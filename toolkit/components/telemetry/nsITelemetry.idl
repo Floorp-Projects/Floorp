@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(749d0bdf-8c7a-4b4a-bb32-eaf3d69af45e)]
+[scriptable, uuid(1cd31579-2a81-4b99-900b-e89eea2e461c)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -56,10 +56,12 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval histogramSnapshots;
 
   /**
-   * As histogramSnapshots, except this contains the internally duplicated histograms for subsession telemetry.
+   * Get a snapshot of the internally duplicated subsession histograms.
+   * @param clear Whether to clear out the subsession histograms after snapshotting.
+   * @return An object as histogramSnapshots, except this contains the internally duplicated histograms for subsession telemetry.
    */
   [implicit_jscontext]
-  readonly attribute jsval subsessionHistogramSnapshots;
+  jsval snapshotSubsessionHistograms([optional] in boolean clear);
 
   /**
    * The amount of time, in milliseconds, that the last session took
