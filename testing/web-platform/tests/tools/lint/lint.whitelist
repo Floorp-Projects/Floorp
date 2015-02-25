@@ -77,6 +77,9 @@ W3C-TEST.ORG:docs/*
 ## Helper scripts ##
 
 W3C-TEST.ORG:tools/*
+PRINT STATEMENT:tools/*
+W3C-TEST.ORG:*/tools/*
+PRINT STATEMENT:*/tools/*
 
 ### Test exclusions ##
 
@@ -95,10 +98,4 @@ PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubi
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-3.xhtml
 
 # Test generation files containing print statements
-PRINT STATEMENT:2dcontext/tools/gentest.py
 PRINT STATEMENT:dom/nodes/Document-createElement-namespace-tests/generate.py
-PRINT STATEMENT:serve.py
-PRINT STATEMENT:tools/runner/report.py
-PRINT STATEMENT:tools/scripts/lint.py
-PRINT STATEMENT:tools/scripts/update_html5lib_tests.py
-PRINT STATEMENT:subresource-integrity/tools/generate_javascript.py
