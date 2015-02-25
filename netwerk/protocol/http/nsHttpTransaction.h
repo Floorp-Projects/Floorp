@@ -277,6 +277,8 @@ private:
     bool                            mResponseTimeoutEnabled;
     bool                            mForceRestart;
     bool                            mReuseOnRestart;
+    bool                            mContentDecoding;
+    bool                            mContentDecodingCheck;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
