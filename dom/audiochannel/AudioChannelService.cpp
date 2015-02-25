@@ -507,15 +507,15 @@ AudioChannelService::ProcessContentOrNormalChannelIsActive(uint64_t aChildID)
 
 void
 AudioChannelService::SetDefaultVolumeControlChannel(int32_t aChannel,
-                                                    bool aHidden)
+                                                    bool aVisible)
 {
-  SetDefaultVolumeControlChannelInternal(aChannel, aHidden,
+  SetDefaultVolumeControlChannelInternal(aChannel, aVisible,
                                          CONTENT_PROCESS_ID_MAIN);
 }
 
 void
 AudioChannelService::SetDefaultVolumeControlChannelInternal(int32_t aChannel,
-                                                            bool aHidden,
+                                                            bool aVisible,
                                                             uint64_t aChildID)
 {
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
@@ -525,7 +525,7 @@ AudioChannelService::SetDefaultVolumeControlChannelInternal(int32_t aChannel,
   // If this child is in the background and mDefChannelChildID is set to
   // others then it means other child in the foreground already set it's
   // own default channel already.
-  if ((!aHidden && mDefChannelChildID != aChildID) ||
+  if ((!aVisible && mDefChannelChildID != aChildID) ||
       (mDefChannelChildID != aChildID &&
        mDefChannelChildID != CONTENT_PROCESS_ID_UNKNOWN)) {
     return;
