@@ -52,6 +52,7 @@ class CreateMetadataPatch(Step):
             for path in metadata_paths:
                 local_tree.add_new(os.path.relpath(path, local_tree.root))
             local_tree.update_patch(include=metadata_paths)
+            local_tree.commit_patch()
 
 
 class MetadataUpdateRunner(StepRunner):
