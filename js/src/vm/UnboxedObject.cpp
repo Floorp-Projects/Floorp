@@ -248,8 +248,8 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
             TypeSet::TypeList types;
             if (!property->types.enumerateTypes(&types))
                 return false;
-            for (size_t i = 0; i < types.length(); i++)
-                AddTypePropertyId(cx, nativeGroup, property->id, types[i]);
+            for (size_t j = 0; j < types.length(); j++)
+                AddTypePropertyId(cx, nativeGroup, property->id, types[j]);
             HeapTypeSet *nativeProperty = nativeGroup->maybeGetProperty(property->id);
             if (nativeProperty->canSetDefinite(i))
                 nativeProperty->setDefinite(i);
