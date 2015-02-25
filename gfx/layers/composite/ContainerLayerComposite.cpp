@@ -384,17 +384,24 @@ RenderLayers(ContainerT* aContainer,
     }
 
     // Draw a border around scrollable layers.
-    for (uint32_t i = 0; i < layer->GetFrameMetricsCount(); i++) {
-      // A layer can be scrolled by multiple scroll frames. Draw a border
-      // for each.
-      if (layer->GetFrameMetrics(i).IsScrollable()) {
+    // A layer can be scrolled by multiple scroll frames. Draw a border
+    // for each.
+    // Within the list of scroll frames for a layer, the layer border for a
+    // scroll frame lower down is affected by the async transforms on scroll
+    // frames higher up, so loop from the top down, and accumulate an async
+    // transform as we go along.
+    Matrix4x4 asyncTransform;
+    for (uint32_t i = layer->GetFrameMetricsCount(); i > 0; --i) {
+      if (layer->GetFrameMetrics(i - 1).IsScrollable()) {
         // Since the composition bounds are in the parent layer's coordinates,
         // use the parent's effective transform rather than the layer's own.
-        ParentLayerRect compositionBounds = layer->GetFrameMetrics(i).mCompositionBounds;
+        ParentLayerRect compositionBounds = layer->GetFrameMetrics(i - 1).mCompositionBounds;
         aManager->GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTAINER,
                                                    compositionBounds.ToUnknownRect(),
                                                    gfx::Rect(aClipRect.ToUnknownRect()),
-                                                   aContainer->GetEffectiveTransform());
+                                                   asyncTransform * aContainer->GetEffectiveTransform());
+        asyncTransform = layer->GetAsyncPanZoomController(i - 1)->GetCurrentAsyncTransformWithOverscroll()
+                       * asyncTransform;
       }
     }
 
