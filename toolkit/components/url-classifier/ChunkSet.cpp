@@ -41,7 +41,9 @@ ChunkSet::Set(uint32_t aChunk)
 {
   size_t idx = mChunks.BinaryIndexOf(aChunk);
   if (idx == nsTArray<uint32_t>::NoIndex) {
-    mChunks.InsertElementSorted(aChunk);
+    if (!mChunks.InsertElementSorted(aChunk)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   return NS_OK;
 }
@@ -79,7 +81,9 @@ ChunkSet::Remove(const ChunkSet& aOther)
     }
   }
 
-  mChunks.SetLength(addIter - mChunks.Elements());
+  if (!mChunks.SetLength(addIter - mChunks.Elements())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
