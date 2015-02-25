@@ -5,17 +5,12 @@ import sys
 import fnmatch
 
 from collections import defaultdict
-try:
-    from xml.etree import cElementTree as ElementTree
-except ImportError:
-    from xml.etree import ElementTree
 
-import _env
-import manifest
-import html5lib
+from .. import localpaths
+from manifest.sourcefile import SourceFile
 
 here = os.path.abspath(os.path.split(__file__)[0])
-repo_root = _env.repo_root
+repo_root = localpaths.repo_root
 
 def git(command, *args):
     args = list(args)
@@ -26,7 +21,7 @@ def git(command, *args):
 
     try:
         return subprocess.check_output(command_line, **proc_kwargs)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         raise
 
 
@@ -141,75 +136,64 @@ def check_regexp_line(path, f):
     return errors
 
 def check_parsed(path, f):
-    ext = os.path.splitext(path)[1][1:]
+    source_file = SourceFile(repo_root, path, "/")
 
     errors = []
 
-    if path.endswith("-manual.%s" % ext):
+    if source_file.name_is_non_test or source_file.name_is_manual:
         return []
 
-    parsers = {"html":lambda x:html5lib.parse(x, treebuilder="etree"),
-               "htm":lambda x:html5lib.parse(x, treebuilder="etree"),
-               "xhtml":ElementTree.parse,
-               "xhtm":ElementTree.parse,
-               "svg":ElementTree.parse}
-
-    parser = parsers.get(ext)
-
-    if parser is None:
+    if source_file.markup_type is None:
         return []
 
-    try:
-        tree = parser(f)
-    except:
+    if source_file.root is None:
         return [("PARSE-FAILED", "Unable to parse file %s" % path, None)]
 
-    if hasattr(tree, "getroot"):
-        root = tree.getroot()
-    else:
-        root = tree
-
-    timeout_nodes = manifest.get_timeout_meta(root)
-    if len(timeout_nodes) > 1:
+    if len(source_file.timeout_nodes) > 1:
         errors.append(("MULTIPLE-TIMEOUT", "%s more than one meta name='timeout'" % path, None))
 
-    for timeout_node in timeout_nodes:
+    for timeout_node in source_file.timeout_nodes:
         timeout_value = timeout_node.attrib.get("content", "").lower()
         if timeout_value != "long":
             errors.append(("INVALID-TIMEOUT", "%s invalid timeout value %s" % (path, timeout_value), None))
 
-    testharness_nodes = manifest.get_testharness_scripts(root)
-    if testharness_nodes:
-        if len(testharness_nodes) > 1:
-            errors.append(("MULTIPLE-TESTHARNESS", "%s more than one <script src='/resources/testharness.js>'" % path, None))
+    if source_file.testharness_nodes:
+        if len(source_file.testharness_nodes) > 1:
+            errors.append(("MULTIPLE-TESTHARNESS",
+                           "%s more than one <script src='/resources/testharness.js>'" % path, None))
 
-        testharnessreport_nodes = root.findall(".//{http://www.w3.org/1999/xhtml}script[@src='/resources/testharnessreport.js']")
+        testharnessreport_nodes = source_file.root.findall(".//{http://www.w3.org/1999/xhtml}script[@src='/resources/testharnessreport.js']")
         if not testharnessreport_nodes:
-            errors.append(("MISSING-TESTHARNESSREPORT", "%s missing <script src='/resources/testharnessreport.js>'" % path, None))
+            errors.append(("MISSING-TESTHARNESSREPORT",
+                           "%s missing <script src='/resources/testharnessreport.js>'" % path, None))
         else:
             if len(testharnessreport_nodes) > 1:
-                errors.append(("MULTIPLE-TESTHARNESSREPORT", "%s more than one <script src='/resources/testharnessreport.js>'" % path, None))
+                errors.append(("MULTIPLE-TESTHARNESSREPORT",
+                               "%s more than one <script src='/resources/testharnessreport.js>'" % path, None))
 
         seen_elements = {"timeout": False,
                          "testharness": False,
                          "testharnessreport": False}
         required_elements = [key for key, value in {"testharness": True,
                                                     "testharnessreport": len(testharnessreport_nodes) > 0,
-                                                    "timeout": len(timeout_nodes) > 0}.iteritems() if value]
+                                                    "timeout": len(source_file.timeout_nodes) > 0}.iteritems()
+                             if value]
 
-        for elem in root.iter():
-            if timeout_nodes and elem == timeout_nodes[0]:
+        for elem in source_file.root.iter():
+            if source_file.timeout_nodes and elem == source_file.timeout_nodes[0]:
                 seen_elements["timeout"] = True
                 if seen_elements["testharness"]:
-                    errors.append(("LATE-TIMEOUT", "%s <meta name=timeout> seen after testharness.js script" % path, None))
+                    errors.append(("LATE-TIMEOUT",
+                                   "%s <meta name=timeout> seen after testharness.js script" % path, None))
 
-            elif elem == testharness_nodes[0]:
+            elif elem == source_file.testharness_nodes[0]:
                 seen_elements["testharness"] = True
 
             elif testharnessreport_nodes and elem == testharnessreport_nodes[0]:
                 seen_elements["testharnessreport"] = True
                 if not seen_elements["testharness"]:
-                    errors.append(("EARLY-TESTHARNESSREPORT", "%s testharnessreport.js script seen before testharness.js script" % path, None))
+                    errors.append(("EARLY-TESTHARNESSREPORT",
+                                   "%s testharnessreport.js script seen before testharness.js script" % path, None))
 
             if all(seen_elements[name] for name in required_elements):
                 break

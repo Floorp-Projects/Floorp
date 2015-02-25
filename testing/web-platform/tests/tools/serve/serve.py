@@ -13,17 +13,15 @@ import uuid
 from collections import defaultdict
 from multiprocessing import Process, Event
 
-from tools.scripts import _env
-repo_root = _env.repo_root
+from .. import localpaths
+
+import sslutils
 from wptserve import server as wptserve, handlers
 from wptserve.router import any_method
 from wptserve.logger import set_logger
-
 from mod_pywebsocket import standalone as pywebsocket
 
-sys.path.insert(1, os.path.join(repo_root, "tools"))
-import sslutils
-
+repo_root = localpaths.repo_root
 
 @handlers.handler
 def workers_handler(request, response):
@@ -453,7 +451,3 @@ def main():
                     item.join(1)
         except KeyboardInterrupt:
             logger.info("Shutting down")
-
-
-if __name__ == "__main__":
-    main()
