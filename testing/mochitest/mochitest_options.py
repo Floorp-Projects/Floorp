@@ -478,6 +478,12 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "debuggerInteractive",
           "help": "prevents the test harness from redirecting stdout and stderr for interactive debuggers",
           }],
+        [["--max-timeouts"],
+         { "type": "int",
+           "dest": "maxTimeouts",
+           "help": "maximum number of timeouts permitted before halting testing",
+           "default": None,
+           }],
     ]
 
     def __init__(self, **kwargs):
