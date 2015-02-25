@@ -1062,3 +1062,50 @@ class BuildReader(object):
                 yield res
 
         self._execution_stack.pop()
+
+    def _find_relevant_mozbuilds(self, paths):
+        """Given a set of filesystem paths, find all relevant moz.build files.
+
+        We assume that a moz.build file in the directory ancestry of a given path
+        is relevant to that path. Let's say we have the following files on disk::
+
+           moz.build
+           foo/moz.build
+           foo/baz/moz.build
+           foo/baz/file1
+           other/moz.build
+           other/file2
+
+        If ``foo/baz/file1`` is passed in, the relevant moz.build files are
+        ``moz.build``, ``foo/moz.build``, and ``foo/baz/moz.build``. For
+        ``other/file2``, the relevant moz.build files are ``moz.build`` and
+        ``other/moz.build``.
+
+        Returns a dict of input paths to a list of relevant moz.build files.
+        The root moz.build file is first and the leaf-most moz.build is last.
+        """
+        root = self.config.topsrcdir
+        result = {}
+
+        @memoize
+        def exists(path):
+            return os.path.exists(path)
+
+        def itermozbuild(path):
+            subpath = ''
+            yield 'moz.build'
+            for part in mozpath.split(path):
+                subpath = mozpath.join(subpath, part)
+                yield mozpath.join(subpath, 'moz.build')
+
+        for path in sorted(paths):
+            path = mozpath.normpath(path)
+            if os.path.isabs(path):
+                if not mozpath.basedir(path, [root]):
+                    raise Exception('Path outside topsrcdir: %s' % path)
+                path = mozpath.relpath(path, root)
+
+            result[path] = [p for p in itermozbuild(path)
+                              if exists(mozpath.join(root, p))]
+
+        return result
