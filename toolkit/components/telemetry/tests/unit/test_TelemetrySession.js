@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
+Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -31,6 +32,7 @@ const PING_TYPE_MAIN = "main";
 const REASON_SAVED_SESSION = "saved-session";
 const REASON_TEST_PING = "test-ping";
 const REASON_DAILY = "daily";
+const REASON_ENVIRONMENT_CHANGE = "environment-change";
 
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
@@ -110,6 +112,11 @@ function fakeNow(date) {
 
 function futureDate(date, offset) {
   return new Date(date.getTime() + offset);
+}
+
+function fakeNow(date) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  session.Policy.now = () => date;
 }
 
 function registerPingHandler(handler) {
@@ -822,6 +829,70 @@ add_task(function* test_dailyCollection() {
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 1);
+});
+
+add_task(function* test_environmentChange() {
+  let now = new Date(2040, 1, 1, 12, 0, 0);
+  let nowDay = new Date(2040, 1, 1, 0, 0, 0);
+  let timerCallback = null;
+  let timerDelay = null;
+
+  gRequestIterator = Iterator(new Request());
+
+  fakeNow(now);
+  fakeDailyTimers(() => {}, () => {});
+
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+  Preferences.reset(PREF_TEST);
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_VALUE;
+
+  // Setup.
+  yield TelemetrySession.setup();
+  TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+
+  // Set histograms to expected state.
+  const COUNT_ID = "TELEMETRY_TEST_COUNT";
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
+  const count = Telemetry.getHistogramById(COUNT_ID);
+  const keyed = Telemetry.getKeyedHistogramById(KEYED_ID);
+
+  count.clear();
+  keyed.clear();
+  count.add(1);
+  keyed.add("a", 1);
+  keyed.add("b", 1);
+
+  // Trigger and collect environment-change ping.
+  Preferences.set(PREF_TEST, 1);
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
+  Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
+  let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
+
+  // Trigger and collect another ping. The histograms should be reset.
+  Preferences.set(PREF_TEST, 2);
+  request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 2);
+  Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
+  subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
+  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
+  Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
 });
 
 // Checks that an expired histogram file is deleted when loaded.
