@@ -79,7 +79,6 @@
       this.mTokenRequestMap.delete(token);
       requestType = options.rilRequestType;
 
-      options.rilRequestError = error;
       if (error !== ERROR_SUCCESS) {
         options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[error] ||
                            GECKO_ERROR_UNSPECIFIED_ERROR;
@@ -126,7 +125,6 @@
       options = {};
     }
     options.rilRequestType = type;
-    options.rilRequestError = null;
     this.mTokenRequestMap.set(this.mToken, options);
     this.mToken++;
     return this.mToken;

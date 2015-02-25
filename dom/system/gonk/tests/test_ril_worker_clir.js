@@ -23,8 +23,7 @@ add_test(function test_setCLIR_success() {
 
   context.RIL.setCLIR = function fakeSetCLIR(options) {
     context.RIL[REQUEST_SET_CLIR](0, {
-      rilMessageType: "setCLIR",
-      rilRequestError: ERROR_SUCCESS
+      rilMessageType: "setCLIR"
     });
   };
 
@@ -48,7 +47,6 @@ add_test(function test_setCLIR_generic_failure() {
   context.RIL.setCLIR = function fakeSetCLIR(options) {
     context.RIL[REQUEST_SET_CLIR](0, {
       rilMessageType: "setCLIR",
-      rilRequestError: ERROR_GENERIC_FAILURE,
       errorMsg: GECKO_ERROR_GENERIC_FAILURE
     });
   };
@@ -82,8 +80,7 @@ add_test(function test_getCLIR_n0_m1() {
       2   // Length.
     ];
     context.RIL[REQUEST_GET_CLIR](1, {
-      rilMessageType: "setCLIR",
-      rilRequestError: ERROR_SUCCESS
+      rilMessageType: "setCLIR"
     });
   };
 
@@ -115,8 +112,7 @@ add_test(function test_getCLIR_error_generic_failure_invalid_length() {
       0   // Length (invalid one).
     ];
     context.RIL[REQUEST_GET_CLIR](1, {
-      rilMessageType: "setCLIR",
-      rilRequestError: ERROR_SUCCESS
+      rilMessageType: "setCLIR"
     });
   };
 
