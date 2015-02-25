@@ -109,7 +109,7 @@
         let validator = createPackaged("wrong-launch-path");
         validator.validate().then(() => {
             is(validator.errors.length, 1, "app with wrong path got an error");
-            let file = nsFile(validator.project.location);
+            let file = nsFile(validator.location);
             file.append("wrong-path.html");
             let url = Services.io.newFileURI(file);
             is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPath", [url.spec], 1),
