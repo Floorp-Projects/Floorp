@@ -5150,9 +5150,7 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
-    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
-        *_retval = mDNSPrefetch->StartTimestamp();
-    else if (mTransaction)
+    if (mTransaction)
         *_retval = mTransaction->GetDomainLookupStart();
     else
         *_retval = mTransactionTimings.domainLookupStart;
@@ -5161,9 +5159,7 @@ nsHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
 
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupEnd(TimeStamp* _retval) {
-    if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
-        *_retval = mDNSPrefetch->EndTimestamp();
-    else if (mTransaction)
+    if (mTransaction)
         *_retval = mTransaction->GetDomainLookupEnd();
     else
         *_retval = mTransactionTimings.domainLookupEnd;
@@ -5495,7 +5491,11 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mTransactionPump = nullptr;
 
         // We no longer need the dns prefetch object
-        if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+        if (mDNSPrefetch && mDNSPrefetch->TimingsValid()
+            && !mTransactionTimings.requestStart.IsNull()
+            && mDNSPrefetch->EndTimestamp() <= mTransactionTimings.requestStart) {
+            // We only need the domainLookup timestamps when not using a
+            // persistent connection, meaning if the endTimestamp < requestStart
             mTransactionTimings.domainLookupStart =
                 mDNSPrefetch->StartTimestamp();
             mTransactionTimings.domainLookupEnd =
@@ -6438,11 +6438,15 @@ nsHttpChannel::OnLookupComplete(nsICancelable *request,
 
     // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
     // validly null if OnStopRequest has already been called.
-    if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
-        mTransactionTimings.domainLookupStart =
-            mDNSPrefetch->StartTimestamp();
-        mTransactionTimings.domainLookupEnd =
-            mDNSPrefetch->EndTimestamp();
+    // We only need the domainLookup timestamps when not loading from cache
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid() && mTransaction) {
+        TimeStamp requestStart = mTransaction->GetRequestStart();
+        // We only set the domainLookup timestamps if we're not using a
+        // persistent connection.
+        if (requestStart.IsNull() || (mDNSPrefetch->EndTimestamp() < requestStart)) {
+            mTransaction->SetDomainLookupStart(mDNSPrefetch->StartTimestamp());
+            mTransaction->SetDomainLookupEnd(mDNSPrefetch->EndTimestamp());
+        }
     }
     mDNSPrefetch = nullptr;
 
