@@ -355,9 +355,7 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 }
 
 void
-SetProcessPriority(int aPid,
-                   ProcessPriority aPriority,
-                   uint32_t aBackgroundLRU)
+SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
 {
   NS_RUNTIMEABORT("Only the main process may set processes' priorities.");
 }
