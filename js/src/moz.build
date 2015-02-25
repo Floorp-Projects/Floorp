@@ -494,6 +494,10 @@ if CONFIG['_MSC_VER']:
     # Prevent floating point errors caused by VC++ optimizations
     # XXX We should add this to CXXFLAGS, too?
     CFLAGS += ['-fp:precise']
+    # C4805 warns mixing bool with other integral types in computation.
+    # But given the conversion from bool is specified, and this is a
+    # pattern widely used in code in js/src, suppress this warning here.
+    CXXFLAGS += ['-wd4805']
 
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
