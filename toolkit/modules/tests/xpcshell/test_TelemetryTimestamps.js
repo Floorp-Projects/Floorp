@@ -65,7 +65,7 @@ add_task(function* actualTest() {
   do_check_true(simpleMeasurements.bar > 1); // bar was included
   do_check_eq(undefined, simpleMeasurements.baz); // baz wasn't included since it wasn't added
 
-  yield TelemetrySession.shutdown();
+  yield TelemetrySession.shutdown(false);
 
   do_test_finished();
 });
