@@ -80,6 +80,44 @@ class TestCommitParser(unittest.TestCase):
         result = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
+    def test_try_flag_in_middle_of_commit(self):
+        '''
+        The try command prefix may appear anywhere this test ensures that it
+        works in some common cases.
+        '''
+        commit = 'Bug XXX - I like cheese try: -b o -p all -u none wootbar'
+        jobs = {
+            'flags': {
+                'builds': ['linux', 'linux64'],
+                'tests': ['web-platform-tests'],
+            },
+            'builds': {
+                'linux': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
+                    }
+                },
+            },
+            'tests': {}
+        }
+
+        expected = [
+            {
+                'task': 'task/linux',
+                'dependents': [],
+                'additional-parameters': {}
+            }
+        ]
+
+        result = parse_commit(commit, jobs)
+        self.assertEqual(expected, result)
+
+
     def test_commit_all_builds_no_tests(self):
         '''
         This test covers the case of all builds but no tests passed -u none

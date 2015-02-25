@@ -364,17 +364,17 @@ add_test(function test_load_icon_basic() {
 
     let onsuccess = function(icons) {
       // Query one record at a time.
-      do_check_eq(icons.length, 1);
-      do_check_eq(icons[0].length, expected.length);
+      equal(icons.length, 1);
+      equal(icons[0].length, expected.length);
       for (let i = 0; i < icons[0].length; i++) {
         // Read the i_th image of the record.
         let icon = icons[0][i];
         let exp = expected[i];
-        do_check_eq(icon.width, exp.width);
-        do_check_eq(icon.height, exp.height);
-        do_check_eq(icon.pixels.length, exp.pixels.length);
+        equal(icon.width, exp.width);
+        equal(icon.height, exp.height);
+        equal(icon.pixels.length, exp.pixels.length);
         for (let j = 0; j < icon.pixels.length; j++) {
-          do_check_eq(icon.pixels[j], exp.pixels[j]);
+          equal(icon.pixels[j], exp.pixels[j]);
         }
       }
     };
@@ -746,17 +746,17 @@ add_test(function test_load_icons() {
     };
 
     let onsuccess = function(icons) {
-      do_check_eq(icons.length, test_data.expected.length);
+      equal(icons.length, test_data.expected.length);
       for (let i = 0; i < icons.length; i++) {
         for (let j = 0; j < icons[i].length; j++) {
           // Read the j_th image from the i_th record.
           let icon = icons[i][j];
           let expected = test_data.expected[i][j];
-          do_check_eq(icon.width, expected.width);
-          do_check_eq(icon.height, expected.height);
-          do_check_eq(icon.pixels.length, expected.pixels.length);
+          equal(icon.width, expected.width);
+          equal(icon.height, expected.height);
+          equal(icon.pixels.length, expected.pixels.length);
           for (let k = 0; k < icon.pixels.length; k++) {
-            do_check_eq(icon.pixels[k], expected.pixels[k]);
+            equal(icon.pixels[k], expected.pixels[k]);
           }
         }
       }

@@ -67,11 +67,20 @@ BasicCompositor::BasicCompositor(nsIWidget *aWidget)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
   SetBackend(LayersBackend::LAYERS_BASIC);
+
+  mMaxTextureSize =
+    Factory::GetMaxSurfaceSize(gfxPlatform::GetPlatform()->GetContentBackend());
 }
 
 BasicCompositor::~BasicCompositor()
 {
   MOZ_COUNT_DTOR(BasicCompositor);
+}
+
+int32_t
+BasicCompositor::GetMaxTextureSize() const
+{
+  return mMaxTextureSize;
 }
 
 void

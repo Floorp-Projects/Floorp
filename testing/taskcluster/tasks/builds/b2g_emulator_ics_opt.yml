@@ -3,7 +3,7 @@ $inherits:
 task:
   workerType: emulator-ics
   scopes:
-    - 'docker-worker:cache:build-emulator-ics-opt'
+    - 'docker-worker:cache:workspace-emulator-ics-opt'
   metadata:
     name: '[TC] B2G Emulator ICS Opt'
 
@@ -14,7 +14,7 @@ task:
 
   payload:
     cache:
-      build-emulator-ics-opt: /home/worker/object-folder/
+      workspace-emulator-ics-opt: /home/worker/workspace
 
     env:
       TARGET: 'emulator'
