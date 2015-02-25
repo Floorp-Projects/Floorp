@@ -300,13 +300,7 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
         return mir_->toSimdInsertElement()->lane();
     }
     const char *extraName() const {
-        switch (lane()) {
-          case LaneX: return "lane x";
-          case LaneY: return "lane y";
-          case LaneZ: return "lane z";
-          case LaneW: return "lane w";
-        }
-        return "unknown lane";
+        return MSimdInsertElement::LaneName(lane());
     }
 };
 

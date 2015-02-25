@@ -1630,7 +1630,7 @@ class MSimdExtractElement
 // Replaces the datum in the given lane by a scalar value of the same type.
 class MSimdInsertElement
   : public MBinaryInstruction,
-    public NoTypePolicy::Data
+    public MixPolicy< SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >::Data
 {
   private:
     SimdLane lane_;
@@ -1638,9 +1638,7 @@ class MSimdInsertElement
     MSimdInsertElement(MDefinition *vec, MDefinition *val, MIRType type, SimdLane lane)
       : MBinaryInstruction(vec, val), lane_(lane)
     {
-        MOZ_ASSERT(IsSimdType(type) && vec->type() == type);
-        MOZ_ASSERT(SimdTypeToScalarType(type) == val->type());
-
+        MOZ_ASSERT(IsSimdType(type));
         setMovable();
         setResultType(type);
     }
@@ -1650,6 +1648,14 @@ class MSimdInsertElement
 
     static MSimdInsertElement *NewAsmJS(TempAllocator &alloc, MDefinition *vec, MDefinition *val,
                                          MIRType type, SimdLane lane)
+    {
+        MOZ_ASSERT(vec->type() == type);
+        MOZ_ASSERT(SimdTypeToScalarType(type) == val->type());
+        return new(alloc) MSimdInsertElement(vec, val, type, lane);
+    }
+
+    static MSimdInsertElement *New(TempAllocator &alloc, MDefinition *vec, MDefinition *val,
+                                   MIRType type, SimdLane lane)
     {
         return new(alloc) MSimdInsertElement(vec, val, type, lane);
     }
@@ -1664,6 +1670,16 @@ class MSimdInsertElement
         return lane_;
     }
 
+    static const char* LaneName(SimdLane lane) {
+        switch (lane) {
+          case LaneX: return "lane x";
+          case LaneY: return "lane y";
+          case LaneZ: return "lane z";
+          case LaneW: return "lane w";
+        }
+        MOZ_CRASH("unknown lane");
+    }
+
     bool canConsumeFloat32(MUse *use) const MOZ_OVERRIDE {
         return use == getUseFor(1) && SimdTypeToScalarType(type()) == MIRType_Float32;
     }
@@ -1675,6 +1691,8 @@ class MSimdInsertElement
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         return binaryCongruentTo(ins) && lane_ == ins->toSimdInsertElement()->lane();
     }
+
+    void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 
     ALLOW_CLONE(MSimdInsertElement)
 };

@@ -290,6 +290,17 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     COMP_COMMONX4_SIMD_OP(INLINE_SIMD_COMPARISON_)
 #undef INLINE_SIMD_COMPARISON_
 
+#define INLINE_SIMD_SETTER_(LANE)                                                                   \
+    if (native == js::simd_int32x4_with##LANE)                                                      \
+        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::TYPE_INT32);   \
+    if (native == js::simd_float32x4_with##LANE)                                                    \
+        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::TYPE_FLOAT32);
+    INLINE_SIMD_SETTER_(X)
+    INLINE_SIMD_SETTER_(Y)
+    INLINE_SIMD_SETTER_(Z)
+    INLINE_SIMD_SETTER_(W)
+#undef INLINE_SIMD_SETTER_
+
     if (native == js::simd_int32x4_not)
         return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_INT32);
     if (native == js::simd_int32x4_neg)
@@ -2998,6 +3009,21 @@ IonBuilder::inlineUnarySimd(CallInfo &callInfo, JSNative native, MSimdUnaryArith
     // See comment in inlineBinarySimd
     MIRType mirType = SimdTypeDescrToMIRType(type);
     MSimdUnaryArith *ins = MSimdUnaryArith::New(alloc(), callInfo.getArg(0), op, mirType);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdWith(CallInfo &callInfo, JSNative native, SimdLane lane,
+                           SimdTypeDescr::Type type)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    // See comment in inlineBinarySimd
+    MIRType mirType = SimdTypeDescrToMIRType(type);
+    MSimdInsertElement *ins = MSimdInsertElement::New(alloc(), callInfo.getArg(0),
+                                                      callInfo.getArg(1), mirType, lane);
     return boxSimd(callInfo, ins, templateObj);
 }
 
