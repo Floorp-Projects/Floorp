@@ -455,7 +455,8 @@ let Impl = {
 
     let registered =
       Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
-    let hls = subsession ? Telemetry.subsessionHistogramSnapshots : Telemetry.histogramSnapshots;
+    let hls = subsession ? Telemetry.snapshotSubsessionHistograms(false)
+                         : Telemetry.histogramSnapshots;
     let ret = {};
 
     for (let name of registered) {

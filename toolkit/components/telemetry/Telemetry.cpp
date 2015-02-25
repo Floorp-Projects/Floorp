@@ -702,7 +702,8 @@ private:
   void IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs);
   nsresult CreateHistogramSnapshots(JSContext *cx,
                                     JS::MutableHandle<JS::Value> ret,
-                                    bool subsession);
+                                    bool subsession,
+                                    bool clearSubsession);
   typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
 
   struct AddonHistogramInfo {
@@ -2161,7 +2162,8 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
 nsresult
 TelemetryImpl::CreateHistogramSnapshots(JSContext *cx,
                                         JS::MutableHandle<JS::Value> ret,
-                                        bool subsession)
+                                        bool subsession,
+                                        bool clearSubsession)
 {
   JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj)
@@ -2228,6 +2230,10 @@ TelemetryImpl::CreateHistogramSnapshots(JSContext *cx,
         return NS_ERROR_FAILURE;
       }
     }
+
+    if (subsession && clearSubsession) {
+      h->Clear();
+    }
   }
   return NS_OK;
 }
@@ -2235,13 +2241,15 @@ TelemetryImpl::CreateHistogramSnapshots(JSContext *cx,
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  return CreateHistogramSnapshots(cx, ret, false);
+  return CreateHistogramSnapshots(cx, ret, false, false);
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetSubsessionHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
+                                            JSContext *cx,
+                                            JS::MutableHandle<JS::Value> ret)
 {
-  return CreateHistogramSnapshots(cx, ret, true);
+  return CreateHistogramSnapshots(cx, ret, true, clearSubsession);
 }
 
 bool

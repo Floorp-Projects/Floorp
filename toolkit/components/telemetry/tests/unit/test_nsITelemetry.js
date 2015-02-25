@@ -607,19 +607,21 @@ function test_datasets()
 
 function test_subsession() {
   const ID = "TELEMETRY_TEST_COUNT";
+  const FLAG = "TELEMETRY_TEST_FLAG";
   let h = Telemetry.getHistogramById(ID);
+  let flag = Telemetry.getHistogramById(FLAG);
 
   // Both original and duplicate should start out the same.
   h.clear();
   let snapshot = Telemetry.histogramSnapshots;
-  let subsession = Telemetry.subsessionHistogramSnapshots;
+  let subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.ok(!(ID in snapshot));
   Assert.ok(!(ID in subsession));
 
   // They should instantiate and pick-up the count.
   h.add(1);
   snapshot = Telemetry.histogramSnapshots;
-  subsession = Telemetry.subsessionHistogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.ok(ID in snapshot);
   Assert.ok(ID in subsession);
   Assert.equal(snapshot[ID].sum, 1);
@@ -628,21 +630,21 @@ function test_subsession() {
   // They should still reset properly.
   h.clear();
   snapshot = Telemetry.histogramSnapshots;
-  subsession = Telemetry.subsessionHistogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.ok(!(ID in snapshot));
   Assert.ok(!(ID in subsession));
 
   // Both should instantiate and pick-up the count.
   h.add(1);
   snapshot = Telemetry.histogramSnapshots;
-  subsession = Telemetry.subsessionHistogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.equal(snapshot[ID].sum, 1);
   Assert.equal(subsession[ID].sum, 1);
 
   // Check that we are able to only reset the duplicate histogram.
   h.clear(true);
   snapshot = Telemetry.histogramSnapshots;
-  subsession = Telemetry.subsessionHistogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.ok(ID in snapshot);
   Assert.ok(ID in subsession);
   Assert.equal(snapshot[ID].sum, 1);
@@ -651,9 +653,39 @@ function test_subsession() {
   // Both should register the next count.
   h.add(1);
   snapshot = Telemetry.histogramSnapshots;
-  subsession = Telemetry.subsessionHistogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
   Assert.equal(snapshot[ID].sum, 2);
   Assert.equal(subsession[ID].sum, 1);
+
+  // Retrieve a subsession snapshot and pass the flag to
+  // clear subsession histograms too.
+  h.clear();
+  flag.clear();
+  h.add(1);
+  flag.add(1);
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms(true);
+  Assert.ok(ID in snapshot);
+  Assert.ok(ID in subsession);
+  Assert.ok(FLAG in snapshot);
+  Assert.ok(FLAG in subsession);
+  Assert.equal(snapshot[ID].sum, 1);
+  Assert.equal(subsession[ID].sum, 1);
+  Assert.equal(snapshot[FLAG].sum, 1);
+  Assert.equal(subsession[FLAG].sum, 1);
+
+  // The next subsesssion snapshot should show the histograms
+  // got reset.
+  snapshot = Telemetry.histogramSnapshots;
+  subsession = Telemetry.snapshotSubsessionHistograms();
+  Assert.ok(ID in snapshot);
+  Assert.ok(ID in subsession);
+  Assert.ok(FLAG in snapshot);
+  Assert.ok(FLAG in subsession);
+  Assert.equal(snapshot[ID].sum, 1);
+  Assert.equal(subsession[ID].sum, 0);
+  Assert.equal(snapshot[FLAG].sum, 1);
+  Assert.equal(subsession[FLAG].sum, 0);
 }
 
 function test_keyed_subsession() {
