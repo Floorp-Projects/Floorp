@@ -44,8 +44,8 @@ class TouchCaretTest(MarionetteTestCase):
         set touch caret expiration time in milliseconds).
 
         '''
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("touchcaret.enabled", %s);' %
+        self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["touchcaret.enabled", %s]]}, marionetteScriptFinished);' %
             ('true' if enabled else 'false'))
 
         # Set a larger expiration time to avoid intermittent test failures.

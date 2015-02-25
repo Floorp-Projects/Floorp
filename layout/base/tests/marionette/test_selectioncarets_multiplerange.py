@@ -21,12 +21,9 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
     def openTestHtml(self, enabled=True):
         # Open html for testing and enable selectioncaret and
         # non-editable support
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
-            ('true' if enabled else 'false'))
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.noneditable", %s);' %
-            ('true' if enabled else 'false'))
+        self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["selectioncaret.enabled", %s],["selectioncaret.noneditable", %s]]}, marionetteScriptFinished);' %
+            ( ('true' if enabled else 'false'),  ('true' if enabled else 'false')))
 
         test_html = self.marionette.absolute_url('test_selectioncarets_multiplerange.html')
         self.marionette.navigate(test_html)
