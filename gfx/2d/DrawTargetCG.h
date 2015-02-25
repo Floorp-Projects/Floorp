@@ -183,6 +183,13 @@ public:
   CGContextRef GetCGContext() {
       return mCg;
   }
+
+  // 32767 is the maximum size supported by cairo. We clamp to that to make it
+  // easier to interoperate.
+  static size_t GetMaxSurfaceSize() {
+    return 32767;
+  }
+
 private:
   void MarkChanged();
 
