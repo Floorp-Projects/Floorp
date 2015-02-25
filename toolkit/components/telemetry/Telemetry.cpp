@@ -1808,6 +1808,17 @@ mFailedLockCount(0)
   mTrackedDBs.MarkImmutable();
 #endif
 
+  // Populate the static histogram name->id cache.
+  // Note that the histogram names are statically allocated.
+  for (uint32_t i = 0; i < Telemetry::HistogramCount; i++) {
+    CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id());
+    entry->mData = (Telemetry::ID) i;
+  }
+
+#ifdef DEBUG
+  mHistogramMap.MarkImmutable();
+#endif
+
   // Create registered keyed histograms
   for (size_t i = 0; i < ArrayLength(gHistograms); ++i) {
     const TelemetryHistogram& h = gHistograms[i];
@@ -1938,21 +1949,8 @@ TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
     return NS_ERROR_FAILURE;
   }
 
-  // Cache names
-  // Note the histogram names are statically allocated
-  TelemetryImpl::HistogramMapType *map = &sTelemetry->mHistogramMap;
-  if (!map->Count()) {
-    for (uint32_t i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id());
-      if (MOZ_UNLIKELY(!entry)) {
-        map->Clear();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      entry->mData = (Telemetry::ID) i;
-    }
-  }
-
-  CharPtrEntryType *entry = map->GetEntry(name);
+  const TelemetryImpl::HistogramMapType& map = sTelemetry->mHistogramMap;
+  CharPtrEntryType *entry = map.GetEntry(name);
   if (!entry) {
     return NS_ERROR_INVALID_ARG;
   }
