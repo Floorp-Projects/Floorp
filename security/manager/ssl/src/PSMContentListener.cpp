@@ -264,7 +264,7 @@ PSMContentListener::CanHandleContent(const char * aContentType,
 }
 
 NS_IMETHODIMP
-PSMContentListener::DoContent(const char * aContentType,
+PSMContentListener::DoContent(const nsACString & aContentType,
                                bool aIsContentPreferred,
                                nsIRequest * aRequest,
                                nsIStreamListener ** aContentHandler,
@@ -272,7 +272,7 @@ PSMContentListener::DoContent(const char * aContentType,
 {
   PSMContentDownloader *downLoader;
   uint32_t type;
-  type = getPSMContentType(aContentType);
+  type = getPSMContentType(PromiseFlatCString(aContentType).get());
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PSMContentListener::DoContent\n"));
   if (type != PSMContentDownloader::UNKNOWN_TYPE) {
     downLoader = new PSMContentDownloader(type);

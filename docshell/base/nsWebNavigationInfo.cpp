@@ -89,7 +89,7 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
   nsContentUtils::ContentViewerType vtype = nsContentUtils::TYPE_UNSUPPORTED;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-    nsContentUtils::FindInternalContentViewer(aType.get(), &vtype);
+    nsContentUtils::FindInternalContentViewer(aType, &vtype);
 
   switch (vtype) {
     case nsContentUtils::TYPE_UNSUPPORTED:
