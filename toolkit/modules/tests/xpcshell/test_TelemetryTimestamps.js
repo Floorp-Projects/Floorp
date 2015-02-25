@@ -5,7 +5,14 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
+  () => Cc["@mozilla.org/datareporting/service;1"]
+          .getService(Ci.nsISupports)
+          .wrappedJSObject);
 
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
 // implement the nsIAppInfo interface, which is needed by Services.jsm and
@@ -15,6 +22,17 @@ updateAppInfo();
 
 function getSimpleMeasurementsFromTelemetryPing() {
   return TelemetrySession.getPayload().simpleMeasurements;
+}
+
+function initialiseTelemetry() {
+  // Send the needed startup notifications to the datareporting service
+  // to ensure that it has been initialized.
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDatareportingService.observe(null, "app-startup", null);
+    gDatareportingService.observe(null, "profile-after-change", null);
+  }
+
+  return TelemetryPing.setup().then(TelemetrySession.setup);
 }
 
 function run_test() {
@@ -27,7 +45,7 @@ function run_test() {
 }
 
 add_task(function* actualTest() {
-  yield TelemetrySession.setup();
+  yield initialiseTelemetry();
 
   // Test the module logic
   let tmp = {};
