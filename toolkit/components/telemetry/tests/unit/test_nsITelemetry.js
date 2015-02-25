@@ -606,6 +606,11 @@ function test_datasets()
 }
 
 function test_subsession() {
+  if (gIsAndroid) {
+    // We don't support subsessions yet on Android.
+    return;
+  }
+
   const ID = "TELEMETRY_TEST_COUNT";
   const FLAG = "TELEMETRY_TEST_FLAG";
   let h = Telemetry.getHistogramById(ID);
@@ -689,6 +694,11 @@ function test_subsession() {
 }
 
 function test_keyed_subsession() {
+  if (gIsAndroid) {
+    // We don't support subsessions yet on Android.
+    return;
+  }
+
   let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
   const KEY = "foo";
 
