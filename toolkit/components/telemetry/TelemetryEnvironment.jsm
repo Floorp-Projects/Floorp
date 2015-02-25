@@ -442,6 +442,11 @@ this.TelemetryEnvironment = {
    * @returns null on error, true if we are the default browser, or false otherwise.
    */
   _isDefaultBrowser: function () {
+    if (!("@mozilla.org/browser/shell-service;1" in Cc)) {
+      this._log.error("_isDefaultBrowser - Could not obtain shell service");
+      return null;
+    }
+
     let shellService;
     try {
       shellService = Cc["@mozilla.org/browser/shell-service;1"]
@@ -476,7 +481,9 @@ this.TelemetryEnvironment = {
 
     return {
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
+#ifndef MOZ_WIDGET_ANDROID
       isDefaultBrowser: this._isDefaultBrowser(),
+#endif
       e10sEnabled: Preferences.get(PREF_E10S_ENABLED, false),
       telemetryEnabled: Preferences.get(PREF_TELEMETRY_ENABLED, false),
       locale: getBrowserLocale(),
