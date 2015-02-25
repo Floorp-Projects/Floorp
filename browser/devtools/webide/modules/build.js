@@ -14,10 +14,10 @@ const ProjectBuilding = exports.ProjectBuilding = {
     let manifestPath = OS.Path.join(project.location, "package.json");
     let exists = yield OS.File.exists(manifestPath);
     if (!exists) {
-      return;
+      // No explicit manifest, try to generate one if possible
+      return this.generatePackageManifest(project);
     }
 
-    let Decoder = new TextDecoder();
     let data = yield OS.File.read(manifestPath);
     data = new TextDecoder().decode(data);
     let manifest;
@@ -28,6 +28,31 @@ const ProjectBuilding = exports.ProjectBuilding = {
                       "', invalid JSON: " + e.message);
     }
     return manifest;
+  }),
+
+  /**
+   * For common frameworks in the community, attempt to detect the build
+   * settings if none are defined.  This makes it much easier to get started
+   * with WebIDE.  Later on, perhaps an add-on could define such things for
+   * different frameworks.
+   */
+  generatePackageManifest: Task.async(function*(project) {
+    // Cordova
+    let cordovaConfigPath = OS.Path.join(project.location, "config.xml");
+    let exists = yield OS.File.exists(cordovaConfigPath);
+    if (!exists) {
+      return;
+    }
+    let data = yield OS.File.read(cordovaConfigPath);
+    data = new TextDecoder().decode(data);
+    if (data.contains("cordova.apache.org")) {
+      return {
+        "webide": {
+          "prepackage": "cordova prepare",
+          "packageDir": "./platforms/firefoxos/www"
+        }
+      };
+    }
   }),
 
   hasPrepackage: Task.async(function* (project) {
