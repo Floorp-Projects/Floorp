@@ -123,6 +123,16 @@ public:
       SBR_DEBUG("item=%p length=%d offset=%llu",
                 item, item->mData->Length(), mOffset);
       if (item->mData->Length() + mOffset >= aOffset) {
+        if (aOffset <= mOffset) {
+          break;
+        }
+        uint32_t offset = aOffset - mOffset;
+        mOffset += offset;
+        evicted += offset;
+        nsRefPtr<LargeDataBuffer> data = new LargeDataBuffer;
+        data->AppendElements(item->mData->Elements() + offset,
+                             item->mData->Length() - offset);
+        item->mData = data;
         break;
       }
       mOffset += item->mData->Length();
