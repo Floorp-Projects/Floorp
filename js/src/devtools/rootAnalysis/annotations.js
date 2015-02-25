@@ -57,7 +57,7 @@ function indirectCallCannotGC(fullCaller, fullVariable)
 
 // Ignore calls through functions pointers with these types
 var ignoreClasses = {
-    "JSTracer" : true,
+    "JS::CallbackTracer" : true,
     "JSStringFinalizer" : true,
     "SprintfState" : true,
     "SprintfStateStr" : true,
