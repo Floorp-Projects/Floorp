@@ -122,7 +122,6 @@
 <!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_privacy_summary "Control passwords, cookies, tracking, data">
-<!ENTITY pref_manage_logins "Manage logins">
 <!ENTITY pref_category_vendor "&vendorShortName;">
 <!ENTITY pref_category_vendor_summary "About &brandShortName;, FAQs, data choices">
 <!ENTITY pref_category_datareporting "Data choices">
@@ -142,7 +141,9 @@
 <!ENTITY pref_category_devtools_summary "Remote debugging, paint flashing">
 <!ENTITY pref_developer_paint_flashing "Paint flashing">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
+<!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons "Remember passwords">
+<!ENTITY pref_manage_logins "Manage logins">
 
 <!ENTITY pref_category_home "Home">
 <!ENTITY pref_category_home_summary "Customize your homepage">
