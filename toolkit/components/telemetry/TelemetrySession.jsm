@@ -217,9 +217,11 @@ this.TelemetrySession = Object.freeze({
   },
   /**
    * Used only for testing purposes.
+   * @param {Boolean} [aForceSavePending=true] If true, always saves the ping whether Telemetry
+   *        can send pings or not, which is used for testing.
    */
-  shutdown: function() {
-    return Impl.shutdown(true);
+  shutdown: function(aForceSavePending = true) {
+    return Impl.shutdown(aForceSavePending);
   },
   /**
    * Used only for testing purposes.
@@ -1163,5 +1165,6 @@ let Impl = {
     if (Telemetry.canSend || testing) {
       return this.savePendingPings();
     }
+    return Promise.resolve();
   },
 };
