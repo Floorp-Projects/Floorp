@@ -628,7 +628,6 @@ gtjar.sources += [ thirdparty_source_dir + f for f in [
     'com/nineoldandroids/view/ViewPropertyAnimatorHC.java',
     'com/nineoldandroids/view/ViewPropertyAnimatorICS.java',
     'com/nineoldandroids/view/ViewPropertyAnimatorPreHC.java',
-    'com/readystatesoftware/systembartint/SystemBarTintManager.java',
     'com/squareup/picasso/Action.java',
     'com/squareup/picasso/AssetBitmapHunter.java',
     'com/squareup/picasso/BitmapHunter.java',
