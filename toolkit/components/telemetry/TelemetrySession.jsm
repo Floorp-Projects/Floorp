@@ -286,7 +286,7 @@ this.TelemetrySession = Object.freeze({
    *        can send pings or not, which is used for testing.
    */
   shutdown: function(aForceSavePending = true) {
-    return Impl.shutdown(aForceSavePending);
+    return Impl.shutdownChromeProcess(aForceSavePending);
   },
   /**
    * Used only for testing purposes.
@@ -348,6 +348,8 @@ let Impl = {
   _subsessionStartDate: null,
   // The timer used for daily collections.
   _dailyTimerId: null,
+  // A task performing delayed initialization of the chrome process
+  _delayedInitTask: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -922,11 +924,22 @@ let Impl = {
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
   setupChromeProcess: function setupChromeProcess(testing) {
+    this._initStarted = true;
     if (testing && !this._log) {
       this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
     this._log.trace("setupChromeProcess");
+
+    if (this._delayedInitTask) {
+      this._log.error("setupTelemetry - init task already running");
+      return this._delayedInitTask;
+    }
+
+    if (this._initialized && !testing) {
+      this._log.error("setupTelemetry - already initialized");
+      return Promise.resolve();
+    }
 
     this._sessionStartDate = Policy.now();
     this._subsessionStartDate = this._sessionStartDate;
@@ -951,8 +964,9 @@ let Impl = {
       return Promise.resolve();
     }
 
-    AsyncShutdown.sendTelemetry.addBlocker(
-      "TelemetrySession: shutting down", () => this.shutdown());
+    TelemetryPing.shutdown.addBlocker("TelemetrySession: shutting down",
+                                      () => this.shutdownChromeProcess(),
+                                      () => this._getState());
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
 #ifdef MOZ_WIDGET_ANDROID
@@ -968,23 +982,28 @@ let Impl = {
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
     let deferred = Promise.defer();
-    let delayedTask = new DeferredTask(function* () {
-      this._initialized = true;
+    this._delayedInitTask = new DeferredTask(function* () {
+      try {
+        this._initialized = true;
 
-      this.attachObservers();
-      this.gatherMemory();
+        this.attachObservers();
+        this.gatherMemory();
 
-      Telemetry.asyncFetchTelemetryData(function () {});
-      this._rescheduleDailyTimer();
+        Telemetry.asyncFetchTelemetryData(function () {});
+        this._rescheduleDailyTimer();
 
-      TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
-                                                  () => this._onEnvironmentChange());
+        TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
+                                                    () => this._onEnvironmentChange());
 
-      deferred.resolve();
-
+        deferred.resolve();
+      } catch (e) {
+        deferred.reject();
+      } finally {
+        this._delayedInitTask = null;
+      }
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    delayedTask.arm();
+    this._delayedInitTask.arm();
     return deferred.promise;
   },
 
@@ -1243,23 +1262,57 @@ let Impl = {
   },
 
   /**
-   * This tells TelemetryPing to uninitialize and save any pending pings.
+   * This tells TelemetrySession to uninitialize and save any pending pings.
    * @param testing Optional. If true, always saves the ping whether Telemetry
    *                can send pings or not, which is used for testing.
    */
-  shutdown: function(testing = false) {
+  shutdownChromeProcess: function(testing = false) {
+    this._log.trace("shutdownChromeProcess - testing: " + testing);
     TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
 
-    if (this._dailyTimerId) {
-      Policy.clearDailyTimeout(this._dailyTimerId);
-      this._dailyTimerId = null;
-    }
-    this.uninstall();
-    if (Telemetry.canSend || testing) {
-      return this.savePendingPings();
-    }
-    return Promise.resolve();
-  },
+    let cleanup = () => {
+      TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
+      if (this._dailyTimerId) {
+        Policy.clearDailyTimeout(this._dailyTimerId);
+        this._dailyTimerId = null;
+      }
+      this.uninstall();
+
+      let reset = () => {
+        this._initStarted = false;
+        this._initialized = false;
+      };
+
+      if (Telemetry.canSend || testing) {
+        return this.savePendingPings().then(reset);
+      }
+
+      reset();
+      return Promise.resolve();
+    };
+
+    // We can be in one the following states here:
+    // 1) setupChromeProcess was never called
+    // or it was called and
+    //   2) _delayedInitTask was scheduled, but didn't run yet.
+    //   3) _delayedInitTask is running now.
+    //   4) _delayedInitTask finished running already.
+
+    // This handles 1).
+    if (!this._initStarted) {
+      return Promise.resolve();
+     }
+
+    // This handles 4).
+    if (!this._delayedInitTask) {
+      // We already ran the delayed initialization.
+      return cleanup();
+     }
+
+    // This handles 2) and 3).
+    this._delayedInitTask.disarm();
+    return this._delayedInitTask.finalize().then(cleanup);
+   },
 
   _rescheduleDailyTimer: function() {
     if (this._dailyTimerId) {
@@ -1280,7 +1333,7 @@ let Impl = {
   },
 
   _onDailyTimer: function() {
-    if (!this._initialized) {
+    if (!this._initStarted) {
       if (this._log) {
         this._log.warn("_onDailyTimer - not initialized");
       } else {
@@ -1324,5 +1377,17 @@ let Impl = {
       REASON_TEST_PING,
     ];
     return classicReasons.indexOf(reason) != -1;
+  },
+
+  /**
+   * Get an object describing the current state of this module for AsyncShutdown diagnostics.
+   */
+  _getState: function() {
+    return {
+      initialized: this._initialized,
+      initStarted: this._initStarted,
+      haveDelayedInitTask: !!this._delayedInitTask,
+      dailyTimerScheduled: !!this._dailyTimerId,
+    };
   },
 };
