@@ -355,7 +355,7 @@ class JS_FRIEND_API(BaseProxyHandler)
  * to add an override in CrossCompartmentWrapper. If you don't, you risk
  * compartment mismatches. See bug 945826 comment 0.
  */
-class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
+class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
 {
   public:
     explicit MOZ_CONSTEXPR DirectProxyHandler(const void *aFamily, bool aHasPrototype = false,
