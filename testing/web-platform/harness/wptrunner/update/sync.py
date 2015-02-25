@@ -128,10 +128,10 @@ class UpdateManifest(Step):
 
     provides = ["initial_rev"]
     def create(self, state):
-        import manifest
+        from manifest import manifest, update
         test_manifest = state.test_manifest
         state.initial_rev = test_manifest.rev
-        manifest.update(state.sync["path"], "/", test_manifest)
+        update.update(state.sync["path"], "/", test_manifest)
         manifest.write(test_manifest, os.path.join(state.metadata_path, "MANIFEST.json"))
 
 

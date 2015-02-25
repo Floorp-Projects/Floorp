@@ -11,7 +11,14 @@ import traceback
 import urlparse
 import uuid
 
-from .base import TestExecutor, testharness_result_converter
+from .base import (ExecutorException,
+                   Protocol,
+                   RefTestExecutor,
+                   RefTestImplementation,
+                   TestExecutor,
+                   TestharnessExecutor,
+                   testharness_result_converter,
+                   reftest_result_converter)
 from ..testrunner import Stop
 
 
@@ -20,9 +27,7 @@ here = os.path.join(os.path.split(__file__)[0])
 webdriver = None
 exceptions = None
 
-required_files = [("testharness_runner.html", "", False),
-                  ("testharnessreport.js", "resources/", True)]
-
+extra_timeout = 5
 
 def do_delayed_imports():
     global webdriver
@@ -31,16 +36,14 @@ def do_delayed_imports():
     from selenium.common import exceptions
 
 
-class SeleniumTestExecutor(TestExecutor):
-    def __init__(self, browser, http_server_url, capabilities,
-                 timeout_multiplier=1, debug_args=None, **kwargs):
+class SeleniumProtocol(Protocol):
+    def __init__(self, executor, browser, http_server_url, capabilities, **kwargs):
         do_delayed_imports()
-        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier, debug_args)
+
+        Protocol.__init__(self, executor, browser, http_server_url)
         self.capabilities = capabilities
         self.url = browser.webdriver_url
         self.webdriver = None
-        self.timer = None
-        self.window_id = str(uuid.uuid4())
 
     def setup(self, runner):
         """Connect to browser via Selenium's WebDriver implementation."""
@@ -60,7 +63,7 @@ class SeleniumTestExecutor(TestExecutor):
 
         if not session_started:
             self.logger.warning("Failed to connect to Selenium")
-            self.runner.send_message("init_failed")
+            self.executor.runner.send_message("init_failed")
         else:
             try:
                 self.after_connect()
@@ -68,9 +71,9 @@ class SeleniumTestExecutor(TestExecutor):
                 print >> sys.stderr, traceback.format_exc()
                 self.logger.warning(
                     "Failed to connect to navigate initial page")
-                self.runner.send_message("init_failed")
+                self.executor.runner.send_message("init_failed")
             else:
-                self.runner.send_message("init_succeeded")
+                self.executor.runner.send_message("init_succeeded")
 
     def teardown(self):
         self.logger.debug("Hanging up on Selenium session")
@@ -96,90 +99,155 @@ class SeleniumTestExecutor(TestExecutor):
         self.webdriver.execute_script("document.title = '%s'" %
                                       threading.current_thread().name.replace("'", '"'))
 
-    def run_test(self, test):
-        """Run a single test.
+    def wait(self):
+        while True:
+            try:
+                self.webdriver.execute_async_script("");
+            except exceptions.TimeoutException:
+                pass
+            except (socket.timeout, exceptions.NoSuchWindowException,
+                    exceptions.ErrorInResponseException, IOError):
+                break
+            except Exception as e:
+                self.logger.error(traceback.format_exc(e))
+                break
 
-        This method is independent of the test type, and calls
-        do_test to implement the type-sepcific testing functionality.
-        """
-        # Lock to prevent races between timeouts and other results
-        # This might not be strictly necessary if we need to deal
-        # with the result changing post-hoc anyway (e.g. due to detecting
-        # a crash after we get the data back from webdriver)
-        result = None
-        result_flag = threading.Event()
-        result_lock = threading.Lock()
 
-        timeout = test.timeout * self.timeout_multiplier
+class SeleniumRun(object):
+    def __init__(self, func, webdriver, url, timeout):
+        self.func = func
+        self.result = None
+        self.webdriver = webdriver
+        self.url = url
+        self.timeout = timeout
+        self.result_flag = threading.Event()
 
-        def timeout_func():
-            with result_lock:
-                if not result_flag.is_set():
-                    result_flag.set()
-                    result = (test.result_cls("EXTERNAL-TIMEOUT", None), [])
-                    self.runner.send_message("test_ended", test, result)
-
-        self.timer = threading.Timer(timeout + 10, timeout_func)
-        self.timer.start()
+    def run(self):
+        timeout = self.timeout
 
         try:
-            self.webdriver.set_script_timeout((timeout + 5) * 1000)
+            self.webdriver.set_script_timeout((timeout + extra_timeout) * 1000)
         except exceptions.ErrorInResponseException:
             self.logger.error("Lost webdriver connection")
-            self.runner.send_message("restart_test", test)
             return Stop
 
+        executor = threading.Thread(target=self._run)
+        executor.start()
+
+        flag = self.result_flag.wait(timeout + 2 * extra_timeout)
+        if self.result is None:
+            assert not flag
+            self.result = False, ("EXTERNAL-TIMEOUT", None)
+
+        return self.result
+
+    def _run(self):
         try:
-            result = self.convert_result(test, self.do_test(test, timeout))
+            self.result = True, self.func(self.webdriver, self.url, self.timeout)
         except exceptions.TimeoutException:
-            with result_lock:
-                if not result_flag.is_set():
-                    result_flag.set()
-                    result = (test.result_cls("EXTERNAL-TIMEOUT", None), [])
-            # Clean up any unclosed windows
-            # This doesn't account for the possibility the browser window
-            # is totally hung. That seems less likely since we are still
-            # getting data from marionette, but it might be just as well
-            # to do a full restart in this case
-            # XXX - this doesn't work at the moment because window_handles
-            # only returns OS-level windows (see bug 907197)
-            # while True:
-            #     handles = self.marionette.window_handles
-            #     self.marionette.switch_to_window(handles[-1])
-            #     if len(handles) > 1:
-            #         self.marionette.close()
-            #     else:
-            #         break
-            # Now need to check if the browser is still responsive and restart it if not
-
-        # TODO: try to detect crash here
+            self.result = False, ("EXTERNAL-TIMEOUT", None)
         except (socket.timeout, exceptions.ErrorInResponseException):
-            # This can happen on a crash
-            # Also, should check after the test if the firefox process is still running
-            # and otherwise ignore any other result and set it to crash
-            with result_lock:
-                if not result_flag.is_set():
-                    result_flag.set()
-                    result = (test.result_cls("CRASH", None), [])
+            self.result = False, ("CRASH", None)
+        except Exception as e:
+            message = getattr(e, "message", "")
+            if message:
+                message += "\n"
+            message += traceback.format_exc(e)
+            self.result = False, ("ERROR", e)
         finally:
-            self.timer.cancel()
-
-        with result_lock:
-            if result:
-                self.runner.send_message("test_ended", test, result)
+            self.result_flag.set()
 
 
-class SeleniumTestharnessExecutor(SeleniumTestExecutor):
-    convert_result = testharness_result_converter
+class SeleniumTestharnessExecutor(TestharnessExecutor):
+    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+                 close_after_done=True, capabilities=None, debug_args=None):
+        """Selenium-based executor for testharness.js tests"""
+        TestharnessExecutor.__init__(self, browser, http_server_url,
+                                     timeout_multiplier=timeout_multiplier,
+                                     debug_args=debug_args)
+        self.protocol = SeleniumProtocol(self, browser, http_server_url, capabilities)
+        with open(os.path.join(here, "testharness_webdriver.js")) as f:
+            self.script = f.read()
+        self.close_after_done = close_after_done
+        self.window_id = str(uuid.uuid4())
 
-    def __init__(self, *args, **kwargs):
-        SeleniumTestExecutor.__init__(self, *args, **kwargs)
-        self.script = open(os.path.join(here, "testharness_webdriver.js")).read()
+    def is_alive(self):
+        return self.protocol.is_alive()
 
-    def do_test(self, test, timeout):
-        return self.webdriver.execute_async_script(
-            self.script % {"abs_url": urlparse.urljoin(self.http_server_url, test.url),
-                           "url": test.url,
+    def do_test(self, test):
+        success, data = SeleniumRun(self.do_testharness, self.protocol.webdriver,
+                                    test.url, test.timeout * self.timeout_multiplier).run()
+        if success:
+            return self.convert_result(test, data)
+
+        return (test.result_cls(*data), [])
+
+    def do_testharness(self, webdriver, url, timeout):
+        return webdriver.execute_async_script(
+            self.script % {"abs_url": urlparse.urljoin(self.http_server_url, url),
+                           "url": url,
                            "window_id": self.window_id,
                            "timeout_multiplier": self.timeout_multiplier,
                            "timeout": timeout * 1000})
+
+class SeleniumRefTestExecutor(RefTestExecutor):
+    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+                 screenshot_cache=None, close_after_done=True,
+                 debug_args=None, capabilities=None):
+        """Selenium WebDriver-based executor for reftests"""
+        RefTestExecutor.__init__(self,
+                                 browser,
+                                 http_server_url,
+                                 screenshot_cache=screenshot_cache,
+                                 timeout_multiplier=timeout_multiplier,
+                                 debug_args=debug_args)
+        self.protocol = SeleniumProtocol(self, browser, http_server_url,
+                                         capabilities=capabilities)
+        self.implementation = RefTestImplementation(self)
+        self.close_after_done = close_after_done
+        self.has_window = False
+
+        with open(os.path.join(here, "reftest.js")) as f:
+            self.script = f.read()
+        with open(os.path.join(here, "reftest-wait_webdriver.js")) as f:
+            self.wait_script = f.read()
+
+    def is_alive(self):
+        return self.protocol.is_alive()
+
+    def do_test(self, test):
+        self.logger.info("Test requires OS-level window focus")
+
+        if self.close_after_done and self.has_window:
+            self.protocol.webdriver.close()
+            self.protocol.webdriver.switch_to_window(
+                self.protocol.webdriver.window_handles[-1])
+            self.has_window = False
+
+        if not self.has_window:
+            self.protocol.webdriver.execute_script(self.script)
+            self.protocol.webdriver.switch_to_window(
+                self.protocol.webdriver.window_handles[-1])
+            self.has_window = True
+
+        result = self.implementation.run_test(test)
+
+        return self.convert_result(test, result)
+
+    def screenshot(self, url, timeout):
+        return SeleniumRun(self._screenshot, self.protocol.webdriver,
+                           url, timeout).run()
+
+    def _screenshot(self, webdriver, url, timeout):
+        full_url = urlparse.urljoin(self.http_server_url, url)
+        webdriver.get(full_url)
+
+        webdriver.execute_async_script(self.wait_script)
+
+        screenshot = webdriver.get_screenshot_as_base64()
+
+        # strip off the data:img/png, part of the url
+        if screenshot.startswith("data:image/png;base64,"):
+            screenshot = screenshot.split(",", 1)[1]
+
+        return screenshot

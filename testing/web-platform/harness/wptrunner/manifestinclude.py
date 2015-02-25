@@ -8,6 +8,7 @@ The manifest is represented by a tree of IncludeManifest objects, the root
 representing the file and each subnode representing a subdirectory that should
 be included or excluded.
 """
+import os
 
 from wptmanifest.node import DataNode
 from wptmanifest.backends import conditional
@@ -68,7 +69,14 @@ class IncludeManifest(ManifestItem):
         assert test_url[0] == "/"
         return [item for item in reversed(test_url.split("/")) if item]
 
-    def _add_rule(self, url, direction):
+    def _add_rule(self, test_manifests, url, direction):
+        maybe_path = os.path.abspath(os.path.join(os.curdir, url))
+        if os.path.exists(maybe_path):
+            for manifest, data in test_manifests.iteritems():
+                rel_path = os.path.relpath(maybe_path, data["tests_path"])
+                if ".." not in rel_path.split(os.sep):
+                    url = rel_path
+
         assert direction in ("include", "exclude")
         components = [item for item in reversed(url.split("/")) if item]
 
@@ -84,21 +92,21 @@ class IncludeManifest(ManifestItem):
         skip = False if direction == "include" else True
         node.set("skip", str(skip))
 
-    def add_include(self, url_prefix):
+    def add_include(self, test_manifests, url_prefix):
         """Add a rule indicating that tests under a url path
         should be included in test runs
 
         :param url_prefix: The url prefix to include
         """
-        return self._add_rule(url_prefix, "include")
+        return self._add_rule(test_manifests, url_prefix, "include")
 
-    def add_exclude(self, url_prefix):
+    def add_exclude(self, test_manifests, url_prefix):
         """Add a rule indicating that tests under a url path
         should be excluded from test runs
 
         :param url_prefix: The url prefix to exclude
         """
-        return self._add_rule(url_prefix, "exclude")
+        return self._add_rule(test_manifests, url_prefix, "exclude")
 
 
 def get_manifest(manifest_path):
