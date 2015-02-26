@@ -3,12 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from by import By
-from marionette import Actions
+from marionette_driver.by import By
+from marionette_driver.marionette import Actions
 from marionette_test import MarionetteTestCase
+from marionette_driver.selection import SelectionManager
+from marionette_driver.gestures import long_press_without_contextmenu
+
 from math import ceil, floor
-from selection import SelectionManager
-from gestures import long_press_without_contextmenu
 
 
 class SelectionCaretsTest(MarionetteTestCase):
@@ -30,10 +31,9 @@ class SelectionCaretsTest(MarionetteTestCase):
     def openTestHtml(self, enabled=True):
         '''Open html for testing and locate elements, and enable/disable touch
         caret.'''
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
+        self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["selectioncaret.enabled", %s]]}, marionetteScriptFinished);' %
             ('true' if enabled else 'false'))
-
         test_html = self.marionette.absolute_url('test_selectioncarets.html')
         self.marionette.navigate(test_html)
 

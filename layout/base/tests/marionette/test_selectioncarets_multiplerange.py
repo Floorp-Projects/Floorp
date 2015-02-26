@@ -3,11 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from by import By
-from marionette import Actions
+from marionette_driver.by import By
+from marionette_driver.marionette import Actions
 from marionette_test import MarionetteTestCase
-from selection import SelectionManager
-from gestures import long_press_without_contextmenu
+from marionette_driver.selection import SelectionManager
+from marionette_driver.gestures import long_press_without_contextmenu
 
 
 class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
@@ -21,12 +21,9 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
     def openTestHtml(self, enabled=True):
         # Open html for testing and enable selectioncaret and
         # non-editable support
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
-            ('true' if enabled else 'false'))
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.noneditable", %s);' %
-            ('true' if enabled else 'false'))
+        self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["selectioncaret.enabled", %s],["selectioncaret.noneditable", %s]]}, marionetteScriptFinished);' %
+            ( ('true' if enabled else 'false'),  ('true' if enabled else 'false')))
 
         test_html = self.marionette.absolute_url('test_selectioncarets_multiplerange.html')
         self.marionette.navigate(test_html)

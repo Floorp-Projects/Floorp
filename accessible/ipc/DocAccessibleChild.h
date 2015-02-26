@@ -63,6 +63,12 @@ public:
 
   virtual bool RecvAttributes(const uint64_t& aID,
                               nsTArray<Attribute> *aAttributes) MOZ_OVERRIDE;
+
+  virtual bool RecvCharacterCount(const uint64_t& aID, int32_t* aCount)
+     MOZ_OVERRIDE;
+  virtual bool RecvSelectionCount(const uint64_t& aID, int32_t* aCount)
+     MOZ_OVERRIDE;
+
   virtual bool RecvTextSubstring(const uint64_t& aID,
                                  const int32_t& aStartOffset,
                                  const int32_t& aEndOffset, nsString* aText)

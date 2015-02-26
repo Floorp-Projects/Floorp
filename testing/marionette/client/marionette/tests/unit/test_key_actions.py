@@ -5,8 +5,8 @@
 from marionette_test import (MarionetteTestCase,
                              skip_if_b2g,
                              skip_if_e10s)
-from keys import Keys
-from marionette import Actions
+from marionette_driver.keys import Keys
+from marionette_driver.marionette import Actions
 
 class TestKeyActions(MarionetteTestCase):
 
