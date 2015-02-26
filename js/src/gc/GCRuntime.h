@@ -909,11 +909,11 @@ class GCRuntime
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
     IncrementalProgress beginCompactPhase();
-    IncrementalProgress compactPhase(JS::gcreason::Reason reason);
+    IncrementalProgress compactPhase(JS::gcreason::Reason reason, SliceBudget &sliceBudget);
     void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
-    bool relocateArenas(Zone *zone, JS::gcreason::Reason reason);
+    bool relocateArenas(Zone *zone, JS::gcreason::Reason reason, SliceBudget &sliceBudget);
     void updateAllCellPointersParallel(MovingTracer *trc, Zone *zone);
     void updateAllCellPointersSerial(MovingTracer *trc, Zone *zone);
     void updatePointersToRelocatedCells(Zone *zone);
