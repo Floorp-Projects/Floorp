@@ -637,10 +637,14 @@ impl ToMarionette for WebDriverMessage {
             ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
             GetCookie(ref x) => (Some("getCookies"), Some(x.to_marionette())),
             AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
-            DismissAlert => (None, None), //Unsupported
-            AcceptAlert => (None, None), //Unsupported
-            GetAlertText => (None, None), //Unsupported
-            SendAlertText(_) => (None, None), //Unsupported
+            DismissAlert => (Some("dismissDialog"), None),
+            AcceptAlert => (Some("acceptDialog"), None),
+            GetAlertText => (Some("getTextFromDialog"), None),
+            SendAlertText(ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("value".to_string(), x.to_json());
+                (Some("sendKeysToDialog"), Some(Ok(Json::Object(data))))
+            },
             TakeScreenshot(ref x) => (Some("takeScreenshot"), Some(x.to_marionette())),
         };
 
