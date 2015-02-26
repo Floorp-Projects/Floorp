@@ -8,6 +8,7 @@
 #define MOZILLA_CONTAINERPARSER_H_
 
 #include "nsRefPtr.h"
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -16,7 +17,7 @@ class SourceBufferResource;
 
 class ContainerParser {
 public:
-  ContainerParser();
+  explicit ContainerParser(const nsACString& aType);
   virtual ~ContainerParser() {}
 
   // Return true if aData starts with an initialization segment.
@@ -57,6 +58,7 @@ protected:
   nsRefPtr<LargeDataBuffer> mInitData;
   nsRefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
+  const nsCString mType;
 };
 
 } // namespace mozilla
