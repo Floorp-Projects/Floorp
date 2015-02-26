@@ -146,7 +146,10 @@ function summarizeObject(obj) {
   return obj;
 }
 
-let Scheduler = {
+// In order to expose Scheduler to the unfiltered Cu.import return value variant
+// on B2G we need to save it to `this`.  This does not make it public;
+// EXPORTED_SYMBOLS still controls that in all cases.
+let Scheduler = this.Scheduler = {
 
   /**
    * |true| once we have sent at least one message to the worker.
@@ -268,36 +271,39 @@ let Scheduler = {
     // Grab the kill queue to make sure that we
     // cannot be interrupted by another call to `kill`.
     let killQueue = this._killQueue;
+
+    // Deactivate the queue, to ensure that no message is sent
+    // to an obsolete worker (we reactivate it in the `finally`).
+    // This needs to be done right now so that we maintain relative
+    // ordering with calls to post(), etc.
+    let deferred = Promise.defer();
+    let savedQueue = this.queue;
+    this.queue = deferred.promise;
+
     return this._killQueue = Task.spawn(function*() {
 
       yield killQueue;
       // From this point, and until the end of the Task, we are the
       // only call to `kill`, regardless of any `yield`.
 
-      yield this.queue;
-
-      // Enter critical section: no yield in this block
-      // (we want to make sure that we remain the only
-      // request in the queue).
-
-      if (!this.launched || this.shutdown || !this._worker) {
-        // Nothing to kill
-        this.shutdown = this.shutdown || shutdown;
-        this._worker = null;
-        return null;
-      }
-
-      // Deactivate the queue, to ensure that no message is sent
-      // to an obsolete worker (we reactivate it in the |finally|).
-      let deferred = Promise.defer();
-      this.queue = deferred.promise;
-
-
-      // Exit critical section
-
-      let message = ["Meta_shutdown", [reset]];
+      yield savedQueue;
 
       try {
+        // Enter critical section: no yield in this block
+        // (we want to make sure that we remain the only
+        // request in the queue).
+
+        if (!this.launched || this.shutdown || !this._worker) {
+          // Nothing to kill
+          this.shutdown = this.shutdown || shutdown;
+          this._worker = null;
+          return null;
+        }
+
+        // Exit critical section
+
+        let message = ["Meta_shutdown", [reset]];
+
         Scheduler.latestReceived = [];
         Scheduler.latestSent = [Date.now(), ...message];
 

@@ -43,7 +43,12 @@ types.addDictType("AllocationsRecordingOptions", {
   // The probability we sample any given allocation when recording
   // allocations. Must be between 0.0 and 1.0. Defaults to 1.0, or sampling
   // every allocation.
-  probability: "number"
+  probability: "number",
+
+  // The maximum number of of allocation events to keep in the allocations
+  // log. If new allocations arrive, when we are already at capacity, the oldest
+  // allocation event is lost. This number must fit in a 32 bit signed integer.
+  maxLogLength: "number"
 });
 
 /**
@@ -164,6 +169,9 @@ let MemoryActor = protocol.ActorClass({
     this.dbg.memory.allocationSamplingProbability = options.probability != null
       ? options.probability
       : 1.0;
+    if (options.maxLogLength != null) {
+      this.dbg.memory.maxAllocationsLogLength = options.maxLogLength;
+    }
     this.dbg.memory.trackingAllocationSites = true;
 
     return Date.now();
@@ -253,6 +261,15 @@ let MemoryActor = protocol.ActorClass({
    *          profiling and done only when necessary.
    */
   getAllocations: method(expectState("attached", function() {
+    if (this.dbg.memory.allocationsLogOverflowed) {
+      // Since the last time we drained the allocations log, there have been
+      // more allocations than the log's capacity, and we lost some data. There
+      // isn't anything actionable we can do about this, but put a message in
+      // the browser console so we at least know that it occurred.
+      reportException("MemoryActor.prototype.getAllocations",
+                      "Warning: allocations log overflowed and lost some data.");
+    }
+
     const allocations = this.dbg.memory.drainAllocationsLog()
     const packet = {
       allocations: [],
