@@ -2203,7 +2203,7 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
 
     uint32_t srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
     uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
-    bool strict = parser.pc->sc->strict && !parser.pc->sc->hasExplicitUseStrict();
+    bool strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
 
     // usesSignalHandlers will be clobbered when deserializing
     ScopedJSDeletePtr<AsmJSModule> module(

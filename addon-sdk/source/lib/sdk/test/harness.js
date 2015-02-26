@@ -340,7 +340,7 @@ function getPotentialLeaks() {
       let item = {
         path: matches[1],
         principal: details[1],
-        location: details[2] ? details[2].replace("\\", "/", "g") : undefined,
+        location: details[2] ? details[2].replace(/\\/g, "/") : undefined,
         source: details[3] ? details[3].split(" -> ").reverse() : undefined,
         toString: function() this.location
       };
@@ -364,8 +364,8 @@ function getPotentialLeaks() {
 
       let item = {
         path: matches[1],
-        location: details[1].replace("\\", "/", "g"),
-        source: [details[1].replace("\\", "/", "g")],
+        location: details[1].replace(/\\/g, "/"),
+        source: [details[1].replace(/\\/g, "/")],
         toString: function() this.location
       };
 

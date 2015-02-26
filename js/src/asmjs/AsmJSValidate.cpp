@@ -1548,7 +1548,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         // "use strict" should be added to the source if we are in an implicit
         // strict context, see also comment above addUseStrict in
         // js::FunctionToString.
-        bool strict = parser_.pc->sc->strict && !parser_.pc->sc->hasExplicitUseStrict();
+        bool strict = parser_.pc->sc->strict() && !parser_.pc->sc->hasExplicitUseStrict();
         module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict,
                                          cx_->canUseSignalHandlers());
         if (!module_)

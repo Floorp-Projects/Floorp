@@ -75,42 +75,21 @@ let AboutReader = function(mm, win) {
   let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
   let fontTypeOptions = [
     { name: fontTypeSample,
-      description: gStrings.GetStringFromName("aboutReader.fontType.serif"),
-      value: "serif",
-      linkClass: "serif" },
-    { name: fontTypeSample,
       description: gStrings.GetStringFromName("aboutReader.fontType.sans-serif"),
       value: "sans-serif",
       linkClass: "sans-serif"
     },
+    { name: fontTypeSample,
+      description: gStrings.GetStringFromName("aboutReader.fontType.serif"),
+      value: "serif",
+      linkClass: "serif" },
   ];
 
   let fontType = Services.prefs.getCharPref("reader.font_type");
   this._setupSegmentedButton("font-type-buttons", fontTypeOptions, fontType, this._setFontType.bind(this));
   this._setFontType(fontType);
 
-  let fontSizeSample = gStrings.GetStringFromName("aboutReader.fontSizeSample");
-  let fontSizeOptions = [
-    { name: fontSizeSample,
-      value: 1,
-      linkClass: "font-size1-sample" },
-    { name: fontSizeSample,
-      value: 2,
-      linkClass: "font-size2-sample" },
-    { name: fontSizeSample,
-      value: 3,
-      linkClass: "font-size3-sample" },
-    { name: fontSizeSample,
-      value: 4,
-      linkClass: "font-size4-sample" },
-    { name: fontSizeSample,
-      value: 5,
-      linkClass: "font-size5-sample" }
-  ];
-
-  let fontSize = Services.prefs.getIntPref("reader.font_size");
-  this._setupSegmentedButton("font-size-buttons", fontSizeOptions, fontSize, this._setFontSize.bind(this));
-  this._setFontSize(fontSize);
+  this._setupFontSizeButtons();
 
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
@@ -305,6 +284,63 @@ AboutReader.prototype = {
       name: "reader.font_size",
       value: this._fontSize
     });
+  },
+
+  _setupFontSizeButtons: function() {
+    const FONT_SIZE_MIN = 1;
+    const FONT_SIZE_MAX = 9;
+
+    let currentSize = Services.prefs.getIntPref("reader.font_size");
+    currentSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, currentSize));
+
+    let plusButton = this._doc.getElementById("font-size-plus");
+    let minusButton = this._doc.getElementById("font-size-minus");
+
+    function updateControls() {
+      if (currentSize === FONT_SIZE_MIN) {
+        minusButton.setAttribute("disabled", true);
+      } else {
+        minusButton.removeAttribute("disabled");
+      }
+      if (currentSize === FONT_SIZE_MAX) {
+        plusButton.setAttribute("disabled", true);
+      } else {
+        plusButton.removeAttribute("disabled");
+      }
+    }
+
+    updateControls();
+    this._setFontSize(currentSize);
+
+    plusButton.addEventListener("click", (event) => {
+      if (!event.isTrusted) {
+        return;
+      }
+      event.stopPropagation();
+
+      if (currentSize >= FONT_SIZE_MAX) {
+        return;
+      }
+
+      currentSize++;
+      updateControls();
+      this._setFontSize(currentSize);
+    }, true);
+
+    minusButton.addEventListener("click", (event) => {
+      if (!event.isTrusted) {
+        return;
+      }
+      event.stopPropagation();
+
+      if (currentSize <= FONT_SIZE_MIN) {
+        return;
+      }
+
+      currentSize--;
+      updateControls();
+      this._setFontSize(currentSize);
+    }, true);
   },
 
   _handleDeviceLight: function Reader_handleDeviceLight(newLux) {

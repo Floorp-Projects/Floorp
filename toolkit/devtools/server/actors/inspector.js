@@ -1195,19 +1195,23 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
-    this._destroyed = true;
+    try {
+      this._destroyed = true;
 
-    this.clearPseudoClassLocks();
-    this._activePseudoClassLocks = null;
+      this.clearPseudoClassLocks();
+      this._activePseudoClassLocks = null;
 
-    this._hoveredNode = null;
-    this.rootDoc = null;
+      this._hoveredNode = null;
+      this.rootDoc = null;
 
-    this.reflowObserver.off("reflows", this._onReflows);
-    this.reflowObserver = null;
-    releaseLayoutChangesObserver(this.tabActor);
+      this.reflowObserver.off("reflows", this._onReflows);
+      this.reflowObserver = null;
+      releaseLayoutChangesObserver(this.tabActor);
 
-    events.emit(this, "destroyed");
+      events.emit(this, "destroyed");
+    } catch(e) {
+      console.error(e);
+    }
     protocol.Actor.prototype.destroy.call(this);
   },
 
