@@ -180,6 +180,7 @@ private:
   uint32_t mUpdateID;
 
   MediaPromiseConsumerHolder<TrackBufferAppendPromise> mPendingAppend;
+  const nsCString mType;
 };
 
 } // namespace dom
