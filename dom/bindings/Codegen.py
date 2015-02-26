@@ -10437,8 +10437,12 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
                 }
                 """)
             addUnforgeable = CallOnUnforgeableHolder(self.descriptor,
-                                                     addUnforgeable,
-                                                     "isXray")
+                                                     addUnforgeable)
+            # We only need to do this in the non-Xray case, since in the Xray
+            # case the unforgeables will get added via
+            # XrayOwnNativePropertyKeys.
+            addUnforgeable = CGIfWrapper(CGGeneric(addUnforgeable),
+                                         "!isXray").define()
         else:
             addUnforgeable = ""
 
