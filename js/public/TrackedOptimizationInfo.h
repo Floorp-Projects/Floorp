@@ -203,6 +203,8 @@ namespace JS {
       "can't inline: not hot enough")                                   \
     _(CantInlineNotInDispatch,                                          \
       "can't inline: not in dispatch table")                            \
+    _(CantInlineUnreachable,                                            \
+      "can't inline: unreachable due to incomplete types for this/arguments") \
     _(CantInlineNativeBadForm,                                          \
       "can't inline native: bad form (arity mismatch/constructing)")    \
     _(CantInlineNativeBadType,                                          \
