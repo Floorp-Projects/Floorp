@@ -2882,17 +2882,11 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
         return InliningStatus_NotInlined;
 
     // Generic constructor of SIMD valuesX4.
-    MIRType simdType = MIRType(-1);  // initialize to silence GCC warning
-    switch (descr->type()) {
-      case SimdTypeDescr::TYPE_INT32:
-        simdType = MIRType_Int32x4;
-        break;
-      case SimdTypeDescr::TYPE_FLOAT32:
-        simdType = MIRType_Float32x4;
-        break;
-      case SimdTypeDescr::TYPE_FLOAT64:
-        return InliningStatus_NotInlined; // :TODO: NYI (Bug 1124205)
-    }
+    MIRType simdType = SimdTypeDescrToMIRType(descr->type());
+
+    // TODO Happens for TYPE_FLOAT64 (Bug 1124205)
+    if (simdType == MIRType_Undefined)
+        return InliningStatus_NotInlined;
 
     // We do not inline SIMD constructors if the number of arguments does not
     // match the number of lanes.
@@ -2923,17 +2917,6 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
-}
-
-static MIRType
-SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
-{
-    switch (type) {
-      case SimdTypeDescr::TYPE_FLOAT32:   return MIRType_Float32x4;
-      case SimdTypeDescr::TYPE_INT32:     return MIRType_Int32x4;
-      case SimdTypeDescr::TYPE_FLOAT64:   break;
-    }
-    MOZ_CRASH("unexpected SimdTypeDescr");
 }
 
 bool
