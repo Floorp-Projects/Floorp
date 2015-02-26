@@ -45,10 +45,11 @@ static MOZ_CONSTEXPR_VAR Register StackPointer = esp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = ebp;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm7;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm7;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = xmm7;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm7;
 
 // Avoid ebp, which is the FramePointer, which is unavailable in some modes.

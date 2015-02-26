@@ -3662,8 +3662,10 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
         lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
     else if (rval->type() == MIRType_Double)
         lir->setOperand(0, useFixed(rval, ReturnDoubleReg));
-    else if (IsSimdType(rval->type()))
-        lir->setOperand(0, useFixed(rval, ReturnSimdReg));
+    else if (rval->type() == MIRType_Int32x4)
+        lir->setOperand(0, useFixed(rval, ReturnInt32x4Reg));
+    else if (rval->type() == MIRType_Float32x4)
+        lir->setOperand(0, useFixed(rval, ReturnFloat32x4Reg));
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
     else
