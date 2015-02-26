@@ -5,7 +5,14 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
+  () => Cc["@mozilla.org/datareporting/service;1"]
+          .getService(Ci.nsISupports)
+          .wrappedJSObject);
 
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
 // implement the nsIAppInfo interface, which is needed by Services.jsm and
@@ -13,11 +20,36 @@ Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
+let gGlobalScope = this;
+function loadAddonManager() {
+  let ns = {};
+  Cu.import("resource://gre/modules/Services.jsm", ns);
+  let head = "../../../mozapps/extensions/test/xpcshell/head_addons.js";
+  let file = do_get_file(head);
+  let uri = ns.Services.io.newFileURI(file);
+  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  startupManager();
+}
+
 function getSimpleMeasurementsFromTelemetryPing() {
   return TelemetrySession.getPayload().simpleMeasurements;
 }
 
+function initialiseTelemetry() {
+  // Send the needed startup notifications to the datareporting service
+  // to ensure that it has been initialized.
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDatareportingService.observe(null, "app-startup", null);
+    gDatareportingService.observe(null, "profile-after-change", null);
+  }
+
+  return TelemetryPing.setup().then(TelemetrySession.setup);
+}
+
 function run_test() {
+  // Telemetry needs the AddonManager.
+  loadAddonManager();
   // Make profile available for |TelemetrySession.shutdown()|.
   do_get_profile();
 
@@ -27,7 +59,7 @@ function run_test() {
 }
 
 add_task(function* actualTest() {
-  yield TelemetrySession.setup();
+  yield initialiseTelemetry();
 
   // Test the module logic
   let tmp = {};
@@ -65,7 +97,7 @@ add_task(function* actualTest() {
   do_check_true(simpleMeasurements.bar > 1); // bar was included
   do_check_eq(undefined, simpleMeasurements.baz); // baz wasn't included since it wasn't added
 
-  yield TelemetrySession.shutdown();
+  yield TelemetrySession.shutdown(false);
 
   do_test_finished();
 });

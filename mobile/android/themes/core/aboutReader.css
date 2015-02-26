@@ -33,12 +33,48 @@ body {
   font-family: serif;
 }
 
+.font-size1 {
+  font-size: 10px;
+}
+
+.font-size2 {
+  font-size: 12px;
+}
+
+.font-size3 {
+  font-size: 14px;
+}
+
+.font-size4  {
+  font-size: 16px;
+}
+
+.font-size5 {
+  font-size: 18px;
+}
+
+.font-size6 {
+  font-size: 20px;
+}
+
+.font-size7 {
+  font-size: 22px;
+}
+
+.font-size8 {
+  font-size: 24px;
+}
+
+.font-size9 {
+  font-size: 26px;
+}
+
 .message {
   margin-top: 40px;
   display: none;
   text-align: center;
   width: 100%;
-  font-size: 16px;
+  font-size: 0.9rem;
 }
 
 .header {
@@ -65,7 +101,7 @@ body {
 }
 
 .header > h1 {
-  font-size: 2.625em;
+  font-size: 1.33rem;
   font-weight: 700;
   line-height: 1.1em;
   width: 100%;
@@ -107,66 +143,19 @@ body {
   color: #aaaaaa;
 }
 
-.font-size1 > body > .header > h1 {
-  font-size: 27px;
-}
-
-.font-size2 > body > .header > h1 {
-  font-size: 29px;
-}
-
-.font-size3 > body > .header > h1 {
-  font-size: 31px;
-}
-
-.font-size4 > body > .header > h1 {
-  font-size: 33px;
-}
-
-.font-size5 > body > .header > h1 {
-  font-size: 35px;
-}
-
 /* This covers caption, domain, and credits
    texts in the reader UI */
 
-.font-size1 > body > .content .wp-caption-text,
-.font-size1 > body > .content figcaption,
-.font-size1 > body > .header > .domain,
-.font-size1 > body > .header > .credits {
-  font-size: 10px;
-}
-
-.font-size2 > body > .content .wp-caption-text,
-.font-size2 > body > .content figcaption,
-.font-size2 > body > .header > .domain,
-.font-size2 > body > .header > .credits {
-  font-size: 13px;
-}
-
-.font-size3 > body > .content .wp-caption-text,
-.font-size3 > body > .content figcaption,
-.font-size3 > body > .header > .domain,
-.font-size3 > body > .header > .credits {
-  font-size: 15px;
-}
-
-.font-size4 > body > .content .wp-caption-text,
-.font-size4 > body > .content figcaption,
-.font-size4 > body > .header > .domain,
-.font-size4 > body > .header > .credits {
-  font-size: 17px;
-}
-
-.font-size5 > body > .content .wp-caption-text,
-.font-size5 > body > .content figcaption,
-.font-size5 > body > .header > .domain,
-.font-size5 > body > .header > .credits {
-  font-size: 19px;
+.content .wp-caption-text,
+.content figcaption,
+.header > .domain,
+.header > .credits {
+  font-size: 0.9rem;
 }
 
 .content {
   display: none;
+  font-size: 1rem;
 }
 
 .content a {
@@ -295,31 +284,6 @@ body {
   list-style: decimal !important;
 }
 
-.font-size1-sample,
-.font-size1 > body > .content {
-  font-size: 14px !important;
-}
-
-.font-size2-sample,
-.font-size2 > body > .content {
-  font-size: 16px !important;
-}
-
-.font-size3-sample,
-.font-size3 > body > .content {
-  font-size: 18px !important;
-}
-
-.font-size4-sample,
-.font-size4 > body > .content {
-  font-size: 20px !important;
-}
-
-.font-size5-sample,
-.font-size5 > body > .content {
-  font-size: 22px !important;
-}
-
 .toolbar {
   font-family: "Clear Sans",sans-serif;
   transition-property: visibility, opacity;
@@ -361,7 +325,8 @@ body {
 }
 
 /* Remove dotted border when button is focused */
-.button::-moz-focus-inner {
+.button::-moz-focus-inner,
+#font-size-buttons > button::-moz-focus-inner {
   border: 0;
 }
 
@@ -427,6 +392,7 @@ body {
 }
 
 #font-type-buttons,
+#font-size-buttons,
 .segmented-button {
   display: flex;
   flex-direction: row;
@@ -436,11 +402,20 @@ body {
 }
 
 #font-type-buttons > li,
+#font-size-buttons > button,
 .segmented-button > li {
-  width: 50px; /* combined with flex, this acts as a minimum width */
   flex: 1 0 auto;
   text-align: center;
   line-height: 20px;
+}
+
+#font-type-buttons > li,
+#font-size-buttons > button {
+  width: 100px; /* combined with flex, this acts as a minimum width */
+}
+
+.segmented-button > li {
+  width: 50px; /* combined with flex, this acts as a minimum width */
 }
 
 #font-type-buttons > li {
@@ -451,6 +426,7 @@ body {
   border-left: 1px solid #B5B5B5;
 }
 
+#font-size-buttons > button:first-child,
 .segmented-button > li:first-child {
   border-left: 0px;
 }
@@ -496,6 +472,24 @@ body {
   font-size: 12px;
 }
 
+.minus-button,
+.plus-button {
+  background-color: transparent;
+  border: 0;
+  height: 30px;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.minus-button {
+  background-size: 24px 6px;
+}
+
+.plus-button {
+  background-size: 24px 24px;
+}
+
  /* desktop-only controls */
 .close-button,
 .list-button {
@@ -518,6 +512,14 @@ body {
   background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
 }
 
+.minus-button {
+  background-image: url('chrome://browser/skin/images/reader-minus-mdpi.png');
+}
+
+.plus-button {
+  background-image: url('chrome://browser/skin/images/reader-plus-mdpi.png');
+}
+
 @media screen and (min-resolution: 1.25dppx) {
   .dropdown-arrow {
     background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-hdpi.png');
@@ -537,6 +539,14 @@ body {
 
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-hdpi.png');
   }
 }
 
@@ -559,6 +569,14 @@ body {
 
   .style-button {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-xhdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-xhdpi.png');
   }
 }
 

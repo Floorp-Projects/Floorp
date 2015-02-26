@@ -8,6 +8,14 @@
  */
 let WaterfallView = Heritage.extend(DetailsSubview, {
 
+  observedPrefs: [
+    "hidden-markers"
+  ],
+
+  rerenderPrefs: [
+    "hidden-markers"
+  ],
+
   rangeChangeDebounceTime: 10, // ms
 
   /**
@@ -16,7 +24,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
-    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#waterfall-view"), TIMELINE_BLUEPRINT);
+    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#waterfall-view"));
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
 
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
@@ -26,6 +34,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.waterfall.on("unselected", this._onMarkerSelected);
     this.details.on("resize", this._onResize);
 
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    this.waterfall.setBlueprint(blueprint);
     this.waterfall.recalculateBounds();
   },
 
@@ -77,6 +87,14 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   _onResize: function () {
     this.waterfall.recalculateBounds();
     this.render();
+  },
+
+  /**
+   * Called whenever an observed pref is changed.
+   */
+  _onObservedPrefChange: function(_, prefName) {
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    this.waterfall.setBlueprint(blueprint);
   },
 
   toString: () => "[object WaterfallView]"

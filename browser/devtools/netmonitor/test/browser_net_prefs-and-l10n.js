@@ -35,9 +35,6 @@ function test() {
     function testPrefs() {
       let { Prefs } = aMonitor.panelWin;
 
-      is(Prefs._root, "devtools.netmonitor",
-        "The preferences object should have a correct root path.");
-
       is(Prefs.networkDetailsWidth,
         Services.prefs.getIntPref("devtools.netmonitor.panes-network-details-width"),
         "Getting a pref should work correctly.");
