@@ -73,8 +73,8 @@ let AboutReaderListener = {
 
           // The loaded page may have changed while we were parsing the document.
           // Make sure we've got the current one.
-          let currentURL = Services.io.newURI(content.document.documentURI, null, null).specIgnoringRef;
-          if (article.url !== currentURL) {
+          let url = Services.io.newURI(content.document.documentURI, null, null).spec;
+          if (article.url !== url) {
             return;
           }
 
