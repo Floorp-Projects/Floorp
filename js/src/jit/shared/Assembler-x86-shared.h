@@ -88,25 +88,25 @@ class Operand
     Kind kind() const {
         return kind_;
     }
-    Registers::Code reg() const {
+    Register::Code reg() const {
         MOZ_ASSERT(kind() == REG);
-        return (Registers::Code)base_;
+        return Register::Code(base_);
     }
-    Registers::Code base() const {
+    Register::Code base() const {
         MOZ_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
-        return (Registers::Code)base_;
+        return Register::Code(base_);
     }
-    Registers::Code index() const {
+    Register::Code index() const {
         MOZ_ASSERT(kind() == MEM_SCALE);
-        return (Registers::Code)index_;
+        return Register::Code(index_);
     }
     Scale scale() const {
         MOZ_ASSERT(kind() == MEM_SCALE);
         return scale_;
     }
-    FloatRegisters::Code fpu() const {
+    FloatRegister::Code fpu() const {
         MOZ_ASSERT(kind() == FPREG);
-        return (FloatRegisters::Code)base_;
+        return FloatRegister::Code(base_);
     }
     int32_t disp() const {
         MOZ_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);

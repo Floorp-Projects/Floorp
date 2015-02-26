@@ -853,8 +853,8 @@ class ABIArg
   private:
     Kind kind_;
     union {
-        Registers::Code gpr_;
-        FloatRegisters::Code fpu_;
+        Register::Code gpr_;
+        FloatRegister::Code fpu_;
         uint32_t offset_;
     } u;
 
