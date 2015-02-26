@@ -29,6 +29,17 @@ exports.testGetAndSet = function(assert) {
                    "preferences-service should read from " +
                    "application-wide preferences service");
 
+  // test getting a pref that does not exist,
+  // and where we provide no default
+  assert.equal(
+      prefs.get("test_dne_get_pref", "default"),
+      "default",
+      "default was used for a pref that does not exist");
+  assert.equal(
+      prefs.get("test_dne_get_pref"),
+      undefined,
+      "undefined was returned for a pref that does not exist with no default");
+
   prefs.set("test_set_get_pref.integer", 1);
   assert.equal(prefs.get("test_set_get_pref.integer"), 1,
                    "set/get integer preference should work");

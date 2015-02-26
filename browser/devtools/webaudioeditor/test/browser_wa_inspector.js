@@ -29,12 +29,7 @@ add_task(function*() {
     "InspectorView tabs view should be hidden when no node's selected.");
 
   // Wait for the node to be set as well as the inspector to come fully into the view
-  let nodeSet = Promise.all([
-    once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET),
-    once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
-  ]);
-  click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  yield nodeSet;
+  yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]), true);
 
   ok(InspectorView.isVisible(), "InspectorView shown once node selected.");
   ok(!isVisible($("#web-audio-editor-details-pane-empty")),
@@ -45,9 +40,7 @@ add_task(function*() {
   is($("#web-audio-editor-tabs").selectedIndex, 0,
     "default tab selected should be the parameters tab.");
 
-  nodeSet = once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
-  click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield nodeSet;
+  yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[2]));
 
   yield teardown(target);
 });
