@@ -530,9 +530,9 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.pop(ecx); // Get bailoutInfo outparam.
 
     // Common size of stuff we've pushed.
-    const uint32_t BailoutDataSize = sizeof(void *) + // frameClass
-                                   sizeof(double) * FloatRegisters::Total +
-                                   sizeof(void *) * Registers::Total;
+    static const uint32_t BailoutDataSize = 0
+        + sizeof(void *) // frameClass
+        + sizeof(RegisterDump);
 
     // Remove both the bailout frame and the topmost Ion frame's stack.
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
