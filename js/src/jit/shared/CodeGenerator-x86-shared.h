@@ -252,6 +252,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitFloat32x4(LFloat32x4 *ins);
     void visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4 *ins);
     void visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4 *ins);
+    void visitSimdReinterpretCast(LSimdReinterpretCast *lir);
     void visitSimdExtractElementI(LSimdExtractElementI *lir);
     void visitSimdExtractElementF(LSimdExtractElementF *lir);
     void visitSimdInsertElementI(LSimdInsertElementI *lir);
