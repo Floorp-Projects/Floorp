@@ -2229,8 +2229,9 @@ private:
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
 
+    NS_ConvertUTF8toUTF16 local(mSpec);
     RequestOrUSVString requestInfo;
-    *requestInfo.SetAsUSVString().ToAStringPtr() = NS_ConvertUTF8toUTF16(mSpec);
+    requestInfo.SetAsUSVString().Rebind(local.Data(), local.Length());
 
     RootedDictionary<RequestInit> reqInit(aCx);
     reqInit.mMethod.Construct(mMethod);
