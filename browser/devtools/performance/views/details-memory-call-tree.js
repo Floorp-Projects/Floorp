@@ -62,7 +62,7 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    */
   _prepareCallTree: function (allocations, { startTime, endTime }, options) {
     let samples = RecordingUtils.getSamplesFromAllocations(allocations);
-    let invertTree = PerformanceController.getPref("invert-call-tree");
+    let invertTree = PerformanceController.getOption("invert-call-tree");
 
     let threadNode = new ThreadNode(samples,
       { startTime, endTime, invertTree });

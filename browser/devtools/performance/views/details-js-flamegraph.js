@@ -53,10 +53,10 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
     let samples = profile.threads[0].samples;
 
     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
-      invertStack: PerformanceController.getPref("invert-flame-graph"),
-      flattenRecursion: PerformanceController.getPref("flatten-tree-recursion"),
-      filterFrames: !PerformanceController.getPref("show-platform-data") && FrameNode.isContent,
-      showIdleBlocks: PerformanceController.getPref("show-idle-blocks") && L10N.getStr("table.idle")
+      invertStack: PerformanceController.getOption("invert-flame-graph"),
+      flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
+      filterFrames: !PerformanceController.getOption("show-platform-data") && FrameNode.isContent,
+      showIdleBlocks: PerformanceController.getOption("show-idle-blocks") && L10N.getStr("table.idle")
     });
 
     this.graph.setData({ data,

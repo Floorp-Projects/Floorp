@@ -1406,10 +1406,29 @@
      *   Stack: => intrinsicHolder
      */ \
     macro(JSOP_BINDINTRINSIC, 145, "bindintrinsic", NULL, 5,  0,  1, JOF_ATOM|JOF_NAME|JOF_SET) \
-    \
+    /*
+     * Initialize a non-configurable, non-writable, non-enumerable data-property on an object.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
+    macro(JSOP_INITLOCKEDPROP, 146, "initlockedprop", NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a non-enumerable data-property on an object.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
+    macro(JSOP_INITHIDDENPROP, 147,"inithiddenprop", NULL, 5,  2,  1,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
     /* Unused. */ \
-    macro(JSOP_UNUSED146,     146,"unused146", NULL,      1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED147,     147,"unused147", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  JOF_BYTE) \
     \
     /*
