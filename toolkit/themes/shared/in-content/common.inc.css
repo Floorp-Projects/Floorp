@@ -548,6 +548,7 @@ xul|*#categories[keyboard-navigation="true"]:-moz-focusring > xul|*.category[cur
   padding-bottom: 2px;
   -moz-padding-start: 9px;
   margin: 0;
+  -moz-user-select: none;
 }
 
 *|*.category-icon {
@@ -569,6 +570,7 @@ xul|*#categories[keyboard-navigation="true"]:-moz-focusring > xul|*.category[cur
   font-weight: normal;
   line-height: 40px;
   margin: 0;
+  -moz-user-select: none;
 }
 
 /* File fields */

@@ -67,6 +67,7 @@
           let packagedAppLocation = getTestFilePath("app");
 
           yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield waitForUpdate(win, "project-validated");
 
           let panelNode = win.document.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");

@@ -103,8 +103,10 @@ function nextTick() {
 }
 
 function waitForUpdate(win, update) {
+  info("Wait: " + update);
   let deferred = promise.defer();
   win.AppManager.on("app-manager-update", function onUpdate(e, what) {
+    info("Got: " + what);
     if (what !== update) {
       return;
     }
