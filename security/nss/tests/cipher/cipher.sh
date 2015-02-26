@@ -124,7 +124,7 @@ cipher_cleanup()
 # built and the cipher suite run as part of an nss-softoken build. 
 if [ ! -x ${DIST}/${OBJDIR}/bin/bltest${PROG_SUFFIX} ]; then
     echo "bltest not built, skipping this test." >> ${LOGFILE}
-    res = 0
+    res=0
     html_msg $res $EXP_RET "$TESTNAME"
     return 0
 fi

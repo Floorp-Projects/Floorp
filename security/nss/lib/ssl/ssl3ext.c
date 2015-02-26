@@ -914,8 +914,9 @@ ssl3_ClientHandleStatusRequestXtn(sslSocket *ss, PRUint16 ex_type,
                                  SECItem *data)
 {
     /* The echoed extension must be empty. */
-    if (data->len != 0)
-       return SECFailure;
+    if (data->len != 0) {
+       return SECSuccess;  /* Ignore the extension. */
+    }
 
     /* Keep track of negotiated extensions. */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
@@ -1365,8 +1366,9 @@ SECStatus
 ssl3_ClientHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
                                   SECItem *data)
 {
-    if (data->len != 0)
-        return SECFailure;
+    if (data->len != 0) {
+        return SECSuccess;  /* Ignore the extension. */
+    }
 
     /* Keep track of negotiated extensions. */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;

@@ -929,14 +929,13 @@ extern SECStatus CERT_FindNSCertTypeExtension
 
 extern char * CERT_FindNSStringExtension (CERTCertificate *cert, int oidtag);
 
-extern SECStatus CERT_FindIssuerCertExtension
-   (CERTCertificate *cert, int tag, SECItem *value);
-
 extern SECStatus CERT_FindCertExtensionByOID
    (CERTCertificate *cert, SECItem *oid, SECItem *value);
 
-extern char *CERT_FindCertURLExtension (CERTCertificate *cert, int tag, 
-								int catag);
+/* Find a URL extension in the cert.
+** The caller must free the result string using PORT_Free.
+*/
+extern char *CERT_FindCertURLExtension (CERTCertificate *cert, SECOidTag tag);
 
 /* Returns the decoded value of the authKeyID extension.
 **   Note that this uses passed in the arena to allocate storage for the result
