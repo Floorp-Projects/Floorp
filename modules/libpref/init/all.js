@@ -1362,7 +1362,8 @@ pref("network.http.tcp_keepalive.short_lived_idle_time", 10);
 pref("network.http.tcp_keepalive.long_lived_connections", true);
 pref("network.http.tcp_keepalive.long_lived_idle_time", 600);
 
-pref("network.http.enforce-framing.http1", false);
+pref("network.http.enforce-framing.http1", false); // should be named "strict"
+pref("network.http.enforce-framing.soft", true);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -1587,6 +1588,9 @@ pref("network.dnsCacheExpirationGracePeriod", 60);
 
 // This preference can be used to turn off DNS prefetch.
 pref("network.dns.disablePrefetch", false);
+
+// Contols whether or not "localhost" should resolve when offline
+pref("network.dns.offline-localhost", true);
 
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.

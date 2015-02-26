@@ -20,12 +20,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             }
             catch(e) {}
             """)
-        self.marionette.execute_script("""
-            SpecialPowers.setBoolPref('dom.ipc.browser_frames.oop_by_default', true);
-            """)
-        self.marionette.execute_script("""
-            SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-            """)
+        self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["dom.ipc.browser_frames.oop_by_default", true], ["dom.mozBrowserFramesEnabled", true]]}, marionetteScriptFinished);')
 
         with self.marionette.using_context('chrome'):
             self.multi_process_browser = self.marionette.execute_script("""
@@ -37,7 +33,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
 
     def test_remote_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.execute_async_script(
+            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -58,7 +55,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
     def test_remote_frame_revisit(self):
         # test if we can revisit a remote frame (this takes a different codepath)
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.execute_async_script(
+            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -91,7 +89,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
     def test_we_can_switch_to_a_remote_frame_by_index(self):
         # test if we can revisit a remote frame (this takes a different codepath)
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.execute_async_script(
+            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -125,14 +124,14 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
                 SpecialPowers.clearUserPref('dom.ipc.browser_frames.oop_by_default');
                 """)
         else:
-            self.marionette.execute_script("""
-                SpecialPowers.setBoolPref('dom.ipc.browser_frames.oop_by_default', %s);
-                """ % 'true' if self.oop_by_default else 'false')
+             self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["dom.ipc.browser_frames.oop_by_default", %s]]}, marionetteScriptFinished);' %
+            ('true' if self.oop_by_default else 'false'))
         if self.mozBrowserFramesEnabled is None:
             self.marionette.execute_script("""
                 SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
                 """)
         else:
-            self.marionette.execute_script("""
-                SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', %s);
-                """ % 'true' if self.mozBrowserFramesEnabled else 'false')
+            self.marionette.execute_async_script(
+            'SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", %s]]}, marionetteScriptFinished);' %
+            ('true' if self.mozBrowserFramesEnabled else 'false'))

@@ -5,6 +5,7 @@
  */
 
 #include "ServiceWorkerClient.h"
+#include "ServiceWorkerContainer.h"
 
 #include "mozilla/dom/MessageEvent.h"
 #include "nsGlobalWindow.h"
@@ -59,16 +60,23 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    ErrorResult result;
+    dom::Navigator* navigator = window->GetNavigator(result);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.ErrorCode();
+    }
+
+    nsRefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();
     AutoJSAPI jsapi;
     jsapi.Init(window);
     JSContext* cx = jsapi.cx();
 
-    return DispatchDOMEvent(cx, window);
+    return DispatchDOMEvent(cx, container);
   }
 
 private:
   NS_IMETHOD
-  DispatchDOMEvent(JSContext* aCx, nsGlobalWindow* aTargetWindow)
+  DispatchDOMEvent(JSContext* aCx, ServiceWorkerContainer* aTargetContainer)
   {
     AssertIsOnMainThread();
 
@@ -84,7 +92,7 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMMessageEvent> event = new MessageEvent(aTargetWindow,
+    nsCOMPtr<nsIDOMMessageEvent> event = new MessageEvent(aTargetContainer,
                                                           nullptr, nullptr);
     nsresult rv =
       event->InitMessageEvent(NS_LITERAL_STRING("message"),
@@ -101,7 +109,7 @@ private:
 
     event->SetTrusted(true);
     bool status = false;
-    aTargetWindow->DispatchEvent(event, &status);
+    aTargetContainer->DispatchEvent(event, &status);
 
     if (!status) {
       return NS_ERROR_FAILURE;
