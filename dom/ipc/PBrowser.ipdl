@@ -31,7 +31,6 @@ using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::ZoomConstraints from "FrameMetrics.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
-using mozilla::layout::ScrollingBehavior from "mozilla/layout/RenderFrameUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using nscolor from "nsColor.h";
@@ -474,8 +473,7 @@ parent:
     async RemotePaintIsReady();
 
     sync GetRenderFrameInfo(PRenderFrame aRenderFrame)
-        returns (ScrollingBehavior scrolling,
-                 TextureFactoryIdentifier textureFactoryIdentifier,
+        returns (TextureFactoryIdentifier textureFactoryIdentifier,
                  uint64_t layersId);
 
     /**
@@ -496,7 +494,6 @@ child:
      */
     Show(nsIntSize size,
          ShowInfo info,
-         ScrollingBehavior scrolling,
          TextureFactoryIdentifier textureFactoryIdentifier,
          uint64_t layersId,
          nullable PRenderFrame renderFrame,
