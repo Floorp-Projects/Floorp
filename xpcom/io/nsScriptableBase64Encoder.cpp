@@ -17,8 +17,7 @@ nsScriptableBase64Encoder::EncodeToCString(nsIInputStream* aStream,
                                            uint32_t aLength,
                                            nsACString& aResult)
 {
-  Base64EncodeInputStream(aStream, aResult, aLength);
-  return NS_OK;
+  return Base64EncodeInputStream(aStream, aResult, aLength);
 }
 
 /* AString encodeToString (in nsIInputStream stream, in unsigned long length); */
@@ -27,6 +26,5 @@ nsScriptableBase64Encoder::EncodeToString(nsIInputStream* aStream,
                                           uint32_t aLength,
                                           nsAString& aResult)
 {
-  Base64EncodeInputStream(aStream, aResult, aLength);
-  return NS_OK;
+  return Base64EncodeInputStream(aStream, aResult, aLength);
 }
