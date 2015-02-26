@@ -7,6 +7,10 @@
 #ifndef gtest_utils_h__
 #define gtest_utils_h__
 
+#define GTEST_HAS_RTTI 0
+#include "gtest/gtest.h"
+#include "test_io.h"
+
 namespace nss_test {
 
 // Gtest utilities
@@ -15,6 +19,9 @@ class Timeout : public PollTarget {
   Timeout(int32_t timer_ms) : handle_(nullptr), timed_out_(false) {
     Poller::Instance()->SetTimer(timer_ms, this, &Timeout::ExpiredCallback,
                                  &handle_);
+  }
+  ~Timeout() {
+    Cancel();
   }
 
   static void ExpiredCallback(PollTarget* target, Event event) {

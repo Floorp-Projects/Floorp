@@ -226,7 +226,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     }
     html_msg()
     {
-        if [ "$1" -ne "$2" ] ; then
+        if [ $1 -ne $2 ] ; then
             html_failed "$3" "$4"
         else
             html_passed "$3" "$4"

@@ -45,7 +45,7 @@ Usage(char *progName)
     FPS "\t\t [-c key_cipher] [-C cert_cipher]\n"
         "\t\t [-m | --key_len keyLen] [--cert_key_len certKeyLen] [-v]\n");
     FPS "\t\t [-k slotpwfile | -K slotpw]\n"
-		"\t\t [-w p12filepwfile | -W p12filefilepw]\n");
+        "\t\t [-w p12filepwfile | -W p12filepw]\n");
 
     exit(PK12UERR_USAGE);
 }
@@ -101,9 +101,6 @@ static p12uContext *
 p12u_InitContext(PRBool fileImport, char *filename)
 {
     p12uContext *p12cxt;
-    PRBool fileExist;
-
-    fileExist = fileImport;
 
     p12cxt = PORT_ZNew(p12uContext);
     if(!p12cxt) {

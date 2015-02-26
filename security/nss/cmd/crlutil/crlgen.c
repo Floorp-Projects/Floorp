@@ -1169,7 +1169,7 @@ crlgen_setNextDataFn_field(CRLGENGeneratorData *crlGenData, void *str,
 
     switch (crlGenData->contextId) {
       case CRLGEN_CHANGE_RANGE_CONTEXT:
-          if (dtype != CRLGEN_TYPE_DIGIT || dtype != CRLGEN_TYPE_DIGIT_RANGE) {
+          if (dtype != CRLGEN_TYPE_DIGIT && dtype != CRLGEN_TYPE_DIGIT_RANGE) {
               crlgen_PrintError(crlGenData->parsedLineNum,
                                 "range value should have "
                                 "numeric or numeric range values.\n");
