@@ -293,6 +293,11 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
   if (!CanHaveTextOverflow(aBuilder, aBlockFrame)) {
     return nullptr;
   }
+  nsIScrollableFrame* scrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
+  if (scrollableFrame && scrollableFrame->IsTransformingByAPZ()) {
+    // If the APZ is actively scrolling this, don't bother with markers.
+    return nullptr;
+  }
   nsAutoPtr<TextOverflow> textOverflow(new TextOverflow);
   textOverflow->Init(aBuilder, aBlockFrame);
   return textOverflow.forget();
@@ -666,14 +671,20 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
 }
 
 /* static */ bool
+TextOverflow::HasClippedOverflow(nsIFrame* aBlockFrame)
+{
+  const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
+  return style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
+         style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
+}
+
+/* static */ bool
 TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
                                   nsIFrame*             aBlockFrame)
 {
-  const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
   // Nothing to do for text-overflow:clip or if 'overflow-x:visible' or if
   // we're just building items for event processing or image visibility.
-  if ((style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
-       style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP) ||
+  if (HasClippedOverflow(aBlockFrame) ||
       IsHorizontalOverflowVisible(aBlockFrame) ||
       aBuilder->IsForEventDelivery() || aBuilder->IsForImageVisibility()) {
     return false;

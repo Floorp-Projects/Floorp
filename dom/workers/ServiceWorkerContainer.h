@@ -31,6 +31,7 @@ public:
   IMPL_EVENT_HANDLER(controllerchange)
   IMPL_EVENT_HANDLER(reloadpage)
   IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(message)
 
   explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow);
 

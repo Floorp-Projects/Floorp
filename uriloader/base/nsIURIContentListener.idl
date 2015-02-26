@@ -16,7 +16,7 @@ interface nsIURI;
  * a nsIURIContentListener for each of its content windows with the uri
  * dispatcher service. 
  */
-[scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
+[scriptable, uuid(10a28f38-32e8-4c63-8aa1-12eaaebc369a)]
 interface nsIURIContentListener : nsISupports
 {
  /**
@@ -52,7 +52,7 @@ interface nsIURIContentListener : nsISupports
   *                             continue handling the load and call the
   *                             returned streamlistener's methods. 
   */
-  boolean doContent(in string aContentType,
+  boolean doContent(in ACString aContentType,
                     in boolean aIsContentPreferred,
                     in nsIRequest aRequest,
                     out nsIStreamListener aContentHandler);

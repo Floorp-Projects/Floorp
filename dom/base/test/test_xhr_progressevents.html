@@ -97,7 +97,13 @@ function updateProgress(e, data, testName) {
 function sendData(s) {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "progressserver.sjs?send");
-  xhr.sendAsBinary(s);
+  // The Blob constructor encodes String elements as UTF-8;
+  // for straight bytes, manually convert to ArrayBuffer first
+  var buffer = new Uint8Array(s.length);
+  for (var i = 0; i < s.length; ++i) {
+    buffer[i] = s.charCodeAt(i) & 0xff;
+  };
+  xhr.send(new Blob([buffer]));
 }
 
 function closeConn() {

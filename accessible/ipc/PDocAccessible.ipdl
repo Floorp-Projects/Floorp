@@ -65,6 +65,8 @@ child:
   // AccessibleText
 
   // TextSubstring is getText in IDL.
+  prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
+  prio(high) sync SelectionCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
                                 aEndOffset) returns(nsString aText);
   prio(high) sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)

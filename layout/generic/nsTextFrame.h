@@ -74,8 +74,6 @@ public:
   
   virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
                                   
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
-  
   virtual nsIFrame* GetNextContinuation() const MOZ_OVERRIDE {
     return mNextContinuation;
   }
@@ -304,11 +302,10 @@ public:
    *
    * Callbacks are invoked in the following order:
    *
-   *   (NotifySelectionBackgroundNeedsFill)?
+   *   NotifySelectionBackgroundNeedsFill?
    *   PaintDecorationLine*
    *   NotifyBeforeText
-   *   (NotifyGlyphPathEmitted |
-   *    (NotifyBeforeSVGGlyphPainted NotifyAfterSVGGlyphPainted))*
+   *   NotifyGlyphPathEmitted*
    *   NotifyAfterText
    *   PaintDecorationLine*
    *   PaintSelectionDecorationLine*

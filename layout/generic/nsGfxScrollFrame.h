@@ -20,6 +20,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsQueryFrame.h"
 #include "nsExpirationTracker.h"
+#include "TextOverflow.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -324,6 +325,18 @@ public:
   void MarkNotRecentlyScrolled();
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
+  void SetTransformingByAPZ(bool aTransforming) {
+    mTransformingByAPZ = aTransforming;
+    if (!mozilla::css::TextOverflow::HasClippedOverflow(mOuter)) {
+      // If the block has some text-overflow stuff we should kick off a paint
+      // because we have special behaviour for it when APZ scrolling is active.
+      mOuter->SchedulePaint();
+    }
+  }
+  bool IsTransformingByAPZ() const {
+    return mTransformingByAPZ;
+  }
+
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
 
@@ -465,6 +478,10 @@ public:
   // True if the frame's resolution has been set via SetResolutionAndScaleTo.
   // Only meaningful for root scroll frames.
   bool mScaleToResolution:1;
+
+  // True if the APZ is in the process of async-transforming this scrollframe,
+  // (as best as we can tell on the main thread, anyway).
+  bool mTransformingByAPZ:1;
 
 protected:
   /**
@@ -811,6 +828,13 @@ public:
   }
   virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
   virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
+
+  virtual void SetTransformingByAPZ(bool aTransforming) MOZ_OVERRIDE {
+    mHelper.SetTransformingByAPZ(aTransforming);
+  }
+  bool IsTransformingByAPZ() const MOZ_OVERRIDE {
+    return mHelper.IsTransformingByAPZ();
+  }
   
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -1180,6 +1204,13 @@ public:
 
   virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
   virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
+
+  virtual void SetTransformingByAPZ(bool aTransforming) MOZ_OVERRIDE {
+    mHelper.SetTransformingByAPZ(aTransforming);
+  }
+  bool IsTransformingByAPZ() const MOZ_OVERRIDE {
+    return mHelper.IsTransformingByAPZ();
+  }
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

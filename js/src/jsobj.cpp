@@ -3182,6 +3182,11 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
             return false;
     }
 
+    // Convert unboxed objects to their native representations before changing
+    // their prototype/group, as they depend on the group for their layout.
+    if (obj->is<UnboxedPlainObject>() && !UnboxedPlainObject::convertToNative(cx, obj))
+        return false;
+
     Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
     *succeeded = SetClassAndProto(cx, obj, obj->getClass(), taggedProto);
     return *succeeded;
