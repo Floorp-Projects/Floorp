@@ -153,6 +153,15 @@ function loadAddonManager() {
   startupManager();
 }
 
+// Starts the addon manager without creating app info. We can't directly use
+// |loadAddonManager| defined above in test_conditions.js as it would make the test fail.
+function startAddonManagerOnly() {
+  let addonManager = Cc["@mozilla.org/addons/integration;1"]
+                       .getService(Ci.nsIObserver)
+                       .QueryInterface(Ci.nsITimerCallback);
+  addonManager.observe(null, "addons-startup", null);
+}
+
 function getExperimentAddons(previous=false) {
   let deferred = Promise.defer();
 

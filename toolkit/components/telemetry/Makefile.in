@@ -42,3 +42,14 @@ $(histogram_data_file): $(histograms_file) $(data_python_deps)
 	$(PYTHON) $(srcdir)/gen-histogram-data.py $< > $@
 
 GARBAGE += $(histogram_enum_file)
+
+# This is so hacky. Waiting on bug 988938.
+addondir = $(srcdir)/tests/addons
+testdir = $(abspath $(DEPTH)/_tests/xpcshell/toolkit/components/telemetry/tests/unit)
+
+misc:: $(call mkdir_deps,$(testdir))
+	$(EXIT_ON_ERROR) \
+	for dir in $(addondir)/*; do \
+	  base=`basename $$dir`; \
+	  (cd $$dir && zip -qr $(testdir)/$$base.xpi *); \
+	done

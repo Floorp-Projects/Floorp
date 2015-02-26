@@ -96,9 +96,12 @@ exports.testSidebarBasicLifeCycle = function*(assert) {
   sidebar.destroy();
   sidebar.destroy();
 
-  let sidebarMI = getSidebarMenuitems();
-  for (let mi of sidebarMI) {
-    assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
+  for (let mi of getSidebarMenuitems()) {
+    let id = mi.getAttribute('id');
+
+    if (BUILTIN_SIDEBAR_MENUITEMS.indexOf(id) < 0) {
+      assert.fail('the menuitem "' + id + '" is not a built-in sidebar');
+    }
     assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
   }
 
@@ -360,8 +363,7 @@ exports.testSidebarUnload = function*(assert) {
 
   loader.unload();
 
-  let sidebarMI = getSidebarMenuitems();
-  for (let mi of sidebarMI) {
+  for (let mi of getSidebarMenuitems()) {
     assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
     assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
   }
@@ -598,9 +600,12 @@ exports.testDestroyEdgeCaseBug = function*(assert) {
   yield sidebar.show();
   loader.unload();
 
-  let sidebarMI = getSidebarMenuitems();
-  for (let mi of sidebarMI) {
-    assert.ok(BUILTIN_SIDEBAR_MENUITEMS.indexOf(mi.getAttribute('id')) >= 0, 'the menuitem is for a built-in sidebar')
+  for (let mi of getSidebarMenuitems()) {
+    let id = mi.getAttribute('id');
+
+    if (BUILTIN_SIDEBAR_MENUITEMS.indexOf(id) < 0) {
+      assert.fail('the menuitem "' + id + '" is not a built-in sidebar');
+    }
     assert.ok(!isChecked(mi), 'no sidebar menuitem is checked');
   }
   assert.ok(!window.document.getElementById(makeID(testName)), 'sidebar id DNE');
@@ -761,6 +766,9 @@ exports.testURLSetterToSameValueReloadsSidebar = function*(assert) {
   window = yield windowPromise(window.OpenBrowserWindow(), 'load');
   document = window.document;
   assert.pass('new window was opened');
+
+  yield focus(window);
+  assert.pass('new window was focused');
 
   yield sidebar1.show();
 
@@ -1490,23 +1498,29 @@ exports.testShowHideRawWindowArg = function*(assert) {
   });
 
   let mainWindow = getMostRecentBrowserWindow();
-  let newWindow = yield open().then(focus);
+  let newWindow = yield windowPromise(mainWindow.OpenBrowserWindow(), 'load');
+  assert.pass("Created the new window");
+
+  yield focus(newWindow);
+  assert.pass("Focused the new window");
 
   yield focus(mainWindow);
+  assert.pass("Focused the old window");
 
   yield sidebar.show(newWindow);
 
   assert.pass('the sidebar was shown');
-  assert.ok(!isSidebarShowing(mainWindow), 'sidebar is not showing in main window');
-  assert.ok(isSidebarShowing(newWindow), 'sidebar is showing in new window');
+  assert.equal(isSidebarShowing(mainWindow), false, 'sidebar is not showing in main window');
+  assert.equal(isSidebarShowing(newWindow), true, 'sidebar is showing in new window');
 
   assert.ok(isFocused(mainWindow), 'main window is still focused');
 
   yield sidebar.hide(newWindow);
 
-  assert.ok(isFocused(mainWindow), 'main window is still focused');
-  assert.ok(!isSidebarShowing(mainWindow), 'sidebar is not showing in main window');
-  assert.ok(!isSidebarShowing(newWindow), 'sidebar is not showing in new window');
+  assert.equal(isFocused(mainWindow), true, 'main window is still focused');
+  assert.equal(isSidebarShowing(mainWindow), false, 'sidebar is not showing in main window');
+  assert.equal(isSidebarShowing(newWindow), false, 'sidebar is not showing in new window');
+
   sidebar.destroy();
 }
 
@@ -1547,6 +1561,7 @@ before(exports, (name, assert) => {
 });
 
 after(exports, function*(name, assert) {
+  assert.pass("Cleaning new windows and tabs");
   yield cleanUI();
   assert.equal(isSidebarShowing(), false, 'no sidebar is showing');
 });

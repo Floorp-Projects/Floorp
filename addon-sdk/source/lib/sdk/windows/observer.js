@@ -12,6 +12,7 @@ const { emit } = require("../event/core");
 const { WindowTracker, windowIterator } = require("../deprecated/window-utils");
 const { DOMEventAssembler } = require("../deprecated/events/assembler");
 const { Class } = require("../core/heritage");
+const { Cu } = require("chrome");
 
 // Event emitter objects used to register listeners and emit events on them
 // when they occur.
@@ -42,6 +43,9 @@ const Observer = Class({
    *    Keyboard event being emitted.
    */
   handleEvent(event) {
+    // Ignore events from windows in the child process as they can't be top-level
+    if (Cu.isCrossProcessWrapper(event.target))
+      return;
     emit(this, event.type, event.target, event);
   }
 });

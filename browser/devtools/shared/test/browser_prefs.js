@@ -20,14 +20,23 @@ function test() {
     "The pref was was correctly changed (2).");
 
   Services.prefs.setBoolPref("devtools.debugger.enabled", originalPrefValue);
-  info("The pref value was reset.");
-
+  info("The pref value was reset (1).");
   is(Prefs.foo, !originalPrefValue,
-    "The cached pref value hasn't changed yet.");
+    "The cached pref value hasn't changed yet (1).");
 
-  Prefs.refresh();
+  Services.prefs.setBoolPref("devtools.debugger.enabled", !originalPrefValue);
+  info("The pref value was reset (2).");
+  is(Prefs.foo, !originalPrefValue,
+    "The cached pref value hasn't changed yet (2).");
+
+  Prefs.registerObserver();
+
+  Services.prefs.setBoolPref("devtools.debugger.enabled", originalPrefValue);
+  info("The pref value was reset (3).");
   is(Prefs.foo, originalPrefValue,
     "The cached pref value has changed now.");
+
+  Prefs.unregisterObserver();
 
   finish();
 }
