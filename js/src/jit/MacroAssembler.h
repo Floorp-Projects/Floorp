@@ -280,6 +280,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename Source>
     void guardType(const Source &address, TypeSet::Type type, Register scratch, Label *miss);
 
+    void guardTypeSetMightBeIncomplete(Register obj, Register scratch, Label *label);
+
     void loadObjShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
     }
