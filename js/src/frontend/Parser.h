@@ -504,6 +504,10 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     }
 
     virtual bool strictMode() { return pc->sc->strict(); }
+    bool setLocalStrictMode(bool strict) {
+        MOZ_ASSERT(tokenStream.debugHasNoLookahead());
+        return pc->sc->setLocalStrictMode(strict);
+    }
 
     const ReadOnlyCompileOptions &options() const {
         return tokenStream.options();
