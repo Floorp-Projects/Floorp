@@ -1556,14 +1556,14 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // We have two major codepaths here. One that does preformatted text and one
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
-  if ((mPreFormatted && !mWrapColumn) || IsInPre()
+  if ((mPreFormatted && !mWrapColumn) || (IsInPre() && !mPreFormatted)
       || ((mSpanLevel > 0 || mDontWrapAnyQuotes)
           && mEmptyLines >= 0 && str.First() == char16_t('>'))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_ASSERTION(mCurrentLine.IsEmpty() || IsInPre(),
+    NS_ASSERTION(mCurrentLine.IsEmpty() || (IsInPre() && !mPreFormatted),
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();
