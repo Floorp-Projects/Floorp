@@ -78,9 +78,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, HandleObject obj)
     XPCWrappedNativeScope *scope = ObjectScope(obj);
 
     JSAutoCompartment ac(cx, obj);
-    JSObject *waiver = Wrapper::New(cx, obj,
-                                    JS_GetGlobalForObject(cx, obj),
-                                    &XrayWaiver);
+    JSObject *waiver = Wrapper::New(cx, obj, &XrayWaiver);
     if (!waiver)
         return nullptr;
 
@@ -382,8 +380,7 @@ SelectAddonWrapper(JSContext *cx, HandleObject obj, const Wrapper *wrapper)
 }
 
 JSObject *
-WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
-                       HandleObject parent)
+WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj)
 {
     MOZ_ASSERT(!IsWrapper(obj) ||
                GetProxyHandler(obj) == &XrayWaiver ||
@@ -504,7 +501,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     if (existing)
         return Wrapper::Renew(cx, existing, obj, wrapper);
 
-    return Wrapper::New(cx, obj, parent, wrapper);
+    return Wrapper::New(cx, obj, wrapper);
 }
 
 // Call WaiveXrayAndWrap when you have a JS object that you don't want to be
