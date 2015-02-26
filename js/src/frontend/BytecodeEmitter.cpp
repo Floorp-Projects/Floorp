@@ -7312,6 +7312,11 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         MOZ_ASSERT(pn->getArity() == PN_NULLARY);
         break;
 
+      case PNK_CLASS:
+        // TODO: Implement emitter support for classes
+        bce->reportError(nullptr, JSMSG_CLASS_NOT_IMPLEMENTED);
+        return false;
+
       default:
         MOZ_ASSERT(0);
     }

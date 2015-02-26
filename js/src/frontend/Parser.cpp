@@ -5823,6 +5823,80 @@ Parser<ParseHandler>::debuggerStatement()
     return handler.newDebuggerStatement(p);
 }
 
+template <>
+ParseNode *
+Parser<FullParseHandler>::classStatement()
+{
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_CLASS));
+
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt))
+        return null();
+
+    RootedPropertyName name(context);
+    if (tt == TOK_NAME) {
+        name = tokenStream.currentName();
+    } else if (tt == TOK_YIELD) {
+        if (!checkYieldNameValidity())
+            return null();
+        name = tokenStream.currentName();
+    } else {
+        // Class statements must have a bound name
+        report(ParseError, false, null(), JSMSG_UNNAMED_CLASS_STMT);
+        return null();
+    }
+
+    if (name == context->names().let) {
+        report(ParseError, false, null(), JSMSG_LET_CLASS_BINDING);
+        return null();
+    }
+
+    // Because the binding definitions keep track of their blockId, we need to
+    // create at least the inner binding later. Keep track of the name's position
+    // in order to provide it for the nodes created later.
+    TokenPos namePos = pos();
+
+    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
+
+    bool savedStrictness = setLocalStrictMode(true);
+
+    StmtInfoPC classStmt(context);
+    ParseNode *classBlock = pushLexicalScope(&classStmt);
+    if (!classBlock)
+        return null();
+
+    ParseNode *classMethods = propertyList(ClassBody);
+    if (!classMethods)
+        return null();
+    handler.setLexicalScopeBody(classBlock, classMethods);
+
+    ParseNode *innerBinding = makeInitializedLexicalBinding(name, true, namePos);
+    if (!innerBinding)
+        return null();
+
+    PopStatementPC(tokenStream, pc);
+
+    ParseNode *outerBinding = makeInitializedLexicalBinding(name, false, namePos);
+    if (!outerBinding)
+        return null();
+
+    ParseNode *nameNode = handler.newClassNames(outerBinding, innerBinding, namePos);
+    if (!nameNode)
+        return null();
+
+    MOZ_ALWAYS_TRUE(setLocalStrictMode(savedStrictness));
+
+    return handler.newClass(nameNode, null(), classBlock);
+}
+
+template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::classStatement()
+{
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return SyntaxParseHandler::NodeFailure;
+}
+
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::statement(bool canHaveDirectives)
@@ -5890,6 +5964,11 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return functionStmt();
       case TOK_DEBUGGER:
         return debuggerStatement();
+      case TOK_CLASS:
+        if (!abortIfSyntaxParser())
+            return null();
+        return classStatement();
+
 
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:
@@ -7923,6 +8002,10 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::newPropertyListNode(PropListType type)
 {
+    if (type == ClassBody)
+        return handler.newClassMethodList(pos().begin);
+
+    MOZ_ASSERT(type == ObjectLiteral);
     return handler.newObjectLiteral(pos().begin);
 }
 
@@ -7937,6 +8020,7 @@ Parser<ParseHandler>::propertyList(PropListType type)
         return null();
 
     bool seenPrototypeMutation = false;
+    bool seenConstructor = false;
     RootedAtom atom(context);
     for (;;) {
         TokenKind ltok;
@@ -7944,6 +8028,9 @@ Parser<ParseHandler>::propertyList(PropListType type)
             return null();
         if (ltok == TOK_RC)
             break;
+
+        if (type == ClassBody && ltok == TOK_SEMI)
+            continue;
 
         bool isGenerator = false;
         if (ltok == TOK_MUL) {
@@ -8060,12 +8147,30 @@ Parser<ParseHandler>::propertyList(PropListType type)
             return null();
         }
 
+        if (type == ClassBody) {
+            if (atom == context->names().constructor) {
+                if (isGenerator || op != JSOP_INITPROP) {
+                    report(ParseError, false, propname, JSMSG_BAD_METHOD_DEF);
+                    return null();
+                }
+                if (seenConstructor) {
+                    report(ParseError, false, propname, JSMSG_DUPLICATE_PROPERTY, "constructor");
+                    return null();
+                }
+                seenConstructor = true;
+            }
+        }
+
         if (op == JSOP_INITPROP) {
             TokenKind tt;
             if (!tokenStream.getToken(&tt))
                 return null();
 
             if (tt == TOK_COLON) {
+                if (type == ClassBody) {
+                    report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
+                    return null();
+                }
                 if (isGenerator) {
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
@@ -8104,6 +8209,10 @@ Parser<ParseHandler>::propertyList(PropListType type)
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
+                if (type == ClassBody) {
+                    report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
+                    return null();
+                }
                 if (isGenerator) {
                     report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
                     return null();
@@ -8137,15 +8246,23 @@ Parser<ParseHandler>::propertyList(PropListType type)
             }
         }
 
-        TokenKind tt;
-        if (!tokenStream.getToken(&tt))
-            return null();
-        if (tt == TOK_RC)
-            break;
-        if (tt != TOK_COMMA) {
-            report(ParseError, false, null(), JSMSG_CURLY_AFTER_LIST);
-            return null();
+        if (type == ObjectLiteral) {
+            TokenKind tt;
+            if (!tokenStream.getToken(&tt))
+                return null();
+            if (tt == TOK_RC)
+                break;
+            if (tt != TOK_COMMA) {
+                report(ParseError, false, null(), JSMSG_CURLY_AFTER_LIST);
+                return null();
+            }
         }
+    }
+
+    // Default constructors not yet implemented. See bug 1105463
+    if (type == ClassBody && !seenConstructor) {
+        report(ParseError, false, null(), JSMSG_NO_CLASS_CONSTRUCTOR);
+        return null();
     }
 
     handler.setEndPosition(propList, pos().end);
@@ -8154,9 +8271,9 @@ Parser<ParseHandler>::propertyList(PropListType type)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::methodDefinition(PropListType, Node propList, Node propname, FunctionType type,
-                                       FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                                       JSOp op)
+Parser<ParseHandler>::methodDefinition(PropListType listType, Node propList, Node propname,
+                                       FunctionType type, FunctionSyntaxKind kind,
+                                       GeneratorKind generatorKind, JSOp op)
 {
     RootedPropertyName funName(context);
     if (kind == Method && tokenStream.isCurrentTokenType(TOK_NAME))
@@ -8167,9 +8284,12 @@ Parser<ParseHandler>::methodDefinition(PropListType, Node propList, Node propnam
     Node fn = functionDef(funName, type, kind, generatorKind);
     if (!fn)
         return false;
-    if (!handler.addMethodDefinition(propList, propname, fn, op))
-        return false;
-    return true;
+
+    if (listType == ClassBody)
+        return handler.addClassMethodDefinition(propList, propname, fn, op);
+
+    MOZ_ASSERT(listType == ObjectLiteral);
+    return handler.addObjectMethodDefinition(propList, propname, fn, op);
 }
 
 template <typename ParseHandler>

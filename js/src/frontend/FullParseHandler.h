@@ -281,6 +281,16 @@ class FullParseHandler
         return literal;
     }
 
+    ParseNode *newClass(ParseNode *name, ParseNode *heritage, ParseNode *methodBlock) {
+        return new_<ClassNode>(name, heritage, methodBlock);
+    }
+    ParseNode *newClassMethodList(uint32_t begin) {
+        return new_<ListNode>(PNK_CLASSMETHODLIST, TokenPos(begin, begin + 1));
+    }
+    ParseNode *newClassNames(ParseNode *outer, ParseNode *inner, const TokenPos &pos) {
+        return new_<ClassNames>(outer, inner, pos);
+    }
+
     bool addPrototypeMutation(ParseNode *literal, uint32_t begin, ParseNode *expr) {
         // Object literals with mutated [[Prototype]] are non-constant so that
         // singleton objects will have Object.prototype as their [[Prototype]].
@@ -323,7 +333,7 @@ class FullParseHandler
         return true;
     }
 
-    bool addMethodDefinition(ParseNode *literal, ParseNode *key, ParseNode *fn, JSOp op)
+    bool addObjectMethodDefinition(ParseNode *literal, ParseNode *key, ParseNode *fn, JSOp op)
     {
         MOZ_ASSERT(literal->isArity(PN_LIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
@@ -336,6 +346,22 @@ class FullParseHandler
         if (!propdef)
             return false;
         literal->append(propdef);
+        return true;
+    }
+
+    bool addClassMethodDefinition(ParseNode *methodList, ParseNode *key, ParseNode *fn, JSOp op)
+    {
+        MOZ_ASSERT(methodList->isKind(PNK_CLASSMETHODLIST));
+        MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
+                   key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
+                   key->isKind(PNK_STRING) ||
+                   key->isKind(PNK_COMPUTED_NAME));
+
+        // For now, there's no such thing as static methods.
+        ParseNode *classMethod = new_<ClassMethod>(key, fn, op, false);
+        if (!classMethod)
+            return false;
+        methodList->append(classMethod);
         return true;
     }
 

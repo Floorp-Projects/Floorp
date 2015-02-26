@@ -552,6 +552,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node throwStatement();
     Node tryStatement();
     Node debuggerStatement();
+    Node classStatement();
 
     Node lexicalDeclaration(bool isConst);
     Node letDeclarationOrBlock();
@@ -574,7 +575,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension();
     Node exprInParens();
 
-    enum PropListType { ObjectLiteral };
+    enum PropListType { ObjectLiteral, ClassBody };
     bool methodDefinition(PropListType listType, Node propList, Node propname, FunctionType type,
                           FunctionSyntaxKind kind, GeneratorKind generatorKind, JSOp Op);
 
