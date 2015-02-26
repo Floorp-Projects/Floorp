@@ -248,6 +248,20 @@ class Resources(ContextDerived):
             defs.update(defines)
         self.defines = defs
 
+class BrandingFiles(ContextDerived):
+    """Sandbox container object for BRANDING_FILES, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing BRANDING_FILES.
+    """
+    __slots__ = ('files')
+
+    def __init__(self, sandbox, files):
+        ContextDerived.__init__(self, sandbox)
+        self.files = files
+
 class JsPreferenceFile(ContextDerived):
     """Context derived container object for a Javascript preference file.
 
