@@ -26,6 +26,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOZ_PKG_FORMAT = BZ2
 _APPNAME = XUL.framework
 _BINPATH = /$(_APPNAME)/Versions/Current
+_RESPATH := $(_BINPATH)
 endif
 
 include $(topsrcdir)/config/rules.mk
