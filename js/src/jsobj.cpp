@@ -1803,7 +1803,7 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto)
         ProxyOptions options;
         options.setClass(obj->getClass());
 
-        clone = ProxyObject::New(cx, GetProxyHandler(obj), JS::NullHandleValue, proto, nullptr, options);
+        clone = ProxyObject::New(cx, GetProxyHandler(obj), JS::NullHandleValue, proto, options);
         if (!clone)
             return nullptr;
 
