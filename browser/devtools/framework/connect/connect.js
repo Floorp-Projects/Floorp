@@ -162,7 +162,7 @@ let onConnectionReady = Task.async(function*(aType, aTraits) {
 function buildAddonLink(addon, parent) {
   let a = document.createElement("a");
   a.onclick = function() {
-    openToolbox(addon, true, "jsdebugger");
+    openToolbox(addon, true, "jsdebugger", false);
   }
 
   a.textContent = addon.name;
@@ -221,11 +221,12 @@ function handleConnectionTimeout() {
  * The user clicked on one of the buttons.
  * Opens the toolbox.
  */
-function openToolbox(form, chrome=false, tool="webconsole") {
+function openToolbox(form, chrome=false, tool="webconsole", isTabActor) {
   let options = {
     form: form,
     client: gClient,
-    chrome: chrome
+    chrome: chrome,
+    isTabActor: isTabActor
   };
   devtools.TargetFactory.forRemoteTab(options).then((target) => {
     let hostType = devtools.Toolbox.HostType.WINDOW;
@@ -233,7 +234,7 @@ function openToolbox(form, chrome=false, tool="webconsole") {
       toolbox.once("destroyed", function() {
         gClient.close();
       });
-    });
+    }, console.error.bind(console));
     window.close();
-  });
+  }, console.error.bind(console));
 }

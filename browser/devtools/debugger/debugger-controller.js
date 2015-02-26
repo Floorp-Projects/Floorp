@@ -206,7 +206,9 @@ let DebuggerController = {
 
     if (target.isAddon) {
       yield this._startAddonDebugging(actor);
-    } else if (target.chrome) {
+    } else if (!target.isTabActor) {
+      // Some actors like AddonActor or RootActor for chrome debugging
+      // do not support attach/detach and can be used directly
       yield this._startChromeDebugging(chromeDebugger);
     } else {
       yield this._startDebuggingTab();
