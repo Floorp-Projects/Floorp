@@ -27,6 +27,10 @@ class Registers
     };
     typedef RegisterID Code;
     typedef RegisterID Encoding;
+    union RegisterContent {
+        uintptr_t r;
+    };
+
     typedef uint8_t SetType;
 
     static uint32_t SetSize(SetType) { MOZ_CRASH(); }
@@ -62,6 +66,10 @@ class FloatRegisters
     };
     typedef FPRegisterID  Code;
     typedef FPRegisterID Encoding;
+    union RegisterContent {
+        double d;
+    };
+
     typedef uint32_t SetType;
 
     static const char *GetName(Code) { MOZ_CRASH(); }
