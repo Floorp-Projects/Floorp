@@ -1123,9 +1123,9 @@ static SECStatus DPCache_Destroy(CRLDPCache* cache)
 	PORT_Free(cache->crls);
     }
     /* destroy the cert */
-    if (cache->issuer)
+    if (cache->issuerDERCert)
     {
-        CERT_DestroyCertificate(cache->issuer);
+        SECITEM_FreeItem(cache->issuerDERCert, PR_TRUE);
     }
     /* free the subject */
     if (cache->subject)
@@ -1571,14 +1571,20 @@ static SECStatus CachedCrl_Verify(CRLDPCache* cache, CachedCrl* crlobject,
     else
     {
         SECStatus signstatus = SECFailure;
-        if (cache->issuer)
+        if (cache->issuerDERCert)
         {
-            signstatus = CERT_VerifyCRL(crlobject->crl, cache->issuer, vfdate,
+	    CERTCertificate *issuer = CERT_NewTempCertificate(cache->dbHandle,
+		cache->issuerDERCert, NULL, PR_FALSE, PR_TRUE);
+
+	    if (issuer) {
+                signstatus = CERT_VerifyCRL(crlobject->crl, issuer, vfdate,
                                         wincx);
+		CERT_DestroyCertificate(issuer);
+	    }
         }
         if (SECSuccess != signstatus)
         {
-            if (!cache->issuer)
+            if (!cache->issuerDERCert)
             {
                 /* we tried to verify without an issuer cert . This is
                    because this CRL came through a call to SEC_FindCrlByName.
@@ -1925,15 +1931,16 @@ static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate*
     }
 
     /* add issuer certificate if it was previously unavailable */
-    if (issuer && (NULL == cache->issuer) &&
+    if (issuer && (NULL == cache->issuerDERCert) &&
         (SECSuccess == CERT_CheckCertUsage(issuer, KU_CRL_SIGN)))
     {
         /* if we didn't have a valid issuer cert yet, but we do now. add it */
         DPCache_LockWrite();
-        if (!cache->issuer)
+        if (!cache->issuerDERCert)
         {
             dirty = PR_TRUE;
-            cache->issuer = CERT_DupCertificate(issuer);    
+	    cache->dbHandle = issuer->dbhandle;
+    	    cache->issuerDERCert = SECITEM_DupItem(&issuer->derCert);
         }
         DPCache_UnlockWrite();
     }
@@ -1944,7 +1951,7 @@ static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate*
        SEC_FindCrlByName, or through manual insertion, rather than through a
        certificate verification (CERT_CheckCRL) */
 
-    if (cache->issuer && vfdate )
+    if (cache->issuerDERCert && vfdate )
     {
 	mustunlock = PR_FALSE;
         /* re-process all unverified CRLs */
@@ -2201,7 +2208,8 @@ static SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
     }
     if (issuer)
     {
-        cache->issuer = CERT_DupCertificate(issuer);
+	cache->dbHandle = issuer->dbhandle;
+    	cache->issuerDERCert = SECITEM_DupItem(&issuer->derCert);
     }
     cache->distributionPoint = SECITEM_DupItem(dp);
     cache->subject = SECITEM_DupItem(subject);

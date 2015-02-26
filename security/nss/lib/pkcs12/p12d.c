@@ -2795,6 +2795,64 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
     return rv;
 }
 
+SECStatus
+SEC_PKCS12DecoderRenameCertNicknames(SEC_PKCS12DecoderContext *p12dcx,
+                                     SEC_PKCS12NicknameRenameCallback nicknameCb,
+                                     void *arg)
+{
+    int i;
+    sec_PKCS12SafeBag *safeBag;
+    CERTCertificate *cert;
+    SECStatus srv;
+
+    if(!p12dcx || p12dcx->error || !p12dcx->safeBags || !nicknameCb) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    for (i = 0; safeBag = p12dcx->safeBags[i]; i++) {
+        SECItem *newNickname = NULL;
+        SECItem *defaultNickname = NULL;
+        SECStatus rename_rv;
+
+        if (SECOID_FindOIDTag(&(safeBag->safeBagType)) !=
+            SEC_OID_PKCS12_V1_CERT_BAG_ID) {
+            continue;
+        }
+
+        cert = CERT_DecodeDERCertificate(
+                   &safeBag->safeBagContent.certBag->value.x509Cert,
+                   PR_FALSE, NULL);
+        if (!cert) {
+            return SECFailure;
+        }
+
+        defaultNickname = sec_pkcs12_get_nickname(safeBag);
+        rename_rv = (*nicknameCb)(cert, defaultNickname, &newNickname, arg);
+
+        CERT_DestroyCertificate(cert);
+
+        if (defaultNickname) {
+            SECITEM_ZfreeItem(defaultNickname, PR_TRUE);
+            defaultNickname = NULL;
+        }
+
+        if (rename_rv != SECSuccess) {
+            return rename_rv;
+        }
+
+        if (newNickname) {
+            srv = sec_pkcs12_set_nickname(safeBag, newNickname);
+            SECITEM_ZfreeItem(newNickname, PR_TRUE);
+            newNickname = NULL;
+            if (srv != SECSuccess) {
+                return SECFailure;
+            }
+        }
+    }
+
+    return SECSuccess;
+}
 
 static SECKEYPublicKey *
 sec_pkcs12_get_public_key_and_usage(sec_PKCS12SafeBag *certBag,

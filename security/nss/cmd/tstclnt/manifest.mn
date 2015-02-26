@@ -17,6 +17,7 @@ REQUIRES = seccmd dbm
 # DIRS = 
 
 CSRCS	= tstclnt.c  
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 PROGRAM	= tstclnt
 

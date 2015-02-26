@@ -20,6 +20,13 @@ extern std::string g_working_dir_path;
 
 namespace nss_test {
 
+enum SessionResumptionMode {
+  RESUME_NONE = 0,
+  RESUME_SESSIONID = 1,
+  RESUME_TICKET = 2,
+  RESUME_BOTH = RESUME_SESSIONID | RESUME_TICKET
+};
+
 #define LOG(a) std::cerr << name_ << ": " << a << std::endl;
 
 // Inspector that parses out DTLS records and passes
@@ -306,22 +313,6 @@ class TlsAgent : public PollTarget {
     return true;
   }
 
-  void SetSessionTicketsEnabled(bool en) {
-    ASSERT_TRUE(EnsureTlsSetup());
-
-    SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_SESSION_TICKETS,
-                                  en ? PR_TRUE : PR_FALSE);
-    ASSERT_EQ(SECSuccess, rv);
-  }
-
-  void SetSessionCacheEnabled(bool en) {
-    ASSERT_TRUE(EnsureTlsSetup());
-
-    SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_NO_CACHE,
-                                  en ? PR_FALSE : PR_TRUE);
-    ASSERT_EQ(SECSuccess, rv);
-  }
-
   void SetVersionRange(uint16_t minver, uint16_t maxver) {
     SSLVersionRange range = {minver, maxver};
     ASSERT_EQ(SECSuccess, SSL_VersionRangeSet(ssl_fd_, &range));
@@ -366,6 +357,7 @@ class TlsAgent : public PollTarget {
     ASSERT_EQ(version, info_.protocolVersion);
   }
 
+
   void Handshake() {
     SECStatus rv = SSL_ForceHandshake(ssl_fd_);
     if (rv == SECSuccess) {
@@ -402,6 +394,22 @@ class TlsAgent : public PollTarget {
   std::vector<uint8_t> GetSessionId() {
     return std::vector<uint8_t>(info_.sessionID,
                                 info_.sessionID + info_.sessionIDLength);
+  }
+
+  void ConfigureSessionCache(SessionResumptionMode mode) {
+    ASSERT_TRUE(EnsureTlsSetup());
+
+    SECStatus rv = SSL_OptionSet(ssl_fd_,
+                                 SSL_NO_CACHE,
+                                 mode & RESUME_SESSIONID ?
+                                 PR_FALSE : PR_TRUE);
+    ASSERT_EQ(SECSuccess, rv);
+
+    rv = SSL_OptionSet(ssl_fd_,
+                       SSL_ENABLE_SESSION_TICKETS,
+                       mode & RESUME_TICKET ?
+                       PR_TRUE : PR_FALSE);
+    ASSERT_EQ(SECSuccess, rv);
   }
 
  private:
@@ -460,6 +468,10 @@ class TlsConnectTestBase : public ::testing::Test {
     // Configure a fresh session cache.
     SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
 
+    // Clear statistics.
+    SSL3Statistics* stats = SSL_GetStatistics();
+    memset(stats, 0, sizeof(*stats));
+
     Init();
   }
 
@@ -467,6 +479,7 @@ class TlsConnectTestBase : public ::testing::Test {
     client_ = nullptr;
     server_ = nullptr;
 
+    SSL_ClearSessionCache();
     SSL_ShutdownServerSessionIDCache();
   }
 
@@ -520,7 +533,7 @@ class TlsConnectTestBase : public ::testing::Test {
     std::vector<uint8_t> sid_s1 = server_->GetSessionId();
     ASSERT_EQ(32, sid_s1.size());
     ASSERT_EQ(sid_c1, sid_s1);
-    session_id_ = sid_c1;
+    session_ids_.push_back(sid_c1);
   }
 
   void EnableSomeECDHECiphers() {
@@ -528,11 +541,38 @@ class TlsConnectTestBase : public ::testing::Test {
     server_->EnableSomeECDHECiphers();
   }
 
+  void ConfigureSessionCache(SessionResumptionMode client,
+                             SessionResumptionMode server) {
+    client_->ConfigureSessionCache(client);
+    server_->ConfigureSessionCache(server);
+  }
+
+  void CheckResumption(SessionResumptionMode expected) {
+    ASSERT_NE(RESUME_BOTH, expected);
+
+    int resume_ct = expected != 0;
+    int stateless_ct = (expected & RESUME_TICKET) ? 1 : 0;
+
+    SSL3Statistics* stats = SSL_GetStatistics();
+    ASSERT_EQ(resume_ct, stats->hch_sid_cache_hits);
+    ASSERT_EQ(resume_ct, stats->hsh_sid_cache_hits);
+
+    ASSERT_EQ(stateless_ct, stats->hch_sid_stateless_resumes);
+    ASSERT_EQ(stateless_ct, stats->hsh_sid_stateless_resumes);
+
+    if (resume_ct) {
+      // Check that the last two session ids match.
+      ASSERT_GE(2, session_ids_.size());
+      ASSERT_EQ(session_ids_[session_ids_.size()-1],
+                session_ids_[session_ids_.size()-2]);
+    }
+  }
+
  protected:
   Mode mode_;
   TlsAgent* client_;
   TlsAgent* server_;
-  std::vector<uint8_t> session_id_;
+  std::vector<std::vector<uint8_t>> session_ids_;
 };
 
 class TlsConnectTest : public TlsConnectTestBase {
@@ -568,23 +608,102 @@ TEST_P(TlsConnectGeneric, Connect) {
 }
 
 TEST_P(TlsConnectGeneric, ConnectResumed) {
+  ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
   Connect();
-  std::vector<uint8_t> old_sid = session_id_;
 
   Reset();
   Connect();
-  ASSERT_EQ(old_sid, session_id_) << "Session was not resumed when it should have been";
+  CheckResumption(RESUME_SESSIONID);
 }
 
-TEST_P(TlsConnectGeneric, ConnectNotResumed) {
+TEST_P(TlsConnectGeneric, ConnectClientCacheDisabled) {
+  ConfigureSessionCache(RESUME_NONE, RESUME_SESSIONID);
   Connect();
-  std::vector<uint8_t> old_sid = session_id_;
+  Reset();
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectServerCacheDisabled) {
+  ConfigureSessionCache(RESUME_SESSIONID, RESUME_NONE);
+  Connect();
+  Reset();
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectSessionCacheDisabled) {
+  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
+  Connect();
+  Reset();
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectResumeSupportBoth) {
+  // This prefers tickets.
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
 
   Reset();
-  client_->SetSessionCacheEnabled(false);
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  CheckResumption(RESUME_TICKET);
+}
+
+TEST_P(TlsConnectGeneric, ConnectResumeClientTicketServerBoth) {
+  // This causes no resumption because the client needs the
+  // session cache to resume even with tickets.
+  ConfigureSessionCache(RESUME_TICKET, RESUME_BOTH);
   Connect();
 
-  ASSERT_NE(old_sid, session_id_) << "Session was resumed when it should not have been";
+  Reset();
+  ConfigureSessionCache(RESUME_TICKET, RESUME_BOTH);
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicket) {
+  // This causes a ticket resumption.
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  CheckResumption(RESUME_TICKET);
+}
+
+TEST_P(TlsConnectGeneric, ConnectClientServerTicketOnly) {
+  // This causes no resumption because the client needs the
+  // session cache to resume even with tickets.
+  ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
+  Connect();
+
+  Reset();
+  ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectClientBothServerNone) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_NONE);
+  Connect();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_NONE);
+  Connect();
+  CheckResumption(RESUME_NONE);
+}
+
+TEST_P(TlsConnectGeneric, ConnectClientNoneServerBoth) {
+  ConfigureSessionCache(RESUME_NONE, RESUME_BOTH);
+  Connect();
+
+  Reset();
+  ConfigureSessionCache(RESUME_NONE, RESUME_BOTH);
+  Connect();
+  CheckResumption(RESUME_NONE);
 }
 
 TEST_P(TlsConnectGeneric, ConnectTLS_1_1_Only) {
@@ -632,7 +751,7 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceReuseKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetInspector(i2);
   EnableSomeECDHECiphers();
-  client_->SetSessionCacheEnabled(false);
+  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
   client_->CheckKEAType(ssl_kea_ecdh);
 
@@ -666,7 +785,7 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceNewKey) {
   TlsInspectorRecordHandshakeMessage* i2 =
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetInspector(i2);
-  client_->SetSessionCacheEnabled(false);
+  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
   client_->CheckKEAType(ssl_kea_ecdh);
 
