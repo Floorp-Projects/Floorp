@@ -36,7 +36,7 @@ ACCEPTABLE_ERRATA_KEYS = set([
 
 GENERATED_HEADER = '''
 # This is a GENERATED FILE. Do not edit it directly.
-# Regenerated it by using `python generate-wrapper-and-manifest.py`.
+# Regenerated it by using `python generate-wrappers-and-manifest.py`.
 # Mark skipped tests in mochitest-errata.ini.
 # Mark failing tests in mochi-single.html.
 '''.strip()
