@@ -630,7 +630,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 
       case PN_CODE:
         NULLCHECK(pn->pn_funbox = newFunctionBox(pn, opn->pn_funbox->function(), pc,
-                                                 Directives(/* strict = */ opn->pn_funbox->strict),
+                                                 Directives(/* strict = */ opn->pn_funbox->strict()),
                                                  opn->pn_funbox->generatorKind()));
         NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
         pn->pn_cookie = opn->pn_cookie;

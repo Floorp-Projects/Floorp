@@ -316,7 +316,7 @@ struct ParseContext : public GenericParseContext
 template <typename ParseHandler>
 inline
 Directives::Directives(ParseContext<ParseHandler> *parent)
-  : strict_(parent->sc->strict),
+  : strict_(parent->sc->strict()),
     asmJS_(parent->useAsmOrInsideUseAsm())
 {}
 
@@ -503,7 +503,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         return versionNumber() >= JSVERSION_1_7 || pc->isGenerator();
     }
 
-    virtual bool strictMode() { return pc->sc->strict; }
+    virtual bool strictMode() { return pc->sc->strict(); }
 
     const ReadOnlyCompileOptions &options() const {
         return tokenStream.options();
