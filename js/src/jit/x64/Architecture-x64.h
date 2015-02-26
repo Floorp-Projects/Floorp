@@ -196,6 +196,17 @@ struct FloatRegister {
         FloatRegister r = { Code(i) };
         return r;
     }
+
+    bool isSingle() const { return true; }
+    bool isDouble() const { return true; }
+    bool isInt32x4() const { return true; }
+    bool isFloat32x4() const { return true; }
+
+    FloatRegister asSingle() const { return *this; }
+    FloatRegister asDouble() const { return *this; }
+    FloatRegister asInt32x4() const { return *this; }
+    FloatRegister asFloat32x4() const { return *this; }
+
     Code code() const {
         MOZ_ASSERT(uint32_t(code_) < FloatRegisters::Total);
         return code_;
