@@ -54,6 +54,9 @@ using namespace mozilla;
 
 typedef nsCSSProps::KTableValue KTableValue;
 
+// pref-backed bool values (hooked up in nsCSSParser::Startup)
+static bool sOpentypeSVGEnabled;
+
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
@@ -6953,13 +6956,6 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
         }
       }
       if ((aVariantMask & VARIANT_OPENTYPE_SVG_KEYWORD) != 0) {
-        static bool sOpentypeSVGEnabled;
-        static bool sOpentypeSVGEnabledCached = false;
-        if (!sOpentypeSVGEnabledCached) {
-          sOpentypeSVGEnabledCached = true;
-          Preferences::AddBoolVarCache(&sOpentypeSVGEnabled,
-                                       "gfx.font_rendering.opentype_svg.enabled");
-        }
         if (sOpentypeSVGEnabled) {
           aVariantMask |= VARIANT_KEYWORD;
         }
@@ -15058,6 +15054,13 @@ CSSParserImpl::IsValueValidForProperty(const nsCSSProperty aPropID,
 // Recycling of parser implementation objects
 
 static CSSParserImpl* gFreeList = nullptr;
+
+/* static */ void
+nsCSSParser::Startup()
+{
+  Preferences::AddBoolVarCache(&sOpentypeSVGEnabled,
+                               "gfx.font_rendering.opentype_svg.enabled");
+}
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
                          CSSStyleSheet* aSheet)
