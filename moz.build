@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**/Makefile.in'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+    FINAL = True
+
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',
