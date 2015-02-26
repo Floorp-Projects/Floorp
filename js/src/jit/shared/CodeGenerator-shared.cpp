@@ -418,9 +418,9 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
 
         MOZ_ASSERT(payload->isMemory() || payload->isFloatReg());
         if (payload->isFloatReg())
-            alloc = RValueAllocation::Float32(ToFloatRegister(payload));
+            alloc = RValueAllocation::AnyFloat(ToFloatRegister(payload));
         else
-            alloc = RValueAllocation::Float32(ToStackIndex(payload));
+            alloc = RValueAllocation::AnyFloat(ToStackIndex(payload));
         break;
       }
       case MIRType_MagicOptimizedArguments:
