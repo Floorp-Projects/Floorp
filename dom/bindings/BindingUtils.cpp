@@ -1615,7 +1615,7 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                    obj, flags, props);
 }
 
-NativePropertyHooks sWorkerNativePropertyHooks = {
+NativePropertyHooks sEmptyNativePropertyHooks = {
   nullptr,
   nullptr,
   {
