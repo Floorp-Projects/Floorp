@@ -647,7 +647,9 @@ bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
 bool MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value);
-bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value);
+
+bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value,
+              jsbytecode *pc);
 
 template<bool Equal>
 bool LooselyEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res);

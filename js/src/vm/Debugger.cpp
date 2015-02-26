@@ -1982,6 +1982,19 @@ Debugger::ensureExecutionObservabilityOfScript(JSContext *cx, JSScript *script)
 }
 
 /* static */ bool
+Debugger::ensureExecutionObservabilityOfOsrFrame(JSContext *cx, InterpreterFrame *frame)
+{
+    MOZ_ASSERT(frame->isDebuggee());
+    if (frame->script()->hasBaselineScript() &&
+        frame->script()->baselineScript()->hasDebugInstrumentation())
+    {
+        return true;
+    }
+    ExecutionObservableFrame obs(frame);
+    return updateExecutionObservabilityOfFrames(cx, obs, Observing);
+}
+
+/* static */ bool
 Debugger::ensureExecutionObservabilityOfFrame(JSContext *cx, AbstractFramePtr frame)
 {
     MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
