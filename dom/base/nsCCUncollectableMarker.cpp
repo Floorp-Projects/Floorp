@@ -16,6 +16,7 @@
 #include "nsISHistory.h"
 #include "nsISHEntry.h"
 #include "nsISHContainer.h"
+#include "nsITabChild.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/Services.h"
 #include "nsIXULWindow.h"
@@ -297,6 +298,15 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
       nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
 
       MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);
+
+      nsCOMPtr<nsITabChild> tabChild = do_GetInterface(rootDocShell);
+      if (tabChild) {
+        nsCOMPtr<nsIContentFrameMessageManager> mm;
+        tabChild->GetMessageManager(getter_AddRefs(mm));
+        if (mm) {
+          mm->MarkForCC();
+        }
+      }
     }
   }
 }

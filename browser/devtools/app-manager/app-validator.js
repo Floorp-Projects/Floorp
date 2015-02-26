@@ -12,8 +12,9 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 let XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 let strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
 
-function AppValidator(project) {
-  this.project = project;
+function AppValidator({ type, location }) {
+  this.type = type;
+  this.location = location;
   this.errors = [];
   this.warnings = [];
 }
@@ -27,7 +28,7 @@ AppValidator.prototype.warning = function (message) {
 };
 
 AppValidator.prototype._getPackagedManifestFile = function () {
-  let manifestFile = FileUtils.File(this.project.location);
+  let manifestFile = FileUtils.File(this.location);
   if (!manifestFile.exists()) {
     this.error(strings.GetStringFromName("validator.nonExistingFolder"));
     return null;
@@ -149,12 +150,12 @@ AppValidator.prototype._fetchManifest = function (manifestURL) {
 
 AppValidator.prototype._getManifest = function () {
   let manifestURL;
-  if (this.project.type == "packaged") {
+  if (this.type == "packaged") {
     manifestURL = this._getPackagedManifestURL();
     if (!manifestURL)
       return promise.resolve(null);
-  } else if (this.project.type == "hosted") {
-    manifestURL = this.project.location;
+  } else if (this.type == "hosted") {
+    manifestURL = this.location;
     try {
       Services.io.newURI(manifestURL, null, null);
     } catch(e) {
@@ -162,7 +163,7 @@ AppValidator.prototype._getManifest = function () {
       return promise.resolve(null);
     }
   } else {
-    this.error(strings.formatStringFromName("validator.invalidProjectType", [this.project.type], 1));
+    this.error(strings.formatStringFromName("validator.invalidProjectType", [this.type], 1));
     return promise.resolve(null);
   }
   return this._fetchManifest(manifestURL);
@@ -181,11 +182,11 @@ AppValidator.prototype.validateManifest = function (manifest) {
 };
 
 AppValidator.prototype._getOriginURL = function () {
-  if (this.project.type == "packaged") {
+  if (this.type == "packaged") {
     let manifestURL = Services.io.newURI(this.manifestURL, null, null);
     return Services.io.newURI(".", null, manifestURL).spec;
-  } else if (this.project.type == "hosted") {
-    return Services.io.newURI(this.project.location, null, null).prePath;
+  } else if (this.type == "hosted") {
+    return Services.io.newURI(this.location, null, null).prePath;
   }
 };
 
@@ -203,9 +204,9 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   }
   let origin = this._getOriginURL();
   let path;
-  if (this.project.type == "packaged") {
+  if (this.type == "packaged") {
     path = "." + ( manifest.launch_path || "/index.html" );
-  } else if (this.project.type == "hosted") {
+  } else if (this.type == "hosted") {
     path = manifest.launch_path || "/";
   }
   let indexURL;
@@ -251,7 +252,7 @@ AppValidator.prototype.validateType = function (manifest) {
   let appType = manifest.type || "web";
   if (["web", "trusted", "privileged", "certified"].indexOf(appType) === -1) {
     this.error(strings.formatStringFromName("validator.invalidAppType", [appType], 1));
-  } else if (this.project.type == "hosted" &&
+  } else if (this.type == "hosted" &&
              ["certified", "privileged"].indexOf(appType) !== -1) {
     this.error(strings.formatStringFromName("validator.invalidHostedPriviledges", [appType], 1));
   }
