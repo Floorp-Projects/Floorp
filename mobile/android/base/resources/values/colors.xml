@@ -105,7 +105,6 @@
   <color name="text_color_hint_floating_focused">#33b5e5</color>
 
   <!-- Highlight colors -->
-  <color name="text_color_highlight">#FF9500</color>
   <color name="text_color_highlight_inverse">#D06BFF</color>
 
   <!-- Link colors -->
@@ -125,7 +124,6 @@
   <color name="doorhanger_background_dark">#FFDDE4EA</color>
 
   <color name="validation_message_text">#ffffff</color>
-  <color name="url_bar_text_highlight">#FFFF9500</color>
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>
   <color name="suggestion_pressed">#bbbbbb</color>
