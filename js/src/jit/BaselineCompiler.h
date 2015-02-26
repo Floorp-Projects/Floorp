@@ -103,6 +103,7 @@ namespace jit {
     _(JSOP_INITELEM_INC)       \
     _(JSOP_MUTATEPROTO)        \
     _(JSOP_INITPROP)           \
+    _(JSOP_INITLOCKEDPROP)     \
     _(JSOP_INITPROP_GETTER)    \
     _(JSOP_INITPROP_SETTER)    \
     _(JSOP_ARRAYPUSH)          \
