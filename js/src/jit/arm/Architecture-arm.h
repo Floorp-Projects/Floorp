@@ -525,7 +525,6 @@ class VFPRegister
         return FloatRegisters::FromName(name);
     }
     static TypedRegisterSet<VFPRegister> ReduceSetForPush(const TypedRegisterSet<VFPRegister> &s);
-    static uint32_t GetSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
     uint32_t getRegisterDumpOffsetInBytes();
     static uint32_t FirstBit(SetType x) {
