@@ -115,6 +115,10 @@ class MachineState
     void setRegisterLocation(Register reg, uintptr_t *up) {
         regs_[reg.code()] = (Registers::RegisterContent *) up;
     }
+    void setRegisterLocation(FloatRegister reg, float *fp) {
+        MOZ_ASSERT(reg.isSingle());
+        fpregs_[reg.code()] = (FloatRegisters::RegisterContent *) fp;
+    }
     void setRegisterLocation(FloatRegister reg, double *dp) {
         fpregs_[reg.code()] = (FloatRegisters::RegisterContent *) dp;
     }

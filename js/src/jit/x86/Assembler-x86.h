@@ -27,29 +27,29 @@ static MOZ_CONSTEXPR_VAR Register ebp = { X86Encoding::rbp };
 static MOZ_CONSTEXPR_VAR Register esi = { X86Encoding::rsi };
 static MOZ_CONSTEXPR_VAR Register edi = { X86Encoding::rdi };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Encoding::xmm0 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Encoding::xmm1 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Encoding::xmm2 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Encoding::xmm3 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Encoding::xmm4 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Encoding::xmm5 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Encoding::xmm6 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Encoding::xmm7 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = FloatRegister(X86Encoding::xmm2, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = FloatRegister(X86Encoding::xmm3, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = FloatRegister(X86Encoding::xmm4, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = FloatRegister(X86Encoding::xmm5, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = FloatRegister(X86Encoding::xmm6, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Encoding::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Encoding::invalid_xmm };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = FloatRegister();
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = ecx;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = edx;
 static MOZ_CONSTEXPR_VAR Register StackPointer = esp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = ebp;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm7;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = xmm7;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Int32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Float32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Single);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm7;
 
 // Avoid ebp, which is the FramePointer, which is unavailable in some modes.
