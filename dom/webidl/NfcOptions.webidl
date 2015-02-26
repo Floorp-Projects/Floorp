@@ -8,12 +8,24 @@ enum RFState {
   "discovery"
 };
 
+/**
+ * Type of the Request used in NfcCommandOptions.
+ */
+enum NfcRequestType {
+  "changeRFState",
+  "readNDEF",
+  "writeNDEF",
+  "makeReadOnly",
+  "format",
+  "transceive"
+};
+
 dictionary NfcCommandOptions
 {
-  DOMString type = "";
+  required NfcRequestType type;
 
   long sessionId;
-  DOMString requestId = "";
+  required DOMString requestId;
 
   RFState rfState;
 
