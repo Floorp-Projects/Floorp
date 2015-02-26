@@ -105,7 +105,11 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 FloatRegisterSet
 FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
 {
-    return s;
+    if (JitSupportsSimd())
+        return s;
+
+    // Ignore all SIMD register.
+    return FloatRegisterSet(s.bits() & (Codes::AllPhysMask * Codes::SpreadScalar));
 }
 uint32_t
 FloatRegister::GetPushSizeInBytes(const FloatRegisterSet &s)

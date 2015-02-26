@@ -17,6 +17,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
     int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
@@ -63,6 +64,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
