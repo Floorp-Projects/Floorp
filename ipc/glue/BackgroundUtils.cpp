@@ -7,7 +7,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "nsIPrincipal.h"
+#include "nsPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -80,6 +80,31 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
       return principal.forget();
     }
 
+    case PrincipalInfo::TExpandedPrincipalInfo: {
+      const ExpandedPrincipalInfo& info = aPrincipalInfo.get_ExpandedPrincipalInfo();
+
+      nsTArray< nsCOMPtr<nsIPrincipal> > whitelist;
+      nsCOMPtr<nsIPrincipal> wlPrincipal;
+
+      for (uint32_t i = 0; i < info.whitelist().Length(); i++) {
+        wlPrincipal = PrincipalInfoToPrincipal(info.whitelist()[i], &rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return nullptr;
+        }
+        // append that principal to the whitelist
+        whitelist.AppendElement(wlPrincipal);
+      }
+
+      nsRefPtr<nsExpandedPrincipal> expandedPrincipal = new nsExpandedPrincipal(whitelist);
+      if (!expandedPrincipal) {
+        NS_WARNING("could not instantiate expanded principal");
+        return nullptr;
+      }
+
+      principal = expandedPrincipal;
+      return principal.forget();
+    }
+
     default:
       MOZ_CRASH("Unknown PrincipalInfo type!");
   }
@@ -122,6 +147,32 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     *aPrincipalInfo = SystemPrincipalInfo();
     return NS_OK;
   }
+
+  // might be an expanded principal
+  nsCOMPtr<nsIExpandedPrincipal> expanded =
+    do_QueryInterface(aPrincipal);
+
+  if (expanded) {
+    nsTArray<PrincipalInfo> whitelistInfo;
+    PrincipalInfo info;
+
+    nsTArray< nsCOMPtr<nsIPrincipal> >* whitelist;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(expanded->GetWhiteList(&whitelist)));
+
+    for (uint32_t i = 0; i < whitelist->Length(); i++) {
+      rv = PrincipalToPrincipalInfo((*whitelist)[i], &info);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      // append that spec to the whitelist
+      whitelistInfo.AppendElement(info);
+    }
+
+    *aPrincipalInfo = ExpandedPrincipalInfo(Move(whitelistInfo));
+    return NS_OK;
+  }
+
+  // must be a content principal
 
   nsCOMPtr<nsIURI> uri;
   rv = aPrincipal->GetURI(getter_AddRefs(uri));
