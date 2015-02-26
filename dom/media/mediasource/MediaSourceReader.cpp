@@ -508,7 +508,6 @@ MediaSourceReader::SwitchAudioSource(int64_t* aTarget)
     return SOURCE_EXISTING;
   }
   mAudioSourceDecoder = newDecoder;
-  GetAudioReader()->ResetDecode();
   if (usedFuzz) {
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
@@ -555,7 +554,6 @@ MediaSourceReader::SwitchVideoSource(int64_t* aTarget)
     return SOURCE_EXISTING;
   }
   mVideoSourceDecoder = newDecoder;
-  GetVideoReader()->ResetDecode();
   if (usedFuzz) {
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
@@ -711,7 +709,7 @@ MediaSourceReader::NotifyTimeRangesChanged()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mWaitingForSeekData) {
-    //post a task to the decode queue to try to complete the pending seek.
+    //post a task to the state machine thread to call seek.
     RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
         this, &MediaSourceReader::AttemptSeek));
     GetTaskQueue()->Dispatch(task.forget());
@@ -812,7 +810,6 @@ MediaSourceReader::OnVideoSeekFailed(nsresult aResult)
 void
 MediaSourceReader::DoAudioSeek()
 {
-  GetAudioReader()->ResetDecode();
   if (SwitchAudioSource(&mPendingSeekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
@@ -862,6 +859,11 @@ MediaSourceReader::AttemptSeek()
     mWaitingForSeekData = false;
   }
 
+  ResetDecode();
+  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
+    mTrackBuffers[i]->ResetDecode();
+  }
+
   // Decoding discontinuity upon seek, reset last times to seek target.
   mLastAudioTime = mPendingSeekTime;
   mLastVideoTime = mPendingSeekTime;
@@ -878,7 +880,6 @@ MediaSourceReader::AttemptSeek()
 void
 MediaSourceReader::DoVideoSeek()
 {
-  GetVideoReader()->ResetDecode();
   if (SwitchVideoSource(&mPendingSeekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
