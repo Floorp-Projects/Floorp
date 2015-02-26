@@ -9870,6 +9870,11 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!getPropTryConstant(&emitted, obj, name, types) || emitted)
         return emitted;
 
+    // Try to emit SIMD getter loads
+    trackOptimizationAttempt(TrackedStrategy::GetProp_SimdGetter);
+    if (!getPropTrySimdGetter(&emitted, obj, name) || emitted)
+        return emitted;
+
     // Try to emit loads from known binary data blocks
     trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
     if (!getPropTryTypedObject(&emitted, obj, name) || emitted)
@@ -10056,6 +10061,81 @@ IonBuilder::getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *na
 
     pushConstant(ObjectValue(*singleton));
 
+    trackOptimizationSuccess();
+    *emitted = true;
+    return true;
+}
+
+MIRType
+IonBuilder::SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
+{
+    switch (type) {
+      case SimdTypeDescr::TYPE_INT32:   return MIRType_Int32x4;
+      case SimdTypeDescr::TYPE_FLOAT32: return MIRType_Float32x4;
+      case SimdTypeDescr::TYPE_FLOAT64: return MIRType_Undefined;
+    }
+    MOZ_CRASH("unimplemented MIR type for a SimdTypeDescr::Type");
+}
+
+bool
+IonBuilder::getPropTrySimdGetter(bool *emitted, MDefinition *obj, PropertyName *name)
+{
+    MOZ_ASSERT(!*emitted);
+
+    if (!JitSupportsSimd()) {
+        trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
+        return true;
+    }
+
+    TypedObjectPrediction objPrediction = typedObjectPrediction(obj);
+    if (objPrediction.isUseless()) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedObject);
+        return true;
+    }
+
+    if (objPrediction.kind() != type::Simd) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotSimdObject);
+        return true;
+    }
+
+    MIRType type = SimdTypeDescrToMIRType(objPrediction.simdType());
+    if (type == MIRType_Undefined) {
+        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
+        return true;
+    }
+
+    const JSAtomState &names = compartment->runtime()->names();
+
+    // Reading the signMask property.
+    if (name == names.signMask) {
+        MSimdSignMask *ins = MSimdSignMask::New(alloc(), obj, type);
+        current->add(ins);
+        current->push(ins);
+        trackOptimizationSuccess();
+        *emitted = true;
+        return true;
+    }
+
+    // Reading a lane property.
+    SimdLane lane;
+    if (name == names.x) {
+        lane = LaneX;
+    } else if (name == names.y) {
+        lane = LaneY;
+    } else if (name == names.z) {
+        lane = LaneZ;
+    } else if (name == names.w) {
+        lane = LaneW;
+    } else {
+        // Unknown getprop access on a SIMD value
+        trackOptimizationOutcome(TrackedOutcome::UnknownSimdProperty);
+        return true;
+    }
+
+    MIRType scalarType = SimdTypeToScalarType(type);
+    MSimdExtractElement *ins = MSimdExtractElement::New(alloc(), obj, type, scalarType, lane);
+    current->add(ins);
+    current->push(ins);
     trackOptimizationSuccess();
     *emitted = true;
     return true;

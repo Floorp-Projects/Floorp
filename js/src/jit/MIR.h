@@ -1589,27 +1589,36 @@ class MSimdReinterpretCast
 // Extracts a lane element from a given vector type, given by its lane symbol.
 class MSimdExtractElement
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdPolicy<0>::Data
 {
   protected:
     SimdLane lane_;
 
-    MSimdExtractElement(MDefinition *obj, MIRType type, SimdLane lane)
+    MSimdExtractElement(MDefinition *obj, MIRType vecType, MIRType scalarType, SimdLane lane)
       : MUnaryInstruction(obj), lane_(lane)
     {
-        MOZ_ASSERT(IsSimdType(obj->type()));
-        MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(obj->type()));
-        MOZ_ASSERT(!IsSimdType(type));
-        MOZ_ASSERT(SimdTypeToScalarType(obj->type()) == type);
-        setResultType(type);
+        MOZ_ASSERT(IsSimdType(vecType));
+        MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(vecType));
+        MOZ_ASSERT(!IsSimdType(scalarType));
+        MOZ_ASSERT(SimdTypeToScalarType(vecType) == scalarType);
+
+        specialization_ = vecType;
+        setResultType(scalarType);
     }
 
   public:
     INSTRUCTION_HEADER(SimdExtractElement)
+
     static MSimdExtractElement *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType type,
                                          SimdLane lane)
     {
-        return new(alloc) MSimdExtractElement(obj, type, lane);
+        return new(alloc) MSimdExtractElement(obj, obj->type(), type, lane);
+    }
+
+    static MSimdExtractElement *New(TempAllocator &alloc, MDefinition *obj, MIRType vecType,
+                                    MIRType scalarType, SimdLane lane)
+    {
+        return new(alloc) MSimdExtractElement(obj, vecType, scalarType, lane);
     }
 
     SimdLane lane() const {
@@ -1703,22 +1712,29 @@ class MSimdInsertElement
 // Extracts the sign bits from a given vector, returning an MIRType_Int32.
 class MSimdSignMask
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdPolicy<0>::Data
 {
   protected:
-    explicit MSimdSignMask(MDefinition *obj)
+    explicit MSimdSignMask(MDefinition *obj, MIRType type)
       : MUnaryInstruction(obj)
     {
-        MOZ_ASSERT(IsSimdType(obj->type()));
         setResultType(MIRType_Int32);
+        specialization_ = type;
         setMovable();
     }
 
   public:
     INSTRUCTION_HEADER(SimdSignMask)
+
     static MSimdSignMask *NewAsmJS(TempAllocator &alloc, MDefinition *obj)
     {
-        return new(alloc) MSimdSignMask(obj);
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        return new(alloc) MSimdSignMask(obj, obj->type());
+    }
+
+    static MSimdSignMask *New(TempAllocator &alloc, MDefinition *obj, MIRType type)
+    {
+        return new(alloc) MSimdSignMask(obj, type);
     }
 
     AliasSet getAliasSet() const MOZ_OVERRIDE {
