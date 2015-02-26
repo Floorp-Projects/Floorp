@@ -129,6 +129,8 @@ function updateUI() {
       warningsNode.appendChild(li);
     }
   }
+
+  AppManager.update("details");
 }
 
 function showPrepackageLog() {

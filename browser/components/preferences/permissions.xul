@@ -61,8 +61,8 @@
       <treechildren/>
     </tree>
   </vbox>
-  <hbox align="end">
-    <hbox class="actionButtons" flex="1">
+  <vbox>
+    <hbox class="actionButtons" align="left" flex="1">
       <button id="removePermission" disabled="true"
               accesskey="&removepermission.accesskey;"
               icon="remove" label="&removepermission.label;"
@@ -71,9 +71,13 @@
               icon="clear" label="&removeallpermissions.label;"
               accesskey="&removeallpermissions.accesskey;" 
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
-      <spacer flex="1"/>
-      <button oncommand="close();" icon="close"
-              label="&button.close.label;" accesskey="&button.close.accesskey;"/>
     </hbox>
-  </hbox>
+    <spacer flex="1"/>
+    <hbox class="actionButtons" align="right" flex="1">
+      <button oncommand="close();" icon="close"
+              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+      <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
+              label="&button.ok.label;" accesskey="&button.ok.accesskey;"/>
+    </hbox>
+  </vbox>
 </window>
