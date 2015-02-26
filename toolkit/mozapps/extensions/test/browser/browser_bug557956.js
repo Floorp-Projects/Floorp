@@ -514,5 +514,5 @@ add_test(function overrides_retrieved() {
 });
 
 add_test(function test_shutdown() {
-  TelemetrySession.shutdown().then(run_next_test);
+  TelemetrySession.shutdown(false).then(run_next_test);
 });
