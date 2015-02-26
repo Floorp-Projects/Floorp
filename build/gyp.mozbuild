@@ -95,7 +95,7 @@ flavors = {
     'NetBSD': 'netbsd',
     'OpenBSD': 'openbsd',
 }
-gyp_vars['OS'] = flavors[os]
+gyp_vars['OS'] = flavors.get(os)
 
 arches = {
     'x86_64': 'x64',

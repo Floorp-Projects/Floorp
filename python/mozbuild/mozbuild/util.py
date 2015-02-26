@@ -18,6 +18,7 @@ import os
 import stat
 import sys
 import time
+import types
 
 from collections import (
     defaultdict,
@@ -48,6 +49,17 @@ def hash_file(path, hasher=None):
             h.update(data)
 
     return h.hexdigest()
+
+
+class EmptyValue(unicode):
+    """A dummy type that behaves like an empty string and sequence.
+
+    This type exists in order to support
+    :py:class:`mozbuild.frontend.reader.EmptyConfig`. It should likely not be
+    used elsewhere.
+    """
+    def __init__(self):
+        super(EmptyValue, self).__init__()
 
 
 class ReadOnlyDict(dict):
@@ -254,9 +266,9 @@ class ListMixin(object):
         return super(ListMixin, self).__setslice__(i, j, sequence)
 
     def __add__(self, other):
-        # Allow None is a special case because it makes undefined variable
-        # references in moz.build behave better.
-        other = [] if other is None else other
+        # Allow None and EmptyValue is a special case because it makes undefined
+        # variable references in moz.build behave better.
+        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
@@ -265,7 +277,7 @@ class ListMixin(object):
         return new_list
 
     def __iadd__(self, other):
-        other = [] if other is None else other
+        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
