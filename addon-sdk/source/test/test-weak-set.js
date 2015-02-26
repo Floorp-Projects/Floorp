@@ -5,10 +5,7 @@
 
 const { Cu } = require('chrome');
 const { Loader } = require('sdk/test/loader');
-
-function gc() {
-  return new Promise(resolve => Cu.schedulePreciseGC(resolve));
-};
+const { gc } = require("sdk/test/memory");
 
 exports['test adding item'] = function*(assert) {
   let loader = Loader(module);
@@ -121,31 +118,31 @@ exports['test adding non object or null item'] = function(assert) {
   assert.throws(() => {
     add(items, 'foo');
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, 0);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, undefined);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, null);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, true);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 };
 
@@ -158,31 +155,31 @@ exports['test adding to non object or null item'] = function(assert) {
   assert.throws(() => {
     add('foo', item);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(0, item);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(undefined, item);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(null, item);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(true, item);
   },
-  /^value is not a non-null object/,
+  /^\w+ is not a non-null object/,
   'only non-null object are allowed');
 };
 
