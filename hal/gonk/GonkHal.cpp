@@ -1738,11 +1738,10 @@ EnsureKernelLowMemKillerParamsSet()
 void
 SetProcessPriority(int aPid,
                    ProcessPriority aPriority,
-                   ProcessCPUPriority aCPUPriority,
                    uint32_t aBackgroundLRU)
 {
-  HAL_LOG("SetProcessPriority(pid=%d, priority=%d, cpuPriority=%d, LRU=%u)",
-          aPid, aPriority, aCPUPriority, aBackgroundLRU);
+  HAL_LOG("SetProcessPriority(pid=%d, priority=%d, LRU=%u)",
+          aPid, aPriority, aBackgroundLRU);
 
   // If this is the first time SetProcessPriority was called, set the kernel's
   // OOM parameters according to our prefs.
