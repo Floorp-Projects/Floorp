@@ -435,6 +435,7 @@ class IonBuilder
                                 TemporaryTypeSet *types);
     bool getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName *name,
                                 BarrierKind barrier, TemporaryTypeSet *types);
+    bool getPropTrySimdGetter(bool *emitted, MDefinition *obj, PropertyName *name);
     bool getPropTryTypedObject(bool *emitted, MDefinition *obj, PropertyName *name);
     bool getPropTryScalarPropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                            int32_t fieldOffset,
@@ -810,6 +811,7 @@ class IonBuilder
     InliningStatus inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *target);
 
     //  helpers
+    static MIRType SimdTypeDescrToMIRType(SimdTypeDescr::Type type);
     bool checkInlineSimd(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
                          unsigned numArgs, InlineTypedObject **templateObj);
     IonBuilder::InliningStatus boxSimd(CallInfo &callInfo, MInstruction *ins,
