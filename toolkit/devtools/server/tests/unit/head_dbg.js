@@ -227,6 +227,24 @@ function finishClient(aClient)
   });
 }
 
+// Create a server, connect to it and fetch tab actors for the parent process;
+// pass |aCallback| the debugger client and tab actor form with all actor IDs.
+function get_chrome_actors(callback)
+{
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+  DebuggerServer.allowChromeProcess = true;
+
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.attachProcess().then(response => {
+      callback(client, response.form);
+    });
+  });
+}
+
 /**
  * Takes a relative file path and returns the absolute file url for it.
  */
