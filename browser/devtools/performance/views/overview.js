@@ -40,8 +40,8 @@ let OverviewView = {
 
     // Toggle the initial visibility of memory and framerate graph containers
     // based off of prefs.
-    $("#memory-overview").hidden = !PerformanceController.getPref("enable-memory");
-    $("#time-framerate").hidden = !PerformanceController.getPref("enable-framerate");
+    $("#memory-overview").hidden = !PerformanceController.getOption("enable-memory");
+    $("#time-framerate").hidden = !PerformanceController.getOption("enable-framerate");
 
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.on(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
@@ -55,6 +55,16 @@ let OverviewView = {
    * Unbinds events.
    */
   destroy: function () {
+    if (this.markersOverview) {
+      this.markersOverview.destroy();
+    }
+    if (this.memoryOverview) {
+      this.memoryOverview.destroy();
+    }
+    if (this.framerateGraph) {
+      this.framerateGraph.destroy();
+    }
+
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
@@ -86,7 +96,7 @@ let OverviewView = {
    * Sets the time interval selection for all graphs in this overview.
    *
    * @param object interval
-   *        The { starTime, endTime }, in milliseconds.
+   *        The { startTime, endTime }, in milliseconds.
    */
   setTimeInterval: function(interval, options = {}) {
     if (this.isDisabled()) {
@@ -138,7 +148,8 @@ let OverviewView = {
       yield this.markersOverview.ready();
       return true;
     }
-    this.markersOverview = new MarkersOverview($("#markers-overview"), TIMELINE_BLUEPRINT);
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    this.markersOverview = new MarkersOverview($("#markers-overview"), blueprint);
     this.markersOverview.headerHeight = MARKERS_GRAPH_HEADER_HEIGHT;
     this.markersOverview.rowHeight = MARKERS_GRAPH_ROW_HEIGHT;
     this.markersOverview.groupPadding = MARKERS_GROUP_VERTICAL_PADDING;
@@ -155,7 +166,7 @@ let OverviewView = {
    *         ready to use, `false` if the graph is disabled.
    */
   _memoryGraphAvailable: Task.async(function *() {
-    if (!PerformanceController.getPref("enable-memory")) {
+    if (!PerformanceController.getOption("enable-memory")) {
       return false;
     }
     if (this.memoryOverview) {
@@ -179,7 +190,7 @@ let OverviewView = {
    *         ready to use, `false` if the graph is disabled.
    */
   _framerateGraphAvailable: Task.async(function *() {
-    if (!PerformanceController.getPref("enable-framerate")) {
+    if (!PerformanceController.getOption("enable-framerate")) {
       return false;
     }
     if (this.framerateGraph) {
@@ -340,14 +351,26 @@ let OverviewView = {
    * Called whenever a preference in `devtools.performance.ui.` changes. Used
    * to toggle the visibility of memory and framerate graphs.
    */
-  _onPrefChanged: function (_, prefName) {
-    if (prefName === "enable-memory") {
-      $("#memory-overview").hidden = !PerformanceController.getPref("enable-memory");
+  _onPrefChanged: Task.async(function* (_, prefName, prefValue) {
+    switch (prefName) {
+      case "enable-memory": {
+        $("#memory-overview").hidden = !prefValue;
+        break;
+      }
+      case "enable-framerate": {
+        $("#time-framerate").hidden = !prefValue;
+        break;
+      }
+      case "hidden-markers": {
+        if (yield this._markersGraphAvailable()) {
+          let blueprint = PerformanceController.getTimelineBlueprint();
+          this.markersOverview.setBlueprint(blueprint);
+          this.markersOverview.refresh({ force: true });
+        }
+        break;
+      }
     }
-    if (prefName === "enable-framerate") {
-      $("#time-framerate").hidden = !PerformanceController.getPref("enable-framerate");
-    }
-  },
+  }),
 
   toString: () => "[object OverviewView]"
 };

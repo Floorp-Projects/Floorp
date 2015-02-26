@@ -5,28 +5,29 @@
  * Tests markers filtering mechanism.
  */
 
-add_task(function*() {
-  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
-  let { $, $$, TimelineController, TimelineView } = panel.panelWin;
+function spawnTest () {
+  let { panel } = yield initPerformance(SIMPLE_URL);
+  let { $, $$, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
+  let { MARKERS_GRAPH_ROW_HEIGHT } = panel.panelWin;
 
-  yield TimelineController.toggleRecording();
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
   yield waitUntil(() => {
     // Wait until we get 3 different markers.
-    let markers = TimelineController.getMarkers();
+    let markers = PerformanceController.getCurrentRecording().getMarkers();
     return markers.some(m => m.name == "Styles") &&
            markers.some(m => m.name == "Reflow") &&
            markers.some(m => m.name == "Paint");
   });
 
-  yield TimelineController.toggleRecording();
+  yield stopRecording(panel);
 
-  let overview = TimelineView.markersOverview;
-  let waterfall = TimelineView.waterfall;
+  let overview = OverviewView.markersOverview;
+  let waterfall = WaterfallView.waterfall;
 
   // Select everything
-  overview.setSelection({ start: 0, end: overview.width })
+  OverviewView.setTimeInterval({ startTime: 0, endTime: Number.MAX_VALUE })
 
   $("#filter-button").click();
 
@@ -70,8 +71,7 @@ add_task(function*() {
 
   yield waitUntil(() => !waterfall._outstandingMarkers.length);
 
-  // A row is 11px. See markers-overview.js
-  is(overview.fixedHeight, heightBefore - 11, "Overview is smaller");
+  is(overview.fixedHeight, heightBefore - MARKERS_GRAPH_ROW_HEIGHT, "Overview is smaller");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (4)");
   ok(!$(".waterfall-marker-bar[type=Reflow]"), "No 'Reflow' marker (4)");
   ok(!$(".waterfall-marker-bar[type=Paint]"), "No 'Paint' marker (4)");
@@ -89,5 +89,6 @@ add_task(function*() {
 
   is(overview.fixedHeight, originalHeight, "Overview restored");
 
-  $(".waterfall-marker-bar[type=Styles]");
-});
+  yield teardown(panel);
+  finish();
+}

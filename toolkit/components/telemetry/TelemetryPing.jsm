@@ -30,10 +30,14 @@ const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID"
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
+const PING_FORMAT_VERSION = 4;
+
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 100;
+// The number of days to keep pings serialised on the disk in case of failures.
+const DEFAULT_RETENTION_DAYS = 14;
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
@@ -46,6 +50,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
                                   "resource://gre/modules/ThirdPartyCookieProbe.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+                                  "resource://gre/modules/TelemetryEnvironment.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -84,6 +92,14 @@ function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   // strip {}
   return str.substring(1, str.length - 1);
+}
+
+/**
+ * Determine if the ping has new ping format or a legacy one.
+ */
+function isNewPingFormat(aPing) {
+  return ("id" in aPing) && ("application" in aPing) &&
+         ("version" in aPing) && (aPing.version >= 2);
 }
 
 this.EXPORTED_SYMBOLS = ["TelemetryPing"];
@@ -131,9 +147,105 @@ this.TelemetryPing = Object.freeze({
 
   /**
    * Send payloads to the server.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} [aOptions] Options object.
+   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   *                  environment data.
+   * @returns {Promise} A promise that resolves when the ping is sent.
    */
-  send: function(aReason, aPingPayload) {
-    return Impl.send(aReason, aPingPayload);
+  send: function(aType, aPayload, aOptions = {}) {
+    let options = aOptions;
+    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
+    options.addClientId = aOptions.addClientId || false;
+    options.addEnvironment = aOptions.addEnvironment || false;
+
+    return Impl.send(aType, aPayload, options);
+  },
+
+  /**
+   * Add the ping to the pending ping list and save all pending pings.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} [aOptions] Options object.
+   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   *                  environment data.
+   * @returns {Promise} A promise that resolves when the pings are saved.
+   */
+  savePendingPings: function(aType, aPayload, aOptions = {}) {
+    let options = aOptions;
+    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
+    options.addClientId = aOptions.addClientId || false;
+    options.addEnvironment = aOptions.addEnvironment || false;
+
+    return Impl.savePendingPings(aType, aPayload, options);
+  },
+
+  /**
+   * Save a ping to disk.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} [aOptions] Options object.
+   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   *                  environment data.
+   * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
+   *                  if found.
+   *
+   * @returns {Promise} A promise that resolves when the ping is saved to disk.
+   */
+  savePing: function(aType, aPayload, aOptions = {}) {
+    let options = aOptions;
+    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
+    options.addClientId = aOptions.addClientId || false;
+    options.addEnvironment = aOptions.addEnvironment || false;
+    options.overwrite = aOptions.overwrite || false;
+
+    return Impl.savePing(aType, aPayload, options);
+  },
+
+  /**
+   * Only used for testing. Saves a ping to disk and return the ping id once done.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} [aOptions] Options object.
+   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   *                  environment data.
+   * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
+   *                  if found.
+   * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
+   *                 ping location if not provided.
+   *
+   * @returns {Promise<Integer>} A promise that resolves with the ping id when the ping is
+   *                             saved to disk.
+   */
+  testSavePingToFile: function(aType, aPayload, aOptions = {}) {
+    let options = aOptions;
+    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
+    options.addClientId = aOptions.addClientId || false;
+    options.addEnvironment = aOptions.addEnvironment || false;
+    options.overwrite = aOptions.overwrite || false;
+
+    return Impl.testSavePingToFile(aType, aPayload, options);
   },
 
   /**
@@ -144,23 +256,111 @@ this.TelemetryPing = Object.freeze({
    get clientID() {
     return Impl.clientID;
    },
+
+   /**
+    * The AsyncShutdown.Barrier to synchronize with TelemetryPing shutdown.
+    */
+   get shutdown() {
+    return Impl._shutdownBarrier.client;
+   },
 });
 
 let Impl = {
   _initialized: false,
+  _initStarted: false, // Whether we started setting up TelemetryPing.
   _log: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
   _clientID: null,
+  // A task performing delayed initialization
+  _delayedInitTask: null,
+  // The deferred promise resolved when the initialization task completes.
+  _delayedInitTaskDeferred: null,
 
-  popPayloads: function popPayloads(reason, externalPayload) {
+  _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
+
+  /**
+   * Get the data for the "application" section of the ping.
+   */
+  _getApplicationSection: function() {
+    // Querying architecture and update channel can throw. Make sure to recover and null
+    // those fields.
+    let arch = null;
+    try {
+      arch = Services.sysinfo.get("arch");
+    } catch (e) {
+      this._log.trace("assemblePing - Unable to get system architecture.", e);
+    }
+
+    let updateChannel = null;
+    try {
+      updateChannel = UpdateChannel.get();
+    } catch (e) {
+      this._log.trace("assemblePing - Unable to get update channel.", e);
+    }
+
+    return {
+      architecture: arch,
+      buildId: Services.appinfo.appBuildID,
+      name: Services.appinfo.name,
+      version: Services.appinfo.version,
+      vendor: Services.appinfo.vendor,
+      platformVersion: Services.appinfo.platformVersion,
+      xpcomAbi: Services.appinfo.XPCOMABI,
+      channel: updateChannel,
+    };
+  },
+
+  /**
+   * Assemble a complete ping following the common ping format specification.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} aOptions Options object.
+   * @param {Boolean} aOptions.addClientId true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   *                  environment data.
+   *
+   * @returns Promise<Object> A promise that resolves when the ping is completely assembled.
+   */
+  assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
+    this._log.trace("assemblePing - Type " + aType + ", Server " + this._server +
+                    ", aOptions " + JSON.stringify(aOptions));
+
+    // Fill the common ping fields.
+    let pingData = {
+      type: aType,
+      id: generateUUID(),
+      creationDate: (new Date()).toISOString(),
+      version: PING_FORMAT_VERSION,
+      application: this._getApplicationSection(),
+      payload: aPayload,
+    };
+
+    if (aOptions.addClientId) {
+      pingData.clientId = this._clientID;
+    }
+
+    if (aOptions.addEnvironment) {
+      return TelemetryEnvironment.getEnvironmentData().then(environment => {
+        pingData.environment = environment;
+        return pingData;
+      },
+      error => {
+        this._log.error("assemblePing - Rejection", error);
+      });
+    }
+
+    return Promise.resolve(pingData);
+  },
+
+  popPayloads: function popPayloads() {
+    this._log.trace("popPayloads");
     function payloadIter() {
-      if (externalPayload && reason != "overdue-flush") {
-        yield externalPayload;
-      }
-      let iterator = TelemetryFile.popPendingPings(reason);
+      let iterator = TelemetryFile.popPendingPings();
       for (let data of iterator) {
         yield data;
       }
@@ -178,29 +378,142 @@ let Impl = {
   },
 
   /**
-   * Send data to the server. Record success/send-time in histograms
+   * Build a complete ping and send data to the server. Record success/send-time in
+   * histograms.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} aOptions Options object.
+   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
+   *                  false otherwise.
+   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   *                  environment data.
+   *
+   * @returns {Promise} A promise that resolves when the ping is sent.
    */
-  send: function send(reason, aPayload) {
-    this._log.trace("send - Reason " + reason + ", Server " + this._server);
-    return this.sendPingsFromIterator(this._server, reason,
-                                      Iterator(this.popPayloads(reason, aPayload)));
+  send: function send(aType, aPayload, aOptions) {
+    this._log.trace("send - Type " + aType + ", Server " + this._server +
+                    ", aOptions " + JSON.stringify(aOptions));
+
+    return this.assemblePing(aType, aPayload, aOptions)
+        .then(pingData => {
+          // Once ping is assembled, send it along with the persisted ping in the backlog.
+          let p = [
+            // Persist the ping if sending it fails.
+            this.doPing(pingData, false)
+                .catch(() => TelemetryFile.savePing(pingData, true)),
+            this.sendPersistedPings(),
+          ];
+          return Promise.all(p);
+        },
+        error => this._log.error("send - Rejection", error));
   },
 
-  sendPingsFromIterator: function sendPingsFromIterator(server, reason, i) {
-    let p = [data for (data in i)].map((data) =>
-      this.doPing(server, data).then(null, () => TelemetryFile.savePing(data, true)));
-
+  /**
+   * Send the persisted pings to the server.
+   */
+  sendPersistedPings: function sendPersistedPings() {
+    this._log.trace("sendPersistedPings");
+    let pingsIterator = Iterator(this.popPayloads());
+    let p = [data for (data in pingsIterator)].map(data => this.doPing(data, true));
     return Promise.all(p);
   },
 
-  finishPingRequest: function finishPingRequest(success, startTime, ping) {
+  /**
+   * Saves all the pending pings, plus the passed one, to disk.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} aOptions Options object.
+   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
+   *                  false otherwise.
+   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   *                  environment data.
+   *
+   * @returns {Promise} A promise that resolves when all the pings are saved to disk.
+   */
+  savePendingPings: function savePendingPings(aType, aPayload, aOptions) {
+    this._log.trace("savePendingPings - Type " + aType + ", Server " + this._server +
+                    ", aOptions " + JSON.stringify(aOptions));
+
+    return this.assemblePing(aType, aPayload, aOptions)
+        .then(pingData => TelemetryFile.savePendingPings(pingData),
+              error => this._log.error("savePendingPings - Rejection", error));
+  },
+
+  /**
+   * Save a ping to disk.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} aOptions Options object.
+   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
+   *                  false otherwise.
+   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   *                  environment data.
+   * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
+   *
+   * @returns {Promise} A promise that resolves when the ping is saved to disk.
+   */
+  savePing: function savePing(aType, aPayload, aOptions) {
+    this._log.trace("savePing - Type " + aType + ", Server " + this._server +
+                    ", aOptions " + JSON.stringify(aOptions));
+
+    return this.assemblePing(aType, aPayload, aOptions)
+        .then(pingData => TelemetryFile.savePing(pingData, aOptions.overwrite),
+              error => this._log.error("savePing - Rejection", error));
+  },
+
+  /**
+   * Save a ping to disk and return the ping id when done.
+   *
+   * @param {String} aType The type of the ping.
+   * @param {Object} aPayload The actual data payload for the ping.
+   * @param {Object} aOptions Options object.
+   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
+   *                 if sending fails.
+   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
+   *                  false otherwise.
+   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   *                  environment data.
+   * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
+   * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
+   *                 ping location if not provided.
+   *
+   * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
+   *                    disk.
+   */
+  testSavePingToFile: function testSavePingToFile(aType, aPayload, aOptions) {
+    this._log.trace("testSavePingToFile - Type " + aType + ", Server " + this._server +
+                    ", aOptions " + JSON.stringify(aOptions));
+    return this.assemblePing(aType, aPayload, aOptions)
+        .then(pingData => {
+            if (aOptions.filePath) {
+              return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
+                                  .then(() => { return pingData.id; });
+            } else {
+              return TelemetryFile.savePing(pingData, aOptions.overwrite)
+                                  .then(() => { return pingData.id; });
+            }
+        }, error => this._log.error("testSavePing - Rejection", error));
+  },
+
+  finishPingRequest: function finishPingRequest(success, startTime, ping, isPersisted) {
+    this._log.trace("finishPingRequest - Success " + success + ", Persisted " + isPersisted);
+
     let hping = Telemetry.getHistogramById("TELEMETRY_PING");
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
     hsuccess.add(success);
     hping.add(new Date() - startTime);
 
-    if (success) {
+    if (success && isPersisted) {
       return TelemetryFile.cleanupPingFile(ping);
     } else {
       return Promise.resolve();
@@ -208,23 +521,44 @@ let Impl = {
   },
 
   submissionPath: function submissionPath(ping) {
-    let slug;
-    if (!ping) {
-      slug = this._uuid;
+    // The new ping format contains an "application" section, the old one doesn't.
+    let pathComponents;
+    if (isNewPingFormat(ping)) {
+      // We insert the Ping id in the URL to simplify server handling of duplicated
+      // pings.
+      let app = ping.application;
+      pathComponents = [
+        ping.id, ping.type, app.name, app.version, app.channel, app.buildId
+      ];
     } else {
-      let info = ping.payload.info;
-      let pathComponents = [ping.slug, info.reason, info.appName,
-                            info.appVersion, info.appUpdateChannel,
-                            info.appBuildID];
-      slug = pathComponents.join("/");
+      // This is a ping in the old format.
+      if (!("slug" in ping)) {
+        // That's odd, we don't have a slug. Generate one so that TelemetryFile.jsm works.
+        ping.slug = generateUUID();
+      }
+
+      // Do we have enough info to build a submission URL?
+      let payload = ("payload" in ping) ? ping.payload : null;
+      if (payload && ("info" in payload)) {
+        let info = ping.payload.info;
+        pathComponents = [ ping.slug, info.reason, info.appName, info.appVersion,
+                           info.appUpdateChannel, info.appBuildID ];
+      } else {
+        // Only use the UUID as the slug.
+        pathComponents = [ ping.slug ];
+      }
     }
+
+    let slug = pathComponents.join("/");
     return "/submit/telemetry/" + slug;
   },
 
-  doPing: function doPing(server, ping) {
-    this._log.trace("doPing - Server " + server);
+  doPing: function doPing(ping, isPersisted) {
+    this._log.trace("doPing - Server " + this._server + ", Persisted " + isPersisted);
     let deferred = Promise.defer();
-    let url = server + this.submissionPath(ping);
+    let isNewPing = isNewPingFormat(ping);
+    let version = isNewPing ? PING_FORMAT_VERSION : 1;
+    let url = this._server + this.submissionPath(ping) + "?v=" + version;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
@@ -235,24 +569,34 @@ let Impl = {
     let startTime = new Date();
 
     function handler(success) {
+      let handleCompletion = event => {
+        if (success) {
+          deferred.resolve();
+        } else {
+          deferred.reject(event);
+        }
+      };
+
       return function(event) {
-        this.finishPingRequest(success, startTime, ping).then(() => {
-          if (success) {
-            deferred.resolve();
-          } else {
-            deferred.reject(event);
-          }
-        });
+        this.finishPingRequest(success, startTime, ping, isPersisted)
+          .then(() => handleCompletion(event),
+                error => {
+                  this._log.error("doPing - Request Success " + success + ", Error " +
+                                  error);
+                  handleCompletion(event);
+                });
       };
     }
     request.addEventListener("error", handler(false).bind(this), false);
     request.addEventListener("load", handler(true).bind(this), false);
 
+    // If that's a legacy ping format, just send its payload.
+    let networkPayload = isNewPing ? ping : ping.payload;
     request.setRequestHeader("Content-Encoding", "gzip");
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(ping.payload));
+    let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
@@ -316,13 +660,31 @@ let Impl = {
 
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
+   *
+   * This delayed initialization means TelemetryPing init can be in the following states:
+   * 1) setupTelemetry was never called
+   * or it was called and
+   *   2) _delayedInitTask was scheduled, but didn't run yet.
+   *   3) _delayedInitTask is currently running.
+   *   4) _delayedInitTask finished running and is nulled out.
    */
   setupTelemetry: function setupTelemetry(testing) {
+    this._initStarted = true;
     if (testing && !this._log) {
       this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
     this._log.trace("setupTelemetry");
+
+    if (this._delayedInitTask) {
+      this._log.error("setupTelemetry - init task already running");
+      return this._delayedInitTaskDeferred.promise;
+    }
+
+    if (this._initialized && !testing) {
+      this._log.error("setupTelemetry - already initialized");
+      return Promise.resolve();
+    }
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
@@ -342,41 +704,91 @@ let Impl = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    let deferred = Promise.defer();
-    let delayedTask = new DeferredTask(function* () {
-      this._initialized = true;
+    this._delayedInitTaskDeferred = Promise.defer();
+    this._delayedInitTask = new DeferredTask(function* () {
+      try {
+        this._initialized = true;
 
-      yield TelemetryFile.loadSavedPings();
-      // If we have any TelemetryPings lying around, we'll be aggressive
-      // and try to send them all off ASAP.
-      if (TelemetryFile.pingsOverdue > 0) {
-        this._log.trace("setupChromeProcess - Sending " + TelemetryFile.pingsOverdue +
-                        " overdue pings now.");
-        // It doesn't really matter what we pass to this.send as a reason,
-        // since it's never sent to the server. All that this.send does with
-        // the reason is check to make sure it's not a test-ping.
-        yield this.send("overdue-flush");
+        yield TelemetryEnvironment.init();
+
+        yield TelemetryFile.loadSavedPings();
+        // If we have any TelemetryPings lying around, we'll be aggressive
+        // and try to send them all off ASAP.
+        if (TelemetryFile.pingsOverdue > 0) {
+          this._log.trace("setupChromeProcess - Sending " + TelemetryFile.pingsOverdue +
+                          " overdue pings now.");
+          // It doesn't really matter what we pass to this.send as a reason,
+          // since it's never sent to the server. All that this.send does with
+          // the reason is check to make sure it's not a test-ping.
+          yield this.sendPersistedPings();
+        }
+
+        if ("@mozilla.org/datareporting/service;1" in Cc) {
+          let drs = Cc["@mozilla.org/datareporting/service;1"]
+                      .getService(Ci.nsISupports)
+                      .wrappedJSObject;
+          this._clientID = yield drs.getClientID();
+          // Update cached client id.
+          Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+        } else {
+          // Nuke potentially cached client id.
+          Preferences.reset(PREF_CACHED_CLIENTID);
+        }
+
+        Telemetry.asyncFetchTelemetryData(function () {});
+        this._delayedInitTaskDeferred.resolve();
+      } catch (e) {
+        this._delayedInitTaskDeferred.reject(e);
+      } finally {
+        this._delayedInitTask = null;
+        this._delayedInitTaskDeferred = null;
       }
-
-      if ("@mozilla.org/datareporting/service;1" in Cc) {
-        let drs = Cc["@mozilla.org/datareporting/service;1"]
-                    .getService(Ci.nsISupports)
-                    .wrappedJSObject;
-        this._clientID = yield drs.getClientID();
-        // Update cached client id.
-        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
-      } else {
-        // Nuke potentially cached client id.
-        Preferences.reset(PREF_CACHED_CLIENTID);
-      }
-
-      Telemetry.asyncFetchTelemetryData(function () {});
-      deferred.resolve();
-
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    delayedTask.arm();
-    return deferred.promise;
+    AsyncShutdown.sendTelemetry.addBlocker("TelemetryPing: shutting down",
+                                           () => this.shutdown(),
+                                           () => this._getState());
+
+    this._delayedInitTask.arm();
+    return this._delayedInitTaskDeferred.promise;
+  },
+
+  shutdown: function() {
+    this._log.trace("shutdown");
+
+    let cleanup = () => {
+      if (!this._initialized) {
+        return;
+      }
+      let reset = () => {
+        this._initialized = false;
+        this._initStarted = false;
+      };
+      return this._shutdownBarrier.wait().then(
+               () => TelemetryEnvironment.shutdown().then(reset, reset));
+    };
+
+    // We can be in one the following states here:
+    // 1) setupTelemetry was never called
+    // or it was called and
+    //   2) _delayedInitTask was scheduled, but didn't run yet.
+    //   3) _delayedInitTask is running now.
+    //   4) _delayedInitTask finished running already.
+
+    // This handles 1).
+    if (!this._initStarted) {
+      return Promise.resolve();
+    }
+
+    // This handles 4).
+    if (!this._delayedInitTask) {
+      // We already ran the delayed initialization.
+      return cleanup();
+    }
+
+    // This handles 2) and 3).
+    this._delayedInitTask.disarm();
+    return this._delayedInitTask.finalize().then(cleanup);
   },
 
   /**
@@ -411,5 +823,16 @@ let Impl = {
 
   get clientID() {
     return this._clientID;
+  },
+
+  /**
+   * Get an object describing the current state of this module for AsyncShutdown diagnostics.
+   */
+  _getState: function() {
+    return {
+      initialized: this._initialized,
+      initStarted: this._initStarted,
+      haveDelayedInitTask: !!this._delayedInitTask,
+    };
   },
 };

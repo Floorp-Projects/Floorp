@@ -138,9 +138,9 @@ function finishUp() {
     inspector.destroy();
     inspector = null;
     completer = null;
+    gBrowser.removeCurrentTab();
+    finish();
   });
   progress = null;
   progressDiv = null;
-  gBrowser.removeCurrentTab();
-  finish();
 }

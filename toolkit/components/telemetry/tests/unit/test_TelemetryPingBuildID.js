@@ -62,7 +62,7 @@ add_task(function* test_newBuild() {
   info.appBuildID = NEW_BUILD_ID;
   yield TelemetrySession.reset();
   let metadata = TelemetrySession.getMetadata();
-  do_check_eq(metadata.previousBuildID, oldBuildID);
+  do_check_eq(metadata.previousBuildId, oldBuildID);
   let buildIDPref = Services.prefs.getCharPref(TelemetrySession.Constants.PREF_PREVIOUS_BUILDID);
   do_check_eq(NEW_BUILD_ID, buildIDPref);
 });
