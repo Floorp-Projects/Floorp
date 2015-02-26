@@ -298,6 +298,21 @@ class TestBuildReader(unittest.TestCase):
             'd2/file': ['moz.build', 'd2/moz.build'],
         })
 
+    def test_read_relevant_mozbuilds(self):
+        reader = self.reader('reader-relevant-mozbuild')
+
+        paths, contexts = reader.read_relevant_mozbuilds(['d1/every-level/a/file',
+            'd1/every-level/b/file', 'd2/file'])
+        self.assertEqual(len(paths), 3)
+        self.assertEqual(len(contexts), 6)
+
+        self.assertEqual([ctx.relsrcdir for ctx in paths['d1/every-level/a/file']],
+            ['', 'd1', 'd1/every-level', 'd1/every-level/a'])
+        self.assertEqual([ctx.relsrcdir for ctx in paths['d1/every-level/b/file']],
+            ['', 'd1', 'd1/every-level', 'd1/every-level/b'])
+        self.assertEqual([ctx.relsrcdir for ctx in paths['d2/file']],
+            ['', 'd2'])
+
 
 if __name__ == '__main__':
     main()
