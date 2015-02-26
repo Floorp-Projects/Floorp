@@ -6,11 +6,17 @@ var methodCalled = false;
 var getterCalled = false;
 var setterCalled = false;
 var constructorCalled = false;
+var staticMethodCalled = false;
+var staticGetterCalled = false;
+var staticSetterCalled = false;
 class a {
     constructor() { constructorCalled = true; }
     __proto__() { methodCalled = true }
     get getter() { getterCalled = true; }
     set setter(x) { setterCalled = true; }
+    static staticMethod() { staticMethodCalled = true; }
+    static get staticGetter() { staticGetterCalled = true; }
+    static set staticSetter(x) { staticSetterCalled = true; }
     *[Symbol.iterator]() { yield "cow"; yield "pig"; }
 }
 var aConstDesc = Object.getOwnPropertyDescriptor(a.prototype, \"constructor\");
@@ -41,6 +47,28 @@ assertEq(aSetDesc.enumerable, true);
 aSetDesc.set();
 assertEq(setterCalled, true);
 assertDeepEq(aSetDesc, Object.getOwnPropertyDescriptor(a.prototype, \"setter\"));
+
+assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticMethod\"), undefined);
+var aStaticMethDesc = Object.getOwnPropertyDescriptor(a, \"staticMethod\");
+assertEq(aStaticMethDesc.configurable, true);
+assertEq(aStaticMethDesc.enumerable, true);
+assertEq(aStaticMethDesc.writable, true);
+aStaticMethDesc.value();
+assertEq(staticMethodCalled, true);
+
+assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticGetter\"), undefined);
+var aStaticGetDesc = Object.getOwnPropertyDescriptor(a, \"staticGetter\");
+assertEq(aStaticGetDesc.configurable, true);
+assertEq(aStaticGetDesc.enumerable, true);
+aStaticGetDesc.get();
+assertEq(staticGetterCalled, true);
+
+assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticSetter\"), undefined);
+var aStaticSetDesc = Object.getOwnPropertyDescriptor(a, \"staticSetter\");
+assertEq(aStaticSetDesc.configurable, true);
+assertEq(aStaticSetDesc.enumerable, true);
+aStaticSetDesc.set();
+assertEq(staticSetterCalled, true);
 
 assertEq([...new a()].join(), "cow,pig");
 `;
