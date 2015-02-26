@@ -435,6 +435,8 @@ private:
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
+  void* CreateEmptyStyleData(const nsStyleStructID& aSID);
+
   void ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup);
 
   // Helper function for HasChildThatUsesGrandancestorStyle.
