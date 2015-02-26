@@ -1273,7 +1273,7 @@ PeerConnectionObserver.prototype = {
     var pc = this._dompc;
     pc._onReplaceTrackWithTrack = null;
     pc._onReplaceTrackSender = null;
-    pc._onReplaceTrackError(this.newError(message, code));
+    pc._onReplaceTrackFailure(this.newError(message, code));
   },
 
   foundIceCandidate: function(cand) {
