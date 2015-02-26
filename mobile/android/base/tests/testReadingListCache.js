@@ -39,8 +39,7 @@ let TEST_PAGES = [
 ];
 
 add_task(function* test_article_not_found() {
-  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
-  let article = yield ReaderMode.getArticleFromCache(uri);
+  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   do_check_eq(article, null);
 });
 
@@ -55,15 +54,13 @@ add_task(function* test_store_article() {
     length: TEST_PAGES[0].expected.length
   });
 
-  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
-  let article = yield ReaderMode.getArticleFromCache(uri);
+  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   checkArticle(article, TEST_PAGES[0]);
 });
 
 add_task(function* test_remove_article() {
-  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
-  yield ReaderMode.removeArticleFromCache(uri);
-  let article = yield ReaderMode.getArticleFromCache(uri);
+  yield ReaderMode.removeArticleFromCache(TEST_PAGES[0].url);
+  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   do_check_eq(article, null);
 });
 
@@ -110,8 +107,7 @@ add_task(function* test_migrate_cache() {
   yield Reader.migrateCache();
 
   // Check to make sure the article made it into the new cache.
-  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
-  let article = yield ReaderMode.getArticleFromCache(uri);
+  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   checkArticle(article, TEST_PAGES[0]);
 });
 
