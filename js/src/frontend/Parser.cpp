@@ -3325,7 +3325,7 @@ Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
 
 template <>
 bool
-Parser<FullParseHandler>::bindDestructuringVar(BindData<FullParseHandler> *data, ParseNode *pn)
+Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler> *data, ParseNode *pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_NAME));
 
@@ -3385,7 +3385,7 @@ Parser<FullParseHandler>::checkDestructuringObject(BindData<FullParseHandler> *d
                 report(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
                 return false;
             }
-            ok = bindDestructuringVar(data, expr);
+            ok = bindInitialized(data, expr);
         } else {
             ok = checkAndMarkAsAssignmentLhs(expr, KeyedDestructuringAssignment);
         }
@@ -3433,7 +3433,7 @@ Parser<FullParseHandler>::checkDestructuringArray(BindData<FullParseHandler> *da
                     report(ParseError, false, target, JSMSG_NO_VARIABLE_NAME);
                     return false;
                 }
-                ok = bindDestructuringVar(data, target);
+                ok = bindInitialized(data, target);
             } else {
                 ok = checkAndMarkAsAssignmentLhs(target, KeyedDestructuringAssignment);
             }
@@ -3954,135 +3954,168 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
 }
 
 template <>
+bool
+Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos &errorPos)
+{
+    /*
+     * This is a lexical declaration. We must be directly under a block per the
+     * proposed ES4 specs, but not an implicit block created due to
+     * 'for (let ...)'. If we pass this error test, make the enclosing
+     * StmtInfoPC be our scope. Further let declarations in this block will
+     * find this scope statement and use the same block object.
+     *
+     * If we are the first let declaration in this block (i.e., when the
+     * enclosing maybe-scope StmtInfoPC isn't yet a scope statement) then
+     * we also need to set pc->blockNode to be our PNK_LEXICALSCOPE.
+     */
+    StmtInfoPC *stmt = pc->topStmt;
+    if (stmt && (!stmt->maybeScope() || stmt->isForLetBlock)) {
+        reportWithOffset(ParseError, false, errorPos.begin, JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
+                         isConst ? "const" : "lexical");
+        return false;
+    }
+
+    if (stmt && stmt->isBlockScope) {
+        MOZ_ASSERT(pc->staticScope == stmt->staticScope);
+    } else {
+        if (pc->atBodyLevel()) {
+            /*
+             * When bug 589199 is fixed, let variables will be stored in
+             * the slots of a new scope chain object, encountered just
+             * before the global object in the overall chain.  This extra
+             * object is present in the scope chain for all code in that
+             * global, including self-hosted code.  But self-hosted code
+             * must be usable against *any* global object, including ones
+             * with other let variables -- variables possibly placed in
+             * conflicting slots.  Forbid top-level let declarations to
+             * prevent such conflicts from ever occurring.
+             */
+            bool isGlobal = !pc->sc->isFunctionBox() && stmt == pc->topScopeStmt;
+            if (options().selfHostingMode && isGlobal) {
+                report(ParseError, false, null(), JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL,
+                        isConst ? "'const'" : "'let'");
+                return false;
+            }
+            return true;
+        }
+
+        /*
+         * Some obvious assertions here, but they may help clarify the
+         * situation. This stmt is not yet a scope, so it must not be a
+         * catch block (catch is a lexical scope by definition).
+         */
+        MOZ_ASSERT(!stmt->isBlockScope);
+        MOZ_ASSERT(stmt != pc->topScopeStmt);
+        MOZ_ASSERT(stmt->type == STMT_BLOCK ||
+                    stmt->type == STMT_SWITCH ||
+                    stmt->type == STMT_TRY ||
+                    stmt->type == STMT_FINALLY);
+        MOZ_ASSERT(!stmt->downScope);
+
+        /* Convert the block statement into a scope statement. */
+        StaticBlockObject *blockObj = StaticBlockObject::create(context);
+        if (!blockObj)
+            return false;
+
+        ObjectBox *blockbox = newObjectBox(blockObj);
+        if (!blockbox)
+            return false;
+
+        /*
+         * Insert stmt on the pc->topScopeStmt/stmtInfo.downScope linked
+         * list stack, if it isn't already there.  If it is there, but it
+         * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
+         * block.
+         */
+        stmt->isBlockScope = stmt->isNestedScope = true;
+        stmt->downScope = pc->topScopeStmt;
+        pc->topScopeStmt = stmt;
+
+        blockObj->initEnclosingNestedScopeFromParser(pc->staticScope);
+        pc->staticScope = blockObj;
+        stmt->staticScope = blockObj;
+
+#ifdef DEBUG
+        ParseNode *tmp = pc->blockNode;
+        MOZ_ASSERT(!tmp || !tmp->isKind(PNK_LEXICALSCOPE));
+#endif
+
+        /* Create a new lexical scope node for these statements. */
+        ParseNode *pn1 = handler.new_<LexicalScopeNode>(blockbox, pc->blockNode);
+        if (!pn1)
+            return false;;
+        pc->blockNode = pn1;
+    }
+    return true;
+}
+
+static StaticBlockObject *
+CurrentLexicalStaticBlock(ParseContext<FullParseHandler> *pc)
+{
+    return pc->atBodyLevel() ? nullptr :
+           &pc->staticScope->as<StaticBlockObject>();
+}
+
+template <>
+ParseNode *
+Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name, bool isConst,
+                                                        const TokenPos &pos)
+{
+    // Handle the silliness of global and body level lexical decls.
+    BindData<FullParseHandler> data(context);
+    if (pc->atGlobalLevel()) {
+        data.initVarOrGlobalConst(isConst ? JSOP_DEFCONST : JSOP_DEFVAR);
+    } else {
+        if (!checkAndPrepareLexical(isConst, pos))
+            return null();
+        data.initLexical(HoistVars, CurrentLexicalStaticBlock(pc), JSMSG_TOO_MANY_LOCALS, isConst);
+    }
+    ParseNode *dn = newBindingNode(name, pc->atGlobalLevel());
+    if (!dn)
+        return null();
+    handler.setPosition(dn, pos);
+
+    if (!bindInitialized(&data, dn))
+        return null();
+
+    return dn;
+}
+
+template <>
 ParseNode *
 Parser<FullParseHandler>::lexicalDeclaration(bool isConst)
 {
     handler.disableSyntaxParser();
 
-    ParseNode *pn;
+    if (!checkAndPrepareLexical(isConst, pos()))
+        return null();
 
-    do {
-        /*
-         * This is a let declaration. We must be directly under a block per the
-         * proposed ES4 specs, but not an implicit block created due to
-         * 'for (let ...)'. If we pass this error test, make the enclosing
-         * StmtInfoPC be our scope. Further let declarations in this block will
-         * find this scope statement and use the same block object.
-         *
-         * If we are the first let declaration in this block (i.e., when the
-         * enclosing maybe-scope StmtInfoPC isn't yet a scope statement) then
-         * we also need to set pc->blockNode to be our PNK_LEXICALSCOPE.
-         */
-        StmtInfoPC *stmt = pc->topStmt;
-        if (stmt && (!stmt->maybeScope() || stmt->isForLetBlock)) {
-            report(ParseError, false, null(), JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
-                   isConst ? "const" : "let");
-            return null();
-        }
+    /*
+     * Parse body-level lets without a new block object. ES6 specs
+     * that an execution environment's initial lexical environment
+     * is the VariableEnvironment, i.e., body-level lets are in
+     * the same environment record as vars.
+     *
+     * However, they cannot be parsed exactly as vars, as ES6
+     * requires that uninitialized lets throw ReferenceError on use.
+     *
+     * See 8.1.1.1.6 and the note in 13.2.1.
+     *
+     * FIXME global-level lets are still considered vars until
+     * other bugs are fixed.
+     */
+    ParseNodeKind kind = PNK_LET;
+    if (pc->atGlobalLevel())
+        kind = isConst ? PNK_GLOBALCONST : PNK_VAR;
+    else if (isConst)
+        kind = PNK_CONST;
 
-        if (stmt && stmt->isBlockScope) {
-            MOZ_ASSERT(pc->staticScope == stmt->staticScope);
-        } else {
-            if (pc->atBodyLevel()) {
-                /*
-                 * When bug 589199 is fixed, let variables will be stored in
-                 * the slots of a new scope chain object, encountered just
-                 * before the global object in the overall chain.  This extra
-                 * object is present in the scope chain for all code in that
-                 * global, including self-hosted code.  But self-hosted code
-                 * must be usable against *any* global object, including ones
-                 * with other let variables -- variables possibly placed in
-                 * conflicting slots.  Forbid top-level let declarations to
-                 * prevent such conflicts from ever occurring.
-                 */
-                bool isGlobal = !pc->sc->isFunctionBox() && stmt == pc->topScopeStmt;
-                if (options().selfHostingMode && isGlobal) {
-                    report(ParseError, false, null(), JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL,
-                           isConst ? "'const'" : "'let'");
-                    return null();
-                }
-
-                /*
-                 * Parse body-level lets without a new block object. ES6 specs
-                 * that an execution environment's initial lexical environment
-                 * is the VariableEnvironment, i.e., body-level lets are in
-                 * the same environment record as vars.
-                 *
-                 * However, they cannot be parsed exactly as vars, as ES6
-                 * requires that uninitialized lets throw ReferenceError on use.
-                 *
-                 * See 8.1.1.1.6 and the note in 13.2.1.
-                 *
-                 * FIXME global-level lets are still considered vars until
-                 * other bugs are fixed.
-                 */
-                ParseNodeKind kind = PNK_LET;
-                if (isGlobal)
-                    kind = isConst ? PNK_GLOBALCONST : PNK_VAR;
-                else if (isConst)
-                    kind = PNK_CONST;
-                pn = variables(kind);
-                if (!pn)
-                    return null();
-                pn->pn_xflags |= PNX_POPVAR;
-                break;
-            }
-
-            /*
-             * Some obvious assertions here, but they may help clarify the
-             * situation. This stmt is not yet a scope, so it must not be a
-             * catch block (catch is a lexical scope by definition).
-             */
-            MOZ_ASSERT(!stmt->isBlockScope);
-            MOZ_ASSERT(stmt != pc->topScopeStmt);
-            MOZ_ASSERT(stmt->type == STMT_BLOCK ||
-                       stmt->type == STMT_SWITCH ||
-                       stmt->type == STMT_TRY ||
-                       stmt->type == STMT_FINALLY);
-            MOZ_ASSERT(!stmt->downScope);
-
-            /* Convert the block statement into a scope statement. */
-            StaticBlockObject *blockObj = StaticBlockObject::create(context);
-            if (!blockObj)
-                return null();
-
-            ObjectBox *blockbox = newObjectBox(blockObj);
-            if (!blockbox)
-                return null();
-
-            /*
-             * Insert stmt on the pc->topScopeStmt/stmtInfo.downScope linked
-             * list stack, if it isn't already there.  If it is there, but it
-             * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
-             * block.
-             */
-            stmt->isBlockScope = stmt->isNestedScope = true;
-            stmt->downScope = pc->topScopeStmt;
-            pc->topScopeStmt = stmt;
-
-            blockObj->initEnclosingNestedScopeFromParser(pc->staticScope);
-            pc->staticScope = blockObj;
-            stmt->staticScope = blockObj;
-
-#ifdef DEBUG
-            ParseNode *tmp = pc->blockNode;
-            MOZ_ASSERT(!tmp || !tmp->isKind(PNK_LEXICALSCOPE));
-#endif
-
-            /* Create a new lexical scope node for these statements. */
-            ParseNode *pn1 = handler.new_<LexicalScopeNode>(blockbox, pc->blockNode);
-            if (!pn1)
-                return null();
-            pc->blockNode = pn1;
-        }
-
-        pn = variables(isConst ? PNK_CONST : PNK_LET, nullptr,
-                       &pc->staticScope->as<StaticBlockObject>(), HoistVars);
-        if (!pn)
-            return null();
-        pn->pn_xflags = PNX_POPVAR;
-    } while (0);
-
+    ParseNode *pn = variables(kind, nullptr,
+                              CurrentLexicalStaticBlock(pc),
+                              HoistVars);
+    if (!pn)
+        return null();
+    pn->pn_xflags = PNX_POPVAR;
     return MatchOrInsertSemicolon(tokenStream) ? pn : nullptr;
 }
 
