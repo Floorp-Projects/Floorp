@@ -437,9 +437,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
     break;
 
   UNIQUE_CASE(Display)
-  UNIQUE_CASE(Background)
   UNIQUE_CASE(Text)
-  UNIQUE_CASE(TextReset)
 
 #undef UNIQUE_CASE
 
