@@ -728,14 +728,14 @@ const Class* const js::ProxyClassPtr = &js::ProxyObject::class_;
 
 JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
-                   JSObject *parent_, const ProxyOptions &options)
+                   const ProxyOptions &options)
 {
     if (options.lazyProto()) {
         MOZ_ASSERT(!proto_);
         proto_ = TaggedProto::LazyProto;
     }
 
-    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_,
+    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), nullptr,
                             options);
 }
 
