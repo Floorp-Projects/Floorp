@@ -97,12 +97,6 @@ private:
   void BeginPaint();
 
   /**
-   * Determine if we can use a fast path to just do a single high-precision,
-   * non-progressive paint.
-   */
-  bool UseFastPath();
-
-  /**
    * Check if the layer is being scrolled by APZ on the compositor.
    */
   bool IsScrollingOnCompositor(const FrameMetrics& aParentMetrics);
