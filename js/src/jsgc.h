@@ -477,7 +477,7 @@ class ArenaList {
     ArenaHeader *removeRemainingArenas(ArenaHeader **arenap);
     ArenaHeader **pickArenasToRelocate(size_t &arenaTotalOut, size_t &relocTotalOut);
     ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated,
-                                gcstats::Statistics& stats);
+                                SliceBudget &sliceBudget, gcstats::Statistics& stats);
 };
 
 /*
@@ -805,7 +805,7 @@ class ArenaLists
     }
 
     bool relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason reason,
-                        gcstats::Statistics& stats);
+                        SliceBudget &sliceBudget, gcstats::Statistics& stats);
 
     void queueForegroundObjectsForSweep(FreeOp *fop);
     void queueForegroundThingsForSweep(FreeOp *fop);
