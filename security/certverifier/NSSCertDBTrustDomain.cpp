@@ -209,6 +209,28 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
+  // Check the certificate against the OneCRL cert blocklist
+  if (!mCertBlocklist) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  bool isCertRevoked;
+  nsresult nsrv = mCertBlocklist->IsCertRevoked(
+                    candidateCert->derIssuer.data,
+                    candidateCert->derIssuer.len,
+                    candidateCert->serialNumber.data,
+                    candidateCert->serialNumber.len,
+                    &isCertRevoked);
+  if (NS_FAILED(nsrv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  if (isCertRevoked) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: certificate is in blocklist"));
+    return Result::ERROR_REVOKED_CERTIFICATE;
+  }
+
   // XXX: CERT_GetCertTrust seems to be abusing SECStatus as a boolean, where
   // SECSuccess means that there is a trust record and SECFailure means there
   // is not a trust record. I looked at NSS's internal uses of
@@ -355,27 +377,6 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   uint16_t maxOCSPLifetimeInDays = 10;
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     maxOCSPLifetimeInDays = 365;
-  }
-
-  if (!mCertBlocklist) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  bool isCertRevoked;
-  nsresult nsrv = mCertBlocklist->IsCertRevoked(
-                    certID.issuer.UnsafeGetData(),
-                    certID.issuer.GetLength(),
-                    certID.serialNumber.UnsafeGetData(),
-                    certID.serialNumber.GetLength(),
-                    &isCertRevoked);
-  if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  if (isCertRevoked) {
-    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
-           ("NSSCertDBTrustDomain: certificate is in blocklist"));
-    return Result::ERROR_REVOKED_CERTIFICATE;
   }
 
   // If we have a stapled OCSP response then the verification of that response
