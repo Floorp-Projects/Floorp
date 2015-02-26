@@ -2148,11 +2148,7 @@ nsFrameLoader::TryRemoteBrowser()
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
   ScrollingBehavior scrollingBehavior = DEFAULT_SCROLLING;
 
-  if (Preferences::GetBool("layers.async-pan-zoom.enabled", false) ||
-      mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                 nsGkAtoms::mozasyncpanzoom,
-                                 nsGkAtoms::_true,
-                                 eCaseMatters)) {
+  if (Preferences::GetBool("layers.async-pan-zoom.enabled", false)) {
     scrollingBehavior = ASYNC_PAN_ZOOM;
   }
 
