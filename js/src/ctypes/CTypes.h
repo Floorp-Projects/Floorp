@@ -416,7 +416,7 @@ namespace CType {
   JSObject* Create(JSContext* cx, HandleObject typeProto, HandleObject dataProto,
     TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType);
 
-  JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName,
+  JSObject* DefineBuiltin(JSContext* cx, HandleObject ctypesObj, const char* propName,
     JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type,
     jsval size, jsval align, ffi_type* ffiType);
 
