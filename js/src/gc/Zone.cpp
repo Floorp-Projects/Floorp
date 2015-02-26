@@ -367,10 +367,3 @@ ZoneList::removeFront()
 
     front->listNext_ = Zone::NotOnList;
 }
-
-void
-ZoneList::clear()
-{
-    while (!isEmpty())
-        removeFront();
-}
