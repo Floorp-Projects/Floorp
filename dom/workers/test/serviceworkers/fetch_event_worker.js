@@ -27,6 +27,18 @@ onfetch = function(ev) {
     ev.respondWith(new Response("test-respondwith-response response body", {}));
   }
 
+  else if (ev.request.url.contains("synthesized-redirect-real-file.txt")) {
+    ev.respondWith(Promise.resolve(
+      Response.redirect("fetch/real-file.txt")
+    ));
+  }
+
+  else if (ev.request.url.contains("synthesized-redirect-synthesized.txt")) {
+    ev.respondWith(Promise.resolve(
+      Response.redirect("synthesized.txt")
+    ));
+  }
+
   else if (ev.request.url.contains("ignored.txt")) {
   }
 
