@@ -3245,7 +3245,8 @@ CASE(JSOP_INITHIDDENPROP)
 
     /* Load the object being initialized into lval/obj. */
     RootedNativeObject &obj = rootNativeObject0;
-    obj = &REGS.sp[-2].toObject().as<PlainObject>();
+    obj = &REGS.sp[-2].toObject().as<NativeObject>();
+    MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
 
     PropertyName *name = script->getName(REGS.pc);
 
