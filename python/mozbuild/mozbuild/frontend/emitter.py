@@ -25,6 +25,7 @@ import reftest
 import mozinfo
 
 from .data import (
+    BrandingFiles,
     ConfigFileSubstitution,
     ContextWrapped,
     Defines,
@@ -663,6 +664,10 @@ class TreeMetadataEmitter(LoggingMixin):
                         'does not exist: %s' % f, context)
 
             yield DistFiles(context, dist_files, context['FINAL_TARGET'])
+
+        branding_files = context.get('BRANDING_FILES')
+        if branding_files:
+            yield BrandingFiles(context, branding_files)
 
         self._handle_libraries(context)
 
