@@ -1656,6 +1656,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   if (aBuilder->IsBuildingLayerEventRegions() &&
       nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell)) {
     root->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
+  } else {
+    root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
   }
 
   // If we're using containerless scrolling, there is still one case where we
@@ -3811,7 +3813,8 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
-                           aContainerParameters, nullptr);
+                           aContainerParameters, nullptr,
+                           FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
   if (!container)
     return nullptr;
 
@@ -4120,7 +4123,8 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
-                           aContainerParameters, nullptr);
+                           aContainerParameters, nullptr,
+                           FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
   if (mFlags & VERTICAL_SCROLLBAR) {
     layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::VERTICAL);
   }
@@ -4169,9 +4173,9 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
-  if (mForceDispatchToContentRegion) {
-    layer->AsContainerLayer()->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-  }
+  layer->AsContainerLayer()->SetEventRegionsOverride(mForceDispatchToContentRegion
+    ? EventRegionsOverride::ForceDispatchToContent
+    : EventRegionsOverride::NoOverride);
   return layer.forget();
 }
 
@@ -4518,7 +4522,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   return aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
-                           params, nullptr);
+                           params, nullptr,
+                           FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
 }
 
 UniquePtr<FrameMetrics>
@@ -5521,6 +5526,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 
   uint32_t flags = ShouldPrerender(aBuilder) ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
+  flags |= FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix, flags);
@@ -5949,6 +5955,30 @@ nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
   AppendToString(aStream, GetTransform());
 }
 
+nsDisplayItemGeometry*
+nsCharClipDisplayItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+{
+  return new nsCharClipGeometry(this, aBuilder);
+}
+
+void
+nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
+{
+  const nsCharClipGeometry* geometry = static_cast<const nsCharClipGeometry*>(aGeometry);
+
+  bool snap;
+  nsRect newRect = geometry->mBounds;
+  nsRect oldRect = GetBounds(aBuilder, &snap);
+  if (mLeftEdge != geometry->mLeftEdge ||
+      mRightEdge != geometry->mRightEdge ||
+      !oldRect.IsEqualInterior(newRect) ||
+      !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
+    aInvalidRegion->Or(oldRect, newRect);
+  }
+}
+
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList),
@@ -5977,7 +6007,8 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
                         const ContainerLayerParameters& aContainerParameters)
 {
   ContainerLayerParameters newContainerParameters = aContainerParameters;
-  uint32_t flags = FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS;
+  uint32_t flags = FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS |
+                   FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr, flags);

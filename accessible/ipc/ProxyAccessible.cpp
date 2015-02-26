@@ -149,6 +149,22 @@ ProxyAccessible::Relations(nsTArray<RelationType>* aTypes,
   }
 }
 
+int32_t
+ProxyAccessible::CharacterCount()
+{
+  int32_t count = 0;
+  unused << mDoc->SendCharacterCount(mID, &count);
+  return count;
+}
+
+int32_t
+ProxyAccessible::SelectionCount()
+{
+  int32_t count = 0;
+  unused << mDoc->SendSelectionCount(mID, &count);
+  return count;
+}
+
 void
 ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                                nsString& aText) const

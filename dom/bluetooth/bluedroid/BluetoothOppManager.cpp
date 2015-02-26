@@ -77,6 +77,11 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
                              const char16_t* aData)
 {
   MOZ_ASSERT(sBluetoothOppManager);
+  // if state of any volume was changed
+  if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
+    HandleVolumeStateChanged(aSubject);
+    return NS_OK; 
+  }
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
@@ -204,6 +209,10 @@ BluetoothOppManager::~BluetoothOppManager()
   if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
     BT_WARNING("Failed to remove shutdown observer!");
   }
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
+    BT_WARNING("Failed to remove volume observer!");
+  }
 }
 
 bool
@@ -213,6 +222,11 @@ BluetoothOppManager::Init()
   NS_ENSURE_TRUE(obs, false);
   if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
     BT_WARNING("Failed to add shutdown observer!");
+    return false;
+  }
+
+  if (NS_FAILED(obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false))) {
+    BT_WARNING("Failed to add ns volume observer!");
     return false;
   }
 
@@ -281,6 +295,40 @@ BluetoothOppManager::HandleShutdown()
   sInShutdown = true;
   Disconnect(nullptr);
   sBluetoothOppManager = nullptr;
+}
+
+void
+BluetoothOppManager::HandleVolumeStateChanged(nsISupports* aSubject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We will disconnect OPP connection no matter which volume becomes non
+  // STATE_MOUNTED, since user may select files scattered in multiple volumes
+  // in a single transfer, (e.g., user selects 2 files to transfer, one is in
+  // internal volume and the other is in external volume).
+
+  if (!mConnected) {
+    return;
+  }
+
+  // get volume interface and state
+  nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
+  if (!vol) {
+    return;
+  }
+  int32_t state;
+  vol->GetState(&state);
+  if (nsIVolume::STATE_MOUNTED != state) {
+    // Here is for unexpected physical removal of any storage.
+    // By checking the volume state change, we should release the unavailable
+    // storage to prevent being killed by vold.
+    // Disconnect any connected OPP connection since volume state becomes
+    // non STATE_MOUNTED. Then |OnSocketDisconnect| would also be called to
+    // handle remaining files during send(|DiscardBlobsToSend|) or
+    // receive(|DeleteReceivedFile|).
+    BT_LOGR("Volume state is not STATE_MOUNTED. Abort any ongoing OPP connection.");
+    Disconnect(nullptr);
+  }
 }
 
 bool
@@ -1099,7 +1147,9 @@ BluetoothOppManager::ReceiveSocketData(BluetoothSocket* aSocket,
 void
 BluetoothOppManager::SendConnectRequest()
 {
-  if (mConnected) return;
+  if (mConnected) {
+    return;
+  }
 
   // Section 3.3.1 "Connect", IrOBEX 1.2
   // [opcode:1][length:2][version:1][flags:1][MaxPktSizeWeCanReceive:2]
@@ -1119,7 +1169,9 @@ void
 BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
                                           int aFileSize)
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
 
   uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
 
@@ -1150,7 +1202,10 @@ void
 BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
                                     int aFileBodyLength)
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
+
   int packetLeftSpace = mRemoteMaxPacketLength - kPutRequestHeaderSize;
   if (aFileBodyLength > packetLeftSpace) {
     BT_WARNING("Not allowed such a small MaxPacketLength value");
@@ -1174,7 +1229,9 @@ BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
 void
 BluetoothOppManager::SendPutFinalRequest()
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
 
   /**
    * Section 2.2.9, "End-of-Body", IrObex 1.2
@@ -1197,7 +1254,9 @@ BluetoothOppManager::SendPutFinalRequest()
 void
 BluetoothOppManager::SendDisconnectRequest()
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
 
   // Section 3.3.2 "Disconnect", IrOBEX 1.2
   // [opcode:1][length:2][Headers:var]
@@ -1230,7 +1289,9 @@ BluetoothOppManager::GetAddress(nsAString& aDeviceAddress)
 void
 BluetoothOppManager::ReplyToConnect()
 {
-  if (mConnected) return;
+  if (mConnected) {
+    return;
+  }
 
   // Section 3.3.1 "Connect", IrOBEX 1.2
   // [opcode:1][length:2][version:1][flags:1][MaxPktSizeWeCanReceive:2]
@@ -1249,7 +1310,9 @@ BluetoothOppManager::ReplyToConnect()
 void
 BluetoothOppManager::ReplyToDisconnectOrAbort()
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
 
   // Section 3.3.2 "Disconnect" and Section 3.3.5 "Abort", IrOBEX 1.2
   // The format of response packet of "Disconnect" and "Abort" are the same
@@ -1263,7 +1326,9 @@ BluetoothOppManager::ReplyToDisconnectOrAbort()
 void
 BluetoothOppManager::ReplyToPut(bool aFinal, bool aContinue)
 {
-  if (!mConnected) return;
+  if (!mConnected) {
+    return;
+  }
 
   // The received length can be reset here because this is where we reply to a
   // complete put packet.
