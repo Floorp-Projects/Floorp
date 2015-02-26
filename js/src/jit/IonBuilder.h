@@ -824,6 +824,7 @@ class IonBuilder
                                    MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
     InliningStatus inlineSimdWith(CallInfo &callInfo, JSNative native, SimdLane lane,
                                   SimdTypeDescr::Type type);
+    InliningStatus inlineSimdSplat(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
     InliningStatus inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
                                      SimdTypeDescr::Type from, SimdTypeDescr::Type to);
 

@@ -1434,16 +1434,13 @@ class MSimdValueX4
 // Generic constructor of SIMD valuesX4.
 class MSimdSplatX4
   : public MUnaryInstruction,
-    public NoTypePolicy::Data
+    public SimdScalarPolicy<0>::Data
 {
   protected:
     MSimdSplatX4(MIRType type, MDefinition *v)
       : MUnaryInstruction(v)
     {
         MOZ_ASSERT(IsSimdType(type));
-        mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
-        MOZ_ASSERT(scalarType == v->type());
-
         setMovable();
         setResultType(type);
     }
@@ -1451,7 +1448,13 @@ class MSimdSplatX4
   public:
     INSTRUCTION_HEADER(SimdSplatX4)
 
-    static MSimdSplatX4 *New(TempAllocator &alloc, MIRType type, MDefinition *v)
+    static MSimdSplatX4 *NewAsmJS(TempAllocator &alloc, MDefinition *v, MIRType type)
+    {
+        MOZ_ASSERT(SimdTypeToScalarType(type) == v->type());
+        return new(alloc) MSimdSplatX4(type, v);
+    }
+
+    static MSimdSplatX4 *New(TempAllocator &alloc, MDefinition *v, MIRType type)
     {
         return new(alloc) MSimdSplatX4(type, v);
     }

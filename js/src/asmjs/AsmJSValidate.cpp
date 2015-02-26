@@ -2792,7 +2792,7 @@ class FunctionCompiler
             return nullptr;
 
         MOZ_ASSERT(IsSimdType(type));
-        MSimdSplatX4 *ins = MSimdSplatX4::New(alloc(), type, v);
+        MSimdSplatX4 *ins = MSimdSplatX4::NewAsmJS(alloc(), v, type);
         curBlock_->add(ins);
         return ins;
     }
