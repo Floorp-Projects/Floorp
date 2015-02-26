@@ -349,7 +349,8 @@ class FullParseHandler
         return true;
     }
 
-    bool addClassMethodDefinition(ParseNode *methodList, ParseNode *key, ParseNode *fn, JSOp op)
+    bool addClassMethodDefinition(ParseNode *methodList, ParseNode *key, ParseNode *fn, JSOp op,
+                                  bool isStatic)
     {
         MOZ_ASSERT(methodList->isKind(PNK_CLASSMETHODLIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
@@ -357,8 +358,7 @@ class FullParseHandler
                    key->isKind(PNK_STRING) ||
                    key->isKind(PNK_COMPUTED_NAME));
 
-        // For now, there's no such thing as static methods.
-        ParseNode *classMethod = new_<ClassMethod>(key, fn, op, false);
+        ParseNode *classMethod = new_<ClassMethod>(key, fn, op, isStatic);
         if (!classMethod)
             return false;
         methodList->append(classMethod);

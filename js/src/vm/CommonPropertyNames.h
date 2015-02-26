@@ -180,6 +180,7 @@
     macro(signMask, signMask, "signMask") \
     macro(source, source, "source") \
     macro(stack, stack, "stack") \
+    macro(static, static_, "static") \
     macro(sticky, sticky, "sticky") \
     macro(strings, strings, "strings") \
     macro(StructType, StructType, "StructType") \
