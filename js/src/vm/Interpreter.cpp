@@ -1660,7 +1660,6 @@ CASE(JSOP_UNUSED105)
 CASE(JSOP_UNUSED107)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
-CASE(JSOP_UNUSED147)
 CASE(JSOP_UNUSED148)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED150)
@@ -3233,9 +3232,12 @@ END_CASE(JSOP_MUTATEPROTO)
 
 CASE(JSOP_INITPROP)
 CASE(JSOP_INITLOCKEDPROP)
+CASE(JSOP_INITHIDDENPROP)
 {
     static_assert(JSOP_INITPROP_LENGTH == JSOP_INITLOCKEDPROP_LENGTH,
                   "initprop and initlockedprop must be the same size");
+    static_assert(JSOP_INITPROP_LENGTH == JSOP_INITHIDDENPROP_LENGTH,
+                  "initprop and inithiddenprop must be the same size");
     /* Load the property's initial value into rval. */
     MOZ_ASSERT(REGS.stackDepth() >= 2);
     RootedValue &rval = rootValue0;
@@ -3250,9 +3252,8 @@ CASE(JSOP_INITLOCKEDPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    unsigned propFlags = JSOp(*REGS.pc) == JSOP_INITPROP ? JSPROP_ENUMERATE
-                                                         : JSPROP_READONLY | JSPROP_PERMANENT;
-    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, propFlags))
+    unsigned propAttrs = GetInitDataPropAttrs(JSOp(*REGS.pc));
+    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, propAttrs))
         goto error;
 
     REGS.sp--;
@@ -4023,6 +4024,22 @@ js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 
     MarkObjectGroupFlags(cx, script->functionNonDelazifying(), OBJECT_FLAG_RUNONCE_INVALIDATED);
     return true;
+}
+
+unsigned
+js::GetInitDataPropAttrs(JSOp op)
+{
+    switch (op) {
+      case JSOP_INITPROP:
+        return JSPROP_ENUMERATE;
+      case JSOP_INITLOCKEDPROP:
+        return JSPROP_PERMANENT | JSPROP_READONLY;
+      case JSOP_INITHIDDENPROP:
+        // Non-enumerable, but writable and configurable
+        return 0;
+      default:;
+    }
+    MOZ_CRASH("Unknown data initprop");
 }
 
 bool
