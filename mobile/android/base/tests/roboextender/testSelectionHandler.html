@@ -208,7 +208,12 @@ function testCloseSelection() {
   // Various ways to close an active selection.
   ]).then(function() {
     sh.startSelection(inputNode);
-    Services.obs.notifyObservers(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End",
+      JSON.stringify({selectionID: -1}));
+    return ok(sh.isSelectionActive(), "unrelated TextSelection:End should not close active selection");
+  }).then(function() {
+    Services.obs.notifyObservers(null, "TextSelection:End",
+      JSON.stringify({selectionID: sh._selectionID}));
     return ok(!sh.isSelectionActive(), "TextSelection:End should close active selection");
 
   }).then(function() {
@@ -310,7 +315,8 @@ function testAttachCaret() {
     ]);
 
   }).then(function() {
-    Services.obs.notifyObservers(null, "TextSelection:End", {});
+    Services.obs.notifyObservers(null, "TextSelection:End",
+      JSON.stringify({selectionID: sh._selectionID}));
 
     return Promise.all([
       ok(!sh.isSelectionActive(), "Selection should not be active at end of testAttachCaret"),

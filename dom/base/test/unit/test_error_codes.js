@@ -6,6 +6,9 @@
 var gExpectedStatus = null;
 var gNextTestFunc   = null;
 
+var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch);
+
 var asyncXHR = {
   load: function() {
     var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -39,6 +42,7 @@ function run_test_pt1() {
   catch (e) {
   }
   ioService.offline = true;
+  prefs.setBoolPref("network.dns.offline-localhost", false);
 
   gExpectedStatus = Components.results.NS_ERROR_OFFLINE;
   gNextTestFunc = run_test_pt2;
@@ -51,6 +55,7 @@ function run_test_pt2() {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
   ioService.offline = false;
+  prefs.clearUserPref("network.dns.offline-localhost");
 
   gExpectedStatus = Components.results.NS_ERROR_CONNECTION_REFUSED;
   gNextTestFunc = end_test;

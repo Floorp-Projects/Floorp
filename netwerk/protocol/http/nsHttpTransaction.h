@@ -114,7 +114,6 @@ public:
     void    SetPriority(int32_t priority) { mPriority = priority; }
     int32_t    Priority()                 { return mPriority; }
 
-    const TimingStruct& Timings() const { return mTimings; }
     enum Classifier Classification() { return mClassification; }
 
     void PrintDiagnostics(nsCString &log);
@@ -140,6 +139,24 @@ public:
         return r;
     }
     void SetPushedStream(Http2PushedStream *push) { mPushedStream = push; }
+
+    // Locked methods to get and set timing info
+    const TimingStruct Timings();
+    void SetDomainLookupStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetDomainLookupEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetConnectStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetConnectEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetRequestStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetResponseStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+    void SetResponseEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
+
+    mozilla::TimeStamp GetDomainLookupStart();
+    mozilla::TimeStamp GetDomainLookupEnd();
+    mozilla::TimeStamp GetConnectStart();
+    mozilla::TimeStamp GetConnectEnd();
+    mozilla::TimeStamp GetRequestStart();
+    mozilla::TimeStamp GetResponseStart();
+    mozilla::TimeStamp GetResponseEnd();
 
 private:
     friend class DeleteHttpTransaction;
@@ -277,6 +294,8 @@ private:
     bool                            mResponseTimeoutEnabled;
     bool                            mForceRestart;
     bool                            mReuseOnRestart;
+    bool                            mContentDecoding;
+    bool                            mContentDecodingCheck;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

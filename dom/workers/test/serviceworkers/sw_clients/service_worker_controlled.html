@@ -26,7 +26,7 @@
     });
   }
 
-  window.onmessage = function(msg) {
+  navigator.serviceWorker.onmessage = function(msg) {
     // forward message to the test page.
     parent.postMessage(msg.data, "*");
   };

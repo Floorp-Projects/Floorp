@@ -2070,7 +2070,7 @@ bool AudioCodingImpl::RegisterSendCodec(int encoder_type,
 
 const AudioEncoder* AudioCodingImpl::GetSenderInfo() const {
   FATAL() << "Not implemented yet.";
-  return reinterpret_cast<const AudioEncoder*>(NULL);
+  return NULL;
 }
 
 const CodecInst* AudioCodingImpl::GetSenderCodecInst() {
@@ -2089,7 +2089,7 @@ int AudioCodingImpl::Add10MsAudio(const AudioFrame& audio_frame) {
 
 const ReceiverInfo* AudioCodingImpl::GetReceiverInfo() const {
   FATAL() << "Not implemented yet.";
-  return reinterpret_cast<const ReceiverInfo*>(NULL);
+  return NULL;
 }
 
 bool AudioCodingImpl::RegisterReceiveCodec(AudioDecoder* receive_codec) {

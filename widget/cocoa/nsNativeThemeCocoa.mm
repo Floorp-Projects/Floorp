@@ -3494,6 +3494,8 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_METERBAR:
     case NS_THEME_METERBAR_CHUNK:
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
       *aShouldRepaint = false;
       return NS_OK;
   }
