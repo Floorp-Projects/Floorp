@@ -531,6 +531,11 @@ class MOZ_STACK_CLASS TokenStream
     void tell(Position *);
     void seek(const Position &pos);
     bool seek(const Position &pos, const TokenStream &other);
+#ifdef DEBUG
+    inline bool debugHasNoLookahead() const {
+        return lookahead == 0;
+    }
+#endif
 
     const char16_t *rawCharPtrAt(size_t offset) const {
         return userbuf.rawCharPtrAt(offset);
