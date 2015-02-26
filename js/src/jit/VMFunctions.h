@@ -648,8 +648,8 @@ bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleO
 bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
 bool MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value);
 
-template<bool Locked>
-bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value);
+bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value,
+              jsbytecode *pc);
 
 template<bool Equal>
 bool LooselyEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res);

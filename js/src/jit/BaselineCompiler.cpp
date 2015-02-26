@@ -1980,6 +1980,12 @@ BaselineCompiler::emit_JSOP_INITLOCKEDPROP()
     return emit_JSOP_INITPROP();
 }
 
+bool
+BaselineCompiler::emit_JSOP_INITHIDDENPROP()
+{
+    return emit_JSOP_INITPROP();
+}
+
 typedef bool (*NewbornArrayPushFn)(JSContext *, HandleObject, const Value &);
 static const VMFunction NewbornArrayPushInfo = FunctionInfo<NewbornArrayPushFn>(NewbornArrayPush);
 
