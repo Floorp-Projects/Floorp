@@ -81,6 +81,16 @@ const NFC_IPC_MSG_ENTRIES = [
                "NFC:SetFocusApp"] }
 ];
 
+// Should be consistent with NfcRequestType defined in NfcOptions.webidl.
+const NfcRequestType = {
+  CHANGE_RF_STATE: "changeRFState",
+  READ_NDEF: "readNDEF",
+  WRITE_NDEF: "writeNDEF",
+  MAKE_READ_ONLY: "makeReadOnly",
+  FORMAT: "format",
+  TRANSCEIVE: "transceive"
+};
+
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
@@ -617,23 +627,23 @@ Nfc.prototype = {
 
     switch (message.name) {
       case "NFC:ChangeRFState":
-        this.sendToNfcService("changeRFState", message.data);
+        this.sendToNfcService(NfcRequestType.CHANGE_RF_STATE, message.data);
         break;
       case "NFC:ReadNDEF":
-        this.sendToNfcService("readNDEF", message.data);
+        this.sendToNfcService(NfcRequestType.READ_NDEF, message.data);
         break;
       case "NFC:WriteNDEF":
         message.data.isP2P = SessionHelper.isP2PSession(message.data.sessionId);
-        this.sendToNfcService("writeNDEF", message.data);
+        this.sendToNfcService(NfcRequestType.WRITE_NDEF, message.data);
         break;
       case "NFC:MakeReadOnly":
-        this.sendToNfcService("makeReadOnly", message.data);
+        this.sendToNfcService(NfcRequestType.MAKE_READ_ONLY, message.data);
         break;
       case "NFC:Format":
-        this.sendToNfcService("format", message.data);
+        this.sendToNfcService(NfcRequestType.FORMAT, message.data);
         break;
       case "NFC:Transceive":
-        this.sendToNfcService("transceive", message.data);
+        this.sendToNfcService(NfcRequestType.TRANSCEIVE, message.data);
         break;
       case "NFC:SendFile":
         // Chrome process is the arbitrator / mediator between

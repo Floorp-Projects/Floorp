@@ -83,7 +83,7 @@ struct CommandOptions
 #undef COPY_OPT_FIELD
   }
 
-  nsString mType;
+  dom::NfcRequestType mType;
   int32_t mSessionId;
   nsString mRequestId;
   int32_t mRfState;
