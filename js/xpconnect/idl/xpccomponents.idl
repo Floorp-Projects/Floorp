@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(2617a800-63c1-11e4-9803-0800200c9a66)]
+[scriptable, uuid(9b153002-3bc6-4d83-b825-64d21b13a098)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -679,6 +679,14 @@ interface nsIXPCComponents_Utils : nsISupports
      * startup, measured with a monotonic clock.
      */
     double now();
+
+    /*
+     * Whether we are currently monitoring CPU use on this thread.
+     *
+     * Note that CPU monitoring is rather expensive, so it generally
+     * not be active at all times.
+     */
+    attribute boolean stopwatchMonitoring;
 };
 
 /**

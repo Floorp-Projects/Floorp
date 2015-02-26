@@ -479,6 +479,60 @@ struct PerThreadDataFriendFields
     template <typename T> friend class JS::Rooted;
 };
 
+// Container for performance data
+struct PerformanceData {
+    // Jank indicator.
+    //
+    // missedFrames[i] == number of times execution of this
+    // compartment caused us to miss at least 2^i successive frames -
+    // we assume that a frame lasts 16ms.
+    uint64_t missedFrames[8];
+
+    // Total amount of time spent executing code in this compartment,
+    // in microseconds, since process launch.
+    uint64_t totalUserTime;
+    uint64_t totalSystemTime;
+    uint64_t ownUserTime;
+    uint64_t ownSystemTime;
+    uint64_t cpowTime;
+
+    // Total number of time code was executed in this compartment,
+    // since process launch.
+    uint64_t visits;
+
+    PerformanceData()
+        : totalUserTime(0)
+        , totalSystemTime(0)
+        , ownUserTime(0)
+        , ownSystemTime(0)
+        , cpowTime(0)
+        , visits(0)
+    {
+        memset(missedFrames, 0, sizeof(missedFrames));
+    }
+    PerformanceData(const PerformanceData& from)
+        : totalUserTime(from.totalUserTime)
+        , totalSystemTime(from.totalSystemTime)
+        , ownUserTime(from.ownUserTime)
+        , ownSystemTime(from.ownSystemTime)
+        , cpowTime(from.cpowTime)
+        , visits(from.visits)
+    {
+        memcpy(missedFrames, from.missedFrames, sizeof(missedFrames));
+    }
+    PerformanceData& operator=(const PerformanceData& from)
+    {
+        memcpy(missedFrames, from.missedFrames, sizeof(missedFrames));
+        totalUserTime = from.totalUserTime;
+        totalSystemTime = from.totalSystemTime;
+        ownUserTime = from.ownUserTime;
+        ownSystemTime = from.ownSystemTime;
+        cpowTime = from.cpowTime;
+        visits = from.visits;
+        return *this;
+    }
+};
+
 } /* namespace js */
 
 #endif /* jspubtd_h */

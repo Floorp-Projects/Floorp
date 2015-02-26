@@ -848,3 +848,21 @@ JS::UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime *runtime, uint32_t generati
     runtime->setProfilerSampleBufferGen(generation);
     runtime->updateProfilerSampleBufferLapCount(lapCount);
 }
+
+void
+js::ResetStopwatches(JSRuntime *rt)
+{
+    rt->stopwatch.reset();
+}
+
+void
+js::SetStopwatchActive(JSRuntime *rt, bool isActive)
+{
+    rt->stopwatch.isActive = isActive;
+}
+
+bool
+js::IsStopwatchActive(JSRuntime *rt)
+{
+    return rt->stopwatch.isActive;
+}

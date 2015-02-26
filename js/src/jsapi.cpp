@@ -173,8 +173,9 @@ JS_GetCompartmentStats(JSRuntime *rt, CompartmentStatsVector &stats)
             return false;
 
         CompartmentTimeStats *stat = &stats.back();
-        stat->time = c.get()->totalTime;
         stat->compartment = c.get();
+        stat->performance = stat->compartment->performance;
+        stat->isSystem = stat->compartment->isSystem;
         stat->addonId = c.get()->addonId;
         if (rt->compartmentNameCallback) {
             (*rt->compartmentNameCallback)(rt, stat->compartment,
@@ -5800,4 +5801,12 @@ JS_PUBLIC_API(Zone *)
 JS::GetObjectZone(JSObject *obj)
 {
     return obj->zone();
+}
+
+JS_PUBLIC_API(PerformanceData*)
+js::GetPerformanceData(JSCompartment *c)
+{
+    if (!c)
+        return nullptr;
+    return &c->performance;
 }
