@@ -67,6 +67,18 @@ function defaultClause(stmts) Pattern({ type: "SwitchCase", test: null, conseque
 function catchClause(id, guard, body) Pattern({ type: "CatchClause", param: id, guard: guard, body: body })
 function tryStmt(body, guarded, unguarded, fin) Pattern({ type: "TryStatement", block: body, guardedHandlers: guarded, handler: unguarded, finalizer: fin })
 function letStmt(head, body) Pattern({ type: "LetStatement", head: head, body: body })
+
+function classStmt(id, heritage, body) Pattern({ type: "ClassStatement",
+                                                 name: id,
+                                                 heritage: heritage,
+                                                 body: body})
+function classMethod(id, body, kind, static) Pattern({ type: "ClassMethod",
+                                                       name: id,
+                                                       body: body,
+                                                       kind: kind,
+                                                       static: static })
+
+
 function funExpr(id, args, body, gen) Pattern({ type: "FunctionExpression",
                                                 id: id,
                                                 params: args,
@@ -1132,6 +1144,149 @@ assertError("let (x = 1, x = 2) { }", TypeError);
 try {
     Reflect.parse(Array(3000).join("x + y - ") + "z")
 } catch (e) { }
+
+
+// Classes
+function classesEnabled() {
+    try {
+        Reflect.parse("class foo { constructor() { } }");
+        return true;
+    } catch (e) {
+        assertEq(e instanceof SyntaxError, true);
+        return false;
+    }
+}
+
+function testClasses() {
+    // No unnamed class statements.
+    assertError("class { constructor() { } }", SyntaxError);
+
+    function simpleMethod(id, kind, generator, args=[]) {
+        assertEq(generator && kind === "method", generator);
+        let idN = ident(id);
+        let methodMaker = generator ? genFunExpr : funExpr;
+        let methodName = kind !== "method" ? null : idN;
+        let methodFun = methodMaker(methodName, args.map(ident), blockStmt([]));
+
+        return classMethod(idN, methodFun, kind, false);
+    }
+    function setClassMethods(class_, methods) {
+        class_.template.body = methods;
+    }
+
+    let simpleConstructor = simpleMethod("constructor", "method", false);
+    let emptyFooClass = classStmt(ident("Foo"), null, [simpleConstructor]);
+
+    /* Trivial classes */
+    assertStmt("class Foo { constructor() { } }", emptyFooClass);
+
+    // Allow methods and accessors
+    let stmt = classStmt(ident("Foo"), null,
+                         [simpleConstructor, simpleMethod("method", "method", false)]);
+    assertStmt("class Foo { constructor() { } method() { } }", stmt);
+
+    setClassMethods(stmt, [simpleConstructor, simpleMethod("method", "get", false)]);
+    assertStmt("class Foo { constructor() { } get method() { } }", stmt);
+
+    setClassMethods(stmt, [simpleConstructor, simpleMethod("method", "set", false, ["x"])]);
+    assertStmt("class Foo { constructor() { } set method(x) { } }", stmt);
+
+    /* Constructor */
+    // Currently, we do not allow default constructors
+    assertError("class Foo { }", TypeError);
+
+    // It is an error to have two methods named constructor, but not other
+    // names, regardless if one is an accessor or a generator.
+    assertError("class Foo { constructor() { } constructor(a) { } }", SyntaxError);
+    let methods = [["method() { }", simpleMethod("method", "method", false)],
+                   ["*method() { }", simpleMethod("method", "method", true)],
+                   ["get method() { }", simpleMethod("method", "get", false)],
+                   ["set method(x) { }", simpleMethod("method", "set", false, ["x"])]];
+    let i,j;
+    for (i=0; i < methods.length; i++) {
+        for (j=0; j < methods.length; j++) {
+            setClassMethods(stmt,
+                            [simpleConstructor,
+                             methods[i][1],
+                             methods[j][1]]);
+            let str = "class Foo { constructor() { } " +
+                       methods[i][0] + " " + methods[j][0] +
+                       " }";
+            assertStmt(str, stmt);
+        }
+    }
+
+    // It is, however, not an error to have a constructor, and a method with a
+    // computed property name 'constructor'
+    assertStmt("class Foo { constructor () { } [\"constructor\"] () { } }",
+               classStmt(ident("Foo"), null,
+                         [simpleConstructor,
+                          classMethod(computedName(lit("constructor")),
+                                      funExpr(null, [], blockStmt([])),
+                                      "method", false)]));
+
+    // It is an error to have a generator or accessor named constructor
+    assertError("class Foo { *constructor() { } }", SyntaxError);
+    assertError("class Foo { get constructor() { } }", SyntaxError);
+    assertError("class Foo { set constructor() { } }", SyntaxError);
+
+    /* Semicolons */
+    // Allow Semicolons in Class Definitions
+    assertStmt("class Foo { constructor() { }; }", emptyFooClass);
+
+    // Allow more than one semicolon, even in otherwise trivial classses
+    assertStmt("class Foo { ;;; constructor() { } }", emptyFooClass);
+
+    // Semicolons are optional, even if the methods share a line
+    setClassMethods(stmt, [simpleMethod("method", "method", false), simpleConstructor]);
+    assertStmt("class Foo { method() { } constructor() { } }", stmt);
+
+    /* Generators */
+    // No yield as a class name inside a generator
+    assertError("function *foo() {\
+                    class yield {\
+                        constructor() { } \
+                    }\
+                 }", SyntaxError);
+
+    // Methods may be generators, but not accessors
+    assertError("class Foo { constructor() { } *get foo() { } }", SyntaxError);
+    assertError("class Foo { constructor() { } *set foo() { } }", SyntaxError);
+
+    setClassMethods(stmt, [simpleMethod("method", "method", true), simpleConstructor]);
+    assertStmt("class Foo { *method() { } constructor() { } }", stmt);
+
+    /* Strictness */
+    // yield is a strict-mode keyword, and class definitions are always strict.
+    assertError("class Foo { constructor() { var yield; } }", SyntaxError);
+    // Beware of the strictness of computed property names. Here use bareword
+    // deletion (a deprecated action) to check.
+    assertError("class Foo { constructor() { } [delete bar]() { }}", SyntaxError);
+
+    /* Bindings */
+    // Classes should bind lexically, so they should collide with other in-block
+    // lexical bindings
+    assertError("{ let Foo; class Foo { constructor() { } } }", TypeError);
+    assertError("{ const Foo = 0; class Foo { constructor() { } } }", TypeError);
+    assertError("{ class Foo { constructor() { } } class Foo { constructor() { } } }", TypeError);
+
+    // Can't make a lexical binding inside a block.
+    assertError("if (1) class Foo { constructor() { } }", SyntaxError);
+
+    /* EOF */
+    // Clipped classes should throw a syntax error
+    assertError("class Foo {", SyntaxError);
+    assertError("class Foo {;", SyntaxError);
+    assertError("class Foo { constructor", SyntaxError);
+    assertError("class Foo { constructor(", SyntaxError);
+    assertError("class Foo { constructor()", SyntaxError);
+    assertError("class Foo { constructor()", SyntaxError);
+    assertError("class Foo { constructor() {", SyntaxError);
+    assertError("class Foo { constructor() { }", SyntaxError);
+}
+
+if (classesEnabled())
+    testClasses();
 
 
 // Source location information
