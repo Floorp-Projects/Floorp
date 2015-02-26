@@ -581,7 +581,7 @@ class MOZ_STACK_CLASS ProxyOptions {
 
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv,
-               JSObject *proto, JSObject *parent, const ProxyOptions &options = ProxyOptions());
+               JSObject *proto, const ProxyOptions &options = ProxyOptions());
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);
