@@ -735,8 +735,7 @@ js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue p
         proto_ = TaggedProto::LazyProto;
     }
 
-    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), nullptr,
-                            options);
+    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), options);
 }
 
 void
