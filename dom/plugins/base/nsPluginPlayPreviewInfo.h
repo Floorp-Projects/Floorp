@@ -23,6 +23,18 @@ public:
                           const char* aWhitelist);
   explicit nsPluginPlayPreviewInfo(const nsPluginPlayPreviewInfo* aSource);
 
+  /** This function checks aPageURI and aObjectURI against the whitelist
+   *  specified in aWhitelist. This is public static function because this
+   *  whitelist checking code needs to be accessed without any instances of
+   *  nsIPluginPlayPreviewInfo. In particular, the Shumway whitelist is
+   *  obtained directly from prefs and compared using this code for telemetry
+   *  purposes.
+   */
+  static nsresult CheckWhitelist(const nsACString& aPageURI,
+                                 const nsACString& aObjectURI,
+                                 const nsACString& aWhitelist,
+                                 bool *_retval);
+
   nsCString mMimeType;
   bool      mIgnoreCTP;
   nsCString mRedirectURL;
