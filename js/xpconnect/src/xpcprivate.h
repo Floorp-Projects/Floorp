@@ -3480,8 +3480,7 @@ public:
     { }
 
     JSObject *ToJSObject(JSContext *cx) {
-        JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-        JS::RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), global));
+        JS::RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr()));
         if (!obj)
             return nullptr;
 
