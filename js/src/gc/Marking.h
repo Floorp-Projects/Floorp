@@ -37,6 +37,28 @@ struct IonScript;
 struct VMFunction;
 }
 
+/*** Tracing ***/
+
+template <typename T>
+void
+TraceEdge(JSTracer *trc, BarrieredBase<T> *thingp, const char *name);
+
+template <typename T>
+void
+TraceRoot(JSTracer *trc, T *thingp, const char *name);
+
+template <typename T>
+void
+TraceManuallyBarrieredEdge(JSTracer *trc, T *thingp, const char *name);
+
+template <typename T>
+void
+TraceRange(JSTracer *trc, size_t len, BarrieredBase<T> *thingp, const char *name);
+
+template <typename T>
+void
+TraceRootRange(JSTracer *trc, size_t len, T *thingp, const char *name);
+
 namespace gc {
 
 /*** Object Marking ***/
