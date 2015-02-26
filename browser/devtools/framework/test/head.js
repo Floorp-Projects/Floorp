@@ -152,3 +152,26 @@ function toggleAllTools(state) {
     }
   }
 }
+
+function getChromeActors(callback)
+{
+  let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+  let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+  DebuggerServer.allowChromeProcess = true;
+
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.attachProcess().then(response => {
+      callback(client, response.form);
+    });
+  });
+
+  SimpleTest.registerCleanupFunction(() => {
+    DebuggerServer.destroy();
+  });
+}
