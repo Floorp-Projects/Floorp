@@ -135,20 +135,25 @@ class MozbuildSandbox(Sandbox):
         self.exports = set(exports.keys())
         context.update(exports)
         self.templates = self.metadata.setdefault('templates', {})
+        self.special_variables = self.metadata.setdefault('special_variables',
+                                                          SPECIAL_VARIABLES)
+        self.functions = self.metadata.setdefault('functions', FUNCTIONS)
+        self.subcontext_types = self.metadata.setdefault('subcontexts',
+                                                         SUBCONTEXTS)
 
     def __getitem__(self, key):
-        if key in SPECIAL_VARIABLES:
-            return SPECIAL_VARIABLES[key][0](self._context)
-        if key in FUNCTIONS:
-            return self._create_function(FUNCTIONS[key])
-        if key in SUBCONTEXTS:
-            return self._create_subcontext(SUBCONTEXTS[key])
+        if key in self.special_variables:
+            return self.special_variables[key][0](self._context)
+        if key in self.functions:
+            return self._create_function(self.functions[key])
+        if key in self.subcontext_types:
+            return self._create_subcontext(self.subcontext_types[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        if key in SPECIAL_VARIABLES or key in FUNCTIONS or key in SUBCONTEXTS:
+        if key in self.special_variables or key in self.functions or key in self.subcontext_types:
             raise KeyError()
         if key in self.exports:
             self._context[key] = value
@@ -356,12 +361,20 @@ class MozbuildSandbox(Sandbox):
         func, code, path = template
 
         def template_function(*args, **kwargs):
-            context = TemplateContext(VARIABLES, self._context.config)
+            context = TemplateContext(self._context._allowed_variables,
+                                      self._context.config)
             context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
 
-            sandbox = MozbuildSandbox(context, {
+            sandbox = MozbuildSandbox(context, metadata={
+                # We should arguably set these defaults to something else.
+                # Templates, for example, should arguably come from the state
+                # of the sandbox from when the template was declared, not when
+                # it was instantiated. Bug 1137319.
+                'functions': self.metadata.get('functions', {}),
+                'special_variables': self.metadata.get('special_variables', {}),
+                'subcontexts': self.metadata.get('subcontexts', {}),
                 'templates': self.metadata.get('templates', {})
             })
             for k, v in inspect.getcallargs(func, *args, **kwargs).items():
@@ -1035,12 +1048,11 @@ class BuildReader(object):
                             mozpath.relpath(d, context.srcdir), var), context)
 
                 recurse_info[d] = {}
-                if 'templates' in sandbox.metadata:
-                    recurse_info[d]['templates'] = dict(
-                        sandbox.metadata['templates'])
-                if 'exports' in sandbox.metadata:
-                    sandbox.recompute_exports()
-                    recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
+                for key in sandbox.metadata:
+                    if key == 'exports':
+                        sandbox.recompute_exports()
+
+                    recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
             child_path = path.join('moz.build')
