@@ -539,7 +539,7 @@ class TypedRegisterSet
         return bits_;
     }
     uint32_t size() const {
-        return mozilla::CountPopulation32(bits_);
+        return T::SetSize(bits_);
     }
     bool operator ==(const TypedRegisterSet<T> &other) const {
         return other.bits_ == bits_;
