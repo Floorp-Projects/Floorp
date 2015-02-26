@@ -1124,6 +1124,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(ObjectPolicy<3>)                                                  \
     _(SimdPolicy<0>)                                                    \
     _(SimdSameAsReturnedTypePolicy<0>)                                  \
+    _(SimdScalarPolicy<0>)                                              \
     _(StringPolicy<0>)
 
 
