@@ -15,7 +15,7 @@ function mul(a, b) { return a * b; }
 function div(a, b) { return a / b; }
 function neg(a) { return -a; }
 function reciprocal(a) { return 1 / a; }
-function reciprocalSqrt(a) { return 1 / Math.sqrt(a); }
+function reciprocalSqrt(a) { return Math.sqrt(1 / a); }
 
 function testAdd(v, w) {
     return testBinaryFunc(v, w, float64x2.add, add);
@@ -62,10 +62,6 @@ function test() {
       testNeg(v);
       testReciprocal(v);
       testSqrt(v);
-  }
-  for (v of [float64x2(1, 0.25), float64x2(3, 0.5),
-             float64x2(-0, NaN), float64x2(+Infinity, -Infinity)])
-  {
       testReciprocalSqrt(v);
   }
 
