@@ -87,7 +87,7 @@ nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen)
 }
 
 NS_IMETHODIMP
-nsDSURIContentListener::DoContent(const char* aContentType,
+nsDSURIContentListener::DoContent(const nsACString& aContentType,
                                   bool aIsContentPreferred,
                                   nsIRequest* aRequest,
                                   nsIStreamListener** aContentHandler,
@@ -131,7 +131,7 @@ nsDSURIContentListener::DoContent(const char* aContentType,
   }
 
   bool reuseCV = baseChannel && baseChannel == mExistingJPEGRequest &&
-                 nsDependentCString(aContentType).EqualsLiteral("image/jpeg");
+                 aContentType.EqualsLiteral("image/jpeg");
 
   if (mExistingJPEGStreamListener && reuseCV) {
     nsRefPtr<nsIStreamListener> copy(mExistingJPEGStreamListener);

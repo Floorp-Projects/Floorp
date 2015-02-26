@@ -193,8 +193,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-    mLayerManager = nullptr;
-    DestroyCompositor();
+    EnumAllWindows(ClearCompositor);
     return false;
   }
 

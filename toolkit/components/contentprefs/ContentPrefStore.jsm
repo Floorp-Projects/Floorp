@@ -7,20 +7,20 @@ let EXPORTED_SYMBOLS = [
 ];
 
 function ContentPrefStore() {
-  this._groups = {};
-  this._globalNames = {};
+  this._groups = new Map();
+  this._globalNames = new Map();
 }
 
 ContentPrefStore.prototype = {
 
   set: function CPS_set(group, name, val) {
     if (group) {
-      if (!this._groups.hasOwnProperty(group))
-        this._groups[group] = {};
-      this._groups[group][name] = val;
+      if (!this._groups.has(group))
+        this._groups.set(group, new Map());
+      this._groups.get(group).set(name, val);
     }
     else {
-      this._globalNames[name] = val;
+      this._globalNames.set(name, val);
     }
   },
 
@@ -33,78 +33,72 @@ ContentPrefStore.prototype = {
   },
 
   has: function CPS_has(group, name) {
-    return (group &&
-            this._groups.hasOwnProperty(group) &&
-            this._groups[group].hasOwnProperty(name)) ||
-           (!group &&
-            this._globalNames.hasOwnProperty(name));
+    if (group) {
+      return this._groups.has(group) &&
+             this._groups.get(group).has(name);
+    }
+    return this._globalNames.has(name);
   },
 
   get: function CPS_get(group, name) {
-    if (group) {
-      if (this._groups.hasOwnProperty(group) &&
-          this._groups[group].hasOwnProperty(name))
-        return this._groups[group][name];
-    }
-    else if (this._globalNames.hasOwnProperty(name)) {
-      return this._globalNames[name];
-    }
-    return undefined;
+    if (group && this._groups.has(group))
+      return this._groups.get(group).get(name);
+    return this._globalNames.get(name);
   },
 
   remove: function CPS_remove(group, name) {
     if (group) {
-      if (this._groups.hasOwnProperty(group)) {
-        delete this._groups[group][name];
-        if (!Object.keys(this._groups[group]).length)
-          delete this._groups[group];
+      if (this._groups.has(group)) {
+        this._groups.get(group).delete(name);
+        if (this._groups.get(group).size == 0)
+          this._groups.delete(group);
       }
     }
     else {
-      delete this._globalNames[name];
+      this._globalNames.delete(name);
     }
   },
 
   removeGroup: function CPS_removeGroup(group) {
     if (group) {
-      delete this._groups[group];
+      this._groups.delete(group);
     }
     else {
-      this._globalNames = {};
+      this._globalNames.clear();
     }
   },
 
   removeAllGroups: function CPS_removeAllGroups() {
-    this._groups = {};
+    this._groups.clear();
   },
 
   removeAll: function CPS_removeAll() {
     this.removeAllGroups();
-    this._globalNames = {};
+    this._globalNames.clear();
   },
 
-  __iterator__: function CPS___iterator__() {
-    for (let [group, names] in Iterator(this._groups)) {
-      for (let [name, val] in Iterator(names)) {
+  * [Symbol.iterator]() {
+    for (let [group, names] of this._groups) {
+      for (let [name, val] of names) {
         yield [group, name, val];
       }
     }
-    for (let [name, val] in Iterator(this._globalNames)) {
+    for (let [name, val] of this._globalNames) {
       yield [null, name, val];
     }
   },
 
-  match: function CPS_match(group, name, includeSubdomains) {
-    for (let sgroup in this.matchGroups(group, includeSubdomains)) {
+  * match(group, name, includeSubdomains) {
+    for (let sgroup of this.matchGroups(group, includeSubdomains)) {
       if (this.has(sgroup, name))
         yield [sgroup, this.get(sgroup, name)];
     }
   },
 
-  matchGroups: function CPS_matchGroups(group, includeSubdomains) {
+  * matchGroups(group, includeSubdomains) {
     if (group) {
       if (includeSubdomains) {
-        for (let [sgroup, , ] in this) {
+        for (let [sgroup, , ] of this) {
           if (sgroup) {
             let idx = sgroup.indexOf(group);
             if (idx == sgroup.length - group.length &&
@@ -113,11 +107,11 @@ ContentPrefStore.prototype = {
           }
         }
       }
-      else if (this._groups.hasOwnProperty(group)) {
+      else if (this._groups.has(group)) {
         yield group;
       }
     }
-    else if (Object.keys(this._globalNames).length) {
+    else if (this._globalNames.size) {
       yield null;
     }
   },

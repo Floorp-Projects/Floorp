@@ -1,12 +1,18 @@
 from marionette_test import MarionetteTestCase
-from by import By
-import urlparse
-from errors import NoSuchElementException, StaleElementException
-# noinspection PyUnresolvedReferences
-from wait import Wait
+try:
+    from by import By
+    from errors import NoSuchElementException, StaleElementException
+    # noinspection PyUnresolvedReferences
+    from wait import Wait
+except ImportError:
+    from marionette_driver.by import By
+    from marionette_driver.errors import NoSuchElementException, StaleElementException
+    # noinspection PyUnresolvedReferences
+    from marionette_driver import Wait
 
 import os
 import sys
+import urlparse
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 import pyperclip
