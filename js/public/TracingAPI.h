@@ -119,7 +119,7 @@ class JS_PUBLIC_API(JSTracer)
     }
 
     void setTracingName(const char *name) {
-        setTracingDetails(nullptr, (void *)name, size_t(-1));
+        setTracingDetails(nullptr, (void *)name, InvalidIndex);
     }
 
     // Remove the currently set tracing details.
@@ -127,6 +127,8 @@ class JS_PUBLIC_API(JSTracer)
         debugPrinter_ = nullptr;
         debugPrintArg_ = nullptr;
     }
+
+    const static size_t InvalidIndex = size_t(-1);
 
     // Return true if tracing details are currently set.
     bool hasTracingDetails() const;
