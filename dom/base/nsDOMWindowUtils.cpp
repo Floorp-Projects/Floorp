@@ -2380,31 +2380,6 @@ nsDOMWindowUtils::IsInModalState(bool *retval)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetParent(JS::Handle<JS::Value> aObject,
-                            JSContext* aCx,
-                            JS::MutableHandle<JS::Value> aParent)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  // First argument must be an object.
-  if (aObject.isPrimitive()) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  JS::Rooted<JSObject*> parent(aCx, JS_GetParent(&aObject.toObject()));
-
-  // Outerize if necessary.
-  if (parent) {
-    if (js::ObjectOp outerize = js::GetObjectClass(parent)->ext.outerObject) {
-      parent = outerize(aCx, parent);
-    }
-  }
-
-  aParent.setObject(*parent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetOuterWindowID(uint64_t *aWindowID)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
