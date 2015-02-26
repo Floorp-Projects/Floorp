@@ -14,6 +14,11 @@
   min-width: 100%;
 }
 
+body.dragging .tag-line {
+  cursor: grabbing;
+  -moz-user-select: none;
+}
+
 #root-wrapper:after {
    content: "";
    display: block;
@@ -61,6 +66,40 @@
 .child {
   margin-left: -1000em;
   padding-left: 1001em;
+}
+
+/* Normally this element takes space in the layout even if it's position: relative
+ * by adding height: 0 we let surrounding elements to fill the blank space */
+.child.dragging {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+  height: 0;
+}
+
+/* Indicates a tag-line in the markup-view as being an active drop target by
+ * drawing a horizontal line where the dragged element would be inserted if
+ * dropped here */
+.tag-line.drop-target::before, .tag-line.drag-target::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+.tag-line.drag-target::before {
+  border-top: 2px dashed var(--theme-contrast-background);
+}
+
+.tag-line.drop-target::before {
+  border-top: 2px dashed var(--theme-content-color1);
+}
+
+/* In case the indicator is put on the closing .tag-line, the indentation level
+ * will become misleading, so we push it forward to match the indentation level */
+ul.children + .tag-line::before {
+  margin-left: 14px;
 }
 
 .tag-line {

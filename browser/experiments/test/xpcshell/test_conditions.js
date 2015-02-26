@@ -5,7 +5,13 @@
 
 
 Cu.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
+
+XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
+  () => Cc["@mozilla.org/datareporting/service;1"]
+          .getService(Ci.nsISupports)
+          .wrappedJSObject);
 
 const FILE_MANIFEST            = "experiments.manifest";
 const SEC_IN_ONE_DAY = 24 * 60 * 60;
@@ -45,6 +51,17 @@ function applicableFromManifestData(data, policy) {
   return entry.isApplicable();
 }
 
+function initialiseTelemetry() {
+  // Send the needed startup notifications to the datareporting service
+  // to ensure that it has been initialized.
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDatareportingService.observe(null, "app-startup", null);
+    gDatareportingService.observe(null, "profile-after-change", null);
+  }
+
+  return TelemetryPing.setup().then(TelemetrySession.setup);
+}
+
 function run_test() {
   run_next_test();
 }
@@ -52,7 +69,8 @@ function run_test() {
 add_task(function* test_setup() {
   createAppInfo();
   gProfileDir = do_get_profile();
-  yield TelemetrySession.setup();
+  startAddonManagerOnly();
+  yield initialiseTelemetry();
   gPolicy = new Experiments.Policy();
 
   gReporter = yield getReporter("json_payload_simple");
@@ -312,5 +330,5 @@ add_task(function* test_times() {
 });
 
 add_task(function* test_shutdown() {
-  yield TelemetrySession.shutdown();
+  yield TelemetrySession.shutdown(false);
 });
