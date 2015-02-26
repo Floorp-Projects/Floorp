@@ -23,7 +23,7 @@
                   android:background="@drawable/url_bar_entry"
                   android:textColor="@color/url_bar_title"
                   android:textColorHint="@color/url_bar_title_hint"
-                  android:textColorHighlight="@color/url_bar_text_highlight"
+                  android:textColorHighlight="@color/fennec_ui_orange"
                   android:textSelectHandle="@drawable/handle_middle"
                   android:textSelectHandleLeft="@drawable/handle_start"
                   android:textSelectHandleRight="@drawable/handle_end"

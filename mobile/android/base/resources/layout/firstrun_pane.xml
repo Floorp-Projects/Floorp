@@ -22,7 +22,7 @@
                            android:layout_gravity="top"
                            android:gravity="center_vertical"
                            android:background="@color/firstrun_tabstrip"
-                           gecko:tabIndicatorColor="@color/text_color_highlight"
+                           gecko:tabIndicatorColor="@color/fennec_ui_orange"
                            android:textColor="@color/android:white"/>
     </org.mozilla.gecko.firstrun.FirstrunPager>
 </org.mozilla.gecko.firstrun.FirstrunPane>
