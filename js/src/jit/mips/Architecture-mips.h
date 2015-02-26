@@ -115,6 +115,11 @@ class Registers
     typedef RegisterID Code;
     typedef RegisterID Encoding;
 
+    // Content spilled during bailouts.
+    union RegisterContent {
+        uintptr_t r;
+    };
+
     static const char *GetName(Code code) {
         static const char * const Names[] = { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
                                               "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7",
@@ -266,6 +271,11 @@ class FloatRegisters
     };
     typedef FPRegisterID Code;
     typedef FPRegisterID Encoding;
+
+    // Content spilled during bailouts.
+    union RegisterContent {
+        double d;
+    };
 
     static const char *GetName(Code code) {
         static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",

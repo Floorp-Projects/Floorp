@@ -37,6 +37,12 @@ class Registers {
   public:
     typedef X86Encoding::RegisterID Code;
     typedef X86Encoding::RegisterID Encoding;
+
+    // Content spilled during bailouts.
+    union RegisterContent {
+        uintptr_t r;
+    };
+
     typedef uint8_t SetType;
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 1, "SetType must be 8 bits");
@@ -116,6 +122,12 @@ typedef uint8_t PackedRegisterMask;
 class FloatRegisters {
   public:
     typedef X86Encoding::XMMRegisterID Encoding;
+
+    // Content spilled during bailouts.
+    union RegisterContent {
+        double d;
+    };
+
     typedef uint32_t SetType;
     static const char *GetName(Encoding code) {
         return X86Encoding::XMMRegName(code);
