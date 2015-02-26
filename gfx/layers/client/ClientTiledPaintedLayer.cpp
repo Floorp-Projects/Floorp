@@ -91,11 +91,14 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
 
 void
 ClientTiledPaintedLayer::GetAncestorLayers(LayerMetricsWrapper* aOutScrollAncestor,
-                                          LayerMetricsWrapper* aOutDisplayPortAncestor)
+                                           LayerMetricsWrapper* aOutDisplayPortAncestor,
+                                           bool* aOutHasTransformAnimation)
 {
   LayerMetricsWrapper scrollAncestor;
   LayerMetricsWrapper displayPortAncestor;
+  bool hasTransformAnimation = false;
   for (LayerMetricsWrapper ancestor(this, LayerMetricsWrapper::StartAt::BOTTOM); ancestor; ancestor = ancestor.GetParent()) {
+    hasTransformAnimation |= ancestor.HasTransformAnimation();
     const FrameMetrics& metrics = ancestor.Metrics();
     if (!scrollAncestor && metrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID) {
       scrollAncestor = ancestor;
@@ -112,6 +115,9 @@ ClientTiledPaintedLayer::GetAncestorLayers(LayerMetricsWrapper* aOutScrollAncest
   }
   if (aOutDisplayPortAncestor) {
     *aOutDisplayPortAncestor = displayPortAncestor;
+  }
+  if (aOutHasTransformAnimation) {
+    *aOutHasTransformAnimation = hasTransformAnimation;
   }
 }
 
@@ -134,7 +140,8 @@ ClientTiledPaintedLayer::BeginPaint()
   // with a displayport.
   LayerMetricsWrapper scrollAncestor;
   LayerMetricsWrapper displayPortAncestor;
-  GetAncestorLayers(&scrollAncestor, &displayPortAncestor);
+  bool hasTransformAnimation;
+  GetAncestorLayers(&scrollAncestor, &displayPortAncestor, &hasTransformAnimation);
 
   if (!displayPortAncestor || !scrollAncestor) {
     // No displayport or scroll ancestor, so we can't do progressive rendering.
@@ -146,8 +153,8 @@ ClientTiledPaintedLayer::BeginPaint()
     return;
   }
 
-  TILING_LOG("TILING %p: Found scrollAncestor %p and displayPortAncestor %p\n", this,
-    scrollAncestor.GetLayer(), displayPortAncestor.GetLayer());
+  TILING_LOG("TILING %p: Found scrollAncestor %p, displayPortAncestor %p, transform %d\n", this,
+    scrollAncestor.GetLayer(), displayPortAncestor.GetLayer(), hasTransformAnimation);
 
   const FrameMetrics& scrollMetrics = scrollAncestor.Metrics();
   const FrameMetrics& displayportMetrics = displayPortAncestor.Metrics();
@@ -159,12 +166,17 @@ ClientTiledPaintedLayer::BeginPaint()
   transformDisplayPortToLayer.Invert();
 
   // Compute the critical display port that applies to this layer in the
-  // LayoutDevice space of this layer.
-  ParentLayerRect criticalDisplayPort =
-    (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
-    + displayportMetrics.mCompositionBounds.TopLeft();
-  mPaintData.mCriticalDisplayPort = RoundedOut(
-    ApplyParentLayerToLayerTransform(transformDisplayPortToLayer, criticalDisplayPort));
+  // LayoutDevice space of this layer, but only if there is no OMT animation
+  // on this layer. If there is an OMT animation then we need to draw the whole
+  // visible region of this layer as determined by layout, because we don't know
+  // what parts of it might move into view in the compositor.
+  if (!hasTransformAnimation) {
+    ParentLayerRect criticalDisplayPort =
+      (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
+      + displayportMetrics.mCompositionBounds.TopLeft();
+    mPaintData.mCriticalDisplayPort = RoundedOut(
+      ApplyParentLayerToLayerTransform(transformDisplayPortToLayer, criticalDisplayPort));
+  }
   TILING_LOG("TILING %p: Critical displayport %s\n", this, Stringify(mPaintData.mCriticalDisplayPort).c_str());
 
   // Store the resolution from the displayport ancestor layer. Because this is Gecko-side,
@@ -219,17 +231,24 @@ ClientTiledPaintedLayer::IsScrollingOnCompositor(const FrameMetrics& aParentMetr
 bool
 ClientTiledPaintedLayer::UseFastPath()
 {
+  LayerMetricsWrapper scrollAncestor;
+  bool hasTransformAnimation;
+  GetAncestorLayers(&scrollAncestor, nullptr, &hasTransformAnimation);
+  // If there is no scroll ancestor or if this layer is subject to OMTA then
+  // we effectively don't have a displayport and will just be drawing the
+  // entire visible region of the layer, so we can use the fast-path and be
+  // done with it. In particular we don't want to be drawing OMTA layers
+  // progressively as they might already be animating before we're done drawing.
+  if (!scrollAncestor || hasTransformAnimation) {
+    return true;
+  }
+
   // The fast path doesn't allow rendering at low resolution. It will draw the low-res
   // area at full resolution and cause OOM.
   if (gfxPrefs::UseLowPrecisionBuffer()) {
     return false;
   }
 
-  LayerMetricsWrapper scrollAncestor;
-  GetAncestorLayers(&scrollAncestor, nullptr);
-  if (!scrollAncestor) {
-    return true;
-  }
   const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
 
   bool multipleTransactionsNeeded = gfxPlatform::GetPlatform()->UseProgressivePaint()
