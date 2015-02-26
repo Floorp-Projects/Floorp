@@ -13,7 +13,7 @@ var SelectHelper = {
   handleClick: function(aTarget) {
     // if we're busy looking at a select we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this._isMenu(aTarget) || aTarget.disabled)
+    if (this._uiBusy || !this._isMenu(aTarget) || this._isDisabledElement(aTarget))
         return;
 
     this._uiBusy = true;
@@ -134,5 +134,16 @@ var SelectHelper = {
     setTimeout(function() {
       aElement.dispatchEvent(evt);
     }, 0);
+  },
+
+  _isDisabledElement : function(aElement) {
+    let currentElement = aElement;
+    while (currentElement) {
+      if (currentElement.disabled)
+	return true;
+
+      currentElement = currentElement.parentElement;
+    }
+    return false;
   }
 };
