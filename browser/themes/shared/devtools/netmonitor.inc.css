@@ -499,6 +499,10 @@ label.requests-menu-status-code {
   -moz-padding-start: 3px;
 }
 
+.theme-dark .tabpanel-summary-value {
+  color: var(--theme-selection-color);
+}
+
 /* Headers tabpanel */
 
 #headers-summary-status,
