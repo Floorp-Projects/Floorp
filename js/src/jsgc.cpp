@@ -1106,6 +1106,8 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     sweepKindIndex(0),
     abortSweepAfterCurrentGroup(false),
     arenasAllocatedDuringSweep(nullptr),
+    startedCompacting(false),
+    relocatedArenasToRelease(nullptr),
 #ifdef JS_GC_MARKING_VALIDATION
     markingValidator(nullptr),
 #endif
@@ -1134,7 +1136,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #ifdef DEBUG
     inUnsafeRegion(0),
     noGCOrAllocationCheck(0),
-    relocatedArenasToRelease(nullptr),
 #endif
     lock(nullptr),
     lockOwner(nullptr),
@@ -2131,6 +2132,16 @@ RelocateArena(ArenaHeader *aheader)
             CrashAtUnhandlableOOM("Could not allocate new arena while compacting");
         }
     }
+
+#ifdef DEBUG
+    for (ArenaCellIterUnderFinalize i(aheader); !i.done(); i.next()) {
+        TenuredCell *src = i.getCell();
+        MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
+        TenuredCell *dest = Forwarded(src);
+        MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
+        MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
+    }
+#endif
 }
 
 /*
@@ -2228,25 +2239,37 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
     return true;
 }
 
-ArenaHeader *
-GCRuntime::relocateArenas(JS::gcreason::Reason reason)
+bool
+GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_MOVE);
 
-    ArenaHeader *relocatedList = nullptr;
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        MOZ_ASSERT(zone->isGCFinished());
-        MOZ_ASSERT(!zone->isPreservingCode());
+    MOZ_ASSERT(!zone->isPreservingCode());
+    MOZ_ASSERT(CanRelocateZone(rt, zone));
 
-        if (CanRelocateZone(rt, zone)) {
-            jit::StopAllOffThreadCompilations(zone);
-            if (zone->arenas.relocateArenas(relocatedList, reason, stats))
-                zone->setGCState(Zone::Compact);
+    jit::StopAllOffThreadCompilations(zone);
+
+    if (!zone->arenas.relocateArenas(relocatedArenasToRelease, reason, stats))
+        return false;
+
+#ifdef DEBUG
+    // Check that we did as much compaction as we should have. There
+    // should always be less than one arena's worth of free cells.
+    for (size_t i = 0; i < FINALIZE_LIMIT; i++) {
+        size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(AllocKind(i)));
+        if (CanRelocateAllocKind(AllocKind(i))) {
+            ArenaList &al = zone->arenas.arenaLists[i];
+            size_t freeCells = 0;
+            for (ArenaHeader *arena = al.arenaAfterCursor(); arena; arena = arena->next)
+                freeCells += arena->countFreeCells();
+            MOZ_ASSERT(freeCells < thingsPerArena);
         }
     }
+#endif
 
-    return relocatedList;
+    return true;
 }
+
 
 void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
@@ -2381,7 +2404,7 @@ struct ArenasToUpdate
         BACKGROUND = 2,
         ALL = FOREGROUND | BACKGROUND
     };
-    ArenasToUpdate(JSRuntime *rt, KindsToUpdate kinds);
+    ArenasToUpdate(Zone *zone, KindsToUpdate kinds);
     bool done() { return initialized && arena == nullptr; }
     ArenaHeader* next(AutoLockHelperThreadState& lock);
     ArenaHeader *getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
@@ -2389,7 +2412,7 @@ struct ArenasToUpdate
   private:
     bool initialized;
     KindsToUpdate kinds;
-    GCZonesIter zone;    // Current zone to process, unless zone.done()
+    Zone *zone;          // Zone to process
     unsigned kind;       // Current alloc kind to process
     ArenaHeader *arena;  // Next arena to process
 
@@ -2413,9 +2436,10 @@ bool ArenasToUpdate::shouldProcessKind(unsigned kind)
         return (kinds & FOREGROUND) != 0;
 }
 
-ArenasToUpdate::ArenasToUpdate(JSRuntime *rt, KindsToUpdate kinds)
-  : initialized(false), kinds(kinds), zone(rt, SkipAtoms)
+ArenasToUpdate::ArenasToUpdate(Zone *zone, KindsToUpdate kinds)
+  : initialized(false), kinds(kinds), zone(zone)
 {
+    MOZ_ASSERT(zone->isGCCompacting());
     MOZ_ASSERT(kinds && !(kinds & ~ALL));
 }
 
@@ -2434,33 +2458,30 @@ ArenasToUpdate::next(AutoLockHelperThreadState& lock)
     if (initialized) {
         MOZ_ASSERT(arena);
         MOZ_ASSERT(shouldProcessKind(kind));
-        MOZ_ASSERT(!zone.done());
+        MOZ_ASSERT(zone);
         goto resumePoint;
     }
 
     initialized = true;
-    for (; !zone.done(); zone.next()) {
-        if (zone->isGCCompacting()) {
-            for (kind = 0; kind < FINALIZE_LIMIT; ++kind) {
-                if (shouldProcessKind(kind)) {
-                    for (arena = zone.get()->arenas.getFirstArena(AllocKind(kind));
-                         arena;
-                         arena = arena->next)
-                    {
-                        return arena;
-                      resumePoint:;
-                    }
-                }
+    for (kind = 0; kind < FINALIZE_LIMIT; ++kind) {
+        if (shouldProcessKind(kind)) {
+            for (arena = zone->arenas.getFirstArena(AllocKind(kind));
+                 arena;
+                 arena = arena->next)
+            {
+                return arena;
+              resumePoint:;
             }
         }
     }
+    zone = nullptr;
     return nullptr;
 }
 
 ArenaHeader *
 ArenasToUpdate::getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned count)
 {
-    if (zone.done())
+    if (!zone)
         return nullptr;
 
     ArenaHeader *head = nullptr;
@@ -2546,7 +2567,7 @@ UpdateCellPointersTask::run()
 } // namespace js
 
 void
-GCRuntime::updateAllCellPointersParallel(MovingTracer *trc)
+GCRuntime::updateAllCellPointersParallel(MovingTracer *trc, Zone *zone)
 {
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
@@ -2557,8 +2578,8 @@ GCRuntime::updateAllCellPointersParallel(MovingTracer *trc)
     UpdateCellPointersTask bgTasks[maxTasks];
     UpdateCellPointersTask fgTask;
 
-    ArenasToUpdate fgArenas(rt, ArenasToUpdate::FOREGROUND);
-    ArenasToUpdate bgArenas(rt, ArenasToUpdate::BACKGROUND);
+    ArenasToUpdate fgArenas(zone, ArenasToUpdate::FOREGROUND);
+    ArenasToUpdate bgArenas(zone, ArenasToUpdate::BACKGROUND);
 
     unsigned tasksStarted = 0;
     {
@@ -2583,12 +2604,12 @@ GCRuntime::updateAllCellPointersParallel(MovingTracer *trc)
 }
 
 void
-GCRuntime::updateAllCellPointersSerial(MovingTracer *trc)
+GCRuntime::updateAllCellPointersSerial(MovingTracer *trc, Zone *zone)
 {
     UpdateCellPointersTask task;
     {
         AutoLockHelperThreadState lock;
-        ArenasToUpdate allArenas(rt, ArenasToUpdate::ALL);
+        ArenasToUpdate allArenas(zone, ArenasToUpdate::ALL);
         task.init(rt, &allArenas, lock);
     }
     task.runFromMainThread(rt);
@@ -2601,20 +2622,24 @@ GCRuntime::updateAllCellPointersSerial(MovingTracer *trc)
  * part of the traversal.
  */
 void
-GCRuntime::updatePointersToRelocatedCells()
+GCRuntime::updatePointersToRelocatedCells(Zone *zone)
 {
+    MOZ_ASSERT(zone->isGCCompacting());
     MOZ_ASSERT(rt->currentThreadHasExclusiveAccess());
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_UPDATE);
     MovingTracer trc(rt);
 
     // Fixup compartment global pointers as these get accessed during marking.
-    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         comp->fixupAfterMovingGC();
 
     // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
+        // Sweep the wrapper map to update its pointers.
         comp->sweepCrossCompartmentWrappers();
+
+        // Mark the contents of the map to update each wrapper's cross compartment pointer.
         comp->markCrossCompartmentWrappers(&trc);
     }
 
@@ -2622,9 +2647,9 @@ GCRuntime::updatePointersToRelocatedCells()
     // them. Since updating each cell is independent we try to parallelize this
     // as much as possible.
     if (CanUseExtraThreads())
-        updateAllCellPointersParallel(&trc);
+        updateAllCellPointersParallel(&trc, zone);
     else
-        updateAllCellPointersSerial(&trc);
+        updateAllCellPointersSerial(&trc, zone);
 
     // Mark roots to update them.
     {
@@ -2634,7 +2659,7 @@ GCRuntime::updatePointersToRelocatedCells()
         Debugger::markAll(&trc);
         Debugger::markAllCrossCompartmentEdges(&trc);
 
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
             WeakMapBase::markAll(c, &trc);
             if (c->watchpointMap)
                 c->watchpointMap->markAll(&trc);
@@ -2649,10 +2674,7 @@ GCRuntime::updatePointersToRelocatedCells()
     // Sweep everything to fix up weak pointers
     WatchpointMap::sweepAll(rt);
     Debugger::sweepAll(rt->defaultFreeOp());
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (zone->isGCCompacting())
-            rt->gc.sweepZoneAfterCompacting(zone);
-    }
+    rt->gc.sweepZoneAfterCompacting(zone);
 
     // Type inference may put more blocks here to free.
     freeLifoAlloc.freeAll();
@@ -2668,9 +2690,9 @@ GCRuntime::updatePointersToRelocatedCells()
 
 #ifdef DEBUG
 void
-GCRuntime::protectRelocatedArenas(ArenaHeader *relocatedList)
+GCRuntime::protectRelocatedArenas()
 {
-    for (ArenaHeader* arena = relocatedList, *next; arena; arena = next) {
+    for (ArenaHeader* arena = relocatedArenasToRelease, *next; arena; arena = next) {
         next = arena->next;
 #if defined(XP_WIN)
         DWORD oldProtect;
@@ -2684,9 +2706,9 @@ GCRuntime::protectRelocatedArenas(ArenaHeader *relocatedList)
 }
 
 void
-GCRuntime::unprotectRelocatedArenas(ArenaHeader *relocatedList)
+GCRuntime::unprotectRelocatedArenas()
 {
-    for (ArenaHeader* arena = relocatedList; arena; arena = arena->next) {
+    for (ArenaHeader* arena = relocatedArenasToRelease; arena; arena = arena->next) {
 #if defined(XP_WIN)
         DWORD oldProtect;
         if (!VirtualProtect(arena, ArenaSize, PAGE_READWRITE, &oldProtect))
@@ -2700,21 +2722,21 @@ GCRuntime::unprotectRelocatedArenas(ArenaHeader *relocatedList)
 #endif
 
 void
-GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
+GCRuntime::releaseRelocatedArenas()
 {
     AutoLockGC lock(rt);
-    releaseRelocatedArenasWithoutUnlocking(relocatedList, lock);
+    releaseRelocatedArenasWithoutUnlocking(lock);
     expireChunksAndArenas(true, lock);
 }
 
 void
-GCRuntime::releaseRelocatedArenasWithoutUnlocking(ArenaHeader *relocatedList, const AutoLockGC &lock)
+GCRuntime::releaseRelocatedArenasWithoutUnlocking(const AutoLockGC &lock)
 {
     // Release the relocated arenas, now containing only forwarding pointers
     unsigned count = 0;
-    while (relocatedList) {
-        ArenaHeader *aheader = relocatedList;
-        relocatedList = relocatedList->next;
+    while (relocatedArenasToRelease) {
+        ArenaHeader *aheader = relocatedArenasToRelease;
+        relocatedArenasToRelease = relocatedArenasToRelease->next;
 
         // Clear the mark bits
         aheader->unmarkAll();
@@ -2744,9 +2766,8 @@ GCRuntime::releaseHeldRelocatedArenas()
     // In debug mode we don't release relocated arenas straight away.  Instead
     // we protect them and hold onto them until the next GC sweep phase to catch
     // any pointers to them that didn't get forwarded.
-    unprotectRelocatedArenas(relocatedArenasToRelease);
-    releaseRelocatedArenas(relocatedArenasToRelease);
-    relocatedArenasToRelease = nullptr;
+    unprotectRelocatedArenas();
+    releaseRelocatedArenas();
 #endif
 }
 
@@ -3407,7 +3428,6 @@ GCRuntime::assertBackgroundSweepingFinished()
 #ifdef DEBUG
     MOZ_ASSERT(backgroundSweepZones.isEmpty());
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        MOZ_ASSERT(!zone->isOnList());
         for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep[i]);
             MOZ_ASSERT(zone->arenas.doneBackgroundFinalize(AllocKind(i)));
@@ -5475,7 +5495,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 }
 
 GCRuntime::IncrementalProgress
-GCRuntime::compactPhase(JS::gcreason::Reason reason)
+GCRuntime::beginCompactPhase()
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
@@ -5488,63 +5508,60 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason)
         waitBackgroundSweepEnd();
     }
 
+    MOZ_ASSERT(zonesToMaybeCompact.isEmpty());
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (CanRelocateZone(rt, zone))
+            zonesToMaybeCompact.append(zone);
+    }
+
+    MOZ_ASSERT(!relocatedArenasToRelease);
+    startedCompacting = true;
+    return Finished;
+}
+
+GCRuntime::IncrementalProgress
+GCRuntime::compactPhase(JS::gcreason::Reason reason)
+{
     MOZ_ASSERT(rt->gc.nursery.isEmpty());
     assertBackgroundSweepingFinished();
+    MOZ_ASSERT(startedCompacting);
 
-    ArenaHeader *relocatedList = relocateArenas(reason);
-    if (relocatedList)
-        updatePointersToRelocatedCells();
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
-#ifdef DEBUG
-    for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
-        for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
-            TenuredCell *src = i.getCell();
-            MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
-            TenuredCell *dest = Forwarded(src);
-            MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
-            MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
+    while (!zonesToMaybeCompact.isEmpty()) {
+        Zone *zone = zonesToMaybeCompact.front();
+        MOZ_ASSERT(zone->isGCFinished());
+        if (relocateArenas(zone, reason)) {
+            zone->setGCState(Zone::Compact);
+            updatePointersToRelocatedCells(zone);
+            zone->setGCState(Zone::Finished);
         }
+        zonesToMaybeCompact.removeFront();
     }
-#endif
-
-    // Release the relocated arenas, or in debug builds queue them to be
-    // released until the start of the next GC unless this is the last GC or we
-    // are doing a last ditch GC.
-#ifndef DEBUG
-    releaseRelocatedArenas(relocatedList);
-#else
-    if (reason == JS::gcreason::DESTROY_RUNTIME || reason == JS::gcreason::LAST_DITCH) {
-        releaseRelocatedArenas(relocatedList);
-    } else {
-        MOZ_ASSERT(!relocatedArenasToRelease);
-        protectRelocatedArenas(relocatedList);
-        relocatedArenasToRelease = relocatedList;
-    }
-#endif
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (zone->isGCCompacting()) {
-            MOZ_ASSERT(!zone->isPreservingCode());
-            zone->arenas.checkEmptyFreeLists();
-
-            // Check that we did as much compaction as we should have. There
-            // should always be less than one arena's worth of free cells.
-            for (size_t i = 0; i < FINALIZE_LIMIT; i++) {
-                size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(AllocKind(i)));
-                if (CanRelocateAllocKind(AllocKind(i))) {
-                    ArenaList &al = zone->arenas.arenaLists[i];
-                    size_t freeCells = 0;
-                    for (ArenaHeader *arena = al.arenaAfterCursor(); arena; arena = arena->next)
-                        freeCells += arena->countFreeCells();
-                    MOZ_ASSERT(freeCells < thingsPerArena);
-                }
-            }
-        }
-    }
 #endif
-    return Finished;
+
+    return zonesToMaybeCompact.isEmpty() ? Finished : NotFinished;
+}
+
+void
+GCRuntime::endCompactPhase(JS::gcreason::Reason reason)
+{
+    // Release the relocated arenas, or in debug builds queue them to be
+    // released at the start of the next GC unless this is the last GC or we are
+    // doing a last ditch GC.
+#ifndef DEBUG
+    releaseRelocatedArenas();
+#else
+    if (reason == JS::gcreason::DESTROY_RUNTIME || reason == JS::gcreason::LAST_DITCH)
+        releaseRelocatedArenas();
+    else
+        protectRelocatedArenas();
+#endif
+
+    startedCompacting = false;
 }
 
 void
@@ -5558,7 +5575,7 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting()) {
-            MOZ_ASSERT(zone->isGCFinished() || zone->isGCCompacting());
+            MOZ_ASSERT(zone->isGCFinished());
             zone->setGCState(Zone::NoGC);
             zone->active = false;
         }
@@ -5566,6 +5583,8 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
         MOZ_ASSERT(!zone->isCollecting());
         MOZ_ASSERT(!zone->wasGCStarted());
     }
+
+    MOZ_ASSERT(zonesToMaybeCompact.isEmpty());
 
     if (invocationKind == GC_SHRINK) {
         // Ensure excess chunks are returns to the system and free arenas
@@ -5721,7 +5740,10 @@ GCRuntime::resetIncrementalGC(const char *reason)
         }
 
         bool wasCompacting = isCompacting;
-        isCompacting = false;
+
+        isCompacting = true;
+        startedCompacting = true;
+        zonesToMaybeCompact.clear();
 
         SliceBudget budget;
         incrementalCollectSlice(budget, JS::gcreason::RESET);
@@ -5737,11 +5759,13 @@ GCRuntime::resetIncrementalGC(const char *reason)
     stats.reset(reason);
 
 #ifdef DEBUG
+    assertBackgroundSweepingFinished();
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        MOZ_ASSERT(!zone->isCollecting());
         MOZ_ASSERT(!zone->needsIncrementalBarrier());
-        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)
-            MOZ_ASSERT(!zone->arenas.arenaListsToSweep[i]);
+        MOZ_ASSERT(!zone->isOnList());
     }
+    MOZ_ASSERT(zonesToMaybeCompact.isEmpty());
 #endif
 }
 
@@ -5939,14 +5963,22 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         endSweepPhase(lastGC);
 
         incrementalState = COMPACT;
+        MOZ_ASSERT(!startedCompacting);
 
         /* Yield before compacting since it is not incremental. */
         if (isCompacting && isIncremental)
             break;
 
       case COMPACT:
-        if (isCompacting && compactPhase(reason) == NotFinished)
-            break;
+        if (isCompacting) {
+            if (!startedCompacting && beginCompactPhase() == NotFinished)
+                break;
+
+            if (compactPhase(reason) == NotFinished)
+                break;
+
+            endCompactPhase(reason);
+        }
 
         finishCollection(reason);
 
@@ -6406,12 +6438,11 @@ GCRuntime::onOutOfMallocMemory()
 void
 GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 {
+#ifdef DEBUG
     // Release any relocated arenas we may be holding on to, without releasing
     // the GC lock.
-#ifdef DEBUG
-    unprotectRelocatedArenas(relocatedArenasToRelease);
-    releaseRelocatedArenasWithoutUnlocking(relocatedArenasToRelease, lock);
-    relocatedArenasToRelease = nullptr;
+    unprotectRelocatedArenas();
+    releaseRelocatedArenasWithoutUnlocking(lock);
 #endif
 
     // Throw away any excess chunks we have lying around.

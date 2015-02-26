@@ -548,6 +548,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Debugger objects that are definitely live but not yet marked, it marks
      * them and returns true. If not, it returns false.
      */
+    static void markIncomingCrossCompartmentEdges(JSTracer *tracer);
     static void markAllCrossCompartmentEdges(JSTracer *tracer);
     static bool markAllIteratively(GCMarker *trc);
     static void markAll(JSTracer *trc);
