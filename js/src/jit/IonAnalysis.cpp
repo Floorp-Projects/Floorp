@@ -2072,6 +2072,8 @@ IsResumableMIRType(MIRType type)
       case MIRType_MagicOptimizedOut:
       case MIRType_MagicUninitializedLexical:
       case MIRType_Value:
+      case MIRType_Float32x4:
+      case MIRType_Int32x4:
         return true;
 
       case MIRType_MagicHole:
@@ -2083,9 +2085,7 @@ IsResumableMIRType(MIRType type)
       case MIRType_Pointer:
       case MIRType_Shape:
       case MIRType_ObjectGroup:
-      case MIRType_Float32x4:
-      case MIRType_Int32x4:
-      case MIRType_Doublex2:
+      case MIRType_Doublex2: // NYI, see also RSimdBox::recover
         return false;
     }
     MOZ_CRASH("Unknown MIRType.");
