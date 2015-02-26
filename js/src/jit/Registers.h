@@ -86,9 +86,13 @@ struct Register {
 
 class RegisterDump
 {
+  public:
+    typedef mozilla::Array<Registers::RegisterContent, Registers::Total> GPRArray;
+    typedef mozilla::Array<FloatRegisters::RegisterContent, FloatRegisters::TotalPhys> FPUArray;
+
   protected: // Silence Clang warning.
-    mozilla::Array<uintptr_t, Registers::Total> regs_;
-    mozilla::Array<double, FloatRegisters::TotalPhys> fpregs_;
+    GPRArray regs_;
+    FPUArray fpregs_;
 
   public:
     static size_t offsetOfRegister(Register reg) {
@@ -102,18 +106,17 @@ class RegisterDump
 // Information needed to recover machine register state.
 class MachineState
 {
-    mozilla::Array<uintptr_t *, Registers::Total> regs_;
-    mozilla::Array<double *, FloatRegisters::Total> fpregs_;
+    mozilla::Array<Registers::RegisterContent *, Registers::Total> regs_;
+    mozilla::Array<FloatRegisters::RegisterContent *, FloatRegisters::Total> fpregs_;
 
   public:
-    static MachineState FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                                    mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs);
+    static MachineState FromBailout(RegisterDump::GPRArray &regs, RegisterDump::FPUArray &fpregs);
 
     void setRegisterLocation(Register reg, uintptr_t *up) {
-        regs_[reg.code()] = up;
+        regs_[reg.code()] = (Registers::RegisterContent *) up;
     }
     void setRegisterLocation(FloatRegister reg, double *dp) {
-        fpregs_[reg.code()] = dp;
+        fpregs_[reg.code()] = (FloatRegisters::RegisterContent *) dp;
     }
 
     bool has(Register reg) const {
@@ -123,13 +126,13 @@ class MachineState
         return fpregs_[reg.code()] != nullptr;
     }
     uintptr_t read(Register reg) const {
-        return *regs_[reg.code()];
+        return regs_[reg.code()]->r;
     }
     double read(FloatRegister reg) const {
-        return *fpregs_[reg.code()];
+        return fpregs_[reg.code()]->d;
     }
     void write(Register reg, uintptr_t value) const {
-        *regs_[reg.code()] = value;
+        regs_[reg.code()]->r = value;
     }
 };
 

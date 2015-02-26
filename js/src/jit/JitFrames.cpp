@@ -2461,24 +2461,23 @@ InlineFrameIterator::isFunctionFrame() const
 }
 
 MachineState
-MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                          mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs)
+MachineState::FromBailout(RegisterDump::GPRArray &regs, RegisterDump::FPUArray &fpregs)
 {
     MachineState machine;
 
     for (unsigned i = 0; i < Registers::Total; i++)
-        machine.setRegisterLocation(Register::FromCode(i), &regs[i]);
+        machine.setRegisterLocation(Register::FromCode(i), &regs[i].r);
 #ifdef JS_CODEGEN_ARM
     float *fbase = (float*)&fpregs[0];
     for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++)
-        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i].d);
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++)
         machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single), (double*)&fbase[i]);
 #elif defined(JS_CODEGEN_MIPS)
     float *fbase = (float*)&fpregs[0];
     for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++) {
         machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Double),
-                                    &fpregs[i]);
+                                    &fpregs[i].d);
     }
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
         machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single),
@@ -2486,7 +2485,7 @@ MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
     }
 #else
     for (unsigned i = 0; i < FloatRegisters::Total; i++)
-        machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i].d);
 #endif
     return machine;
 }
