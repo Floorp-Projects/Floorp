@@ -441,6 +441,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                              IsObserving observing);
 
   public:
+    static bool ensureExecutionObservabilityOfOsrFrame(JSContext *cx, InterpreterFrame *frame);
+
     // Public for DebuggerScript_setBreakpoint.
     static bool ensureExecutionObservabilityOfScript(JSContext *cx, JSScript *script);
 
