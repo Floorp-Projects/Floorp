@@ -6865,6 +6865,46 @@ EmitDefaults(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
+
+static bool
+EmitLexicalInitialization(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+                          JSOp globalDefOp)
+{
+    /*
+     * This function is significantly more complicated than it needs to be.
+     * In fact, it shouldn't exist at all. This should all be a
+     * JSOP_INITLEXIAL. Unfortunately, toplevel lexicals are broken, and
+     * are emitted as vars :(. As such, we have to do these ministrations to
+     * to make sure that all works properly.
+     */
+    MOZ_ASSERT(pn->isKind(PNK_NAME));
+
+    if (!BindNameToSlot(cx, bce, pn))
+        return false;
+
+    jsatomid atomIndex;
+    if (!MaybeEmitVarDecl(cx, bce, globalDefOp, pn, &atomIndex))
+        return false;
+
+    if (pn->getOp() != JSOP_INITLEXICAL) {
+        bool global = js_CodeSpec[pn->getOp()].format & JOF_GNAME;
+        if (!EmitIndex32(cx, global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_SWAP) < 0)
+            return false;
+    }
+
+    if (!pn->pn_cookie.isFree()) {
+        if (!EmitVarOp(cx, pn, pn->getOp(), bce))
+            return false;
+    } else {
+        if (!EmitIndexOp(cx, pn->getOp(), atomIndex, bce))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
