@@ -45,17 +45,19 @@ public class ReferrerReceiver extends BroadcastReceiver {
             return;
         }
 
+        // Track the referrer object for distribution handling.
         ReferrerDescriptor referrer = new ReferrerDescriptor(intent.getStringExtra("referrer"));
 
-        // Track the referrer object for distribution handling.
+        if (!TextUtils.equals(referrer.source, MOZILLA_UTM_SOURCE)) {
+            return;
+        }
+
         if (TextUtils.equals(referrer.campaign, DISTRIBUTION_UTM_CAMPAIGN)) {
             Distribution.onReceivedReferrer(context, referrer);
         } else {
             Log.d(LOGTAG, "Not downloading distribution: non-matching campaign.");
-        }
-
-        // If this is a Mozilla campaign, pass the campaign along to Gecko.
-        if (TextUtils.equals(referrer.source, MOZILLA_UTM_SOURCE)) {
+            // If this is a Mozilla campaign, pass the campaign along to Gecko.
+            // It'll pretend to be a "playstore" distribution for BLP purposes.
             propagateMozillaCampaign(referrer);
         }
 
