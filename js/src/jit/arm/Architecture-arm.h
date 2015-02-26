@@ -410,6 +410,10 @@ class VFPRegister
         MOZ_ASSERT(isFloat());
         return Code(code_ | (kind << 5));
     }
+    Encoding encoding() const {
+        MOZ_ASSERT(!_isInvalid && !_isMissing);
+        return Code(code_ | (kind << 5));
+    }
     uint32_t id() const {
         return code_;
     }

@@ -126,22 +126,21 @@ typedef uint16_t PackedRegisterMask;
 
 class FloatRegisters {
   public:
-    typedef X86Encoding::XMMRegisterID Code;
     typedef X86Encoding::XMMRegisterID Encoding;
     typedef uint32_t SetType;
-    static const char *GetName(Code code) {
+    static const char *GetName(Encoding code) {
         return X86Encoding::XMMRegName(code);
     }
 
-    static Code FromName(const char *name) {
+    static Encoding FromName(const char *name) {
         for (size_t i = 0; i < Total; i++) {
-            if (strcmp(GetName(Code(i)), name) == 0)
-                return Code(i);
+            if (strcmp(GetName(Encoding(i)), name) == 0)
+                return Encoding(i);
         }
         return Invalid;
     }
 
-    static const Code Invalid = X86Encoding::invalid_xmm;
+    static const Encoding Invalid = X86Encoding::invalid_xmm;
 
     static const uint32_t Total = 16;
     static const uint32_t TotalPhys = 16;
@@ -177,7 +176,7 @@ class TypedRegisterSet;
 
 struct FloatRegister {
     typedef FloatRegisters Codes;
-    typedef Codes::Code Code;
+    typedef size_t Code;
     typedef Codes::Encoding Encoding;
     typedef Codes::SetType SetType;
     static uint32_t SetSize(SetType x) {
@@ -194,15 +193,19 @@ struct FloatRegister {
 
     static FloatRegister FromCode(uint32_t i) {
         MOZ_ASSERT(i < FloatRegisters::Total);
-        FloatRegister r = { (FloatRegisters::Code)i };
+        FloatRegister r = { Code(i) };
         return r;
     }
     Code code() const {
-        MOZ_ASSERT((uint32_t)code_ < FloatRegisters::Total);
+        MOZ_ASSERT(uint32_t(code_) < FloatRegisters::Total);
         return code_;
     }
+    Encoding encoding() const {
+        MOZ_ASSERT(uint32_t(code_) < FloatRegisters::Total);
+        return Encoding(code_);
+    }
     const char *name() const {
-        return FloatRegisters::GetName(code());
+        return FloatRegisters::GetName(encoding());
     }
     bool volatile_() const {
         return !!((1 << code()) & FloatRegisters::VolatileMask);

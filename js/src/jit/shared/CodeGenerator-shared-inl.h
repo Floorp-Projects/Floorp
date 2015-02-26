@@ -222,7 +222,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
       case Scalar::Float64:
       case Scalar::Float32x4:
       case Scalar::Int32x4:
-        op = OtherOperand(ToFloatRegister(alloc).code());
+        op = OtherOperand(ToFloatRegister(alloc).encoding());
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
