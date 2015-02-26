@@ -108,7 +108,7 @@ add_test(function test_logOnSuccess_true() {
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
     do_check_eq(logfile.leafName.slice(-4), ".txt");
-    do_check_true(logfile.leafName.startsWith("sync-success-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("success-sync-"), logfile.leafName);
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
@@ -175,7 +175,7 @@ add_test(function test_sync_error_logOnError_true() {
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
     do_check_eq(logfile.leafName.slice(-4), ".txt");
-    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
@@ -242,7 +242,7 @@ add_test(function test_login_error_logOnError_true() {
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
     do_check_eq(logfile.leafName.slice(-4), ".txt");
-    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
@@ -281,7 +281,7 @@ add_test(function test_logErrorCleanup_age() {
   _("Making some files.");
   for (let i = 0; i < numLogs; i++) {
     let now = Date.now();
-    let filename = "sync-error-" + now + "" + i + ".txt";
+    let filename = "error-sync-" + now + "" + i + ".txt";
     let newLog = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
     let foStream = FileUtils.openFileOutputStream(newLog);
     foStream.write(errString, errString.length);
