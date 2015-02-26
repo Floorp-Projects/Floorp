@@ -88,9 +88,8 @@ if CONFIG['MOZ_B2G_RIL']:
         'nsIRadioInterfaceLayer.idl',
     ]
     EXTRA_COMPONENTS += [
-        'RadioInterfaceLayer.js',
-        'RadioInterfaceLayer.manifest',
         'RILContentHelper.js',
+        'RILContentHelper.manifest',
         'RILSystemMessengerHelper.js',
         'RILSystemMessengerHelper.manifest',
     ]
@@ -100,6 +99,11 @@ if CONFIG['MOZ_B2G_RIL']:
         'ril_worker_buf_object.js',
         'RILSystemMessenger.jsm',
     ]
+    if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
+        EXTRA_COMPONENTS += [
+            'RadioInterfaceLayer.js',
+            'RadioInterfaceLayer.manifest',
+        ]
 
 FAIL_ON_WARNINGS = True
 
