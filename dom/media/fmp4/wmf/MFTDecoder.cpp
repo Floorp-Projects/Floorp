@@ -62,11 +62,6 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
   hr = mDecoder->GetInputStreamInfo(0, &mInputStreamInfo);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = mDecoder->GetOutputStreamInfo(0, &mOutputStreamInfo);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  mMFTProvidesOutputSamples = IsFlagSet(mOutputStreamInfo.dwFlags, MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
-
   hr = SendMFTMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -101,6 +96,12 @@ MFTDecoder::SetDecoderOutputType()
     if (SUCCEEDED(hr) && resultMatch == TRUE) {
       hr = mDecoder->SetOutputType(0, outputType, 0);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      hr = mDecoder->GetOutputStreamInfo(0, &mOutputStreamInfo);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+      mMFTProvidesOutputSamples = IsFlagSet(mOutputStreamInfo.dwFlags, MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
+
       return S_OK;
     }
     outputType = nullptr;
