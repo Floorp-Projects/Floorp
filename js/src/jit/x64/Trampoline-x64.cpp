@@ -509,7 +509,25 @@ static void
 PushBailoutFrame(MacroAssembler &masm, Register spArg)
 {
     // Push registers such that we can access them from [base + code].
-    masm.PushRegsInMask(AllRegs);
+    if (JitSupportsSimd()) {
+        masm.PushRegsInMask(AllRegs);
+    } else {
+        // When SIMD isn't supported, PushRegsInMask reduces the set of float
+        // registers to be double-sized, while the RegisterDump expects each of
+        // the float registers to have the maximal possible size
+        // (Simd128DataSize). To work around this, we just spill the double
+        // registers by hand here, using the register dump offset directly.
+        RegisterSet set = AllRegs;
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++)
+            masm.Push(*iter);
+
+        masm.reserveStack(sizeof(RegisterDump::FPUArray));
+        for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
+            FloatRegister reg = *iter;
+            Address spillAddress(StackPointer, reg.getRegisterDumpOffsetInBytes());
+            masm.storeDouble(reg, spillAddress);
+        }
+    }
 
     // Get the stack pointer into a register, pre-alignment.
     masm.movq(rsp, spArg);
