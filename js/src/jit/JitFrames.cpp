@@ -2483,9 +2483,15 @@ MachineState::FromBailout(RegisterDump::GPRArray &regs, RegisterDump::FPUArray &
         machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single),
                                     (double*)&fbase[i]);
     }
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single), &fpregs[i].s);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double), &fpregs[i].d);
+    }
+#elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
 #else
-    for (unsigned i = 0; i < FloatRegisters::Total; i++)
-        machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i].d);
+# error "Unknown architecture!"
 #endif
     return machine;
 }
