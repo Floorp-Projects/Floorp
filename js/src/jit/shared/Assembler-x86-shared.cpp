@@ -293,3 +293,32 @@ CPUInfo::SetSSEVersion()
         avxPresent = (xcr0EAX & xcr0SSEBit) && (xcr0EAX & xcr0AVXBit);
     }
 }
+
+const char *
+FloatRegister::name() const {
+    static const char *const names[] = {
+
+#ifdef JS_CODEGEN_X64
+#define FLOAT_REGS_(TYPE) \
+        "%xmm0" TYPE, "%xmm1" TYPE, "%xmm2" TYPE, "%xmm3" TYPE, \
+        "%xmm4" TYPE, "%xmm5" TYPE, "%xmm6" TYPE, "%xmm7" TYPE, \
+        "%xmm8" TYPE, "%xmm9" TYPE, "%xmm10" TYPE, "%xmm11" TYPE, \
+        "%xmm12" TYPE, "%xmm13" TYPE, "%xmm14" TYPE, "%xmm15" TYPE
+#else
+#define FLOAT_REGS_(TYPE) \
+        "%xmm0" TYPE, "%xmm1" TYPE, "%xmm2" TYPE, "%xmm3" TYPE, \
+        "%xmm4" TYPE, "%xmm5" TYPE, "%xmm6" TYPE, "%xmm7" TYPE
+#endif
+
+        // These should be enumerated in the same order as in
+        // FloatRegisters::ContentType.
+        FLOAT_REGS_(".s"),
+        FLOAT_REGS_(".d"),
+        FLOAT_REGS_(".i4"),
+        FLOAT_REGS_(".s4")
+#undef FLOAT_REGS_
+
+    };
+    MOZ_ASSERT(size_t(code()) < mozilla::ArrayLength(names));
+    return names[size_t(code())];
+}
