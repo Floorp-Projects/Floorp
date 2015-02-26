@@ -779,7 +779,9 @@ XPCWrappedNative::Init(HandleObject parent,
         return false;
     }
 
-    mFlatJSObject = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject, parent);
+    mFlatJSObject =
+        JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, jsclazz,
+                                                      protoJSObject, parent);
     if (!mFlatJSObject) {
         mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
         return false;

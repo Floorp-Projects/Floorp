@@ -909,7 +909,9 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
   MOZ_ASSERT(fnproto);
 
   // Set up ctypes.CType.prototype.
-  RootedObject prototype(cx, JS_NewObjectWithGivenProto(cx, &sCTypeProtoClass, fnproto, parent));
+  RootedObject prototype(cx,
+    JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCTypeProtoClass,
+                                                  fnproto, parent));
   if (!prototype)
     return nullptr;
 
@@ -1033,7 +1035,8 @@ InitTypeConstructor(JSContext* cx,
     return false;
 
   // Set up the .prototype and .prototype.constructor properties.
-  typeProto.set(JS_NewObjectWithGivenProto(cx, &sCTypeProtoClass, CTypeProto, parent));
+  typeProto.set(JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCTypeProtoClass,
+                                                              CTypeProto, parent));
   if (!typeProto)
     return false;
 
@@ -1060,7 +1063,8 @@ InitTypeConstructor(JSContext* cx,
   // created from the given type constructor. This has ctypes.CData.prototype
   // as its prototype, such that it inherits the properties and functions
   // common to all CDatas.
-  dataProto.set(JS_NewObjectWithGivenProto(cx, &sCDataProtoClass, CDataProto, parent));
+  dataProto.set(JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCDataProtoClass,
+                                                              CDataProto, parent));
   if (!dataProto)
     return false;
 
@@ -3305,7 +3309,8 @@ CType::Create(JSContext* cx,
   //     * 'constructor' property === 't'
   //     * Additional properties specified by 'ps', as appropriate for the
   //       specific type instance 't'.
-  RootedObject typeObj(cx, JS_NewObjectWithGivenProto(cx, &sCTypeClass, typeProto, parent));
+  RootedObject typeObj(cx, JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCTypeClass,
+                                                                         typeProto, parent));
   if (!typeObj)
     return nullptr;
 
@@ -3320,7 +3325,9 @@ CType::Create(JSContext* cx,
 
   if (dataProto) {
     // Set up the 'prototype' and 'prototype.constructor' properties.
-    RootedObject prototype(cx, JS_NewObjectWithGivenProto(cx, &sCDataProtoClass, dataProto, parent));
+    RootedObject prototype(cx,
+      JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCDataProtoClass,
+                                                    dataProto, parent));
     if (!prototype)
       return nullptr;
 
@@ -4872,7 +4879,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   // Set up the 'prototype' and 'prototype.constructor' properties.
   // The prototype will reflect the struct fields as properties on CData objects
   // created from this type.
-  RootedObject prototype(cx, JS_NewObjectWithGivenProto(cx, &sCDataProtoClass, dataProto, NullPtr()));
+  RootedObject prototype(cx, JS_NewObjectWithGivenProto(cx, &sCDataProtoClass, dataProto));
   if (!prototype)
     return false;
 
@@ -6381,7 +6388,8 @@ CData::Create(JSContext* cx,
   RootedObject parent(cx, JS_GetParent(typeObj));
   MOZ_ASSERT(parent);
 
-  RootedObject dataObj(cx, JS_NewObjectWithGivenProto(cx, &sCDataClass, proto, parent));
+  RootedObject dataObj(cx, JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, &sCDataClass,
+                                                                         proto, parent));
   if (!dataObj)
     return nullptr;
 
@@ -6962,8 +6970,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   // Get arguments
   if (args.length() == 0) { // Special case: the empty (already finalized) object
-    JSObject *objResult = JS_NewObjectWithGivenProto(cx, &sCDataFinalizerClass, objProto,
-                                                     NullPtr());
+    JSObject *objResult = JS_NewObjectWithGivenProto(cx, &sCDataFinalizerClass, objProto);
     args.rval().setObject(*objResult);
     return true;
   }
@@ -7062,7 +7069,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval *vp)
 
   // 5. Create |objResult|
 
-  JSObject *objResult = JS_NewObjectWithGivenProto(cx, &sCDataFinalizerClass, objProto, NullPtr());
+  JSObject *objResult = JS_NewObjectWithGivenProto(cx, &sCDataFinalizerClass, objProto);
   if (!objResult) {
     return false;
   }
@@ -7362,7 +7369,8 @@ Int64Base::Construct(JSContext* cx,
 {
   const JSClass* clasp = isUnsigned ? &sUInt64Class : &sInt64Class;
   RootedObject parent(cx, JS_GetParent(proto));
-  RootedObject result(cx, JS_NewObjectWithGivenProto(cx, clasp, proto, parent));
+  RootedObject result(cx, JS_DeprecatedNewObjectWithGivenProtoAndParent(cx, clasp,
+                                                                        proto, parent));
   if (!result)
     return nullptr;
 

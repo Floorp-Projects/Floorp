@@ -2480,8 +2480,7 @@ JS_GetObjectRuntime(JSObject *obj);
  * If proto is JS::NullPtr, the JS object will have `null` as [[Prototype]].
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *clasp, JS::Handle<JSObject*> proto,
-                           JS::Handle<JSObject*> parent = JS::NullPtr());
+JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *clasp, JS::Handle<JSObject*> proto);
 
 // Creates a new plain object, like `new Object()`, with Object.prototype as [[Prototype]].
 extern JS_PUBLIC_API(JSObject *)
