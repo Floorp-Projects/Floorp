@@ -62,9 +62,9 @@ class Registers {
     static const uint32_t TotalPhys = 16;
     static const uint32_t Allocatable = 14;
 
-    static const uint32_t AllMask = (1 << Total) - 1;
+    static const SetType AllMask = (1 << Total) - 1;
 
-    static const uint32_t ArgRegMask =
+    static const SetType ArgRegMask =
 # if !defined(_WIN64)
         (1 << X86Encoding::rdi) |
         (1 << X86Encoding::rsi) |
@@ -74,7 +74,7 @@ class Registers {
         (1 << X86Encoding::r8) |
         (1 << X86Encoding::r9);
 
-    static const uint32_t VolatileMask =
+    static const SetType VolatileMask =
         (1 << X86Encoding::rax) |
         (1 << X86Encoding::rcx) |
         (1 << X86Encoding::rdx) |
@@ -87,7 +87,7 @@ class Registers {
         (1 << X86Encoding::r10) |
         (1 << X86Encoding::r11);
 
-    static const uint32_t NonVolatileMask =
+    static const SetType NonVolatileMask =
         (1 << X86Encoding::rbx) |
 #if defined(_WIN64)
         (1 << X86Encoding::rsi) |
@@ -99,25 +99,25 @@ class Registers {
         (1 << X86Encoding::r14) |
         (1 << X86Encoding::r15);
 
-    static const uint32_t WrapperMask = VolatileMask;
+    static const SetType WrapperMask = VolatileMask;
 
-    static const uint32_t SingleByteRegs = VolatileMask | NonVolatileMask;
+    static const SetType SingleByteRegs = VolatileMask | NonVolatileMask;
 
-    static const uint32_t NonAllocatableMask =
+    static const SetType NonAllocatableMask =
         (1 << X86Encoding::rsp) |
         (1 << X86Encoding::r11);      // This is ScratchReg.
 
-    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+    static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 
     // Registers that can be allocated without being saved, generally.
-    static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
+    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
     // Registers returned from a JS -> JS call.
-    static const uint32_t JSCallMask =
+    static const SetType JSCallMask =
         (1 << X86Encoding::rcx);
 
     // Registers returned from a JS -> C call.
-    static const uint32_t CallMask =
+    static const SetType CallMask =
         (1 << X86Encoding::rax);
 };
 
@@ -147,9 +147,9 @@ class FloatRegisters {
 
     static const uint32_t Allocatable = 15;
 
-    static const uint32_t AllMask = (1 << Total) - 1;
-    static const uint32_t AllDoubleMask = AllMask;
-    static const uint32_t VolatileMask =
+    static const SetType AllMask = (1 << Total) - 1;
+    static const SetType AllDoubleMask = AllMask;
+    static const SetType VolatileMask =
 #if defined(_WIN64)
         (1 << X86Encoding::xmm0) |
         (1 << X86Encoding::xmm1) |
@@ -161,14 +161,14 @@ class FloatRegisters {
         AllMask;
 #endif
 
-    static const uint32_t NonVolatileMask = AllMask & ~VolatileMask;
+    static const SetType NonVolatileMask = AllMask & ~VolatileMask;
 
-    static const uint32_t WrapperMask = VolatileMask;
+    static const SetType WrapperMask = VolatileMask;
 
-    static const uint32_t NonAllocatableMask =
+    static const SetType NonAllocatableMask =
         (1 << X86Encoding::xmm15);    // This is ScratchDoubleReg.
 
-    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+    static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 template <typename T>
