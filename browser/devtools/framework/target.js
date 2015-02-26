@@ -175,6 +175,8 @@ function TabTarget(tab) {
     this._client = tab.client;
     this._chrome = tab.chrome;
   }
+  // Default isTabActor to true if not explicitely specified
+  this._isTabActor = typeof(tab.isTabActor) == "boolean" ? tab.isTabActor : true;
 }
 
 TabTarget.prototype = {
@@ -315,8 +317,19 @@ TabTarget.prototype = {
     return this._client;
   },
 
+  // Tells us if we are debugging content document
+  // or if we are debugging chrome stuff.
+  // Allows to controls which features are available against
+  // a chrome or a content document.
   get chrome() {
     return this._chrome;
+  },
+
+  // Tells us if the related actor implements TabActor interface
+  // and requires to call `attach` request before being used
+  // and `detach` during cleanup
+  get isTabActor() {
+    return this._isTabActor;
   },
 
   get window() {
@@ -436,12 +449,13 @@ TabTarget.prototype = {
           attachTab();
         });
       });
-    } else if (!this.chrome) {
+    } else if (this.isTabActor) {
       // In the remote debugging case, the protocol connection will have been
       // already initialized in the connection screen code.
       attachTab();
     } else {
-      // Remote chrome debugging doesn't need anything at this point.
+      // AddonActor and chrome debugging on RootActor doesn't inherits from TabActor and
+      // doesn't need to be attached.
       this._remote.resolve(null);
     }
 
