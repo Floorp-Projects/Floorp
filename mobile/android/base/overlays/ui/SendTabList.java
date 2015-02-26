@@ -10,6 +10,7 @@ import static org.mozilla.gecko.overlays.ui.SendTabList.State.SHOW_DEVICES;
 
 import java.util.Arrays;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -130,7 +131,14 @@ public class SendTabList extends ListView {
      * inline and looking crazy).
      */
     public AlertDialog getDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        final Context context = getContext();
+
+        final AlertDialog.Builder builder;
+        if (Versions.feature11Plus) {
+            builder = new AlertDialog.Builder(context, R.style.Gecko_Dialog);
+        } else {
+            builder = new AlertDialog.Builder(context);
+        }
 
         final ParcelableClientRecord[] records = clientListAdapter.toArray();
         final String[] dialogElements = new String[records.length];
