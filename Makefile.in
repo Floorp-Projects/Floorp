@@ -95,7 +95,7 @@ include backend.RecursiveMakeBackend.pp
 default:: backend.RecursiveMakeBackend
 
 install_manifests := \
-  $(addprefix dist/,bin idl include public private sdk xpi-stage) \
+  $(addprefix dist/,bin branding idl include public private sdk xpi-stage) \
   _tests \
   $(NULL)
 install_manifest_depends = \

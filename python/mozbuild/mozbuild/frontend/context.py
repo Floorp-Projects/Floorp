@@ -953,6 +953,27 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
+    'BRANDING_FILES': (HierarchicalStringListWithFlagsFactory({'source': unicode}), list,
+        """List of files to be installed into the branding directory.
+
+        ``BRANDING_FILES`` will copy (or symlink, if the platform supports it)
+        the contents of its files to the ``dist/branding`` directory. Files that
+        are destined for a subdirectory can be specified by accessing a field.
+        For example, to export ``foo.png`` to the top-level directory and
+        ``bar.png`` to the directory ``images/subdir``, append to
+        ``BRANDING_FILES`` like so::
+
+           BRANDING_FILES += ['foo.png']
+           BRANDING_FILES.images.subdir += ['bar.png']
+
+        If the source and destination have different file names, add the
+        destination name to the list and set the ``source`` property on the
+        entry, like so::
+
+           BRANDING_FILES.dir += ['baz.png']
+           BRANDING_FILES.dir['baz.png'].source = 'quux.png'
+        """, None),
+
     'RESOURCE_FILES': (HierarchicalStringListWithFlagsFactory({'preprocess': bool}), list,
         """List of resources to be exported, and in which subdirectories.
 
