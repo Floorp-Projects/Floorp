@@ -40,26 +40,12 @@ let test = asyncTest(function* () {
     ],
   });
 
-  testClickOpenNewTab(hud, result);
+  yield testClickOpenNewTab(hud, result);
 });
 
 function testClickOpenNewTab(hud, [result]) {
   let msg = [...result.matched][0];
   let warningNode = msg.querySelector(".learn-more-link");
   ok(warningNode, "learn more link");
-
-  // Invoke the click event and check if a new tab would open to the correct
-  // page
-  let linkOpened = false;
-  let oldOpenUILinkIn = window.openUILinkIn;
-  window.openUILinkIn = function(aLink) {
-    if (aLink == INSECURE_PASSWORDS_URI) {
-      linkOpened = true;
-    }
-  }
-
-  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
-                             warningNode.ownerDocument.defaultView);
-  ok(linkOpened, "Clicking the Insecure Passwords Warning node opens the desired page");
-  window.openUILinkIn = oldOpenUILinkIn;
+  return simulateMessageLinkClick(warningNode, INSECURE_PASSWORDS_URI);
 }

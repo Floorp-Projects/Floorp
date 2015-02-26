@@ -23,7 +23,7 @@ Structure::
         reason: <string>, // what triggered this ping: "saved-session", "environment-change", "shutdown", ...
         revision: <string>, // the Histograms.json revision
         timezoneOffset: <number>, // time-zone offset from UTC, in minutes, for the current locale
-        previousBuildId: <string>,
+        previousBuildId: <string>, // null if this is the first run, or the previous build ID is unknown
 
         sessionId: <uuid>,  // random session id, shared by subsessions
         subsessionId: <uuid>,  // random subsession id
@@ -34,7 +34,7 @@ Structure::
         profileSubsessionCounter: <number>, // the running no. of all subsessions for the whole profile life time
 
         sessionStartDate: <ISO date>, // daily precision
-        subsessionStartDate: <ISO date>, // daily precision
+        subsessionStartDate: <ISO date>, // daily precision, ISO date in local time
         subsessionLength: <number>, // the subsession length in seconds
       },
 

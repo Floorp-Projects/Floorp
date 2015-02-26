@@ -21,6 +21,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 
 this.AddonTestUtils = {
   /**
+   * Get the add-on that is specified by its ID.
+   *
+   * @return {Promise<Object>} A promise that resolves returning the found addon or null
+   *         if it is not found.
+   */
+  getAddonById: function (id) {
+    return new Promise(resolve => AddonManager.getAddonByID(id, addon => resolve(addon)));
+  },
+
+  /**
    * Uninstall an add-on that is specified by its ID.
    *
    * The returned promise resolves on successful uninstall and rejects

@@ -14,6 +14,7 @@ Structure::
     {
       build: {
         applicationId: <string>, // nsIXULAppInfo.ID
+        applicationName: <string>, // "Firefox"
         architecture: <string>, // e.g. "x86", build architecture for the active build
         architecturesInBinary: <string>, // e.g. "i386-x86_64", from nsIMacUtils.architecturesInBinary, only present for mac universal builds
         buildId: <string>, // e.g. "20141126041045"
@@ -24,22 +25,22 @@ Structure::
         hotfixVersion: <string>, // e.g. "20141211.01"
       },
       settings: {
-        blocklistEnabled: <bool>, // false on failure
-        isDefaultBrowser: <bool>, // null on failure
+        blocklistEnabled: <bool>, // true on failure
+        isDefaultBrowser: <bool>, // null on failure, not available on Android
         e10sEnabled: <bool>, // false on failure
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
         update: {
           channel: <string>, // e.g. "release", null on failure
-          enabled: <bool>, // false on failure
-          autoDownload: <bool>, // false on failure
+          enabled: <bool>, // true on failure
+          autoDownload: <bool>, // true on failure
         },
         userPrefs: {
           // Two possible behaviours: values of the whitelisted prefs, or for some prefs we
           // only record they are present with value being set to null.
         },
       },
-      profile: {
+      profile: { // This section is not available on Android.
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
       },
@@ -86,16 +87,16 @@ Structure::
         },
         hdd: {
           profile: { // hdd where the profile folder is located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
           binary:  { // hdd where the application binary is located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
           system:  { // hdd where the system files are located
-              model: <string>, // null on failure
-              revision: <string>, // null on failure
+              model: <string>, // windows only or null on failure
+              revision: <string>, // windows only or null on failure
           },
         },
         gfx: {
@@ -122,7 +123,7 @@ Structure::
         activeAddons: { // the currently enabled addons
           <addon id>: {
             blocklisted: <bool>,
-            description: <string>,
+            description: <string>, // null if not available
             name: <string>,
             userDisabled: <bool>,
             appDisabled: <bool>,

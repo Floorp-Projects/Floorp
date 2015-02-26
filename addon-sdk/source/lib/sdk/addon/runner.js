@@ -81,14 +81,12 @@ function startup(reason, options) Startup.onceInitialized.then(() => {
       // Exports data to a pseudo module so that api-utils/l10n/core
       // can get access to it
       definePseudo(options.loader, '@l10n/data', data ? data : null);
-      return ready;
-    }).then(function() {
-      run(options);
+      return ready.then(() => run(options, !!data));
     }).then(null, console.exception);
     return void 0; // otherwise we raise a warning, see bug 910304
 });
 
-function run(options) {
+function run(options, hasL10n) {
   try {
     // Try initializing HTML localization before running main module. Just print
     // an exception in case of error, instead of preventing addon to be run.
@@ -96,7 +94,7 @@ function run(options) {
       // Do not enable HTML localization while running test as it is hard to
       // disable. Because unit tests are evaluated in a another Loader who
       // doesn't have access to this current loader.
-      if (options.main !== 'sdk/test/runner') {
+      if (hasL10n && options.main !== 'sdk/test/runner') {
         require('../l10n/html').enable();
       }
     }

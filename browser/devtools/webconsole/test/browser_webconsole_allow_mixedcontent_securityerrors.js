@@ -39,7 +39,7 @@ let test = asyncTest(function* () {
     ],
   });
 
-  testClickOpenNewTab(hud, results);
+  yield testClickOpenNewTab(hud, results);
 });
 
 function pushPrefEnv()
@@ -57,18 +57,5 @@ function testClickOpenNewTab(hud, results) {
   let warningNode = results[0].clickableElements[0];
   ok(warningNode, "link element");
   ok(warningNode.classList.contains("learn-more-link"), "link class name");
-
-  // Invoke the click event and check if a new tab would open to the correct page.
-  let linkOpened = false;
-  let oldOpenUILinkIn = window.openUILinkIn;
-  window.openUILinkIn = function(aLink) {
-    if (aLink == LEARN_MORE_URI) {
-      linkOpened = true;
-    }
-  }
-
-  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
-                             warningNode.ownerDocument.defaultView);
-  ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
-  window.openUILinkIn = oldOpenUILinkIn;
+  return simulateMessageLinkClick(warningNode, LEARN_MORE_URI);
 }

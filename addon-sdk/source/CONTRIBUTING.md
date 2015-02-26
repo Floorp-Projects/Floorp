@@ -17,12 +17,14 @@ If you have code that you'd like to contribute the Jetpack project, follow these
 3. Make your changes, per the Overview
 4. Write a test ([intro][test intro], [API][test API])
 5. Submit pull request with changes and a title in a form of `Bug XXX - description`
-6. Copy the pull request link from GitHub and paste it in as an attachment to the bug
-7. Each pull request should idealy contain only one commit, so squash the commits if necessary.
-8. Flag the attachment for code review from one of the Jetpack reviewers listed below.
+6. Make sure that [Travis CI](https://travis-ci.org/mozilla/addon-sdk/branches) tests are passing for your branch.
+7. Copy the pull request link from GitHub and paste it in as an attachment to the bug
+8. Each pull request should idealy contain only one commit, so squash the commits if necessary.
+9. Flag the attachment for code review from one of the Jetpack reviewers listed below.
    This step is optional, but could speed things up.
-9. Address any nits (ie style changes), or other issues mentioned in the review.
-10. Finally, once review is approved, a team member will do the merging
+10. Address any nits (ie style changes), or other issues mentioned in the review.
+
+Finally, once review is approved, a team member will do the merging
 
 ## Good First Bugs
 
