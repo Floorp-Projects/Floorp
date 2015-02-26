@@ -8369,11 +8369,11 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
         break;
       case RetType::Int32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedInt32x4(ReturnSimdReg, Address(argv, 0));
+        masm.storeUnalignedInt32x4(ReturnInt32x4Reg, Address(argv, 0));
         break;
       case RetType::Float32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedFloat32x4(ReturnSimdReg, Address(argv, 0));
+        masm.storeUnalignedFloat32x4(ReturnFloat32x4Reg, Address(argv, 0));
         break;
     }
 
