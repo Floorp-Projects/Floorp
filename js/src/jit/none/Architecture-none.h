@@ -26,6 +26,7 @@ class Registers
         invalid_reg
     };
     typedef RegisterID Code;
+    typedef RegisterID Encoding;
     typedef uint8_t SetType;
 
     static uint32_t SetSize(SetType) { MOZ_CRASH(); }
@@ -60,6 +61,7 @@ class FloatRegisters
         invalid_reg
     };
     typedef FPRegisterID  Code;
+    typedef FPRegisterID Encoding;
     typedef uint32_t SetType;
 
     static const char *GetName(Code) { MOZ_CRASH(); }
@@ -84,6 +86,7 @@ struct FloatRegister
 {
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::Encoding Encoding;
     typedef Codes::SetType SetType;
 
     Code _;

@@ -29,16 +29,17 @@ namespace jit {
 
 struct Register {
     typedef Registers Codes;
+    typedef Codes::Encoding Encoding;
     typedef Codes::Code Code;
     typedef Codes::SetType SetType;
     Code code_;
     static Register FromCode(uint32_t i) {
         MOZ_ASSERT(i < Registers::Total);
-        Register r = { (Registers::Code)i };
+        Register r = { Code(i) };
         return r;
     }
     static Register FromName(const char *name) {
-        Registers::Code code = Registers::FromName(name);
+        Code code = Registers::FromName(name);
         Register r = { code };
         return r;
     }

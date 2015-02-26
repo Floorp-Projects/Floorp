@@ -27,6 +27,7 @@ static const uint32_t ShadowStackSpace = 0;
 class Registers {
   public:
     typedef X86Encoding::RegisterID Code;
+    typedef X86Encoding::RegisterID Encoding;
     typedef uint32_t SetType;
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
@@ -126,6 +127,7 @@ typedef uint16_t PackedRegisterMask;
 class FloatRegisters {
   public:
     typedef X86Encoding::XMMRegisterID Code;
+    typedef X86Encoding::XMMRegisterID Encoding;
     typedef uint32_t SetType;
     static const char *GetName(Code code) {
         return X86Encoding::XMMRegName(code);
@@ -176,6 +178,7 @@ class TypedRegisterSet;
 struct FloatRegister {
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::Encoding Encoding;
     typedef Codes::SetType SetType;
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");

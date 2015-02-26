@@ -75,6 +75,7 @@ class Registers
         invalid_reg
     };
     typedef RegisterID Code;
+    typedef RegisterID Encoding;
 
     static const char *GetName(Code code) {
         static const char * const Names[] = { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
@@ -232,6 +233,7 @@ class FloatRegisters
     };
 
     typedef FPRegisterID Code;
+    typedef FPRegisterID Encoding;
 
 
     static const char *GetDoubleName(Code code) {
@@ -331,6 +333,7 @@ class VFPRegister
 
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::Encoding Encoding;
 
   protected:
     RegType kind : 2;
