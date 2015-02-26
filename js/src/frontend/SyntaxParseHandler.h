@@ -191,7 +191,7 @@ class SyntaxParseHandler
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
     bool addShorthand(Node literal, Node name, Node expr) { return true; }
     bool addObjectMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
-    bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
+    bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op, bool isStatic) { return true; }
     Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeUnparenthesizedYieldExpr; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
 
