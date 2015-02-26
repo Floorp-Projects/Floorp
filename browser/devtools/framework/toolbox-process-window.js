@@ -38,7 +38,7 @@ let connect = Task.async(function*() {
     if (addonID) {
       gClient.listAddons(({addons}) => {
         let addonActor = addons.filter(addon => addon.id === addonID).pop();
-        openToolbox(addonActor);
+        openToolbox({ form: addonActor, chrome: true, isTabActor: false });
       });
     } else {
       gClient.listTabs(openToolbox);
@@ -65,11 +65,12 @@ function onCloseCommand(event) {
   window.close();
 }
 
-function openToolbox(form) {
+function openToolbox({ form, chrome, isTabActor }) {
   let options = {
     form: form,
     client: gClient,
-    chrome: true
+    chrome: chrome,
+    isTabActor: isTabActor
   };
   devtools.TargetFactory.forRemoteTab(options).then(target => {
     let frame = document.getElementById("toolbox-iframe");
