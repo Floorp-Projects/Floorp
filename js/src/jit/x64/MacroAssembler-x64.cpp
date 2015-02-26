@@ -213,6 +213,9 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
       case MoveOp::DOUBLE: {
         FloatRegister dest;
         if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
+            // Convert to the right type of register.
+            if (type == MoveOp::FLOAT32)
+                dest = dest.asSingle();
             if (from.isFloatReg() && from.floatReg() == dest) {
                 // Nothing to do; the value is in the right register already
                 return;

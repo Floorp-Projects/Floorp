@@ -373,18 +373,26 @@ class FloatRegister
         MOZ_ASSERT(!other.isInvalid());
         return kind_ == other.kind_ && code_ == other.code_;
     }
-    bool isDouble() const { return kind_ == Double; }
-    bool isSingle() const { return kind_ == Single; }
     bool equiv(const FloatRegister &other) const { return other.kind_ == kind_; }
     size_t size() const { return (kind_ == Double) ? 8 : 4; }
     bool isInvalid() const {
         return code_ == FloatRegisters::invalid_freg;
     }
 
+    bool isSingle() const { return kind_ == Single; }
+    bool isDouble() const { return kind_ == Double; }
+    bool isInt32x4() const { return false; }
+    bool isFloat32x4() const { return false; }
+
     FloatRegister doubleOverlay(unsigned int which = 0) const;
     FloatRegister singleOverlay(unsigned int which = 0) const;
     FloatRegister sintOverlay(unsigned int which = 0) const;
     FloatRegister uintOverlay(unsigned int which = 0) const;
+
+    FloatRegister asSingle() const { return singleOverlay(); }
+    FloatRegister asDouble() const { return doubleOverlay(); }
+    FloatRegister asInt32x4() const { MOZ_CRASH("NYI"); }
+    FloatRegister asFloat32x4() const { MOZ_CRASH("NYI"); }
 
     Code code() const {
         MOZ_ASSERT(!isInvalid());
