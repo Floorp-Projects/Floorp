@@ -4974,10 +4974,10 @@ DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
     if (!handler)
         return false;
 
-    // Ensure observability *before* setting the breakpoint. If the script's
-    // compartment is not already a debuggee, trying to ensure observability
-    // after setting the breakpoint (and thus marking the script as a
-    // debuggee) will skip actually ensuring observability.
+    // Ensure observability *before* setting the breakpoint. If the script is
+    // not already a debuggee, trying to ensure observability after setting
+    // the breakpoint (and thus marking the script as a debuggee) will skip
+    // actually ensuring observability.
     if (!dbg->ensureExecutionObservabilityOfScript(cx, script))
         return false;
 
@@ -5937,6 +5937,12 @@ DebuggerFrame_setOnStep(JSContext *cx, unsigned argc, Value *vp)
     if (!args[0].isUndefined() && prior.isUndefined()) {
         // Single stepping toggled off->on.
         AutoCompartment ac(cx, frame.scopeChain());
+        // Ensure observability *before* incrementing the step mode
+        // count. Calling this function after calling incrementStepModeCount
+        // will make it a no-op.
+        Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+        if (!dbg->ensureExecutionObservabilityOfScript(cx, frame.script()))
+            return false;
         if (!frame.script()->incrementStepModeCount(cx))
             return false;
     } else if (args[0].isUndefined() && !prior.isUndefined()) {
