@@ -1176,14 +1176,23 @@ NukeCrossCompartmentWrappers(JSContext* cx,
  * The DOMProxyShadowsCheck function will be called to check if the property for
  * id should be gotten from the prototype, or if there is an own property that
  * shadows it.
- * If DoesntShadow is returned then the slot at listBaseExpandoSlot should
- * either be undefined or point to an expando object that would contain the own
- * property.
- * If DoesntShadowUnique is returned then the slot at listBaseExpandoSlot should
- * contain a private pointer to a ExpandoAndGeneration, which contains a
- * JS::Value that should either be undefined or point to an expando object, and
- * a uint32 value. If that value changes then the IC for getting a property will
- * be invalidated.
+ * * If ShadowsViaDirectExpando is returned, then the slot at
+ *   listBaseExpandoSlot contains an expando object which has the property in
+ *   question.
+ * * If ShadowsViaIndirectExpando is returned, then the slot at
+ *   listBaseExpandoSlot contains a private pointer to an ExpandoAndGeneration
+ *   and the expando object in the ExpandoAndGeneration has the property in
+ *   question.
+ * * If DoesntShadow is returned then the slot at listBaseExpandoSlot should
+ *   either be undefined or point to an expando object that would contain the
+ *   own property.
+ * * If DoesntShadowUnique is returned then the slot at listBaseExpandoSlot
+ *   should contain a private pointer to a ExpandoAndGeneration, which contains
+ *   a JS::Value that should either be undefined or point to an expando object,
+ *   and a uint32 value. If that value changes then the IC for getting a
+ *   property will be invalidated.
+ * * If Shadows is returned, that means the property is an own property of the
+ *   proxy but doesn't live on the expando object.
  */
 
 struct ExpandoAndGeneration {
@@ -1216,7 +1225,9 @@ typedef enum DOMProxyShadowsResult {
   ShadowCheckFailed,
   Shadows,
   DoesntShadow,
-  DoesntShadowUnique
+  DoesntShadowUnique,
+  ShadowsViaDirectExpando,
+  ShadowsViaIndirectExpando
 } DOMProxyShadowsResult;
 typedef DOMProxyShadowsResult
 (* DOMProxyShadowsCheck)(JSContext* cx, JS::HandleObject object, JS::HandleId id);
@@ -1227,6 +1238,11 @@ SetDOMProxyInformation(const void *domProxyHandlerFamily, uint32_t domProxyExpan
 const void *GetDOMProxyHandlerFamily();
 uint32_t GetDOMProxyExpandoSlot();
 DOMProxyShadowsCheck GetDOMProxyShadowsCheck();
+inline bool DOMProxyIsShadowing(DOMProxyShadowsResult result) {
+    return result == Shadows ||
+           result == ShadowsViaDirectExpando ||
+           result == ShadowsViaIndirectExpando;
+}
 
 /* Implemented in jsdate.cpp. */
 
