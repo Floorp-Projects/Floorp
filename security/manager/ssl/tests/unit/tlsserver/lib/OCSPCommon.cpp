@@ -15,8 +15,8 @@
 namespace mozilla { namespace pkix { namespace test {
 
 // Ownership of privateKey is transfered.
-TestKeyPair* CreateTestKeyPair(const ByteString& spki,
-                               const ByteString& spk,
+TestKeyPair* CreateTestKeyPair(const TestPublicKeyAlgorithm publicKeyAlg,
+                               const SECKEYPublicKey& publicKey,
                                SECKEYPrivateKey* privateKey);
 
 } } } // namespace mozilla::pkix::test
@@ -33,14 +33,11 @@ CreateTestKeyPairFromCert(CERTCertificate& cert)
   if (!privateKey) {
     return nullptr;
   }
-  ByteString subjectPublicKeyInfo(cert.derPublicKey.data,
-                                  cert.derPublicKey.len);
-  SECItem subjectPublicKeyItem = cert.subjectPublicKeyInfo.subjectPublicKey;
-  DER_ConvertBitString(&subjectPublicKeyItem); // bits to bytes
-  ByteString subjectPublicKey(subjectPublicKeyItem.data,
-                              subjectPublicKeyItem.len);
-  return CreateTestKeyPair(subjectPublicKeyInfo, subjectPublicKey,
-                           privateKey.forget());
+  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(&cert));
+  if (!publicKey) {
+    return nullptr;
+  }
+  return CreateTestKeyPair(RSA_PKCS1(), *publicKey, privateKey.forget());
 }
 
 SECItemArray *
