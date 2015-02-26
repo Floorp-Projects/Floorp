@@ -1660,7 +1660,6 @@ CASE(JSOP_UNUSED105)
 CASE(JSOP_UNUSED107)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
-CASE(JSOP_UNUSED146)
 CASE(JSOP_UNUSED147)
 CASE(JSOP_UNUSED148)
 CASE(JSOP_BACKPATCH)
@@ -3233,7 +3232,10 @@ CASE(JSOP_MUTATEPROTO)
 END_CASE(JSOP_MUTATEPROTO)
 
 CASE(JSOP_INITPROP)
+CASE(JSOP_INITLOCKEDPROP)
 {
+    static_assert(JSOP_INITPROP_LENGTH == JSOP_INITLOCKEDPROP_LENGTH,
+                  "initprop and initlockedprop must be the same size");
     /* Load the property's initial value into rval. */
     MOZ_ASSERT(REGS.stackDepth() >= 2);
     RootedValue &rval = rootValue0;
@@ -3248,7 +3250,9 @@ CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
+    unsigned propFlags = JSOp(*REGS.pc) == JSOP_INITPROP ? JSPROP_ENUMERATE
+                                                         : JSPROP_READONLY | JSPROP_PERMANENT;
+    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, propFlags))
         goto error;
 
     REGS.sp--;
