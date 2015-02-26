@@ -117,6 +117,30 @@ struct AtomHasher
 
 typedef HashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy> AtomSet;
 
+// This class is a wrapper for AtomSet that is used to ensure the AtomSet is
+// not modified. It should only expose read-only methods from AtomSet.
+// Note however that the atoms within the table can be marked during GC.
+class FrozenAtomSet
+{
+    AtomSet *mSet;
+
+public:
+    // This constructor takes ownership of the passed-in AtomSet.
+    explicit FrozenAtomSet(AtomSet *set) { mSet = set; }
+
+    ~FrozenAtomSet() { js_delete(mSet); }
+
+    AtomSet::Ptr readonlyThreadsafeLookup(const AtomSet::Lookup &l) const;
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mSet->sizeOfIncludingThis(mallocSizeOf);
+    }
+
+    typedef AtomSet::Range Range;
+
+    AtomSet::Range all() const { return mSet->all(); }
+};
+
 class PropertyName;
 
 }  /* namespace js */
