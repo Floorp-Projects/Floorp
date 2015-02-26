@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="ef937d1aca7c4cf89ecb5cc43ae8c21c2000a9db">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="7512026a377271a0cade12d70846557f0bc7781c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="2769db0e5fe75986ff9b16b39f63ec328eff62ff"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3905180d9e2dbe03d7ce3b3a6debe4d4adc938d1"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -134,7 +134,7 @@
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="0b4249f88cb8faadfbf80be207af14198dec08e3"/>
+  <project name="kernel/common" path="kernel" revision="1ef12a094a59d966a2576d0991a3618b591a7da9"/>
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
   <project name="u-boot" path="u-boot" revision="6980cf8f8cf9c1d43ff92b7af13425a5ed531d12"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
