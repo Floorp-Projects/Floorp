@@ -406,19 +406,16 @@ js::proxy_create(JSContext *cx, unsigned argc, Value *vp)
     JSObject *handler = NonNullObject(cx, args[0]);
     if (!handler)
         return false;
-    JSObject *proto, *parent = nullptr;
+    JSObject *proto;
     if (args.get(1).isObject()) {
         proto = &args[1].toObject();
-        parent = proto->getParent();
     } else {
         MOZ_ASSERT(IsFunctionObject(&args.callee()));
         proto = nullptr;
     }
-    if (!parent)
-        parent = args.callee().getParent();
     RootedValue priv(cx, ObjectValue(*handler));
     JSObject *proxy = NewProxyObject(cx, &ScriptedIndirectProxyHandler::singleton,
-                                     priv, proto, parent);
+                                     priv, proto);
     if (!proxy)
         return false;
 
@@ -438,12 +435,9 @@ js::proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     RootedObject handler(cx, NonNullObject(cx, args[0]));
     if (!handler)
         return false;
-    RootedObject proto(cx), parent(cx);
-    parent = args.callee().getParent();
-    proto = parent->global().getOrCreateFunctionPrototype(cx);
+    RootedObject proto(cx, args.callee().global().getOrCreateFunctionPrototype(cx));
     if (!proto)
         return false;
-    parent = proto->getParent();
 
     RootedObject call(cx, ValueToCallable(cx, args[1], args.length() - 2));
     if (!call)
@@ -469,7 +463,7 @@ js::proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     RootedValue priv(cx, ObjectValue(*handler));
     JSObject *proxy =
         NewProxyObject(cx, &CallableScriptedIndirectProxyHandler::singleton,
-                       priv, proto, parent);
+                       priv, proto);
     if (!proxy)
         return false;
     proxy->as<ProxyObject>().setExtra(0, ObjectValue(*ccHolder));

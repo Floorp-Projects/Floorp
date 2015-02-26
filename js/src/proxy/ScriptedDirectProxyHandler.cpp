@@ -1206,7 +1206,7 @@ NewScriptedProxy(JSContext *cx, CallArgs &args, const char *callerName)
     RootedValue priv(cx, ObjectValue(*target));
     JSObject *proxy_ =
         NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
-                       priv, TaggedProto::LazyProto, cx->global());
+                       priv, TaggedProto::LazyProto);
     if (!proxy_)
         return false;
     Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
