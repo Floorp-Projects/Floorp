@@ -207,7 +207,6 @@ MSG_DEF(JSMSG_CATCH_AFTER_GENERAL,     0, JSEXN_SYNTAXERR, "catch after uncondit
 MSG_DEF(JSMSG_CATCH_IDENTIFIER,        0, JSEXN_SYNTAXERR, "missing identifier in catch")
 MSG_DEF(JSMSG_CATCH_OR_FINALLY,        0, JSEXN_SYNTAXERR, "missing catch or finally after try")
 MSG_DEF(JSMSG_CATCH_WITHOUT_TRY,       0, JSEXN_SYNTAXERR, "catch without try")
-MSG_DEF(JSMSG_CLASS_NOT_IMPLEMENTED,   0, JSEXN_SYNTAXERR, "classes are not implemented yet")
 MSG_DEF(JSMSG_COLON_AFTER_CASE,        0, JSEXN_SYNTAXERR, "missing : after case label")
 MSG_DEF(JSMSG_COLON_AFTER_ID,          0, JSEXN_SYNTAXERR, "missing : after property id")
 MSG_DEF(JSMSG_COLON_IN_COND,           0, JSEXN_SYNTAXERR, "missing : in conditional expression")
