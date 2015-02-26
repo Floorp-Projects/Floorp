@@ -1070,6 +1070,27 @@ DebuggerClient.prototype = {
    */
   onClosed: function (aStatus) {
     this.emit("closed");
+
+    // The |_pools| array on the client-side currently is used only by
+    // protocol.js to store active fronts, mirroring the actor pools found in
+    // the server.  So, read all usages of "pool" as "protocol.js front".
+    //
+    // In the normal case where we shutdown cleanly, the toolbox tells each tool
+    // to close, and they each call |destroy| on any fronts they were using.
+    // When |destroy| or |cleanup| is called on a protocol.js front, it also
+    // removes itself from the |_pools| array.  Once the toolbox has shutdown,
+    // the connection is closed, and we reach here.  All fronts (should have
+    // been) |destroy|ed, so |_pools| should empty.
+    //
+    // If the connection instead aborts unexpectedly, we may end up here with
+    // all fronts used during the life of the connection.  So, we call |cleanup|
+    // on them clear their state, reject pending requests, and remove themselves
+    // from |_pools|.  This saves the toolbox from hanging indefinitely, in case
+    // it waits for some server response before shutdown that will now never
+    // arrive.
+    for (let pool of this._pools) {
+      pool.cleanup();
+    }
   },
 
   registerClient: function (client) {
