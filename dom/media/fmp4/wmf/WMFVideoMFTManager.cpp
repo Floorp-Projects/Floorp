@@ -234,6 +234,10 @@ WMFVideoMFTManager::Init()
 HRESULT
 WMFVideoMFTManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
+  if (!mDecoder) {
+    // This can happen during shutdown.
+    return E_FAIL;
+  }
   if (mStreamType != VP8 && mStreamType != VP9) {
     // We must prepare samples in AVC Annex B.
     if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
