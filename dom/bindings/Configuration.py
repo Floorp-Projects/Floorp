@@ -302,6 +302,12 @@ class Descriptor(DescriptorProvider):
         DescriptorProvider.__init__(self, config, desc.get('workers', False))
         self.interface = interface
 
+        if self.workers:
+            assert 'wantsXrays' not in desc
+            self.wantsXrays = False
+        else:
+            self.wantsXrays = desc.get('wantsXrays', True)
+
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name
         if self.interface.isExternal():
