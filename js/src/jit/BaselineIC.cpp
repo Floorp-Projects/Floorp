@@ -8285,9 +8285,9 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         op == JSOP_INITLOCKEDPROP ||
         op == JSOP_INITHIDDENPROP)
     {
-        MOZ_ASSERT(obj->is<PlainObject>());
+        MOZ_ASSERT(obj->is<JSFunction>() || obj->is<PlainObject>());
         unsigned propAttrs = GetInitDataPropAttrs(op);
-        if (!NativeDefineProperty(cx, obj.as<PlainObject>(), id, rhs,
+        if (!NativeDefineProperty(cx, obj.as<NativeObject>(), id, rhs,
                                   nullptr, nullptr, propAttrs))
         {
             return false;
