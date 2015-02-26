@@ -52,7 +52,7 @@ if (!('BrowserElementIsPreloaded' in this)) {
 
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js");
 } else {
-  if (docShell.asynPanZoomEnabled === false) {
+  if (docShell.asyncPanZoomEnabled === false) {
     ContentPanningAPZDisabled.init();
   }
   ContentPanning.init();
