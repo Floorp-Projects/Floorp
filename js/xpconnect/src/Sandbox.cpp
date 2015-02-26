@@ -647,7 +647,7 @@ WrapCallable(JSContext *cx, HandleObject callable, HandleObject sandboxProtoProx
 
     RootedValue priv(cx, ObjectValue(*callable));
     JSObject *obj = js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
-                                       priv, nullptr, nullptr);
+                                       priv, nullptr);
     if (obj) {
         js::SetProxyExtra(obj, SandboxCallableProxyHandler::SandboxProxySlot,
                           ObjectValue(*sandboxProtoProxy));
@@ -972,7 +972,7 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
                 // of this-binding for methods.
                 RootedValue priv(cx, ObjectValue(*options.proto));
                 options.proto = js::NewProxyObject(cx, &xpc::sandboxProxyHandler,
-                                                   priv, nullptr, nullptr);
+                                                   priv, nullptr);
                 if (!options.proto)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
