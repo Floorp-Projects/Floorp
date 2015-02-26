@@ -3575,7 +3575,7 @@ IMEInputHandler::IsOrWouldBeFocused()
   NS_ENSURE_TRUE(!Destroyed(), false);
   NSWindow* window = [mView window];
   NS_ENSURE_TRUE(window, false);
-  return [window firstResponder] == mView;
+  return [window firstResponder] == mView && ![window attachedSheet];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }

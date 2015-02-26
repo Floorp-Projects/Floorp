@@ -848,7 +848,8 @@ PivotContext.prototype = {
         hints.push(hint);
       } else if (aAccessible.actionCount > 0) {
         hints.push({
-          string: Utils.AccRetrieval.getStringRole(aAccessible.role) + '-hint'
+          string: Utils.AccRetrieval.getStringRole(
+            aAccessible.role).replace(/\s/g, '') + '-hint'
         });
       }
     });

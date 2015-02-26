@@ -277,7 +277,7 @@ BaselineCompiler::compile()
             return Method_Error;
 
         JitcodeGlobalEntry::BaselineEntry entry;
-        entry.init(code->raw(), code->rawEnd(), script, str);
+        entry.init(code, code->raw(), code->rawEnd(), script, str);
 
         JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
         if (!globalTable->addEntry(entry, cx->runtime())) {
@@ -1972,6 +1972,18 @@ BaselineCompiler::emit_JSOP_INITPROP()
     // Call IC.
     ICSetProp_Fallback::Compiler compiler(cx);
     return emitOpIC(compiler.getStub(&stubSpace_));
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITLOCKEDPROP()
+{
+    return emit_JSOP_INITPROP();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITHIDDENPROP()
+{
+    return emit_JSOP_INITPROP();
 }
 
 typedef bool (*NewbornArrayPushFn)(JSContext *, HandleObject, const Value &);

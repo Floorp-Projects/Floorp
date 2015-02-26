@@ -17,6 +17,7 @@ mk_add_options "export MOZ_AUTOMATION_INSTALLER=${MOZ_AUTOMATION_INSTALLER-0}"
 mk_add_options "export MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-0}"
 mk_add_options "export MOZ_AUTOMATION_UPLOAD=${MOZ_AUTOMATION_UPLOAD-1}"
 mk_add_options "export MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-0}"
+mk_add_options "export MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-0}"
 
 # If we are also building with MOZ_PKG_PRETTYNAMES, set the corresponding
 # stages.

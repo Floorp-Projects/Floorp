@@ -48,6 +48,11 @@ class SavedFrame : public NativeObject {
 
     bool         isSelfHosted();
 
+    static bool isSavedFrameAndNotProto(JSObject &obj) {
+        return obj.is<SavedFrame>() &&
+               !obj.as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull();
+    }
+
     struct Lookup;
     struct HashPolicy;
 

@@ -146,6 +146,10 @@ if (params.interactiveDebugger) {
   TestRunner.structuredLogger.interactiveDebugger = true;
 }
 
+if (params.maxTimeouts) {
+  TestRunner.maxTimeouts = params.maxTimeouts;
+}
+
 // Log things to the console if appropriate.
 TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
   dump(msg.info.join(' ') + "\n");
