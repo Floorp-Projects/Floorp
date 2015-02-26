@@ -180,8 +180,7 @@ EncodeInputStream(nsIInputStream* aInputStream,
 
   uint32_t count = uint32_t(countlong);
 
-  aDest.SetLength(count + aOffset);
-  if (aDest.Length() != count + aOffset) {
+  if (!aDest.SetLength(count + aOffset, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
