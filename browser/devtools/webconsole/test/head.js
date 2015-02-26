@@ -1646,3 +1646,32 @@ function getSourceActor(aSources, aURL) {
   let item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item && item.value;
 }
+
+/**
+ * Verify that clicking on a link from a popup notification message tries to
+ * open the expected URL.
+ */
+function simulateMessageLinkClick(element, expectedLink) {
+  let deferred = promise.defer();
+
+  // Invoke the click event and check if a new tab would
+  // open to the correct page.
+  let oldOpenUILinkIn = window.openUILinkIn;
+  window.openUILinkIn = function(link) {
+    if (link == expectedLink) {
+      ok(true, "Clicking the message link opens the desired page");
+      window.openUILinkIn = oldOpenUILinkIn;
+      deferred.resolve();
+    }
+  };
+
+  let event = new MouseEvent("click", {
+    detail: 1,
+    button: 0,
+    bubbles: true,
+    cancelable: true
+  });
+  element.dispatchEvent(event);
+
+  return deferred.promise;
+}
