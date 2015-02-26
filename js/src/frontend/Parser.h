@@ -329,6 +329,7 @@ class CompExprTransplanter;
 enum LetContext { LetExpression, LetStatement };
 enum VarContext { HoistVars, DontHoistVars };
 enum FunctionType { Getter, Setter, Normal };
+enum PropListType { ObjectLiteral, ClassBody };
 
 template <typename ParseHandler>
 class Parser : private JS::AutoGCRooter, public StrictModeGetter
@@ -575,7 +576,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension();
     Node exprInParens();
 
-    enum PropListType { ObjectLiteral, ClassBody };
     bool methodDefinition(PropListType listType, Node propList, Node propname, FunctionType type,
                           FunctionSyntaxKind kind, GeneratorKind generatorKind, JSOp Op);
 

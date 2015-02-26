@@ -6559,36 +6559,11 @@ EmitConditionalExpression(ExclusiveContext *cx, BytecodeEmitter *bce, Conditiona
     return SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq);
 }
 
-/*
- * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
- * the comment on EmitSwitch.
- */
-MOZ_NEVER_INLINE static bool
-EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+static bool
+EmitPropertyList(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+                 MutableHandlePlainObject objp, PropListType type)
 {
-    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
-        return EmitSingletonInitialiser(cx, bce, pn);
-
-    /*
-     * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
-     * a new object and defining (in source order) each property on the object
-     * (or mutating the object's [[Prototype]], in the case of __proto__).
-     */
-    ptrdiff_t offset = bce->offset();
-    if (!EmitNewInit(cx, bce, JSProto_Object))
-        return false;
-
-    /*
-     * Try to construct the shape of the object as we go, so we can emit a
-     * JSOP_NEWOBJECT with the final shape instead.
-     */
-    RootedPlainObject obj(cx);
-    if (bce->script->compileAndGo()) {
-        gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
-        obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
-        if (!obj)
-            return false;
-    }
+    MOZ_ASSERT(type == ObjectLiteral);
 
     for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
         if (!UpdateSourceCoordNotes(cx, bce, propdef->pn_pos.begin))
@@ -6599,7 +6574,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (propdef->isKind(PNK_MUTATEPROTO)) {
             if (!EmitTree(cx, bce, propdef->pn_kid))
                 return false;
-            obj = nullptr;
+            objp.set(nullptr);
             if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
                 return false;
             continue;
@@ -6639,10 +6614,10 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                    op == JSOP_INITPROP_SETTER);
 
         if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
-            obj = nullptr;
+            objp.set(nullptr);
 
         if (isIndex) {
-            obj = nullptr;
+            objp.set(nullptr);
             switch (op) {
               case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
               case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
@@ -6658,23 +6633,59 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!bce->makeAtomIndex(key->pn_atom, &index))
                 return false;
 
-            if (obj) {
-                MOZ_ASSERT(!obj->inDictionaryMode());
+            if (objp) {
+                MOZ_ASSERT(!objp->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());
-                if (!NativeDefineProperty(cx, obj, id, undefinedValue, nullptr, nullptr,
+                if (!NativeDefineProperty(cx, objp, id, undefinedValue, nullptr, nullptr,
                                           JSPROP_ENUMERATE))
                 {
                     return false;
                 }
-                if (obj->inDictionaryMode())
-                    obj = nullptr;
+                if (objp->inDictionaryMode())
+                    objp.set(nullptr);
             }
 
             if (!EmitIndex32(cx, op, index, bce))
                 return false;
         }
     }
+    return true;
+}
+
+/*
+ * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
+ * the comment on EmitSwitch.
+ */
+MOZ_NEVER_INLINE static bool
+EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
+        return EmitSingletonInitialiser(cx, bce, pn);
+
+    /*
+     * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
+     * a new object and defining (in source order) each property on the object
+     * (or mutating the object's [[Prototype]], in the case of __proto__).
+     */
+    ptrdiff_t offset = bce->offset();
+    if (!EmitNewInit(cx, bce, JSProto_Object))
+        return false;
+
+    /*
+     * Try to construct the shape of the object as we go, so we can emit a
+     * JSOP_NEWOBJECT with the final shape instead.
+     */
+    RootedPlainObject obj(cx);
+    if (bce->script->compileAndGo()) {
+        gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
+        obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
+        if (!obj)
+            return false;
+    }
+
+    if (!EmitPropertyList(cx, bce, pn, &obj, ObjectLiteral))
+        return false;
 
     if (obj) {
         /*
