@@ -640,7 +640,7 @@ WrapCallable(JSContext *cx, HandleObject callable, HandleObject sandboxProtoProx
     MOZ_ASSERT(JS::IsCallable(callable));
     // Our proxy is wrapping the callable.  So we need to use the
     // callable as the private.  We put the given sandboxProtoProxy in
-    // an extra slot,, and our call() hook depends on that.
+    // an extra slot, and our call() hook depends on that.
     MOZ_ASSERT(js::IsProxy(sandboxProtoProxy) &&
                js::GetProxyHandler(sandboxProtoProxy) ==
                  &xpc::sandboxProxyHandler);
