@@ -3239,7 +3239,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (gfxPrefs::DumpClientLayers()) {
     std::stringstream ss;
     FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss, false);
-    printf_stderr("%s", ss.str().c_str());
+    print_stderr(ss);
   }
 #endif
 
