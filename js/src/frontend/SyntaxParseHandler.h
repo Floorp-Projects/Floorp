@@ -186,10 +186,12 @@ class SyntaxParseHandler
     void addArrayElement(Node literal, Node element) { }
 
     Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
+    Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
     bool addShorthand(Node literal, Node name, Node expr) { return true; }
-    bool addMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
+    bool addObjectMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
+    bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
     Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeUnparenthesizedYieldExpr; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
 

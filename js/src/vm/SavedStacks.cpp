@@ -379,83 +379,113 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
 //   - unsigned   argc
 //   - Value      *vp
 //   - const char *fnName
-//   - Value      defaultVal
 // These parameters will be defined after calling this macro:
 //   - CallArgs args
 //   - Rooted<SavedFrame *> frame (will be non-null)
-#define THIS_SAVEDFRAME(cx, argc, vp, fnName, defaultVal, args, frame) \
+#define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)             \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
     RootedSavedFrame frame(cx);                                        \
     if (!checkThis(cx, args, fnName, &frame))                          \
-        return false;                                                  \
-    if (!frame) {                                                      \
-        args.rval().set(defaultVal);                                   \
-        return true;                                                   \
+        return false;
+
+} /* namespace js */
+
+namespace JS {
+
+static inline js::SavedFrame *
+UnwrapSavedFrame(JSContext *cx, HandleObject obj)
+{
+    if (!obj)
+        return nullptr;
+    RootedObject savedFrameObj(cx, CheckedUnwrap(obj));
+    MOZ_ASSERT(savedFrameObj);
+    MOZ_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*savedFrameObj));
+    js::RootedSavedFrame frame(cx, &savedFrameObj->as<js::SavedFrame>());
+    return GetFirstSubsumedFrame(cx, frame);
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameSource(JSContext *cx, HandleObject savedFrame, MutableHandleString sourcep)
+{
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    if (!frame) {
+        sourcep.set(cx->runtime()->emptyString);
+        return SavedFrameResult::AccessDenied;
+    }
+    sourcep.set(frame->getSource());
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameLine(JSContext *cx, HandleObject savedFrame, uint32_t *linep)
+{
+    MOZ_ASSERT(linep);
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    if (!frame) {
+        *linep = 0;
+        return SavedFrameResult::AccessDenied;
+    }
+    *linep = frame->getLine();
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameColumn(JSContext *cx, HandleObject savedFrame, uint32_t *columnp)
+{
+    MOZ_ASSERT(columnp);
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    if (!frame) {
+        *columnp = 0;
+        return SavedFrameResult::AccessDenied;
+    }
+    *columnp = frame->getColumn();
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameFunctionDisplayName(JSContext *cx, HandleObject savedFrame, MutableHandleString namep)
+{
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    if (!frame) {
+        namep.set(nullptr);
+        return SavedFrameResult::AccessDenied;
+    }
+    namep.set(frame->getFunctionDisplayName());
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject parentp)
+{
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    if (!frame) {
+        parentp.set(nullptr);
+        return SavedFrameResult::AccessDenied;
+    }
+    js::RootedSavedFrame parent(cx, frame->getParent());
+    parentp.set(js::GetFirstSubsumedFrame(cx, parent));
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(bool)
+StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString stringp)
+{
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, stack));
+    if (!frame) {
+        stringp.set(cx->runtime()->emptyString);
+        return true;
     }
 
-/* static */ bool
-SavedFrame::sourceProperty(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "(get source)", NullValue(), args, frame);
-    args.rval().setString(frame->getSource());
-    return true;
-}
-
-/* static */ bool
-SavedFrame::lineProperty(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "(get line)", NullValue(), args, frame);
-    uint32_t line = frame->getLine();
-    args.rval().setNumber(line);
-    return true;
-}
-
-/* static */ bool
-SavedFrame::columnProperty(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "(get column)", NullValue(), args, frame);
-    uint32_t column = frame->getColumn();
-    args.rval().setNumber(column);
-    return true;
-}
-
-/* static */ bool
-SavedFrame::functionDisplayNameProperty(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "(get functionDisplayName)", NullValue(), args, frame);
-    RootedAtom name(cx, frame->getFunctionDisplayName());
-    if (name)
-        args.rval().setString(name);
-    else
-        args.rval().setNull();
-    return true;
-}
-
-/* static */ bool
-SavedFrame::parentProperty(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "(get parent)", NullValue(), args, frame);
-    RootedSavedFrame parent(cx, frame->getParent());
-    args.rval().setObjectOrNull(GetFirstSubsumedFrame(cx, parent));
-    return true;
-}
-
-/* static */ bool
-SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_SAVEDFRAME(cx, argc, vp, "toString", StringValue(cx->runtime()->emptyString), args, frame);
-    StringBuffer sb(cx);
+    js::StringBuffer sb(cx);
     DebugOnly<JSSubsumesOp> subsumes = cx->runtime()->securityCallbacks->subsumes;
     DebugOnly<JSPrincipals *> principals = cx->compartment()->principals;
 
-    RootedSavedFrame parent(cx);
+    js::RootedSavedFrame parent(cx);
     do {
         MOZ_ASSERT_IF(subsumes, (*subsumes)(principals, frame->getPrincipals()));
-        if (frame->isSelfHosted())
-            goto nextIteration;
 
-        {
-            RootedAtom name(cx, frame->getFunctionDisplayName());
+        if (!frame->isSelfHosted()) {
+            js::RootedAtom name(cx, frame->getFunctionDisplayName());
             if ((name && !sb.append(name))
                 || !sb.append('@')
                 || !sb.append(frame->getSource())
@@ -469,15 +499,88 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
             }
         }
 
-    nextIteration:
         parent = frame->getParent();
-        frame = GetFirstSubsumedFrame(cx, parent);
+        frame = js::GetFirstSubsumedFrame(cx, parent);
     } while (frame);
 
     JSString *str = sb.finishString();
     if (!str)
         return false;
-    args.rval().setString(str);
+    stringp.set(str);
+    return true;
+}
+
+} /* namespace JS */
+
+namespace js {
+
+/* static */ bool
+SavedFrame::sourceProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get source)", args, frame);
+    RootedString source(cx);
+    if (JS::GetSavedFrameSource(cx, frame, &source) == JS::SavedFrameResult::Ok)
+        args.rval().setString(source);
+    else
+        args.rval().setNull();
+    return true;
+}
+
+/* static */ bool
+SavedFrame::lineProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get line)", args, frame);
+    uint32_t line;
+    if (JS::GetSavedFrameLine(cx, frame, &line) == JS::SavedFrameResult::Ok)
+        args.rval().setNumber(line);
+    else
+        args.rval().setNull();
+    return true;
+}
+
+/* static */ bool
+SavedFrame::columnProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get column)", args, frame);
+    uint32_t column;
+    if (JS::GetSavedFrameColumn(cx, frame, &column) == JS::SavedFrameResult::Ok)
+        args.rval().setNumber(column);
+    else
+        args.rval().setNull();
+    return true;
+}
+
+/* static */ bool
+SavedFrame::functionDisplayNameProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get functionDisplayName)", args, frame);
+    RootedString name(cx);
+    JS::SavedFrameResult result = JS::GetSavedFrameFunctionDisplayName(cx, frame, &name);
+    if (result == JS::SavedFrameResult::Ok && name)
+        args.rval().setString(name);
+    else
+        args.rval().setNull();
+    return true;
+}
+
+/* static */ bool
+SavedFrame::parentProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get parent)", args, frame);
+    RootedObject parent(cx);
+    (void) JS::GetSavedFrameParent(cx, frame, &parent);
+    args.rval().setObjectOrNull(parent);
+    return true;
+}
+
+/* static */ bool
+SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "toString", args, frame);
+    RootedString string(cx);
+    if (!JS::StringifySavedFrameStack(cx, frame, &string))
+        return false;
+    args.rval().setString(string);
     return true;
 }
 

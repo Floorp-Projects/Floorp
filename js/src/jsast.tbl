@@ -77,4 +77,6 @@ ASTDEF(AST_TAGGED_TEMPLATE,       "TaggedTemplate",                 "taggedTempl
 ASTDEF(AST_CALL_SITE_OBJ,         "CallSiteObject",                 "callSiteObject")
 ASTDEF(AST_COMPUTED_NAME,         "ComputedName",                   "computedName")
 
+ASTDEF(AST_CLASS_STMT,            "ClassStatement",                 "classStatement")
+ASTDEF(AST_CLASS_METHOD,          "ClassMethod",                    "classMethod")
 /* AST_LIMIT = last + 1 */

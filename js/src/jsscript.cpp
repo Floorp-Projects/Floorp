@@ -2603,7 +2603,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
         bce->tryNoteList.finish(script->trynotes());
     if (bce->blockScopeList.length() != 0)
         bce->blockScopeList.finish(script->blockScopes());
-    script->strict_ = bce->sc->strict;
+    script->strict_ = bce->sc->strict();
     script->explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope_ = funbox ? funbox->hasExtensibleScope() : false;

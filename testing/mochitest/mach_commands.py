@@ -256,6 +256,7 @@ class MochitestRunner(MozbuildObject):
             runByDir=False,
             useTestMediaDevices=False,
             timeout=None,
+            max_timeouts=None,
             **kwargs):
         """Runs a mochitest.
 
@@ -393,6 +394,8 @@ class MochitestRunner(MozbuildObject):
         options.useTestMediaDevices = useTestMediaDevices
         if timeout:
             options.timeout = int(timeout)
+        if max_timeouts:
+            options.maxTimeouts = int(max_timeouts)
 
         options.failureFile = failure_file_path
         if install_extension is not None:
@@ -728,6 +731,10 @@ def MochitestCommand(func):
         default=None,
         help='The per-test timeout time in seconds (default: 60 seconds)')
     func = timeout(func)
+
+    max_timeouts = CommandArgument('--max-timeouts', default=None,
+        help='The maximum number of timeouts permitted before halting testing')
+    func = max_timeouts(func)
 
     return func
 
