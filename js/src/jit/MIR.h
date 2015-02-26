@@ -3032,6 +3032,11 @@ class MSimdBox
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const MOZ_OVERRIDE;
+    bool canRecoverOnBailout() const MOZ_OVERRIDE {
+        return true;
+    }
 };
 
 class MSimdUnbox

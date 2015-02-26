@@ -13,6 +13,7 @@
 #include "jsstr.h"
 
 #include "builtin/RegExp.h"
+#include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"
 
 #include "gc/Heap.h"
@@ -1304,6 +1305,54 @@ RLambda::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
 
     JSObject *resultObject = js::Lambda(cx, fun, scopeChain);
+    if (!resultObject)
+        return false;
+
+    RootedValue result(cx);
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MSimdBox::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_SimdBox));
+    SimdTypeDescr &simdTypeDescr = templateObject()->typeDescr().as<SimdTypeDescr>();
+    SimdTypeDescr::Type type = simdTypeDescr.type();
+    writer.writeByte(uint8_t(type));
+    return true;
+}
+
+RSimdBox::RSimdBox(CompactBufferReader &reader)
+{
+    type_ = reader.readByte();
+}
+
+bool
+RSimdBox::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    JSObject *resultObject = nullptr;
+    RValueAllocation a = iter.readAllocation();
+    MOZ_ASSERT(iter.allocationReadable(a));
+    const FloatRegisters::RegisterContent *raw = iter.floatAllocationPointer(a);
+    switch (SimdTypeDescr::Type(type_)) {
+      case SimdTypeDescr::TYPE_INT32:
+        MOZ_ASSERT_IF(a.mode() == RValueAllocation::FLOAT32_REG,
+                      a.fpuReg().isInt32x4());
+        resultObject = js::CreateSimd<Int32x4>(cx, (const Int32x4::Elem *) raw);
+        break;
+      case SimdTypeDescr::TYPE_FLOAT32:
+        MOZ_ASSERT_IF(a.mode() == RValueAllocation::FLOAT32_REG,
+                      a.fpuReg().isFloat32x4());
+        resultObject = js::CreateSimd<Float32x4>(cx, (const Float32x4::Elem *) raw);
+        break;
+      case SimdTypeDescr::TYPE_FLOAT64:
+        MOZ_CRASH("NYI, RSimdBox of Float64x2");
+        break;
+    }
+
     if (!resultObject)
         return false;
 

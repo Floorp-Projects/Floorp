@@ -122,6 +122,9 @@ class MachineState
     void setRegisterLocation(FloatRegister reg, double *dp) {
         fpregs_[reg.code()] = (FloatRegisters::RegisterContent *) dp;
     }
+    void setRegisterLocation(FloatRegister reg, FloatRegisters::RegisterContent *rp) {
+        fpregs_[reg.code()] = rp;
+    }
 
     bool has(Register reg) const {
         return regs_[reg.code()] != nullptr;
@@ -137,6 +140,9 @@ class MachineState
     }
     void write(Register reg, uintptr_t value) const {
         regs_[reg.code()]->r = value;
+    }
+    const FloatRegisters::RegisterContent *address(FloatRegister reg) const {
+        return fpregs_[reg.code()];
     }
 };
 

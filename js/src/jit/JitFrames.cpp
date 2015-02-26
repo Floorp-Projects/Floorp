@@ -51,40 +51,46 @@ OffsetOfFrameSlot(int32_t slot)
     return -slot;
 }
 
+static inline uint8_t *
+AddressOfFrameSlot(JitFrameLayout *fp, int32_t slot)
+{
+    return (uint8_t *) fp + OffsetOfFrameSlot(slot);
+}
+
 static inline uintptr_t
 ReadFrameSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(uintptr_t *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline void
 WriteFrameSlot(JitFrameLayout *fp, int32_t slot, uintptr_t value)
 {
-    *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot)) = value;
+    *(uintptr_t *) AddressOfFrameSlot(fp, slot) = value;
 }
 
 static inline double
 ReadFrameDoubleSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(double *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline float
 ReadFrameFloat32Slot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(float *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(float *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline int32_t
 ReadFrameInt32Slot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(int32_t *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(int32_t *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline bool
 ReadFrameBooleanSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(bool *) AddressOfFrameSlot(fp, slot);
 }
 
 JitFrameIterator::JitFrameIterator()
@@ -1835,6 +1841,7 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
             double d;
             float f;
         } pun;
+        MOZ_ASSERT(alloc.fpuReg().isSingle());
         pun.d = fromRegister(alloc.fpuReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
@@ -1926,6 +1933,21 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
 
       default:
         MOZ_CRASH("huh?");
+    }
+}
+
+const FloatRegisters::RegisterContent *
+SnapshotIterator::floatAllocationPointer(const RValueAllocation &alloc) const
+{
+    switch (alloc.mode()) {
+      case RValueAllocation::FLOAT32_REG:
+        return machine_.address(alloc.fpuReg());
+
+      case RValueAllocation::FLOAT32_STACK:
+        return (FloatRegisters::RegisterContent *) AddressOfFrameSlot(fp_, alloc.stackOffset());
+
+      default:
+        MOZ_CRASH("Not a float allocation.");
     }
 }
 
@@ -2485,8 +2507,10 @@ MachineState::FromBailout(RegisterDump::GPRArray &regs, RegisterDump::FPUArray &
     }
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single), &fpregs[i].s);
-        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double), &fpregs[i].d);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Int32x4), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Float32x4), &fpregs[i]);
     }
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();

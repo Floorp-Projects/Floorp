@@ -381,30 +381,46 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
       case MIRType_ObjectOrNull:
       case MIRType_Boolean:
       case MIRType_Double:
-      case MIRType_Float32:
       {
         LAllocation *payload = snapshot->payloadOfSlot(*allocIndex);
-        JSValueType valueType =
-            (type == MIRType_ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
-        if (payload->isMemory()) {
-            if (type == MIRType_Float32)
-                alloc = RValueAllocation::Float32(ToStackIndex(payload));
-            else
-                alloc = RValueAllocation::Typed(valueType, ToStackIndex(payload));
-        } else if (payload->isGeneralReg()) {
-            alloc = RValueAllocation::Typed(valueType, ToRegister(payload));
-        } else if (payload->isFloatReg()) {
-            FloatRegister reg = ToFloatRegister(payload);
-            if (type == MIRType_Float32)
-                alloc = RValueAllocation::Float32(reg);
-            else
-                alloc = RValueAllocation::Double(reg);
-        } else {
+        if (payload->isConstant()) {
             MConstant *constant = mir->toConstant();
             uint32_t index;
             masm.propagateOOM(graph.addConstantToPool(constant->value(), &index));
             alloc = RValueAllocation::ConstantPool(index);
+            break;
         }
+
+        JSValueType valueType =
+            (type == MIRType_ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
+
+        MOZ_ASSERT(payload->isMemory() || payload->isRegister());
+        if (payload->isMemory())
+            alloc = RValueAllocation::Typed(valueType, ToStackIndex(payload));
+        else if (payload->isGeneralReg())
+            alloc = RValueAllocation::Typed(valueType, ToRegister(payload));
+        else if (payload->isFloatReg())
+            alloc = RValueAllocation::Double(ToFloatRegister(payload));
+        break;
+      }
+      case MIRType_Float32:
+      case MIRType_Int32x4:
+      case MIRType_Float32x4:
+      {
+        LAllocation *payload = snapshot->payloadOfSlot(*allocIndex);
+        if (payload->isConstant()) {
+            MConstant *constant = mir->toConstant();
+            uint32_t index;
+            masm.propagateOOM(graph.addConstantToPool(constant->value(), &index));
+            alloc = RValueAllocation::ConstantPool(index);
+            break;
+        }
+
+        MOZ_ASSERT(payload->isMemory() || payload->isFloatReg());
+        if (payload->isFloatReg())
+            alloc = RValueAllocation::Float32(ToFloatRegister(payload));
+        else
+            alloc = RValueAllocation::Float32(ToStackIndex(payload));
         break;
       }
       case MIRType_MagicOptimizedArguments:
