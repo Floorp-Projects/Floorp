@@ -975,8 +975,8 @@ struct CompartmentTimeStats {
     char compartmentName[1024];
     JSAddonId *addonId;
     JSCompartment *compartment;
-    uint64_t time;  // microseconds
-    uint64_t cpowTime; // microseconds
+    bool isSystem;
+    js::PerformanceData performance;
 };
 
 typedef js::Vector<CompartmentTimeStats, 0, js::SystemAllocPolicy> CompartmentStatsVector;
@@ -5125,5 +5125,34 @@ StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString 
 
 
 } /* namespace JS */
+
+
+/* Stopwatch-based CPU monitoring. */
+
+namespace js {
+
+/**
+ * Reset any stopwatch currently measuring.
+ *
+ * This function is designed to be called when we process a new event.
+ */
+extern JS_PUBLIC_API(void)
+ResetStopwatches(JSRuntime*);
+
+/**
+ * Turn on/off stopwatch-based CPU monitoring.
+ */
+extern JS_PUBLIC_API(void)
+SetStopwatchActive(JSRuntime*, bool);
+extern JS_PUBLIC_API(bool)
+IsStopwatchActive(JSRuntime*);
+
+/**
+ * Access the performance information stored in a compartment.
+ */
+extern JS_PUBLIC_API(PerformanceData*)
+GetPerformanceData(JSCompartment*);
+
+} /* namespace js */
 
 #endif /* jsapi_h */

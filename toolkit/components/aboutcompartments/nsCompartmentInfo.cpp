@@ -12,12 +12,16 @@
 #include "nsIMutableArray.h"
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
+#include "jspubtd.h"
 
 class nsCompartment : public nsICompartment {
 public:
-  nsCompartment(nsAString& aCompartmentName, nsAString& aAddonId,
-                uint64_t aTime, uint64_t aCPOWTime)
-    : mCompartmentName(aCompartmentName), mAddonId(aAddonId), mTime(aTime), mCPOWTime(aCPOWTime) {}
+  nsCompartment(nsAString& aCompartmentName, nsAString& aAddonId, bool aIsSystem, js::PerformanceData aPerformanceData)
+    : mCompartmentName(aCompartmentName)
+    , mAddonId(aAddonId)
+    , mIsSystem(aIsSystem)
+    , mPerformanceData(aPerformanceData)
+  {}
 
   NS_DECL_ISUPPORTS
 
@@ -27,28 +31,68 @@ public:
     return NS_OK;
   };
 
-  /* readonly attribute unsigned long time; */
-  NS_IMETHOD GetTime(uint64_t* aTime) MOZ_OVERRIDE {
-    *aTime = mTime;
-    return NS_OK;
-  }
   /* readonly attribute wstring addon id; */
   NS_IMETHOD GetAddonId(nsAString& aAddonId) MOZ_OVERRIDE {
     aAddonId.Assign(mAddonId);
     return NS_OK;
   };
 
-  /* readonly attribute unsigned long CPOW time; */
-  NS_IMETHOD GetCPOWTime(uint64_t* aCPOWTime) MOZ_OVERRIDE {
-    *aCPOWTime = mCPOWTime;
+  /* readonly attribute unsigned long long totalUserTime; */
+  NS_IMETHOD GetTotalUserTime(uint64_t *aTotalUserTime) {
+    *aTotalUserTime = mPerformanceData.totalUserTime;
+    return NS_OK;
+  };
+
+  /* readonly attribute unsigned long long totalSystemTime; */
+  NS_IMETHOD GetTotalSystemTime(uint64_t *aTotalSystemTime) {
+    *aTotalSystemTime = mPerformanceData.totalSystemTime;
+    return NS_OK;
+  };
+
+  /* readonly attribute unsigned long long ownUserTime; */
+  NS_IMETHOD GetOwnUserTime(uint64_t *aOwnUserTime) {
+    *aOwnUserTime = mPerformanceData.ownUserTime;
+    return NS_OK;
+  };
+
+  /* readonly attribute unsigned long long ownSystemTime; */
+  NS_IMETHOD GetOwnSystemTime(uint64_t *aOwnSystemTime) {
+    *aOwnSystemTime = mPerformanceData.ownSystemTime;
+    return NS_OK;
+  };
+
+  /* readonly attribute unsigned long long CPOWTime; */
+  NS_IMETHOD GetCPOWTime(uint64_t *aCpowTime) {
+    *aCpowTime = mPerformanceData.cpowTime;
+    return NS_OK;
+  };
+
+  /* readonly attribute unsigned long long visits; */
+  NS_IMETHOD GetVisits(uint64_t *aVisits) {
+    *aVisits = mPerformanceData.visits;
+    return NS_OK;
+  };
+
+  /* unsigned long long getMissedFrames (in unsigned long i); */
+  NS_IMETHOD GetMissedFrames(uint32_t i, uint64_t *_retval) {
+    if (i >= mozilla::ArrayLength(mPerformanceData.missedFrames)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    *_retval = mPerformanceData.missedFrames[i];
+    return NS_OK;
+  };
+
+  NS_IMETHOD GetIsSystem(bool *_retval) {
+    *_retval = mIsSystem;
     return NS_OK;
   }
 
 private:
   nsString mCompartmentName;
   nsString mAddonId;
-  uint64_t mTime;
-  uint64_t mCPOWTime;
+  bool mIsSystem;
+  js::PerformanceData mPerformanceData;
+
   virtual ~nsCompartment() {}
 };
 
@@ -77,17 +121,18 @@ nsCompartmentInfo::GetCompartments(nsIArray** aCompartments)
 
   size_t num = stats.length();
   for (size_t pos = 0; pos < num; pos++) {
+    CompartmentTimeStats *c = &stats[pos];
     nsString addonId;
-    if (stats[pos].addonId) {
-      AssignJSFlatString(addonId, (JSFlatString*)stats[pos].addonId);
+    if (c->addonId) {
+      AssignJSFlatString(addonId, (JSFlatString*)c->addonId);
     } else {
       addonId.AssignLiteral("<non-addon>");
     }
 
-    uint32_t cpowTime = xpc::GetCompartmentCPOWMicroseconds(stats[pos].compartment);
-    nsCString compartmentName(stats[pos].compartmentName);
+    nsCString compartmentName(c->compartmentName);
     NS_ConvertUTF8toUTF16 name(compartmentName);
-    compartments->AppendElement(new nsCompartment(name, addonId, stats[pos].time, cpowTime), false);
+
+    compartments->AppendElement(new nsCompartment(name, addonId, c->isSystem, c->performance), false);
   }
   compartments.forget(aCompartments);
   return NS_OK;

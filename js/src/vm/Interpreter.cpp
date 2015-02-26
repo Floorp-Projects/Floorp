@@ -10,6 +10,7 @@
 
 #include "vm/Interpreter-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
@@ -51,6 +52,13 @@
 #include "vm/Probes-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
+
+#if defined(XP_UNIX)
+#include <sys/resource.h>
+#elif defined(XP_WIN)
+#include <Processthreadsapi.h>
+#include <Windows.h>
+#endif // defined(XP_UNIX) || defined(XP_WIN)
 
 using namespace js;
 using namespace js::gc;
@@ -411,10 +419,190 @@ ExecuteState::pushInterpreterFrame(JSContext *cx)
                                                               type_, evalInFrame_);
 }
 
+namespace js {
+
+// Implementation of per-compartment performance measurement.
+//
+//
+// All mutable state is stored in `Runtime::stopwatch`.
+struct AutoStopwatch MOZ_FINAL
+{
+    // If the stopwatch is active, constructing an instance of
+    // AutoStopwatch causes it to become the current owner of the
+    // stopwatch.
+    //
+    // Previous owner is restored upon destruction.
+    explicit inline AutoStopwatch(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : parent_(nullptr)
+        , context_(cx)
+        , descendentsUserTime_(0)
+        , descendentsSystemTime_(0)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        JSRuntime *runtime = context_->runtime();
+        if (!runtime->stopwatch.isActive)
+            return;
+
+
+#if defined(XP_UNIX)
+        int err = getrusage(RUSAGE_SELF, &timeStamp_);
+        if (err)
+            return;
+#elif defined(XP_WIN)
+        FILETIME creationTime; // Ignored
+        FILETIME exitTime; // Ignored
+
+        BOOL success = GetProcessTimes(GetCurrentProcess(),
+                                       &creationTime, &exitTime,
+                                       &kernelTimeStamp_, &userTimeStamp_);
+        if (!success)
+            return;
+#endif // defined(XP_UNIX) || defined(XP_WIN)
+
+        // Push on top of previous owner.
+        parent_ = runtime->stopwatch.owner;
+        runtime->stopwatch.owner = this;
+    }
+
+    // If the stopwatch is active, destructing an instance of
+    // AutoStopwatch causes ownership to return to the previous owner.
+    inline ~AutoStopwatch()
+    {
+        JSRuntime *runtime = context_->runtime();
+        if (runtime->stopwatch.owner != this) {
+            // We are not the owner of the stopwatch, either because
+            // we never acquired it, because we have entered a nested
+            // event loop, or because some stopwatch lower on the
+            // stack encountered an error.
+            // If there is any ongoing measure, discard it.
+            return;
+        }
+
+        // If this destructor cannot proceed to completion without error,
+        // prepare to cancel any ongoing measure.
+        runtime->stopwatch.owner = nullptr;
+
+        // Durations in museconds of the total user/system time spent
+        // by the entire process between construction and destruction
+        // of this object.
+        uint64_t totalUserTime, totalSystemTime;
+
+#if defined(XP_UNIX)
+        struct rusage stop;
+        int err = getrusage(RUSAGE_SELF, &stop);
+        if (err)
+            return;
+
+        totalUserTime =
+            (stop.ru_utime.tv_usec - timeStamp_.ru_utime.tv_usec)
+            + (stop.ru_utime.tv_sec - timeStamp_.ru_utime.tv_sec) * 1000000;
+        totalSystemTime =
+            (stop.ru_stime.tv_usec - timeStamp_.ru_stime.tv_usec)
+            + (stop.ru_stime.tv_sec - timeStamp_.ru_stime.tv_sec) * 1000000;
+#elif defined(XP_WIN)
+        FILETIME creationTime; // Ignored
+        FILETIME exitTime; // Ignored
+        FILETIME kernelTime;
+        FILETIME userTime;
+        BOOL success = GetProcessTimes(GetCurrentProcess(),
+                                       &creationTime, &exitTime,
+                                       &kernelTime, &userTime);
+        if (!success)
+            return;
+
+        // Convert values to a data structure that supports arithmetics.
+        ULARGE_INTEGER userTimeInt, userTimeStampInt;
+        userTimeInt.LowPart = userTime.dwLowDateTime;
+        userTimeInt.HighPart = userTime.dwHighDateTime;
+        userTimeStampInt.LowPart = userTimeStamp_.dwLowDateTime;
+        userTimeStampInt.HighPart = userTimeStamp_.dwHighDateTime;
+
+        totalUserTime = (userTimeInt.QuadPart - userTimeStampInt.QuadPart) / 10;  // 100 ns to 1 mus
+
+        ULARGE_INTEGER kernelTimeInt, kernelTimeStampInt;
+        kernelTimeInt.LowPart = kernelTime.dwLowDateTime;
+        kernelTimeInt.HighPart = kernelTime.dwHighDateTime;
+        kernelTimeStampInt.LowPart = kernelTimeStamp_.dwLowDateTime;
+        kernelTimeStampInt.HighPart = kernelTimeStamp_.dwHighDateTime;
+
+        totalSystemTime = (kernelTimeInt.QuadPart - kernelTimeStampInt.QuadPart) / 10;  // 100 ns to 1 mus
+#endif // defined(XP_UNIX) || defined (XP_WIN)
+
+        // Process durations.
+        //
+        // Note that durations are per-process, while our measures attempt
+        // to be per-thread. In other words, the data we extract may be
+        // badly skewed by activity on other threads. We can only hope that
+        // things will eventually average out.
+
+        JSCompartment *compartment = context_->compartment();
+        compartment->performance.visits++;
+        compartment->performance.totalUserTime += totalUserTime;
+        compartment->performance.totalSystemTime += totalSystemTime;
+
+        uint64_t ownUserTime = totalUserTime - descendentsUserTime_;
+        uint64_t ownSystemTime = totalSystemTime - descendentsSystemTime_;
+        compartment->performance.ownUserTime += ownUserTime;
+        compartment->performance.ownSystemTime += ownSystemTime;
+
+        if (parent_) {
+            // The time we just spent executing code in this compartment
+            // should be substracted to determine the parent's own time.
+            parent_->descendentsUserTime_ += totalUserTime;
+            parent_->descendentsSystemTime_ += totalSystemTime;
+        }
+
+        uint64_t totalDuration = totalUserTime + totalSystemTime;
+
+        // Store performance information in the compartment
+
+        uint64_t missedFrames = 16 * 1000; // Duration of one frame, i.e. 16ms in museconds
+        for (size_t i = 0; i < ArrayLength(compartment->performance.missedFrames); ++i) {
+            if (totalDuration < missedFrames)
+                break;
+            compartment->performance.missedFrames[i]++;
+            missedFrames *= 2;
+        }
+
+        runtime->stopwatch.owner = parent_;
+    }
+
+  private:
+    // The AutoStopwatch for the caller compartment.
+    AutoStopwatch *parent_;
+
+    // The context with which this object was initialized.
+    JSContext *context_;
+
+    // Total time spent so far executing compartments that have been
+    // called by this compartment, in museconds. These values are
+    // updated upon destruction of callee AutoStopwatch instances.
+    uint64_t descendentsUserTime_;
+    uint64_t descendentsSystemTime_;
+
+    // Kernel and user time at the time of construction of this
+    // instance of AutoStopwatch. Unspecified if the stopwatch is not
+    // active.
+#if defined(XP_UNIX)
+    struct rusage timeStamp_;
+#elif defined(XP_WIN)
+    FILETIME kernelTimeStamp_;
+    FILETIME userTimeStamp_;
+#endif // defined(XP_UNIX) || defined(XP_WIN)
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+}
+
 bool
 js::RunScript(JSContext *cx, RunState &state)
 {
     JS_CHECK_RECURSION(cx, return false);
+
+#if defined(NIGHTLY_BUILD)
+    js::AutoStopwatch stopwatch(cx);
+#endif // defined(NIGHTLY_BUILD)
 
     SPSEntryMarker marker(cx->runtime(), state.script());
 

@@ -566,6 +566,7 @@ class PerThreadData : public PerThreadDataFriendFields
 
 class AutoLockForExclusiveAccess;
 
+struct AutoStopwatch;
 } // namespace js
 
 struct JSRuntime : public JS::shadow::Runtime,
@@ -1420,6 +1421,53 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Last time at which an animation was played for this runtime. */
     int64_t lastAnimationTime;
+
+  public:
+
+    /* ------------------------------------------
+       Performance measurements
+       ------------------------------------------ */
+    struct Stopwatch {
+        /**
+         * The current owner of the stopwatch.
+         *
+         * This is `nullptr` if we have not started executing JS code
+         * in this tick yet, or if we are not using stopwatch
+         * monitoring. If monitoring is activated, whenever we
+         * instantiate an `AutoStopwatch`, it becomes the owner, and
+         * whenever we destruct it, it returns ownership to the
+         * previous owner.
+         *
+         * Note that `owner` is reset to `nullptr` if we start
+         * processing a nested event. By design, this has the
+         * side-effect of discarding any ongoing measurement that
+         * would otherwise be completely skewed by the nested event
+         * loop.
+         */
+        js::AutoStopwatch *owner;
+
+        /**
+         * `true` if stopwatch monitoring is active, `false` otherwise.
+         */
+        bool isActive;
+
+        Stopwatch()
+            : owner(nullptr)
+            , isActive(false)
+        { }
+
+        /**
+         * Reset the stopwatch.
+         *
+         * This method is meant to be called whewnever we start processing
+         * an event, to ensure that stop any ongoing measurement that would
+         * otherwise provide irrelevant results.
+         */
+        void reset() {
+            owner = nullptr;
+        }
+    };
+    Stopwatch stopwatch;
 };
 
 namespace js {
