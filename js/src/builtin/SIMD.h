@@ -323,7 +323,7 @@ struct Int32x4 {
 };
 
 template<typename V>
-JSObject *CreateSimd(JSContext *cx, typename V::Elem *data);
+JSObject *CreateSimd(JSContext *cx, const typename V::Elem *data);
 
 template<typename V>
 bool IsVectorObject(HandleValue v);
