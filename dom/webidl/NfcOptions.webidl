@@ -20,6 +20,28 @@ enum NfcRequestType {
   "transceive"
 };
 
+/**
+ * Type of the Response used in NfcEventOptions.
+ */
+enum NfcResponseType {
+  "changeRFStateRsp",
+  "readNDEFRsp",
+  "writeNDEFRsp",
+  "makeReadOnlyRsp",
+  "formatRsp",
+  "transceiveRsp",
+};
+
+/**
+ * Type of the Notification used in NfcEventOptions.
+ */
+enum NfcNotificationType {
+  "initialized",
+  "techDiscovered",
+  "techLost",
+  "hciEventTransaction"
+};
+
 dictionary NfcCommandOptions
 {
   required NfcRequestType type;
@@ -40,7 +62,8 @@ dictionary NfcCommandOptions
 
 dictionary NfcEventOptions
 {
-  DOMString type = "";
+  NfcResponseType rspType;
+  NfcNotificationType ntfType;
 
   long status;
   NfcErrorMessage errorMsg;
