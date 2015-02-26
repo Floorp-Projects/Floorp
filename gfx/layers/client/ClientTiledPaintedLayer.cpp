@@ -229,58 +229,48 @@ ClientTiledPaintedLayer::IsScrollingOnCompositor(const FrameMetrics& aParentMetr
 }
 
 bool
-ClientTiledPaintedLayer::UseFastPath()
-{
-  LayerMetricsWrapper scrollAncestor;
-  bool hasTransformAnimation;
-  GetAncestorLayers(&scrollAncestor, nullptr, &hasTransformAnimation);
-  // If there is no scroll ancestor or if this layer is subject to OMTA then
-  // we effectively don't have a displayport and will just be drawing the
-  // entire visible region of the layer, so we can use the fast-path and be
-  // done with it. In particular we don't want to be drawing OMTA layers
-  // progressively as they might already be animating before we're done drawing.
-  if (!scrollAncestor || hasTransformAnimation) {
-    return true;
-  }
-
-  // The fast path doesn't allow rendering at low resolution. It will draw the low-res
-  // area at full resolution and cause OOM.
-  if (gfxPrefs::UseLowPrecisionBuffer()) {
+ClientTiledPaintedLayer::UseProgressiveDraw() {
+  if (!gfxPlatform::GetPlatform()->UseProgressivePaint()) {
+    // pref is disabled, so never do progressive
     return false;
   }
 
-  const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
+  if (ClientManager()->HasShadowTarget()) {
+    // This condition is true when we are in a reftest scenario. We don't want
+    // to draw progressively here because it can cause intermittent reftest
+    // failures because the harness won't wait for all the tiles to be drawn.
+    return false;
+  }
 
-  bool multipleTransactionsNeeded = gfxPlatform::GetPlatform()->UseProgressivePaint()
-                                 || !parentMetrics.GetCriticalDisplayPort().IsEmpty();
-  bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
-  bool isScrollable = parentMetrics.IsScrollable();
+  if (mPaintData.mCriticalDisplayPort.IsEmpty()) {
+    // This catches three scenarios:
+    // 1) This layer doesn't have a scrolling ancestor
+    // 2) This layer is subject to OMTA transforms
+    // 3) Low-precision painting is disabled
+    // In all of these cases, we don't want to draw this layer progressively.
+    return false;
+  }
 
-  return !multipleTransactionsNeeded || isFixed || !isScrollable;
-}
-
-bool
-ClientTiledPaintedLayer::UseProgressiveDraw() {
-  // Don't draw progressively in a reftest scenario (that's what the HasShadowTarget() check is for).
-  if (!gfxPlatform::GetPlatform()->UseProgressivePaint() || ClientManager()->HasShadowTarget()) {
+  if (GetIsFixedPosition() || GetParent()->GetIsFixedPosition()) {
+    // This layer is fixed-position and so even if it does have a scrolling
+    // ancestor it will likely be entirely on-screen all the time, so we
+    // should draw it all at once
     return false;
   }
 
   // XXX We probably want to disable progressive drawing for non active APZ layers in the future
   //     but we should wait for a proper test case before making this change.
-
 #if 0 //!defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
   LayerMetricsWrapper scrollAncestor;
-  GetAncestorLayers(&scrollAncestor, nullptr);
-  if (!scrollAncestor) {
-    return true;
-  }
+  GetAncestorLayers(&scrollAncestor, nullptr, nullptr);
+  MOZ_ASSERT(scrollAncestor); // because mPaintData.mCriticalDisplayPort is non-empty
   const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
-
-  return !IsScrollingOnCompositor(parentMetrics);
-#else
-  return true;
+  if (!IsScrollingOnCompositor(parentMetrics)) {
+    return false;
+  }
 #endif
+
+  return true;
 }
 
 bool
@@ -458,16 +448,6 @@ ClientTiledPaintedLayer::RenderLayer()
     // Only paint the mask layer on the first transaction.
     if (GetMaskLayer()) {
       ToClientLayer(GetMaskLayer())->RenderLayer();
-    }
-
-    // In some cases we can take a fast path and just be done with it.
-    if (UseFastPath()) {
-      TILING_LOG("TILING %p: Taking fast-path\n", this);
-      mValidRegion = neededRegion;
-      mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion, callback, data);
-      ClientManager()->Hold(this);
-      mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
-      return;
     }
 
     // For more complex cases we need to calculate a bunch of metrics before we
