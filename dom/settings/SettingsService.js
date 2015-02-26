@@ -205,7 +205,7 @@ SettingsServiceLock.prototype = {
     try {
         aCallback && aCallback.handle ? aCallback.handle(aName, aValue) : null;
     } catch (e) {
-      if (DEBUG) debug("settings 'handle' for " + aName + " callback threw an exception, dropping: " + e + "\n");
+      if (DEBUG) debug("settings 'handle' callback threw an exception, dropping: " + e + "\n");
     }
   },
 

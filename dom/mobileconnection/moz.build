@@ -62,11 +62,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
         'gonk/nsIGonkMobileConnectionService.idl',
         'gonk/nsIMobileConnectionMessenger.idl',
     ]
-    if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
-        EXTRA_COMPONENTS += [
-            'gonk/MobileConnectionService.js',
-            'gonk/MobileConnectionService.manifest',
-        ]
+    EXTRA_COMPONENTS += [
+        'gonk/MobileConnectionService.js',
+        'gonk/MobileConnectionService.manifest',
+    ]
 
 LOCAL_INCLUDES += [
     '/dom/system/gonk',
