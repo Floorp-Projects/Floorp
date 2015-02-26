@@ -16,7 +16,7 @@ namespace jit {
 
 class StupidAllocator : public RegisterAllocator
 {
-    static const uint32_t MAX_REGISTERS = Registers::Allocatable + FloatRegisters::Allocatable;
+    static const uint32_t MAX_REGISTERS = AnyRegister::Total;
     static const uint32_t MISSING_ALLOCATION = UINT32_MAX;
 
     struct AllocatedRegister {
