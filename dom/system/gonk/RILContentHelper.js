@@ -73,8 +73,11 @@ XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function() {
                           .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
   if (isParentProcess) {
-    let ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
-    return ril.numRadioInterfaces;
+    let ril = { numRadioInterfaces: 0 };
+    try {
+      ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+    } catch(e) {}
+    return ril.numRadioInterfaces
   }
 
   return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);

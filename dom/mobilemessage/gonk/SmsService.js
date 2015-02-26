@@ -40,7 +40,10 @@ const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
 
 XPCOMUtils.defineLazyGetter(this, "gRadioInterfaces", function() {
-  let ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+  let ril = { numRadioInterfaces: 0 };
+  try {
+    ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+  } catch(e) {}
 
   let interfaces = [];
   for (let i = 0; i < ril.numRadioInterfaces; i++) {
