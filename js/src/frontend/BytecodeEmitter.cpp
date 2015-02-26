@@ -6579,6 +6579,15 @@ EmitPropertyList(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
             continue;
         }
 
+        bool extraPop = false;
+        if (type == ClassBody && propdef->as<ClassMethod>().isStatic()) {
+            extraPop = true;
+            if (Emit1(cx, bce, JSOP_DUP2) < 0)
+                return false;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return false;
+        }
+
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *key = propdef->pn_left;
         bool isIndex = false;
@@ -6650,6 +6659,11 @@ EmitPropertyList(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
             }
 
             if (!EmitIndex32(cx, op, index, bce))
+                return false;
+        }
+
+        if (extraPop) {
+            if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         }
     }
