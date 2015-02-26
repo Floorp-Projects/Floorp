@@ -14,10 +14,10 @@ const ProjectBuilding = exports.ProjectBuilding = {
     let manifestPath = OS.Path.join(project.location, "package.json");
     let exists = yield OS.File.exists(manifestPath);
     if (!exists) {
-      return;
+      // No explicit manifest, try to generate one if possible
+      return this.generatePackageManifest(project);
     }
 
-    let Decoder = new TextDecoder();
     let data = yield OS.File.read(manifestPath);
     data = new TextDecoder().decode(data);
     let manifest;
@@ -30,6 +30,31 @@ const ProjectBuilding = exports.ProjectBuilding = {
     return manifest;
   }),
 
+  /**
+   * For common frameworks in the community, attempt to detect the build
+   * settings if none are defined.  This makes it much easier to get started
+   * with WebIDE.  Later on, perhaps an add-on could define such things for
+   * different frameworks.
+   */
+  generatePackageManifest: Task.async(function*(project) {
+    // Cordova
+    let cordovaConfigPath = OS.Path.join(project.location, "config.xml");
+    let exists = yield OS.File.exists(cordovaConfigPath);
+    if (!exists) {
+      return;
+    }
+    let data = yield OS.File.read(cordovaConfigPath);
+    data = new TextDecoder().decode(data);
+    if (data.contains("cordova.apache.org")) {
+      return {
+        "webide": {
+          "prepackage": "cordova prepare",
+          "packageDir": "./platforms/firefoxos/www"
+        }
+      };
+    }
+  }),
+
   hasPrepackage: Task.async(function* (project) {
     let manifest = yield ProjectBuilding.fetchPackageManifest(project);
     return manifest && manifest.webide && "prepackage" in manifest.webide;
@@ -37,22 +62,19 @@ const ProjectBuilding = exports.ProjectBuilding = {
 
   // If the app depends on some build step, run it before pushing the app
   build: Task.async(function* ({ project, logger }) {
-    if (!this.hasPrepackage(project)) {
+    if (!(yield this.hasPrepackage(project))) {
       return;
     }
 
     let manifest = yield ProjectBuilding.fetchPackageManifest(project);
 
     logger("start");
-    let packageDir;
     try {
-      packageDir = yield this._build(project, manifest, logger);
+      yield this._build(project, manifest, logger);
       logger("succeed");
     } catch(e) {
       logger("failed", e);
     }
-
-    return packageDir;
   }),
 
   _build: Task.async(function* (project, manifest, logger) {
@@ -60,6 +82,15 @@ const ProjectBuilding = exports.ProjectBuilding = {
     manifest = manifest.webide;
 
     let command, cwd, args = [], env = [];
+
+    // Copy frequently used env vars
+    let envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    ["HOME", "PATH"].forEach(key => {
+      let value = envService.get(key);
+      if (value) {
+        env.push(key + "=" + value);
+      }
+    });
 
     if (typeof(manifest.prepackage) === "string") {
       command = manifest.prepackage.replace(/%project%/g, project.location);
@@ -69,15 +100,8 @@ const ProjectBuilding = exports.ProjectBuilding = {
       args = manifest.prepackage.args || [];
       args = args.map(a => a.replace(/%project%/g, project.location));
 
-      env = manifest.prepackage.env || [];
+      env = env.concat(manifest.prepackage.env || []);
       env = env.map(a => a.replace(/%project%/g, project.location));
-
-      // Gaia build system crashes if HOME env variable isn't set...
-      let envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-      let home = envService.get("HOME");
-      if (home) {
-        env.push("HOME=" + home);
-      }
 
       if (manifest.prepackage.cwd) {
         // Normalize path for Windows support (converts / to \)
@@ -110,7 +134,6 @@ const ProjectBuilding = exports.ProjectBuilding = {
     // Otherwise, on Linux and Mac, SHELL env variable should refer to
     // the user chosen shell program.
     // (We do not check for OS, as on windows, with cygwin, ComSpec isn't set)
-    let envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
     let shell = envService.get("ComSpec") || envService.get("SHELL");
     args.unshift(command);
 
@@ -155,17 +178,22 @@ const ProjectBuilding = exports.ProjectBuilding = {
       throw new Error("Unable to run pre-package command '" + command + "' " +
                       args.join(" ") + ":\n" + (e.message || e));
     }
-
-    if (manifest.packageDir) {
-      let packageDir = OS.Path.join(project.location, manifest.packageDir);
-      // On Windows, replace / by \\
-      packageDir = OS.Path.normalize(packageDir);
-      let exists = yield OS.File.exists(packageDir);
-      if (exists) {
-        return packageDir;
-      }
-      throw new Error("Unable to resolve application package directory: '" + manifest.packageDir + "'");
-    }
   }),
-};
 
+  getPackageDir: Task.async(function*(project) {
+    let manifest = yield ProjectBuilding.fetchPackageManifest(project);
+    if (!manifest || !manifest.webide || !manifest.webide.packageDir) {
+      return project.location;
+    }
+    manifest = manifest.webide;
+
+    let packageDir = OS.Path.join(project.location, manifest.packageDir);
+    // On Windows, replace / by \\
+    packageDir = OS.Path.normalize(packageDir);
+    let exists = yield OS.File.exists(packageDir);
+    if (exists) {
+      return packageDir;
+    }
+    throw new Error("Unable to resolve application package directory: '" + manifest.packageDir + "'");
+  })
+};
