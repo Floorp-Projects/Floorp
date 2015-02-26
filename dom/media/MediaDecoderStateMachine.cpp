@@ -2103,6 +2103,13 @@ bool MediaDecoderStateMachine::HasLowDecodedData(int64_t aAudioUsecs)
           static_cast<uint32_t>(VideoQueue().GetSize()) < LOW_VIDEO_FRAMES));
 }
 
+bool MediaDecoderStateMachine::OutOfDecodedAudio()
+{
+    return IsAudioDecoding() && !AudioQueue().IsFinished() &&
+           AudioQueue().GetSize() == 0 &&
+           (!mAudioSink || !mAudioSink->HasUnplayedFrames());
+}
+
 bool MediaDecoderStateMachine::HasLowUndecodedData()
 {
   return HasLowUndecodedData(mLowDataThresholdUsecs);
