@@ -1190,31 +1190,23 @@ class RelocationOverlay
 
 /* Functions for checking and updating things that might be moved by compacting GC. */
 
-#define TYPE_MIGHT_BE_FORWARDED(T, value)                                     \
-    inline bool                                                               \
-    TypeMightBeForwarded(T *thing)                                            \
-    {                                                                         \
-        return value;                                                         \
-    }                                                                         \
+template <typename T>
+struct MightBeForwarded
+{
+    static_assert(mozilla::IsBaseOf<Cell, T>::value,
+                  "T must derive from Cell");
+    static_assert(!mozilla::IsSame<Cell, T>::value && !mozilla::IsSame<TenuredCell, T>::value,
+                  "T must not be Cell or TenuredCell");
 
-TYPE_MIGHT_BE_FORWARDED(JSObject, true)
-TYPE_MIGHT_BE_FORWARDED(JSString, false)
-TYPE_MIGHT_BE_FORWARDED(JS::Symbol, false)
-TYPE_MIGHT_BE_FORWARDED(JSScript, false)
-TYPE_MIGHT_BE_FORWARDED(Shape, false)
-TYPE_MIGHT_BE_FORWARDED(BaseShape, false)
-TYPE_MIGHT_BE_FORWARDED(jit::JitCode, false)
-TYPE_MIGHT_BE_FORWARDED(LazyScript, false)
-TYPE_MIGHT_BE_FORWARDED(ObjectGroup, false)
-
-#undef TYPE_MIGHT_BE_FORWARDED
+    static const bool value = mozilla::IsBaseOf<JSObject, T>::value;
+};
 
 template <typename T>
 inline bool
 IsForwarded(T *t)
 {
     RelocationOverlay *overlay = RelocationOverlay::fromCell(t);
-    if (!TypeMightBeForwarded(t)) {
+    if (!MightBeForwarded<T>::value) {
         MOZ_ASSERT(!overlay->isForwarded());
         return false;
     }
