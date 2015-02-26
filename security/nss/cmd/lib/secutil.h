@@ -221,6 +221,9 @@ extern int SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m,
 extern int SECU_PrintCertificate(FILE *out, const SECItem *der, const char *m,
                                  int level);
 
+extern int SECU_PrintCertificateBasicInfo(FILE *out, const SECItem *der, const char *m,
+                                 int level);
+
 extern int SECU_PrintDumpDerIssuerAndSerial(FILE *out, SECItem *der, char *m,
                                  int level);
 
