@@ -191,23 +191,14 @@ MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value)
     return true;
 }
 
-template<bool Locked>
 bool
-InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value)
+InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value,
+         jsbytecode *pc)
 {
     RootedId id(cx, NameToId(name));
-    unsigned propFlags;
-    if (Locked)
-        propFlags = JSPROP_READONLY | JSPROP_PERMANENT;
-    else
-        propFlags = JSPROP_ENUMERATE;
-    return NativeDefineProperty(cx, obj, id, value, nullptr, nullptr, propFlags);
+    unsigned propAttrs = GetInitDataPropAttrs(JSOp(*pc));
+    return NativeDefineProperty(cx, obj, id, value, nullptr, nullptr, propAttrs);
 }
-
-template bool InitProp<true>(JSContext *cx, HandleNativeObject obj, HandlePropertyName name,
-                             HandleValue value);
-template bool InitProp<false>(JSContext *cx, HandleNativeObject obj, HandlePropertyName name,
-                              HandleValue value);
 
 template<bool Equal>
 bool

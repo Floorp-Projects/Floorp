@@ -4635,11 +4635,8 @@ CodeGenerator::visitMutateProto(LMutateProto *lir)
 }
 
 typedef bool(*InitPropFn)(JSContext *cx, HandleNativeObject obj,
-                          HandlePropertyName name, HandleValue value);
-static const VMFunction InitPropInfo =
-    FunctionInfo<InitPropFn>(InitProp<false>);
-static const VMFunction InitLockedPropInfo =
-    FunctionInfo<InitPropFn>(InitProp<true>);
+                          HandlePropertyName name, HandleValue value, jsbytecode *pc);
+static const VMFunction InitPropInfo = FunctionInfo<InitPropFn>(InitProp);
 
 void
 CodeGenerator::visitInitProp(LInitProp *lir)
@@ -4649,11 +4646,9 @@ CodeGenerator::visitInitProp(LInitProp *lir)
     pushArg(ToValue(lir, LInitProp::ValueIndex));
     pushArg(ImmGCPtr(lir->mir()->propertyName()));
     pushArg(objReg);
+    pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
 
-    if (lir->mir()->locked())
-        callVM(InitLockedPropInfo, lir);
-    else
-        callVM(InitPropInfo, lir);
+    callVM(InitPropInfo, lir);
 }
 
 typedef bool(*InitPropGetterSetterFn)(JSContext *, jsbytecode *, HandleObject, HandlePropertyName,
