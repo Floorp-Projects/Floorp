@@ -86,6 +86,16 @@
           events: CLICK_EVENTS
         },
         {
+          ID: "switch_unchecked",
+          actionName: "check",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "switch_checked",
+          actionName: "uncheck",
+          events: CLICK_EVENTS
+        },
+        {
           ID: "tab",
           actionName: "switch",
           events: CLICK_EVENTS
@@ -165,6 +175,10 @@
   <div role="radiogroup">
     <div id="radio" role="radio">Radio</div>
   </div>
+
+  <div id="switch_unchecked" role="switch">Switch</div>
+
+  <div id="switch_checked" role="switch" aria-checked="true">Switch</div>
 
   <div role="tablist">
     <div id="tab" role="tab">Tab</div>

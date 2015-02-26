@@ -70,6 +70,7 @@ const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;
 const ROLE_SPINBUTTON = nsIAccessibleRole.ROLE_SPINBUTTON;
 const ROLE_STATICTEXT = nsIAccessibleRole.ROLE_STATICTEXT;
 const ROLE_STATUSBAR = nsIAccessibleRole.ROLE_STATUSBAR;
+const ROLE_SWITCH = nsIAccessibleRole.ROLE_SWITCH;
 const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TERM = nsIAccessibleRole.ROLE_TERM;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
