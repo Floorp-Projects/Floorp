@@ -817,6 +817,56 @@ class memoized_property(object):
         return getattr(instance, name)
 
 
+def TypedNamedTuple(name, fields):
+    """Factory for named tuple types with strong typing.
+
+    Arguments are an iterable of 2-tuples. The first member is the
+    the field name. The second member is a type the field will be validated
+    to be.
+
+    Construction of instances varies from ``collections.namedtuple``.
+
+    First, if a single tuple argument is given to the constructor, this is
+    treated as the equivalent of passing each tuple value as a separate
+    argument into __init__. e.g.::
+
+        t = (1, 2)
+        TypedTuple(t) == TypedTuple(1, 2)
+
+    This behavior is meant for moz.build files, so vanilla tuples are
+    automatically cast to typed tuple instances.
+
+    Second, fields in the tuple are validated to be instances of the specified
+    type. This is done via an ``isinstance()`` check. To allow multiple types,
+    pass a tuple as the allowed types field.
+    """
+    cls = collections.namedtuple(name, (name for name, typ in fields))
+
+    class TypedTuple(cls):
+        __slots__ = ()
+
+        def __new__(klass, *args, **kwargs):
+            if len(args) == 1 and not kwargs and isinstance(args[0], tuple):
+                args = args[0]
+
+            return super(TypedTuple, klass).__new__(klass, *args, **kwargs)
+
+        def __init__(self, *args, **kwargs):
+            for i, (fname, ftype) in enumerate(self._fields):
+                value = self[i]
+
+                if not isinstance(value, ftype):
+                    raise TypeError('field in tuple not of proper type: %s; '
+                                    'got %s, expected %s' % (fname,
+                                    type(value), ftype))
+
+            super(TypedTuple, self).__init__(*args, **kwargs)
+
+    TypedTuple._fields = fields
+
+    return TypedTuple
+
+
 class TypedListMixin(object):
     '''Mixin for a list with type coercion. See TypedList.'''
 
