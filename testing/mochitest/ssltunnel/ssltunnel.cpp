@@ -961,7 +961,7 @@ void StartServer(void* data)
   PRNetAddr server_addr;
   PR_InitializeNetAddr(PR_IpAddrAny, si->listen_port, &server_addr);
   if (PR_Bind(listen_socket, &server_addr) != PR_SUCCESS) {
-    LOG_ERROR(("failed to bind socket\n"));
+    LOG_ERROR(("failed to bind socket on port %d: error %d\n", si->listen_port, PR_GetError()));
     SignalShutdown();
     return;
   }
