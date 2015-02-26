@@ -840,6 +840,14 @@ TrackBuffer::BreakCycles()
 }
 
 void
+TrackBuffer::ResetDecode()
+{
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    mDecoders[i]->GetReader()->ResetDecode();
+  }
+}
+
+void
 TrackBuffer::ResetParserState()
 {
   MOZ_ASSERT(NS_IsMainThread());
