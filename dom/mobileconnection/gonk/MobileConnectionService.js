@@ -56,13 +56,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
-XPCOMUtils.defineLazyGetter(this, "gRadioInterfaceLayer", function() {
-  let ril = { numRadioInterfaces: 0 };
-  try {
-    ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
-  } catch(e) {}
-  return ril;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
 
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {

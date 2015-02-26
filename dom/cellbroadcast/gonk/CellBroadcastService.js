@@ -28,13 +28,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
-XPCOMUtils.defineLazyGetter(this, "gRadioInterfaceLayer", function() {
-  let ril = { numRadioInterfaces: 0 };
-  try {
-    ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
-  } catch(e) {}
-  return ril;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
 
 const GONK_CELLBROADCAST_SERVICE_CONTRACTID =
   "@mozilla.org/cellbroadcast/gonkservice;1";

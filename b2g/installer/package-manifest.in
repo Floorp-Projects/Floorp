@@ -462,28 +462,23 @@
 @BINPATH@/components/CellBroadcastService.manifest
 @BINPATH@/components/MmsService.js
 @BINPATH@/components/MmsService.manifest
-@BINPATH@/components/MobileMessageDatabaseService.js
-@BINPATH@/components/MobileMessageDatabaseService.manifest
-#ifndef DISABLE_MOZ_RIL_GEOLOC
 @BINPATH@/components/MobileConnectionService.js
 @BINPATH@/components/MobileConnectionService.manifest
+@BINPATH@/components/MobileMessageDatabaseService.js
+@BINPATH@/components/MobileMessageDatabaseService.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/RadioInterfaceLayer.manifest
-@BINPATH@/components/SmsService.js
-@BINPATH@/components/SmsService.manifest
-#endif
 @BINPATH@/components/RILContentHelper.js
-@BINPATH@/components/RILContentHelper.manifest
 @BINPATH@/components/RILSystemMessengerHelper.js
 @BINPATH@/components/RILSystemMessengerHelper.manifest
+@BINPATH@/components/SmsService.js
+@BINPATH@/components/SmsService.manifest
 @BINPATH@/components/TelephonyAudioService.js
 @BINPATH@/components/TelephonyAudioService.manifest
-#ifndef DISABLE_MOZ_RIL_GEOLOC
 @BINPATH@/components/TelephonyService.js
 @BINPATH@/components/TelephonyService.manifest
 @BINPATH@/components/VoicemailService.js
 @BINPATH@/components/VoicemailService.manifest
-#endif
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
 #ifndef MOZ_WIDGET_GONK
