@@ -26,6 +26,7 @@ const OVERVIEW_ROW_HEIGHT = 11; // px
 const OVERVIEW_SELECTION_LINE_COLOR = "#666";
 const OVERVIEW_CLIPHEAD_LINE_COLOR = "#555";
 
+const FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS = 100;
 const OVERVIEW_HEADER_TICKS_MULTIPLE = 100; // ms
 const OVERVIEW_HEADER_TICKS_SPACING_MIN = 75; // px
 const OVERVIEW_HEADER_TEXT_FONT_SIZE = 9; // px
@@ -199,9 +200,18 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   _findOptimalTickInterval: function(dataScale) {
     let timingStep = OVERVIEW_HEADER_TICKS_MULTIPLE;
     let spacingMin = OVERVIEW_HEADER_TICKS_SPACING_MIN * this._pixelRatio;
+    let maxIters = FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS;
+    let numIters = 0;
+
+    if (dataScale > spacingMin) {
+      return dataScale;
+    }
 
     while (true) {
       let scaledStep = dataScale * timingStep;
+      if (++numIters > maxIters) {
+        return scaledStep;
+      }
       if (scaledStep < spacingMin) {
         timingStep <<= 1;
         continue;

@@ -26,6 +26,7 @@ const GRAPH_WHEEL_ZOOM_SENSITIVITY = 0.00035;
 const GRAPH_WHEEL_SCROLL_SENSITIVITY = 0.5;
 const GRAPH_MIN_SELECTION_WIDTH = 0.001; // ms
 
+const FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS = 100;
 const TIMELINE_TICKS_MULTIPLE = 5; // ms
 const TIMELINE_TICKS_SPACING_MIN = 75; // px
 
@@ -789,12 +790,17 @@ FlameGraph.prototype = {
   _findOptimalTickInterval: function(dataScale) {
     let timingStep = TIMELINE_TICKS_MULTIPLE;
     let spacingMin = TIMELINE_TICKS_SPACING_MIN * this._pixelRatio;
+    let maxIters = FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS;
+    let numIters = 0;
 
     if (dataScale > spacingMin) {
       return dataScale;
     }
 
     while (true) {
+      if (++numIters > maxIters) {
+        return scaledStep;
+      }
       let scaledStep = dataScale * timingStep;
       if (scaledStep < spacingMin) {
         timingStep <<= 1;
