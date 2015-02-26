@@ -400,10 +400,10 @@ class Assembler : public AssemblerX86Shared
         }
     }
     void vmovq(Register src, FloatRegister dest) {
-        masm.vmovq_rr(src.code(), dest.code());
+        masm.vmovq_rr(src.code(), dest.encoding());
     }
     void vmovq(FloatRegister src, Register dest) {
-        masm.vmovq_rr(src.code(), dest.code());
+        masm.vmovq_rr(src.encoding(), dest.code());
     }
     void movq(Register src, Register dest) {
         masm.movq_rr(src.code(), dest.code());
@@ -621,31 +621,31 @@ class Assembler : public AssemblerX86Shared
         return CodeOffsetLabel(masm.movq_ripr(dest.code()).offset());
     }
     CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovsd_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovsd_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel loadRipRelativeFloat32(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovss_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovss_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel loadRipRelativeInt32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovdqa_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovdqa_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel loadRipRelativeFloat32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovaps_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovaps_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeInt32(Register dest) {
         return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
     }
     CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovsd_rrip(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovsd_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeFloat32(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovss_rrip(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovss_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeInt32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovdqa_rrip(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovdqa_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeFloat32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovaps_rrip(dest.code()).offset());
+        return CodeOffsetLabel(masm.vmovaps_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel leaRipRelative(Register dest) {
         return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
@@ -769,16 +769,16 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::call;
 
     void vcvttsd2sq(FloatRegister src, Register dest) {
-        masm.vcvttsd2sq_rr(src.code(), dest.code());
+        masm.vcvttsd2sq_rr(src.encoding(), dest.code());
     }
     void vcvttss2sq(FloatRegister src, Register dest) {
-        masm.vcvttss2sq_rr(src.code(), dest.code());
+        masm.vcvttss2sq_rr(src.encoding(), dest.code());
     }
     void vcvtsq2sd(Register src1, FloatRegister src0, FloatRegister dest) {
-        masm.vcvtsq2sd_rr(src1.code(), src0.code(), dest.code());
+        masm.vcvtsq2sd_rr(src1.code(), src0.encoding(), dest.encoding());
     }
     void vcvtsq2ss(Register src1, FloatRegister src0, FloatRegister dest) {
-        masm.vcvtsq2ss_rr(src1.code(), src0.code(), dest.code());
+        masm.vcvtsq2ss_rr(src1.code(), src0.encoding(), dest.encoding());
     }
 };
 

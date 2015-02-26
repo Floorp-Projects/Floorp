@@ -390,6 +390,10 @@ class FloatRegister
         MOZ_ASSERT(!isInvalid());
         return Code(code_  | (kind_ << 5));
     }
+    Encoding encoding() const {
+        MOZ_ASSERT(!isInvalid());
+        return Code(code_  | (kind_ << 5));
+    }
     uint32_t id() const {
         return code_;
     }
