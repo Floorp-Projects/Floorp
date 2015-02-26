@@ -785,7 +785,12 @@ enum Role {
    */
   KEY = 129,
 
-  LAST_ROLE = KEY
+  /**
+   * Represent a switch control widget (ARIA role "switch").
+   */
+  SWITCH = 130,
+
+  LAST_ROLE = SWITCH
 };
 
 } // namespace role

@@ -107,17 +107,28 @@
         new setAttrOfMixedType(aID, "aria-checked", STATE_CHECKED, aValue);
     }
 
+    function buildQueueForAttr(aList, aQueue, aID, aInvokerFunc)
+    {
+      for (var i = 0; i < aList.length; i++) {
+        for (var j = i + 1; j < aList.length; j++) {
+          // XXX: changes from/to "undefined"/"" shouldn't fire state change
+          // events, bug 472142.
+          aQueue.push(new aInvokerFunc(aID, aList[i]));
+          aQueue.push(new aInvokerFunc(aID, aList[j]));
+        }
+      }
+    }
+
     function buildQueueForAttrOfMixedType(aQueue, aID, aInvokerFunc)
     {
       var list = [ "", "undefined", "false", "true", "mixed" ];
-      for (var i = 0; i < list.length; i++) {
-        for (var j = i + 1; j < list.length; j++) {
-          // XXX: changes from/to "undefined"/"" shouldn't fire state change
-          // events, bug 472142.
-          aQueue.push(new aInvokerFunc(aID, list[i]));
-          aQueue.push(new aInvokerFunc(aID, list[j]));
-        }
-      }
+      buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
+    }
+
+    function buildQueueForAttrOfBoolType(aQueue, aID, aInvokerFunc)
+    {
+      var list = [ "", "undefined", "false", "true" ];
+      buildQueueForAttr(list, aQueue, aID, aInvokerFunc);
     }
 
     function doTests()
@@ -135,6 +146,7 @@
       buildQueueForAttrOfMixedType(gQueue, "pressable", setPressed);
       buildQueueForAttrOfMixedType(gQueue, "pressable_native", setPressed);
       buildQueueForAttrOfMixedType(gQueue, "checkable", setChecked);
+      buildQueueForAttrOfBoolType(gQueue, "checkableBool", setChecked);
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -166,6 +178,11 @@
      title="Pressed state is not exposed on a button element with aria-pressed attribute"
     Mozilla Bug 989958
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136563"
+     title="Support ARIA 1.1 switch role"
+    Mozilla Bug 1136563
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -186,5 +203,6 @@
 
   <!-- aria-checked -->
   <div id="checkable" role="checkbox"></div>
+  <div id="checkableBool" role="switch"></div>
 </body>
 </html>
