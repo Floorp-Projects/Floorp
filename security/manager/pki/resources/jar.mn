@@ -5,7 +5,6 @@
 pippki.jar:
 % content pippki %content/pippki/
     content/pippki/changepassword.xul        (content/changepassword.xul)
-    content/pippki/getpassword.xul           (content/getpassword.xul)
     content/pippki/password.js               (content/password.js)
     content/pippki/resetpassword.xul         (content/resetpassword.xul)
     content/pippki/resetpassword.js          (content/resetpassword.js)
