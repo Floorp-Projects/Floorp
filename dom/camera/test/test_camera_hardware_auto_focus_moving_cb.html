@@ -17,104 +17,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=965421
 
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var initialConfig = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
-  }
-};
+var suite = new CameraTestSuite();
 
-const PREF_AUTOFOCUSCALLBACK_ENABLED = "camera.control.autofocus_moving_callback.enabled";
-
-var cameraObj;
-var oldPref;
-
-// Shorthand functions
-function end() {
-  function reallyEnd() {
-    CameraTest.end();
-  }
-  if (oldPref) {
-    SpecialPowers.pushPrefEnv(
-      {'set': [[PREF_AUTOFOCUSCALLBACK_ENABLED, oldPref]]}, reallyEnd);
-  } else {
-    SpecialPowers.pushPrefEnv(
-      {'clear': [[PREF_AUTOFOCUSCALLBACK_ENABLED]]}, reallyEnd);
-  }
-}
-function next() {
-  CameraTest.next();
-}
-
-var tests = [
-  {
-    key: "autofocus-moving-true",
-    func: function testAutoFocusMovingIsTrue(camera) {
-      var handler = function(evt) {
-        camera.removeEventListener("focus", handler);
-        ok(evt.newState == "focusing", "autofocus event state focusing == " + evt.newState);
-        camera.focusMode = 'auto';
-        next();
+suite.test('auto-focus-moving', function() {
+  function triggerAutoFocusMoving(p) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        suite.camera.removeEventListener('focus', onEvent);
+        ok(e.newState === 'focusing', 'autofocus event state focusing == ' + e.newState);
+        resolve();
       }
-      camera.addEventListener("focus", handler);
-      camera.focusMode = 'continuous-picture';
-    }
-  },
-];
+      suite.camera.addEventListener('focus', onEvent);
+    });
 
-var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
-    yield tests[i];
+    suite.hw.fireAutoFocusMoving(true);
+    return sync;
   }
-}();
 
-window.addEventListener('beforeunload', function() {
-  document.getElementById('viewfinder').mozSrcObject = null;
-  cameraObj.release();
-  cameraObj = null;
+  return suite.getCamera()
+    .then(triggerAutoFocusMoving);
 });
 
-// Must call CameraTest.begin() before any other async methods.
-CameraTest.begin("hardware", function(test) {
-  // If the pref doesn't exist, this get will fail; catch it and continue.
-  try {
-    oldPref = SpecialPowers.getBoolPref(PREF_AUTOFOCUSCALLBACK_ENABLED);
-  } catch(e) { }
-
-  SpecialPowers.pushPrefEnv({'set': [[PREF_AUTOFOCUSCALLBACK_ENABLED, true]]}, function() {
-    var enabled;
-    try {
-      enabled = SpecialPowers.getBoolPref(PREF_AUTOFOCUSCALLBACK_ENABLED);
-    } catch(e) { }
-    ok(enabled, PREF_AUTOFOCUSCALLBACK_ENABLED + " is " + enabled);
-
-    function onSuccess(d) {
-      document.getElementById('viewfinder').mozSrcObject = d.camera;
-      cameraObj = d.camera;
-      CameraTest.next = function() {
-        try {
-          var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, d.camera));
-        } catch(e) {
-          if (e instanceof StopIteration) {
-            end();
-          } else {
-            throw e;
-          }
-        }
-      };
-      next();
-    }
-    function onError(error) {
-      ok(false, "getCamera() failed with: " + error);
-      end();
-    }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
-  })
-});
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>
