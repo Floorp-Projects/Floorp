@@ -2470,7 +2470,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!funpc.init(tokenStream))
         return null();
 
-    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement)) {
+    if (!functionArgsAndBodyGeneric(pn, fun, Normal, Lazy)) {
         MOZ_ASSERT(directives == newDirectives);
         return null();
     }
@@ -2555,8 +2555,11 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     if (!body)
         return false;
 
-    if (fun->name() && !checkStrictBinding(fun->name(), pn))
+    if (kind != Method && kind != Lazy && 
+        fun->name() && !checkStrictBinding(fun->name(), pn))
+    {
         return false;
+    }
 
     if (bodyType == StatementListBody) {
         bool matched;
@@ -2574,7 +2577,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
         if (tokenStream.hadError())
             return false;
         funbox->bufEnd = pos().end;
-        if (kind == Statement && !MatchOrInsertSemicolon(tokenStream))
+        if ((kind == Statement || kind == Lazy) && !MatchOrInsertSemicolon(tokenStream))
             return false;
     }
 
