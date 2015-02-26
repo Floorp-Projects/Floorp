@@ -1112,7 +1112,7 @@ let Front = Class({
     // the front is destroyed.
     while (this._requests && this._requests.length > 0) {
       let deferred = this._requests.shift();
-      deferred.reject(new Error("Connection closed"));
+      deferred.reject(new Error("Connection closed, pending request not sent"));
     }
     Pool.prototype.destroy.call(this);
     this.actorID = null;
