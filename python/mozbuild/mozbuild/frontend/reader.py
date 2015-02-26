@@ -36,6 +36,7 @@ from collections import (
 from io import StringIO
 
 from mozbuild.util import (
+    EmptyValue,
     memoize,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
@@ -80,6 +81,48 @@ else:
 
 def log(logger, level, action, params, formatter):
     logger.log(level, formatter, extra={'action': action, 'params': params})
+
+
+class EmptyConfig(object):
+    """A config object that is empty.
+
+    This config object is suitable for using with a BuildReader on a vanilla
+    checkout, without any existing configuration. The config is simply
+    bootstrapped from a top source directory path.
+    """
+    class PopulateOnGetDict(ReadOnlyDefaultDict):
+        """A variation on ReadOnlyDefaultDict that populates during .get().
+
+        This variation is needed because CONFIG uses .get() to access members.
+        Without it, None (instead of our EmptyValue types) would be returned.
+        """
+        def get(self, key, default=None):
+            return self[key]
+
+    def __init__(self, topsrcdir):
+        self.topsrcdir = topsrcdir
+        self.topobjdir = ''
+
+        self.substs = self.PopulateOnGetDict(EmptyValue, {
+            # These 2 variables are used semi-frequently and it isn't worth
+            # changing all the instances.
+            b'MOZ_APP_NAME': b'empty',
+            b'MOZ_CHILD_PROCESS_NAME': b'empty',
+            # Set manipulations are performed within the moz.build files. But
+            # set() is not an exposed symbol, so we can't create an empty set.
+            b'NECKO_PROTOCOLS': set(),
+            # Needed to prevent js/src's config.status from loading.
+            b'JS_STANDALONE': b'1',
+        })
+        udict = {}
+        for k, v in self.substs.items():
+            if isinstance(v, str):
+                udict[k.decode('utf-8')] = v.decode('utf-8')
+            else:
+                udict[k] = v
+        self.substs_unicode = self.PopulateOnGetDict(EmptyValue, udict)
+        self.defines = self.substs
+        self.external_source_dir = None
 
 
 def is_read_allowed(path, config):
