@@ -723,7 +723,7 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   
   bool abort = false;
   bool isPreferred = (mFlags & nsIURILoader::IS_CONTENT_PREFERRED) != 0;
-  nsresult rv = aListener->DoContent(mContentType.get(),
+  nsresult rv = aListener->DoContent(mContentType,
                                      isPreferred,
                                      aChannel,
                                      getter_AddRefs(m_targetStreamListener),
