@@ -1898,12 +1898,11 @@ class MSimdUnaryArith
 {
   public:
     enum Operation {
-        abs,
+#define OP_LIST_(OP) OP,
+        UNARY_ARITH_FLOAT32X4_SIMD_OP(OP_LIST_)
         neg,
-        not_,
-        reciprocal,
-        reciprocalSqrt,
-        sqrt
+        not_
+#undef OP_LIST_
     };
 
     static const char* OperationName(Operation op) {
@@ -1970,14 +1969,14 @@ class MSimdBinaryComp
   public:
     enum Operation {
 #define NAME_(x) x,
-        COMP_COMMONX4_SIMD_OP(NAME_)
+        COMP_COMMONX4_TO_INT32X4_SIMD_OP(NAME_)
 #undef NAME_
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
 #define NAME_(x) case x: return #x;
-        COMP_COMMONX4_SIMD_OP(NAME_)
+        COMP_COMMONX4_TO_INT32X4_SIMD_OP(NAME_)
 #undef NAME_
         }
         MOZ_CRASH("unexpected operation");
@@ -2055,7 +2054,7 @@ class MSimdBinaryArith
     enum Operation {
 #define OP_LIST_(OP) Op_##OP,
         ARITH_COMMONX4_SIMD_OP(OP_LIST_)
-        ARITH_FLOAT32X4_SIMD_OP(OP_LIST_)
+        BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_LIST_)
 #undef OP_LIST_
     };
 
@@ -2063,7 +2062,7 @@ class MSimdBinaryArith
         switch (op) {
 #define OP_CASE_LIST_(OP) case Op_##OP: return #OP;
           ARITH_COMMONX4_SIMD_OP(OP_CASE_LIST_)
-          ARITH_FLOAT32X4_SIMD_OP(OP_CASE_LIST_)
+          BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_CASE_LIST_)
 #undef OP_CASE_LIST_
         }
         MOZ_CRASH("unexpected operation");

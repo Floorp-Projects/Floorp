@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("SIMD"))
+    quit();
+
 function binaryX4(op, v, w) {
     var arr = [];
     var [varr, warr] = [simdToArray(v), simdToArray(w)];

@@ -9229,31 +9229,18 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
 #define ADD_INT32X4_SIMD_OP_NAME_(OP) || native == js::simd_int32x4_##OP
 #define ADD_FLOAT32X4_SIMD_OP_NAME_(OP) || native == js::simd_float32x4_##OP
        if (false
-           ARITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
-           BITWISE_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
-           COMP_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
-           COMP_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           WITH_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
-           || native == js::simd_int32x4_not || native == js::simd_int32x4_neg
-           || native == js::simd_int32x4_fromFloat32x4 || native == js::simd_int32x4_fromFloat32x4Bits
-           || native == js::simd_int32x4_select || native == js::simd_int32x4_bitselect
-           || native == js::simd_int32x4_splat)
+           ION_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
+           COMP_COMMONX4_TO_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
+           COMP_COMMONX4_TO_INT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
+           CONVERSION_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
        {
             Rooted<SimdTypeDescr *> descr(cx, &cx->global()->int32x4TypeDescr().as<SimdTypeDescr>());
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
             return !!res;
        }
        if (false
-           ARITH_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           ARITH_FLOAT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           BITWISE_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           WITH_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           || native == js::simd_float32x4_abs || native == js::simd_float32x4_sqrt
-           || native == js::simd_float32x4_reciprocal || native == js::simd_float32x4_reciprocalSqrt
-           || native == js::simd_float32x4_not || native == js::simd_float32x4_neg
-           || native == js::simd_float32x4_fromInt32x4 || native == js::simd_float32x4_fromInt32x4Bits
-           || native == js::simd_float32x4_select || native == js::simd_float32x4_bitselect
-           || native == js::simd_float32x4_splat)
+           FOREACH_FLOAT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
+           ION_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_))
        {
             Rooted<SimdTypeDescr *> descr(cx, &cx->global()->float32x4TypeDescr().as<SimdTypeDescr>());
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
