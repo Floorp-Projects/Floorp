@@ -1178,6 +1178,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
           case "httpVersion":
             requestItem.attachment.httpVersion = value;
             break;
+          case "remoteAddress":
+            requestItem.attachment.remoteAddress = value;
+            break;
+          case "remotePort":
+            requestItem.attachment.remotePort = value;
+            break;
           case "status":
             requestItem.attachment.status = value;
             this.updateMenuView(requestItem, key, value);
@@ -2269,6 +2275,21 @@ NetworkDetailsView.prototype = {
       $("#headers-summary-method").removeAttribute("hidden");
     } else {
       $("#headers-summary-method").setAttribute("hidden", "true");
+    }
+
+    if (aData.remoteAddress) {
+      let address = aData.remoteAddress;
+      if (address.indexOf(":") != -1) {
+        address = `[${address}]`;
+      }
+      if(aData.remotePort) {
+        address += `:${aData.remotePort}`;
+      }
+      $("#headers-summary-address-value").setAttribute("value", address);
+      $("#headers-summary-address-value").setAttribute("tooltiptext", address);
+      $("#headers-summary-address").removeAttribute("hidden");
+    } else {
+      $("#headers-summary-address").setAttribute("hidden", "true");
     }
 
     if (aData.status) {

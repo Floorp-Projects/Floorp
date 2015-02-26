@@ -607,6 +607,8 @@ NetworkEventsHandler.prototype = {
       case "responseStart":
         NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
           httpVersion: aPacket.response.httpVersion,
+          remoteAddress: aPacket.response.remoteAddress,
+          remotePort: aPacket.response.remotePort,
           status: aPacket.response.status,
           statusText: aPacket.response.statusText,
           headersSize: aPacket.response.headersSize
