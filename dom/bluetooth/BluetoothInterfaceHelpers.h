@@ -13,6 +13,13 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 //
+// Conversion
+//
+
+nsresult
+Convert(nsresult aIn, BluetoothStatus& aOut);
+
+//
 // Result handling
 //
 // The classes of type |BluetoothResultRunnable[0..3]| transfer
