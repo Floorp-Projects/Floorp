@@ -3867,7 +3867,12 @@ void
 LIRGenerator::visitSimdReinterpretCast(MSimdReinterpretCast *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()) && IsSimdType(ins->input()->type()));
-    redefine(ins, ins->input());
+    MDefinition *input = ins->input();
+    LUse use = useRegisterAtStart(input);
+    // :TODO: (Bug 1132894) We have to allocate a different register as redefine
+    // and/or defineReuseInput are not yet capable of reusing the same register
+    // with a different register type.
+    define(new(alloc()) LSimdReinterpretCast(use), ins);
 }
 
 void
