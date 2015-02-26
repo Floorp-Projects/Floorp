@@ -23,7 +23,7 @@ function getAppenders(log) {
 }
 
 // Test that the correct thing happens when no prefs exist for the log manager.
-add_test(function test_noPrefs() {
+add_task(function* test_noPrefs() {
   // tell the log manager to init with a pref branch that doesn't exist.
   let lm = new LogManager("no-such-branch.", ["TestLog"], "test");
 
@@ -36,11 +36,10 @@ add_test(function test_noPrefs() {
   equal(fapps.length, 1, "only 1 file appender");
   equal(fapps[0].level, Log.Level.Debug);
   lm.finalize();
-  run_next_test();
 });
 
 // Test that changes to the prefs used by the log manager are updated dynamically.
-add_test(function test_PrefChanges() {
+add_task(function* test_PrefChanges() {
   Services.prefs.setCharPref("log-manager.test.log.appender.console", "Trace");
   Services.prefs.setCharPref("log-manager.test.log.appender.dump", "Trace");
   Services.prefs.setCharPref("log-manager.test.log.appender.file.level", "Trace");
@@ -66,11 +65,10 @@ add_test(function test_PrefChanges() {
   equal(dapp.level, Log.Level.Error);
   equal(fapp.level, Log.Level.Debug);
   lm.finalize();
-  run_next_test();
 });
 
 // Test that the same log used by multiple log managers does the right thing.
-add_test(function test_SharedLogs() {
+add_task(function* test_SharedLogs() {
   // create the prefs for the first instance.
   Services.prefs.setCharPref("log-manager-1.test.log.appender.console", "Trace");
   Services.prefs.setCharPref("log-manager-1.test.log.appender.dump", "Trace");
@@ -102,6 +100,4 @@ add_test(function test_SharedLogs() {
 
   lm1.finalize();
   lm2.finalize();
-
-  run_next_test();
 });
