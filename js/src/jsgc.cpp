@@ -1997,7 +1997,7 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
 }
 
 static void
-RelocateArena(ArenaHeader *aheader)
+RelocateArena(ArenaHeader *aheader, SliceBudget &sliceBudget)
 {
     MOZ_ASSERT(aheader->allocated());
     MOZ_ASSERT(!aheader->hasDelayedMarking);
@@ -2016,6 +2016,7 @@ RelocateArena(ArenaHeader *aheader)
             // for.
             CrashAtUnhandlableOOM("Could not allocate new arena while compacting");
         }
+        sliceBudget.step();
     }
 
 #ifdef DEBUG
@@ -2034,14 +2035,14 @@ RelocateArena(ArenaHeader *aheader)
  * relocate each cell within it, then add it to a list of relocated arenas.
  */
 ArenaHeader *
-ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated,
+ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated, SliceBudget &sliceBudget,
                           gcstats::Statistics& stats)
 {
     check();
 
     while (ArenaHeader *arena = toRelocate) {
         toRelocate = arena->next;
-        RelocateArena(arena);
+        RelocateArena(arena, sliceBudget);
         // Prepend to list of relocated arenas
         arena->next = relocated;
         relocated = arena;
@@ -2070,7 +2071,7 @@ static bool ShouldRelocateZone(size_t arenaCount, size_t relocCount, JS::gcreaso
 
 bool
 ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason reason,
-                           gcstats::Statistics& stats)
+                           SliceBudget &sliceBudget, gcstats::Statistics& stats)
 {
 
     // This is only called from the main thread while we are doing a GC, so
@@ -2089,7 +2090,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
                 ArenaList &al = arenaLists[i];
                 ArenaHeader *allArenas = al.head();
                 al.clear();
-                relocatedListOut = al.relocateArenas(allArenas, relocatedListOut, stats);
+                relocatedListOut = al.relocateArenas(allArenas, relocatedListOut, sliceBudget, stats);
             }
         }
     } else {
@@ -2110,7 +2111,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
             if (toRelocate[i]) {
                 ArenaList &al = arenaLists[i];
                 ArenaHeader *arenas = al.removeRemainingArenas(toRelocate[i]);
-                relocatedListOut = al.relocateArenas(arenas, relocatedListOut, stats);
+                relocatedListOut = al.relocateArenas(arenas, relocatedListOut, sliceBudget, stats);
             }
         }
     }
@@ -2126,7 +2127,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
 }
 
 bool
-GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason)
+GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason, SliceBudget &sliceBudget)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_MOVE);
 
@@ -2135,7 +2136,7 @@ GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason)
 
     jit::StopAllOffThreadCompilations(zone);
 
-    if (!zone->arenas.relocateArenas(relocatedArenasToRelease, reason, stats))
+    if (!zone->arenas.relocateArenas(relocatedArenasToRelease, reason, sliceBudget, stats))
         return false;
 
 #ifdef DEBUG
@@ -5311,7 +5312,7 @@ GCRuntime::beginCompactPhase()
 }
 
 GCRuntime::IncrementalProgress
-GCRuntime::compactPhase(JS::gcreason::Reason reason)
+GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget &sliceBudget)
 {
     MOZ_ASSERT(rt->gc.nursery.isEmpty());
     assertBackgroundSweepingFinished();
@@ -5322,12 +5323,14 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason)
     while (!zonesToMaybeCompact.isEmpty()) {
         Zone *zone = zonesToMaybeCompact.front();
         MOZ_ASSERT(zone->isGCFinished());
-        if (relocateArenas(zone, reason)) {
+        if (relocateArenas(zone, reason, sliceBudget)) {
             zone->setGCState(Zone::Compact);
             updatePointersToRelocatedCells(zone);
             zone->setGCState(Zone::Finished);
         }
         zonesToMaybeCompact.removeFront();
+        if (sliceBudget.isOverBudget())
+            break;
     }
 
 #ifdef DEBUG
@@ -5770,7 +5773,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             if (!startedCompacting && beginCompactPhase() == NotFinished)
                 break;
 
-            if (compactPhase(reason) == NotFinished)
+            if (compactPhase(reason, budget) == NotFinished)
                 break;
 
             endCompactPhase(reason);
