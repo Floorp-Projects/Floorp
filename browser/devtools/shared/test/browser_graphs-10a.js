@@ -27,7 +27,7 @@ function* performTest() {
 
   is(refreshCount, 2, "The graph should've been refreshed 2 times.");
 
-  graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
