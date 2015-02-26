@@ -1013,14 +1013,14 @@ class HashTable : private AllocPolicy
     void operator=(const HashTable &) = delete;
 
   private:
-    static const size_t CAP_BITS = 24;
+    static const size_t CAP_BITS = 30;
 
   public:
     Entry       *table;                 // entry storage
-    uint32_t    gen;                    // entry storage generation number
-    uint32_t    entryCount;             // number of entries in table
-    uint32_t    removedCount:CAP_BITS;  // removed entry sentinels in table
+    uint32_t    gen:24;                 // entry storage generation number
     uint32_t    hashShift:8;            // multiplicative hash shift
+    uint32_t    entryCount;             // number of entries in table
+    uint32_t    removedCount;           // removed entry sentinels in table
 
 #ifdef JS_DEBUG
     uint64_t     mutationCount;
@@ -1088,8 +1088,6 @@ class HashTable : private AllocPolicy
     {
         static_assert(sFreeKey == 0,
                       "newly-calloc'd tables have to be considered empty");
-        static_assert(sMaxCapacity <= SIZE_MAX / sizeof(Entry),
-                      "would overflow allocating max number of entries");
         return alloc.template pod_calloc<Entry>(capacity);
     }
 
@@ -1105,9 +1103,9 @@ class HashTable : private AllocPolicy
       : AllocPolicy(ap)
       , table(nullptr)
       , gen(0)
+      , hashShift(sHashBits)
       , entryCount(0)
       , removedCount(0)
-      , hashShift(sHashBits)
 #ifdef JS_DEBUG
       , mutationCount(0)
       , mEntered(false)
