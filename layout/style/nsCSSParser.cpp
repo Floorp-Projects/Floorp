@@ -722,6 +722,13 @@ protected:
                         bool* aChanged,
                         nsCSSContextType aContext = eCSSContext_General);
 
+  // A "prefix-aware" wrapper for nsCSSKeywords::LookupKeyword().
+  // Use this instead of LookupKeyword() if you might be parsing an unprefixed
+  // property (like "display") for which we emulate a vendor-prefixed value
+  // (like "-webkit-box").
+  nsCSSKeyword LookupKeywordPrefixAware(nsAString& aKeywordStr,
+                                        const KTableValue aKeywordTable[]);
+
   bool ShouldUseUnprefixingService();
   bool ParsePropertyWithUnprefixingService(const nsAString& aPropertyName,
                                            css::Declaration* aDeclaration,
@@ -1195,6 +1202,12 @@ protected:
   // @supports rule.
   bool mSuppressErrors : 1;
 
+  // True if we've parsed "display: -webkit-box" as "display: flex" in an
+  // earlier declaration within the current block of declarations, as part of
+  // emulating support for certain -webkit-prefixed properties on certain
+  // sites.
+  bool mDidUnprefixWebkitBoxInEarlierDecl; // not :1 so we can use AutoRestore
+
   // Stack of rule groups; used for @media and such.
   InfallibleTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
@@ -1271,6 +1284,7 @@ CSSParserImpl::CSSParserImpl()
     mInSupportsCondition(false),
     mInFailingSupportsRule(false),
     mSuppressErrors(false),
+    mDidUnprefixWebkitBoxInEarlierDecl(false),
     mNextFree(nullptr)
 {
 }
@@ -1498,6 +1512,10 @@ CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
   nsCSSScanner scanner(aBuffer, 0);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURI);
   InitScanner(scanner, reporter, aSheetURI, aBaseURI, aSheetPrincipal);
+
+  MOZ_ASSERT(!mDidUnprefixWebkitBoxInEarlierDecl,
+             "Someone forgot to clear the 'did unprefix webkit-box' flag");
+  AutoRestore<bool> autoRestore(mDidUnprefixWebkitBoxInEarlierDecl);
 
   mSection = eCSSSection_General;
 
@@ -6143,6 +6161,10 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
 {
   bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
 
+  MOZ_ASSERT(!mDidUnprefixWebkitBoxInEarlierDecl,
+             "Someone forgot to clear the 'did unprefix webkit-box' flag");
+  AutoRestore<bool> restorer(mDidUnprefixWebkitBoxInEarlierDecl);
+
   if (checkForBraces) {
     if (!ExpectSymbol('{', true)) {
       REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
@@ -6549,6 +6571,41 @@ CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
   return true;
 }
 #endif
+
+nsCSSKeyword
+CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
+                                        const KTableValue aKeywordTable[])
+{
+  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aKeywordStr);
+
+  if (aKeywordTable == nsCSSProps::kDisplayKTable) {
+    if (keyword == eCSSKeyword_UNKNOWN &&
+        ShouldUseUnprefixingService() &&
+        aKeywordStr.EqualsLiteral("-webkit-box")) {
+      // Treat "display: -webkit-box" as "display: flex". In simple scenarios,
+      // they largely behave the same, as long as we use the CSS Unprefixing
+      // Service to also translate the associated properties.
+      mDidUnprefixWebkitBoxInEarlierDecl = true;
+      return eCSSKeyword_flex;
+    }
+
+    // If we've seen "display: -webkit-box" in an earlier declaration and we
+    // tried to unprefix it to emulate support for it, then we have to watch
+    // out for later "display: -moz-box" declarations; they're likely just a
+    // halfhearted attempt at compatibility, and they actually end up stomping
+    // on our emulation of the earlier -webkit-box display-value, via the CSS
+    // cascade. To prevent this problem, we also treat "display: -moz-box" as
+    // "display: flex" (but only if we unprefixed an earlier "-webkit-box").
+    if (mDidUnprefixWebkitBoxInEarlierDecl && keyword == eCSSKeyword__moz_box) {
+      MOZ_ASSERT(ShouldUseUnprefixingService(),
+                 "mDidUnprefixWebkitBoxInEarlierDecl should only be set if "
+                 "we're using the unprefixing service on this site");
+      return eCSSKeyword_flex;
+    }
+  }
+
+  return keyword;
+}
 
 bool
 CSSParserImpl::ShouldUseUnprefixingService()
@@ -7089,7 +7146,9 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   nsCSSToken* tk = &mToken;
   if (((aVariantMask & (VARIANT_AHK | VARIANT_NORMAL | VARIANT_NONE | VARIANT_ALL)) != 0) &&
       (eCSSToken_Ident == tk->mType)) {
-    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
+    nsCSSKeyword keyword = LookupKeywordPrefixAware(tk->mIdent,
+                                                    aKeywordTable);
+
     if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
       if ((aVariantMask & VARIANT_AUTO) != 0) {
         if (eCSSKeyword_auto == keyword) {
