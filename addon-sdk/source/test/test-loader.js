@@ -506,4 +506,22 @@ exports["test Cu.import in b2g style"] = (assert) => {
                "Loader.Loader is a funciton");
 };
 
+exports['test lazy globals'] = function (assert) {
+  let uri = root + '/fixtures/loader/lazy/';
+  let gotFoo = false;
+  let foo = {};
+  let modules = {
+    get foo() {
+      gotFoo = true;
+      return foo;
+    }
+  };
+  let loader = Loader({ paths: { '': uri }, modules: modules});
+  assert.ok(!gotFoo, "foo hasn't been accessed during loader instanciation");
+  let program = main(loader, 'main');
+  assert.ok(!gotFoo, "foo hasn't been accessed during module loading");
+  assert.equal(program.useFoo(), foo, "foo mock works");
+  assert.ok(gotFoo, "foo has been accessed only when we first try to use it");
+};
+
 require('sdk/test').run(exports);
