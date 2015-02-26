@@ -141,7 +141,7 @@
   <default remote="caf" revision="refs/tags/android-5.0.0_r6" sync-j="4"/>
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="ba62cc8b78c30d36181b8060a2016cc8da166236"/>
-  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="b765862a60e0063fc2451f5e3e137247dd9838c3"/>
+  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="dc525eeb67301a44f514a7ac40a59ec592b34e31"/>
   <project name="device/qcom/common" path="device/qcom/common" remote="caf" revision="3697e5acf25629b82658334e3f8ee3b6df5becab"/>
   <project name="device_lge_hammerhead-kernel" path="device/lge/hammerhead-kernel" remote="b2g" revision="1268f640184df5ef759ada669f101a613451673a"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0cb8574d338bf9f15b45ace7c08ad6deae9673ee"/>
