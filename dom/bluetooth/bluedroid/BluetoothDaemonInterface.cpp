@@ -1893,7 +1893,15 @@ void
 BluetoothDaemonInterface::OnDisconnect(enum Channel aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
+
+  if (mResultHandlerQ.IsEmpty()) {
+    if (sNotificationHandler) {
+      // Bluetooth daemon crashed; clear state
+      sNotificationHandler->AdapterStateChangedNotification(false);
+      sNotificationHandler = nullptr;
+    }
+    return;
+  }
 
   switch (aChannel) {
     case CMD_CHANNEL:
