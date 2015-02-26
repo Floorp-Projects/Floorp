@@ -477,7 +477,7 @@ class ArenaList {
     ArenaHeader *removeRemainingArenas(ArenaHeader **arenap);
     ArenaHeader **pickArenasToRelocate(size_t &arenaTotalOut, size_t &relocTotalOut);
     ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated,
-                                SliceBudget &sliceBudget, gcstats::Statistics& stats);
+                                gcstats::Statistics& stats);
 };
 
 /*
@@ -805,7 +805,7 @@ class ArenaLists
     }
 
     bool relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason reason,
-                        SliceBudget &sliceBudget, gcstats::Statistics& stats);
+                        gcstats::Statistics& stats);
 
     void queueForegroundObjectsForSweep(FreeOp *fop);
     void queueForegroundThingsForSweep(FreeOp *fop);
@@ -1392,7 +1392,6 @@ class ZoneList
     void append(Zone *zone);
     void transferFrom(ZoneList &other);
     void removeFront();
-    void clear();
 
   private:
     explicit ZoneList(Zone *singleZone);
