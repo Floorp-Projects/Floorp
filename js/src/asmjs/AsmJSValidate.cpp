@@ -5863,7 +5863,7 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_##OP:                                                     \
         return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Op_##OP, def, type);
       ARITH_COMMONX4_SIMD_OP(OP_CHECK_CASE_LIST_)
-      ARITH_FLOAT32X4_SIMD_OP(OP_CHECK_CASE_LIST_)
+      BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_CHECK_CASE_LIST_)
 #undef OP_CHECK_CASE_LIST_
 
       case AsmJSSimdOperation_lessThan:
