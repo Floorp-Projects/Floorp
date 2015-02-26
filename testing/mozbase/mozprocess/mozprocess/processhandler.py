@@ -825,7 +825,10 @@ class ProcessReader(object):
         return thread
 
     def _read_stream(self, stream, queue, callback):
-        for line in stream:
+        while True:
+            line = stream.readline()
+            if not line:
+                break
             queue.put((line, callback))
         stream.close()
 
