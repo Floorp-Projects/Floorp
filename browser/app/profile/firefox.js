@@ -1683,7 +1683,7 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 pref("shumway.disabled", true);
 #else
 pref("shumway.disabled", false);
-pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRenderer*.swf");
+pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRenderer*.swf,http://z-ecx.images-amazon.com/*/AiryFlashlsRenderer._TTW_.swf,http://ia.media-imdb.com/*/AiryFlashlsRenderer._TTW_.swf");
 #endif
 #endif
 
