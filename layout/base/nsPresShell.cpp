@@ -11132,10 +11132,10 @@ nsIPresShell::RecomputeFontSizeInflationEnabled()
 
   // Force-enabling font inflation always trumps the heuristics here.
   if (!FontSizeInflationForceEnabled()) {
-    if (TabChild* tab = TabChild::GetFrom(this)) {
+    if (TabChild::GetFrom(this)) {
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
-      if (!tab->IsAsyncPanZoomEnabled()) {
+      if (!gfxPrefs::AsyncPanZoomEnabled()) {
         mFontSizeInflationEnabled = false;
         return;
       }
