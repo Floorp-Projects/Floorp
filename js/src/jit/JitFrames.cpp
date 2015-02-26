@@ -1835,7 +1835,7 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
       case RValueAllocation::DOUBLE_REG:
         return DoubleValue(fromRegister(alloc.fpuReg()));
 
-      case RValueAllocation::FLOAT32_REG:
+      case RValueAllocation::ANY_FLOAT_REG:
       {
         union {
             double d;
@@ -1848,7 +1848,7 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
         return Float32Value(pun.f);
       }
 
-      case RValueAllocation::FLOAT32_STACK:
+      case RValueAllocation::ANY_FLOAT_STACK:
         return Float32Value(ReadFrameFloat32Slot(fp_, alloc.stackOffset()));
 
       case RValueAllocation::TYPED_REG:
@@ -1940,10 +1940,10 @@ const FloatRegisters::RegisterContent *
 SnapshotIterator::floatAllocationPointer(const RValueAllocation &alloc) const
 {
     switch (alloc.mode()) {
-      case RValueAllocation::FLOAT32_REG:
+      case RValueAllocation::ANY_FLOAT_REG:
         return machine_.address(alloc.fpuReg());
 
-      case RValueAllocation::FLOAT32_STACK:
+      case RValueAllocation::ANY_FLOAT_STACK:
         return (FloatRegisters::RegisterContent *) AddressOfFrameSlot(fp_, alloc.stackOffset());
 
       default:
@@ -1988,8 +1988,8 @@ SnapshotIterator::writeAllocationValuePayload(const RValueAllocation &alloc, Val
       case RValueAllocation::CST_UNDEFINED:
       case RValueAllocation::CST_NULL:
       case RValueAllocation::DOUBLE_REG:
-      case RValueAllocation::FLOAT32_REG:
-      case RValueAllocation::FLOAT32_STACK:
+      case RValueAllocation::ANY_FLOAT_REG:
+      case RValueAllocation::ANY_FLOAT_STACK:
         MOZ_CRASH("Not a GC thing: Unexpected write");
         break;
 
