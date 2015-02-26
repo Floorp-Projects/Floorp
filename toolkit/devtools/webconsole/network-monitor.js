@@ -937,6 +937,8 @@ NetworkMonitor.prototype = {
 
     let response = {};
     response.httpVersion = statusLineArray.shift();
+    response.remoteAddress = aHttpActivity.channel.remoteAddress;
+    response.remotePort = aHttpActivity.channel.remotePort;
     response.status = statusLineArray.shift();
     response.statusText = statusLineArray.join(" ");
     response.headersSize = aExtraStringData.length;
