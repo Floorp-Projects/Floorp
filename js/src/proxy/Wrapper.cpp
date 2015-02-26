@@ -37,7 +37,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, const Wrapper *handler,
              const WrapperOptions &options)
 {
     RootedValue priv(cx, ObjectValue(*obj));
-    return NewProxyObject(cx, handler, priv, options.proto(), nullptr, options);
+    return NewProxyObject(cx, handler, priv, options.proto(), options);
 }
 
 JSObject *
