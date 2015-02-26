@@ -88,6 +88,11 @@ struct TestPublicKeyAlgorithm
   ByteString algorithmIdentifier;
 };
 
+ByteString DSS_P();
+ByteString DSS_Q();
+ByteString DSS_G();
+
+TestPublicKeyAlgorithm DSS();
 TestPublicKeyAlgorithm RSA_PKCS1();
 
 struct TestSignatureAlgorithm
@@ -267,6 +272,8 @@ class TestKeyPair
 public:
   virtual ~TestKeyPair() { }
 
+  const TestPublicKeyAlgorithm publicKeyAlg;
+
   // The DER encoding of the entire SubjectPublicKeyInfo structure. This is
   // what is encoded in certificates.
   const ByteString subjectPublicKeyInfo;
@@ -281,12 +288,7 @@ public:
 
   virtual TestKeyPair* Clone() const = 0;
 protected:
-  TestKeyPair(const ByteString& spki, const ByteString& spk)
-    : subjectPublicKeyInfo(spki)
-    , subjectPublicKey(spk)
-  {
-  }
-
+  TestKeyPair(const TestPublicKeyAlgorithm& publicKeyAlg, const ByteString& spk);
   TestKeyPair(const TestKeyPair&) = delete;
   void operator=(const TestKeyPair&) = delete;
 };
