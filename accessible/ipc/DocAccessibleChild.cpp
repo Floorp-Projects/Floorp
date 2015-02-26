@@ -208,6 +208,22 @@ DocAccessibleChild::RecvRelations(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvCharacterCount(const uint64_t& aID, int32_t* aCount)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aCount = acc ? acc->CharacterCount() : 0;
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectionCount(const uint64_t& aID, int32_t* aCount)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aCount = acc ? acc->SelectionCount() : 0;
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
                                       const int32_t& aStartOffset,
                                       const int32_t& aEndOffset,
