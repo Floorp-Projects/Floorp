@@ -85,6 +85,15 @@ AudioSink::GetPosition()
   return mLastGoodPosition;
 }
 
+bool
+AudioSink::HasUnplayedFrames()
+{
+  AssertCurrentThreadInMonitor();
+  // Experimentation suggests that GetPositionInFrames() is zero-indexed,
+  // so we need to add 1 here before comparing it to mWritten.
+  return mAudioStream && mAudioStream->GetPositionInFrames() + 1 < mWritten;
+}
+
 void
 AudioSink::PrepareToShutdown()
 {
