@@ -7,16 +7,52 @@
 #include "nsISupports.idl"
 #include "nsIArray.idl"
 
-[scriptable, uuid(13dd4c09-ff11-4943-8dc2-d96eb69c963b)]
+[scriptable, uuid(3a23d383-052e-4199-8914-74c037fe359e)]
 interface nsICompartment : nsISupports {
   /* name of compartment */
   readonly attribute AString compartmentName;
-  /* time spent executing code in this compartment in microseconds */
-  readonly attribute unsigned long long time;
+
   /* the id of the addon associated with this compartment, or null */
   readonly attribute AString addonId;
-  /* time spent processing CPOWs in microseconds */
+
+  /*
+    Total amount of time spent executing code in this compartment, in
+    microseconds.
+
+    Note that these durations are only computed while
+    Components.utils.stopwatchMonitoring == true and that they are never
+    reset to 0.
+  */
+  readonly attribute unsigned long long totalUserTime;
+  readonly attribute unsigned long long totalSystemTime;
+  readonly attribute unsigned long long ownUserTime;
+  readonly attribute unsigned long long ownSystemTime;
   readonly attribute unsigned long long CPOWTime;
+
+  /* Number of times we have executed code in this compartment.
+     Updated only while Components.utils.stopwatchMonitoring == true,
+     never reset to 0.
+  */
+  readonly attribute unsigned long long visits;
+
+  /* `true` if this is a system compartment (either an add-on or a built-in).*/
+  readonly attribute bool isSystem;
+
+  /**
+   * The number of times execution of code in this compartment has apparently
+   * caused frame drops.
+   *
+   * getMissedFrames(0): number of times we have dropped at least 1 frame
+   * getMissedFrames(1): number of times we have dropped at least 2 successive frames
+   * ...
+   * getMissedFrames(i): number of times we have dropped at least 2^i successive frames
+   *
+   * Updated only while Components.utils.stopwatchMonitoring == true,
+   * never reset to 0.
+   */
+  unsigned long long getMissedFrames(in unsigned long i);
+  /* Number of values that may be consulted in `getMissedFrames`.*/
+  const unsigned long MISSED_FRAMES_RANGE = 8;
 };
 
 [scriptable, builtinclass, uuid(5795113a-39a1-4087-ba09-98b7d07d025a)]

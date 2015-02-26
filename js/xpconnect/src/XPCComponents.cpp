@@ -3529,6 +3529,22 @@ nsXPCComponents_Utils::Now(double *aRetval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetStopwatchMonitoring(bool aValue)
+{
+    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    SetStopwatchActive(rt, aValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetStopwatchMonitoring(bool* aResult)
+{
+    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    *aResult = IsStopwatchActive(rt);
+    return NS_OK;
+}
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
