@@ -43,8 +43,8 @@
     macro(with, with, TOK_WITH, JSVERSION_DEFAULT) \
     macro(import, import, TOK_IMPORT, JSVERSION_DEFAULT) \
     macro(export, export, TOK_EXPORT, JSVERSION_DEFAULT) \
+    macro(class, class_, TOK_CLASS, JSVERSION_DEFAULT) \
     /* Reserved keywords. */ \
-    macro(class, class_, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(enum, enum_, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(extends, extends, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(super, super, TOK_RESERVED, JSVERSION_DEFAULT) \

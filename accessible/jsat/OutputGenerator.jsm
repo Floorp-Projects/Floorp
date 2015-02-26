@@ -223,7 +223,7 @@ let OutputGenerator = {
   },
 
   _getOutputName: function _getOutputName(aName) {
-    return aName.replace(' ', '');
+    return aName.replace(/\s/g, '');
   },
 
   roleRuleMap: {
