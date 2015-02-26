@@ -574,8 +574,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node parenExprOrGeneratorComprehension();
     Node exprInParens();
 
-    bool methodDefinition(Node literal, Node propname, FunctionType type, FunctionSyntaxKind kind,
-                          GeneratorKind generatorKind, JSOp Op);
+    enum PropListType { ObjectLiteral };
+    bool methodDefinition(PropListType listType, Node propList, Node propname, FunctionType type,
+                          FunctionSyntaxKind kind, GeneratorKind generatorKind, JSOp Op);
 
     /*
      * Additional JS parsers.
@@ -656,10 +657,12 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node pushLexicalScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     Node pushLetScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
-    Node objectLiteral();
     Node computedPropertyName(Node literal);
     Node arrayInitializer();
     Node newRegExp();
+
+    Node propertyList(PropListType type);
+    Node newPropertyListNode(PropListType type);
 
     bool checkAndPrepareLexical(bool isConst, const TokenPos &errorPos);
     Node makeInitializedLexicalBinding(HandlePropertyName name, bool isConst, const TokenPos &pos);
