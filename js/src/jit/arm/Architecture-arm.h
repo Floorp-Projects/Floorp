@@ -95,16 +95,18 @@ class Registers
     static const uint32_t Total = 16;
     static const uint32_t Allocatable = 13;
 
-    static const uint32_t AllMask = (1 << Total) - 1;
-    static const uint32_t ArgRegMask = (1 << r0) | (1 << r1) | (1 << r2) | (1 << r3);
+    typedef uint32_t SetType;
 
-    static const uint32_t VolatileMask =
+    static const SetType AllMask = (1 << Total) - 1;
+    static const SetType ArgRegMask = (1 << r0) | (1 << r1) | (1 << r2) | (1 << r3);
+
+    static const SetType VolatileMask =
         (1 << r0) |
         (1 << r1) |
         (1 << Registers::r2) |
         (1 << Registers::r3);
 
-    static const uint32_t NonVolatileMask =
+    static const SetType NonVolatileMask =
         (1 << Registers::r4) |
         (1 << Registers::r5) |
         (1 << Registers::r6) |
@@ -116,35 +118,35 @@ class Registers
         (1 << Registers::r12) |
         (1 << Registers::r14);
 
-    static const uint32_t WrapperMask =
+    static const SetType WrapperMask =
         VolatileMask |         // = arguments
         (1 << Registers::r4) | // = outReg
         (1 << Registers::r5);  // = argBase
 
-    static const uint32_t SingleByteRegs =
+    static const SetType SingleByteRegs =
         VolatileMask | NonVolatileMask;
 
-    static const uint32_t NonAllocatableMask =
+    static const SetType NonAllocatableMask =
         (1 << Registers::sp) |
         (1 << Registers::r12) | // r12 = ip = scratch
         (1 << Registers::lr) |
         (1 << Registers::pc);
 
     // Registers that can be allocated without being saved, generally.
-    static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
+    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
     // Registers returned from a JS -> JS call.
-    static const uint32_t JSCallMask =
+    static const SetType JSCallMask =
         (1 << Registers::r2) |
         (1 << Registers::r3);
 
     // Registers returned from a JS -> C call.
-    static const uint32_t CallMask =
+    static const SetType CallMask =
         (1 << Registers::r0) |
         (1 << Registers::r1);  // Used for double-size returns.
 
-    static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
-    typedef uint32_t SetType;
+    static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
+
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
         return mozilla::CountPopulation32(x);
@@ -266,11 +268,13 @@ class FloatRegisters
     // There are only 32 places that we can put values.
     static const uint32_t TotalPhys = 32;
     static uint32_t ActualTotalPhys();
-    static const uint64_t AllDoubleMask = ((1ull << 16) - 1) << 32;
-    static const uint64_t AllMask = ((1ull << 48) - 1);
+
+    typedef uint64_t SetType;
+    static const SetType AllDoubleMask = ((1ull << 16) - 1) << 32;
+    static const SetType AllMask = ((1ull << 48) - 1);
 
     // d15 is the ScratchFloatReg.
-    static const uint64_t NonVolatileDoubleMask =
+    static const SetType NonVolatileDoubleMask =
          ((1ULL << d8) |
           (1ULL << d9) |
           (1ULL << d10) |
@@ -279,7 +283,7 @@ class FloatRegisters
           (1ULL << d13) |
           (1ULL << d14));
     // s30 and s31 alias d15.
-    static const uint64_t NonVolatileMask =
+    static const SetType NonVolatileMask =
         (NonVolatileDoubleMask |
          ((1 << s16) |
           (1 << s17) |
@@ -297,22 +301,21 @@ class FloatRegisters
           (1 << s29) |
           (1 << s30)));
 
-    static const uint64_t VolatileMask = AllMask & ~NonVolatileMask;
-    static const uint64_t VolatileDoubleMask = AllDoubleMask & ~NonVolatileDoubleMask;
+    static const SetType VolatileMask = AllMask & ~NonVolatileMask;
+    static const SetType VolatileDoubleMask = AllDoubleMask & ~NonVolatileDoubleMask;
 
-    static const uint64_t WrapperMask = VolatileMask;
+    static const SetType WrapperMask = VolatileMask;
 
     // d15 is the ARM scratch float register.
     // s30 and s31 alias d15.
-    static const uint64_t NonAllocatableMask = ((1ULL << d15)) |
-                                                (1ULL << s30) |
-                                                (1ULL << s31);
+    static const SetType NonAllocatableMask = ((1ULL << d15)) |
+                                               (1ULL << s30) |
+                                               (1ULL << s31);
 
     // Registers that can be allocated without being saved, generally.
-    static const uint64_t TempMask = VolatileMask & ~NonAllocatableMask;
+    static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
-    static const uint64_t AllocatableMask = AllMask & ~NonAllocatableMask;
-    typedef uint64_t SetType;
+    static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
 template <typename T>
