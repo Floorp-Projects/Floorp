@@ -7,6 +7,12 @@
 DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
+XPIDL_SOURCES += [
+    'nsICSSUnprefixingService.idl',
+]
+
+XPIDL_MODULE = 'layout_base'
+
 EXPORTS += [
     'AnimationCommon.h',
     'CounterStyleManager.h',
@@ -145,6 +151,11 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'FontFaceSet.cpp',
     'nsCSSRuleProcessor.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'CSSUnprefixingService.js',
+    'CSSUnprefixingService.manifest',
 ]
 
 FAIL_ON_WARNINGS = True
