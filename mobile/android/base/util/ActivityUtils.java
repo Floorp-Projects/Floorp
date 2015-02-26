@@ -43,9 +43,9 @@ public class ActivityUtils {
         if (Versions.feature16Plus) {
             final int vis = window.getDecorView().getSystemUiVisibility();
             return (vis & View.SYSTEM_UI_FLAG_FULLSCREEN) != 0;
-        } else {
-            final int flags = window.getAttributes().flags;
-            return ((flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) != 0);
         }
+
+        final int flags = window.getAttributes().flags;
+        return ((flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) != 0);
     }
 }
