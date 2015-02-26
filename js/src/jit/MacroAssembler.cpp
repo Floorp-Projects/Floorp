@@ -138,20 +138,31 @@ MacroAssembler::guardTypeSet(const Source &address, const Set *types, BarrierKin
         jump(&matched);
         bind(&fail);
 
-        // Type set guards might miss when an object's type changes and its
-        // properties become unknown, so check for this case.
         if (obj == scratch)
             extractObject(address, scratch);
-        loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-        branchTestPtr(Assembler::NonZero,
-                      Address(scratch, ObjectGroup::offsetOfFlags()),
-                      Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &matched);
+        guardTypeSetMightBeIncomplete(obj, scratch, &matched);
 
         assumeUnreachable("Unexpected object type");
 #endif
     }
 
     bind(&matched);
+}
+
+void
+MacroAssembler::guardTypeSetMightBeIncomplete(Register obj, Register scratch, Label *label)
+{
+    // Type set guards might miss when an object's group changes. In this case
+    // either its properties will become unknown, or it will change to a native
+    // object with an original unboxed group. Jump to label if this might have
+    // happened for the input object.
+
+    loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    load32(Address(scratch, ObjectGroup::offsetOfFlags()), scratch);
+    branchTest32(Assembler::NonZero, scratch, Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), label);
+    and32(Imm32(OBJECT_FLAG_ADDENDUM_MASK), scratch);
+    branch32(Assembler::Equal,
+             scratch, Imm32(ObjectGroup::addendumOriginalUnboxedGroupValue()), label);
 }
 
 template <typename Set> void

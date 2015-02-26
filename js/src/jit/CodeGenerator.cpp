@@ -3761,13 +3761,7 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
         masm.jump(&ok);
 
         masm.bind(&miss);
-
-        // Type set guards might miss when an object's group changes and its
-        // properties become unknown, so check for this case.
-        masm.loadPtr(Address(output, JSObject::offsetOfGroup()), temp);
-        masm.branchTestPtr(Assembler::NonZero,
-                           Address(temp, ObjectGroup::offsetOfFlags()),
-                           Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
+        masm.guardTypeSetMightBeIncomplete(output, temp, &ok);
 
         masm.assumeUnreachable("MIR instruction returned object with unexpected type");
 
@@ -3839,15 +3833,12 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
 
         masm.bind(&miss);
 
-        // Type set guards might miss when an object's group changes and its
-        // properties become unknown, so check for this case.
+        // Check for cases where the type set guard might have missed due to
+        // changing object groups.
         Label realMiss;
         masm.branchTestObject(Assembler::NotEqual, output, &realMiss);
         Register payload = masm.extractObject(output, temp1);
-        masm.loadPtr(Address(payload, JSObject::offsetOfGroup()), temp1);
-        masm.branchTestPtr(Assembler::NonZero,
-                           Address(temp1, ObjectGroup::offsetOfFlags()),
-                           Imm32(OBJECT_FLAG_UNKNOWN_PROPERTIES), &ok);
+        masm.guardTypeSetMightBeIncomplete(payload, temp1, &ok);
         masm.bind(&realMiss);
 
         masm.assumeUnreachable("MIR instruction returned value with unexpected type");
