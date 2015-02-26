@@ -1714,8 +1714,10 @@ ActivationIterator::settle()
         activation_ = activation_->prev();
 }
 
-JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state)
+JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state,
+                                                   uint32_t sampleBufferGen)
   : rt_(rt),
+    sampleBufferGen_(sampleBufferGen),
     activation_(rt->profilingActivation()),
     savedPrevJitTop_(nullptr)
 {
@@ -1877,6 +1879,10 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
     jit::JitcodeGlobalTable *table = rt_->jitRuntime()->getJitcodeGlobalTable();
     jit::JitcodeGlobalEntry entry;
     table->lookupInfallible(returnAddr, &entry, rt_);
+    if (hasSampleBufferGen())
+        table->lookupForSampler(returnAddr, &entry, rt_, sampleBufferGen_);
+    else
+        table->lookup(returnAddr, &entry, rt_);
 
     MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline() || entry.isDummy());
 

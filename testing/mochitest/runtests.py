@@ -592,6 +592,8 @@ class MochitestUtilsMixin(object):
                 self.urlOpts.append("autorun=1")
             if options.timeout:
                 self.urlOpts.append("timeout=%d" % options.timeout)
+            if options.maxTimeouts:
+                self.urlOpts.append("maxTimeouts=%d" % options.maxTimeouts)
             if options.closeWhenDone:
                 self.urlOpts.append("closeWhenDone=1")
             if options.webapprtContent:

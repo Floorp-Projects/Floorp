@@ -247,9 +247,9 @@ UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
 static bool
 CheckStrictOrSloppy(BytecodeEmitter *bce, JSOp op)
 {
-    if (IsCheckStrictOp(op) && !bce->sc->strict)
+    if (IsCheckStrictOp(op) && !bce->sc->strict())
         return false;
-    if (IsCheckSloppyOp(op) && bce->sc->strict)
+    if (IsCheckSloppyOp(op) && bce->sc->strict())
         return false;
     return true;
 }
@@ -1527,11 +1527,11 @@ StrictifySetNameOp(JSOp op, BytecodeEmitter *bce)
 {
     switch (op) {
       case JSOP_SETNAME:
-        if (bce->sc->strict)
+        if (bce->sc->strict())
             op = JSOP_STRICTSETNAME;
         break;
       case JSOP_SETGNAME:
-        if (bce->sc->strict)
+        if (bce->sc->strict())
             op = JSOP_STRICTSETGNAME;
         break;
         default:;
@@ -1664,7 +1664,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
     // worth the trouble for doubly-nested eval code.  So we conservatively
     // approximate.  If the outer eval code is strict, then this eval code will
     // be: thus, don't optimize if we're compiling strict code inside an eval.
-    if (bce->insideEval && bce->sc->strict)
+    if (bce->insideEval && bce->sc->strict())
         return false;
 
     JSOp op;
@@ -2233,7 +2233,7 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictModeErrorNumberVA(pos.begin, sc->strict,
+    bool result = tokenStream()->reportStrictModeErrorNumberVA(pos.begin, sc->strict(),
                                                                errorNumber, args);
     va_end(args);
     return result;
@@ -2458,7 +2458,7 @@ EmitPropIncDec(ExclusiveContext *cx, ParseNode *pn, BytecodeEmitter *bce)
             return false;
     }
 
-    JSOp setOp = bce->sc->strict ? JSOP_STRICTSETPROP : JSOP_SETPROP;
+    JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
     if (!EmitAtomOp(cx, pn->pn_kid, setOp, bce))     // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
@@ -2581,7 +2581,7 @@ EmitElemIncDec(ExclusiveContext *cx, ParseNode *pn, BytecodeEmitter *bce)
             return false;
     }
 
-    JSOp setOp = bce->sc->strict ? JSOP_STRICTSETELEM : JSOP_SETELEM;
+    JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
     if (!EmitElemOpBase(cx, bce, setOp))     // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
@@ -3443,7 +3443,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *targ
                 return false;
             if (Emit1(cx, bce, JSOP_SWAP) < 0)
                 return false;
-            JSOp setOp = bce->sc->strict ? JSOP_STRICTSETPROP : JSOP_SETPROP;
+            JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
             if (!EmitAtomOp(cx, target, setOp, bce))
                 return false;
             break;
@@ -3454,7 +3454,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *targ
             // See the comment at `case PNK_DOT:` above. This case,
             // `[a[x]] = [b]`, is handled much the same way. The JSOP_SWAP
             // is emitted by EmitElemOperands.
-            JSOp setOp = bce->sc->strict ? JSOP_STRICTSETELEM : JSOP_SETELEM;
+            JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
             if (!EmitElemOp(cx, target, setOp, bce))
                 return false;
             break;
@@ -4215,7 +4215,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
         break;
       case PNK_DOT:
       {
-        JSOp setOp = bce->sc->strict ? JSOP_STRICTSETPROP : JSOP_SETPROP;
+        JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
         if (!EmitIndexOp(cx, setOp, atomIndex, bce))
             return false;
         break;
@@ -4226,7 +4226,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
         break;
       case PNK_ELEM:
       {
-        JSOp setOp = bce->sc->strict ? JSOP_STRICTSETELEM : JSOP_SETELEM;
+        JSOp setOp = bce->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
         if (Emit1(cx, bce, setOp) < 0)
             return false;
         break;
@@ -5408,7 +5408,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
                 funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
-            MOZ_ASSERT_IF(outersc->strict, funbox->strict);
+            MOZ_ASSERT_IF(outersc->strict(), funbox->strictScript);
 
             // Inherit most things (principals, version, etc) from the parent.
             Rooted<JSScript*> parent(cx, bce->script);
@@ -6034,7 +6034,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // later in the script, because such statements are misleading.
             const char *directive = nullptr;
             if (atom == cx->names().useStrict) {
-                if (!bce->sc->strict)
+                if (!bce->sc->strictScript)
                     directive = js_useStrict_str;
             } else if (atom == cx->names().useAsm) {
                 if (bce->sc->isFunctionBox()) {
@@ -6076,14 +6076,14 @@ EmitDelete(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
       case PNK_DOT:
       {
-        JSOp delOp = bce->sc->strict ? JSOP_STRICTDELPROP : JSOP_DELPROP;
+        JSOp delOp = bce->sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
         if (!EmitPropOp(cx, pn2, delOp, bce))
             return false;
         break;
       }
       case PNK_ELEM:
       {
-        JSOp delOp = bce->sc->strict ? JSOP_STRICTDELELEM : JSOP_DELELEM;
+        JSOp delOp = bce->sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
         if (!EmitElemOp(cx, pn2, delOp, bce))
             return false;
         break;
@@ -6559,6 +6559,103 @@ EmitConditionalExpression(ExclusiveContext *cx, BytecodeEmitter *bce, Conditiona
     return SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq);
 }
 
+static bool
+EmitPropertyList(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+                 MutableHandlePlainObject objp, PropListType type)
+{
+    for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
+        if (!UpdateSourceCoordNotes(cx, bce, propdef->pn_pos.begin))
+            return false;
+
+        // Handle __proto__: v specially because *only* this form, and no other
+        // involving "__proto__", performs [[Prototype]] mutation.
+        if (propdef->isKind(PNK_MUTATEPROTO)) {
+            MOZ_ASSERT(type == ObjectLiteral);
+            if (!EmitTree(cx, bce, propdef->pn_kid))
+                return false;
+            objp.set(nullptr);
+            if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
+                return false;
+            continue;
+        }
+
+        /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
+        ParseNode *key = propdef->pn_left;
+        bool isIndex = false;
+        if (key->isKind(PNK_NUMBER)) {
+            if (!EmitNumberOp(cx, key->pn_dval, bce))
+                return false;
+            isIndex = true;
+        } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
+            // EmitClass took care of constructor already.
+            if (type == ClassBody && key->pn_atom == cx->names().constructor)
+                continue;
+
+            // The parser already checked for atoms representing indexes and
+            // used PNK_NUMBER instead, but also watch for ids which TI treats
+            // as indexes for simpliciation of downstream analysis.
+            jsid id = NameToId(key->pn_atom->asPropertyName());
+            if (id != IdToTypeId(id)) {
+                if (!EmitTree(cx, bce, key))
+                    return false;
+                isIndex = true;
+            }
+        } else {
+            MOZ_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+            if (!EmitTree(cx, bce, key->pn_kid))
+                return false;
+            isIndex = true;
+        }
+
+        /* Emit code for the property initializer. */
+        if (!EmitTree(cx, bce, propdef->pn_right))
+            return false;
+
+        JSOp op = propdef->getOp();
+        MOZ_ASSERT(op == JSOP_INITPROP ||
+                   op == JSOP_INITPROP_GETTER ||
+                   op == JSOP_INITPROP_SETTER);
+
+        if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
+            objp.set(nullptr);
+
+        if (isIndex) {
+            objp.set(nullptr);
+            switch (op) {
+              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
+              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
+              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
+              default: MOZ_CRASH("Invalid op");
+            }
+            if (Emit1(cx, bce, op) < 0)
+                return false;
+        } else {
+            MOZ_ASSERT(key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING));
+
+            jsatomid index;
+            if (!bce->makeAtomIndex(key->pn_atom, &index))
+                return false;
+
+            if (objp) {
+                MOZ_ASSERT(!objp->inDictionaryMode());
+                Rooted<jsid> id(cx, AtomToId(key->pn_atom));
+                RootedValue undefinedValue(cx, UndefinedValue());
+                if (!NativeDefineProperty(cx, objp, id, undefinedValue, nullptr, nullptr,
+                                          JSPROP_ENUMERATE))
+                {
+                    return false;
+                }
+                if (objp->inDictionaryMode())
+                    objp.set(nullptr);
+            }
+
+            if (!EmitIndex32(cx, op, index, bce))
+                return false;
+        }
+    }
+    return true;
+}
+
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
  * the comment on EmitSwitch.
@@ -6590,91 +6687,8 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
-    for (ParseNode *propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
-        if (!UpdateSourceCoordNotes(cx, bce, propdef->pn_pos.begin))
-            return false;
-
-        // Handle __proto__: v specially because *only* this form, and no other
-        // involving "__proto__", performs [[Prototype]] mutation.
-        if (propdef->isKind(PNK_MUTATEPROTO)) {
-            if (!EmitTree(cx, bce, propdef->pn_kid))
-                return false;
-            obj = nullptr;
-            if (!Emit1(cx, bce, JSOP_MUTATEPROTO))
-                return false;
-            continue;
-        }
-
-        /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
-        ParseNode *key = propdef->pn_left;
-        bool isIndex = false;
-        if (key->isKind(PNK_NUMBER)) {
-            if (!EmitNumberOp(cx, key->pn_dval, bce))
-                return false;
-            isIndex = true;
-        } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
-            // The parser already checked for atoms representing indexes and
-            // used PNK_NUMBER instead, but also watch for ids which TI treats
-            // as indexes for simpliciation of downstream analysis.
-            jsid id = NameToId(key->pn_atom->asPropertyName());
-            if (id != IdToTypeId(id)) {
-                if (!EmitTree(cx, bce, key))
-                    return false;
-                isIndex = true;
-            }
-        } else {
-            MOZ_ASSERT(key->isKind(PNK_COMPUTED_NAME));
-            if (!EmitTree(cx, bce, key->pn_kid))
-                return false;
-            isIndex = true;
-        }
-
-        /* Emit code for the property initializer. */
-        if (!EmitTree(cx, bce, propdef->pn_right))
-            return false;
-
-        JSOp op = propdef->getOp();
-        MOZ_ASSERT(op == JSOP_INITPROP ||
-                   op == JSOP_INITPROP_GETTER ||
-                   op == JSOP_INITPROP_SETTER);
-
-        if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
-            obj = nullptr;
-
-        if (isIndex) {
-            obj = nullptr;
-            switch (op) {
-              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
-              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
-              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
-              default: MOZ_CRASH("Invalid op");
-            }
-            if (Emit1(cx, bce, op) < 0)
-                return false;
-        } else {
-            MOZ_ASSERT(key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING));
-
-            jsatomid index;
-            if (!bce->makeAtomIndex(key->pn_atom, &index))
-                return false;
-
-            if (obj) {
-                MOZ_ASSERT(!obj->inDictionaryMode());
-                Rooted<jsid> id(cx, AtomToId(key->pn_atom));
-                RootedValue undefinedValue(cx, UndefinedValue());
-                if (!NativeDefineProperty(cx, obj, id, undefinedValue, nullptr, nullptr,
-                                          JSPROP_ENUMERATE))
-                {
-                    return false;
-                }
-                if (obj->inDictionaryMode())
-                    obj = nullptr;
-            }
-
-            if (!EmitIndex32(cx, op, index, bce))
-                return false;
-        }
-    }
+    if (!EmitPropertyList(cx, bce, pn, &obj, ObjectLiteral))
+        return false;
 
     if (obj) {
         /*
@@ -6861,6 +6875,120 @@ EmitDefaults(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         SET_JUMP_OFFSET(bce->code(jump), bce->offset() - jump);
     }
+
+    return true;
+}
+
+
+static bool
+EmitLexicalInitialization(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
+                          JSOp globalDefOp)
+{
+    /*
+     * This function is significantly more complicated than it needs to be.
+     * In fact, it shouldn't exist at all. This should all be a
+     * JSOP_INITLEXIAL. Unfortunately, toplevel lexicals are broken, and
+     * are emitted as vars :(. As such, we have to do these ministrations to
+     * to make sure that all works properly.
+     */
+    MOZ_ASSERT(pn->isKind(PNK_NAME));
+
+    if (!BindNameToSlot(cx, bce, pn))
+        return false;
+
+    jsatomid atomIndex;
+    if (!MaybeEmitVarDecl(cx, bce, globalDefOp, pn, &atomIndex))
+        return false;
+
+    if (pn->getOp() != JSOP_INITLEXICAL) {
+        bool global = js_CodeSpec[pn->getOp()].format & JOF_GNAME;
+        if (!EmitIndex32(cx, global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_SWAP) < 0)
+            return false;
+    }
+
+    if (!pn->pn_cookie.isFree()) {
+        if (!EmitVarOp(cx, pn, pn->getOp(), bce))
+            return false;
+    } else {
+        if (!EmitIndexOp(cx, pn->getOp(), atomIndex, bce))
+            return false;
+    }
+
+    return true;
+}
+
+// This follows ES6 14.5.14 (ClassDefinitionEvaluation) and ES6 14.5.15
+// (BindingClassDeclarationEvaluation).
+static bool
+EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    ClassNode &classNode = pn->as<ClassNode>();
+
+    ClassNames *names = classNode.names();
+
+    MOZ_ASSERT(!classNode.heritage(), "For now, no heritage expressions");
+    LexicalScopeNode *innerBlock = classNode.scope();
+
+    ParseNode *classMethods = innerBlock->pn_expr;
+    MOZ_ASSERT(classMethods->isKind(PNK_CLASSMETHODLIST));
+
+    ParseNode *constructor = nullptr;
+    for (ParseNode *mn = classMethods->pn_head; mn; mn = mn->pn_next) {
+        ClassMethod &method = mn->as<ClassMethod>();
+        ParseNode &methodName = method.name();
+        if (methodName.isKind(PNK_OBJECT_PROPERTY_NAME) &&
+            methodName.pn_atom == cx->names().constructor)
+        {
+            constructor = &method.method();
+            break;
+        }
+    }
+    MOZ_ASSERT(constructor, "For now, no default constructors");
+
+    bool savedStrictness = bce->sc->setLocalStrictMode(true);
+
+    StmtInfoBCE stmtInfo(cx);
+    if (!EnterBlockScope(cx, bce, &stmtInfo, innerBlock->pn_objbox, JSOP_UNINITIALIZED))
+        return false;
+
+    if (!EmitFunc(cx, bce, constructor))
+        return false;
+
+    if (!EmitNewInit(cx, bce, JSProto_Object))
+        return false;
+
+    if (Emit1(cx, bce, JSOP_DUP2) < 0)
+        return false;
+    if (!EmitAtomOp(cx, cx->names().prototype, JSOP_INITLOCKEDPROP, bce))
+        return false;
+    if (!EmitAtomOp(cx, cx->names().constructor, JSOP_INITHIDDENPROP, bce))
+        return false;
+
+    RootedPlainObject obj(cx);
+    if (!EmitPropertyList(cx, bce, classMethods, &obj, ClassBody))
+        return false;
+
+    if (Emit1(cx, bce, JSOP_POP) < 0)
+        return false;
+
+    // That DEFCONST is never gonna be used, but use it here for logical consistency.
+    ParseNode *innerName = names->innerBinding();
+    if (!EmitLexicalInitialization(cx, bce, innerName, JSOP_DEFCONST))
+        return false;
+
+    if (!LeaveNestedScope(cx, bce, &stmtInfo))
+        return false;
+
+    ParseNode *outerName = names->outerBinding();
+    if (!EmitLexicalInitialization(cx, bce, outerName, JSOP_DEFVAR))
+        return false;
+
+    if (Emit1(cx, bce, JSOP_POP) < 0)
+        return false;
+
+    MOZ_ALWAYS_TRUE(bce->sc->setLocalStrictMode(savedStrictness));
 
     return true;
 }
@@ -7310,6 +7438,10 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_NOP:
         MOZ_ASSERT(pn->getArity() == PN_NULLARY);
+        break;
+
+      case PNK_CLASS:
+        ok = EmitClass(cx, bce, pn);
         break;
 
       default:

@@ -3283,7 +3283,6 @@ class MInitProp
   : public MAryInstruction<2>,
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
-  public:
     AlwaysTenuredPropertyName name_;
 
   protected:
@@ -3314,6 +3313,7 @@ class MInitProp
     PropertyName *propertyName() const {
         return name_;
     }
+
     bool possiblyCalls() const MOZ_OVERRIDE {
         return true;
     }

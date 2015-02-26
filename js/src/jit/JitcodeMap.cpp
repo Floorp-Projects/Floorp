@@ -7,8 +7,10 @@
 #include "jit/JitcodeMap.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 #include "jsprf.h"
+#include "gc/Marking.h"
 
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
@@ -375,45 +377,364 @@ JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
 {
     MOZ_ASSERT(result);
 
-    // Construct a JitcodeGlobalEntry::Query to do the lookup
-    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
+    JitcodeGlobalEntry *entry = lookupInternal(ptr);
+    if (!entry)
+        return false;
 
-    // Lookups on tree does mutation.  Suppress sampling when this is happening.
-    AutoSuppressProfilerSampling suppressSampling(rt);
-    return tree_.contains(query, result);
+    *result = *entry;
+    return true;
 }
 
-void
-JitcodeGlobalTable::lookupInfallible(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
+bool
+JitcodeGlobalTable::lookupForSampler(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt,
+                                     uint32_t sampleBufferGen)
 {
-    mozilla::DebugOnly<bool> success = lookup(ptr, result, rt);
-    MOZ_ASSERT(success);
+    MOZ_ASSERT(result);
+
+    JitcodeGlobalEntry *entry = lookupInternal(ptr);
+    if (!entry)
+        return false;
+
+    entry->setGeneration(sampleBufferGen);
+
+    *result = *entry;
+    return true;
+}
+
+JitcodeGlobalEntry *
+JitcodeGlobalTable::lookupInternal(void *ptr)
+{
+    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
+    JitcodeGlobalEntry *searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
+    searchInternal(query, searchTower);
+
+    if (searchTower[0] == nullptr) {
+        // Check startTower
+        if (startTower_[0] == nullptr)
+            return nullptr;
+
+        MOZ_ASSERT(startTower_[0]->compareTo(query) >= 0);
+        int cmp = startTower_[0]->compareTo(query);
+        MOZ_ASSERT(cmp >= 0);
+        return (cmp == 0) ? startTower_[0] : nullptr;
+    }
+
+    JitcodeGlobalEntry *bottom = searchTower[0];
+    MOZ_ASSERT(bottom->compareTo(query) < 0);
+
+    JitcodeGlobalEntry *bottomNext = bottom->tower_->next(0);
+    if (bottomNext == nullptr)
+        return nullptr;
+
+    int cmp = bottomNext->compareTo(query);
+    MOZ_ASSERT(cmp >= 0);
+    return (cmp == 0) ? bottomNext : nullptr;
 }
 
 bool
 JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry, JSRuntime *rt)
 {
-    // Suppress profiler sampling while table is being mutated.
+    MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache() || entry.isDummy());
+
+    JitcodeGlobalEntry *searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
+    searchInternal(entry, searchTower);
+
+    // Allocate a new entry and tower.
+    JitcodeSkiplistTower *newTower = allocateTower(generateTowerHeight());
+    if (!newTower)
+        return false;
+
+    JitcodeGlobalEntry *newEntry = allocateEntry();
+    if (!newEntry)
+        return false;
+
+    *newEntry = entry;
+    newEntry->tower_ = newTower;
+
+    // Suppress profiler sampling while skiplist is being mutated.
     AutoSuppressProfilerSampling suppressSampling(rt);
 
-    MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache() || entry.isDummy());
-    return tree_.insert(entry);
+    // Link up entry with forward entries taken from tower.
+    for (int level = newTower->height() - 1; level >= 0; level--) {
+        JitcodeGlobalEntry *searchTowerEntry = searchTower[level];
+        if (searchTowerEntry) {
+            MOZ_ASSERT(searchTowerEntry->compareTo(*newEntry) < 0);
+            JitcodeGlobalEntry *searchTowerNextEntry = searchTowerEntry->tower_->next(level);
+
+            MOZ_ASSERT_IF(searchTowerNextEntry, searchTowerNextEntry->compareTo(*newEntry) > 0);
+
+            newTower->setNext(level, searchTowerNextEntry);
+            searchTowerEntry->tower_->setNext(level, newEntry);
+        } else {
+            newTower->setNext(level, startTower_[level]);
+            startTower_[level] = newEntry;
+        }
+    }
+    skiplistSize_++;
+    // verifySkiplist(); - disabled for release.
+    return true;
 }
 
 void
 JitcodeGlobalTable::removeEntry(void *startAddr, JSRuntime *rt)
 {
-    // Suppress profiler sampling while table is being mutated.
-    AutoSuppressProfilerSampling suppressSampling(rt);
-
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
-    JitcodeGlobalEntry result;
-    mozilla::DebugOnly<bool> success = tree_.contains(query, &result);
-    MOZ_ASSERT(success);
+    JitcodeGlobalEntry *searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
+    searchInternal(query, searchTower);
 
-    // Destroy entry before removing it from tree.
-    result.destroy();
-    tree_.remove(query);
+    JitcodeGlobalEntry *queryEntry;
+    if (searchTower[0]) {
+        MOZ_ASSERT(searchTower[0]->compareTo(query) < 0);
+        queryEntry = searchTower[0]->tower_->next(0);
+    } else {
+        MOZ_ASSERT(startTower_[0]);
+        queryEntry = startTower_[0];
+    }
+    MOZ_ASSERT(queryEntry->compareTo(query) == 0);
+
+    {
+        // Suppress profiler sampling while table is being mutated.
+        AutoSuppressProfilerSampling suppressSampling(rt);
+
+        // Unlink query entry.
+        for (int level = queryEntry->tower_->height() - 1; level >= 0; level--) {
+            JitcodeGlobalEntry *searchTowerEntry = searchTower[level];
+            if (searchTowerEntry) {
+                MOZ_ASSERT(searchTowerEntry);
+                searchTowerEntry->tower_->setNext(level, queryEntry->tower_->next(level));
+            } else {
+                startTower_[level] = queryEntry->tower_->next(level);
+            }
+        }
+        skiplistSize_--;
+        // verifySkiplist(); - disabled for release.
+    }
+
+    // Entry has been unlinked.
+    queryEntry->destroy();
+    queryEntry->tower_->addToFreeList(&(freeTowers_[queryEntry->tower_->height() - 1]));
+    queryEntry->tower_ = nullptr;
+    *queryEntry = JitcodeGlobalEntry();
+    queryEntry->addToFreeList(&freeEntries_);
+}
+
+void
+JitcodeGlobalTable::releaseEntry(void *startAddr, JSRuntime *rt)
+{
+    mozilla::DebugOnly<JitcodeGlobalEntry *> entry = lookupInternal(startAddr);
+    mozilla::DebugOnly<uint32_t> gen = rt->profilerSampleBufferGen();
+    mozilla::DebugOnly<uint32_t> lapCount = rt->profilerSampleBufferLapCount();
+    MOZ_ASSERT(entry);
+    MOZ_ASSERT_IF(gen != UINT32_MAX, !entry->isSampled(gen, lapCount));
+    removeEntry(startAddr, rt);
+}
+
+void
+JitcodeGlobalTable::searchInternal(const JitcodeGlobalEntry &query, JitcodeGlobalEntry **towerOut)
+{
+    JitcodeGlobalEntry *cur = nullptr;
+    for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--) {
+        JitcodeGlobalEntry *entry = searchAtHeight(level, cur, query);
+        MOZ_ASSERT_IF(entry == nullptr, cur == nullptr);
+        towerOut[level] = entry;
+        cur = entry;
+    }
+
+    // Validate the resulting tower.
+#ifdef DEBUG
+    for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--) {
+        if (towerOut[level] == nullptr) {
+            // If we got NULL for a given level, then we should have gotten NULL
+            // for the level above as well.
+            MOZ_ASSERT_IF(unsigned(level) < (JitcodeSkiplistTower::MAX_HEIGHT - 1),
+                          towerOut[level + 1] == nullptr);
+            continue;
+        }
+
+        JitcodeGlobalEntry *cur = towerOut[level];
+
+        // Non-null result at a given level must sort < query.
+        MOZ_ASSERT(cur->compareTo(query) < 0);
+
+        // The entry must have a tower height that accomodates level.
+        if (!cur->tower_->next(level))
+            continue;
+
+        JitcodeGlobalEntry *next = cur->tower_->next(level);
+
+        // Next entry must have tower height that accomodates level.
+        MOZ_ASSERT(unsigned(level) < next->tower_->height());
+
+        // Next entry must sort >= query.
+        MOZ_ASSERT(next->compareTo(query) >= 0);
+    }
+#endif // DEBUG
+}
+
+JitcodeGlobalEntry *
+JitcodeGlobalTable::searchAtHeight(unsigned level, JitcodeGlobalEntry *start,
+                                   const JitcodeGlobalEntry &query)
+{
+    JitcodeGlobalEntry *cur = start;
+
+    // If starting with nullptr, use the start tower.
+    if (start == nullptr) {
+        cur = startTower_[level];
+        if (cur == nullptr || cur->compareTo(query) >= 0)
+            return nullptr;
+    }
+
+    // Keep skipping at |level| until we reach an entry < query whose
+    // successor is an entry >= query.
+    for (;;) {
+        JitcodeGlobalEntry *next = cur->tower_->next(level);
+        if (next == nullptr || next->compareTo(query) >= 0)
+            return cur;
+
+        cur = next;
+    }
+}
+
+unsigned
+JitcodeGlobalTable::generateTowerHeight()
+{
+    // Implementation taken from Hars L. and Pteruska G.,
+    // "Pseudorandom Recursions: Small and fast Pseudorandom number generators for
+    //  embedded applications."
+    rand_ ^= mozilla::RotateLeft(rand_, 5) ^ mozilla::RotateLeft(rand_, 24);
+    rand_ += 0x37798849;
+
+    // Return number of lowbit zeros in new randval.
+    unsigned result = 0;
+    for (unsigned i = 0; i < 32; i++) {
+        if ((rand_ >> i) & 0x1)
+            break;
+        result++;
+    }
+    return result + 1;
+}
+
+JitcodeSkiplistTower *
+JitcodeGlobalTable::allocateTower(unsigned height)
+{
+    MOZ_ASSERT(height >= 1);
+    JitcodeSkiplistTower *tower = JitcodeSkiplistTower::PopFromFreeList(&freeTowers_[height - 1]);
+    if (tower)
+        return tower;
+
+    size_t size = JitcodeSkiplistTower::CalculateSize(height);
+    tower = (JitcodeSkiplistTower *) alloc_.alloc(size);
+    if (!tower)
+        return nullptr;
+
+    return new (tower) JitcodeSkiplistTower(height);
+}
+
+JitcodeGlobalEntry *
+JitcodeGlobalTable::allocateEntry()
+{
+    JitcodeGlobalEntry *entry = JitcodeGlobalEntry::PopFromFreeList(&freeEntries_);
+    if (entry)
+        return entry;
+
+    return alloc_.new_<JitcodeGlobalEntry>();
+}
+
+#ifdef DEBUG
+void
+JitcodeGlobalTable::verifySkiplist()
+{
+    JitcodeGlobalEntry *curTower[JitcodeSkiplistTower::MAX_HEIGHT];
+    for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT; i++)
+        curTower[i] = startTower_[i];
+
+    uint32_t count = 0;
+    JitcodeGlobalEntry *curEntry = startTower_[0];
+    while (curEntry) {
+        count++;
+        unsigned curHeight = curEntry->tower_->height();
+        MOZ_ASSERT(curHeight >= 1);
+
+        for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT; i++) {
+            if (i < curHeight) {
+                MOZ_ASSERT(curTower[i] == curEntry);
+                JitcodeGlobalEntry *nextEntry = curEntry->tower_->next(i);
+                MOZ_ASSERT_IF(nextEntry, curEntry->compareTo(*nextEntry) < 0);
+                curTower[i] = nextEntry;
+            } else {
+                MOZ_ASSERT_IF(curTower[i], curTower[i]->compareTo(*curEntry) > 0);
+            }
+        }
+        curEntry = curEntry->tower_->next(0);
+    }
+
+    MOZ_ASSERT(count == skiplistSize_);
+}
+#endif // DEBUG
+
+struct JitcodeMapEntryTraceCallback
+{
+    JSTracer *trc;
+    uint32_t gen;
+    uint32_t lapCount;
+
+    explicit JitcodeMapEntryTraceCallback(JSTracer *trc)
+      : trc(trc),
+        gen(trc->runtime()->profilerSampleBufferGen()),
+        lapCount(trc->runtime()->profilerSampleBufferLapCount())
+    {
+        if (!trc->runtime()->spsProfiler.enabled())
+            gen = UINT32_MAX;
+    }
+
+    void operator()(JitcodeGlobalEntry &entry) {
+        // If an entry is not sampled, reset its generation to
+        // the invalid generation, and skip it.
+        if (!entry.isSampled(gen, lapCount)) {
+            entry.setGeneration(UINT32_MAX);
+            return;
+        }
+
+        // Mark jitcode pointed to by this entry.
+        entry.baseEntry().markJitcode(trc);
+
+        // Mark ion entry if necessary.
+        if (entry.isIon())
+            entry.ionEntry().mark(trc);
+    }
+};
+
+void
+JitcodeGlobalTable::mark(JSTracer *trc)
+{
+    AutoSuppressProfilerSampling suppressSampling(trc->runtime());
+    JitcodeMapEntryTraceCallback traceCallback(trc);
+
+    // Find start entry.
+    JitcodeGlobalEntry *entry = startTower_[0];
+    while (entry != nullptr) {
+        traceCallback(*entry);
+        entry = entry->tower_->next(0);
+    }
+}
+
+void
+JitcodeGlobalEntry::BaseEntry::markJitcode(JSTracer *trc)
+{
+    MarkJitCodeRoot(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
+}
+
+void
+JitcodeGlobalEntry::IonEntry::mark(JSTracer *trc)
+{
+    if (!optsAllTypes_)
+        return;
+
+    for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
+         iter != optsAllTypes_->end(); iter++)
+    {
+        TypeSet::MarkTypeRoot(trc, &(iter->type), "jitcodeglobaltable-ionentry-type");
+    }
 }
 
 /* static */ void
@@ -845,7 +1166,7 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
 
     SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts,
                                                             &profilingStrings[0]);
-    out.init(code->raw(), code->rawEnd(), scriptList, this);
+    out.init(code, code->raw(), code->rawEnd(), scriptList, this);
     return true;
 }
 
