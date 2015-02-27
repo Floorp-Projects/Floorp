@@ -626,7 +626,15 @@ class MochiRemote(Mochitest):
                     ''.join(logcat).decode(
                         'utf-8',
                         'replace'))
-            self.log.info("Device info: %s" % self._dm.getInfo())
+            self.log.info("Device info:")
+            devinfo = self._dm.getInfo()
+            for category in devinfo:
+                if type(devinfo[category]) is list:
+                    self.log.info("  %s:" % category)
+                    for item in devinfo[category]:
+                        self.log.info("     %s" % item)
+                else:
+                    self.log.info("  %s: %s" % (category, devinfo[category]))
             self.log.info("Test root: %s" % self._dm.deviceRoot)
         except devicemanager.DMError:
             self.log.warning("Error getting device information")
