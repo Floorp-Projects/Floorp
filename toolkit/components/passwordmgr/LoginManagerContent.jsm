@@ -165,16 +165,32 @@ var LoginManagerContent = {
   },
 
   receiveMessage: function (msg) {
+    // Convert an array of logins in simple JS-object form to an array of
+    // nsILoginInfo objects.
+    function jsLoginsToXPCOM(logins) {
+      return logins.map(login => {
+        var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                      createInstance(Ci.nsILoginInfo);
+        formLogin.init(login.hostname, login.formSubmitURL,
+                       login.httpRealm, login.username,
+                       login.password, login.usernameField,
+                       login.passwordField);
+        return formLogin;
+      });
+    }
+
     let request = this._takeRequest(msg);
     switch (msg.name) {
       case "RemoteLogins:loginsFound": {
+        let loginsFound = jsLoginsToXPCOM(msg.data.logins);
         request.promise.resolve({ form: request.form,
-                                  loginsFound: msg.data.logins });
+                                  loginsFound: loginsFound});
         break;
       }
 
       case "RemoteLogins:loginsAutoCompleted": {
-        request.promise.resolve(msg.data.logins);
+        let loginsFound = jsLoginsToXPCOM(msg.data.logins);
+        request.promise.resolve(loginsFound);
         break;
       }
     }
@@ -634,15 +650,6 @@ var LoginManagerContent = {
     if (passwordField.maxLength >= 0)
       maxPasswordLen = passwordField.maxLength;
 
-    foundLogins = foundLogins.map(login => {
-      var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                      createInstance(Ci.nsILoginInfo);
-      formLogin.init(login.hostname, login.formSubmitURL,
-                     login.httpRealm, login.username,
-                     login.password, login.usernameField,
-                     login.passwordField);
-      return formLogin;
-    });
     var logins = foundLogins.filter(function (l) {
       var fit = (l.username.length <= maxUsernameLen &&
                  l.password.length <= maxPasswordLen);
