@@ -294,6 +294,12 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
 #endif
         masm.storeDouble(value, dest);
         break;
+      case Scalar::Float32x4:
+        masm.storeUnalignedFloat32x4(value, dest);
+        break;
+      case Scalar::Int32x4:
+        masm.storeUnalignedInt32x4(value, dest);
+        break;
       default:
         MOZ_CRASH("Invalid typed array type");
     }

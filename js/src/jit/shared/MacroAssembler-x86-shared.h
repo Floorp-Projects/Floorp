@@ -939,6 +939,9 @@ class MacroAssemblerX86Shared : public Assembler
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
         vmovdqu(src, Operand(dest));
     }
+    void storeUnalignedInt32x4(FloatRegister src, const BaseIndex &dest) {
+        vmovdqu(src, Operand(dest));
+    }
     void storeUnalignedInt32x4(FloatRegister src, const Operand &dest) {
         vmovdqu(src, dest);
     }
@@ -1021,6 +1024,9 @@ class MacroAssemblerX86Shared : public Assembler
         vmovups(src, dest);
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
+        vmovups(src, Operand(dest));
+    }
+    void storeUnalignedFloat32x4(FloatRegister src, const BaseIndex &dest) {
         vmovups(src, Operand(dest));
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Operand &dest) {
