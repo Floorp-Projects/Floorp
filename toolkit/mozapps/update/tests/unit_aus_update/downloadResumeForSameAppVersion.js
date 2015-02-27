@@ -9,11 +9,9 @@ function run_test() {
   logTestInfo("testing resuming an update download in progress for the same " +
               "version of the application on startup (Bug 485624)");
 
-  var patches, updates;
-
-  patches = getLocalPatchString(null, null, null, null, null, null,
-                                STATE_DOWNLOADING);
-  updates = getLocalUpdateString(patches, null, null, "1.0", "1.0");
+  let patches = getLocalPatchString(null, null, null, null, null, null,
+                                    STATE_DOWNLOADING);
+  let updates = getLocalUpdateString(patches, null, null, "1.0", "1.0");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
@@ -38,5 +36,5 @@ function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   reloadUpdateManagerData();
 
-  do_timeout(TEST_CHECK_TIMEOUT, doTestFinish);
+  do_execute_soon(doTestFinish);
 }

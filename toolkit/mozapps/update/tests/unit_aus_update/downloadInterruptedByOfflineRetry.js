@@ -31,12 +31,12 @@ function run_test_pt1() {
 }
 
 function xhr_pt1() {
-  gXHR.status = AUS_Cr.NS_ERROR_OFFLINE;
+  gXHR.status = Cr.NS_ERROR_OFFLINE;
   gXHR.onerror({ target: gXHR });
 }
 
 function check_test_pt1(request, update) {
-  do_check_eq(gStatusCode, AUS_Cr.NS_ERROR_OFFLINE);
+  do_check_eq(gStatusCode, Cr.NS_ERROR_OFFLINE);
   do_check_eq(update.errorCode, NETWORK_ERROR_OFFLINE);
 
   // Forward the error to AUS, which should register the online observer
@@ -47,22 +47,22 @@ function check_test_pt1(request, update) {
   Services.obs.notifyObservers(gAUS, "network:offline-status-changed", "online");
 }
 
-var updatePrompt = {
+const updatePrompt = {
   showUpdateAvailable: function(update) {
     check_test_pt2(update);
   }
 };
 
 function xhr_pt2() {
-  var patches = getLocalPatchString();
-  var updates = getLocalUpdateString(patches);
-  var responseBody = getLocalUpdatesXMLString(updates);
+  let patches = getLocalPatchString();
+  let updates = getLocalUpdateString(patches);
+  let responseBody = getLocalUpdatesXMLString(updates);
 
   gXHR.status = 200;
   gXHR.responseText = responseBody;
   try {
-    var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(AUS_Ci.nsIDOMParser);
+    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                 createInstance(Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(responseBody, "application/xml");
   } catch (e) {
   }

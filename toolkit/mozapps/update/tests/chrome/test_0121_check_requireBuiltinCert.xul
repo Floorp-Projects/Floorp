@@ -26,7 +26,7 @@ const TESTS = [ {
   buttonClick: "finish"
 } ];
 
-Components.utils.import("resource://gre/modules/CertUtils.jsm");
+Cu.import("resource://gre/modules/CertUtils.jsm");
 
 const CERT_ATTRS = ["nickname", "emailAddress", "subjectName", "commonName",
                     "organization", "organizationalUnit", "sha1Fingerprint",
@@ -39,8 +39,8 @@ var gRequest;
 function runTest() {
   debugDump("entering");
 
-  gRequest = AUS_Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-             createInstance(AUS_Ci.nsIXMLHttpRequest);
+  gRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+             createInstance(Ci.nsIXMLHttpRequest);
   gRequest.open("GET", "https://example.com/", true);
   gRequest.channel.notificationCallbacks = new BadCertHandler(true);
   gRequest.onload = function(event) { testXHRLoad(event); };
@@ -53,16 +53,17 @@ function testXHRError(aEvent) {
 
   ok(true, "Entering testXHRError - something went wrong");
 
-  var request = aEvent.target;
-  var status = 0;
+  let request = aEvent.target;
+  let status = 0;
   try {
     status = request.status;
   }
   catch (e) {
   }
 
-  if (status == 0)
-    status = request.channel.QueryInterface(AUS_Ci.nsIRequest).status;
+  if (status == 0) {
+    status = request.channel.QueryInterface(Ci.nsIRequest).status;
+  }
 
   ok(false, "XHR onerror called: " + status);
 
@@ -73,9 +74,9 @@ function testXHRError(aEvent) {
 function testXHRLoad(aEvent) {
   debugDump("entering");
 
-  var channel = aEvent.target.channel;
-  var cert = channel.securityInfo.QueryInterface(AUS_Ci.nsISSLStatusProvider).
-             SSLStatus.QueryInterface(AUS_Ci.nsISSLStatus).serverCert;
+  let channel = aEvent.target.channel;
+  let cert = channel.securityInfo.QueryInterface(Ci.nsISSLStatusProvider).
+             SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
   CERT_ATTRS.forEach(function(aCertAttrName) {
     Services.prefs.setCharPref(PREF_APP_UPDATE_CERTS_BRANCH + "1." +
                                aCertAttrName, cert[aCertAttrName]);

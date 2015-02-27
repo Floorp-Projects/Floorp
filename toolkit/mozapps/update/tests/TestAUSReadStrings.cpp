@@ -117,8 +117,7 @@ int NS_main(int argc, NS_tchar **argv)
       rv = 22;
       fail("%s | Info ini value incorrect (check 4)", TEST_NAME);
     }
-  }
-  else {
+  } else {
     fail("%s | ReadStrings returned %i (check 2)", TEST_NAME, retval);
     rv = 23;
   }
@@ -157,8 +156,7 @@ int NS_main(int argc, NS_tchar **argv)
       rv = 27;
       fail("%s | Title ini value incorrect (check 9)", TEST_NAME);
     }
-  }
-  else {
+  } else {
     fail("%s | ReadStrings returned %i (check 8)", TEST_NAME, retval);
     rv = 28;
   }

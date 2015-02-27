@@ -49,8 +49,8 @@ function run_test() {
   callbackApp.permissions = PERMS_DIRECTORY;
   let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
-  let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                           createInstance(AUS_Ci.nsIProcess);
+  let callbackAppProcess = Cc["@mozilla.org/process/util;1"].
+                           createInstance(Ci.nsIProcess);
   callbackAppProcess.init(callbackApp);
   callbackAppProcess.run(false, args, args.length);
 
@@ -118,8 +118,8 @@ function checkUpdate() {
 
 function runHelperProcess(args) {
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let process = AUS_Cc["@mozilla.org/process/util;1"].
-                createInstance(AUS_Ci.nsIProcess);
+  let process = Cc["@mozilla.org/process/util;1"].
+                createInstance(Ci.nsIProcess);
   process.init(helperBin);
   logTestInfo("Running " + helperBin.path + " " + args.join(" "));
   process.run(true, args, args.length);
