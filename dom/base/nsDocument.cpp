@@ -6199,7 +6199,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     }
 
     if (!aOptions.mPrototype) {
-      protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto, JS::NullPtr());
+      protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto);
       if (!protoObject) {
         rv.Throw(NS_ERROR_UNEXPECTED);
         return;
@@ -6348,15 +6348,12 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       // Make sure that the element name matches the name in the definition.
       // (e.g. a definition for x-button extending button should match
       // <button is="x-button"> but not <x-button>.
-      // Note: we also check the tag name, because if it's not the above
-      // mentioned case, it can be that only the |is| property has been
-      // changed, which we should ignore by the spec.
-      if (elem->NodeInfo()->NameAtom() != nameAtom &&
-          elem->Tag() == nameAtom) {
+      if (elem->Tag() != nameAtom) {
         //Skip over this element because definition does not apply.
         continue;
       }
 
+      MOZ_ASSERT(elem->IsHTML(nameAtom));
       nsWrapperCache* cache;
       CallQueryInterface(elem, &cache);
       MOZ_ASSERT(cache, "Element doesn't support wrapper cache?");

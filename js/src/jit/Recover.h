@@ -64,6 +64,7 @@ namespace jit {
     _(NewDerivedTypedObject)                    \
     _(CreateThisWithTemplate)                   \
     _(Lambda)                                   \
+    _(SimdBox)                                  \
     _(ObjectState)                              \
     _(ArrayState)
 
@@ -679,6 +680,21 @@ class RLambda MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RSimdBox MOZ_FINAL : public RInstruction
+{
+  private:
+    uint8_t type_;
+
+  public:
+    RINSTRUCTION_HEADER_(SimdBox)
+
+    virtual uint32_t numOperands() const {
+        return 1;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;

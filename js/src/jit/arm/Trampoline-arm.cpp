@@ -636,9 +636,9 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.ma_ldr(Address(sp, 0), r2);
     masm.ma_add(sp, Imm32(sizeOfBailoutInfo), sp);
     // Common size of a bailout frame.
-    uint32_t bailoutFrameSize = sizeof(void *) + // frameClass
-                              sizeof(double) * FloatRegisters::TotalPhys +
-                              sizeof(void *) * Registers::Total;
+    uint32_t bailoutFrameSize = 0
+        + sizeof(void *) // frameClass
+        + sizeof(RegisterDump);
 
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
         // Make sure the bailout frame size fits into the offset for a load.

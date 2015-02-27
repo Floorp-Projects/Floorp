@@ -3594,10 +3594,21 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                        nsTArray<nsRefPtr<nsStyleContext>>&
                                          aSwappedStructOwners)
 {
-  PROFILER_LABEL("ElementRestyler", "ComputeStyleChangeFor",
-    js::ProfileEntry::Category::CSS);
-
   nsIContent* content = aFrame->GetContent();
+  nsAutoCString idStr;
+  if (profiler_is_active() && content) {
+    nsIAtom* id = content->GetID();
+    if (id) {
+      id->ToUTF8String(idStr);
+    } else {
+      idStr.AssignLiteral("?");
+    }
+  }
+
+  PROFILER_LABEL_PRINTF("ElementRestyler", "ComputeStyleChangeFor",
+                        js::ProfileEntry::Category::CSS,
+                        content ? "Element: %s" : "%s",
+                        content ? idStr.get() : "");
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }

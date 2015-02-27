@@ -2297,7 +2297,7 @@ ServiceWorkerManager::DispatchFetchEvent(nsIDocument* aDoc, nsIInterceptedChanne
 
   if (!isNavigation) {
     MOZ_ASSERT(aDoc);
-    rv = GetDocumentController(aDoc->GetWindow(), getter_AddRefs(serviceWorker));
+    rv = GetDocumentController(aDoc->GetInnerWindow(), getter_AddRefs(serviceWorker));
   } else {
     nsCOMPtr<nsIChannel> internalChannel;
     rv = aChannel->GetChannel(getter_AddRefs(internalChannel));

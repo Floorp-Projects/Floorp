@@ -221,6 +221,21 @@ class LSimdSplatX4 : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Reinterpret the bits of a SIMD value with a different type.
+class LSimdReinterpretCast : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SimdReinterpretCast)
+    explicit LSimdReinterpretCast(const LAllocation &v)
+    {
+        setOperand(0, v);
+    }
+
+    MSimdReinterpretCast *mir() const {
+        return mir_->toSimdReinterpretCast();
+    }
+};
+
 class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
 {
   protected:

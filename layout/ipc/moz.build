@@ -7,7 +7,6 @@
 EXPORTS.mozilla.layout += [
     'RenderFrameChild.h',
     'RenderFrameParent.h',
-    'RenderFrameUtils.h',
     'VsyncChild.h',
     'VsyncParent.h',
 ]

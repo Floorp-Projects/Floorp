@@ -268,6 +268,7 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == js::simd_float32x4_##OP)                                                       \
         return inlineBinarySimd<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
                                                   SimdTypeDescr::TYPE_FLOAT32);
+    ARITH_COMMONX4_SIMD_OP(INLINE_FLOAT32X4_SIMD_ARITH_)
     ARITH_FLOAT32X4_SIMD_OP(INLINE_FLOAT32X4_SIMD_ARITH_)
 #undef INLINE_FLOAT32X4_SIMD_ARITH_
 

@@ -352,8 +352,6 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     RootedObject parent(cx, Scope->GetGlobalJSObject());
 
-    RootedValue newParentVal(cx, NullValue());
-
     mozilla::Maybe<JSAutoCompartment> ac;
 
     if (sciWrapper.GetFlags().WantPreCreate()) {
@@ -367,14 +365,16 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(parent),
                    "Xray wrapper being used to parent XPCWrappedNative?");
 
+        MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(parent) == parent,
+                   "Non-global being used to parent XPCWrappedNative?");
+
         ac.emplace(static_cast<JSContext*>(cx), parent);
 
         if (parent != plannedParent) {
             XPCWrappedNativeScope* betterScope = ObjectScope(parent);
-            if (betterScope != Scope)
-                return GetNewOrUsed(helper, betterScope, Interface, resultWrapper);
-
-            newParentVal = OBJECT_TO_JSVAL(parent);
+            MOZ_ASSERT(betterScope != Scope,
+                       "How can we have the same scope for two different globals?");
+            return GetNewOrUsed(helper, betterScope, Interface, resultWrapper);
         }
 
         // Take the performance hit of checking the hashtable again in case
@@ -439,7 +439,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     // *seen* this happen.
     AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
 
-    if (!wrapper->Init(parent, &sciWrapper))
+    if (!wrapper->Init(&sciWrapper))
         return NS_ERROR_FAILURE;
 
     if (!wrapper->FindTearOff(Interface, false, &rv)) {
@@ -736,8 +736,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
 }
 
 bool
-XPCWrappedNative::Init(HandleObject parent,
-                       const XPCNativeScriptableCreateInfo* sci)
+XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
 {
     AutoJSContext cx;
     // setup our scriptable info...
@@ -772,14 +771,18 @@ XPCWrappedNative::Init(HandleObject parent,
                jsclazz->convert &&
                jsclazz->finalize, "bad class");
 
+    // XXXbz JS_GetObjectPrototype wants an object, even though it then asserts
+    // that this object is same-compartment with cx, which means it could just
+    // use the cx global...
+    RootedObject global(cx, CurrentGlobalOrNull(cx));
     RootedObject protoJSObject(cx, HasProto() ?
                                    GetProto()->GetJSProtoObject() :
-                                   JS_GetObjectPrototype(cx, parent));
+                                   JS_GetObjectPrototype(cx, global));
     if (!protoJSObject) {
         return false;
     }
 
-    mFlatJSObject = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject, parent);
+    mFlatJSObject = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject);
     if (!mFlatJSObject) {
         mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
         return false;
