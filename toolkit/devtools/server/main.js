@@ -713,9 +713,9 @@ var DebuggerServer = {
       prefix: prefix
     });
 
-    function onDisconnect() {
-      Services.obs.removeObserver(onMessageManagerDisconnect, "message-manager-disconnect");
-      events.off(aConnection, "closed", onDisconnect);
+    function onClose() {
+      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
+      events.off(aConnection, "closed", onClose);
       if (childTransport) {
         // If we have a child transport, the actor has already
         // been created. We need to stop using this message manager.
@@ -730,16 +730,16 @@ var DebuggerServer = {
       }
     }
 
-    let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
+    let onMessageManagerClose = DevToolsUtils.makeInfallible(function (subject, topic, data) {
       if (subject == aMm) {
-        onDisconnect();
+        onClose();
         aConnection.send({ from: actor.actor, type: "tabDetached" });
       }
     }).bind(this);
-    Services.obs.addObserver(onMessageManagerDisconnect,
-                             "message-manager-disconnect", false);
+    Services.obs.addObserver(onMessageManagerClose,
+                             "message-manager-close", false);
 
-    events.on(aConnection, "closed", onDisconnect);
+    events.on(aConnection, "closed", onClose);
 
     return deferred.promise;
   },
@@ -882,9 +882,9 @@ var DebuggerServer = {
     }).bind(this);
     mm.addMessageListener("debug:actor", onActorCreated);
 
-    let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
+    let onMessageManagerClose = DevToolsUtils.makeInfallible(function (subject, topic, data) {
       if (subject == mm) {
-        Services.obs.removeObserver(onMessageManagerDisconnect, topic);
+        Services.obs.removeObserver(onMessageManagerClose, topic);
 
         // provides hook to actor modules that need to exchange messages
         // between e10s parent and child processes
@@ -925,8 +925,8 @@ var DebuggerServer = {
         }
       }
     }).bind(this);
-    Services.obs.addObserver(onMessageManagerDisconnect,
-                             "message-manager-disconnect", false);
+    Services.obs.addObserver(onMessageManagerClose,
+                             "message-manager-close", false);
 
     events.once(aConnection, "closed", () => {
       if (childTransport) {
