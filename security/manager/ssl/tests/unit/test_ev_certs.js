@@ -255,9 +255,5 @@ function check_no_ocsp_requests(cert_name, expected_error) {
   // Since we're not doing OCSP requests, no certificate will be EV.
   do_check_eq(hasEVPolicy.value, false);
   do_check_eq(expected_error, error);
-  // Also check that isExtendedValidation doesn't cause OCSP requests.
-  let identityInfo = cert.QueryInterface(Ci.nsIIdentityInfo);
-  do_check_eq(identityInfo.isExtendedValidation, false);
   ocspResponder.stop(run_next_test);
 }
-
