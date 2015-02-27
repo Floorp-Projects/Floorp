@@ -240,7 +240,8 @@
     _(select)                        \
     _(splat)                         \
     _(not)                           \
-    _(neg)
+    _(neg)                           \
+    _(check)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(_) \
@@ -253,8 +254,7 @@
     _(store)                         \
     _(storeX)                        \
     _(storeXY)                       \
-    _(storeXYZ)                      \
-    _(check)
+    _(storeXYZ)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
