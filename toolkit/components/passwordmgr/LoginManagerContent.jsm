@@ -599,7 +599,6 @@ var LoginManagerContent = {
       MULTIPLE_LOGINS: 7,
       NO_AUTOFILL_FORMS: 8,
       AUTOCOMPLETE_OFF: 9,
-      UNKNOWN_FAILURE: 10,
     };
 
     function recordAutofillResult(result) {
@@ -667,9 +666,6 @@ var LoginManagerContent = {
       return;
     }
 
-    // The reason we didn't end up filling the form, if any.
-    var didntFillReason = null;
-
     // Attach autocomplete stuff to the username field, if we have
     // one. This is normally used to select from multiple accounts,
     // but even with one account we should refill if the user edits.
@@ -678,7 +674,6 @@ var LoginManagerContent = {
 
     // Don't clobber an existing password.
     if (passwordField.value && !clobberPassword) {
-      didntFillReason = "existingPassword";
       log("form not filled, the password field was already filled");
       recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
       return;
@@ -721,8 +716,8 @@ var LoginManagerContent = {
           selectedLogin = matchingLogins[0];
         }
       } else {
-        didntFillReason = "existingUsername";
         log("Password not filled. None of the stored logins match the username already present.");
+        recordAutofillResult(AUTOFILL_RESULT.EXISTING_USERNAME);
       }
     } else if (logins.length == 1) {
       selectedLogin = logins[0];
@@ -739,8 +734,8 @@ var LoginManagerContent = {
       if (matchingLogins.length == 1) {
         selectedLogin = matchingLogins[0];
       } else {
-        didntFillReason = "multipleLogins";
         log("Multiple logins for form, so not filling any.");
+        recordAutofillResult(AUTOFILL_RESULT.MULTIPLE_LOGINS);
       }
     }
 
@@ -768,33 +763,15 @@ var LoginManagerContent = {
       }
       didFillForm = true;
     } else if (selectedLogin && !autofillForm) {
-      didntFillReason = "noAutofillForms";
       log("autofillForms=false but form can be filled; notified observers");
+      recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
     } else if (selectedLogin && isFormDisabled) {
-      didntFillReason = "autocompleteOff";
       log("autocomplete=off but form can be filled; notified observers");
+      recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
     }
 
     if (didFillForm) {
       recordAutofillResult(AUTOFILL_RESULT.FILLED);
-    } else {
-      let autofillResult = AUTOFILL_RESULT.UNKNOWN_FAILURE;
-      switch (didntFillReason) {
-        // existingPassword is already handled above
-        case "existingUsername":
-          autofillResult = AUTOFILL_RESULT.EXISTING_USERNAME;
-          break;
-        case "multipleLogins":
-          autofillResult = AUTOFILL_RESULT.MULTIPLE_LOGINS;
-          break;
-        case "noAutofillForms":
-          autofillResult = AUTOFILL_RESULT.NO_AUTOFILL_FORMS;
-          break;
-        case "autocompleteOff":
-          autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
-          break;
-      }
-      recordAutofillResult(autofillResult);
     }
   },
 
