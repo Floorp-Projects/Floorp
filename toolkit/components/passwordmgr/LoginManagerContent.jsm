@@ -693,10 +693,8 @@ var LoginManagerContent = {
       log("form not filled, has autocomplete=off");
     }
 
-    // Variable such that we reduce code duplication and can be sure we
-    // should be firing notifications if and only if we can fill the form.
-    var selectedLogin = null;
-
+    // Select a login to use for filling in the form.
+    var selectedLogin;
     if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
       // If username was specified in the field, it's disabled or it's readOnly, only fill in the
       // password if we find a matching login.
@@ -704,20 +702,21 @@ var LoginManagerContent = {
 
       let matchingLogins = logins.filter(function(l)
                                          l.username.toLowerCase() == username);
-      if (matchingLogins.length) {
-        // If there are multiple, and one matches case, use it
-        for (let l of matchingLogins) {
-          if (l.username == usernameField.value) {
-            selectedLogin = l;
-          }
-        }
-        // Otherwise just use the first
-        if (!selectedLogin) {
-          selectedLogin = matchingLogins[0];
-        }
-      } else {
+      if (matchingLogins.length == 0) {
         log("Password not filled. None of the stored logins match the username already present.");
         recordAutofillResult(AUTOFILL_RESULT.EXISTING_USERNAME);
+        return;
+      }
+
+      // If there are multiple, and one matches case, use it
+      for (let l of matchingLogins) {
+        if (l.username == usernameField.value) {
+          selectedLogin = l;
+        }
+      }
+      // Otherwise just use the first
+      if (!selectedLogin) {
+        selectedLogin = matchingLogins[0];
       }
     } else if (logins.length == 1) {
       selectedLogin = logins[0];
@@ -731,16 +730,20 @@ var LoginManagerContent = {
         matchingLogins = logins.filter(function(l) l.username);
       else
         matchingLogins = logins.filter(function(l) !l.username);
-      if (matchingLogins.length == 1) {
-        selectedLogin = matchingLogins[0];
-      } else {
+
+      if (matchingLogins.length != 1) {
         log("Multiple logins for form, so not filling any.");
         recordAutofillResult(AUTOFILL_RESULT.MULTIPLE_LOGINS);
+        return;
       }
+
+      selectedLogin = matchingLogins[0];
     }
 
+    // We will always have a selectedLogin at this point.
+
     var didFillForm = false;
-    if (selectedLogin && autofillForm && !isFormDisabled) {
+    if (autofillForm && !isFormDisabled) {
       // Fill the form
 
       if (usernameField) {
@@ -762,10 +765,10 @@ var LoginManagerContent = {
         passwordField.setUserInput(selectedLogin.password);
       }
       didFillForm = true;
-    } else if (selectedLogin && !autofillForm) {
+    } else if (!autofillForm) {
       log("autofillForms=false but form can be filled; notified observers");
       recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
-    } else if (selectedLogin && isFormDisabled) {
+    } else if (isFormDisabled) {
       log("autocomplete=off but form can be filled; notified observers");
       recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
     }
