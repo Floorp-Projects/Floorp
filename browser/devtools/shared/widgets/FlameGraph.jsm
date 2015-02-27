@@ -181,7 +181,9 @@ FlameGraph.prototype = {
   /**
    * Destroys this graph.
    */
-  destroy: function() {
+  destroy: Task.async(function*() {
+    yield this.ready();
+
     this._window.removeEventListener("mousemove", this._onMouseMove);
     this._window.removeEventListener("mousedown", this._onMouseDown);
     this._window.removeEventListener("mouseup", this._onMouseUp);
@@ -201,7 +203,7 @@ FlameGraph.prototype = {
     this._data = null;
 
     this.emit("destroyed");
-  },
+  }),
 
   /**
    * Rendering options. Subclasses should override these.
