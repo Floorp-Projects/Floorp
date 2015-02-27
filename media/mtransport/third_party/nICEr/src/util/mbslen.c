@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <locale.h>
 #include <stdlib.h>
 #include <wchar.h>
-#ifdef DARWIN
+#if defined(DARWIN)
 #define HAVE_XLOCALE
 #endif
 
