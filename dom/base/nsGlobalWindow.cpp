@@ -2599,21 +2599,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       SetWrapper(outerObject);
 
-      {
-        JSAutoCompartment ac(cx, outerObject);
+      MOZ_ASSERT(js::GetObjectParent(outerObject) == newInnerGlobal);
 
-        JS_SetParent(cx, outerObject, newInnerGlobal);
-
-        // Inform the nsJSContext, which is the canonical holder of the outer.
-        mContext->SetWindowProxy(outerObject);
-
-        NS_ASSERTION(!JS_IsExceptionPending(cx),
-                     "We might overwrite a pending exception!");
-        XPCWrappedNativeScope* scope = xpc::ObjectScope(outerObject);
-        if (scope->mWaiverWrapperMap) {
-          scope->mWaiverWrapperMap->Reparent(cx, newInnerGlobal);
-        }
-      }
+      // Inform the nsJSContext, which is the canonical holder of the outer.
+      mContext->SetWindowProxy(outerObject);
     }
 
     // Enter the new global's compartment.
