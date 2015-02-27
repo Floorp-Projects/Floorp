@@ -72,7 +72,11 @@ loop.Dispatcher = (function() {
       }
 
       registeredStores.forEach(function(store) {
-        store[type](action);
+        try {
+          store[type](action);
+        } catch (x) {
+          console.error("[Dispatcher] Dispatching action caused an exception: ", x);
+        }
       });
 
       this._active = false;
