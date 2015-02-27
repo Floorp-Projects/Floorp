@@ -24,10 +24,10 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioNodeExternalInputStream.h"
+#include "webaudio/MediaStreamAudioDestinationNode.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
-#include "mozilla/unused.h"
 #ifdef MOZ_WEBRTC
 #include "AudioOutputObserver.h"
 #endif
@@ -275,12 +275,16 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       } else if (InMutedCycle()) {
         segment->AppendNullData(ticks);
       } else {
-        MOZ_ASSERT(outputTrack->GetEnd() == GraphTimeToStreamTime(interval.mStart),
-                   "Samples missing");
-        StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
-        segment->AppendSlice(*aInputTrack->GetSegment(),
-                             std::min(inputTrackEndPoint, inputStart),
-                             std::min(inputTrackEndPoint, inputEnd));
+        if (GraphImpl()->StreamSuspended(source)) {
+          segment->AppendNullData(aTo - aFrom);
+        } else {
+          MOZ_ASSERT(outputTrack->GetEnd() == GraphTimeToStreamTime(interval.mStart),
+                     "Samples missing");
+          StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
+          segment->AppendSlice(*aInputTrack->GetSegment(),
+                               std::min(inputTrackEndPoint, inputStart),
+                               std::min(inputTrackEndPoint, inputEnd));
+        }
       }
       ApplyTrackDisabling(outputTrack->GetID(), segment);
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
