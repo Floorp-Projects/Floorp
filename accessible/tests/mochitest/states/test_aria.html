@@ -92,6 +92,8 @@
       // aria-checked
       testStates("aria_checked_checkbox", STATE_CHECKED);
       testStates("aria_mixed_checkbox", STATE_MIXED);
+      testStates("aria_checked_switch", STATE_CHECKED);
+      testStates("aria_mixed_switch", 0, 0, STATE_MIXED); // unsupported
 
       // test disabled group and all its descendants to see if they are
       // disabled, too. See bug 429285.
@@ -350,6 +352,11 @@
      title="Pressed state is not exposed on a button element with aria-pressed attribute"
     Mozilla Bug 989958
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136563"
+     title="Support ARIA 1.1 switch role"
+    Mozilla Bug 1136563
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -383,6 +390,15 @@
   <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
     I might agree
   </div>
+
+  <div id="aria_checked_switch" role="switch" aria-checked="true">
+    I am switched on
+  </div>
+
+  <div id="aria_mixed_switch" role="switch" aria-checked="mixed">
+    I am unsupported
+  </div>
+
   <div id="aria_modal" aria-modal="true">modal stuff</div>
   <div id="aria_modal_false" aria-modal="false">non modal stuff</div>div>
   <div id="aria_multiline_textbox" role="textbox" aria-multiline="true"></div>

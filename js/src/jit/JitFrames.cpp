@@ -51,40 +51,46 @@ OffsetOfFrameSlot(int32_t slot)
     return -slot;
 }
 
+static inline uint8_t *
+AddressOfFrameSlot(JitFrameLayout *fp, int32_t slot)
+{
+    return (uint8_t *) fp + OffsetOfFrameSlot(slot);
+}
+
 static inline uintptr_t
 ReadFrameSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(uintptr_t *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline void
 WriteFrameSlot(JitFrameLayout *fp, int32_t slot, uintptr_t value)
 {
-    *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot)) = value;
+    *(uintptr_t *) AddressOfFrameSlot(fp, slot) = value;
 }
 
 static inline double
 ReadFrameDoubleSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(double *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline float
 ReadFrameFloat32Slot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(float *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(float *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline int32_t
 ReadFrameInt32Slot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(int32_t *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(int32_t *) AddressOfFrameSlot(fp, slot);
 }
 
 static inline bool
 ReadFrameBooleanSlot(JitFrameLayout *fp, int32_t slot)
 {
-    return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
+    return *(bool *) AddressOfFrameSlot(fp, slot);
 }
 
 JitFrameIterator::JitFrameIterator()
@@ -1829,19 +1835,20 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
       case RValueAllocation::DOUBLE_REG:
         return DoubleValue(fromRegister(alloc.fpuReg()));
 
-      case RValueAllocation::FLOAT32_REG:
+      case RValueAllocation::ANY_FLOAT_REG:
       {
         union {
             double d;
             float f;
         } pun;
+        MOZ_ASSERT(alloc.fpuReg().isSingle());
         pun.d = fromRegister(alloc.fpuReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
         return Float32Value(pun.f);
       }
 
-      case RValueAllocation::FLOAT32_STACK:
+      case RValueAllocation::ANY_FLOAT_STACK:
         return Float32Value(ReadFrameFloat32Slot(fp_, alloc.stackOffset()));
 
       case RValueAllocation::TYPED_REG:
@@ -1929,6 +1936,21 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc, ReadMethod rm)
     }
 }
 
+const FloatRegisters::RegisterContent *
+SnapshotIterator::floatAllocationPointer(const RValueAllocation &alloc) const
+{
+    switch (alloc.mode()) {
+      case RValueAllocation::ANY_FLOAT_REG:
+        return machine_.address(alloc.fpuReg());
+
+      case RValueAllocation::ANY_FLOAT_STACK:
+        return (FloatRegisters::RegisterContent *) AddressOfFrameSlot(fp_, alloc.stackOffset());
+
+      default:
+        MOZ_CRASH("Not a float allocation.");
+    }
+}
+
 Value
 SnapshotIterator::maybeRead(const RValueAllocation &a, MaybeReadFallback &fallback)
 {
@@ -1966,8 +1988,8 @@ SnapshotIterator::writeAllocationValuePayload(const RValueAllocation &alloc, Val
       case RValueAllocation::CST_UNDEFINED:
       case RValueAllocation::CST_NULL:
       case RValueAllocation::DOUBLE_REG:
-      case RValueAllocation::FLOAT32_REG:
-      case RValueAllocation::FLOAT32_STACK:
+      case RValueAllocation::ANY_FLOAT_REG:
+      case RValueAllocation::ANY_FLOAT_STACK:
         MOZ_CRASH("Not a GC thing: Unexpected write");
         break;
 
@@ -2461,32 +2483,39 @@ InlineFrameIterator::isFunctionFrame() const
 }
 
 MachineState
-MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                          mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs)
+MachineState::FromBailout(RegisterDump::GPRArray &regs, RegisterDump::FPUArray &fpregs)
 {
     MachineState machine;
 
     for (unsigned i = 0; i < Registers::Total; i++)
-        machine.setRegisterLocation(Register::FromCode(i), &regs[i]);
+        machine.setRegisterLocation(Register::FromCode(i), &regs[i].r);
 #ifdef JS_CODEGEN_ARM
     float *fbase = (float*)&fpregs[0];
     for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++)
-        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double), &fpregs[i].d);
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++)
         machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single), (double*)&fbase[i]);
 #elif defined(JS_CODEGEN_MIPS)
     float *fbase = (float*)&fpregs[0];
     for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++) {
         machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Double),
-                                    &fpregs[i]);
+                                    &fpregs[i].d);
     }
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
         machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single),
                                     (double*)&fbase[i]);
     }
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Int32x4), &fpregs[i]);
+        machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Float32x4), &fpregs[i]);
+    }
+#elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
 #else
-    for (unsigned i = 0; i < FloatRegisters::Total; i++)
-        machine.setRegisterLocation(FloatRegister::FromCode(i), &fpregs[i]);
+# error "Unknown architecture!"
 #endif
     return machine;
 }

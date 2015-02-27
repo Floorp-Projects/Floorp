@@ -41,8 +41,9 @@ public:
     return mVendor;
   }
 
+  // This spoofed value wins, even if the environment variable
+  // MOZ_GFX_SPOOF_GL_VENDOR was set.
   void SpoofVendor(const nsCString& s) {
-    EnsureInitialized();
     mVendor = s;
   }
 
@@ -51,8 +52,9 @@ public:
     return mRenderer;
   }
 
+  // This spoofed value wins, even if the environment variable
+  // MOZ_GFX_SPOOF_GL_RENDERER was set.
   void SpoofRenderer(const nsCString& s) {
-    EnsureInitialized();
     mRenderer = s;
   }
 
@@ -61,8 +63,9 @@ public:
     return mVersion;
   }
 
+  // This spoofed value wins, even if the environment variable
+  // MOZ_GFX_SPOOF_GL_VERSION was set.
   void SpoofVersion(const nsCString& s) {
-    EnsureInitialized();
     mVersion = s;
   }
 
@@ -85,21 +88,32 @@ public:
 
     gl->MakeCurrent();
 
-    const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_GL_VENDOR");
-    if (spoofedVendor)
+    if (mVendor.IsEmpty()) {
+      const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_GL_VENDOR");
+      if (spoofedVendor) {
         mVendor.Assign(spoofedVendor);
-    else
+      } else {
         mVendor.Assign((const char*)gl->fGetString(LOCAL_GL_VENDOR));
-    const char *spoofedRenderer = PR_GetEnv("MOZ_GFX_SPOOF_GL_RENDERER");
-    if (spoofedRenderer)
+      }
+    }
+
+    if (mRenderer.IsEmpty()) {
+      const char *spoofedRenderer = PR_GetEnv("MOZ_GFX_SPOOF_GL_RENDERER");
+      if (spoofedRenderer) {
         mRenderer.Assign(spoofedRenderer);
-    else
+      } else {
         mRenderer.Assign((const char*)gl->fGetString(LOCAL_GL_RENDERER));
-    const char *spoofedVersion = PR_GetEnv("MOZ_GFX_SPOOF_GL_VERSION");
-    if (spoofedVersion)
+      }
+    }
+
+    if (mVersion.IsEmpty()) {
+      const char *spoofedVersion = PR_GetEnv("MOZ_GFX_SPOOF_GL_VERSION");
+      if (spoofedVersion) {
         mVersion.Assign(spoofedVersion);
-    else
+      } else {
         mVersion.Assign((const char*)gl->fGetString(LOCAL_GL_VERSION));
+      }
+    }
 
     mReady = true;
   }
@@ -153,9 +167,10 @@ GfxInfo::EnsureInitialized()
   if (mInitialized)
     return;
 
-  mGLStrings->EnsureInitialized();
-
-  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
+  if (!mozilla::AndroidBridge::Bridge()) {
+    gfxWarning() << "AndroidBridge missing during initialization";
+    return;
+  }
 
   if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", mModel)) {
     mAdapterDescription.AppendPrintf("Model: %s",  NS_LossyConvertUTF16toASCII(mModel).get());
@@ -601,7 +616,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 /* void spoofVendorID (in DOMString aVendorID); */
 NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
 {
-  EnsureInitialized();
   mGLStrings->SpoofVendor(NS_LossyConvertUTF16toASCII(aVendorID));
   return NS_OK;
 }
@@ -609,7 +623,6 @@ NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
 /* void spoofDeviceID (in unsigned long aDeviceID); */
 NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
 {
-  EnsureInitialized();
   mGLStrings->SpoofRenderer(NS_LossyConvertUTF16toASCII(aDeviceID));
   return NS_OK;
 }
@@ -617,7 +630,6 @@ NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
 /* void spoofDriverVersion (in DOMString aDriverVersion); */
 NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
 {
-  EnsureInitialized();
   mGLStrings->SpoofVersion(NS_LossyConvertUTF16toASCII(aDriverVersion));
   return NS_OK;
 }

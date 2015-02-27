@@ -1254,9 +1254,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSAtomState *commonNames;
 
     // All permanent atoms in the runtime, other than those in staticStrings.
-    js::AtomSet *permanentAtoms;
+    // Unlike |atoms_|, access to this does not require
+    // AutoLockForExclusiveAccess because it is frozen and thus read-only.
+    js::FrozenAtomSet *permanentAtoms;
 
-    bool transformToPermanentAtoms();
+    bool transformToPermanentAtoms(JSContext *cx);
 
     // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
     // these are shared with the parentRuntime, if any.
@@ -1415,6 +1417,9 @@ struct JSRuntime : public JS::shadow::Runtime,
      * function to assess the size of malloc'd blocks of memory.
      */
     mozilla::MallocSizeOf debuggerMallocSizeOf;
+
+    /* Last time at which an animation was played for this runtime. */
+    int64_t lastAnimationTime;
 };
 
 namespace js {

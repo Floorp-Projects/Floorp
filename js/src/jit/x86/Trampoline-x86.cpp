@@ -503,7 +503,25 @@ static void
 PushBailoutFrame(MacroAssembler &masm, uint32_t frameClass, Register spArg)
 {
     // Push registers such that we can access them from [base + code].
-    masm.PushRegsInMask(AllRegs);
+    if (JitSupportsSimd()) {
+        masm.PushRegsInMask(AllRegs);
+    } else {
+        // When SIMD isn't supported, PushRegsInMask reduces the set of float
+        // registers to be double-sized, while the RegisterDump expects each of
+        // the float registers to have the maximal possible size
+        // (Simd128DataSize). To work around this, we just spill the double
+        // registers by hand here, using the register dump offset directly.
+        RegisterSet set = AllRegs;
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++)
+            masm.Push(*iter);
+
+        masm.reserveStack(sizeof(RegisterDump::FPUArray));
+        for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
+            FloatRegister reg = *iter;
+            Address spillAddress(StackPointer, reg.getRegisterDumpOffsetInBytes());
+            masm.storeDouble(reg, spillAddress);
+        }
+    }
 
     // Push the bailout table number.
     masm.push(Imm32(frameClass));
@@ -530,9 +548,9 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.pop(ecx); // Get bailoutInfo outparam.
 
     // Common size of stuff we've pushed.
-    const uint32_t BailoutDataSize = sizeof(void *) + // frameClass
-                                   sizeof(double) * FloatRegisters::Total +
-                                   sizeof(void *) * Registers::Total;
+    static const uint32_t BailoutDataSize = 0
+        + sizeof(void *) // frameClass
+        + sizeof(RegisterDump);
 
     // Remove both the bailout frame and the topmost Ion frame's stack.
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
