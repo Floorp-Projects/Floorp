@@ -2,7 +2,7 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="@color/highlight_orange"/>
+                <solid android:color="@color/fennec_ui_orange"/>
             </shape>
         </clip>
     </item>
