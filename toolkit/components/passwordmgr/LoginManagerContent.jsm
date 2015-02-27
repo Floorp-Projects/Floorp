@@ -267,7 +267,6 @@ var LoginManagerContent = {
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
     this._fillForm(form, autofillForm, false, false, loginsFound);
-    Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
   },
 
   /*
@@ -311,7 +310,6 @@ var LoginManagerContent = {
       this._asyncFindLogins(acForm, { showMasterPassword: false })
           .then(({ form, loginsFound }) => {
               this._fillForm(form, true, true, true, loginsFound);
-              Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
           })
           .then(null, Cu.reportError);
     } else {
@@ -610,172 +608,176 @@ var LoginManagerContent = {
       autofillResultHist.add(result);
     }
 
-    // Nothing to do if we have no matching logins available.
-    if (foundLogins.length == 0) {
-      // We don't log() here since this is a very common case.
-      recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
-      return;
-    }
-
-    // Heuristically determine what the user/pass fields are
-    // We do this before checking to see if logins are stored,
-    // so that the user isn't prompted for a master password
-    // without need.
-    var [usernameField, passwordField, ignored] =
-        this._getFormFields(form, false);
-
-    // Need a valid password field to do anything.
-    if (passwordField == null) {
-      log("not filling form, no password field found");
-      recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
-      return;
-    }
-
-    // If the password field is disabled or read-only, there's nothing to do.
-    if (passwordField.disabled || passwordField.readOnly) {
-      log("not filling form, password field disabled or read-only");
-      recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
-      return;
-    }
-
-    // Discard logins which have username/password values that don't
-    // fit into the fields (as specified by the maxlength attribute).
-    // The user couldn't enter these values anyway, and it helps
-    // with sites that have an extra PIN to be entered (bug 391514)
-    var maxUsernameLen = Number.MAX_VALUE;
-    var maxPasswordLen = Number.MAX_VALUE;
-
-    // If attribute wasn't set, default is -1.
-    if (usernameField && usernameField.maxLength >= 0)
-      maxUsernameLen = usernameField.maxLength;
-    if (passwordField.maxLength >= 0)
-      maxPasswordLen = passwordField.maxLength;
-
-    var logins = foundLogins.filter(function (l) {
-      var fit = (l.username.length <= maxUsernameLen &&
-                 l.password.length <= maxPasswordLen);
-      if (!fit)
-        log("Ignored", l.username, "login: won't fit");
-
-      return fit;
-    }, this);
-
-    if (logins.length == 0) {
-      log("form not filled, none of the logins fit in the field");
-      recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
-      return;
-    }
-
-    // Attach autocomplete stuff to the username field, if we have
-    // one. This is normally used to select from multiple accounts,
-    // but even with one account we should refill if the user edits.
-    if (usernameField)
-      this._formFillService.markAsLoginManagerField(usernameField);
-
-    // Don't clobber an existing password.
-    if (passwordField.value && !clobberPassword) {
-      log("form not filled, the password field was already filled");
-      recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
-      return;
-    }
-
-    // If the form has an autocomplete=off attribute in play, don't
-    // fill in the login automatically. We check this after attaching
-    // the autocomplete stuff to the username field, so the user can
-    // still manually select a login to be filled in.
-    var isFormDisabled = false;
-    if (!ignoreAutocomplete &&
-        (this._isAutocompleteDisabled(form) ||
-         this._isAutocompleteDisabled(usernameField) ||
-         this._isAutocompleteDisabled(passwordField))) {
-
-      isFormDisabled = true;
-      log("form not filled, has autocomplete=off");
-    }
-
-    // Select a login to use for filling in the form.
-    var selectedLogin;
-    if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
-      // If username was specified in the field, it's disabled or it's readOnly, only fill in the
-      // password if we find a matching login.
-      var username = usernameField.value.toLowerCase();
-
-      let matchingLogins = logins.filter(function(l)
-                                         l.username.toLowerCase() == username);
-      if (matchingLogins.length == 0) {
-        log("Password not filled. None of the stored logins match the username already present.");
-        recordAutofillResult(AUTOFILL_RESULT.EXISTING_USERNAME);
+    try {
+      // Nothing to do if we have no matching logins available.
+      if (foundLogins.length == 0) {
+        // We don't log() here since this is a very common case.
+        recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
         return;
       }
 
-      // If there are multiple, and one matches case, use it
-      for (let l of matchingLogins) {
-        if (l.username == usernameField.value) {
-          selectedLogin = l;
-        }
+      // Heuristically determine what the user/pass fields are
+      // We do this before checking to see if logins are stored,
+      // so that the user isn't prompted for a master password
+      // without need.
+      var [usernameField, passwordField, ignored] =
+          this._getFormFields(form, false);
+
+      // Need a valid password field to do anything.
+      if (passwordField == null) {
+        log("not filling form, no password field found");
+        recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
+        return;
       }
-      // Otherwise just use the first
-      if (!selectedLogin) {
+
+      // If the password field is disabled or read-only, there's nothing to do.
+      if (passwordField.disabled || passwordField.readOnly) {
+        log("not filling form, password field disabled or read-only");
+        recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
+        return;
+      }
+
+      // Discard logins which have username/password values that don't
+      // fit into the fields (as specified by the maxlength attribute).
+      // The user couldn't enter these values anyway, and it helps
+      // with sites that have an extra PIN to be entered (bug 391514)
+      var maxUsernameLen = Number.MAX_VALUE;
+      var maxPasswordLen = Number.MAX_VALUE;
+
+      // If attribute wasn't set, default is -1.
+      if (usernameField && usernameField.maxLength >= 0)
+        maxUsernameLen = usernameField.maxLength;
+      if (passwordField.maxLength >= 0)
+        maxPasswordLen = passwordField.maxLength;
+
+      var logins = foundLogins.filter(function (l) {
+        var fit = (l.username.length <= maxUsernameLen &&
+                   l.password.length <= maxPasswordLen);
+        if (!fit)
+          log("Ignored", l.username, "login: won't fit");
+
+        return fit;
+      }, this);
+
+      if (logins.length == 0) {
+        log("form not filled, none of the logins fit in the field");
+        recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
+        return;
+      }
+
+      // Attach autocomplete stuff to the username field, if we have
+      // one. This is normally used to select from multiple accounts,
+      // but even with one account we should refill if the user edits.
+      if (usernameField)
+        this._formFillService.markAsLoginManagerField(usernameField);
+
+      // Don't clobber an existing password.
+      if (passwordField.value && !clobberPassword) {
+        log("form not filled, the password field was already filled");
+        recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
+        return;
+      }
+
+      // If the form has an autocomplete=off attribute in play, don't
+      // fill in the login automatically. We check this after attaching
+      // the autocomplete stuff to the username field, so the user can
+      // still manually select a login to be filled in.
+      var isFormDisabled = false;
+      if (!ignoreAutocomplete &&
+          (this._isAutocompleteDisabled(form) ||
+           this._isAutocompleteDisabled(usernameField) ||
+           this._isAutocompleteDisabled(passwordField))) {
+
+        isFormDisabled = true;
+        log("form not filled, has autocomplete=off");
+      }
+
+      // Select a login to use for filling in the form.
+      var selectedLogin;
+      if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
+        // If username was specified in the field, it's disabled or it's readOnly, only fill in the
+        // password if we find a matching login.
+        var username = usernameField.value.toLowerCase();
+
+        let matchingLogins = logins.filter(function(l)
+                                           l.username.toLowerCase() == username);
+        if (matchingLogins.length == 0) {
+          log("Password not filled. None of the stored logins match the username already present.");
+          recordAutofillResult(AUTOFILL_RESULT.EXISTING_USERNAME);
+          return;
+        }
+
+        // If there are multiple, and one matches case, use it
+        for (let l of matchingLogins) {
+          if (l.username == usernameField.value) {
+            selectedLogin = l;
+          }
+        }
+        // Otherwise just use the first
+        if (!selectedLogin) {
+          selectedLogin = matchingLogins[0];
+        }
+      } else if (logins.length == 1) {
+        selectedLogin = logins[0];
+      } else {
+        // We have multiple logins. Handle a special case here, for sites
+        // which have a normal user+pass login *and* a password-only login
+        // (eg, a PIN). Prefer the login that matches the type of the form
+        // (user+pass or pass-only) when there's exactly one that matches.
+        let matchingLogins;
+        if (usernameField)
+          matchingLogins = logins.filter(function(l) l.username);
+        else
+          matchingLogins = logins.filter(function(l) !l.username);
+
+        if (matchingLogins.length != 1) {
+          log("Multiple logins for form, so not filling any.");
+          recordAutofillResult(AUTOFILL_RESULT.MULTIPLE_LOGINS);
+          return;
+        }
+
         selectedLogin = matchingLogins[0];
       }
-    } else if (logins.length == 1) {
-      selectedLogin = logins[0];
-    } else {
-      // We have multiple logins. Handle a special case here, for sites
-      // which have a normal user+pass login *and* a password-only login
-      // (eg, a PIN). Prefer the login that matches the type of the form
-      // (user+pass or pass-only) when there's exactly one that matches.
-      let matchingLogins;
-      if (usernameField)
-        matchingLogins = logins.filter(function(l) l.username);
-      else
-        matchingLogins = logins.filter(function(l) !l.username);
 
-      if (matchingLogins.length != 1) {
-        log("Multiple logins for form, so not filling any.");
-        recordAutofillResult(AUTOFILL_RESULT.MULTIPLE_LOGINS);
+      // We will always have a selectedLogin at this point.
+
+      if (!autofillForm) {
+        log("autofillForms=false but form can be filled; notified observers");
+        recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
         return;
       }
 
-      selectedLogin = matchingLogins[0];
-    }
-
-    // We will always have a selectedLogin at this point.
-
-    if (!autofillForm) {
-      log("autofillForms=false but form can be filled; notified observers");
-      recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
-      return;
-    }
-
-    if (isFormDisabled) {
-      log("autocomplete=off but form can be filled; notified observers");
-      recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
-      return;
-    }
-
-    // Fill the form
-
-    if (usernameField) {
-      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
-      let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
-
-      let userNameDiffers = selectedLogin.username != usernameField.value;
-      // Don't replace the username if it differs only in case, and the user triggered
-      // this autocomplete. We assume that if it was user-triggered the entered text
-      // is desired.
-      let userEnteredDifferentCase = userTriggered && userNameDiffers &&
-             usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
-
-      if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
-        usernameField.setUserInput(selectedLogin.username);
+      if (isFormDisabled) {
+        log("autocomplete=off but form can be filled; notified observers");
+        recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
+        return;
       }
-    }
-    if (passwordField.value != selectedLogin.password) {
-      passwordField.setUserInput(selectedLogin.password);
-    }
 
-    recordAutofillResult(AUTOFILL_RESULT.FILLED);
+      // Fill the form
+
+      if (usernameField) {
+      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+        let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
+
+        let userNameDiffers = selectedLogin.username != usernameField.value;
+        // Don't replace the username if it differs only in case, and the user triggered
+        // this autocomplete. We assume that if it was user-triggered the entered text
+        // is desired.
+        let userEnteredDifferentCase = userTriggered && userNameDiffers &&
+               usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
+
+        if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
+          usernameField.setUserInput(selectedLogin.username);
+        }
+      }
+      if (passwordField.value != selectedLogin.password) {
+        passwordField.setUserInput(selectedLogin.password);
+      }
+
+      recordAutofillResult(AUTOFILL_RESULT.FILLED);
+    } finally {
+      Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
+    }
   },
 
 };
