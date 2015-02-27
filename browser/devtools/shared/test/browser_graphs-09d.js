@@ -20,7 +20,7 @@ function* performTest() {
 
   yield testGraph(graph);
 
-  graph.destroy();
+  yield graph.destroy();
   host.destroy();
 }
 
