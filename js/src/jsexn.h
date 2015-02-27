@@ -22,7 +22,6 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report);
 
 JSString *
 ComputeStackString(JSContext *cx);
-}
 
 /*
  * Given a JSErrorReport, check to see if there is an exception associated with
@@ -51,8 +50,8 @@ ComputeStackString(JSContext *cx);
  *     unless the caller decides to call CallErrorReporter explicitly.
  */
 extern bool
-js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
-                    JSErrorCallback callback, void *userRef);
+ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
+                 JSErrorCallback callback, void *userRef);
 
 /*
  * Called if a JS API call to js_Execute or js_InternalCall fails; calls the
@@ -71,10 +70,10 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
  * this flag.
  */
 extern bool
-js_ReportUncaughtException(JSContext *cx);
+ReportUncaughtException(JSContext *cx);
 
 extern JSErrorReport *
-js_ErrorFromException(JSContext *cx, js::HandleObject obj);
+ErrorFromException(JSContext *cx, HandleObject obj);
 
 /*
  * Make a copy of errobj parented to cx's compartment's global.
@@ -84,7 +83,7 @@ js_ErrorFromException(JSContext *cx, js::HandleObject obj);
  * prototype objects (errobj->getPrivate() must not be nullptr).
  */
 extern JSObject *
-js_CopyErrorObject(JSContext *cx, JS::Handle<js::ErrorObject*> errobj);
+CopyErrorObject(JSContext *cx, JS::Handle<ErrorObject*> errobj);
 
 static_assert(JSEXN_ERR == 0 &&
               JSProto_Error + JSEXN_INTERNALERR == JSProto_InternalError &&
@@ -115,5 +114,7 @@ ExnTypeFromProtoKey(JSProtoKey key)
     MOZ_ASSERT(type < JSEXN_LIMIT);
     return type;
 }
+
+} // namespace js
 
 #endif /* jsexn_h */

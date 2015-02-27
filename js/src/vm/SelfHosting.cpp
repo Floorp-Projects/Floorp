@@ -157,7 +157,7 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     uint32_t errorNumber = args[0].toInt32();
 
 #ifdef DEBUG
-    const JSErrorFormatString *efs = js_GetErrorMessage(nullptr, errorNumber);
+    const JSErrorFormatString *efs = GetErrorMessage(nullptr, errorNumber);
     MOZ_ASSERT(efs->argCount == args.length() - 1);
 #endif
 
@@ -178,7 +178,7 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, errorNumber,
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber,
                          errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
     return false;
 }
@@ -742,7 +742,7 @@ intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 
     const char *locale = cx->runtime()->getDefaultLocale();
     if (!locale) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEFAULT_LOCALE_ERROR);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEFAULT_LOCALE_ERROR);
         return false;
     }
 
@@ -808,7 +808,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Date_valueOf",                    date_valueOf,                 0,0),
 
     JS_FN("std_Function_bind",                   fun_bind,                     1,0),
-    JS_FN("std_Function_apply",                  js_fun_apply,                 2,0),
+    JS_FN("std_Function_apply",                  fun_apply,                    2,0),
 
     JS_FN("std_Math_floor",                      math_floor,                   1,0),
     JS_FN("std_Math_max",                        math_max,                     2,0),
@@ -820,7 +820,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Map_has",                         MapObject::has,               1,0),
     JS_FN("std_Map_iterator",                    MapObject::entries,           0,0),
 
-    JS_FN("std_Number_valueOf",                  js_num_valueOf,               0,0),
+    JS_FN("std_Number_valueOf",                  num_valueOf,                  0,0),
 
     JS_FN("std_Object_create",                   obj_create,                   2,0),
     JS_FN("std_Object_defineProperty",           obj_defineProperty,           3,0),
@@ -833,7 +833,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
 
     JS_FN("std_String_fromCharCode",             str_fromCharCode,             1,0),
-    JS_FN("std_String_charCodeAt",               js_str_charCodeAt,            1,0),
+    JS_FN("std_String_charCodeAt",               str_charCodeAt,               1,0),
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
     JS_FN("std_String_match",                    str_match,                    1,0),
@@ -1154,15 +1154,15 @@ GetUnclonedValue(JSContext *cx, HandleNativeObject selfHostedObject,
     if (JSID_IS_STRING(id) && !JSID_TO_STRING(id)->isPermanentAtom()) {
         MOZ_ASSERT(selfHostedObject->is<GlobalObject>());
         RootedValue value(cx, IdToValue(id));
-        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
-                                        JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
+        return ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
+                                     JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
     }
 
     RootedShape shape(cx, selfHostedObject->lookupPure(id));
     if (!shape) {
         RootedValue value(cx, IdToValue(id));
-        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
-                                        JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
+        return ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
+                                     JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
     }
 
     MOZ_ASSERT(shape->hasSlot() && shape->hasDefaultGetter());

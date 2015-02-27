@@ -238,7 +238,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
                 args.rval().set(args[0]);
                 return true;
             }
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_LENGTH);
             return false;
         }
 
@@ -263,7 +263,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
             if (!ToLengthClamped(cx, args[0], &length, &overflow)) {
                 // Bug 1068458: Limit length to 2^31-1.
                 if (overflow || length > INT32_MAX)
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
                 return nullptr;
             }
             return fromLength(cx, length);
@@ -273,7 +273,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
         RootedObject dataObj(cx, &args.get(0).toObject());
 
         if (!UncheckedUnwrap(dataObj)->is<SharedArrayBufferObject>()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT);
             return nullptr;
         }
 
@@ -285,7 +285,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
                 return nullptr;
 
             if (numByteOffset < 0 || numByteOffset > MAX_BYTEOFFSET) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                      JSMSG_SHARED_TYPED_ARRAY_ARG_RANGE, "'byteOffset'");
                 return nullptr;
             }
@@ -296,7 +296,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
                 if (!ToLengthClamped(cx, args[2], &length, &overflow)) {
                     // Bug 1068458: Limit length to 2^31-1.
                     if (overflow || length > INT32_MAX)
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                              JSMSG_SHARED_TYPED_ARRAY_ARG_RANGE, "'length'");
                     return nullptr;
                 }
@@ -412,7 +412,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
                         HandleObject proto)
     {
         if (!ObjectClassIs(bufobj, ESClass_SharedArrayBuffer, cx)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT);
             return nullptr; // must be SharedArrayBuffer
         }
 
@@ -426,7 +426,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
 
         if (byteOffset > buffer->byteLength() || byteOffset % sizeof(NativeType) != 0) {
             // Invalid byteOffset.
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS);
             return nullptr;
         }
 
@@ -434,14 +434,14 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
 
         if (length == LENGTH_NOT_PROVIDED) {
             if (bytesAvailable % sizeof(NativeType) != 0) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS);
                 return nullptr;
             }
             length = bytesAvailable / sizeof(NativeType);
         }
 
         if (length > MAX_LENGTH / sizeof(NativeType) || length * sizeof(NativeType) > bytesAvailable) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return nullptr;
         }
 
@@ -459,7 +459,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     fromLength(JSContext *cx, uint32_t nelements)
     {
         if (nelements > MAX_LENGTH / sizeof(NativeType)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return nullptr;
         }
         Rooted<SharedArrayBufferObject *> buffer(

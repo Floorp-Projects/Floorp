@@ -182,7 +182,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args,
         RootedObject sourceObj(cx, &sourceValue.toObject());
 
         if (args.hasDefined(1)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
 
@@ -577,7 +577,7 @@ static const JSPropertySpec regexp_static_props[] = {
 };
 
 JSObject *
-js_InitRegExpClass(JSContext *cx, HandleObject obj)
+js::InitRegExpClass(JSContext *cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
 

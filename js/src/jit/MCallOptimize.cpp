@@ -64,7 +64,7 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     }
 
     // Array natives.
-    if (native == js_Array)
+    if (native == ArrayConstructor)
         return inlineArray(callInfo);
     if (native == js::array_pop)
         return inlineArrayPopShift(callInfo, MArrayPopShift::Pop);
@@ -152,15 +152,15 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineMathFunction(callInfo, MMathFunction::Cbrt);
 
     // String natives.
-    if (native == js_String)
+    if (native == StringConstructor)
         return inlineStringObject(callInfo);
-    if (native == js::str_split)
+    if (native == str_split)
         return inlineStringSplit(callInfo);
-    if (native == js_str_charCodeAt)
+    if (native == str_charCodeAt)
         return inlineStrCharCodeAt(callInfo);
-    if (native == js::str_fromCharCode)
+    if (native == str_fromCharCode)
         return inlineStrFromCharCode(callInfo);
-    if (native == js_str_charAt)
+    if (native == str_charAt)
         return inlineStrCharAt(callInfo);
     if (native == str_replace)
         return inlineStrReplace(callInfo);
@@ -385,7 +385,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     uint32_t initLength = 0;
     AllocatingBehaviour allocating = NewArray_Unallocating;
 
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js_Array);
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, ArrayConstructor);
     if (!templateObject) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoTemplateObj);
         return InliningStatus_NotInlined;
@@ -1362,7 +1362,7 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    JSObject *templateObj = inspector->getTemplateObjectForNative(pc, js_String);
+    JSObject *templateObj = inspector->getTemplateObjectForNative(pc, StringConstructor);
     if (!templateObj)
         return InliningStatus_NotInlined;
     MOZ_ASSERT(templateObj->is<StringObject>());

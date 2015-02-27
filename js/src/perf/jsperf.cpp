@@ -174,7 +174,7 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
 
     uint32_t mask;
     if (!args.hasDefined(0)) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
+        ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
     if (!JS::ToUint32(cx, args[0], &mask))
@@ -213,7 +213,7 @@ GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
         if (!bytes)
             return nullptr;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes);
         return nullptr;
     }
     RootedObject obj(cx, &value.toObject());
@@ -224,7 +224,7 @@ GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
 
     // JS_GetInstancePrivate only sets an exception if its last argument
     // is nonzero, so we have to do it by hand.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, 0, JSMSG_INCOMPATIBLE_PROTO,
+    JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_INCOMPATIBLE_PROTO,
                          pm_class.name, fname, JS_GetClass(obj)->name);
     return nullptr;
 }

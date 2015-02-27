@@ -854,15 +854,11 @@ const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
 } /* namespace gc */
 
-} /* namespace js */
-
 extern bool
-js_InitGC(JSRuntime *rt, uint32_t maxbytes);
+InitGC(JSRuntime *rt, uint32_t maxbytes);
 
 extern void
-js_FinishGC(JSRuntime *rt);
-
-namespace js {
+FinishGC(JSRuntime *rt);
 
 class InterpreterFrame;
 
@@ -1112,12 +1108,8 @@ extern void
 IterateScripts(JSRuntime *rt, JSCompartment *compartment,
                void *data, IterateScriptCallback scriptCallback);
 
-} /* namespace js */
-
 extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str);
-
-namespace js {
+FinalizeStringRT(JSRuntime *rt, JSString *str);
 
 JSCompartment *
 NewCompartment(JSContext *cx, JS::Zone *zone, JSPrincipals *principals,

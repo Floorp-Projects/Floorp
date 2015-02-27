@@ -97,17 +97,6 @@ struct JSSubString {
 #define JS7_UNHEX(c)    (unsigned)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
-/* Initialize the String class, returning its prototype object. */
-extern JSObject *
-js_InitStringClass(JSContext *cx, js::HandleObject obj);
-
-/*
- * Convert a value to a printable C string.
- */
-extern const char *
-js_ValueToPrintable(JSContext *cx, const js::Value &,
-                    JSAutoByteString *bytes, bool asSource = false);
-
 extern size_t
 js_strlen(const char16_t *s);
 
@@ -125,6 +114,16 @@ js_strncpy(char16_t *dst, const char16_t *src, size_t nelem)
 }
 
 namespace js {
+
+/* Initialize the String class, returning its prototype object. */
+extern JSObject *
+InitStringClass(JSContext *cx, HandleObject obj);
+
+/*
+ * Convert a value to a printable C string.
+ */
+extern const char *
+ValueToPrintable(JSContext *cx, const Value &, JSAutoByteString *bytes, bool asSource = false);
 
 extern mozilla::UniquePtr<char[], JS::FreePolicy>
 DuplicateString(ExclusiveContext *cx, const char *s);
@@ -327,31 +326,23 @@ str_toLowerCase(JSContext *cx, unsigned argc, Value *vp);
 extern bool
 str_toUpperCase(JSContext *cx, unsigned argc, Value *vp);
 
-} /* namespace js */
+extern bool
+str_toString(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
-js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern bool
-js_str_charAt(JSContext *cx, unsigned argc, js::Value *vp);
-
-namespace js {
+str_charAt(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
 str_charCodeAt_impl(JSContext *cx, HandleString string, HandleValue index, MutableHandleValue res);
 
-} /* namespace js */
-
 extern bool
-js_str_charCodeAt(JSContext *cx, unsigned argc, js::Value *vp);
+str_charCodeAt(JSContext *cx, unsigned argc, Value *vp);
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 6 bytes long.  Return the number of UTF-8 bytes of data written.
  */
 extern int
-js_OneUcs4ToUtf8Char(uint8_t *utf8Buffer, uint32_t ucs4Char);
-
-namespace js {
+OneUcs4ToUtf8Char(uint8_t *utf8Buffer, uint32_t ucs4Char);
 
 extern size_t
 PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSLinearString *str, uint32_t quote);
@@ -431,9 +422,9 @@ bool
 str_replace_string_raw(JSContext *cx, HandleString string, HandleString pattern,
                        HandleString replacement, MutableHandleValue rval);
 
-} /* namespace js */
-
 extern bool
-js_String(JSContext *cx, unsigned argc, js::Value *vp);
+StringConstructor(JSContext *cx, unsigned argc, Value *vp);
+
+} /* namespace js */
 
 #endif /* jsstr_h */

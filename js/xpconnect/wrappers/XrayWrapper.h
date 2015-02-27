@@ -233,7 +233,7 @@ public:
             return baseInstance.call(cx, wrapper, args);
 
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -246,7 +246,7 @@ public:
             return baseInstance.construct(cx, wrapper, args);
 
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -352,7 +352,7 @@ public:
                      const JS::CallArgs &args, const js::Wrapper& baseInstance)
     {
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -360,7 +360,7 @@ public:
                           const JS::CallArgs &args, const js::Wrapper& baseInstance)
     {
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 

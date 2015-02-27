@@ -58,9 +58,9 @@ class SymbolObject : public NativeObject
     static const JSFunctionSpec staticMethods[];
 };
 
-} /* namespace js */
-
 extern JSObject *
-js_InitSymbolClass(JSContext *cx, js::HandleObject obj);
+InitSymbolClass(JSContext *cx, HandleObject obj);
+
+} /* namespace js */
 
 #endif /* builtin_SymbolObject_h */

@@ -742,7 +742,7 @@ CreateMappedArrayBuffer(JSContext *cx, unsigned argc, Value *vp)
             return false;
         sizeGiven = true;
         if (offset > size) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                  JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
             return false;
         }
@@ -763,7 +763,7 @@ CreateMappedArrayBuffer(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
         if (st.st_size < off_t(offset)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                  JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
             return false;
         }
@@ -1210,7 +1210,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                     return false;
             }
             if (!global || !(JS_GetClass(global)->flags & JSCLASS_IS_GLOBAL)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                                      "\"global\" passed to evaluate()", "not a global object");
                 return false;
             }
@@ -2010,7 +2010,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
     if (!ToUint32(cx, args.get(lineArg), &lineno))
          return false;
 
-    jsbytecode *pc = js_LineNumberToPC(script, lineno);
+    jsbytecode *pc = LineNumberToPC(script, lineno);
     if (!pc)
         return false;
     args.rval().setInt32(script->pcToOffset(pc));
@@ -2238,7 +2238,7 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
         Sprint(sp, "\n");
     }
 
-    if (!js_Disassemble(cx, script, lines, sp))
+    if (!Disassemble(cx, script, lines, sp))
         return false;
     SrcNotes(cx, script, sp);
     TryNotes(cx, script, sp);
@@ -2308,7 +2308,7 @@ DisassembleToSprinter(JSContext *cx, unsigned argc, jsval *vp, Sprinter *sprinte
         RootedScript script(cx, GetTopScript(cx));
         if (script) {
             JSAutoCompartment ac(cx, script);
-            if (!js_Disassemble(cx, script, p.lines, sprinter))
+            if (!Disassemble(cx, script, p.lines, sprinter))
                 return false;
             SrcNotes(cx, script, sprinter);
             TryNotes(cx, script, sprinter);
@@ -2490,7 +2490,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
                 }
             }
 
-            len = js_Disassemble1(cx, script, pc, script->pcToOffset(pc), true, &sprinter);
+            len = Disassemble1(cx, script, pc, script->pcToOffset(pc), true, &sprinter);
             if (!len) {
                 ok = false;
                 goto bail;
@@ -2573,7 +2573,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     if (funobj->compartment() != cx->compartment()) {
         JSFunction *fun = &funobj->as<JSFunction>();
         if (fun->hasScript() && fun->nonLazyScript()->compileAndGo()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
             return false;
         }
@@ -2607,7 +2607,7 @@ GetSLX(JSContext *cx, unsigned argc, jsval *vp)
     script = ValueToScript(cx, args.get(0));
     if (!script)
         return false;
-    args.rval().setInt32(js_GetScriptLineExtent(script));
+    args.rval().setInt32(GetScriptLineExtent(script));
     return true;
 }
 
@@ -3257,7 +3257,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "compile", "0", "s");
         return false;
     }
@@ -3297,7 +3297,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "parse", "0", "s");
         return false;
     }
@@ -3346,7 +3346,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "parse", "0", "s");
         return false;
     }
@@ -3485,7 +3485,7 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "offThreadCompileScript", "0", "s");
         return false;
     }
@@ -4732,7 +4732,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Get the shape of obj (an implementation detail)."),
 
 #ifdef DEBUG
-    JS_FN_HELP("arrayInfo", js_ArrayInfo, 1, 0,
+    JS_FN_HELP("arrayInfo", ArrayInfo, 1, 0,
 "arrayInfo(a1, a2, ...)",
 "  Report statistics about arrays."),
 #endif
@@ -5365,7 +5365,7 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value *vp)
         return false;
 
     if (!protov.isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_PROTOTYPE, "FakeDOMObject");
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_PROTOTYPE, "FakeDOMObject");
         return false;
     }
 

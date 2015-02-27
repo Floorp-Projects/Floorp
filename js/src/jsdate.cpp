@@ -2429,7 +2429,7 @@ date_toISOString_impl(JSContext *cx, CallArgs args)
 {
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
     if (!IsFinite(utctime)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_DATE);
+        JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr, JSMSG_INVALID_DATE);
         return false;
     }
 
@@ -2484,7 +2484,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5. */
     if (!IsCallable(toISO)) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js::GetErrorMessage, nullptr,
                                      JSMSG_BAD_TOISOSTRING_PROP);
         return false;
     }
@@ -2957,7 +2957,7 @@ static const JSFunctionSpec date_methods[] = {
 };
 
 bool
-js_Date(JSContext *cx, unsigned argc, Value *vp)
+js::DateConstructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3009,7 +3009,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
         d = msec_time;
     }
 
-    JSObject *obj = js_NewDateObjectMsec(cx, d);
+    JSObject *obj = NewDateObjectMsec(cx, d);
     if (!obj)
         return false;
 
@@ -3051,7 +3051,7 @@ const Class DateObject::class_ = {
     nullptr, /* construct */
     nullptr, /* trace */
     {
-        GenericCreateConstructor<js_Date, MAXARGS, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<DateConstructor, MAXARGS, JSFunction::FinalizeKind>,
         GenericCreatePrototype,
         date_static_methods,
         date_methods,
@@ -3061,7 +3061,7 @@ const Class DateObject::class_ = {
 };
 
 JS_FRIEND_API(JSObject *)
-js_NewDateObjectMsec(JSContext *cx, double msec_time)
+js::NewDateObjectMsec(JSContext *cx, double msec_time)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &DateObject::class_);
     if (!obj)
@@ -3071,12 +3071,12 @@ js_NewDateObjectMsec(JSContext *cx, double msec_time)
 }
 
 JS_FRIEND_API(JSObject *)
-js_NewDateObject(JSContext *cx, int year, int mon, int mday,
-                 int hour, int min, int sec)
+js::NewDateObject(JSContext *cx, int year, int mon, int mday,
+                  int hour, int min, int sec)
 {
     MOZ_ASSERT(mon < 12);
     double msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-    return js_NewDateObjectMsec(cx, UTC(msec_time, &cx->runtime()->dateTimeInfo));
+    return NewDateObjectMsec(cx, UTC(msec_time, &cx->runtime()->dateTimeInfo));
 }
 
 JS_FRIEND_API(bool)

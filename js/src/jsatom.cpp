@@ -39,7 +39,7 @@ using mozilla::RangedPtr;
 const char *
 js::AtomToPrintableString(ExclusiveContext *cx, JSAtom *atom, JSAutoByteString *bytes)
 {
-    JSString *str = js_QuoteString(cx, atom, 0);
+    JSString *str = QuoteString(cx, atom, 0);
     if (!str)
         return nullptr;
     return bytes->encodeLatin1(cx, str);
@@ -163,7 +163,7 @@ JSRuntime::initializeAtoms(JSContext *cx)
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
         JS::Symbol *symbol = JS::Symbol::new_(cx, JS::SymbolCode(i), descriptions[i]);
         if (!symbol) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
         symbols[i].init(symbol);
@@ -352,7 +352,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const CharT *tbchars, size_t length, I
         // Grudgingly forgo last-ditch GC. The alternative would be to release
         // the lock, manually GC here, and retry from the top. If you fix this,
         // please also fix or comment the similar case in Symbol::new_.
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 
@@ -362,7 +362,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const CharT *tbchars, size_t length, I
     // since then can't GC; therefore the atoms table has not been modified and
     // p is still valid.
     if (!atoms.add(p, AtomStateEntry(atom, bool(ib)))) {
-        js_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
+        ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
         return nullptr;
     }
 
