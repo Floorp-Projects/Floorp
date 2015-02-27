@@ -40,6 +40,18 @@ loop.panel = (function(_, mozL10n) {
       if (tabChange) {
         this.props.mozLoop.notifyUITour("Loop:PanelTabChanged", nextState.selectedTab);
       }
+
+      if (!tabChange && nextProps.buttonsHidden) {
+        if (nextProps.buttonsHidden.length !== this.props.buttonsHidden.length) {
+          tabChange = true;
+        } else {
+          for (var i = 0, l = nextProps.buttonsHidden.length; i < l && !tabChange; ++i) {
+            if (this.props.buttonsHidden.indexOf(nextProps.buttonsHidden[i]) === -1) {
+              tabChange = true;
+            }
+          }
+        }
+      }
       return tabChange;
     },
 
