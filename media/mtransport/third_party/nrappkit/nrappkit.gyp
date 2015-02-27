@@ -153,7 +153,7 @@
                     'BSD',
                 ],
               }],
-              [ 'OS == "mac" or os_bsd == 1', {
+              [ 'OS == "mac" or OS == "ios" or os_bsd == 1', {
                 'cflags_mozilla': [
                     '-Wall',
                     '-Wno-parentheses',

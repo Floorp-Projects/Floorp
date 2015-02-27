@@ -11,6 +11,9 @@
 #include "cpr_win_types.h"
 #elif defined SIP_OS_OSX
 #include "cpr_darwin_types.h"
+#else
+//lol
+//#error "Unsupported platform"
 #endif
 
 #ifdef __cplusplus
