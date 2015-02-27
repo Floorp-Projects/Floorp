@@ -7360,14 +7360,14 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
 }
 
 nsresult
-nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
+nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
 {
   mInitializableFrameLoaders.RemoveElement(aLoader);
   if (mInDestructor) {
     return NS_ERROR_FAILURE;
   }
 
-  mFinalizableFrameLoaders.AppendElement(aLoader);
+  mFrameLoaderFinalizers.AppendElement(aFinalizer);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
       NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
@@ -7392,7 +7392,7 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
   if (!nsContentUtils::IsSafeToRunScript()) {
     if (!mInDestructor && !mFrameLoaderRunner &&
         (mInitializableFrameLoaders.Length() ||
-         mFinalizableFrameLoaders.Length())) {
+         mFrameLoaderFinalizers.Length())) {
       mFrameLoaderRunner =
         NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
       nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
@@ -7411,12 +7411,12 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
     loader->ReallyStartLoading();
   }
 
-  uint32_t length = mFinalizableFrameLoaders.Length();
+  uint32_t length = mFrameLoaderFinalizers.Length();
   if (length > 0) {
-    nsTArray<nsRefPtr<nsFrameLoader> > loaders;
-    mFinalizableFrameLoaders.SwapElements(loaders);
+    nsTArray<nsCOMPtr<nsIRunnable> > finalizers;
+    mFrameLoaderFinalizers.SwapElements(finalizers);
     for (uint32_t i = 0; i < length; ++i) {
-      loaders[i]->Finalize();
+      finalizers[i]->Run();
     }
   }
 }
@@ -7431,20 +7431,6 @@ nsDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
       return;
     }
   }
-}
-
-bool
-nsDocument::FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell)
-{
-  if (aShell) {
-    uint32_t length = mFinalizableFrameLoaders.Length();
-    for (uint32_t i = 0; i < length; ++i) {
-      if (mFinalizableFrameLoaders[i]->GetExistingDocShell() == aShell) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 nsIDocument*
