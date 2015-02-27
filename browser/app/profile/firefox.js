@@ -1577,6 +1577,9 @@ pref("devtools.browserconsole.filter.secwarn", true);
 // Text size in the Web Console. Use 0 for the system default size.
 pref("devtools.webconsole.fontSize", 0);
 
+// Max number of inputs to store in web console history.
+pref("devtools.webconsole.inputHistoryCount", 50);
+
 // Persistent logging: |true| if you want the Web Console to keep all of the
 // logged messages after reloading the page, |false| if you want the output to
 // be cleared each time page navigation happens.

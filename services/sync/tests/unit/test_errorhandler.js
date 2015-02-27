@@ -1770,7 +1770,7 @@ add_task(function test_sync_engine_generic_fail() {
       let entries = logsdir.directoryEntries;
       do_check_true(entries.hasMoreElements());
       let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-      do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+      do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
       clean();
       server.stop(deferred.resolve);
@@ -1801,7 +1801,7 @@ add_test(function test_logs_on_sync_error_despite_shouldReportError() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
     clean();
     run_next_test();
@@ -1828,7 +1828,7 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
     clean();
     run_next_test();
@@ -1862,7 +1862,7 @@ add_task(function test_engine_applyFailed() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(logfile.leafName.startsWith("sync-error-"), logfile.leafName);
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
     clean();
     server.stop(deferred.resolve);
