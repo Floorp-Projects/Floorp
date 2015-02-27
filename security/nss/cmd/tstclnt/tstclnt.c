@@ -32,6 +32,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "pk11func.h"
+#include "secmod.h"
 #include "plgetopt.h"
 #include "plstr.h"
 
@@ -97,6 +98,7 @@ int ssl3CipherSuites[] = {
 
 unsigned long __cmp_umuls;
 PRBool verbose;
+int dumpServerChain = 0;
 int renegotiationsToDo = 0;
 int renegotiationsDone = 0;
 
@@ -179,7 +181,8 @@ static void PrintUsageHeader(const char *progName)
 {
     fprintf(stderr, 
 "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
-                    "[-d certdir] [-n nickname] [-Bafosvx] [-c ciphers] [-Y]\n"
+                    "[-D | -d certdir] [-C] [-b | -R root-module] \n"
+		    "[-n nickname] [-Bafosvx] [-c ciphers] [-Y]\n"
                     "[-V [min-version]:[max-version]] [-K] [-T]\n"
                     "[-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n", 
             progName);
@@ -196,6 +199,12 @@ static void PrintParameterUsage(void)
     fprintf(stderr, 
             "%-20s Directory with cert database (default is ~/.netscape)\n",
 	    "-d certdir");
+    fprintf(stderr, "%-20s Run without a cert database\n", "-D");
+    fprintf(stderr, "%-20s Load the default \"builtins\" root CA module\n", "-b");
+    fprintf(stderr, "%-20s Load the given root CA module\n", "-R");
+    fprintf(stderr, "%-20s Print certificate chain information\n", "-C");
+    fprintf(stderr, "%-20s (use -C twice to print more certificate details)\n", "");
+    fprintf(stderr, "%-20s (use -C three times to include PEM format certificate dumps)\n", "");
     fprintf(stderr, "%-20s Nickname of key and cert for client auth\n", 
                     "-n nickname");
     fprintf(stderr, 
@@ -500,11 +509,113 @@ verifyFromSideChannel(CERTCertificate *cert, ServerCertAuth *sca)
         EXIT_CODE_SIDECHANNELTEST_REVOKED;
 }
 
+
+static void
+dumpCertificatePEM(CERTCertificate *cert)
+{
+    SECItem data;
+    data.data = cert->derCert.data;
+    data.len = cert->derCert.len;
+    fprintf(stderr, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+	    BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
+}
+
+static void
+dumpServerCertificateChain(PRFileDesc *fd)
+{
+    CERTCertList *peerCertChain = NULL;
+    CERTCertListNode *node = NULL;
+    CERTCertificate *peerCert = NULL;
+    CERTCertificateList *foundChain = NULL;
+    SECU_PPFunc dumpFunction = NULL;
+    PRBool dumpCertPEM = PR_FALSE;
+
+    if (!dumpServerChain) {
+	return;
+    }
+    else if (dumpServerChain == 1) {
+	dumpFunction = SECU_PrintCertificateBasicInfo;
+    } else {
+	dumpFunction = SECU_PrintCertificate;
+	if (dumpServerChain > 2) {
+	    dumpCertPEM = PR_TRUE;
+	}
+    }
+
+    SECU_EnableWrap(PR_FALSE);
+
+    fprintf(stderr, "==== certificate(s) sent by server: ====\n");
+    peerCertChain = SSL_PeerCertificateChain(fd);
+    if (peerCertChain) {
+        node = CERT_LIST_HEAD(peerCertChain);
+        while ( ! CERT_LIST_END(node, peerCertChain) ) {
+            CERTCertificate *cert = node->cert;
+            SECU_PrintSignedContent(stderr, &cert->derCert, "Certificate", 0,
+                                    dumpFunction);
+	    if (dumpCertPEM) {
+		dumpCertificatePEM(cert);
+	    }
+            node = CERT_LIST_NEXT(node);   
+        }
+    }
+
+    if (peerCertChain) {
+	peerCert = SSL_RevealCert(fd);
+	if (peerCert) {
+	    foundChain = CERT_CertChainFromCert(peerCert, certificateUsageSSLServer,
+						PR_TRUE);
+	}
+	if (foundChain) {
+	    int count = 0;
+	    fprintf(stderr, "==== locally found issuer certificate(s): ====\n");
+	    for(count = 0; count < (unsigned int)foundChain->len; count++) {
+		CERTCertificate *c;
+		PRBool wasSentByServer = PR_FALSE;
+		c = CERT_FindCertByDERCert(CERT_GetDefaultCertDB(), &foundChain->certs[count]);
+
+		node = CERT_LIST_HEAD(peerCertChain);
+		while ( ! CERT_LIST_END(node, peerCertChain) ) {
+		    CERTCertificate *cert = node->cert;
+		    if (CERT_CompareCerts(cert, c)) {
+			wasSentByServer = PR_TRUE;
+			break;
+		    }
+		    node = CERT_LIST_NEXT(node);   
+		}
+		
+		if (!wasSentByServer) {
+		    SECU_PrintSignedContent(stderr, &c->derCert, "Certificate", 0,
+					    dumpFunction);
+		    if (dumpCertPEM) {
+			dumpCertificatePEM(c);
+		    }
+		}
+		CERT_DestroyCertificate(c);
+	    }
+	    CERT_DestroyCertificateList(foundChain);
+	}
+	if (peerCert) {
+	    CERT_DestroyCertificate(peerCert);
+	}
+
+	CERT_DestroyCertList(peerCertChain);
+	peerCertChain = NULL;
+    }
+
+    fprintf(stderr, "==== end of certificate chain information ====\n");
+    fflush(stderr);
+}
+
 static SECStatus 
 ownAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
                        PRBool isServer)
 {
     ServerCertAuth * serverCertAuth = (ServerCertAuth *) arg;
+
+    if (dumpServerChain) {
+	dumpServerCertificateChain(fd);
+    }
+
 
     if (!serverCertAuth->shouldPause) {
         CERTCertificate *cert;
@@ -828,6 +939,9 @@ int main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus optstatus;
     PRStatus prStatus;
+    PRBool openDB = PR_TRUE;
+    PRBool loadDefaultRootCAs = PR_FALSE;
+    char *rootModule = NULL;
 
     serverCertAuth.shouldPause = PR_TRUE;
     serverCertAuth.isPaused = PR_FALSE;
@@ -854,7 +968,7 @@ int main(int argc, char **argv)
     SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "46BFKM:OSTV:W:Ya:c:d:fgh:m:n:op:qr:st:uvw:xz");
+                                 "46BCDFKM:OR:STV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -864,6 +978,10 @@ int main(int argc, char **argv)
           case '6': allowIPv4 = PR_FALSE; if (!allowIPv6) Usage(progName); break;
 
           case 'B': bypassPKCS11 = 1; 			break;
+
+          case 'C': ++dumpServerChain; 			break;
+
+          case 'D': openDB = PR_FALSE; 			break;
 
           case 'F': if (serverCertAuth.testFreshStatusFromSideChannel) {
                         /* parameter given twice or more */
@@ -895,6 +1013,8 @@ int main(int argc, char **argv)
                     };
                     break;
 
+          case 'R': rootModule = PORT_Strdup(optstate->value); break;
+
           case 'S': skipProtoHeader = PR_TRUE;                 break;
 
           case 'T': enableCertStatus = 1;               break;
@@ -916,6 +1036,8 @@ int main(int argc, char **argv)
                         Usage(progName);
                     }
                     break;
+
+          case 'b': loadDefaultRootCAs = PR_TRUE;                 break;
 
           case 'c': cipherString = PORT_Strdup(optstate->value); break;
 
@@ -972,12 +1094,24 @@ int main(int argc, char **argv)
     if (optstatus == PL_OPT_BAD)
 	Usage(progName);
 
-    if (!host || !portno) 
+    if (!host || !portno) {
+        fprintf(stderr, "%s: parameters -h and -p are mandatory\n", progName);
     	Usage(progName);
+    }
 
     if (serverCertAuth.testFreshStatusFromSideChannel
         && serverCertAuth.shouldPause) {
         fprintf(stderr, "%s: -F requires the use of -O\n", progName);
+        exit(1);
+    }
+
+    if (certDir && !openDB) {
+        fprintf(stderr, "%s: Cannot combine parameters -D and -d\n", progName);
+        exit(1);
+    }
+
+    if (rootModule && loadDefaultRootCAs) {
+        fprintf(stderr, "%s: Cannot combine parameters -b and -R\n", progName);
         exit(1);
     }
 
@@ -1073,10 +1207,26 @@ int main(int argc, char **argv)
         certDir = SECU_ConfigDirectory(certDirTmp);
         PORT_Free(certDirTmp);
     }
-    rv = NSS_Init(certDir);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "unable to open cert database");
-        return 1;
+
+    if (openDB) {
+	rv = NSS_Init(certDir);
+	if (rv != SECSuccess) {
+	    SECU_PrintError(progName, "unable to open cert database");
+	    return 1;
+	}
+    } else {
+	rv = NSS_NoDB_Init(NULL);
+	if (rv != SECSuccess) {
+	    SECU_PrintError(progName, "failed to initialize NSS");
+	    return 1;
+	}
+    }
+
+    if (loadDefaultRootCAs) {
+	SECMOD_AddNewModule("Builtins",
+			    DLL_PREFIX"nssckbi."DLL_SUFFIX, 0, 0);
+    } else if (rootModule) {
+	SECMOD_AddNewModule("Builtins", rootModule, 0, 0);
     }
 
     /* set the policy bits true for all the cipher suites. */

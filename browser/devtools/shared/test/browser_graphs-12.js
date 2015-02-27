@@ -35,8 +35,8 @@ function* performTest() {
 
   testGraphs(graph1, graph2);
 
-  graph1.destroy();
-  graph2.destroy();
+  yield graph1.destroy();
+  yield graph2.destroy();
   host.destroy();
 }
 

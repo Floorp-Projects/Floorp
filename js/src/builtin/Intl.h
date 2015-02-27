@@ -15,14 +15,14 @@
  * ECMAScript Internationalization API Specification.
  */
 
+namespace js {
+
 /**
  * Initializes the Intl Object and its standard built-in properties.
  * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
  */
 extern JSObject *
-js_InitIntlClass(JSContext *cx, js::HandleObject obj);
-
-namespace js {
+InitIntlClass(JSContext *cx, HandleObject obj);
 
 /*
  * The following functions are for use by self-hosted code.

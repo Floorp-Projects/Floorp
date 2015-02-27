@@ -68,7 +68,7 @@ GeneratorObject::suspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame
 
     if (*pc == JSOP_YIELD && genObj->isClosing() && genObj->is<LegacyGeneratorObject>()) {
         RootedValue val(cx, ObjectValue(*frame.callee()));
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_IGNORE_STACK, val, NullPtr());
+        ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_IGNORE_STACK, val, NullPtr());
         return false;
     }
 

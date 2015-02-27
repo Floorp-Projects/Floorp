@@ -34,11 +34,13 @@ let JsFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
    * Unbinds events.
    */
-  destroy: function () {
+  destroy: Task.async(function* () {
     DetailsSubview.destroy.call(this);
 
     this.graph.off("selecting", this._onRangeChangeInGraph);
-  },
+
+    yield this.graph.destroy();
+  }),
 
   /**
    * Method for handling all the set up for rendering a new flamegraph.

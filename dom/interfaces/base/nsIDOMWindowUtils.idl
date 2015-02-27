@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(d0461871-31bd-4da1-b22d-24595c27295c)]
+[scriptable, uuid(6eaf87a1-b252-4c4e-a2fc-318120680335)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1246,14 +1246,6 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getVisitedDependentComputedStyle(in nsIDOMElement aElement,
                                            in AString aPseudoElement,
                                            in AString aPropertyName);
-
-  /**
-   * Returns the parent of obj.
-   *
-   * @param obj The JavaScript object whose parent is to be gotten.
-   * @return the parent.
-   */
-  [implicit_jscontext] jsval getParent(in jsval obj);
 
   /**
    * Get the id of the outer window of this window.  This will never throw.

@@ -143,7 +143,7 @@
     </style>
 
     <style name="Widget.ReadingListRow.ReadTime">
-        <item name="android:textColor">@color/text_color_highlight</item>
+        <item name="android:textColor">@color/fennec_ui_orange</item>
     </style>
 
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
@@ -292,7 +292,7 @@
     -->
     <style name="TextAppearance">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:textColorHighlight">@color/text_color_highlight</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
         <item name="android:textColorHint">?android:attr/textColorHint</item>
         <item name="android:textColorLink">?android:attr/textColorLink</item>
         <item name="android:textSize">@dimen/menu_item_textsize</item>
@@ -457,7 +457,7 @@
         <item name="android:textAppearance">@style/TextAppearance.UrlBar.Title</item>
         <item name="android:textColor">@color/url_bar_title</item>
         <item name="android:textColorHint">@color/url_bar_title_hint</item>
-        <item name="android:textColorHighlight">@color/url_bar_text_highlight</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
         <item name="android:textSelectHandle">@drawable/handle_middle</item>
         <item name="android:textSelectHandleLeft">@drawable/handle_start</item>
         <item name="android:textSelectHandleRight">@drawable/handle_end</item>

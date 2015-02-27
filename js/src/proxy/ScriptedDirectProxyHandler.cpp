@@ -158,8 +158,8 @@ ReportInvalidTrapResult(JSContext *cx, JSObject *proxy, JSAtom *atom)
     JSAutoByteString bytes;
     if (!AtomToPrintableString(cx, atom, &bytes))
         return;
-    js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK, v,
-                         js::NullPtr(), bytes.ptr());
+    ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK, v,
+                      js::NullPtr(), bytes.ptr());
 }
 
 // This function is shared between ownPropertyKeys, enumerate, and
@@ -207,7 +207,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
         if (!IsExtensible(cx, target, &extensible))
             return false;
         if (!extensible && !isFixed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NEW);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NEW);
             return false;
         }
 
@@ -240,7 +240,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
         if (!IsSealed(cx, target, id, &sealed))
             return false;
         if (sealed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_SKIP_NC);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SKIP_NC);
             return false;
         }
 
@@ -254,7 +254,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
         if (!IsExtensible(cx, target, &extensible))
             return false;
         if (!extensible && isFixed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
             return false;
         }
     }
@@ -272,7 +272,7 @@ ScriptedDirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy,
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     // Though handler is used elsewhere, spec mandates that both get set to null.
     if (!target) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -285,7 +285,7 @@ ScriptedDirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy,
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!target) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -300,7 +300,7 @@ ScriptedDirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject pr
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!target) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -315,7 +315,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
     // Steps 1-3.
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -348,7 +348,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
         if (!IsExtensible(cx, target, &extensible))
             return false;
         if (extensible) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
             return false;
         }
     }
@@ -367,7 +367,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
 
     // step 2
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -401,7 +401,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
 
     // step 12
     if (targetResult != booleanTrapResult) {
-       JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_EXTENSIBILITY);
+       JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_EXTENSIBILITY);
        return false;
     }
 
@@ -442,7 +442,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -473,7 +473,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 10
     if (!trapResult.isUndefined() && !trapResult.isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_GETOWN_OBJORUNDEF);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_GETOWN_OBJORUNDEF);
         return false;
     }
 
@@ -492,7 +492,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
         // substep b
         if (targetDesc.isPermanent()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
             return false;
         }
 
@@ -501,7 +501,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
         if (!IsExtensible(cx, target, &extensibleTarget))
             return false;
         if (!extensibleTarget) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
             return false;
         }
 
@@ -530,19 +530,19 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 20
     if (!valid) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_INVALID);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_INVALID);
         return false;
     }
 
     // step 21
     if (!resultDesc.configurable()) {
         if (!targetDesc.object()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NE_AS_NC);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NE_AS_NC);
             return false;
         }
 
         if (!targetDesc.isPermanent()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_C_AS_NC);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_C_AS_NC);
             return false;
         }
     }
@@ -562,7 +562,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -614,12 +614,12 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
         if (!targetDesc.object()) {
             // step 20a
             if (!extensibleTarget) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
                 return false;
             }
             // step 20b
             if (settingConfigFalse) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
                 return false;
             }
         } else {
@@ -630,7 +630,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
             if (!ValidatePropertyDescriptor(cx, extensibleTarget, pd, targetDesc, &valid))
                 return false;
             if (!valid || (settingConfigFalse && !targetDesc.isPermanent())) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
                 return false;
             }
         }
@@ -651,7 +651,7 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
 
     // step 2
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -697,7 +697,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -735,7 +735,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
         // step 14-15
         if (desc.object() && desc.isPermanent()) {
             RootedValue v(cx, IdToValue(id));
-            js_ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
+            ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
             return false;
         }
 
@@ -759,7 +759,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
 
     // step 2
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -804,7 +804,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -843,7 +843,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
 
         if (desc.object()) {
             if (desc.isPermanent()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NC_AS_NE);
                 return false;
             }
 
@@ -851,7 +851,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
             if (!IsExtensible(cx, target, &extensible))
                 return false;
             if (!extensible) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REPORT_E_AS_NE);
                 return false;
             }
         }
@@ -872,7 +872,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -913,14 +913,14 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
             if (!SameValue(cx, trapResult, desc.value(), &same))
                 return false;
             if (!same) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MUST_REPORT_SAME_VALUE);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MUST_REPORT_SAME_VALUE);
                 return false;
             }
         }
 
         if (IsAccessorDescriptor(desc) && desc.isPermanent() && !desc.hasGetterObject()) {
             if (!trapResult.isUndefined()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MUST_REPORT_UNDEFINED);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MUST_REPORT_UNDEFINED);
                 return false;
             }
         }
@@ -941,7 +941,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 3
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -987,13 +987,13 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
                 if (!SameValue(cx, vp, desc.value(), &same))
                     return false;
                 if (!same) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_SET_NW_NC);
+                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_NW_NC);
                     return false;
                 }
             }
 
             if (IsAccessorDescriptor(desc) && desc.isPermanent() && !desc.hasSetterObject()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_SET_WO_SETTER);
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_WO_SETTER);
                 return false;
             }
         }
@@ -1014,7 +1014,7 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallAr
 
     // step 2
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -1055,7 +1055,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
 
     // step 2
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -1088,7 +1088,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
 
     // step 10
     if (!args.rval().isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_CONSTRUCT_OBJECT);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_CONSTRUCT_OBJECT);
         return false;
     }
     return true;
@@ -1108,7 +1108,7 @@ ScriptedDirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, Mutab
 {
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
     if (!handler) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
@@ -1149,7 +1149,7 @@ JSString *
 ScriptedDirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy,
                                          unsigned indent) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                          js_Function_str, js_toString_str, "object");
     return nullptr;
 }
@@ -1193,7 +1193,7 @@ static bool
 NewScriptedProxy(JSContext *cx, CallArgs &args, const char *callerName)
 {
     if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              callerName, "1", "s");
         return false;
     }
@@ -1206,7 +1206,7 @@ NewScriptedProxy(JSContext *cx, CallArgs &args, const char *callerName)
     RootedValue priv(cx, ObjectValue(*target));
     JSObject *proxy_ =
         NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
-                       priv, TaggedProto::LazyProto, cx->global());
+                       priv, TaggedProto::LazyProto);
     if (!proxy_)
         return false;
     Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
@@ -1227,7 +1227,7 @@ js::proxy(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION, "Proxy");
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION, "Proxy");
         return false;
     }
 

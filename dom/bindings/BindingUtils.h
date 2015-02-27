@@ -2802,7 +2802,7 @@ public:
     options.setClass(aClass);
     JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aNative));
     aReflector.set(js::NewProxyObject(aCx, aHandler, proxyPrivateVal, aProto,
-                                      /* parent= */nullptr, options));
+                                      options));
     if (aReflector) {
       mNative = aNative;
       mReflector = aReflector;

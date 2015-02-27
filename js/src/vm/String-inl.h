@@ -97,7 +97,7 @@ MOZ_ALWAYS_INLINE bool
 JSString::validateLength(js::ExclusiveContext *maybecx, size_t length)
 {
     if (MOZ_UNLIKELY(length > JSString::MAX_LENGTH)) {
-        js_ReportAllocationOverflow(maybecx);
+        js::ReportAllocationOverflow(maybecx);
         return false;
     }
 

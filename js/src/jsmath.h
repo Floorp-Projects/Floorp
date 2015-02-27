@@ -83,16 +83,12 @@ class MathCache
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
-} /* namespace js */
-
 /*
  * JS math functions.
  */
 
 extern JSObject *
-js_InitMathClass(JSContext *cx, js::HandleObject obj);
-
-namespace js {
+InitMathClass(JSContext *cx, HandleObject obj);
 
 extern void
 random_initState(uint64_t *rngState);

@@ -6940,6 +6940,12 @@
     "n_values": 512,
     "description": "Certificate pinning test results by host for Mozilla operational sites"
   },
+  "CERT_CHAIN_KEY_SIZE_STATUS": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Does enforcing a larger minimum RSA key size cause verification failures? 1 = no, 2 = yes, 3 = another error prevented finding a verified chain"
+  },
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",
     "kind": "boolean",

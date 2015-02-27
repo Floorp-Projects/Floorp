@@ -202,7 +202,7 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |
                                         JSREPORT_STRICT_MODE_ERROR,
-                                        js_GetErrorMessage, nullptr,
+                                        js::GetErrorMessage, nullptr,
                                         JSMSG_GETTER_ONLY);
   }
 
@@ -216,7 +216,7 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
   }
 
   bool dummy;
-  return js_DefineOwnProperty(cx, expando, id, desc, &dummy);
+  return js::DefineOwnProperty(cx, expando, id, desc, &dummy);
 }
 
 bool

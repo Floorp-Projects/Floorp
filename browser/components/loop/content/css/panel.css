@@ -390,6 +390,23 @@ body {
   color: #fff;
 }
 
+.button-close {
+  background-color: transparent;
+  background-image: url(../shared/img/icons-10x10.svg#close);
+  background-repeat: no-repeat;
+  background-size: 8px 8px;
+  border: none;
+  padding: 0;
+  height: 8px;
+  width: 8px;
+}
+
+.button-close:hover,
+.button-close:hover:active {
+  background-color: transparent;
+  border: none;
+}
+
 /* Dropdown menu */
 
 .dropdown {

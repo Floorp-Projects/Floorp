@@ -72,7 +72,7 @@ BEGIN_TEST(testSetPropertyIgnoringNamedGetter_direct)
     EVAL("({})", &targetv);
 
     RootedObject proxyObj(cx, NewProxyObject(cx, &customProxyHandler, targetv,
-                                             &protov.toObject(), global, ProxyOptions()));
+                                             &protov.toObject(), ProxyOptions()));
     CHECK(proxyObj);
 
     CHECK(JS_DefineProperty(cx, global, "target", targetv, 0));

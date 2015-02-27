@@ -12,6 +12,7 @@
 #include "WrapperFactory.h"
 
 #include "jswrapper.h"
+#include "js/Proxy.h"
 
 // Xray wrappers re-resolve the original native properties on the native
 // object and always directly access to those properties.
@@ -232,7 +233,7 @@ public:
             return baseInstance.call(cx, wrapper, args);
 
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -245,7 +246,7 @@ public:
             return baseInstance.construct(cx, wrapper, args);
 
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -351,7 +352,7 @@ public:
                      const JS::CallArgs &args, const js::Wrapper& baseInstance)
     {
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -359,7 +360,7 @@ public:
                           const JS::CallArgs &args, const js::Wrapper& baseInstance)
     {
         JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
-        js_ReportIsNotFunction(cx, v);
+        js::ReportIsNotFunction(cx, v);
         return false;
     }
 
@@ -526,6 +527,13 @@ public:
 
     virtual bool call(JSContext *cx, JS::Handle<JSObject*> proxy,
                       const JS::CallArgs &args) const MOZ_OVERRIDE;
+
+    static const size_t SandboxProxySlot = 0;
+
+    static inline JSObject *getSandboxProxy(JS::Handle<JSObject*> proxy)
+    {
+        return &js::GetProxyExtra(proxy, SandboxProxySlot).toObject();
+    }
 };
 
 extern const SandboxCallableProxyHandler sandboxCallableProxyHandler;

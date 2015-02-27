@@ -266,7 +266,10 @@ function mousedown (win, button) {
   EventUtils.sendMouseEvent({ type: "mousedown" }, button, win);
 }
 
-function* startRecording(panel, options={}) {
+function* startRecording(panel, options = {
+  waitForOverview: true,
+  waitForStateChanged: true
+}) {
   let win = panel.panelWin;
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_START_RECORDING);
   let willStart = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_START);
@@ -287,10 +290,14 @@ function* startRecording(panel, options={}) {
     "The record button should be locked.");
 
   yield willStart;
-  let stateChanged = once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED);
+  let stateChanged = options.waitForStateChanged
+    ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
+    : Promise.resolve();
 
   yield hasStarted;
-  let overviewRendered = options.waitForOverview ? once(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED) : Promise.resolve();
+  let overviewRendered = options.waitForOverview
+    ? once(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED)
+    : Promise.resolve();
 
   yield stateChanged;
   yield overviewRendered;
@@ -304,7 +311,10 @@ function* startRecording(panel, options={}) {
     "The record button should not be locked.");
 }
 
-function* stopRecording(panel, options={}) {
+function* stopRecording(panel, options = {
+  waitForOverview: true,
+  waitForStateChanged: true
+}) {
   let win = panel.panelWin;
   let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_STOP_RECORDING);
   let willStop = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_WILL_STOP);
@@ -325,10 +335,14 @@ function* stopRecording(panel, options={}) {
     "The record button should be locked.");
 
   yield willStop;
-  let stateChanged = once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED);
+  let stateChanged = options.waitForStateChanged
+    ? once(win.PerformanceView, win.EVENTS.UI_STATE_CHANGED)
+    : Promise.resolve();
 
   yield hasStopped;
-  let overviewRendered = options.waitForOverview ? once(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED) : Promise.resolve();
+  let overviewRendered = options.waitForOverview
+    ? once(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED)
+    : Promise.resolve();
 
   yield stateChanged;
   yield overviewRendered;

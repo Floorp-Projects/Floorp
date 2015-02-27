@@ -927,7 +927,7 @@ gc::MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t n
 {
     MOZ_ASSERT(obj->isNative());
     for (uint32_t i = start; i < (start + nslots); ++i) {
-        trc->setTracingDetails(js_GetObjectSlotName, obj, i);
+        trc->setTracingDetails(GetObjectSlotName, obj, i);
         MarkValueInternal(trc, obj->getSlotRef(i).unsafeGet());
     }
 }

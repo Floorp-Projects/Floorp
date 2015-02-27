@@ -223,7 +223,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
 
   if (JS_GetClass(aObj) == IDBObjectStore::DummyPropClass()) {
     MOZ_ASSERT(!cloneWriteInfo->mOffsetToKeyProp);
-    cloneWriteInfo->mOffsetToKeyProp = js_GetSCOffset(aWriter);
+    cloneWriteInfo->mOffsetToKeyProp = js::GetSCOffset(aWriter);
 
     uint64_t value = 0;
     // Omit endian swap
