@@ -5730,7 +5730,7 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult)
 
 /* static */
 nsresult
-nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsCString& aOrigin)
+nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsACString& aOrigin)
 {
   NS_PRECONDITION(aPrincipal, "missing principal");
 
@@ -5751,7 +5751,7 @@ nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsCString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
+nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
 
@@ -5805,7 +5805,7 @@ nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
+nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin)
 {
   NS_PRECONDITION(aPrincipal, "missing principal");
 
@@ -5826,7 +5826,7 @@ nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
+nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
 
