@@ -50,6 +50,7 @@
     _(RangeAnalysis)                                  \
     _(LoopUnrolling)                                  \
     _(EffectiveAddressAnalysis)                       \
+    _(AlignmentMaskAnalysis)                          \
     _(EliminateDeadCode)                              \
     _(EdgeCaseAnalysis)                               \
     _(EliminateRedundantChecks)                       \

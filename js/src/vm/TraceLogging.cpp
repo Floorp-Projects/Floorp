@@ -683,6 +683,7 @@ TraceLoggerThreadState::init()
         enabledTextIds[TraceLogger_RangeAnalysis] = true;
         enabledTextIds[TraceLogger_LoopUnrolling] = true;
         enabledTextIds[TraceLogger_EffectiveAddressAnalysis] = true;
+        enabledTextIds[TraceLogger_AlignmentMaskAnalysis] = true;
         enabledTextIds[TraceLogger_EliminateDeadCode] = true;
         enabledTextIds[TraceLogger_EdgeCaseAnalysis] = true;
         enabledTextIds[TraceLogger_EliminateRedundantChecks] = true;
