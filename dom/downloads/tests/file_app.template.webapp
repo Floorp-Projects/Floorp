@@ -1,0 +1,7 @@
+{
+  "name": "Really Rapid Release (hosted)",
+  "description": "Updated even faster than <a href='http://mozilla.org'>Firefox</a>, just to annoy slashdotters.",
+  "type": "APPTYPE",
+  "launch_path": "/tests/dom/downloads/tests/TESTTOKEN",
+  "icons": { "128": "default_icon" }
+}

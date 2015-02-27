@@ -309,6 +309,16 @@ public:
     return EventRegions();
   }
 
+  bool HasTransformAnimation() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->HasTransformAnimation();
+    }
+    return false;
+  }
+
   RefLayer* AsRefLayer() const
   {
     MOZ_ASSERT(IsValid());
