@@ -323,6 +323,7 @@ let Strings = {
   init: function () {
     XPCOMUtils.defineLazyGetter(Strings, "brand", () => Services.strings.createBundle("chrome://branding/locale/brand.properties"));
     XPCOMUtils.defineLazyGetter(Strings, "browser", () => Services.strings.createBundle("chrome://browser/locale/browser.properties"));
+    XPCOMUtils.defineLazyGetter(Strings, "reader", () => Services.strings.createBundle("chrome://global/locale/aboutReader.properties"));
   },
 
   flush: function () {
