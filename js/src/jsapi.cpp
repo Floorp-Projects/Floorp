@@ -1724,18 +1724,6 @@ JS_GetParent(JSObject *obj)
     return obj->getParent();
 }
 
-JS_PUBLIC_API(bool)
-JS_SetParent(JSContext *cx, HandleObject obj, HandleObject parent)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    MOZ_ASSERT(!obj->is<ScopeObject>());
-    MOZ_ASSERT(parent || !obj->getParent());
-    assertSameCompartment(cx, obj, parent);
-
-    return JSObject::setParent(cx, obj, parent);
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, HandleObject proto)
 {
