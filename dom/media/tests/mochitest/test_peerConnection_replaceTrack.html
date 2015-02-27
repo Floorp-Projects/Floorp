@@ -18,54 +18,49 @@
 
   // Test basically just verifies that success callback is called at this point
 
-  var test;
-  var newtrackId;
-
   runNetworkTest(function () {
     test = new PeerConnectionTest();
     test.setMediaConstraints([{video: true}], [{video: true}]);
     test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
     var flowtest = test.chain.remove("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
     test.chain.append(flowtest);
-    test.chain.append([
-      function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
-        var stream = test.pcLocal._pc.getLocalStreams()[0];
-        var track = stream.getVideoTracks()[0];
-        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
-        ok(sender, "track has a sender");
-        var newtrack;
-        return navigator.mediaDevices.getUserMedia({video:true, fake: true})
-          .then(newStream => {
-            newtrack = newStream.getVideoTracks()[0];
-            newtrackId = newtrack.id;
-            return sender.replaceTrack(newtrack);
-          })
-          .then(() => {
-            is(sender.track, newtrack, "sender.track has been replaced");
-          });
-      }
-    ]);
-    // Do it again to make sure it still works.
-    test.chain.append([
-      function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
-        var stream = test.pcLocal._pc.getLocalStreams()[0];
-        var track = stream.getVideoTracks()[0];
-        is(track.id, newtrackId, "track has been replaced in stream");
-        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
-        ok(sender, "track has a sender");
-        var newtrack;
-        return navigator.mediaDevices.getUserMedia({video:true, fake: true})
-          .then(newStream => {
-            newtrack = newStream.getVideoTracks()[0];
-            return sender.replaceTrack(newtrack);
-          })
-          .then(() => {
-            is(sender.track, newtrack, "sender.track has been replaced");
-          });
-      }
-    ]);
-    test.chain.append(flowtest);
 
+    var replacetest = [ function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
+      var stream = test.pcLocal._pc.getLocalStreams()[0];
+      var track = stream.getVideoTracks()[0];
+      var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
+      ok(sender, "track has a sender");
+      var newtrack;
+      return navigator.mediaDevices.getUserMedia({video:true, fake: true})
+        .then(newStream => {
+          newtrack = newStream.getVideoTracks()[0];
+          isnot(newtrack, track, "replacing with a different track");
+          isnot(newStream, stream, "from a different stream");
+          return sender.replaceTrack(newtrack);
+        })
+        .then(() => {
+          is(sender.track, newtrack, "sender.track has been replaced");
+          var stream = test.pcLocal._pc.getLocalStreams()[0];
+          var track = stream.getVideoTracks()[0];
+          is(track, newtrack, "track has been replaced in stream");
+        });
+    } ];
+    // Do it twice to make sure it still works.
+    test.chain.append(replacetest);
+    test.chain.append(flowtest);
+    test.chain.append(replacetest);
+    test.chain.append(flowtest);
+    test.chain.append([
+      function PC_LOCAL_INVALID_REPLACE_VIDEOTRACK(test) {
+        var stream = test.pcLocal._pc.getLocalStreams()[0];
+        var track = stream.getVideoTracks()[0];
+        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
+        return sender.replaceTrack(track) // same track
+          .then(() => ok(false, "replacing with itself should fail"),
+                e => is(e.name, "InvalidParameter",
+                        "replacing with itself should fail"));
+      }
+    ]);
     test.run();
   });
 </script>
