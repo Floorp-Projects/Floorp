@@ -12,3 +12,5 @@ fi
 # Some builds (eg: Mulet) don't want the installer, so only set this if it
 # hasn't already been set.
 MOZ_AUTOMATION_INSTALLER=${MOZ_AUTOMATION_INSTALLER-1}
+
+export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=c:/builds/crash-stats-api.token
