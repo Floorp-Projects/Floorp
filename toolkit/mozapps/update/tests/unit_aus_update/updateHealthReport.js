@@ -3,9 +3,6 @@
 
 "use strict";
 
-const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
-
-
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/UpdaterHealthProvider.jsm");
 

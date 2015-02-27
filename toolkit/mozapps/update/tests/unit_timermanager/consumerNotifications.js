@@ -7,12 +7,10 @@
 
 'use strict';
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cm = Components.manager;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
+        utils: Cu } = Components;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const CATEGORY_UPDATE_TIMER = "update-timer";
 
@@ -215,7 +213,7 @@ function run_test1thru7() {
 
 function finished_test1thru7() {
   if (TESTS[4].notified && TESTS[5].notified && TESTS[6].notified) {
-    do_timeout(0, gNextFunc);
+    do_execute_soon(gNextFunc);
   }
 }
 
@@ -270,7 +268,7 @@ function check_test1thru7() {
            "registered");
   do_check_eq(count, 0);
 
-  do_timeout(0, run_test8);
+  do_execute_soon(run_test8);
 }
 
 function run_test8() {
@@ -427,7 +425,7 @@ const gTest8TimerCallback = {
   notify: function T8CB_notify(aTimer) {
     TESTS[7].notified = true;
     TESTS[7].notifyTime = Date.now();
-    do_timeout(0, function() {
+    do_execute_soon(function() {
       check_test8(gTest8TimerCallback);
     });
   },
@@ -447,7 +445,7 @@ const gTest9TimerCallback = {
   notify: function T9CB_notify(aTimer) {
     TESTS[8].notified = true;
     TESTS[8].notifyTime = Date.now();
-    do_timeout(0, function() {
+    do_execute_soon(function() {
       check_test8(gTest9TimerCallback);
     });
   },

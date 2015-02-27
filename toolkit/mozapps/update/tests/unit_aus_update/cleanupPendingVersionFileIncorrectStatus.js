@@ -10,9 +10,9 @@ function run_test() {
               "update xml has an update with STATE_PENDING (Bug 601701).");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  var patches = getLocalPatchString(null, null, null, null, null, null,
+  let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_PENDING);
-  var updates = getLocalUpdateString(patches);
+  let updates = getLocalUpdateString(patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile("99.9");
 
@@ -25,12 +25,12 @@ function run_test() {
   logTestInfo("testing updateCount == 0");
   do_check_eq(gUpdateManager.updateCount, 0);
 
-  var dir = getUpdatesDir();
+  let dir = getUpdatesDir();
   dir.append("0");
   logTestInfo("testing " + dir.path + " should exist");
   do_check_true(dir.exists());
 
-  var versionFile = dir.clone();
+  let versionFile = dir.clone();
   versionFile.append(FILE_UPDATE_VERSION);
   logTestInfo("testing " + versionFile.path + " should not exist");
   do_check_false(versionFile.exists());
