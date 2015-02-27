@@ -10,11 +10,22 @@ function checkRLState() {
   let sidebarBroadcaster = document.getElementById("readingListSidebar");
   let sidebarMenuitem = document.getElementById("menu_readingListSidebar");
 
+  let bookmarksMenubarItem = document.getElementById("menu_readingList");
+  let bookmarksMenubarSeparator = document.getElementById("menu_readingListSeparator");
+
   if (enabled) {
     Assert.notEqual(sidebarBroadcaster.getAttribute("hidden"), "true",
                     "Sidebar broadcaster should not be hidden");
     Assert.notEqual(sidebarMenuitem.getAttribute("hidden"), "true",
                     "Sidebar menuitem should be visible");
+
+    // Currently disabled on OSX.
+    if (bookmarksMenubarItem) {
+      Assert.notEqual(bookmarksMenubarItem.getAttribute("hidden"), "true",
+                      "RL bookmarks submenu in menubar should not be hidden");
+      Assert.notEqual(sidebarMenuitem.getAttribute("hidden"), "true",
+                      "RL bookmarks separator in menubar should be visible");
+    }
   } else {
     Assert.equal(sidebarBroadcaster.getAttribute("hidden"), "true",
                  "Sidebar broadcaster should be hidden");
@@ -22,6 +33,14 @@ function checkRLState() {
                  "Sidebar menuitem should be hidden");
     Assert.equal(ReadingListUI.isSidebarOpen, false,
                  "ReadingListUI should not think sidebar is open");
+
+    // Currently disabled on OSX.
+    if (bookmarksMenubarItem) {
+      Assert.equal(bookmarksMenubarItem.getAttribute("hidden"), "true",
+                      "RL bookmarks submenu in menubar should not be hidden");
+      Assert.equal(sidebarMenuitem.getAttribute("hidden"), "true",
+                      "RL bookmarks separator in menubar should be visible");
+    }
   }
 
   if (!enabled) {
