@@ -637,6 +637,13 @@ var LoginManagerContent = {
         return;
       }
 
+      var isAutocompleteOff = false;
+      if (this._isAutocompleteDisabled(form) ||
+          this._isAutocompleteDisabled(usernameField) ||
+          this._isAutocompleteDisabled(passwordField)) {
+        isAutocompleteOff = true;
+      }
+
       // Discard logins which have username/password values that don't
       // fit into the fields (as specified by the maxlength attribute).
       // The user couldn't enter these values anyway, and it helps
@@ -676,20 +683,6 @@ var LoginManagerContent = {
         log("form not filled, the password field was already filled");
         recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
         return;
-      }
-
-      // If the form has an autocomplete=off attribute in play, don't
-      // fill in the login automatically. We check this after attaching
-      // the autocomplete stuff to the username field, so the user can
-      // still manually select a login to be filled in.
-      var isFormDisabled = false;
-      if (!ignoreAutocomplete &&
-          (this._isAutocompleteDisabled(form) ||
-           this._isAutocompleteDisabled(usernameField) ||
-           this._isAutocompleteDisabled(passwordField))) {
-
-        isFormDisabled = true;
-        log("form not filled, has autocomplete=off");
       }
 
       // Select a login to use for filling in the form.
@@ -742,13 +735,13 @@ var LoginManagerContent = {
       // We will always have a selectedLogin at this point.
 
       if (!autofillForm) {
-        log("autofillForms=false but form can be filled; notified observers");
+        log("autofillForms=false but form can be filled");
         recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
         return;
       }
 
-      if (isFormDisabled) {
-        log("autocomplete=off but form can be filled; notified observers");
+      if (isAutocompleteOff && !ignoreAutocomplete) {
+        log("Not filling the login because we're respecting autocomplete=off");
         recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
         return;
       }
