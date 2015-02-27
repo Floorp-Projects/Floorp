@@ -512,7 +512,8 @@ class DeviceManagerADB(DeviceManager):
                     [int(g or 0) for g in m.groups()[1:]])
             ret["uptime"] = uptime
         if directive == "process" or directive == "all":
-            ret["process"] = self.shellCheckOutput(["ps"])
+            data = self.shellCheckOutput(["ps"])
+            ret["process"] = data.split('\n')
         if directive == "systime" or directive == "all":
             ret["systime"] = self.shellCheckOutput(["date"])
         if directive == "memtotal" or directive == "all":
@@ -521,6 +522,9 @@ class DeviceManagerADB(DeviceManager):
                 key, value = line.split(":")
                 meminfo[key] = value.strip()
             ret["memtotal"] = meminfo["MemTotal"]
+        if directive == "disk" or directive == "all":
+            data = self.shellCheckOutput(["df", "/data", "/system", "/sdcard"])
+            ret["disk"] = data.split('\n')
         self._logger.debug("getInfo: %s" % ret)
         return ret
 
