@@ -1,0 +1,3 @@
+with Files('**/Makefile.in'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+    FINAL = True
