@@ -229,3 +229,44 @@
 .contact-form > .button-group {
   margin-top: 1rem;
 }
+
+.contacts-gravatar-promo {
+  position: relative;
+  border: 1px dashed #c1c1c1;
+  border-radius: 2px;
+  background-color: #fbfbfb;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.contacts-gravatar-promo > p {
+  margin-top: 2px;
+  margin-bottom: 8px;
+  margin-right: 4px;
+  word-wrap: break-word;
+}
+
+body[dir=rtl] .contacts-gravatar-promo > p {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+.contacts-gravatar-promo > p > a {
+  color: #0295df;
+  text-decoration: none;
+}
+
+.contacts-gravatar-promo > p > a:hover {
+  text-decoration: underline;
+}
+
+.contacts-gravatar-promo > .button-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+body[dir=rtl] .contacts-gravatar-promo > .button-close {
+  right: auto;
+  left: 8px;
+}

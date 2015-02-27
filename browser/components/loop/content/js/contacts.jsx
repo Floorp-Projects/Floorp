@@ -81,6 +81,59 @@ loop.contacts = (function(_, mozL10n) {
     contact[field][0].value = value;
   };
 
+  const GravatarPromo = React.createClass({
+    propTypes: {
+      handleUse: React.PropTypes.func.isRequired
+    },
+
+    getInitialState: function() {
+      return {
+        showMe: navigator.mozLoop.getLoopPref("contacts.gravatars.promo") &&
+          !navigator.mozLoop.getLoopPref("contacts.gravatars.show")
+      };
+    },
+
+    handleCloseButtonClick: function() {
+      navigator.mozLoop.setLoopPref("contacts.gravatars.promo", false);
+      this.setState({ showMe: false });
+    },
+
+    handleUseButtonClick: function() {
+      navigator.mozLoop.setLoopPref("contacts.gravatars.promo", false);
+      navigator.mozLoop.setLoopPref("contacts.gravatars.show", true);
+      this.setState({ showMe: false });
+      this.props.handleUse();
+    },
+
+    render: function() {
+      if (!this.state.showMe) {
+        return null;
+      }
+
+      let privacyUrl = navigator.mozLoop.getLoopPref("legal.privacy_url");
+      let message = mozL10n.get("gravatars_promo_message", {
+        "learn_more": React.renderToStaticMarkup(
+          <a href={privacyUrl} target="_blank">
+            {mozL10n.get("gravatars_promo_message_learnmore")}
+          </a>
+        )
+      });
+      return (
+        <div className="contacts-gravatar-promo">
+          <Button additionalClass="button-close" onClick={this.handleCloseButtonClick}/>
+          <p dangerouslySetInnerHTML={{__html: message}}></p>
+          <ButtonGroup>
+            <Button caption={mozL10n.get("gravatars_promo_button_nothanks")}
+                    onClick={this.handleCloseButtonClick}/>
+            <Button caption={mozL10n.get("gravatars_promo_button_use")}
+                    additionalClass="button-accept"
+                    onClick={this.handleUseButtonClick}/>
+          </ButtonGroup>
+        </div>
+      );
+    }
+  });
+
   const ContactDropdown = React.createClass({
     propTypes: {
       handleAction: React.PropTypes.func.isRequired,
@@ -232,7 +285,9 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         <li className={contactCSSClass} onMouseLeave={this.hideDropdownMenu}>
-          <div className="avatar" />
+          <div className="avatar">
+            <img src={navigator.mozLoop.getUserAvatar(email.value)} />
+          </div>
           <div className="details">
             <div className="username"><strong>{names.firstName}</strong> {names.lastName}
               <i className={cx({"icon icon-google": this.props.contact.category[0] == "google"})} />
@@ -462,6 +517,12 @@ loop.contacts = (function(_, mozL10n) {
       }
     },
 
+    handleUseGravatar: function() {
+      // We got permission to use Gravatar icons now, so we need to redraw the
+      // list entirely to show them.
+      this.refresh();
+    },
+
     sortContacts: function(contact1, contact2) {
       let comp = contact1.name[0].localeCompare(contact2.name[0]);
       if (comp !== 0) {
@@ -523,6 +584,7 @@ loop.contacts = (function(_, mozL10n) {
                    placeholder={mozL10n.get("contacts_search_placesholder")}
                    valueLink={this.linkState("filter")} />
             : null }
+            <GravatarPromo handleUse={this.handleUseGravatar}/>
           </div>
           <ul className="contact-list">
             {shownContacts.available ?
