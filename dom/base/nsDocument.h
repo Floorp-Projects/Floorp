@@ -1033,9 +1033,8 @@ public:
   virtual void FlushSkinBindings() MOZ_OVERRIDE;
 
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) MOZ_OVERRIDE;
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) MOZ_OVERRIDE;
+  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) MOZ_OVERRIDE;
   virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) MOZ_OVERRIDE;
-  virtual bool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell) MOZ_OVERRIDE;
   virtual nsIDocument*
     RequestExternalResource(nsIURI* aURI,
                             nsINode* aRequestingNode,
@@ -1768,7 +1767,7 @@ private:
   nsString mLastStyleSheetSet;
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
-  nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
+  nsTArray<nsCOMPtr<nsIRunnable> > mFrameLoaderFinalizers;
   nsRefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 
   nsRevocableEventPtr<nsRunnableMethod<nsDocument, void, false> >
