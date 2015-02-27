@@ -7,12 +7,25 @@
 XPCOMUtils.defineLazyModuleGetter(this, "ReadingList",
   "resource:///modules/readinglist/ReadingList.jsm");
 
+const READINGLIST_COMMAND_ID = "readingListSidebar";
+
 let ReadingListUI = {
+  MESSAGES: [
+    "ReadingList:GetVisibility",
+    "ReadingList:ToggleVisibility",
+  ],
+
   /**
    * Initialize the ReadingList UI.
    */
   init() {
     Preferences.observe("browser.readinglist.enabled", this.updateUI, this);
+
+    const mm = window.messageManager;
+    for (let msg of this.MESSAGES) {
+      mm.addMessageListener(msg, this);
+    }
+
     this.updateUI();
   },
 
@@ -21,6 +34,11 @@ let ReadingListUI = {
    */
   uninit() {
     Preferences.ignore("browser.readinglist.enabled", this.updateUI, this);
+
+    const mm = window.messageManager;
+    for (let msg of this.MESSAGES) {
+      mm.removeMessageListener(msg, this);
+    }
   },
 
   /**
@@ -36,7 +54,7 @@ let ReadingListUI = {
    * @type {boolean}
    */
   get isSidebarOpen() {
-    return SidebarUI.isOpen && SidebarUI.currentID == "readingListSidebar";
+    return SidebarUI.isOpen && SidebarUI.currentID == READINGLIST_COMMAND_ID;
   },
 
   /**
@@ -49,7 +67,7 @@ let ReadingListUI = {
       this.hideSidebar();
     }
 
-    document.getElementById("readingListSidebar").setAttribute("hidden", !enabled);
+    document.getElementById(READINGLIST_COMMAND_ID).setAttribute("hidden", !enabled);
   },
 
   /**
@@ -57,7 +75,9 @@ let ReadingListUI = {
    * @return {Promise}
    */
   showSidebar() {
-    return SidebarUI.show("readingListSidebar");
+    if (this.enabled) {
+      return SidebarUI.show(READINGLIST_COMMAND_ID);
+    }
   },
 
   /**
@@ -133,5 +153,34 @@ let ReadingListUI = {
         target.insertBefore(menuitem, insertPoint);
       }
     });
-  }
+  },
+
+  /**
+   * Hide the ReadingList sidebar, if it is currently shown.
+   */
+  toggleSidebar() {
+    if (this.enabled) {
+      SidebarUI.toggle(READINGLIST_COMMAND_ID);
+    }
+  },
+
+  /**
+   * Respond to messages.
+   */
+  receiveMessage(message) {
+    switch (message.name) {
+      case "ReadingList:GetVisibility": {
+        if (message.target.messageManager) {
+          message.target.messageManager.sendAsyncMessage("ReadingList:VisibilityStatus",
+            { isOpen: this.isSidebarOpen });
+        }
+        break;
+      }
+
+      case "ReadingList:ToggleVisibility": {
+        this.toggleSidebar();
+        break;
+      }
+    }
+  },
 };
