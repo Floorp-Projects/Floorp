@@ -155,7 +155,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   /* get the summation for all arenas, i == narenas */
   CTL_I_GET("stats.arenas.0.pdirty", pdirty, narenas);
 
-  stats->chunksize = 1 << lg_chunk;
+  stats->chunksize = (size_t) 1 << lg_chunk;
   stats->mapped = mapped;
   stats->allocated = allocated;
   stats->waste = active - allocated;
