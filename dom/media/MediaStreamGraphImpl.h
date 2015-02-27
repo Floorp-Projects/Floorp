@@ -248,6 +248,49 @@ public:
    * Mark aStream and all its inputs (recursively) as consumed.
    */
   static void MarkConsumed(MediaStream* aStream);
+
+  /**
+   * Given the Id of an AudioContext, return the set of all MediaStreams that
+   * are part of this context.
+   */
+  void StreamSetForAudioContext(dom::AudioContext::AudioContextId aAudioContextId,
+                                mozilla::LinkedList<MediaStream>& aStreamSet);
+
+  /**
+   * Called when a suspend/resume/close operation has been completed, on the
+   * graph thread.
+   */
+  void AudioContextOperationCompleted(MediaStream* aStream,
+                                      void* aPromise,
+                                      dom::AudioContextOperation aOperation);
+
+  /**
+   * Apply and AudioContext operation (suspend/resume/closed), on the graph
+   * thread.
+   */
+  void ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
+                                      dom::AudioContextOperation aOperation,
+                                      void* aPromise);
+
+  /*
+   * Move streams from the mStreams to mSuspendedStream if suspending/closing an
+   * AudioContext, or the inverse when resuming an AudioContext.
+   */
+  void MoveStreams(dom::AudioContextOperation aAudioContextOperation,
+                   mozilla::LinkedList<MediaStream>& aStreamSet);
+
+  /*
+   * Reset some state about the streams before suspending them, or resuming
+   * them.
+   */
+  void ResetVisitedStreamState();
+
+  /*
+   * True if a stream is suspended, that is, is not in mStreams, but in
+   * mSuspendedStream.
+   */
+  bool StreamSuspended(MediaStream* aStream);
+
   /**
    * Sort mStreams so that every stream not in a cycle is after any streams
    * it depends on, and every stream in a cycle is marked as being in a cycle.
@@ -368,7 +411,10 @@ public:
   /**
    * Returns true when there are no active streams.
    */
-  bool IsEmpty() { return mStreams.IsEmpty() && mPortCount == 0; }
+  bool IsEmpty()
+  {
+    return mStreams.IsEmpty() && mSuspendedStreams.IsEmpty() && mPortCount == 0;
+  }
 
   // For use by control messages, on graph thread only.
   /**
@@ -487,6 +533,13 @@ public:
    * unnecessary thread-safe refcount changes.
    */
   nsTArray<MediaStream*> mStreams;
+  /**
+   * This stores MediaStreams that are part of suspended AudioContexts.
+   * mStreams and mSuspendStream are disjoint sets: a stream is either suspended
+   * or not suspended. Suspended streams are not ordered in UpdateStreamOrder,
+   * and are therefore not doing any processing.
+   */
+  nsTArray<MediaStream*> mSuspendedStreams;
   /**
    * Streams from mFirstCycleBreaker to the end of mStreams produce output
    * before they receive input.  They correspond to DelayNodes that are in
