@@ -13,10 +13,14 @@
 
 #include "NamespaceImports.h"
 
+namespace js {
+
 extern JSObject *
-js_InitBooleanClass(JSContext *cx, js::HandleObject obj);
+InitBooleanClass(JSContext *cx, js::HandleObject obj);
 
 extern JSString *
-js_BooleanToString(js::ExclusiveContext *cx, bool b);
+BooleanToString(js::ExclusiveContext *cx, bool b);
+
+}
 
 #endif /* jsbool_h */

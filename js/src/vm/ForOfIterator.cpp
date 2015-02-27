@@ -72,7 +72,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, iterable, NullPtr());
         if (!bytes)
             return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE, bytes);
         js_free(bytes);
         return false;
     }

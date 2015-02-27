@@ -16,7 +16,7 @@ bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     *bp = false;
     return false;
 }
@@ -26,7 +26,7 @@ bool
 SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -35,7 +35,7 @@ bool
 SecurityWrapper<Base>::setPrototypeOf(JSContext *cx, HandleObject wrapper,
                                       HandleObject proto, bool *bp) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -44,7 +44,7 @@ bool
 SecurityWrapper<Base>::setImmutablePrototype(JSContext *cx, HandleObject wrapper,
                                              bool *succeeded) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -116,7 +116,7 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
         const char16_t *prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
             prop = chars.twoByteChars();
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr,
+        JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr,
                                JSMSG_ACCESSOR_DEF_DENIED, prop);
         return false;
     }
@@ -129,7 +129,7 @@ bool
 SecurityWrapper<Base>::watch(JSContext *cx, HandleObject proxy,
                              HandleId id, HandleObject callable) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -138,7 +138,7 @@ bool
 SecurityWrapper<Base>::unwatch(JSContext *cx, HandleObject proxy,
                                HandleId id) const
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 

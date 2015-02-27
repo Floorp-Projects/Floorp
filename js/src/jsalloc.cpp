@@ -19,5 +19,5 @@ TempAllocPolicy::onOutOfMemory(void *p, size_t nbytes)
 void
 TempAllocPolicy::reportAllocOverflow() const
 {
-    js_ReportAllocationOverflow(static_cast<ExclusiveContext *>(cx_));
+    ReportAllocationOverflow(static_cast<ExclusiveContext *>(cx_));
 }

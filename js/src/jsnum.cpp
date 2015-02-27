@@ -81,7 +81,7 @@ ComputeAccurateDecimalInteger(ExclusiveContext *cx, const CharT *start, const Ch
     int err = 0;
     *dp = js_strtod_harder(cx->dtoaState(), cstr, &estr, &err);
     if (err == JS_DTOA_ENOMEM) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -679,8 +679,8 @@ Int32ToCString(ToCStringBuf *cbuf, int32_t i, size_t *len, int base = 10)
 }
 
 template <AllowGC allowGC>
-static JSString * JS_FASTCALL
-js_NumberToStringWithBase(ExclusiveContext *cx, double d, int base);
+static JSString *
+NumberToStringWithBase(ExclusiveContext *cx, double d, int base);
 
 MOZ_ALWAYS_INLINE bool
 num_toString_impl(JSContext *cx, CallArgs args)
@@ -696,13 +696,13 @@ num_toString_impl(JSContext *cx, CallArgs args)
             return false;
 
         if (d2 < 2 || d2 > 36) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_RADIX);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_RADIX);
             return false;
         }
 
         base = int32_t(d2);
     }
-    JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, base);
+    JSString *str = NumberToStringWithBase<CanGC>(cx, d, base);
     if (!str) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -712,7 +712,7 @@ num_toString_impl(JSContext *cx, CallArgs args)
 }
 
 bool
-js_num_toString(JSContext *cx, unsigned argc, Value *vp)
+js::num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
@@ -726,7 +726,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
 
     double d = Extract(args.thisv());
 
-    Rooted<JSString*> str(cx, js_NumberToStringWithBase<CanGC>(cx, d, 10));
+    RootedString str(cx, NumberToStringWithBase<CanGC>(cx, d, 10));
     if (!str) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -862,7 +862,7 @@ num_valueOf_impl(JSContext *cx, CallArgs args)
 }
 
 bool
-js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
+js::num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_valueOf_impl>(cx, args);
@@ -884,7 +884,7 @@ ComputePrecisionInRange(JSContext *cx, int minPrecision, int maxPrecision, Handl
 
     ToCStringBuf cbuf;
     if (char *numStr = NumberToCString(cx, &cbuf, prec, 10))
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PRECISION_RANGE, numStr);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PRECISION_RANGE, numStr);
     return false;
 }
 
@@ -965,7 +965,7 @@ num_toPrecision_impl(JSContext *cx, CallArgs args)
     double d = Extract(args.thisv());
 
     if (!args.hasDefined(0)) {
-        JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, 10);
+        JSString *str = NumberToStringWithBase<CanGC>(cx, d, 10);
         if (!str) {
             JS_ReportOutOfMemory(cx);
             return false;
@@ -992,13 +992,13 @@ static const JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_FN(js_toString_str,       js_num_toString,       1, 0),
+    JS_FN(js_toString_str,       num_toString,          1, 0),
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Number_toLocaleString", 0,0),
 #else
     JS_FN(js_toLocaleString_str, num_toLocaleString,     0,0),
 #endif
-    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
+    JS_FN(js_valueOf_str,        num_valueOf,           0, 0),
     JS_FN("toFixed",             num_toFixed,           1, 0),
     JS_FN("toExponential",       num_toExponential,     1, 0),
     JS_FN("toPrecision",         num_toPrecision,       1, 0),
@@ -1118,7 +1118,7 @@ js::FinishRuntimeNumberState(JSRuntime *rt)
 #endif
 
 JSObject *
-js_InitNumberClass(JSContext *cx, HandleObject obj)
+js::InitNumberClass(JSContext *cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
 
@@ -1249,8 +1249,8 @@ js::NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base/* = 10
 }
 
 template <AllowGC allowGC>
-static JSString * JS_FASTCALL
-js_NumberToStringWithBase(ExclusiveContext *cx, double d, int base)
+static JSString *
+NumberToStringWithBase(ExclusiveContext *cx, double d, int base)
 {
     ToCStringBuf cbuf;
     char *numStr;
@@ -1289,7 +1289,7 @@ js_NumberToStringWithBase(ExclusiveContext *cx, double d, int base)
 
         numStr = FracNumberToCString(cx, &cbuf, d, base);
         if (!numStr) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return nullptr;
         }
         MOZ_ASSERT_IF(base == 10,
@@ -1308,7 +1308,7 @@ template <AllowGC allowGC>
 JSString *
 js::NumberToString(ExclusiveContext *cx, double d)
 {
-    return js_NumberToStringWithBase<allowGC>(cx, d, 10);
+    return NumberToStringWithBase<allowGC>(cx, d, 10);
 }
 
 template JSString *
@@ -1330,7 +1330,7 @@ js::NumberToAtom(ExclusiveContext *cx, double d)
     ToCStringBuf cbuf;
     char *numStr = FracNumberToCString(cx, &cbuf, d);
     if (!numStr) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
     MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
@@ -1348,7 +1348,7 @@ js::NumberToAtom(ExclusiveContext *cx, double d)
 JSFlatString *
 js::NumberToString(JSContext *cx, double d)
 {
-    if (JSString *str = js_NumberToStringWithBase<CanGC>(cx, d, 10))
+    if (JSString *str = NumberToStringWithBase<CanGC>(cx, d, 10))
         return &str->asFlat();
     return nullptr;
 }
@@ -1512,7 +1512,7 @@ js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
             }
             if (v.isSymbol()) {
                 if (cx->isJSContext()) {
-                    JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, nullptr,
+                    JS_ReportErrorNumber(cx->asJSContext(), GetErrorMessage, nullptr,
                                          JSMSG_SYMBOL_TO_NUMBER);
                 }
                 return false;

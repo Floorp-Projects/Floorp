@@ -309,7 +309,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
     if (!detect.init())
         return false;
     if (detect.foundCycle()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
                              js_object_str);
         return false;
     }
@@ -400,7 +400,7 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
     if (!detect.init())
         return false;
     if (detect.foundCycle()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_CYCLIC_VALUE,
                              js_object_str);
         return false;
     }
@@ -517,8 +517,8 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
 /* ES5 15.12.3. */
 bool
-js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value space_,
-             StringBuffer &sb)
+js::Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value space_,
+              StringBuffer &sb)
 {
     RootedObject replacer(cx, replacer_);
     RootedValue space(cx, space_);
@@ -861,7 +861,7 @@ json_stringify(JSContext *cx, unsigned argc, Value *vp)
     RootedValue space(cx, args.get(2));
 
     StringBuffer sb(cx);
-    if (!js_Stringify(cx, &value, replacer, space, sb))
+    if (!Stringify(cx, &value, replacer, space, sb))
         return false;
 
     // XXX This can never happen to nsJSON.cpp, but the JSON object
@@ -889,7 +889,7 @@ static const JSFunctionSpec json_static_methods[] = {
 };
 
 JSObject *
-js_InitJSONClass(JSContext *cx, HandleObject obj)
+js::InitJSONClass(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 

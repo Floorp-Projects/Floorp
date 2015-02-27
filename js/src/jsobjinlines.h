@@ -413,7 +413,7 @@ ToPrimitive(JSContext *cx, MutableHandleValue vp)
     if (obj->is<StringObject>()) {
         jsid id = NameToId(cx->names().valueOf);
         StringObject *nobj = &obj->as<StringObject>();
-        if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, js_str_toString)) {
+        if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
             vp.setString(nobj->unbox());
             return true;
         }
@@ -423,7 +423,7 @@ ToPrimitive(JSContext *cx, MutableHandleValue vp)
     if (obj->is<NumberObject>()) {
         jsid id = NameToId(cx->names().valueOf);
         NumberObject *nobj = &obj->as<NumberObject>();
-        if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, js_num_valueOf)) {
+        if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, num_valueOf)) {
             vp.setNumber(nobj->unbox());
             return true;
         }
@@ -784,14 +784,14 @@ ApplyAttributes(unsigned attrs, bool enumerable, bool writable, bool configurabl
     return attrs;
 }
 
-} /* namespace js */
+extern NativeObject *
+InitClass(JSContext *cx, HandleObject obj, HandleObject parent_proto,
+          const Class *clasp, JSNative constructor, unsigned nargs,
+          const JSPropertySpec *ps, const JSFunctionSpec *fs,
+          const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
+          NativeObject **ctorp = nullptr,
+          gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
-extern js::NativeObject *
-js_InitClass(JSContext *cx, js::HandleObject obj, js::HandleObject parent_proto,
-             const js::Class *clasp, JSNative constructor, unsigned nargs,
-             const JSPropertySpec *ps, const JSFunctionSpec *fs,
-             const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
-             js::NativeObject **ctorp = nullptr,
-             js::gc::AllocKind ctorKind = JSFunction::FinalizeKind);
+} /* namespace js */
 
 #endif /* jsobjinlines_h */

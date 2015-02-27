@@ -674,9 +674,9 @@ inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id,
 {}
 #endif
 
-} /* namespace js */
-
 extern JS_FRIEND_API(JSObject *)
-js_InitProxyClass(JSContext *cx, JS::HandleObject obj);
+InitProxyClass(JSContext *cx, JS::HandleObject obj);
+
+} /* namespace js */
 
 #endif /* js_Proxy_h */

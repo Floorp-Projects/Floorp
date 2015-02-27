@@ -880,7 +880,7 @@ RegExpCompartment::init(JSContext *cx)
 {
     if (!set_.init(0)) {
         if (cx)
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
         return false;
     }
 
@@ -946,7 +946,7 @@ RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
         return false;
 
     if (!set_.add(p, shared)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -1056,7 +1056,7 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
         char charBuf[2];
         charBuf[0] = char(lastParsed);
         charBuf[1] = '\0';
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                      JSMSG_BAD_REGEXP_FLAG, charBuf);
         return false;
     }

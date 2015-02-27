@@ -2064,7 +2064,7 @@ ScriptSource::setDisplayURL(ExclusiveContext *cx, const char16_t *displayURL)
     if (hasDisplayURL()) {
         if (cx->isJSContext() &&
             !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
-                                          js_GetErrorMessage, nullptr,
+                                          GetErrorMessage, nullptr,
                                           JSMSG_ALREADY_HAS_PRAGMA, filename_.get(),
                                           "//# sourceURL"))
         {
@@ -2169,7 +2169,7 @@ SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScri
             script->setCode(nullptr);
             script->atoms = nullptr;
             js_free(ssd);
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
     }
@@ -2380,7 +2380,7 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
 {
     MOZ_ASSERT(bufStart <= bufEnd);
 
-    RootedScript script(cx, js_NewGCScript(cx));
+    RootedScript script(cx, NewGCScript(cx));
     if (!script)
         return nullptr;
 
@@ -2405,7 +2405,7 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
     if (staticLevel > UINT16_MAX) {
         if (cx->isJSContext()) {
             JS_ReportErrorNumber(cx->asJSContext(),
-                                 js_GetErrorMessage, nullptr, JSMSG_TOO_DEEP, js_function_str);
+                                 GetErrorMessage, nullptr, JSMSG_TOO_DEEP, js_function_str);
         }
         return nullptr;
     }
@@ -2779,7 +2779,7 @@ js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
 }
 
 jssrcnote *
-js_GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
+js::GetSrcNote(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     return GetSrcNote(cx->runtime()->gsnCache, script, pc);
 }
@@ -2838,7 +2838,7 @@ js::PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp)
 }
 
 jsbytecode *
-js_LineNumberToPC(JSScript *script, unsigned target)
+js::LineNumberToPC(JSScript *script, unsigned target)
 {
     ptrdiff_t offset = 0;
     ptrdiff_t best = -1;
@@ -2873,7 +2873,7 @@ out:
 }
 
 JS_FRIEND_API(unsigned)
-js_GetScriptLineExtent(JSScript *script)
+js::GetScriptLineExtent(JSScript *script)
 {
     unsigned lineno = script->lineno();
     unsigned maxLineNo = lineno;
@@ -3322,7 +3322,7 @@ JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc)
     if (!site) {
         site = cx->runtime()->new_<BreakpointSite>(this, pc);
         if (!site) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return nullptr;
         }
         debug->numSites++;
@@ -3758,7 +3758,7 @@ LazyScript::CreateRaw(ExclusiveContext *cx, HandleFunction fun,
     if (bytes && !table)
         return nullptr;
 
-    LazyScript *res = js_NewGCLazyScript(cx);
+    LazyScript *res = NewGCLazyScript(cx);
     if (!res)
         return nullptr;
 

@@ -212,7 +212,7 @@ SharedArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *
             args.rval().set(args[0]);
             return true;
         }
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_OBJECT);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_OBJECT);
         return false;
     }
 
@@ -221,7 +221,7 @@ SharedArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *
     if (!ToLengthClamped(cx, args.get(0), &length, &overflow)) {
         // Bug 1068458: Limit length to 2^31-1.
         if (overflow || length > INT32_MAX)
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
         return false;
     }
 
@@ -324,7 +324,7 @@ const Class SharedArrayBufferObject::class_ = {
 };
 
 JSObject *
-js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
+js::InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());

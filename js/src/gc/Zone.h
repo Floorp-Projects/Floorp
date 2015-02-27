@@ -136,7 +136,7 @@ struct Zone : public JS::shadow::Zone,
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtimeFromMainThread()->onOutOfMemory(p, nbytes);
     }
-    void reportAllocationOverflow() { js_ReportAllocationOverflow(nullptr); }
+    void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
 
     void beginSweepTypes(js::FreeOp *fop, bool releaseTypes);
 

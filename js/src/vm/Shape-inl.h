@@ -53,7 +53,7 @@ Shape::set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, bool st
     }
 
     if (attrs & JSPROP_GETTER)
-        return js_ReportGetterOnlyAssignment(cx, strict);
+        return ReportGetterOnlyAssignment(cx, strict);
 
     if (!setterOp())
         return true;
@@ -109,7 +109,7 @@ Shape::new_(ExclusiveContext *cx, StackShape &unrootedOther, uint32_t nfixed)
     RootedGeneric<StackShape*> other(cx, &unrootedOther);
     Shape *shape = other->isAccessorShape() ? NewGCAccessorShape(cx) : NewGCShape(cx);
     if (!shape) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 

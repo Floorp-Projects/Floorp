@@ -26,11 +26,11 @@ extern void
 FinishRuntimeNumberState(JSRuntime *rt);
 #endif
 
-} /* namespace js */
-
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *
-js_InitNumberClass(JSContext *cx, js::HandleObject obj);
+InitNumberClass(JSContext *cx, HandleObject obj);
+
+} /* namespace js */
 
 /*
  * String constants for global function names, used in jsapi.c and jsnum.c.
@@ -101,7 +101,7 @@ struct ToCStringBuf
  * Convert a number to a C string.  When base==10, this function implements
  * ToString() as specified by ECMA-262-5 section 9.8.1.  It handles integral
  * values cheaply.  Return nullptr if we ran out of memory.  See also
- * js_NumberToCString().
+ * NumberToCString().
  */
 extern char *
 NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base = 10);
@@ -187,13 +187,13 @@ extern bool
 js_strtod(js::ExclusiveContext *cx, const CharT *begin, const CharT *end,
           const CharT **dEnd, double *d);
 
-extern bool
-js_num_toString(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern bool
-js_num_valueOf(JSContext *cx, unsigned argc, js::Value *vp);
-
 namespace js {
+
+extern bool
+num_toString(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+num_valueOf(JSContext *cx, unsigned argc, Value *vp);
 
 static MOZ_ALWAYS_INLINE bool
 ValueFitsInInt32(const Value &v, int32_t *pi)

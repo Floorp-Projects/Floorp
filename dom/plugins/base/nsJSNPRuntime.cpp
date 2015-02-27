@@ -1724,7 +1724,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
       return true;
   }
 
-  JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+  JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                        JS_GetClass(obj)->name,
                        hint == JSTYPE_VOID
                        ? "primitive type"

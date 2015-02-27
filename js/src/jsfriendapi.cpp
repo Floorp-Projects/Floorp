@@ -260,13 +260,13 @@ JS_DefineFunctionsWithHelp(JSContext *cx, HandleObject obj, const JSFunctionSpec
 }
 
 JS_FRIEND_API(bool)
-js_ObjectClassIs(JSContext *cx, HandleObject obj, ESClassValue classValue)
+js::ObjectClassIs(JSContext *cx, HandleObject obj, ESClassValue classValue)
 {
     return ObjectClassIs(obj, classValue, cx);
 }
 
 JS_FRIEND_API(const char *)
-js_ObjectClassName(JSContext *cx, HandleObject obj)
+js::ObjectClassName(JSContext *cx, HandleObject obj)
 {
     return GetObjectClassName(cx, obj);
 }
@@ -1184,12 +1184,12 @@ js::GetObjectMetadata(JSObject *obj)
 }
 
 JS_FRIEND_API(bool)
-js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
-                     JS::Handle<js::PropertyDescriptor> descriptor, bool *bp)
+js::DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
+                      JS::Handle<js::PropertyDescriptor> descriptor, bool *bp)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    js::AssertHeapIsIdle(cx);
+    AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, descriptor.value());
     if (descriptor.hasGetterObject())
@@ -1201,9 +1201,9 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 }
 
 JS_FRIEND_API(bool)
-js_ReportIsNotFunction(JSContext *cx, JS::HandleValue v)
+js::ReportIsNotFunction(JSContext *cx, HandleValue v)
 {
-    return ReportIsNotFunction(cx, v);
+    return ReportIsNotFunction(cx, v, -1);
 }
 
 JS_FRIEND_API(void)

@@ -73,7 +73,7 @@ CloneModule(JSContext *cx, MutableHandle<AsmJSModuleObject*> moduleObj)
 static bool
 LinkFail(JSContext *cx, const char *str)
 {
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage,
                                  nullptr, JSMSG_USE_ASM_LINK_FAIL, str);
     return false;
 }
@@ -252,7 +252,7 @@ ValidateByteLength(JSContext *cx, HandleValue globalVal)
     RootedFunction fun(cx, &v.toObject().as<JSFunction>());
 
     RootedValue boundTarget(cx, ObjectValue(*fun->getBoundFunctionTarget()));
-    if (!IsNativeFunction(boundTarget, js_fun_call))
+    if (!IsNativeFunction(boundTarget, fun_call))
         return LinkFail(cx, "bound target of byteLength must be Function.prototype.call");
 
     RootedValue boundThis(cx, fun->getBoundFunctionThis());
@@ -736,7 +736,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     // since these can technically pop out anywhere and the full fix may
     // actually OOM when trying to allocate the PROT_NONE memory.
     if (module.hasDetachedHeap()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
         return false;
     }
 
@@ -1235,7 +1235,7 @@ js::IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp)
 
     JSFunction *fun;
     if (!args.hasDefined(0) || !IsMaybeWrappedNativeFunction(args[0], LinkAsmJS, &fun)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_USE_ASM_TYPE_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_USE_ASM_TYPE_FAIL,
                              "argument passed to isAsmJSModuleLoadedFromCache is not a "
                              "validated asm.js module");
         return false;

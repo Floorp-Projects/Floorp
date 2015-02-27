@@ -65,7 +65,7 @@ class StringObject : public NativeObject
 
     /* For access to init, as String.prototype is special. */
     friend JSObject *
-    ::js_InitStringClass(JSContext *cx, js::HandleObject global);
+    js::InitStringClass(JSContext *cx, HandleObject global);
 };
 
 } // namespace js
