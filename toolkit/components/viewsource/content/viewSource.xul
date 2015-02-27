@@ -206,8 +206,8 @@
 
           <!-- Charset Menu -->
           <menu id="charsetMenu"
-                label="&charsetMenu.label;"
-                accesskey="&charsetMenu.accesskey;"
+                label="&charsetMenu2.label;"
+                accesskey="&charsetMenu2.accesskey;"
                 oncommand="BrowserSetCharacterSet(event);"
                 onpopupshowing="CharsetMenu.build(event.target);"
                 onpopupshown="CharsetMenu.update(event.target, content.document.characterSet);">
