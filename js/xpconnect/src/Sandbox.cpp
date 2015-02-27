@@ -578,15 +578,14 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
 {
     // We forward the call to our underlying callable.
 
-    // Get our SandboxProxyHandler proxy.
-    RootedObject sandboxProxy(cx, getSandboxProxy(proxy));
+    // The parent of our proxy is the SandboxProxyHandler proxy
+    RootedObject sandboxProxy(cx, JS_GetParent(proxy));
     MOZ_ASSERT(js::IsProxy(sandboxProxy) &&
                js::GetProxyHandler(sandboxProxy) == &xpc::sandboxProxyHandler);
 
-    // The global of the sandboxProxy is the sandbox global, and the
+    // The parent of the sandboxProxy is the sandbox global, and the
     // target object is the original proto.
-    RootedObject sandboxGlobal(cx,
-      js::GetGlobalForObjectCrossCompartment(sandboxProxy));
+    RootedObject sandboxGlobal(cx, JS_GetParent(sandboxProxy));
     MOZ_ASSERT(IsSandbox(sandboxGlobal));
 
     // If our this object is the sandbox global, we call with this set to the
@@ -639,21 +638,16 @@ WrapCallable(JSContext *cx, HandleObject callable, HandleObject sandboxProtoProx
 {
     MOZ_ASSERT(JS::IsCallable(callable));
     // Our proxy is wrapping the callable.  So we need to use the
-    // callable as the private.  We put the given sandboxProtoProxy in
-    // an extra slot,, and our call() hook depends on that.
+    // callable as the private.  We use the given sandboxProtoProxy as
+    // the parent, and our call() hook depends on that.
     MOZ_ASSERT(js::IsProxy(sandboxProtoProxy) &&
                js::GetProxyHandler(sandboxProtoProxy) ==
                  &xpc::sandboxProxyHandler);
 
     RootedValue priv(cx, ObjectValue(*callable));
-    JSObject *obj = js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
-                                       priv, nullptr, nullptr);
-    if (obj) {
-        js::SetProxyExtra(obj, SandboxCallableProxyHandler::SandboxProxySlot,
-                          ObjectValue(*sandboxProtoProxy));
-    }
-
-    return obj;
+    return js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
+                              priv, nullptr,
+                              sandboxProtoProxy);
 }
 
 template<typename Op>
@@ -972,7 +966,7 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
                 // of this-binding for methods.
                 RootedValue priv(cx, ObjectValue(*options.proto));
                 options.proto = js::NewProxyObject(cx, &xpc::sandboxProxyHandler,
-                                                   priv, nullptr, nullptr);
+                                                   priv, nullptr, sandbox);
                 if (!options.proto)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
