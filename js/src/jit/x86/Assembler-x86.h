@@ -27,28 +27,29 @@ static MOZ_CONSTEXPR_VAR Register ebp = { X86Encoding::rbp };
 static MOZ_CONSTEXPR_VAR Register esi = { X86Encoding::rsi };
 static MOZ_CONSTEXPR_VAR Register edi = { X86Encoding::rdi };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Encoding::xmm0 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Encoding::xmm1 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Encoding::xmm2 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Encoding::xmm3 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Encoding::xmm4 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Encoding::xmm5 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Encoding::xmm6 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Encoding::xmm7 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = FloatRegister(X86Encoding::xmm2, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = FloatRegister(X86Encoding::xmm3, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = FloatRegister(X86Encoding::xmm4, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = FloatRegister(X86Encoding::xmm5, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = FloatRegister(X86Encoding::xmm6, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Encoding::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Encoding::invalid_xmm };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = FloatRegister();
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = ecx;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = edx;
 static MOZ_CONSTEXPR_VAR Register StackPointer = esp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = ebp;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm7;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = xmm7;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Int32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Float32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Single);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm7;
 
 // Avoid ebp, which is the FramePointer, which is unavailable in some modes.
@@ -511,10 +512,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovss_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovss_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovss_mr(src.address(), dest.code());
+            masm.vmovss_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -525,10 +526,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovd_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovd_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovd_mr(src.address(), dest.code());
+            masm.vmovd_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -539,10 +540,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovq_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovq_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovq_mr(src.address(), dest.code());
+            masm.vmovq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -553,10 +554,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovsd_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovsd_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovsd_mr(src.address(), dest.code());
+            masm.vmovsd_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -567,10 +568,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovups_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovups_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovups_mr(src.address(), dest.code());
+            masm.vmovups_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -581,10 +582,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovdqu_mr_disp32(src.disp(), src.base(), dest.code());
+            masm.vmovdqu_mr_disp32(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovdqu_mr(src.address(), dest.code());
+            masm.vmovdqu_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -636,10 +637,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovd_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovd_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovd_rm(src.code(), dest.address());
+            masm.vmovd_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -650,10 +651,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovq_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovq_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovq_rm(src.code(), dest.address());
+            masm.vmovq_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -664,10 +665,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovss_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovss_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovss_rm(src.code(), dest.address());
+            masm.vmovss_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -678,10 +679,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovsd_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovsd_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovsd_rm(src.code(), dest.address());
+            masm.vmovsd_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -692,10 +693,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovups_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovups_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovups_rm(src.code(), dest.address());
+            masm.vmovups_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -706,10 +707,10 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.vmovdqu_rm_disp32(src.code(), dest.disp(), dest.base());
+            masm.vmovdqu_rm_disp32(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.vmovdqu_rm(src.code(), dest.address());
+            masm.vmovdqu_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -748,42 +749,42 @@ class Assembler : public AssemblerX86Shared
     }
     CodeOffsetLabel vmovssWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovss_mr(src.addr, dest.code());
+        masm.vmovss_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovd_mr(src.addr, dest.code());
+        masm.vmovd_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovqWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovq_mr(src.addr, dest.code());
+        masm.vmovq_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovsdWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovsd_mr(src.addr, dest.code());
+        masm.vmovsd_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdqaWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovdqa_mr(src.addr, dest.code());
+        masm.vmovdqa_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdquWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovdqu_mr(src.addr, dest.code());
+        masm.vmovdqu_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovapsWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovaps_mr(src.addr, dest.code());
+        masm.vmovaps_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovupsWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovups_mr(src.addr, dest.code());
+        masm.vmovups_mr(src.addr, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
 
@@ -802,42 +803,42 @@ class Assembler : public AssemblerX86Shared
     }
     CodeOffsetLabel vmovssWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovss_rm(src.code(), dest.addr);
+        masm.vmovss_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovd_rm(src.code(), dest.addr);
+        masm.vmovd_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovqWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovq_rm(src.code(), dest.addr);
+        masm.vmovq_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovsdWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovsd_rm(src.code(), dest.addr);
+        masm.vmovsd_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdqaWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovdqa_rm(src.code(), dest.addr);
+        masm.vmovdqa_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovapsWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovaps_rm(src.code(), dest.addr);
+        masm.vmovaps_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovdquWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovdqu_rm(src.code(), dest.addr);
+        masm.vmovdqu_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel vmovupsWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
-        masm.vmovups_rm(src.code(), dest.addr);
+        masm.vmovups_rm(src.encoding(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
 

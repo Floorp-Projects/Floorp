@@ -26,6 +26,11 @@ class Registers
         invalid_reg
     };
     typedef RegisterID Code;
+    typedef RegisterID Encoding;
+    union RegisterContent {
+        uintptr_t r;
+    };
+
     typedef uint8_t SetType;
 
     static uint32_t SetSize(SetType) { MOZ_CRASH(); }
@@ -39,15 +44,15 @@ class Registers
     static const uint32_t Total = 1;
     static const uint32_t TotalPhys = 0;
     static const uint32_t Allocatable = 0;
-    static const uint32_t AllMask = 0;
-    static const uint32_t ArgRegMask = 0;
-    static const uint32_t VolatileMask = 0;
-    static const uint32_t NonVolatileMask = 0;
-    static const uint32_t NonAllocatableMask = 0;
-    static const uint32_t AllocatableMask = 0;
-    static const uint32_t TempMask = 0;
-    static const uint32_t JSCallMask = 0;
-    static const uint32_t CallMask = 0;
+    static const SetType AllMask = 0;
+    static const SetType ArgRegMask = 0;
+    static const SetType VolatileMask = 0;
+    static const SetType NonVolatileMask = 0;
+    static const SetType NonAllocatableMask = 0;
+    static const SetType AllocatableMask = 0;
+    static const SetType TempMask = 0;
+    static const SetType JSCallMask = 0;
+    static const SetType CallMask = 0;
 };
 
 typedef uint8_t PackedRegisterMask;
@@ -60,6 +65,11 @@ class FloatRegisters
         invalid_reg
     };
     typedef FPRegisterID  Code;
+    typedef FPRegisterID Encoding;
+    union RegisterContent {
+        double d;
+    };
+
     typedef uint32_t SetType;
 
     static const char *GetName(Code) { MOZ_CRASH(); }
@@ -69,12 +79,12 @@ class FloatRegisters
     static const uint32_t Total = 0;
     static const uint32_t TotalPhys = 0;
     static const uint32_t Allocatable = 0;
-    static const uint32_t AllMask = 0;
-    static const uint32_t AllDoubleMask = 0;
-    static const uint32_t VolatileMask = 0;
-    static const uint32_t NonVolatileMask = 0;
-    static const uint32_t NonAllocatableMask = 0;
-    static const uint32_t AllocatableMask = 0;
+    static const SetType AllMask = 0;
+    static const SetType AllDoubleMask = 0;
+    static const SetType VolatileMask = 0;
+    static const SetType NonVolatileMask = 0;
+    static const SetType NonAllocatableMask = 0;
+    static const SetType AllocatableMask = 0;
 };
 
 template <typename T>
@@ -84,6 +94,7 @@ struct FloatRegister
 {
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::Encoding Encoding;
     typedef Codes::SetType SetType;
 
     Code _;
@@ -91,6 +102,14 @@ struct FloatRegister
     static uint32_t FirstBit(SetType) { MOZ_CRASH(); }
     static uint32_t LastBit(SetType) { MOZ_CRASH(); }
     static FloatRegister FromCode(uint32_t) { MOZ_CRASH(); }
+    bool isSingle() const { MOZ_CRASH(); }
+    bool isDouble() const { MOZ_CRASH(); }
+    bool isInt32x4() const { MOZ_CRASH(); }
+    bool isFloat32x4() const { MOZ_CRASH(); }
+    FloatRegister asSingle() const { MOZ_CRASH(); }
+    FloatRegister asDouble() const { MOZ_CRASH(); }
+    FloatRegister asInt32x4() const { MOZ_CRASH(); }
+    FloatRegister asFloat32x4() const { MOZ_CRASH(); }
     Code code() const { MOZ_CRASH(); }
     const char *name() const { MOZ_CRASH(); }
     bool volatile_() const { MOZ_CRASH(); }

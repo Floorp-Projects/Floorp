@@ -365,14 +365,6 @@ VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
 }
 
 uint32_t
-VFPRegister::GetSizeInBytes(const FloatRegisterSet &s)
-{
-    uint64_t bits = s.bits();
-    uint32_t ret = mozilla::CountPopulation32(bits&0xffffffff) * sizeof(float);
-    ret +=  mozilla::CountPopulation32(bits >> 32) * sizeof(double);
-    return ret;
-}
-uint32_t
 VFPRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
 {
     FloatRegisterSet ss = s.reduceSetForPush();

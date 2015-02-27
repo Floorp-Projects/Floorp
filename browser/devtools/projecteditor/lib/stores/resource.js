@@ -48,11 +48,6 @@ var Resource = Class({
   },
 
   /**
-   * Return the trailing name component of this.uri.
-   */
-  get basename() { return this.uri.path.replace(/\/+$/, '').replace(/\\/g,'/').replace( /.*\//, '' ); },
-
-  /**
    * Is there more than 1 child Resource?
    */
   get hasChildren() { return this.children && this.children.size > 0; },
@@ -236,6 +231,13 @@ var FileResource = Class({
       }
     });
     return this._refreshDeferred.promise;
+  },
+
+  /**
+   * Return the trailing name component of this Resource
+   */
+  get basename() {
+    return this.path.replace(/\/+$/, '').replace(/\\/g,'/').replace( /.*\//, '' );
   },
 
   /**

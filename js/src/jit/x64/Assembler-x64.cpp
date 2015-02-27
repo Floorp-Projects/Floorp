@@ -49,15 +49,22 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(IntArgRegs[regIndex_++]);
         break;
       case MIRType_Float32:
+        current_ = ABIArg(FloatArgRegs[regIndex_++].asSingle());
+        break;
       case MIRType_Double:
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
       case MIRType_Int32x4:
+        // On Win64, >64 bit args need to be passed by reference, but asm.js
+        // doesn't allow passing SIMD values to FFIs. The only way to reach
+        // here is asm to asm calls, so we can break the ABI here.
+        current_ = ABIArg(FloatArgRegs[regIndex_++].asInt32x4());
+        break;
       case MIRType_Float32x4:
         // On Win64, >64 bit args need to be passed by reference, but asm.js
         // doesn't allow passing SIMD values to FFIs. The only way to reach
         // here is asm to asm calls, so we can break the ABI here.
-        current_ = ABIArg(FloatArgRegs[regIndex_++]);
+        current_ = ABIArg(FloatArgRegs[regIndex_++].asFloat32x4());
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
@@ -81,7 +88,10 @@ ABIArgGenerator::next(MIRType type)
             stackOffset_ += sizeof(uint64_t);
             break;
         }
-        current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
+        if (type == MIRType_Float32)
+            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asSingle());
+        else
+            current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
         break;
       case MIRType_Int32x4:
       case MIRType_Float32x4:
@@ -91,7 +101,10 @@ ABIArgGenerator::next(MIRType type)
             stackOffset_ += Simd128DataSize;
             break;
         }
-        current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
+        if (type == MIRType_Int32x4)
+            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asInt32x4());
+        else
+            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asFloat32x4());
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
@@ -294,21 +307,39 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 FloatRegisterSet
 FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
 {
-    return s;
-}
-uint32_t
-FloatRegister::GetSizeInBytes(const FloatRegisterSet &s)
-{
-    uint32_t ret = s.size() * sizeof(double);
-    return ret;
+    if (JitSupportsSimd())
+        return s;
+
+    // Ignore all SIMD register.
+    return FloatRegisterSet(s.bits() & (Codes::AllPhysMask * Codes::SpreadScalar));
 }
 uint32_t
 FloatRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
 {
-    return s.size() * sizeof(double);
+    SetType all = s.bits();
+    SetType float32x4Set =
+        (all >> (uint32_t(Codes::Float32x4) * Codes::TotalPhys)) & Codes::AllPhysMask;
+    SetType int32x4Set =
+        (all >> (uint32_t(Codes::Int32x4) * Codes::TotalPhys)) & Codes::AllPhysMask;
+    SetType doubleSet =
+        (all >> (uint32_t(Codes::Double) * Codes::TotalPhys)) & Codes::AllPhysMask;
+    SetType singleSet =
+        (all >> (uint32_t(Codes::Single) * Codes::TotalPhys)) & Codes::AllPhysMask;
+
+    // PushRegsInMask pushes the largest register first, and thus avoids pushing
+    // aliased registers. So we have to filter out the physical registers which
+    // are already pushed as part of larger registers.
+    SetType set128b = int32x4Set | float32x4Set;
+    SetType set64b = doubleSet & ~set128b;
+    SetType set32b = singleSet & ~set64b  & ~set128b;
+
+    static_assert(Codes::AllPhysMask <= 0xffff, "We can safely use CountPopulation32");
+    return mozilla::CountPopulation32(set128b) * (4 * sizeof(int32_t))
+        + mozilla::CountPopulation32(set64b) * sizeof(double)
+        + mozilla::CountPopulation32(set32b) * sizeof(float);
 }
 uint32_t
 FloatRegister::getRegisterDumpOffsetInBytes()
 {
-    return code() * sizeof(double);
+    return uint32_t(encoding()) * sizeof(FloatRegisters::RegisterContent);
 }

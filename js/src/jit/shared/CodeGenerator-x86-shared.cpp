@@ -2249,6 +2249,27 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4 *ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    if (input.aliases(output))
+        return;
+
+    switch (ins->mir()->type()) {
+      case MIRType_Int32x4:
+        masm.vmovdqa(input, output);
+        break;
+      case MIRType_Float32x4:
+        masm.vmovaps(input, output);
+        break;
+      default:
+        MOZ_CRASH("Unknown SIMD kind");
+    }
+}
+
+void
 CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

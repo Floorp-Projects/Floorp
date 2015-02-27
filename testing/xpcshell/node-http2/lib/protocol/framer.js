@@ -800,39 +800,218 @@ frameFlags.ALTSVC = [];
 //     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //    |         Origin-Len (16)       | Origin? (*)                 ...
-//    +-------------------------------+-------------------------------+
+//    +-------------------------------+----------------+--------------+
 //    |                   Alt-Svc-Field-Value (*)                   ...
 //    +---------------------------------------------------------------+
 //
 // The ALTSVC frame contains the following fields:
 //
-// Origin-Len: An unsinged 16 bit integer indicating the length of the origin
-//    field. Must be empty for non zero stream id
+// Origin-Len: An unsigned, 16-bit integer indicating the length, in
+//    octets, of the Origin field.
 //
-// Origin: origin this directive applies to. If empty it applies to the
-//    same origin as the stream with the same id
+// Origin: An OPTIONAL sequence of characters containing ASCII
+//    serialisation of an origin ([RFC6454](http://tools.ietf.org/html/rfc6454),
+//    Section 6.2) that the alternate service is applicable to.
 //
-// Alt-Svc-Field-Value: an ascaii string corresponding to the HTTP response
-//    header field value for Alt-Svc
+// Alt-Svc-Field-Value: A sequence of octets (length determined by
+//    subtracting the length of all preceding fields from the frame
+//    length) containing a value identical to the Alt-Svc field value
+//    defined in (Section 3)[http://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06#section-3]
+//    (ABNF production "Alt-Svc").
 
 typeSpecificAttributes.ALTSVC = ['maxAge', 'port', 'protocolID', 'host',
                                  'origin'];
 
-Serializer.ALTSVC = function writeAltSvc(frame, buffers) {
-  var hdr = frame.protocolID + "=\"" + frame.host + ":" + frame.port + "\"";
-  if (frame.maxAge) {
-   hdr += "; ma=" + frame.maxAge;
+function istchar(c) {
+  return ('!#$&\'*+-.^_`|~1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.indexOf(c) > -1);
+}
+
+function hexencode(s) {
+  var t = '';
+  for (var i = 0; i < s.length; i++) {
+    if (!istchar(s[i])) {
+      t += '%';
+      t += new Buffer(s[i]).toString('hex');
+    } else {
+      t += s[i];
+    }
   }
-  
-  buffer = new Buffer(2);
+  return t;
+}
+
+Serializer.ALTSVC = function writeAltSvc(frame, buffers) {
+  var buffer = new Buffer(2);
   buffer.writeUInt16BE(frame.origin.length, 0);
   buffers.push(buffer);
   buffers.push(new Buffer(frame.origin, 'ascii'));
-  buffers.push(new Buffer(hdr, 'ascii'));
+
+  var fieldValue = hexencode(frame.protocolID) + '="' + frame.host + ':' + frame.port + '"';
+  if (frame.maxAge !== 86400) { // 86400 is the default
+    fieldValue += "; ma=" + frame.maxAge;
+  }
+
+  buffers.push(new Buffer(fieldValue, 'ascii'));
 };
 
+function stripquotes(s) {
+  var start = 0;
+  var end = s.length;
+  while ((start < end) && (s[start] === '"')) {
+    start++;
+  }
+  while ((end > start) && (s[end - 1] === '"')) {
+    end--;
+  }
+  if (start >= end) {
+    return "";
+  }
+  return s.substring(start, end);
+}
+
+function splitNameValue(nvpair) {
+  var eq = -1;
+  var inQuotes = false;
+
+  for (var i = 0; i < nvpair.length; i++) {
+    if (nvpair[i] === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (inQuotes) {
+      continue;
+    }
+    if (nvpair[i] === '=') {
+      eq = i;
+      break;
+    }
+  }
+
+  if (eq === -1) {
+    return {'name': nvpair, 'value': null};
+  }
+
+  var name = stripquotes(nvpair.substring(0, eq).trim());
+  var value = stripquotes(nvpair.substring(eq + 1).trim());
+  return {'name': name, 'value': value};
+}
+
+function splitHeaderParameters(hv) {
+  return parseHeaderValue(hv, ';', splitNameValue);
+}
+
+function parseHeaderValue(hv, separator, callback) {
+  var start = 0;
+  var inQuotes = false;
+  var values = [];
+
+  for (var i = 0; i < hv.length; i++) {
+    if (hv[i] === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (inQuotes) {
+      // Just skip this
+      continue;
+    }
+    if (hv[i] === separator) {
+      var newValue = hv.substring(start, i).trim();
+      if (newValue.length > 0) {
+        newValue = callback(newValue);
+        values.push(newValue);
+      }
+      start = i + 1;
+    }
+  }
+
+  var newValue = hv.substring(start).trim();
+  if (newValue.length > 0) {
+    newValue = callback(newValue);
+    values.push(newValue);
+  }
+
+  return values;
+}
+
+function rsplit(s, delim, count) {
+  var nsplits = 0;
+  var end = s.length;
+  var rval = [];
+  for (var i = s.length - 1; i >= 0; i--) {
+    if (s[i] === delim) {
+      var t = s.substring(i + 1, end);
+      end = i;
+      rval.unshift(t);
+      nsplits++;
+      if (nsplits === count) {
+        break;
+      }
+    }
+  }
+  if (end !== 0) {
+    rval.unshift(s.substring(0, end));
+  }
+  return rval;
+}
+
+function ishex(c) {
+  return ('0123456789ABCDEFabcdef'.indexOf(c) > -1);
+}
+
+function unescape(s) {
+  var i = 0;
+  var t = '';
+  while (i < s.length) {
+    if (s[i] != '%' || !ishex(s[i + 1]) || !ishex(s[i + 2])) {
+      t += s[i];
+    } else {
+      ++i;
+      var hexvalue = '';
+      if (i < s.length) {
+        hexvalue += s[i];
+        ++i;
+      }
+      if (i < s.length) {
+        hexvalue += s[i];
+      }
+      if (hexvalue.length > 0) {
+        t += new Buffer(hexvalue, 'hex').toString();
+      } else {
+        t += '%';
+      }
+    }
+
+    ++i;
+  }
+  return t;
+}
+
 Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
-  // todo
+  var originLength = buffer.readUInt16BE(0);
+  frame.origin = buffer.toString('ascii', 2, 2 + originLength);
+  var fieldValue = buffer.toString('ascii', 2 + originLength);
+  var values = parseHeaderValue(fieldValue, ',', splitHeaderParameters);
+  if (values.length > 1) {
+    // TODO - warn that we only use one here
+  }
+  if (values.length === 0) {
+    // Well that's a malformed frame. Just ignore it.
+    return;
+  }
+
+  var chosenAltSvc = values[0];
+  frame.maxAge = 86400; // Default
+  for (var i = 0; i < chosenAltSvc.length; i++) {
+    if (i === 0) {
+      // This corresponds to the protocolID="<host>:<port>" item
+      frame.protocolID = unescape(chosenAltSvc[i].name);
+      var hostport = rsplit(chosenAltSvc[i].value, ':', 1);
+      frame.host = hostport[0];
+      frame.port = parseInt(hostport[1], 10);
+    } else if (chosenAltSvc[i].name == 'ma') {
+      frame.maxAge = parseInt(chosenAltSvc[i].value, 10);
+    }
+    // Otherwise, we just ignore this
+  }
 };
 
 // BLOCKED

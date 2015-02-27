@@ -71,10 +71,10 @@ function runOnFocus() {
 
   gMisspeltWords = ["haz", "cheezburger"];
   is(isSpellingCheckOk(), true, "All misspellings before editing are accounted for.");
-  append(" becaz I'm a lolcat!");
+  append(" becaz I'm a lulcat!");
   onSpellCheck(edit, function () {
     gMisspeltWords.push("becaz");
-    gMisspeltWords.push("lolcat");
+    gMisspeltWords.push("lulcat");
     is(isSpellingCheckOk(), true, "All misspellings after typing are accounted for.");
 
     // Now, type an invalid word, and instead of hitting "space" at the end, just blur

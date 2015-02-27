@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for making sure named getters don't override the unforgeable location on HTMLDocument</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<img name="location">
+<script>
+test(function() {
+  assert_equals(document.location, window.location,
+                'The <img name="location"> should not override the location getter');
+}, "document.location is the right thing");
+test(function() {
+  var doc = new DOMParser().parseFromString("<img name='location'>", "text/html");
+  assert_equals(doc.location, null,
+                'The <img name="location"> should not override the location getter on a data document');
+}, "document.location is the right thing on non-rendered document");
+</script>

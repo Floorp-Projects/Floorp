@@ -1055,3 +1055,11 @@ ROLE(KEY,
      ROLE_SYSTEM_PUSHBUTTON,
      ROLE_SYSTEM_PUSHBUTTON,
      eNameFromSubtreeRule)
+
+ROLE(SWITCH,
+     "switch",
+     ATK_ROLE_TOGGLE_BUTTON,
+     NSAccessibilityCheckBoxRole,
+     ROLE_SYSTEM_CHECKBUTTON,
+     IA2_ROLE_TOGGLE_BUTTON,
+     eNameFromSubtreeRule)

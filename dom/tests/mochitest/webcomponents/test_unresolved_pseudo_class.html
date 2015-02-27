@@ -88,7 +88,7 @@ par.removeChild(del);
 del.setAttribute("is", "foobar");
 par.appendChild(del);
 is(getComputedStyle(del).color, "rgb(0, 0, 255)", "del - color (after reappend)");
-var Del = document.registerElement('x-del', { prototype: Object.create(HTMLSpanElement.prototype) });
+var Del = document.registerElement('x-del', { extends: 'span', prototype: Object.create(HTMLSpanElement.prototype) });
 // [is="x-del"] will not match any longer so the rule of span will apply
 is(getComputedStyle(del).color, "rgb(0, 255, 0)", "del - color (after registerElement)");
 // but the element should have been upgraded:

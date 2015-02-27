@@ -8181,12 +8181,14 @@ StackDecrementForCall(MacroAssembler &masm, uint32_t alignment, const VectorT &a
 }
 
 #if defined(JS_CODEGEN_ARM)
-// The ARM system ABI also includes d15 in the non volatile float registers.
+// The ARM system ABI also includes d15 & s31 in the non volatile float registers.
 // Also exclude lr (a.k.a. r14) as we preserve it manually)
 static const RegisterSet NonVolatileRegs =
     RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
                                    ~(uint32_t(1) << Registers::lr)),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1ULL << FloatRegisters::d15)));
+                FloatRegisterSet(FloatRegisters::NonVolatileMask
+                                 | (1ULL << FloatRegisters::d15)
+                                 | (1ULL << FloatRegisters::s31)));
 #else
 static const RegisterSet NonVolatileRegs =
     RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
@@ -8369,11 +8371,11 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
         break;
       case RetType::Int32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedInt32x4(ReturnSimdReg, Address(argv, 0));
+        masm.storeUnalignedInt32x4(ReturnInt32x4Reg, Address(argv, 0));
         break;
       case RetType::Float32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedFloat32x4(ReturnSimdReg, Address(argv, 0));
+        masm.storeUnalignedFloat32x4(ReturnFloat32x4Reg, Address(argv, 0));
         break;
     }
 

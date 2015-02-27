@@ -88,11 +88,11 @@ using namespace js::jit;
 //         DOUBLE_REG [FPU_REG]
 //           Double value stored in a FPU register.
 //
-//         FLOAT32_REG [FPU_REG]
-//           Float 32bit value stored in a FPU register.
+//         ANY_FLOAT_REG [FPU_REG]
+//           Any Float value (float32, simd) stored in a FPU register.
 //
-//         FLOAT32_STACK [STACK_OFFSET]
-//           Float 32bit value stored on the stack.
+//         ANY_FLOAT_STACK [STACK_OFFSET]
+//           Any Float value (float32, simd) stored on the stack.
 //
 //         UNTYPED_REG   [GPR_REG]
 //         UNTYPED_STACK [STACK_OFFSET]
@@ -160,19 +160,19 @@ RValueAllocation::layoutFromMode(Mode mode)
         };
         return layout;
       }
-      case FLOAT32_REG: {
+      case ANY_FLOAT_REG: {
         static const RValueAllocation::Layout layout = {
             PAYLOAD_FPU,
             PAYLOAD_NONE,
-            "float32"
+            "float register content"
         };
         return layout;
       }
-      case FLOAT32_STACK: {
+      case ANY_FLOAT_STACK: {
         static const RValueAllocation::Layout layout = {
             PAYLOAD_STACK_OFFSET,
             PAYLOAD_NONE,
-            "float32"
+            "float register content"
         };
         return layout;
       }

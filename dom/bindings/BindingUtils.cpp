@@ -497,7 +497,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
   if (constructorClass) {
     MOZ_ASSERT(constructorProto);
     constructor = JS_NewObjectWithGivenProto(cx, Jsvalify(constructorClass),
-                                             constructorProto, global);
+                                             constructorProto);
   } else {
     MOZ_ASSERT(constructorNative);
     MOZ_ASSERT(constructorProto == JS_GetFunctionPrototype(cx, global));
@@ -1615,7 +1615,7 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                    obj, flags, props);
 }
 
-NativePropertyHooks sWorkerNativePropertyHooks = {
+NativePropertyHooks sEmptyNativePropertyHooks = {
   nullptr,
   nullptr,
   {
@@ -1774,17 +1774,19 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   JS::Rooted<JSObject*> aObj(aCx, aObjArg);
   const DOMJSClass* domClass = GetDOMClass(aObj);
 
+  // DOM things are always parented to globals.
   JS::Rooted<JSObject*> oldParent(aCx, JS_GetParent(aObj));
+  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(oldParent) == oldParent);
+
   JS::Rooted<JSObject*> newParent(aCx, domClass->mGetParent(aCx, aObj));
+  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(newParent) == newParent);
 
   JSAutoCompartment oldAc(aCx, oldParent);
 
   JSCompartment* oldCompartment = js::GetObjectCompartment(oldParent);
   JSCompartment* newCompartment = js::GetObjectCompartment(newParent);
   if (oldCompartment == newCompartment) {
-    if (!JS_SetParent(aCx, aObj, newParent)) {
-      MOZ_CRASH();
-    }
+    MOZ_ASSERT(oldParent == newParent);
     return NS_OK;
   }
 
@@ -1806,9 +1808,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   // return early we must avoid ending up with two reflectors pointing to the
   // same native. Other than that, the objects we create will just go away.
 
-  JS::Rooted<JSObject*> global(aCx,
-                               js::GetGlobalForObjectCrossCompartment(newParent));
-  JS::Handle<JSObject*> proto = (domClass->mGetProto)(aCx, global);
+  JS::Handle<JSObject*> proto = (domClass->mGetProto)(aCx, newParent);
   if (!proto) {
     return NS_ERROR_FAILURE;
   }
@@ -1833,8 +1833,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 
     JS::Rooted<JSObject*> copyFrom(aCx, isProxy ? expandoObject : aObj);
     if (copyFrom) {
-      propertyHolder = JS_NewObjectWithGivenProto(aCx, nullptr, JS::NullPtr(),
-                                                  newParent);
+      propertyHolder = JS_NewObjectWithGivenProto(aCx, nullptr, JS::NullPtr());
       if (!propertyHolder) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1903,12 +1902,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     htmlobject->SetupProtoChain(aCx, aObj);
   }
 
-  // Now we can just fix up the parent and return the wrapper
-
-  if (newParent && !JS_SetParent(aCx, aObj, newParent)) {
-    MOZ_CRASH();
-  }
-
+  // Now we can just return the wrapper
   return NS_OK;
 }
 

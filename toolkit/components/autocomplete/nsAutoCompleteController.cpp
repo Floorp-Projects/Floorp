@@ -491,6 +491,21 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
     uint32_t minResultsForPopup;
     input->GetMinResultsForPopup(&minResultsForPopup);
     if (isOpen || (mRowCount > 0 && mRowCount < minResultsForPopup)) {
+      // For completeSelectedIndex autocomplete fields, if the popup shouldn't
+      // close when the caret is moved, don't adjust the text value or caret
+      // position.
+      if (isOpen) {
+        bool noRollup;
+        input->GetNoRollupOnCaretMove(&noRollup);
+        if (noRollup) {
+          bool completeSelection;
+          input->GetCompleteSelectedIndex(&completeSelection);
+          if (completeSelection) {
+            return NS_OK;
+          }
+        }
+      }
+
       int32_t selectedIndex;
       popup->GetSelectedIndex(&selectedIndex);
       bool shouldComplete;
@@ -530,13 +545,9 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
         }
       }
 
-      bool noRollup;
-      input->GetNoRollupOnCaretMove(&noRollup);
-      if (!noRollup) {
-        // Close the pop-up even if nothing was selected
-        ClearSearchTimer();
-        ClosePopup();
-      }
+      // Close the pop-up even if nothing was selected
+      ClearSearchTimer();
+      ClosePopup();
     }
     // Update last-searched string to the current input, since the input may
     // have changed.  Without this, subsequent backspaces look like text
