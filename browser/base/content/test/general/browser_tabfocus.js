@@ -216,14 +216,13 @@ add_task(function*() {
                          "main-window", "tab1", true,
                          "tab change when selected tab element was focused");
 
-  let paintWaiter;
+  let switchWaiter;
   if (gMultiProcessBrowser) {
-    paintWaiter = new Promise((resolve, reject) => {
-      browser2.addEventListener("MozAfterRemotePaint", function paintListener() {
-        browser2.removeEventListener("MozAfterRemotePaint", paintListener, false);
+    switchWaiter = new Promise((resolve, reject) => {
+      gBrowser.addEventListener("TabSwitchDone", function listener() {
+        gBrowser.removeEventListener("TabSwitchDone", listener);
         executeSoon(resolve);
-      }, false);
-      browser2.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.requestNotifyAfterRemotePaint();
+      });
     });
   }
 
@@ -236,7 +235,7 @@ add_task(function*() {
   // Otherwise, the _adjustFocusAfterTabSwitch in tabbrowser gets confused and
   // isn't sure what tab is really focused.
   if (gMultiProcessBrowser) {
-    yield paintWaiter;
+    yield switchWaiter;
   }
 
   yield expectFocusShift(function () gBrowser.selectedTab.blur(),
