@@ -33,11 +33,13 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
 }
 
 JSObject *
-Wrapper::New(JSContext *cx, JSObject *obj, const Wrapper *handler,
+Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
              const WrapperOptions &options)
 {
+    MOZ_ASSERT(parent);
+
     RootedValue priv(cx, ObjectValue(*obj));
-    return NewProxyObject(cx, handler, priv, options.proto(), options);
+    return NewProxyObject(cx, handler, priv, options.proto(), parent, options);
 }
 
 JSObject *
@@ -125,11 +127,12 @@ JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
 /* Compartments. */
 
 extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj)
+js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
+                             HandleObject parent)
 {
     // Allow wrapping outer window proxies.
     MOZ_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);
-    return Wrapper::New(cx, obj, &CrossCompartmentWrapper::singleton);
+    return Wrapper::New(cx, obj, parent, &CrossCompartmentWrapper::singleton);
 }
 
 ErrorCopier::~ErrorCopier()

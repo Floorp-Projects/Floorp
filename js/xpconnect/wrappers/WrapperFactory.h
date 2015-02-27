@@ -46,7 +46,8 @@ class WrapperFactory {
     // Rewrap an object that is about to cross compartment boundaries.
     static JSObject *Rewrap(JSContext *cx,
                             JS::HandleObject existing,
-                            JS::HandleObject obj);
+                            JS::HandleObject obj,
+                            JS::HandleObject parent);
 
     // Wrap wrapped object into a waiver wrapper and then re-wrap it.
     static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleValue vp);
