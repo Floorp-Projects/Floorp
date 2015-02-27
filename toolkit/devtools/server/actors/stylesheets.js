@@ -104,11 +104,11 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
       let actors = [];
 
       for (let doc of documents) {
-        let sheets = yield this._addStyleSheets(doc.styleSheets);
+        let sheets = yield this._addStyleSheets(doc);
         actors = actors.concat(sheets);
 
         // Recursively handle style sheets of the documents in iframes.
-        for (let iframe of doc.getElementsByTagName("iframe")) {
+        for (let iframe of doc.querySelectorAll("iframe, browser, frame")) {
           if (iframe.contentDocument) {
             // Sometimes, iframes don't have any document, like the
             // one that are over deeply nested (bug 285395)
@@ -121,25 +121,54 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   },
 
   /**
-   * Add all the stylesheets to the map and create an actor for each one
-   * if not already created.
+   * Check if we should be showing this stylesheet.
    *
-   * @param {[DOMStyleSheet]} styleSheets
-   *        Stylesheets to add
+   * @param {Document} doc
+   *        Document for which we're checking
+   * @param {DOMCSSStyleSheet} sheet
+   *        Stylesheet we're interested in
+   *
+   * @return boolean
+   *         Whether the stylesheet should be listed.
+   */
+  _shouldListSheet: function(doc, sheet) {
+    // Special case about:PreferenceStyleSheet, as it is generated on the
+    // fly and the URI is not registered with the about: handler.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
+    if (sheet.href && sheet.href.toLowerCase() == "about:preferencestylesheet") {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Add all the stylesheets for this document to the map and create an actor
+   * for each one if not already created.
+   *
+   * @param {Document} doc
+   *        Document for which to add stylesheets
    *
    * @return {Promise}
    *         Promise that resolves to an array of StyleSheetActors
    */
-  _addStyleSheets: function(styleSheets)
+  _addStyleSheets: function(doc)
   {
     return Task.spawn(function*() {
+      let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
+      let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
-        let actor = this.parentActor.createStyleSheetActor(styleSheets[i]);
+        let sheet = styleSheets[i];
+        if (!this._shouldListSheet(doc, sheet)) {
+          continue;
+        }
+
+        let actor = this.parentActor.createStyleSheetActor(sheet);
         actors.push(actor);
 
         // Get all sheets, including imported ones
-        let imports = yield this._getImported(actor);
+        let imports = yield this._getImported(doc, actor);
         actors = actors.concat(imports);
       }
       return actors;
@@ -149,12 +178,14 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   /**
    * Get all the stylesheets @imported from a stylesheet.
    *
+   * @param  {Document} doc
+   *         The document including the stylesheet
    * @param  {DOMStyleSheet} styleSheet
    *         Style sheet to search
    * @return {Promise}
    *         A promise that resolves with an array of StyleSheetActors
    */
-  _getImported: function(styleSheet) {
+  _getImported: function(doc, styleSheet) {
     return Task.spawn(function*() {
       let rules = yield styleSheet.getCSSRules();
       let imported = [];
@@ -164,14 +195,14 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
         if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
           // Associated styleSheet may be null if it has already been seen due
           // to duplicate @imports for the same URL.
-          if (!rule.styleSheet) {
+          if (!rule.styleSheet || !this._shouldListSheet(doc, rule.styleSheet)) {
             continue;
           }
           let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
           imported.push(actor);
 
           // recurse imports in this stylesheet as well
-          let children = yield this._getImported(actor);
+          let children = yield this._getImported(doc, actor);
           imported = imported.concat(children);
         }
         else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {

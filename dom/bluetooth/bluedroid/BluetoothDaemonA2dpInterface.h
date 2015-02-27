@@ -155,6 +155,7 @@ public:
 private:
   void DispatchError(BluetoothA2dpResultHandler* aRes,
                      BluetoothStatus aStatus);
+  void DispatchError(BluetoothA2dpResultHandler* aRes, nsresult aRv);
 
   BluetoothDaemonA2dpModule* mModule;
 };
