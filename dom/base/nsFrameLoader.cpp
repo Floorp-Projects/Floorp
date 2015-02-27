@@ -2670,6 +2670,38 @@ nsFrameLoader::RequestNotifyAfterRemotePaint()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::RequestNotifyLayerTreeReady()
+{
+  if (mRemoteBrowser) {
+    return mRemoteBrowser->RequestNotifyLayerTreeReady() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<AsyncEventDispatcher> event =
+    new AsyncEventDispatcher(mOwnerContent,
+                             NS_LITERAL_STRING("MozLayerTreeReady"),
+                             true, false);
+  event->PostDOMEvent();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::RequestNotifyLayerTreeCleared()
+{
+  if (mRemoteBrowser) {
+    return mRemoteBrowser->RequestNotifyLayerTreeCleared() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<AsyncEventDispatcher> event =
+    new AsyncEventDispatcher(mOwnerContent,
+                             NS_LITERAL_STRING("MozLayerTreeCleared"),
+                             true, false);
+  event->PostDOMEvent();
+
+  return NS_OK;
+}
+
 /* [infallible] */ NS_IMETHODIMP
 nsFrameLoader::SetVisible(bool aVisible)
 {
