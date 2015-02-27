@@ -62,7 +62,7 @@ const GMP_PLUGINS = [
     name:            "Primetime Content Decryption Module provided by Adobe Systems, Incorporated",
     description:     "Play back protected web video.",
     fullDescription: "<xhtml:a href=\"\" target=\"_blank\">License information</xhtml:a>.",
-    homepageURL:     "https://www.adobe.com/",
+    homepageURL:     "http://help.adobe.com/en_US/primetime/drm/index.html",
     optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
     isEME:           true
   }];
