@@ -72,6 +72,10 @@ function downloadChange(evt) {
     is(download.currentBytes, 1024, "Download current size is 1024 bytes");
     SimpleTest.finish();
   } else if (download.state === "downloading") {
+    // Note that this case may or may not trigger, depending on whether the
+    // download is initially reported with 0 bytes (we should happen) or with
+    // 1024 bytes (we should not happen).  If we do happen, an additional 8
+    // TEST-PASS events should be logged.
     ok(download.currentBytes > lastKnownCurrentBytes,
        "Download current size is larger than last download change event");
     lastKnownCurrentBytes = download.currentBytes;
@@ -84,7 +88,8 @@ function downloadStart(evt) {
   var download = evt.download;
   checkConsistentDownloadAttributes(download);
 
-  is(download.currentBytes, 0, "Download current size is zero");
+  // We used to check that the currentBytes was 0.  This was incorrect.  It
+  // is very common to first hear about the download already at 1024 bytes.
   is(download.state, "downloading", "Download state is downloading");
 
   download.onstatechange = downloadChange;

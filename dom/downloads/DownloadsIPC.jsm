@@ -36,10 +36,10 @@ const ipcMessages = ["Downloads:Added",
                      "Downloads:Removed",
                      "Downloads:Changed",
                      "Downloads:GetList:Return",
-                     "Downloads:ClearAllDone:Return",
                      "Downloads:Remove:Return",
                      "Downloads:Pause:Return",
-                     "Downloads:Resume:Return"];
+                     "Downloads:Resume:Return",
+                     "Downloads:Adopt:Return"];
 
 this.DownloadsIPC = {
   downloads: {},
@@ -54,7 +54,6 @@ this.DownloadsIPC = {
     // We need to get the list of current downloads.
     this.ready = false;
     this.getListPromises = [];
-    this.clearAllPromises = [];
     this.downloadPromises = {};
     cpmm.sendAsyncMessage("Downloads:GetList", {});
     this._promiseId = 0;
@@ -92,12 +91,6 @@ this.DownloadsIPC = {
           this.getListPromises.length = 0;
         }
         this.ready = true;
-        break;
-      case "Downloads:ClearAllDone:Return":
-        this._updateDownloadsArray(download);
-        this.clearAllPromises.forEach(aPromise =>
-                                      aPromise.resolve(this.downloads));
-        this.clearAllPromises.length = 0;
         break;
       case "Downloads:Added":
         this.downloads[download.id] = download;
@@ -139,6 +132,7 @@ this.DownloadsIPC = {
       case "Downloads:Remove:Return":
       case "Downloads:Pause:Return":
       case "Downloads:Resume:Return":
+      case "Downloads:Adopt:Return":
         if (this.downloadPromises[download.promiseId]) {
           if (!download.error) {
             this.downloadPromises[download.promiseId].resolve(download);
@@ -167,14 +161,11 @@ this.DownloadsIPC = {
   },
 
   /**
-    * Returns a promise that is resolved with the list of current downloads.
-    */
+   * Void function to trigger removal of completed downloads.
+   */
   clearAllDone: function() {
     debug("clearAllDone");
-    let deferred = Promise.defer();
-    this.clearAllPromises.push(deferred);
     cpmm.sendAsyncMessage("Downloads:ClearAllDone", {});
-    return deferred.promise;
   },
 
   promiseId: function() {
@@ -208,6 +199,16 @@ this.DownloadsIPC = {
     this.downloadPromises[pId] = deferred;
     cpmm.sendAsyncMessage("Downloads:Resume",
                           { id: aId, promiseId: pId });
+    return deferred.promise;
+  },
+
+  adoptDownload: function(aJsonDownload) {
+    debug("adoptDownload");
+    let deferred = Promise.defer();
+    let pId = this.promiseId();
+    this.downloadPromises[pId] = deferred;
+    cpmm.sendAsyncMessage("Downloads:Adopt",
+                          { jsonDownload: aJsonDownload, promiseId: pId });
     return deferred.promise;
   },
 
