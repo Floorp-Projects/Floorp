@@ -22,6 +22,13 @@ function assertNear(a, b) {
     assertEq((a != a && b != b) || Math.abs(a - b) < 0.001, true);
 }
 
+function assertEqVec(v, w) {
+    assertEq(v.x, w.x);
+    assertEq(v.y, w.y);
+    assertEq(v.z, w.z);
+    assertEq(v.w, w.w);
+}
+
 function assertEqX4(vec, arr, ...opts) {
 
     var assertFunc;
