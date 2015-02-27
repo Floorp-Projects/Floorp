@@ -407,7 +407,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.thisv().isObject()) {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+    JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr,
                          JSMSG_CANT_CONVERT_TO, "null", "object");
     return false;
   }

@@ -395,7 +395,7 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, Token
     uint32_t count = args_.length() + vars_.length() + bodyLevelLexicals_.length();
     Binding *packedBindings = alloc.newArrayUninitialized<Binding>(count);
     if (!packedBindings) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -576,7 +576,7 @@ Parser<ParseHandler>::newObjectBox(NativeObject *obj)
 
     ObjectBox *objbox = alloc.new_<ObjectBox>(obj, traceListHead);
     if (!objbox) {
-        js_ReportOutOfMemory(context);
+        ReportOutOfMemory(context);
         return nullptr;
     }
 
@@ -673,7 +673,7 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<Pars
                                 inheritedDirectives, options().extraWarningsOption,
                                 generatorKind);
     if (!funbox) {
-        js_ReportOutOfMemory(context);
+        ReportOutOfMemory(context);
         return nullptr;
     }
 

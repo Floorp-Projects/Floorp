@@ -35,7 +35,7 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
         return;
 
     if (JSID_IS_VOID(id)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_OBJECT_ACCESS_DENIED);
     } else {
         RootedValue idVal(cx, IdToValue(id));
@@ -48,7 +48,7 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id)
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
             prop = chars.twoByteChars();
 
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr, JSMSG_PROPERTY_ACCESS_DENIED,
+        JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_ACCESS_DENIED,
                                prop);
     }
 }
@@ -754,7 +754,7 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
 }
 
 JS_FRIEND_API(JSObject *)
-js_InitProxyClass(JSContext *cx, HandleObject obj)
+js::InitProxyClass(JSContext *cx, HandleObject obj)
 {
     static const JSFunctionSpec static_methods[] = {
         JS_FN("create",         proxy_create,          2, 0),

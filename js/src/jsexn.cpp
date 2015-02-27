@@ -335,7 +335,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
 }
 
 JSErrorReport *
-js_ErrorFromException(JSContext *cx, HandleObject objArg)
+js::ErrorFromException(JSContext *cx, HandleObject objArg)
 {
     // It's ok to UncheckedUnwrap here, since all we do is get the
     // JSErrorReport, and consumers are careful with the information they get
@@ -542,8 +542,8 @@ js::GetErrorTypeName(JSRuntime *rt, int16_t exnType)
 }
 
 bool
-js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
-                    JSErrorCallback callback, void *userRef)
+js::ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
+                     JSErrorCallback callback, void *userRef)
 {
     // Tell our caller to report immediately if this report is just a warning.
     MOZ_ASSERT(reportp);
@@ -553,7 +553,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     // Find the exception index associated with this error.
     JSErrNum errorNumber = static_cast<JSErrNum>(reportp->errorNumber);
     if (!callback)
-        callback = js_GetErrorMessage;
+        callback = GetErrorMessage;
     const JSErrorFormatString *errorString = callback(userRef, errorNumber);
     JSExnType exnType = errorString ? static_cast<JSExnType>(errorString->exnType) : JSEXN_NONE;
     MOZ_ASSERT(exnType < JSEXN_LIMIT);
@@ -645,7 +645,7 @@ js::ErrorReportToString(JSContext *cx, JSErrorReport *reportp)
 }
 
 bool
-js_ReportUncaughtException(JSContext *cx)
+js::ReportUncaughtException(JSContext *cx)
 {
     if (!cx->isExceptionPending())
         return true;
@@ -686,7 +686,7 @@ ErrorReport::~ErrorReport()
     js_free(ownedMessage);
     if (ownedReport.messageArgs) {
         /*
-         * js_ExpandErrorArguments owns its messageArgs only if it had to
+         * ExpandErrorArguments owns its messageArgs only if it had to
          * inflate the arguments (from regular |char *|s), which is always in
          * our case.
          */
@@ -709,7 +709,7 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
      */
     if (exn.isObject()) {
         exnObject = &exn.toObject();
-        reportp = js_ErrorFromException(cx, exnObject);
+        reportp = ErrorFromException(cx, exnObject);
 
         JSCompartment *comp = exnObject->compartment();
         JSAddonId *addonId = comp->addonId;
@@ -746,7 +746,7 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
     if (!str)
         cx->clearPendingException();
 
-    // If js_ErrorFromException didn't get us a JSErrorReport, then the object
+    // If ErrorFromException didn't get us a JSErrorReport, then the object
     // was not an ErrorObject, security-wrapped or otherwise. However, it might
     // still quack like one. Give duck-typing a chance.  We start by looking for
     // "filename" (all lowercase), since that's where DOMExceptions store their
@@ -848,7 +848,7 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
     if (!reportp) {
         // This is basically an inlined version of
         //
-        //   JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+        //   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
         //                        JSMSG_UNCAUGHT_EXCEPTION, message_);
         //
         // but without the reporting bits.  Instead it just puts all
@@ -892,9 +892,9 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext *cx, va_list ap)
         ownedReport.isMuted = iter.mutedErrors();
     }
 
-    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, nullptr,
-                                 JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
-                                 &ownedReport, ArgumentsAreASCII, ap)) {
+    if (!ExpandErrorArguments(cx, GetErrorMessage, nullptr,
+                              JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
+                              &ownedReport, ArgumentsAreASCII, ap)) {
         return false;
     }
 
@@ -905,7 +905,7 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext *cx, va_list ap)
 }
 
 JSObject *
-js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
+js::CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
 {
     js::ScopedJSFreePtr<JSErrorReport> copyReport;
     if (JSErrorReport *errorReport = err->getErrorReport()) {

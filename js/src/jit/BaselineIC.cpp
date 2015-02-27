@@ -1093,7 +1093,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, JSScript *script, 
         ICStub *stub = existingStub ? compiler.updateStub()
                                     : compiler.getStub(compiler.getStubSpace(script));
         if (!stub) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
 
@@ -1120,7 +1120,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, JSScript *script, 
         ICTypeMonitor_SingleObject::Compiler compiler(cx, obj);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
 
@@ -1144,7 +1144,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, JSScript *script, 
         ICTypeMonitor_ObjectGroup::Compiler compiler(cx, group);
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
 
@@ -5644,7 +5644,7 @@ DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue ob
     FallbackICSpew(cx, stub, "In");
 
     if (!objValue.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, objValue, NullPtr());
+        ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, objValue, NullPtr());
         return false;
     }
 
@@ -9093,7 +9093,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     // Check for natives to which template objects can be attached. This is
     // done to provide templates to Ion for inlining these natives later on.
 
-    if (native == js_Array) {
+    if (native == ArrayConstructor) {
         // Note: the template array won't be used if its length is inaccurately
         // computed here.  (We allocate here because compilation may occur on a
         // separate thread where allocation is impossible.)
@@ -9150,7 +9150,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
-    if (native == js_String) {
+    if (native == StringConstructor) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
         res.set(StringObject::create(cx, emptyString, TenuredObject));
         return !!res;
@@ -9398,7 +9398,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
         // Check for JSOP_FUNAPPLY
         if (op == JSOP_FUNAPPLY) {
-            if (fun->native() == js_fun_apply)
+            if (fun->native() == fun_apply)
                 return TryAttachFunApplyStub(cx, stub, script, pc, thisv, argc, vp + 2, handled);
 
             // Don't try to attach a "regular" optimized call stubs for FUNAPPLY ops,
@@ -9406,7 +9406,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             return true;
         }
 
-        if (op == JSOP_FUNCALL && fun->native() == js_fun_call) {
+        if (op == JSOP_FUNCALL && fun->native() == fun_call) {
             if (!TryAttachFunCallStub(cx, stub, script, pc, thisv, handled))
                 return false;
             if (*handled)
@@ -9818,7 +9818,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
     // Stack now confirmed to be like:
     //      [..., CalleeV, ThisV, Arg0V, MagicValue(Arguments), <MaybeReturnAddr>]
 
-    // Load the callee, ensure that it's js_fun_apply
+    // Load the callee, ensure that it's fun_apply
     ValueOperand val = regs.takeAnyValue();
     Address calleeSlot(BaselineStackReg, ICStackValueOffset + (3 * sizeof(Value)));
     masm.loadValue(calleeSlot, val);
@@ -9830,7 +9830,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
                             failure);
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
 
-    masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(js_fun_apply), failure);
+    masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(fun_apply), failure);
 
     // Load the |thisv|, ensure that it's a scripted function with a valid baseline or ion
     // script, or a native function.
@@ -10658,7 +10658,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
     // Stack now looks like:
     //                                      BaselineFrameReg -------------------.
     //                                                                          v
-    //      [..., js_fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader]
+    //      [..., fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader]
 
     // Push all array elements onto the stack:
     Address arrayVal(BaselineFrameReg, STUB_FRAME_SIZE);
@@ -10667,7 +10667,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
     // Stack now looks like:
     //                                      BaselineFrameReg -------------------.
     //                                                                          v
-    //      [..., js_fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader,
+    //      [..., fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader,
     //       PushedArgN, ..., PushedArg0]
     // Can't fail after this, so it's ok to clobber argcReg.
 
@@ -10758,7 +10758,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     //
 
     // Stack now looks like:
-    //      [..., js_fun_apply, TargetV, TargetThisV, MagicArgsV, StubFrameHeader]
+    //      [..., fun_apply, TargetV, TargetThisV, MagicArgsV, StubFrameHeader]
 
     // Push all arguments supplied to caller function onto the stack.
     pushCallerArguments(masm, regs);
@@ -10766,7 +10766,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     // Stack now looks like:
     //                                      BaselineFrameReg -------------------.
     //                                                                          v
-    //      [..., js_fun_apply, TargetV, TargetThisV, MagicArgsV, StubFrameHeader,
+    //      [..., fun_apply, TargetV, TargetThisV, MagicArgsV, StubFrameHeader,
     //       PushedArgN, ..., PushedArg0]
     // Can't fail after this, so it's ok to clobber argcReg.
 
@@ -10839,14 +10839,14 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(calleeSlot, R1);
     regs.take(R1);
 
-    // Ensure callee is js_fun_call.
+    // Ensure callee is fun_call.
     masm.branchTestObject(Assembler::NotEqual, R1, &failure);
 
     Register callee = masm.extractObject(R1, ExtractTemp0);
     masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
                             &failure);
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
-    masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(js_fun_call), &failure);
+    masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(fun_call), &failure);
 
     // Ensure |this| is a scripted function with JIT code.
     BaseIndex thisSlot(BaselineStackReg, argcReg, TimesEight, ICStackValueOffset);
@@ -11265,7 +11265,7 @@ DoInstanceOfFallback(JSContext *cx, BaselineFrame *frame, ICInstanceOf_Fallback 
     FallbackICSpew(cx, stub, "InstanceOf");
 
     if (!rhs.isObject()) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rhs, NullPtr());
+        ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rhs, NullPtr());
         return false;
     }
 

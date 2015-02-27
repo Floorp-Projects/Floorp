@@ -209,7 +209,7 @@ EmitCheck(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
 
     jsbytecode dummy = 0;
     if (!bce->code().appendN(dummy, delta)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return -1;
     }
     return offset;
@@ -2818,7 +2818,7 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                     intmap_bitlen = JS_BIT(16);
                     intmap = cx->pod_malloc<jsbitmap>(JS_BIT(16) / JS_BITMAP_NBITS);
                     if (!intmap) {
-                        js_ReportOutOfMemory(cx);
+                        ReportOutOfMemory(cx);
                         return false;
                     }
                 }
@@ -7481,7 +7481,7 @@ AllocSrcNote(ExclusiveContext *cx, SrcNotesVector &notes)
 
     jssrcnote dummy = 0;
     if (!notes.append(dummy)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return -1;
     }
     return notes.length() - 1;
@@ -7615,7 +7615,7 @@ SetSrcNoteOffset(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned index, uns
                 !(sn = notes.insert(sn, dummy)) ||
                 !(sn = notes.insert(sn, dummy)))
             {
-                js_ReportOutOfMemory(cx);
+                ReportOutOfMemory(cx);
                 return false;
             }
         }

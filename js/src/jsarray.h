@@ -15,10 +15,9 @@
 namespace js {
 /* 2^32-2, inclusive */
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
-}
 
 inline bool
-js_IdIsIndex(jsid id, uint32_t *indexp)
+IdIsIndex(jsid id, uint32_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
@@ -34,12 +33,7 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
 }
 
 extern JSObject *
-js_InitArrayClass(JSContext *cx, js::HandleObject obj);
-
-extern bool
-js_InitContextBusyArrayTable(JSContext *cx);
-
-namespace js {
+InitArrayClass(JSContext *cx, js::HandleObject obj);
 
 class ArrayObject;
 
@@ -131,7 +125,7 @@ ObjectMayHaveExtraIndexedProperties(JSObject *obj);
  * Copy 'length' elements from aobj to vp.
  *
  * This function assumes 'length' is effectively the result of calling
- * js_GetLengthProperty on aobj. vp must point to rooted memory.
+ * GetLengthProperty on aobj. vp must point to rooted memory.
  */
 extern bool
 GetElements(JSContext *cx, HandleObject aobj, uint32_t length, js::Value *vp);
@@ -195,15 +189,15 @@ NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &v);
 extern ArrayObject *
 ArrayConstructorOneArg(JSContext *cx, HandleObjectGroup group, int32_t lengthInt);
 
-} /* namespace js */
-
 #ifdef DEBUG
 extern bool
-js_ArrayInfo(JSContext *cx, unsigned argc, js::Value *vp);
+ArrayInfo(JSContext *cx, unsigned argc, Value *vp);
 #endif
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
-bool
-js_Array(JSContext *cx, unsigned argc, js::Value *vp);
+extern bool
+ArrayConstructor(JSContext *cx, unsigned argc, Value *vp);
+
+} /* namespace js */
 
 #endif /* jsarray_h */

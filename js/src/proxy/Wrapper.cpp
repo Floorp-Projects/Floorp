@@ -141,7 +141,7 @@ ErrorCopier::~ErrorCopier()
             cx->clearPendingException();
             ac.reset();
             Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
-            JSObject *copyobj = js_CopyErrorObject(cx, errObj);
+            JSObject *copyobj = CopyErrorObject(cx, errObj);
             if (copyobj)
                 cx->setPendingException(ObjectValue(*copyobj));
         }
