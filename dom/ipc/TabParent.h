@@ -374,6 +374,11 @@ public:
     bool SendLoadRemoteScript(const nsString& aURL,
                               const bool& aRunInGlobalScope);
 
+    // See nsIFrameLoader requestNotifyLayerTreeReady.
+    bool RequestNotifyLayerTreeReady();
+    bool RequestNotifyLayerTreeCleared();
+    bool LayerTreeUpdate(bool aActive);
+
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
