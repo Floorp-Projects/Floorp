@@ -510,7 +510,7 @@ impl ToJson for SwitchToFrameParameters {
 
 #[derive(PartialEq)]
 pub struct SendKeysParameters {
-    pub value: String
+    pub value: Nullable<Vec<Json>>
 }
 
 impl Parameters for SendKeysParameters {
@@ -518,11 +518,16 @@ impl Parameters for SendKeysParameters {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
-        let value = try_opt!(try_opt!(data.get("value"),
-                                      ErrorStatus::InvalidArgument,
-                                      "Missing 'value' parameter").as_string(),
+        let value_json= try_opt!(data.get("value"),
                              ErrorStatus::InvalidArgument,
-                             "'value' not a string").to_string();
+                             "Missing 'value' parameter");
+        let value = try!(Nullable::from_json(
+            value_json,
+            |x| {
+                Ok((try_opt!(x.as_array(),
+                             ErrorStatus::InvalidArgument,
+                             "Failed to convert args to Array")).clone())
+            }));
 
         Ok(SendKeysParameters {
             value: value
