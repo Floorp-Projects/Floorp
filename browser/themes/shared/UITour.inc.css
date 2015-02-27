@@ -151,12 +151,28 @@
 /* Notification overrides for Heartbeat UI */
 
 notification.heartbeat {
-  background-color: #F1F1F1;
 %ifdef XP_MACOSX
   background-image: linear-gradient(-179deg, #FBFBFB 0%, #EBEBEB 100%);
+%else
+  background-color: #F1F1F1;
 %endif
-  box-shadow: 0px 1px 0px 0px rgba(0,0,0,0.35);
+  border-bottom: 1px solid #C1C1C1;
+  height: 40px;
 }
+
+/* In themes/osx/global/notification.css the close icon is inverted because notifications
+   on OSX are usually dark. Heartbeat is light, so override that behaviour. */
+
+%ifdef XP_MACOSX
+notification.heartbeat[type="info"] .close-icon:not(:hover) {
+  -moz-image-region: rect(0, 16px, 16px, 0px) !important;
+}
+@media (min-resolution: 2dppx) {
+  notification.heartbeat[type="info"] .close-icon:not(:hover) {
+    -moz-image-region: rect(0, 32px, 32px, 0px) !important;
+  }
+}
+%endif
 
 @keyframes pulse-onshow {
  0% {
@@ -192,17 +208,17 @@ notification.heartbeat {
 
 .messageText.heartbeat {
   color: #333333;
-  font-weight: normal;
-  font-family: "Lucida Grande", Segoe, Ubuntu;
-  font-size: 14px;
-  line-height: 16px;
   text-shadow: none;
+  -moz-margin-start: 0px;
+  /* The !important is required to override OSX default style. */
+  -moz-margin-end: 12px !important;
 }
 
 .messageImage.heartbeat {
-  width: 36px;
-  height: 36px;
-  -moz-margin-end: 10px;
+  width: 24px;
+  height: 24px;
+  -moz-margin-start: 8px;
+  -moz-margin-end: 8px;
 }
 
 .messageImage.heartbeat.pulse-onshow {
@@ -219,9 +235,25 @@ notification.heartbeat {
   animation-timing-function: linear;
 }
 
+/* Learn More link styles */
+.heartbeat > .text-link {
+  color: #0095DD;
+  -moz-margin-start: 0px;
+}
+
+.heartbeat > .text-link:hover {
+  color: #008ACB;
+  text-decoration: none;
+}
+
+.heartbeat > .text-link:hover:active {
+  color: #006B9D;
+}
+
 /* Heartbeat UI Rating Star Classes */
 .heartbeat > #star-rating-container {
   display: -moz-box;
+  margin-bottom: 4px;
 }
 
 .heartbeat > #star-rating-container > #star5 {
@@ -243,14 +275,13 @@ notification.heartbeat {
 .heartbeat > #star-rating-container > .star-x  {
   background: url("chrome://browser/skin/heartbeat-star-off.svg");
   cursor: pointer;
-  width: 24px;
-  height: 24px;
+  /* Overrides the -moz-margin-end for all platforms defined in the .plain class */
+  -moz-margin-end: 4px !important;
+  width: 16px;
+  height: 16px;
 }
 
 .heartbeat > #star-rating-container > .star-x:hover,
 .heartbeat > #star-rating-container > .star-x:hover ~ .star-x {
   background: url("chrome://browser/skin/heartbeat-star-lit.svg");
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
 }
