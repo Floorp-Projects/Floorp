@@ -8754,13 +8754,6 @@ PresShell::WillPaintWindow()
 void
 PresShell::DidPaintWindow()
 {
-  if (mDocument) {
-    nsCOMPtr<nsPIDOMWindow> window = mDocument->GetWindow();
-    if (window) {
-      window->SendAfterRemotePaintIfRequested();
-    }
-  }
-
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (rootPresContext != mPresContext) {
     // This could be a popup's presshell. No point in notifying XPConnect
