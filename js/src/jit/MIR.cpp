@@ -948,6 +948,20 @@ MSimdSwizzle::foldsTo(TempAllocator &alloc)
     return this;
 }
 
+MDefinition *
+MSimdGeneralSwizzle::foldsTo(TempAllocator &alloc)
+{
+    int32_t lanes[4];
+    for (size_t i = 0; i < 4; i++) {
+        if (!lane(i)->isConstant() || lane(i)->type() != MIRType_Int32)
+            return this;
+        lanes[i] = lane(i)->toConstant()->value().toInt32();
+        if (lanes[i] < 0 || lanes[i] >= 4)
+            return this;
+    }
+    return MSimdSwizzle::New(alloc, input(), type(), lanes[0], lanes[1], lanes[2], lanes[3]);
+}
+
 template <typename T>
 static void
 PrintOpcodeOperation(T *mir, FILE *fp)

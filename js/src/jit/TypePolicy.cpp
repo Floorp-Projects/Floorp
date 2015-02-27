@@ -786,6 +786,31 @@ template bool
 SimdPolicy<0>::adjustInputs(TempAllocator &alloc, MInstruction *ins);
 
 bool
+SimdSwizzlePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType specialization = ins->typePolicySpecialization();
+
+    // First input is the vector input.
+    if (!MaybeSimdUnbox(alloc, ins, specialization, 0))
+        return false;
+
+    // Next inputs are the lanes, which need to be int32
+    for (unsigned i = 0; i < 4; i++) {
+        MDefinition *in = ins->getOperand(i + 1);
+        if (in->type() == MIRType_Int32)
+            continue;
+
+        MInstruction *replace = MTruncateToInt32::New(alloc, in);
+        ins->block()->insertBefore(ins, replace);
+        ins->replaceOperand(i + 1, replace);
+        if (!replace->typePolicy()->adjustInputs(alloc, replace))
+            return false;
+    }
+
+    return true;
+}
+
+bool
 SimdSelectPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MIRType specialization = ins->typePolicySpecialization();
@@ -1085,6 +1110,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(PowPolicy)                                \
     _(SimdAllPolicy)                            \
     _(SimdSelectPolicy)                         \
+    _(SimdSwizzlePolicy)                        \
     _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreTypedArrayPolicy)                    \

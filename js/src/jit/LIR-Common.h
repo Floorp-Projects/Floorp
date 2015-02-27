@@ -374,6 +374,49 @@ class LSimdSwizzleF : public LSimdSwizzleBase
     {}
 };
 
+class LSimdGeneralSwizzleBase : public LInstructionHelper<1, 5, 1>
+{
+  public:
+    LSimdGeneralSwizzleBase(const LAllocation &base, const LAllocation lanes[4],
+                            const LDefinition &temp)
+    {
+        setOperand(0, base);
+        for (size_t i = 0; i < 4; i++)
+            setOperand(1 + i, lanes[i]);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *base() {
+        return getOperand(0);
+    }
+    const LAllocation *lane(size_t i) {
+        return getOperand(1 + i);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+};
+
+class LSimdGeneralSwizzleI : public LSimdGeneralSwizzleBase
+{
+  public:
+    LIR_HEADER(SimdGeneralSwizzleI);
+    LSimdGeneralSwizzleI(const LAllocation &base, const LAllocation lanes[4],
+                         const LDefinition &temp)
+      : LSimdGeneralSwizzleBase(base, lanes, temp)
+    {}
+};
+
+class LSimdGeneralSwizzleF : public LSimdGeneralSwizzleBase
+{
+  public:
+    LIR_HEADER(SimdGeneralSwizzleF);
+    LSimdGeneralSwizzleF(const LAllocation &base, const LAllocation lanes[4],
+                         const LDefinition &temp)
+      : LSimdGeneralSwizzleBase(base, lanes, temp)
+    {}
+};
+
 // Base class for both int32x4 and float32x4 shuffle instructions.
 class LSimdShuffle : public LInstructionHelper<1, 2, 1>
 {
