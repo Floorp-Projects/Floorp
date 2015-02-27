@@ -8,6 +8,8 @@
 
 #include "jit/C1Spewer.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include <time.h>
 
 #include "jit/LinearScan.h"
@@ -34,8 +36,8 @@ C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
 
     fprintf(spewout_, "begin_compilation\n");
     if (script) {
-        fprintf(spewout_, "  name \"%s:%d\"\n", script->filename(), (int)script->lineno());
-        fprintf(spewout_, "  method \"%s:%d\"\n", script->filename(), (int)script->lineno());
+        fprintf(spewout_, "  name \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
+        fprintf(spewout_, "  method \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
     } else {
         fprintf(spewout_, "  name \"asm.js compilation\"\n");
         fprintf(spewout_, "  method \"asm.js compilation\"\n");
