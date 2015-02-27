@@ -742,35 +742,37 @@ var LoginManagerContent = {
 
     // We will always have a selectedLogin at this point.
 
-    if (autofillForm && !isFormDisabled) {
-      // Fill the form
-
-      if (usernameField) {
-        // Don't modify the username field if it's disabled or readOnly so we preserve its case.
-        let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
-
-        let userNameDiffers = selectedLogin.username != usernameField.value;
-        // Don't replace the username if it differs only in case, and the user triggered
-        // this autocomplete. We assume that if it was user-triggered the entered text
-        // is desired.
-        let userEnteredDifferentCase = userTriggered && userNameDiffers &&
-               usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
-
-        if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
-          usernameField.setUserInput(selectedLogin.username);
-        }
-      }
-      if (passwordField.value != selectedLogin.password) {
-        passwordField.setUserInput(selectedLogin.password);
-      }
-    } else if (!autofillForm) {
+    if (!autofillForm) {
       log("autofillForms=false but form can be filled; notified observers");
       recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
       return;
-    } else if (isFormDisabled) {
+    }
+
+    if (isFormDisabled) {
       log("autocomplete=off but form can be filled; notified observers");
       recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
       return;
+    }
+
+    // Fill the form
+
+    if (usernameField) {
+      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+      let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
+
+      let userNameDiffers = selectedLogin.username != usernameField.value;
+      // Don't replace the username if it differs only in case, and the user triggered
+      // this autocomplete. We assume that if it was user-triggered the entered text
+      // is desired.
+      let userEnteredDifferentCase = userTriggered && userNameDiffers &&
+             usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
+
+      if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
+        usernameField.setUserInput(selectedLogin.username);
+      }
+    }
+    if (passwordField.value != selectedLogin.password) {
+      passwordField.setUserInput(selectedLogin.password);
     }
 
     recordAutofillResult(AUTOFILL_RESULT.FILLED);
