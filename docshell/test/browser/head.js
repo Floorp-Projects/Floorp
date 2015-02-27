@@ -39,9 +39,16 @@ function makeTimelineTest(frameScriptName, url) {
 
 /* Open a URL for a timeline test.  */
 function timelineTestOpenUrl(url) {
-  return new Promise(function(resolve, reject) {
-    window.focus();
+  window.focus();
 
+  let tabSwitchPromise = new Promise((resolve, reject) => {
+    window.gBrowser.addEventListener("TabSwitchDone", function listener() {
+      window.gBrowser.removeEventListener("TabSwitchDone", listener);
+      resolve();
+    });
+  });
+
+  let loadPromise = new Promise(function(resolve, reject) {
     let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
     let linkedBrowser = tab.linkedBrowser;
 
@@ -50,4 +57,6 @@ function timelineTestOpenUrl(url) {
       resolve(tab);
     }, true);
   });
+
+  return Promise.all([tabSwitchPromise, loadPromise]).then(([_, tab]) => tab);
 }
