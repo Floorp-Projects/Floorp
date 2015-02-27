@@ -65,6 +65,7 @@ class ProcessHandlerMixin(object):
 
         MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY = 180
         MAX_PROCESS_KILL_DELAY = 30
+        TIMEOUT_BEFORE_SIGKILL = 1.0
 
         def __init__(self,
                      args,
@@ -144,16 +145,32 @@ class ProcessHandlerMixin(object):
                     if err is not None:
                         raise OSError(err)
             else:
-                sig = sig or signal.SIGKILL
-                if not self._ignore_children:
-                    try:
-                        os.killpg(self.pid, sig)
-                    except BaseException, e:
-                        if getattr(e, "errno", None) != 3:
-                            # Error 3 is "no such process", which is ok
-                            print >> sys.stdout, "Could not kill process, could not find pid: %s, assuming it's already dead" % self.pid
+                def send_sig(sig):
+                    if not self._ignore_children:
+                        try:
+                            os.killpg(self.pid, sig)
+                        except BaseException, e:
+                            if getattr(e, "errno", None) != 3:
+                                # Error 3 is "no such process", which is ok
+                                print >> sys.stdout, "Could not kill process, could not find pid: %s, assuming it's already dead" % self.pid
+                    else:
+                        os.kill(self.pid, sig)
+
+                if sig is None and isPosix:
+                    # ask the process for termination and wait a bit
+                    send_sig(signal.SIGTERM)
+                    limit = time.time() + self.TIMEOUT_BEFORE_SIGKILL
+                    while time.time() <= limit:
+                        if self.poll() is not None:
+                            # process terminated nicely
+                            break
+                        time.sleep(0.02)
+                    else:
+                        # process did not terminate - send SIGKILL to force
+                        send_sig(signal.SIGKILL)
                 else:
-                    os.kill(self.pid, sig)
+                    # a signal was explicitly set or not posix
+                    send_sig(sig or signal.SIGKILL)
 
             self.returncode = self.wait()
             self._cleanup()
