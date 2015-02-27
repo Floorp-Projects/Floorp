@@ -3061,14 +3061,8 @@ xhr.prototype = {
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
   },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIClassInfo) ||
-        aIID.equals(Ci.nsISupports)) {
-      return gXHR;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  get wrappedJSObject() { return this; }
+  get wrappedJSObject() { return this; },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo])
 };
 
 /**
@@ -3125,14 +3119,7 @@ UpdatePrompt.prototype = {
     }
     throw Cr.NS_ERROR_NO_AGGREGATION;
   },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIClassInfo) ||
-        aIID.equals(Ci.nsIUpdatePrompt) ||
-        aIID.equals(Ci.nsISupports)) {
-      return gUpdatePrompt;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt])
 };
 
 /* Update check listener */
@@ -3164,13 +3151,7 @@ const updateCheckListener = {
     do_execute_soon(gCheckFunc.bind(null, aRequest, aUpdate));
   },
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsIUpdateCheckListener) &&
-        !aIID.equals(Ci.nsISupports)) {
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener])
 };
 
 /* Update download listener - nsIRequestObserver */
@@ -3190,14 +3171,8 @@ const downloadListener = {
     do_execute_soon(gCheckFunc);
   },
 
-  QueryInterface: function DL_QueryInterface(aIID) {
-    if (!aIID.equals(Ci.nsIRequestObserver) &&
-        !aIID.equals(Ci.nsIProgressEventSink) &&
-        !aIID.equals(Ci.nsISupports)) {
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
+                                         Ci.nsIProgressEventSink])
 };
 
 /**
@@ -3247,6 +3222,10 @@ function stop_httpserver(aCallback) {
 function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
+  let ifaces = [Ci.nsIXULAppInfo, Ci.nsIXULRuntime];
+  if (IS_WIN) {
+    ifaces.push(Ci.nsIWinAppHelper);
+  }
   const XULAppInfo = {
     vendor: APP_INFO_VENDOR,
     name: aName,
@@ -3260,21 +3239,11 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
     OS: "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
 
-    QueryInterface: function QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIXULAppInfo) ||
-          aIID.equals(Ci.nsIXULRuntime) ||
-          aIID.equals(Ci.nsISupports)) {
-        return this;
-      }
-      if (IS_WIN && aIID.equals(Ci.nsIWinAppHelper)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: XPCOMUtils.generateQI(ifaces)
   };
 
   const XULAppInfoFactory = {
-    createInstance: function (aOuter, aIID) {
+    createInstance: function(aOuter, aIID) {
       if (aOuter == null) {
         return XULAppInfo.QueryInterface(aIID);
       }
@@ -3400,13 +3369,7 @@ function adjustGeneralPaths() {
       }
       return null;
     },
-    QueryInterface: function(aIID) {
-      if (aIID.equals(Ci.nsIDirectoryServiceProvider) ||
-          aIID.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
   };
   let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_DIR);

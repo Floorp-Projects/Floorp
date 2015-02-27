@@ -62,13 +62,7 @@ const WindowWatcher = {
     }; 
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIWindowWatcher) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
 const WindowWatcherFactory = {

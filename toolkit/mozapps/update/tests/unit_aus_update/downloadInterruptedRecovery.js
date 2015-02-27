@@ -240,7 +240,7 @@ IncrementalDownload.prototype = {
   get status() {
     return this._status;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIncrementalDownload]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIncrementalDownload])
 };
 
 // Test disconnecting during an update
