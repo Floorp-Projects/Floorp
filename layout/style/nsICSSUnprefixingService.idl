@@ -1,0 +1,48 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* interface for a service that converts certain vendor-prefixed CSS properties
+   to their unprefixed equivalents */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(927a5c60-0378-4bcb-a50d-99e6d1fe6063)]
+interface nsICSSUnprefixingService : nsISupports
+{
+  /**
+   * This function helps to convert unsupported vendor-prefixed CSS into
+   * supported unprefixed CSS. Given a vendor-prefixed property name and a
+   * value (or e.g. value + trailing junk like " !important;}"), this function
+   * will attempt to produce an equivalent CSS declaration that uses a
+   * supported unprefixed CSS property.
+   *
+   * @param   aPropName
+   *          The vendor-prefixed property name.
+   *
+   * @param   aRightHalfOfDecl
+   *          Everything after the ":" in the CSS declaration. This includes
+   *          the property's value, along with possibly some leading whitespace
+   *          and trailing text like "!important", and possibly a ';' and/or
+   *          '}' (along with any other bogus text the author happens to
+   *          include before those, which will probably make the decl invalid).
+   *
+   * @param   aUnprefixedDecl[out]
+   *          The resulting unprefixed declaration, if we return true.
+   *
+   * @return true if we were able to unprefix -- i.e. if we were able to
+   *         convert the property to a known unprefixed equivalent, and we also
+   *         performed any known-to-be-necessary fixup on the value, and we put
+   *         the result in aUnprefixedDecl.
+   *         Otherwise, this function returns false.
+   */
+  boolean generateUnprefixedDeclaration(in AString aPropName,
+                                        in AString aRightHalfOfDecl,
+                                        out AString aUnprefixedDecl);
+};
+
+%{C++
+#define NS_CSSUNPREFIXINGSERVICE_CONTRACTID \
+    "@mozilla.org/css-unprefixing-service;1"
+%}

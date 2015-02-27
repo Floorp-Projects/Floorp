@@ -315,7 +315,7 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
     nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
 
     // get the selection location
-    NS_ENSURE_STATE(selection->GetRangeCount());
+    NS_ENSURE_STATE(selection->RangeCount());
     mRangeItem->startNode = selection->GetRangeAt(0)->GetStartParent();
     mRangeItem->startOffset = selection->GetRangeAt(0)->StartOffset();
     mRangeItem->endNode = selection->GetRangeAt(0)->GetEndParent();
@@ -582,7 +582,7 @@ nsHTMLEditRules::WillDoAction(Selection* aSelection,
   if (!aSelection) {
     return NS_OK;
   }
-  NS_ENSURE_TRUE(aSelection->GetRangeCount(), NS_OK);
+  NS_ENSURE_TRUE(aSelection->RangeCount(), NS_OK);
 
   nsRefPtr<nsRange> range = aSelection->GetRangeAt(0);
   nsCOMPtr<nsINode> selStartNode = range->GetStartParent();
@@ -2425,7 +2425,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         // except table elements.
         join = true;
 
-        uint32_t rangeCount = aSelection->GetRangeCount();
+        uint32_t rangeCount = aSelection->RangeCount();
         for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
           nsRefPtr<nsRange> range = aSelection->GetRangeAt(rangeIdx);
 
@@ -6050,7 +6050,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
   // is only in part of it.  used by list item dialog.
   if (aEntireList)
   {       
-    uint32_t rangeCount = selection->GetRangeCount();
+    uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
       nsCOMPtr<nsIDOMNode> commonParent, parent, tmp;
@@ -7519,7 +7519,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   NS_ENSURE_STATE(mHTMLEditor);
   nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   MOZ_ASSERT(selection);
-  if (!selection->GetRangeCount()) {
+  if (!selection->RangeCount()) {
     // Nothing to do
     return NS_OK;
   }
@@ -8179,7 +8179,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult)
   nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
   
-  uint32_t rangeCount = selection->GetRangeCount();
+  uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
     nsCOMPtr<nsIDOMNode> startParent, endParent;

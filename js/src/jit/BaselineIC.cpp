@@ -3220,7 +3220,7 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
         if (*shadowsResult == ShadowCheckFailed)
             return false;
 
-        if (*shadowsResult == Shadows) {
+        if (DOMProxyIsShadowing(*shadowsResult)) {
             holder.set(obj);
             return true;
         }
@@ -6519,7 +6519,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     // If it's a shadowed listbase proxy property, attach stub to call Proxy::get instead.
-    if (isDOMProxy && domProxyShadowsResult == Shadows) {
+    if (isDOMProxy && DOMProxyIsShadowing(domProxyShadowsResult)) {
         MOZ_ASSERT(obj == holder);
 #if JS_HAS_NO_SUCH_METHOD
         if (isCallProp)
@@ -9175,6 +9175,7 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
 #undef ADD_INT32X4_SIMD_OP_NAME_
 #define ADD_FLOAT32X4_SIMD_OP_NAME_(OP) || native == js::simd_float32x4_##OP
        if (false
+           ARITH_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
            ARITH_FLOAT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
            BITWISE_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_))
        {

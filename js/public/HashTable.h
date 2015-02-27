@@ -732,7 +732,6 @@ class HashTableEntry
     void removeLive()      { MOZ_ASSERT(isLive()); keyHash = sRemovedKey; mem.addr()->~T(); }
     bool isLive() const    { return isLiveHash(keyHash); }
     void setCollision()               { MOZ_ASSERT(isLive()); keyHash |= sCollisionBit; }
-    void setCollision(HashNumber bit) { MOZ_ASSERT(isLive()); keyHash |= bit; }
     void unsetCollision()             { keyHash &= ~sCollisionBit; }
     bool hasCollision() const         { return keyHash & sCollisionBit; }
     bool matchHash(HashNumber hn)     { return (keyHash & ~sCollisionBit) == hn; }
@@ -1014,18 +1013,20 @@ class HashTable : private AllocPolicy
     void operator=(const HashTable &) = delete;
 
   private:
-    static const size_t CAP_BITS = 24;
+    static const size_t CAP_BITS = 30;
 
   public:
     Entry       *table;                 // entry storage
-    uint32_t    gen;                    // entry storage generation number
-    uint32_t    entryCount;             // number of entries in table
-    uint32_t    removedCount:CAP_BITS;  // removed entry sentinels in table
+    uint32_t    gen:24;                 // entry storage generation number
     uint32_t    hashShift:8;            // multiplicative hash shift
+    uint32_t    entryCount;             // number of entries in table
+    uint32_t    removedCount;           // removed entry sentinels in table
 
 #ifdef JS_DEBUG
     uint64_t     mutationCount;
     mutable bool mEntered;
+    // Note that some updates to these stats are not thread-safe. See the
+    // comment on the three-argument overloading of HashTable::lookup().
     mutable struct Stats
     {
         uint32_t        searches;       // total number of table searches
@@ -1087,8 +1088,6 @@ class HashTable : private AllocPolicy
     {
         static_assert(sFreeKey == 0,
                       "newly-calloc'd tables have to be considered empty");
-        static_assert(sMaxCapacity <= SIZE_MAX / sizeof(Entry),
-                      "would overflow allocating max number of entries");
         return alloc.template pod_calloc<Entry>(capacity);
     }
 
@@ -1104,9 +1103,9 @@ class HashTable : private AllocPolicy
       : AllocPolicy(ap)
       , table(nullptr)
       , gen(0)
+      , hashShift(sHashBits)
       , entryCount(0)
       , removedCount(0)
-      , hashShift(sHashBits)
 #ifdef JS_DEBUG
       , mutationCount(0)
       , mEntered(false)
@@ -1223,6 +1222,11 @@ class HashTable : private AllocPolicy
         return HashPolicy::match(HashPolicy::getKey(e.get()), l);
     }
 
+    // Warning: in order for readonlyThreadsafeLookup() to be safe this
+    // function must not modify the table in any way when |collisionBit| is 0.
+    // (The use of the METER() macro to increment stats violates this
+    // restriction but we will live with that for now because it's enabled so
+    // rarely.)
     Entry &lookup(const Lookup &l, HashNumber keyHash, unsigned collisionBit) const
     {
         MOZ_ASSERT(isLiveHash(keyHash));
@@ -1253,12 +1257,13 @@ class HashTable : private AllocPolicy
         // Save the first removed entry pointer so we can recycle later.
         Entry *firstRemoved = nullptr;
 
-        while(true) {
+        while (true) {
             if (MOZ_UNLIKELY(entry->isRemoved())) {
                 if (!firstRemoved)
                     firstRemoved = entry;
             } else {
-                entry->setCollision(collisionBit);
+                if (collisionBit == sCollisionBit)
+                    entry->setCollision();
             }
 
             METER(stats.steps++);
@@ -1304,7 +1309,7 @@ class HashTable : private AllocPolicy
         // Collision: double hash.
         DoubleHash dh = hash2(keyHash);
 
-        while(true) {
+        while (true) {
             MOZ_ASSERT(!entry->isRemoved());
             entry->setCollision();
 

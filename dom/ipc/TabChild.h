@@ -177,7 +177,6 @@ public:
     virtual nsIWebNavigation* WebNavigation() const = 0;
     virtual nsIWidget* WebWidget() = 0;
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
-    bool IsAsyncPanZoomEnabled();
     // Recalculates the display state, including the CSS
     // viewport. This should be called whenever we believe the
     // viewport data on a document may have changed. If it didn't
@@ -222,7 +221,6 @@ protected:
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     ScreenIntSize mInnerSize;
     mozilla::layers::FrameMetrics mLastRootMetrics;
-    mozilla::layout::ScrollingBehavior mScrolling;
     nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
@@ -243,7 +241,6 @@ class TabChild MOZ_FINAL : public TabChildBase,
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
-    typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
     typedef mozilla::layers::APZEventState APZEventState;
     typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
 
@@ -313,7 +310,6 @@ public:
                                          MOZ_OVERRIDE;
     virtual bool RecvShow(const nsIntSize& aSize,
                           const ShowInfo& aInfo,
-                          const ScrollingBehavior& aScrolling,
                           const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
                           PRenderFrameChild* aRenderFrame,
@@ -537,16 +533,14 @@ private:
 
     enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };
     bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);
-    bool InitRenderingState(const ScrollingBehavior& aScrolling,
-                            const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+    bool InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                             const uint64_t& aLayersId,
                             PRenderFrameChild* aRenderFrame);
     void DestroyWindow();
     void SetProcessNameToAppName();
 
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
-    void DoFakeShow(const ScrollingBehavior& aScrolling,
-                    const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+    void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                     const uint64_t& aLayersId,
                     PRenderFrameChild* aRenderFrame);
 

@@ -17,9 +17,10 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
-    int32_t diffF = numDouble * sizeof(double) + numSimd * Simd128DataSize;
+    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     // On x86, always use push to push the integer registers, as it's fast
@@ -32,9 +33,20 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 
     reserveStack(diffF);
     for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
-        diffF -= sizeof(double);
+        FloatRegister reg = *iter;
+        diffF -= reg.size();
         numDouble -= 1;
-        storeDouble(*iter, Address(StackPointer, diffF));
+        Address spillAddress(StackPointer, diffF);
+        if (reg.isDouble())
+            storeDouble(reg, spillAddress);
+        else if (reg.isSingle())
+            storeFloat32(reg, spillAddress);
+        else if (reg.isInt32x4())
+            storeUnalignedInt32x4(reg, spillAddress);
+        else if (reg.isFloat32x4())
+            storeUnalignedFloat32x4(reg, spillAddress);
+        else
+            MOZ_CRASH("Unknown register type.");
     }
     MOZ_ASSERT(numDouble == 0);
     for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
@@ -52,10 +64,11 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = numDouble * sizeof(double) + numSimd * Simd128DataSize;
+    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
@@ -68,10 +81,23 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     }
     MOZ_ASSERT(numSimd == 0);
     for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
-        diffF -= sizeof(double);
+        FloatRegister reg = *iter;
+        diffF -= reg.size();
         numDouble -= 1;
-        if (!ignore.has(*iter))
-            loadDouble(Address(StackPointer, diffF), *iter);
+        if (ignore.has(reg))
+            continue;
+
+        Address spillAddress(StackPointer, diffF);
+        if (reg.isDouble())
+            loadDouble(spillAddress, reg);
+        else if (reg.isSingle())
+            loadFloat32(spillAddress, reg);
+        else if (reg.isInt32x4())
+            loadUnalignedInt32x4(spillAddress, reg);
+        else if (reg.isFloat32x4())
+            loadUnalignedFloat32x4(spillAddress, reg);
+        else
+            MOZ_CRASH("Unknown register type.");
     }
     freeStack(reservedF);
     MOZ_ASSERT(numDouble == 0);
