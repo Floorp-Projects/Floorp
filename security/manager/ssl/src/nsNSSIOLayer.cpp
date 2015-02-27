@@ -1872,16 +1872,34 @@ private:
   const char* mTarget;
 };
 
+static const char* const kFallbackWildcardList[] =
+{
+  ".kuronekoyamato.co.jp", // bug 1128366
+  ".userstorage.mega.co.nz", // bug 1133496
+  ".whatwg.org", // bug 1137079
+  ".wildcard.test",
+};
+
 bool
 nsSSLIOLayerHelpers::isInsecureFallbackSite(const nsACString& hostname)
 {
   size_t match;
-  if (mUseStaticFallbackList &&
-      BinarySearchIf(kIntolerantFallbackList, 0,
-        ArrayLength(kIntolerantFallbackList),
-        FallbackListComparator(PromiseFlatCString(hostname).get()),
-        &match)) {
-    return true;
+  if (mUseStaticFallbackList) {
+    const char* host = PromiseFlatCString(hostname).get();
+    if (BinarySearchIf(kIntolerantFallbackList, 0,
+          ArrayLength(kIntolerantFallbackList),
+          FallbackListComparator(host), &match)) {
+      return true;
+    }
+    for (size_t i = 0; i < ArrayLength(kFallbackWildcardList); ++i) {
+      size_t hostLen = hostname.Length();
+      const char* target = kFallbackWildcardList[i];
+      size_t targetLen = strlen(target);
+      if (hostLen > targetLen &&
+          !memcmp(host + hostLen - targetLen, target, targetLen)) {
+        return true;
+      }
+    }
   }
   MutexAutoLock lock(mutex);
   return mInsecureFallbackSites.Contains(hostname);
