@@ -43,6 +43,66 @@ var fakeRooms = [
   }
 ];
 
+var fakeContacts = [{
+  id: 1,
+  _guid: 1,
+  name: ["Ally Avocado"],
+  email: [{
+    "pref": true,
+    "type": ["work"],
+    "value": "ally@mail.com"
+  }],
+  tel: [{
+    "pref": true,
+    "type": ["mobile"],
+    "value": "+31-6-12345678"
+  }],
+  category: ["google"],
+  published: 1406798311748,
+  updated: 1406798311748
+},{
+  id: 2,
+  _guid: 2,
+  name: ["Bob Banana"],
+  email: [{
+    "pref": true,
+    "type": ["work"],
+    "value": "bob@gmail.com"
+  }],
+  tel: [{
+    "pref": true,
+    "type": ["mobile"],
+    "value": "+1-214-5551234"
+  }],
+  category: ["local"],
+  published: 1406798311748,
+  updated: 1406798311748
+}, {
+  id: 3,
+  _guid: 3,
+  name: ["Caitlin Cantaloupe"],
+  email: [{
+    "pref": true,
+    "type": ["work"],
+    "value": "caitlin.cant@hotmail.com"
+  }],
+  category: ["local"],
+  published: 1406798311748,
+  updated: 1406798311748
+}, {
+  id: 4,
+  _guid: 4,
+  name: ["Dave Dragonfruit"],
+  email: [{
+    "pref": true,
+    "type": ["work"],
+    "value": "dd@dragons.net"
+  }],
+  category: ["google"],
+  published: 1406798311748,
+  updated: 1406798311748
+}];
+
 /**
  * Faking the mozLoop object which doesn't exist in regular web pages.
  * @type {Object}
@@ -54,21 +114,28 @@ navigator.mozLoop = {
     switch(pref) {
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
+      case "contacts.gravatars.promo":
         return true;
+      case "contacts.gravatars.show":
+        return false;
     }
   },
   setLoopPref: function(){},
   releaseCallData: function() {},
   copyString: function() {},
+  getUserAvatar: function(emailAddress) {
+    return "http://www.gravatar.com/avatar/" + (Math.ceil(Math.random() * 3) === 2 ?
+      "0a996f0fe2727ef1668bdb11897e4459" : "foo") + ".jpg?default=blank&s=40";
+  },
   contacts: {
     getAll: function(callback) {
-      callback(null, []);
+      callback(null, [].concat(fakeContacts));
     },
     on: function() {}
   },
   rooms: {
     getAll: function(version, callback) {
-      callback(null, fakeRooms);
+      callback(null, [].concat(fakeRooms));
     },
     on: function() {}
   },
