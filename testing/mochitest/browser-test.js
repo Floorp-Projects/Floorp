@@ -313,8 +313,6 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
-    TabDestroyObserver.destroy();
-
     this.Promise.Debugging.flushUncaughtErrors();
 
     var passCount = this.tests.reduce(function(a, f) a + f.passCount, 0);
@@ -327,6 +325,7 @@ Tester.prototype = {
       this.nextTest();
     }
     else{
+      TabDestroyObserver.destroy();
       Services.console.unregisterListener(this);
       Services.obs.removeObserver(this, "chrome-document-global-created");
       Services.obs.removeObserver(this, "content-document-global-created");
