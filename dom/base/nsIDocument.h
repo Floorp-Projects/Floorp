@@ -63,6 +63,7 @@ class nsIObserver;
 class nsIPresShell;
 class nsIPrincipal;
 class nsIRequest;
+class nsIRunnable;
 class nsIStreamListener;
 class nsIStructuredCloneContainer;
 class nsIStyleRule;
@@ -1664,11 +1665,9 @@ public:
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
   // In case of failure, the caller must handle the error, for example by
   // finalizing frame loader asynchronously.
-  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) = 0;
+  virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer) = 0;
   // Removes the frame loader of aShell from the initialization list.
   virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
-  //  Returns true if the frame loader of aShell is in the finalization list.
-  virtual bool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell) = 0;
 
   /**
    * Check whether this document is a root document that is not an

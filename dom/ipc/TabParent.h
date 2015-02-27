@@ -80,6 +80,8 @@ public:
     Element* GetOwnerElement() const { return mFrameElement; }
     void SetOwnerElement(Element* aElement);
 
+    void CacheFrameLoader(nsFrameLoader* aFrameLoader);
+
     /**
      * Get the mozapptype attribute from this TabParent's owner DOM element.
      */
@@ -427,7 +429,7 @@ protected:
     bool mUpdatedDimensions;
 
 private:
-    already_AddRefed<nsFrameLoader> GetFrameLoader() const;
+    already_AddRefed<nsFrameLoader> GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy = false) const;
     layout::RenderFrameParent* GetRenderFrame();
     nsRefPtr<nsIContentParent> mManager;
     void TryCacheDPIAndScale();
@@ -468,6 +470,11 @@ private:
     bool mInitedByParent;
 
     nsCOMPtr<nsILoadContext> mLoadContext;
+
+    // We keep a strong reference to the frameloader after we've sent the
+    // Destroy message and before we've received __delete__. This allows us to
+    // dispatch message manager messages during this time.
+    nsRefPtr<nsFrameLoader> mFrameLoader;
 
     TabId mTabId;
 
