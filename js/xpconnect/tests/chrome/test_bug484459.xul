@@ -22,11 +22,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484459
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     SimpleTest.waitForExplicitFinish();
-
+    var url = "chrome://mochitests/content/chrome/js/xpconnect/tests/chrome/test_bug484459.xul";
     function go() {
       var w = $('ifr').contentWindow.wrappedJSObject;
       var sandbox = new Components.utils.Sandbox(w);
       sandbox.__proto__ = w;
+      ok(location.href, url, "location.href is set properly");
+      ok(w.location, "data:text/html,<script>var%20x=3</script>", "contents of w.location are correct");
       is(Components.utils.evalInSandbox("x * 4", sandbox), 12,
          "Unexpected return from the sandbox");
       SimpleTest.finish();

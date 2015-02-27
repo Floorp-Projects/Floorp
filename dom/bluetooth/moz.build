@@ -10,6 +10,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothDevice.cpp',
         'BluetoothHidManager.cpp',
         'BluetoothInterface.cpp',
+        'BluetoothInterfaceHelpers.cpp',
         'BluetoothManager.cpp',
         'BluetoothProfileController.cpp',
         'BluetoothPropertyContainer.cpp',

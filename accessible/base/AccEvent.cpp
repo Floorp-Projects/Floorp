@@ -139,7 +139,7 @@ AccTextSelChangeEvent::~AccTextSelChangeEvent() { }
 bool
 AccTextSelChangeEvent::IsCaretMoveOnly() const
 {
-  return mSel->GetRangeCount() == 1 && mSel->IsCollapsed() &&
+  return mSel->RangeCount() == 1 && mSel->IsCollapsed() &&
     ((mReason & (nsISelectionListener::COLLAPSETOSTART_REASON |
                  nsISelectionListener::COLLAPSETOEND_REASON)) == 0);
 }

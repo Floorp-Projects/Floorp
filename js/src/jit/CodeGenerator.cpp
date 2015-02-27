@@ -4391,12 +4391,14 @@ CodeGenerator::visitSimdBox(LSimdBox *lir)
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
     MIRType type = lir->mir()->input()->type();
 
-    // :TODO: We cannot spill SIMD registers (Bug 1112164) from safepoints, thus
-    // we cannot use the same oolCallVM as visitNewTypedObject for allocating
-    // SIMD Typed Objects if we are at the end of the nursery. (Bug 1119303)
-    Label bail;
-    masm.createGCObject(object, temp, templateObject, initialHeap, &bail);
-    bailoutFrom(&bail, lir->snapshot());
+    MOZ_ASSERT(lir->safepoint()->liveRegs().has(in),
+               "Save the input register across the oolCallVM");
+    OutOfLineCode *ool = oolCallVM(NewTypedObjectInfo, lir,
+                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
+                                   StoreRegisterTo(object));
+
+    masm.createGCObject(object, temp, templateObject, initialHeap, ool->entry());
+    masm.bind(ool->rejoin());
 
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
     switch (type) {

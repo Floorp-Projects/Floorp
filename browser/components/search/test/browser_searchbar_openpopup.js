@@ -452,6 +452,28 @@ add_task(function* dont_rollup_oncaretmove() {
   is(textbox.selectionEnd, 9, "Should have moved the caret (selectionEnd after right)");
   is(searchPopup.state, "open", "Popup should still be open");
 
+  // Ensure caret movement works while a suggestion is selected.
+  is(textbox.popup.selectedIndex, -1, "No selected item in list");
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  is(textbox.popup.selectedIndex, 0, "Selected item in list");
+  is(textbox.selectionStart, 9, "Should have moved the caret to the end (selectionStart after selection)");
+  is(textbox.selectionEnd, 9, "Should have moved the caret to the end (selectionEnd after selection)");
+
+  EventUtils.synthesizeKey("VK_LEFT", {});
+  is(textbox.selectionStart, 8, "Should have moved the caret again (selectionStart after left)");
+  is(textbox.selectionEnd, 8, "Should have moved the caret again (selectionEnd after left)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
+  EventUtils.synthesizeKey("VK_LEFT", {});
+  is(textbox.selectionStart, 7, "Should have moved the caret (selectionStart after left)");
+  is(textbox.selectionEnd, 7, "Should have moved the caret (selectionEnd after left)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
+  EventUtils.synthesizeKey("VK_RIGHT", {});
+  is(textbox.selectionStart, 8, "Should have moved the caret (selectionStart after right)");
+  is(textbox.selectionEnd, 8, "Should have moved the caret (selectionEnd after right)");
+  is(searchPopup.state, "open", "Popup should still be open");
+
   if (navigator.platform.indexOf("Mac") == -1) {
     EventUtils.synthesizeKey("VK_HOME", {});
     is(textbox.selectionStart, 0, "Should have moved the caret (selectionStart after home)");

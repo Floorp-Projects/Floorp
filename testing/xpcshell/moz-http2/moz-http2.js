@@ -382,7 +382,7 @@ function handleRequest(req, res) {
       return;
    }
    // test the alt svc frame for use with altsvc2
-   res.altsvc("localhost", serverPort, "h2-16", 3600, req.headers['x-redirect-origin']);
+   res.altsvc("localhost", serverPort, "h2", 3600, req.headers['x-redirect-origin']);
   }
 
   else if (u.pathname === "/altsvc2") {

@@ -14,7 +14,10 @@ using namespace js::jit;
 static inline uint32_t
 DefaultStackSlot(uint32_t vreg)
 {
-    return vreg * sizeof(Value);
+    // On x86/x64, we have to keep the stack aligned on 16 bytes for spilling
+    // SIMD registers.  To avoid complexity in this stupid allocator, we just
+    // allocate 16 bytes stack slot for all vreg.
+    return vreg * 2 * sizeof(Value);
 }
 
 LAllocation *
@@ -75,10 +78,10 @@ StupidAllocator::init()
         registerCount = 0;
         RegisterSet remainingRegisters(allRegisters_);
         while (!remainingRegisters.empty(/* float = */ false))
-            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeGeneral());
+            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeUnaliasedGeneral());
 
         while (!remainingRegisters.empty(/* float = */ true))
-            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeFloat());
+            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeUnaliasedFloat());
 
         MOZ_ASSERT(registerCount <= MAX_REGISTERS);
     }

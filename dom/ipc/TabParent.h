@@ -66,7 +66,6 @@ class TabParent : public PBrowserParent
                 , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-    typedef mozilla::layout::ScrollingBehavior ScrollingBehavior;
 
     virtual ~TabParent();
 
@@ -400,7 +399,6 @@ protected:
     virtual bool RecvRemotePaintIsReady() MOZ_OVERRIDE;
 
     virtual bool RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
-                                        ScrollingBehavior* aScrolling,
                                         TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                         uint64_t* aLayersId) MOZ_OVERRIDE;
 
@@ -453,9 +451,6 @@ private:
 
     CSSPoint AdjustTapToChildWidget(const CSSPoint& aPoint);
 
-    // When true, we create a pan/zoom controller for our frame and
-    // notify it of input events targeting us.
-    bool UseAsyncPanZoom();
     // Update state prior to routing an APZ-aware event to the child process.
     // |aOutTargetGuid| will contain the identifier
     // of the APZC instance that handled the event. aOutTargetGuid may be

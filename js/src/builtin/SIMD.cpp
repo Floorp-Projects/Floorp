@@ -495,7 +495,7 @@ js_InitSIMDClass(JSContext *cx, HandleObject obj)
 
 template<typename V>
 JSObject *
-js::CreateSimd(JSContext *cx, typename V::Elem *data)
+js::CreateSimd(JSContext *cx, const typename V::Elem *data)
 {
     typedef typename V::Elem Elem;
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
@@ -510,9 +510,9 @@ js::CreateSimd(JSContext *cx, typename V::Elem *data)
     return result;
 }
 
-template JSObject *js::CreateSimd<Float32x4>(JSContext *cx, Float32x4::Elem *data);
-template JSObject *js::CreateSimd<Float64x2>(JSContext *cx, Float64x2::Elem *data);
-template JSObject *js::CreateSimd<Int32x4>(JSContext *cx, Int32x4::Elem *data);
+template JSObject *js::CreateSimd<Float32x4>(JSContext *cx, const Float32x4::Elem *data);
+template JSObject *js::CreateSimd<Float64x2>(JSContext *cx, const Float64x2::Elem *data);
+template JSObject *js::CreateSimd<Int32x4>(JSContext *cx, const Int32x4::Elem *data);
 
 namespace js {
 // Unary SIMD operators

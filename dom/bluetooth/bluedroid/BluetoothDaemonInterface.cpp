@@ -1893,7 +1893,15 @@ void
 BluetoothDaemonInterface::OnDisconnect(enum Channel aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
+
+  if (mResultHandlerQ.IsEmpty()) {
+    if (sNotificationHandler) {
+      // Bluetooth daemon crashed; clear state
+      sNotificationHandler->AdapterStateChangedNotification(false);
+      sNotificationHandler = nullptr;
+    }
+    return;
+  }
 
   switch (aChannel) {
     case CMD_CHANNEL:
@@ -2194,19 +2202,31 @@ BluetoothDaemonInterface::Cleanup(BluetoothResultHandler* aRes)
   mResultHandlerQ.AppendElement(aRes);
 
   // Cleanup, step 1: Unregister Socket module
-  mProtocol->UnregisterModuleCmd(0x02, new CleanupResultHandler(this));
+  nsresult rv = mProtocol->UnregisterModuleCmd(
+    0x02, new CleanupResultHandler(this));
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::Enable(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(mProtocol)->EnableCmd(aRes);
+  nsresult rv =
+    static_cast<BluetoothDaemonCoreModule*>(mProtocol)->EnableCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::Disable(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(mProtocol)->DisableCmd(aRes);
+  nsresult rv =
+    static_cast<BluetoothDaemonCoreModule*>(mProtocol)->DisableCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Adapter Properties */
@@ -2214,24 +2234,33 @@ BluetoothDaemonInterface::Disable(BluetoothResultHandler* aRes)
 void
 BluetoothDaemonInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->GetAdapterPropertiesCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::GetAdapterProperty(const nsAString& aName,
                                              BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->GetAdapterPropertyCmd(aName, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::SetAdapterProperty(
   const BluetoothNamedValue& aProperty, BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->SetAdapterPropertyCmd(aProperty, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Remote Device Properties */
@@ -2240,8 +2269,11 @@ void
 BluetoothDaemonInterface::GetRemoteDeviceProperties(
   const nsAString& aRemoteAddr, BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->GetRemoteDevicePropertiesCmd(aRemoteAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
@@ -2249,8 +2281,11 @@ BluetoothDaemonInterface::GetRemoteDeviceProperty(
   const nsAString& aRemoteAddr, const nsAString& aName,
   BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->GetRemoteDevicePropertyCmd(aRemoteAddr, aName, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
@@ -2258,8 +2293,11 @@ BluetoothDaemonInterface::SetRemoteDeviceProperty(
   const nsAString& aRemoteAddr, const BluetoothNamedValue& aProperty,
   BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->SetRemoteDevicePropertyCmd(aRemoteAddr, aProperty, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Remote Services */
@@ -2269,16 +2307,22 @@ BluetoothDaemonInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
                                                  const uint8_t aUuid[16],
                                                  BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(
-    mProtocol)->GetRemoteServiceRecordCmd(aRemoteAddr, aUuid, aRes);
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
+    (mProtocol)->GetRemoteServiceRecordCmd(aRemoteAddr, aUuid, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::GetRemoteServices(const nsAString& aRemoteAddr,
                                             BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(
-    mProtocol)->GetRemoteServicesCmd(aRemoteAddr, aRes);
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
+    (mProtocol)->GetRemoteServicesCmd(aRemoteAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Discovery */
@@ -2286,14 +2330,21 @@ BluetoothDaemonInterface::GetRemoteServices(const nsAString& aRemoteAddr,
 void
 BluetoothDaemonInterface::StartDiscovery(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(mProtocol)->StartDiscoveryCmd(aRes);
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
+    (mProtocol)->StartDiscoveryCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->CancelDiscoveryCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Bonds */
@@ -2303,24 +2354,33 @@ BluetoothDaemonInterface::CreateBond(const nsAString& aBdAddr,
                                      BluetoothTransport aTransport,
                                      BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->CreateBondCmd(aBdAddr, aTransport, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::RemoveBond(const nsAString& aBdAddr,
                                      BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->RemoveBondCmd(aBdAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
 BluetoothDaemonInterface::CancelBond(const nsAString& aBdAddr,
                                      BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->CancelBondCmd(aBdAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Connection */
@@ -2339,8 +2399,11 @@ BluetoothDaemonInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
                                    const nsAString& aPinCode,
                                    BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->PinReplyCmd(aBdAddr, aAccept, aPinCode, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
@@ -2349,8 +2412,11 @@ BluetoothDaemonInterface::SspReply(const nsAString& aBdAddr,
                                    bool aAccept, uint32_t aPasskey,
                                    BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->SspReplyCmd(aBdAddr, aVariant, aAccept, aPasskey, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* DUT Mode */
@@ -2359,8 +2425,11 @@ void
 BluetoothDaemonInterface::DutModeConfigure(bool aEnable,
                                            BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->DutModeConfigureCmd(aEnable, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 void
@@ -2368,8 +2437,11 @@ BluetoothDaemonInterface::DutModeSend(uint16_t aOpcode, uint8_t* aBuf,
                                       uint8_t aLen,
                                       BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->DutModeSendCmd(aOpcode, aBuf, aLen, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* LE Mode */
@@ -2379,8 +2451,11 @@ BluetoothDaemonInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf,
                                      uint8_t aLen,
                                      BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->LeTestModeCmd(aOpcode, aBuf, aLen, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
 }
 
 /* Energy Information */
@@ -2399,6 +2474,18 @@ BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
     BluetoothResultHandler, void, BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
+}
+
+void
+BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
+                                        nsresult aRv)
+{
+  BluetoothStatus status;
+
+  if (NS_WARN_IF(NS_FAILED(Convert(aRv, status)))) {
+    status = STATUS_FAIL;
+  }
+  DispatchError(aRes, status);
 }
 
 // Profile Interfaces

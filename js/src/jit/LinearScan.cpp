@@ -998,7 +998,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
         // If the requested register is a FP, we may need to look at
         // all of the float32 and float64 registers.
-        AnyRegister reg = regs.takeAny(needFloat);
+        AnyRegister reg = regs.takeUnaliasedAny(needFloat);
         freeUntilPos[reg.code()] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
@@ -1126,7 +1126,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     CodePosition nextUsePos[AnyRegister::Total];
     bool needFloat = vregs[current->vreg()].isFloatReg();
     for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
-        AnyRegister reg = regs.takeAny(needFloat);
+        AnyRegister reg = regs.takeUnaliasedAny(needFloat);
         nextUsePos[reg.code()] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {

@@ -13,6 +13,13 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 //
+// Conversion
+//
+
+nsresult
+Convert(nsresult aIn, BluetoothStatus& aOut);
+
+//
 // Result handling
 //
 // The classes of type |BluetoothResultRunnable[0..3]| transfer
@@ -49,6 +56,9 @@ public:
   static void
   Dispatch(Obj* aObj, Res (Obj::*aMethod)(), const InitOp& aInitOp)
   {
+    if (!aObj) {
+      return; // silently return if no result runnable has been given
+    }
     nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       BT_LOGR("BluetoothResultRunnable0::Create failed");
@@ -108,6 +118,9 @@ public:
   static void
   Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1), const InitOp& aInitOp)
   {
+    if (!aObj) {
+      return; // silently return if no result runnable has been given
+    }
     nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       BT_LOGR("BluetoothResultRunnable1::Create failed");
@@ -174,6 +187,9 @@ public:
   Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
            const InitOp& aInitOp)
   {
+    if (!aObj) {
+      return; // silently return if no result runnable has been given
+    }
     nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       BT_LOGR("BluetoothResultRunnable3::Create failed");

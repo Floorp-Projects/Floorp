@@ -3032,6 +3032,11 @@ class MSimdBox
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const MOZ_OVERRIDE;
+    bool canRecoverOnBailout() const MOZ_OVERRIDE {
+        return true;
+    }
 };
 
 class MSimdUnbox
@@ -3054,6 +3059,11 @@ class MSimdUnbox
     static MSimdUnbox *New(TempAllocator &alloc, MDefinition *op, MIRType type)
     {
         return new(alloc) MSimdUnbox(op, type);
+    }
+
+    MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
+    bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
+        return congruentIfOperandsEqual(ins);
     }
 
     AliasSet getAliasSet() const MOZ_OVERRIDE {
