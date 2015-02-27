@@ -8,7 +8,7 @@ let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {}
 function test() {
   let l10n = new ViewHelpers.L10N();
 
-  is(l10n.numberWithDecimals(1234.56789, 2), "1,234.56",
+  is(l10n.numberWithDecimals(1234.56789, 2), "1,234.57",
     "The first number was properly localized.");
   is(l10n.numberWithDecimals(0.0001, 2), "0",
     "The second number was properly localized.");
