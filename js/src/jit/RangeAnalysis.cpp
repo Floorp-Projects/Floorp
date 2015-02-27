@@ -2645,7 +2645,7 @@ MDefinition::TruncateKind
 MStoreTypedArrayElement::operandTruncateKind(size_t index) const
 {
     // An integer store truncates the stored value.
-    return index == 2 && !isFloatArray() ? Truncate : NoTruncate;
+    return index == 2 && !isFloatArray() && !isSimdWrite() ? Truncate : NoTruncate;
 }
 
 MDefinition::TruncateKind
