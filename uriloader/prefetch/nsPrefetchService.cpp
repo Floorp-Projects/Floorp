@@ -9,7 +9,7 @@
 #include "nsIObserverService.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
-#include "nsICacheInfoChannel.h"
+#include "nsICachingChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
 #include "nsISimpleEnumerator.h"
@@ -246,13 +246,13 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
 {
     nsresult rv;
 
-    nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
+    nsCOMPtr<nsICachingChannel> cachingChannel =
         do_QueryInterface(aRequest, &rv);
     if (NS_FAILED(rv)) return rv;
- 
+
     // no need to prefetch a document that is already in the cache
     bool fromCache;
-    if (NS_SUCCEEDED(cacheInfoChannel->IsFromCache(&fromCache)) &&
+    if (NS_SUCCEEDED(cachingChannel->IsFromCache(&fromCache)) &&
         fromCache) {
         LOG(("document is already in the cache; canceling prefetch\n"));
         return NS_BINDING_ABORTED;
@@ -262,8 +262,17 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
     // no need to prefetch a document that must be requested fresh each
     // and every time.
     //
+    nsCOMPtr<nsISupports> cacheToken;
+    cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
+    if (!cacheToken)
+        return NS_ERROR_ABORT; // bail, no cache entry
+
+    nsCOMPtr<nsICacheEntry> entryInfo =
+        do_QueryInterface(cacheToken, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     uint32_t expTime;
-    if (NS_SUCCEEDED(cacheInfoChannel->GetCacheTokenExpirationTime(&expTime))) {
+    if (NS_SUCCEEDED(entryInfo->GetExpirationTime(&expTime))) {
         if (NowInSeconds() >= expTime) {
             LOG(("document cannot be reused from cache; "
                  "canceling prefetch\n"));
