@@ -116,11 +116,16 @@ struct CRLDPCacheStr {
 #else
     PRLock* lock;
 #endif
-    CERTCertificate* issuer;    /* issuer cert
-                                   XXX there may be multiple issuer certs,
-                                       with different validity dates. Also
-                                       need to deal with SKID/AKID . See
-                                       bugzilla 217387, 233118 */
+    SECItem *issuerDERCert;    /* issuer DER cert. Don't hold a reference
+				  to the actual cert so the trust can be
+				  updated on the cert automatically.
+				  XXX there may be multiple issuer certs,
+				  with different validity dates. Also
+				  need to deal with SKID/AKID . See
+				  bugzilla 217387, 233118 */
+
+    CERTCertDBHandle *dbHandle;
+
     SECItem* subject;           /* DER of issuer subject */
     SECItem* distributionPoint; /* DER of distribution point. This may be
                                    NULL when distribution points aren't
@@ -165,15 +170,6 @@ struct CRLDPCacheStr {
 struct CRLIssuerCacheStr {
     SECItem* subject;           /* DER of issuer subject */
     CRLDPCache* dpp;
-#if 0
-    /* XCRL for future use.
-       We don't need to lock at the moment because we only have one DP,
-       which gets created at the same time as this object */
-    NSSRWLock* lock;
-    CRLDPCache** dps;
-    PLHashTable* distributionpoints;
-    CERTCertificate* issuer;
-#endif
 };
 
 /*  CRL revocation cache object

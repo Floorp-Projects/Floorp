@@ -92,7 +92,7 @@ static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, CallArgs &args)
 {
     if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
-        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
+        if (!IsNativeFunction(args.calleev(), js::fun_apply)) {
             RootedScript script(cx, frame.script());
             if (!JSScript::argumentsOptimizationFailed(cx, script))
                 return false;
@@ -186,7 +186,7 @@ ValuePropertyBearer(JSContext *cx, InterpreterFrame *fp, HandleValue v, int spin
         return GlobalObject::getOrCreateBooleanPrototype(cx, global);
 
     MOZ_ASSERT(v.isNull() || v.isUndefined());
-    js_ReportIsNullOrUndefined(cx, spindex, v, NullPtr());
+    ReportIsNullOrUndefined(cx, spindex, v, NullPtr());
     return nullptr;
 }
 
@@ -230,7 +230,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         }
         JSAutoByteString printable;
         if (AtomToPrintableString(cx, name, &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
+            ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
 
@@ -355,7 +355,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
         JSAutoByteString bytes;
         if (AtomToPrintableString(cx, dn, &bytes)) {
             JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                                         js_GetErrorMessage,
+                                                         GetErrorMessage,
                                                          nullptr, JSMSG_REDECLARED_VAR,
                                                          desc.isReadonly() ? "const" : "var",
                                                          bytes.ptr()));
@@ -636,7 +636,7 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
     }
 
     if (op == JSOP_INITELEM_INC && index == INT32_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SPREAD_TOO_LARGE);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SPREAD_TOO_LARGE);
         return false;
     }
 

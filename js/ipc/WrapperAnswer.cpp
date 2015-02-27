@@ -180,7 +180,7 @@ WrapperAnswer::RecvDefineProperty(const ObjectId &objId, const JSIDVariant &idVa
         return fail(cx, rs);
 
     bool ignored;
-    if (!js_DefineOwnProperty(cx, obj, id, desc, &ignored))
+    if (!js::DefineOwnProperty(cx, obj, id, desc, &ignored))
         return fail(cx, rs);
 
     return ok(rs);
@@ -513,7 +513,7 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId &objId, const uint32_t &classVal
 
     LOG("%s.objectClassIs()", ReceiverObj(objId));
 
-    *result = js_ObjectClassIs(cx, obj, (js::ESClassValue)classValue);
+    *result = js::ObjectClassIs(cx, obj, (js::ESClassValue)classValue);
     return true;
 }
 
@@ -533,7 +533,7 @@ WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
 
     LOG("%s.className()", ReceiverObj(objId));
 
-    *name = NS_ConvertASCIItoUTF16(js_ObjectClassName(cx, obj));
+    *name = NS_ConvertASCIItoUTF16(js::ObjectClassName(cx, obj));
     return true;
 }
 

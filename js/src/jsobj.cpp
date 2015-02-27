@@ -75,7 +75,7 @@ JS_FRIEND_API(JSObject *)
 JS_ObjectToInnerObject(JSContext *cx, HandleObject obj)
 {
     if (!obj) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INACTIVE);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INACTIVE);
         return nullptr;
     }
     return GetInnerObject(obj);
@@ -96,7 +96,7 @@ js::NonNullObject(JSContext *cx, const Value &v)
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
         if (!bytes)
             return nullptr;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
         return nullptr;
     }
     return &v.toObject();
@@ -241,7 +241,7 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
                              MutableHandleObject objp)
 {
     if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              method, "0", "s");
         return false;
     }
@@ -251,7 +251,7 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                              bytes, "not an object");
         js_free(bytes);
         return false;
@@ -287,7 +287,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
         return false;
     }
     RootedObject desc(cx, &v.toObject());
@@ -370,7 +370,7 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.7 step 9 */
     if ((hasGet() || hasSet()) && (hasValue() || hasWritable())) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INVALID_DESCRIPTOR);
         return false;
     }
 
@@ -425,7 +425,7 @@ js::Throw(JSContext *cx, jsid id, unsigned errorNumber)
     JSAutoByteString bytes(cx, idstr);
     if (!bytes)
         return false;
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
     return false;
 }
 
@@ -434,12 +434,12 @@ js::Throw(JSContext *cx, JSObject *obj, unsigned errorNumber)
 {
     if (js_ErrorFormatString[errorNumber].argCount == 1) {
         RootedValue val(cx, ObjectValue(*obj));
-        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
-                                 JSDVG_IGNORE_STACK, val, NullPtr(),
-                                 nullptr, nullptr);
+        ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
+                              JSDVG_IGNORE_STACK, val, NullPtr(),
+                              nullptr, nullptr);
     } else {
         MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, errorNumber);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber);
     }
     return false;
 }
@@ -824,7 +824,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
 
     /* Step 3. */
     uint32_t index;
-    if (js_IdIsIndex(id, &index)) {
+    if (IdIsIndex(id, &index)) {
         /* Step 3b. */
         uint32_t oldLen = arr->length();
 
@@ -993,7 +993,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
     if (!PreventExtensions(cx, obj, &status))
         return false;
     if (!status) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
         return false;
     }
 
@@ -1777,22 +1777,22 @@ CopyProxyObject(JSContext *cx, Handle<ProxyObject *> from, Handle<ProxyObject *>
 }
 
 JSObject *
-js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, HandleObject parent)
+js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto)
 {
     if (!obj->isNative() && !obj->is<ProxyObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_CANT_CLONE_OBJECT);
         return nullptr;
     }
 
     RootedObject clone(cx);
     if (obj->isNative()) {
-        clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto, parent);
+        clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto, NullPtr());
         if (!clone)
             return nullptr;
 
         if (clone->is<JSFunction>() && (obj->compartment() != clone->compartment())) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                  JSMSG_CANT_CLONE_OBJECT);
             return nullptr;
         }
@@ -1803,7 +1803,7 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, 
         ProxyOptions options;
         options.setClass(obj->getClass());
 
-        clone = ProxyObject::New(cx, GetProxyHandler(obj), JS::NullHandleValue, proto, parent, options);
+        clone = ProxyObject::New(cx, GetProxyHandler(obj), JS::NullHandleValue, proto, options);
         if (!clone)
             return nullptr;
 
@@ -2490,7 +2490,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
      *    passed null for proto; and
      *
      * 2. NewObject tolerating no default prototype (null proto slot value)
-     *    due to this js_InitClass call coming from js_InitFunctionClass on an
+     *    due to this js::InitClass call coming from js::InitFunctionClass on an
      *    otherwise-uninitialized global.
      *
      * 3. NewObject allocating a JSFunction-sized GC-thing when clasp is
@@ -2603,11 +2603,11 @@ bad:
 }
 
 NativeObject *
-js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
-             const Class *clasp, Native constructor, unsigned nargs,
-             const JSPropertySpec *ps, const JSFunctionSpec *fs,
-             const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
-             NativeObject **ctorp, AllocKind ctorKind)
+js::InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
+              const Class *clasp, Native constructor, unsigned nargs,
+              const JSPropertySpec *ps, const JSFunctionSpec *fs,
+              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
+              NativeObject **ctorp, AllocKind ctorKind)
 {
     RootedObject protoProto(cx, protoProto_);
 
@@ -2627,7 +2627,7 @@ js_InitClass(JSContext *cx, HandleObject obj, HandleObject protoProto_,
      *
      * When initializing a standard class (other than Object), if protoProto is
      * null, default to Object.prototype. The engine's internal uses of
-     * js_InitClass depend on this nicety.
+     * js::InitClass depend on this nicety.
      */
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null &&
@@ -3085,27 +3085,27 @@ bool
 JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
-    return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
-                                    nullptr, nullptr);
+    return ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
+                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 nullptr, nullptr);
 }
 
 bool
 JSObject::reportNotConfigurable(JSContext *cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
-    return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
-                                    nullptr, nullptr);
+    return ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
+                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 nullptr, nullptr);
 }
 
 bool
 JSObject::reportNotExtensible(JSContext *cx, unsigned report)
 {
     RootedValue val(cx, ObjectValue(*this));
-    return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
-                                    nullptr, nullptr);
+    return ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
+                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 nullptr, nullptr);
 }
 
 
@@ -3137,7 +3137,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * have a mutable [[Prototype]].
      */
     if (obj->is<ArrayBufferObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
                              "incompatible ArrayBuffer");
         return false;
     }
@@ -3146,7 +3146,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
      */
     if (obj->is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
                              "incompatible TypedObject");
         return false;
     }
@@ -3156,7 +3156,7 @@ js::SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succ
      * for flash-related security reasons.
      */
     if (!strcmp(obj->getClass()->name, "Location")) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
                              "incompatible Location object");
         return false;
     }
@@ -3375,7 +3375,7 @@ js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
     if (!wpmap) {
         wpmap = cx->runtime()->new_<WatchpointMap>();
         if (!wpmap || !wpmap->init()) {
-            js_ReportOutOfMemory(cx);
+            ReportOutOfMemory(cx);
             return false;
         }
         cx->compartment()->watchpointMap = wpmap;
@@ -3402,7 +3402,7 @@ js::WatchProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject cal
         return op(cx, obj, id, callable);
 
     if (!obj->isNative() || IsAnyTypedArray(obj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
         return false;
     }
@@ -3495,7 +3495,7 @@ JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHan
         /* Optimize (new String(...)).toString(). */
         if (clasp == &StringObject::class_) {
             StringObject *nobj = &obj->as<StringObject>();
-            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, js_str_toString)) {
+            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
                 vp.setString(nobj->unbox());
                 return true;
             }
@@ -3517,7 +3517,7 @@ JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHan
         if (clasp == &StringObject::class_) {
             id = NameToId(cx->names().valueOf);
             StringObject *nobj = &obj->as<StringObject>();
-            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, js_str_toString)) {
+            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
                 vp.setString(nobj->unbox());
                 return true;
             }
@@ -3527,7 +3527,7 @@ JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHan
         if (clasp == &NumberObject::class_) {
             id = NameToId(cx->names().valueOf);
             NumberObject *nobj = &obj->as<NumberObject>();
-            if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, js_num_valueOf)) {
+            if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, num_valueOf)) {
                 vp.setNumber(nobj->unbox());
                 return true;
             }
@@ -3546,7 +3546,7 @@ JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHan
             return true;
     }
 
-    /* Avoid recursive death when decompiling in js_ReportValueError. */
+    /* Avoid recursive death when decompiling in ReportValueError. */
     RootedString str(cx);
     if (hint == JSTYPE_STRING) {
         str = JS_InternString(cx, clasp->name);
@@ -3557,10 +3557,10 @@ JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHan
     }
 
     RootedValue val(cx, ObjectValue(*obj));
-    js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
-                         hint == JSTYPE_VOID
-                         ? "primitive type"
-                         : hint == JSTYPE_STRING ? "string" : "number");
+    ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
+                      hint == JSTYPE_VOID
+                      ? "primitive type"
+                      : hint == JSTYPE_STRING ? "string" : "number");
     return false;
 }
 
@@ -3638,9 +3638,9 @@ js::ToObjectSlow(JSContext *cx, JS::HandleValue val, bool reportScanStack)
 
     if (val.isNullOrUndefined()) {
         if (reportScanStack) {
-            js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
         } else {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                                  val.isNull() ? "null" : "undefined", "object");
         }
         return nullptr;
@@ -3650,9 +3650,9 @@ js::ToObjectSlow(JSContext *cx, JS::HandleValue val, bool reportScanStack)
 }
 
 void
-js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
+js::GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
-    MOZ_ASSERT(trc->debugPrinter() == js_GetObjectSlotName);
+    MOZ_ASSERT(trc->debugPrinter() == GetObjectSlotName);
 
     JSObject *obj = (JSObject *)trc->debugPrintArg();
     uint32_t slot = uint32_t(trc->debugPrintIndex());
@@ -3718,13 +3718,13 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 }
 
 bool
-js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
+js::ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
                                         strict
                                         ? JSREPORT_ERROR
                                         : JSREPORT_WARNING | JSREPORT_STRICT,
-                                        js_GetErrorMessage, nullptr,
+                                        GetErrorMessage, nullptr,
                                         JSMSG_GETTER_ONLY);
 }
 

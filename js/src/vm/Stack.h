@@ -304,7 +304,7 @@ class InterpreterFrame
         PREV_UP_TO_DATE    =     0x4000,  /* see DebugScopes::updateLiveScopes */
 
         /*
-         * See comment above 'debugMode' in jscompartment.h for explanation of
+         * See comment above 'isDebuggee' in jscompartment.h for explanation of
          * invariants of debuggee compartments, scripts, and frames.
          */
         DEBUGGEE           =     0x8000,  /* Execution is being observed by Debugger */

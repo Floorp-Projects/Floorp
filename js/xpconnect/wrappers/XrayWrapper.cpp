@@ -1593,7 +1593,7 @@ DOMXrayTraits::call(JSContext *cx, HandleObject wrapper,
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
         if (!clasp->call) {
             RootedValue v(cx, ObjectValue(*wrapper));
-            js_ReportIsNotFunction(cx, v);
+            js::ReportIsNotFunction(cx, v);
             return false;
         }
         // call it on the Xray compartment
@@ -1619,7 +1619,7 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
     if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
         if (!clasp->construct) {
             RootedValue v(cx, ObjectValue(*wrapper));
-            js_ReportIsNotFunction(cx, v);
+            js::ReportIsNotFunction(cx, v);
             return false;
         }
         if (!clasp->construct(cx, args.length(), args.base()))

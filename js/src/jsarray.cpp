@@ -340,7 +340,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
                 break;
             uint32_t idx = uint32_t(index);
             if (idx >= arr->length() && !arr->lengthIsWritable()) {
-                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                              JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
                 return false;
             }
@@ -499,7 +499,7 @@ js::CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *newLen)
     if (d == *newLen)
         return true;
 
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
     return false;
 }
 
@@ -553,7 +553,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
             return true;
 
         if (setterIsStrict) {
-            return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+            return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                                 JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
         }
 
@@ -659,7 +659,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
                         return false;
 
                     uint32_t index;
-                    if (!js_IdIsIndex(props[i], &index))
+                    if (!IdIsIndex(props[i], &index))
                         continue;
 
                     if (index >= newLen && index < oldLen) {
@@ -783,7 +783,7 @@ js::WouldDefinePastNonwritableLength(ExclusiveContext *cx,
         return true;
 
     // XXX include the index and maybe array length in the error message
-    return JS_ReportErrorFlagsAndNumber(ncx, flags, js_GetErrorMessage, nullptr,
+    return JS_ReportErrorFlagsAndNumber(ncx, flags, GetErrorMessage, nullptr,
                                         JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
 }
 
@@ -793,7 +793,7 @@ array_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleVal
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
 
     uint32_t index;
-    if (!js_IdIsIndex(id, &index))
+    if (!IdIsIndex(id, &index))
         return true;
 
     uint32_t length = arr->length();
@@ -1073,7 +1073,7 @@ js::ArrayJoin(JSContext *cx, HandleObject obj, HandleLinearString sepstr, uint32
     size_t seplen = sepstr->length();
     CheckedInt<uint32_t> res = CheckedInt<uint32_t>(seplen) * (length - 1);
     if (length > 0 && !res.isValid()) {
-        js_ReportAllocationOverflow(cx);
+        ReportAllocationOverflow(cx);
         return nullptr;
     }
 
@@ -1873,7 +1873,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
 
     if (args.hasDefined(0)) {
         if (args[0].isPrimitive()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_SORT_ARG);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_SORT_ARG);
             return false;
         }
         fval = args[0];     /* non-default compare function */
@@ -1902,7 +1902,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
      */
 #if JS_BITS_PER_WORD == 32
     if (size_t(len) > size_t(-1) / (2 * sizeof(Value))) {
-        js_ReportAllocationOverflow(cx);
+        ReportAllocationOverflow(cx);
         return false;
     }
 #endif
@@ -2966,7 +2966,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 4. */
     if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
+        ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
     RootedObject callable(cx, ValueToCallable(cx, args[0], args.length() - 1));
@@ -3054,7 +3054,7 @@ IsArrayConstructor(const Value &v)
     return v.isObject() &&
            v.toObject().is<JSFunction>() &&
            v.toObject().as<JSFunction>().isNative() &&
-           v.toObject().as<JSFunction>().native() == js_Array;
+           v.toObject().as<JSFunction>().native() == ArrayConstructor;
 }
 
 static bool
@@ -3184,7 +3184,7 @@ static const JSFunctionSpec array_static_methods[] = {
 
 /* ES5 15.4.2 */
 bool
-js_Array(JSContext *cx, unsigned argc, Value *vp)
+js::ArrayConstructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
@@ -3198,7 +3198,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
     if (args[0].isInt32()) {
         int32_t i = args[0].toInt32();
         if (i < 0) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
         length = uint32_t(i);
@@ -3206,7 +3206,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
         double d = args[0].toDouble();
         length = ToUint32(d);
         if (d != double(length)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
     }
@@ -3230,7 +3230,7 @@ ArrayObject *
 js::ArrayConstructorOneArg(JSContext *cx, HandleObjectGroup group, int32_t lengthInt)
 {
     if (lengthInt < 0) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
         return nullptr;
     }
 
@@ -3301,7 +3301,7 @@ const Class ArrayObject::class_ = {
     nullptr, /* construct */
     nullptr, /* trace */
     {
-        GenericCreateConstructor<js_Array, 1, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<ArrayConstructor, 1, JSFunction::FinalizeKind>,
         CreateArrayPrototype,
         array_static_methods,
         array_methods
@@ -3576,7 +3576,7 @@ js::NewDenseCopyOnWriteArray(JSContext *cx, HandleArrayObject templateObject, gc
 
 #ifdef DEBUG
 bool
-js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
+js::ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JSObject *obj;

@@ -280,7 +280,6 @@ WindowNamedPropertiesHandler::Create(JSContext* aCx,
   options.setClass(&WindowNamedPropertiesClass.mBase);
   return js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
                             JS::NullHandleValue, aProto,
-                            js::GetGlobalForObjectCrossCompartment(aProto),
                             options);
 }
 

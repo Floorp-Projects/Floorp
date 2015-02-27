@@ -89,7 +89,7 @@ GetDeflatedUTF8StringLength(JSContext *maybecx, const CharT *chars,
     if (maybecx) {
         js::gc::AutoSuppressGC suppress(maybecx);
         JS_snprintf(buffer, 10, "0x%x", c);
-        JS_ReportErrorFlagsAndNumber(maybecx, JSREPORT_ERROR, js_GetErrorMessage,
+        JS_ReportErrorFlagsAndNumber(maybecx, JSREPORT_ERROR, GetErrorMessage,
                                      nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
     }
     return (size_t) -1;
@@ -151,7 +151,7 @@ DeflateStringToUTF8Buffer(JSContext *maybecx, const CharT *src, size_t srclen,
             *dst++ = (char) v;
             utf8Len = 1;
         } else {
-            utf8Len = js_OneUcs4ToUtf8Char(utf8buf, v);
+            utf8Len = js::OneUcs4ToUtf8Char(utf8buf, v);
             if (utf8Len > dstlen)
                 goto bufferTooSmall;
             for (i = 0; i < utf8Len; i++)
@@ -173,7 +173,7 @@ bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
     if (maybecx) {
         js::gc::AutoSuppressGC suppress(maybecx);
-        JS_ReportErrorNumber(maybecx, js_GetErrorMessage, nullptr,
+        JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr,
                              JSMSG_BUFFER_TOO_SMALL);
     }
     return false;
@@ -749,8 +749,8 @@ static const JSPropertySpec sFunctionProps[] = {
 };
 
 static const JSFunctionSpec sFunctionInstanceFunctions[] = {
-  JS_FN("call", js_fun_call, 1, CDATAFN_FLAGS),
-  JS_FN("apply", js_fun_apply, 2, CDATAFN_FLAGS),
+  JS_FN("call", js::fun_call, 1, CDATAFN_FLAGS),
+  JS_FN("apply", js::fun_apply, 2, CDATAFN_FLAGS),
   JS_FS_END
 };
 

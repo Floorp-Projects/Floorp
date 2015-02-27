@@ -36,13 +36,13 @@ XDRBuffer::grow(size_t n)
         newCapacity = MIN_CAPACITY;
     if (isUint32Overflow(newCapacity)) {
         js::gc::AutoSuppressGC suppressGC(cx());
-        JS_ReportErrorNumber(cx(), js_GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
+        JS_ReportErrorNumber(cx(), GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
         return false;
     }
 
     void *data = js_realloc(base, newCapacity);
     if (!data) {
-        js_ReportOutOfMemory(cx());
+        ReportOutOfMemory(cx());
         return false;
     }
     base = static_cast<uint8_t *>(data);
@@ -97,7 +97,7 @@ VersionCheck(XDRState<mode> *xdr)
 
     if (mode == XDR_DECODE && bytecodeVer != XDR_BYTECODE_VERSION) {
         /* We do not provide binary compatibility with older scripts. */
-        JS_ReportErrorNumber(xdr->cx(), js_GetErrorMessage, nullptr, JSMSG_BAD_SCRIPT_MAGIC);
+        JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_SCRIPT_MAGIC);
         return false;
     }
 

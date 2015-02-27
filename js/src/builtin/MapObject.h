@@ -180,12 +180,12 @@ class SetObject : public NativeObject {
 extern bool
 InitSelfHostingCollectionIteratorFunctions(JSContext *cx, js::HandleObject obj);
 
+extern JSObject *
+InitMapClass(JSContext *cx, HandleObject obj);
+
+extern JSObject *
+InitSetClass(JSContext *cx, HandleObject obj);
+
 } /* namespace js */
-
-extern JSObject *
-js_InitMapClass(JSContext *cx, js::HandleObject obj);
-
-extern JSObject *
-js_InitSetClass(JSContext *cx, js::HandleObject obj);
 
 #endif /* builtin_MapObject_h */

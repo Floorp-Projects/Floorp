@@ -170,7 +170,7 @@ dbtest_main()
 
     # skipping the next two tests when user is root,
     # otherwise they would fail due to rooty powers
-    if [ $UID -ne 0 ] then
+    if [ $UID -ne 0 ]; then
       ${BINDIR}/dbtest -d $RONLY_DIR
     ret=$?
     if [ $ret -ne 46 ]; then
@@ -181,7 +181,7 @@ dbtest_main()
     else
       html_passed "Skipping Dbtest r/w in a readonly dir because user is root"
     fi
-    if [ $UID -ne 0 ] then
+    if [ $UID -ne 0 ]; then
       ${BINDIR}/certutil -D -n "TestUser" -d .
     ret=$?
     if [ $ret -ne 255 ]; then

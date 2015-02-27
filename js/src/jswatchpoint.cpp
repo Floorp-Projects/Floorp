@@ -68,7 +68,7 @@ WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
 
     Watchpoint w(handler, closure, false);
     if (!map.put(WatchKey(obj, id), w)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
     /*

@@ -69,7 +69,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) const MOZ_OVERRIDE;
 
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
+    static JSObject *New(JSContext *cx, JSObject *obj, const Wrapper *handler,
                          const WrapperOptions &options = WrapperOptions());
 
     static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler);
@@ -217,8 +217,7 @@ typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
 typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper;
 
 extern JSObject *
-TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
-                         HandleObject parent);
+TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj);
 
 inline bool
 IsWrapper(JSObject *obj)

@@ -450,8 +450,8 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
         if (!AtomToPrintableString(cx, name, &bytes))
             return false;
         RootedValue val(cx, ObjectValue(*obj));
-        js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, val, js::NullPtr(), bytes.ptr());
+        ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
+                          -1, val, js::NullPtr(), bytes.ptr());
         return false;
     }
     objp.set(&rval.toObject());
@@ -858,7 +858,7 @@ js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
+        ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
 
@@ -1447,7 +1447,7 @@ GlobalObject::initStopIterationClass(JSContext *cx, Handle<GlobalObject *> globa
 }
 
 JSObject *
-js_InitIteratorClasses(JSContext *cx, HandleObject obj)
+js::InitIteratorClasses(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     if (!GlobalObject::initIteratorClasses(cx, global))

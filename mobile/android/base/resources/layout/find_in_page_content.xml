@@ -16,7 +16,7 @@
               android:inputType="text"
               android:paddingLeft="@dimen/find_in_page_text_padding_left"
               android:paddingRight="@dimen/find_in_page_text_padding_right"
-              android:textColorHighlight="@color/url_bar_text_highlight"
+              android:textColorHighlight="@color/fennec_ui_orange"
               android:imeOptions="actionSearch"
               android:selectAllOnFocus="true"
               android:gravity="center_vertical|left"/>

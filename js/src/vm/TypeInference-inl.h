@@ -605,7 +605,7 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
          * specific properties.
          */
         uint32_t i;
-        if (js_IdIsIndex(id, &i))
+        if (IdIsIndex(id, &i))
             return;
 
         // But if we don't have too many properties yet, don't do anything.  The

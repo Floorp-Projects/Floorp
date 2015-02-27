@@ -229,7 +229,9 @@ AbstractCanvasGraph.prototype = {
   /**
    * Destroys this graph.
    */
-  destroy: function() {
+  destroy: Task.async(function *() {
+    yield this.ready();
+
     this._window.removeEventListener("mousemove", this._onMouseMove);
     this._window.removeEventListener("mousedown", this._onMouseDown);
     this._window.removeEventListener("mouseup", this._onMouseUp);
@@ -259,7 +261,7 @@ AbstractCanvasGraph.prototype = {
     gCachedStripePattern.clear();
 
     this.emit("destroyed");
-  },
+  }),
 
   /**
    * Rendering options. Subclasses should override these.

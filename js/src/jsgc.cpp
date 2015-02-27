@@ -3035,7 +3035,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
 
     // We are really just totally out of memory.
     MOZ_ASSERT(allowGC, "A fallible allocation must not report OOM on failure.");
-    js_ReportOutOfMemory(cx);
+    ReportOutOfMemory(cx);
     return nullptr;
 }
 
@@ -3059,7 +3059,7 @@ GCRuntime::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind
     if (thing)
         return thing;
 
-    js_ReportOutOfMemory(cx);
+    ReportOutOfMemory(cx);
     return nullptr;
 }
 
@@ -5576,8 +5576,13 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
     lastGCTime = currentTime;
 
     // If this is an OOM GC reason, wait on the background sweeping thread
-    // before returning to ensure that we free as much as possible.
-    if (reason == JS::gcreason::LAST_DITCH || reason == JS::gcreason::MEM_PRESSURE) {
+    // before returning to ensure that we free as much as possible. If this is
+    // a zeal-triggered GC, we want to ensure that the mutator can continue
+    // allocating on the same pages to reduce fragmentation.
+    if (reason == JS::gcreason::LAST_DITCH ||
+        reason == JS::gcreason::MEM_PRESSURE ||
+        reason == JS::gcreason::DEBUG_GC)
+    {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
         rt->gc.waitBackgroundSweepOrAllocEnd();
     }
@@ -6541,12 +6546,12 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
     AutoLockGC lock(rt);
 
     if (!zone->compartments.append(compartment.get())) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 
     if (zoneHolder && !rt->gc.zones.append(zone)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 
