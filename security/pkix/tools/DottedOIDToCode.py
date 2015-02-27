@@ -76,7 +76,7 @@ def dottedOIDToCArray(dottedOID, mode):
     """
     bytes = dottedOIDToEncodedArray(dottedOID)
 
-    if mode != "value":
+    if mode != "value" and mode != "prefixdefine":
         bytes = [0x06, len(bytes)] + bytes
 
     if mode == "alg":
@@ -142,8 +142,27 @@ def toCode(programName, specName, dottedOID, mode):
         static const uint8_t alg_ecdsa_with_SHA512[] = {
           0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x04
         };
+
+    This:
+
+        toCode("DottedOIDToCode.py", "PREFIX_1_2_840_10045", "1.2.840.10045",
+               "prefixdefine")
+
+    would result in a string like this (note the lack of indention):
+
+      // python DottedOIDToCode.py --prefixdefine PREFIX_1_2_840_10045 1.2.840.10045
+      #define PREFIX_1_2_840_10045 0x2a, 0x86, 0x48, 0xce, 0x3d
     """
     programNameWithOptions = programName
+
+    if mode == "prefixdefine":
+        programNameWithOptions += " --prefixdefine"
+        varName = specName
+        return ("// python %s %s %s\n" +
+                "#define %s %s\n") % (programNameWithOptions, specName,
+                                      dottedOID, varName,
+                                      dottedOIDToCArray(dottedOID, mode))
+
     varName = specNameToCName(specName)
     if mode == "tlv":
         programNameWithOptions += " --tlv"
@@ -151,6 +170,9 @@ def toCode(programName, specName, dottedOID, mode):
     elif mode == "alg":
         programNameWithOptions += " --alg"
         varName = "alg_" + varName
+    elif mode == "prefixdefine":
+        programNameWithOptions += " --alg"
+        varName = varName
 
     return ("  // python %s %s %s\n" +
             "  static const uint8_t %s[] = {\n" +
@@ -168,6 +190,8 @@ if __name__ == "__main__":
                        help="Wrap the encoded OID value with the tag and length")
     group.add_argument("--alg", action='store_true',
                        help="Wrap the encoded OID value in an encoded SignatureAlgorithm")
+    group.add_argument("--prefixdefine", action='store_true',
+                       help="generate a OID prefix #define")
     parser.add_argument("name",
                         help="The name given to the OID in the specification")
     parser.add_argument("dottedOID", metavar="dotted-oid",
@@ -178,6 +202,8 @@ if __name__ == "__main__":
         mode = 'alg'
     elif args.tlv:
         mode = 'tlv'
+    elif args.prefixdefine:
+        mode = 'prefixdefine'
     else:
         mode = 'value'
 

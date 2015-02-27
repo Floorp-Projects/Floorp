@@ -151,7 +151,7 @@ OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
   , producedAt(time)
   , extensions(nullptr)
   , includeEmptyExtensions(false)
-  , signatureAlgorithm(sha256WithRSAEncryption)
+  , signatureAlgorithm(sha256WithRSAEncryption())
   , badSignature(false)
   , certs(nullptr)
 
@@ -378,7 +378,7 @@ YMDHMS(uint16_t year, uint16_t month, uint16_t day,
 static ByteString
 SignedData(const ByteString& tbsData,
            const TestKeyPair& keyPair,
-           const ByteString& signatureAlgorithm,
+           const TestSignatureAlgorithm& signatureAlgorithm,
            bool corrupt, /*optional*/ const ByteString* certs)
 {
   ByteString signature;
@@ -407,7 +407,7 @@ SignedData(const ByteString& tbsData,
 
   ByteString value;
   value.append(tbsData);
-  value.append(signatureAlgorithm);
+  value.append(signatureAlgorithm.algorithmIdentifier);
   value.append(signatureNested);
   value.append(certsNested);
   return TLV(der::SEQUENCE, value);
@@ -521,7 +521,8 @@ static ByteString TBSCertificate(long version, const ByteString& serialNumber,
 //         signatureAlgorithm   AlgorithmIdentifier,
 //         signatureValue       BIT STRING  }
 ByteString
-CreateEncodedCertificate(long version, const ByteString& signature,
+CreateEncodedCertificate(long version,
+                         const TestSignatureAlgorithm& signature,
                          const ByteString& serialNumber,
                          const ByteString& issuerNameDER,
                          time_t notBefore, time_t notAfter,
@@ -529,10 +530,11 @@ CreateEncodedCertificate(long version, const ByteString& signature,
                          const TestKeyPair& subjectKeyPair,
                          /*optional*/ const ByteString* extensions,
                          const TestKeyPair& issuerKeyPair,
-                         const ByteString& signatureAlgorithm)
+                         const TestSignatureAlgorithm& signatureAlgorithm)
 {
   ByteString tbsCertificate(TBSCertificate(version, serialNumber,
-                                           signature, issuerNameDER, notBefore,
+                                           signature.algorithmIdentifier,
+                                           issuerNameDER, notBefore,
                                            notAfter, subjectNameDER,
                                            subjectKeyPair.subjectPublicKeyInfo,
                                            extensions));

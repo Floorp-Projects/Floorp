@@ -320,7 +320,7 @@ TEST_F(pkixcheck_CheckSignatureAlgorithm, BuildCertChain)
   ASSERT_FALSE(ENCODING_FAILED(issuerExtensions[0]));
 
   ByteString issuer(CreateEncodedCertificate(3,
-                                             sha256WithRSAEncryption,
+                                             sha256WithRSAEncryption(),
                                              CreateEncodedSerialNumber(1),
                                              CNToDERName("issuer"),
                                              oneDayBeforeNow, oneDayAfterNow,
@@ -328,12 +328,11 @@ TEST_F(pkixcheck_CheckSignatureAlgorithm, BuildCertChain)
                                              *keyPair,
                                              issuerExtensions,
                                              *keyPair,
-                                             sha256WithRSAEncryption));
+                                             sha256WithRSAEncryption()));
   ASSERT_FALSE(ENCODING_FAILED(issuer));
 
   ByteString subject(CreateEncodedCertificate(3,
-                                              TLV(der::SEQUENCE,
-                                                  BS(tlv_sha_1WithRSAEncryption)),
+                                              sha1WithRSAEncryption(),
                                               CreateEncodedSerialNumber(2),
                                               CNToDERName("issuer"),
                                               oneDayBeforeNow, oneDayAfterNow,
@@ -341,7 +340,7 @@ TEST_F(pkixcheck_CheckSignatureAlgorithm, BuildCertChain)
                                               *keyPair,
                                               nullptr,
                                               *keyPair,
-                                              sha256WithRSAEncryption));
+                                              sha256WithRSAEncryption()));
   ASSERT_FALSE(ENCODING_FAILED(subject));
 
   Input subjectInput;

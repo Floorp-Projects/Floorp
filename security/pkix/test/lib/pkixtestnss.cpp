@@ -33,6 +33,7 @@
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
+#include "pkixutil.h"
 #include "prinit.h"
 #include "secerr.h"
 #include "secitem.h"
@@ -86,39 +87,44 @@ public:
   {
   }
 
-  Result SignData(const ByteString& tbs, const ByteString& signatureAlgorithm,
+  Result SignData(const ByteString& tbs,
+                  const TestSignatureAlgorithm& signatureAlgorithm,
                   /*out*/ ByteString& signature) const override
   {
-    // signatureAlgorithm is of the form SEQUENCE { OID { <OID bytes> } },
-    // whereas SECOID_GetAlgorithmTag wants just the OID bytes, so we have to
-    // unwrap it here. As long as signatureAlgorithm is short enough, we don't
-    // have to do full DER decoding here.
-    // Also, this is just for testing purposes - there shouldn't be any
-    // untrusted input given to this function. If we make a mistake, we only
-    // have ourselves to blame.
-    if (signatureAlgorithm.length() > 127 ||
-        signatureAlgorithm.length() < 4 ||
-        signatureAlgorithm.data()[0] != der::SEQUENCE ||
-        signatureAlgorithm.data()[2] != der::OIDTag) {
-      return Result::FATAL_ERROR_INVALID_ARGS;
-    }
-    SECAlgorithmID signatureAlgorithmID;
-    signatureAlgorithmID.algorithm.data =
-      const_cast<unsigned char*>(signatureAlgorithm.data() + 4);
-    signatureAlgorithmID.algorithm.len = signatureAlgorithm.length() - 4;
-    signatureAlgorithmID.parameters.data = nullptr;
-    signatureAlgorithmID.parameters.len = 0;
-    SECOidTag signatureAlgorithmOidTag =
-      SECOID_GetAlgorithmTag(&signatureAlgorithmID);
-    if (signatureAlgorithmOidTag == SEC_OID_UNKNOWN) {
-      return Result::FATAL_ERROR_INVALID_ARGS;
+    SECOidTag oidTag;
+    if (signatureAlgorithm.publicKeyAlg == RSA_PKCS1()) {
+      switch (signatureAlgorithm.digestAlg) {
+        case TestDigestAlgorithmID::MD2:
+          oidTag = SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::MD5:
+          oidTag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::SHA1:
+          oidTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::SHA224:
+          oidTag = SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::SHA256:
+          oidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::SHA384:
+          oidTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
+          break;
+        case TestDigestAlgorithmID::SHA512:
+          oidTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
+          break;
+        MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+      }
+    } else {
+      abort();
     }
 
     SECItem signatureItem;
     if (SEC_SignData(&signatureItem, tbs.data(),
                      static_cast<int>(tbs.length()),
-                     privateKey.get(), signatureAlgorithmOidTag)
-          != SECSuccess) {
+                     privateKey.get(), oidTag) != SECSuccess) {
       return MapPRErrorCodeToResult(PR_GetError());
     }
     signature.assign(signatureItem.data, signatureItem.len);
