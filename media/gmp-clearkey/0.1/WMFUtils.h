@@ -49,14 +49,20 @@ namespace wmf {
 template<class T>
 class CComPtr {
 public:
+  CComPtr(CComPtr&& aOther) : mPtr(aOther.Detach()) { }
+  CComPtr& operator=(CComPtr&& other) { mPtr = other.Detach(); }
+
+  CComPtr(const CComPtr& aOther) : mPtr(nullptr) { Set(aOther.Get()); }
   CComPtr() : mPtr(nullptr) { }
-  CComPtr(T* const & aPtr) : mPtr(aPtr) { }
+  CComPtr(T* const & aPtr) : mPtr(nullptr) { Set(aPtr); }
   CComPtr(const nullptr_t& aNullPtr) : mPtr(aNullPtr) { }
   T** operator&() { return &mPtr; }
   T* operator->(){ return mPtr; }
   operator T*() { return mPtr; }
-  T* operator=(T* const & aPtr) { return mPtr = aPtr; }
+  T* operator=(T* const & aPtr) { return Set(aPtr); }
   T* operator=(const nullptr_t& aPtr) { return mPtr = aPtr; }
+
+  T* Get() const { return mPtr; }
 
   T* Detach() {
     T* tmp = mPtr;
@@ -72,6 +78,21 @@ public:
   }
 
 private:
+
+  T* Set(T* aPtr) {
+    if (mPtr == aPtr) {
+      return aPtr;
+    }
+    if (mPtr) {
+      mPtr->Release();
+    }
+    mPtr = aPtr;
+    if (mPtr) {
+      mPtr->AddRef();
+    }
+    return mPtr;
+  }
+
   T* mPtr;
 };
 
