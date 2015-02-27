@@ -655,6 +655,9 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 {
   MediaDecoderReader* decoderReader = nullptr;
 
+  if (!aDecoder) {
+    return decoderReader;
+  }
 #ifdef MOZ_FMP4
   if (IsMP4SupportedType(aType)) {
     decoderReader = new MP4Reader(aDecoder);
