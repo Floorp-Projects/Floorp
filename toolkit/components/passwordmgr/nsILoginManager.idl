@@ -13,7 +13,7 @@ interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
-[scriptable, uuid(f0c5ca21-db71-4b32-993e-ab63054cc6f5)]
+[scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]
 interface nsILoginManager : nsISupports {
   /**
    * This promise is resolved when initialization is complete, and is rejected
@@ -214,16 +214,6 @@ interface nsILoginManager : nsISupports {
                                in nsIAutoCompleteResult aPreviousResult,
                                in nsIDOMHTMLInputElement aElement,
                                in nsIFormAutoCompleteObserver aListener);
-
-  /**
-   * Fill a form with login information if we have it. This method will fill
-   * aForm regardless of the signon.autofillForms preference.
-   *
-   * @param aForm
-   *        The form to fill
-   * @return Promise that is resolved with whether or not the form was filled.
-   */
-  jsval fillForm(in nsIDOMHTMLFormElement aForm);
 
   /**
    * Search for logins in the login manager. An array is always returned;
