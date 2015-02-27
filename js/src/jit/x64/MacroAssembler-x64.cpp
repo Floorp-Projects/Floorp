@@ -44,7 +44,7 @@ MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
     // instructions which reference them. This allows the instructions to use
     // PC-relative addressing. Use "jump" label support code, because we need
     // the same PC-relative address patching that jumps use.
-    JmpSrc j = masm.vmovsd_ripr(dest.code());
+    JmpSrc j = masm.vmovsd_ripr(dest.encoding());
     JmpSrc prev = JmpSrc(dbl.uses.use(j.offset()));
     masm.setNextJump(j, prev);
 }
@@ -74,7 +74,7 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
     MOZ_ASSERT(!flt.uses.bound());
 
     // See comment in loadConstantDouble
-    JmpSrc j = masm.vmovss_ripr(dest.code());
+    JmpSrc j = masm.vmovss_ripr(dest.encoding());
     JmpSrc prev = JmpSrc(flt.uses.use(j.offset()));
     masm.setNextJump(j, prev);
 }
@@ -115,7 +115,7 @@ MacroAssemblerX64::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest
     MOZ_ASSERT(!val->uses.bound());
     MOZ_ASSERT(val->type() == SimdConstant::Int32x4);
 
-    JmpSrc j = masm.vmovdqa_ripr(dest.code());
+    JmpSrc j = masm.vmovdqa_ripr(dest.encoding());
     JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
     masm.setNextJump(j, prev);
 }
@@ -134,7 +134,7 @@ MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister des
     MOZ_ASSERT(!val->uses.bound());
     MOZ_ASSERT(val->type() == SimdConstant::Float32x4);
 
-    JmpSrc j = masm.vmovaps_ripr(dest.code());
+    JmpSrc j = masm.vmovaps_ripr(dest.encoding());
     JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
     masm.setNextJump(j, prev);
 }
@@ -213,6 +213,9 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
       case MoveOp::DOUBLE: {
         FloatRegister dest;
         if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
+            // Convert to the right type of register.
+            if (type == MoveOp::FLOAT32)
+                dest = dest.asSingle();
             if (from.isFloatReg() && from.floatReg() == dest) {
                 // Nothing to do; the value is in the right register already
                 return;

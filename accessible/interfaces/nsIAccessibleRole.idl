@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, uuid(50db5e86-9a45-4637-a5c3-4ff148c33270)]
+[scriptable, uuid(76ce835f-ef86-47c0-ac7b-e871417f1b6e)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -778,4 +778,9 @@ interface nsIAccessibleRole : nsISupports
    * A keyboard or keypad key.
    */
   const unsigned long ROLE_KEY = 129;
+
+  /**
+   * A switch control widget.
+   */
+  const unsigned long ROLE_SWITCH = 130;
 };

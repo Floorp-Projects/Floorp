@@ -135,6 +135,7 @@ protected:
 
 private:
   void DispatchError(BluetoothResultHandler* aRes, BluetoothStatus aStatus);
+  void DispatchError(BluetoothResultHandler* aRes, nsresult aRv);
 
   nsCString mListenSocketName;
   nsRefPtr<BluetoothDaemonListenSocket> mListenSocket;

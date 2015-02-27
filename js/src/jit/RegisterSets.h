@@ -425,7 +425,7 @@ class TypedRegisterSet
         for (uint32_t a = 0; a < reg.numAliased(); a++) {
             T tmp;
             reg.aliased(a, &tmp);
-            bits_ &= ~(SetType(1) << tmp.code());
+            takeUnchecked(tmp);
         }
     }
     void take(ValueOperand value) {
@@ -488,12 +488,19 @@ class TypedRegisterSet
     T takeAny() {
         MOZ_ASSERT(!empty());
         T reg = getAny();
-        take(reg);
+        takeAllAliasedUnchecked(reg);
+        return reg;
+    }
+    T takeUnaliasedAny() {
+        // This variant is used by LinearScan for iterating over all registers.
+        MOZ_ASSERT(!empty());
+        T reg = getAny();
+        takeUnchecked(reg);
         return reg;
     }
     T takeAnyExcluding(T preclude) {
         T reg = getAnyExcluding(preclude);
-        take(reg);
+        takeAllAliasedUnchecked(reg);
         return reg;
     }
     ValueOperand takeAnyValue() {
@@ -509,15 +516,20 @@ class TypedRegisterSet
 #endif
     }
     T takeFirst() {
+        // This function is used to implement a forward register set iterator.
         MOZ_ASSERT(!empty());
         T reg = getFirst();
-        take(reg);
+        // The iterator is used by PushRegsInMask which might be called with
+        // AllAlllocatableRegister mask.  To avoid saving more than needed we
+        // should take aliased registers too.
+        takeAllAliasedUnchecked(reg);
         return reg;
     }
     T takeLast() {
+        // This function is used to implement a backward register set iterator.
         MOZ_ASSERT(!empty());
         T reg = getLast();
-        take(reg);
+        takeAllAliasedUnchecked(reg);
         return reg;
     }
     void clear() {
@@ -527,16 +539,13 @@ class TypedRegisterSet
         return bits_;
     }
     uint32_t size() const {
-        return mozilla::CountPopulation32(bits_);
+        return T::SetSize(bits_);
     }
     bool operator ==(const TypedRegisterSet<T> &other) const {
         return other.bits_ == bits_;
     }
     TypedRegisterSet<T> reduceSetForPush() const {
         return T::ReduceSetForPush(*this);
-    }
-    uint32_t getSizeInBytes() const {
-        return T::GetSizeInBytes(*this);
     }
     uint32_t getPushSizeInBytes() const {
         return T::GetPushSizeInBytes(*this);
@@ -646,8 +655,14 @@ class RegisterSet {
     FloatRegister takeFloat() {
         return fpu_.takeAny();
     }
+    FloatRegister takeUnaliasedFloat() {
+        return fpu_.takeUnaliasedAny();
+    }
     Register takeGeneral() {
         return gpr_.takeAny();
+    }
+    Register takeUnaliasedGeneral() {
+        return gpr_.takeUnaliasedAny();
     }
     ValueOperand takeValueOperand() {
 #if defined(JS_NUNBOX32)
@@ -670,10 +685,11 @@ class RegisterSet {
         else
             gpr_.takeAllAliasedUnchecked(reg.gpr());
     }
-    AnyRegister takeAny(bool isFloat) {
+    // This function is used by LinearScan to find a free register.
+    AnyRegister takeUnaliasedAny(bool isFloat) {
         if (isFloat)
-            return AnyRegister(takeFloat());
-        return AnyRegister(takeGeneral());
+            return AnyRegister(takeUnaliasedFloat());
+        return AnyRegister(takeUnaliasedGeneral());
     }
     void clear() {
         gpr_.clear();
@@ -853,8 +869,8 @@ class ABIArg
   private:
     Kind kind_;
     union {
-        Registers::Code gpr_;
-        FloatRegisters::Code fpu_;
+        Register::Code gpr_;
+        FloatRegister::Code fpu_;
         uint32_t offset_;
     } u;
 

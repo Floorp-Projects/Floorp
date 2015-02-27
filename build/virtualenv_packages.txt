@@ -26,3 +26,4 @@ gyp.pth:media/webrtc/trunk/tools/gyp/pylib
 pyasn1.pth:python/pyasn1
 bitstring.pth:python/bitstring
 redo.pth:python/redo
+requests.pth:python/requests

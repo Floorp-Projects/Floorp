@@ -437,11 +437,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
     break;
 
   UNIQUE_CASE(Display)
-  UNIQUE_CASE(Background)
-  UNIQUE_CASE(Border)
-  UNIQUE_CASE(Padding)
   UNIQUE_CASE(Text)
-  UNIQUE_CASE(TextReset)
 
 #undef UNIQUE_CASE
 
@@ -453,6 +449,41 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   SetStyle(aSID, result);
   mBits &= ~static_cast<uint64_t>(nsCachedStyleData::GetBitForSID(aSID));
 
+  return result;
+}
+
+// This is an evil function, but less evil than GetUniqueStyleData. It
+// creates an empty style struct for this nsStyleContext.
+void*
+nsStyleContext::CreateEmptyStyleData(const nsStyleStructID& aSID)
+{
+  MOZ_ASSERT(!mChild && !mEmptyChild &&
+             !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
+             !GetCachedStyleData(aSID),
+             "This style should not have been computed");
+
+  void* result;
+  nsPresContext* presContext = PresContext();
+  switch (aSID) {
+#define UNIQUE_CASE(c_, ...) \
+    case eStyleStruct_##c_: \
+      result = new (presContext) nsStyle##c_(__VA_ARGS__); \
+      break;
+
+  UNIQUE_CASE(Border, presContext)
+  UNIQUE_CASE(Padding)
+
+#undef UNIQUE_CASE
+
+  default:
+    NS_ERROR("Struct type not supported.");
+    return nullptr;
+  }
+
+  // The new struct is owned by this style context, but that we don't
+  // need to clear the bit in mBits because we've asserted that at the
+  // top of this function.
+  SetStyle(aSID, result);
   return result;
 }
 
@@ -620,25 +651,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // Suppress border/padding of ruby level containers
   if (disp->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER ||
       disp->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
-    if (StyleBorder()->GetComputedBorder() != nsMargin(0, 0, 0, 0)) {
-      nsStyleBorder* border =
-        static_cast<nsStyleBorder*>(GetUniqueStyleData(eStyleStruct_Border));
-      NS_FOR_CSS_SIDES(side) {
-        border->SetBorderWidth(side, 0);
-      }
-    }
-
-    nsMargin computedPadding;
-    if (!StylePadding()->GetPadding(computedPadding) ||
-        computedPadding != nsMargin(0, 0, 0, 0)) {
-      const nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
-      nsStylePadding* padding =
-        static_cast<nsStylePadding*>(GetUniqueStyleData(eStyleStruct_Padding));
-      NS_FOR_CSS_SIDES(side) {
-        padding->mPadding.Set(side, zero);
-      }
-      padding->RecalcData();
-    }
+    CreateEmptyStyleData(eStyleStruct_Border);
+    CreateEmptyStyleData(eStyleStruct_Padding);
   }
 
   // Compute User Interface style, to trigger loads of cursors
