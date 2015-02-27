@@ -19,11 +19,9 @@ CPOWTimer::~CPOWTimer()
     if (!obj)
         return;
     JSCompartment *compartment = js::GetObjectCompartment(obj);
-    if (!compartment)
+    xpc::CompartmentPrivate *compartmentPrivate = xpc::CompartmentPrivate::Get(compartment);
+    if (!compartmentPrivate)
         return;
-    js::PerformanceData *performance = js::GetPerformanceData(compartment);
-    if (!performance)
-        return;
-    uint64_t time = PR_IntervalToMicroseconds(PR_IntervalNow() - startInterval);
-    performance->cpowTime += time;
+    PRIntervalTime time = PR_IntervalNow() - startInterval;
+    compartmentPrivate->CPOWTime += time;
 }
