@@ -1470,6 +1470,23 @@ nsPluginInstanceOwner::NotifyHostCreateWidget()
 #endif
 }
 
+void
+nsPluginInstanceOwner::NotifyDestroyPending()
+{
+  if (!mInstance) {
+    return;
+  }
+  bool isOOP = false;
+  if (NS_FAILED(mInstance->GetIsOOP(&isOOP)) || !isOOP) {
+    return;
+  }
+  NPP npp = nullptr;
+  if (NS_FAILED(mInstance->GetNPP(&npp)) || !npp) {
+    return;
+  }
+  PluginAsyncSurrogate::NotifyDestroyPending(npp);
+}
+
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifdef MOZ_WIDGET_ANDROID
