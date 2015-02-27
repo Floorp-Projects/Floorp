@@ -21,6 +21,7 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Mutex.h"
 #include "MainThreadUtils.h"
 
 #if defined(ANDROID) && defined(DEBUG)
@@ -181,16 +182,13 @@ public:
  * IToplevelProtocol tracks all top-level protocol actors created from
  * this protocol actor.
  */
-class IToplevelProtocol : public LinkedListElement<IToplevelProtocol>
+class IToplevelProtocol : private LinkedListElement<IToplevelProtocol>
 {
-protected:
-    explicit IToplevelProtocol(ProtocolId aProtoId)
-        : mProtocolId(aProtoId)
-        , mTrans(nullptr)
-    {
-        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
-    }
+    friend class LinkedList<IToplevelProtocol>;
+    friend class LinkedListElement<IToplevelProtocol>;
 
+protected:
+    explicit IToplevelProtocol(ProtocolId aProtoId);
     ~IToplevelProtocol();
 
     /**
@@ -209,19 +207,13 @@ public:
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
-    /**
-     * Return first of actors of top level protocols opened by this one.
-     */
-    IToplevelProtocol* GetFirstOpenedActors()
-    {
-        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
-        return mOpenActors.getFirst();
-    }
-    const IToplevelProtocol* GetFirstOpenedActors() const
-    {
-        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
-        return mOpenActors.getFirst();
-    }
+    void GetOpenedActors(nsTArray<IToplevelProtocol*>& aActors);
+
+    // This Unsafe version should only be used when all other threads are
+    // frozen, since it performs no locking. It also takes a stack-allocated
+    // array and its size (number of elements) rather than an nsTArray. The Nuwa
+    // code that calls this function is not allowed to allocate memory.
+    size_t GetOpenedActorsUnsafe(IToplevelProtocol** aActors, size_t aActorsMax);
 
     virtual IToplevelProtocol*
     CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
@@ -233,27 +225,15 @@ public:
                               base::ProcessHandle aPeerProcess,
                               ProtocolCloneContext* aCtx);
 
-#ifdef MOZ_IPDL_TESTS
-    static void SetAllowNonMainThreadUse();
-#endif
-
-    static bool AllowNonMainThreadUse() {
-#ifdef MOZ_IPDL_TESTS
-        return sAllowNonMainThreadUse;
-#else
-        return false;
-#endif
-    }
-
 private:
+    void AddOpenedActorLocked(IToplevelProtocol* aActor);
+    void GetOpenedActorsLocked(nsTArray<IToplevelProtocol*>& aActors);
+
     LinkedList<IToplevelProtocol> mOpenActors; // All protocol actors opened by this.
+    IToplevelProtocol* mOpener;
 
     ProtocolId mProtocolId;
     Transport* mTrans;
-
-#ifdef MOZ_IPDL_TESTS
-    static bool sAllowNonMainThreadUse;
-#endif
 };
 
 
