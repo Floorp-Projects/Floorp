@@ -387,9 +387,7 @@ PreviewController.prototype = {
             this.onTabPaint(r);
           }
         }
-        let preview = this.preview;
-        if (preview.visible)
-          preview.invalidate();
+        this.preview.invalidate();
         break;
       case "TabAttrModified":
         this.updateTitleAndTooltip();
