@@ -9,14 +9,14 @@ function run_test() {
   logTestInfo("testing that the update.log is moved after a successful update");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-  var patches = getLocalPatchString(null, null, null, null, null, null,
+  let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_PENDING);
-  var updates = getLocalUpdateString(patches);
+  let updates = getLocalUpdateString(patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
 
-  var dir = getUpdatesDir();
-  var log = dir.clone();
+  let dir = getUpdatesDir();
+  let log = dir.clone();
   log.append("0");
   log.append(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");

@@ -97,8 +97,9 @@ function getRemotePatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
  * @return The string representing a local update xml file.
  */
 function getLocalUpdatesXMLString(aUpdates) {
-  if (!aUpdates || aUpdates == "")
+  if (!aUpdates || aUpdates == "") {
     return "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"/>"
+  }
   return ("<updates xmlns=\"http://www.mozilla.org/2005/app-update\">" +
             aUpdates +
           "</updates>").replace(/>\s+\n*</g,'><');

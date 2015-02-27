@@ -10,12 +10,10 @@ function run_test() {
               "same version of the application with the same application " +
               "build id on startup (Bug 536547)");
 
-  var patches, updates;
-
-  patches = getLocalPatchString(null, null, null, null, null, null,
-                                STATE_DOWNLOADING);
-  updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0", null,
-                                 "2007010101");
+  let patches = getLocalPatchString(null, null, null, null, null, null,
+                                    STATE_DOWNLOADING);
+  let updates = getLocalUpdateString(patches, null, null, "version 1.0", "1.0",
+                                     null, "2007010101");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
