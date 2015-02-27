@@ -10,21 +10,6 @@ let gDirService;
 let gDirProvider;
 let gOldProviders;
 
-function FakeDirProvider() {}
-FakeDirProvider.prototype = {
-  classID: Components.ID("{f30b43a7-2bfa-4e5f-8c4f-abc7dd4ac486}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
-
-  getFile: function(prop, persistent) {
-    if (prop == KEY_UPDATE_ARCHIVE_DIR) {
-      if (gActiveUpdate) {
-        gActiveUpdate.errorCode = Cr.NS_ERROR_FILE_TOO_BIG;
-      }
-    }
-    return null;
-  }
-};
-
 function run_test() {
   setupTestCommon();
 
@@ -49,7 +34,7 @@ function run_test() {
   gDirService = Cc["@mozilla.org/file/directory_service;1"].
                 getService(Ci.nsIProperties);
 
-  gOldProviders.forEach(function (p) {
+  gOldProviders.forEach(function(p) {
     gDirService.unregisterProvider(p);
   });
   gDirService.registerProvider(gDirProvider);
@@ -99,10 +84,24 @@ function check_test_pt1() {
 
 function end_test() {
   gDirService.unregisterProvider(gDirProvider);
-  gOldProviders.forEach(function (p) {
+  gOldProviders.forEach(function(p) {
     gDirService.registerProvider(p);
   });
   gActiveUpdate = null;
   gDirService = null;
   gDirProvider = null;
 }
+
+function FakeDirProvider() {}
+FakeDirProvider.prototype = {
+  getFile: function(prop, persistent) {
+    if (prop == KEY_UPDATE_ARCHIVE_DIR) {
+      if (gActiveUpdate) {
+        gActiveUpdate.errorCode = Cr.NS_ERROR_FILE_TOO_BIG;
+      }
+    }
+    return null;
+  },
+  classID: Components.ID("{f30b43a7-2bfa-4e5f-8c4f-abc7dd4ac486}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
+};
