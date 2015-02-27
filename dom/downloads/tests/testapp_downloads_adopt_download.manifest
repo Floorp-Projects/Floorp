@@ -1,0 +1,10 @@
+{
+  "name": "Downloads certified test fake app",
+  "description": "Test",
+  "launch_path": "http://mochi.test:8888/tests/dom/downloads/tests/testapp_downloads_adopt_download.html",
+  "type": "certified",
+  "permissions": {
+    "device-storage:sdcard":{ "access": "readcreate" },
+    "downloads": {}
+  }
+}
