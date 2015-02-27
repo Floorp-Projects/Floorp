@@ -244,6 +244,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitSimdExtractElementI(LSimdExtractElementI *ins) { MOZ_CRASH("NYI"); }
     void visitSimdExtractElementF(LSimdExtractElementF *ins) { MOZ_CRASH("NYI"); }
     void visitSimdSignMaskX4(LSimdSignMaskX4 *ins) { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralSwizzleI(LSimdGeneralSwizzleI *lir) { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralSwizzleF(LSimdGeneralSwizzleF *lir) { MOZ_CRASH("NYI"); }
     void visitSimdSwizzleI(LSimdSwizzleI *lir) { MOZ_CRASH("NYI"); }
     void visitSimdSwizzleF(LSimdSwizzleF *lir) { MOZ_CRASH("NYI"); }
     void visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir) { MOZ_CRASH("NYI"); }
