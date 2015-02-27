@@ -8,6 +8,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include <ctype.h>
 
@@ -761,8 +762,8 @@ MConstant::printOpcode(FILE *fp) const
             }
             if (fun->hasScript()) {
                 JSScript *script = fun->nonLazyScript();
-                fprintf(fp, " (%s:%d)",
-                        script->filename() ? script->filename() : "", (int) script->lineno());
+                fprintf(fp, " (%s:%" PRIuSIZE ")",
+                        script->filename() ? script->filename() : "", script->lineno());
             }
             fprintf(fp, " at %p", (void *) fun);
             break;
