@@ -267,6 +267,7 @@ var LoginManagerContent = {
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
     this._fillForm(form, autofillForm, false, false, loginsFound);
+    Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
   },
 
   /*
@@ -310,6 +311,7 @@ var LoginManagerContent = {
       this._asyncFindLogins(acForm, { showMasterPassword: false })
           .then(({ form, loginsFound }) => {
               this._fillForm(form, true, true, true, loginsFound);
+              Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
           })
           .then(null, Cu.reportError);
     } else {
@@ -665,9 +667,7 @@ var LoginManagerContent = {
       return;
     }
 
-    // The reason we didn't end up filling the form, if any.  We include
-    // this in the formInfo object we send with the passwordmgr-found-logins
-    // notification.  See the _notifyFoundLogins docs for possible values.
+    // The reason we didn't end up filling the form, if any.
     var didntFillReason = null;
 
     // Attach autocomplete stuff to the username field, if we have
@@ -679,8 +679,6 @@ var LoginManagerContent = {
     // Don't clobber an existing password.
     if (passwordField.value && !clobberPassword) {
       didntFillReason = "existingPassword";
-      this._notifyFoundLogins(didntFillReason, usernameField,
-                              passwordField, foundLogins, null);
       log("form not filled, the password field was already filled");
       recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
       return;
@@ -777,9 +775,6 @@ var LoginManagerContent = {
       log("autocomplete=off but form can be filled; notified observers");
     }
 
-    this._notifyFoundLogins(didntFillReason, usernameField, passwordField,
-                            foundLogins, selectedLogin);
-
     if (didFillForm) {
       recordAutofillResult(AUTOFILL_RESULT.FILLED);
     } else {
@@ -801,61 +796,6 @@ var LoginManagerContent = {
       }
       recordAutofillResult(autofillResult);
     }
-  },
-
-
-  /**
-   * Notify observers about an attempt to fill a form that resulted in some
-   * saved logins being found for the form.
-   *
-   * This does not get called if the login manager attempts to fill a form
-   * but does not find any saved logins.  It does, however, get called when
-   * the login manager does find saved logins whether or not it actually
-   * fills the form with one of them.
-   *
-   * @param didntFillReason {String}
-   *        the reason the login manager didn't fill the form, if any;
-   *        if the value of this parameter is null, then the form was filled;
-   *        otherwise, this parameter will be one of these values:
-   *          existingUsername: the username field already contains a username
-   *                            that doesn't match any stored usernames
-   *          existingPassword: the password field already contains a password
-   *          autocompleteOff:  autocomplete has been disabled for the form
-   *                            or its username or password fields
-   *          multipleLogins:   we have multiple logins for the form
-   *          noAutofillForms:  the autofillForms pref is set to false
-   *
-   * @param usernameField   {HTMLInputElement}
-   *        the username field detected by the login manager, if any;
-   *        otherwise null
-   *
-   * @param passwordField   {HTMLInputElement}
-   *        the password field detected by the login manager
-   *
-   * @param foundLogins     {Array}
-   *        an array of nsILoginInfos that can be used to fill the form
-   *
-   * @param selectedLogin   {nsILoginInfo}
-   *        the nsILoginInfo that was/would be used to fill the form, if any;
-   *        otherwise null; whether or not it was actually used depends on
-   *        the value of the didntFillReason parameter
-   */
-  _notifyFoundLogins : function (didntFillReason, usernameField,
-                                 passwordField, foundLogins, selectedLogin) {
-    // We need .setProperty(), which is a method on the original
-    // nsIWritablePropertyBag. Strangley enough, nsIWritablePropertyBag2
-    // doesn't inherit from that, so the additional QI is needed.
-    let formInfo = Cc["@mozilla.org/hash-property-bag;1"].
-                   createInstance(Ci.nsIWritablePropertyBag2).
-                   QueryInterface(Ci.nsIWritablePropertyBag);
-
-    formInfo.setPropertyAsACString("didntFillReason", didntFillReason);
-    formInfo.setPropertyAsInterface("usernameField", usernameField);
-    formInfo.setPropertyAsInterface("passwordField", passwordField);
-    formInfo.setProperty("foundLogins", foundLogins.concat());
-    formInfo.setPropertyAsInterface("selectedLogin", selectedLogin);
-
-    Services.obs.notifyObservers(formInfo, "passwordmgr-found-logins", null);
   },
 
 };
