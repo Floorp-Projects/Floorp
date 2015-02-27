@@ -7,7 +7,6 @@
 #include "nsSSLStatus.h"
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIIdentityInfo.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
@@ -288,7 +287,8 @@ nsSSLStatus::~nsSSLStatus()
 }
 
 void
-nsSSLStatus::SetServerCert(nsIX509Cert* aServerCert, nsNSSCertificate::EVStatus aEVStatus)
+nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert,
+                           nsNSSCertificate::EVStatus aEVStatus)
 {
   mServerCert = aServerCert;
 
@@ -299,10 +299,9 @@ nsSSLStatus::SetServerCert(nsIX509Cert* aServerCert, nsNSSCertificate::EVStatus 
   }
 
 #ifndef MOZ_NO_EV_CERTS
-  nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(mServerCert);
-  if (idinfo) {
-    nsresult rv = idinfo->GetIsExtendedValidation(&mIsEV);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (aServerCert) {
+    nsresult rv = aServerCert->GetIsExtendedValidation(&mIsEV);
+    if (NS_FAILED(rv)) {
       return;
     }
     mHasIsEVStatus = true;

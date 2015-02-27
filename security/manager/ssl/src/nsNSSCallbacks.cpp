@@ -1269,8 +1269,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     nsContentUtils::LogSimpleConsoleError(msg, "SSL");
   }
 
-  ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
-
   /* Set the SSL Status information */
   RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
   if (!status) {
@@ -1281,33 +1279,15 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
                                                              status);
 
-  RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
-  nsCOMPtr<nsIX509Cert> prevcert;
-  infoObject->GetPreviousCert(getter_AddRefs(prevcert));
-
-  bool equals_previous = false;
-  if (prevcert && nssc) {
-    nsresult rv = nssc->Equals(prevcert, &equals_previous);
-    if (NS_FAILED(rv)) {
-      equals_previous = false;
-    }
-  }
-
-  if (equals_previous) {
+  if (status->HasServerCert()) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-            ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
-    status->SetServerCert(prevcert, nsNSSCertificate::ev_status_unknown);
-  }
-  else {
-    if (status->HasServerCert()) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-              ("HandshakeCallback KEEPING existing cert\n"));
-    }
-    else {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-              ("HandshakeCallback using NEW cert %p\n", nssc.get()));
-      status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
-    }
+           ("HandshakeCallback KEEPING existing cert\n"));
+  } else {
+    ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
+    RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("HandshakeCallback using NEW cert %p\n", nssc.get()));
+    status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
   }
 
   infoObject->NoteTimeUntilReady();

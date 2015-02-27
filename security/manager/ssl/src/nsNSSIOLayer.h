@@ -44,8 +44,6 @@ public:
   bool IsHandshakePending() const { return mHandshakePending; }
   void SetHandshakeNotPending() { mHandshakePending = false; }
 
-  void GetPreviousCert(nsIX509Cert** _result);
-
   void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
   SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
 
