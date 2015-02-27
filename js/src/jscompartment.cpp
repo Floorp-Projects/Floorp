@@ -443,7 +443,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
         }
     }
 
-    obj.set(cb->wrap(cx, existing, obj));
+    obj.set(cb->wrap(cx, existing, obj, global));
     if (!obj)
         return false;
 

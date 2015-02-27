@@ -1020,6 +1020,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
                              &CPOWProxyHandler::singleton,
                              v,
                              nullptr,
+                             junkScope,
                              options);
         if (!obj)
             return nullptr;

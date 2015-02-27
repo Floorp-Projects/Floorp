@@ -28,7 +28,8 @@ class ProxyObject : public JSObject
 
   public:
     static ProxyObject *New(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv,
-                            TaggedProto proto_, const ProxyOptions &options);
+                            TaggedProto proto_, JSObject *parent_,
+                            const ProxyOptions &options);
 
     const Value &private_() {
         return GetProxyPrivate(this);
