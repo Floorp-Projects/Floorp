@@ -780,10 +780,24 @@
 
     <style name="ShareOverlayTitle">
         <item name="android:gravity">center_horizontal</item>
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">15dp</item>
         <item name="android:paddingRight">15dp</item>
+    </style>
+
+    <style name="TextAppearance.ShareOverlay">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="TextAppearance.ShareOverlay.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="TextAppearance.ShareOverlay.Subtitle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:scrollHorizontally">true</item>
     </style>
 
     <!-- TODO: Clean up this and inherited styles. -->
