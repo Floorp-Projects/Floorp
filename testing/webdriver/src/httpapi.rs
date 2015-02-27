@@ -43,7 +43,7 @@ static ROUTES: [(Method, &'static str, Route); 41] = [
     (Post, "/session/{sessionId}/element/{elementId}/click", Route::ElementClick),
     (Post, "/session/{sessionId}/element/{elementId}/tap", Route::ElementTap),
     (Post, "/session/{sessionId}/element/{elementId}/clear", Route::ElementClear),
-    (Post, "/session/{sessionId}/element/{elementId}/sendKeys", Route::ElementSendKeys),
+    (Post, "/session/{sessionId}/element/{elementId}/value", Route::ElementSendKeys),
     (Post, "/session/{sessionId}/dismiss_alert", Route::DismissAlert),
     (Post, "/session/{sessionId}/accept_alert", Route::AcceptAlert),
     (Get, "/session/{sessionId}/alert_text", Route::GetAlertText),
