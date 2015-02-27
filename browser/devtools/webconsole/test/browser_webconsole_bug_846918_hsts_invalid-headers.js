@@ -6,45 +6,30 @@ const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/t
 const HSTS_INVALID_HEADER_MSG = "The site specified an invalid Strict-Transport-Security header.";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
 
-function test()
-{
-  loadTab(TEST_URI).then(() => {
-    openConsole().then((hud) => {
-      waitForMessages({
-        webconsole: hud,
-        messages: [
-          {
-            name: "Invalid HSTS header error displayed successfully",
-            text: HSTS_INVALID_HEADER_MSG,
-            category: CATEGORY_SECURITY,
-            severity: SEVERITY_WARNING,
-            objects: true,
-          },
-        ],
-      }).then((results) => testClickOpenNewTab(hud, results));
-    })
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  let results = yield waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "Invalid HSTS header error displayed successfully",
+        text: HSTS_INVALID_HEADER_MSG,
+        category: CATEGORY_SECURITY,
+        severity: SEVERITY_WARNING,
+        objects: true,
+      },
+    ],
   });
-}
+
+  yield testClickOpenNewTab(hud, results);
+});
 
 function testClickOpenNewTab(hud, results) {
   let warningNode = results[0].clickableElements[0];
   ok(warningNode, "link element");
   ok(warningNode.classList.contains("learn-more-link"), "link class name");
-
-  // Invoke the click event and check if a new tab would
-  // open to the correct page.
-  let linkOpened = false;
-  let oldOpenUILinkIn = window.openUILinkIn;
-  window.openUILinkIn = function(aLink) {
-    if (aLink == LEARN_MORE_URI) {
-      linkOpened = true;
-    }
-  }
-
-  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
-                             warningNode.ownerDocument.defaultView);
-  ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
-  window.openUILinkIn = oldOpenUILinkIn;
-
-  finishTest();
+  return simulateMessageLinkClick(warningNode, LEARN_MORE_URI);
 }
