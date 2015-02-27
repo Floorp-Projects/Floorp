@@ -111,7 +111,7 @@ typedef AutoValueVector NodeVector;
     JS_BEGIN_MACRO                                                                        \
         MOZ_ASSERT(expr);                                                                 \
         if (!(expr)) {                                                                    \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_PARSE_NODE);  \
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_PARSE_NODE);     \
             return false;                                                                 \
         }                                                                                 \
     JS_END_MACRO
@@ -119,7 +119,7 @@ typedef AutoValueVector NodeVector;
 #define LOCAL_NOT_REACHED(expr)                                                           \
     JS_BEGIN_MACRO                                                                        \
         MOZ_ASSERT(false);                                                                \
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_PARSE_NODE);      \
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_PARSE_NODE);         \
         return false;                                                                     \
     JS_END_MACRO
 
@@ -200,8 +200,8 @@ class NodeBuilder
             }
 
             if (!funv.isObject() || !funv.toObject().is<JSFunction>()) {
-                js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NOT_FUNCTION,
-                                         JSDVG_SEARCH_STACK, funv, js::NullPtr(), nullptr, nullptr);
+                ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NOT_FUNCTION,
+                                      JSDVG_SEARCH_STACK, funv, js::NullPtr(), nullptr, nullptr);
                 return false;
             }
 
@@ -726,7 +726,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
 {
     const size_t len = elts.length();
     if (len > UINT32_MAX) {
-        js_ReportAllocationOverflow(cx);
+        ReportAllocationOverflow(cx);
         return false;
     }
     RootedObject array(cx, NewDenseFullyAllocatedArray(cx, uint32_t(len)));
@@ -3552,7 +3552,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "Reflect.parse", "0", "s");
         return false;
     }
@@ -3571,9 +3571,9 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
     if (!arg.isNullOrUndefined()) {
         if (!arg.isObject()) {
-            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                     JSDVG_SEARCH_STACK, arg, js::NullPtr(),
-                                     "not an object", nullptr);
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                  JSDVG_SEARCH_STACK, arg, js::NullPtr(),
+                                  "not an object", nullptr);
             return false;
         }
 
@@ -3623,9 +3623,9 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
         if (!prop.isNullOrUndefined()) {
             if (!prop.isObject()) {
-                js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                         JSDVG_SEARCH_STACK, prop, js::NullPtr(),
-                                         "not an object", nullptr);
+                ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                      JSDVG_SEARCH_STACK, prop, js::NullPtr(),
+                                      "not an object", nullptr);
                 return false;
             }
             builder = &prop.toObject();

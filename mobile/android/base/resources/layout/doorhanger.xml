@@ -52,7 +52,7 @@
     <View android:id="@+id/divider_doorhanger"
           android:layout_width="match_parent"
           android:layout_height="1dp"
-          android:background="#FFFF9500"
+          android:background="@color/fennec_ui_orange"
           android:visibility="gone"/>
 
 </merge>

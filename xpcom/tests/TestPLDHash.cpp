@@ -7,10 +7,8 @@
 #include <stdio.h>
 #include "pldhash.h"
 
-// pldhash is very widely used and so any basic bugs in it are likely to be
-// exposed through normal usage.  Therefore, this test currently focusses on
-// extreme cases relating to maximum table capacity and potential overflows,
-// which are unlikely to be hit during normal execution.
+// This test mostly focuses on edge cases. But more coverage of normal
+// operations wouldn't be a bad thing.
 
 namespace TestPLDHash {
 
@@ -106,6 +104,67 @@ static bool test_pldhash_Init_overflow()
   return true;
 }
 
+static bool test_pldhash_lazy_storage()
+{
+  PLDHashTable t;
+  PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub));
+
+  // PLDHashTable allocates entry storage lazily. Check that all the non-add
+  // operations work appropriately when the table is empty and the storage
+  // hasn't yet been allocated.
+
+  if (!t.IsInitialized()) {
+    return false;
+  }
+
+  if (t.Capacity() != 0) {
+    return false;
+  }
+
+  if (t.EntrySize() != sizeof(PLDHashEntryStub)) {
+    return false;
+  }
+
+  if (t.EntryCount() != 0) {
+    return false;
+  }
+
+  if (t.Generation() != 0) {
+    return false;
+  }
+
+  if (PL_DHashTableSearch(&t, (const void*)1)) {
+    return false;   // search succeeded?
+  }
+
+  // No result to check here, but call it to make sure it doesn't crash.
+  PL_DHashTableRemove(&t, (const void*)2);
+
+  // Using a null |enumerator| should be fine because it shouldn't be called
+  // for an empty table.
+  PLDHashEnumerator enumerator = nullptr;
+  if (PL_DHashTableEnumerate(&t, enumerator, nullptr) != 0) {
+    return false;   // enumeration count is non-zero?
+  }
+
+  for (PLDHashTable::Iterator iter = t.Iterate();
+       iter.HasMoreEntries();
+       iter.NextEntry()) {
+    return false; // shouldn't hit this on an empty table
+  }
+
+  // Using a null |mallocSizeOf| should be fine because it shouldn't be called
+  // for an empty table.
+  mozilla::MallocSizeOf mallocSizeOf = nullptr;
+  if (PL_DHashTableSizeOfExcludingThis(&t, nullptr, mallocSizeOf) != 0) {
+    return false;   // size is non-zero?
+  }
+
+  PL_DHashTableFinish(&t);
+
+  return true;
+}
+
 // See bug 931062, we skip this test on Android due to OOM.
 #ifndef MOZ_WIDGET_ANDROID
 // We insert the integers 0.., so this is has function is (a) as simple as
@@ -168,6 +227,7 @@ static const struct Test {
   DECL_TEST(test_pldhash_Init_capacity_ok),
   DECL_TEST(test_pldhash_Init_capacity_too_large),
   DECL_TEST(test_pldhash_Init_overflow),
+  DECL_TEST(test_pldhash_lazy_storage),
 // See bug 931062, we skip this test on Android due to OOM.
 #ifndef MOZ_WIDGET_ANDROID
   DECL_TEST(test_pldhash_grow_to_max_capacity),

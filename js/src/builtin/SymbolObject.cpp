@@ -103,7 +103,7 @@ SymbolObject::construct(JSContext *cx, unsigned argc, Value *vp)
     // yet, so just throw a TypeError.
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.isConstructing()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR, "Symbol");
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CONSTRUCTOR, "Symbol");
         return false;
     }
 
@@ -159,8 +159,8 @@ SymbolObject::keyFor(JSContext *cx, unsigned argc, Value *vp)
     // step 1
     HandleValue arg = args.get(0);
     if (!arg.isSymbol()) {
-        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
-                                 arg, js::NullPtr(), "not a symbol", nullptr);
+        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                              arg, js::NullPtr(), "not a symbol", nullptr);
         return false;
     }
 
@@ -230,7 +230,7 @@ SymbolObject::valueOf(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JSObject *
-js_InitSymbolClass(JSContext *cx, HandleObject obj)
+js::InitSymbolClass(JSContext *cx, HandleObject obj)
 {
     return SymbolObject::initClass(cx, obj);
 }

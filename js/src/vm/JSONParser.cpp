@@ -94,7 +94,7 @@ JSONParser<CharT>::error(const char *msg)
         char lineNumber[MaxWidth];
         JS_snprintf(lineNumber, sizeof lineNumber, "%lu", line);
 
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
                              msg, lineNumber, columnNumber);
     }
 }

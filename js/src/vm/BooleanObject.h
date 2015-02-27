@@ -40,7 +40,7 @@ class BooleanObject : public NativeObject
 
     /* For access to init, as Boolean.prototype is special. */
     friend JSObject *
-    ::js_InitBooleanClass(JSContext *cx, js::HandleObject global);
+    js::InitBooleanClass(JSContext *cx, js::HandleObject global);
 };
 
 } // namespace js

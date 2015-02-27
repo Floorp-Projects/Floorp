@@ -438,7 +438,9 @@ bool Poller::Poll() {
 
     Timer *timer = timers_.top();
     timers_.pop();
-    timer->callback_(timer->target_, TIMER_EVENT);
+    if (timer->callback_) {
+      timer->callback_(timer->target_, TIMER_EVENT);
+    }
     delete timer;
   }
 

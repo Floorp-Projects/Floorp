@@ -27,6 +27,7 @@ const WATERFALL_SIDEBAR_WIDTH = 150; // px
 const WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT = 30;
 const WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY = 75; // ms
 
+const FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS = 100;
 const WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
 const WATERFALL_HEADER_TICKS_SPACING_MIN = 50; // px
 const WATERFALL_HEADER_TEXT_PADDING = 3; // px
@@ -575,9 +576,18 @@ Waterfall.prototype = {
    */
   _findOptimalTickInterval: function({ ticksMultiple, ticksSpacingMin, dataScale }) {
     let timingStep = ticksMultiple;
+    let maxIters = FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS;
+    let numIters = 0;
+
+    if (dataScale > ticksSpacingMin) {
+      return dataScale;
+    }
 
     while (true) {
       let scaledStep = dataScale * timingStep;
+      if (++numIters > maxIters) {
+        return scaledStep;
+      }
       if (scaledStep < ticksSpacingMin) {
         timingStep <<= 1;
         continue;

@@ -2412,6 +2412,46 @@ loser:
 }
 
 int
+SECU_PrintCertificateBasicInfo(FILE *out, const SECItem *der, const char *m, int level)
+{
+    PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    CERTCertificate *c;
+    int rv = SEC_ERROR_NO_MEMORY;
+    int iv;
+    
+    if (!arena)
+	return rv;
+
+    /* Decode certificate */
+    c = PORT_ArenaZNew(arena, CERTCertificate);
+    if (!c)
+	goto loser;
+    c->arena = arena;
+    rv = SEC_ASN1DecodeItem(arena, c, 
+                            SEC_ASN1_GET(CERT_CertificateTemplate), der);
+    if (rv) {
+        SECU_Indent(out, level); 
+	SECU_PrintErrMsg(out, level, "Error", "Parsing extension");
+	SECU_PrintAny(out, der, "Raw", level);
+	goto loser;
+    }
+    /* Pretty print it out */
+    SECU_Indent(out, level); fprintf(out, "%s:\n", m);
+    SECU_PrintInteger(out, &c->serialNumber, "Serial Number", level+1);
+    SECU_PrintAlgorithmID(out, &c->signature, "Signature Algorithm", level+1);
+    SECU_PrintName(out, &c->issuer, "Issuer", level+1);
+    if (!SECU_GetWrapEnabled()) /*SECU_PrintName didn't add newline*/
+	SECU_Newline(out);
+    secu_PrintValidity(out, &c->validity, "Validity", level+1);
+    SECU_PrintName(out, &c->subject, "Subject", level+1);
+    if (!SECU_GetWrapEnabled()) /*SECU_PrintName didn't add newline*/
+	SECU_Newline(out);
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return rv;
+}
+
+int
 SECU_PrintSubjectPublicKeyInfo(FILE *out, SECItem *der, char *m, int level)
 {
     PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

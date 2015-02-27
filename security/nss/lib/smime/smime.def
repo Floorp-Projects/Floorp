@@ -279,3 +279,9 @@ NSS_CMSSignerInfo_Verify;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.18 {    # NSS 3.18 release
+;+    global:
+SEC_PKCS12DecoderRenameCertNicknames;
+;+    local:
+;+       *;
+;+};

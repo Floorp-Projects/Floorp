@@ -143,7 +143,7 @@ JSRuntime::createJitRuntime(JSContext *cx)
     jitRuntime_ = jrt;
 
     if (!jitRuntime_->initialize(cx)) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
 
         js_delete(jitRuntime_);
         jitRuntime_ = nullptr;
@@ -443,7 +443,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
         }
     }
 
-    obj.set(cb->wrap(cx, existing, obj, global));
+    obj.set(cb->wrap(cx, existing, obj));
     if (!obj)
         return false;
 

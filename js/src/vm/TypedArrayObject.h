@@ -310,6 +310,9 @@ TypedArrayElemSize(Scalar::Type viewType)
     return 1u << TypedArrayShift(viewType);
 }
 
+extern JSObject *
+InitDataViewClass(JSContext *cx, HandleObject obj);
+
 class DataViewObject : public NativeObject
 {
   private:

@@ -241,7 +241,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
         NativeObject *proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
         if (!proto)
             return false;
-        if (ClassMethodIsNative(cx, proto, &NumberObject::class_, id, js_num_toString))
+        if (ClassMethodIsNative(cx, proto, &NumberObject::class_, id, num_toString))
             obj = proto;
     }
 
@@ -363,7 +363,7 @@ js::ReportIsNotFunction(JSContext *cx, HandleValue v, int numToSkip, MaybeConstr
     unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
     int spIndex = numToSkip >= 0 ? -(numToSkip + 1) : JSDVG_SEARCH_STACK;
 
-    js_ReportValueError3(cx, error, spIndex, v, NullPtr(), nullptr, nullptr);
+    ReportValueError3(cx, error, spIndex, v, NullPtr(), nullptr, nullptr);
     return false;
 }
 
@@ -700,7 +700,7 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
         return clasp->hasInstance(cx, obj, &local, bp);
 
     RootedValue val(cx, ObjectValue(*obj));
-    js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+    ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, val, NullPtr());
     return false;
 }
@@ -1918,7 +1918,7 @@ CASE(JSOP_IN)
 {
     HandleValue rref = REGS.stackHandleAt(-1);
     if (!rref.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, js::NullPtr());
+        ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3381,7 +3381,7 @@ CASE(JSOP_INSTANCEOF)
     RootedValue &rref = rootValue0;
     rref = REGS.sp[-1];
     if (rref.isPrimitive()) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, js::NullPtr());
+        ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3548,7 +3548,7 @@ DEFAULT()
 {
     char numBuf[12];
     JS_snprintf(numBuf, sizeof numBuf, "%d", *REGS.pc);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;
 }
@@ -3672,7 +3672,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
     if (!shape) {
         JSAutoByteString printable;
         if (AtomToPrintableString(cx, name, &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
+            ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
 
@@ -3808,7 +3808,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
             if (AtomToPrintableString(cx, name, &bytes)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
                                      bytes.ptr());
             }
 
@@ -3830,7 +3830,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 bool
 js::SetCallOperation(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_LEFTSIDE_OF_ASS);
     return false;
 }
 
@@ -4097,7 +4097,7 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
     JSOp op = JSOp(*pc);
 
     if (length > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
                                                   : JSMSG_TOO_MANY_FUN_SPREADARGS);
         return false;
@@ -4156,7 +4156,7 @@ js::ReportUninitializedLexical(JSContext *cx, HandlePropertyName name)
 {
     JSAutoByteString printable;
     if (AtomToPrintableString(cx, name, &printable)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_LEXICAL,
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_LEXICAL,
                              printable.ptr());
     }
 }

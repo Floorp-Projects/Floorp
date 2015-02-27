@@ -24,7 +24,7 @@ class Linker
     MacroAssembler &masm;
 
     JitCode *fail(JSContext *cx) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 

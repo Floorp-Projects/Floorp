@@ -116,7 +116,7 @@ DeflateStringToUTF8Buffer(const CharT *src, size_t srclen, mozilla::RangedPtr<ch
             utf8Len = 1;
         } else {
             uint8_t utf8buf[4];
-            utf8Len = js_OneUcs4ToUtf8Char(utf8buf, v);
+            utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
             for (size_t i = 0; i < utf8Len; i++)
                 *dst++ = char(utf8buf[i]);
         }
@@ -200,14 +200,14 @@ ReportInvalidCharacter(JSContext *cx, uint32_t offset)
 {
     char buffer[10];
     JS_snprintf(buffer, 10, "%d", offset);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
 
 static void
 ReportBufferTooSmall(JSContext *cx, uint32_t dummy)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
 }
 
 static void
@@ -215,7 +215,7 @@ ReportTooBigCharacter(JSContext *cx, uint32_t v)
 {
     char buffer[10];
     JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                  JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
 

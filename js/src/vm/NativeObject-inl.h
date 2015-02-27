@@ -615,7 +615,7 @@ WarnIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinNa
 {
     if (args.isConstructing())
         return true;
-    return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, nullptr,
+    return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
                                         JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
 }
 

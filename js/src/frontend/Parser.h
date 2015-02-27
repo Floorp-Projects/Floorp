@@ -577,7 +577,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node exprInParens();
 
     bool methodDefinition(PropListType listType, Node propList, Node propname, FunctionType type,
-                          FunctionSyntaxKind kind, GeneratorKind generatorKind, JSOp Op);
+                          FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                          bool isStatic, JSOp Op);
 
     /*
      * Additional JS parsers.

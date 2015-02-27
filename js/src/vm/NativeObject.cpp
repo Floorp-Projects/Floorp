@@ -53,7 +53,7 @@ PropDesc::checkGetter(JSContext *cx)
 {
     if (hasGet_) {
         if (!IsCallable(get_) && !get_.isUndefined()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
         }
@@ -66,7 +66,7 @@ PropDesc::checkSetter(JSContext *cx)
 {
     if (hasSet_) {
         if (!IsCallable(set_) && !set_.isUndefined()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;
         }
@@ -626,7 +626,7 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleNativeO
     RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
         uint32_t index;
-        if (js_IdIsIndex(shape->propid(), &index)) {
+        if (IdIsIndex(shape->propid(), &index)) {
             if (shape->attributes() == JSPROP_ENUMERATE &&
                 shape->hasDefaultGetter() &&
                 shape->hasDefaultSetter())
@@ -671,7 +671,7 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleNativeO
     while (!shape->isEmptyShape()) {
         jsid id = shape->propid();
         uint32_t index;
-        if (js_IdIsIndex(id, &index)) {
+        if (IdIsIndex(id, &index)) {
             value = obj->getSlot(shape->slot());
 
             /*
@@ -979,7 +979,7 @@ NativeObject::allocSlot(ExclusiveContext *cx, HandleNativeObject obj, uint32_t *
     }
 
     if (slot >= SHAPE_MAXIMUM_SLOT) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -1175,7 +1175,7 @@ DefinePropertyOrElement(ExclusiveContext *cx, HandleNativeObject obj, HandleId i
         }
 
         uint32_t index;
-        if (js_IdIsIndex(id, &index)) {
+        if (IdIsIndex(id, &index)) {
             bool definesPast;
             if (!WouldDefinePastNonwritableLength(cx, arr, index, setterIsStrict, &definesPast))
                 return false;
@@ -1772,8 +1772,8 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
     // If we are doing a name lookup, this is a ReferenceError.
     if (nameLookup) {
         JSAutoByteString printable;
-        if (js_ValueToPrintable(cx, IdToValue(id), &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
+        if (ValueToPrintable(cx, IdToValue(id), &printable))
+            ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
 
@@ -1817,7 +1817,7 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
 
     // Ok, bad undefined property reference: whine about it.
     RootedValue val(cx, IdToValue(id));
-    return js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
+    return ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
                                     js::NullPtr(), nullptr, nullptr);
 }
 
@@ -1946,7 +1946,7 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
            JS_ReportErrorFlagsAndNumber(cx,
                                         (JSREPORT_WARNING | JSREPORT_STRICT
                                          | JSREPORT_STRICT_MODE_ERROR),
-                                        js_GetErrorMessage, nullptr,
+                                        GetErrorMessage, nullptr,
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
@@ -2145,7 +2145,7 @@ NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
          * or throw if we're in strict mode.
          */
         if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return js_ReportGetterOnlyAssignment(cx, strict);
+            return ReportGetterOnlyAssignment(cx, strict);
     }
 
     RootedValue ovp(cx, vp);
@@ -2187,7 +2187,7 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
             if (shape->hasDefaultSetter())
-                return js_ReportGetterOnlyAssignment(cx, strict);
+                return ReportGetterOnlyAssignment(cx, strict);
         } else {
             MOZ_ASSERT(shape->isDataDescriptor());
 

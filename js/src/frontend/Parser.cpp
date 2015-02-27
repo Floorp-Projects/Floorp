@@ -395,7 +395,7 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, Token
     uint32_t count = args_.length() + vars_.length() + bodyLevelLexicals_.length();
     Binding *packedBindings = alloc.newArrayUninitialized<Binding>(count);
     if (!packedBindings) {
-        js_ReportOutOfMemory(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 
@@ -576,7 +576,7 @@ Parser<ParseHandler>::newObjectBox(NativeObject *obj)
 
     ObjectBox *objbox = alloc.new_<ObjectBox>(obj, traceListHead);
     if (!objbox) {
-        js_ReportOutOfMemory(context);
+        ReportOutOfMemory(context);
         return nullptr;
     }
 
@@ -673,7 +673,7 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<Pars
                                 inheritedDirectives, options().extraWarningsOption,
                                 generatorKind);
     if (!funbox) {
-        js_ReportOutOfMemory(context);
+        ReportOutOfMemory(context);
         return nullptr;
     }
 
@@ -8029,8 +8029,19 @@ Parser<ParseHandler>::propertyList(PropListType type)
         if (ltok == TOK_RC)
             break;
 
-        if (type == ClassBody && ltok == TOK_SEMI)
-            continue;
+        bool isStatic = false;
+        if (type == ClassBody) {
+            if (ltok == TOK_SEMI)
+                continue;
+
+            if (ltok == TOK_NAME &&
+                tokenStream.currentName() == context->names().static_)
+            {
+                isStatic = true;
+                if (!tokenStream.getToken(&ltok, TokenStream::KeywordIsName))
+                    return null();
+            }
+        }
 
         bool isGenerator = false;
         if (ltok == TOK_MUL) {
@@ -8143,12 +8154,23 @@ Parser<ParseHandler>::propertyList(PropListType type)
           }
 
           default:
-            report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
-            return null();
+            // There is never a case in which |static *(| can make a meaningful method definition.
+            if (isStatic && !isGenerator) {
+                // Turns out it wasn't static. Put it back and pretend it was a name all along.
+                isStatic = false;
+                tokenStream.ungetToken();
+                atom = tokenStream.currentName();
+                propname = handler.newObjectLiteralPropertyName(atom->asPropertyName(), pos());
+                if (!propname)
+                    return null();
+            } else {
+                report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                return null();
+            }
         }
 
         if (type == ClassBody) {
-            if (atom == context->names().constructor) {
+            if (!isStatic && atom == context->names().constructor) {
                 if (isGenerator || op != JSOP_INITPROP) {
                     report(ParseError, false, propname, JSMSG_BAD_METHOD_DEF);
                     return null();
@@ -8158,6 +8180,9 @@ Parser<ParseHandler>::propertyList(PropListType type)
                     return null();
                 }
                 seenConstructor = true;
+            } else if (isStatic && atom == context->names().prototype) {
+                report(ParseError, false, propname, JSMSG_BAD_METHOD_DEF);
+                return null();
             }
         }
 
@@ -8231,7 +8256,7 @@ Parser<ParseHandler>::propertyList(PropListType type)
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();
                 if (!methodDefinition(type, propList, propname, Normal, Method,
-                                      isGenerator ? StarGenerator : NotGenerator, op)) {
+                                      isGenerator ? StarGenerator : NotGenerator, isStatic, op)) {
                     return null();
                 }
             } else {
@@ -8241,7 +8266,7 @@ Parser<ParseHandler>::propertyList(PropListType type)
         } else {
             /* NB: Getter function in { get x(){} } is unnamed. */
             if (!methodDefinition(type, propList, propname, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                                  Expression, NotGenerator, op)) {
+                                  Expression, NotGenerator, isStatic, op)) {
                 return null();
             }
         }
@@ -8273,7 +8298,8 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::methodDefinition(PropListType listType, Node propList, Node propname,
                                        FunctionType type, FunctionSyntaxKind kind,
-                                       GeneratorKind generatorKind, JSOp op)
+                                       GeneratorKind generatorKind,
+                                       bool isStatic, JSOp op)
 {
     RootedPropertyName funName(context);
     if (kind == Method && tokenStream.isCurrentTokenType(TOK_NAME))
@@ -8286,7 +8312,7 @@ Parser<ParseHandler>::methodDefinition(PropListType listType, Node propList, Nod
         return false;
 
     if (listType == ClassBody)
-        return handler.addClassMethodDefinition(propList, propname, fn, op);
+        return handler.addClassMethodDefinition(propList, propname, fn, op, isStatic);
 
     MOZ_ASSERT(listType == ObjectLiteral);
     return handler.addObjectMethodDefinition(propList, propname, fn, op);

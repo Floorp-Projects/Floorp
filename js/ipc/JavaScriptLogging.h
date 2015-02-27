@@ -106,7 +106,7 @@ class Logging
             obj = shared->objects_.find(id);
             if (obj) {
                 JSAutoCompartment ac(cx, obj);
-                objDesc = js_ObjectClassName(cx, obj);
+                objDesc = js::ObjectClassName(cx, obj);
             } else {
                 objDesc = "<dead object>";
             }
