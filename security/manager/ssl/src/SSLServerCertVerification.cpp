@@ -655,7 +655,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
     return nullptr;
   }
 
-  infoObject->SetStatusErrorBits(*nssCert, collected_errors);
+  infoObject->SetStatusErrorBits(nssCert, collected_errors);
 
   return new CertErrorRunnable(fdForLogging,
                                static_cast<nsIX509Cert*>(nssCert.get()),
