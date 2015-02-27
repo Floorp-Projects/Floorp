@@ -9,7 +9,7 @@
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
 
-const TESTCASE_URI = TEST_BASE + "autocomplete.html";
+const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 const MAX_SUGGESTIONS = 15;
 
 // Pref which decides if CSS autocompletion is enabled in Style Editor or not.

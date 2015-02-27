@@ -1,24 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict;"
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, 'Services',
-  'resource://gre/modules/Services.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Preferences',
-  'resource://gre/modules/Preferences.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'FileUtils',
-  'resource://gre/modules/FileUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Log',
-  'resource://gre/modules/Log.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Task',
-  'resource://gre/modules/Task.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'OS',
-  'resource://gre/modules/osfile.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'CommonUtils',
-  'resource://services-common/utils.js');
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+  "resource://gre/modules/Log.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+  "resource://services-common/utils.js");
+
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "LogManager",
@@ -28,7 +28,7 @@ const DEFAULT_MAX_ERROR_AGE = 20 * 24 * 60 * 60; // 20 days
 
 // "shared" logs (ie, where the same log name is used by multiple LogManager
 // instances) are a fact of life here - eg, FirefoxAccounts logs are used by
-// both Sync and Reading-list.
+// both Sync and Reading List.
 // However, different instances have different pref branches, so we need to
 // handle when one pref branch says "Debug" and the other says "Error"
 // So we (a) keep singleton console and dump appenders and (b) keep track
@@ -103,7 +103,7 @@ LogManager.prototype = {
 
     // The file appender doesn't get the special singleton behaviour.
     let fapp = this._fileAppender = new Log.StorageStreamAppender(formatter);
-    // the stream gets a default of Debug as the user must go out of there way
+    // the stream gets a default of Debug as the user must go out of their way
     // to see the stuff spewed to it.
     this._observeStreamPref = setupAppender(fapp, "log.appender.file.level", Log.Level.Debug);
 
@@ -151,7 +151,7 @@ LogManager.prototype = {
     const BUFFER_SIZE = 8192;
 
     // get a binary stream
-    let binaryStream = Cc['@mozilla.org/binaryinputstream;1'].createInstance(Ci.nsIBinaryInputStream);
+    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
     binaryStream.setInputStream(inputStream);
     yield OS.File.makeDir(outputFile.parent.path, { ignoreExisting: true });
     let output = yield OS.File.open(outputFile.path, { write: true} );
@@ -165,12 +165,14 @@ LogManager.prototype = {
         yield output.write(new Uint8Array(chunk));
       }
     } finally {
-      inputStream.close();
-      binaryStream.close();
-      yield output.close();
+      try {
+        binaryStream.close(); // inputStream is closed by the binaryStream
+        yield output.close();
+      } catch (ex) {
+        this._log.error("Failed to close the input stream", ex);
+      }
     }
     this._log.trace("finished copy to", outputFile.path);
-    return (yield OS.File.stat(outputFile.path)).lastModificationDate;
   }),
 
   /**
@@ -179,70 +181,65 @@ LogManager.prototype = {
    * Returns a promise that resolves on completion or rejects if the file could
    * not be written.
    */
-  resetFileLog(reason) {
-    return new Promise((resolve, reject) => {
-      try {
-        let flushToFile;
-        let reasonPrefix;
-        switch (reason) {
-          case this.REASON_SUCCESS:
-            flushToFile = this._prefs.get("log.appender.file.logOnSuccess");
-            reasonPrefix = "success";
-            break;
-          case this.REASON_ERROR:
-            flushToFile = this._prefs.get("log.appender.file.logOnError");
-            reasonPrefix = "error";
-            break;
-          default:
-            return reject(new Error("Invalid reason"));
-        }
-
-        let inStream = this._fileAppender.getInputStream();
-        this._fileAppender.reset();
-        if (flushToFile && inStream) {
-          this._log.debug("Flushing file log");
-          let filename = this.logFilePrefix + "-" + reasonPrefix + "-" + Date.now() + ".txt";
-          let file = this._logFileDirectory;
-          file.append(filename);
-          this._log.trace("Beginning stream copy to " + file.leafName + ": " +
-                          Date.now());
-          this._copyStreamToFile(inStream, file).then(
-            modDate => {
-              this._log.trace("onCopyComplete: " + Date.now());
-              this._log.trace("Output file timestamp: " + modDate + " (" + modDate.getTime() + ")");
-            },
-            err => {
-              this._log.error("Failed to copy log stream to file", err)
-              reject(err)
-            }
-          ).then(
-            () => {
-              // It's not completely clear to markh why we only do log cleanups
-              // for errors, but for now the Sync semantics have been copied...
-              // (one theory is that only cleaning up on error makes it less
-              // likely old error logs would be removed, but that's not true if
-              // there are occasional errors - let's address this later!)
-              if (reason == this.REASON_ERROR &&
-                  !this._cleaningUpFileLogs) {
-                this._log.trace("Scheduling cleanup.");
-                // Note we don't return or wait on this promise - it continues
-                // in the background
-                this.cleanupLogs().then(null, err => {
-                  this._log.error("Failed to cleanup logs", err);
-                });
-              }
-              resolve();
-            }
-          );
-        } else {
-          resolve();
-        }
-      } catch (ex) {
-        this._log.error("Failed to resetFileLog", ex)
-        reject(ex);
+  resetFileLog: Task.async(function* (reason) {
+    try {
+      let flushToFile;
+      let reasonPrefix;
+      switch (reason) {
+        case this.REASON_SUCCESS:
+          flushToFile = this._prefs.get("log.appender.file.logOnSuccess", false);
+          reasonPrefix = "success";
+          break;
+        case this.REASON_ERROR:
+          flushToFile = this._prefs.get("log.appender.file.logOnError", true);
+          reasonPrefix = "error";
+          break;
+        default:
+          throw new Error("Invalid reason");
       }
-    })
-  },
+
+      // might as well avoid creating an input stream if we aren't going to use it.
+      if (!flushToFile) {
+        this._fileAppender.reset();
+        return;
+      }
+
+      let inStream = this._fileAppender.getInputStream();
+      this._fileAppender.reset();
+      if (inStream) {
+        this._log.debug("Flushing file log");
+        // We have reasonPrefix at the start of the filename so all "error"
+        // logs are grouped in about:sync-log.
+        let filename = reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
+        let file = this._logFileDirectory;
+        file.append(filename);
+        this._log.trace("Beginning stream copy to " + file.leafName + ": " +
+                        Date.now());
+        try {
+          yield this._copyStreamToFile(inStream, file);
+          this._log.trace("onCopyComplete", Date.now());
+        } catch (ex) {
+          this._log.error("Failed to copy log stream to file", ex);
+          return;
+        }
+        // It's not completely clear to markh why we only do log cleanups
+        // for errors, but for now the Sync semantics have been copied...
+        // (one theory is that only cleaning up on error makes it less
+        // likely old error logs would be removed, but that's not true if
+        // there are occasional errors - let's address this later!)
+        if (reason == this.REASON_ERROR && !this._cleaningUpFileLogs) {
+          this._log.trace("Scheduling cleanup.");
+          // Note we don't return/yield or otherwise wait on this promise - it
+          // continues in the background
+          this.cleanupLogs().catch(err => {
+            this._log.error("Failed to cleanup logs", err);
+          });
+        }
+      }
+    } catch (ex) {
+      this._log.error("Failed to resetFileLog", ex)
+    }
+  }),
 
   /**
    * Finds all logs older than maxErrorAge and deletes them using async I/O.
@@ -255,7 +252,8 @@ LogManager.prototype = {
 
     this._log.debug("Log cleanup threshold time: " + threshold);
     yield iterator.forEach(Task.async(function* (entry) {
-      if (!entry.name.startsWith(this.logFilePrefix + "-")) {
+      if (!entry.name.startsWith("error-" + this.logFilePrefix + "-") &&
+          !entry.name.startsWith("success-" + this.logFilePrefix + "-")) {
         return;
       }
       try {

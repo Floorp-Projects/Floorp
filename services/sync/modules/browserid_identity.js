@@ -617,7 +617,7 @@ this.BrowserIDManager.prototype = {
         // that there is no authentication dance still under way.
         this._shouldHaveSyncKeyBundle = true;
         Weave.Status.login = this._authFailureReason;
-        Services.obs.notifyObservers(null, "weave:service:login:error", null);
+        Services.obs.notifyObservers(null, "weave:ui:login:error", null);
         throw err;
       });
   },
