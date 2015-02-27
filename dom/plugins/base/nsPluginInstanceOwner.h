@@ -258,6 +258,7 @@ public:
 
   void NotifyHostAsyncInitFailed();
   void NotifyHostCreateWidget();
+  void NotifyDestroyPending();
 
 private:
   virtual ~nsPluginInstanceOwner();
