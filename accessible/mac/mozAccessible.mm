@@ -460,6 +460,9 @@ GetClosestInterestingAccessible(id anObject)
 
     if (token.EqualsLiteral("search"))
       return @"AXLandmarkSearch";
+
+    if (token.EqualsLiteral("searchbox"))
+      return @"AXSearchField";
   }
 
   switch (mRole) {
@@ -496,6 +499,8 @@ GetClosestInterestingAccessible(id anObject)
     return utils::LocalizedString(NS_LITERAL_STRING("term"));
   if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
     return utils::LocalizedString(NS_LITERAL_STRING("definition"));
+  if ((mRole == roles::ENTRY) && [subrole isEqualToString:@"AXSearchField"])
+    return utils::LocalizedString(NS_LITERAL_STRING("searchTextField"));
 
   NSString* role = [self role];
 
