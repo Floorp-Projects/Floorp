@@ -1548,9 +1548,9 @@ CreateCert(const ByteString& subject, const ByteString& subjectAltName)
 
   ScopedTestKeyPair keyPair(CloneReusedKeyPair());
   return CreateEncodedCertificate(
-                    v3, sha256WithRSAEncryption, serialNumber, issuerDER,
+                    v3, sha256WithRSAEncryption(), serialNumber, issuerDER,
                     oneDayBeforeNow, oneDayAfterNow, Name(subject), *keyPair,
-                    extensions, *keyPair, sha256WithRSAEncryption);
+                    extensions, *keyPair, sha256WithRSAEncryption());
 }
 
 TEST_P(pkixnames_CheckCertHostname, CheckCertHostname)
@@ -1588,10 +1588,10 @@ TEST_F(pkixnames_CheckCertHostname, SANWithoutSequence)
 
   ScopedTestKeyPair keyPair(CloneReusedKeyPair());
   ByteString certDER(CreateEncodedCertificate(
-                       v3, sha256WithRSAEncryption, serialNumber,
+                       v3, sha256WithRSAEncryption(), serialNumber,
                        Name(RDN(CN("issuer"))), oneDayBeforeNow, oneDayAfterNow,
                        Name(RDN(CN("a"))), *keyPair, extensions,
-                       *keyPair, sha256WithRSAEncryption));
+                       *keyPair, sha256WithRSAEncryption()));
   ASSERT_FALSE(ENCODING_FAILED(certDER));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(certDER.data(), certDER.length()));

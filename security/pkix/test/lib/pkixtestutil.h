@@ -66,29 +66,47 @@ static const uint8_t tlv_id_kp_serverAuth[] = {
   0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
 };
 
-// python DottedOIDToCode.py --alg sha256WithRSAEncryption 1.2.840.113549.1.1.11
-const uint8_t alg_sha256WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b
+enum class TestDigestAlgorithmID
+{
+  MD2,
+  MD5,
+  SHA1,
+  SHA224,
+  SHA256,
+  SHA384,
+  SHA512,
 };
 
-const ByteString sha256WithRSAEncryption(alg_sha256WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_sha256WithRSAEncryption));
-
-// python DottedOIDToCode.py --alg md5WithRSAEncryption 1.2.840.113549.1.1.4
-const uint8_t alg_md5WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04
+struct TestPublicKeyAlgorithm
+{
+  explicit TestPublicKeyAlgorithm(const ByteString& algorithmIdentifier)
+    : algorithmIdentifier(algorithmIdentifier) { }
+  bool operator==(const TestPublicKeyAlgorithm& other) const
+  {
+    return algorithmIdentifier == other.algorithmIdentifier;
+  }
+  ByteString algorithmIdentifier;
 };
 
-const ByteString md5WithRSAEncryption(alg_md5WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_md5WithRSAEncryption));
+TestPublicKeyAlgorithm RSA_PKCS1();
 
-// python DottedOIDToCode.py --alg md2WithRSAEncryption 1.2.840.113549.1.1.2
-const uint8_t alg_md2WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x02
+struct TestSignatureAlgorithm
+{
+  TestSignatureAlgorithm(const TestPublicKeyAlgorithm& publicKeyAlg,
+                         TestDigestAlgorithmID digestAlg,
+                         const ByteString& algorithmIdentifier,
+                         bool accepted);
+
+  TestPublicKeyAlgorithm publicKeyAlg;
+  TestDigestAlgorithmID digestAlg;
+  ByteString algorithmIdentifier;
+  bool accepted;
 };
 
-const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_md2WithRSAEncryption));
+TestSignatureAlgorithm md2WithRSAEncryption();
+TestSignatureAlgorithm md5WithRSAEncryption();
+TestSignatureAlgorithm sha1WithRSAEncryption();
+TestSignatureAlgorithm sha256WithRSAEncryption();
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(uint16_t year, uint16_t month, uint16_t day,
@@ -258,7 +276,7 @@ public:
   const ByteString subjectPublicKey;
 
   virtual Result SignData(const ByteString& tbs,
-                          const ByteString& signatureAlgorithm,
+                          const TestSignatureAlgorithm& signatureAlgorithm,
                           /*out*/ ByteString& signature) const = 0;
 
   virtual TestKeyPair* Clone() const = 0;
@@ -312,7 +330,8 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // extensions must point to an array of ByteStrings, terminated with an empty
 // ByteString. (If the first item of the array is empty then an empty
 // Extensions sequence will be encoded.)
-ByteString CreateEncodedCertificate(long version, const ByteString& signature,
+ByteString CreateEncodedCertificate(long version,
+                                    const TestSignatureAlgorithm& signature,
                                     const ByteString& serialNumber,
                                     const ByteString& issuerNameDER,
                                     time_t notBefore, time_t notAfter,
@@ -320,7 +339,7 @@ ByteString CreateEncodedCertificate(long version, const ByteString& signature,
                                     const TestKeyPair& subjectKeyPair,
                                     /*optional*/ const ByteString* extensions,
                                     const TestKeyPair& issuerKeyPair,
-                                    const ByteString& signatureAlgorithm);
+                                    const TestSignatureAlgorithm& signatureAlgorithm);
 
 ByteString CreateEncodedSerialNumber(long value);
 
@@ -380,7 +399,7 @@ public:
                                // regardless of if there are any actual
                                // extensions.
   ScopedTestKeyPair signerKeyPair;
-  ByteString signatureAlgorithm; // DER encoding of signature algorithm to use.
+  TestSignatureAlgorithm signatureAlgorithm;
   bool badSignature; // If true, alter the signature to fail verification
   const ByteString* certs; // optional; array terminated by an empty string
 
