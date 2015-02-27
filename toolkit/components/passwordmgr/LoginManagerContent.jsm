@@ -573,15 +573,15 @@ var LoginManagerContent = {
   /*
    * _fillform
    *
-   * Fill the form with the provided login information.
-   * The logins are returned so they can be reused for
-   * optimization. Success of action is also returned in format
-   * [success, foundLogins].
+   * Attempt to find the username and password fields in a form, and fill them
+   * in using the provided logins.
    *
    * - autofillForm denotes if we should fill the form in automatically
+   * - clobberPassword controls if an existing password value can be
+   *     overwritten
    * - userTriggered is an indication of whether this filling was triggered by
    *     the user
-   * - foundLogins is an array of nsILoginInfo
+   * - foundLogins is an array of nsILoginInfo that could be used for the form
    */
   _fillForm : function (form, autofillForm, clobberPassword,
                         userTriggered, foundLogins) {
@@ -613,7 +613,7 @@ var LoginManagerContent = {
     if (foundLogins.length == 0) {
       // We don't log() here since this is a very common case.
       recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
-      return [false, foundLogins];
+      return;
     }
 
     // Heuristically determine what the user/pass fields are
@@ -627,14 +627,14 @@ var LoginManagerContent = {
     if (passwordField == null) {
       log("not filling form, no password field found");
       recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
-      return [false, foundLogins];
+      return;
     }
 
     // If the password field is disabled or read-only, there's nothing to do.
     if (passwordField.disabled || passwordField.readOnly) {
       log("not filling form, password field disabled or read-only");
       recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
-      return [false, foundLogins];
+      return;
     }
 
     // Discard logins which have username/password values that don't
@@ -662,7 +662,7 @@ var LoginManagerContent = {
     if (logins.length == 0) {
       log("form not filled, none of the logins fit in the field");
       recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
-      return [false, foundLogins];
+      return;
     }
 
     // The reason we didn't end up filling the form, if any.  We include
@@ -683,7 +683,7 @@ var LoginManagerContent = {
                               passwordField, foundLogins, null);
       log("form not filled, the password field was already filled");
       recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
-      return [false, foundLogins];
+      return;
     }
 
     // If the form has an autocomplete=off attribute in play, don't
@@ -770,16 +770,10 @@ var LoginManagerContent = {
       }
       didFillForm = true;
     } else if (selectedLogin && !autofillForm) {
-      // For when autofillForm is false, but we still have the information
-      // to fill a form, we notify observers.
       didntFillReason = "noAutofillForms";
-      Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
       log("autofillForms=false but form can be filled; notified observers");
     } else if (selectedLogin && isFormDisabled) {
-      // For when autocomplete is off, but we still have the information
-      // to fill a form, we notify observers.
       didntFillReason = "autocompleteOff";
-      Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
       log("autocomplete=off but form can be filled; notified observers");
     }
 
@@ -807,8 +801,6 @@ var LoginManagerContent = {
       }
       recordAutofillResult(autofillResult);
     }
-
-    return [didFillForm, foundLogins];
   },
 
 
