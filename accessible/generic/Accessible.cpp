@@ -881,6 +881,11 @@ Accessible::Attributes()
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
   if (mRoleMapEntry) {
+    if (mRoleMapEntry->Is(nsGkAtoms::searchbox)) {
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType,
+                             NS_LITERAL_STRING("search"));
+    }
+
     nsAutoString live;
     nsAccUtils::GetAccAttr(attributes, nsGkAtoms::live, live);
     if (live.IsEmpty()) {
