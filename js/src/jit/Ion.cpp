@@ -14,6 +14,7 @@
 
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
+#include "jit/AlignmentMaskAnalysis.h"
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
@@ -1245,6 +1246,18 @@ OptimizeMIR(MIRGenerator *mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Apply types"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().amaEnabled()) {
+        AutoTraceLog log(logger, TraceLogger_AlignmentMaskAnalysis);
+        AlignmentMaskAnalysis ama(graph);
+        if (!ama.analyze())
+            return false;
+        IonSpewPass("Alignment Mask Analysis");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Alignment Mask Analysis"))
             return false;
     }
 
