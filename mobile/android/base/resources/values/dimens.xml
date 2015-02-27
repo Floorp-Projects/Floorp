@@ -5,6 +5,8 @@
 
 <resources>
 
+    <dimen name="button_corner_radius">3dp</dimen>
+
     <dimen name="autocomplete_min_width">200dp</dimen>
     <dimen name="autocomplete_row_height">32dp</dimen>
 
