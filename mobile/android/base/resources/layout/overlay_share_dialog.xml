@@ -25,17 +25,16 @@
         <TextView
             android:id="@+id/title"
             style="@style/ShareOverlayTitle"
+            android:textAppearance="@style/TextAppearance.ShareOverlay.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:scrollHorizontally="true"
-            android:textSize="24sp"/>
+            android:layout_marginBottom="8dp"/>
 
         <!-- Subtitle (url) -->
         <TextView
             android:id="@+id/subtitle"
             style="@style/ShareOverlayTitle"
+            android:textAppearance="@style/TextAppearance.ShareOverlay.Subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
@@ -44,6 +43,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:background="@color/overlay_share_background"
             android:orientation="vertical">
 
