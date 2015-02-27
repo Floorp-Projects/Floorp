@@ -2981,7 +2981,10 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
-    if (ins->isFloatArray()) {
+    if (ins->isSimdWrite()) {
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32x4, ins->value()->type() == MIRType_Float32x4);
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Int32x4, ins->value()->type() == MIRType_Int32x4);
+    } else if (ins->isFloatArray()) {
         MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
         MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
     } else {
@@ -2993,7 +2996,7 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     LAllocation value;
 
     // For byte arrays, the value has to be in a byte register on x86.
-    if (ins->isByteArray())
+    if (ins->isByteArray() && !ins->isSimdWrite())
         value = useByteOpRegisterOrNonDoubleConstant(ins->value());
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
