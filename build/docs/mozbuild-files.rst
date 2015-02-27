@@ -30,6 +30,8 @@ The following properties make execution of ``moz.build`` files special:
 1. The execution environment exposes a limited subset of Python.
 2. There is a special set of global symbols and an enforced naming
    convention of symbols.
+3. Some symbols are inherited from previously-executed ``moz.build``
+   files.
 
 The limited subset of Python is actually an extremely limited subset.
 Only a few symbols from ``__builtins__`` are exposed. These include
@@ -68,16 +70,77 @@ sneak into the sandbox without being explicitly defined and documented.
 Reading and Traversing moz.build Files
 ======================================
 
-The process responsible for reading ``moz.build`` files simply starts at
-a root ``moz.build`` file, processes it, emits the globals namespace to
-a consumer, and then proceeds to process additional referenced
-``moz.build`` files from the original file. The consumer then examines
-the globals/``UPPERCASE`` variables set as part of execution and then
-converts the data therein to Python class instances.
+The process for reading ``moz.build`` files roughly consists of:
 
-The executed Python sandbox is essentially represented as a dictionary
-of all the special ``UPPERCASE`` variables populated during its
-execution.
+1. Start at the root ``moz.build`` (``<topsrcdir>/moz.build``)
+2. Evaluate the ``moz.build`` file in a new sandbox
+3. Emit the main *context* and any *sub-contexts* from the executed
+   sandbox
+4. Extract a set of ``moz.build`` files to execute next.
+5. For each additional ``moz.build`` file, goto #2 and repeat until all
+   referenced files have executed.
+
+From the perspective of the consumer, the output of reading is a stream
+of :py:class:`mozbuild.frontend.reader.context.Context` instances. Each
+``Context`` defines a particular aspect of data. Consumers iterate over
+these objects and do something with the data inside. Each object is
+essentially a dictionary of all the ``UPPERCASE`` variables populated
+during its execution.
+
+.. note::
+
+   Historically, there was only one ``context`` per ``moz.build`` file.
+   As the number of things tracked by ``moz.build`` files grew and more
+   and more complex processing was desired, it was necessary to split these
+   contexts into multiple logical parts. It is now common to emit
+   multiple contexts per ``moz.build`` file.
+
+Build System Reading Mode
+-------------------------
+
+The traditional mode of evaluation of ``moz.build`` files is what's
+called *build system traversal mode.* In this mode, the ``CONFIG``
+variable in each ``moz.build`` sandbox is populated from data coming
+from ``config.status``, which is produced by ``configure``.
+
+During evaluation, ``moz.build`` files often make decisions conditional
+on the state of the build configuration. e.g. *only compile foo.cpp if
+feature X is enabled*.
+
+In this mode, traversal of ``moz.build`` files is governed by variables
+like ``DIRS`` and ``TEST_DIRS``. For example, to execute a child
+directory, ``foo``, you would add ``DIRS += ['foo']`` to a ``moz.build``
+file and ``foo/moz.build`` would be evaluated.
+
+.. _mozbuild_fs_reading_mode:
+
+Filesystem Reading Mode
+-----------------------
+
+There is an alternative reading mode that doesn't involve the build
+system and doesn't utilize ``DIRS`` variables to control traversal into
+child directories. This mode is called *filesystem reading mode*.
+
+In this reading mode, the ``CONFIG`` variable is a dummy, mostly empty
+object. Accessing all but a few special variables will return an empty
+value. This means that nearly all ``if CONFIG['FOO']:`` branches will
+not be taken.
+
+Instead of utilizing content from within the evaluated ``moz.build``
+file to drive traversal into subsequent ``moz.build`` files, the set
+of files to evaluate is controlled by the thing doing the reading.
+
+A single ``moz.build`` file is not guaranteed to be executable in
+isolation. Instead, we must evaluate all *parent* ``moz.build`` files
+first. For example, in order to evaluate ``/foo/moz.build``, one must
+execute ``/moz.build`` and have its state influence the execution of
+``/foo/moz.build``.
+
+Filesystem reading mode is utilized to power the
+:ref:`mozbuild_files_metadata` feature.
+
+Technical Details
+-----------------
 
 The code for reading ``moz.build`` files lives in
 :py:mod:`mozbuild.frontend.reader`. The Python sandboxes evaluation results
@@ -99,9 +162,6 @@ and metadata representation is to facilitate a unified normalization and
 verification step. There are multiple downstream consumers of the
 ``moz.build``-derived data and many will perform the same actions. This
 logic can be complicated, so we have a component dedicated to it.
-
-Other Notes
-===========
 
 :py:class:`mozbuild.frontend.reader.BuildReader`` and
 :py:class:`mozbuild.frontend.reader.TreeMetadataEmitter`` have a
