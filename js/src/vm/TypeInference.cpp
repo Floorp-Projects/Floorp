@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -2357,7 +2358,7 @@ TypeZone::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
     if (!co || !co->isValid() || co->pendingInvalidation())
         return;
 
-    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d",
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%" PRIuSIZE,
               co->script(), co->script()->filename(), co->script()->lineno());
 
     co->setPendingInvalidation();
@@ -4152,7 +4153,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
         fprintf(stderr, "Eval");
     else
         fprintf(stderr, "Main");
-    fprintf(stderr, " %p %s:%d ", script.get(), script->filename(), (int) script->lineno());
+    fprintf(stderr, " %p %s:%" PRIuSIZE " ", script.get(), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {
         if (js::PropertyName *name = script->functionNonDelazifying()->name())

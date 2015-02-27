@@ -8,6 +8,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
 
 #include "jslibmath.h"
@@ -58,13 +59,13 @@ FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,
-                "Fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d,stubs=%d): %s",
+                "Fallback hit for (%s:%" PRIuSIZE ") (pc=%" PRIuSIZE ",line=%d,uses=%d,stubs=%" PRIuSIZE "): %s",
                 script->filename(),
                 script->lineno(),
-                (int) script->pcToOffset(pc),
+                script->pcToOffset(pc),
                 PCToLineNumber(script, pc),
                 script->getWarmUpCount(),
-                (int) stub->numOptimizedStubs(),
+                stub->numOptimizedStubs(),
                 fmtbuf);
     }
 }
@@ -83,10 +84,10 @@ TypeFallbackICSpew(JSContext *cx, ICTypeMonitor_Fallback *stub, const char *fmt,
         va_end(args);
 
         JitSpew(JitSpew_BaselineICFallback,
-                "Type monitor fallback hit for (%s:%d) (pc=%d,line=%d,uses=%d,stubs=%d): %s",
+                "Type monitor fallback hit for (%s:%" PRIuSIZE ") (pc=%" PRIuSIZE ",line=%d,uses=%d,stubs=%d): %s",
                 script->filename(),
                 script->lineno(),
-                (int) script->pcToOffset(pc),
+                script->pcToOffset(pc),
                 PCToLineNumber(script, pc),
                 script->getWarmUpCount(),
                 (int) stub->numOptimizedMonitorStubs(),
@@ -939,7 +940,7 @@ DoWarmUpCounterFallback(JSContext *cx, ICWarmUpCounter_Fallback *stub, BaselineF
 
     // Ensure that Ion-compiled code is available.
     JitSpew(JitSpew_BaselineOSR,
-            "WarmUpCounter for %s:%d reached %d at pc %p, trying to switch to Ion!",
+            "WarmUpCounter for %s:%" PRIuSIZE " reached %d at pc %p, trying to switch to Ion!",
             script->filename(), script->lineno(), (int) script->getWarmUpCount(), (void *) pc);
     void *jitcode = nullptr;
     if (!EnsureCanEnterIon(cx, stub, frame, script, pc, &jitcode))
@@ -3741,7 +3742,7 @@ TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 
         if (getterIsScripted) {
             JitSpew(JitSpew_BaselineIC,
-                    "  Generating GetElem(Native %s%s call scripted %s:%d) stub "
+                    "  Generating GetElem(Native %s%s call scripted %s:%" PRIuSIZE ") stub "
                     "(obj=%p, shape=%p, holder=%p, holderShape=%p)",
                         (obj == holder) ? "direct" : "prototype",
                         needsAtomize ? " atomizing" : "",
@@ -6504,7 +6505,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             return true;
         }
 
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(NativeObj/ScriptedGetter %s:%d) stub",
+        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(NativeObj/ScriptedGetter %s:%" PRIuSIZE ") stub",
                     callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
 
         ICGetProp_CallScripted::Compiler compiler(cx, monitorStub, obj, holder, callee,
@@ -8110,7 +8111,7 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             return true;
         }
 
-        JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObj/ScriptedSetter %s:%d) stub",
+        JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObj/ScriptedSetter %s:%" PRIuSIZE ") stub",
                     callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
 
         ICSetProp_CallScripted::Compiler compiler(cx, obj, holder, callee, script->pcToOffset(pc));
@@ -9377,7 +9378,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         }
 
         JitSpew(JitSpew_BaselineIC,
-                "  Generating Call_Scripted stub (fun=%p, %s:%d, cons=%s, spread=%s)",
+                "  Generating Call_Scripted stub (fun=%p, %s:%" PRIuSIZE ", cons=%s, spread=%s)",
                 fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno(),
                 constructing ? "yes" : "no", isSpread ? "yes" : "no");
         ICCallScriptedCompiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),

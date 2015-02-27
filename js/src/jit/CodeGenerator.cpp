@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -3645,7 +3646,7 @@ CodeGenerator::maybeCreateScriptCounts()
                     JSScript *innerScript = block->info().script();
                     description = (char *) js_calloc(200);
                     if (description) {
-                        JS_snprintf(description, 200, "%s:%d",
+                        JS_snprintf(description, 200, "%s:%" PRIuSIZE,
                                     innerScript->filename(), innerScript->lineno());
                     }
                 }
@@ -3912,7 +3913,8 @@ CodeGenerator::generateBody()
 
 #ifdef DEBUG
         const char *filename = nullptr;
-        unsigned lineNumber = 0, columnNumber = 0;
+        size_t lineNumber = 0;
+        unsigned columnNumber = 0;
         if (current->mir()->info().script()) {
             filename = current->mir()->info().script()->filename();
             if (current->mir()->pc())
@@ -3922,8 +3924,8 @@ CodeGenerator::generateBody()
             lineNumber = current->mir()->lineno();
             columnNumber = current->mir()->columnIndex();
         }
-        JitSpew(JitSpew_Codegen, "# block%lu %s:%u:%u%s:", i,
-                filename ? filename : "?", lineNumber, columnNumber,
+        JitSpew(JitSpew_Codegen, "# block%" PRIuSIZE " %s:%" PRIuSIZE ":%u%s:",
+                i, filename ? filename : "?", lineNumber, columnNumber,
                 current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
 

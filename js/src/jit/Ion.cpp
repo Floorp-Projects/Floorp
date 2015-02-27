@@ -7,6 +7,7 @@
 #include "jit/Ion.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/ThreadLocal.h"
 
 #include "jscompartment.h"
@@ -1938,7 +1939,7 @@ IonCompile(JSContext *cx, JSScript *script,
         if (!recompile)
             builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
 
-        JitSpew(JitSpew_IonLogs, "Can't log script %s:%d. (Compiled on background thread.)",
+        JitSpew(JitSpew_IonLogs, "Can't log script %s:%" PRIuSIZE ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
 
         JSRuntime *rt = cx->runtime();
@@ -2080,13 +2081,13 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     }
 
     if (!CheckScript(cx, script, bool(osrPc))) {
-        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%d", script->filename(), script->lineno());
+        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%" PRIuSIZE, script->filename(), script->lineno());
         return Method_CantCompile;
     }
 
     MethodStatus status = CheckScriptSize(cx, script);
     if (status != Method_Compiled) {
-        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%d", script->filename(), script->lineno());
+        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%" PRIuSIZE, script->filename(), script->lineno());
         return status;
     }
 
@@ -2506,7 +2507,7 @@ InvalidateActivation(FreeOp *fop, const JitActivationIterator &activations, bool
                 type = "Baseline";
             else if (it.isBailoutJS())
                 type = "Bailing";
-            JitSpew(JitSpew_IonInvalidate, "#%d %s JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
+            JitSpew(JitSpew_IonInvalidate, "#%d %s JS frame @ %p, %s:%" PRIuSIZE " (fun: %p, script: %p, pc %p)",
                     frameno, type, it.fp(), it.script()->filename(), it.script()->lineno(),
                     it.maybeCallee(), (JSScript *)it.script(), it.returnAddressToFp());
             break;
@@ -2682,7 +2683,7 @@ jit::Invalidate(TypeZone &types, FreeOp *fop,
         if (!co->ion())
             continue;
 
-        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u, IonScript %p",
+        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%" PRIuSIZE ", IonScript %p",
                 co->script()->filename(), co->script()->lineno(), co->ion());
 
         // Keep the ion script alive during the invalidation and flag this
@@ -2771,7 +2772,7 @@ jit::Invalidate(JSContext *cx, JSScript *script, bool resetUses, bool cancelOffT
             return false;
 
         // Construct the descriptive string.
-        JS_snprintf(buf, len, "Invalidate %s:%u", filename, (unsigned int)script->lineno());
+        JS_snprintf(buf, len, "Invalidate %s:%" PRIuSIZE, filename, script->lineno());
         cx->runtime()->spsProfiler.markEvent(buf);
         js_free(buf);
     }
@@ -2815,7 +2816,7 @@ jit::FinishInvalidation(FreeOp *fop, JSScript *script)
 void
 jit::ForbidCompilation(JSContext *cx, JSScript *script)
 {
-    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%d",
+    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%" PRIuSIZE,
             script->filename(), script->lineno());
 
     CancelOffThreadIonCompile(cx->compartment(), script);
