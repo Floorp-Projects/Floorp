@@ -170,12 +170,18 @@ struct JSCompartment
     int64_t                      startInterval;
 
   public:
-    js::PerformanceData performance;
+    int64_t                      totalTime;
     void enter() {
+        if (addonId && !enterCompartmentDepth) {
+            startInterval = PRMJ_Now();
+        }
         enterCompartmentDepth++;
     }
     void leave() {
         enterCompartmentDepth--;
+        if (addonId && !enterCompartmentDepth) {
+            totalTime += (PRMJ_Now() - startInterval);
+        }
     }
     bool hasBeenEntered() { return !!enterCompartmentDepth; }
 
