@@ -432,6 +432,9 @@ public:
   void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::Cleanup failed: %d", (int)aStatus);
+
+    sBluetoothHfpInterface = nullptr;
+
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
     }

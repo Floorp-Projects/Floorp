@@ -495,7 +495,12 @@ label.requests-menu-status-code {
 }
 
 .tabpanel-summary-value {
+  color: inherit;
   -moz-padding-start: 3px;
+}
+
+.theme-dark .tabpanel-summary-value {
+  color: var(--theme-selection-color);
 }
 
 /* Headers tabpanel */

@@ -391,7 +391,7 @@ pref("devtools.errorconsole.enabled", false);
 // to communicate with a usb cable via adb forward.
 pref("devtools.debugger.unix-domain-socket", "/data/data/@ANDROID_PACKAGE_NAME@/firefox-debugger-socket");
 
-pref("font.size.inflation.minTwips", 120);
+pref("font.size.inflation.minTwips", 0);
 
 // When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
 pref("browser.ui.zoom.force-user-scalable", false);

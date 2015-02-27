@@ -13,6 +13,7 @@ let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {require, TargetFactory} = devtools;
 let {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
 let {Messages} = require("devtools/webconsole/console-output");
+const asyncStorage = require("devtools/toolkit/shared/async-storage");
 
 // promise._reportErrors = true; // please never leave me.
 //Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -321,6 +322,9 @@ let finishTest = Task.async(function* () {
 
 registerCleanupFunction(function*() {
   gDevTools.testing = false;
+
+  // Remove stored console commands in between tests
+  yield asyncStorage.removeItem("webConsoleHistory");
 
   dumpConsoles();
 
