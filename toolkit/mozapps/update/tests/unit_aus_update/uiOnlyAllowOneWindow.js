@@ -74,13 +74,7 @@ const WindowWatcher = {
     gCheckFunc();
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIWindowWatcher) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
 const WindowWatcherFactory = {
@@ -97,13 +91,7 @@ const WindowMediator = {
     return { getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow]) };
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIWindowMediator) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
 }
 
 const WindowMediatorFactory = {
