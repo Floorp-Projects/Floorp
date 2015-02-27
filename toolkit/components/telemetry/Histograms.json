@@ -6841,6 +6841,13 @@
     "n_values": 24,
     "description": "Was a certificate error overridden on this handshake? What was it? (0=unknown error (indicating bug), 1=no, >1=a specific error)"
   },
+  "SSL_CERT_VERIFICATION_ERRORS": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "If certificate verification failed in a TLS handshake, what was the error? (see mapping in SSLServerCertVerification.cpp)"
+  },
   "SSL_PERMANENT_CERT_ERROR_OVERRIDES": {
     "alert_emails": ["seceng@mozilla.org"],
     "expires_in_version": "42",
