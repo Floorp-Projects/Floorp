@@ -378,6 +378,11 @@ let Printing = {
     this.MESSAGES.forEach(msgName => addMessageListener(msgName, this));
   },
 
+  get shouldSavePrintSettings() {
+    return Services.prefs.getBoolPref("print.use_global_printsettings", false) &&
+           Services.prefs.getBoolPref("print.save_print_settings", false);
+  },
+
   receiveMessage(message) {
     let objects = message.objects;
     let data = message.data;
@@ -474,9 +479,21 @@ let Printing = {
     } catch(e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
       // causing an exception to be thrown which we catch here.
-      rv = e.result;
+      if (e.result != Cr.NS_ERROR_ABORT) {
+        Cu.reportError(`In Printing:Print:Done handler, got unexpected rv
+                        ${e.result}.`);
+      }
     }
-    sendAsyncMessage("Printing:Print:Done", { rv }, { printSettings });
+
+    if (this.shouldSavePrintSettings) {
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Ci.nsIPrintSettingsService);
+
+      PSSVC.savePrintSettingsToPrefs(printSettings, true,
+                                     printSettings.kInitSaveAll);
+      PSSVC.savePrintSettingsToPrefs(printSettings, false,
+                                     printSettings.kInitSavePrinterName);
+    }
   },
 
   updatePageCount() {
