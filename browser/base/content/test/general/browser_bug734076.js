@@ -26,8 +26,7 @@ function test() {
           cb();
         });
 
-        let contextMenu = initContextMenu(contentBody);
-        contextMenu.viewBGImage();
+        doContextCommand(contentBody, "context-viewbgimage");
       }
     },
     {
@@ -45,8 +44,7 @@ function test() {
         img.setAttribute("src", writeDomainURL);
         doc.body.appendChild(img);
 
-        let contextMenu = initContextMenu(img);
-        contextMenu.viewMedia();
+        doContextCommand(img, "context-viewimage");
       }
     },
     {
@@ -65,8 +63,8 @@ function test() {
         doc.body.appendChild(iframe);
 
         iframe.addEventListener("load", function onload() {
-          let contextMenu = initContextMenu(iframe.contentDocument.body);
-          contextMenu.showOnlyThisFrame();
+          doContextCommand(iframe.contentDocument.body,
+                           "context-showonlythisframe");
         }, false);
       }
     }
@@ -99,9 +97,8 @@ function test() {
   doNext();
 }
 
-function initContextMenu(aNode) {
-  document.popupNode = aNode;
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let contextMenu = new nsContextMenu(contentAreaContextMenu);
-  return contextMenu;
+function doContextCommand(aNode, aCmd) {
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, aNode);
+  document.getElementById(aCmd).click();
+  document.getElementById("contentAreaContextMenu").hidePopup();
 }
