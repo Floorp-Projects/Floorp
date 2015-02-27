@@ -23,6 +23,8 @@
 #endif
 
 #ifdef PR_LOGGING
+extern PRLogModuleInfo* GetMediaSourceLog();
+
 #define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define MSE_DEBUGV(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG + 1, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #else

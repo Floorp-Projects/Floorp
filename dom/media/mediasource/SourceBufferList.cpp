@@ -17,7 +17,9 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
+extern PRLogModuleInfo* GetMediaSourceLog();
 extern PRLogModuleInfo* GetMediaSourceAPILog();
+
 #define MSE_API(arg, ...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #else
