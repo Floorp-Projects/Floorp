@@ -7,7 +7,7 @@
 interface nsIDOMBlob;
 interface nsIWifiEventListener;
 
-[scriptable, uuid(2712a791-f720-484d-8820-c4085629f657)]
+[scriptable, uuid(5d0edcd3-c2f1-4946-aae5-06adcbdf0992)]
 interface nsIWifiCertService : nsISupports
 {
   const unsigned short WIFI_CERT_USAGE_FLAG_SERVER = 0x01;
@@ -43,4 +43,12 @@ interface nsIWifiCertService : nsISupports
    */
   void deleteCert(in long id,
                   in DOMString certNickname);
+
+  /**
+   * Check if certificate has private key.
+   *
+   * @param certNickname
+   *        Certificate nickname to check for private key.
+   */
+   boolean hasPrivateKey(in DOMString certNickname);
 };
