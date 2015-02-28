@@ -1306,7 +1306,8 @@ class Assembler : public AssemblerShared
   public:
     void writeCodePointer(AbsoluteLabel *label);
 
-    void align(int alignment);
+    void haltingAlign(int alignment);
+    void nopAlign(int alignment);
     BufferOffset as_nop();
     BufferOffset as_alu(Register dest, Register src1, Operand2 op2,
                         ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);

@@ -583,7 +583,14 @@ Assembler::WriteInstStatic(uint32_t x, uint32_t *dest)
 }
 
 BufferOffset
-Assembler::align(int alignment)
+Assembler::haltingAlign(int alignment)
+{
+    // TODO: Implement a proper halting align.
+    nopAlign(alignment);
+}
+
+BufferOffset
+Assembler::nopAlign(int alignment)
 {
     BufferOffset ret;
     MOZ_ASSERT(m_buffer.isAligned(4));
