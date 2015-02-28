@@ -70,7 +70,6 @@
   <color name="firstrun_background">#99000000</color>
   <color name="firstrun_tabstrip">#1193CB</color>
   <color name="firstrun_pager_background">#16A3DF</color>
-  <color name="firstrun_pager_button_pressed">#DC5600</color>
 
   <!--
       Application theme colors
