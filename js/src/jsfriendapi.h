@@ -359,8 +359,8 @@ extern JS_FRIEND_API(bool)
 proxy_LookupProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp,
                     JS::MutableHandle<Shape*> propp);
 extern JS_FRIEND_API(bool)
-proxy_DefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                     JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+proxy_DefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                     JS::Handle<JSPropertyDescriptor> desc,
                      JS::ObjectOpResult &result);
 extern JS_FRIEND_API(bool)
 proxy_HasProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
