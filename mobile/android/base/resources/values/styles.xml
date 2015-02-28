@@ -280,7 +280,7 @@
         <item name="android:layout_width">@dimen/firstrun_content_width</item>
         <item name="android:layout_height">60dp</item>
         <item name="android:textColor">@color/android:white</item>
-        <item name="android:background">@color/firstrun_pager_button</item>
+        <item name="android:background">@color/action_orange</item>
         <item name="android:textSize">18sp</item>
     </style>
 

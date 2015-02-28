@@ -70,7 +70,6 @@
   <color name="firstrun_background">#99000000</color>
   <color name="firstrun_tabstrip">#1193CB</color>
   <color name="firstrun_pager_background">#16A3DF</color>
-  <color name="firstrun_pager_button">#E66000</color>
   <color name="firstrun_pager_button_pressed">#DC5600</color>
 
   <!--
@@ -162,7 +161,6 @@
   <color name="swipe_refresh_orange4">#FFB44C</color>
 
   <!-- Remote tabs setup -->
-  <color name="remote_tabs_setup_button_background">#E66000</color>
   <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 
   <!-- Button toast colors. -->
