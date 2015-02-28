@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1423697587000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1424991539000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -73,6 +73,14 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i862" id="{CA8C84C6-3918-41b1-BE77-049B2BDD887C}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i430" id="1chtw@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -121,8 +129,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i810" id="{41339ee8-61ed-489d-b049-01e41fd5d7e0}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i364" id="{FE1DEEEA-DB6D-44b8-83F0-34FC0F9D1052}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -387,7 +395,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
+      <emItem  blockID="i860" id="PrivDog@AdTrustMedia.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -742,6 +750,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i340" id="chiang@programmer.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i99" id="pfzPXmnzQRXX6@2iABkVe.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -1016,6 +1030,12 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                                 <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i91" id="crossriderapp4926@crossrider.com">
+                        <versionRange  minVersion="0" maxVersion="0.81.43" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1960,8 +1980,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i364" id="{FE1DEEEA-DB6D-44b8-83F0-34FC0F9D1052}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i810" id="{41339ee8-61ed-489d-b049-01e41fd5d7e0}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2084,8 +2104,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i340" id="chiang@programmer.net">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i866" id="faststartff@gmail.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2157,10 +2177,24 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i91" id="crossriderapp4926@crossrider.com">
-                        <versionRange  minVersion="0" maxVersion="0.81.43" severity="1">
+      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i868" id="{6e7f6f9f-8ce6-4611-add2-05f0f7049ee6}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i864" id="{0A92F062-6AC6-8180-5881-B6E0C0DC2CC5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i814" id="liiros@facebook.com">
