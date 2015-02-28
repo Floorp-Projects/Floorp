@@ -189,8 +189,19 @@ this.XPCOMUtils = {
   {
     Object.defineProperty(aObject, aName, {
       get: function () {
+        // Redefine this accessor property as a data property.
+        // Delete it first, to rule out "too much recursion" in case aObject is
+        // a proxy whose defineProperty handler might unwittingly trigger this
+        // getter again.
         delete aObject[aName];
-        return aObject[aName] = aLambda.apply(aObject);
+        let value = aLambda.apply(aObject);
+        Object.defineProperty(aObject, aName, {
+          value,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+        return value;
       },
       configurable: true,
       enumerable: true
