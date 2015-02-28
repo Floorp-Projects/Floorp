@@ -129,7 +129,7 @@ var WifiManager = (function() {
 
   let capabilities = {
     security: ["OPEN", "WEP", "WPA-PSK", "WPA-EAP"],
-    eapMethod: ["PEAP", "TTLS"],
+    eapMethod: ["PEAP", "TTLS", "TLS"],
     eapPhase2: ["MSCHAPV2"],
     certificate: ["SERVER"],
     mode: [MODE_ESS]
