@@ -70,3 +70,34 @@ class TestClickAction(MarionetteTestCase):
         rel = self.marionette.find_element("id", "keyReporter")
         rel.send_keys(self.mod_key + 'v')
         self.assertEqual(rel.get_attribute('value'), 'Displayed')
+
+    def test_context_click_action(self):
+        test_html = self.marionette.absolute_url("javascriptPage.html")
+        self.marionette.navigate(test_html)
+        click_el = self.marionette.find_element(By.ID, 'resultContainer')
+
+        def context_menu_state():
+            with self.marionette.using_context('chrome'):
+                cm_el = self.marionette.find_element(By.ID, 'contentAreaContextMenu')
+                return cm_el.get_attribute('state')
+
+        self.assertEqual('closed', context_menu_state())
+        self.action.context_click(click_el).perform()
+        self.wait_for_condition(lambda _: context_menu_state() == 'open')
+
+        with self.marionette.using_context('chrome'):
+            (self.marionette.find_element(By.ID, 'main-window')
+                            .send_keys(Keys.ESCAPE))
+        self.wait_for_condition(lambda _: context_menu_state() == 'closed')
+
+    def test_middle_click_action(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+
+        self.marionette.find_element(By.ID, "addbuttonlistener").click()
+
+        el = self.marionette.find_element(By.ID, "showbutton")
+        self.action.middle_click(el).perform()
+
+        self.wait_for_condition(
+            lambda _: el.get_attribute('innerHTML') == '1')
