@@ -771,7 +771,7 @@ TypeSet::removeSet(TemporaryTypeSet *input, TemporaryTypeSet *removal, LifoAlloc
 
     uint32_t flags = input->baseFlags() & ~removal->baseFlags();
     TemporaryTypeSet *res =
-        alloc->new_<TemporaryTypeSet>(flags, static_cast<TypeSetObjectKey**>(nullptr));
+        alloc->new_<TemporaryTypeSet>(flags, static_cast<ObjectKey**>(nullptr));
     if (!res)
         return nullptr;
 
@@ -783,7 +783,7 @@ TypeSet::removeSet(TemporaryTypeSet *input, TemporaryTypeSet *removal, LifoAlloc
         if (!input->getObject(i))
             continue;
 
-        res->addType(Type::ObjectType(input->getObject(i)), alloc);
+        res->addType(TypeSet::ObjectType(input->getObject(i)), alloc);
     }
 
     return res;
