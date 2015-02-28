@@ -3308,7 +3308,7 @@ IonBuilder::replaceTypeSet(MDefinition *subject, TemporaryTypeSet *type, MTest *
     if (type->unknown())
         return true;
 
-    if (type->equals(subject->resultTypeSet()))
+    if (subject->resultTypeSet() && type->equals(subject->resultTypeSet()))
         return true;
 
     MInstruction *replace = nullptr;
@@ -3463,7 +3463,18 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *t
         return true;
 
     MDefinition *subject = typeOf->input();
-    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
+    TemporaryTypeSet *inputTypes = subject->resultTypeSet();
+
+    // Create temporary typeset equal to the type if there is no resultTypeSet.
+    TemporaryTypeSet tmp;
+    if (!inputTypes) {
+        if (subject->type() == MIRType_Value)
+            return true;
+        inputTypes = &tmp;
+        tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())), alloc_->lifoAlloc());
+    }
+
+    if (inputTypes->unknown())
         return true;
 
     // Note: we cannot remove the AnyObject type in the false branch,
@@ -3493,9 +3504,9 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *t
 
     TemporaryTypeSet *type;
     if (trueBranch)
-        type = TypeSet::intersectSets(&filter, subject->resultTypeSet(), alloc_->lifoAlloc());
+        type = TypeSet::intersectSets(&filter, inputTypes, alloc_->lifoAlloc());
     else
-        type = TypeSet::removeSet(subject->resultTypeSet(), &filter, alloc_->lifoAlloc());
+        type = TypeSet::removeSet(inputTypes, &filter, alloc_->lifoAlloc());
 
     if (!type)
         return false;
@@ -3528,13 +3539,20 @@ IonBuilder::improveTypesAtNullOrUndefinedCompare(MCompare *ins, bool trueBranch,
     }
 
     MDefinition *subject = ins->lhs();
+    TemporaryTypeSet *inputTypes = subject->resultTypeSet();
 
     MOZ_ASSERT(IsNullOrUndefined(ins->rhs()->type()));
 
-    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
-        return true;
+    // Create temporary typeset equal to the type if there is no resultTypeSet.
+    TemporaryTypeSet tmp;
+    if (!inputTypes) {
+        if (subject->type() == MIRType_Value)
+            return true;
+        inputTypes = &tmp;
+        tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())), alloc_->lifoAlloc());
+    }
 
-    if (!altersUndefined && !altersNull)
+    if (inputTypes->unknown())
         return true;
 
     TemporaryTypeSet *type;
@@ -3548,21 +3566,21 @@ IonBuilder::improveTypesAtNullOrUndefinedCompare(MCompare *ins, bool trueBranch,
         if (altersNull)
             remove.addType(TypeSet::NullType(), alloc_->lifoAlloc());
 
-        type = TypeSet::removeSet(subject->resultTypeSet(), &remove, alloc_->lifoAlloc());
+        type = TypeSet::removeSet(inputTypes, &remove, alloc_->lifoAlloc());
     } else {
         // Set undefined/null.
         TemporaryTypeSet base;
         if (altersUndefined) {
             base.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
             // If TypeSet emulates undefined, then we cannot filter the objects.
-            if (subject->resultTypeSet()->maybeEmulatesUndefined(constraints()))
+            if (inputTypes->maybeEmulatesUndefined(constraints()))
                 base.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
         }
 
         if (altersNull)
             base.addType(TypeSet::NullType(), alloc_->lifoAlloc());
 
-        type = TypeSet::intersectSets(&base, subject->resultTypeSet(), alloc_->lifoAlloc());
+        type = TypeSet::intersectSets(&base, inputTypes, alloc_->lifoAlloc());
     }
 
     if (!type)
@@ -3587,9 +3605,17 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
       case MDefinition::Op_IsObject: {
         TemporaryTypeSet *oldType = ins->getOperand(0)->resultTypeSet();
-        if (!oldType)
-            return true;
-        if (oldType->unknown() || !oldType->mightBeMIRType(MIRType_Object))
+
+        // Create temporary typeset equal to the type if there is no resultTypeSet.
+        TemporaryTypeSet tmp;
+        if (!oldType) {
+            if (ins->type() == MIRType_Value)
+                return true;
+            oldType = &tmp;
+            tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type())), alloc_->lifoAlloc());
+        }
+
+        if (oldType->unknown())
             return true;
 
         TemporaryTypeSet *type = nullptr;
@@ -3656,12 +3682,21 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
     // undefined and null. In false branch we can only encounter undefined, null, false, 0, ""
     // and objects that emulate undefined.
 
-    // If ins does not have a typeset we return as we cannot optimize.
-    if (!ins->resultTypeSet() || ins->resultTypeSet()->unknown())
-        return true;
-
     TemporaryTypeSet *oldType = ins->resultTypeSet();
     TemporaryTypeSet *type;
+
+    // Create temporary typeset equal to the type if there is no resultTypeSet.
+    TemporaryTypeSet tmp;
+    if (!oldType) {
+        if (ins->type() == MIRType_Value)
+            return true;
+        oldType = &tmp;
+        tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type())), alloc_->lifoAlloc());
+    }
+
+    // If ins does not have a typeset we return as we cannot optimize.
+    if (oldType->unknown())
+        return true;
 
     // Decide either to set or remove.
     if (trueBranch) {
