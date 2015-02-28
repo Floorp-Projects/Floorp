@@ -559,16 +559,10 @@ js::proxy_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                         GetterOp getter, SetterOp setter, unsigned attrs,
+js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                         Handle<JSPropertyDescriptor> desc,
                          ObjectOpResult &result)
 {
-    Rooted<PropertyDescriptor> desc(cx);
-    desc.object().set(obj);
-    desc.value().set(value);
-    desc.setAttributes(attrs);
-    desc.setGetter(getter);
-    desc.setSetter(setter);
     return Proxy::defineProperty(cx, obj, id, desc, result);
 }
 
