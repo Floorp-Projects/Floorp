@@ -317,6 +317,7 @@ PK11_DigestOp
 PK11_DoesMechanism
 PK11_Encrypt
 PK11_ExportDERPrivateKeyInfo
+PK11_ExportEncryptedPrivKeyInfo
 PK11_ExtractKeyValue
 PK11_FindCertFromNickname
 PK11_FindCertsFromEmailAddress
@@ -512,6 +513,7 @@ SECKEY_CopyPublicKey
 SECKEY_CopySubjectPublicKeyInfo
 SECKEY_CreateSubjectPublicKeyInfo
 SECKEY_DecodeDERSubjectPublicKeyInfo
+SECKEY_DestroyEncryptedPrivateKeyInfo
 SECKEY_DestroyPrivateKey
 SECKEY_DestroyPrivateKeyList
 SECKEY_DestroyPublicKey
