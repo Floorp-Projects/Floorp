@@ -7,13 +7,15 @@
 #include <string.h>
 
 #include "ClearKeySessionManager.h"
-#if defined(ENABLE_WMF)
-#include "WMFUtils.h"
-#endif
-
 #include "gmp-api/gmp-decryption.h"
 #include "gmp-api/gmp-platform.h"
 #include "mozilla/Attributes.h"
+
+#if defined(ENABLE_WMF)
+#include "WMFUtils.h"
+#include "AudioDecoder.h"
+#include "VideoDecoder.h"
+#endif
 
 static GMPPlatformAPI* sPlatform = nullptr;
 GMPPlatformAPI*
