@@ -759,7 +759,9 @@ function emitMouseEvent(doc, type, elClientX, elClientY, button, clickCount, mod
   if (!wasInterrupted()) {
     let loggingInfo = "emitting Mouse event of type " + type +
       " at coordinates (" + elClientX + ", " + elClientY +
-      ") relative to the viewport";
+      ") relative to the viewport\n" +
+      " button: " + button + "\n" +
+      " clickCount: " + clickCount + "\n";
     dumpLog(loggingInfo);
     /*
     Disabled per bug 888303
@@ -1129,11 +1131,19 @@ function actions(chain, touchId, command_id, i, keyModifiers) {
       break;
     case 'click':
       el = elementManager.getKnownElement(pack[1], curFrame);
+      let button = pack[2];
       let clickCount = pack[3];
       c = coordinates(el, null, null);
-      emitMouseEvent(el.ownerDocument, 'mousemove', c.x, c.y, null, clickCount, keyModifiers);
-      emitMouseEvent(el.ownerDocument, 'mousedown', c.x, c.y, null, clickCount, keyModifiers);
-      emitMouseEvent(el.ownerDocument, 'mouseup', c.x, c.y, null, clickCount, keyModifiers);
+      emitMouseEvent(el.ownerDocument, 'mousemove', c.x, c.y, button, clickCount,
+                     keyModifiers);
+      emitMouseEvent(el.ownerDocument, 'mousedown', c.x, c.y, button, clickCount,
+                     keyModifiers);
+      emitMouseEvent(el.ownerDocument, 'mouseup', c.x, c.y, button, clickCount,
+                     keyModifiers);
+      if (button == 2) {
+        emitMouseEvent(el.ownerDocument, 'contextmenu', c.x, c.y, button, clickCount,
+                       keyModifiers);
+      }
       actions(chain, touchId, command_id, i, keyModifiers);
       break;
     case 'press':
