@@ -329,6 +329,27 @@ class Actions(object):
         self.action_chain.append(['release'])
         return self
 
+    def click(self, element, count=1):
+        '''
+        Performs a click with additional parameters to allow for double clicking,
+        right click, middle click, etc.
+
+        :param element: The element to click.
+        :param count: Optional, the count of clicks to synthesize (for double
+                      click events).
+        '''
+        el = element.id
+        self.action_chain.append(['click', el, None, count])
+        return self
+
+    def double_click(self, element):
+        '''
+        Performs a double click on the specified element.
+
+        :param element: The element to double click.
+        '''
+        return self.click(element, count=2)
+
     def flick(self, element, x1, y1, x2, y2, duration=200):
         '''
         Performs a flick gesture on the target element.
