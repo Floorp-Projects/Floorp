@@ -944,45 +944,13 @@ HyperTextAccessible::NativeAttributes()
   if (!HasOwnContent())
     return attributes.forget();
 
-  // For the html landmark elements we expose them like we do aria landmarks to
-  // make AT navigation schemes "just work".
   nsIAtom* tag = mContent->Tag();
-  if (tag == nsGkAtoms::nav) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("navigation"));
-  } else if (tag == nsGkAtoms::section)  {
+  if (tag == nsGkAtoms::section)  {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("region"));
-  } else if (tag == nsGkAtoms::header || tag == nsGkAtoms::footer) {
-    // Only map header and footer if they are not descendants
-    // of an article or section tag.
-    nsIContent* parent = mContent->GetParent();
-    while (parent) {
-      if (parent->Tag() == nsGkAtoms::article ||
-          parent->Tag() == nsGkAtoms::section)
-        break;
-      parent = parent->GetParent();
-    }
-
-    // No article or section elements found.
-    if (!parent) {
-      if (tag == nsGkAtoms::header) {
-        nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                               NS_LITERAL_STRING("banner"));
-      } else if (tag == nsGkAtoms::footer) {
-        nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                               NS_LITERAL_STRING("contentinfo"));
-      }
-    }
-  } else if (tag == nsGkAtoms::aside) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("complementary"));
   } else if (tag == nsGkAtoms::article) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("article"));
-  } else if (tag == nsGkAtoms::main) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("main"));
   } else if (tag == nsGkAtoms::time) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("time"));
@@ -995,6 +963,47 @@ HyperTextAccessible::NativeAttributes()
   }
 
   return attributes.forget();
+}
+
+nsIAtom*
+HyperTextAccessible::LandmarkRole() const
+{
+  // For the html landmark elements we expose them like we do ARIA landmarks to
+  // make AT navigation schemes "just work".
+  nsIAtom* tag = mContent->Tag();
+  if (tag == nsGkAtoms::nav)
+    return nsGkAtoms::navigation;
+
+  if (tag == nsGkAtoms::header || tag == nsGkAtoms::footer) {
+    // Only map header and footer if they are not descendants of an article
+    // or section tag.
+    nsIContent* parent = mContent->GetParent();
+    while (parent) {
+      if (parent->Tag() == nsGkAtoms::article ||
+          parent->Tag() == nsGkAtoms::section)
+        break;
+      parent = parent->GetParent();
+    }
+
+    // No article or section elements found.
+    if (!parent) {
+      if (tag == nsGkAtoms::header)
+        return nsGkAtoms::banner;
+
+      if (tag == nsGkAtoms::footer) {
+        return nsGkAtoms::contentinfo;
+      }
+    }
+    return nullptr;
+  }
+
+  if (tag == nsGkAtoms::aside)
+    return nsGkAtoms::complementary;
+
+  if (tag == nsGkAtoms::main)
+    return nsGkAtoms::main;
+
+  return nullptr;
 }
 
 int32_t

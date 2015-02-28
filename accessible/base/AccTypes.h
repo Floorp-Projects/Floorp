@@ -74,13 +74,14 @@ enum AccGenericType {
   eCombobox = 1 << 3,
   eDocument = 1 << 4,
   eHyperText = 1 << 5,
-  eList = 1 << 6,
-  eListControl = 1 << 7,
-  eMenuButton = 1 << 8,
-  eSelect = 1 << 9,
-  eTable = 1 << 10,
-  eTableCell = 1 << 11,
-  eTableRow = 1 << 12,
+  eLandmark = 1 << 6,
+  eList = 1 << 7,
+  eListControl = 1 << 8,
+  eMenuButton = 1 << 9,
+  eSelect = 1 << 10,
+  eTable = 1 << 11,
+  eTableCell = 1 << 12,
+  eTableRow = 1 << 13,
 
   eLastAccGenericType = eTableRow
 };
