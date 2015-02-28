@@ -469,12 +469,11 @@ with_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 static bool
-with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc,
                     ObjectOpResult &result)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return DefineProperty(cx, actual, id, value, getter, setter, attrs, result);
+    return DefineProperty(cx, actual, id, desc, result);
 }
 
 static bool
