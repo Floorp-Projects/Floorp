@@ -13,9 +13,9 @@
     <item gecko:state_dark="true" android:color="#FFDDDDDD"/>
 
     <!-- light theme -->
-    <item gecko:state_light="true" android:color="#FF222222"/>
+    <item gecko:state_light="true" android:color="@color/placeholder_active_grey"/>
 
     <!-- normal mode -->
-    <item android:color="#FF222222"/>
+    <item android:color="@color/placeholder_active_grey"/>
 
 </selector>
