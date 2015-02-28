@@ -81,9 +81,6 @@ public:
 
   void BreakCycles();
 
-  // Call ResetDecode() on each decoder in mDecoders.
-  void ResetDecode();
-
   // Run MSE Reset Parser State Algorithm.
   // 3.5.2 Reset Parser State
   // http://w3c.github.io/media-source/#sourcebuffer-reset-parser-state
