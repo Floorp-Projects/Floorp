@@ -1751,8 +1751,8 @@ ReportPropertyError(JSContext *cx,
 }
 
 bool
-TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                GetterOp getter, SetterOp setter, unsigned attrs,
+TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());

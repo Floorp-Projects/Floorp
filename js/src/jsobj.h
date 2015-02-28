@@ -769,6 +769,10 @@ StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
                        Handle<PropertyDescriptor> desc);
 
 extern bool
+DefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+               Handle<PropertyDescriptor> desc, ObjectOpResult &result);
+
+extern bool
 DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                JSGetterOp getter, JSSetterOp setter, unsigned attrs, ObjectOpResult &result);
 

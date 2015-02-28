@@ -3193,22 +3193,29 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
+js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc,
+                   ObjectOpResult &result)
+{
+    if (DefinePropertyOp op = obj->getOps()->defineProperty)
+        return op(cx, obj, id, desc, result);
+    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
+}
+
+bool
 js::DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                    ObjectOpResult &result)
 {
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
-    DefinePropertyOp op = obj->getOps()->defineProperty;
-    if (op) {
+    Rooted<PropertyDescriptor> desc(cx);
+    desc.initFields(obj, value, attrs, getter, setter);
+    if (DefinePropertyOp op = obj->getOps()->defineProperty) {
         if (!cx->shouldBeJSContext())
             return false;
-        return op(cx->asJSContext(), obj, id, value, getter, setter, attrs, result);
+        return op(cx->asJSContext(), obj, id, desc, result);
     }
-    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs,
-                                result);
+    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
 }
 
 bool

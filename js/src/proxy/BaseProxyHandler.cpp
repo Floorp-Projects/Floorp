@@ -109,16 +109,13 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
         if (proto)
             return SetProperty(cx, proto, receiver, id, vp, result);
 
-        // Change ownDesc to be a complete descriptor for a configurable,
-        // writable, enumerable data property. Then fall through to step 5.
-        ownDesc.clear();
-        ownDesc.setAttributes(JSPROP_ENUMERATE);
+        // Step 4.d.
+        ownDesc.setDataDescriptor(UndefinedHandleValue, JSPROP_ENUMERATE);
     }
 
     // Step 5.
     if (ownDesc.isDataDescriptor()) {
-        // Steps 5.a-b, adapted to our nonstandard implementation of ES6
-        // [[Set]] return values.
+        // Steps 5.a-b.
         if (!ownDesc.writable())
             return result.fail(JSMSG_READ_ONLY);
 

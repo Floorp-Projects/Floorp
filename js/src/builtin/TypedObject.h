@@ -528,8 +528,8 @@ class TypedObject : public JSObject
     static bool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                   MutableHandleObject objp, MutableHandleShape propp);
 
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                   GetterOp getter, SetterOp setter, unsigned attrs,
+    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                                   Handle<JSPropertyDescriptor> desc,
                                    ObjectOpResult &result);
 
     static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
