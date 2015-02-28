@@ -35,10 +35,10 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
-class OmxReaderProcessCachedDataTask : public Task
+class MediaOmxReader::ProcessCachedDataTask : public Task
 {
 public:
-  OmxReaderProcessCachedDataTask(MediaOmxReader* aOmxReader, int64_t aOffset)
+  ProcessCachedDataTask(MediaOmxReader* aOmxReader, int64_t aOffset)
   : mOmxReader(aOmxReader),
     mOffset(aOffset)
   { }
@@ -70,10 +70,10 @@ private:
 // the IO task dispatches a runnable to the main thread for parsing the
 // data. This goes on until all of the MP3 file has been parsed.
 
-class OmxReaderNotifyDataArrivedRunnable : public nsRunnable
+class MediaOmxReader::NotifyDataArrivedRunnable : public nsRunnable
 {
 public:
-  OmxReaderNotifyDataArrivedRunnable(MediaOmxReader* aOmxReader,
+  NotifyDataArrivedRunnable(MediaOmxReader* aOmxReader,
                                      const char* aBuffer, uint64_t aLength,
                                      int64_t aOffset, uint64_t aFullLength)
   : mOmxReader(aOmxReader),
@@ -117,7 +117,7 @@ private:
       // might block for too long. Instead we post an IO task
       // to the IO thread if there is more data available.
       XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-          new OmxReaderProcessCachedDataTask(mOmxReader.get(), mOffset));
+          new ProcessCachedDataTask(mOmxReader.get(), mOffset));
     }
   }
 
@@ -618,12 +618,9 @@ int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset, bool aWaitForCompleti
                                                        aOffset, bufferLength);
   NS_ENSURE_SUCCESS(rv, -1);
 
-  nsRefPtr<OmxReaderNotifyDataArrivedRunnable> runnable(
-    new OmxReaderNotifyDataArrivedRunnable(this,
-                                           buffer.forget(),
-                                           bufferLength,
-                                           aOffset,
-                                           resourceLength));
+  nsRefPtr<NotifyDataArrivedRunnable> runnable(
+    new NotifyDataArrivedRunnable(this, buffer.forget(), bufferLength,
+                                  aOffset, resourceLength));
   if (aWaitForCompletion) {
     rv = NS_DispatchToMainThread(runnable.get(), NS_DISPATCH_SYNC);
   } else {
