@@ -3427,12 +3427,87 @@ IonBuilder::detectAndOrStructure(MPhi *ins, bool *branchIsAnd)
 bool
 IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
 {
-    // Only support Compare_Undefined and Compare_Null at the moment.
-    if (ins->compareType() != MCompare::Compare_Undefined &&
-        ins->compareType() != MCompare::Compare_Null)
+    if (ins->compareType() == MCompare::Compare_Undefined ||
+        ins->compareType() == MCompare::Compare_Null)
     {
-        return true;
+        return improveTypesAtNullOrUndefinedCompare(ins, trueBranch, test);
     }
+
+    if ((ins->lhs()->isTypeOf() || ins->rhs()->isTypeOf()) &&
+        (ins->lhs()->isConstantValue() || ins->rhs()->isConstantValue()))
+    {
+        return improveTypesAtTypeOfCompare(ins, trueBranch, test);
+    }
+
+    return true;
+}
+
+bool
+IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *test)
+{
+    MTypeOf *typeOf = ins->lhs()->isTypeOf() ? ins->lhs()->toTypeOf() : ins->rhs()->toTypeOf();
+    const Value *constant =
+        ins->lhs()->isConstant() ? ins->lhs()->constantVp() : ins->rhs()->constantVp();
+
+    if (!constant->isString())
+        return true;
+
+    bool equal = ins->jsop() == JSOP_EQ || ins->jsop() == JSOP_STRICTEQ;
+    bool notEqual = ins->jsop() == JSOP_NE || ins->jsop() == JSOP_STRICTNE;
+
+    if (notEqual)
+        trueBranch = !trueBranch;
+
+    // Relational compares not supported.
+    if (!equal && !notEqual)
+        return true;
+
+    MDefinition *subject = typeOf->input();
+    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
+        return true;
+
+    // Note: we cannot remove the AnyObject type in the false branch,
+    // since there are multiple ways to get an object. That is the reason
+    // for the 'trueBranch' test.
+    TemporaryTypeSet filter;
+    const JSAtomState &names = GetJitContext()->runtime->names();
+    if (constant->toString() == TypeName(JSTYPE_VOID, names)) {
+        filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
+        if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
+            filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_NUMBER, names)) {
+        filter.addType(TypeSet::Int32Type(), alloc_->lifoAlloc());
+        filter.addType(TypeSet::DoubleType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_STRING, names)) {
+        filter.addType(TypeSet::StringType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
+        filter.addType(TypeSet::SymbolType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
+        filter.addType(TypeSet::NullType(), alloc_->lifoAlloc());
+        if (trueBranch)
+            filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_FUNCTION, names)) {
+        if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
+            filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    }
+
+    TemporaryTypeSet *type;
+    if (trueBranch)
+        type = TypeSet::intersectSets(&filter, subject->resultTypeSet(), alloc_->lifoAlloc());
+    else
+        type = TypeSet::removeSet(subject->resultTypeSet(), &filter, alloc_->lifoAlloc());
+
+    if (!type)
+        return false;
+
+    return replaceTypeSet(subject, type, test);
+}
+
+bool
+IonBuilder::improveTypesAtNullOrUndefinedCompare(MCompare *ins, bool trueBranch, MTest *test)
+{
+    MOZ_ASSERT(ins->compareType() == MCompare::Compare_Undefined ||
+               ins->compareType() == MCompare::Compare_Null);
 
     // altersUndefined/Null represents if we can filter/set Undefined/Null.
     bool altersUndefined, altersNull;
