@@ -2815,6 +2815,7 @@ MTypeOf::foldsTo(TempAllocator &alloc)
 
     switch (inputType()) {
       case MIRType_Double:
+      case MIRType_Float32:
       case MIRType_Int32:
         type = JSTYPE_NUMBER;
         break;
@@ -3275,11 +3276,82 @@ MCompare::tryFoldEqualOperands(bool *result)
 }
 
 bool
+MCompare::tryFoldTypeOf(bool *result)
+{
+    if (!lhs()->isTypeOf() && !rhs()->isTypeOf())
+        return false;
+    if (!lhs()->isConstantValue() && !rhs()->isConstantValue())
+        return false;
+
+    MTypeOf *typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
+    const Value *constant = lhs()->isConstantValue() ? lhs()->constantVp() : rhs()->constantVp();
+
+    if (!constant->isString())
+        return false;
+
+    if (jsop() != JSOP_STRICTEQ && jsop() != JSOP_STRICTNE &&
+        jsop() != JSOP_EQ && jsop() != JSOP_NE)
+    {
+        return false;
+    }
+
+    const JSAtomState &names = GetJitContext()->runtime->names();
+    if (constant->toString() == TypeName(JSTYPE_VOID, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_Undefined) &&
+            !typeOf->inputMaybeCallableOrEmulatesUndefined())
+        {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_Boolean)) {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_NUMBER, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_Int32) &&
+            !typeOf->input()->mightBeType(MIRType_Float32) &&
+            !typeOf->input()->mightBeType(MIRType_Double))
+        {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_STRING, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_String)) {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_Symbol)) {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
+        if (!typeOf->input()->mightBeType(MIRType_Object) &&
+            !typeOf->input()->mightBeType(MIRType_Null))
+        {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    } else if (constant->toString() == TypeName(JSTYPE_FUNCTION, names)) {
+        if (!typeOf->inputMaybeCallableOrEmulatesUndefined()) {
+            *result = (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
 MCompare::tryFold(bool *result)
 {
     JSOp op = jsop();
 
     if (tryFoldEqualOperands(result))
+        return true;
+
+    if (tryFoldTypeOf(result))
         return true;
 
     if (compareType_ == Compare_Null || compareType_ == Compare_Undefined) {
