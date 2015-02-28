@@ -311,6 +311,11 @@ inline void SECOID_DestroyAlgorithmID_true(SECAlgorithmID * a)
   return SECOID_DestroyAlgorithmID(a, true);
 }
 
+inline void SECKEYEncryptedPrivateKeyInfo_true(SECKEYEncryptedPrivateKeyInfo * epki)
+{
+  return SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE);
+}
+
 } // namespace internal
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
@@ -320,6 +325,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
                                           SECKEYPrivateKey,
                                           SECKEY_DestroyPrivateKey)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYEncryptedPrivateKeyInfo,
+                                          SECKEYEncryptedPrivateKeyInfo,
+                                          internal::SECKEYEncryptedPrivateKeyInfo_true)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
                                           SECKEYPublicKey,
                                           SECKEY_DestroyPublicKey)
