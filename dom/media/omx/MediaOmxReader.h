@@ -110,18 +110,23 @@ public:
 
   virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
+  android::sp<android::MediaSource> GetAudioOffloadTrack();
+
+  // This method is intended only for private use but public only for
+  // MediaPromise::InvokeCallbackMethod().
+  void ReleaseDecoder();
+
+private:
+  class ProcessCachedDataTask;
+  class NotifyDataArrivedRunnable;
+
   bool IsShutdown() {
     MutexAutoLock lock(mShutdownMutex);
     return mIsShutdown;
   }
 
-  void ReleaseDecoder();
-
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
 
-  android::sp<android::MediaSource> GetAudioOffloadTrack();
-
-private:
   already_AddRefed<AbstractMediaDecoder> SafeGetDecoder();
 };
 
