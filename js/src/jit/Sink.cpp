@@ -57,8 +57,11 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
 
             // Only instructions which can be recovered on bailout can be moved
             // into the bailout paths.
-            if (ins->isGuard() || ins->isRecoveredOnBailout() || !ins->canRecoverOnBailout())
+            if (ins->isGuard() || ins->isGuardRangeBailouts() ||
+                ins->isRecoveredOnBailout() || !ins->canRecoverOnBailout())
+            {
                 continue;
+            }
 
             // Compute a common dominator for all uses of the current
             // instruction.
