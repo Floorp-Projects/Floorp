@@ -13,13 +13,13 @@
     <TextView android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textSize="14sp"
-              android:textColor="@color/doorhanger_text"
+              android:textColor="@color/placeholder_active_grey"
               android:text="@string/identity_no_info"/>
 
     <TextView android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textSize="14sp"
-              android:textColor="@color/doorhanger_text"
+              android:textColor="@color/placeholder_active_grey"
               android:text="@string/identity_not_encrypted"
               android:paddingTop="12dip"/>
 

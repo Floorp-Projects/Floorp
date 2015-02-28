@@ -414,12 +414,12 @@
     </style>
 
     <style name="TextAppearance.Widget.DoorHanger.Medium" parent="TextAppearance.Medium">
-        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
     <style name="TextAppearance.Widget.DoorHanger.Small" parent="TextAppearance.Small">
-        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
@@ -657,7 +657,7 @@
     </style>
 
     <style name="WebView.Titlebar.Title">
-        <item name="android:textColor">#ff222222</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
     </style>
 
     <style name="GeckoDialogTitle">
@@ -777,7 +777,7 @@
 
     <style name="GeckoActionBar.Buttons">
         <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@color/text_color_primary</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:gravity">right</item>
     </style>
 
@@ -872,7 +872,7 @@
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance.Header">
-        <item name="android:textColor">#222222</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textSize">20sp</item>
         <item name="android:layout_marginBottom">8dp</item>
     </style>
