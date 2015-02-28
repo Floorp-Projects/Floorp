@@ -45,6 +45,15 @@ Accessible::ARIARole()
 }
 
 inline bool
+Accessible::IsSearchbox() const
+{
+  return (mRoleMapEntry && mRoleMapEntry->Is(nsGkAtoms::searchbox)) ||
+    (mContent->IsHTML(nsGkAtoms::input) &&
+     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                           nsGkAtoms::textInputType, eCaseMatters));
+}
+
+inline bool
 Accessible::HasGenericType(AccGenericType aType) const
 {
   return (mGenericTypes & aType) ||
