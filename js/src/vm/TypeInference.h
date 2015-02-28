@@ -426,6 +426,12 @@ class TypeSet
     static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
     /* Return the intersection of the 2 TypeSets. The result should not be modified further */
     static TemporaryTypeSet *intersectSets(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *alloc);
+    /*
+     * Returns a copy of TypeSet a excluding/removing the types in TypeSet b.
+     * TypeSet b can only contain primitives or be any object. No support for
+     * specific objects. The result should not be modified further.
+     */
+    static TemporaryTypeSet *removeSet(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *alloc);
 
     /* Add a type to this set using the specified allocator. */
     void addType(Type type, LifoAlloc *alloc);
