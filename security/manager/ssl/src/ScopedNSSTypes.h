@@ -23,6 +23,7 @@
 #include "keyhi.h"
 #include "cryptohi.h"
 #include "pk11pub.h"
+#include "pkcs12.h"
 #include "sechash.h"
 #include "secpkcs7.h"
 #include "secport.h"
@@ -240,6 +241,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS7ContentInfo,
                                           SEC_PKCS7ContentInfo,
                                           SEC_PKCS7DestroyContentInfo)
 
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS12DecoderContext,
+                                          SEC_PKCS12DecoderContext,
+                                          SEC_PKCS12DecoderFinish)
 namespace internal {
 
 inline void

@@ -589,6 +589,7 @@ SEC_PKCS12DecoderFinish
 SEC_PKCS12DecoderImportBags
 SEC_PKCS12DecoderIterateInit
 SEC_PKCS12DecoderIterateNext
+SEC_PKCS12DecoderRenameCertNicknames
 SEC_PKCS12DecoderStart
 SEC_PKCS12DecoderUpdate
 SEC_PKCS12DecoderValidateBags
