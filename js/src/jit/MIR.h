@@ -73,6 +73,20 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
                                                                                 \
+    /* Flag an instruction to be considered as a Guard if the instructions
+     * bails out on some inputs.
+     *
+     * Some optimizations can replace an instruction, and leave its operands
+     * unused. When the type information of the operand got used as a
+     * predicate of the transformation, then we have to flag the operands as
+     * GuardRangeBailouts.
+     *
+     * This flag prevents further optimization of instructions, which
+     * might remove the run-time checks (bailout conditions) used as a
+     * predicate of the previous transformation.
+     */                                                                         \
+    _(GuardRangeBailouts)                                                       \
+                                                                                \
     /* Keep the flagged instruction in resume points and do not substitute this
      * instruction by an UndefinedValue. This might be used by call inlining
      * when a function argument is not used by the inlined instructions.
