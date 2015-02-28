@@ -9,7 +9,7 @@
     <!-- private pressed state -->
     <item gecko:state_private="true"
           android:state_pressed="true"
-          android:drawable="@color/new_tablet_highlight_pb"/>
+          android:drawable="@color/placeholder_active_grey"/>
 
     <!-- focused state -->
     <item gecko:state_private="true"
