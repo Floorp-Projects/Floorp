@@ -179,6 +179,14 @@ class HTMLElement(object):
         '''
         return self.marionette._send_message('submitElement', 'ok', id=self.id)
 
+class MouseButton(object):
+    '''
+    Enum-like class for mouse button constants
+    '''
+    LEFT = 0
+    MIDDLE = 1
+    RIGHT = 2
+
 class Actions(object):
     '''
     An Action object represents a set of actions that are executed in a particular order.
@@ -329,18 +337,35 @@ class Actions(object):
         self.action_chain.append(['release'])
         return self
 
-    def click(self, element, count=1):
+    def click(self, element, button=MouseButton.LEFT, count=1):
         '''
         Performs a click with additional parameters to allow for double clicking,
         right click, middle click, etc.
 
         :param element: The element to click.
+        :param button: The mouse button to click (indexed from 0, left to right).
         :param count: Optional, the count of clicks to synthesize (for double
                       click events).
         '''
         el = element.id
-        self.action_chain.append(['click', el, None, count])
+        self.action_chain.append(['click', el, button, count])
         return self
+
+    def context_click(self, element):
+        '''
+        Performs a context click on the specified element.
+
+        :param element: The element to context click.
+        '''
+        return self.click(element, button=MouseButton.RIGHT)
+
+    def middle_click(self, element):
+        '''
+        Performs a middle click on the specified element.
+
+        :param element: The element to middle click.
+        '''
+        return self.click(element, button=MouseButton.MIDDLE)
 
     def double_click(self, element):
         '''
