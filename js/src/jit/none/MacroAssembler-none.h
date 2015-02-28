@@ -185,7 +185,8 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void bind(T) { MOZ_CRASH(); }
     template <typename T> void j(Condition, T) { MOZ_CRASH(); }
     template <typename T> void jump(T) { MOZ_CRASH(); }
-    void align(size_t) { MOZ_CRASH(); }
+    void haltingAlign(size_t) { MOZ_CRASH(); }
+    void nopAlign(size_t) { MOZ_CRASH(); }
     void checkStackAlignment() { MOZ_CRASH(); }
     uint32_t currentOffset() { MOZ_CRASH(); }
     uint32_t actualOffset(uint32_t) { MOZ_CRASH(); }
