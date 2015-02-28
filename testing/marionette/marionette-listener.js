@@ -1127,6 +1127,15 @@ function actions(chain, touchId, command_id, i, keyModifiers) {
       utils.sendKeyUp(pack[1], keyModifiers, curFrame);
       actions(chain, touchId, command_id, i, keyModifiers);
       break;
+    case 'click':
+      el = elementManager.getKnownElement(pack[1], curFrame);
+      let clickCount = pack[3];
+      c = coordinates(el, null, null);
+      emitMouseEvent(el.ownerDocument, 'mousemove', c.x, c.y, null, clickCount, keyModifiers);
+      emitMouseEvent(el.ownerDocument, 'mousedown', c.x, c.y, null, clickCount, keyModifiers);
+      emitMouseEvent(el.ownerDocument, 'mouseup', c.x, c.y, null, clickCount, keyModifiers);
+      actions(chain, touchId, command_id, i, keyModifiers);
+      break;
     case 'press':
       if (lastCoordinates) {
         generateEvents('cancel', lastCoordinates[0], lastCoordinates[1],
