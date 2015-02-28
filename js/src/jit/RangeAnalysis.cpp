@@ -3065,12 +3065,12 @@ MLoadElementHole::collectRangeInfoPreTrunc()
 void
 MLoadTypedArrayElementStatic::collectRangeInfoPreTrunc()
 {
-    Range *range = ptr()->range();
+    Range range(ptr());
 
-    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+    if (range.hasInt32LowerBound() && range.hasInt32UpperBound()) {
         int64_t offset = this->offset();
-        int64_t lower = range->lower() + offset;
-        int64_t upper = range->upper() + offset;
+        int64_t lower = range.lower() + offset;
+        int64_t upper = range.upper() + offset;
         int64_t length = this->length();
         if (lower >= 0 && upper < length)
             setNeedsBoundsCheck(false);
@@ -3080,12 +3080,12 @@ MLoadTypedArrayElementStatic::collectRangeInfoPreTrunc()
 void
 MStoreTypedArrayElementStatic::collectRangeInfoPreTrunc()
 {
-    Range *range = ptr()->range();
+    Range range(ptr());
 
-    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+    if (range.hasInt32LowerBound() && range.hasInt32UpperBound()) {
         int64_t offset = this->offset();
-        int64_t lower = range->lower() + offset;
-        int64_t upper = range->upper() + offset;
+        int64_t lower = range.lower() + offset;
+        int64_t upper = range.upper() + offset;
         int64_t length = this->length();
         if (lower >= 0 && upper < length)
             setNeedsBoundsCheck(false);
