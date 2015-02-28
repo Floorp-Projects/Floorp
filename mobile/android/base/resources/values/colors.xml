@@ -74,7 +74,6 @@
       Application theme colors
   -->
   <!-- Default colors -->
-  <color name="text_color_secondary">#777777</color>
   <color name="text_color_tertiary">#9198A1</color>
 
   <!-- Default inverse colors -->

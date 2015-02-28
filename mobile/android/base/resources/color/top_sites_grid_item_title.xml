@@ -9,6 +9,6 @@
     <item android:state_empty="true" android:color="#80777777" />
 
     <!-- default -->
-    <item android:color="#FF777777"/>
+    <item android:color="@color/placeholder_grey"/>
 
 </selector>
