@@ -576,9 +576,16 @@ Range::Range(const MDefinition *def)
         *this = *other;
 
         // Simulate the effect of converting the value to its type.
+        // Note: we cannot clamp here, since ranges aren't allowed to shrink
+        // and truncation can increase range again. So doing wrapAround to
+        // mimick a possible truncation.
         switch (def->type()) {
           case MIRType_Int32:
-            wrapAroundToInt32();
+            // MToInt32 cannot truncate. So we can safely clamp.
+            if (def->isToInt32())
+                clampToInt32();
+            else
+                wrapAroundToInt32();
             break;
           case MIRType_Boolean:
             wrapAroundToBoolean();
@@ -1630,9 +1637,8 @@ MTruncateToInt32::computeRange(TempAllocator &alloc)
 void
 MToInt32::computeRange(TempAllocator &alloc)
 {
-    Range *output = new(alloc) Range(getOperand(0));
-    output->clampToInt32();
-    setRange(output);
+    // No clamping since this computes the range *before* bailouts.
+    setRange(new(alloc) Range(getOperand(0)));
 }
 
 void
