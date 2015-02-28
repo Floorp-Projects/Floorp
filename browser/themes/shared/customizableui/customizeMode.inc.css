@@ -151,9 +151,14 @@
 #customization-titlebar-visibility-button {
   list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
   -moz-image-region: rect(0, 24px, 24px, 0);
+}
+
+#customization-lwtheme-button,
+#customization-titlebar-visibility-button  {
   padding: 2px 7px;
 }
 
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-text,
 #customization-titlebar-visibility-button > .button-box > .button-text {
   /* Sadly, button.css thinks its margins are perfect for everyone. */
   -moz-margin-start: 6px !important;
