@@ -1077,8 +1077,8 @@ UpdateShapeTypeAndValue(ExclusiveContext *cx, NativeObject *obj, Shape *shape, c
 }
 
 static bool
-NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
-          HandleShape shape, MutableHandleValue vp, ObjectOpResult &result);
+NativeSetExistingDataProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
+                              HandleShape shape, MutableHandleValue vp, ObjectOpResult &result);
 
 static inline bool
 DefinePropertyOrElement(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
@@ -1167,10 +1167,12 @@ DefinePropertyOrElement(ExclusiveContext *cx, HandleNativeObject obj, HandleId i
         return false;
 
     if (callSetterAfterwards && setter) {
+        MOZ_ASSERT(!(attrs & JSPROP_GETTER));
+        MOZ_ASSERT(!(attrs & JSPROP_SETTER));
         if (!cx->shouldBeJSContext())
             return false;
         RootedValue nvalue(cx, value);
-        return NativeSet(cx->asJSContext(), obj, obj, shape, &nvalue, result);
+        return NativeSetExistingDataProperty(cx->asJSContext(), obj, obj, shape, &nvalue, result);
     }
 
     return result.succeed();
@@ -1602,6 +1604,7 @@ js::NativeHasProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *
     }
 }
 
+
 /*** [[Get]] *************************************************************************************/
 
 static inline bool
@@ -1927,6 +1930,7 @@ js::GetPropertyForNameLookup(JSContext *cx, HandleObject obj, HandleId id, Mutab
     return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), obj, id, NameLookup, vp);
 }
 
+
 /*** [[Set]] *************************************************************************************/
 
 static bool
@@ -2098,18 +2102,20 @@ SetDenseOrTypedArrayElement(JSContext *cx, HandleNativeObject obj, uint32_t inde
 }
 
 /*
- * Finish assignment to a shapeful property of a native object obj. This
+ * Finish assignment to a shapeful data property of a native object obj. This
  * conforms to no standard and there is a lot of legacy baggage here.
  */
 static bool
-NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
-          HandleShape shape, MutableHandleValue vp, ObjectOpResult &result)
+NativeSetExistingDataProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
+                              HandleShape shape, MutableHandleValue vp, ObjectOpResult &result)
 {
     MOZ_ASSERT(obj->isNative());
+    MOZ_ASSERT(shape->isDataDescriptor());
 
-    if (shape->hasSlot()) {
-        /* If shape has a stub setter, just store vp. */
-        if (shape->hasDefaultSetter()) {
+    if (shape->hasDefaultSetter()) {
+        if (shape->hasSlot()) {
+            // The common path. Standard data property.
+
             // Global properties declared with 'var' will be initially
             // defined with an undefined value, so don't treat the initial
             // assignments to such properties as overwrites.
@@ -2117,29 +2123,22 @@ NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
             obj->setSlotWithType(cx, shape, vp, overwriting);
             return result.succeed();
         }
+
+        // Bizarre: shared (slotless) property that's writable but has no
+        // JSSetterOp. JS code can't define such a property, but it can be done
+        // through the JSAPI. Treat it as non-writable.
+        return result.fail(JSMSG_GETTER_ONLY);
     }
 
-    if (!shape->hasSlot()) {
-        /*
-         * Allow API consumers to create shared properties with stub setters.
-         * Such properties effectively function as data descriptors which are
-         * not writable, so attempting to set such a property should do nothing
-         * or throw if we're in strict mode.
-         */
-        if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return result.fail(JSMSG_GETTER_ONLY);
-    }
-
-    RootedValue ovp(cx, vp);
+    MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
 
     uint32_t sample = cx->runtime()->propertyRemovals;
-    if (!shape->set(cx, obj, receiver, vp, result))
+    RootedId id(cx, shape->propid());
+    if (!CallJSSetterOp(cx, shape->setterOp(), obj, id, vp, result))
         return false;
 
-    /*
-     * Update any slot for the shape with the value produced by the setter,
-     * unless the setter deleted the shape.
-     */
+    // Update any slot for the shape with the value produced by the setter,
+    // unless the setter deleted the shape.
     if (shape->hasSlot() &&
         (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
          obj->contains(cx, shape)))
@@ -2147,7 +2146,7 @@ NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
         obj->setSlot(shape->slot(), vp);
     }
 
-    return true;  // result is populated by shape->set() above.
+    return true;  // result is populated by CallJSSetterOp above.
 }
 
 /*
@@ -2193,7 +2192,7 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
                 Rooted<ArrayObject*> arr(cx, &pobj->as<ArrayObject>());
                 return ArraySetLength(cx, arr, id, shape->attributes(), vp, result);
             }
-            return NativeSet(cx, obj, receiver, shape, vp, result);
+            return NativeSetExistingDataProperty(cx, obj, receiver, shape, vp, result);
         }
 
         // SpiderMonkey special case: assigning to an inherited slotless
@@ -2209,7 +2208,7 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
             if (shape->hasDefaultSetter())
                 return result.succeed();
 
-            return shape->set(cx, obj, receiver, vp, result);
+            return CallJSSetterOp(cx, shape->setterOp(), obj, id, vp, result);
         }
 
         // Shadow pobj[id] by defining a new data property receiver[id].
