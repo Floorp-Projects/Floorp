@@ -430,44 +430,36 @@ GetClosestInterestingAccessible(id anObject)
   if (!mGeckoAccessible)
     return nil;
 
-  // XXX maybe we should cache the subrole.
-  nsAutoString xmlRoles;
-
-  // XXX we don't need all the attributes (see bug 771113)
-  nsCOMPtr<nsIPersistentProperties> attributes = mGeckoAccessible->Attributes();
-  if (attributes)
-    nsAccUtils::GetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
-
-  nsWhitespaceTokenizer tokenizer(xmlRoles);
-
-  while (tokenizer.hasMoreTokens()) {
-    const nsDependentSubstring token(tokenizer.nextToken());
-
-    if (token.EqualsLiteral("banner"))
+  nsIAtom* landmark = mGeckoAccessible->LandmarkRole();
+  if (landmark) {
+    if (landmark == nsGkAtoms::application)
+      return @"AXLandmarkApplication";
+    if (landmark == nsGkAtoms::banner)
       return @"AXLandmarkBanner";
-
-    if (token.EqualsLiteral("complementary"))
+    if (landmark == nsGkAtoms::complementary)
       return @"AXLandmarkComplementary";
-
-    if (token.EqualsLiteral("contentinfo"))
+    if (landmark == nsGkAtoms::contentinfo)
       return @"AXLandmarkContentInfo";
-
-    if (token.EqualsLiteral("main"))
+    if (landmark == nsGkAtoms::form)
+      return @"AXLandmarkForm";
+    if (landmark == nsGkAtoms::main)
       return @"AXLandmarkMain";
-
-    if (token.EqualsLiteral("navigation"))
+    if (landmark == nsGkAtoms::navigation)
       return @"AXLandmarkNavigation";
-
-    if (token.EqualsLiteral("search"))
+    if (landmark == nsGkAtoms::search)
       return @"AXLandmarkSearch";
-
-    if (token.EqualsLiteral("searchbox"))
+    if (landmark == nsGkAtoms::searchbox)
       return @"AXSearchField";
   }
 
   switch (mRole) {
     case roles::LIST:
       return @"AXContentList"; // 10.6+ NSAccessibilityContentListSubrole;
+
+    case roles::ENTRY:
+      if (mGeckoAccessible->IsSearchbox())
+        return @"AXSearchField";
+      break;
 
     case roles::DEFINITION_LIST:
       return @"AXDefinitionList"; // 10.6+ NSAccessibilityDefinitionListSubrole;
@@ -488,6 +480,33 @@ GetClosestInterestingAccessible(id anObject)
   return nil;
 }
 
+struct RoleDescrMap
+{
+  NSString* role;
+  const nsString& description;
+};
+
+static const RoleDescrMap sRoleDescrMap[] = {
+  { @"AXDefinition", NS_LITERAL_STRING("definition") },
+  { @"AXLandmarkBanner", NS_LITERAL_STRING("banner") },
+  { @"AXLandmarkComplementary", NS_LITERAL_STRING("complementary") },
+  { @"AXLandmarkContentInfo", NS_LITERAL_STRING("content") },
+  { @"AXLandmarkMain", NS_LITERAL_STRING("main") },
+  { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
+  { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
+  { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
+  { @"AXTerm", NS_LITERAL_STRING("term") }
+};
+
+struct RoleDescrComparator
+{
+  const NSString* mRole;
+  explicit RoleDescrComparator(const NSString* aRole) : mRole(aRole) {}
+  int operator()(const RoleDescrMap& aEntry) const {
+    return [mRole compare:aEntry.role];
+  }
+};
+
 - (NSString*)roleDescription
 {
   if (mRole == roles::DOCUMENT)
@@ -495,32 +514,13 @@ GetClosestInterestingAccessible(id anObject)
 
   NSString* subrole = [self subrole];
 
-  if ((mRole == roles::LISTITEM) && [subrole isEqualToString:@"AXTerm"])
-    return utils::LocalizedString(NS_LITERAL_STRING("term"));
-  if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
-    return utils::LocalizedString(NS_LITERAL_STRING("definition"));
-  if ((mRole == roles::ENTRY) && [subrole isEqualToString:@"AXSearchField"])
-    return utils::LocalizedString(NS_LITERAL_STRING("searchTextField"));
-
-  NSString* role = [self role];
-
-  // the WAI-ARIA Landmarks
-  if ([role isEqualToString:NSAccessibilityGroupRole]) {
-    if ([subrole isEqualToString:@"AXLandmarkBanner"])
-      return utils::LocalizedString(NS_LITERAL_STRING("banner"));
-    if ([subrole isEqualToString:@"AXLandmarkComplementary"])
-      return utils::LocalizedString(NS_LITERAL_STRING("complementary"));
-    if ([subrole isEqualToString:@"AXLandmarkContentInfo"])
-      return utils::LocalizedString(NS_LITERAL_STRING("content"));
-    if ([subrole isEqualToString:@"AXLandmarkMain"])
-      return utils::LocalizedString(NS_LITERAL_STRING("main"));
-    if ([subrole isEqualToString:@"AXLandmarkNavigation"])
-      return utils::LocalizedString(NS_LITERAL_STRING("navigation"));
-    if ([subrole isEqualToString:@"AXLandmarkSearch"])
-      return utils::LocalizedString(NS_LITERAL_STRING("search"));
+  size_t idx = 0;
+  if (BinarySearchIf(sRoleDescrMap, 0, ArrayLength(sRoleDescrMap),
+                     RoleDescrComparator(subrole), &idx)) {
+    return utils::LocalizedString(sRoleDescrMap[idx].description);
   }
 
-  return NSAccessibilityRoleDescription(role, subrole);
+  return NSAccessibilityRoleDescription([self role], subrole);
 }
 
 - (NSString*)title
