@@ -124,7 +124,7 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
         SetterOp setter = ownDesc.setter();
         MOZ_ASSERT(setter != JS_StrictPropertyStub);
         if (setter && setter != JS_StrictPropertyStub)
-            return CallSetter(cx, receiver, id, setter, ownDesc.attributes(), vp, result);
+            return CallJSSetterOp(cx, setter, receiver, id, vp, result);
 
         // Steps 5.c-d. Adapt for SpiderMonkey by using HasOwnProperty instead
         // of the standard [[GetOwnProperty]].
