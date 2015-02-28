@@ -21,7 +21,7 @@ body {
 }
 
 .dark {
-  background-color: #000000;
+  background-color: #222222;
   color: #eeeeee;
 }
 
@@ -284,6 +284,8 @@ body {
   list-style: decimal !important;
 }
 
+/*======= Controls toolbar =======*/
+
 .toolbar {
   font-family: "Clear Sans",sans-serif;
   transition-property: visibility, opacity;
@@ -298,7 +300,7 @@ body {
   padding: 0;
   list-style: none;
   background-color: #EBEBF0;
-  -moz-user-select: none;
+  border-top: 1px solid #D7D9DB;
 }
 
 .toolbar-hidden {
@@ -314,23 +316,27 @@ body {
 }
 
 .button {
-  color: white;
   display: block;
   background-position: center;
-  background-size: 30px 24px;
+  background-size: 30px 28px;
   background-repeat: no-repeat;
   background-color: transparent;
   border: 0;
   width: 100%;
 }
 
+.button:active {
+  background-color: #D7D7DC;
+}
+
 /* Remove dotted border when button is focused */
 .button::-moz-focus-inner,
-#font-size-buttons > button::-moz-focus-inner {
+.dropdown-popup > div > button::-moz-focus-inner {
   border: 0;
 }
 
 .dropdown {
+  left: 0;
   text-align: center;
   display: inline-block;
   list-style: none;
@@ -348,135 +354,77 @@ body {
   padding: 0px;
 }
 
+/*======= Font style popup =======*/
+
 .dropdown-popup {
-  text-align: start;
   position: absolute;
-  left: 0px;
+  left: 0;
+  width: 100%;
   z-index: 1000;
-  float: left;
   background: #EBEBF0;
-  margin-top: 12px;
-  margin-bottom: 10px;
-  padding-top: 4px;
-  padding-bottom: 8px;
-  font-size: 14px;
-  box-shadow: 0px -1px 12px #333;
-  border-radius: 3px;
   visibility: hidden;
+  border-top: 1px solid #D7D9DB;
 }
 
-.dropdown-popup > hr {
-  width: 100%;
-  height: 0px;
-  border: 0px;
-  border-top: 1px solid #B5B5B5;
-  margin: 0;
+/* Only used on desktop */
+.dropdown-popup > hr,
+.dropdown-arrow,
+#font-type-buttons > button > span {
+  display: none;
 }
 
 .open > .dropdown-popup {
-  margin-top: 0px;
-  margin-bottom: 6px;
-  bottom: 100%;
   visibility: visible;
-}
-
-.dropdown-arrow {
-  position: absolute;
-  width: 40px;
-  height: 18px;
-  bottom: -18px;
-  background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-mdpi.png');
-  background-size: 40px 18px;
-  background-position: center;
-  display: block;
+  bottom: 100%;
 }
 
 #font-type-buttons,
 #font-size-buttons,
-.segmented-button {
+#color-scheme-buttons {
   display: flex;
   flex-direction: row;
-  list-style: none;
-  padding: 10px 5px;
-  white-space: nowrap;
 }
 
-#font-type-buttons > li,
-#font-size-buttons > button,
-.segmented-button > li {
-  flex: 1 0 auto;
+#font-type-buttons > button,
+#color-scheme-buttons > button {
   text-align: center;
-  line-height: 20px;
 }
 
-#font-type-buttons > li,
+#font-type-buttons > button,
 #font-size-buttons > button {
-  width: 100px; /* combined with flex, this acts as a minimum width */
+  width: 50%;
+  background-color: transparent;
+  border: 0;
 }
 
-.segmented-button > li {
-  width: 50px; /* combined with flex, this acts as a minimum width */
+#font-type-buttons > button {
+  font-size: 24px;
+  color: #AFB1B3;
+  padding: 15px 0;
 }
 
-#font-type-buttons > li {
-  padding: 10px 0;
+#font-type-buttons > button:active,
+#font-type-buttons > button.selected {
+  color: #222222;
 }
 
-.segmented-button > li {
-  border-left: 1px solid #B5B5B5;
+#font-size-sample {
+  flex: 0;
+  font-size: 24px;
+  color: #000000;
+  margin-left: -20px;
+  margin-right: -20px;
 }
 
-#font-size-buttons > button:first-child,
-.segmented-button > li:first-child {
-  border-left: 0px;
-}
-
-#font-type-buttons > li > a,
-.segmented-button > li > a {
-  vertical-align: middle;
-  text-decoration: none;
-  color: black;
-}
-
-#font-type-buttons > li > a {
-  display: inline-block;
-  font-size: 48px;
-  line-height: 50px;
-  margin-bottom: 5px;
-  border-bottom: 3px solid transparent;
-}
-
-.segmented-button > li > a {
-  display: block;
-  padding: 5px 0;
-  font-family: "Clear Sans",sans-serif;
-  font-weight: lighter;
-}
-
-#font-type-buttons > li > a:active,
-#font-type-buttons > li.selected > a {
-  border-color: #ff9400;
-}
-
-.segmented-button > li > a:active,
-.segmented-button > li.selected > a {
-  font-weight: bold;
-}
-
-#font-type-buttons > li > .sans-serif {
-  font-weight: lighter;
-}
-
-#font-type-buttons > li > div {
-  color: #666;
-  font-size: 12px;
+.serif-button {
+  font-family: serif;
 }
 
 .minus-button,
 .plus-button {
   background-color: transparent;
   border: 0;
-  height: 30px;
+  height: 60px;
   background-size: 18px 18px;
   background-repeat: no-repeat;
   background-position: center;
@@ -490,7 +438,38 @@ body {
   background-size: 24px 24px;
 }
 
- /* desktop-only controls */
+#color-scheme-buttons > button {
+  width: 33%;
+  border-radius: 4px;
+  border: 1px solid #BFBFBF;
+  padding: 10px;
+  margin: 15px 10px;
+  font-size: 14px;
+}
+
+#color-scheme-buttons > button:active,
+#color-scheme-buttons > button.selected {
+  border: 2px solid #FF9500;
+}
+
+.dark-button {
+  color: #eeeeee;
+  background-color: #333333;
+}
+
+.auto-button {
+  color: #000000;
+  background-color: transparent;
+}
+
+.light-button {
+  color: #333333;
+  background-color: #ffffff;
+}
+
+/*======= Toolbar icons =======*/
+
+/* desktop-only controls */
 .close-button,
 .list-button {
   display: none;
@@ -512,6 +491,10 @@ body {
   background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
 }
 
+.open .style-button {
+  background-image: url('chrome://browser/skin/images/reader-style-icon-active-mdpi.png');
+}
+
 .minus-button {
   background-image: url('chrome://browser/skin/images/reader-minus-mdpi.png');
 }
@@ -521,10 +504,6 @@ body {
 }
 
 @media screen and (min-resolution: 1.25dppx) {
-  .dropdown-arrow {
-    background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-hdpi.png');
-  }
-
   .toggle-button.on {
     background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
   }
@@ -541,6 +520,10 @@ body {
     background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
   }
 
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-hdpi.png');
+  }
+
   .minus-button {
     background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
   }
@@ -551,10 +534,6 @@ body {
 }
 
 @media screen and (min-resolution: 2dppx) {
-  .dropdown-arrow {
-    background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-xhdpi.png');
-  }
-
   .toggle-button.on {
     background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xhdpi.png');
   }
@@ -571,6 +550,10 @@ body {
     background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
   }
 
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xhdpi.png');
+  }
+
   .minus-button {
     background-image: url('chrome://browser/skin/images/reader-minus-xhdpi.png');
   }
@@ -580,9 +563,39 @@ body {
   }
 }
 
+@media screen and (min-resolution: 3dppx) {
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xxhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xxhdpi.png');
+  }
+
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xxhdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-xxhdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-xxhdpi.png');
+  }
+}
+
 @media screen and (orientation: portrait) {
   .button {
-    height: 48px;
+    height: 56px;
   }
 }
 
@@ -600,5 +613,18 @@ body {
 
   .toolbar > * {
     width: 56px;
+  }
+
+  .dropdown-popup {
+    position: absolute;
+    width: 350px;
+    left: auto;
+    right: 15px;
+    bottom: -12px;
+    z-index: 1000;
+    background: #EBEBF0;
+    border: 1px solid #D7D9DB;
+    border-radius: 4px;
+    box-shadow: 0px 2px 4px 2px #BFBFBF;
   }
 }
