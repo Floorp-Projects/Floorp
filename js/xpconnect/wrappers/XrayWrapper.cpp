@@ -2081,15 +2081,15 @@ XrayWrapper<Base, Traits>::get(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
-                               HandleObject receiver, HandleId id,
-                               MutableHandleValue vp, ObjectOpResult &result) const
+XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper, HandleId id, HandleValue v,
+                               HandleValue receiver, ObjectOpResult &result) const
 {
     MOZ_ASSERT(!Traits::HasPrototype);
     // Skip our Base if it isn't already BaseProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return js::BaseProxyHandler::set(cx, wrapper, wrapper, id, vp, result);
+    RootedValue wrapperValue(cx, ObjectValue(*wrapper));
+    return js::BaseProxyHandler::set(cx, wrapper, id, v, wrapperValue, result);
 }
 
 template <typename Base, typename Traits>

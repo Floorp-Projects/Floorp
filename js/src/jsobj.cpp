@@ -1575,25 +1575,26 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
 }
 
 /* static */ bool
-JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                               HandleId id, MutableHandleValue vp, ObjectOpResult &result)
+JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                               HandleValue receiver, ObjectOpResult &result)
 {
+    RootedValue value(cx, v);
     if (MOZ_UNLIKELY(obj->watched())) {
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
+        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, &value))
             return false;
     }
-    return obj->getOps()->setProperty(cx, obj, receiver, id, vp, result);
+    return obj->getOps()->setProperty(cx, obj, id, value, receiver, result);
 }
 
 /* static */ bool
-JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
-                              uint32_t index, MutableHandleValue vp, ObjectOpResult &result)
+JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
+                              HandleValue receiver, ObjectOpResult &result)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return nonNativeSetProperty(cx, obj, receiver, id, vp, result);
+    return nonNativeSetProperty(cx, obj, id, v, receiver, result);
 }
 
 JS_FRIEND_API(bool)
@@ -3257,22 +3258,6 @@ js::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, Handle
     if (!IndexToId(cx, index, &id))
         return false;
     return DefineProperty(cx, obj, id, value, getter, setter, attrs);
-}
-
-bool
-js::SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
-                MutableHandleValue vp)
-{
-    RootedId id(cx, NameToId(name));
-    return SetProperty(cx, obj, receiver, id, vp);
-}
-
-bool
-js::PutProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue value,
-                bool strict)
-{
-    RootedId id(cx, NameToId(name));
-    return PutProperty(cx, obj, id, value, strict);
 }
 
 

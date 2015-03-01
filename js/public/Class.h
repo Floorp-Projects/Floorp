@@ -342,8 +342,8 @@ typedef bool
 (* GetPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                   JS::MutableHandleValue vp);
 typedef bool
-(* SetPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
-                  JS::MutableHandleValue vp, JS::ObjectOpResult &result);
+(* SetPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v,
+                  JS::HandleValue receiver, JS::ObjectOpResult &result);
 typedef bool
 (* GetOwnPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                      JS::MutableHandle<JSPropertyDescriptor> desc);

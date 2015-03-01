@@ -2218,11 +2218,11 @@ EmitObjectOpResultCheck(MacroAssembler &masm, Label *failure, bool strict,
 }
 
 static bool
-ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
-                 bool strict)
+ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v, bool strict)
 {
+    RootedValue receiver(cx, ObjectValue(*proxy));
     ObjectOpResult result;
-    return Proxy::set(cx, proxy, proxy, id, vp, result)
+    return Proxy::set(cx, proxy, id, v, receiver, result)
            && result.checkStrictErrorOrWarning(cx, proxy, id, strict);
 }
 
@@ -2243,12 +2243,12 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     RegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
 
-    // ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
+    // ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
     //                  bool strict);
     Register argJSContextReg = regSet.takeGeneral();
     Register argProxyReg     = regSet.takeGeneral();
     Register argIdReg        = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
+    Register argValueReg     = regSet.takeGeneral();
     Register argStrictReg    = regSet.takeGeneral();
 
     Register scratch         = regSet.takeGeneral();
@@ -2259,7 +2259,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     // Push args on stack so we can take pointers to make handles.
     // Push value before touching any other registers (see WARNING above).
     masm.Push(value);
-    masm.movePtr(StackPointer, argVpReg);
+    masm.movePtr(StackPointer, argValueReg);
 
     masm.move32(Imm32(strict), argStrictReg);
 
@@ -2283,7 +2283,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.passABIArg(argJSContextReg);
     masm.passABIArg(argProxyReg);
     masm.passABIArg(argIdReg);
-    masm.passABIArg(argVpReg);
+    masm.passABIArg(argValueReg);
     masm.passABIArg(argStrictReg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ProxySetProperty));
 
@@ -2508,7 +2508,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         MOZ_ASSERT(target);
 
         // JSSetterOp: bool fn(JSContext *cx, HandleObject obj,
-        //                     HandleId id, MutableHandleValue vp, ObjectOpResult &result);
+        //                     HandleId id, HandleValue value, ObjectOpResult &result);
 
         // First, allocate an ObjectOpResult on the stack. We push this before
         // the stubCode pointer in order to match the layout of
@@ -2529,11 +2529,11 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         // OK, now we can grab our remaining registers and grab the pointer to
         // what we just pushed into one of them.
         Register argJSContextReg = regSet.takeGeneral();
-        Register argVpReg        = regSet.takeGeneral();
+        Register argValueReg     = regSet.takeGeneral();
         // We can just reuse the "object" register for argObjReg
         Register argObjReg       = object;
         Register argIdReg        = regSet.takeGeneral();
-        masm.movePtr(StackPointer, argVpReg);
+        masm.movePtr(StackPointer, argValueReg);
 
         // push canonical jsid from shape instead of propertyname.
         masm.Push(shape->propid(), argIdReg);
@@ -2553,7 +2553,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.passABIArg(argJSContextReg);
         masm.passABIArg(argObjReg);
         masm.passABIArg(argIdReg);
-        masm.passABIArg(argVpReg);
+        masm.passABIArg(argValueReg);
         masm.passABIArg(argResultReg);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
 
@@ -2565,7 +2565,8 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         EmitObjectOpResultCheck<IonOOLSetterOpExitFrameLayout>(masm, masm.exceptionLabel(),
                                                                strict, scratchReg,
                                                                argJSContextReg, argObjReg,
-                                                               argIdReg, argVpReg, argResultReg);
+                                                               argIdReg, argValueReg,
+                                                               argResultReg);
 
         // masm.leaveExitFrame & pop locals.
         masm.adjustStack(IonOOLSetterOpExitFrameLayout::Size());
