@@ -364,8 +364,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
     if (!ToId(cx, index, &id))
         return false;
 
-    RootedValue tmp(cx, v);
-    return SetProperty(cx, obj, obj, id, &tmp);
+    return SetProperty(cx, obj, id, v);
 }
 
 /*
@@ -434,7 +433,7 @@ bool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
-    return SetProperty(cx, obj, obj, cx->names().length, &v);
+    return SetProperty(cx, obj, cx->names().length, v);
 }
 
 /*
@@ -1270,11 +1269,10 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     do {
         value = *vector++;
         indexv = DoubleValue(index);
-        if (!ValueToId<CanGC>(cx, indexv, &id) ||
-            !SetProperty(cx, obj, obj, id, &value))
-        {
+        if (!ValueToId<CanGC>(cx, indexv, &id))
             return false;
-        }
+        if (!SetProperty(cx, obj, id, value))
+            return false;
         index += 1;
     } while (vector != end);
 
