@@ -219,13 +219,14 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
 }
 
 bool
-DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> receiver,
-                     Handle<jsid> id, MutableHandle<JS::Value> vp, ObjectOpResult &result) const
+DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<jsid> id,
+                     Handle<JS::Value> v, Handle<JS::Value> receiver,
+                     ObjectOpResult &result) const
 {
   MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
              "Should not have a XrayWrapper here");
   bool done;
-  if (!setCustom(cx, proxy, id, vp, &done)) {
+  if (!setCustom(cx, proxy, id, v, &done)) {
     return false;
   }
   if (done) {
@@ -252,7 +253,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
     }
   }
 
-  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, desc, result);
+  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, desc, result);
 }
 
 bool
@@ -350,7 +351,7 @@ IdToInt32(JSContext* cx, JS::Handle<jsid> id)
 
 bool
 DOMProxyHandler::setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                           JS::MutableHandle<JS::Value> vp, bool *done) const
+                           JS::Handle<JS::Value> v, bool *done) const
 {
   *done = false;
   return true;
