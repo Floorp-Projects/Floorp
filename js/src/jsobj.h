@@ -1270,8 +1270,21 @@ XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
 extern bool
 ReportGetterOnlyAssignment(JSContext* cx, bool strict);
 
-extern JSObject*
-NonNullObject(JSContext* cx, const Value& v);
+/*
+ * Report a TypeError: "so-and-so is not an object".
+ * Using NotNullObject is usually less code.
+ */
+extern void
+ReportNotObject(JSContext* cx, const Value& v);
+
+inline JSObject*
+NonNullObject(JSContext* cx, const Value& v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    ReportNotObject(cx, v);
+    return nullptr;
+}
 
 extern const char*
 InformalValueTypeName(const Value& v);

@@ -125,13 +125,6 @@ GetOrCreateFunctionScript(JSContext* cx, HandleFunction fun)
     return fun->nonLazyScript();
 }
 
-bool
-js::ReportObjectRequired(JSContext* cx)
-{
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, "value");
-    return false;
-}
-
 static bool
 ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id)
 {
@@ -2243,7 +2236,6 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
     }
 }
 
-
 
 /*** Allocations Tracking *************************************************************************/
 
@@ -2645,11 +2637,9 @@ const Class Debugger::jsclass = {
 /* static */ Debugger*
 Debugger::fromThisValue(JSContext* cx, const CallArgs& args, const char* fnname)
 {
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, args.thisv());
+    if (!thisobj)
         return nullptr;
-    }
-    JSObject* thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &Debugger::jsclass) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger", fnname, thisobj->getClass()->name);
@@ -3206,10 +3196,9 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
 
     /* Check that the arguments, if any, are cross-compartment wrappers. */
     for (unsigned i = 0; i < args.length(); i++) {
-        const Value& arg = args[i];
-        if (!arg.isObject())
-            return ReportObjectRequired(cx);
-        JSObject* argobj = &arg.toObject();
+        JSObject* argobj = NonNullObject(cx, args[i]);
+        if (!argobj)
+            return false;
         if (!argobj->is<CrossCompartmentWrapperObject>()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CCW_REQUIRED,
                                  "Debugger");
@@ -4565,11 +4554,9 @@ Debugger::wrapScript(JSContext* cx, HandleScript script)
 static JSObject*
 DebuggerScript_check(JSContext* cx, const Value& v, const char* clsname, const char* fnname)
 {
-    if (!v.isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, v);
+    if (!thisobj)
         return nullptr;
-    }
-    JSObject* thisobj = &v.toObject();
     if (thisobj->getClass() != &DebuggerScript_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              clsname, fnname, thisobj->getClass()->name);
@@ -5592,12 +5579,9 @@ DebuggerSource_construct(JSContext* cx, unsigned argc, Value* vp)
 static NativeObject*
 DebuggerSource_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
 {
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, args.thisv());
+    if (!thisobj)
         return nullptr;
-    }
-
-    JSObject* thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &DebuggerSource_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Source", fnname, thisobj->getClass()->name);
@@ -5890,11 +5874,9 @@ const Class DebuggerFrame_class = {
 static NativeObject*
 CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool checkLive)
 {
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, args.thisv());
+    if (!thisobj)
         return nullptr;
-    }
-    JSObject* thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &DebuggerFrame_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Frame", fnname, thisobj->getClass()->name);
@@ -6113,11 +6095,9 @@ DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
     int32_t i = args.callee().as<JSFunction>().getExtendedSlot(0).toInt32();
 
     /* Check that the this value is an Arguments object. */
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    RootedObject argsobj(cx, NonNullObject(cx, args.thisv()));
+    if (!argsobj)
         return false;
-    }
-    RootedObject argsobj(cx, &args.thisv().toObject());
     if (argsobj->getClass() != &DebuggerArguments_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Arguments", "getArgument", argsobj->getClass()->name);
@@ -6660,11 +6640,9 @@ const Class DebuggerObject_class = {
 static NativeObject*
 DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
 {
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, args.thisv());
+    if (!thisobj)
         return nullptr;
-    }
-    JSObject* thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &DebuggerObject_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Object", fnname, thisobj->getClass()->name);
@@ -7608,11 +7586,9 @@ static NativeObject*
 DebuggerEnv_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
                       bool requireDebuggee = true)
 {
-    if (!args.thisv().isObject()) {
-        ReportObjectRequired(cx);
+    JSObject* thisobj = NonNullObject(cx, args.thisv());
+    if (!thisobj)
         return nullptr;
-    }
-    JSObject* thisobj = &args.thisv().toObject();
     if (thisobj->getClass() != &DebuggerEnv_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Environment", fnname, thisobj->getClass()->name);

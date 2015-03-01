@@ -92,19 +92,16 @@ JS_ObjectToOuterObject(JSContext* cx, HandleObject obj)
     return GetOuterObject(cx, obj);
 }
 
-JSObject*
-js::NonNullObject(JSContext* cx, const Value& v)
+void
+js::ReportNotObject(JSContext* cx, const Value& v)
 {
-    if (v.isPrimitive()) {
-        RootedValue value(cx, v);
-        UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
-        if (!bytes)
-            return nullptr;
+    MOZ_ASSERT(!v.isObject());
+
+    RootedValue value(cx, v);
+    UniquePtr<char[], JS::FreePolicy> bytes =
+        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
+    if (bytes)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
-        return nullptr;
-    }
-    return &v.toObject();
 }
 
 const char*
@@ -292,12 +289,9 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                          MutableHandle<PropertyDescriptor> desc)
 {
     // step 2
-    if (!descval.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                             InformalValueTypeName(descval));
+    RootedObject obj(cx, NonNullObject(cx, descval));
+    if (!obj)
         return false;
-    }
-    RootedObject obj(cx, &descval.toObject());
 
     // step 3
     desc.clear();
