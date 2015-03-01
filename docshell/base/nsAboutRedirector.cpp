@@ -69,8 +69,6 @@ static RedirEntry kRedirMap[] = {
        nsIAboutModule::ALLOW_SCRIPT },
     { "webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.xhtml",
        nsIAboutModule::ALLOW_SCRIPT },
-    { "media", "chrome://global/content/aboutMedia.xhtml",
-       nsIAboutModule::ALLOW_SCRIPT },
     // about:srcdoc is unresolvable by specification.  It is included here
     // because the security manager would disallow srcdoc iframes otherwise.
     { "srcdoc", "about:blank",
