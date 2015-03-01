@@ -7709,7 +7709,7 @@ var Distribution = {
     for (let key in localizeablePrefs) {
       try {
         let value = localizeablePrefs[key];
-        value = value.replace("%LOCALE%", locale, "g");
+        value = value.replace(/%LOCALE%/g, locale);
         localizedString.data = "data:text/plain," + key + "=" + value;
         defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedString);
       } catch (e) { /* ignore bad prefs and move on */ }
