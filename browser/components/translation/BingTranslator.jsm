@@ -207,7 +207,7 @@ this.BingTranslator.prototype = {
         if (root.isSimpleRoot) {
           // Workaround for Bing's service problem in which "&" chars in
           // plain-text TranslationItems are double-escaped.
-          result = result.replace("&amp;", "&", "g");
+          result = result.replace(/&amp;/g, "&");
         }
 
         root.parseResult(result);
@@ -422,11 +422,11 @@ let BingTokenManager = {
  */
 function escapeXML(aStr) {
   return aStr.toString()
-             .replace("&", "&amp;", "g")
-             .replace('"', "&quot;", "g")
-             .replace("'", "&apos;", "g")
-             .replace("<", "&lt;", "g")
-             .replace(">", "&gt;", "g");
+             .replace(/&/g, "&amp;")
+             .replace(/\"/g, "&quot;")
+             .replace(/\'/g, "&apos;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;");
 }
 
 /**
