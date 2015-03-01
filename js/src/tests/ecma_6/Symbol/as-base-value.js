@@ -27,9 +27,8 @@ Object.defineProperty(Symbol.prototype, "prop", {
     set: function (v) {
         "use strict";
         sets++;
-        assertEq(typeof this, "object");
-        assertEq(this instanceof Symbol, true);
-        assertEq(this.valueOf(), sym);
+        assertEq(typeof this, "symbol");
+        assertEq(this, sym);
         assertEq(v, "newvalue");
     }
 });
