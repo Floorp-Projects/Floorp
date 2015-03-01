@@ -1,169 +1,396 @@
-var CameraTest = (function() {
-  'use strict';
+function isDefinedObj(obj) {
+  return typeof(obj) !== 'undefined' && obj != null;
+}
 
-  /**
-   * 'camera.control.test.enabled' is queried in Gecko to enable different
-   * test modes in the camera stack. The only currently-supported setting
-   * is 'hardware', which wraps the Gonk camera abstraction class in a
-   * shim class that supports injecting hardware camera API failures into
-   * the execution path.
-   *
-   * The affected API is specified by the 'camera.control.test.hardware'
-   * pref. Currently supported values should be determined by inspecting
-   * TestGonkCameraHardware.cpp.
-   *
-   * Some API calls are simple: e.g. 'start-recording-failure' will cause
-   * the DOM-facing startRecording() call to fail. More complex tests like
-   * 'take-picture-failure' will cause the takePicture() API to fail, while
-   * 'take-picture-process-failure' will simulate a failure of the
-   * asynchronous picture-taking process, even if the initial API call
-   * path seems to have succeeded.
-   *
-   * If 'camera.control.test.hardware.gonk.parameters' is set, it will cause
-   * the contents of that string to be appended to the string of parameters
-   * pulled from the Gonk camera library. This allows tests to inject fake
-   * settings/capabilities for features not supported by the emulator. These
-   * parameters are one or more semicolon-delimited key=value pairs, e.g. to
-   * pretend the emulator supports zoom:
-   *
-   *   zoom-ratios=100,150,200,300,400;max-zoom=4
-   *
-   * This means (of course) that neither the key not the value tokens can
-   * contain either equals signs or semicolons. The test shim doesn't enforce
-   * this so that we can test getting junk from the camera library as well.
-   */
-  const PREF_TEST_ENABLED = "camera.control.test.enabled";
-  const PREF_TEST_HARDWARE = "camera.control.test.hardware";
-  const PREF_TEST_EXTRA_PARAMETERS = "camera.control.test.hardware.gonk.parameters";
-  const PREF_TEST_FAKE_LOW_MEMORY = "camera.control.test.is_low_memory";
-  var oldTestEnabled;
-  var oldTestHw;
-  var testMode;
+function isDefined(obj) {
+  return typeof(obj) !== 'undefined';
+}
 
-  function testHardwareSetFakeParameters(parameters, callback) {
-    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_EXTRA_PARAMETERS, parameters]]}, function() {
-      var setParams = SpecialPowers.getCharPref(PREF_TEST_EXTRA_PARAMETERS);
-      ise(setParams, parameters, "Extra test parameters '" + setParams + "'");
-      if (callback) {
-        callback(setParams);
-      }
-    });
-  }
+/* This is a simple test suite class removing the need to
+   write a lot of boilerplate for camera tests. It can
+   manage the platform configurations for testing, any
+   cleanup required, and common actions such as fetching
+   the camera or waiting for the preview to be completed.
 
-  function testHardwareClearFakeParameters(callback) {
-    SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_EXTRA_PARAMETERS]]}, callback);
-  }
+   To create the suite:
+     var suite = new CameraTestSuite();
 
-  function testHardwareSetFakeLowMemoryPlatform(callback) {
-    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_FAKE_LOW_MEMORY, true]]}, function() {
-      var setParams = SpecialPowers.getBoolPref(PREF_TEST_FAKE_LOW_MEMORY);
-      ise(setParams, true, "Fake low memory platform");
-      if (callback) {
-        callback(setParams);
-      }
-    });
-  }
+   To add a test case to the suite:
+     suite.test('test-name', function() {
+       function startAutoFocus(p) {
+         return suite.camera.autoFocus();
+       }
 
-  function testHardwareClearFakeLowMemoryPlatform(callback) {
-    SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_FAKE_LOW_MEMORY]]}, callback);
-  }
+       return suite.getCamera()
+         .then(startAutoFocus, suite.rejectGetCamera);
+     });
 
-  function testHardwareSet(test, callback) {
-    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_HARDWARE, test]]}, function() {
-      var setTest = SpecialPowers.getCharPref(PREF_TEST_HARDWARE);
-      ise(setTest, test, "Test subtype set to " + setTest);
-      if (callback) {
-        callback(setTest);
-      }
-    });
-  }
+   Finally, to execute the test cases:
+     suite.setup()
+       .then(suite.run);
 
-  function testHardwareDone(callback) {
-    testMode = null;
-    if (oldTestHw) {
-      SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_HARDWARE, oldTestHw]]}, callback);
-    } else {
-      SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_HARDWARE]]}, callback);
+   Behind the scenes, suite configured the native camera
+   to use the JS hardware, setup that hardware such that
+   the getCamera would succeed, got a camera control
+   reference and saved it to suite.camera, and after the
+   tests were finished, it reset any modified state,
+   released the camera object, and concluded the mochitest
+   appropriately.
+*/
+function CameraTestSuite() {
+  SimpleTest.waitForExplicitFinish();
+
+  this._window = window;
+  this._document = document;
+  this.viewfinder = document.getElementById('viewfinder');
+  this._tests = [];
+  this.hwType = '';
+
+  /* Ensure that the this pointer is bound to all functions so that
+     they may be used as promise resolve/reject handlers without any
+     special effort, permitting code like this:
+
+       getCamera().catch(suite.rejectGetCamera);
+
+     instead of:
+
+       getCamera().catch(suite.rejectGetCamera.bind(suite));
+  */
+  this.setup = this._setup.bind(this);
+  this.teardown = this._teardown.bind(this);
+  this.test = this._test.bind(this);
+  this.run = this._run.bind(this);
+  this.waitPreviewStarted = this._waitPreviewStarted.bind(this);
+  this.waitParameterPush = this._waitParameterPush.bind(this);
+  this.initJsHw = this._initJsHw.bind(this);
+  this.getCamera = this._getCamera.bind(this);
+  this.setLowMemoryPlatform = this._setLowMemoryPlatform.bind(this);
+  this.logError = this._logError.bind(this);
+  this.expectedError = this._expectedError.bind(this);
+  this.expectedRejectGetCamera = this._expectedRejectGetCamera.bind(this);
+  this.expectedRejectAutoFocus = this._expectedRejectAutoFocus.bind(this);
+  this.expectedRejectTakePicture = this._expectedRejectTakePicture.bind(this);
+  this.rejectGetCamera = this._rejectGetCamera.bind(this);
+  this.rejectRelease = this._rejectRelease.bind(this);
+  this.rejectAutoFocus = this._rejectAutoFocus.bind(this);
+  this.rejectTakePicture = this._rejectTakePicture.bind(this);
+  this.rejectPreviewStarted = this._rejectPreviewStarted.bind(this);
+
+  var self = this;
+  this._window.addEventListener('beforeunload', function() {
+    if (isDefinedObj(self.viewfinder)) {
+      self.viewfinder.mozSrcObject = null;
     }
-  }
 
-  function testBegin(mode, callback) {
-    SimpleTest.waitForExplicitFinish();
-    try {
-      oldTestEnabled = SpecialPowers.getCharPref(PREF_TEST_ENABLED);
-    } catch(e) { }
-    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_ENABLED, mode]]}, function() {
-      var setMode = SpecialPowers.getCharPref(PREF_TEST_ENABLED);
-      ise(setMode, mode, "Test mode set to " + setMode);
-      if (setMode === "hardware") {
+    self.hw = null;
+    if (isDefinedObj(self.camera)) {
+      ok(false, 'window unload triggered camera release instead of test completion');
+      self.camera.release();
+      self.camera = null;
+    }
+  });
+}
+
+CameraTestSuite.prototype = {
+  camera: null,
+  hw: null,
+  _lowMemSet: false,
+
+  /* Returns a promise which is resolved when the test suite is ready
+     to be executing individual test cases. One may provide the expected
+     hardware type here if desired; the default is to use the JS test
+     hardware. Use '' for the native emulated camera hardware. */
+  _setup: function(hwType) {
+    if (!isDefined(hwType)) {
+      hwType = 'hardware';
+    }
+
+    this._hwType = hwType;
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.pushPrefEnv({'set': [['camera.control.test.enabled', hwType]]}, function() {
+        resolve();
+      });
+    });
+  },
+
+  /* Returns a promise which is resolved when all of the SpecialPowers
+     parameters that were set while testing are flushed. This includes
+     camera.control.test.enabled and camera.control.test.is_low_memory. */
+  _teardown: function() {
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.flushPrefEnv(function() {
+        resolve();
+      });
+    });
+  },
+
+  /* Returns a promise which is resolved when the set low memory
+     parameter is set. If no value is given, it defaults to true.
+     This is intended to be used inside a test case at the beginning
+     of its promise chain to configure the platform as desired. */
+  _setLowMemoryPlatform: function(val) {
+    if (typeof(val) === 'undefined') {
+      val = true;
+    }
+
+    if (this._lowMemSet === val) {
+      return Promise.resolve();
+    }
+
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.pushPrefEnv({'set': [['camera.control.test.is_low_memory', val]]}, function() {
+        self._lowMemSet = val;
+        resolve();
+      });
+    }).catch(function(e) {
+      return self.logError('set low memory ' + val + ' failed', e);
+    });
+  },
+
+  /* Add a test case to the test suite to be executed later. */
+  _test: function(aName, aCb) {
+    this._tests.push({
+      name: aName,
+      cb: aCb
+    });
+  },
+
+  /* Execute all test cases (after setup is called). */
+  _run: function() {
+    var test = this._tests.shift();
+    var self = this;
+    if (test) {
+      info(test.name + ' started');
+
+      function runNextTest() {
+        self.run();
+      }
+
+      function resetLowMem() {
+        return self.setLowMemoryPlatform(false);
+      }
+
+      function postTest(pass) {
+        ok(pass, test.name + ' finished');
+        var camera = self.camera;
+        self.viewfinder.mozSrcObject = null;
+        self.camera = null;
+
+        if (!isDefinedObj(camera)) {
+          return Promise.resolve();
+        }
+
+        function handler(e) {
+          ok(typeof(e) === 'undefined', 'camera released');
+          return Promise.resolve();
+        }
+
+        return camera.release().then(handler).catch(handler);
+      }
+
+      this.initJsHw();
+
+      var testPromise;
+      try {
+        testPromise = test.cb();
+        if (!isDefinedObj(testPromise)) {
+          testPromise = Promise.resolve();
+        }
+      } catch(e) {
+        ok(false, 'caught exception while running test: ' + e);
+        testPromise = Promise.reject(e);
+      }
+
+      testPromise
+        .then(function(p) {
+          return postTest(true);
+        }, function(e) {
+          self.logError('unhandled error', e);
+          return postTest(false);
+        })
+        .then(resetLowMem, resetLowMem)
+        .then(runNextTest, runNextTest);
+    } else {
+      ok(true, 'all tests completed');
+      var finish = SimpleTest.finish.bind(SimpleTest);
+      this.teardown().then(finish, finish);
+    }
+  },
+
+  /* If the JS hardware is in use, get (and possibly initialize)
+     the service XPCOM object. The native Gonk layers are able
+     to get it via the same mechanism. Save a reference to it
+     so that the test case may manipulate it as it sees fit in
+     this.hw. Minimal setup is done for the test hardware such
+     that the camera is able to be brought up without issue.
+
+     This function has no effect if the JS hardware is not used. */
+  _initJsHw: function() {
+    if (this._hwType === 'hardware') {
+      this.hw = SpecialPowers.Cc['@mozilla.org/cameratesthardware;1']
+                .getService(SpecialPowers.Ci.nsICameraTestHardware);
+      this.hw.reset(this._window);
+
+      /* Minimum parameters required to get camera started */
+      this.hw.params['preview-size'] = '320x240';
+      this.hw.params['preview-size-values'] = '320x240';
+      this.hw.params['picture-size-values'] = '320x240';
+    } else {
+      this.hw = null;
+    }
+  },
+
+  /* Returns a promise which resolves when the camera has
+     been successfully opened with the given name and
+     configuration. If no name is given, it uses the first
+     camera in the list from the camera manager. */
+  _getCamera: function(name, config) {
+    var cameraManager = navigator.mozCameras;
+    if (!isDefined(name)) {
+      name = cameraManager.getListOfCameras()[0];
+    }
+
+    var self = this;
+    return cameraManager.getCamera(name, config).then(
+      function(p) {
+        ok(isDefinedObj(p) && isDefinedObj(p.camera), 'got camera');
+        self.camera = p.camera;
+        /* Ensure a followup promise can verify config by
+           returning the same parameter again. */
+        return Promise.resolve(p);
+      }
+    );
+  },
+
+  /* Returns a promise which resolves when the camera has
+     successfully started the preview and is bound to the
+     given viewfinder object. Note that this requires that
+     a video element be present with the ID 'viewfinder'. */
+  _waitPreviewStarted: function() {
+    var self = this;
+
+    return new Promise(function(resolve, reject) {
+      function onPreviewStateChange(e) {
         try {
-          oldTestHw = SpecialPowers.getCharPref(PREF_TEST_HARDWARE);
-        } catch(e) { }
-        testMode = {
-          set: testHardwareSet,
-          setFakeParameters: testHardwareSetFakeParameters,
-          clearFakeParameters: testHardwareClearFakeParameters,
-          setFakeLowMemoryPlatform: testHardwareSetFakeLowMemoryPlatform,
-          clearFakeLowMemoryPlatform: testHardwareClearFakeLowMemoryPlatform,
-          done: testHardwareDone
-        };
-        if (callback) {
-          callback(testMode);
+          if (e.newState === 'started') {
+            ok(true, 'viewfinder is ready and playing');
+            self.camera.removeEventListener('previewstatechange', onPreviewStateChange);
+            resolve();
+          }
+        } catch(e) {
+          reject(e);
         }
       }
+
+      if (!isDefinedObj(self.viewfinder)) {
+        reject(new Error('no viewfinder object'));
+        return;
+      }
+
+      self.viewfinder.mozSrcObject = self.camera;
+      self.viewfinder.play();
+      self.camera.addEventListener('previewstatechange', onPreviewStateChange);
     });
-  }
+  },
 
-  function testEnd(callback) {
-    // A chain of clean-up functions....
-    function allCleanedUp() {
-      SimpleTest.finish();
-      if (callback) {
-        callback();
-      }
-    }
+  /* Returns a promise which resolves when the camera hardware
+     has received a push parameters request. This is useful
+     when setting camera parameters from the application and
+     you want confirmation when the operation is complete if
+     there is no asynchronous notification provided. */
+  _waitParameterPush: function() {
+    var self = this;
 
-    function cleanUpTestEnabled() {
-      var next = allCleanedUp;
-      if (oldTestEnabled) {
-        SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_ENABLED, oldTestEnabled]]}, next);
-      } else {
-        SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_ENABLED]]}, next);
-      }
-    }
-    function cleanUpTest() {
-      var next = cleanUpTestEnabled;
-      if (testMode) {
-        testMode.done(next);
-        testMode = null;
-      } else {
-        next();
-      }
-    }
-    function cleanUpLowMemoryPlatform() {
-      var next = cleanUpTest;
-      if (testMode) {
-        testMode.clearFakeLowMemoryPlatform(next);
-      } else {
-        next();
-      }
-    }
-    function cleanUpExtraParameters() {
-      var next = cleanUpLowMemoryPlatform;
-      if (testMode) {
-        testMode.clearFakeParameters(next);
-      } else {
-        next();
-      }
-    }
+    return new Promise(function(resolve, reject) {
+      self.hw.attach({
+        'pushParameters': function() {
+          self._window.setTimeout(resolve);
+        }
+      });
+    });
+  },
 
-    cleanUpExtraParameters();
-  }
+  /* When an error occurs in the promise chain, all of the relevant rejection
+     functions will be triggered. Most of the time however we only want the
+     first rejection to be handled and then let the failure trickle down the
+     chain to terminate the test. There is no way to exit a promise chain
+     early so the convention is to handle the error in the first reject and
+     then give an empty error for subsequent reject handlers so they know
+     it is not for them.
 
-  ise(SpecialPowers.sanityCheck(), "foo", "SpecialPowers passed sanity check");
-  return {
-    begin: testBegin,
-    end: testEnd
-  };
+     For example:
+       function rejectSomething(e) {
+         return suite.logError('something call failed');
+       }
 
-})();
+       getCamera()
+         .then(, suite.rejectGetCamera)
+         .then(something)
+         .then(, rejectSomething)
+
+     If the getCamera promise is rejected, suite.rejectGetCamera reports an
+     error, but rejectSomething remains silent. */
+  _logError: function(msg, e) {
+    if (isDefined(e)) {
+      ok(false, msg + ': ' + e);
+    }
+    // Make sure the error is undefined for later handlers
+    return Promise.reject();
+  },
+
+  /* The reject handlers below are intended to be used
+     when a test case does not expect a particular call
+     to fail but otherwise does not require any special
+     handling of that situation beyond failing the test
+     case and logging why.*/
+  _rejectGetCamera: function(e) {
+    return this.logError('get camera failed', e);
+  },
+
+  _rejectRelease: function(e) {
+    return this.logError('release camera failed', e);
+  },
+
+  _rejectAutoFocus: function(e) {
+    return this.logError('auto focus failed', e);
+  },
+
+  _rejectTakePicture: function(e) {
+    return this.logError('take picture failed', e);
+  },
+
+  _rejectPreviewStarted: function(e) {
+    return this.logError('preview start failed', e);
+  },
+
+  /* The success handlers below are intended to be used
+     when a test case does not expect a particular call
+     to succed but otherwise does not require any special
+     handling of that situation beyond failing the test
+     case and logging why.*/
+  _expectedError: function(msg) {
+    ok(false, msg);
+    /* Since the original promise was technically resolved
+       we actually want to pass up a rejection to try and
+       end the test case sooner */
+    return Promise.reject();
+  },
+
+  _expectedRejectGetCamera: function(p) {
+    /* Copy handle to ensure it gets released at the end
+       of the test case */
+    self.camera = p.camera;
+    return this.expectedError('expected get camera to fail');
+  },
+
+  _expectedRejectAutoFocus: function(p) {
+    return this.expectedError('expected auto focus to fail');
+  },
+
+  _expectedRejectTakePicture: function(p) {
+    return this.expectedError('expected take picture to fail');
+  },
+};
+
+ise(SpecialPowers.sanityCheck(), "foo", "SpecialPowers passed sanity check");

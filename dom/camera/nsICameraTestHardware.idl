@@ -1,0 +1,191 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMBlob;
+interface nsIDOMEventListener;
+
+[scriptable, uuid(2e567730-f164-49d7-b975-862caa4425a5)]
+interface nsICameraTestHardware : nsISupports
+{
+  /* The following methods are intended to be used by the test cases
+     written in JavaScript to define the behaviour of the hardware: */
+
+  /* Attach a delegate handler object such that the test hardware
+     will call the given handlers for the given operations to decide
+     what to do. This allows a test case to define specific behaviours
+     on a fine grained basis.
+
+     The following handlers may be supplied as properties of the
+     given delagate handler object:
+       autoFocus
+       cancelAutoFocus
+       cancelTakePicture
+       init
+       pushParameters
+       pullParameters
+       startFaceDetection
+       startPreview
+       startRecording
+       stopFaceDetection
+       stopPreview
+       stopRecording
+       takePicture
+
+     Implementation notes for handlers:
+
+     - If the handler throws an error, we will the return code
+       of the driver operation.
+
+     - If the handler returns true, we will perform the default
+       action (if any) for the operation. */
+  void attach(in jsval mock);
+
+  /* Detach a delegate handler object such that the test hardware
+     will revert to default behaviour when a function is called. */
+  void detach();
+
+  /* Reset the state of the test hardware back to the initial state.
+     This is useful when one test case has been completed and we need
+     a clean slate for the next. */
+  void reset(in jsval window);
+
+  /* Trigger an OnAutoFocusMoving callback at the Gonk layer.
+
+     state is a boolean indicating where or not the camera focus
+     is moving. */
+  void fireAutoFocusComplete(in boolean state);
+
+  /* Trigger an OnAutoFocusComplete callback at the Gonk layer.
+
+     state is a boolean indicating where or not the camera is focused. */
+  void fireAutoFocusMoving(in boolean moving);
+
+  /* Trigger an OnTakePictureComplete callback at the Gonk layer.
+
+     blob should be a Blob object. The actual content of the blob
+     is unimportant since nothing processes it as an image internally. */
+  void fireTakePictureComplete(in nsIDOMBlob picture);
+
+  /* Trigger an OnTakePictureError callback at the Gonk layer. */
+  void fireTakePictureError();
+
+  /* Trigger an OnSystemError callback at the Gonk layer. */
+  void fireSystemError();
+
+  /* Trigger an OnShutter callback at the Gonk layer. */
+  void fireShutter();
+
+  /* Trigger an OnFacesDetected callback at the Gonk layer.
+
+     faces is an array of CameraDetectedFaceInit dictionaries although
+     hasLeftEye, hasRightEye and hasMouth may be omitted and will be
+     implied by the presence/absence of leftEye, rightEye and mouth. */
+  void fireFacesDetected(in jsval faces);
+
+  /* Object which stores the camera parameters read/written by the
+     camera control layer from the hardware. The test case may set
+     its own values to control the behaviour of the camera middleware.
+
+     E.g. params['preview-sizes'] = '320x240,640x480'; */
+  attribute jsval params;
+
+  /* The following methods are intended to be used by the Gonk layer
+     in order to call back into JavaScript to get test case defined
+     behaviour: */
+
+  /* Set a handler to capture asynchronous events triggered by the
+     test case via the fireXXX methods. E.g.:
+
+       nsCOMPtr<nsICameraHardware> wrapper =
+         do_GetService("@mozilla.org/cameratesthardware;1");
+
+       nsCOMPtr<nsIDOMEventListener> listener = new HwListener();
+
+       wrapper->setHander(listener);
+
+     where
+
+       class HwListener : public nsIDOMEventListener {
+         NS_IMETHODIMP HandleEvent(nsIDOMEvent *aEvent) {
+           nsString type;
+           aEvent->GetType(&type);
+           if (aEvent.EqualsLiteral("focus")) {
+              ...
+           } else {
+              ...
+           }
+         }
+       };
+
+     The following event types may be generated:
+       focus: CameraStateChangeEvent where newState should map
+       to the OnAutoFocusComplete and OnAutoFocusMoving callbacks:
+       -- focused: OnAutoFocusComplete(false)
+       -- unfocused: OnAutoFocusComplete(true)
+       -- focusing: OnAutoFocusMoving(true)
+       -- not_focusing: OnAutoFocusMoving(false)
+
+       picture: BlobEvent which contains the picture type and
+       data corresponding to the OnTakePictureComplete callback.
+
+       error: ErrorEvent corresponding to the various error callbacks,
+       where the message is:
+       -- picture: OnTakePictureError()
+       -- system: OnSystemError(100, 0)
+
+       facesdetected: CameraFacesDetectedEvent which contains the
+       faces data corresponding to OnFacesDetected callback.
+
+       shutter: Event which corresponds to the OnShutter callback. */
+  void setHandler(in nsIDOMEventListener handler);
+
+  /* Execute an intercepted Init() driver call. */
+  void initCamera();
+
+  /* Execute an intercepted AutoFocus() driver call. Default behaviour is
+     to trigger OnAutoFocusComplete where the camera is focused. */
+  void autoFocus();
+
+  /* Execute an intercepted CancelAutoFocus() driver call. */
+  void cancelAutoFocus();
+
+  /* Execute an intercepted StartFaceDetection() driver call. */
+  void startFaceDetection();
+
+  /* Execute an intercepted StopFaceDetection() driver call. */
+  void stopFaceDetection();
+
+  /* Execute an intercepted TakePicture() driver call. Default behaviour is
+     to trigger OnTakePictureComplete with a fake jpeg blob. */
+  void takePicture();
+
+  /* Execute an intercepted CancelTakePicture() driver call. */
+  void cancelTakePicture();
+
+  /* Execute an intercepted StartPreview() driver call. */
+  void startPreview();
+
+  /* Execute an intercepted StopPreview() driver call. */
+  void stopPreview();
+
+  /* Execute an intercepted StartRecording() driver call. */
+  void startRecording();
+
+  /* Execute an intercepted StopRecording() driver call. */
+  void stopRecording();
+
+  /* Execute an intercepted PushParameters() driver call. If the delegate
+     handler throws an error, it will restore the old parameters.
+     When the delegate is called, the new proposed parameters are
+     placed in this.params. */
+  void pushParameters(in DOMString params);
+
+  /* Execute an intercepted PullParameters() driver call. Unless the delegate
+     handler throws an error, it will return an assembled parameter
+     list derived from the this.params hash table. */
+  DOMString pullParameters();
+};
+
