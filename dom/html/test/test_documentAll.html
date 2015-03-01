@@ -42,7 +42,7 @@ function testNumSame() {
   is(document.all.id3.length, 3, "three length");
 }
 testNumSame();
-p.innerHTML = p.innerHTML.replace("id=", "name=", "g");
+p.innerHTML = p.innerHTML.replace(/id=/g, "name=");
 testNumSame();
 
 
