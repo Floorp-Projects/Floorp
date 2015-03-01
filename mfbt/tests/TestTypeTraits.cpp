@@ -23,6 +23,7 @@ using mozilla::IsUnsigned;
 using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
 using mozilla::RemoveExtent;
+using mozilla::RemovePointer;
 
 static_assert(!IsArray<bool>::value,
               "bool not an array");
@@ -429,6 +430,28 @@ static_assert(IsSame<RemoveExtent<volatile int[5]>::Type, volatile int>::value,
               "removing extent from known-bound array must return element type");
 static_assert(IsSame<RemoveExtent<long[][17]>::Type, long[17]>::value,
               "removing extent from multidimensional array must return element type");
+
+struct TestRemovePointer { bool m; void f(); };
+static_assert(IsSame<RemovePointer<int>::Type, int>::value,
+              "removing pointer from int must return int");
+static_assert(IsSame<RemovePointer<int*>::Type, int>::value,
+              "removing pointer from int* must return int");
+static_assert(IsSame<RemovePointer<int* const>::Type, int>::value,
+              "removing pointer from int* const must return int");
+static_assert(IsSame<RemovePointer<int* volatile>::Type, int>::value,
+              "removing pointer from int* volatile must return int");
+static_assert(IsSame<RemovePointer<const long*>::Type, const long>::value,
+              "removing pointer from const long* must return const long");
+static_assert(IsSame<RemovePointer<void* const>::Type, void>::value,
+              "removing pointer from void* const must return void");
+static_assert(IsSame<RemovePointer<void (TestRemovePointer::*)()>::Type,
+                                   void (TestRemovePointer::*)()>::value,
+              "removing pointer from void (S::*)() must return void (S::*)()");
+static_assert(IsSame<RemovePointer<void (*)()>::Type, void()>::value,
+              "removing pointer from void (*)() must return void()");
+static_assert(IsSame<RemovePointer<bool TestRemovePointer::*>::Type,
+                                   bool TestRemovePointer::*>::value,
+              "removing pointer from bool S::* must return bool S::*");
 
 /*
  * Android's broken [u]intptr_t inttype macros are broken because its PRI*PTR
