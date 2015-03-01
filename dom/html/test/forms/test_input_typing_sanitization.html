@@ -44,7 +44,7 @@ function sendKeyEventToSubmitForm() {
 }
 
 function urlify(aStr) {
-  return aStr.replace(':', '%3A', 'g');
+  return aStr.replace(/:/g, '%3A');
 }
 
 function runTestsForNextInputType()
