@@ -947,28 +947,3 @@ addMessageListener("ContextMenu:SaveVideoFrameAsImage", (message) => {
     dataURL: canvas.toDataURL("image/jpeg", ""),
   });
 });
-
-addMessageListener("AboutMedia:CollectData", (mesage) => {
-  let text = "";
-  let media = content.document.getElementsByTagName('video');
-  if (media.length > 0) {
-    text += content.document.documentURI + "\n";
-  }
-  for (let mediaEl of media) {
-    text += "\t" + mediaEl.currentSrc + "\n";
-    text += "\t" + "currentTime: " + mediaEl.currentTime + "\n";
-    let ms = mediaEl.mozMediaSourceObject;
-    if (ms) {
-      for (let k = 0; k < ms.sourceBuffers.length; ++k) {
-        let sb = ms.sourceBuffers[k];
-        text += "\t\tSourceBuffer " + k + "\n";
-        for (let l = 0; l < sb.buffered.length; ++l) {
-          text += "\t\t\tstart=" + sb.buffered.start(l) + " end=" + sb.buffered.end(l) + "\n";
-        }
-      }
-      text += "\tInternal Data:\n";
-      text += ms.mozDebugReaderData.split("\n").map(line => { return "\t" + line + "\n"; }).join("");
-     }
-  }
-  sendAsyncMessage("AboutMedia:DataCollected", { text: text });
-});
