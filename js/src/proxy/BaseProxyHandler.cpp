@@ -61,8 +61,7 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
         return true;
     }
     if (desc.hasGetterObject())
-        return InvokeGetterOrSetter(cx, receiver, ObjectValue(*desc.getterObject()),
-                                    0, nullptr, vp);
+        return InvokeGetter(cx, receiver, ObjectValue(*desc.getterObject()), vp);
     if (!desc.isShared())
         vp.set(desc.value());
     else
@@ -72,8 +71,8 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                      HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
+BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                      HandleValue receiver, ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, proxy, id, SET);
 
@@ -88,13 +87,12 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     // The rest is factored out into a separate function with a weird name.
     // This algorithm continues just below.
-    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, ownDesc, result);
+    return SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, ownDesc, result);
 }
 
 bool
-js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
-                                   MutableHandleValue vp, HandleObject receiver,
-                                   Handle<PropertyDescriptor> ownDesc_,
+js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                                   HandleValue receiver, Handle<PropertyDescriptor> ownDesc_,
                                    ObjectOpResult &result)
 {
     Rooted<PropertyDescriptor> ownDesc(cx, ownDesc_);
@@ -107,7 +105,7 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
         if (!GetPrototype(cx, obj, &proto))
             return false;
         if (proto)
-            return SetProperty(cx, proto, receiver, id, vp, result);
+            return SetProperty(cx, proto, id, v, receiver, result);
 
         // Step 4.d.
         ownDesc.setDataDescriptor(UndefinedHandleValue, JSPROP_ENUMERATE);
@@ -118,17 +116,22 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
         // Steps 5.a-b.
         if (!ownDesc.writable())
             return result.fail(JSMSG_READ_ONLY);
+        if (!receiver.isObject())
+            return result.fail(JSMSG_SET_NON_OBJECT_RECEIVER);
+        RootedObject receiverObj(cx, &receiver.toObject());
 
         // Nonstandard SpiderMonkey special case: setter ops.
         SetterOp setter = ownDesc.setter();
         MOZ_ASSERT(setter != JS_StrictPropertyStub);
-        if (setter && setter != JS_StrictPropertyStub)
-            return CallJSSetterOp(cx, setter, receiver, id, vp, result);
+        if (setter && setter != JS_StrictPropertyStub) {
+            RootedValue valCopy(cx, v);
+            return CallJSSetterOp(cx, setter, receiverObj, id, &valCopy, result);
+        }
 
         // Steps 5.c-d. Adapt for SpiderMonkey by using HasOwnProperty instead
         // of the standard [[GetOwnProperty]].
         bool existingDescriptor;
-        if (!HasOwnProperty(cx, receiver, id, &existingDescriptor))
+        if (!HasOwnProperty(cx, receiverObj, id, &existingDescriptor))
             return false;
 
         // Steps 5.e-f.
@@ -139,10 +142,10 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
 
         // A very old nonstandard SpiderMonkey extension: default to the Class
         // getter and setter ops.
-        const Class *clasp = receiver->getClass();
+        const Class *clasp = receiverObj->getClass();
         MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
         MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
-        return DefineProperty(cx, receiver, id, vp, clasp->getProperty, clasp->setProperty,
+        return DefineProperty(cx, receiverObj, id, v, clasp->getProperty, clasp->setProperty,
                               attrs, result);
     }
 
@@ -154,7 +157,7 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
     if (!setter)
         return result.fail(JSMSG_GETTER_ONLY);
     RootedValue setterValue(cx, ObjectValue(*setter));
-    if (!InvokeGetterOrSetter(cx, receiver, setterValue, 1, vp.address(), vp))
+    if (!InvokeSetter(cx, receiver, setterValue, v))
         return false;
     return result.succeed();
 }

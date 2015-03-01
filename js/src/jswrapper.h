@@ -137,8 +137,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool has(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject wrapper, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
-                     MutableHandleValue vp, ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, HandleObject wrapper, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject wrapper, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject wrapper, const CallArgs &args) const override;
 

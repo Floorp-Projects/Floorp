@@ -37,8 +37,8 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                      MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-                     MutableHandleValue vp, ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult &result) const override;
 
     /* SpiderMonkey extensions. */
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
@@ -55,8 +55,8 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     static const ScriptedIndirectProxyHandler singleton;
 
 private:
-    bool derivedSet(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-                    MutableHandleValue vp, ObjectOpResult &result) const;
+    bool derivedSet(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                    HandleValue receiver, ObjectOpResult &result) const;
 };
 
 /* Derived class to handle Proxy.createFunction() */
