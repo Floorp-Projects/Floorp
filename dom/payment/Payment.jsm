@@ -301,7 +301,7 @@ let PaymentManager =  {
       // the payment request information to be shown to the user.
       // Before decoding the JWT string we need to normalize it to be compliant
       // with RFC 4648.
-      segments[1] = segments[1].replace("-", "+", "g").replace("_", "/", "g");
+      segments[1] = segments[1].replace(/-/g, "+").replace(/_/g, "/");
       let payload = atob(segments[1]);
       if (this._debug) {
         this.LOG("Payload " + payload);
