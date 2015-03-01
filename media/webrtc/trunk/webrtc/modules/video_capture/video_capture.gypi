@@ -152,6 +152,9 @@
           'xcode_settings': {
             'CLANG_ENABLE_OBJC_ARC': 'YES',
           },
+          'cflags_mozilla': [
+            '-fobjc-arc',
+          ],
           'all_dependent_settings': {
             'xcode_settings': {
               'OTHER_LDFLAGS': [
