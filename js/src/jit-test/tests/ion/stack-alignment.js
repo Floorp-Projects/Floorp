@@ -31,7 +31,7 @@ function gen_ionFrameSize(x, y, name) {
   var args = (new Array(y)).fill(0).map((v, i) => i);
 
   return new Function("i",
-    locals.map(i => "var l% = i + %;\n".replace("%", i, "g")).join("")
+    locals.map(i => "var l% = i + %;\n".replace(/%/g, i)).join("")
   + name + "(" + args.map(i => "l%".replace("%", i)).join(", ") + ");\n"
   + "return " + locals.map(i => "l%".replace("%", i)).join(" + ") + ";\n"
   );
