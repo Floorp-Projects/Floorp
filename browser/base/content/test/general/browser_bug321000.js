@@ -15,7 +15,7 @@ var gTests = [
 
   { desc: "Searchbar replaces newlines with spaces",
     element: document.getElementById('searchbar'),
-    expected: kTestString.replace('\n',' ','g')
+    expected: kTestString.replace(/\n/g,' ')
   },
 
 ];
