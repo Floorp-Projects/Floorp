@@ -72,8 +72,7 @@ NativeObject::clearShouldConvertDoubleElements()
 }
 
 inline void
-NativeObject::setDenseElementWithType(ExclusiveContext *cx, uint32_t index,
-                                      const Value &val)
+NativeObject::setDenseElementWithType(ExclusiveContext *cx, uint32_t index, const Value &val)
 {
     // Avoid a slow AddTypePropertyId call if the type is the same as the type
     // of the previous element.
@@ -84,8 +83,7 @@ NativeObject::setDenseElementWithType(ExclusiveContext *cx, uint32_t index,
 }
 
 inline void
-NativeObject::initDenseElementWithType(ExclusiveContext *cx, uint32_t index,
-                                       const Value &val)
+NativeObject::initDenseElementWithType(ExclusiveContext *cx, uint32_t index, const Value &val)
 {
     MOZ_ASSERT(!shouldConvertDoubleElements());
     AddTypePropertyId(cx, this, JSID_VOID, val);
