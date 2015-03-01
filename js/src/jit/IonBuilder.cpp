@@ -875,9 +875,9 @@ IonBuilder::build()
     if (!processIterators())
         return false;
 
-    if (!abortedNewScriptPropertiesGroups().empty()) {
+    if (!abortedPreliminaryGroups().empty()) {
         MOZ_ASSERT(!info().isAnalysis());
-        abortReason_ = AbortReason_NewScriptProperties;
+        abortReason_ = AbortReason_PreliminaryObjects;
         return false;
     }
 
@@ -1030,9 +1030,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // Discard unreferenced & pre-allocated resume points.
     replaceMaybeFallbackFunctionGetter(nullptr);
 
-    if (!abortedNewScriptPropertiesGroups().empty()) {
+    if (!abortedPreliminaryGroups().empty()) {
         MOZ_ASSERT(!info().isAnalysis());
-        abortReason_ = AbortReason_NewScriptProperties;
+        abortReason_ = AbortReason_PreliminaryObjects;
         return false;
     }
 
@@ -4624,12 +4624,12 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
             abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
             abortReason_ = AbortReason_Inlining;
-        } else if (inlineBuilder.abortReason_ == AbortReason_NewScriptProperties) {
-            const ObjectGroupVector &groups = inlineBuilder.abortedNewScriptPropertiesGroups();
+        } else if (inlineBuilder.abortReason_ == AbortReason_PreliminaryObjects) {
+            const ObjectGroupVector &groups = inlineBuilder.abortedPreliminaryGroups();
             MOZ_ASSERT(!groups.empty());
             for (size_t i = 0; i < groups.length(); i++)
-                addAbortedNewScriptPropertiesGroup(groups[i]);
-            abortReason_ = AbortReason_NewScriptProperties;
+                addAbortedPreliminaryGroup(groups[i]);
+            abortReason_ = AbortReason_PreliminaryObjects;
         }
 
         return false;
@@ -6380,23 +6380,19 @@ bool
 IonBuilder::jsop_newobject()
 {
     JSObject *templateObject = inspector->getTemplateObject(pc);
-    if (!templateObject) {
-        if (info().analysisMode() == Analysis_ArgumentsUsage) {
-            MUnknownValue *unknown = MUnknownValue::New(alloc());
-            current->add(unknown);
-            current->push(unknown);
-            return true;
-        }
-        return abort("No template object for NEWOBJECT");
+    gc::InitialHeap heap;
+    MConstant *templateConst;
+
+    if (templateObject) {
+        heap = templateObject->group()->initialHeap(constraints());
+        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    } else {
+        heap = gc::DefaultHeap;
+        templateConst = MConstant::New(alloc(), NullValue());
     }
 
-    MOZ_ASSERT(templateObject->is<PlainObject>());
-    MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     current->add(templateConst);
-    MNewObject *ins = MNewObject::New(alloc(), constraints(), templateConst,
-                                      templateObject->isSingleton()
-                                      ? gc::TenuredHeap
-                                      : templateObject->group()->initialHeap(constraints()),
+    MNewObject *ins = MNewObject::New(alloc(), constraints(), templateConst, heap,
                                       MNewObject::ObjectLiteral);
 
     current->add(ins);
@@ -6498,66 +6494,53 @@ IonBuilder::jsop_mutateproto()
 bool
 IonBuilder::jsop_initprop(PropertyName *name)
 {
-    MDefinition *value = current->pop();
-    MDefinition *obj = current->peek(-1);
-
-    NativeObject *templateObject = nullptr;
-    Shape *shape = nullptr;
-
     bool useSlowPath = false;
 
-    if (obj->isUnknownValue() || obj->isLambda()) {
+    MDefinition *value = current->peek(-1);
+    MDefinition *obj = current->peek(-2);
+    if (obj->isLambda()) {
         useSlowPath = true;
+    } else if (JSObject *templateObject = obj->toNewObject()->templateObject()) {
+        if (templateObject->is<PlainObject>()) {
+            if (!templateObject->as<PlainObject>().containsPure(name))
+                useSlowPath = true;
+        } else {
+            MOZ_ASSERT(templateObject->as<UnboxedPlainObject>().layout().lookup(name));
+        }
     } else {
-        templateObject = obj->toNewObject()->templateObject();
-        shape = templateObject->lastProperty()->searchLinear(NameToId(name));
-
-        if (!shape)
-            useSlowPath = true;
-    }
-
-    if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
-                                      &obj, name, &value, /* canModify = */ true))
-    {
         useSlowPath = true;
     }
 
     if (useSlowPath) {
-        // JSOP_NEWINIT becomes an MNewObject without preconfigured properties.
+        current->pop();
         MInitProp *init = MInitProp::New(alloc(), obj, name, value);
         current->add(init);
         return resumeAfter(init);
     }
 
-    if (NeedsPostBarrier(info(), value))
-        current->add(MPostWriteBarrier::New(alloc(), obj, value));
+    MInstruction *last = *current->rbegin();
 
-    bool needsBarrier = true;
-    if (obj->resultTypeSet() &&
-        !obj->resultTypeSet()->propertyNeedsBarrier(constraints(), NameToId(name)))
-    {
-        needsBarrier = false;
+    // This is definitely initializing an 'own' property of the object, treat
+    // it as an assignment.
+    if (!jsop_setprop(name))
+        return false;
+
+    // SETPROP pushed the value, instead of the object. Fix this on the stack,
+    // and check the most recent resume point to see if it needs updating too.
+    current->pop();
+    current->push(obj);
+    for (MInstructionReverseIterator riter = current->rbegin(); *riter != last; riter++) {
+        if (MResumePoint *resumePoint = riter->resumePoint()) {
+            MOZ_ASSERT(resumePoint->pc() == pc);
+            if (resumePoint->mode() == MResumePoint::ResumeAfter) {
+                size_t index = resumePoint->numOperands() - 1;
+                resumePoint->replaceOperand(index, obj);
+            }
+            break;
+        }
     }
 
-    if (templateObject->isFixedSlot(shape->slot())) {
-        MStoreFixedSlot *store = MStoreFixedSlot::New(alloc(), obj, shape->slot(), value);
-        if (needsBarrier)
-            store->setNeedsBarrier();
-
-        current->add(store);
-        return resumeAfter(store);
-    }
-
-    MSlots *slots = MSlots::New(alloc(), obj);
-    current->add(slots);
-
-    uint32_t slot = templateObject->dynamicSlotIndex(shape->slot());
-    MStoreSlot *store = MStoreSlot::New(alloc(), slots, slot, value);
-    if (needsBarrier)
-        store->setNeedsBarrier();
-
-    current->add(store);
-    return resumeAfter(store);
+    return true;
 }
 
 bool
@@ -9323,8 +9306,9 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet *types, PropertyName *name, uint32_
         return UINT32_MAX;
     }
 
-    // Watch for types which the new script properties analysis has not been
-    // performed on yet. Normally this is done after a small number of the
+    // Watch for groups which still have preliminary object information and
+    // have not had the new script properties other analyses performed on their
+    // preliminary objects. Normally this is done after a small number of the
     // objects have been created, but if only a few have been created we can
     // still perform the analysis with a smaller object population. The
     // analysis can have side effects so abort the builder and retry later.
@@ -9341,7 +9325,12 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet *types, PropertyName *name, uint32_
 
         if (ObjectGroup *group = key->maybeGroup()) {
             if (group->newScript() && !group->newScript()->analyzed()) {
-                addAbortedNewScriptPropertiesGroup(group);
+                addAbortedPreliminaryGroup(group);
+                trackOptimizationOutcome(TrackedOutcome::NoAnalysisInfo);
+                return UINT32_MAX;
+            }
+            if (group->maybePreliminaryObjects()) {
+                addAbortedPreliminaryGroup(group);
                 trackOptimizationOutcome(TrackedOutcome::NoAnalysisInfo);
                 return UINT32_MAX;
             }

@@ -1912,14 +1912,20 @@ IonCompile(JSContext *cx, JSScript *script,
 
     if (!succeeded) {
         AbortReason reason = builder->abortReason();
-        if (reason == AbortReason_NewScriptProperties) {
-            // Some type was accessed which needs the new script properties
-            // analysis to be performed. Do this now and we will try to build
-            // again shortly.
-            const MIRGenerator::ObjectGroupVector &groups = builder->abortedNewScriptPropertiesGroups();
+        if (reason == AbortReason_PreliminaryObjects) {
+            // Some group was accessed which has associated preliminary objects
+            // to analyze. Do this now and we will try to build again shortly.
+            const MIRGenerator::ObjectGroupVector &groups = builder->abortedPreliminaryGroups();
             for (size_t i = 0; i < groups.length(); i++) {
-                if (!groups[i]->newScript()->maybeAnalyze(cx, groups[i], nullptr, /* force = */ true))
-                    return AbortReason_Alloc;
+                ObjectGroup *group = groups[i];
+                if (group->newScript()) {
+                    if (!group->newScript()->maybeAnalyze(cx, group, nullptr, /* force = */ true))
+                        return AbortReason_Alloc;
+                } else if (group->maybePreliminaryObjects()) {
+                    group->maybePreliminaryObjects()->maybeAnalyze(cx, group, /* force = */ true);
+                } else {
+                    MOZ_CRASH("Unexpected aborted preliminary group");
+                }
             }
         }
 

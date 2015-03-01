@@ -192,12 +192,11 @@ MutatePrototype(JSContext *cx, HandlePlainObject obj, HandleValue value)
 }
 
 bool
-InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value,
+InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
          jsbytecode *pc)
 {
     RootedId id(cx, NameToId(name));
-    unsigned propAttrs = GetInitDataPropAttrs(JSOp(*pc));
-    return NativeDefineProperty(cx, obj, id, value, nullptr, nullptr, propAttrs);
+    return InitPropertyOperation(cx, JSOp(*pc), obj, id, value);
 }
 
 template<bool Equal>
@@ -265,23 +264,6 @@ StringsEqual(JSContext *cx, HandleString lhs, HandleString rhs, bool *res)
 
 template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
-
-JSObject*
-NewInitObject(JSContext *cx, HandlePlainObject templateObject)
-{
-    NewObjectKind newKind = templateObject->isSingleton() ? SingletonObject : GenericObject;
-    if (!templateObject->hasLazyGroup() && templateObject->group()->shouldPreTenure())
-        newKind = TenuredObject;
-    RootedObject obj(cx, CopyInitializerObject(cx, templateObject, newKind));
-
-    if (!obj)
-        return nullptr;
-
-    if (!templateObject->isSingleton())
-        obj->setGroup(templateObject->group());
-
-    return obj;
-}
 
 bool
 ArraySpliceDense(JSContext *cx, HandleObject obj, uint32_t start, uint32_t deleteCount)
