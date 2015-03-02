@@ -21,6 +21,7 @@ dictionary ContextAttributes2D {
 };
 
 dictionary HitRegionOptions {
+  Path2D? path = null;
   DOMString id = "";
   Element? control = null;
 };
