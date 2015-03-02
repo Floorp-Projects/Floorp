@@ -16,7 +16,8 @@ use webdriver::command::WebDriverCommand::{
     GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
     GetWindowHandles, Close, SetWindowSize,
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
-    SwitchToParentFrame, FindElement, FindElements, IsDisplayed,
+    SwitchToParentFrame, FindElement, FindElements,
+    FindElementElement, FindElementElements, IsDisplayed,
     IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
     GetElementTagName, GetElementRect, IsEnabled, ElementClick,
     ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
@@ -421,14 +422,14 @@ impl MarionetteSession {
                 }).collect::<Result<Vec<_>, _>>());
                 WebDriverResponse::Cookie(CookieResponse::new(cookies))
             },
-            FindElement(_) => {
+            FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
                     try_opt!(json_data.get("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field")));
                 WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
             },
-            FindElements(_) => {
+            FindElements(_) | FindElementElements(_, _) => {
                 let element_vec = try_opt!(
                     try_opt!(json_data.get("value"),
                              ErrorStatus::UnknownError,
@@ -441,7 +442,7 @@ impl MarionetteSession {
                     }).collect::<Result<Vec<_>, _>>());
                 WebDriverResponse::Generic(ValueResponse::new(
                     Json::Array(elements.iter().map(|x| {x.to_json()}).collect())))
-            }
+            },
             NewSession => {
                 let session_id = try_opt!(
                     try_opt!(json_data.get("sessionId"),
@@ -650,6 +651,30 @@ impl ToMarionette for WebDriverMessage {
             SwitchToParentFrame => (Some("switchToParentFrame"), None),
             FindElement(ref x) => (Some("findElement"), Some(x.to_marionette())),
             FindElements(ref x) => (Some("findElements"), Some(x.to_marionette())),
+            FindElementElement(ref e, ref x) => {
+                let body = x.to_marionette();
+                if body.is_err() {
+                    return body;
+                }
+
+                let mut data = try_opt!(body.unwrap().as_object(),
+                                        ErrorStatus::UnknownError,
+                                        "Marionette response was not an object").clone();
+                data.insert("element".to_string(), e.id.to_json());
+                (Some("findElement"), Some(Ok(Json::Object(data.clone()))))
+            },
+            FindElementElements(ref e, ref x) => {
+                let body = x.to_marionette();
+                if body.is_err() {
+                    return body;
+                }
+
+                let mut data = try_opt!(body.unwrap().as_object(),
+                                        ErrorStatus::UnknownError,
+                                        "Marionette response was not an object").clone();
+                data.insert("element".to_string(), e.id.to_json());
+                (Some("findElement"), Some(Ok(Json::Object(data.clone()))))
+            },
             IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
             IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
             GetElementAttribute(ref e, ref x) => {
