@@ -16,6 +16,26 @@ function test() {
     let { $, $all, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
+    // Loading the frame script and preparing the xhr request URLs so we can
+    // generate some requests later.
+    loadCommonFrameScript();
+    let requests = [{
+      url: "sjs_sorting-test-server.sjs?index=1&" + Math.random(),
+      method: "GET1"
+    }, {
+      url: "sjs_sorting-test-server.sjs?index=5&" + Math.random(),
+      method: "GET5"
+    }, {
+      url: "sjs_sorting-test-server.sjs?index=2&" + Math.random(),
+      method: "GET2"
+    }, {
+      url: "sjs_sorting-test-server.sjs?index=4&" + Math.random(),
+      method: "GET4"
+    }, {
+      url: "sjs_sorting-test-server.sjs?index=3&" + Math.random(),
+      method: "GET3"
+    }];
+
     RequestsMenu.lazyUpdate = false;
 
     waitForNetworkEvents(aMonitor, 5).then(() => {
@@ -38,7 +58,7 @@ function test() {
         })
         .then(() => {
           info("Performing more requests.");
-          aDebuggee.performRequests();
+          performRequestsInContent(requests);
           return waitForNetworkEvents(aMonitor, 5);
         })
         .then(() => {
@@ -54,7 +74,7 @@ function test() {
         })
         .then(() => {
           info("Performing more requests.");
-          aDebuggee.performRequests();
+          performRequestsInContent(requests);
           return waitForNetworkEvents(aMonitor, 5);
         })
         .then(() => {
@@ -77,7 +97,11 @@ function test() {
         .then(() => {
           return teardown(aMonitor);
         })
-        .then(finish);
+        .then(finish, e => {
+          ok(false, e);
+        });
+    }, e => {
+      ok(false, e);
     });
 
     function testHeaders(aSortType, aDirection) {
@@ -191,6 +215,6 @@ function test() {
       return promise.resolve(null);
     }
 
-    aDebuggee.performRequests();
+    performRequestsInContent(requests).then(null, Cu.reportError);
   });
 }
