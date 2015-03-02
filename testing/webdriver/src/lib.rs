@@ -1,5 +1,6 @@
 #![feature(old_io)]
 #![feature(core)]
+#![feature(collections)]
 #![allow(non_snake_case)]
 
 #[macro_use]
