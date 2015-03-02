@@ -136,8 +136,11 @@ function* promiseOnLoad() {
   });
 }
 
-function promiseNewEngine(basename) {
+function promiseNewEngine(basename, options = {}) {
   return new Promise((resolve, reject) => {
+    //Default the setAsCurrent option to true.
+    let setAsCurrent =
+      options.setAsCurrent == undefined ? true : options.setAsCurrent;
     info("Waiting for engine to be added: " + basename);
     Services.search.init({
       onInitComplete: function() {
@@ -146,9 +149,13 @@ function promiseNewEngine(basename) {
         Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
           onSuccess: function (engine) {
             info("Search engine added: " + basename);
-            Services.search.currentEngine = engine;
+            if (setAsCurrent) {
+              Services.search.currentEngine = engine;
+            }
             registerCleanupFunction(() => {
-              Services.search.currentEngine = current;
+              if (setAsCurrent) {
+                Services.search.currentEngine = current;
+              }
               Services.search.removeEngine(engine);
               info("Search engine removed: " + basename);
             });
