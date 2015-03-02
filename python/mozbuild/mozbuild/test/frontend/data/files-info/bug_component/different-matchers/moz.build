@@ -1,0 +1,4 @@
+with Files('*.jsm'):
+    BUG_COMPONENT = ('Firefox', 'JS')
+with Files('*.cpp'):
+    BUG_COMPONENT = ('Firefox', 'C++')
