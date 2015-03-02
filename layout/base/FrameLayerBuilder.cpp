@@ -33,6 +33,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/unused.h"
 
 #include <algorithm>
 
@@ -1668,9 +1669,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
   nsRefPtr<PaintedLayer> layer;
   PaintedDisplayItemLayerUserData* data;
   bool layerRecycled = false;
-#ifndef MOZ_WIDGET_ANDROID
   bool didResetScrollPositionForLayerPixelAlignment = false;
-#endif
 
   // Check whether the layer will be scrollable. This is used as a hint to
   // influence whether tiled layers are used or not.
@@ -1720,9 +1719,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
       }
 #endif
         InvalidateEntirePaintedLayer(layer, aAnimatedGeometryRoot, "recycled layer changed state");
-#ifndef MOZ_WIDGET_ANDROID
         didResetScrollPositionForLayerPixelAlignment = true;
-#endif
       }
       if (!data->mRegionToInvalidate.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
@@ -1756,9 +1753,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
     data = new PaintedDisplayItemLayerUserData();
     layer->SetUserData(&gPaintedDisplayItemLayerUserData, data);
     ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
-#ifndef MOZ_WIDGET_ANDROID
     didResetScrollPositionForLayerPixelAlignment = true;
-#endif
   }
   data->mXScale = mParameters.mXScale;
   data->mYScale = mParameters.mYScale;
@@ -1799,6 +1794,8 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
   } else if (didResetScrollPositionForLayerPixelAlignment) {
     data->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
   }
+#else
+  unused << didResetScrollPositionForLayerPixelAlignment;
 #endif
 
   return layer.forget();
