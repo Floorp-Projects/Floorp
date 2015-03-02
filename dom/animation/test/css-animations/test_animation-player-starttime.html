@@ -19,6 +19,7 @@
     </style>
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="../testcommon.js"></script>
   </head>
   <body>
     <div id="log"></div>
@@ -54,17 +55,6 @@ const TEN_PCT_POSITION = 110;
 const FIFTY_PCT_POSITION = 150;
 const NINETY_PCT_POSITION = 190;
 const END_POSITION = 200;
-
-function addDiv(id)
-{
-  var div = document.createElement('div');
-  div.setAttribute('class', 'animated-div');
-  if (id) {
-    div.setAttribute('id', id);
-  }
-  document.body.appendChild(div);
-  return div;
-}
 
 /**
  * CSS animation events fire asynchronously after we set 'startTime'. This
@@ -288,9 +278,9 @@ function checkStateAtActiveIntervalEndTime(player)
 }
 
 
-test(function()
+test(function(t)
 {
-  var div = addDiv();
+  var div = addDiv(t, {'class': 'animated-div'});
 
   div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 
@@ -321,13 +311,11 @@ test(function()
     'Check setting of startTime actually works');
 
   checkStateOnSettingStartTimeToAnimationCreationTime(player);
-
-  div.parentNode.removeChild(div);
 }, 'Examine newly created Animation');
 
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
 
   div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
@@ -354,7 +342,6 @@ async_test(function(t) {
     checkStateAtActiveIntervalEndTime(player);
 
     eventWatcher.stopWatching();
-    div.parentNode.removeChild(div);
   })).catch(t.step_func(function(reason) {
     assert_true(false, reason);
   })).then(function() {
@@ -364,7 +351,7 @@ async_test(function(t) {
 
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
 
   div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
@@ -406,7 +393,6 @@ async_test(function(t) {
     checkStateOnReadyPromiseResolved(player);
 
     eventWatcher.stopWatching();
-    div.parentNode.removeChild(div);
   })).catch(t.step_func(function(reason) {
     assert_true(false, reason);
   })).then(function() {
@@ -446,7 +432,7 @@ async_test(function(t) {
   var eventWatchers = new Array(6);
   var players = new Array(6);
   for (let i = 0; i < 6; i++) {
-    divs[i] = addDiv();
+    divs[i] = addDiv(t, {'class': 'animated-div'});
     eventWatchers[i] = new EventWatcher(divs[i], CSS_ANIM_EVENTS);
     divs[i].style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
     players[i] = divs[i].getAnimationPlayers()[0];
@@ -497,7 +483,6 @@ async_test(function(t) {
   setTimeout(function() {
     for (let i = 0; i < 6; i++) {
       eventWatchers[i].stopWatching();
-      divs[i].parentNode.removeChild(divs[i]);
     }
     t.done();
   }, 1000);
@@ -505,7 +490,7 @@ async_test(function(t) {
 
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 
   var player = div.getAnimationPlayers()[0];
@@ -513,8 +498,6 @@ async_test(function(t) {
   player.ready.then(t.step_func(function() {
     player.startTime = null;
     return player.ready;
-  })).then(t.step_func(function() {
-    div.parentNode.removeChild(div);
   })).catch(t.step_func(function(reason) {
     assert_true(false, reason);
   })).then(function() {
@@ -524,7 +507,7 @@ async_test(function(t) {
 
 
 async_test(function(t) {
-  var div = addDiv();
+  var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
 
   var player = div.getAnimationPlayers()[0];
@@ -540,8 +523,6 @@ async_test(function(t) {
       'AnimationPlayer.startTime is null after paused');
     assert_equals(player.playState, 'paused',
       'AnimationPlayer.playState is "paused" after pause() call');
-
-    div.parentNode.removeChild(div);
   })).catch(t.step_func(function(reason) {
     assert_true(false, reason);
   })).then(function() {
