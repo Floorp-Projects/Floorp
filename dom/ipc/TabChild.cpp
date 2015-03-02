@@ -2011,7 +2011,7 @@ TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
     ScreenIntSize oldScreenSize = mInnerSize;
     mInnerSize = ScreenIntSize::FromUnknownSize(
       gfx::IntSize(size.width, size.height));
-    mWidget->Resize(0, 0, size.width, size.height,
+    mWidget->Resize(rect.x + chromeDisp.x, rect.y + chromeDisp.y, size.width, size.height,
                     true);
 
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(WebNavigation());
@@ -2227,7 +2227,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
       return;
     }
     if (aStatus == nsEventStatus_eConsumeNoDefault ||
-        nsIPresShell::gPreventMouseEvents ||
+        TouchManager::gPreventMouseEvents ||
         aEvent.mFlags.mMultipleActionsPrevented) {
       return;
     }
@@ -2268,7 +2268,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
     return;
 
   case NS_TOUCH_END:
-    if (!nsIPresShell::gPreventMouseEvents) {
+    if (!TouchManager::gPreventMouseEvents) {
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOVE, time, currentPoint, mWidget);
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_DOWN, time, currentPoint, mWidget);
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_UP, time, currentPoint, mWidget);

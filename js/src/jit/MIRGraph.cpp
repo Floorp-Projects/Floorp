@@ -28,7 +28,7 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     graph_(graph),
     abortReason_(AbortReason_NoAbort),
     shouldForceAbort_(false),
-    abortedNewScriptPropertiesGroups_(*alloc_),
+    abortedPreliminaryGroups_(*alloc_),
     error_(false),
     pauseBuild_(nullptr),
     cancelBuild_(false),
@@ -96,14 +96,14 @@ MIRGenerator::abort(const char *message, ...)
 }
 
 void
-MIRGenerator::addAbortedNewScriptPropertiesGroup(ObjectGroup *group)
+MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup *group)
 {
-    for (size_t i = 0; i < abortedNewScriptPropertiesGroups_.length(); i++) {
-        if (group == abortedNewScriptPropertiesGroups_[i])
+    for (size_t i = 0; i < abortedPreliminaryGroups_.length(); i++) {
+        if (group == abortedPreliminaryGroups_[i])
             return;
     }
-    if (!abortedNewScriptPropertiesGroups_.append(group))
-        CrashAtUnhandlableOOM("addAbortedNewScriptPropertiesGroup");
+    if (!abortedPreliminaryGroups_.append(group))
+        CrashAtUnhandlableOOM("addAbortedPreliminaryGroup");
 }
 
 void

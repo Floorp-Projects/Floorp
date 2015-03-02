@@ -1,4 +1,4 @@
-.. _healthreport_dataformat:
+.. _sslerrorreport_dataformat:
 
 ==============
 Payload Format

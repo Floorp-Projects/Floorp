@@ -468,13 +468,7 @@ void NotifyAlarmFired();
 bool SetAlarm(int32_t aSeconds, int32_t aNanoseconds);
 
 /**
- * Set the priority of the given process.  A process's priority is a two-tuple
- * consisting of a hal::ProcessPriority value and a hal::ProcessCPUPriority
- * value.
- *
- * Two processes with the same ProcessCPUPriority value don't necessarily have
- * the same CPU priority; the CPU priority we assign to a process is a function
- * of its ProcessPriority and ProcessCPUPriority.
+ * Set the priority of the given process.
  *
  * Exactly what this does will vary between platforms.  On *nix we might give
  * background processes higher nice values.  On other platforms, we might
@@ -482,7 +476,6 @@ bool SetAlarm(int32_t aSeconds, int32_t aNanoseconds);
  */
 void SetProcessPriority(int aPid,
                         hal::ProcessPriority aPriority,
-                        hal::ProcessCPUPriority aCPUPriority,
                         uint32_t aLRU = 0);
 
 

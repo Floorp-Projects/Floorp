@@ -1813,47 +1813,10 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
 {
     frame.syncStack(0);
 
-    RootedObjectGroup group(cx);
-    if (!ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Object)) {
-        group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Object);
-        if (!group)
-            return false;
-    }
-
-    RootedPlainObject baseObject(cx, &script->getObject(pc)->as<PlainObject>());
-    RootedPlainObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
-    if (!templateObject)
-        return false;
-
-    if (group) {
-        templateObject->setGroup(group);
-    } else {
-        if (!JSObject::setSingleton(cx, templateObject))
-            return false;
-    }
-
-    // Try to do the allocation inline.
-    Label done;
-    if (group && !group->shouldPreTenure() && !templateObject->hasDynamicSlots()) {
-        Label slowPath;
-        Register objReg = R0.scratchReg();
-        Register tempReg = R1.scratchReg();
-        masm.movePtr(ImmGCPtr(group), tempReg);
-        masm.branchTest32(Assembler::NonZero, Address(tempReg, ObjectGroup::offsetOfFlags()),
-                          Imm32(OBJECT_FLAG_PRE_TENURE), &slowPath);
-        masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataCallback()),
-                      ImmWord(0), &slowPath);
-        masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &slowPath);
-        masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
-        masm.jump(&done);
-        masm.bind(&slowPath);
-    }
-
-    ICNewObject_Fallback::Compiler stubCompiler(cx, templateObject);
+    ICNewObject_Fallback::Compiler stubCompiler(cx);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
-    masm.bind(&done);
     frame.push(R0);
     return true;
 }
@@ -1887,19 +1850,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
     } else {
         MOZ_ASSERT(key == JSProto_Object);
 
-        RootedPlainObject templateObject(cx,
-            NewBuiltinClassInstance<PlainObject>(cx, TenuredObject));
-        if (!templateObject)
-            return false;
-
-        if (group) {
-            templateObject->setGroup(group);
-        } else {
-            if (!JSObject::setSingleton(cx, templateObject))
-                return false;
-        }
-
-        ICNewObject_Fallback::Compiler stubCompiler(cx, templateObject);
+        ICNewObject_Fallback::Compiler stubCompiler(cx);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     }

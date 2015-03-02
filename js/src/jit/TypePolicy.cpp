@@ -737,28 +737,71 @@ template bool ObjectPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruc
 template bool ObjectPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
-template <unsigned Op>
-bool
-SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+static bool
+MaybeSimdUnbox(TempAllocator &alloc, MInstruction *ins, MIRType type, unsigned op)
 {
-    MIRType type = ins->type();
     MOZ_ASSERT(IsSimdType(type));
-
-    MDefinition *in = ins->getOperand(Op);
+    MDefinition *in = ins->getOperand(op);
     if (in->type() == type)
         return true;
 
     MSimdUnbox *replace = MSimdUnbox::New(alloc, in, type);
     ins->block()->insertBefore(ins, replace);
-    ins->replaceOperand(Op, replace);
+    ins->replaceOperand(op, replace);
 
     return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template <unsigned Op>
+bool
+SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    return MaybeSimdUnbox(alloc, ins, ins->type(), Op);
 }
 
 template bool
 SimdSameAsReturnedTypePolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool
 SimdSameAsReturnedTypePolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+
+bool
+SimdAllPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType specialization = ins->typePolicySpecialization();
+    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
+        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
+            return false;
+    }
+    return true;
+}
+
+template <unsigned Op>
+bool
+SimdPolicy<Op>::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    return MaybeSimdUnbox(alloc, ins, ins->typePolicySpecialization(), Op);
+}
+
+template bool
+SimdPolicy<0>::adjustInputs(TempAllocator &alloc, MInstruction *ins);
+
+bool
+SimdSelectPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType specialization = ins->typePolicySpecialization();
+
+    // First input is the mask, which has to be an int32x4 (for now).
+    if (!MaybeSimdUnbox(alloc, ins, MIRType_Int32x4, 0))
+        return false;
+
+    // Next inputs are the two vectors of a particular type.
+    for (unsigned i = 1; i < 3; i++) {
+        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
+            return false;
+    }
+
+    return true;
+}
 
 bool
 CallPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
@@ -1040,6 +1083,8 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(FilterTypeSetPolicy)                      \
     _(InstanceOfPolicy)                         \
     _(PowPolicy)                                \
+    _(SimdAllPolicy)                            \
+    _(SimdSelectPolicy)                         \
     _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreTypedArrayPolicy)                    \
@@ -1087,6 +1132,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<2> >)            \
     _(MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >)            \
     _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >) \
+    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >) \
     _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
     _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
     _(NoFloatPolicy<0>)                                                 \
@@ -1095,6 +1141,9 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(ObjectPolicy<0>)                                                  \
     _(ObjectPolicy<1>)                                                  \
     _(ObjectPolicy<3>)                                                  \
+    _(SimdPolicy<0>)                                                    \
+    _(SimdSameAsReturnedTypePolicy<0>)                                  \
+    _(SimdScalarPolicy<0>)                                              \
     _(StringPolicy<0>)
 
 

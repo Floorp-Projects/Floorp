@@ -306,8 +306,13 @@ HTMLTextFieldAccessible::NativeAttributes()
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
   nsAutoString type;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type))
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
+    if (!mRoleMapEntry && type.EqualsLiteral("search")) {
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
+                             NS_LITERAL_STRING("searchbox"));
+    }
+  }
 
   return attributes.forget();
 }

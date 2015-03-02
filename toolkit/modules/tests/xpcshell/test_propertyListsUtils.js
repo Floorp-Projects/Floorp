@@ -36,47 +36,45 @@ function checkMainPropertyList(aPropertyListRoot) {
 
   checkValue(aPropertyListRoot, PropertyListUtils.TYPE_DICTIONARY);
   checkValue(aPropertyListRoot.get("Boolean"), PRIMITIVE, false);
-  let (array = aPropertyListRoot.get("Array")) {
-    checkValue(array, PropertyListUtils.TYPE_ARRAY);
-    do_check_eq(array.length, 8);
+  let array = aPropertyListRoot.get("Array");
+  checkValue(array, PropertyListUtils.TYPE_ARRAY);
+  do_check_eq(array.length, 8);
 
-    // Test both long and short values, since binary property lists store
-    // long values a little bit differently (see readDataLengthAndOffset).
+  // Test both long and short values, since binary property lists store
+  // long values a little bit differently (see readDataLengthAndOffset).
 
-    // Short ASCII string
-    checkLazyGetterValue(array, 0, PRIMITIVE, "abc");
-    // Long ASCII string
-    checkLazyGetterValue(array, 1, PRIMITIVE, new Array(1001).join("a"));
-    // Short unicode string
-    checkLazyGetterValue(array, 2, PRIMITIVE, "\u05D0\u05D0\u05D0");
-    // Long unicode string
-    checkLazyGetterValue(array, 3, PRIMITIVE, new Array(1001).join("\u05D0"));
-    // Unicode surrogate pair
-    checkLazyGetterValue(array, 4, PRIMITIVE,
-                         "\uD800\uDC00\uD800\uDC00\uD800\uDC00");
+  // Short ASCII string
+  checkLazyGetterValue(array, 0, PRIMITIVE, "abc");
+  // Long ASCII string
+  checkLazyGetterValue(array, 1, PRIMITIVE, new Array(1001).join("a"));
+  // Short unicode string
+  checkLazyGetterValue(array, 2, PRIMITIVE, "\u05D0\u05D0\u05D0");
+  // Long unicode string
+  checkLazyGetterValue(array, 3, PRIMITIVE, new Array(1001).join("\u05D0"));
+  // Unicode surrogate pair
+  checkLazyGetterValue(array, 4, PRIMITIVE,
+                       "\uD800\uDC00\uD800\uDC00\uD800\uDC00");
 
-    // Date
-    checkLazyGetterValue(array, 5, PropertyListUtils.TYPE_DATE,
-                         new Date("2011-12-31T11:15:23Z"));
+  // Date
+  checkLazyGetterValue(array, 5, PropertyListUtils.TYPE_DATE,
+                       new Date("2011-12-31T11:15:23Z"));
 
-    // Data
-    checkLazyGetterValue(array, 6, PropertyListUtils.TYPE_UINT8_ARRAY);
-    let dataAsString = [String.fromCharCode(b) for each (b in array[6])].join("");
-    do_check_eq(dataAsString, "2011-12-31T11:15:33Z");
+  // Data
+  checkLazyGetterValue(array, 6, PropertyListUtils.TYPE_UINT8_ARRAY);
+  let dataAsString = [String.fromCharCode(b) for each (b in array[6])].join("");
+  do_check_eq(dataAsString, "2011-12-31T11:15:33Z");
 
-    // Dict
-    let (dict = array[7]) {
-      checkValue(dict, PropertyListUtils.TYPE_DICTIONARY);
-      checkValue(dict.get("Negative Number"), PRIMITIVE, -400);
-      checkValue(dict.get("Real Number"), PRIMITIVE, 2.71828183);
-      checkValue(dict.get("Big Int"),
-                 PropertyListUtils.TYPE_INT64,
-                 "9007199254740993");
-      checkValue(dict.get("Negative Big Int"),
-                 PropertyListUtils.TYPE_INT64,
-                 "-9007199254740993");
-    }
-  }
+  // Dict
+  let dict = array[7];
+  checkValue(dict, PropertyListUtils.TYPE_DICTIONARY);
+  checkValue(dict.get("Negative Number"), PRIMITIVE, -400);
+  checkValue(dict.get("Real Number"), PRIMITIVE, 2.71828183);
+  checkValue(dict.get("Big Int"),
+             PropertyListUtils.TYPE_INT64,
+             "9007199254740993");
+  checkValue(dict.get("Negative Big Int"),
+             PropertyListUtils.TYPE_INT64,
+             "-9007199254740993");
 }
 
 function readPropertyList(aFile, aCallback) {

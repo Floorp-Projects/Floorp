@@ -75,7 +75,7 @@ There should be ``UUID.dmp`` and ``UUID.extra`` files on disk, saved by
 Breakpad.
 
 crash.submission.1
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 This event is produced when a crash is submitted.
 

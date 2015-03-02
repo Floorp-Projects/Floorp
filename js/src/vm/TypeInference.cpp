@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "jsapi.h"
 #include "jscntxt.h"
@@ -716,22 +717,6 @@ TypeSet::clone(LifoAlloc *alloc) const
 }
 
 TemporaryTypeSet *
-TypeSet::filter(LifoAlloc *alloc, bool filterUndefined, bool filterNull) const
-{
-    TemporaryTypeSet *res = clone(alloc);
-    if (!res)
-        return nullptr;
-
-    if (filterUndefined)
-        res->flags = res->flags & ~TYPE_FLAG_UNDEFINED;
-
-    if (filterNull)
-        res->flags = res->flags & ~TYPE_FLAG_NULL;
-
-    return res;
-}
-
-TemporaryTypeSet *
 TypeSet::cloneObjectsOnly(LifoAlloc *alloc)
 {
     TemporaryTypeSet *res = clone(alloc);
@@ -772,6 +757,33 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
             if (ObjectKey *key = b->getObject(i))
                 res->addType(ObjectType(key), alloc);
         }
+    }
+
+    return res;
+}
+
+/* static */ TemporaryTypeSet *
+TypeSet::removeSet(TemporaryTypeSet *input, TemporaryTypeSet *removal, LifoAlloc *alloc)
+{
+    // Only allow removal of primitives and the "AnyObject" flag.
+    MOZ_ASSERT(!removal->unknown());
+    MOZ_ASSERT_IF(!removal->unknownObject(), removal->getObjectCount() == 0);
+
+    uint32_t flags = input->baseFlags() & ~removal->baseFlags();
+    TemporaryTypeSet *res =
+        alloc->new_<TemporaryTypeSet>(flags, static_cast<ObjectKey**>(nullptr));
+    if (!res)
+        return nullptr;
+
+    res->setBaseObjectCount(0);
+    if (removal->unknownObject() || input->unknownObject())
+        return res;
+
+    for (size_t i = 0; i < input->getObjectCount(); i++) {
+        if (!input->getObject(i))
+            continue;
+
+        res->addType(TypeSet::ObjectType(input->getObject(i)), alloc);
     }
 
     return res;
@@ -2357,7 +2369,7 @@ TypeZone::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
     if (!co || !co->isValid() || co->pendingInvalidation())
         return;
 
-    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d",
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%" PRIuSIZE,
               co->script(), co->script()->filename(), co->script()->lineno());
 
     co->setPendingInvalidation();
@@ -3248,12 +3260,113 @@ PreliminaryObjectArray::sweep()
     }
 }
 
+void
+PreliminaryObjectArrayWithTemplate::trace(JSTracer *trc)
+{
+    MarkShape(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
+}
+
+/* static */ void
+PreliminaryObjectArrayWithTemplate::writeBarrierPre(PreliminaryObjectArrayWithTemplate *objects)
+{
+    if (!objects->shape()->runtimeFromAnyThread()->needsIncrementalBarrier())
+        return;
+
+    JS::Zone *zone = objects->shape()->zoneFromAnyThread();
+    if (zone->needsIncrementalBarrier())
+        objects->trace(zone->barrierTracer());
+}
+
+// Return whether shape consists entirely of plain data properties.
+static bool
+OnlyHasDataProperties(Shape *shape)
+{
+    MOZ_ASSERT(!shape->inDictionary());
+
+    while (!shape->isEmptyShape()) {
+        if (!shape->isDataDescriptor() ||
+            !shape->configurable() ||
+            !shape->enumerable() ||
+            !shape->writable() ||
+            !shape->hasSlot())
+        {
+            return false;
+        }
+        shape = shape->previous();
+    }
+
+    return true;
+}
+
+// Find the most recent common ancestor of two shapes, or an empty shape if
+// the two shapes have no common ancestor.
+static Shape *
+CommonPrefix(Shape *first, Shape *second)
+{
+    MOZ_ASSERT(OnlyHasDataProperties(first));
+    MOZ_ASSERT(OnlyHasDataProperties(second));
+
+    while (first->slotSpan() > second->slotSpan())
+        first = first->previous();
+    while (second->slotSpan() > first->slotSpan())
+        second = second->previous();
+
+    while (first != second && !first->isEmptyShape()) {
+        first = first->previous();
+        second = second->previous();
+    }
+
+    return first;
+}
+
+void
+PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool force)
+{
+    // Don't perform the analyses until sufficient preliminary objects have
+    // been allocated.
+    if (!force && !full())
+        return;
+
+    AutoEnterAnalysis enter(cx);
+
+    ScopedJSDeletePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
+    group->detachPreliminaryObjects();
+
+    MOZ_ASSERT(shape()->slotSpan() != 0);
+    MOZ_ASSERT(OnlyHasDataProperties(shape()));
+
+    // Make sure all the preliminary objects reflect the properties originally
+    // in the template object.
+    for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
+        JSObject *objBase = preliminaryObjects->get(i);
+        if (!objBase)
+            continue;
+        PlainObject *obj = &objBase->as<PlainObject>();
+
+        if (obj->inDictionaryMode() || !OnlyHasDataProperties(obj->lastProperty()))
+            return;
+
+        if (CommonPrefix(obj->lastProperty(), shape()) != shape())
+            return;
+    }
+
+    TryConvertToUnboxedLayout(cx, shape(), group, preliminaryObjects);
+    if (group->maybeUnboxedLayout())
+        return;
+
+    // We weren't able to use an unboxed layout, but since the preliminary
+    // still reflect the template object's properties, and all objects in the
+    // future will be created with those properties, the properties can be
+    // marked as definite for objects in the group.
+    group->addDefiniteProperties(cx, shape());
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeNewScript
 /////////////////////////////////////////////////////////////////////
 
-// Make a TypeNewScript for |group|, and set it up to hold the initial
-// PRELIMINARY_OBJECT_COUNT objects created with the group.
+// Make a TypeNewScript for |group|, and set it up to hold the preliminary
+// objects created with the group.
 /* static */ void
 TypeNewScript::make(JSContext *cx, ObjectGroup *group, JSFunction *fun)
 {
@@ -3326,48 +3439,6 @@ TypeNewScript::registerNewObject(PlainObject *res)
     MOZ_ASSERT(res->numFixedSlots() == NativeObject::MAX_FIXED_SLOTS);
 
     preliminaryObjects->registerNewObject(res);
-}
-
-// Return whether shape consists entirely of plain data properties.
-static bool
-OnlyHasDataProperties(Shape *shape)
-{
-    MOZ_ASSERT(!shape->inDictionary());
-
-    while (!shape->isEmptyShape()) {
-        if (!shape->isDataDescriptor() ||
-            !shape->configurable() ||
-            !shape->enumerable() ||
-            !shape->writable() ||
-            !shape->hasSlot())
-        {
-            return false;
-        }
-        shape = shape->previous();
-    }
-
-    return true;
-}
-
-// Find the most recent common ancestor of two shapes, or an empty shape if
-// the two shapes have no common ancestor.
-static Shape *
-CommonPrefix(Shape *first, Shape *second)
-{
-    MOZ_ASSERT(OnlyHasDataProperties(first));
-    MOZ_ASSERT(OnlyHasDataProperties(second));
-
-    while (first->slotSpan() > second->slotSpan())
-        first = first->previous();
-    while (second->slotSpan() > first->slotSpan())
-        second = second->previous();
-
-    while (first != second && !first->isEmptyShape()) {
-        first = first->previous();
-        second = second->previous();
-    }
-
-    return first;
 }
 
 static bool
@@ -3748,6 +3819,17 @@ TypeNewScript::trace(JSTracer *trc)
         MarkObjectGroup(trc, &initializedGroup_, "TypeNewScript_initializedGroup");
 }
 
+/* static */ void
+TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
+{
+    if (!newScript->function()->runtimeFromAnyThread()->needsIncrementalBarrier())
+        return;
+
+    JS::Zone *zone = newScript->function()->zoneFromAnyThread();
+    if (zone->needsIncrementalBarrier())
+        newScript->trace(zone->barrierTracer());
+}
+
 void
 TypeNewScript::sweep()
 {
@@ -3905,6 +3987,9 @@ ObjectGroup::maybeSweep(AutoClearTypeInferenceStateOnOOM *oom)
 
     if (maybeUnboxedLayout() && unboxedLayout().newScript())
         unboxedLayout().newScript()->sweep();
+
+    if (maybePreliminaryObjects())
+        maybePreliminaryObjects()->sweep();
 
     if (newScript())
         newScript()->sweep();
@@ -4152,7 +4237,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
         fprintf(stderr, "Eval");
     else
         fprintf(stderr, "Main");
-    fprintf(stderr, " %p %s:%d ", script.get(), script->filename(), (int) script->lineno());
+    fprintf(stderr, " %p %s:%" PRIuSIZE " ", script.get(), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {
         if (js::PropertyName *name = script->functionNonDelazifying()->name())

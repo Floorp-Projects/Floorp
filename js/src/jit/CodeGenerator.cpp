@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -3645,7 +3646,7 @@ CodeGenerator::maybeCreateScriptCounts()
                     JSScript *innerScript = block->info().script();
                     description = (char *) js_calloc(200);
                     if (description) {
-                        JS_snprintf(description, 200, "%s:%d",
+                        JS_snprintf(description, 200, "%s:%" PRIuSIZE,
                                     innerScript->filename(), innerScript->lineno());
                     }
                 }
@@ -3912,7 +3913,8 @@ CodeGenerator::generateBody()
 
 #ifdef DEBUG
         const char *filename = nullptr;
-        unsigned lineNumber = 0, columnNumber = 0;
+        size_t lineNumber = 0;
+        unsigned columnNumber = 0;
         if (current->mir()->info().script()) {
             filename = current->mir()->info().script()->filename();
             if (current->mir()->pc())
@@ -3922,8 +3924,8 @@ CodeGenerator::generateBody()
             lineNumber = current->mir()->lineno();
             columnNumber = current->mir()->columnIndex();
         }
-        JitSpew(JitSpew_Codegen, "# block%lu %s:%u:%u%s:", i,
-                filename ? filename : "?", lineNumber, columnNumber,
+        JitSpew(JitSpew_Codegen, "# block%" PRIuSIZE " %s:%" PRIuSIZE ":%u%s:",
+                i, filename ? filename : "?", lineNumber, columnNumber,
                 current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
 
@@ -4204,8 +4206,12 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-typedef JSObject *(*NewInitObjectFn)(JSContext *, HandlePlainObject);
-static const VMFunction NewInitObjectInfo = FunctionInfo<NewInitObjectFn>(NewInitObject);
+typedef JSObject *(*NewInitObjectWithTemplateFn)(JSContext *, HandleObject);
+static const VMFunction NewInitObjectWithTemplateInfo =
+    FunctionInfo<NewInitObjectWithTemplateFn>(NewObjectOperationWithTemplate);
+
+typedef JSObject *(*NewInitObjectFn)(JSContext *, HandleScript, jsbytecode *pc, NewObjectKind);
+static const VMFunction NewInitObjectInfo = FunctionInfo<NewInitObjectFn>(NewObjectOperation);
 
 typedef PlainObject *(*ObjectCreateWithTemplateFn)(JSContext *, HandlePlainObject);
 static const VMFunction ObjectCreateWithTemplateInfo =
@@ -4219,16 +4225,25 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
     MOZ_ASSERT(!lir->isCall());
     saveLive(lir);
 
-    pushArg(ImmGCPtr(lir->mir()->templateObject()));
+    JSObject *templateObject = lir->mir()->templateObject();
 
     // If we're making a new object with a class prototype (that is, an object
     // that derives its class from its prototype instead of being
-    // JSObject::class_'d) from self-hosted code, we need a different init
+    // PlainObject::class_'d) from self-hosted code, we need a different init
     // function.
     if (lir->mir()->mode() == MNewObject::ObjectLiteral) {
-        callVM(NewInitObjectInfo, lir);
+        if (templateObject) {
+            pushArg(ImmGCPtr(templateObject));
+            callVM(NewInitObjectWithTemplateInfo, lir);
+        } else {
+            pushArg(Imm32(GenericObject));
+            pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
+            pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
+            callVM(NewInitObjectInfo, lir);
+        }
     } else {
         MOZ_ASSERT(lir->mir()->mode() == MNewObject::ObjectCreate);
+        pushArg(ImmGCPtr(templateObject));
         callVM(ObjectCreateWithTemplateInfo, lir);
     }
 
@@ -4239,8 +4254,12 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 }
 
 static bool
-ShouldInitFixedSlots(LInstruction *lir, NativeObject *templateObj)
+ShouldInitFixedSlots(LInstruction *lir, JSObject *obj)
 {
+    if (!obj->isNative())
+        return true;
+    NativeObject *templateObj = &obj->as<NativeObject>();
+
     // Look for StoreFixedSlot instructions following an object allocation
     // that write to this object before a GC is triggered or this object is
     // passed to a VM call. If all fixed slots will be initialized, the
@@ -4327,7 +4346,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
-    PlainObject *templateObject = lir->mir()->templateObject();
+    JSObject *templateObject = lir->mir()->templateObject();
 
     if (lir->mir()->shouldUseVM()) {
         visitNewObjectVMCall(lir);
@@ -4627,8 +4646,7 @@ CodeGenerator::visitMutateProto(LMutateProto *lir)
     callVM(MutatePrototypeInfo, lir);
 }
 
-typedef bool(*InitPropFn)(JSContext *cx, HandleNativeObject obj,
-                          HandlePropertyName name, HandleValue value, jsbytecode *pc);
+typedef bool(*InitPropFn)(JSContext *, HandleObject, HandlePropertyName, HandleValue, jsbytecode *pc);
 static const VMFunction InitPropInfo = FunctionInfo<InitPropFn>(InitProp);
 
 void

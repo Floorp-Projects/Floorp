@@ -863,14 +863,12 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 void
 SetProcessPriority(int aPid,
                    ProcessPriority aPriority,
-                   ProcessCPUPriority aCPUPriority,
                    uint32_t aBackgroundLRU)
 {
   // n.b. The sandboxed implementation crashes; SetProcessPriority works only
   // from the main process.
   MOZ_ASSERT(aBackgroundLRU == 0 || aPriority == PROCESS_PRIORITY_BACKGROUND);
-  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority, aCPUPriority,
-                                        aBackgroundLRU));
+  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority, aBackgroundLRU));
 }
 
 void
@@ -918,89 +916,6 @@ ThreadPriorityToString(ThreadPriority aPriority)
       MOZ_ASSERT(false);
       return "???";
   }
-}
-
-// From HalTypes.h.
-const char*
-ProcessPriorityToString(ProcessPriority aPriority,
-                        ProcessCPUPriority aCPUPriority)
-{
-  // Sorry this is ugly.  At least it's all in one place.
-  //
-  // We intentionally fall through if aCPUPriority is invalid; we won't hit any
-  // of the if statements further down, so it's OK.
-
-  switch (aPriority) {
-  case PROCESS_PRIORITY_MASTER:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "MASTER:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "MASTER:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_PREALLOC:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "PREALLOC:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "PREALLOC:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_FOREGROUND_HIGH:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "FOREGROUND_HIGH:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "FOREGROUND_HIGH:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_FOREGROUND:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "FOREGROUND:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "FOREGROUND:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_FOREGROUND_KEYBOARD:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "FOREGROUND_KEYBOARD:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "FOREGROUND_KEYBOARD:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "BACKGROUND_PERCEIVABLE:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "BACKGROUND_PERCEIVABLE:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_BACKGROUND_HOMESCREEN:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "BACKGROUND_HOMESCREEN:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "BACKGROUND_HOMESCREEN:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_BACKGROUND:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "BACKGROUND:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "BACKGROUND:CPU_LOW";
-    }
-  case PROCESS_PRIORITY_UNKNOWN:
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_NORMAL) {
-      return "UNKNOWN:CPU_NORMAL";
-    }
-    if (aCPUPriority == PROCESS_CPU_PRIORITY_LOW) {
-      return "UNKNOWN:CPU_LOW";
-    }
-  default:
-    // Fall through.  (|default| is here to silence warnings.)
-    break;
-  }
-
-  MOZ_ASSERT(false);
-  return "???";
 }
 
 static StaticAutoPtr<ObserverList<FMRadioOperationInformation> > sFMRadioObservers;

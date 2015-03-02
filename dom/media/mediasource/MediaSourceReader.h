@@ -132,7 +132,7 @@ public:
 
   // Return true if the Ended method has been called
   bool IsEnded();
-  bool IsNearEnd(int64_t aTime /* microseconds */);
+  bool IsNearEnd(MediaData::Type aType, int64_t aTime /* microseconds */);
 
   // Set the duration of the attached mediasource element.
   void SetMediaSourceDuration(double aDuration /* seconds */);

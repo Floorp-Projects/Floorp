@@ -111,8 +111,7 @@ const browserElementTestHelpers = {
 
 // Returns a promise which is resolved when a subprocess is created.  The
 // argument to resolve() is the childID of the subprocess.
-function expectProcessCreated(/* optional */ initialPriority,
-                              /* optional */ initialCPUPriority) {
+function expectProcessCreated(/* optional */ initialPriority) {
   return new Promise(function(resolve, reject) {
     var observed = false;
     browserElementTestHelpers.addProcessPriorityObserver(
@@ -128,7 +127,7 @@ function expectProcessCreated(/* optional */ initialPriority,
         var childID = parseInt(data);
         ok(true, 'Got new process, id=' + childID);
         if (initialPriority) {
-          expectPriorityChange(childID, initialPriority, initialCPUPriority).then(function() {
+          expectPriorityChange(childID, initialPriority).then(function() {
             resolve(childID);
           });
         } else {
@@ -141,9 +140,8 @@ function expectProcessCreated(/* optional */ initialPriority,
 
 // Just like expectProcessCreated(), except we'll call ok(false) if a second
 // process is created.
-function expectOnlyOneProcessCreated(/* optional */ initialPriority,
-                                     /* optional */ initialCPUPriority) {
-  var p = expectProcessCreated(initialPriority, initialCPUPriority);
+function expectOnlyOneProcessCreated(/* optional */ initialPriority) {
+  var p = expectProcessCreated(initialPriority);
   p.then(function() {
     expectProcessCreated().then(function(childID) {
       ok(false, 'Got unexpected process creation, childID=' + childID);
@@ -153,15 +151,10 @@ function expectOnlyOneProcessCreated(/* optional */ initialPriority,
 }
 
 // Returns a promise which is resolved or rejected the next time the process
-// childID changes its priority.  We resolve if the (priority, CPU priority)
-// tuple matches (expectedPriority, expectedCPUPriority) and we reject
-// otherwise.
-//
-// expectedCPUPriority is an optional argument; if it's not specified, we
-// resolve if priority matches expectedPriority.
+// childID changes its priority. We resolve if the priority matches
+// expectedPriority, and we reject otherwise.
 
-function expectPriorityChange(childID, expectedPriority,
-                              /* optional */ expectedCPUPriority) {
+function expectPriorityChange(childID, expectedPriority) {
   return new Promise(function(resolve, reject) {
     var observed = false;
     browserElementTestHelpers.addProcessPriorityObserver(
@@ -171,7 +164,7 @@ function expectPriorityChange(childID, expectedPriority,
           return;
         }
 
-        var [id, priority, cpuPriority] = data.split(":");
+        var [id, priority] = data.split(":");
         if (id != childID) {
           return;
         }
@@ -184,14 +177,7 @@ function expectPriorityChange(childID, expectedPriority,
            'Expected priority of childID ' + childID +
            ' to change to ' + expectedPriority);
 
-        if (expectedCPUPriority) {
-          is(cpuPriority, expectedCPUPriority,
-             'Expected CPU priority of childID ' + childID +
-             ' to change to ' + expectedCPUPriority);
-        }
-
-        if (priority == expectedPriority &&
-            (!expectedCPUPriority || expectedCPUPriority == cpuPriority)) {
+        if (priority == expectedPriority) {
           resolve();
         } else {
           reject();
@@ -212,13 +198,14 @@ function expectPriorityWithBackgroundLRUSet(childID, expectedBackgroundLRU) {
       'process-priority-with-background-LRU-set',
       function(subject, topic, data) {
 
-        var [id, priority, cpuPriority, backgroundLRU] = data.split(":");
+        var [id, priority, backgroundLRU] = data.split(":");
         if (id != childID) {
           return;
         }
 
         is(backgroundLRU, expectedBackgroundLRU,
-           'Expected backgroundLRU ' + backgroundLRU + ' of childID ' + childID +
+           'Expected backgroundLRU ' + backgroundLRU +
+           ' of childID ' + childID +
            ' to change to ' + expectedBackgroundLRU);
 
         if (backgroundLRU == expectedBackgroundLRU) {

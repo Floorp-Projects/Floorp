@@ -547,12 +547,14 @@ LMoveGroup::add(LAllocation *from, LAllocation *to, LDefinition::Type type)
 
     // Check that SIMD moves are aligned according to ABI requirements.
     if (LDefinition(type).isSimdType()) {
+        MOZ_ASSERT(from->isMemory() || from->isFloatReg());
         if (from->isMemory()) {
             if (from->isArgument())
                 MOZ_ASSERT(from->toArgument()->index() % SimdMemoryAlignment == 0);
             else
                 MOZ_ASSERT(from->toStackSlot()->slot() % SimdMemoryAlignment == 0);
         }
+        MOZ_ASSERT(to->isMemory() || to->isFloatReg());
         if (to->isMemory()) {
             if (to->isArgument())
                 MOZ_ASSERT(to->toArgument()->index() % SimdMemoryAlignment == 0);
