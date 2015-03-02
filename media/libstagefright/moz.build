@@ -60,12 +60,7 @@ EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/Interval.h',
     'binding/include/mp4_demuxer/MoofParser.h',
     'binding/include/mp4_demuxer/mp4_demuxer.h',
-    'binding/include/mp4_demuxer/MP4TrackDemuxer.h',
     'binding/include/mp4_demuxer/SinfParser.h',
-]
-
-EXPORTS.demuxer += [
-    'binding/include/demuxer/TrackDemuxer.h',
 ]
 
 SOURCES += [
@@ -87,7 +82,6 @@ UNIFIED_SOURCES += [
     'binding/Index.cpp',
     'binding/MoofParser.cpp',
     'binding/mp4_demuxer.cpp',
-    'binding/MP4TrackDemuxer.cpp',
     'binding/SinfParser.cpp',
     'frameworks/av/media/libstagefright/DataSource.cpp',
     'frameworks/av/media/libstagefright/ESDS.cpp',

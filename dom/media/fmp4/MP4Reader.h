@@ -11,7 +11,6 @@
 #include "nsAutoPtr.h"
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
-#include "demuxer/TrackDemuxer.h"
 #include "MediaTaskQueue.h"
 
 #include <deque>
@@ -23,7 +22,7 @@ namespace dom {
 class TimeRanges;
 }
 
-typedef std::deque<MediaSample*> MediaSampleQueue;
+typedef std::deque<mp4_demuxer::MP4Sample*> MP4SampleQueue;
 
 class MP4Stream;
 
@@ -102,8 +101,8 @@ private:
 
   // Blocks until the demuxer produces an sample of specified type.
   // Returns nullptr on error on EOS. Caller must delete sample.
-  MediaSample* PopSample(mp4_demuxer::TrackType aTrack);
-  MediaSample* PopSampleLocked(mp4_demuxer::TrackType aTrack);
+  mp4_demuxer::MP4Sample* PopSample(mp4_demuxer::TrackType aTrack);
+  mp4_demuxer::MP4Sample* PopSampleLocked(mp4_demuxer::TrackType aTrack);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
@@ -128,9 +127,8 @@ private:
   size_t SizeOfQueue(TrackType aTrack);
 
   nsRefPtr<MP4Stream> mStream;
-  nsRefPtr<mp4_demuxer::MP4Demuxer> mDemuxer;
+  nsAutoPtr<mp4_demuxer::MP4Demuxer> mDemuxer;
   nsRefPtr<PlatformDecoderModule> mPlatform;
-  mp4_demuxer::CryptoFile mCrypto;
 
   class DecoderCallback : public MediaDataDecoderCallback {
   public:
@@ -183,7 +181,6 @@ private:
     {
     }
 
-    nsAutoPtr<TrackDemuxer> mTrackDemuxer;
     // The platform decoder.
     nsRefPtr<MediaDataDecoder> mDecoder;
     // TaskQueue on which decoder can choose to decode.
@@ -242,7 +239,7 @@ private:
 
   // Queued samples extracted by the demuxer, but not yet sent to the platform
   // decoder.
-  nsAutoPtr<MediaSample> mQueuedVideoSample;
+  nsAutoPtr<mp4_demuxer::MP4Sample> mQueuedVideoSample;
 
   // Returns true when the decoder for this track needs input.
   // aDecoder.mMonitor must be locked.
