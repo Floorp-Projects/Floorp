@@ -1,3 +1,4 @@
+asm.js/testParallelCompile.js
 auto-regress/bug653395.js
 auto-regress/bug675251.js
 baseline/bug847446.js
