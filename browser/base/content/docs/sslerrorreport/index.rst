@@ -1,4 +1,4 @@
-.. _sslerrorreport
+.. _sslerrorreport:
 
 ===================
 SSL Error Reporting

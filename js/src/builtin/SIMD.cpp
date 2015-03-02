@@ -538,7 +538,7 @@ struct Rec {
 };
 template<typename T>
 struct RecSqrt {
-    static inline T apply(T x) { return 1 / sqrt(x); }
+    static inline T apply(T x) { return sqrt(1 / x); }
 };
 template<typename T>
 struct Sqrt {

@@ -105,6 +105,9 @@ JitOptions::JitOptions()
     // Toggles whether Effective Address Analysis is globally disabled.
     SET_DEFAULT(disableEaa, false);
 
+    // Toggles whether Alignment Mask Analysis is globally disabled.
+    SET_DEFAULT(disableAma, false);
+
     // Whether functions are compiled immediately.
     SET_DEFAULT(eagerCompilation, false);
 

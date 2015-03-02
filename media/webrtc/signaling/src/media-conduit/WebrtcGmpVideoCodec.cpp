@@ -197,7 +197,7 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
   mCodecParams.mMaxFramerate = aCodecSettings->maxFramerate;
   mMaxPayloadSize = aMaxPayloadSize;
   if (aCodecSettings->codecSpecific.H264.packetizationMode == 1) {
-    mMaxPayloadSize = 4*1024*1024; // insanely large
+    mMaxPayloadSize = 0; // No limit.
   }
 
   // Pass dummy codecSpecific data for now...

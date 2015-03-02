@@ -221,24 +221,8 @@ class Float32Policy MOZ_FINAL : public TypePolicy
 template <unsigned Op>
 class FloatingPointPolicy MOZ_FINAL : public TypePolicy
 {
-
   public:
-    struct PolicyTypeData
-    {
-        MIRType policyType_;
-
-        void setPolicyType(MIRType type) {
-            policyType_ = type;
-        }
-
-      protected:
-        MIRType &thisTypeSpecialization() {
-            return policyType_;
-        }
-    };
-
-    INHERIT_DATA_(PolicyTypeData);
-
+    SPECIALIZATION_DATA_;
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
@@ -322,6 +306,28 @@ class SimdScalarPolicy MOZ_FINAL : public TypePolicy
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
         return staticAdjustInputs(alloc, def);
     }
+};
+
+class SimdAllPolicy MOZ_FINAL : public TypePolicy
+{
+    public:
+    SPECIALIZATION_DATA_;
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
+};
+
+template <unsigned Op>
+class SimdPolicy MOZ_FINAL : public TypePolicy
+{
+    public:
+    SPECIALIZATION_DATA_;
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
+};
+
+class SimdSelectPolicy MOZ_FINAL : public TypePolicy
+{
+    public:
+    SPECIALIZATION_DATA_;
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
 // SIMD value-type policy, use the returned type of the instruction to determine

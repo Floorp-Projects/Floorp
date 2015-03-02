@@ -56,6 +56,7 @@
       testRole("aria_row", ROLE_ROW);
       testRole("aria_rowheader", ROLE_ROWHEADER);
       testRole("aria_scrollbar", ROLE_SCROLLBAR);
+      testRole("aria_searchbox", ROLE_ENTRY);
       testRole("aria_separator", ROLE_SEPARATOR);
       testRole("aria_slider", ROLE_SLIDER);
       testRole("aria_spinbutton", ROLE_SPINBUTTON);
@@ -181,8 +182,13 @@
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136563"
-     title="Support ARIA 1.1 switch role"
+     title="Support ARIA 1.1 switch role">
     Bug 1136563
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121518"
+     title="Support ARIA 1.1 searchbox role">
+    Bug 1121518
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -227,6 +233,7 @@
   <span id="aria_row" role="row"/>
   <span id="aria_rowheader" role="rowheader"/>
   <span id="aria_scrollbar" role="scrollbar"/>
+  <span id="aria_searchbox" role="textbox"/>
   <span id="aria_separator" role="separator"/>
   <span id="aria_slider" role="slider"/>
   <span id="aria_spinbutton" role="spinbutton"/>

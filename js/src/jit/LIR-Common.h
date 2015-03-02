@@ -300,13 +300,7 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
         return mir_->toSimdInsertElement()->lane();
     }
     const char *extraName() const {
-        switch (lane()) {
-          case LaneX: return "lane x";
-          case LaneY: return "lane y";
-          case LaneZ: return "lane z";
-          case LaneW: return "lane w";
-        }
-        return "unknown lane";
+        return MSimdInsertElement::LaneName(lane());
     }
 };
 
@@ -425,15 +419,7 @@ public:
         return mir_->toSimdBinaryComp()->operation();
     }
     const char *extraName() const {
-        switch (operation()) {
-          case MSimdBinaryComp::greaterThan: return "greaterThan";
-          case MSimdBinaryComp::greaterThanOrEqual: return "greaterThanOrEqual";
-          case MSimdBinaryComp::lessThan: return "lessThan";
-          case MSimdBinaryComp::lessThanOrEqual: return "lessThanOrEqual";
-          case MSimdBinaryComp::equal: return "equal";
-          case MSimdBinaryComp::notEqual: return "notEqual";
-        }
-        MOZ_CRASH("unexpected operation");
+        return MSimdBinaryComp::OperationName(operation());
     }
 };
 

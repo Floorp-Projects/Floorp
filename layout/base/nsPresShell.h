@@ -32,6 +32,7 @@
 #include "nsStyleSet.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
 #include "nsRefreshDriver.h"
+#include "TouchManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
@@ -740,8 +741,6 @@ protected:
   static void MarkImagesInListVisible(const nsDisplayList& aList);
   void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect);
 
-  void EvictTouches();
-
   // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
   void HandleKeyboardEvent(nsINode* aTarget,
                            mozilla::WidgetKeyboardEvent& aEvent,
@@ -811,6 +810,9 @@ protected:
   nsRefPtr<nsCaret>         mOriginalCaret;
   nsCallbackEventRequest*   mFirstCallbackEventRequest;
   nsCallbackEventRequest*   mLastCallbackEventRequest;
+
+  // TouchManager
+  TouchManager              mTouchManager;
 
   // TouchCaret
   nsRefPtr<mozilla::TouchCaret> mTouchCaret;

@@ -6,6 +6,8 @@
 
 #include "jit/JitFrames-inl.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscript.h"
@@ -2595,8 +2597,8 @@ JitFrameIterator::dumpBaseline() const
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno());
+    fprintf(stderr, "  file %s line %" PRIuSIZE "\n",
+            script()->filename(), script()->lineno());
 
     JSContext *cx = GetJSContextFromJitCode();
     RootedScript script(cx);
@@ -2644,8 +2646,8 @@ InlineFrameIterator::dump() const
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno());
+    fprintf(stderr, "  file %s line %" PRIuSIZE "\n",
+            script()->filename(), script()->lineno());
 
     fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc()]);
@@ -2774,9 +2776,9 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 
     JitSpew(JitSpew_Profiling, "Found bytecode location of depth %d:", depth);
     for (size_t i = 0; i < location.length(); i++) {
-        JitSpew(JitSpew_Profiling, "   %s:%d - %d",
+        JitSpew(JitSpew_Profiling, "   %s:%" PRIuSIZE " - %" PRIuSIZE,
                 location[i].script->filename(), location[i].script->lineno(),
-                (int) (location[i].pc - location[i].script->code()));
+                size_t(location[i].pc - location[i].script->code()));
     }
 
     if (type_ == JitFrame_IonJS) {
@@ -2786,14 +2788,15 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
             MOZ_ASSERT(idx < location.length());
             MOZ_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
-            JitSpew(JitSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
+            JitSpew(JitSpew_Profiling,
+                    "Match %d: ION %s:%" PRIuSIZE "(%" PRIuSIZE ") vs N2B %s:%" PRIuSIZE "(%" PRIuSIZE ")",
                     (int)idx,
                     inlineFrames.script()->filename(),
                     inlineFrames.script()->lineno(),
-                    inlineFrames.pc() - inlineFrames.script()->code(),
+                    size_t(inlineFrames.pc() - inlineFrames.script()->code()),
                     location[idx].script->filename(),
                     location[idx].script->lineno(),
-                    location[idx].pc - location[idx].script->code());
+                    size_t(location[idx].pc - location[idx].script->code()));
 
             MOZ_ASSERT(inlineFrames.script() == location[idx].script);
 

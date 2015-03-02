@@ -89,13 +89,6 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
     last->block()->insertAfter(last, eaddr);
 }
 
-static bool
-IsAlignmentMask(uint32_t m)
-{
-    // Test whether m is just leading ones and trailing zeros.
-    return (-m & ~m) == 0;
-}
-
 template<typename MAsmJSHeapAccessType>
 static void
 AnalyzeAsmHeapAccess(MAsmJSHeapAccessType *ins, MIRGraph &graph)
@@ -116,6 +109,8 @@ AnalyzeAsmHeapAccess(MAsmJSHeapAccessType *ins, MIRGraph &graph)
         }
     } else if (ptr->isAdd()) {
         // Look for heap[a+i] where i is a constant offset, and fold the offset.
+        // Alignment masks have already been moved out of the way by the
+        // Alignment Mask Analysis pass.
         MDefinition *op0 = ptr->toAdd()->getOperand(0);
         MDefinition *op1 = ptr->toAdd()->getOperand(1);
         if (op0->isConstantValue())
@@ -124,29 +119,6 @@ AnalyzeAsmHeapAccess(MAsmJSHeapAccessType *ins, MIRGraph &graph)
             int32_t imm = op1->constantValue().toInt32();
             if (ins->tryAddDisplacement(imm))
                 ins->replacePtr(op0);
-        }
-    } else if (ptr->isBitAnd() && ptr->hasOneUse()) {
-        // Transform heap[(a+i)&m] to heap[(a&m)+i] so that we can fold i into
-        // the access. Since we currently just mutate the BitAnd in place, this
-        // requires that we are its only user.
-        MDefinition *lhs = ptr->toBitAnd()->getOperand(0);
-        MDefinition *rhs = ptr->toBitAnd()->getOperand(1);
-        int lhsIndex = 0;
-        if (lhs->isConstantValue()) {
-            mozilla::Swap(lhs, rhs);
-            lhsIndex = 1;
-        }
-        if (lhs->isAdd() && rhs->isConstantValue()) {
-            MDefinition *op0 = lhs->toAdd()->getOperand(0);
-            MDefinition *op1 = lhs->toAdd()->getOperand(1);
-            if (op0->isConstantValue())
-                mozilla::Swap(op0, op1);
-            if (op1->isConstantValue()) {
-                uint32_t i = op1->constantValue().toInt32();
-                uint32_t m = rhs->constantValue().toInt32();
-                if (IsAlignmentMask(m) && ((i & m) == i) && ins->tryAddDisplacement(i))
-                    ptr->toBitAnd()->replaceOperand(lhsIndex, op0);
-            }
         }
     }
 }

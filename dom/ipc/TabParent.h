@@ -22,6 +22,7 @@
 #include "Units.h"
 #include "WritingModes.h"
 #include "js/TypeDecls.h"
+#include "nsIDOMEventListener.h"
 
 class nsFrameLoader;
 class nsIFrameLoader;
@@ -58,7 +59,8 @@ class nsIContentParent;
 class Element;
 struct StructuredCloneData;
 
-class TabParent : public PBrowserParent 
+class TabParent : public PBrowserParent
+                , public nsIDOMEventListener
                 , public nsITabParent 
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
@@ -97,6 +99,9 @@ public:
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
+
+    // nsIDOMEventListener interfaces 
+    NS_DECL_NSIDOMEVENTLISTENER
 
     already_AddRefed<nsILoadContext> GetLoadContext();
 
@@ -241,8 +246,7 @@ public:
     // message-sending functions under a layer of indirection and
     // eating the return values
     void Show(const nsIntSize& size, bool aParentIsActive);
-    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
-                          const nsIntPoint& chromeDisp);
+    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void UIResolutionChanged();
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);

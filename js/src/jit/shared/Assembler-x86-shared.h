@@ -391,8 +391,11 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
   public:
-    void align(int alignment) {
-        masm.align(alignment);
+    void haltingAlign(int alignment) {
+        masm.haltingAlign(alignment);
+    }
+    void nopAlign(int alignment) {
+        masm.nopAlign(alignment);
     }
     void writeCodePointer(AbsoluteLabel *label) {
         MOZ_ASSERT(!label->bound());

@@ -83,10 +83,10 @@ this.CommonUtils = {
    *        to true for historical reasons.
    */
   encodeBase64URL: function encodeBase64URL(bytes, pad=true) {
-    let s = btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+    let s = btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_");
 
     if (!pad) {
-      s = s.replace("=", "", "g");
+      return s.replace(/=+$/, "");
     }
 
     return s;

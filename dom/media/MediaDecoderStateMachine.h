@@ -496,10 +496,7 @@ protected:
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData(int64_t aAudioUsecs);
 
-  bool OutOfDecodedAudio()
-  {
-    return IsAudioDecoding() && !AudioQueue().IsFinished() && AudioQueue().GetSize() == 0;
-  }
+  bool OutOfDecodedAudio();
 
   bool OutOfDecodedVideo()
   {
@@ -622,7 +619,7 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  // Dispatches a task to the decode task queue to begin decoding content.
+  // Dispatches a task to the state machine thread to begin decoding content.
   // This is threadsafe and can be called on any thread.
   // The decoder monitor must be held.
   nsresult EnqueueDecodeFirstFrameTask();
@@ -657,6 +654,7 @@ protected:
   // to idle mode. This is threadsafe, and can be called from any thread.
   // The decoder monitor must be held.
   void DispatchDecodeTasksIfNeeded();
+  void AcquireMonitorAndInvokeDispatchDecodeTasksIfNeeded();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -684,7 +682,7 @@ protected:
   // Wraps the call to DecodeMetadata(), signals a DecodeError() on failure.
   void CallDecodeMetadata();
 
-  // Initiate first content decoding. Called on the decode thread.
+  // Initiate first content decoding. Called on the state machine thread.
   // The decoder monitor must be held with exactly one lock count.
   nsresult DecodeFirstFrame();
 
@@ -775,7 +773,7 @@ protected:
 
   // Used to schedule state machine cycles. This should never outlive
   // the life cycle of the state machine.
-  const nsAutoPtr<MediaDecoderStateMachineScheduler> mScheduler;
+  const nsRefPtr<MediaDecoderStateMachineScheduler> mScheduler;
 
   // Time at which the last video sample was requested. If it takes too long
   // before the sample arrives, we will increase the amount of audio we buffer.

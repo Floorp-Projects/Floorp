@@ -580,10 +580,10 @@ function checkMPSubmission(sub, expected, test) {
     return l;
   }
   function mpquote(s) {
-    return s.replace("\r\n", " ", "g")
-            .replace("\r", " ", "g")
-            .replace("\n", " ", "g")
-            .replace("\"", "\\\"", "g");
+    return s.replace(/\r\n/g, " ")
+            .replace(/\r/g, " ")
+            .replace(/\n/g, " ")
+            .replace(/\"/g, "\\\"");
   }
 
   is(sub.length, expected.length,
@@ -628,9 +628,9 @@ function utf8encode(s) {
 
 function checkURLSubmission(sub, expected) {
   function urlEscape(s) {
-    return escape(utf8encode(s)).replace("%20", "+", "g")
-                                .replace("/", "%2F", "g")
-                                .replace("@", "%40", "g");
+    return escape(utf8encode(s)).replace(/%20/g, "+")
+                                .replace(/\//g, "%2F")
+                                .replace(/@/g, "%40");
   }
 
   subItems = sub.split("&");

@@ -323,7 +323,7 @@ DistributionCustomizer.prototype = {
       for (let key in enumerate(this._ini.getKeys("LocalizablePreferences"))) {
         try {
           let value = eval(this._ini.getString("LocalizablePreferences", key));
-          value = value.replace("%LOCALE%", this._locale, "g");
+          value = value.replace(/%LOCALE%/g, this._locale);
           localizedStr.data = "data:text/plain," + key + "=" + value;
           defaults.setComplexValue(key, Ci.nsIPrefLocalizedString, localizedStr);
         } catch (e) { /* ignore bad prefs and move on */ }

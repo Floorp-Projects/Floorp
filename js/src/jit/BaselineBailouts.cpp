@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include "jsprf.h"
 #include "jsutil.h"
 #include "jit/arm/Simulator-arm.h"
@@ -961,9 +963,9 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         }
     }
 
-    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
+    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%" PRIuSIZE,
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
-                PCToLineNumber(script, pc), script->filename(), (int) script->lineno());
+                PCToLineNumber(script, pc), script->filename(), script->lineno());
     JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(bailoutKind));
 #endif
@@ -1119,13 +1121,13 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             char *buf = js_pod_malloc<char>(len);
             if (buf == nullptr)
                 return false;
-            JS_snprintf(buf, len, "%s %s %s on line %d of %s:%d",
+            JS_snprintf(buf, len, "%s %s %s on line %u of %s:%" PRIuSIZE,
                                   BailoutKindString(bailoutKind),
                                   resumeAfter ? "after" : "at",
                                   js_CodeName[op],
-                                  int(PCToLineNumber(script, pc)),
+                                  PCToLineNumber(script, pc),
                                   filename,
-                                  int(script->lineno()));
+                                  script->lineno());
             cx->runtime()->spsProfiler.markEvent(buf);
             js_free(buf);
         }
