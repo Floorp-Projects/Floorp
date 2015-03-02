@@ -32,16 +32,29 @@ SpecialPowers.pushPrefEnv({"set": [["canvas.hitregions.enabled", true]]}, functi
       ctx.rect(20, 20, 100, 75);
       ctx.fill();
       ctx.addHitRegion({id: "a"});
+
       ctx.beginPath();
       ctx.fillStyle = "red";
       ctx.rect(60, 40, 100, 75);
       ctx.fill();
       ctx.addHitRegion({id: "b"});
+
+      var mypath = new Path2D();
+      mypath.rect(80, 60, 10, 10);
+
       ctx.beginPath();
       ctx.fillStyle = "yellow";
       ctx.rect(80, 60, 10, 10);
       ctx.fill();
-      ctx.addHitRegion({id: "c"});
+      ctx.addHitRegion({id: "c", path: mypath});
+
+      ctx.beginPath();
+      ctx.fillStyle = "green";
+      ctx.rect(60, 60, 10, 10); // This region is on purpose not the hit region
+      ctx.fill();
+      var mypath = new Path2D();
+      mypath.rect(70, 30, 10, 10);
+      ctx.addHitRegion({id: "d", path: mypath});
 
       synthesizeMouse(input, 25,25, {type: "mousedown"});
       is(regionId, "a", "Hit region a", ". Found: " + regionId);
@@ -54,6 +67,9 @@ SpecialPowers.pushPrefEnv({"set": [["canvas.hitregions.enabled", true]]}, functi
 
       synthesizeMouse(input, 85,65, {type: "mousedown"});
       is(regionId, "c", "Hit region c", ". Found: " + regionId);
+
+      synthesizeMouse(input, 75,35, {type: "mousedown"});
+      is(regionId, "d", "Hit region d", ". Found: " + regionId);
 
       ctx.removeHitRegion("c");
       synthesizeMouse(input, 85,65, {type: "mousedown"});
