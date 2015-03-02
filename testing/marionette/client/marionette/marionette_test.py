@@ -635,10 +635,10 @@ class MarionetteTestCase(CommonTestCase):
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
-        self.marionette.check_for_crash()
-        self.marionette.set_context("content")
-        self.marionette.execute_script("log('TEST-END: %s:%s')" %
-                                       (self.filepath.replace('\\', '\\\\'), self.methodName))
+        if not self.marionette.check_for_crash():
+           self.marionette.set_context("content")
+           self.marionette.execute_script("log('TEST-END: %s:%s')" %
+                                          (self.filepath.replace('\\', '\\\\'), self.methodName))
         self.marionette.test_name = None
         CommonTestCase.tearDown(self)
 
