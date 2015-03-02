@@ -21,6 +21,8 @@ are no conflicting variables in those source files.
 ``SOURCES`` and ``UNIFIED_SOURCES`` are lists which must be appended to, and
 each append requires the given list to be alphanumerically ordered.
 
+.. code-block:: python
+
    UNIFIED_SOURCES += [
        'FirstSource.cpp',
        'SecondSource.cpp',
@@ -41,6 +43,8 @@ Static Libraries
 To build a static library, other than defining the source files (see above), one
 just needs to define a library name with the ``Library`` template.
 
+.. code-block:: python
+
    Library('foo')
 
 The library file name will be ``libfoo.a`` on UNIX systems and ``foo.lib`` on
@@ -50,11 +54,15 @@ If the static library needs to aggregate other static libraries, a list of
 ``Library`` names can be added to the ``USE_LIBS`` variable. Like ``SOURCES``, it
 requires the appended list to be alphanumerically ordered.
 
+.. code-block:: python
+
    USE_LIBS += ['bar', 'baz']
 
 If there are multiple directories containing the same ``Library`` name, it is
 possible to disambiguate by prefixing with the path to the wanted one (relative
 or absolute):
+
+.. code-block:: python
 
    USE_LIBS += [
        '/path/from/topsrcdir/to/bar',
@@ -82,6 +90,8 @@ required libraries to ``USE_LIBS`` for the bigger one, it is possible to tell
 the build system that the library built in the current directory is meant to
 be linked to that bigger library, with the ``FINAL_LIBRARY`` variable.
 
+.. code-block:: python
+
    FINAL_LIBRARY = 'xul'
 
 The ``FINAL_LIBRARY`` value must match a unique ``Library`` name somewhere
@@ -98,6 +108,8 @@ Sometimes, we want shared libraries, a.k.a. dynamic libraries. Such libraries
 are defined similarly to static libraries, using the ``SharedLibrary`` template
 instead of ``Library``.
 
+.. code-block:: python
+
    SharedLibrary('foo')
 
 When this template is used, no static library is built. See further below to
@@ -113,6 +125,8 @@ systems.
 On OSX, one may want to create a special kind of dynamic library: frameworks.
 This is done with the ``Framework`` template.
 
+.. code-block:: python
+
    Framework('foo')
 
 With a ``Framework`` name of ``foo``, the framework file name will be ``foo``.
@@ -126,6 +140,8 @@ Executables
 Executables, a.k.a. programs, are, in the simplest form, defined with the
 ``Program`` template.
 
+.. code-block:: python
+
    Program('foobar')
 
 On UNIX systems, the executable file name will be ``foobar``, while on Windows,
@@ -138,6 +154,8 @@ names.
 In some cases, we want to create an executable per source file in the current
 directory, in which case we can use the ``SimplePrograms`` template
 
+.. code-block:: python
+
    SimplePrograms([
        'FirstProgram',
        'SecondProgram',
@@ -147,6 +165,8 @@ Contrary to ``Program``, which requires corresponding ``SOURCES``, when using
 ``SimplePrograms``, the corresponding ``SOURCES`` are implied. If the
 corresponding ``sources`` have an extension different from ``.cpp``, it is
 possible to specify the proper extension:
+
+.. code-block:: python
 
    SimplePrograms([
        'ThirdProgram',
@@ -170,6 +190,8 @@ Programs and libraries usually need to link with system libraries, such as a
 widget toolkit, etc. Those required dependencies can be given with the
 ``OS_LIBS`` variable.
 
+.. code-block:: python
+
    OS_LIBS += [
        'foo',
        'bar',
@@ -181,6 +203,8 @@ This expands to ``foo.lib bar.lib`` when building with MSVC, and
 For convenience with ``pkg-config``, ``OS_LIBS`` can also take linker flags
 such as ``-L/some/path`` and ``-llib``, such that it is possible to directly
 assign ``LIBS`` variables from ``CONFIG``, such as:
+
+.. code-block:: python
 
    OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
 
@@ -201,6 +225,8 @@ path (like when disambiguating identical ``Library`` names). The same naming
 rules apply as other uses of ``USE_LIBS``, so only the library name without
 prefix and suffix shall be given.
 
+.. code-block:: python
+
    USE_LIBS += [
        '/path/from/topsrcdir/to/third-party/bar',
        '../relative/third-party/baz',
@@ -217,6 +243,8 @@ Building both static and shared libraries
 When both types of libraries are required, one needs to set both
 ``FORCE_SHARED_LIB`` and ``FORCE_STATIC_LIB`` boolean variables.
 
+.. code-block:: python
+
    FORCE_SHARED_LIB = True
    FORCE_STATIC_LIB = True
 
@@ -227,6 +255,8 @@ than the name given to the ``Library`` template.
 The ``STATIC_LIBRARY_NAME`` and ``SHARED_LIBRARY_NAME`` variables can be used
 to change either the static or the shared library name.
 
+.. code-block:: python
+
   Library('foo')
   STATIC_LIBRARY_NAME = 'foo_s'
 
@@ -235,6 +265,8 @@ With the above, on Windows, ``foo_s.lib`` will be the static library,
 
 In some cases, for convenience, it is possible to set both
 ``STATIC_LIBRARY_NAME`` and ``SHARED_LIBRARY_NAME``. For example:
+
+.. code-block:: python
 
   Library('mylib')
   STATIC_LIBRARY_NAME = 'mylib_s'
@@ -247,6 +279,8 @@ When refering to a ``Library`` name building both types of libraries in
 ``USE_LIBS``, the shared library is chosen to be linked. But sometimes,
 it is wanted to link the static version, in which case the ``Library`` name
 needs to be prefixed with ``static:`` in ``USE_LIBS``
+
+::
 
    a/moz.build:
       Library('mylib')
@@ -271,6 +305,8 @@ defaults to the ``Library`` name or the ``SHARED_LIBRARY_NAME`` if set. When
 linking to a library with a ``SONAME``, the resulting library or program will
 have a dependency on the library with the name corresponding to the ``SONAME``
 instead of the ``Library`` name. This only impacts ELF systems.
+
+::
 
    a/moz.build:
       Library('mylib')

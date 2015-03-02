@@ -72,7 +72,7 @@ Events capture key occurrences. They should be brief and simple, and should not 
   The time at which the event occurred. If not specified, this field defaults to the current value of the realtime clock.
 
 Versioning
-========
+==========
 
 As a we improve on our Telemetry methods, it is foreseeable that our probes will change over time. Different versions of a probe could carry different data or have different interpretations on the server-side. To make it easier for the server to handle these changes, you should add version numbers to your event and session names. An example of a versioned session is ``homepanel.1``; this is version 1 of the ``homepanel`` session. This approach should also be applied to event names, an example being: ``panel.enable.1`` and ``panel.enable.2``.
 
