@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('**'):
-    BUG_COMPONENT = ('Mozilla Services', 'Firefox: Common')
-
 TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [
