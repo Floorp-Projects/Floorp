@@ -166,6 +166,7 @@ enum WorkerPreference
 {
   WORKERPREF_DUMP = 0, // browser.dom.window.dump.enabled
   WORKERPREF_DOM_FETCH,// dom.fetch.enabled
+  WORKERPREF_DOM_CACHES, // dom.caches.enabled
   WORKERPREF_COUNT
 };
 
