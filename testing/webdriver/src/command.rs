@@ -30,6 +30,8 @@ pub enum WebDriverCommand {
     SwitchToParentFrame,
     FindElement(LocatorParameters),
     FindElements(LocatorParameters),
+    FindElementElement(WebElement, LocatorParameters),
+    FindElementElements(WebElement, LocatorParameters),
     IsDisplayed(WebElement),
     IsSelected(WebElement),
     GetElementAttribute(WebElement, String),
@@ -128,6 +130,22 @@ impl WebDriverMessage {
             Route::FindElements => {
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElements(parameters)
+            },
+            Route::FindElementElement => {
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::FindElementElement(element, parameters)
+            },
+            Route::FindElementElements => {
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::FindElementElements(element, parameters)
             },
             Route::IsDisplayed => {
                 let element_id = try_opt!(params.name("elementId"),
@@ -289,6 +307,8 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
             WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
             WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElementElement(_, ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElementElements(_, ref x) => Some(x.to_json()),
             WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
             WebDriverCommand::ExecuteScript(ref x) |
             WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),

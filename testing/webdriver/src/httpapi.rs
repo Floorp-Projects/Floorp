@@ -6,7 +6,7 @@ use hyper::method::Method::{Get, Post, Delete};
 use command::{WebDriverMessage};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
-static ROUTES: [(Method, &'static str, Route); 41] = [
+static ROUTES: [(Method, &'static str, Route); 43] = [
     (Post, "/session", Route::NewSession),
     (Delete, "/session/{sessionId}", Route::DeleteSession),
     (Post, "/session/{sessionId}/url", Route::Get),
@@ -26,6 +26,8 @@ static ROUTES: [(Method, &'static str, Route); 41] = [
     (Post, "/session/{sessionId}/frame/parent", Route::SwitchToParentFrame),
     (Post, "/session/{sessionId}/element", Route::FindElement),
     (Post, "/session/{sessionId}/elements", Route::FindElements),
+    (Post, "/session/{sessionId}/element/{elementId}/element", Route::FindElementElement),
+    (Post, "/session/{sessionId}/element/{elementId}/elements", Route::FindElementElements),
     (Get, "/session/{sessionId}/element/{elementId}/displayed", Route::IsDisplayed),
     (Get, "/session/{sessionId}/element/{elementId}/selected", Route::IsSelected),
     (Get, "/session/{sessionId}/element/{elementId}/attribute/{name}", Route::GetElementAttribute),
@@ -72,6 +74,8 @@ pub enum Route {
     SwitchToParentFrame,
     FindElement,
     FindElements,
+    FindElementElement,
+    FindElementElements,
     IsDisplayed,
     IsSelected,
     GetElementAttribute,
