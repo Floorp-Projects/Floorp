@@ -256,36 +256,6 @@ FetchEvent::GetClient()
   return client.forget();
 }
 
-already_AddRefed<Promise>
-FetchEvent::ForwardTo(const nsAString& aUrl)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  ErrorResult result;
-  nsRefPtr<Promise> promise = Promise::Create(global, result);
-  if (NS_WARN_IF(result.Failed())) {
-    return nullptr;
-  }
-
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
-}
-
-already_AddRefed<Promise>
-FetchEvent::Default()
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  ErrorResult result;
-  nsRefPtr<Promise> promise = Promise::Create(global, result);
-  if (result.Failed()) {
-    return nullptr;
-  }
-
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
-}
-
 NS_IMPL_ADDREF_INHERITED(FetchEvent, Event)
 NS_IMPL_RELEASE_INHERITED(FetchEvent, Event)
 
