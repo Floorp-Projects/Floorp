@@ -33,13 +33,13 @@ function readTemplate(path) {
   cis.init(fis, "UTF-8", 0, 0);
 
   var data = "";
-  let (str = {}) {
-    let read = 0;
-    do {
-      read = cis.readString(0xffffffff, str); // read as much as we can and put it in str.value
-      data += str.value;
-    } while (read != 0);
-  }
+  let str = {};
+  let read = 0;
+  do {
+    read = cis.readString(0xffffffff, str); // read as much as we can and put it in str.value
+    data += str.value;
+  } while (read != 0);
+
   cis.close();
   return data;
 }
@@ -52,4 +52,3 @@ function getQuery(request) {
   });
   return query;
 }
-

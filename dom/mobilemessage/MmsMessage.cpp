@@ -587,7 +587,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
       return NS_ERROR_FAILURE;
     }
 
-    if (!JS_SetElement(aCx, attachments, i, attachmentObj)) {
+    if (!JS_DefineElement(aCx, attachments, i, attachmentObj, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }

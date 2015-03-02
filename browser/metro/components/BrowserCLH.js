@@ -193,7 +193,7 @@ BrowserCLH.prototype = {
     if (searchParam) {
       var ss = Components.classes["@mozilla.org/browser/search-service;1"]
                          .getService(nsIBrowserSearchService);
-      var submission = ss.defaultEngine.getSubmission(searchParam.replace("\"", "", "g"));
+      var submission = ss.defaultEngine.getSubmission(searchParam.replace(/\"/g, ""));
       uris.push(submission.uri);
     }
 

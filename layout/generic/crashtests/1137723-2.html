@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+<head> 
+	<meta charset="utf-8">
+<title>Testcase bug 1137723</title>
+
+<style>
+ .grid-comment{position:fixed;top:100%;}
+ a[href]:after{content:" (" attr(href) ")";}
+ </style>
+
+<style>
+@font-face { font-family: "slick"; src: url("non-existent-file.eot"); }
+</style>
+</head>
+
+<body>
+	<div style="height:3in"></div>
+	
+	<div class="grid-comment">Artikel teilen
+
+<div>
+<a href="https://www.facebook.com/sharer/sharer.php?u=http://www.stuttgarter-zeitung.de/inhalt.griechenland-hilfe-bundestag-stimmt-verlaengerung-zu.daa3baae-e17d-47e8-ad28-62eece0b4cfa.html">shares</a>
+<a href="https://twitter.com/share?text=Griechenland-Hilfe:Bundestag stimmt Verlängerung zu&amp;url=http://www.stuttgarter-zeitung.de/inhalt.griechenland-hilfe-bundestag-stimmt-verlaengerung-zu.daa3baae-e17d-47e8-ad28-62eece0b4cfa.html">tweets</a>
+</div>
+
+	</div>
+</body>
+</html>

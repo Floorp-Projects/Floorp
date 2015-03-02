@@ -6,7 +6,7 @@ UI Telemetry sends its data as a JSON blob. This document describes the differen
 of the JSON blob.
 
 ``toolbars``
-------------
+============
 
 This tracks the state of the user's UI customizations. It has the following properties:
 
@@ -34,15 +34,16 @@ This tracks the state of the user's UI customizations. It has the following prop
 - ``countableEvents`` - please refer to the next section.
 - ``durations`` - an object mapping descriptions to duration records, which records the amount of
   time a user spent doing something. Currently only has one property:
-   - ``customization`` - how long a user spent customizing the browser. This is an array of
-     objects, where each object has a ``duration`` property indicating the time in milliseconds,
-     and a ``bucket`` property indicating a bucket in which the duration info falls.
+
+  - ``customization`` - how long a user spent customizing the browser. This is an array of
+    objects, where each object has a ``duration`` property indicating the time in milliseconds,
+    and a ``bucket`` property indicating a bucket in which the duration info falls.
 
 
 .. _UITelemetry_countableEvents:
 
 ``countableEvents``
--------------------
+===================
 
 Countable events are stored under the ``toolbars`` section. They count the number of times certain
 events happen. No timing or other correlating information is stored - purely the number of times
@@ -66,23 +67,27 @@ Each bucket is an object with the following properties:
   or ``other``, depending on the kind of item clicked. Note that this is not tracked on OS X, where
   we can't listen for these events because of the global menubar.
 - ``click-bookmarks-menu-button`` is also similar, with the item IDs being replaced by:
-   - ``menu`` for clicks on the 'menu' part of the item;
-   - ``add`` for clicks that add a bookmark;
-   - ``edit`` for clicks that open the panel to edit an existing bookmark;
-   - ``in-panel`` for clicks when the button is in the menu panel, and clicking it does none of the
+
+  - ``menu`` for clicks on the 'menu' part of the item;
+  - ``add`` for clicks that add a bookmark;
+  - ``edit`` for clicks that open the panel to edit an existing bookmark;
+  - ``in-panel`` for clicks when the button is in the menu panel, and clicking it does none of the
      above;
 - ``customize`` tracks different types of customization events without the ``left``, ``middle`` and
   ``right`` distinctions. The different events are the following, with each storing a count of the
   number of times they occurred:
-   - ``start`` counts the number of times the user starts customizing;
-   - ``add`` counts the number of times an item is added somewhere from the palette;
-   - ``move`` counts the number of times an item is moved somewhere else (but not to the palette);
-   - ``remove`` counts the number of times an item is removed to the palette;
-   - ``reset`` counts the number of times the 'restore defaults' button is used;
+
+  - ``start`` counts the number of times the user starts customizing;
+  - ``add`` counts the number of times an item is added somewhere from the palette;
+  - ``move`` counts the number of times an item is moved somewhere else (but not to the palette);
+  - ``remove`` counts the number of times an item is removed to the palette;
+  - ``reset`` counts the number of times the 'restore defaults' button is used;
 - ``search`` is an object tracking searches of various types, keyed off the search
     location, storing a number indicating how often the respective type of search
     has happened.
+
   - There are also two special keys that mean slightly different things.
+
     - ``urlbar-keyword`` records searches that would have been an invalid-protocol
       error, but are now keyword searches.  They are also counted in the ``urlbar``
       keyword (along with all the other urlbar searches).
@@ -93,7 +98,8 @@ Each bucket is an object with the following properties:
 
 
 ``UITour``
-----------
+==========
+
 The UITour API provides ways for pages on trusted domains to safely interact with the browser UI and request it to perform actions such as opening menus and showing highlights over the browser chrome - for the purposes of interactive tours. We track some usage of this API via the ``UITour`` object in the UI Telemetry output.
 
 Each page is able to register itself with an identifier, a ``Page ID``. A list of Page IDs that have been seen over the last 8 weeks is available via ``seenPageIDs``.
@@ -107,7 +113,8 @@ Page IDs are also used to identify buckets for :ref:`UITelemetry_countableEvents
 
 
 ``contextmenu``
----------------
+===============
+
 We track context menu interactions to figure out which ones are most often used and/or how
 effective they are. In the ``contextmenu`` object, we first store things per-bucket. Next, we
 divide the following different context menu situations:

@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="52775e03a2d8532429dff579cb2cd56718e488c3">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="f34ce82a840ad3c0aed3bfff18517b3f6a0eb37f"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="c8ed1085a67490a1ecd7f275e5de9487e1b93b1d"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2e85143db5d5f6edc4c2b97263c02b558fee757e"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -145,6 +145,7 @@
   <!-- external/qemu for emulator-l need to be updated in bug-1121378 -->
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="7639c5c496ffd207bb627f2a59b2c5203ae6fefc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>
+  <project name="platform/development" path="development" revision="7ec1ce5e75f943a4a673aa12d8177d5cf2c0a4cf"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="94704df982a90d2ab74bd620d54155d148c415b2"/>
   <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
   <project name="platform/hardware/ril" path="hardware/ril" revision="71dfa8228ad0d6cdf6bac0426ac59404ab74b7f3"/>

@@ -762,17 +762,6 @@ Layer::GetLocalTransform()
   return transform;
 }
 
-bool
-Layer::HasTransformAnimation() const
-{
-  for (uint32_t i = 0; i < mAnimations.Length(); i++) {
-    if (mAnimations[i].property() == eCSSProperty_transform) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void
 Layer::ApplyPendingUpdatesForThisTransaction()
 {

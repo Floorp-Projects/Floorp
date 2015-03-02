@@ -78,18 +78,6 @@ this.DialNumberUtils = {
     return new RegExp("^" + fullmmi + optionalDialString + "$");
   })(),
 
-  _isPoundString: function(aString) {
-    return aString && aString[aString.length - 1] === "#";
-  },
-
-  _isShortString: function(aString) {
-    if (!aString || this.isEmergency(aString) || aString.length > 2 ||
-        (aString.length == 2 && aString[0] === "1")) {
-      return false;
-    }
-    return true;
-  },
-
   /**
    * Check parse the given string as an MMI code.
    *
@@ -114,12 +102,6 @@ this.DialNumberUtils = {
         sic: matches[MMI_MATCH_GROUP_SIC],
         pwd: matches[MMI_MATCH_GROUP_PWD_CONFIRM],
         dialNumber: matches[MMI_MATCH_GROUP_DIALING_NUMBER]
-      };
-    }
-
-    if (this._isPoundString(aString) || this._isShortString(aString)) {
-      return {
-        fullMMI: aString
       };
     }
 

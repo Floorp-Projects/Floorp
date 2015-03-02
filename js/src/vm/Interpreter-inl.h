@@ -329,6 +329,20 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
 }
 
 inline bool
+InitPropertyOperation(JSContext *cx, JSOp op, HandleObject obj, HandleId id, HandleValue rhs)
+{
+    if (obj->is<PlainObject>() || obj->is<JSFunction>()) {
+        unsigned propAttrs = GetInitDataPropAttrs(op);
+        return NativeDefineProperty(cx, obj.as<NativeObject>(), id, rhs, nullptr, nullptr,
+                                    propAttrs);
+    }
+
+    MOZ_ASSERT(obj->as<UnboxedPlainObject>().layout().lookup(id));
+    RootedValue v(cx, rhs);
+    return SetProperty(cx, obj, obj, id, &v, false);
+}
+
+inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
 {
     MOZ_ASSERT(varobj->isQualifiedVarObj());

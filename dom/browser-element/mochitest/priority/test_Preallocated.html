@@ -53,7 +53,7 @@ function runTest()
 
   // Ensure that the preallocated process initially gets BACKGROUND priority.
   // That's it.
-  expectProcessCreated('PREALLOC', 'CPU_LOW').then(function() {
+  expectProcessCreated('PREALLOC').then(function() {
     // We need to set the pref asynchoronously or the preallocated process won't
     // be shut down.
     SimpleTest.executeSoon(function(){

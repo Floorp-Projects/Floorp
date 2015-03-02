@@ -196,16 +196,12 @@ BluetoothManager::HandleAdapterRemoved(const BluetoothValue& aValue)
   // Remove the adapter of given address from adapters array
   nsString addressToRemove = aValue.get_nsString();
 
-  uint32_t numAdapters = mAdapters.Length();
-  for (uint32_t i = 0; i < numAdapters; i++) {
+  uint32_t i;
+  for (i = 0; i < mAdapters.Length(); i++) {
     nsString address;
     mAdapters[i]->GetAddress(address);
     if (address.Equals(addressToRemove)) {
       mAdapters.RemoveElementAt(i);
-
-      if (mDefaultAdapterIndex == (int)i) {
-        ReselectDefaultAdapter();
-      }
       break;
     }
   }
@@ -214,6 +210,11 @@ BluetoothManager::HandleAdapterRemoved(const BluetoothValue& aValue)
   BluetoothAdapterEventInit init;
   init.mAddress = addressToRemove;
   DispatchAdapterEvent(NS_LITERAL_STRING("adapterremoved"), init);
+
+  // Reselect default adapter if it's removed
+  if (mDefaultAdapterIndex == (int)i) {
+    ReselectDefaultAdapter();
+  }
 }
 
 void

@@ -392,6 +392,13 @@ bool
 SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue thisv,
                     HandleValue callee, HandleValue arr, MutableHandleValue res);
 
+JSObject *
+NewObjectOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
+                   NewObjectKind newKind = GenericObject);
+
+JSObject *
+NewObjectOperationWithTemplate(JSContext *cx, HandleObject templateObject);
+
 inline bool
 SetConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)
 {

@@ -49,13 +49,10 @@ NfcMessageHandler::Marshall(Parcel& aParcel, const CommandOptions& aOptions)
     result = ReadNDEFRequest(aParcel, aOptions);
   } else if (!strcmp(type, kWriteNDEFRequest)) {
     result = WriteNDEFRequest(aParcel, aOptions);
-    mPendingReqQueue.AppendElement(NfcRequest::WriteNDEFReq);
   } else if (!strcmp(type, kMakeReadOnlyRequest)) {
     result = MakeReadOnlyRequest(aParcel, aOptions);
-    mPendingReqQueue.AppendElement(NfcRequest::MakeReadOnlyReq);
   } else if (!strcmp(type, kFormatRequest)) {
     result = FormatRequest(aParcel, aOptions);
-    mPendingReqQueue.AppendElement(NfcRequest::FormatReq);
   } else if (!strcmp(type, kTransceiveRequest)) {
     result = TransceiveRequest(aParcel, aOptions);
   } else {
@@ -68,23 +65,46 @@ NfcMessageHandler::Marshall(Parcel& aParcel, const CommandOptions& aOptions)
 bool
 NfcMessageHandler::Unmarshall(const Parcel& aParcel, EventOptions& aOptions)
 {
-  bool result;
   mozilla::unused << htonl(aParcel.readInt32());  // parcel size
   int32_t type = aParcel.readInt32();
+  bool isNotification = type >> 31;
+  int32_t msgType = type & ~(1 << 31);
 
-  switch (type) {
-    case NfcResponse::GeneralRsp:
-      result = GeneralResponse(aParcel, aOptions);
-      break;
+  return isNotification ? ProcessNotification(msgType, aParcel, aOptions) :
+                          ProcessResponse(msgType, aParcel, aOptions);
+}
+
+bool
+NfcMessageHandler::ProcessResponse(int32_t aType, const Parcel& aParcel, EventOptions& aOptions)
+{
+  bool result;
+  switch (aType) {
     case NfcResponse::ChangeRFStateRsp:
       result = ChangeRFStateResponse(aParcel, aOptions);
       break;
     case NfcResponse::ReadNDEFRsp:
       result = ReadNDEFResponse(aParcel, aOptions);
       break;
+    case NfcResponse::WriteNDEFRsp: // Fall through.
+    case NfcResponse::MakeReadOnlyRsp:
+    case NfcResponse::FormatRsp:
+      result = GeneralResponse(aType, aParcel, aOptions);
+      break;
     case NfcResponse::TransceiveRsp:
       result = TransceiveResponse(aParcel, aOptions);
       break;
+    default:
+      result = false;
+  }
+
+  return result;
+}
+
+bool
+NfcMessageHandler::ProcessNotification(int32_t aType, const Parcel& aParcel, EventOptions& aOptions)
+{
+  bool result;
+  switch (aType) {
     case NfcNotification::Initialized:
       result = InitializeNotification(aParcel, aOptions);
       break;
@@ -106,25 +126,21 @@ NfcMessageHandler::Unmarshall(const Parcel& aParcel, EventOptions& aOptions)
 }
 
 bool
-NfcMessageHandler::GeneralResponse(const Parcel& aParcel, EventOptions& aOptions)
+NfcMessageHandler::GeneralResponse(const int32_t aResponse, const Parcel& aParcel, EventOptions& aOptions)
 {
   const char* type;
-  NS_ENSURE_TRUE(!mPendingReqQueue.IsEmpty(), false);
-  int pendingReq = mPendingReqQueue[0];
-  mPendingReqQueue.RemoveElementAt(0);
-
-  switch (pendingReq) {
-    case NfcRequest::WriteNDEFReq:
+  switch (aResponse) {
+    case NfcResponse::WriteNDEFRsp:
       type = kWriteNDEFResponse;
       break;
-    case NfcRequest::MakeReadOnlyReq:
+    case NfcResponse::MakeReadOnlyRsp:
       type = kMakeReadOnlyResponse;
       break;
-    case NfcRequest::FormatReq:
+    case NfcResponse::FormatRsp:
       type = kFormatResponse;
       break;
     default:
-      NMH_LOG("Nfcd, unknown general response %d", pendingReq);
+      NMH_LOG("Nfcd, unknown general aResponse %d", aResponse);
       return false;
   }
 

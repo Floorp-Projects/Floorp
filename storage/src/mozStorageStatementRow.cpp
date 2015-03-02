@@ -95,7 +95,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
 
       // Copy the blob over to the JS array.
       for (uint32_t i = 0; i < length; i++) {
-        if (!::JS_SetElement(aCtx, scope, i, blob[i])) {
+        if (!::JS_DefineElement(aCtx, scope, i, blob[i], JSPROP_ENUMERATE)) {
           *_retval = false;
           return NS_OK;
         }

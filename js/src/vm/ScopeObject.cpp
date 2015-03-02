@@ -7,6 +7,7 @@
 #include "vm/ScopeObject-inl.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "jscompartment.h"
 #include "jsiter.h"
@@ -2609,14 +2610,14 @@ AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScri
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno());
+        buf.printf("(%s:%" PRIuSIZE ") has variables entrained by ", script->filename(), script->lineno());
 
         if (JSAtom *name = innerScript->functionNonDelazifying()->displayAtom()) {
             buf.putString(name);
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno());
+        buf.printf("(%s:%" PRIuSIZE ") ::", innerScript->filename(), innerScript->lineno());
 
         for (PropertyNameSet::Range r = remainingNames.all(); !r.empty(); r.popFront()) {
             buf.printf(" ");

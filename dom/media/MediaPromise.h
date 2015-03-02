@@ -32,14 +32,17 @@ extern PRLogModuleInfo* gMediaPromiseLog;
   PR_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
 
 class MediaTaskQueue;
+class MediaDecoderStateMachineScheduler;
 namespace detail {
 
 nsresult DispatchMediaPromiseRunnable(MediaTaskQueue* aQueue, nsIRunnable* aRunnable);
 nsresult DispatchMediaPromiseRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable);
+nsresult DispatchMediaPromiseRunnable(MediaDecoderStateMachineScheduler* aScheduler, nsIRunnable* aRunnable);
 
 #ifdef DEBUG
 void AssertOnThread(MediaTaskQueue* aQueue);
 void AssertOnThread(nsIEventTarget* aTarget);
+void AssertOnThread(MediaDecoderStateMachineScheduler* aScheduler);
 #endif
 
 } // namespace detail
@@ -591,7 +594,19 @@ protected:
   Type mMethod;
 };
 
-// NB: MethodCallWithOneArg definition should go here, if/when it is needed.
+template<typename PromiseType, typename ThisType, typename Arg1Type>
+class MethodCallWithOneArg : public MethodCallBase<PromiseType>
+{
+public:
+  typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type);
+  MethodCallWithOneArg(ThisType* aThisVal, Type aMethod, Arg1Type aArg1)
+    : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1) {}
+  nsRefPtr<PromiseType> Invoke() MOZ_OVERRIDE { return ((*mThisVal).*mMethod)(mArg1); }
+protected:
+  nsRefPtr<ThisType> mThisVal;
+  Type mMethod;
+  Arg1Type mArg1;
+};
 
 template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type>
 class MethodCallWithTwoArgs : public MethodCallBase<PromiseType>
@@ -652,7 +667,15 @@ ProxyMediaCall(TargetType* aTarget, ThisType* aThisVal, const char* aCallerName,
   return detail::ProxyInternal(aTarget, methodCall, aCallerName);
 }
 
-// NB: One-arg overload should go here, if/when it is needed.
+template<typename PromiseType, typename TargetType, typename ThisType, typename Arg1Type>
+static nsRefPtr<PromiseType>
+ProxyMediaCall(TargetType* aTarget, ThisType* aThisVal, const char* aCallerName,
+               nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type), Arg1Type aArg1)
+{
+  typedef detail::MethodCallWithOneArg<PromiseType, ThisType, Arg1Type> MethodCallType;
+  MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1);
+  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
+}
 
 template<typename PromiseType, typename TargetType, typename ThisType,
          typename Arg1Type, typename Arg2Type>

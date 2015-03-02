@@ -43,7 +43,7 @@ window.onload = function() {
     var found = false;
 
     for (var count of response.counts) {
-      if (count === 10
+      if (count >= 10
           && response.frames[index]
           && response.frames[index].functionDisplayName == "allocator") {
         found = true;

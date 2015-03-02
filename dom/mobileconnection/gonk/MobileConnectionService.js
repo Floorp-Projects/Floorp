@@ -56,9 +56,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
-                                   "@mozilla.org/ril;1",
-                                   "nsIRadioInterfaceLayer");
+XPCOMUtils.defineLazyGetter(this, "gRadioInterfaceLayer", function() {
+  let ril = { numRadioInterfaces: 0 };
+  try {
+    ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+  } catch(e) {}
+  return ril;
+});
 
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
@@ -338,7 +342,7 @@ MobileConnectionProvider.prototype = {
 
       let networkTypes = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[index];
       supportedNetworkTypes = networkTypes ?
-        networkTypes.replace("-auto", "", "g").split("/") :
+        networkTypes.replace(/-auto/g, "").split("/") :
         RIL.GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT.split(",");
     }
 

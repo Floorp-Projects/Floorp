@@ -55,6 +55,7 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     // Take normal option values for not specified values.
     initNormalOptimizationInfo();
 
+    ama_ = true;
     level_ = Optimization_AsmJS;
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
