@@ -65,6 +65,7 @@ startTestWithPermissions(['mobileconnection'], function() {
     .then(() => testDial_EmergencyNumber())
     .then(() => testDialEmergency_NormalNumber())
     .then(() => testDialEmergency_EmergencyNumber())
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(() => setRadioEnabledAll(true))
     .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
