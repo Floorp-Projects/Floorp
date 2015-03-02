@@ -87,6 +87,12 @@ SPSProfiler::enable(bool enabled)
      */
     ReleaseAllJITCode(rt->defaultFreeOp());
 
+    // Ensure that lastProfilingFrame is null before 'enabled' becomes true.
+    if (rt->jitActivation) {
+        rt->jitActivation->setLastProfilingFrame(nullptr);
+        rt->jitActivation->setLastProfilingCallSite(nullptr);
+    }
+
     enabled_ = enabled;
 
     /* Toggle SPS-related jumps on baseline jitcode.
