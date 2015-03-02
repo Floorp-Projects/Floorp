@@ -56,12 +56,12 @@ StringToUuid(const char* aString, BluetoothUuid& aUuid)
   uuid4 = htonl(uuid4);
   uuid5 = htons(uuid5);
 
-  memcpy(&aUuid.mUuid[0], &uuid0, 4);
-  memcpy(&aUuid.mUuid[4], &uuid1, 2);
-  memcpy(&aUuid.mUuid[6], &uuid2, 2);
-  memcpy(&aUuid.mUuid[8], &uuid3, 2);
-  memcpy(&aUuid.mUuid[10], &uuid4, 4);
-  memcpy(&aUuid.mUuid[14], &uuid5, 2);
+  memcpy(&aUuid.mUuid[0], &uuid0, sizeof(uint32_t));
+  memcpy(&aUuid.mUuid[4], &uuid1, sizeof(uint16_t));
+  memcpy(&aUuid.mUuid[6], &uuid2, sizeof(uint16_t));
+  memcpy(&aUuid.mUuid[8], &uuid3, sizeof(uint16_t));
+  memcpy(&aUuid.mUuid[10], &uuid4, sizeof(uint32_t));
+  memcpy(&aUuid.mUuid[14], &uuid5, sizeof(uint16_t));
 }
 
 bool
