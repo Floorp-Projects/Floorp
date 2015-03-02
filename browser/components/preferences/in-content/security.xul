@@ -4,8 +4,8 @@
 
 <!-- Security panel -->
 
-<script type="application/javascript" 
-        src="chrome://browser/content/preferences/in-content/security.js"/>  
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content/security.js"/>
 
 <preferences id="securityPreferences" hidden="true" data-category="paneSecurity">
   <!-- XXX buttons -->
@@ -83,20 +83,29 @@
             accesskey="&passwordExceptions.accesskey;"
             preference="pref.privacy.disable_button.view_passwords_exceptions"/>
   </hbox>
-  <hbox id="masterPasswordBox">
-    <checkbox id="useMasterPassword"
-              label="&useMasterPassword.label;"
-              accesskey="&useMasterPassword.accesskey;"/>
-    <spacer flex="1"/>
-    <button id="changeMasterPassword"
-            label="&changeMasterPassword.label;"
-            accesskey="&changeMasterPassword.accesskey;"/>
-  </hbox>
-
-  <hbox id="showPasswordsBox">
-    <spacer flex="1"/>
-    <button id="showPasswords"
-            label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
-            preference="pref.privacy.disable_button.view_passwords"/>
-  </hbox>
+  <grid id="passwordGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="passwordRows">
+      <row id="masterPasswordRow">
+        <hbox id="masterPasswordBox">
+          <checkbox id="useMasterPassword"
+                    label="&useMasterPassword.label;"
+                    accesskey="&useMasterPassword.accesskey;"/>
+          <spacer flex="1"/>
+        </hbox>
+        <button id="changeMasterPassword"
+                label="&changeMasterPassword.label;"
+                accesskey="&changeMasterPassword.accesskey;"/>
+      </row>
+      <row id="showPasswordRow">
+        <hbox id="showPasswordsBox"/>
+        <button id="showPasswords"
+                label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
+                preference="pref.privacy.disable_button.view_passwords"/>
+      </row>
+    </rows>
+  </grid>
 </groupbox>
