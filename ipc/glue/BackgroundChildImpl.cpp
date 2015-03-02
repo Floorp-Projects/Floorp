@@ -9,6 +9,7 @@
 #include "FileDescriptorSetChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PBlobChild.h"
+#include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
@@ -45,6 +46,10 @@ public:
 
 namespace mozilla {
 namespace ipc {
+
+using mozilla::dom::cache::PCacheChild;
+using mozilla::dom::cache::PCacheStorageChild;
+using mozilla::dom::cache::PCacheStreamControlChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -228,6 +233,51 @@ BackgroundChildImpl::DeallocPBroadcastChannelChild(
   nsRefPtr<dom::BroadcastChannelChild> child =
     dont_AddRef(static_cast<dom::BroadcastChannelChild*>(aActor));
   MOZ_ASSERT(child);
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// Cache API
+// -----------------------------------------------------------------------------
+
+PCacheStorageChild*
+BackgroundChildImpl::AllocPCacheStorageChild(const Namespace& aNamespace,
+                                             const PrincipalInfo& aPrincipalInfo)
+{
+  MOZ_CRASH("CacheStorageChild actor must be provided to PBackground manager");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPCacheStorageChild(PCacheStorageChild* aActor)
+{
+  dom::cache::DeallocPCacheStorageChild(aActor);
+  return true;
+}
+
+PCacheChild*
+BackgroundChildImpl::AllocPCacheChild()
+{
+  return dom::cache::AllocPCacheChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPCacheChild(PCacheChild* aActor)
+{
+  dom::cache::DeallocPCacheChild(aActor);
+  return true;
+}
+
+PCacheStreamControlChild*
+BackgroundChildImpl::AllocPCacheStreamControlChild()
+{
+  return dom::cache::AllocPCacheStreamControlChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor)
+{
+  dom::cache::DeallocPCacheStreamControlChild(aActor);
   return true;
 }
 
