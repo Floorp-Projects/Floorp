@@ -211,8 +211,6 @@ class SocketBase
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketBase)
 
-  virtual ~SocketBase();
-
   SocketConnectionStatus GetConnectionStatus() const;
 
   int GetSuggestedConnectDelayMs() const;
@@ -256,6 +254,7 @@ public:
 
 protected:
   SocketBase();
+  virtual ~SocketBase();
 
   void SetConnectionStatus(SocketConnectionStatus aConnectionStatus);
 
