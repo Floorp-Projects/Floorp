@@ -1,0 +1,97 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1081819",
+  title: "WebAudio on both input and output side of peerconnection"
+});
+
+// This tests WebAudio as input to a PeerConnection and a PeerConnection as
+// input to WebAudio. This is done by piping a 700Hz oscillator through an
+// analyser on the input side, the PeerConnection, and an analyser on the
+// output side. We then sanity check the audio by comparing the frequency domain
+// data from both analysers.
+
+runNetworkTest(function() {
+  var test = new PeerConnectionTest();
+
+  var audioContext = new AudioContext();
+  var inputAnalyser;
+  var outputAnalyser;
+
+  test.setMediaConstraints([{audio: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function PC_LOCAL_WEBAUDIO_SOURCE(test) {
+      var oscillator = audioContext.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 700;
+      oscillator.start();
+      inputAnalyser = audioContext.createAnalyser();
+      var dest = audioContext.createMediaStreamDestination();
+
+      oscillator.connect(inputAnalyser);
+      inputAnalyser.connect(dest);
+      test.pcLocal.attachMedia(dest.stream, 'audio', 'local');
+
+      return Promise.resolve();
+    }
+  ]);
+  test.chain.insertBefore("PC_REMOTE_SETUP_ADDSTREAM_HANDLER", [
+    function PC_REMOTE_REPLACE_ATTACHMEDIA(test) {
+      var realAttachMedia = test.pcRemote.attachMedia.bind(test.pcRemote);
+      test.pcRemote.attachMedia = function(stream, type, side) {
+        var source = audioContext.createMediaStreamSource(stream);
+        outputAnalyser = audioContext.createAnalyser();
+        var dest = audioContext.createMediaStreamDestination();
+
+        source.connect(outputAnalyser);
+        outputAnalyser.connect(dest);
+        realAttachMedia(dest.stream, type, side);
+      };
+      return Promise.resolve();
+  }]);
+  test.chain.append([
+    function CHECK_AUDIO_FLOW(test) {
+      var inputData = new Uint8Array(inputAnalyser.frequencyBinCount);
+      inputAnalyser.getByteFrequencyData(inputData);
+
+      var outputData = new Uint8Array(outputAnalyser.frequencyBinCount);
+      outputAnalyser.getByteFrequencyData(outputData);
+
+      is(inputData.length, outputData.length, "Equally sized datasets");
+      var numChecks = 0;
+      var sanityCheckFrequencyValue = function(i, input, output) {
+        // This is for sanity check only. The audio encoding applied on the
+        // output will cause some fairly large deviations from the input around
+        // the oscillator's frequency. However, the input analyser will reach
+        // its max value of 255 for multiple indices, so allowing a deviation
+        // of 50 for these is fine.
+        if (input < 200 && output < 200) {
+          // Save us some log output by skipping when both input and output
+          // are sufficiently low. 200 is a bit higher than preferred, but on
+          // Android we've seen the output being quite high (100-150) when
+          // input is fairly low (0-50), i.e., on frequencies neighboring 700Hz.
+          return 0;
+        }
+        ok(Math.abs(input - output) < 50,
+           "Sane audio frequency values at index " + i + "/" + inputData.length +
+           ", input=" + input + ", output=" + output);
+        return 1;
+      }
+      for (i = 0; i < inputData.length; ++i) {
+        numChecks += sanityCheckFrequencyValue(i, inputData[i], outputData[i]);
+      }
+      isnot(numChecks, 0, "Should have had some non-zero values analyzed");
+      return Promise.resolve();
+    }]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>
