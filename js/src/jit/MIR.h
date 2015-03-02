@@ -8833,6 +8833,7 @@ class MLoadTypedArrayElement
     public SingleObjectPolicy::Data
 {
     Scalar::Type arrayType_;
+    Scalar::Type readType_;
     bool requiresBarrier_;
     int32_t offsetAdjustment_;
     bool canonicalizeDoubles_;
@@ -8842,6 +8843,7 @@ class MLoadTypedArrayElement
                            int32_t offsetAdjustment, bool canonicalizeDoubles)
       : MBinaryInstruction(elements, index),
         arrayType_(arrayType),
+        readType_(arrayType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
         offsetAdjustment_(offsetAdjustment),
         canonicalizeDoubles_(canonicalizeDoubles)
@@ -8868,6 +8870,13 @@ class MLoadTypedArrayElement
         return new(alloc) MLoadTypedArrayElement(elements, index, arrayType,
                                                  requiresBarrier, offsetAdjustment,
                                                  canonicalizeDoubles);
+    }
+
+    void setReadType(Scalar::Type type) {
+        readType_ = type;
+    }
+    Scalar::Type readType() const {
+        return readType_;
     }
 
     Scalar::Type arrayType() const {
@@ -8907,6 +8916,8 @@ class MLoadTypedArrayElement
             return false;
         const MLoadTypedArrayElement *other = ins->toLoadTypedArrayElement();
         if (arrayType_ != other->arrayType_)
+            return false;
+        if (readType_ != other->readType_)
             return false;
         if (offsetAdjustment() != other->offsetAdjustment())
             return false;

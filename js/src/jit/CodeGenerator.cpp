@@ -8654,17 +8654,18 @@ CodeGenerator::visitLoadTypedArrayElement(LLoadTypedArrayElement *lir)
     AnyRegister out = ToAnyRegister(lir->output());
 
     Scalar::Type arrayType = lir->mir()->arrayType();
+    Scalar::Type readType  = lir->mir()->readType();
     int width = Scalar::byteSize(arrayType);
 
     Label fail;
     if (lir->index()->isConstant()) {
         Address source(elements, ToInt32(lir->index()) * width + lir->mir()->offsetAdjustment());
-        masm.loadFromTypedArray(arrayType, source, out, temp, &fail,
+        masm.loadFromTypedArray(readType, source, out, temp, &fail,
                                 lir->mir()->canonicalizeDoubles());
     } else {
         BaseIndex source(elements, ToRegister(lir->index()), ScaleFromElemWidth(width),
                          lir->mir()->offsetAdjustment());
-        masm.loadFromTypedArray(arrayType, source, out, temp, &fail,
+        masm.loadFromTypedArray(readType, source, out, temp, &fail,
                                 lir->mir()->canonicalizeDoubles());
     }
 
