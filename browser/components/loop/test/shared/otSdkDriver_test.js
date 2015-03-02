@@ -46,7 +46,10 @@ describe("loop.OTSdkDriver", function () {
     publisher = _.extend({
       destroy: sinon.stub(),
       publishAudio: sinon.stub(),
-      publishVideo: sinon.stub()
+      publishVideo: sinon.stub(),
+      _: {
+        switchAcquiredWindow: sinon.stub()
+      }
     }, Backbone.Events);
 
     sdk = {
@@ -143,13 +146,46 @@ describe("loop.OTSdkDriver", function () {
       // has multiple options.
       var options = {
         videoSource: "browser",
-        browserWindow: 42,
-        scrollWithPage: true
+        constraints: {
+          browserWindow: 42,
+          scrollWithPage: true
+        }
       };
       driver.startScreenShare(options);
 
       sinon.assert.calledOnce(sdk.initPublisher);
       sinon.assert.calledWithMatch(sdk.initPublisher, fakeElement, options);
+    });
+  });
+
+  describe("#switchAcquiredWindow", function() {
+    beforeEach(function() {
+      var options = {
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42,
+          scrollWithPage: true
+        }
+      };
+      driver.getScreenShareElementFunc = function() {
+        return fakeScreenElement;
+      };
+      sandbox.stub(dispatcher, "dispatch");
+
+      driver.startScreenShare(options);
+    });
+
+    it("should switch to the acquired window", function() {
+      driver.switchAcquiredWindow(72);
+
+      sinon.assert.calledOnce(publisher._.switchAcquiredWindow);
+      sinon.assert.calledWithExactly(publisher._.switchAcquiredWindow, 72);
+    });
+
+    it("should not switch if the window is the same as the currently selected one", function() {
+      driver.switchAcquiredWindow(42);
+
+      sinon.assert.notCalled(publisher._.switchAcquiredWindow);
     });
   });
 
