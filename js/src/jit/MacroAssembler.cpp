@@ -356,6 +356,12 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
         if (canonicalizeDoubles)
             canonicalizeDouble(dest.fpu());
         break;
+      case Scalar::Int32x4:
+        loadUnalignedInt32x4(src, dest.fpu());
+        break;
+      case Scalar::Float32x4:
+        loadUnalignedFloat32x4(src, dest.fpu());
+        break;
       default:
         MOZ_CRASH("Invalid typed array type");
     }
