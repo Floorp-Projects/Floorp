@@ -145,6 +145,7 @@
   <!-- external/qemu for emulator-l need to be updated in bug-1121378 -->
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="7639c5c496ffd207bb627f2a59b2c5203ae6fefc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>
+  <project name="platform/development" path="development" revision="7ec1ce5e75f943a4a673aa12d8177d5cf2c0a4cf"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="94704df982a90d2ab74bd620d54155d148c415b2"/>
   <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
   <project name="platform/hardware/ril" path="hardware/ril" revision="71dfa8228ad0d6cdf6bac0426ac59404ab74b7f3"/>
