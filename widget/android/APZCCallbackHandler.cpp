@@ -111,7 +111,7 @@ APZCCallbackHandler::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScroll
 
 void
 APZCCallbackHandler::HandleDoubleTap(const CSSPoint& aPoint,
-                                     int32_t aModifiers,
+                                     Modifiers aModifiers,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
     CSSIntPoint point = RoundedToInt(aPoint);
@@ -122,7 +122,7 @@ APZCCallbackHandler::HandleDoubleTap(const CSSPoint& aPoint,
 
 void
 APZCCallbackHandler::HandleSingleTap(const CSSPoint& aPoint,
-                                     int32_t aModifiers,
+                                     Modifiers aModifiers,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
     // FIXME Send the modifier data to Gecko for use in mouse events.
@@ -134,7 +134,7 @@ APZCCallbackHandler::HandleSingleTap(const CSSPoint& aPoint,
 
 void
 APZCCallbackHandler::HandleLongTap(const CSSPoint& aPoint,
-                                   int32_t aModifiers,
+                                   Modifiers aModifiers,
                                    const mozilla::layers::ScrollableLayerGuid& aGuid,
                                    uint64_t aInputBlockId)
 {
@@ -147,7 +147,7 @@ APZCCallbackHandler::HandleLongTap(const CSSPoint& aPoint,
 
 void
 APZCCallbackHandler::HandleLongTapUp(const CSSPoint& aPoint,
-                                     int32_t aModifiers,
+                                     Modifiers aModifiers,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
     HandleSingleTap(aPoint, aModifiers, aGuid);
