@@ -173,14 +173,14 @@
         </label>
       </hbox>
     </groupbox>
-    <hbox id="tosPP-normal" pack="center">
+    <vbox id="tosPP-normal">
       <label id="tosPP-normal-ToS" class="text-link">
         &prefs.tosLink.label;
       </label>
       <label id="tosPP-normal-PP" class="text-link">
         &prefs.ppLink.label;
       </label>
-    </hbox>
+    </vbox>
   </vbox>
 
   <vbox id="needsUpdate" align="center" pack="center">
@@ -226,7 +226,8 @@
       <deck id="fxaLoginStatus">
 
         <!-- logged in and verified and all is good -->
-        <hbox align="center">
+        <hbox id="fxaLoginVerified"
+              align="center">
           <label id="fxaEmailAddress1"/>
           <spacer flex="1"/>
           <button id="verifiedManage"
@@ -236,7 +237,8 @@
         </hbox>
 
         <!-- logged in to an unverified account -->
-        <hbox flex="1">
+        <hbox id="fxaLoginUnverified"
+              flex="1">
           <description>
             &signedInUnverified.beforename.label;
             <label id="fxaEmailAddress2"/>
@@ -253,7 +255,8 @@
         </hbox>
 
         <!-- logged in locally but server rejected credentials -->
-        <hbox flex="1">
+        <hbox id="fxaLoginRejected"
+              flex="1">
           <description>
             &signedInLoginFailure.beforename.label;
             <label id="fxaEmailAddress3"/>
@@ -306,13 +309,13 @@
                 flex="1"/>
     </hbox>
     <spacer flex="1"/>
-    <hbox id="tosPP-small" pack="center">
+    <vbox id="tosPP-small">
       <label id="tosPP-small-ToS" class="text-link small">
         &prefs.tosLink.label;
       </label>
       <label id="tosPP-small-PP" class="text-link small">
         &fxaPrivacyNotice.link.label;
       </label>
-    </hbox>
+    </vbox>
   </vbox>
 </deck>
