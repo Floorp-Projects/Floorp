@@ -4,17 +4,13 @@
 
 from __future__ import print_function, unicode_literals
 
-from collections import defaultdict
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
-    Command,
-    SubCommand,
+    Command
 )
 
 from mozbuild.base import MachCommandBase
-import mozpack.path as mozpath
 
 
 @CommandProvider
@@ -76,49 +72,3 @@ class MozbuildFileCommands(MachCommandBase):
             print(line)
 
         return 0
-
-    @Command('file-info', category='build-dev',
-             description='Query for metadata about files.')
-    def file_info(self):
-        pass
-
-    @SubCommand('file-info', 'bugzilla-component',
-                'Show Bugzilla component info for files listed.')
-    @CommandArgument('paths', nargs='+',
-                     help='Paths whose data to query')
-    def file_info_bugzilla(self, paths):
-        components = defaultdict(set)
-        for p, m in self._get_files_info(paths).items():
-            components[m.get('BUG_COMPONENT')].add(p)
-
-        for component, files in sorted(components.items(), key=lambda x: (x is None, x)):
-            print('%s :: %s' % (component.product, component.component) if component else 'UNKNOWN')
-            for f in sorted(files):
-                print('  %s' % f)
-
-    @SubCommand('file-info', 'missing-bugzilla',
-                'Show files missing Bugzilla component info')
-    @CommandArgument('paths', nargs='+',
-                     help='Paths whose data to query')
-    def file_info_missing_bugzilla(self, paths):
-        for p, m in sorted(self._get_files_info(paths).items()):
-            if 'BUG_COMPONENT' not in m:
-                print(p)
-
-    def _get_reader(self):
-        from mozbuild.frontend.reader import BuildReader
-        config = self.config_environment
-        return BuildReader(config)
-
-    def _get_files_info(self, paths):
-        relpaths = []
-        for p in paths:
-            a = mozpath.abspath(p)
-            if not mozpath.basedir(a, [self.topsrcdir]):
-                print('path is not inside topsrcdir: %s' % p)
-                return 1
-
-            relpaths.append(mozpath.relpath(a, self.topsrcdir))
-
-        reader = self._get_reader()
-        return reader.files_info(relpaths)

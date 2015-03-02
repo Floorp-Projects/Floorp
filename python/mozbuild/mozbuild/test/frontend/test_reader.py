@@ -10,7 +10,6 @@ import unittest
 
 from mozunit import main
 
-from mozbuild.frontend.context import BugzillaComponent
 from mozbuild.frontend.reader import BuildReaderError
 from mozbuild.frontend.reader import BuildReader
 
@@ -313,70 +312,6 @@ class TestBuildReader(unittest.TestCase):
             ['', 'd1', 'd1/every-level', 'd1/every-level/b'])
         self.assertEqual([ctx.relsrcdir for ctx in paths['d2/file']],
             ['', 'd2'])
-
-    def test_files_bad_bug_component(self):
-        reader = self.reader('files-info')
-
-        with self.assertRaises(BuildReaderError):
-            reader.files_info(['bug_component/bad-assignment/moz.build'])
-
-    def test_files_bug_component_static(self):
-        reader = self.reader('files-info')
-
-        v = reader.files_info(['bug_component/static/foo',
-                               'bug_component/static/bar',
-                               'bug_component/static/foo/baz'])
-        self.assertEqual(len(v), 3)
-        self.assertEqual(v['bug_component/static/foo']['BUG_COMPONENT'],
-                         BugzillaComponent('FooProduct', 'FooComponent'))
-        self.assertEqual(v['bug_component/static/bar']['BUG_COMPONENT'],
-                         BugzillaComponent('BarProduct', 'BarComponent'))
-        self.assertEqual(v['bug_component/static/foo/baz']['BUG_COMPONENT'],
-                         BugzillaComponent('default_product', 'default_component'))
-
-    def test_files_bug_component_simple(self):
-        reader = self.reader('files-info')
-
-        v = reader.files_info(['bug_component/simple/moz.build'])
-        self.assertEqual(len(v), 1)
-        flags = v['bug_component/simple/moz.build']
-        self.assertEqual(flags['BUG_COMPONENT'].product, 'Core')
-        self.assertEqual(flags['BUG_COMPONENT'].component, 'Build Config')
-
-    def test_files_bug_component_different_matchers(self):
-        reader = self.reader('files-info')
-
-        v = reader.files_info([
-            'bug_component/different-matchers/foo.jsm',
-            'bug_component/different-matchers/bar.cpp',
-            'bug_component/different-matchers/baz.misc'])
-        self.assertEqual(len(v), 3)
-
-        js_flags = v['bug_component/different-matchers/foo.jsm']
-        cpp_flags = v['bug_component/different-matchers/bar.cpp']
-        misc_flags = v['bug_component/different-matchers/baz.misc']
-
-        self.assertEqual(js_flags['BUG_COMPONENT'], BugzillaComponent('Firefox', 'JS'))
-        self.assertEqual(cpp_flags['BUG_COMPONENT'], BugzillaComponent('Firefox', 'C++'))
-        self.assertEqual(misc_flags['BUG_COMPONENT'], BugzillaComponent('default_product', 'default_component'))
-
-    def test_files_bug_component_final(self):
-        reader = self.reader('files-info')
-
-        v = reader.files_info([
-            'bug_component/final/foo',
-            'bug_component/final/Makefile.in',
-            'bug_component/final/subcomponent/Makefile.in',
-            'bug_component/final/subcomponent/bar'])
-
-        self.assertEqual(v['bug_component/final/foo']['BUG_COMPONENT'],
-            BugzillaComponent('default_product', 'default_component'))
-        self.assertEqual(v['bug_component/final/Makefile.in']['BUG_COMPONENT'],
-            BugzillaComponent('Core', 'Build Config'))
-        self.assertEqual(v['bug_component/final/subcomponent/Makefile.in']['BUG_COMPONENT'],
-            BugzillaComponent('Core', 'Build Config'))
-        self.assertEqual(v['bug_component/final/subcomponent/bar']['BUG_COMPONENT'],
-            BugzillaComponent('Another', 'Component'))
 
 
 if __name__ == '__main__':
