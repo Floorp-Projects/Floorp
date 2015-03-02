@@ -7,6 +7,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/PHeaders.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
@@ -15,6 +16,23 @@
 
 namespace mozilla {
 namespace dom {
+
+InternalHeaders::InternalHeaders(const nsTArray<PHeadersEntry>& aHeaders,
+                                 HeadersGuardEnum aGuard)
+  : mGuard(aGuard)
+{
+  for (uint32_t i = 0; i < aHeaders.Length(); ++i) {
+    mList.AppendElement(Entry(aHeaders[i].name(), aHeaders[i].value()));
+  }
+}
+
+void
+InternalHeaders::GetPHeaders(nsTArray<PHeadersEntry>& aPHeadersOut) const
+{
+  for (uint32_t i = 0; i < mList.Length(); ++i) {
+    aPHeadersOut.AppendElement(PHeadersEntry(mList[i].mName, mList[i].mValue));
+  }
+}
 
 void
 InternalHeaders::Append(const nsACString& aName, const nsACString& aValue,

@@ -43,9 +43,9 @@ public:
   }
 
   void
-  GetUrl(DOMString& aUrl) const
+  GetUrl(nsAString& aUrl) const
   {
-    aUrl.AsAString() = NS_ConvertUTF8toUTF16(mRequest->mURL);
+    CopyUTF8toUTF16(mRequest->mURL, aUrl);
   }
 
   void
