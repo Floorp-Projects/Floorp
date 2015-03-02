@@ -28,10 +28,10 @@ function test() {
 
   var g = float32x4(NaN, -0, Infinity, -Infinity);
   var i = SIMD.float32x4.reciprocalSqrt(g);
-  assertEq(i.x, NaN);
-  assertEq(i.y, -Infinity);
-  assertEq(i.z, 0);
-  assertEq(i.w, NaN);
+  assertEq(i.x, reciprocalsqrtf(NaN));
+  assertEq(i.y, reciprocalsqrtf(-0));
+  assertEq(i.z, reciprocalsqrtf(Infinity));
+  assertEq(i.w, reciprocalsqrtf(-Infinity));
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

@@ -338,7 +338,7 @@ MobileConnectionProvider.prototype = {
 
       let networkTypes = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[index];
       supportedNetworkTypes = networkTypes ?
-        networkTypes.replace("-auto", "", "g").split("/") :
+        networkTypes.replace(/-auto/g, "").split("/") :
         RIL.GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT.split(",");
     }
 

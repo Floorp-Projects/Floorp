@@ -1,0 +1,47 @@
+From 6505733012458d8fcd0ae8e1f1acdc9ffe33ff35 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Wed, 4 Feb 2015 07:16:55 +0900
+Subject: [PATCH] Make opt.lg_dirty_mult work as documented
+
+The documentation for opt.lg_dirty_mult says:
+    Per-arena minimum ratio (log base 2) of active to dirty
+    pages.  Some dirty unused pages may be allowed to accumulate,
+    within the limit set by the ratio (or one chunk worth of dirty
+    pages, whichever is greater) (...)
+
+The restriction in parentheses currently doesn't happen. This makes
+jemalloc aggressively madvise(), which in turns increases the amount
+of page faults significantly.
+
+For instance, this resulted in several(!) hundred(!) milliseconds
+startup regression on Firefox for Android.
+
+This may require further tweaking, but starting with actually doing
+what the documentation says is a good start.
+---
+ src/arena.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/arena.c b/src/arena.c
+index 984b8ad..a5033bf 100644
+--- a/src/arena.c
++++ b/src/arena.c
+@@ -850,6 +850,7 @@ arena_maybe_purge(arena_t *arena)
+ 	if (opt_lg_dirty_mult < 0)
+ 		return;
+ 	threshold = (arena->nactive >> opt_lg_dirty_mult);
++	threshold = threshold < chunk_npages ? chunk_npages : threshold;
+ 	/*
+ 	 * Don't purge unless the number of purgeable pages exceeds the
+ 	 * threshold.
+@@ -893,6 +894,7 @@ arena_compute_npurge(arena_t *arena, bool all)
+ 	 */
+ 	if (!all) {
+ 		size_t threshold = (arena->nactive >> opt_lg_dirty_mult);
++		threshold = threshold < chunk_npages ? chunk_npages : threshold;
+ 
+ 		npurge = arena->ndirty - threshold;
+ 	} else
+-- 
+2.3.0.3.g98027e3
+

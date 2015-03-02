@@ -13,7 +13,7 @@ Overview
 The Metrics framework by itself doesn't do much: it simply provides a
 generic mechanism for collecting and persisting data. It is up to users
 of this framework to drive collection and do something with the obtained
-data. A consumer of this framework is :ref:`firefox_health_report`.
+data. A consumer of this framework is :ref:`healthreport`.
 
 Relationship to Telemetry
 -------------------------

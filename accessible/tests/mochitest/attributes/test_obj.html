@@ -108,6 +108,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("tel", {"text-input-type" : "tel"}, true);
       testAttrs("url", {"text-input-type" : "url"}, true);
 
+      // ARIA
+      testAttrs("searchbox", {"text-input-type" : "search"}, true);
+
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
       testAttrs("checkbox", {"checkable" : "true"}, true); 
@@ -183,6 +186,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
      title="aria-hidden false value shouldn't be exposed via object attributes">
     Mozilla Bug 838407
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121518"
+     title="ARIA 1.1: Support role 'searchbox'">
+    Mozilla Bug 1121518
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -242,6 +250,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <input id="search" type="search"/>
   <input id="tel" type="tel"/>
   <input id="url" type="url"/>
+  <div id="searchbox" role="searchbox"></div>
 
   <!-- html -->
   <input id="radio" type="radio"/>

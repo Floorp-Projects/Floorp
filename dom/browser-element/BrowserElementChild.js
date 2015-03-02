@@ -42,11 +42,19 @@ if (!('BrowserElementIsPreloaded' in this)) {
     }
   }
 
+  if (docShell.asyncPanZoomEnabled === false) {
+    Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js");
+    ContentPanningAPZDisabled.init();
+  }
+
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js");
   ContentPanning.init();
 
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js");
 } else {
+  if (docShell.asyncPanZoomEnabled === false) {
+    ContentPanningAPZDisabled.init();
+  }
   ContentPanning.init();
 }
 

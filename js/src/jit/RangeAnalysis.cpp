@@ -576,9 +576,16 @@ Range::Range(const MDefinition *def)
         *this = *other;
 
         // Simulate the effect of converting the value to its type.
+        // Note: we cannot clamp here, since ranges aren't allowed to shrink
+        // and truncation can increase range again. So doing wrapAround to
+        // mimick a possible truncation.
         switch (def->type()) {
           case MIRType_Int32:
-            wrapAroundToInt32();
+            // MToInt32 cannot truncate. So we can safely clamp.
+            if (def->isToInt32())
+                clampToInt32();
+            else
+                wrapAroundToInt32();
             break;
           case MIRType_Boolean:
             wrapAroundToBoolean();
@@ -1630,9 +1637,8 @@ MTruncateToInt32::computeRange(TempAllocator &alloc)
 void
 MToInt32::computeRange(TempAllocator &alloc)
 {
-    Range *output = new(alloc) Range(getOperand(0));
-    output->clampToInt32();
-    setRange(output);
+    // No clamping since this computes the range *before* bailouts.
+    setRange(new(alloc) Range(getOperand(0)));
 }
 
 void
@@ -2800,6 +2806,10 @@ ComputeRequestedTruncateKind(MDefinition *candidate, bool *shouldClone)
             break;
     }
 
+    // We cannot do full trunction on guarded instructions.
+    if (candidate->isGuard() || candidate->isGuardRangeBailouts())
+        kind = Min(kind, MDefinition::TruncateAfterBailouts);
+
     // If the value naturally produces an int32 value (before bailout checks)
     // that needs no conversion, we don't have to worry about resume points
     // seeing truncated values.
@@ -3055,12 +3065,12 @@ MLoadElementHole::collectRangeInfoPreTrunc()
 void
 MLoadTypedArrayElementStatic::collectRangeInfoPreTrunc()
 {
-    Range *range = ptr()->range();
+    Range range(ptr());
 
-    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+    if (range.hasInt32LowerBound() && range.hasInt32UpperBound()) {
         int64_t offset = this->offset();
-        int64_t lower = range->lower() + offset;
-        int64_t upper = range->upper() + offset;
+        int64_t lower = range.lower() + offset;
+        int64_t upper = range.upper() + offset;
         int64_t length = this->length();
         if (lower >= 0 && upper < length)
             setNeedsBoundsCheck(false);
@@ -3070,12 +3080,12 @@ MLoadTypedArrayElementStatic::collectRangeInfoPreTrunc()
 void
 MStoreTypedArrayElementStatic::collectRangeInfoPreTrunc()
 {
-    Range *range = ptr()->range();
+    Range range(ptr());
 
-    if (range && range->hasInt32LowerBound() && range->hasInt32UpperBound()) {
+    if (range.hasInt32LowerBound() && range.hasInt32UpperBound()) {
         int64_t offset = this->offset();
-        int64_t lower = range->lower() + offset;
-        int64_t upper = range->upper() + offset;
+        int64_t lower = range.lower() + offset;
+        int64_t upper = range.upper() + offset;
         int64_t length = this->length();
         if (lower >= 0 && upper < length)
             setNeedsBoundsCheck(false);
@@ -3241,8 +3251,6 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
 {
     *shouldRemoveDeadCode = false;
 
-    MDefinitionVector deadConditions(alloc());
-
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
 
@@ -3266,11 +3274,8 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
             constant = MConstant::New(alloc(), BooleanValue(true));
         }
 
-        if (DeadIfUnused(condition) && !condition->isInWorklist()) {
-            condition->setInWorklist();
-            if (!deadConditions.append(condition))
-                return false;
-        }
+        if (DeadIfUnused(condition))
+            condition->setGuardRangeBailoutsUnchecked();
 
         test->block()->insertBefore(test, constant);
 
@@ -3281,54 +3286,72 @@ RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
         *shouldRemoveDeadCode = true;
     }
 
-    // Flag all fallible instructions which were indirectly used in the
-    // computation of the condition, such that we do not ignore
-    // bailout-paths which are used to shrink the input range of the
-    // operands of the condition.
-    for (size_t i = 0; i < deadConditions.length(); i++) {
-        MDefinition *cond = deadConditions[i];
+    return tryRemovingGuards();
+}
 
-        // If this instruction is a guard, then there is not need to continue on
-        // this instruction.
-        if (cond->isGuard())
-            continue;
+bool RangeAnalysis::tryRemovingGuards() {
 
-        if (cond->range()) {
-            // Filter the range of the instruction based on its MIRType.
-            Range typeFilteredRange(cond);
+    MDefinitionVector guards(alloc());
 
-            // If the filtered range is updated by adding the original range,
-            // then the MIRType act as an effectful filter. As we do not know if
-            // this filtered Range might change or not the result of the
-            // previous comparison, we have to keep this instruction as a guard
-            // because it has to bailout in order to restrict the Range to its
-            // MIRType.
-            if (typeFilteredRange.update(cond->range())) {
-                cond->setGuard();
-                continue;
-            }
-        }
-
-        for (size_t op = 0, e = cond->numOperands(); op < e; op++) {
-            MDefinition *operand = cond->getOperand(op);
-            if (!DeadIfUnused(operand) || operand->isInWorklist())
+    for (ReversePostorderIterator block = graph_.rpoBegin(); block != graph_.rpoEnd(); block++) {
+        for (MInstructionReverseIterator iter = block->rbegin(); iter != block->rend(); iter++) {
+            if (!iter->isGuardRangeBailouts())
                 continue;
 
-            // If the operand has no range, then its range is always infered
-            // from its MIRType, so it cannot be used change the result deduced
-            // by Range Analysis.
-            if (!operand->range())
-                continue;
-
-            operand->setInWorklist();
-            if (!deadConditions.append(operand))
+            if (!guards.append(*iter))
                 return false;
         }
     }
 
-    while (!deadConditions.empty()) {
-        MDefinition *cond = deadConditions.popCopy();
-        cond->setNotInWorklist();
+    // Flag all fallible instructions which were indirectly used in the
+    // computation of the condition, such that we do not ignore
+    // bailout-paths which are used to shrink the input range of the
+    // operands of the condition.
+    for (size_t i = 0; i < guards.length(); i++) {
+        MDefinition *guard = guards[i];
+
+#ifdef DEBUG
+        // There is no need to mark an instructions if there is
+        // already a more restrictive flag on it.
+        guard->setNotGuardRangeBailouts();
+        MOZ_ASSERT(DeadIfUnused(guard));
+        guard->setGuardRangeBailouts();
+#endif
+
+        if (!guard->range())
+            continue;
+
+        // Filter the range of the instruction based on its MIRType.
+        Range typeFilteredRange(guard);
+
+        // If the output range is updated by adding the inner range,
+        // then the MIRType act as an effectful filter. As we do not know if
+        // this filtered Range might change or not the result of the
+        // previous comparison, we have to keep this instruction as a guard
+        // because it has to bailout in order to restrict the Range to its
+        // MIRType.
+        if (typeFilteredRange.update(guard->range()))
+            continue;
+
+        guard->setNotGuardRangeBailouts();
+
+        // Propagate the guard to its operands.
+        for (size_t op = 0, e = guard->numOperands(); op < e; op++) {
+            MDefinition *operand = guard->getOperand(op);
+
+            // Already marked.
+            if (operand->isGuardRangeBailouts())
+                continue;
+
+            // No need to mark as a guard, since it is has already an even more
+            // restrictive flag set.
+            if (!DeadIfUnused(operand))
+                continue;
+
+            operand->setGuardRangeBailouts();
+            if (!guards.append(operand))
+                return false;
+        }
     }
 
     return true;

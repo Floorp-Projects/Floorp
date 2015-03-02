@@ -573,11 +573,14 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
 
         objectCount++;
 
-        // All preliminary objects must have been created with the largest
-        // allocation kind possible, which will allow their unboxed data to be
-        // filled in inline.
-        MOZ_ASSERT(gc::GetGCKindSlots(obj->asTenured().getAllocKind()) ==
-                   NativeObject::MAX_FIXED_SLOTS);
+        // All preliminary objects must have been created with enough space to
+        // fill in their unboxed data inline. This is ensured either by using
+        // the largest allocation kind (which limits the maximum size of an
+        // unboxed object), or by using an allocation kind that covers all
+        // properties in the template, as the space used by unboxed properties
+        // less than or equal to that used by boxed properties.
+        MOZ_ASSERT(gc::GetGCKindSlots(obj->asTenured().getAllocKind()) >=
+                   Min(NativeObject::MAX_FIXED_SLOTS, templateShape->slotSpan()));
 
         if (obj->as<PlainObject>().lastProperty() != templateShape ||
             obj->as<PlainObject>().hasDynamicElements())
