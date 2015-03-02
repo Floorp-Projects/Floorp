@@ -513,7 +513,8 @@ function makeGeneralTab()
     metaTree.view = gMetaView;
 
     for (var i = 0; i < length; i++)
-      gMetaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv, metaNodes[i].content]);
+      gMetaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv || metaNodes[i].getAttribute("property"),
+                        metaNodes[i].content]);
 
     metaGroup.collapsed = false;
   }

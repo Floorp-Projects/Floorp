@@ -10,21 +10,6 @@ let gDirService;
 let gDirProvider;
 let gOldProviders;
 
-function FakeDirProvider() {}
-FakeDirProvider.prototype = {
-  classID: Components.ID("{f30b43a7-2bfa-4e5f-8c4f-abc7dd4ac486}"),
-  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsIDirectoryServiceProvider]),
-
-  getFile: function(prop, persistent) {
-    if (prop == KEY_UPDATE_ARCHIVE_DIR) {
-      if (gActiveUpdate) {
-        gActiveUpdate.errorCode = AUS_Cr.NS_ERROR_FILE_TOO_BIG;
-      }
-    }
-    return null;
-  }
-};
-
 function run_test() {
   setupTestCommon();
 
@@ -37,19 +22,19 @@ function run_test() {
 
   gDirProvider = new FakeDirProvider();
 
-  let cm = AUS_Cc["@mozilla.org/categorymanager;1"].getService(AUS_Ci.nsICategoryManager);
+  let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
   gOldProviders = [];
   let enumerator = cm.enumerateCategory("xpcom-directory-providers");
   while (enumerator.hasMoreElements()) {
-    let entry = enumerator.getNext().QueryInterface(AUS_Ci.nsISupportsCString).data;
+    let entry = enumerator.getNext().QueryInterface(Ci.nsISupportsCString).data;
     let contractID = cm.getCategoryEntry("xpcom-directory-providers", entry);
-    gOldProviders.push(AUS_Cc[contractID].createInstance(AUS_Ci.nsIDirectoryServiceProvider));
+    gOldProviders.push(Cc[contractID].createInstance(Ci.nsIDirectoryServiceProvider));
   }
 
-  gDirService = AUS_Cc["@mozilla.org/file/directory_service;1"]
-                       .getService(AUS_Ci.nsIProperties);
+  gDirService = Cc["@mozilla.org/file/directory_service;1"].
+                getService(Ci.nsIProperties);
 
-  gOldProviders.forEach(function (p) {
+  gOldProviders.forEach(function(p) {
     gDirService.unregisterProvider(p);
   });
   gDirService.registerProvider(gDirProvider);
@@ -62,13 +47,13 @@ function xhr_pt1() {
   gXHR.status = 200;
   gXHR.responseText = gResponseBody;
   try {
-    var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(AUS_Ci.nsIDOMParser);
+    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                 createInstance(Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
   } catch (e) {
     gXHR.responseXML = null;
   }
-  var e = { target: gXHR };
+  let e = { target: gXHR };
   gXHR.onload(e);
 }
 
@@ -92,17 +77,31 @@ function check_test_pt1() {
 
   let state = gAUS.downloadUpdate(gActiveUpdate, true);
   do_check_eq(state, "null");
-  do_check_eq(gActiveUpdate.errorCode >>> 0 , AUS_Cr.NS_ERROR_FILE_TOO_BIG);
+  do_check_eq(gActiveUpdate.errorCode >>> 0 , Cr.NS_ERROR_FILE_TOO_BIG);
 
   doTestFinish();
 }
 
 function end_test() {
   gDirService.unregisterProvider(gDirProvider);
-  gOldProviders.forEach(function (p) {
+  gOldProviders.forEach(function(p) {
     gDirService.registerProvider(p);
   });
   gActiveUpdate = null;
   gDirService = null;
   gDirProvider = null;
 }
+
+function FakeDirProvider() {}
+FakeDirProvider.prototype = {
+  getFile: function(prop, persistent) {
+    if (prop == KEY_UPDATE_ARCHIVE_DIR) {
+      if (gActiveUpdate) {
+        gActiveUpdate.errorCode = Cr.NS_ERROR_FILE_TOO_BIG;
+      }
+    }
+    return null;
+  },
+  classID: Components.ID("{f30b43a7-2bfa-4e5f-8c4f-abc7dd4ac486}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
+};

@@ -120,10 +120,10 @@ function* runTest() {
 
   function waitForCompletion() {
     var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-      SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
+      SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
       tester.next();
     });
-    SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
+    SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
   }
 
   /* test 1 */

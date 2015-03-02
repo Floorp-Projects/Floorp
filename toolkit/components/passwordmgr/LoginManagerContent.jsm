@@ -165,16 +165,32 @@ var LoginManagerContent = {
   },
 
   receiveMessage: function (msg) {
+    // Convert an array of logins in simple JS-object form to an array of
+    // nsILoginInfo objects.
+    function jsLoginsToXPCOM(logins) {
+      return logins.map(login => {
+        var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                      createInstance(Ci.nsILoginInfo);
+        formLogin.init(login.hostname, login.formSubmitURL,
+                       login.httpRealm, login.username,
+                       login.password, login.usernameField,
+                       login.passwordField);
+        return formLogin;
+      });
+    }
+
     let request = this._takeRequest(msg);
     switch (msg.name) {
       case "RemoteLogins:loginsFound": {
+        let loginsFound = jsLoginsToXPCOM(msg.data.logins);
         request.promise.resolve({ form: request.form,
-                                  loginsFound: msg.data.logins });
+                                  loginsFound: loginsFound});
         break;
       }
 
       case "RemoteLogins:loginsAutoCompleted": {
-        request.promise.resolve(msg.data.logins);
+        let loginsFound = jsLoginsToXPCOM(msg.data.logins);
+        request.promise.resolve(loginsFound);
         break;
       }
     }
@@ -557,15 +573,15 @@ var LoginManagerContent = {
   /*
    * _fillform
    *
-   * Fill the form with the provided login information.
-   * The logins are returned so they can be reused for
-   * optimization. Success of action is also returned in format
-   * [success, foundLogins].
+   * Attempt to find the username and password fields in a form, and fill them
+   * in using the provided logins.
    *
    * - autofillForm denotes if we should fill the form in automatically
+   * - clobberPassword controls if an existing password value can be
+   *     overwritten
    * - userTriggered is an indication of whether this filling was triggered by
    *     the user
-   * - foundLogins is an array of nsILoginInfo
+   * - foundLogins is an array of nsILoginInfo that could be used for the form
    */
   _fillForm : function (form, autofillForm, clobberPassword,
                         userTriggered, foundLogins) {
@@ -581,7 +597,6 @@ var LoginManagerContent = {
       MULTIPLE_LOGINS: 7,
       NO_AUTOFILL_FORMS: 8,
       AUTOCOMPLETE_OFF: 9,
-      UNKNOWN_FAILURE: 10,
     };
 
     function recordAutofillResult(result) {
@@ -593,118 +608,98 @@ var LoginManagerContent = {
       autofillResultHist.add(result);
     }
 
-    // Nothing to do if we have no matching logins available.
-    if (foundLogins.length == 0) {
-      // We don't log() here since this is a very common case.
-      recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
-      return [false, foundLogins];
-    }
+    try {
+      // Nothing to do if we have no matching logins available.
+      if (foundLogins.length == 0) {
+        // We don't log() here since this is a very common case.
+        recordAutofillResult(AUTOFILL_RESULT.NO_SAVED_LOGINS);
+        return;
+      }
 
-    // Heuristically determine what the user/pass fields are
-    // We do this before checking to see if logins are stored,
-    // so that the user isn't prompted for a master password
-    // without need.
-    var [usernameField, passwordField, ignored] =
-        this._getFormFields(form, false);
+      // Heuristically determine what the user/pass fields are
+      // We do this before checking to see if logins are stored,
+      // so that the user isn't prompted for a master password
+      // without need.
+      var [usernameField, passwordField, ignored] =
+          this._getFormFields(form, false);
 
-    // Need a valid password field to do anything.
-    if (passwordField == null) {
-      log("not filling form, no password field found");
-      recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
-      return [false, foundLogins];
-    }
+      // Need a valid password field to do anything.
+      if (passwordField == null) {
+        log("not filling form, no password field found");
+        recordAutofillResult(AUTOFILL_RESULT.NO_PASSWORD_FIELD);
+        return;
+      }
 
-    // If the password field is disabled or read-only, there's nothing to do.
-    if (passwordField.disabled || passwordField.readOnly) {
-      log("not filling form, password field disabled or read-only");
-      recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
-      return [false, foundLogins];
-    }
+      // If the password field is disabled or read-only, there's nothing to do.
+      if (passwordField.disabled || passwordField.readOnly) {
+        log("not filling form, password field disabled or read-only");
+        recordAutofillResult(AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY);
+        return;
+      }
 
-    // Discard logins which have username/password values that don't
-    // fit into the fields (as specified by the maxlength attribute).
-    // The user couldn't enter these values anyway, and it helps
-    // with sites that have an extra PIN to be entered (bug 391514)
-    var maxUsernameLen = Number.MAX_VALUE;
-    var maxPasswordLen = Number.MAX_VALUE;
+      var isAutocompleteOff = false;
+      if (this._isAutocompleteDisabled(form) ||
+          this._isAutocompleteDisabled(usernameField) ||
+          this._isAutocompleteDisabled(passwordField)) {
+        isAutocompleteOff = true;
+      }
 
-    // If attribute wasn't set, default is -1.
-    if (usernameField && usernameField.maxLength >= 0)
-      maxUsernameLen = usernameField.maxLength;
-    if (passwordField.maxLength >= 0)
-      maxPasswordLen = passwordField.maxLength;
+      // Discard logins which have username/password values that don't
+      // fit into the fields (as specified by the maxlength attribute).
+      // The user couldn't enter these values anyway, and it helps
+      // with sites that have an extra PIN to be entered (bug 391514)
+      var maxUsernameLen = Number.MAX_VALUE;
+      var maxPasswordLen = Number.MAX_VALUE;
 
-    foundLogins = foundLogins.map(login => {
-      var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                      createInstance(Ci.nsILoginInfo);
-      formLogin.init(login.hostname, login.formSubmitURL,
-                     login.httpRealm, login.username,
-                     login.password, login.usernameField,
-                     login.passwordField);
-      return formLogin;
-    });
-    var logins = foundLogins.filter(function (l) {
-      var fit = (l.username.length <= maxUsernameLen &&
-                 l.password.length <= maxPasswordLen);
-      if (!fit)
-        log("Ignored", l.username, "login: won't fit");
+      // If attribute wasn't set, default is -1.
+      if (usernameField && usernameField.maxLength >= 0)
+        maxUsernameLen = usernameField.maxLength;
+      if (passwordField.maxLength >= 0)
+        maxPasswordLen = passwordField.maxLength;
 
-      return fit;
-    }, this);
+      var logins = foundLogins.filter(function (l) {
+        var fit = (l.username.length <= maxUsernameLen &&
+                   l.password.length <= maxPasswordLen);
+        if (!fit)
+          log("Ignored", l.username, "login: won't fit");
 
-    if (logins.length == 0) {
-      log("form not filled, none of the logins fit in the field");
-      recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
-      return [false, foundLogins];
-    }
+        return fit;
+      }, this);
 
-    // The reason we didn't end up filling the form, if any.  We include
-    // this in the formInfo object we send with the passwordmgr-found-logins
-    // notification.  See the _notifyFoundLogins docs for possible values.
-    var didntFillReason = null;
+      if (logins.length == 0) {
+        log("form not filled, none of the logins fit in the field");
+        recordAutofillResult(AUTOFILL_RESULT.NO_LOGINS_FIT);
+        return;
+      }
 
-    // Attach autocomplete stuff to the username field, if we have
-    // one. This is normally used to select from multiple accounts,
-    // but even with one account we should refill if the user edits.
-    if (usernameField)
-      this._formFillService.markAsLoginManagerField(usernameField);
+      // Attach autocomplete stuff to the username field, if we have
+      // one. This is normally used to select from multiple accounts,
+      // but even with one account we should refill if the user edits.
+      if (usernameField)
+        this._formFillService.markAsLoginManagerField(usernameField);
 
-    // Don't clobber an existing password.
-    if (passwordField.value && !clobberPassword) {
-      didntFillReason = "existingPassword";
-      this._notifyFoundLogins(didntFillReason, usernameField,
-                              passwordField, foundLogins, null);
-      log("form not filled, the password field was already filled");
-      recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
-      return [false, foundLogins];
-    }
+      // Don't clobber an existing password.
+      if (passwordField.value && !clobberPassword) {
+        log("form not filled, the password field was already filled");
+        recordAutofillResult(AUTOFILL_RESULT.EXISTING_PASSWORD);
+        return;
+      }
 
-    // If the form has an autocomplete=off attribute in play, don't
-    // fill in the login automatically. We check this after attaching
-    // the autocomplete stuff to the username field, so the user can
-    // still manually select a login to be filled in.
-    var isFormDisabled = false;
-    if (!ignoreAutocomplete &&
-        (this._isAutocompleteDisabled(form) ||
-         this._isAutocompleteDisabled(usernameField) ||
-         this._isAutocompleteDisabled(passwordField))) {
+      // Select a login to use for filling in the form.
+      var selectedLogin;
+      if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
+        // If username was specified in the field, it's disabled or it's readOnly, only fill in the
+        // password if we find a matching login.
+        var username = usernameField.value.toLowerCase();
 
-      isFormDisabled = true;
-      log("form not filled, has autocomplete=off");
-    }
+        let matchingLogins = logins.filter(function(l)
+                                           l.username.toLowerCase() == username);
+        if (matchingLogins.length == 0) {
+          log("Password not filled. None of the stored logins match the username already present.");
+          recordAutofillResult(AUTOFILL_RESULT.EXISTING_USERNAME);
+          return;
+        }
 
-    // Variable such that we reduce code duplication and can be sure we
-    // should be firing notifications if and only if we can fill the form.
-    var selectedLogin = null;
-
-    if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
-      // If username was specified in the field, it's disabled or it's readOnly, only fill in the
-      // password if we find a matching login.
-      var username = usernameField.value.toLowerCase();
-
-      let matchingLogins = logins.filter(function(l)
-                                         l.username.toLowerCase() == username);
-      if (matchingLogins.length) {
         // If there are multiple, and one matches case, use it
         for (let l of matchingLogins) {
           if (l.username == usernameField.value) {
@@ -715,36 +710,46 @@ var LoginManagerContent = {
         if (!selectedLogin) {
           selectedLogin = matchingLogins[0];
         }
+      } else if (logins.length == 1) {
+        selectedLogin = logins[0];
       } else {
-        didntFillReason = "existingUsername";
-        log("Password not filled. None of the stored logins match the username already present.");
-      }
-    } else if (logins.length == 1) {
-      selectedLogin = logins[0];
-    } else {
-      // We have multiple logins. Handle a special case here, for sites
-      // which have a normal user+pass login *and* a password-only login
-      // (eg, a PIN). Prefer the login that matches the type of the form
-      // (user+pass or pass-only) when there's exactly one that matches.
-      let matchingLogins;
-      if (usernameField)
-        matchingLogins = logins.filter(function(l) l.username);
-      else
-        matchingLogins = logins.filter(function(l) !l.username);
-      if (matchingLogins.length == 1) {
-        selectedLogin = matchingLogins[0];
-      } else {
-        didntFillReason = "multipleLogins";
-        log("Multiple logins for form, so not filling any.");
-      }
-    }
+        // We have multiple logins. Handle a special case here, for sites
+        // which have a normal user+pass login *and* a password-only login
+        // (eg, a PIN). Prefer the login that matches the type of the form
+        // (user+pass or pass-only) when there's exactly one that matches.
+        let matchingLogins;
+        if (usernameField)
+          matchingLogins = logins.filter(function(l) l.username);
+        else
+          matchingLogins = logins.filter(function(l) !l.username);
 
-    var didFillForm = false;
-    if (selectedLogin && autofillForm && !isFormDisabled) {
+        if (matchingLogins.length != 1) {
+          log("Multiple logins for form, so not filling any.");
+          recordAutofillResult(AUTOFILL_RESULT.MULTIPLE_LOGINS);
+          return;
+        }
+
+        selectedLogin = matchingLogins[0];
+      }
+
+      // We will always have a selectedLogin at this point.
+
+      if (!autofillForm) {
+        log("autofillForms=false but form can be filled");
+        recordAutofillResult(AUTOFILL_RESULT.NO_AUTOFILL_FORMS);
+        return;
+      }
+
+      if (isAutocompleteOff && !ignoreAutocomplete) {
+        log("Not filling the login because we're respecting autocomplete=off");
+        recordAutofillResult(AUTOFILL_RESULT.AUTOCOMPLETE_OFF);
+        return;
+      }
+
       // Fill the form
 
       if (usernameField) {
-        // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
         let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
 
         let userNameDiffers = selectedLogin.username != usernameField.value;
@@ -761,102 +766,11 @@ var LoginManagerContent = {
       if (passwordField.value != selectedLogin.password) {
         passwordField.setUserInput(selectedLogin.password);
       }
-      didFillForm = true;
-    } else if (selectedLogin && !autofillForm) {
-      // For when autofillForm is false, but we still have the information
-      // to fill a form, we notify observers.
-      didntFillReason = "noAutofillForms";
-      Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
-      log("autofillForms=false but form can be filled; notified observers");
-    } else if (selectedLogin && isFormDisabled) {
-      // For when autocomplete is off, but we still have the information
-      // to fill a form, we notify observers.
-      didntFillReason = "autocompleteOff";
-      Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
-      log("autocomplete=off but form can be filled; notified observers");
-    }
 
-    this._notifyFoundLogins(didntFillReason, usernameField, passwordField,
-                            foundLogins, selectedLogin);
-
-    if (didFillForm) {
       recordAutofillResult(AUTOFILL_RESULT.FILLED);
-    } else {
-      let autofillResult = AUTOFILL_RESULT.UNKNOWN_FAILURE;
-      switch (didntFillReason) {
-        // existingPassword is already handled above
-        case "existingUsername":
-          autofillResult = AUTOFILL_RESULT.EXISTING_USERNAME;
-          break;
-        case "multipleLogins":
-          autofillResult = AUTOFILL_RESULT.MULTIPLE_LOGINS;
-          break;
-        case "noAutofillForms":
-          autofillResult = AUTOFILL_RESULT.NO_AUTOFILL_FORMS;
-          break;
-        case "autocompleteOff":
-          autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
-          break;
-      }
-      recordAutofillResult(autofillResult);
+    } finally {
+      Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
     }
-
-    return [didFillForm, foundLogins];
-  },
-
-
-  /**
-   * Notify observers about an attempt to fill a form that resulted in some
-   * saved logins being found for the form.
-   *
-   * This does not get called if the login manager attempts to fill a form
-   * but does not find any saved logins.  It does, however, get called when
-   * the login manager does find saved logins whether or not it actually
-   * fills the form with one of them.
-   *
-   * @param didntFillReason {String}
-   *        the reason the login manager didn't fill the form, if any;
-   *        if the value of this parameter is null, then the form was filled;
-   *        otherwise, this parameter will be one of these values:
-   *          existingUsername: the username field already contains a username
-   *                            that doesn't match any stored usernames
-   *          existingPassword: the password field already contains a password
-   *          autocompleteOff:  autocomplete has been disabled for the form
-   *                            or its username or password fields
-   *          multipleLogins:   we have multiple logins for the form
-   *          noAutofillForms:  the autofillForms pref is set to false
-   *
-   * @param usernameField   {HTMLInputElement}
-   *        the username field detected by the login manager, if any;
-   *        otherwise null
-   *
-   * @param passwordField   {HTMLInputElement}
-   *        the password field detected by the login manager
-   *
-   * @param foundLogins     {Array}
-   *        an array of nsILoginInfos that can be used to fill the form
-   *
-   * @param selectedLogin   {nsILoginInfo}
-   *        the nsILoginInfo that was/would be used to fill the form, if any;
-   *        otherwise null; whether or not it was actually used depends on
-   *        the value of the didntFillReason parameter
-   */
-  _notifyFoundLogins : function (didntFillReason, usernameField,
-                                 passwordField, foundLogins, selectedLogin) {
-    // We need .setProperty(), which is a method on the original
-    // nsIWritablePropertyBag. Strangley enough, nsIWritablePropertyBag2
-    // doesn't inherit from that, so the additional QI is needed.
-    let formInfo = Cc["@mozilla.org/hash-property-bag;1"].
-                   createInstance(Ci.nsIWritablePropertyBag2).
-                   QueryInterface(Ci.nsIWritablePropertyBag);
-
-    formInfo.setPropertyAsACString("didntFillReason", didntFillReason);
-    formInfo.setPropertyAsInterface("usernameField", usernameField);
-    formInfo.setPropertyAsInterface("passwordField", passwordField);
-    formInfo.setProperty("foundLogins", foundLogins.concat());
-    formInfo.setPropertyAsInterface("selectedLogin", selectedLogin);
-
-    Services.obs.notifyObservers(formInfo, "passwordmgr-found-logins", null);
   },
 
 };

@@ -22,7 +22,7 @@
 <!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Cache Source:">
 <!ENTITY  generalModified       "Modified:">
-<!ENTITY  generalEncoding       "Encoding:">
+<!ENTITY  generalEncoding2      "Text Encoding:">
 <!ENTITY  generalMetaName       "Name">
 <!ENTITY  generalMetaContent    "Content">
 

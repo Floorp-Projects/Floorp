@@ -63,10 +63,10 @@
 <!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
 <!ENTITY  allowPagesToUse.accesskey               "A">
 
-<!ENTITY languages.customize.Fallback.grouplabel  "Character Encoding for Legacy Content">
-<!ENTITY languages.customize.Fallback.label       "Fallback Character Encoding:">
-<!ENTITY languages.customize.Fallback.accesskey   "C">
-<!ENTITY languages.customize.Fallback.desc        "This character encoding is used for legacy content that fails to declare its encoding.">
+<!ENTITY languages.customize.Fallback2.grouplabel "Text Encoding for Legacy Content">
+<!ENTITY languages.customize.Fallback2.label      "Fallback Text Encoding:">
+<!ENTITY languages.customize.Fallback2.accesskey  "T">
+<!ENTITY languages.customize.Fallback2.desc       "This text encoding is used for legacy content that fails to declare its encoding.">
 
 <!ENTITY languages.customize.Fallback.auto        "Default for Current Locale">
 <!-- LOCALIZATION NOTE (languages.customize.Fallback.arabic):

@@ -16,7 +16,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
 
-  let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
+  let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                             "Fake Window Watcher",
                             "@mozilla.org/embedcomp/window-watcher;1",
@@ -57,7 +57,7 @@ function run_test() {
   // didn't throw and otherwise it would report no tests run.
   do_check_true(true);
 
-  registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
+  registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                               WindowWatcherFactory);
 
@@ -76,7 +76,7 @@ function check_showUpdateError() {
   do_throw("showUpdateError should not have seen getNewPrompter!");
 }
 
-var WindowWatcher = {
+const WindowWatcher = {
   openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
     gCheckFunc();
   },
@@ -85,19 +85,14 @@ var WindowWatcher = {
     gCheckFunc();
   },
 
-  QueryInterface: function(aIID) {
-    if (aIID.equals(AUS_Ci.nsIWindowWatcher) ||
-        aIID.equals(AUS_Ci.nsISupports))
-      return this;
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
+};
 
-    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-  }
-}
-
-var WindowWatcherFactory = {
+const WindowWatcherFactory = {
   createInstance: function createInstance(aOuter, aIID) {
-    if (aOuter != null)
-      throw AUS_Cr.NS_ERROR_NO_AGGREGATION;
+    if (aOuter != null) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
     return WindowWatcher.QueryInterface(aIID);
   }
 };

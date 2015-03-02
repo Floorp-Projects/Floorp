@@ -20,6 +20,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Holo.Light.Dialog" />

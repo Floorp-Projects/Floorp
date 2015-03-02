@@ -179,7 +179,7 @@
     </panelview>
 
     <panelview id="PanelUI-characterEncodingView" flex="1">
-      <label value="&charsetMenu.label;" class="panel-subview-header"/>
+      <label value="&charsetMenu2.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <vbox id="PanelUI-characterEncodingView-pinned"
               class="PanelUI-characterEncodingView-list"/>
