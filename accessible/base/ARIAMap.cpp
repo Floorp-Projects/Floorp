@@ -32,10 +32,6 @@ static const uint32_t kGenericAccType = 0;
  *
  *  When no Role enum mapping exists for an ARIA role, the role will be exposed
  *  via the object attribute "xml-roles".
- *
- *  There are no Role enums for the following landmark roles:
- *    banner, contentinfo, main, navigation, note, search, secondary,
- *    seealso, breadcrumbs.
  */
 
 static nsRoleMapEntry sWAIRoleMaps[] =
@@ -67,7 +63,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eLandmark,
     kNoReqStates
   },
   { // article
@@ -80,6 +76,16 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
     kNoReqStates,
     eReadonlyUntilEditable
+  },
+  { // banner
+    &nsGkAtoms::banner,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
   },
   { // button
     &nsGkAtoms::button,
@@ -129,6 +135,26 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly,
     eARIAOrientation
   },
+  { // complementary
+    &nsGkAtoms::complementary,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
+  },
+  { // contentinfo
+    &nsGkAtoms::contentinfo,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
+  },
   { // dialog
     &nsGkAtoms::dialog,
     roles::DIALOG,
@@ -167,7 +193,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eLandmark,
     kNoReqStates
   },
   { // grid
@@ -290,6 +316,16 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
     kNoReqStates
   },
+  { // main
+    &nsGkAtoms::main,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
+  },
   { // marquee
     &nsGkAtoms::marquee,
     roles::ANIMATION,
@@ -365,6 +401,16 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
     kNoReqStates,
     eARIACheckableBool
+  },
+  { // navigation
+    &nsGkAtoms::navigation,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
   },
   { // none
     &nsGkAtoms::none,
@@ -495,6 +541,29 @@ static nsRoleMapEntry sWAIRoleMaps[] =
     states::VERTICAL,
     eARIAOrientation,
     eARIAReadonly
+  },
+  { // search
+    &nsGkAtoms::search,
+    roles::NOTHING,
+    kUseNativeRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eLandmark,
+    kNoReqStates
+  },
+  { // searchbox
+    &nsGkAtoms::searchbox,
+    roles::ENTRY,
+    kUseMapRole,
+    eNoValue,
+    eActivateAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates,
+    eARIAAutoComplete,
+    eARIAMultiline,
+    eARIAReadonlyOrEditable
   },
   { // separator
     &nsGkAtoms::separator_,

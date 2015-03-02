@@ -119,7 +119,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
     JS::Rooted<JSObject*> jsobj(aContext, wrapper->GetJSObject());
     NS_ENSURE_STATE(jsobj);
 
-    bool rc = JS_SetElement(aContext, visits, idx, jsobj);
+    bool rc = JS_DefineElement(aContext, visits, idx, jsobj, JSPROP_ENUMERATE);
     NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   }
 

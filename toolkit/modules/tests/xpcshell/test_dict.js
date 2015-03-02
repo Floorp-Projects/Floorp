@@ -189,67 +189,62 @@ function test_set_property_lazy_getter() {
     });
   };
 
-  let (dict = new Dict()) {
-    setThunk(dict);
+  let dict = new Dict();
+  setThunk(dict);
 
-    // Test that checking for the key existence does not invoke
-    // the getter function.
-    do_check_true(dict.has("foo"));
-    do_check_false(thunkCalled);
-    do_check_true(dict.isLazyGetter("foo"));
+  // Test that checking for the key existence does not invoke
+  // the getter function.
+  do_check_true(dict.has("foo"));
+  do_check_false(thunkCalled);
+  do_check_true(dict.isLazyGetter("foo"));
 
-    // Calling get the first time should invoke the getter function
-    // and unmark the key as a lazy getter.
-    do_check_eq(dict.get("foo"), "bar");
-    do_check_true(thunkCalled);
-    do_check_false(dict.isLazyGetter("foo"));
+  // Calling get the first time should invoke the getter function
+  // and unmark the key as a lazy getter.
+  do_check_eq(dict.get("foo"), "bar");
+  do_check_true(thunkCalled);
+  do_check_false(dict.isLazyGetter("foo"));
 
-    // Calling get again should not invoke the getter function
-    thunkCalled = false;
-    do_check_eq(dict.get("foo"), "bar");
-    do_check_false(thunkCalled);
-    do_check_false(dict.isLazyGetter("foo"));
-  }
+  // Calling get again should not invoke the getter function
+  thunkCalled = false;
+  do_check_eq(dict.get("foo"), "bar");
+  do_check_false(thunkCalled);
+  do_check_false(dict.isLazyGetter("foo"));
 
   // Test that listvalues works for lazy keys.
-  let (dict = new Dict()) {
-    setThunk(dict);
-    do_check_true(dict.isLazyGetter("foo"));
+  dict = new Dict();
+  setThunk(dict);
+  do_check_true(dict.isLazyGetter("foo"));
 
-    let (listvalues = dict.listvalues()) {
-      do_check_false(dict.isLazyGetter("foo"));
-      do_check_true(thunkCalled);
-      do_check_true(listvalues.length, 1);
-      do_check_eq(listvalues[0], "bar");
-    }
+  let listvalues = dict.listvalues();
+  do_check_false(dict.isLazyGetter("foo"));
+  do_check_true(thunkCalled);
+  do_check_true(listvalues.length, 1);
+  do_check_eq(listvalues[0], "bar");
 
-    thunkCalled = false;
+  thunkCalled = false;
 
-    // Retrieving the list again shouldn't invoke our getter.
-    let (listvalues = dict.listvalues()) {
-      do_check_false(dict.isLazyGetter("foo"));
-      do_check_false(thunkCalled);
-      do_check_true(listvalues.length, 1);
-      do_check_eq(listvalues[0], "bar");
-    }
-  }
+  // Retrieving the list again shouldn't invoke our getter.
+  listvalues = dict.listvalues();
+  do_check_false(dict.isLazyGetter("foo"));
+  do_check_false(thunkCalled);
+  do_check_true(listvalues.length, 1);
+  do_check_eq(listvalues[0], "bar");
 
   // Test that the values iterator also works as expected.
-  let (dict = new Dict()) {
-    setThunk(dict);
-    let values = dict.values;
+  dict = new Dict();
+  setThunk(dict);
+  let values = dict.values;
 
-    // Our getter shouldn't be called before the iterator reaches it.
-    do_check_true(dict.isLazyGetter("foo"));
-    do_check_false(thunkCalled);
-    do_check_eq(values.next(), "bar");
-    do_check_true(thunkCalled);
+  // Our getter shouldn't be called before the iterator reaches it.
+  do_check_true(dict.isLazyGetter("foo"));
+  do_check_false(thunkCalled);
+  do_check_eq(values.next(), "bar");
+  do_check_true(thunkCalled);
 
-    thunkCalled = false;
-    do_check_false(dict.isLazyGetter("foo"));
-    do_check_eq(dict.get("foo"), "bar");
-    do_check_false(thunkCalled);
-  }
+  thunkCalled = false;
+  do_check_false(dict.isLazyGetter("foo"));
+  do_check_eq(dict.get("foo"), "bar");
+  do_check_false(thunkCalled);
 }
 
 // This is used by both test_construct_dict_from_json_string and test_serialize_dict_to_json_string

@@ -471,6 +471,11 @@ BuildArgArray(const char *fmt, va_list ap, NumArgStateVector& nas)
                 nas[cn].type = TYPE_INT64;
                 c = *p++;
             }
+        } else if (c == 'z' || c == 'I') {
+            static_assert(sizeof(size_t) == sizeof(int32_t) || sizeof(size_t) == sizeof(int64_t),
+                          "size_t is not one of the expected sizes");
+            nas[cn].type = sizeof(size_t) == sizeof(int64_t) ? TYPE_INT64 : TYPE_INT32;
+            c = *p++;
         }
 
         // format
@@ -700,6 +705,11 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
                 type = TYPE_INT64;
                 c = *fmt++;
             }
+        } else if (c == 'z' || c == 'I') {
+            static_assert(sizeof(size_t) == sizeof(int32_t) || sizeof(size_t) == sizeof(int64_t),
+                          "size_t is not one of the expected sizes");
+            type = sizeof(size_t) == sizeof(int64_t) ? TYPE_INT64 : TYPE_INT32;
+            c = *fmt++;
         }
 
         // format

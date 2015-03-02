@@ -73,12 +73,6 @@ enum ProcessPriority {
   NUM_PROCESS_PRIORITY
 };
 
-enum ProcessCPUPriority {
-  PROCESS_CPU_PRIORITY_LOW,
-  PROCESS_CPU_PRIORITY_NORMAL,
-  NUM_PROCESS_CPU_PRIORITY
-};
-
 /**
  * Values that can be passed to hal::SetCurrentThreadPriority().  These should be
  * functional in nature, such as COMPOSITOR, instead of levels, like LOW/HIGH.
@@ -92,19 +86,14 @@ enum ThreadPriority {
 };
 
 /**
- * Convert a ProcessPriority enum value (with an optional ProcessCPUPriority)
- * to a string.  The strings returned by this function are statically
- * allocated; do not attempt to free one!
+ * Convert a ProcessPriority enum value to a string.  The strings returned by
+ * this function are statically allocated; do not attempt to free one!
  *
  * If you pass an unknown process priority, we fatally assert in debug
  * builds and otherwise return "???".
  */
 const char*
 ProcessPriorityToString(ProcessPriority aPriority);
-
-const char*
-ProcessPriorityToString(ProcessPriority aPriority,
-                        ProcessCPUPriority aCPUPriority);
 
 /**
  * Convert a ThreadPriority enum value to a string.  The strings returned by
