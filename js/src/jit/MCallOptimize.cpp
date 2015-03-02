@@ -354,6 +354,11 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == js::simd_int32x4_swizzle)
         return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_INT32);
 
+    if (native == js::simd_int32x4_load)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32);
+    if (native == js::simd_float32x4_load)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+
     return InliningStatus_NotInlined;
 }
 
@@ -3116,6 +3121,66 @@ IonBuilder::inlineSimdSwizzle(CallInfo &callInfo, JSNative native, SimdTypeDescr
     MIRType mirType = SimdTypeDescrToMIRType(type);
     MSimdGeneralSwizzle *ins = MSimdGeneralSwizzle::New(alloc(), callInfo.getArg(0), lanes, mirType);
     return boxSimd(callInfo, ins, templateObj);
+}
+
+static Scalar::Type
+SimdTypeToScalarType(SimdTypeDescr::Type type)
+{
+    switch (type) {
+      case SimdTypeDescr::TYPE_FLOAT32: return Scalar::Float32x4;
+      case SimdTypeDescr::TYPE_INT32:   return Scalar::Int32x4;
+      case SimdTypeDescr::TYPE_FLOAT64: break;
+    }
+    MOZ_CRASH("unexpected simd type");
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition *array = callInfo.getArg(0);
+    MDefinition *index = callInfo.getArg(1);
+
+    Scalar::Type arrayType;
+    if (!ElementAccessIsAnyTypedArray(constraints(), array, index, &arrayType))
+        return InliningStatus_NotInlined;
+
+    MInstruction *indexAsInt32 = MToInt32::New(alloc(), index);
+    current->add(indexAsInt32);
+    index = indexAsInt32;
+
+    MDefinition *indexForBoundsCheck = index;
+
+    // Artificially make sure the index is in bounds by adding the difference
+    // number of slots needed (e.g. reading from Float32Array we need to make
+    // sure to be in bounds for 4 slots, so add 3, etc.).
+    MOZ_ASSERT(Simd128DataSize % Scalar::byteSize(arrayType) == 0);
+    int32_t suppSlotsNeeded = Simd128DataSize / Scalar::byteSize(arrayType) - 1;
+    if (suppSlotsNeeded) {
+        MConstant *suppSlots = constant(Int32Value(suppSlotsNeeded));
+        MAdd *addedIndex = MAdd::New(alloc(), index, suppSlots);
+        // Even if this addition overflows, we're fine because the code generated
+        // for the bounds check uses uint32 arithmetic
+        addedIndex->setInt32();
+        current->add(addedIndex);
+        indexForBoundsCheck = addedIndex;
+    }
+
+    MInstruction *length;
+    MInstruction *elements;
+    addTypedArrayLengthAndData(array, SkipBoundsCheck, &index, &length, &elements);
+
+    MInstruction *check = MBoundsCheck::New(alloc(), indexForBoundsCheck, length);
+    current->add(check);
+
+    MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(alloc(), elements, index, arrayType);
+    load->setResultType(SimdTypeDescrToMIRType(type));
+    load->setReadType(SimdTypeToScalarType(type));
+
+    return boxSimd(callInfo, load, templateObj);
 }
 
 } // namespace jit
