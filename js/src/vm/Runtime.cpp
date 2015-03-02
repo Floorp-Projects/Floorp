@@ -834,3 +834,9 @@ js::AssertCurrentThreadCanLock(RuntimeLock which)
 }
 
 #endif // DEBUG
+
+JS_FRIEND_API(bool)
+JS::IsProfilingEnabledForRuntime(JSRuntime *runtime)
+{
+    return runtime->spsProfiler.enabled();
+}
