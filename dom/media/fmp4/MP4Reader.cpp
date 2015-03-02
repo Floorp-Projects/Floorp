@@ -20,7 +20,6 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 #include "SharedDecoderManager.h"
-#include "mp4_demuxer/MP4TrackDemuxer.h"
 
 #ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
@@ -333,8 +332,8 @@ bool MP4Reader::IsWaitingMediaResources()
 void
 MP4Reader::ExtractCryptoInitData(nsTArray<uint8_t>& aInitData)
 {
-  MOZ_ASSERT(mCrypto.valid);
-  const nsTArray<mp4_demuxer::PsshInfo>& psshs = mCrypto.pssh;
+  MOZ_ASSERT(mDemuxer->Crypto().valid);
+  const nsTArray<mp4_demuxer::PsshInfo>& psshs = mDemuxer->Crypto().pssh;
   for (uint32_t i = 0; i < psshs.Length(); i++) {
     aInitData.AppendElements(psshs[i].data);
   }
@@ -385,20 +384,13 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     // To decode, we need valid video and a place to put it.
     mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo() &&
                                               mDecoder->GetImageContainer();
-    if (mVideo.mActive) {
-      mVideo.mTrackDemuxer = new MP4VideoDemuxer(mDemuxer);
-    }
 
     mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
-    if (mAudio.mActive) {
-      mAudio.mTrackDemuxer = new MP4AudioDemuxer(mDemuxer);
-    }
-    mCrypto = mDemuxer->Crypto();
 
     {
       MonitorAutoUnlock unlock(mDemuxerMonitor);
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mInfo.mIsEncrypted = mIsEncrypted = mCrypto.valid;
+      mInfo.mIsEncrypted = mIsEncrypted = mDemuxer->Crypto().valid;
     }
 
     // Remember that we've initialized the demuxer, so that if we're decoding
@@ -411,7 +403,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     return NS_OK;
   }
 
-  if (mCrypto.valid) {
+  if (mDemuxer->Crypto().valid) {
 #ifdef MOZ_EME
     // We have encrypted audio or video. We'll need a CDM to decrypt and
     // possibly decode this. Wait until we've received a CDM from the
@@ -537,7 +529,7 @@ MP4Reader::IsMediaSeekable()
   // We can seek if we get a duration *and* the reader reports that it's
   // seekable.
   MonitorAutoLock mon(mDemuxerMonitor);
-  return mDecoder->GetResource()->IsTransportSeekable();
+  return mDecoder->GetResource()->IsTransportSeekable() && mDemuxer->CanSeek();
 }
 
 bool
@@ -566,7 +558,7 @@ Microseconds
 MP4Reader::GetNextKeyframeTime()
 {
   MonitorAutoLock mon(mDemuxerMonitor);
-  return mVideo.mTrackDemuxer->GetNextKeyframeTime();
+  return mDemuxer->GetNextKeyframeTime();
 }
 
 bool
@@ -719,16 +711,16 @@ MP4Reader::Update(TrackType aTrack)
        decoder.mIsFlushing);
 
   if (needInput) {
-    MediaSample* sample = PopSample(aTrack);
+    MP4Sample* sample = PopSample(aTrack);
 
     // Collect telemetry from h264 Annex B SPS.
-    if (sample && !mFoundSPSForTelemetry && AnnexB::HasSPS(sample->mMp4Sample)) {
-      nsRefPtr<ByteBuffer> extradata = AnnexB::ExtractExtraData(sample->mMp4Sample);
+    if (sample && !mFoundSPSForTelemetry && AnnexB::HasSPS(sample)) {
+      nsRefPtr<ByteBuffer> extradata = AnnexB::ExtractExtraData(sample);
       mFoundSPSForTelemetry = AccumulateSPSTelemetry(extradata);
     }
 
     if (sample) {
-      decoder.mDecoder->Input(sample->mMp4Sample.forget());
+      decoder.mDecoder->Input(sample);
       if (aTrack == kVideo) {
         parsed++;
       }
@@ -772,25 +764,25 @@ MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
   }
 }
 
-MediaSample*
+MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
   MonitorAutoLock mon(mDemuxerMonitor);
   return PopSampleLocked(aTrack);
 }
 
-MediaSample*
+MP4Sample*
 MP4Reader::PopSampleLocked(TrackType aTrack)
 {
   mDemuxerMonitor.AssertCurrentThreadOwns();
   switch (aTrack) {
     case kAudio:
-      return InvokeAndRetry(mAudio.mTrackDemuxer.get(), &TrackDemuxer::DemuxSample, mStream, &mDemuxerMonitor);
+      return InvokeAndRetry(mDemuxer.get(), &MP4Demuxer::DemuxAudioSample, mStream, &mDemuxerMonitor);
     case kVideo:
       if (mQueuedVideoSample) {
         return mQueuedVideoSample.forget();
       }
-      return InvokeAndRetry(mVideo.mTrackDemuxer.get(), &TrackDemuxer::DemuxSample, mStream, &mDemuxerMonitor);
+      return InvokeAndRetry(mDemuxer.get(), &MP4Demuxer::DemuxVideoSample, mStream, &mDemuxerMonitor);
 
     default:
       return nullptr;
@@ -824,15 +816,15 @@ MP4Reader::ResetDecode()
   Flush(kVideo);
   {
     MonitorAutoLock mon(mDemuxerMonitor);
-    if (mVideo.mTrackDemuxer) {
-      mVideo.mTrackDemuxer->Seek(0);
+    if (mDemuxer) {
+      mDemuxer->SeekVideo(0);
     }
   }
   Flush(kAudio);
   {
     MonitorAutoLock mon(mDemuxerMonitor);
-    if (mAudio.mTrackDemuxer) {
-      mAudio.mTrackDemuxer->Seek(0);
+    if (mDemuxer) {
+      mDemuxer->SeekAudio(0);
     }
   }
   return MediaDecoderReader::ResetDecode();
@@ -948,7 +940,7 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
 
   // Loop until we reach the next keyframe after the threshold.
   while (true) {
-    nsAutoPtr<MediaSample> compressed(PopSample(kVideo));
+    nsAutoPtr<MP4Sample> compressed(PopSample(kVideo));
     if (!compressed) {
       // EOS, or error. This code assumes EOS, which may or may not be right.
       MonitorAutoLock mon(mVideo.mMonitor);
@@ -956,8 +948,8 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
       return false;
     }
     parsed++;
-    if (!compressed->mMp4Sample->is_sync_point ||
-        compressed->mMp4Sample->composition_timestamp < aTimeThreshold) {
+    if (!compressed->is_sync_point ||
+        compressed->composition_timestamp < aTimeThreshold) {
       continue;
     }
     mQueuedVideoSample = compressed;
@@ -981,14 +973,14 @@ MP4Reader::Seek(int64_t aTime, int64_t aEndTime)
   int64_t seekTime = aTime;
   mQueuedVideoSample = nullptr;
   if (mDemuxer->HasValidVideo()) {
-    mVideo.mTrackDemuxer->Seek(seekTime);
+    mDemuxer->SeekVideo(seekTime);
     mQueuedVideoSample = PopSampleLocked(kVideo);
     if (mQueuedVideoSample) {
-      seekTime = mQueuedVideoSample->mMp4Sample->composition_timestamp;
+      seekTime = mQueuedVideoSample->composition_timestamp;
     }
   }
   if (mDemuxer->HasValidAudio()) {
-    mAudio.mTrackDemuxer->Seek(seekTime);
+    mDemuxer->SeekAudio(seekTime);
   }
   LOG("MP4Reader::Seek(%lld) exit", aTime);
   return SeekPromise::CreateAndResolve(seekTime, __func__);
