@@ -1,0 +1,22 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Validate Interfaces Exposed to Workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="worker_driver.js"></script>
+</head>
+<body>
+<iframe id="frame"></iframe>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true]]
+}, function() {
+  workerTestExec("test_cache_quick_close.js");
+});
+</script>
+</body>
+</html>
