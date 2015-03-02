@@ -57,6 +57,8 @@ WEBIDL_FILES = [
     'BroadcastChannel.webidl',
     'BrowserElement.webidl',
     'BrowserElementDictionaries.webidl',
+    'Cache.webidl',
+    'CacheStorage.webidl',
     'CallsList.webidl',
     'CameraCapabilities.webidl',
     'CameraControl.webidl',
