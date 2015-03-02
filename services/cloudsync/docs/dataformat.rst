@@ -1,8 +1,8 @@
 .. _cloudsync_dataformat:
 
-=========
+===========
 Data Format
-=========
+===========
 
 All fields are required unless noted otherwise.
 
