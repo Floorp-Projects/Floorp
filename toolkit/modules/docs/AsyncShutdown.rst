@@ -8,9 +8,10 @@ During shutdown of the process, subsystems are closed one after another. ``Async
 - services and their clients;
 - shutdown phases (e.g. profile-before-change) and their clients.
 
-.. _AsyncShutdown Barriers:
+.. _AsyncShutdown_Barriers:
+
 Barriers: Expressing shutdown dependencies towards a service
-==========================================
+============================================================
 
 Consider a service FooService. At some point during the shutdown of the process, this service needs to:
 - inform its clients that it is about to shut down;
@@ -22,7 +23,7 @@ This may be expressed as an instance of ``AsyncShutdown.Barrier``. An instance o
 - methods for the owner of the barrier to let it consult the state of blockers and wait until all client-registered blockers have been resolved.
 
 Shutdown timeouts
-------------------
+-----------------
 
 By design, an instance of ``AsyncShutdown.Barrier`` will cause a crash
 if it takes more than 60 seconds `awake` for its clients to lift or
@@ -34,11 +35,12 @@ which it can neither proceed with shutdown nor be relaunched.
 If the CrashReporter is enabled, this crash will report:
 - the name of the barrier that failed;
 - for each blocker that has not been released yet:
+
   - the name of the blocker;
   - the state of the blocker, if a state function has been provided (see :ref:`AsyncShutdown.Barrier.state`).
 
 Example 1: Simple Barrier client
-----------------------------
+--------------------------------
 
 The following snippet presents an example of a client of FooService that has a shutdown dependency upon FooService. In this case, the client wishes to ensure that FooService is not shutdown before some state has been reached. An example is clients that need write data asynchronously and need to ensure that they have fully written their state to disk before shutdown, even if due to some user manipulation shutdown takes place immediately.
 
@@ -58,7 +60,7 @@ The following snippet presents an example of a client of FooService that has a s
     // we have reached the expected state
 
 Example 2: Simple Barrier owner
-----------------------------
+-------------------------------
 
 The following snippet presents an example of a service FooService that
 wishes to ensure that all clients have had a chance to complete any
@@ -91,10 +93,10 @@ outstanding operations before FooService shuts down.
 
 Frequently, a service that owns a ``AsyncShutdown.Barrier`` is itself a client of another Barrier.
 
-.. _AsyncShutdown.Barrier.prototype.state:
+.. _AsyncShutdown.Barrier.state:
 
 Example 3: More sophisticated Barrier client
---------------------------------------
+--------------------------------------------
 
 The following snippet presents FooClient2, a more sophisticated client of FooService that needs to perform a number of operations during shutdown but before the shutdown of FooService. Also, given that this client is more sophisticated, we provide a function returning the state of FooClient2 during shutdown. If for some reason FooClient2's blocker is never lifted, this state can be reported as part of a crash report.
 
@@ -141,7 +143,7 @@ The following snippet presents FooClient2, a more sophisticated client of FooSer
 
 
 Example 4: A service with both internal and external dependencies
--------------------------------------------------------
+-----------------------------------------------------------------
 
  .. code-block:: javascript
 
@@ -211,10 +213,10 @@ Example 4: A service with both internal and external dependencies
       // ...
     });
 
+.. _AsyncShutdown_phases:
 
-.. _AsyncShutdown phases:
 Phases: Expressing dependencies towards phases of shutdown
-===========================================
+==========================================================
 
 The shutdown of a process takes place by phase, such as:
 - ``profileBeforeChange`` (once this phase is complete, there is no guarantee that the process has access to a profile directory);
@@ -255,5 +257,3 @@ List of phases
   The client capability for clients wishing to block asynchronously
   during observer notification "web-workers-shutdown". Once the phase
   is complete, clients MUST NOT use web workers.
-
-

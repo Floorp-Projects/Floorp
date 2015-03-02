@@ -668,7 +668,7 @@ Example
     }
 
 org.mozilla.addons.plugins
--------------------------
+--------------------------
 
 This measurement contains information about the currently-installed plugins.
 
@@ -697,7 +697,7 @@ directly from ``nsIPluginTag`` via ``nsIPluginHost``.
 *updateDay* is the number of days since UNIX epoch of the plugins last modified
 time.
 *mimeTypes* is the list of mimetypes the plugin supports, see
-``nsIPluginTag.getMimeTypes()`.
+``nsIPluginTag.getMimeTypes()``.
 
 Example
 ^^^^^^^
