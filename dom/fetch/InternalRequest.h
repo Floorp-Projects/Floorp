@@ -214,6 +214,12 @@ public:
     return mContentPolicyType;
   }
 
+  void
+  SetContentPolicyType(nsContentPolicyType aContentPolicyType)
+  {
+    mContentPolicyType = aContentPolicyType;
+  }
+
   bool
   UnsafeRequest() const
   {
