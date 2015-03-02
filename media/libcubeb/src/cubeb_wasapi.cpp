@@ -1191,6 +1191,32 @@ int wasapi_stream_start(cubeb_stream * stm)
 
   XASSERT(stm && !stm->thread && !stm->shutdown_event);
 
+  HRESULT hr = stm->client->Start();
+  if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+    LOG("audioclient invalid device, reconfiguring\n", hr);
+
+    BOOL ok = ResetEvent(stm->reconfigure_event);
+    if (!ok) {
+      LOG("resetting reconfig event failed: %x\n", GetLastError());
+    }
+
+    close_wasapi_stream(stm);
+    int r = setup_wasapi_stream(stm);
+    if (r != CUBEB_OK) {
+      LOG("reconfigure failed\n");
+      return r;
+    }
+
+    HRESULT hr = stm->client->Start();
+    if (FAILED(hr)) {
+      LOG("could not start the stream after reconfig: %x\n", hr);
+      return CUBEB_ERROR;
+    }
+ } else if (FAILED(hr)) {
+    LOG("could not start the stream.\n");
+    return CUBEB_ERROR;
+  }
+
   stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
   if (!stm->shutdown_event) {
     LOG("Can't create the shutdown event, error: %x\n", GetLastError());
@@ -1203,37 +1229,35 @@ int wasapi_stream_start(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
-  HRESULT hr = stm->client->Start();
-  if (FAILED(hr)) {
-    LOG("could not start the stream.\n");
-    return CUBEB_ERROR;
-  } else {
-    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
-  }
+  stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
 
-  return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
+  return CUBEB_OK;
 }
 
 int wasapi_stream_stop(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  auto_lock lock(stm->stream_reset_lock);
+  {
+    auto_lock lock(stm->stream_reset_lock);
 
-  HRESULT hr = stm->client->Stop();
-  if (FAILED(hr)) {
-    LOG("could not stop AudioClient\n");
-  }
+    if (!stm->client) {
+      XASSERT(!stm->thread);
+      LOG("stream already stopped\n");
+    } else {
+      HRESULT hr = stm->client->Stop();
+      if (FAILED(hr)) {
+        LOG("could not stop AudioClient\n");
+        return CUBEB_ERROR;
+      }
+    }
 
-  stm->stream_reset_lock->leave();
-  stop_and_join_render_thread(stm);
-  stm->stream_reset_lock->enter();
-
-  if (SUCCEEDED(hr)) {
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
   }
 
-  return FAILED(hr) ? CUBEB_ERROR : CUBEB_OK;
+  stop_and_join_render_thread(stm);
+
+  return CUBEB_OK;
 }
 
 int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
