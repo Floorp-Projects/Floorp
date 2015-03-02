@@ -12,7 +12,7 @@ file of interest and it does something intelligent with that data.
 Defining Metadata
 =================
 
-Files metadata is defined by utilizing the
+Files metadata is defined by using the
 :ref:`Files Sub-Context <mozbuild_subcontext_Files>` in ``moz.build``
 files. e.g.::
 

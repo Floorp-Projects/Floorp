@@ -72,10 +72,10 @@ Reading and Traversing moz.build Files
 
 The process for reading ``moz.build`` files roughly consists of:
 
-1. Start at the root ``moz.build`` (``<topsrcdir>/moz.build``)
-2. Evaluate the ``moz.build`` file in a new sandbox
+1. Start at the root ``moz.build`` (``<topsrcdir>/moz.build``).
+2. Evaluate the ``moz.build`` file in a new sandbox.
 3. Emit the main *context* and any *sub-contexts* from the executed
-   sandbox
+   sandbox.
 4. Extract a set of ``moz.build`` files to execute next.
 5. For each additional ``moz.build`` file, goto #2 and repeat until all
    referenced files have executed.
@@ -118,7 +118,7 @@ Filesystem Reading Mode
 -----------------------
 
 There is an alternative reading mode that doesn't involve the build
-system and doesn't utilize ``DIRS`` variables to control traversal into
+system and doesn't use ``DIRS`` variables to control traversal into
 child directories. This mode is called *filesystem reading mode*.
 
 In this reading mode, the ``CONFIG`` variable is a dummy, mostly empty
@@ -126,7 +126,7 @@ object. Accessing all but a few special variables will return an empty
 value. This means that nearly all ``if CONFIG['FOO']:`` branches will
 not be taken.
 
-Instead of utilizing content from within the evaluated ``moz.build``
+Instead of using content from within the evaluated ``moz.build``
 file to drive traversal into subsequent ``moz.build`` files, the set
 of files to evaluate is controlled by the thing doing the reading.
 
