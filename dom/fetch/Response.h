@@ -116,6 +116,10 @@ public:
 
   void
   SetBody(nsIInputStream* aBody);
+
+  already_AddRefed<InternalResponse>
+  GetInternalResponse() const;
+
 private:
   ~Response();
 
