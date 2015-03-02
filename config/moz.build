@@ -30,6 +30,7 @@ if CONFIG['MOZ_SHARED_ICU']:
     DEFINES['MOZ_SHARED_ICU'] = True
 
 PYTHON_UNIT_TESTS += [
+    'tests/test_mozbuild_reading.py',
     'tests/unit-expandlibs.py',
     'tests/unit-mozunit.py',
     'tests/unit-nsinstall.py',
