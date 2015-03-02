@@ -32,7 +32,7 @@ use webdriver::response::{
     WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
     ElementRectResponse, CookieResponse, Cookie};
 use webdriver::common::{
-    Date, Nullable, WebElement, FrameId};
+    Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{
     WebDriverResult, WebDriverError, ErrorStatus};
 use webdriver::server::{WebDriverHandler, Session};
@@ -219,6 +219,29 @@ impl MarionetteSession {
         Ok(())
     }
 
+    fn to_web_element(&self, json_data: &Json) -> WebDriverResult<WebElement> {
+        let data = try_opt!(json_data.as_object(),
+                            ErrorStatus::UnknownError,
+                            "Failed to convert data to an object");
+        let id = try_opt!(
+            try_opt!(
+                match data.get("ELEMENT") {
+                    Some(id) => Some(id),
+                    None => {
+                        match data.get(ELEMENT_KEY) {
+                            Some(id) => Some(id),
+                            None => None
+                        }
+                    }
+                },
+                ErrorStatus::UnknownError,
+                "Failed to extract Web Element from response").as_string(),
+            ErrorStatus::UnknownError,
+            "Failed to convert id value to string"
+            ).to_string();
+        Ok(WebElement::new(id))
+    }
+
     pub fn response_from_json(&mut self, message: &WebDriverMessage,
                               data: &str) -> WebDriverResult<WebDriverResponse> {
         let json_data = try!(object_from_json(data));
@@ -256,7 +279,7 @@ impl MarionetteSession {
             },
             //Things that simply return the contents of the marionette "value" property
             GetCurrentUrl | GetTitle | GetWindowHandle | GetWindowHandles |
-            FindElement(_) | FindElements(_) | IsDisplayed(_) | IsSelected(_) |
+            IsDisplayed(_) | IsSelected(_) |
             GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot(_) => {
@@ -398,6 +421,27 @@ impl MarionetteSession {
                 }).collect::<Result<Vec<_>, _>>());
                 WebDriverResponse::Cookie(CookieResponse::new(cookies))
             },
+            FindElement(_) => {
+                let element = try!(self.to_web_element(
+                    try_opt!(json_data.get("value"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find value field")));
+                WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
+            },
+            FindElements(_) => {
+                let element_vec = try_opt!(
+                    try_opt!(json_data.get("value"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find value field").as_array(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret value as array");
+                let elements = try!(element_vec.iter().map(
+                    |x| {
+                        self.to_web_element(x)
+                    }).collect::<Result<Vec<_>, _>>());
+                WebDriverResponse::Generic(ValueResponse::new(
+                    Json::Array(elements.iter().map(|x| {x.to_json()}).collect())))
+            }
             NewSession => {
                 let session_id = try_opt!(
                     try_opt!(json_data.get("sessionId"),
@@ -630,7 +674,10 @@ impl ToMarionette for WebDriverMessage {
             ElementSendKeys(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
-                data.insert("value".to_string(), x.value.to_json());
+                let json_value: Vec<String> = x.value.iter().map(|x| {
+                    x.to_string()
+                }).collect();
+                data.insert("value".to_string(), json_value.to_json());
                 (Some("sendKeysToElement"), Some(Ok(Json::Object(data))))
             },
             ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
