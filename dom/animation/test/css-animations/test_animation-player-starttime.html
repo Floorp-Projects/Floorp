@@ -74,7 +74,7 @@ const END_POSITION = 200;
  *     eventWatcher.stopWatching(); // all done - stop listening for events
  *   });
  *
- * This class will assert_true(false) if an event occurs when there is no
+ * This class will assert_unreached() if an event occurs when there is no
  * Promise created by a waitForEvent() call waiting to be fulfilled, or if the
  * event is of a different type to the type passed to waitForEvent. This helps
  * provide test coverage to ensure that only events that are expected occur, in
@@ -92,13 +92,13 @@ function EventWatcher(watchedNode, eventTypes)
 
   function eventHandler(evt) {
     if (!waitingFor) {
-      assert_true(false, 'Not expecting event, but got: ' + evt.type +
+      assert_unreached('Not expecting event, but got: ' + evt.type +
         ' targeting element #' + evt.target.getAttribute('id'));
       return;
     }
     if (evt.type != waitingFor.types[0]) {
-      assert_true(false, 'Expected ' + waitingFor.types[0] + ' event but got ' +
-                         evt.type + ' event');
+      assert_unreached('Expected ' + waitingFor.types[0] + ' event but got ' +
+                        evt.type + ' event');
       return;
     }
     if (waitingFor.types.length > 1) {
@@ -343,7 +343,7 @@ async_test(function(t) {
 
     eventWatcher.stopWatching();
   })).catch(t.step_func(function(reason) {
-    assert_true(false, reason);
+    assert_unreached(reason);
   })).then(function() {
     t.done();
   });
@@ -394,7 +394,7 @@ async_test(function(t) {
 
     eventWatcher.stopWatching();
   })).catch(t.step_func(function(reason) {
-    assert_true(false, reason);
+    assert_unreached(reason);
   })).then(function() {
     t.done();
   });
@@ -499,7 +499,7 @@ async_test(function(t) {
     player.startTime = null;
     return player.ready;
   })).catch(t.step_func(function(reason) {
-    assert_true(false, reason);
+    assert_unreached(reason);
   })).then(function() {
     t.done();
   });
@@ -524,7 +524,7 @@ async_test(function(t) {
     assert_equals(player.playState, 'paused',
       'AnimationPlayer.playState is "paused" after pause() call');
   })).catch(t.step_func(function(reason) {
-    assert_true(false, reason);
+    assert_unreached(reason);
   })).then(function() {
     t.done();
   });
