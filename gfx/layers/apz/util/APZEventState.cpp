@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "nsCOMPtr.h"
 #include "nsDocShell.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsITimer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
@@ -17,6 +18,57 @@
 
 #define APZES_LOG(...)
 // #define APZES_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
+
+// Static helper functions
+namespace {
+
+int32_t
+WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers)
+{
+  int32_t result = 0;
+  if (aModifiers & mozilla::MODIFIER_SHIFT) {
+    result |= nsIDOMWindowUtils::MODIFIER_SHIFT;
+  }
+  if (aModifiers & mozilla::MODIFIER_CONTROL) {
+    result |= nsIDOMWindowUtils::MODIFIER_CONTROL;
+  }
+  if (aModifiers & mozilla::MODIFIER_ALT) {
+    result |= nsIDOMWindowUtils::MODIFIER_ALT;
+  }
+  if (aModifiers & mozilla::MODIFIER_META) {
+    result |= nsIDOMWindowUtils::MODIFIER_META;
+  }
+  if (aModifiers & mozilla::MODIFIER_ALTGRAPH) {
+    result |= nsIDOMWindowUtils::MODIFIER_ALTGRAPH;
+  }
+  if (aModifiers & mozilla::MODIFIER_CAPSLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_CAPSLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_FN) {
+    result |= nsIDOMWindowUtils::MODIFIER_FN;
+  }
+  if (aModifiers & mozilla::MODIFIER_FNLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_FNLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_NUMLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_NUMLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_SCROLLLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_SCROLLLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_SYMBOL) {
+    result |= nsIDOMWindowUtils::MODIFIER_SYMBOL;
+  }
+  if (aModifiers & mozilla::MODIFIER_SYMBOLLOCK) {
+    result |= nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK;
+  }
+  if (aModifiers & mozilla::MODIFIER_OS) {
+    result |= nsIDOMWindowUtils::MODIFIER_OS;
+  }
+  return result;
+}
+
+}
 
 namespace mozilla {
 namespace layers {
@@ -57,9 +109,11 @@ public:
 
   DelayedFireSingleTapEvent(nsWeakPtr aWidget,
                             LayoutDevicePoint& aPoint,
+                            Modifiers aModifiers,
                             nsITimer* aTimer)
     : mWidget(aWidget)
     , mPoint(aPoint)
+    , mModifiers(aModifiers)
     // Hold the reference count until we are called back.
     , mTimer(aTimer)
   {
@@ -68,7 +122,7 @@ public:
   NS_IMETHODIMP Notify(nsITimer*) MOZ_OVERRIDE
   {
     if (nsCOMPtr<nsIWidget> widget = do_QueryReferent(mWidget)) {
-      APZCCallbackHelper::FireSingleTapEvent(mPoint, widget);
+      APZCCallbackHelper::FireSingleTapEvent(mPoint, mModifiers, widget);
     }
     mTimer = nullptr;
     return NS_OK;
@@ -85,6 +139,7 @@ private:
 
   nsWeakPtr mWidget;
   LayoutDevicePoint mPoint;
+  Modifiers mModifiers;
   nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -92,6 +147,7 @@ NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback)
 
 void
 APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
+                                Modifiers aModifiers,
                                 const ScrollableLayerGuid& aGuid,
                                 float aPresShellResolution)
 {
@@ -114,14 +170,14 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
     // If the active element isn't visually affected by the :active style, we
     // have no need to wait the extra sActiveDurationMs to make the activation
     // visually obvious to the user.
-    APZCCallbackHelper::FireSingleTapEvent(currentPoint, widget);
+    APZCCallbackHelper::FireSingleTapEvent(currentPoint, aModifiers, widget);
     return;
   }
 
   APZES_LOG("Active element uses style, scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
   nsRefPtr<DelayedFireSingleTapEvent> callback =
-    new DelayedFireSingleTapEvent(mWidget, currentPoint, timer);
+    new DelayedFireSingleTapEvent(mWidget, currentPoint, aModifiers, timer);
   nsresult rv = timer->InitWithCallback(callback,
                                         sActiveDurationMs,
                                         nsITimer::TYPE_ONE_SHOT);
@@ -135,6 +191,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 void
 APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
                               const CSSPoint& aPoint,
+                              Modifiers aModifiers,
                               const ScrollableLayerGuid& aGuid,
                               uint64_t aInputBlockId,
                               float aPresShellResolution)
@@ -148,10 +205,14 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
 
   SendPendingTouchPreventedResponse(false, aGuid);
 
+  // Converting the modifiers to DOM format for the DispatchMouseEvent call
+  // is the most useless thing ever because nsDOMWindowUtils::SendMouseEvent
+  // just converts them back to widget format, but that API has many callers,
+  // including in JS code, so it's not trivial to change.
   bool eventHandled =
       APZCCallbackHelper::DispatchMouseEvent(aUtils, NS_LITERAL_STRING("contextmenu"),
                          APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, aPresShellResolution),
-                         2, 1, 0, true,
+                         2, 1, WidgetModifiersToDOMModifiers(aModifiers), true,
                          nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
 
   APZES_LOG("Contextmenu event handled: %d\n", eventHandled);
@@ -163,7 +224,7 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
       * widget->GetDefaultScale();
     int time = 0;
     nsEventStatus status =
-        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, widget);
+        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, aModifiers, widget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
@@ -173,12 +234,13 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
 
 void
 APZEventState::ProcessLongTapUp(const CSSPoint& aPoint,
+                                Modifiers aModifiers,
                                 const ScrollableLayerGuid& aGuid,
                                 float aPresShellResolution)
 {
   APZES_LOG("Handling long tap up at %s\n", Stringify(aPoint).c_str());
 
-  ProcessSingleTap(aPoint, aGuid, aPresShellResolution);
+  ProcessSingleTap(aPoint, aModifiers, aGuid, aPresShellResolution);
 }
 
 void
