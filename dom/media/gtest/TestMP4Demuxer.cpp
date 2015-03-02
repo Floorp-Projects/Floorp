@@ -19,7 +19,7 @@ public:
 
   nsRefPtr<MockMediaResource> resource;
   Monitor mMonitor;
-  nsAutoPtr<MP4Demuxer> demuxer;
+  nsRefPtr<MP4Demuxer> demuxer;
 
   explicit MP4DemuxerBinding(const char* aFileName = "dash_dashinit.mp4")
     : resource(new MockMediaResource(aFileName))
