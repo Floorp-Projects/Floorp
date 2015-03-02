@@ -129,7 +129,7 @@ ChromeProcessController::GetDOMWindowUtils() const
 
 void
 ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
-                                         int32_t aModifiers,
+                                         Modifiers aModifiers,
                                          const ScrollableLayerGuid& aGuid)
 {
   if (MessageLoop::current() != mUILoop) {
@@ -144,7 +144,7 @@ ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
 }
 
 void
-ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                                        const ScrollableLayerGuid& aGuid,
                                        uint64_t aInputBlockId)
 {
@@ -161,7 +161,7 @@ ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t 
 }
 
 void
-ChromeProcessController::HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
+ChromeProcessController::HandleLongTapUp(const CSSPoint& aPoint, Modifiers aModifiers,
                                          const ScrollableLayerGuid& aGuid)
 {
   if (MessageLoop::current() != mUILoop) {
