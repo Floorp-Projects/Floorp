@@ -1182,8 +1182,9 @@ int64_t OggReader::RangeEndTime(int64_t aStartOffset,
 nsresult OggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> cached;
-  nsresult res = mDecoder->GetResource()->GetCachedRanges(cached);
+  nsresult res = resource->GetCachedRanges(cached);
   NS_ENSURE_SUCCESS(res, res);
 
   for (uint32_t index = 0; index < cached.Length(); index++) {
