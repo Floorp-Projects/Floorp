@@ -1,0 +1,37 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Validate Interfaces Exposed to Workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="worker_driver.js"></script>
+</head>
+<body>
+<iframe id="frame"></iframe>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.fetch.enabled", true]]
+}, function() {
+  var frame = document.getElementById("frame");
+  frame.src = "test_cache_frame.html";
+  frame.onload = function() {
+    var contentWindow = frame.contentWindow;
+
+    addEventListener("message", function(evt) {
+      ok(evt.data.success, "frame should have succeeded");
+
+      workerTestExec("test_cache.js");
+    });
+
+    contentWindow.postMessage({
+      type: "start"
+    }, "*");
+  }
+});
+</script>
+</body>
+</html>
