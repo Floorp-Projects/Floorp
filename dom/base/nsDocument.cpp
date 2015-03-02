@@ -1850,6 +1850,10 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
     if (elm) {
       elm->MarkForCC();
     }
+    if (tmp->mExpandoAndGeneration.expando.isObject()) {
+      JS::ExposeObjectToActiveJS(
+        &(tmp->mExpandoAndGeneration.expando.toObject()));
+    }
     return true;
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
