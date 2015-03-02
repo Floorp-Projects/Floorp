@@ -33,8 +33,7 @@ LOCAL_INCLUDES += [
 ]
 
 protocols = CONFIG['NECKO_PROTOCOLS'].copy()
-if 'about' in protocols:
-    protocols.remove('about')
+protocols.remove("about")
 LOCAL_INCLUDES += sorted([
     '/netwerk/protocol/%s' % d for d in protocols
 ])
