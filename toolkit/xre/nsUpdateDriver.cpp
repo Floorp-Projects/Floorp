@@ -1231,11 +1231,7 @@ nsUpdateProcessor::UpdateDone()
   nsCOMPtr<nsIUpdateManager> um =
     do_GetService("@mozilla.org/updates/update-manager;1");
   if (um) {
-    nsCOMPtr<nsIUpdate> update;
-    um->GetActiveUpdate(getter_AddRefs(update));
-    if (update) {
-      um->RefreshUpdateStatus(update);
-    }
+    um->RefreshUpdateStatus();
   }
 
   ShutdownWatcherThread();
