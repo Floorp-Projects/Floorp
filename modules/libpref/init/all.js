@@ -446,7 +446,7 @@ pref("media.track.enabled", false);
 // We want to enable on non-release  builds and on release windows and mac
 // but on release builds restrict to YouTube. We don't enable for other
 // configurations because code for those platforms isn't ready yet.
-#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_BUILD)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("media.mediasource.enabled", true);
 #else
 pref("media.mediasource.enabled", false);
@@ -458,18 +458,8 @@ pref("media.mediasource.youtubeonly", true);
 pref("media.mediasource.youtubeonly", false);
 #endif // RELEASE_BUILD
 
-#ifdef MOZ_WIDGET_GONK
-pref("media.mediasource.mp4.enabled", false);
-pref("media.mediasource.webm.enabled", false);
-#else
-#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
-#else
-pref("media.mediasource.mp4.enabled", false);
-pref("media.mediasource.webm.enabled", true);
-#endif
-#endif
 
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
