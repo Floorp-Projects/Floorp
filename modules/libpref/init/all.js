@@ -4433,6 +4433,10 @@ pref("camera.control.face_detection.enabled", true);
 
 // Fetch API.
 pref("dom.fetch.enabled", false);
+
+// SW Cache API
+pref("dom.caches.enabled", false);
+
 #ifdef MOZ_WIDGET_GONK
 // Empirically, this is the value returned by hal::GetTotalSystemMemory()
 // when Flame's memory is limited to 512MiB. If the camera stack determines
