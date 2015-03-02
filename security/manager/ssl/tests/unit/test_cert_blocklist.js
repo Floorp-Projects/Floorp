@@ -99,6 +99,10 @@ let blocklist_contents =
     "<serialNumber>oops! more nonsense.</serialNumber>" +
     "<serialNumber>X1o=</serialNumber></certItem>" +
     // ... and some good
+    // In this case, the issuer name and the valid serialNumber correspond
+    // to other-test-ca.der in tlsserver/ (for testing root revocation)
+    "<certItem issuerName='MBgxFjAUBgNVBAMTDU90aGVyIHRlc3QgQ0E='>" +
+    "<serialNumber>AKEIivg=</serialNumber></certItem>" +
     // This item corresponds to an entry in sample_revocations.txt where:
     // isser name is "another imaginary issuer" base-64 encoded, and
     // serialNumbers are:
@@ -154,6 +158,7 @@ function run_test() {
   // import the certificates we need
   load_cert("test-ca", "CTu,CTu,CTu");
   load_cert("test-int", ",,");
+  load_cert("other-test-ca", "CTu,CTu,CTu");
 
   let certList = Cc["@mozilla.org/security/certblocklist;1"]
                    .getService(Ci.nsICertBlocklist);
@@ -184,6 +189,11 @@ function run_test() {
   // test-int-ee.der.
   // Check the cert validates before we load the blocklist
   let file = "tlsserver/test-int-ee.der";
+  verify_cert(file, Cr.NS_OK);
+
+  // The blocklist also revokes other-test-ca.der, which issued other-ca-ee.der.
+  // Check the cert validates before we load the blocklist
+  file = "tlsserver/default-ee.der";
   verify_cert(file, Cr.NS_OK);
 
   // blocklist load is async so we must use add_test from here
@@ -235,6 +245,8 @@ function run_test() {
       contents = contents + (contents.length == 0 ? "" : "\n") + line.value;
     } while (hasmore);
     let expected = "# Auto generated contents. Do not edit.\n" +
+                  "MBgxFjAUBgNVBAMTDU90aGVyIHRlc3QgQ0E=\n" +
+                  " AKEIivg=\n" +
                   "MBIxEDAOBgNVBAMTB1Rlc3QgQ0E=\n" +
                   " X1o=\n" +
                   "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy\n" +
@@ -244,6 +256,10 @@ function run_test() {
 
     // Check the blocklisted intermediate now causes a failure
     let file = "tlsserver/test-int-ee.der";
+    verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+
+    // Check the ee with the blocklisted root also causes a failure
+    file = "tlsserver/other-issuer-ee.der";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
     // Check a non-blocklisted chain still validates OK

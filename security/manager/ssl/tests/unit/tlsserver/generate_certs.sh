@@ -260,6 +260,7 @@ make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.
 make_EE otherIssuerEE 'CN=Wrong CA Pin Test End-Entity' otherCA "*.include-subdomains.pinning.example.com,*.exclude-subdomains.pinning.example.com,*.pinning.example.com"
 
 export_cert localhostAndExampleCom default-ee.der
+export_cert otherIssuerEE other-issuer-ee.der
 
 # A cert that is like localhostAndExampleCom, but with a different serial number for
 # testing the "OCSP response is from the right issuer, but it is for the wrong cert"
