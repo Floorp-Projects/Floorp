@@ -834,6 +834,7 @@ class IonBuilder
                                      SimdTypeDescr::Type from, SimdTypeDescr::Type to);
     InliningStatus inlineSimdSelect(CallInfo &callInfo, JSNative native, bool isElementWise,
                                     SimdTypeDescr::Type type);
+    InliningStatus inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
