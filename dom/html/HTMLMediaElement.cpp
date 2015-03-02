@@ -1166,6 +1166,12 @@ nsresult HTMLMediaElement::LoadResource()
   // Set the media element's CORS mode only when loading a resource
   mCORSMode = AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 
+#ifdef MOZ_EME
+  if (mMediaKeys && !IsMediaStreamURI(mLoadingSrc)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+#endif
+
   HTMLMediaElement* other = LookupMediaElementURITable(mLoadingSrc);
   if (other && other->mDecoder) {
     // Clone it.
@@ -4324,6 +4330,11 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     // Existing MediaKeys object. Shut it down.
     mMediaKeys->Shutdown();
     mMediaKeys = nullptr;
+  }
+  if (mDecoder && !mMediaSource) {
+    ShutdownDecoder();
+    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return promise.forget();
   }
 
   mMediaKeys = aMediaKeys;
