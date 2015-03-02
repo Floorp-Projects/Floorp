@@ -1,0 +1,83 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom.cache += [
+    'Action.h',
+    'ActorChild.h',
+    'ActorUtils.h',
+    'AutoUtils.h',
+    'Cache.h',
+    'CacheChild.h',
+    'CacheParent.h',
+    'CacheStorage.h',
+    'CacheStorageChild.h',
+    'CacheStorageParent.h',
+    'CacheStreamControlChild.h',
+    'CacheStreamControlParent.h',
+    'Context.h',
+    'DBAction.h',
+    'DBSchema.h',
+    'Feature.h',
+    'FetchPut.h',
+    'FileUtils.h',
+    'IPCUtils.h',
+    'Manager.h',
+    'ManagerId.h',
+    'PrincipalVerifier.h',
+    'QuotaClient.h',
+    'ReadStream.h',
+    'SavedTypes.h',
+    'StreamList.h',
+    'StreamUtils.h',
+    'Types.h',
+    'TypeUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'Action.cpp',
+    'ActorChild.cpp',
+    'AutoUtils.cpp',
+    'Cache.cpp',
+    'CacheChild.cpp',
+    'CacheParent.cpp',
+    'CacheStorage.cpp',
+    'CacheStorageChild.cpp',
+    'CacheStorageParent.cpp',
+    'CacheStreamControlChild.cpp',
+    'CacheStreamControlParent.cpp',
+    'Context.cpp',
+    'DBAction.cpp',
+    'DBSchema.cpp',
+    'Feature.cpp',
+    'FetchPut.cpp',
+    'FileUtils.cpp',
+    'Manager.cpp',
+    'ManagerId.cpp',
+    'PrincipalVerifier.cpp',
+    'QuotaClient.cpp',
+    'ReadStream.cpp',
+    'StreamList.cpp',
+    'StreamUtils.cpp',
+    'TypeUtils.cpp',
+]
+
+IPDL_SOURCES += [
+    'CacheInitData.ipdlh',
+    'PCache.ipdl',
+    'PCacheStorage.ipdl',
+    'PCacheStreamControl.ipdl',
+    'PCacheTypes.ipdlh',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '../workers',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
