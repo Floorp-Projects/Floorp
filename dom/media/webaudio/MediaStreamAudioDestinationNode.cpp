@@ -23,60 +23,21 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioDestinationNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(MediaStreamAudioDestinationNode, AudioNode)
 
-static const int MEDIA_STREAM_DEST_TRACK_ID = 2;
-static_assert(MEDIA_STREAM_DEST_TRACK_ID != AudioNodeStream::AUDIO_TRACK,
-              "MediaStreamAudioDestinationNode::MEDIA_STREAM_DEST_TRACK_ID must be a different value than AudioNodeStream::AUDIO_TRACK");
-
-class MediaStreamDestinationEngine : public AudioNodeEngine {
-public:
-  MediaStreamDestinationEngine(AudioNode* aNode, ProcessedMediaStream* aOutputStream)
-    : AudioNodeEngine(aNode)
-    , mOutputStream(aOutputStream)
-  {
-    MOZ_ASSERT(mOutputStream);
-  }
-
-  virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
-  {
-    *aOutput = aInput;
-    StreamBuffer::Track* track = mOutputStream->EnsureTrack(MEDIA_STREAM_DEST_TRACK_ID);
-    AudioSegment* segment = track->Get<AudioSegment>();
-    segment->AppendAndConsumeChunk(aOutput);
-  }
-
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
-  {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
-private:
-  ProcessedMediaStream* mOutputStream;
-};
-
-// This callback is used to ensure that only the audio data for this track is audible
-static bool FilterAudioNodeStreamTrack(StreamBuffer::Track* aTrack)
-{
-  return aTrack->GetID() == MEDIA_STREAM_DEST_TRACK_ID;
-}
-
 MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* aContext)
   : AudioNode(aContext,
               2,
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
-  , mDOMStream(DOMAudioNodeMediaStream::CreateTrackUnionStream(GetOwner(),
-                                                               this))
+  , mDOMStream(DOMAudioNodeMediaStream::CreateTrackUnionStream(GetOwner(), this))
 {
-  TrackUnionStream* tus = static_cast<TrackUnionStream*>(mDOMStream->GetStream());
-  MOZ_ASSERT(tus == mDOMStream->GetStream()->AsProcessedStream());
-  tus->SetTrackIDFilter(FilterAudioNodeStreamTrack);
+  // Ensure an audio track with the correct ID is exposed to JS
+  mDOMStream->CreateDOMTrack(AudioNodeStream::AUDIO_TRACK, MediaSegment::AUDIO);
 
-  MediaStreamDestinationEngine* engine = new MediaStreamDestinationEngine(this, tus);
-  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
-  mPort = tus->AllocateInputPort(mStream, 0);
+  ProcessedMediaStream* outputStream = mDOMStream->GetStream()->AsProcessedStream();
+  MOZ_ASSERT(!!outputStream);
+  AudioNodeEngine* engine = new AudioNodeEngine(this);
+  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
+  mPort = outputStream->AllocateInputPort(mStream);
 
   nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
   if (doc) {
