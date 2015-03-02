@@ -689,6 +689,14 @@ var gEMETests = [
   },
 ];
 
+var gEMENonFragmentedTests = [
+  {
+    name:"short-cenc.mp4",
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    duration:0.47,
+  },
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
