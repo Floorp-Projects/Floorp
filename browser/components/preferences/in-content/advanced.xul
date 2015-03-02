@@ -360,7 +360,7 @@
                 label="&updateManual.label;"
                 accesskey="&updateManual.accesskey;"/>
         </radiogroup>
-
+        <separator class="thin"/>
         <hbox>
           <button id="showUpdateHistory"
                   label="&updateHistory.label;"
@@ -387,7 +387,8 @@
 
     <!-- Certificates -->
     <tabpanel id="encryptionPanel" orient="vertical">
-
+      <groupbox id="certSelection" align="start">
+        <caption><label>&certSelection.label;</label></caption>
         <description id="CertSelectionDesc" control="certSelection">&certSelection.description;</description>
 
         <!--
@@ -395,34 +396,39 @@
           they're not - this preference uses *those strings* as its values.
           I KID YOU NOT.
         -->
-        <radiogroup id="certSelection" orient="horizontal" preftype="string"
+        <radiogroup id="certSelection"
+                    preftype="string"
                     preference="security.default_personal_cert"
                     aria-labelledby="CertSelectionDesc">
-          <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;"
-                value="Select Automatically"/>
-          <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;"
-                value="Ask Every Time"/>
+          <radio label="&certs.auto;"
+                 accesskey="&certs.auto.accesskey;"
+                 value="Select Automatically"/>
+          <radio label="&certs.ask;"
+                 accesskey="&certs.ask.accesskey;"
+                 value="Ask Every Time"/>
         </radiogroup>
-
-        <separator/>
-
-        <checkbox id="enableOCSP"
-                  label="&enableOCSP.label;"
-                  accesskey="&enableOCSP.accesskey;"
-                  onsyncfrompreference="return gAdvancedPane.readEnableOCSP();"
-                  onsynctopreference="return gAdvancedPane.writeEnableOCSP();"
-                  preference="security.OCSP.enabled"/>
-
-        <separator/>
-
-        <hbox>
-          <button id="viewCertificatesButton"
-                  label="&viewCerts.label;" accesskey="&viewCerts.accesskey;"
-                  preference="security.disable_button.openCertManager"/>
-          <button id="viewSecurityDevicesButton"
-                  label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;"
-                  preference="security.disable_button.openDeviceManager"/>
-        </hbox>
+      </groupbox>
+      <separator/>
+      <checkbox id="enableOCSP"
+                label="&enableOCSP.label;"
+                accesskey="&enableOCSP.accesskey;"
+                onsyncfrompreference="return gAdvancedPane.readEnableOCSP();"
+                onsynctopreference="return gAdvancedPane.writeEnableOCSP();"
+                preference="security.OCSP.enabled"/>
+      <separator/>
+      <hbox>
+        <button id="viewCertificatesButton"
+                flex="1"
+                label="&viewCerts.label;"
+                accesskey="&viewCerts.accesskey;"
+                preference="security.disable_button.openCertManager"/>
+        <button id="viewSecurityDevicesButton"
+                flex="1"
+                label="&viewSecurityDevices.label;"
+                accesskey="&viewSecurityDevices.accesskey;"
+                preference="security.disable_button.openDeviceManager"/>
+        <hbox flex="10"/>
+      </hbox>
     </tabpanel>
   </tabpanels>
 </tabbox>
