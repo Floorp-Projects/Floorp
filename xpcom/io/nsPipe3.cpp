@@ -1611,10 +1611,6 @@ NS_NewPipe2(nsIAsyncInputStream** aPipeIn,
   nsresult rv;
 
   nsPipe* pipe = new nsPipe();
-  if (!pipe) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   rv = pipe->Init(aNonBlockingInput,
                   aNonBlockingOutput,
                   aSegmentSize,
@@ -1637,9 +1633,6 @@ nsPipeConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return NS_ERROR_NO_AGGREGATION;
   }
   nsPipe* pipe = new nsPipe();
-  if (!pipe) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(pipe);
   nsresult rv = pipe->QueryInterface(aIID, aResult);
   NS_RELEASE(pipe);
