@@ -6,7 +6,7 @@ use std::num::ToPrimitive;
 
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
-static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
+pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
 #[derive(RustcEncodable, PartialEq, Debug)]
 pub struct Date(u64);

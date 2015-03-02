@@ -1,6 +1,7 @@
-use std::collections::BTreeMap;
-use rustc_serialize::json::{ToJson, Json};
 use regex::Captures;
+use rustc_serialize::json::{ToJson, Json};
+use std::collections::BTreeMap;
+use std::str::StrExt;
 
 use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
@@ -460,7 +461,7 @@ impl Parameters for LocatorParameters {
         let value = try_opt!(
             try_opt!(data.get("value"),
                      ErrorStatus::InvalidArgument,
-                     "Missing 'using' parameter").as_string(),
+                     "Missing 'value' parameter").as_string(),
             ErrorStatus::InvalidArgument,
             "Could not convert using to string").to_string();
 
@@ -510,7 +511,7 @@ impl ToJson for SwitchToFrameParameters {
 
 #[derive(PartialEq)]
 pub struct SendKeysParameters {
-    pub value: Nullable<Vec<Json>>
+    pub value: Vec<char>
 }
 
 impl Parameters for SendKeysParameters {
@@ -518,16 +519,22 @@ impl Parameters for SendKeysParameters {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
-        let value_json= try_opt!(data.get("value"),
-                             ErrorStatus::InvalidArgument,
-                             "Missing 'value' parameter");
-        let value = try!(Nullable::from_json(
-            value_json,
-            |x| {
-                Ok((try_opt!(x.as_array(),
-                             ErrorStatus::InvalidArgument,
-                             "Failed to convert args to Array")).clone())
-            }));
+        let value_json = try_opt!(try_opt!(data.get("value"),
+                                           ErrorStatus::InvalidArgument,
+                                           "Missing 'value' parameter").as_array(),
+                                  ErrorStatus::InvalidArgument,
+                                  "Could not convert 'value' to array");
+
+        let value = try!(value_json.iter().map(|x| {
+           let str_value = try_opt!(x.as_string(),
+                                    ErrorStatus::InvalidArgument,
+                                    "Value was not a string");
+            if str_value.chars().collect::<Vec<char>>().len() != 1 {
+                return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                               "Value was not a string"));
+            }
+            Ok(str_value.char_at(0))
+        }).collect::<Result<Vec<_>, _>>());
 
         Ok(SendKeysParameters {
             value: value
@@ -538,7 +545,10 @@ impl Parameters for SendKeysParameters {
 impl ToJson for SendKeysParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("value".to_string(), self.value.to_json());
+        let value_string: Vec<String> = self.value.iter().map(|x| {
+            x.to_string()
+        }).collect();
+        data.insert("value".to_string(), value_string.to_json());
         Json::Object(data)
     }
 }
