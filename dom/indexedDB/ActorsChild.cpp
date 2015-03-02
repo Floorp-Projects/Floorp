@@ -452,7 +452,8 @@ private:
           return rv;
         }
 
-        if (NS_WARN_IF(!JS_SetElement(aCx, array, index, value))) {
+        if (NS_WARN_IF(!JS_DefineElement(aCx, array, index, value,
+                                         JSPROP_ENUMERATE))) {
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
@@ -505,7 +506,8 @@ private:
           return rv;
         }
 
-        if (NS_WARN_IF(!JS_SetElement(aCx, array, index, value))) {
+        if (NS_WARN_IF(!JS_DefineElement(aCx, array, index, value,
+                                         JSPROP_ENUMERATE))) {
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
@@ -1094,7 +1096,7 @@ BackgroundFactoryRequestChild::Recv__delete__(
 
   IDBOpenDBRequest* request = GetOpenDBRequest();
   MOZ_ASSERT(request);
-  
+
   request->NoteComplete();
 
   if (NS_WARN_IF(!result)) {
