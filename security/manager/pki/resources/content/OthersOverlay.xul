@@ -29,7 +29,7 @@
       </treecols>
       <treechildren flex="1" ondblclick="viewCerts();"/>
     </tree>
-    
+
     <separator class="thin"/>
 
     <hbox>
@@ -37,10 +37,6 @@
               label="&certmgr.view2.label;"
               accesskey="&certmgr.view2.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
-      <button id="email_editButton"
-              label="&certmgr.edit3.label;"
-              accesskey="&certmgr.edit3.accesskey;"
-              disabled="true" oncommand="editCerts();"/>
       <button id="email_addButton"
               label="&certmgr.restore2.label;"
               accesskey="&certmgr.restore2.accesskey;"
