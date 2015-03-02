@@ -140,7 +140,7 @@ ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
     return;
   }
 
-  mAPZEventState->ProcessSingleTap(aPoint, aGuid, GetPresShellResolution());
+  mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid, GetPresShellResolution());
 }
 
 void
@@ -156,7 +156,7 @@ ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, Modifier
     return;
   }
 
-  mAPZEventState->ProcessLongTap(GetDOMWindowUtils(), aPoint, aGuid,
+  mAPZEventState->ProcessLongTap(GetDOMWindowUtils(), aPoint, aModifiers, aGuid,
       aInputBlockId, GetPresShellResolution());
 }
 
@@ -172,7 +172,7 @@ ChromeProcessController::HandleLongTapUp(const CSSPoint& aPoint, Modifiers aModi
     return;
   }
 
-  mAPZEventState->ProcessLongTapUp(aPoint, aGuid, GetPresShellResolution());
+  mAPZEventState->ProcessLongTapUp(aPoint, aModifiers, aGuid, GetPresShellResolution());
 }
 
 void
