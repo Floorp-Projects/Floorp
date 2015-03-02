@@ -43,11 +43,11 @@ let test = asyncTest(function* () {
     ],
   });
 
-  yield testClickOpenNewTab(hud, results[0]);
+  testClickOpenNewTab(hud, results[0]);
 
   let results2 = yield mixedContentOverrideTest2(hud, browser);
 
-  yield testClickOpenNewTab(hud, results2[0]);
+  testClickOpenNewTab(hud, results2[0]);
 });
 
 function pushPrefEnv()
@@ -118,5 +118,19 @@ function testClickOpenNewTab(hud, match) {
   let warningNode = match.clickableElements[0];
   ok(warningNode, "link element");
   ok(warningNode.classList.contains("learn-more-link"), "link class name");
-  return simulateMessageLinkClick(warningNode, LEARN_MORE_URI);
+
+  // Invoke the click event and check if a new tab would
+  // open to the correct page.
+  let linkOpened = false;
+  let oldOpenUILinkIn = window.openUILinkIn;
+  window.openUILinkIn = function(aLink) {
+    if (aLink == LEARN_MORE_URI) {
+      linkOpened = true;
+    }
+  }
+
+  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
+                             warningNode.ownerDocument.defaultView);
+  ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
+  window.openUILinkIn = oldOpenUILinkIn;
 }
