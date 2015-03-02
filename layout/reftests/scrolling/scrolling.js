@@ -1,8 +1,4 @@
-var topElements = document.getElementsByClassName("scrollTop");
-if (!topElements.length) {
-  topElements = [document.documentElement];
-}
-
+var topElements;
 var failed = false;
 
 function doScroll(d)
@@ -22,20 +18,29 @@ function doScroll(d)
   }
 }
 
-if (document.location.search == '?ref') {
-  doScroll(20);
-} else if (document.location.search == '?up') {
-  doScroll(40);
-  document.documentElement.setAttribute("class", "reftest-wait");
-  window.addEventListener("MozReftestInvalidate", function() {
-    document.documentElement.removeAttribute("class");
+// bug 1134459, images are decoded off main thread
+// Wait for the load event so we know all images have loaded
+document.onload = function() {
+  topElements = document.getElementsByClassName("scrollTop");
+  if (!topElements.length) {
+    topElements = [document.documentElement];
+  }
+
+  if (document.location.search == '?ref') {
     doScroll(20);
-  }, false);
-} else {
-  doScroll(1);
-  document.documentElement.setAttribute("class", "reftest-wait");
-  window.addEventListener("MozReftestInvalidate", function() {
-    document.documentElement.removeAttribute("class");
-    doScroll(20);
-  }, false);
+  } else if (document.location.search == '?up') {
+    doScroll(40);
+    document.documentElement.setAttribute("class", "reftest-wait");
+    window.addEventListener("MozReftestInvalidate", function() {
+        document.documentElement.removeAttribute("class");
+        doScroll(20);
+        }, false);
+  } else {
+    doScroll(1);
+    document.documentElement.setAttribute("class", "reftest-wait");
+    window.addEventListener("MozReftestInvalidate", function() {
+        document.documentElement.removeAttribute("class");
+        doScroll(20);
+        }, false);
+  }
 }
