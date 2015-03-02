@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1131392 - Test that EME does not work for non-MSE media</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function DoSetMediaKeys(v)
+{
+  var options = [{
+    initDataType: "cenc",
+    videoType: test.type,
+  }];
+
+  return navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
+
+  .then(function(keySystemAccess) {
+    return keySystemAccess.createMediaKeys();
+  })
+
+  .catch(function() {
+    ok(false, token + " was not expecting failure (yet)");
+  })
+
+  .then(function(mediaKeys) {
+    return v.setMediaKeys(mediaKeys);
+  });
+}
+
+function TestSetMediaKeys(test, token)
+{
+  manager.started(token);
+
+  var v = document.createElement("video");
+
+  // XXX the encrypted event should never fire here after bug 1134434
+  v.addEventListener("encrypted", function() {
+    DoSetMediaKeys(v)
+
+    .then(function() {
+      ok(false, token + " expected setMediaKeys to fail.");
+      manager.finished(token);
+    }, function(err) {
+      is(err.name, "NotSupportedError", token + " should return correct error");
+      manager.finished(token);
+    });
+  });
+
+  v.src = test.name;
+}
+
+function TestSetSrc(test, token)
+{
+  manager.started(token);
+
+  var v = document.createElement("video");
+  v.addEventListener("error", function(err) {
+    ok(true, token + " got error setting src on video element, as expected");
+    manager.finished(token);
+  });
+
+  DoSetMediaKeys(v)
+
+  .then(function() {
+    v.src = test.name;
+  })
+
+  .catch(function() {
+    ok(false, token + " got error setting media keys");
+  });
+}
+
+function startTest(test, token)
+{
+  TestSetMediaKeys(test, token + "_setMediaKeys");
+  TestSetSrc(test, token + "_setSrc");
+}
+
+function beginTest() {
+  manager.runTests(gEMENonFragmentedTests, startTest);
+}
+
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.youtubeonly", false ],
+  [ "media.mediasource.mp4.enabled", true ],
+];
+
+if (/Linux/.test(navigator.userAgent) ||
+    !document.createElement('video').canPlayType("video/mp4")) {
+  // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+  prefs.push([ "media.fragmented-mp4.exposed", true ]);
+  prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+</script>
+</pre>
+</body>
+</html>
+
