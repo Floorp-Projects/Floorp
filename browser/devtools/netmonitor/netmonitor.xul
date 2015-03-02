@@ -314,6 +314,16 @@
                            crop="end"
                            flex="1"/>
                   </hbox>
+                  <hbox id="headers-summary-address"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.summary.address;"/>
+                    <textbox id="headers-summary-address-value"
+                             class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
+                             flex="1"
+                             readonly="true"/>
+                  </hbox>
                   <hbox id="headers-summary-status"
                         class="tabpanel-summary-container"
                         align="center">

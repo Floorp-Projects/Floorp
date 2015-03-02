@@ -12,21 +12,21 @@ function run_test() {
 
   setUpdateChannel("test_channel");
 
-  var patch, patches, update, updates;
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
   // and until bug 470244 is fixed this will not test the value for detailsURL 
   // when it isn't specified in the update xml.
-  patches = getLocalPatchString("partial", "http://partial/", "SHA256", "cd43",
-                                "86", "true", STATE_PENDING);
-  updates = getLocalUpdateString(patches, "major", "New", "version 4", "4.0",
-                                 "4.0", "20070811053724", "http://details1/",
-                                 "http://billboard1/", "http://license1/",
-                                 "http://service1/", "1238441300314",
-                                 "test status text", "false", "test_channel",
-                                 "true", "true", "true", "345600", "true",
-                                 "test version", "3.0", "3.0",
-                                 "custom1_attr=\"custom1 value\"",
-                                 "custom2_attr=\"custom2 value\"");
+  let patches = getLocalPatchString("partial", "http://partial/", "SHA256",
+                                    "cd43", "86", "true", STATE_PENDING);
+  let updates = getLocalUpdateString(patches, "major", "New", "version 4",
+                                     "4.0", "4.0", "20070811053724",
+                                     "http://details1/", "http://billboard1/",
+                                     "http://license1/", "http://service1/",
+                                     "1238441300314", "test status text",
+                                     "false", "test_channel", "true", "true",
+                                     "true", "345600", "true", "test version",
+                                     "3.0", "3.0",
+                                     "custom1_attr=\"custom1 value\"",
+                                     "custom2_attr=\"custom2 value\"");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
@@ -48,7 +48,7 @@ function run_test() {
   do_check_eq(gUpdateManager.activeUpdate, null);
   do_check_eq(gUpdateManager.updateCount, 2);
 
-  update = gUpdateManager.getUpdateAt(0).QueryInterface(AUS_Ci.nsIPropertyBag);
+  let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
   do_check_eq(update.state, STATE_SUCCEEDED);
   do_check_eq(update.type, "major");
   do_check_eq(update.name, "New");
@@ -73,7 +73,7 @@ function run_test() {
   do_check_eq(update.getProperty("custom1_attr"), "custom1 value");
   do_check_eq(update.getProperty("custom2_attr"), "custom2 value");
 
-  patch = update.selectedPatch;
+  let patch = update.selectedPatch;
   do_check_eq(patch.type, "partial");
   do_check_eq(patch.URL, "http://partial/");
   do_check_eq(patch.hashFunction, "SHA256");
@@ -82,7 +82,7 @@ function run_test() {
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_SUCCEEDED);
 
-  update = gUpdateManager.getUpdateAt(1).QueryInterface(AUS_Ci.nsIPropertyBag);
+  update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIPropertyBag);
   do_check_eq(update.state, STATE_FAILED);
   do_check_eq(update.name, "Existing");
   do_check_eq(update.type, "major");

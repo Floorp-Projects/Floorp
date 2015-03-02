@@ -19,8 +19,8 @@ function run_test() {
   callbackApp.permissions = PERMS_DIRECTORY;
   let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
-  let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                           createInstance(AUS_Ci.nsIProcess);
+  let callbackAppProcess = Cc["@mozilla.org/process/util;1"].
+                           createInstance(Ci.nsIProcess);
   callbackAppProcess.init(callbackApp);
   callbackAppProcess.run(false, args, args.length);
 

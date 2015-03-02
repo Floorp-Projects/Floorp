@@ -7,7 +7,7 @@
  * apply it.
  */
 
-Components.utils.import("resource://gre/modules/ctypes.jsm");
+Cu.import("resource://gre/modules/ctypes.jsm");
 
 function run_test() {
   if (MOZ_APP_NAME == "xulrunner") {

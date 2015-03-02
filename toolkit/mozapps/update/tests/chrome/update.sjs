@@ -4,32 +4,51 @@
 
 /**
  * Server side http server script for application update tests.
- *
- * !IMPORTANT - Since xpcshell used by the http server is launched with -v 170
- * this file must not use features greater than JavaScript 1.7.
  */
 
-const AUS_Cc = Components.classes;
-const AUS_Ci = Components.interfaces;
+const { classes: Cc, interfaces: Ci } = Components;
 
-#include ../sharedUpdateXML.js
+const REL_PATH_DATA = "chrome/toolkit/mozapps/update/tests/data/";
+
+function getTestDataFile(aFilename) {
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+            getService(Ci.nsIProperties).get("CurWorkD", Ci.nsILocalFile);
+  let pathParts = REL_PATH_DATA.split("/");
+  for (let i = 0; i < pathParts.length; ++i) {
+    file.append(pathParts[i]);
+  }
+  if (aFilename) {
+    file.append(aFilename);
+  }
+  return file;
+}
+
+function loadHelperScript() {
+  let scriptFile = getTestDataFile("sharedUpdateXML.js");
+  let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService2);
+  let scriptSpec = io.newFileURI(scriptFile).spec;
+  let scriptloader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                     getService(Ci.mozIJSSubScriptLoader);
+  scriptloader.loadSubScript(scriptSpec, this);
+}
+loadHelperScript();
 
 const URL_HOST = "http://example.com";
 const URL_PATH_UPDATE_XML = "/chrome/toolkit/mozapps/update/tests/chrome/update.sjs";
 const URL_HTTP_UPDATE_SJS = URL_HOST + URL_PATH_UPDATE_XML;
-const REL_PATH_DATA = "chrome/toolkit/mozapps/update/tests/data/";
 const SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + FILE_SIMPLE_MAR;
 
 const SLOW_MAR_DOWNLOAD_INTERVAL = 100;
 var gTimer;
 
 function handleRequest(aRequest, aResponse) {
-  var params = { };
-  if (aRequest.queryString)
+  let params = { };
+  if (aRequest.queryString) {
     params = parseQueryString(aRequest.queryString);
+  }
 
-  var statusCode = params.statusCode ? parseInt(params.statusCode) : 200;
-  var statusReason = params.statusReason ? params.statusReason : "OK";
+  let statusCode = params.statusCode ? parseInt(params.statusCode) : 200;
+  let statusReason = params.statusReason ? params.statusReason : "OK";
   aResponse.setStatusLine(aRequest.httpVersion, statusCode, statusReason);
   aResponse.setHeader("Cache-Control", "no-cache", false);
   
@@ -44,42 +63,25 @@ function handleRequest(aRequest, aResponse) {
   // mar will be downloaded asynchronously which will allow the ui to load
   // before the download completes.
   if (params.slowDownloadMar) {
-    var i;
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "binary/octet-stream");
     aResponse.setHeader("Content-Length", SIZE_SIMPLE_MAR);
-    var continueFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
-                       getService(AUS_Ci.nsIProperties).
-                       get("CurWorkD", AUS_Ci.nsILocalFile);
-    var continuePath = REL_PATH_DATA + "continue";
-    var continuePathParts = continuePath.split("/");
-    for (i = 0; i < continuePathParts.length; ++i) {
-      continueFile.append(continuePathParts[i]);
-    }
-
-    var marFile = AUS_Cc["@mozilla.org/file/directory_service;1"].
-                  getService(AUS_Ci.nsIProperties).
-                  get("CurWorkD", AUS_Ci.nsILocalFile);
-    var path = REL_PATH_DATA + FILE_SIMPLE_MAR;
-    var pathParts = path.split("/");
-    for (i = 0; i < pathParts.length; ++i) {
-      marFile.append(pathParts[i]);
-    }
-    var contents = readFileBytes(marFile);
-    gTimer = AUS_Cc["@mozilla.org/timer;1"].
-             createInstance(AUS_Ci.nsITimer);
+    var continueFile = getTestDataFile("continue");
+    var contents = readFileBytes(getTestDataFile(FILE_SIMPLE_MAR));
+    gTimer = Cc["@mozilla.org/timer;1"].
+             createInstance(Ci.nsITimer);
     gTimer.initWithCallback(function(aTimer) {
       if (continueFile.exists()) {
         gTimer.cancel();
         aResponse.write(contents);
         aResponse.finish();
       }
-    }, SLOW_MAR_DOWNLOAD_INTERVAL, AUS_Ci.nsITimer.TYPE_REPEATING_SLACK);
+    }, SLOW_MAR_DOWNLOAD_INTERVAL, Ci.nsITimer.TYPE_REPEATING_SLACK);
     return;
   }
 
   if (params.uiURL) {
-    var remoteType = "";
+    let remoteType = "";
     if (!params.remoteNoTypeAttr &&
         (params.uiURL == "BILLBOARD" || params.uiURL == "LICENSE")) {
       remoteType = " " + params.uiURL.toLowerCase() + "=\"1\"";
@@ -110,8 +112,8 @@ function handleRequest(aRequest, aResponse) {
     return;
   }
 
-  var hash;
-  var patches = "";
+  let hash;
+  let patches = "";
   if (!params.partialPatchOnly) {
     hash = SHA512_HASH_SIMPLE_MAR + (params.invalidCompleteHash ? "e" : "");
     patches += getRemotePatchString("complete", SERVICE_URL, "SHA512",
@@ -124,31 +126,37 @@ function handleRequest(aRequest, aResponse) {
                                     hash, SIZE_SIMPLE_MAR);
   }
 
-  var type = params.type ? params.type : "major";
-  var name = params.name ? params.name : "App Update Test";
-  var appVersion = params.appVersion ? params.appVersion : "99.9";
-  var displayVersion = params.displayVersion ? params.displayVersion
+  let type = params.type ? params.type : "major";
+  let name = params.name ? params.name : "App Update Test";
+  let appVersion = params.appVersion ? params.appVersion : "99.9";
+  let displayVersion = params.displayVersion ? params.displayVersion
                                              : "version " + appVersion;
-  var platformVersion = params.platformVersion ? params.platformVersion : "99.8";
-  var buildID = params.buildID ? params.buildID : "01234567890123";
+  let platformVersion = params.platformVersion ? params.platformVersion : "99.8";
+  let buildID = params.buildID ? params.buildID : "01234567890123";
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
-//  var detailsURL = params.showDetails ? URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS" : null;
-  var detailsURL = URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS";
-  var billboardURL = params.showBillboard ? URL_HTTP_UPDATE_SJS + "?uiURL=BILLBOARD" : null;
-  if (billboardURL && params.remoteNoTypeAttr)
+//  let detailsURL = params.showDetails ? URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS" : null;
+  let detailsURL = URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS";
+  let billboardURL = params.showBillboard ? URL_HTTP_UPDATE_SJS + "?uiURL=BILLBOARD" : null;
+  if (billboardURL && params.remoteNoTypeAttr) {
     billboardURL += "&amp;remoteNoTypeAttr=1";
-  if (params.billboard404)
+  }
+  if (params.billboard404) {
     billboardURL = URL_HOST + "/missing.html";
-  var licenseURL = params.showLicense ? URL_HTTP_UPDATE_SJS + "?uiURL=LICENSE" : null;
-  if (licenseURL && params.remoteNoTypeAttr)
+  }
+  let licenseURL = params.showLicense ? URL_HTTP_UPDATE_SJS + "?uiURL=LICENSE" : null;
+  if (licenseURL && params.remoteNoTypeAttr) {
     licenseURL += "&amp;remoteNoTypeAttr=1";
-  if (params.license404)
+  }
+  if (params.license404) {
     licenseURL = URL_HOST + "/missing.html";
-  var showPrompt = params.showPrompt ? "true" : null;
-  var showNever = params.showNever ? "true" : null;
-  var promptWaitTime = params.promptWaitTime ? params.promptWaitTime : null;
-  var showSurvey = params.showSurvey ? "true" : null;
+  }
+  let showPrompt = params.showPrompt ? "true" : null;
+  let showNever = params.showNever ? "true" : null;
+  let promptWaitTime = params.promptWaitTime ? params.promptWaitTime : null;
+  let showSurvey = params.showSurvey ? "true" : null;
 
+  let extensionVersion;
+  let version;
   // For testing the deprecated update xml format
   if (params.oldFormat) {
     appVersion = null;
@@ -158,14 +166,15 @@ function handleRequest(aRequest, aResponse) {
     showNever = null;
     showSurvey = null;
     detailsURL = URL_HTTP_UPDATE_SJS + "?uiURL=BILLBOARD";
-    if (params.remoteNoTypeAttr)
+    if (params.remoteNoTypeAttr) {
       detailsURL += "&amp;remoteNoTypeAttr=1";
-    var extensionVersion = params.appVersion ? params.appVersion : "99.9";
-    var version = params.displayVersion ? params.displayVersion
-                                        : "version " + extensionVersion;
+    }
+    extensionVersion = params.appVersion ? params.appVersion : "99.9";
+    version = params.displayVersion ? params.displayVersion
+                                    : "version " + extensionVersion;
   }
 
-  var updates = getRemoteUpdateString(patches, type, "App Update Test",
+  let updates = getRemoteUpdateString(patches, type, "App Update Test",
                                       displayVersion, appVersion,
                                       platformVersion, buildID, detailsURL,
                                       billboardURL, licenseURL, showPrompt,
@@ -185,13 +194,14 @@ function handleRequest(aRequest, aResponse) {
  *         queryString.
  */
 function parseQueryString(aQueryString) {
-  var paramArray = aQueryString.split("&");
-  var regex = /^([^=]+)=(.*)$/;
-  var params = {};
-  for (var i = 0, sz = paramArray.length; i < sz; i++) {
-    var match = regex.exec(paramArray[i]);
-    if (!match)
+  let paramArray = aQueryString.split("&");
+  let regex = /^([^=]+)=(.*)$/;
+  let params = {};
+  for (let i = 0, sz = paramArray.length; i < sz; i++) {
+    let match = regex.exec(paramArray[i]);
+    if (!match) {
       throw "Bad parameter in queryString!  '" + paramArray[i] + "'";
+    }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }
 
@@ -209,10 +219,10 @@ function parseQueryString(aQueryString) {
  *         manifest file.
  */
 function getUpdateRDF(aParams) {
-  var addonVersion;
-  var addonID = aParams.addonID;
-  var addonUpdateType = addonID.split("_")[0];
-  var maxVersion = aParams.platformVersion;
+  let addonVersion;
+  let addonID = aParams.addonID;
+  let addonUpdateType = addonID.split("_")[0];
+  let maxVersion = aParams.platformVersion;
 
   switch (addonUpdateType) {
     case "updatecompatibility":
@@ -265,20 +275,21 @@ function getUpdateRDF(aParams) {
  * @return The contents of the file as a string.
  */
 function readFileBytes(aFile) {
-  var fis = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(AUS_Ci.nsIFileInputStream);
+  let fis = Cc["@mozilla.org/network/file-input-stream;1"].
+            createInstance(Ci.nsIFileInputStream);
   fis.init(aFile, -1, -1, false);
-  var bis = AUS_Cc["@mozilla.org/binaryinputstream;1"].
-            createInstance(AUS_Ci.nsIBinaryInputStream);
+  let bis = Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(Ci.nsIBinaryInputStream);
   bis.setInputStream(fis);
-  var data = [];
-  var count = fis.available();
+  let data = [];
+  let count = fis.available();
   while (count > 0) {
-    var bytes = bis.readByteArray(Math.min(65535, count));
+    let bytes = bis.readByteArray(Math.min(65535, count));
     data.push(String.fromCharCode.apply(null, bytes));
     count -= bytes.length;
-    if (bytes.length == 0)
+    if (bytes.length == 0) {
       throw "Nothing read from input stream!";
+    }
   }
   data.join('');
   fis.close();

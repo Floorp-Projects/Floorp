@@ -60,12 +60,3 @@ add_task(function* test() {
   // Clean up.
   gBrowser.removeTab(tab);
 });
-
-function promiseTabRestoring(tab) {
-  return new Promise(resolve => {
-    tab.addEventListener("SSTabRestoring", function onRestoring() {
-      tab.removeEventListener("SSTabRestoring", onRestoring);
-      resolve();
-    });
-  });
-}
