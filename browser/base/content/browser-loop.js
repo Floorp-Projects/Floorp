@@ -343,5 +343,63 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
 
       this.activeSound.addEventListener("ended", () => this.activeSound = undefined, false);
     },
+
+    /**
+     * Adds a listener for browser sharing. It will inform the listener straight
+     * away for the current windowId, and then on every tab change.
+     *
+     * Listener parameters:
+     * - {Object}  err       If there is a error this will be defined, null otherwise.
+     * - {Integer} windowId  The new windowId for the browser.
+     *
+     * @param {Function} listener The listener to receive information on when the
+     *                            windowId changes.
+     */
+    addBrowserSharingListener: function(listener) {
+      if (!this._tabChangeListeners) {
+        this._tabChangeListeners = new Set();
+        gBrowser.addEventListener("select", this);
+      }
+
+      this._tabChangeListeners.add(listener);
+
+      // Get the first window Id for the listener.
+      listener(null, gBrowser.selectedTab.linkedBrowser.outerWindowID);
+    },
+
+    /**
+     * Removes a listener from browser sharing.
+     *
+     * @param {Function} listener The listener to remove from the list.
+     */
+    removeBrowserSharingListener: function(listener) {
+      if (!this._tabChangeListeners) {
+        return;
+      }
+
+      if (this._tabChangeListeners.has(listener)) {
+        this._tabChangeListeners.delete(listener);
+      }
+
+      if (!this._tabChangeListeners.size) {
+        gBrowser.removeEventListener("select", this);
+        delete this._tabChangeListeners;
+      }
+    },
+
+    /**
+     * Handles events from gBrowser.
+     */
+    handleEvent: function(event) {
+      // We only should get "select" events.
+      if (event.type != "select") {
+        return;
+      }
+
+      // We've changed the tab, so get the new window id.
+      for (let listener of this._tabChangeListeners) {
+        listener(null, gBrowser.selectedTab.linkedBrowser.outerWindowID);
+      };
+    },
   };
 })();
