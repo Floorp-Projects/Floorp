@@ -44,12 +44,6 @@ struct PsshInfo
 class CryptoFile
 {
 public:
-  CryptoFile() {}
-  CryptoFile(const CryptoFile& aCryptoFile) : valid(aCryptoFile.valid)
-  {
-    pssh.AppendElements(aCryptoFile.pssh);
-  }
-
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData)
   {
     valid = DoUpdate(aMetaData);
