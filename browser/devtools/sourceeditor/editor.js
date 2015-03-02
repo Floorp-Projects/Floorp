@@ -155,7 +155,7 @@ function Editor(config) {
     extraKeys:         {},
     indentWithTabs:    useTabs,
     styleActiveLine:   true,
-    autoCloseBrackets: "()[]{}''\"\"",
+    autoCloseBrackets: "()[]{}''\"\"``",
     autoCloseEnabled:  useAutoClose,
     theme:             "mozilla",
     themeSwitching:    true,
