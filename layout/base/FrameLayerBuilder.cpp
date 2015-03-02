@@ -926,7 +926,7 @@ protected:
   /**
    * The uniform opaque color from behind this container layer, or
    * NS_RGBA(0,0,0,0) if the background behind this container layer is not
-   * uniform and opaque. This color can be pulled into ThebesLayers that are
+   * uniform and opaque. This color can be pulled into PaintedLayers that are
    * directly above the background.
    */
   nscolor                          mContainerUniformBackgroundColor;
