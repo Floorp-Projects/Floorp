@@ -30,44 +30,6 @@ add_test(function test_parseMMI_undefined() {
   run_next_test();
 });
 
-add_test(function test_parseMMI_one_digit_short_code() {
-  let mmi = parseMMI("1");
-
-  equal(mmi.fullMMI, "1");
-  equal(mmi.procedure, undefined);
-  equal(mmi.serviceCode, undefined);
-  equal(mmi.sia, undefined);
-  equal(mmi.sib, undefined);
-  equal(mmi.sic, undefined);
-  equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, undefined);
-
-  run_next_test();
-});
-
-add_test(function test_parseMMI_invalid_short_code() {
-  let mmi = parseMMI("11");
-
-  equal(mmi, null);
-
-  run_next_test();
-});
-
-add_test(function test_parseMMI_short_code() {
-  let mmi = parseMMI("21");
-
-  equal(mmi.fullMMI, "21");
-  equal(mmi.procedure, undefined);
-  equal(mmi.serviceCode, undefined);
-  equal(mmi.sia, undefined);
-  equal(mmi.sib, undefined);
-  equal(mmi.sic, undefined);
-  equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, undefined);
-
-  run_next_test();
-});
-
 add_test(function test_parseMMI_dial_string() {
   let mmi = parseMMI("12345");
 
@@ -79,14 +41,7 @@ add_test(function test_parseMMI_dial_string() {
 add_test(function test_parseMMI_USSD_without_asterisk_prefix() {
   let mmi = parseMMI("123#");
 
-  equal(mmi.fullMMI, "123#");
-  equal(mmi.procedure, undefined);
-  equal(mmi.serviceCode, undefined);
-  equal(mmi.sia, undefined);
-  equal(mmi.sib, undefined);
-  equal(mmi.sic, undefined);
-  equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, undefined);
+  equal(mmi, null);
 
   run_next_test();
 });
@@ -109,14 +64,7 @@ add_test(function test_parseMMI_USSD() {
 add_test(function test_parseMMI_USSD_with_two_sharps() {
   let mmi = parseMMI("*225#4384903113430962#");
 
-  equal(mmi.fullMMI, "*225#4384903113430962#");
-  equal(mmi.procedure, undefined);
-  equal(mmi.serviceCode, undefined);
-  equal(mmi.sia, undefined);
-  equal(mmi.sib, undefined);
-  equal(mmi.sic, undefined);
-  equal(mmi.pwd, undefined);
-  equal(mmi.dialNumber, undefined);
+  equal(mmi, null);
 
   run_next_test();
 });

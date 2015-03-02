@@ -27,8 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=902847
       var range = document.createRange();
       range.selectNodeContents(element);
       encoder.setRange(range);
-      return encoder.encodeToString().replace('\n', '\\n', 'g')
-                                     .replace('\r', '\\r', 'g');
+      return encoder.encodeToString().replace(/\n/g, '\\n')
+                                     .replace(/\r/g, '\\r');
     }
 
     // Test cases.

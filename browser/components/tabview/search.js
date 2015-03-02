@@ -100,7 +100,7 @@ TabMatcher.prototype = {
     tabs = tabs.filter(function TabMatcher__filterAndSortForMatches_filter(tab) {
       let name = TabUtils.nameOf(tab);
       let url = TabUtils.URLOf(tab);
-      return name.match(self.term, "i") || url.match(self.term, "i");
+      return name.match(new RegExp(self.term, "i")) || url.match(new RegExp(self.term, "i"));
     });
 
     tabs.sort(function TabMatcher__filterAndSortForMatches_sort(x, y) {
@@ -121,7 +121,7 @@ TabMatcher.prototype = {
     return tabs.filter(function TabMatcher__filterForUnmatches_filter(tab) {
       let name = tab.$tabTitle[0].textContent;
       let url = TabUtils.URLOf(tab);
-      return !name.match(self.term, "i") && !url.match(self.term, "i");
+      return !name.match(new RegExp(self.term, "i")) && !url.match(new RegExp(self.term, "i"));
     });
   },
 

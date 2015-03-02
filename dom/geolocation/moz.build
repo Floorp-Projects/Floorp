@@ -15,6 +15,7 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'MLSFallback.cpp',
     'nsGeoGridFuzzer.cpp',
     'nsGeolocationSettings.cpp',
     'nsGeoPosition.cpp',

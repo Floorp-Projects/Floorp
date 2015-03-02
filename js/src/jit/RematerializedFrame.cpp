@@ -6,6 +6,8 @@
 
 #include "jit/RematerializedFrame.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include "jit/JitFrames.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
@@ -168,8 +170,8 @@ RematerializedFrame::dump()
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %u offset %zu\n",
-            script()->filename(), (unsigned) script()->lineno(),
+    fprintf(stderr, "  file %s line %" PRIuSIZE " offset %" PRIuSIZE "\n",
+            script()->filename(), script()->lineno(),
             script()->pcToOffset(pc()));
 
     fprintf(stderr, "  script = %p\n", (void*) script());

@@ -3969,6 +3969,7 @@ LIRGenerator::visitSimdShuffle(MSimdShuffle *ins)
 void
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
 {
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
 
     // Cannot be at start, as the ouput is used as a temporary to store values.
@@ -3988,15 +3989,17 @@ LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
 void
 LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
 {
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
     MOZ_ASSERT(ins->type() == MIRType_Int32x4);
 
     if (ShouldReorderCommutative(ins->lhs(), ins->rhs(), ins))
         ins->reverse();
 
-    if (ins->compareType() == MSimdBinaryComp::CompareInt32x4) {
+    if (ins->specialization() == MIRType_Int32x4) {
         LSimdBinaryCompIx4 *add = new(alloc()) LSimdBinaryCompIx4();
         lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
-    } else if (ins->compareType() == MSimdBinaryComp::CompareFloat32x4) {
+    } else if (ins->specialization() == MIRType_Float32x4) {
         LSimdBinaryCompFx4 *add = new(alloc()) LSimdBinaryCompFx4();
         lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
     } else {
@@ -4007,6 +4010,8 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
 void
 LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise *ins)
 {
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
 
     MDefinition *lhs = ins->lhs();

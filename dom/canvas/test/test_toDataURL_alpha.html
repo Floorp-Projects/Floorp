@@ -159,7 +159,7 @@ function do_canvas(row, col, type, options)
 
     var color = document.getElementById('c' + row).textContent;
     color = color.substr(5, color.length - 6); // strip off the 'argb()'
-    var colors = color.replace(' ', '', 'g').split(',');
+    var colors = color.replace(/ /g, '').split(',');
     var r = colors[0]*colors[3],
         g = colors[1]*colors[3],
         b = colors[2]*colors[3];

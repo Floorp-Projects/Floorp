@@ -134,6 +134,7 @@ using namespace mozilla::system;
 #include "nsDocument.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "CameraPreferences.h"
+#include "TouchManager.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -267,6 +268,7 @@ nsLayoutStatics::Initialize()
   mozilla::dom::FallbackEncoding::Initialize();
   nsLayoutUtils::Initialize();
   nsIPresShell::InitializeStatics();
+  TouchManager::InitializeStatics();
   nsRefreshDriver::InitializeStatics();
 
   nsCORSListenerProxy::Startup();
@@ -402,6 +404,8 @@ nsLayoutStatics::Shutdown()
   nsCORSListenerProxy::Shutdown();
 
   nsIPresShell::ReleaseStatics();
+
+  TouchManager::ReleaseStatics();
 
   nsTreeSanitizer::ReleaseStatics();
 

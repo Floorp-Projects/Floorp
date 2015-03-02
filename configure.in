@@ -7217,6 +7217,9 @@ if test -z "$MOZ_MEMORY"; then
   esac
 else
   AC_DEFINE(MOZ_MEMORY)
+  if test -n "$NIGHTLY_BUILD"; then
+    MOZ_JEMALLOC3=1
+  fi
   if test -n "$MOZ_JEMALLOC3"; then
     AC_DEFINE(MOZ_JEMALLOC3)
   fi
@@ -7653,6 +7656,18 @@ MOZ_ARG_WITH_STRING(jitreport-granularity,
   JITREPORT_GRANULARITY=3)
 
 AC_DEFINE_UNQUOTED(JS_DEFAULT_JITREPORT_GRANULARITY, $JITREPORT_GRANULARITY)
+
+dnl ========================================================
+dnl = Disable Mozilla's versions of RIL and Geolocation
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(mozril-geoloc,
+[  --disable-mozril-geoloc         Disable Mozilla's RIL and geolocation],
+    DISABLE_MOZ_RIL_GEOLOC=1,
+    DISABLE_MOZ_RIL_GEOLOC= )
+if test -n "$DISABLE_MOZ_RIL_GEOLOC"; then
+   AC_DEFINE(DISABLE_MOZ_RIL_GEOLOC)
+fi
+AC_SUBST(DISABLE_MOZ_RIL_GEOLOC)
 
 dnl ========================================================
 dnl =

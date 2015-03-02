@@ -49,6 +49,9 @@ class OptimizationInfo
     // Toggles whether Effective Address Analysis is performed.
     bool eaa_;
 
+    // Toggles whether Alignment Mask Analysis is performed.
+    bool ama_;
+
     // Toggles whether Edge Case Analysis is used.
     bool edgeCaseAnalysis_;
 
@@ -165,6 +168,10 @@ class OptimizationInfo
 
     bool eaaEnabled() const {
         return eaa_ && !js_JitOptions.disableEaa;
+    }
+
+    bool amaEnabled() const {
+        return ama_ && !js_JitOptions.disableAma;
     }
 
     bool edgeCaseAnalysisEnabled() const {
