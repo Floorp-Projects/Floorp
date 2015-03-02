@@ -36,6 +36,10 @@
                     android:entryValues="@array/pref_cookies_values"
                     android:persistent="false" />
 
+    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.signon.manage"
+                                                  android:title="@string/pref_manage_logins"
+                                                  url="about:passwords"/>
+
     <CheckBoxPreference android:key="signon.rememberSignons"
                         android:title="@string/pref_remember_signons"
                         android:persistent="false" />
