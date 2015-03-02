@@ -262,9 +262,9 @@ class ShapeTable {
 };
 
 /*
- * Reuse the API-only JSPROP_INDEX attribute to mean shadowability.
+ * Use the reserved attribute bit to mean shadowability.
  */
-#define JSPROP_SHADOWABLE       JSPROP_INDEX
+#define JSPROP_SHADOWABLE       JSPROP_INTERNAL_USE_BIT
 
 /*
  * Shapes encode information about both a property lineage *and* a particular
