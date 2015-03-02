@@ -244,13 +244,13 @@
       </hbox>
     </groupbox>
 
-    <!-- Character Encoding -->
+    <!-- Text Encoding -->
     <groupbox>
-      <caption label="&languages.customize.Fallback.grouplabel;"/>
-      <description>&languages.customize.Fallback.desc;</description>
+      <caption label="&languages.customize.Fallback2.grouplabel;"/>
+      <description>&languages.customize.Fallback2.desc;</description>
       <hbox align="center">
-        <label value="&languages.customize.Fallback.label;"
-               accesskey="&languages.customize.Fallback.accesskey;"
+        <label value="&languages.customize.Fallback2.label;"
+               accesskey="&languages.customize.Fallback2.accesskey;"
                control="DefaultCharsetList"/>
         <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
           <menupopup>

@@ -182,18 +182,17 @@ function commonInit(selfFilling) {
         form.appendChild(password);
 
         var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-            var bag = subject.QueryInterface(SpecialPowers.Ci.nsIPropertyBag2);
-            var username = bag.get("usernameField");
-            if (!username || username.form.id !== 'observerforcer')
+            var form = subject.QueryInterface(SpecialPowers.Ci.nsIDOMNode);
+            if (form.id !== 'observerforcer')
                 return;
-            SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
+            SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
             form.parentNode.removeChild(form);
             SimpleTest.executeSoon(() => {
                 var event = new Event("runTests");
                 window.dispatchEvent(event);
             });
         });
-        SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
+        SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
 
         document.body.appendChild(form);
     });

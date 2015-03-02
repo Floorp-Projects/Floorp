@@ -68,7 +68,7 @@ function runTest() {
   ok(!file.exists(), file.path + " should not exist");
 
   let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
-                                         AUS_Ci.nsILocalFile);
+                                         Ci.nsILocalFile);
   addonPrepDir.append(ADDON_PREP_DIR);
   // Not being able to remove the directory used to create the test add-ons
   // will not adversely affect subsequent tests so wrap it in a try block and

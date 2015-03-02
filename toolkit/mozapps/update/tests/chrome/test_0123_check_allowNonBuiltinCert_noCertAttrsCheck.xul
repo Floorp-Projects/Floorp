@@ -26,7 +26,7 @@ const TESTS = [ {
   buttonClick: "extra1"
 } ];
 
-Components.utils.import("resource://gre/modules/CertUtils.jsm");
+Cu.import("resource://gre/modules/CertUtils.jsm");
 
 function runTest() {
   debugDump("entering");

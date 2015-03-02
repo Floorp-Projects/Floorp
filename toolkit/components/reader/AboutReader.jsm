@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 
+const READINGLIST_COMMAND_ID = "readingListSidebar";
+
 function dump(s) {
   Services.console.logStringMessage("AboutReader: " + s);
 }
@@ -27,6 +29,8 @@ let AboutReader = function(mm, win) {
   this._mm = mm;
   this._mm.addMessageListener("Reader:Added", this);
   this._mm.addMessageListener("Reader:Removed", this);
+  this._mm.addMessageListener("Sidebar:VisibilityChange", this);
+  this._mm.addMessageListener("ReadingList:VisibilityStatus", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -94,6 +98,9 @@ let AboutReader = function(mm, win) {
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
   this._updateToggleButton();
+
+  // Setup initial ReadingList button styles.
+  this._updateListButton();
 
   this._loadArticle();
 }
@@ -168,6 +175,20 @@ AboutReader.prototype = {
         }
         break;
       }
+
+      // Notifys us of Sidebar updates, user clicks X to close,
+      // checks View -> Sidebar -> (Bookmarks, Histroy, Readinglist, etc).
+      case "Sidebar:VisibilityChange": {
+        let data = message.data;
+        this._updateListButtonStyle(data.isOpen && data.commandID === READINGLIST_COMMAND_ID);
+        break;
+      }
+
+      // Returns requested status of current ReadingList Sidebar.
+      case "ReadingList:VisibilityStatus": {
+        this._updateListButtonStyle(message.data.isOpen);
+        break;
+      }
     }
   },
 
@@ -200,6 +221,8 @@ AboutReader.prototype = {
       case "unload":
         this._mm.removeMessageListener("Reader:Added", this);
         this._mm.removeMessageListener("Reader:Removed", this);
+        this._mm.removeMessageListener("Sidebar:VisibilityChange", this);
+        this._mm.removeMessageListener("ReadingList:VisibilityStatus", this);
         break;
     }
   },
@@ -267,8 +290,40 @@ AboutReader.prototype = {
     UITelemetry.addEvent("share.1", "list", null);
   },
 
+  /**
+   * Toggle ReadingList Sidebar visibility. SidebarUI will trigger
+   * _updateListButtonStyle().
+   */
   _onList: function() {
-    // To be implemented (bug 1132665)
+    this._mm.sendAsyncMessage("ReadingList:ToggleVisibility");
+  },
+
+  /**
+   * Request ReadingList Sidebar-button visibility status update.
+   * Only desktop currently responds to this message.
+   */
+  _updateListButton: function() {
+    this._mm.sendAsyncMessage("ReadingList:GetVisibility");
+  },
+
+  /**
+   * Update ReadingList toggle button styles.
+   * @param   isVisible
+   *          What Sidebar ReadingList visibility style the List
+   *          toggle-button should be set to reflect, and what
+   *          button-action the tip will provide.
+   */
+  _updateListButtonStyle: function(isVisible) {
+    let classes = this._doc.getElementById("list-button").classList;
+    if (isVisible) {
+      classes.add("on");
+      // When on, action tip is "close".
+      this._setButtonTip("list-button", "aboutReader.toolbar.closeReadingList");
+    } else {
+      classes.remove("on");
+      // When off, action tip is "open".
+      this._setButtonTip("list-button", "aboutReader.toolbar.openReadingList");
+    }
   },
 
   _setFontSize: function Reader_setFontSize(newFontSize) {
@@ -370,6 +425,11 @@ AboutReader.prototype = {
   },
 
   _handleVisibilityChange: function Reader_handleVisibilityChange() {
+    // ReadingList / Sidebar state might change while we're not the selected tab.
+    if (this._doc.visibilityState === "visible") {
+      this._updateListButton();
+    }
+
     let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
     if (colorScheme != "auto") {
       return;
@@ -733,10 +793,10 @@ AboutReader.prototype = {
     }
   },
 
-  _setupButton: function Reader_setupButton(id, callback, titleEntity) {
-    let button = this._doc.getElementById(id);
-    button.setAttribute("title", gStrings.GetStringFromName(titleEntity));
+  _setupButton: function(id, callback, titleEntity) {
+    this._setButtonTip(id, titleEntity);
 
+    let button = this._doc.getElementById(id);
     button.addEventListener("click", function(aEvent) {
       if (!aEvent.isTrusted)
         return;
@@ -744,6 +804,16 @@ AboutReader.prototype = {
       aEvent.stopPropagation();
       callback();
     }, true);
+  },
+
+  /**
+   * Sets a toolTip for a button. Performed at initial button setup
+   * and dynamically as button state changes.
+   * @param   Localizable string providing UI element usage tip.
+   */
+  _setButtonTip: function(id, titleEntity) {
+    let button = this._doc.getElementById(id);
+    button.setAttribute("title", gStrings.GetStringFromName(titleEntity));
   },
 
   _setupStyleDropdown: function Reader_setupStyleDropdown() {

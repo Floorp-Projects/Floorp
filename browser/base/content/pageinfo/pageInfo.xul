@@ -115,7 +115,7 @@
             <textbox readonly="true" crop="end" id="modetext"/>
           </row>
           <row id="generalEncodingRow">
-            <label control="encodingtext" value="&generalEncoding;"/>
+            <label control="encodingtext" value="&generalEncoding2;"/>
             <separator/>
             <textbox readonly="true" id="encodingtext"/>
           </row>

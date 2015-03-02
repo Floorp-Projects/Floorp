@@ -56,6 +56,8 @@ function test() {
         SIMPLE_SJS, "The url summary tooltiptext is incorrect.");
       is(tabpanel.querySelector("#headers-summary-method-value").getAttribute("value"),
         "GET", "The method summary value is incorrect.");
+      is(tabpanel.querySelector("#headers-summary-address-value").getAttribute("value"),
+        "127.0.0.1:8888", "The remote address summary value is incorrect.");
       is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("code"),
         "200", "The status summary code is incorrect.");
       is(tabpanel.querySelector("#headers-summary-status-value").getAttribute("value"),
