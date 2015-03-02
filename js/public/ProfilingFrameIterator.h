@@ -117,6 +117,9 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     bool isJit() const;
 };
 
+JS_FRIEND_API(bool)
+IsProfilingEnabledForRuntime(JSRuntime *runtime);
+
 } // namespace JS
 
 #endif  /* js_ProfilingFrameIterator_h */

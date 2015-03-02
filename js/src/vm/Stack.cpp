@@ -1716,17 +1716,20 @@ ActivationIterator::settle()
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state)
   : rt_(rt),
-    activation_(rt->profilingActivation()),
+    activation_(nullptr),
     savedPrevJitTop_(nullptr)
 {
-    if (!activation_)
+    if (!rt->spsProfiler.enabled())
+        MOZ_CRASH("ProfilingFrameIterator called when spsProfiler not enabled for runtime.");
+
+    if (!rt->profilingActivation())
         return;
 
     // If profiler sampling is not enabled, skip.
-    if (!rt_->isProfilerSamplingEnabled()) {
-        activation_ = nullptr;
+    if (!rt_->isProfilerSamplingEnabled())
         return;
-    }
+
+    activation_ = rt->profilingActivation();
 
     MOZ_ASSERT(activation_->isProfiling());
 
