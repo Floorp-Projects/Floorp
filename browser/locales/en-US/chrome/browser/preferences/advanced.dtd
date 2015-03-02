@@ -113,6 +113,7 @@
 <!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY certificateTab.label            "Certificates">
+<!ENTITY certSelection.label             "Requests">
 <!ENTITY certSelection.description       "When a server requests my personal certificate:">
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "S">
