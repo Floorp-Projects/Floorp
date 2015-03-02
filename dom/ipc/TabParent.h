@@ -251,17 +251,17 @@ public:
     void UIResolutionChanged();
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);
     void HandleDoubleTap(const CSSPoint& aPoint,
-                         int32_t aModifiers,
+                         Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid);
     void HandleSingleTap(const CSSPoint& aPoint,
-                         int32_t aModifiers,
+                         Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid);
     void HandleLongTap(const CSSPoint& aPoint,
-                       int32_t aModifiers,
+                       Modifiers aModifiers,
                        const ScrollableLayerGuid& aGuid,
                        uint64_t aInputBlockId);
     void HandleLongTapUp(const CSSPoint& aPoint,
-                         int32_t aModifiers,
+                         Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid);
     void NotifyAPZStateChange(ViewID aViewId,
                               APZStateChange aChange,
