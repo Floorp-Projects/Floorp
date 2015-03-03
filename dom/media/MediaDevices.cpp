@@ -9,6 +9,7 @@
 #include "mozilla/MediaManager.h"
 #include "nsIEventTarget.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIPermissionManager.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
@@ -39,10 +40,43 @@ private:
 
 class MediaDevices::EnumDevResolver : public nsIGetUserMediaDevicesSuccessCallback
 {
+  static bool HasAPersistentPermission(uint64_t aWindowId)
+  {
+    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+        (nsGlobalWindow::GetInnerWindowWithId(aWindowId));
+    if (NS_WARN_IF(!window)) {
+      return false;
+    }
+    // Check if this site has persistent permissions.
+    nsresult rv;
+    nsCOMPtr<nsIPermissionManager> mgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false; // no permission manager no permissions!
+    }
+
+    uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
+    uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
+    {
+      auto* principal = window->GetExtantDoc()->NodePrincipal();
+      rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+      rv = mgr->TestExactPermissionFromPrincipal(principal, "camera", &video);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+    }
+    return audio == nsIPermissionManager::ALLOW_ACTION ||
+           video == nsIPermissionManager::ALLOW_ACTION;
+  }
+
 public:
   NS_DECL_ISUPPORTS
 
-  explicit EnumDevResolver(Promise* aPromise) : mPromise(aPromise) {}
+  EnumDevResolver(Promise* aPromise, uint64_t aWindowId)
+  : mPromise(aPromise), mWindowId(aWindowId) {}
 
   NS_IMETHOD
   OnSuccess(nsIVariant* aDevices) override
@@ -83,9 +117,19 @@ public:
       if (isVideo || isAudio) {
         MediaDeviceKind kind = isVideo ?
             MediaDeviceKind::Videoinput : MediaDeviceKind::Audioinput;
-        // TODO: return anonymized id, +label (origins w/gUM permission) (1046245)
+        nsString id;
+        nsString name;
+        device->GetId(id);
+        // Include name only if page currently has a gUM stream active or
+        // persistent permissions (audio or video) have been granted
+        if (MediaManager::Get()->IsWindowActivelyCapturing(mWindowId) ||
+            HasAPersistentPermission(mWindowId) ||
+            Preferences::GetBool("media.navigator.permission.disabled", false)) {
+          device->GetName(name);
+        }
+        // TODO: return anonymized origin-persistent id (1046245)
         nsRefPtr<MediaDeviceInfo> info = new MediaDeviceInfo(nsString(), kind,
-                                                             nsString());
+                                                             name);
         infos.AppendElement(info);
       }
     }
@@ -96,6 +140,7 @@ public:
 private:
   virtual ~EnumDevResolver() {}
   nsRefPtr<Promise> mPromise;
+  uint64_t mWindowId;
 };
 
 class MediaDevices::GumRejecter : public nsIDOMGetUserMediaErrorCallback
@@ -150,7 +195,7 @@ MediaDevices::EnumerateDevices(ErrorResult &aRv)
   nsRefPtr<Promise> p = Promise::Create(go, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  nsRefPtr<EnumDevResolver> resolver = new EnumDevResolver(p);
+  nsRefPtr<EnumDevResolver> resolver = new EnumDevResolver(p, window->WindowID());
   nsRefPtr<GumRejecter> rejecter = new GumRejecter(p);
 
   aRv = MediaManager::Get()->EnumerateDevices(window, resolver, rejecter);
