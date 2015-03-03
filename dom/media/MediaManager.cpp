@@ -26,6 +26,9 @@
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "nsPrincipal.h"
+#include "nsICryptoHash.h"
+#include "nsICryptoHMAC.h"
+#include "nsIKeyModule.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
@@ -37,8 +40,10 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Base64.h"
+#include "mozilla/media/MediaChild.h"
 #include "MediaTrackConstraints.h"
-
+#include "VideoUtils.h"
 #include "Latency.h"
 
 // For PR_snprintf
@@ -326,6 +331,50 @@ public:
     mOnFailure.swap(aOnFailure);
   }
 
+  nsresult
+  AnonymizeId(nsAString& aId, const nsACString& aOriginKey)
+  {
+    nsresult rv;
+    nsCOMPtr<nsIKeyObjectFactory> factory =
+      do_GetService("@mozilla.org/security/keyobjectfactory;1", &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCString rawKey;
+    rv = Base64Decode(aOriginKey, rawKey);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCOMPtr<nsIKeyObject> key;
+    rv = factory->KeyFromString(nsIKeyObject::HMAC, rawKey, getter_AddRefs(key));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsICryptoHMAC> hasher =
+      do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = hasher->Init(nsICryptoHMAC::SHA256, key);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    NS_ConvertUTF16toUTF8 id(aId);
+    rv = hasher->Update(reinterpret_cast<const uint8_t*> (id.get()), id.Length());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCString mac;
+    rv = hasher->Finish(true, mac);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    aId = NS_ConvertUTF8toUTF16(mac);
+    return NS_OK;
+  }
+
   NS_IMETHOD
   Run()
   {
@@ -339,7 +388,7 @@ public:
     nsCOMPtr<nsIWritableVariant> devices =
       do_CreateInstance("@mozilla.org/variant;1");
 
-    int32_t len = mDevices->Length();
+    size_t len = mDevices->Length();
     if (len == 0) {
       // XXX
       // We should in the future return an empty array, and dynamically add
@@ -355,8 +404,14 @@ public:
     }
 
     nsTArray<nsIMediaDevice*> tmp(len);
-    for (int32_t i = 0; i < len; i++) {
-      tmp.AppendElement(mDevices->ElementAt(i));
+    for (auto& device : *mDevices) {
+      if (!mOriginKey.IsEmpty()) {
+        nsString id;
+        device->GetId(id);
+        AnonymizeId(id, mOriginKey);
+        device->SetId(id);
+      }
+      tmp.AppendElement(device);
     }
 
     devices->SetAsArray(nsIDataType::VTYPE_INTERFACE,
@@ -370,6 +425,7 @@ public:
     return NS_OK;
   }
 
+  nsCString mOriginKey;
 private:
   nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mOnSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
@@ -1158,7 +1214,7 @@ public:
   void
   Run()
   {
-    NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mOnSuccess);
     MOZ_ASSERT(mOnFailure);
 
@@ -1362,13 +1418,22 @@ private:
 };
 #endif
 
-// A file in the profile dir is used to persist mOriginUuids used to anonymize
-// deviceIds to be unique per origin, to avoid them being supercookies.
+class SanitizeDeviceIdsTask : public Task
+{
+public:
+  explicit SanitizeDeviceIdsTask(int64_t aSinceWhen)
+  : mSinceWhen(aSinceWhen) {}
 
-#define ORIGINUUIDS_FILE "enumerate_devices.txt"
-#define ORIGINUUIDS_VERSION "1"
-
-#define HMAC_LENGTH 20
+  void // NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    nsRefPtr<media::ChildPledge<bool>> p =
+        mozilla::media::SanitizeOriginKeys(mSinceWhen); // we fire and forget
+  }
+private:
+  int64_t mSinceWhen;
+};
 
 /**
  * Similar to GetUserMediaTask, but used for the chrome-only
@@ -1380,291 +1445,6 @@ private:
  */
 class GetUserMediaDevicesTask : public Task
 {
-  class OriginUuidsLoader
-  {
-    static unsigned char*
-    unconst_uchar_cast(const char *s) {
-      return reinterpret_cast<unsigned char*>(const_cast<char*>(s));
-    }
-
-    // Cribbed from nricectx.cpp
-    static nsresult
-    hmac_sha1(const char *key, int keyl, const char *buf, int bufl,
-              unsigned char *result)
-    {
-      const CK_MECHANISM_TYPE mech = CKM_SHA_1_HMAC;
-      PK11SlotInfo *slot = 0;
-      MOZ_ASSERT(keyl > 0);
-      SECItem keyi = { siBuffer, unconst_uchar_cast(key),
-                       static_cast<unsigned int>(keyl) };
-      PK11SymKey *skey = 0;
-      PK11Context *hmac_ctx = 0;
-      SECStatus status;
-      unsigned int hmac_len;
-      SECItem param = { siBuffer, nullptr, 0 };
-      nsresult rv = NS_ERROR_UNEXPECTED;
-
-      slot = PK11_GetInternalKeySlot();
-      if (!slot) {
-        goto abort;
-      }
-      skey = PK11_ImportSymKey(slot, mech, PK11_OriginUnwrap, CKA_SIGN, &keyi,
-                               nullptr);
-      if (!skey) {
-        goto abort;
-      }
-
-      hmac_ctx = PK11_CreateContextBySymKey(mech, CKA_SIGN, skey, &param);
-      if (!hmac_ctx) {
-        goto abort;
-      }
-      status = PK11_DigestBegin(hmac_ctx);
-      if (status != SECSuccess) {
-        goto abort;
-      }
-      status = PK11_DigestOp(hmac_ctx, unconst_uchar_cast(buf), bufl);
-      if (status != SECSuccess) {
-        goto abort;
-      }
-      status = PK11_DigestFinal(hmac_ctx, result, &hmac_len, HMAC_LENGTH);
-      if (status != SECSuccess) {
-        goto abort;
-      }
-      MOZ_ASSERT(hmac_len == HMAC_LENGTH);
-      rv = NS_OK;
-
-    abort:
-      if (hmac_ctx) {
-        PK11_DestroyContext(hmac_ctx, PR_TRUE);
-      }
-      if (skey) {
-        PK11_FreeSymKey(skey);
-      }
-      if (slot) {
-        PK11_FreeSlot(slot);
-      }
-      return rv;
-    }
-
-  public:
-    OriginUuidsLoader()
-    : mUnsaved(false), mManager(MediaManager::GetInstance()) {}
-
-    nsresult
-    AnonymizeId(nsAString& aId, const nsACString& origin, bool aInPrivateBrowsing)
-    {
-      // The persistent deviceId would be a supercookie if we returned it. See
-      // http://w3c.github.io/mediacapture-main/getusermedia.html#attributes-8
-      //
-      // 1. Get (or create) a persistent uuid for this origin.
-      // 2. Return hmac_sha1(uuid, id) - an anonymized id unique to origin.
-
-      static bool loaded = false;
-      if (!loaded) {
-        Load();
-        loaded = true;
-      }
-      OriginUuid* originUuid;
-      if (!mManager->mOriginUuids.Get(origin, &originUuid)) {
-        nsresult rv;
-        nsCOMPtr<nsIUUIDGenerator> uuidgen =
-            do_GetService("@mozilla.org/uuid-generator;1", &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsID nsid;
-        rv = uuidgen->GenerateUUIDInPlace(&nsid);
-        NS_ENSURE_SUCCESS(rv, rv);
-        char uuid[NSID_LENGTH];
-        nsid.ToProvidedString(uuid);
-
-        originUuid = new OriginUuid(uuid, aInPrivateBrowsing);
-        mManager->mOriginUuids.Put(origin, originUuid);
-        mUnsaved = true;
-      }
-
-      unsigned char mac[HMAC_LENGTH];
-      NS_ConvertUTF16toUTF8 id(aId);
-      hmac_sha1(originUuid->mUuid.get(), originUuid->mUuid.Length(),
-                id.get(), id.Length(), mac);
-
-      char hex[sizeof(mac) * 2 + 1];
-      auto& m = mac;
-      PR_snprintf(hex, sizeof(hex), // Use first 16 bytes of hmac as id
-                  "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x"
-                  "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
-                  m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7],
-                  m[8], m[9], m[10],m[11], m[12], m[13], m[14], m[15]);
-      aId = NS_ConvertUTF8toUTF16(hex);
-      return NS_OK;
-    }
-
-    already_AddRefed<nsIFile>
-    GetFile()
-    {
-      MOZ_ASSERT(mManager->mProfileDir);
-      nsCOMPtr<nsIFile> file;
-      nsresult rv = mManager->mProfileDir->Clone(getter_AddRefs(file));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-      file->Append(NS_LITERAL_STRING(ORIGINUUIDS_FILE));
-      return file.forget();
-    }
-
-    // Format of file is (first line is version #):
-    //
-    // 1
-    // {54b1d3ad-18ad-0546-a551-80c1bf425057} http://fiddle.jshell.net
-    // {f9c2a045-53b4-0546-bdd0-b96f41850f8a} http://mozilla.github.io
-    // etc.
-
-    nsresult Read()
-    {
-      nsCOMPtr<nsIFile> file = GetFile();
-      if (NS_WARN_IF(!file)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      bool exists;
-      nsresult rv = file->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (!exists) {
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsIInputStream> stream;
-      rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      nsCOMPtr<nsILineInputStream> i = do_QueryInterface(stream);
-      MOZ_ASSERT(i);
-
-      nsCString line;
-      bool hasMoreLines;
-      rv = i->ReadLine(line, &hasMoreLines);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (!line.EqualsLiteral(ORIGINUUIDS_VERSION)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      while (hasMoreLines) {
-        rv = i->ReadLine(line, &hasMoreLines); \
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        int32_t f = line.FindChar(' ');
-        // Ignore any line that has no space, per format in the comment above.
-        if (f >= 0) {
-          const nsACString& uuid = Substring(line, 0, f);
-          const nsACString& origin = Substring(line, f+1);
-          mManager->mOriginUuids.Put(origin, new OriginUuid(uuid, false));
-        }
-      }
-      return NS_OK;
-    }
-
-    static PLDHashOperator
-    HashWriter(const nsACString& aOrigin, OriginUuid* aOriginUuid, void *aUserArg)
-    {
-      auto* stream = static_cast<nsIOutputStream *>(aUserArg);
-
-      if (!aOriginUuid->mPrivateBrowsing) {
-        nsCString buffer;
-        buffer.Append(aOriginUuid->mUuid);
-        buffer.Append(' ');
-        buffer.Append(aOrigin);
-        buffer.Append('\n');
-
-        uint32_t count;
-        nsresult rv = stream->Write(buffer.Data(), buffer.Length(), &count);
-        if (NS_WARN_IF(NS_FAILED(rv)) || count != buffer.Length()) {
-          return PL_DHASH_STOP;
-        }
-      }
-      return PL_DHASH_NEXT;
-    }
-
-    nsresult
-    Write()
-    {
-      nsCOMPtr<nsIFile> file = GetFile();
-      if (NS_WARN_IF(!file)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      nsCOMPtr<nsIOutputStream> stream;
-      nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(stream), file);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      nsAutoCString buffer;
-      buffer.AppendLiteral(ORIGINUUIDS_VERSION);
-      buffer.Append('\n');
-
-      uint32_t count;
-      rv = stream->Write(buffer.Data(), buffer.Length(), &count);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      if (count != buffer.Length()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      mManager->mOriginUuids.EnumerateRead(HashWriter, stream.get());
-
-      nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(stream);
-      MOZ_ASSERT(safeStream);
-
-      rv = safeStream->Finish();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
-    }
-
-    nsresult Load()
-    {
-      nsresult rv = Read();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        Delete();
-      }
-      return rv;
-    }
-
-    nsresult Save()
-    {
-      nsresult rv = Write();
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to write data for EnumerateDevices id-persistence.");
-        Delete();
-      }
-      return rv;
-    }
-
-    nsresult Delete()
-    {
-      nsCOMPtr<nsIFile> file = GetFile();
-      if (NS_WARN_IF(!file)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      nsresult rv = file->Remove(false);
-      if (rv == NS_ERROR_FILE_NOT_FOUND) {
-        return NS_OK;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
-    }
-
-    bool mUnsaved;
-  private:
-    nsRefPtr<MediaManager> mManager;
-  };
-
 public:
   GetUserMediaDevicesTask(
     const MediaStreamConstraints& aConstraints,
@@ -1688,7 +1468,7 @@ public:
   void // NS_IMETHOD
   Run()
   {
-    NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+    MOZ_ASSERT(!NS_IsMainThread());
 
     nsRefPtr<MediaEngine> backend;
     if (mConstraints.mFake || mUseFakeDevices)
@@ -1717,39 +1497,26 @@ public:
         result->AppendElement(source);
       }
     }
-
-    nsresult rv = NS_OK;
-    if (!mPrivileged) {
-      OriginUuidsLoader loader;
-      for (auto& source : *result) {
-        nsString id;
-        source->GetId(id);
-        rv = loader.AnonymizeId(id, mOrigin, mInPrivateBrowsing);
-        if (NS_FAILED(rv)) {
-          break;
-        }
-        source->SetId(id);
-      }
-      if (loader.mUnsaved) {
-        loader.Save();
-      }
-    }
-    if (NS_SUCCEEDED(rv)) {
-      NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
-                                                                mOnSuccess,
-                                                                mOnFailure,
-                                                                result.forget()));
+    nsRefPtr<DeviceSuccessCallbackRunnable> runnable
+        (new DeviceSuccessCallbackRunnable(mWindowId, mOnSuccess, mOnFailure,
+                                           result.forget()));
+    if (mPrivileged) {
+      NS_DispatchToMainThread(runnable);
     } else {
-      nsRefPtr<MediaMgrError> error = new
-          MediaMgrError(NS_LITERAL_STRING("InternalError"),
-                        NS_LITERAL_STRING("Unexpected error"));
-      NS_DispatchToMainThread(
-        new ErrorCallbackRunnable<nsIGetUserMediaDevicesSuccessCallback>(mOnSuccess,
-                                                                         mOnFailure,
-                                                                         *error,
-                                                                         mWindowId));
+      // Get persistent origin-unique uuid to anonymize deviceIds back on main.
+      //
+      // GetOriginKey is an async API that returns a pledge (as promise-like
+      // pattern). We use .Then() to pass in a lambda to run back on this
+      // thread once GetOriginKey resolves asynchronously . The "runnable"
+      // nsRefPtr is "captured" (passed by value) into the lambda.
+      nsRefPtr<media::ChildPledge<nsCString>> p =
+          media::GetOriginKey(mOrigin, mInPrivateBrowsing);
+      p->Then([runnable](nsCString result) mutable {
+        runnable->mOriginKey = result;
+        NS_DispatchToMainThread(runnable);
+      }, [](nsresult rv){});
     }
-    // DeviceSuccessCallbackRunnable should have taken these.
+    // One of the Runnables have taken these.
     MOZ_ASSERT(!mOnSuccess && !mOnFailure);
   }
 
@@ -1795,6 +1562,16 @@ MediaManager::MediaManager()
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
 
 /* static */ StaticRefPtr<MediaManager> MediaManager::sSingleton;
+
+#ifdef DEBUG
+/* static */ bool
+MediaManager::IsInMediaThread()
+{
+  return sSingleton?
+      (sSingleton->mMediaThread->thread_id() == PlatformThread::CurrentId()) :
+      false;
+}
+#endif
 
 // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
 // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
@@ -2222,12 +1999,6 @@ MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
                                nsIDOMGetUserMediaErrorCallback* aOnFailure)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (!mProfileDir) {
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                         getter_AddRefs(mProfileDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   MediaStreamConstraints c;
   c.mVideo.SetAsBoolean() = true;
@@ -2681,6 +2452,17 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
        *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : "",
        *aAppShare ? "appshare" : "", *aBrowserShare ? "browsershare" : ""));
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaManager::SanitizeDeviceIds(int64_t aSinceWhen)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  LOG(("%s: sinceWhen = %llu", __FUNCTION__, aSinceWhen));
+
+  MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
+    new SanitizeDeviceIdsTask(aSinceWhen));
   return NS_OK;
 }
 
