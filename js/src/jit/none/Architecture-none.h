@@ -124,6 +124,8 @@ struct FloatRegister
     void alignedAliased(uint32_t, FloatRegister *) { MOZ_CRASH(); }
     template <typename T> static T ReduceSetForPush(T) { MOZ_CRASH(); }
     uint32_t getRegisterDumpOffsetInBytes() { MOZ_CRASH(); }
+    static uint32_t SetSize(SetType x) { MOZ_CRASH(); }
+    static Code FromName(const char *name) { MOZ_CRASH(); }
 
     // This is used in static initializers, so produce a bogus value instead of crashing.
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &) { return 0; }
@@ -138,6 +140,9 @@ static const uint32_t ShadowStackSpace = 0;
 static const int32_t NUNBOX32_TYPE_OFFSET = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 #endif
+
+static const size_t AsmJSCheckedImmediateRange = 0;
+static const size_t AsmJSImmediateRange = 0;
 
 } // namespace jit
 } // namespace js
