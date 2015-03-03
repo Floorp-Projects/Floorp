@@ -707,8 +707,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       break;
-    if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-        content->Tag() == nsGkAtoms::math)
+    if (content->IsMathMLElement(nsGkAtoms::math))
       break;
 
     frame = parent;
@@ -1250,7 +1249,7 @@ private:
     GetItalicCorrection(mSize.mBoundingMetrics,
                         leftCorrection, rightCorrection);
     if (!mChildFrame->GetPrevSibling() &&
-        mParentFrame->GetContent()->Tag() == nsGkAtoms::msqrt_) {
+        mParentFrame->GetContent()->IsMathMLElement(nsGkAtoms::msqrt_)) {
       // Remove leading correction in <msqrt> because the sqrt glyph itself is
       // there first.
       if (!mRTL) {
@@ -1402,9 +1401,8 @@ AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,
   if (MOZ_UNLIKELY(!parentContent)) {
     return 0;
   }
-  nsIAtom *parentTag = parentContent->Tag();
-  if (parentContent->GetNameSpaceID() == kNameSpaceID_MathML && 
-      (parentTag == nsGkAtoms::math || parentTag == nsGkAtoms::mtd_)) {
+  if (parentContent->IsAnyOfMathMLElements(nsGkAtoms::math,
+                                           nsGkAtoms::mtd_)) {
     gap = GetInterFrameSpacingFor(aFrame->StyleFont()->mScriptLevel,
                                   parent, aFrame);
     // add our own italic correction
@@ -1568,14 +1566,14 @@ nsMathMLContainerFrame::ReportParseError(const char16_t* aAttribute,
                                          const char16_t* aValue)
 {
   const char16_t* argv[] = 
-    { aValue, aAttribute, mContent->Tag()->GetUTF16String() };
+    { aValue, aAttribute, mContent->NodeInfo()->NameAtom()->GetUTF16String() };
   return ReportErrorToConsole("AttributeParsingError", argv, 3);
 }
 
 nsresult
 nsMathMLContainerFrame::ReportChildCountError()
 {
-  const char16_t* arg = mContent->Tag()->GetUTF16String();
+  const char16_t* arg = mContent->NodeInfo()->NameAtom()->GetUTF16String();
   return ReportErrorToConsole("ChildCountIncorrect", &arg, 1);
 }
 
@@ -1583,7 +1581,8 @@ nsresult
 nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
 {
   const char16_t* argv[] =
-    { aChildTag->GetUTF16String(), mContent->Tag()->GetUTF16String() };
+    { aChildTag->GetUTF16String(),
+      mContent->NodeInfo()->NameAtom()->GetUTF16String() };
   return ReportErrorToConsole("InvalidChild", argv, 2);
 }
 
