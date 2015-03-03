@@ -6,6 +6,7 @@
 
 #include "BroadcastChannelParent.h"
 #include "FileDescriptorSetParent.h"
+#include "mozilla/media/MediaParent.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
@@ -357,6 +358,19 @@ BackgroundParentImpl::DeallocPBroadcastChannelParent(
   MOZ_ASSERT(aActor);
 
   delete static_cast<BroadcastChannelParent*>(aActor);
+  return true;
+}
+
+media::PMediaParent*
+BackgroundParentImpl::AllocPMediaParent()
+{
+  return media::CreateParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPMediaParent(media::PMediaParent *aActor)
+{
+  delete aActor;
   return true;
 }
 
