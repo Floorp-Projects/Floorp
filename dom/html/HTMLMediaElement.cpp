@@ -3263,7 +3263,7 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress)
   if (now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
     DispatchAsyncEvent(NS_LITERAL_STRING("stalled"));
 
-    if (IsMediaSourceURI(mLoadingSrc)) {
+    if (mLoadingSrc && IsMediaSourceURI(mLoadingSrc)) {
       ChangeDelayLoadStatus(false);
     }
 
