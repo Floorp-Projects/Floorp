@@ -50,14 +50,17 @@ public:
   NS_INLINE_DECL_REFCOUNTING(APZEventState);
 
   void ProcessSingleTap(const CSSPoint& aPoint,
+                        Modifiers aModifiers,
                         const ScrollableLayerGuid& aGuid,
                         float aPresShellResolution);
   void ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
                       const CSSPoint& aPoint,
+                      Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId,
                       float aPresShellResolution);
   void ProcessLongTapUp(const CSSPoint& aPoint,
+                        Modifiers aModifiers,
                         const ScrollableLayerGuid& aGuid,
                         float aPresShellResolution);
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,

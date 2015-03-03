@@ -133,13 +133,6 @@ JSRope::new_(js::ExclusiveContext *cx,
     return str;
 }
 
-inline void
-JSRope::markChildren(JSTracer *trc)
-{
-    js::gc::MarkStringUnbarriered(trc, &d.s.u2.left, "left child");
-    js::gc::MarkStringUnbarriered(trc, &d.s.u3.right, "right child");
-}
-
 MOZ_ALWAYS_INLINE void
 JSDependentString::init(js::ExclusiveContext *cx, JSLinearString *base, size_t start,
                         size_t length)
@@ -202,13 +195,6 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
         return nullptr;
     str->init(cx, base, start, length);
     return str;
-}
-
-inline void
-JSString::markBase(JSTracer *trc)
-{
-    MOZ_ASSERT(hasBase());
-    js::gc::MarkStringUnbarriered(trc, &d.s.u3.base, "base");
 }
 
 MOZ_ALWAYS_INLINE void

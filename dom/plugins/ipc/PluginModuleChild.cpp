@@ -159,7 +159,9 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
     }
     mUserAgent.SetIsVoid(true);
 #ifdef XP_MACOSX
-    mac_plugin_interposing::child::SetUpCocoaInterposing();
+    if (aIsChrome) {
+      mac_plugin_interposing::child::SetUpCocoaInterposing();
+    }
 #endif
 }
 

@@ -1623,6 +1623,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
+  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
 
   NotifySubDocInvalidationFunc computeInvalidFunc =
     presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
@@ -1733,6 +1734,15 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     if (aBuilder->WillComputePluginGeometry()) {
       flags = LayerManager::END_NO_REMOTE_COMPOSITE;
     }
+  }
+
+  // If this is the content process, we ship plugin geometry updates over with layer
+  // updates, so calculate that now before we call EndTransaction.
+  if (rootPresContext &&
+      aBuilder->WillComputePluginGeometry() &&
+      XRE_GetProcessType() == GeckoProcessType_Content) {
+    rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+    rootPresContext->CollectPluginGeometryUpdates(layerManager);
   }
 
   MaybeSetupTransactionIdAllocator(layerManager, view);
@@ -4193,8 +4203,10 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   bool isRootContentDocument = presContext->IsRootContentDocument();
   nsIPresShell* presShell = presContext->PresShell();
-  ContainerLayerParameters params(presShell->GetXResolution(),
-      presShell->GetYResolution(), nsIntPoint(), aContainerParameters);
+  ContainerLayerParameters params(
+      aContainerParameters.mXScale * presShell->GetXResolution(),
+      aContainerParameters.mYScale * presShell->GetYResolution(),
+      nsIntPoint(), aContainerParameters);
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
       nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {
