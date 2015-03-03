@@ -3208,11 +3208,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         if (mManager->IsWidgetLayerManager()) {
           paintedLayerData->UpdateCommonClipCount(itemClip);
         }
-
-        InvalidateForLayerChange(item, paintedLayerData->mLayer);
-
-        mLayerBuilder->AddPaintedDisplayItem(paintedLayerData, item, itemClip,
-                                            *this, layerState, topLeft);
         nsIntRegion opaquePixels = ComputeOpaqueRect(item,
             animatedGeometryRoot, paintedLayerData->mFixedPosFrameForLayerData,
             itemClip, aList,
@@ -3222,6 +3217,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         opaquePixels.AndWith(itemVisibleRect);
         paintedLayerData->Accumulate(this, item, opaquePixels,
             itemVisibleRect, itemClip);
+
+        InvalidateForLayerChange(item, paintedLayerData->mLayer);
+        mLayerBuilder->AddPaintedDisplayItem(paintedLayerData, item, itemClip,
+                                             *this, layerState, topLeft);
       }
     }
 
