@@ -712,6 +712,13 @@ protected:
                                                              const nsPoint& aTopLeft);
 
   /**
+   * Find a PaintedLayer for recycling, recycle it and prepare it for use, or
+   * return null if no suitable layer was found.
+   */
+  already_AddRefed<PaintedLayer> AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
+                                                              const nsIFrame *aReferenceFrame,
+                                                              const nsPoint& aTopLeft);
+  /**
    * Recycle aLayer and do any necessary invalidation.
    */
   PaintedDisplayItemLayerUserData* RecyclePaintedLayer(PaintedLayer* aLayer,
@@ -1701,54 +1708,63 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
 }
 
 already_AddRefed<PaintedLayer>
+ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
+                                             const nsIFrame* aReferenceFrame,
+                                             const nsPoint& aTopLeft)
+{
+  if (mNextFreeRecycledPaintedLayer >= mRecycledPaintedLayers.Length()) {
+    return nullptr;
+  }
+
+  // Try to recycle a layer
+  nsRefPtr<PaintedLayer> layer = mRecycledPaintedLayers[mNextFreeRecycledPaintedLayer];
+  ++mNextFreeRecycledPaintedLayer;
+
+  // Check if the layer hint has changed and whether or not the layer should
+  // be recreated because of it.
+  if (!mManager->IsOptimizedFor(layer, GetLayerCreationHint(aAnimatedGeometryRoot))) {
+    return nullptr;
+  }
+
+  bool didResetScrollPositionForLayerPixelAlignment = false;
+  PaintedDisplayItemLayerUserData* data =
+    RecyclePaintedLayer(layer, aAnimatedGeometryRoot,
+                        didResetScrollPositionForLayerPixelAlignment);
+  PreparePaintedLayerForUse(layer, data, aAnimatedGeometryRoot, aReferenceFrame,
+                            aTopLeft,
+                            didResetScrollPositionForLayerPixelAlignment);
+
+  return layer.forget();
+}
+
+already_AddRefed<PaintedLayer>
 ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
                                             const nsIFrame* aReferenceFrame,
                                             const nsPoint& aTopLeft)
 {
   // We need a new painted layer
-  nsRefPtr<PaintedLayer> layer;
-  PaintedDisplayItemLayerUserData* data;
-  bool layerRecycled = false;
-  bool didResetScrollPositionForLayerPixelAlignment = false;
+  nsRefPtr<PaintedLayer> layer =
+    AttemptToRecyclePaintedLayer(aAnimatedGeometryRoot, aReferenceFrame, aTopLeft);
+  if (layer) {
+    return layer.forget();
+  }
 
-  // Check whether the layer will be scrollable. This is used as a hint to
-  // influence whether tiled layers are used or not.
   LayerManager::PaintedLayerCreationHint creationHint =
     GetLayerCreationHint(aAnimatedGeometryRoot);
 
-  if (mNextFreeRecycledPaintedLayer < mRecycledPaintedLayers.Length()) {
-    // Try to recycle a layer
-    layer = mRecycledPaintedLayers[mNextFreeRecycledPaintedLayer];
-    ++mNextFreeRecycledPaintedLayer;
-
-    // Check if the layer hint has changed and whether or not the layer should
-    // be recreated because of it.
-    if (mManager->IsOptimizedFor(layer, creationHint)) {
-      layerRecycled = true;
-      data = RecyclePaintedLayer(layer, aAnimatedGeometryRoot,
-                                 didResetScrollPositionForLayerPixelAlignment);
-
-      // We do not need to Invalidate these areas in the widget because we
-      // assume the caller of InvalidatePaintedLayerContents has ensured
-      // the area is invalidated in the widget.
-    }
+  // Create a new painted layer
+  layer = mManager->CreatePaintedLayerWithHint(creationHint);
+  if (!layer) {
+    return nullptr;
   }
 
-  if (!layerRecycled) {
-    // Create a new painted layer
-    layer = mManager->CreatePaintedLayerWithHint(creationHint);
-    if (!layer)
-      return nullptr;
-    // Mark this layer as being used for painting display items
-    data = new PaintedDisplayItemLayerUserData();
-    layer->SetUserData(&gPaintedDisplayItemLayerUserData, data);
-    ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
-    didResetScrollPositionForLayerPixelAlignment = true;
-  }
+  // Mark this layer as being used for painting display items
+  PaintedDisplayItemLayerUserData* data = new PaintedDisplayItemLayerUserData();
+  layer->SetUserData(&gPaintedDisplayItemLayerUserData, data);
+  ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
 
   PreparePaintedLayerForUse(layer, data, aAnimatedGeometryRoot,
-                            aReferenceFrame, aTopLeft,
-                            didResetScrollPositionForLayerPixelAlignment);
+                            aReferenceFrame, aTopLeft, true);
 
   return layer.forget();
 }
