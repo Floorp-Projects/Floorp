@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_runtimeservice_h__
 
 #include "Workers.h"
+#include "WorkerPrivate.h" // For the WorkerType enum.
 
 #include "nsIObserver.h"
 
@@ -15,6 +16,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
+#include "WorkerPrivate.h"
 
 class nsIRunnable;
 class nsITimer;
