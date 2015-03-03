@@ -2239,7 +2239,6 @@ IonBuilder::inlineTypedArrayLength(CallInfo &callInfo)
     return InliningStatus_Inlined;
 }
 
-
 IonBuilder::InliningStatus
 IonBuilder::inlineObjectIsTypeDescr(CallInfo &callInfo)
 {
