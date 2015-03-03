@@ -2470,7 +2470,7 @@ MediaDecoderStateMachine::SeekCompleted()
   int64_t newCurrentTime = mCurrentSeekTarget.mTime;
 
   // Setup timestamp state.
-  VideoData* video = VideoQueue().PeekFront();
+  nsRefPtr<VideoData> video = VideoQueue().PeekFront();
   if (seekTime == mEndTime) {
     newCurrentTime = mAudioStartTime = seekTime;
   } else if (HasAudio()) {
@@ -2490,27 +2490,7 @@ MediaDecoderStateMachine::SeekCompleted()
   }
   mPlayDuration = newCurrentTime - mStartTime;
 
-  if (HasVideo()) {
-    if (video) {
-      {
-        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-        RenderVideoFrame(video, TimeStamp::Now());
-      }
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(mDecoder, &MediaDecoder::Invalidate);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-    }
-  }
-
-  MOZ_ASSERT(mState != DECODER_STATE_DECODING_NONE);
-
   mDecoder->StartProgressUpdates();
-  if (mState == DECODER_STATE_DECODING_METADATA ||
-      mState == DECODER_STATE_DECODING_FIRSTFRAME ||
-      mState == DECODER_STATE_DORMANT ||
-      mState == DECODER_STATE_SHUTDOWN) {
-    return;
-  }
 
   // Change state to DECODING or COMPLETED now. SeekingStopped will
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING
@@ -2566,6 +2546,14 @@ MediaDecoderStateMachine::SeekCompleted()
 
   ScheduleStateMachine();
   mScheduler->ThawScheduling();
+
+  if (video) {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    RenderVideoFrame(video, TimeStamp::Now());
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(mDecoder, &MediaDecoder::Invalidate);
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  }
 }
 
 // Runnable to dispose of the decoder and state machine on the main thread.
