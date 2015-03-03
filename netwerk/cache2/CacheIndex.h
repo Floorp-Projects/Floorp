@@ -917,9 +917,7 @@ private:
 
   // Methods used by CacheIndexEntryAutoManage to keep the arrays up to date.
   void InsertRecordToFrecencyArray(CacheIndexRecord *aRecord);
-  void InsertRecordToExpirationArray(CacheIndexRecord *aRecord);
   void RemoveRecordFromFrecencyArray(CacheIndexRecord *aRecord);
-  void RemoveRecordFromExpirationArray(CacheIndexRecord *aRecord);
 
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
   void AddRecordToIterators(CacheIndexRecord *aRecord);
@@ -1021,14 +1019,11 @@ private:
   // of the journal fails or the hash does not match.
   nsTHashtable<CacheIndexEntry> mTmpJournal;
 
-  // Arrays that keep entry records ordered by eviction preference. When looking
-  // for an entry to evict, we first try to find an expired entry. If there is
-  // no expired entry, we take the entry with lowest valid frecency. Zero
-  // frecency is an initial value and such entries are stored at the end of the
-  // array. Uninitialized entries and entries marked as deleted are not present
-  // in these arrays.
+  // An array that keeps entry records ordered by eviction preference; we take
+  // the entry with lowest valid frecency. Zero frecency is an initial value
+  // and such entries are stored at the end of the array. Uninitialized entries
+  // and entries marked as deleted are not present in this array.
   nsTArray<CacheIndexRecord *>  mFrecencyArray;
-  nsTArray<CacheIndexRecord *>  mExpirationArray;
 
   nsTArray<CacheIndexIterator *> mIterators;
 
