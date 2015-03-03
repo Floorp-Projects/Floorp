@@ -1637,9 +1637,9 @@ inline static bool IsSVGContentWithCSSClip(const nsIFrame *aFrame)
   // elements regardless of the value of the 'position' property. Here we obey
   // the CSS spec for outer-<svg> (since that's what we generally do), but
   // obey the SVG spec for other SVG elements to which 'clip' applies.
-  nsIAtom *tag = aFrame->GetContent()->Tag();
   return (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-    (tag == nsGkAtoms::svg || tag == nsGkAtoms::foreignObject);
+          aFrame->GetContent()->IsAnyOfSVGElements(nsGkAtoms::svg,
+                                                   nsGkAtoms::foreignObject);
 }
 
 bool
@@ -5709,7 +5709,7 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
   aResult = aType;
   if (mContent && !mContent->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString buf;
-    mContent->Tag()->ToString(buf);
+    mContent->NodeInfo()->NameAtom()->ToString(buf);
     if (GetType() == nsGkAtoms::subDocumentFrame) {
       nsAutoString src;
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
@@ -8912,7 +8912,7 @@ GetTagName(nsFrame* aFrame, nsIContent* aContent, int aResultSize,
 {
   if (aContent) {
     PR_snprintf(aResult, aResultSize, "%s@%p",
-                nsAtomCString(aContent->Tag()).get(), aFrame);
+                nsAtomCString(aContent->NodeInfo()->NameAtom()).get(), aFrame);
   }
   else {
     PR_snprintf(aResult, aResultSize, "@%p", aFrame);

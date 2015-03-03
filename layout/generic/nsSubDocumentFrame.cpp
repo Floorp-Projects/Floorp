@@ -859,7 +859,7 @@ nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::noresize) {
     // Note that we're not doing content type checks, but that's ok -- if
     // they'd fail we will just end up with a null framesetFrame.
-    if (mContent->GetParent()->Tag() == nsGkAtoms::frameset) {
+    if (mContent->GetParent()->IsHTMLElement(nsGkAtoms::frameset)) {
       nsIFrame* parentFrame = GetParent();
 
       if (parentFrame) {
