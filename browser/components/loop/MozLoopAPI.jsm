@@ -196,6 +196,7 @@ function injectLoopAPI(targetWindow) {
   let contactsAPI;
   let roomsAPI;
   let callsAPI;
+  let savedWindowListeners = new Map();
 
   let api = {
     /**
@@ -266,10 +267,21 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
-    getActiveTabWindowId: {
+    /**
+     * Adds a listener to the most recent window for browser/tab sharing. The
+     * listener will be notified straight away of the current tab id, then every
+     * time there is a change of tab.
+     *
+     * Listener parameters:
+     * - {Object}  err      If there is a error this will be defined, null otherwise.
+     * - {Number} windowId The new windowId after a change of tab.
+     *
+     * @param {Function} listener The listener to handle the windowId changes.
+     */
+    addBrowserSharingListener: {
       enumerable: true,
       writable: true,
-      value: function(callback) {
+      value: function(listener) {
         let win = Services.wm.getMostRecentWindow("navigator:browser");
         let browser = win && win.gBrowser.selectedTab.linkedBrowser;
         if (!win || !browser) {
@@ -277,16 +289,39 @@ function injectLoopAPI(targetWindow) {
           // window left.
           let err = new Error("No tabs available to share.");
           MozLoopService.log.error(err);
-          callback(cloneValueInto(err, targetWindow));
+          listener(cloneValueInto(err, targetWindow));
+          return;
+        }
+        win.LoopUI.addBrowserSharingListener(listener);
+
+        savedWindowListeners.set(listener, Cu.getWeakReference(win));
+      }
+    },
+
+    /**
+     * Removes a listener that was previously added.
+     *
+     * @param {Function} listener The listener to handle the windowId changes.
+     */
+    removeBrowserSharingListener: {
+      enumerable: true,
+      writable: true,
+      value: function(listener) {
+        if (!savedWindowListeners.has(listener)) {
           return;
         }
 
-        let mm = browser.messageManager;
-        mm.addMessageListener("webrtc:response:StartBrowserSharing", function listener(message) {
-          mm.removeMessageListener("webrtc:response:StartBrowserSharing", listener);
-          callback(null, message.data.windowID);
-        });
-        mm.sendAsyncMessage("webrtc:StartBrowserSharing");
+        let win = savedWindowListeners.get(listener).get();
+
+        // Remove the element, regardless of if the window exists or not so
+        // that we clean the map.
+        savedWindowListeners.delete(listener);
+
+        if (!win) {
+          return;
+        }
+
+        win.LoopUI.removeBrowserSharingListener(listener);
       }
     },
 

@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.AppConstants;
 
 /** This patch tests the System Pages first by loading system pages from
  *  the awesome bar and then from Firefox menu
@@ -13,13 +14,14 @@ public class testSystemPages extends PixelTest {
         blockForGeckoReady();
 
         final String urls [] = { StringHelper.ABOUT_FIREFOX_URL, StringHelper.ABOUT_RIGHTS_URL,
-                StringHelper.ABOUT_ADDONS_URL, StringHelper.ABOUT_DOWNLOADS_URL,
+                StringHelper.ABOUT_ADDONS_URL, StringHelper.ABOUT_DOWNLOADS_URL, StringHelper.ABOUT_PASSWORDS_URL,
                 StringHelper.ABOUT_BUILDCONFIG_URL, StringHelper.ABOUT_FEEDBACK_URL,
                 StringHelper.ABOUT_HEALTHREPORT_URL, StringHelper.ABOUT_SCHEME
         };
         // Pages to be tested from the menu and their expected urls. This if of the form { {{ <path to item> }, { <expected url> }}* }
         String menuItems [][][] = {{{ StringHelper.APPS_LABEL }, { StringHelper.ABOUT_APPS_URL }},
                                   {{ StringHelper.DOWNLOADS_LABEL }, { StringHelper.ABOUT_DOWNLOADS_URL}},
+                                  {{ StringHelper.LOGINS_LABEL}, { StringHelper.ABOUT_PASSWORDS_URL }},
                                   {{ StringHelper.ADDONS_LABEL }, { StringHelper.ABOUT_ADDONS_URL }},
                                   {{ StringHelper.SETTINGS_LABEL, StringHelper.MOZILLA_SECTION_LABEL, StringHelper.ABOUT_LABEL }, { StringHelper.ABOUT_SCHEME }},
                                   {{ StringHelper.SETTINGS_LABEL, StringHelper.MOZILLA_SECTION_LABEL, StringHelper.FEEDBACK_LABEL }, { StringHelper.ABOUT_FEEDBACK_URL }},
@@ -48,6 +50,9 @@ public class testSystemPages extends PixelTest {
     // Load from Url the about: pages,verify the Url and the tabs number
     public void checkUrl(String urls []) {
         for (String url:urls) {
+            if (skipItemURL(url)) {
+                continue;
+            }
             loadAndPaint(url);
             verifyTabCount(mExpectedTabCount);
             verifyUrl(url);
@@ -63,6 +68,10 @@ public class testSystemPages extends PixelTest {
         for (String[][] item : menuItems) {
             String [] pathToItem = item[0];
             String expectedUrl = item[1][0];
+
+            if (skipItemURL(expectedUrl)) {
+                continue;
+            }
 
             expectedTabCount++;
 
@@ -89,5 +98,12 @@ public class testSystemPages extends PixelTest {
             }
             verifyTabCount(expectedTabCount);
         }
+    }
+
+    private boolean skipItemURL(String item) {
+        if (StringHelper.ABOUT_PASSWORDS_URL.equals(item) && !AppConstants.NIGHTLY_BUILD) {
+            return true;
+        }
+        return false;
     }
 }
