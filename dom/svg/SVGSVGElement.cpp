@@ -786,12 +786,11 @@ SVGSVGElement::WillBeOutermostSVG(nsIContent* aParent,
   nsIContent* parent = aBindingParent ? aBindingParent : aParent;
 
   while (parent && parent->IsSVGElement()) {
-    nsIAtom* tag = parent->Tag();
-    if (tag == nsGkAtoms::foreignObject) {
+    if (parent->IsSVGElement(nsGkAtoms::foreignObject)) {
       // SVG in a foreignObject must have its own <svg> (nsSVGOuterSVGFrame).
       return false;
     }
-    if (tag == nsGkAtoms::svg) {
+    if (parent->IsSVGElement(nsGkAtoms::svg)) {
       return false;
     }
     parent = parent->GetParent();
