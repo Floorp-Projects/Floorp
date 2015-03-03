@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: residue backend 0, 1 and 2 implementation
- last mod: $Id: res0.c 19031 2013-12-03 19:20:50Z tterribe $
+ last mod: $Id: res0.c 19441 2015-01-21 01:17:41Z xiphmont $
 
  ********************************************************************/
 
@@ -152,15 +152,6 @@ void res0_free_look(vorbis_look_residue *i){
   }
 }
 
-static int ilog(unsigned int v){
-  int ret=0;
-  while(v){
-    ret++;
-    v>>=1;
-  }
-  return(ret);
-}
-
 static int icount(unsigned int v){
   int ret=0;
   while(v){
@@ -186,7 +177,7 @@ void res0_pack(vorbis_info_residue *vr,oggpack_buffer *opb){
      bitmask of one indicates this partition class has bits to write
      this pass */
   for(j=0;j<info->partitions;j++){
-    if(ilog(info->secondstages[j])>3){
+    if(ov_ilog(info->secondstages[j])>3){
       /* yes, this is a minor hack due to not thinking ahead */
       oggpack_write(opb,info->secondstages[j],3);
       oggpack_write(opb,1,1);
@@ -284,7 +275,7 @@ vorbis_look_residue *res0_look(vorbis_dsp_state *vd,
   look->partbooks=_ogg_calloc(look->parts,sizeof(*look->partbooks));
 
   for(j=0;j<look->parts;j++){
-    int stages=ilog(info->secondstages[j]);
+    int stages=ov_ilog(info->secondstages[j]);
     if(stages){
       if(stages>maxstage)maxstage=stages;
       look->partbooks[j]=_ogg_calloc(stages,sizeof(*look->partbooks[j]));
