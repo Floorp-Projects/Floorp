@@ -1812,7 +1812,7 @@ nsPlainTextSerializer::IsElementBlock(Element* aElement)
     return displayStyle->IsBlockOutsideStyle();
   }
   // Fall back to looking at the tag, in case there is no style information.
-  return nsContentUtils::IsHTMLBlock(GetIdForContent(aElement));
+  return nsContentUtils::IsHTMLBlock(aElement);
 }
 
 /**
