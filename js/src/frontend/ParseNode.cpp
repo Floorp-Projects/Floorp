@@ -630,6 +630,11 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 {
     JS_CHECK_RECURSION(context, return nullptr);
 
+    if (opn->isKind(PNK_COMPUTED_NAME)) {
+        report(ParseError, false, opn, JSMSG_COMPUTED_NAME_IN_PATTERN);
+        return null();
+    }
+
     ParseNode *pn = handler.new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
                                             opn->pn_pos);
     if (!pn)
