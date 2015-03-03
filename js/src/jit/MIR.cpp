@@ -4109,17 +4109,24 @@ MLoadElement::foldsTo(TempAllocator &alloc)
 }
 
 bool
-MGuardShapePolymorphic::congruentTo(const MDefinition *ins) const
+MGuardReceiverPolymorphic::congruentTo(const MDefinition *ins) const
 {
-    if (!ins->isGuardShapePolymorphic())
+    if (!ins->isGuardReceiverPolymorphic())
         return false;
 
-    const MGuardShapePolymorphic *other = ins->toGuardShapePolymorphic();
+    const MGuardReceiverPolymorphic *other = ins->toGuardReceiverPolymorphic();
+
     if (numShapes() != other->numShapes())
         return false;
-
     for (size_t i = 0; i < numShapes(); i++) {
         if (getShape(i) != other->getShape(i))
+            return false;
+    }
+
+    if (numUnboxedGroups() != other->numUnboxedGroups())
+        return false;
+    for (size_t i = 0; i < numUnboxedGroups(); i++) {
+        if (getUnboxedGroup(i) != other->getUnboxedGroup(i))
             return false;
     }
 

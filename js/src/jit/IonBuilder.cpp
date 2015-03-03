@@ -10454,8 +10454,9 @@ IonBuilder::getPropTryUnboxed(bool *emitted, MDefinition *obj, PropertyName *nam
 
 MDefinition *
 IonBuilder::addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Shape *holderShape,
-                                          const BaselineInspector::ShapeVector &receiverShapes,
-                                          bool isOwnProperty)
+                const BaselineInspector::ShapeVector &receiverShapes,
+                const BaselineInspector::ObjectGroupVector &receiverUnboxedGroups,
+                bool isOwnProperty)
 {
     MOZ_ASSERT(holder);
     MOZ_ASSERT(holderShape);
@@ -10468,7 +10469,7 @@ IonBuilder::addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Sh
     MDefinition *holderDef = constantMaybeNursery(holder);
     addShapeGuard(holderDef, holderShape, Bailout_ShapeGuard);
 
-    return addShapeGuardPolymorphic(obj, receiverShapes);
+    return addShapeGuardPolymorphic(obj, receiverShapes, receiverUnboxedGroups);
 }
 
 bool
@@ -10483,8 +10484,10 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     JSObject *foundProto = nullptr;
     bool isOwnProperty = false;
     BaselineInspector::ShapeVector receiverShapes(alloc());
+    BaselineInspector::ObjectGroupVector receiverUnboxedGroups(alloc());
     if (!inspector->commonGetPropFunction(pc, &foundProto, &lastProperty, &commonGetter,
-                                          &globalShape, &isOwnProperty, receiverShapes))
+                                          &globalShape, &isOwnProperty,
+                                          receiverShapes, receiverUnboxedGroups))
     {
         return true;
     }
@@ -10499,7 +10502,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     if (!canUseTIForGetter) {
         // If type information is bad, we can still optimize the getter if we
         // shape guard.
-        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty, receiverShapes,
+        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
+                                            receiverShapes, receiverUnboxedGroups,
                                             isOwnProperty);
         if (!obj)
             return false;
@@ -10709,14 +10713,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
         spew("Inlining monomorphic unboxed GETPROP");
 
         ObjectGroup *group = unboxedGroups[0];
-
-        // Failures in this group guard should be treated the same as a shape guard failure.
-        obj = MGuardObjectGroup::New(alloc(), obj, group, /* bailOnEquality = */ false,
-                                     Bailout_ShapeGuard);
-        current->add(obj->toInstruction());
-
-        if (failedShapeGuard_)
-            obj->toGuardObjectGroup()->setNotMovable();
+        obj = addGroupGuard(obj, group, Bailout_ShapeGuard);
 
         const UnboxedLayout::Property *property = group->unboxedLayout().lookup(name);
         MInstruction *load = loadUnboxedProperty(obj, property->offset, property->type, barrier, types);
@@ -10738,7 +10735,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
         return false;
 
     if (sameSlot && unboxedGroups.empty()) {
-        obj = addShapeGuardPolymorphic(obj, nativeShapes);
+        obj = addShapeGuardPolymorphic(obj, nativeShapes, unboxedGroups);
         if (!obj)
             return false;
 
@@ -10995,8 +10992,10 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     JSObject *foundProto = nullptr;
     bool isOwnProperty;
     BaselineInspector::ShapeVector receiverShapes(alloc());
-    if (!inspector->commonSetPropFunction(pc, &foundProto, &lastProperty, &commonSetter, &isOwnProperty,
-                                          receiverShapes))
+    BaselineInspector::ObjectGroupVector receiverUnboxedGroups(alloc());
+    if (!inspector->commonSetPropFunction(pc, &foundProto, &lastProperty, &commonSetter,
+                                          &isOwnProperty,
+                                          receiverShapes, receiverUnboxedGroups))
     {
         trackOptimizationOutcome(TrackedOutcome::NoProtoFound);
         return true;
@@ -11010,7 +11009,8 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     if (!canUseTIForSetter) {
         // If type information is bad, we can still optimize the setter if we
         // shape guard.
-        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty, receiverShapes,
+        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
+                                            receiverShapes, receiverUnboxedGroups,
                                             isOwnProperty);
         if (!obj)
             return false;
@@ -11395,14 +11395,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         spew("Inlining monomorphic unboxed SETPROP");
 
         ObjectGroup *group = unboxedGroups[0];
-
-        // Failures in this group guard should be treated the same as a shape guard failure.
-        obj = MGuardObjectGroup::New(alloc(), obj, group, /* bailOnEquality = */ false,
-                                    Bailout_ShapeGuard);
-        current->add(obj->toInstruction());
-
-        if (failedShapeGuard_)
-            obj->toGuardObjectGroup()->setNotMovable();
+        obj = addGroupGuard(obj, group, Bailout_ShapeGuard);
 
         const UnboxedLayout::Property *property = group->unboxedLayout().lookup(name);
         storeUnboxedProperty(obj, property->offset, property->type, value);
@@ -11422,7 +11415,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         return false;
 
     if (sameSlot && unboxedGroups.empty()) {
-        obj = addShapeGuardPolymorphic(obj, nativeShapes);
+        obj = addShapeGuardPolymorphic(obj, nativeShapes, unboxedGroups);
         if (!obj)
             return false;
 
@@ -12334,21 +12327,50 @@ IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bail
 }
 
 MInstruction *
-IonBuilder::addShapeGuardPolymorphic(MDefinition *obj, const BaselineInspector::ShapeVector &shapes)
+IonBuilder::addGroupGuard(MDefinition *obj, ObjectGroup *group, BailoutKind bailoutKind)
 {
-    if (shapes.length() == 1)
+    MGuardObjectGroup *guard = MGuardObjectGroup::New(alloc(), obj, group,
+                                                      /* bailOnEquality = */ false,
+                                                      bailoutKind);
+    current->add(guard);
+
+    // If a shape guard failed in the past, don't optimize group guards.
+    if (failedShapeGuard_)
+        guard->setNotMovable();
+
+    LifoAlloc *lifoAlloc = alloc().lifoAlloc();
+    guard->setResultTypeSet(lifoAlloc->new_<TemporaryTypeSet>(lifoAlloc,
+                                                            TypeSet::ObjectType(group)));
+
+    return guard;
+}
+
+MInstruction *
+IonBuilder::addShapeGuardPolymorphic(MDefinition *obj,
+                                     const BaselineInspector::ShapeVector &shapes,
+                                     const BaselineInspector::ObjectGroupVector &unboxedGroups)
+{
+    if (shapes.length() == 1 && unboxedGroups.empty())
         return addShapeGuard(obj, shapes[0], Bailout_ShapeGuard);
 
-    MOZ_ASSERT(shapes.length() > 1);
+    if (shapes.empty() && unboxedGroups.length() == 1)
+        return addGroupGuard(obj, unboxedGroups[0], Bailout_ShapeGuard);
 
-    MGuardShapePolymorphic *guard = MGuardShapePolymorphic::New(alloc(), obj);
+    MOZ_ASSERT(shapes.length() + unboxedGroups.length() > 1);
+
+    MGuardReceiverPolymorphic *guard = MGuardReceiverPolymorphic::New(alloc(), obj);
     current->add(guard);
 
     if (failedShapeGuard_)
         guard->setNotMovable();
 
-    for (size_t i = 0, len = shapes.length(); i < len; i++) {
+    for (size_t i = 0; i < shapes.length(); i++) {
         if (!guard->addShape(shapes[i]))
+            return nullptr;
+    }
+
+    for (size_t i = 0; i < unboxedGroups.length(); i++) {
+        if (!guard->addUnboxedGroup(unboxedGroups[i]))
             return nullptr;
     }
 

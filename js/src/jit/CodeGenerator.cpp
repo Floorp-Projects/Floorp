@@ -2527,23 +2527,38 @@ CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity *guard)
 }
 
 void
-CodeGenerator::visitGuardShapePolymorphic(LGuardShapePolymorphic *lir)
+CodeGenerator::visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic *lir)
 {
-    const MGuardShapePolymorphic *mir = lir->mir();
+    const MGuardReceiverPolymorphic *mir = lir->mir();
     Register obj = ToRegister(lir->object());
     Register temp = ToRegister(lir->temp());
 
-    MOZ_ASSERT(mir->numShapes() > 1);
+    MOZ_ASSERT(mir->numShapes() + mir->numUnboxedGroups() > 1);
 
     Label done;
-    masm.loadObjShape(obj, temp);
 
-    for (size_t i = 0; i < mir->numShapes(); i++) {
-        Shape *shape = mir->getShape(i);
-        if (i == mir->numShapes() - 1)
-            bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), lir->snapshot());
-        else
-            masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(shape), &done);
+    if (mir->numShapes()) {
+        masm.loadObjShape(obj, temp);
+
+        for (size_t i = 0; i < mir->numShapes(); i++) {
+            Shape *shape = mir->getShape(i);
+            if (i == mir->numShapes() - 1 && !mir->numUnboxedGroups())
+                bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), lir->snapshot());
+            else
+                masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(shape), &done);
+        }
+    }
+
+    if (mir->numUnboxedGroups()) {
+        masm.loadObjGroup(obj, temp);
+
+        for (size_t i = 0; i < mir->numUnboxedGroups(); i++) {
+            ObjectGroup *group = mir->getUnboxedGroup(i);
+            if (i == mir->numUnboxedGroups() - 1)
+                bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(group), lir->snapshot());
+            else
+                masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(group), &done);
+        }
     }
 
     masm.bind(&done);
