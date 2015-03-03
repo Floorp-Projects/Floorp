@@ -41,7 +41,7 @@ class B2GDesktopReftest(RefTest):
         assert(self.marionette.wait_for_port())
         self.marionette.start_session()
         if self.build_type == "mulet":
-            self._wait_for_homescreen(timeout=15)
+            self._wait_for_homescreen(timeout=300)
             self._unlockScreen()
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
 
