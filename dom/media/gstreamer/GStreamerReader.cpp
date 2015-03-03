@@ -705,7 +705,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
       }
     }
 
-    mDecoder->NotifyDecodedFrames(0, 1);
+    mDecoder->NotifyDecodedFrames(0, 1, 0);
 
 #if GST_VERSION_MAJOR >= 1
     GstSample *sample = gst_app_sink_pull_sample(mVideoAppSink);
@@ -719,6 +719,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
 
   bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   if ((aKeyFrameSkip && !isKeyframe)) {
+    mDecoder->NotifyDecodedFrames(0, 0, 1);
     gst_buffer_unref(buffer);
     return true;
   }
@@ -1098,7 +1099,7 @@ void GStreamerReader::NewVideoBuffer()
    * and notify the decode thread potentially blocked in DecodeVideoFrame
    */
 
-  mDecoder->NotifyDecodedFrames(1, 0);
+  mDecoder->NotifyDecodedFrames(1, 0, 0);
   mVideoSinkBufferCount++;
   mon.NotifyAll();
 }

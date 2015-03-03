@@ -143,6 +143,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
     if (aKeyframeSkip && (!si.is_kf || tstamp_usecs < aTimeThreshold)) {
       // Skipping to next keyframe...
       a.mParsed++; // Assume 1 frame per chunk.
+      a.mDropped++;
       continue;
     }
 
@@ -159,6 +160,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
     // to the video queue and won't be displayed.
     if (tstamp_usecs < aTimeThreshold) {
       a.mParsed++; // Assume 1 frame per chunk.
+      a.mDropped++;
       continue;
     }
 
