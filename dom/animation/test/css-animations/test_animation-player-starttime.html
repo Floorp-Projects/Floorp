@@ -225,7 +225,7 @@ function checkStateOnSettingStartTimeToAnimationCreationTime(player)
 // Called when the ready Promise's callbacks should happen
 function checkStateOnReadyPromiseResolved(player)
 {
-  assert_less_than_equal(player.startTime, document.timeline.currentTime,
+  assert_less_than_equal(player.startTime, player.timeline.currentTime,
     'AnimationPlayer.startTime should be less than the timeline\'s ' +
     'currentTime on the first paint tick after animation creation');
 
@@ -334,7 +334,7 @@ test(function(t)
   // will be called (async) regardless of whether the Promise was resolved in
   // the past or is resolved in the future.
 
-  var currentTime = document.timeline.currentTime;
+  var currentTime = player.timeline.currentTime;
   player.startTime = currentTime;
   assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
     'Check setting of startTime actually works');
@@ -413,7 +413,7 @@ async_test(function(t) {
     player.startTime = startTimeForStartOfActiveInterval(player.timeline);
     checkStateAtActiveIntervalStartTime(player);
 
-    player.startTime = document.timeline.currentTime;
+    player.startTime = player.timeline.currentTime;
     // Despite going backwards from just after the active interval starts to
     // the animation start time, we now expect an animationend event
     // because we went from inside to outside the active interval.
