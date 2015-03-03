@@ -899,8 +899,7 @@ bool OggReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
-  uint32_t parsed = 0, decoded = 0;
-  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
 
   // Read the next data packet. Skip any non-data packets we encounter.
   ogg_packet* packet = 0;
@@ -915,7 +914,7 @@ bool OggReader::DecodeVideoFrame(bool &aKeyframeSkip,
   }
   nsAutoRef<ogg_packet> autoRelease(packet);
 
-  parsed++;
+  a.mParsed++;
   NS_ASSERTION(packet && packet->granulepos != -1,
                 "Must know first packet's granulepos");
   bool eos = packet->e_o_s;
@@ -925,7 +924,7 @@ bool OggReader::DecodeVideoFrame(bool &aKeyframeSkip,
   {
     aKeyframeSkip = false;
     nsresult res = DecodeTheora(packet, aTimeThreshold);
-    decoded++;
+    a.mDecoded++;
     if (NS_FAILED(res)) {
       return false;
     }
