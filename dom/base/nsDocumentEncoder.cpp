@@ -134,8 +134,6 @@ protected:
     return true;
   }
 
-  static bool IsTag(nsIContent* aContent, nsIAtom* aAtom);
-  
   virtual bool IncludeInContext(nsINode *aNode);
 
   nsCOMPtr<nsIDocument>          mDocument;
@@ -539,12 +537,6 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
   }
 
   return NS_OK;
-}
-
-bool 
-nsDocumentEncoder::IsTag(nsIContent* aContent, nsIAtom* aAtom)
-{
-  return aContent && aContent->NodeInfo()->NameAtom() == aAtom;
 }
 
 static nsresult
@@ -1886,16 +1878,17 @@ bool
 nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (content)
-  {
-    if (mIsTextWidget) 
-      return (IsTag(content, nsGkAtoms::div));
-
-    return (IsTag(content, nsGkAtoms::body) ||
-            IsTag(content, nsGkAtoms::td)   ||
-            IsTag(content, nsGkAtoms::th));
+  if (!content) {
+    return false;
   }
-  return false;
+
+  if (mIsTextWidget) {
+    return content->IsHTMLElement(nsGkAtoms::div);
+  }
+
+  return content->IsAnyOfHTMLElements(nsGkAtoms::body,
+                                      nsGkAtoms::td,
+                                      nsGkAtoms::th);
 }
 
 bool
