@@ -731,7 +731,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
                 do_QueryInterface(aVisitor.mEvent->originalTarget);
               nsAutoString ot, ct, rt;
               if (originalTarget) {
-                originalTarget->NodeInfo()->NameInfo()->ToString(ot);
+                originalTarget->NodeInfo()->NameAtom()->ToString(ot);
               }
               NodeInfo()->NameAtom()->ToString(ct);
               relatedTarget->NodeInfo()->NameAtom()->ToString(rt);
