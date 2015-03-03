@@ -42,6 +42,17 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader** rtp) {
       (*rtp)->codec = kRtpVideoH264;
       (*rtp)->simulcastIdx = info->codecSpecific.H264.simulcastIdx;
       return;
+    case kVideoCodecVP9:
+      (*rtp)->codec = kRtpVideoVp9;
+      (*rtp)->codecHeader.VP9.InitRTPVideoHeaderVP9();
+      (*rtp)->codecHeader.VP9.pictureId = info->codecSpecific.VP9.pictureId;
+      (*rtp)->codecHeader.VP9.nonReference =
+          info->codecSpecific.VP9.nonReference;
+      (*rtp)->codecHeader.VP9.temporalIdx = info->codecSpecific.VP9.temporalIdx;
+      (*rtp)->codecHeader.VP9.layerSync = info->codecSpecific.VP9.layerSync;
+      (*rtp)->codecHeader.VP9.tl0PicIdx = info->codecSpecific.VP9.tl0PicIdx;
+      (*rtp)->codecHeader.VP9.keyIdx = info->codecSpecific.VP9.keyIdx;
+      return;
     case kVideoCodecGeneric:
       (*rtp)->codec = kRtpVideoGeneric;
       (*rtp)->simulcastIdx = info->codecSpecific.generic.simulcast_idx;
