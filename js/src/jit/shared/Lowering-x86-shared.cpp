@@ -509,7 +509,8 @@ LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 void
-LIRGeneratorX86Shared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
+LIRGeneratorX86Shared::lowerAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins,
+						     const LDefinition& addrTemp)
 {
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
@@ -550,11 +551,13 @@ LIRGeneratorX86Shared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *
     LAsmJSCompareExchangeHeap *lir =
         new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
 
+    lir->setAddrTemp(addrTemp);
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
-LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
+LIRGeneratorX86Shared::lowerAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins,
+						 const LDefinition& addrTemp)
 {
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
@@ -628,6 +631,7 @@ LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     LAsmJSAtomicBinopHeap *lir =
         new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
 
+    lir->setAddrTemp(addrTemp);
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
