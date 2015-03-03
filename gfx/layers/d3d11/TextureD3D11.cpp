@@ -788,7 +788,12 @@ SyncObjectD3D11::FinalizeFrame()
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D10Texture2D), (void**)(ID3D10Texture2D**)byRef(mD3D10Texture));
     
     if (FAILED(hr) || !mD3D10Texture) {
-      gfxCriticalError() << "Failed to OpenSharedResource: " << hexa(hr);
+      gfxCriticalError() << "Failed to D3D10 OpenSharedResource for frame finalization: " << hexa(hr);
+
+      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        return;
+      }
+
       MOZ_CRASH();
     }
 
@@ -808,7 +813,12 @@ SyncObjectD3D11::FinalizeFrame()
     hr = device->OpenSharedResource(mHandle, __uuidof(ID3D11Texture2D), (void**)(ID3D11Texture2D**)byRef(mD3D11Texture));
     
     if (FAILED(hr) || !mD3D11Texture) {
-      gfxCriticalError() << "Failed to OpenSharedResource: " << hexa(hr);
+      gfxCriticalError() << "Failed to D3D11 OpenSharedResource for frame finalization: " << hexa(hr);
+
+      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        return;
+      }
+
       MOZ_CRASH();
     }
 
@@ -849,7 +859,7 @@ SyncObjectD3D11::FinalizeFrame()
   if (mD3D11SyncedTextures.size()) {
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D11Texture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-    hr = mutex->AcquireSync(0, 10000);
+    hr = mutex->AcquireSync(0, 20000);
 
     if (hr == WAIT_TIMEOUT) {
       MOZ_CRASH();
@@ -860,6 +870,14 @@ SyncObjectD3D11::FinalizeFrame()
     box.back = box.bottom = box.right = 1;
 
     ID3D11Device* dev = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+
+    if (!dev) {
+      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        return;
+      }
+      MOZ_CRASH();
+    }
+
     RefPtr<ID3D11DeviceContext> ctx;
     dev->GetImmediateContext(byRef(ctx));
 
