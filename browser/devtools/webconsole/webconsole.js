@@ -5095,7 +5095,7 @@ WebConsoleConnectionProxy.prototype = {
     this.target.on("navigate", this._onTabNavigated);
 
     this._consoleActor = this.target.form.consoleActor;
-    if (this.target.isTabActor) {
+    if (!this.target.chrome) {
       let tab = this.target.form;
       this.owner.onLocationChange(tab.url, tab.title);
     }
