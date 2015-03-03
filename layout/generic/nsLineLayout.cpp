@@ -2162,8 +2162,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // "raises" the box by the given distance while a negative value
       // "lowers" the box by the given distance (with zero being the
       // baseline). Since Y coordinates increase towards the bottom of
-      // the screen we reverse the sign.
-      nscoord revisedBaselineBCoord = baselineBCoord - offset;
+      // the screen we reverse the sign, unless the line orientation is
+      // inverted relative to block direction.
+      nscoord revisedBaselineBCoord = baselineBCoord - offset *
+        lineWM.FlowRelativeToLineRelativeFactor();
       pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
       pfd->mBlockDirAlign = VALIGN_OTHER;
     }
