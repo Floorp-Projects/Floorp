@@ -454,13 +454,11 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProce
 /*static*/ void
 ImageBridgeParent::SendPendingAsyncMessges(base::ProcessId aChildProcessId)
 {
-#ifdef MOZ_WIDGET_GONK
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
     return;
   }
   imageBridge->SendPendingAsyncMessges();
-#endif
 }
 
 } // layers

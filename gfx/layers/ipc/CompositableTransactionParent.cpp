@@ -143,7 +143,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
 
-      if (!IsAsync() && GetChildProcessId()) {
+      if (!IsAsync() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
         // send FenceHandle if present via ImageBridge.
         ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
                              GetChildProcessId(),
