@@ -6,6 +6,7 @@
 
 #include "vm/SelfHosting.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 
 #include "jscntxt.h"
@@ -653,8 +654,47 @@ js::intrinsic_IsTypedArray(JSContext *cx, unsigned argc, Value *vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
 
-    RootedObject obj(cx, &args[0].toObject());
-    args.rval().setBoolean(obj->is<TypedArrayObject>());
+    args.rval().setBoolean(args[0].toObject().is<TypedArrayObject>());
+    return true;
+}
+
+bool
+js::intrinsic_TypedArrayBuffer(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(TypedArrayObject::is(args[0]));
+
+    Rooted<TypedArrayObject*> tarray(cx, &args[0].toObject().as<TypedArrayObject>());
+    if (!TypedArrayObject::ensureHasBuffer(cx, tarray))
+        return false;
+
+    args.rval().set(TypedArrayObject::bufferValue(tarray));
+    return true;
+}
+
+bool
+js::intrinsic_TypedArrayByteOffset(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(TypedArrayObject::is(args[0]));
+
+    args.rval().set(TypedArrayObject::byteOffsetValue(&args[0].toObject().as<TypedArrayObject>()));
+    return true;
+}
+
+bool
+js::intrinsic_TypedArrayElementShift(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(TypedArrayObject::is(args[0]));
+
+    unsigned shift = TypedArrayShift(args[0].toObject().as<TypedArrayObject>().type());
+    MOZ_ASSERT(shift == 0 || shift == 1 || shift == 2 || shift == 3);
+
+    args.rval().setInt32(mozilla::AssertedCast<int32_t>(shift));
     return true;
 }
 
@@ -958,6 +998,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
 
     JS_FN("IsTypedArray",            intrinsic_IsTypedArray,            1,0),
+    JS_FN("TypedArrayBuffer",        intrinsic_TypedArrayBuffer,        1,0),
+    JS_FN("TypedArrayByteOffset",    intrinsic_TypedArrayByteOffset,    1,0),
+    JS_FN("TypedArrayElementShift",  intrinsic_TypedArrayElementShift,  1,0),
     JS_FN("TypedArrayLength",        intrinsic_TypedArrayLength,        1,0),
 
     JS_FN("MoveTypedArrayElements",  intrinsic_MoveTypedArrayElements,  4,0),
