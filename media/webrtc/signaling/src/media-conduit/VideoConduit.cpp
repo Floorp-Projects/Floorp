@@ -1362,6 +1362,9 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   } else if (codecInfo->mName == "VP8") {
     cinst.codecType = webrtc::kVideoCodecVP8;
     PL_strncpyz(cinst.plName, "VP8", sizeof(cinst.plName));
+  } else if (codecInfo->mName == "VP9") {
+    cinst.codecType = webrtc::kVideoCodecVP9;
+    PL_strncpyz(cinst.plName, "VP9", sizeof(cinst.plName));
   } else if (codecInfo->mName == "I420") {
     cinst.codecType = webrtc::kVideoCodecI420;
     PL_strncpyz(cinst.plName, "I420", sizeof(cinst.plName));
