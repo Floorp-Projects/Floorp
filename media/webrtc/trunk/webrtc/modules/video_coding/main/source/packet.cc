@@ -131,6 +131,14 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       return;
     case kRtpVideoGeneric:
     case kRtpVideoNone:
+      if (isFirstPacket && markerBit)
+        completeNALU = kNaluComplete;
+      else if (isFirstPacket)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
       codec = kVideoCodecUnknown;
       return;
   }
