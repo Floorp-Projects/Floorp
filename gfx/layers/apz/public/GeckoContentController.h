@@ -10,6 +10,7 @@
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "Units.h"                      // for CSSPoint, CSSRect, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/EventForwards.h"      // for Modifiers
 #include "nsISupportsImpl.h"
 
 class Task;
@@ -44,7 +45,7 @@ public:
    * to.
    */
   virtual void HandleDoubleTap(const CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const ScrollableLayerGuid& aGuid) = 0;
 
   /**
@@ -53,7 +54,7 @@ public:
    * button down, then mouse button up at |aPoint|.
    */
   virtual void HandleSingleTap(const CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const ScrollableLayerGuid& aGuid) = 0;
 
   /**
@@ -61,7 +62,7 @@ public:
    * current scroll offset.
    */
   virtual void HandleLongTap(const CSSPoint& aPoint,
-                             int32_t aModifiers,
+                             Modifiers aModifiers,
                              const ScrollableLayerGuid& aGuid,
                              uint64_t aInputBlockId) = 0;
 
@@ -74,7 +75,7 @@ public:
    * notifies the APZ that the long-tap event was prevent-defaulted).
    */
   virtual void HandleLongTapUp(const CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const ScrollableLayerGuid& aGuid) = 0;
 
   /**

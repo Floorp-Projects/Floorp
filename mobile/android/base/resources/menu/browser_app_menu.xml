@@ -49,6 +49,9 @@
     <item android:id="@+id/downloads"
           android:title="@string/downloads"/>
 
+    <item android:id="@+id/logins"
+          android:title="@string/logins"/>
+
     <item android:id="@+id/apps"
           android:title="@string/apps"/>
 

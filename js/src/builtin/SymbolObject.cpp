@@ -7,11 +7,11 @@
 #include "builtin/SymbolObject.h"
 
 #include "vm/StringBuffer.h"
+#include "vm/Symbol.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
-#include "vm/Symbol-inl.h"
 
 using JS::Symbol;
 using namespace js;

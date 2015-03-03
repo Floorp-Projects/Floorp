@@ -477,7 +477,7 @@ interface nsIUpdateProcessor : nsISupports
  * An interface describing a global application service that maintains a list
  * of updates previously performed as well as the current active update.
  */
-[scriptable, uuid(c5df56de-919d-406b-aaf9-106dfa9b685b)]
+[scriptable, uuid(f8371237-10a6-46a5-b23f-f6f7684e9d71)]
 interface nsIUpdateManager : nsISupports
 {
   /**
@@ -506,7 +506,7 @@ interface nsIUpdateManager : nsISupports
   /**
    * Refresh the update status based on the information in update.status.
    */
-  void refreshUpdateStatus(in nsIUpdate update);
+  void refreshUpdateStatus();
 };
 
 /**

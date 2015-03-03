@@ -695,6 +695,7 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
 }
 
 void MediaOptimization::SetCPULoadState(CPULoadState state) {
+    CriticalSectionScoped lock(crit_sect_.get());
     loadstate_ = state;
 }
 

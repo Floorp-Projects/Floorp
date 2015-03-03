@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import argparse
 import logging
 import mozpack.path
+import mozpack.executables
 import os
 import sys
 import warnings
@@ -1129,9 +1130,19 @@ class AndroidCommands(MachCommandBase):
                             ('.py', 'r', imp.PY_SOURCE))
         import runtestsremote
 
+        MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
+        if not MOZ_HOST_BIN:
+            print('environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell')
+            return 1
+        elif not os.path.isdir(MOZ_HOST_BIN):
+            print('$MOZ_HOST_BIN does not specify a directory')
+            return 1
+        elif not os.path.isfile(os.path.join(MOZ_HOST_BIN, 'xpcshell')):
+            print('$MOZ_HOST_BIN/xpcshell does not exist')
+            return 1
+
         args = [
-            '--xre-path=' +
-            os.environ.get('MOZ_HOST_BIN'),
+            '--xre-path=' + MOZ_HOST_BIN,
             '--dm_trans=adb',
             '--deviceIP=',
             '--console-level=INFO',

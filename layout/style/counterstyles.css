@@ -13,6 +13,43 @@
   pad: 2 '0';
 }
 
+@counter-style arabic-indic {
+  system: numeric;
+  symbols: \660  \661  \662  \663  \664  \665  \666  \667  \668  \669;
+}
+
+@counter-style armenian {
+  system: additive;
+  range: 1 9999;
+  additive-symbols: 9000 \554, 8000 \553, 7000 \552, 6000 \551, 5000 \550, 4000 \54F, 3000 \54E, 2000 \54D, 1000 \54C, 900 \54B, 800 \54A, 700 \549, 600 \548, 500 \547, 400 \546, 300 \545, 200 \544, 100 \543, 90 \542, 80 \541, 70 \540, 60 \53F, 50 \53E, 40 \53D, 30 \53C, 20 \53B, 10 \53A, 9 \539, 8 \538, 7 \537, 6 \536, 5 \535, 4 \534, 3 \533, 2 \532, 1 \531;
+}
+
+@counter-style upper-armenian {
+  system: additive;
+  range: 1 9999;
+  additive-symbols: 9000 \554, 8000 \553, 7000 \552, 6000 \551, 5000 \550, 4000 \54F, 3000 \54E, 2000 \54D, 1000 \54C, 900 \54B, 800 \54A, 700 \549, 600 \548, 500 \547, 400 \546, 300 \545, 200 \544, 100 \543, 90 \542, 80 \541, 70 \540, 60 \53F, 50 \53E, 40 \53D, 30 \53C, 20 \53B, 10 \53A, 9 \539, 8 \538, 7 \537, 6 \536, 5 \535, 4 \534, 3 \533, 2 \532, 1 \531;
+}
+
+@counter-style lower-armenian {
+  system: additive;
+  range: 1 9999;
+  additive-symbols: 9000 \584, 8000 \583, 7000 \582, 6000 \581, 5000 \580, 4000 \57F, 3000 \57E, 2000 \57D, 1000 \57C, 900 \57B, 800 \57A, 700 \579, 600 \578, 500 \577, 400 \576, 300 \575, 200 \574, 100 \573, 90 \572, 80 \571, 70 \570, 60 \56F, 50 \56E, 40 \56D, 30 \56C, 20 \56B, 10 \56A, 9 \569, 8 \568, 7 \567, 6 \566, 5 \565, 4 \564, 3 \563, 2 \562, 1 \561;
+}
+
+@counter-style bengali {
+  system: numeric;
+  symbols: \9E6  \9E7  \9E8  \9E9  \9EA  \9EB  \9EC  \9ED  \9EE  \9EF;
+}
+
+@counter-style cambodian {
+  system: extends khmer;
+}
+
+@counter-style khmer {
+  system: numeric;
+  symbols: \17E0  \17E1  \17E2  \17E3  \17E4  \17E5  \17E6  \17E7  \17E8  \17E9;
+}
+
 @counter-style cjk-decimal {
   system: numeric;
   range: 0 infinite;
@@ -20,8 +57,64 @@
   suffix: '\3001';
 }
 
-/* Though {lower,upper}-roman have been defined as builtin styles, they
- * are redefined here to allow the correct extending behavior. */
+@counter-style devanagari {
+  system: numeric;
+  symbols: \966  \967  \968  \969  \96A  \96B  \96C  \96D  \96E  \96F;
+}
+
+@counter-style georgian {
+  system: additive;
+  range: 1 19999;
+  additive-symbols: 10000 \10F5, 9000 \10F0, 8000 \10EF, 7000 \10F4, 6000 \10EE, 5000 \10ED, 4000 \10EC, 3000 \10EB, 2000 \10EA, 1000 \10E9, 900 \10E8, 800 \10E7, 700 \10E6, 600 \10E5, 500 \10E4, 400 \10F3, 300 \10E2, 200 \10E1, 100 \10E0, 90 \10DF, 80 \10DE, 70 \10DD, 60 \10F2, 50 \10DC, 40 \10DB, 30 \10DA, 20 \10D9, 10 \10D8, 9 \10D7, 8 \10F1, 7 \10D6, 6 \10D5, 5 \10D4, 4 \10D3, 3 \10D2, 2 \10D1, 1 \10D0;
+}
+
+@counter-style gujarati {
+  system: numeric;
+  symbols: \AE6  \AE7  \AE8  \AE9  \AEA  \AEB  \AEC  \AED  \AEE  \AEF;
+}
+
+@counter-style gurmukhi {
+  system: numeric;
+  symbols: \A66  \A67  \A68  \A69  \A6A  \A6B  \A6C  \A6D  \A6E  \A6F;
+}
+
+/* hebrew is not included because our builtin algorithm can generate a wider
+ * range of number in this style than what the spec defines. */
+
+@counter-style kannada {
+  system: numeric;
+  symbols: \CE6  \CE7  \CE8  \CE9  \CEA  \CEB  \CEC  \CED  \CEE  \CEF;
+}
+
+@counter-style lao {
+  system: numeric;
+  symbols: \ED0  \ED1  \ED2  \ED3  \ED4  \ED5  \ED6  \ED7  \ED8  \ED9;
+}
+
+@counter-style malayalam {
+  system: numeric;
+  symbols: \D66  \D67  \D68  \D69  \D6A  \D6B  \D6C  \D6D  \D6E  \D6F;
+}
+
+@counter-style mongolian {
+  system: numeric;
+  symbols: \1810  \1811  \1812  \1813  \1814  \1815  \1816  \1817  \1818  \1819;
+}
+
+@counter-style myanmar {
+  system: numeric;
+  symbols: \1040  \1041  \1042  \1043  \1044  \1045  \1046  \1047  \1048  \1049;
+}
+
+@counter-style oriya {
+  system: numeric;
+  symbols: \B66  \B67  \B68  \B69  \B6A  \B6B  \B6C  \B6D  \B6E  \B6F;
+}
+
+@counter-style persian {
+  system: numeric;
+  symbols: \6F0  \6F1  \6F2  \6F3  \6F4  \6F5  \6F6  \6F7  \6F8  \6F9;
+}
 
 @counter-style lower-roman {
   system: additive;
@@ -35,20 +128,25 @@
   additive-symbols: 1000 M, 900 CM, 500 D, 400 CD, 100 C, 90 XC, 50 L, 40 XL, 10 X, 9 IX, 5 V, 4 IV, 1 I;
 }
 
-@counter-style armenian {
-  system: additive;
-  range: 1 9999;
-  additive-symbols: 9000 \554, 8000 \553, 7000 \552, 6000 \551, 5000 \550, 4000 \54F, 3000 \54E, 2000 \54D, 1000 \54C, 900 \54B, 800 \54A, 700 \549, 600 \548, 500 \547, 400 \546, 300 \545, 200 \544, 100 \543, 90 \542, 80 \541, 70 \540, 60 \53F, 50 \53E, 40 \53D, 30 \53C, 20 \53B, 10 \53A, 9 \539, 8 \538, 7 \537, 6 \536, 5 \535, 4 \534, 3 \533, 2 \532, 1 \531;
+@counter-style tamil {
+  system: numeric;
+  symbols: \BE6  \BE7  \BE8  \BE9  \BEA  \BEB  \BEC  \BED  \BEE  \BEF;
 }
 
-@counter-style georgian {
-  system: additive;
-  range: 1 19999;
-  additive-symbols: 10000 \10F5, 9000 \10F0, 8000 \10EF, 7000 \10F4, 6000 \10EE, 5000 \10ED, 4000 \10EC, 3000 \10EB, 2000 \10EA, 1000 \10E9, 900 \10E8, 800 \10E7, 700 \10E6, 600 \10E5, 500 \10E4, 400 \10F3, 300 \10E2, 200 \10E1, 100 \10E0, 90 \10DF, 80 \10DE, 70 \10DD, 60 \10F2, 50 \10DC, 40 \10DB, 30 \10DA, 20 \10D9, 10 \10D8, 9 \10D7, 8 \10F1, 7 \10D6, 6 \10D5, 5 \10D4, 4 \10D3, 3 \10D2, 2 \10D1, 1 \10D0;
+@counter-style telugu {
+  system: numeric;
+  symbols: \C66  \C67  \C68  \C69  \C6A  \C6B  \C6C  \C6D  \C6E  \C6F;
 }
 
-/* hebrew is not included because our builtin algorithm can generate a wider
- * range of number in this style than what the spec defines. */
+@counter-style thai {
+  system: numeric;
+  symbols: \E50  \E51  \E52  \E53  \E54  \E55  \E56  \E57  \E58  \E59;
+}
+
+@counter-style tibetan {
+  system: numeric;
+  symbols: \F20  \F21  \F22  \F23  \F24  \F25  \F26  \F27  \F28  \F29;
+}
 
 /* 6.2 Alphabetic */
 
@@ -68,6 +166,20 @@
 
 @counter-style upper-latin {
   system: extends upper-alpha;
+}
+
+@counter-style cjk-heavenly-stem {
+  system: alphabetic;
+  symbols: \7532  \4E59  \4E19  \4E01  \620A  \5DF1  \5E9A  \8F9B  \58EC  \7678;
+  fallback: cjk-decimal;
+  suffix: '\3001';
+}
+
+@counter-style cjk-earthly-branch {
+  system: alphabetic;
+  symbols: \5B50  \4E11  \5BC5  \536F  \8FB0  \5DF3  \5348  \672A  \7533  \9149  \620C  \4EA5;
+  fallback: cjk-decimal;
+  suffix: '\3001';
 }
 
 @counter-style lower-greek {
@@ -111,126 +223,6 @@
 
 @counter-style cjk-ideographic {
   system: extends trad-chinese-informal;
-}
-
-/* Predefined Counter Styles */
-
-/* Some counter styles defined in Predefined Counter Styles are also included
- * here for compatibility with other browsers. */
-
-@counter-style arabic-indic {
-  system: numeric;
-  symbols: \660  \661  \662  \663  \664  \665  \666  \667  \668  \669;
-}
-
-@counter-style persian {
-  system: numeric;
-  symbols: \6F0  \6F1  \6F2  \6F3  \6F4  \6F5  \6F6  \6F7  \6F8  \6F9;
-}
-
-@counter-style lower-armenian {
-  system: additive;
-  range: 1 9999;
-  additive-symbols: 9000 \584, 8000 \583, 7000 \582, 6000 \581, 5000 \580, 4000 \57F, 3000 \57E, 2000 \57D, 1000 \57C, 900 \57B, 800 \57A, 700 \579, 600 \578, 500 \577, 400 \576, 300 \575, 200 \574, 100 \573, 90 \572, 80 \571, 70 \570, 60 \56F, 50 \56E, 40 \56D, 30 \56C, 20 \56B, 10 \56A, 9 \569, 8 \568, 7 \567, 6 \566, 5 \565, 4 \564, 3 \563, 2 \562, 1 \561;
-}
-
-@counter-style upper-armenian {
-  system: additive;
-  range: 1 9999;
-  additive-symbols: 9000 \554, 8000 \553, 7000 \552, 6000 \551, 5000 \550, 4000 \54F, 3000 \54E, 2000 \54D, 1000 \54C, 900 \54B, 800 \54A, 700 \549, 600 \548, 500 \547, 400 \546, 300 \545, 200 \544, 100 \543, 90 \542, 80 \541, 70 \540, 60 \53F, 50 \53E, 40 \53D, 30 \53C, 20 \53B, 10 \53A, 9 \539, 8 \538, 7 \537, 6 \536, 5 \535, 4 \534, 3 \533, 2 \532, 1 \531;
-}
-
-@counter-style bengali {
-  system: numeric;
-  symbols: \9E6  \9E7  \9E8  \9E9  \9EA  \9EB  \9EC  \9ED  \9EE  \9EF;
-}
-
-@counter-style devanagari {
-  system: numeric;
-  symbols: \966  \967  \968  \969  \96A  \96B  \96C  \96D  \96E  \96F;
-}
-
-@counter-style gujarati {
-  system: numeric;
-  symbols: \AE6  \AE7  \AE8  \AE9  \AEA  \AEB  \AEC  \AED  \AEE  \AEF;
-}
-
-@counter-style gurmukhi {
-  system: numeric;
-  symbols: \A66  \A67  \A68  \A69  \A6A  \A6B  \A6C  \A6D  \A6E  \A6F;
-}
-
-@counter-style cjk-heavenly-stem {
-  system: alphabetic;
-  symbols: \7532  \4E59  \4E19  \4E01  \620A  \5DF1  \5E9A  \8F9B  \58EC  \7678;
-  fallback: cjk-decimal;
-  suffix: '\3001';
-}
-
-@counter-style cjk-earthly-branch {
-  system: alphabetic;
-  symbols: \5B50  \4E11  \5BC5  \536F  \8FB0  \5DF3  \5348  \672A  \7533  \9149  \620C  \4EA5;
-  fallback: cjk-decimal;
-  suffix: '\3001';
-}
-
-@counter-style kannada {
-  system: numeric;
-  symbols: \CE6  \CE7  \CE8  \CE9  \CEA  \CEB  \CEC  \CED  \CEE  \CEF;
-}
-
-@counter-style khmer {
-  system: numeric;
-  symbols: \17E0  \17E1  \17E2  \17E3  \17E4  \17E5  \17E6  \17E7  \17E8  \17E9;
-}
-
-@counter-style cambodian {
-  system: extends khmer;
-}
-
-@counter-style lao {
-  system: numeric;
-  symbols: \ED0  \ED1  \ED2  \ED3  \ED4  \ED5  \ED6  \ED7  \ED8  \ED9;
-}
-
-@counter-style malayalam {
-  system: numeric;
-  symbols: \D66  \D67  \D68  \D69  \D6A  \D6B  \D6C  \D6D  \D6E  \D6F;
-}
-
-@counter-style mongolian {
-  system: numeric;
-  symbols: \1810  \1811  \1812  \1813  \1814  \1815  \1816  \1817  \1818  \1819;
-}
-
-@counter-style myanmar {
-  system: numeric;
-  symbols: \1040  \1041  \1042  \1043  \1044  \1045  \1046  \1047  \1048  \1049;
-}
-
-@counter-style oriya {
-  system: numeric;
-  symbols: \B66  \B67  \B68  \B69  \B6A  \B6B  \B6C  \B6D  \B6E  \B6F;
-}
-
-@counter-style tamil {
-  system: numeric;
-  symbols: \BE6  \BE7  \BE8  \BE9  \BEA  \BEB  \BEC  \BED  \BEE  \BEF;
-}
-
-@counter-style telugu {
-  system: numeric;
-  symbols: \C66  \C67  \C68  \C69  \C6A  \C6B  \C6C  \C6D  \C6E  \C6F;
-}
-
-@counter-style thai {
-  system: numeric;
-  symbols: \E50  \E51  \E52  \E53  \E54  \E55  \E56  \E57  \E58  \E59;
-}
-
-@counter-style tibetan {
-  system: numeric;
-  symbols: \F20  \F21  \F22  \F23  \F24  \F25  \F26  \F27  \F28  \F29;
 }
 
 /* Mozilla-specific counter styles */
