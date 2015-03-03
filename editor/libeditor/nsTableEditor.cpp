@@ -219,18 +219,16 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
     nsCOMPtr<nsIContent> content = do_QueryInterface(tableChild);
     if (content)
     {
-      nsIAtom *atom = content->Tag();
-
-      if (atom == nsGkAtoms::tr) {
+      if (content->IsHTMLElement(nsGkAtoms::tr)) {
         // Found a row directly under <table>
         *aRowNode = tableChild;
         NS_ADDREF(*aRowNode);
         return NS_OK;
       }
       // Look for row in one of the row container elements      
-      if (atom == nsGkAtoms::tbody ||
-          atom == nsGkAtoms::thead ||
-          atom == nsGkAtoms::tfoot) {
+      if (content->IsAnyOfHTMLElements(nsGkAtoms::tbody,
+                                       nsGkAtoms::thead,
+                                       nsGkAtoms::tfoot)) {
         nsCOMPtr<nsIDOMNode> rowNode;
         res = tableChild->GetFirstChild(getter_AddRefs(rowNode));
         NS_ENSURE_SUCCESS(res, res);

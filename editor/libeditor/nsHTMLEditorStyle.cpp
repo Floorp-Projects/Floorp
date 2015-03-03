@@ -498,7 +498,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   }
 
   // is it already the right kind of node, but with wrong attribute?
-  if (aNode->Tag() == aProperty) {
+  if (aNode->IsHTMLElement(aProperty)) {
     // Just set the attribute on it.
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
@@ -650,7 +650,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
         aProperty, aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
     }
     if (// node is the correct inline prop
-        (aProperty && node->Tag() == aProperty) ||
+        (aProperty && node->IsHTMLElement(aProperty)) ||
         // node is href - test if really <a href=...
         (aProperty == nsGkAtoms::href && nsHTMLEditUtils::IsLink(node)) ||
         // or node is any prop, and we asked to split them all
@@ -1689,13 +1689,13 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
   // look for siblings that are correct type of node
   nsIAtom* nodeType = aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
   nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(node);
-  if (sibling && sibling->Tag() == nodeType) {
+  if (sibling && sibling->IsHTMLElement(nodeType)) {
     // previous sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, -1);
     return res;
   }
   sibling = GetNextHTMLSibling(node);
-  if (sibling && sibling->Tag() == nodeType) {
+  if (sibling && sibling->IsHTMLElement(nodeType)) {
     // following sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, 0);
     return res;
