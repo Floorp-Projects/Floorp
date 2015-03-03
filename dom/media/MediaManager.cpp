@@ -26,6 +26,9 @@
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "nsPrincipal.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsIInputStream.h"
+#include "nsILineInputStream.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1359,120 +1362,308 @@ private:
 };
 #endif
 
+// A file in the profile dir is used to persist mOriginUuids used to anonymize
+// deviceIds to be unique per origin, to avoid them being supercookies.
+
+#define ORIGINUUIDS_FILE "enumerate_devices.txt"
+#define ORIGINUUIDS_VERSION "1"
+
+#define HMAC_LENGTH 20
+
 /**
  * Similar to GetUserMediaTask, but used for the chrome-only
  * GetUserMediaDevices function. Enumerates a list of audio & video devices,
  * wraps them up in nsIMediaDevice objects and returns it to the success
  * callback.
+ *
+ * All code in this class runs on the MediaManager thread.
  */
 class GetUserMediaDevicesTask : public Task
 {
-  static unsigned char* unconst_uchar_cast(const char *s) {
-    return reinterpret_cast<unsigned char*>(const_cast<char*>(s));
-  }
-
-  // Cribbed from nricectx.cpp
-  static nsresult
-  hmac_sha1(const char *key, int keyl, const char *buf, int bufl,
-            unsigned char *result) {
-    const CK_MECHANISM_TYPE mech = CKM_SHA_1_HMAC;
-    PK11SlotInfo *slot = 0;
-    MOZ_ASSERT(keyl > 0);
-    SECItem keyi = { siBuffer, unconst_uchar_cast(key),
-                     static_cast<unsigned int>(keyl) };
-    PK11SymKey *skey = 0;
-    PK11Context *hmac_ctx = 0;
-    SECStatus status;
-    unsigned int hmac_len;
-    SECItem param = { siBuffer, nullptr, 0 };
-    nsresult rv = NS_ERROR_UNEXPECTED;
-
-    slot = PK11_GetInternalKeySlot();
-    if (!slot) {
-      goto abort;
-    }
-    skey = PK11_ImportSymKey(slot, mech, PK11_OriginUnwrap, CKA_SIGN, &keyi,
-                             nullptr);
-    if (!skey) {
-      goto abort;
+  class OriginUuidsLoader
+  {
+    static unsigned char*
+    unconst_uchar_cast(const char *s) {
+      return reinterpret_cast<unsigned char*>(const_cast<char*>(s));
     }
 
-    hmac_ctx = PK11_CreateContextBySymKey(mech, CKA_SIGN, skey, &param);
-    if (!hmac_ctx) {
-      goto abort;
-    }
-    status = PK11_DigestBegin(hmac_ctx);
-    if (status != SECSuccess) {
-      goto abort;
-    }
-    status = PK11_DigestOp(hmac_ctx, unconst_uchar_cast(buf), bufl);
-    if (status != SECSuccess) {
-      goto abort;
-    }
-    status = PK11_DigestFinal(hmac_ctx, result, &hmac_len, 20);
-    if (status != SECSuccess) {
-      goto abort;
-    }
-    MOZ_ASSERT(hmac_len == 20);
-    rv = NS_OK;
-
-  abort:
-    if (hmac_ctx) {
-      PK11_DestroyContext(hmac_ctx, PR_TRUE);
-    }
-    if (skey) {
-      PK11_FreeSymKey(skey);
-    }
-    if (slot) {
-      PK11_FreeSlot(slot);
-    }
-    return rv;
-  }
-
-  nsresult AnonymizeId(nsAString& aId, const nsACString& origin) {
-    // deviceId would be a supercookie if we returned it. Anonymize it:
-    // 1. Get (or create) a persistent uuid for this origin.
-    // 2. Return hmac_sha1(uuid, id) - an anonymized id unique to origin.
-
-    static bool loaded = false;
-    if (!loaded) {
-      // load OriginUuids from disk.
-    }
-    OriginUuid* originUuid;
-    if (!mManager->mOriginUuids.Get(origin, &originUuid)) {
-      char uuid[NSID_LENGTH];
-      {
-        nsresult rv;
-        nsID id;
-        {
-          nsCOMPtr<nsIUUIDGenerator> uuidgen =
-              do_GetService("@mozilla.org/uuid-generator;1", &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-          rv = uuidgen->GenerateUUIDInPlace(&id);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        id.ToProvidedString(uuid);
-      }
-      originUuid = new OriginUuid(uuid, false);
-      mManager->mOriginUuids.Put(origin, originUuid);
-    }
-
-    unsigned char mac[20];
+    // Cribbed from nricectx.cpp
+    static nsresult
+    hmac_sha1(const char *key, int keyl, const char *buf, int bufl,
+              unsigned char *result)
     {
+      const CK_MECHANISM_TYPE mech = CKM_SHA_1_HMAC;
+      PK11SlotInfo *slot = 0;
+      MOZ_ASSERT(keyl > 0);
+      SECItem keyi = { siBuffer, unconst_uchar_cast(key),
+                       static_cast<unsigned int>(keyl) };
+      PK11SymKey *skey = 0;
+      PK11Context *hmac_ctx = 0;
+      SECStatus status;
+      unsigned int hmac_len;
+      SECItem param = { siBuffer, nullptr, 0 };
+      nsresult rv = NS_ERROR_UNEXPECTED;
+
+      slot = PK11_GetInternalKeySlot();
+      if (!slot) {
+        goto abort;
+      }
+      skey = PK11_ImportSymKey(slot, mech, PK11_OriginUnwrap, CKA_SIGN, &keyi,
+                               nullptr);
+      if (!skey) {
+        goto abort;
+      }
+
+      hmac_ctx = PK11_CreateContextBySymKey(mech, CKA_SIGN, skey, &param);
+      if (!hmac_ctx) {
+        goto abort;
+      }
+      status = PK11_DigestBegin(hmac_ctx);
+      if (status != SECSuccess) {
+        goto abort;
+      }
+      status = PK11_DigestOp(hmac_ctx, unconst_uchar_cast(buf), bufl);
+      if (status != SECSuccess) {
+        goto abort;
+      }
+      status = PK11_DigestFinal(hmac_ctx, result, &hmac_len, HMAC_LENGTH);
+      if (status != SECSuccess) {
+        goto abort;
+      }
+      MOZ_ASSERT(hmac_len == HMAC_LENGTH);
+      rv = NS_OK;
+
+    abort:
+      if (hmac_ctx) {
+        PK11_DestroyContext(hmac_ctx, PR_TRUE);
+      }
+      if (skey) {
+        PK11_FreeSymKey(skey);
+      }
+      if (slot) {
+        PK11_FreeSlot(slot);
+      }
+      return rv;
+    }
+
+  public:
+    OriginUuidsLoader()
+    : mUnsaved(false), mManager(MediaManager::GetInstance()) {}
+
+    nsresult
+    AnonymizeId(nsAString& aId, const nsACString& origin, bool aInPrivateBrowsing)
+    {
+      // The persistent deviceId would be a supercookie if we returned it. See
+      // http://w3c.github.io/mediacapture-main/getusermedia.html#attributes-8
+      //
+      // 1. Get (or create) a persistent uuid for this origin.
+      // 2. Return hmac_sha1(uuid, id) - an anonymized id unique to origin.
+
+      static bool loaded = false;
+      if (!loaded) {
+        Load();
+        loaded = true;
+      }
+      OriginUuid* originUuid;
+      if (!mManager->mOriginUuids.Get(origin, &originUuid)) {
+        nsresult rv;
+        nsCOMPtr<nsIUUIDGenerator> uuidgen =
+            do_GetService("@mozilla.org/uuid-generator;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsID nsid;
+        rv = uuidgen->GenerateUUIDInPlace(&nsid);
+        NS_ENSURE_SUCCESS(rv, rv);
+        char uuid[NSID_LENGTH];
+        nsid.ToProvidedString(uuid);
+
+        originUuid = new OriginUuid(uuid, aInPrivateBrowsing);
+        mManager->mOriginUuids.Put(origin, originUuid);
+        mUnsaved = true;
+      }
+
+      unsigned char mac[HMAC_LENGTH];
       NS_ConvertUTF16toUTF8 id(aId);
       hmac_sha1(originUuid->mUuid.get(), originUuid->mUuid.Length(),
                 id.get(), id.Length(), mac);
+
+      char hex[sizeof(mac) * 2 + 1];
+      auto& m = mac;
+      PR_snprintf(hex, sizeof(hex), // Use first 16 bytes of hmac as id
+                  "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x"
+                  "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+                  m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7],
+                  m[8], m[9], m[10],m[11], m[12], m[13], m[14], m[15]);
+      aId = NS_ConvertUTF8toUTF16(hex);
+      return NS_OK;
     }
-    char hex[sizeof(mac) * 2 + 1];
-    auto& m = mac;
-    PR_snprintf(hex, sizeof(hex), // Use first 16 bytes of hmac as id
-                "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x"
-                "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
-                m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7],
-                m[8], m[9], m[10],m[11], m[12], m[13], m[14], m[15]);
-    aId = NS_ConvertUTF8toUTF16(hex);
-    return NS_OK;
-  }
+
+    already_AddRefed<nsIFile>
+    GetFile()
+    {
+      MOZ_ASSERT(mManager->mProfileDir);
+      nsCOMPtr<nsIFile> file;
+      nsresult rv = mManager->mProfileDir->Clone(getter_AddRefs(file));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
+      file->Append(NS_LITERAL_STRING(ORIGINUUIDS_FILE));
+      return file.forget();
+    }
+
+    // Format of file is (first line is version #):
+    //
+    // 1
+    // {54b1d3ad-18ad-0546-a551-80c1bf425057} http://fiddle.jshell.net
+    // {f9c2a045-53b4-0546-bdd0-b96f41850f8a} http://mozilla.github.io
+    // etc.
+
+    nsresult Read()
+    {
+      nsCOMPtr<nsIFile> file = GetFile();
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      bool exists;
+      nsresult rv = file->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (!exists) {
+        return NS_OK;
+      }
+
+      nsCOMPtr<nsIInputStream> stream;
+      rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      nsCOMPtr<nsILineInputStream> i = do_QueryInterface(stream);
+      MOZ_ASSERT(i);
+
+      nsCString line;
+      bool hasMoreLines;
+      rv = i->ReadLine(line, &hasMoreLines);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (!line.EqualsLiteral(ORIGINUUIDS_VERSION)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      while (hasMoreLines) {
+        rv = i->ReadLine(line, &hasMoreLines); \
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        int32_t f = line.FindChar(' ');
+        // Ignore any line that has no space, per format in the comment above.
+        if (f >= 0) {
+          const nsACString& uuid = Substring(line, 0, f);
+          const nsACString& origin = Substring(line, f+1);
+          mManager->mOriginUuids.Put(origin, new OriginUuid(uuid, false));
+        }
+      }
+      return NS_OK;
+    }
+
+    static PLDHashOperator
+    HashWriter(const nsACString& aOrigin, OriginUuid* aOriginUuid, void *aUserArg)
+    {
+      auto* stream = static_cast<nsIOutputStream *>(aUserArg);
+
+      if (!aOriginUuid->mPrivateBrowsing) {
+        nsCString buffer;
+        buffer.Append(aOriginUuid->mUuid);
+        buffer.Append(' ');
+        buffer.Append(aOrigin);
+        buffer.Append('\n');
+
+        uint32_t count;
+        nsresult rv = stream->Write(buffer.Data(), buffer.Length(), &count);
+        if (NS_WARN_IF(NS_FAILED(rv)) || count != buffer.Length()) {
+          return PL_DHASH_STOP;
+        }
+      }
+      return PL_DHASH_NEXT;
+    }
+
+    nsresult
+    Write()
+    {
+      nsCOMPtr<nsIFile> file = GetFile();
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      nsCOMPtr<nsIOutputStream> stream;
+      nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(stream), file);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      nsAutoCString buffer;
+      buffer.AppendLiteral(ORIGINUUIDS_VERSION);
+      buffer.Append('\n');
+
+      uint32_t count;
+      rv = stream->Write(buffer.Data(), buffer.Length(), &count);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (count != buffer.Length()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      mManager->mOriginUuids.EnumerateRead(HashWriter, stream.get());
+
+      nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(stream);
+      MOZ_ASSERT(safeStream);
+
+      rv = safeStream->Finish();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
+    }
+
+    nsresult Load()
+    {
+      nsresult rv = Read();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        Delete();
+      }
+      return rv;
+    }
+
+    nsresult Save()
+    {
+      nsresult rv = Write();
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to write data for EnumerateDevices id-persistence.");
+        Delete();
+      }
+      return rv;
+    }
+
+    nsresult Delete()
+    {
+      nsCOMPtr<nsIFile> file = GetFile();
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      nsresult rv = file->Remove(false);
+      if (rv == NS_ERROR_FILE_NOT_FOUND) {
+        return NS_OK;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
+    }
+
+    bool mUnsaved;
+  private:
+    nsRefPtr<MediaManager> mManager;
+  };
 
 public:
   GetUserMediaDevicesTask(
@@ -1481,7 +1672,7 @@ public:
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowId, nsACString& aAudioLoopbackDev,
     nsACString& aVideoLoopbackDev, bool aPrivileged, const nsACString& aOrigin,
-    bool aUseFakeDevices)
+    bool aInPrivateBrowsing, bool aUseFakeDevices)
     : mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
     , mOnFailure(aOnFailure)
@@ -1491,6 +1682,7 @@ public:
     , mLoopbackVideoDevice(aVideoLoopbackDev)
     , mPrivileged(aPrivileged)
     , mOrigin(aOrigin)
+    , mInPrivateBrowsing(aInPrivateBrowsing)
     , mUseFakeDevices(aUseFakeDevices) {}
 
   void // NS_IMETHOD
@@ -1528,14 +1720,18 @@ public:
 
     nsresult rv = NS_OK;
     if (!mPrivileged) {
+      OriginUuidsLoader loader;
       for (auto& source : *result) {
         nsString id;
         source->GetId(id);
-        rv = AnonymizeId(id, mOrigin);
+        rv = loader.AnonymizeId(id, mOrigin, mInPrivateBrowsing);
         if (NS_FAILED(rv)) {
           break;
         }
         source->SetId(id);
+      }
+      if (loader.mUnsaved) {
+        loader.Save();
       }
     }
     if (NS_SUCCEEDED(rv)) {
@@ -1571,6 +1767,7 @@ private:
   nsCString mLoopbackVideoDevice;
   bool mPrivileged;
   nsCString mOrigin;
+  bool mInPrivateBrowsing;
   bool mUseFakeDevices;
 };
 
@@ -2003,13 +2200,18 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
   nsCString origin;
   nsPrincipal::GetOriginForURI(aWindow->GetDocumentURI(),
                                getter_Copies(origin));
-
+  bool inPrivateBrowsing;
+  {
+    nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
+    nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
+    inPrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
+  }
   MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
     new GetUserMediaDevicesTask(
       aConstraints, onSuccess.forget(), onFailure.forget(),
       (aInnerWindowID ? aInnerWindowID : aWindow->WindowID()),
       loopbackAudioDevice, loopbackVideoDevice, aPrivileged, origin,
-      useFakeStreams));
+      inPrivateBrowsing, useFakeStreams));
 
   return NS_OK;
 }
@@ -2020,6 +2222,12 @@ MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
                                nsIDOMGetUserMediaErrorCallback* aOnFailure)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (!mProfileDir) {
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                         getter_AddRefs(mProfileDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   MediaStreamConstraints c;
   c.mVideo.SetAsBoolean() = true;
