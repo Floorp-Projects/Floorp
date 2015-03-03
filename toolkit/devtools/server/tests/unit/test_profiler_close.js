@@ -10,12 +10,23 @@
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 
+function connect_client(callback)
+{
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      callback(client, response.profilerActor);
+    });
+  });
+}
+
 function run_test()
 {
-  get_chrome_actors((client1, form1) => {
-    let actor1 = form1.profilerActor;
-    get_chrome_actors((client2, form2) => {
-      let actor2 = form2.profilerActor;
+  DebuggerServer.init();
+  DebuggerServer.addBrowserActors();
+
+  connect_client((client1, actor1) => {
+    connect_client((client2, actor2) => {
       test_close(client1, actor1, client2, actor2, () => {
         client1.close(() => {
           client2.close(() => {

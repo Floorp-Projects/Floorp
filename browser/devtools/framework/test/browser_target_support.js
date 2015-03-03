@@ -4,6 +4,10 @@
 // Test support methods on Target, such as `hasActor`, `getActorDescription`,
 // `actorHasMethod` and `getTrait`.
 
+let { DebuggerServer } =
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+let { DebuggerClient } =
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { devtools } =
   Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { Task } =
@@ -56,20 +60,29 @@ function* testTarget (client, target) {
 function test() {
   waitForExplicitFinish();
 
-  getChromeActors((client, response) => {
-    let options = {
-      form: response,
-      client: client,
-      chrome: true
-    };
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
 
-    devtools.TargetFactory.forRemoteTab(options).then(Task.async(testTarget).bind(null, client));
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      let options = {
+        form: response,
+        client: client,
+        chrome: true
+      };
+
+      devtools.TargetFactory.forRemoteTab(options).then(Task.async(testTarget).bind(null, client));
+    });
   });
 }
 
 function close (target, client) {
   target.on("close", () => {
     ok(true, "Target was closed");
+    DebuggerServer.destroy();
     finish();
   });
   client.close();

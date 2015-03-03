@@ -23,7 +23,6 @@ function test() {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
-  DebuggerServer.allowChromeProcess = true;
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
@@ -43,26 +42,26 @@ function test() {
 }
 
 function testChromeActor() {
-  gClient.attachProcess().then(aResponse => {
+  gClient.listTabs(aResponse => {
+    ok(aResponse.chromeDebugger.contains("chromeDebugger"),
+      "Chrome debugger actor should identify itself accordingly.");
+
     gClient.addListener("newGlobal", onNewGlobal);
     gClient.addListener("newSource", onNewSource);
 
-    let actor = aResponse.form.actor;
-    gClient.attachTab(actor, (response, tabClient) => {
-      tabClient.attachThread(null, (aResponse, aThreadClient) => {
-        gThreadClient = aThreadClient;
+    gClient.attachThread(aResponse.chromeDebugger, (aResponse, aThreadClient) => {
+      gThreadClient = aThreadClient;
 
-        if (aResponse.error) {
-          ok(false, "Couldn't attach to the chrome debugger.");
-          gAttached.reject();
-        } else {
-          ok(true, "Attached to the chrome debugger.");
-          gAttached.resolve();
+      if (aResponse.error) {
+        ok(false, "Couldn't attach to the chrome debugger.");
+        gAttached.reject();
+      } else {
+        ok(true, "Attached to the chrome debugger.");
+        gAttached.resolve();
 
-          // Ensure that a new chrome global will be created.
-          gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
-        }
-      });
+        // Ensure that a new chrome global will be created.
+        gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
+      }
     });
   });
 }
