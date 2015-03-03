@@ -575,7 +575,6 @@ let gLocalRuntime = {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
-    DebuggerServer.allowChromeProcess = true;
     connection.host = null; // Force Pipe transport
     connection.port = null;
     connection.connect();

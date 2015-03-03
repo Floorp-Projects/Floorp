@@ -36,35 +36,6 @@ function getWindowID(window) {
                .currentInnerWindowID;
 }
 
-function getDocShellChromeEventHandler(docShell) {
-  let handler = docShell.chromeEventHandler;
-  if (!handler) {
-    try {
-      // toplevel xul window's docshell doesn't have chromeEventHandler attribute
-      // the chrome event handler is just the global window object
-      handler = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindow);
-    } catch(e) {}
-  }
-  return handler;
-}
-function getChildDocShells(docShell) {
-  let docShellsEnum = docShell.getDocShellEnumerator(
-    Ci.nsIDocShellTreeItem.typeAll,
-    Ci.nsIDocShell.ENUMERATE_FORWARDS
-  );
-
-  let docShells = [];
-  while (docShellsEnum.hasMoreElements()) {
-    let docShell = docShellsEnum.getNext();
-    docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIWebProgress);
-    docShells.push(docShell);
-  }
-  return docShells;
-}
-exports.getChildDocShells = getChildDocShells;
-
 /**
  * Browser-specific actors.
  */
@@ -609,10 +580,6 @@ function TabActor(aConnection)
     shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
   });
 
-  // Flag eventually overloaded by sub classes in order to watch new docshells
-  // Used on b2g to catch activity frames and in chrome to list all frames
-  this.listenForNewDocShells = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
-
   this.traits = { reconfigure: true, frames: true };
 }
 
@@ -640,7 +607,10 @@ TabActor.prototype = {
    * An object on which listen for DOMWindowCreated and pageshow events.
    */
   get chromeEventHandler() {
-    return getDocShellChromeEventHandler(this.docShell);
+    // TODO: bug 992778, fix docShell.chromeEventHandler in child processes
+    return this.docShell.chromeEventHandler ||
+           this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIContentFrameMessageManager);
   },
 
   /**
@@ -664,20 +634,29 @@ TabActor.prototype = {
    * @return {Array}
    */
   get docShells() {
-    return getChildDocShells(this.docShell);
+    let docShellsEnum = this.docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let docShells = [];
+    while (docShellsEnum.hasMoreElements()) {
+      let docShell = docShellsEnum.getNext();
+      docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIWebProgress);
+      docShells.push(docShell);
+    }
+
+    return docShells;
   },
 
   /**
    * Getter for the tab content's DOM window.
    */
   get window() {
-    // On xpcshell, there is no document
-    if (this.docShell) {
-      return this.docShell
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
-    }
-    return null;
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow);
   },
 
   /**
@@ -782,20 +761,16 @@ TabActor.prototype = {
     dbg_assert(this.actorID,
                "tab should have an actorID.");
 
-    let response = {
-      actor: this.actorID
-    };
+    let windowUtils = this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
 
-    // On xpcshell we are using tabactor even if there is no valid document.
-    // Actors like chrome debugger can work.
-    if (this.window) {
-      response.title = this.title;
-      response.url = this.url;
-      let windowUtils = this.window
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
-      response.outerWindowID = windowUtils.outerWindowID;
-    }
+    let response = {
+      actor: this.actorID,
+      title: this.title,
+      url: this.url,
+      outerWindowID: windowUtils.outerWindowID
+    };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
     let actorPool = new ActorPool(this.conn);
@@ -894,24 +869,21 @@ TabActor.prototype = {
     // ... and a pool for context-lifetime actors.
     this._pushContext();
 
-    // on xpcshell, there is no document
-    if (this.window) {
-      this._progressListener = new DebuggerProgressListener(this);
+    this._progressListener = new DebuggerProgressListener(this);
 
-      // Save references to the original document we attached to
-      this._originalWindow = this.window;
+    // Save references to the original document we attached to
+    this._originalWindow = this.window;
 
-      // Ensure replying to attach() request first
-      // before notifying about new docshells.
-      DevToolsUtils.executeSoon(() => this._watchDocshells());
-    }
+    // Ensure replying to attach() request first
+    // before notifying about new docshells.
+    DevToolsUtils.executeSoon(() => this._watchDocshells());
 
     this._attached = true;
   },
 
   _watchDocshells: function BTA_watchDocshells() {
     // In child processes, we watch all docshells living in the process.
-    if (this.listenForNewDocShells) {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       Services.obs.addObserver(this, "webnavigation-create", false);
     }
     Services.obs.addObserver(this, "webnavigation-destroy", false);
@@ -955,34 +927,26 @@ TabActor.prototype = {
     }
     if (aTopic == "webnavigation-create") {
       aSubject.QueryInterface(Ci.nsIDocShell);
-      this._onDocShellCreated(aSubject);
+      // webnavigation-create is fired very early during docshell construction.
+      // In new root docshells within child processes, involving TabChild,
+      // this event is from within this call:
+      //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l912
+      // whereas the chromeEventHandler (and most likely other stuff) is set later:
+      //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l944
+      // So wait a tick before watching it:
+      DevToolsUtils.executeSoon(() => {
+        // In child processes, we have new root docshells,
+        // let's watch them and all their child docshells.
+        if (this._isRootDocShell(aSubject)) {
+          this._progressListener.watch(aSubject);
+        }
+        this._notifyDocShellsUpdate([aSubject]);
+      });
     } else if (aTopic == "webnavigation-destroy") {
-      this._onDocShellDestroy(aSubject);
+      let webProgress = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebProgress);
+      this._notifyDocShellDestroy(webProgress);
     }
-  },
-
-  _onDocShellCreated: function (docShell) {
-    // (chrome-)webnavigation-create is fired very early during docshell construction.
-    // In new root docshells within child processes, involving TabChild,
-    // this event is from within this call:
-    //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l912
-    // whereas the chromeEventHandler (and most likely other stuff) is set later:
-    //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l944
-    // So wait a tick before watching it:
-    DevToolsUtils.executeSoon(() => {
-      // In child processes, we have new root docshells,
-      // let's watch them and all their child docshells.
-      if (this._isRootDocShell(docShell)) {
-        this._progressListener.watch(docShell);
-      }
-      this._notifyDocShellsUpdate([docShell]);
-    });
-  },
-
-  _onDocShellDestroy: function (docShell) {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    this._notifyDocShellDestroy(webProgress);
   },
 
   _isRootDocShell: function (docShell) {
@@ -998,9 +962,7 @@ TabActor.prototype = {
   // Convert docShell list to windows objects list being sent to the client
   _docShellsToWindows: function (docshells) {
     return docshells.map(docShell => {
-      let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebProgress);
-      let window = webProgress.DOMWindow;
+      let window = docShell.DOMWindow;
       let id = window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils)
                      .outerWindowID;
@@ -1035,7 +997,6 @@ TabActor.prototype = {
   },
 
   _notifyDocShellDestroy: function (webProgress) {
-    webProgress = webProgress.QueryInterface(Ci.nsIWebProgress);
     let id = webProgress.DOMWindow
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils)
@@ -1135,17 +1096,15 @@ TabActor.prototype = {
     if (this.docShell) {
       this._progressListener.unwatch(this.docShell);
     }
-    if (this._processListener) {
-      this._progressListener.destroy();
-      this._progressListener = null;
-      this._originalWindow = null;
+    this._progressListener.destroy();
+    this._progressListener = null;
+    this._originalWindow = null;
 
-      // Removes the observers being set in _watchDocShells
-      if (this.listenForNewDocShells) {
-        Services.obs.removeObserver(this, "webnavigation-create");
-      }
-      Services.obs.removeObserver(this, "webnavigation-destroy");
+    // Removes the observers being set in _watchDocShells
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.removeObserver(this, "webnavigation-create", false);
     }
+    Services.obs.removeObserver(this, "webnavigation-destroy", false);
 
     this._popContext();
 
@@ -1345,11 +1304,9 @@ TabActor.prototype = {
 
     this._windowDestroyed(this.window, null, true);
 
-    // Immediately change the window as this window, if in process of unload
-    // may already be non working on the next cycle and start throwing
-    this._setWindow(window);
-
     DevToolsUtils.executeSoon(() => {
+      this._setWindow(window);
+
       // Then fake window-ready and navigate on the given document
       this._windowReady(window, true);
       DevToolsUtils.executeSoon(() => {
@@ -2061,7 +2018,11 @@ DebuggerProgressListener.prototype = {
                                           Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
                                           Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
-    let handler = getDocShellChromeEventHandler(docShell);
+    // TODO: fix docShell.chromeEventHandler in child processes!
+    let handler = docShell.chromeEventHandler ||
+                  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIContentFrameMessageManager);
+
     handler.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
     handler.addEventListener("pageshow", this._onWindowCreated, true);
     handler.addEventListener("pagehide", this._onWindowHidden, true);
@@ -2081,7 +2042,11 @@ DebuggerProgressListener.prototype = {
       webProgress.removeProgressListener(this);
     } catch(e) {}
 
-    let handler = getDocShellChromeEventHandler(docShell);
+    // TODO: fix docShell.chromeEventHandler in child processes!
+    let handler = docShell.chromeEventHandler ||
+                  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIContentFrameMessageManager);
+
     handler.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
     handler.removeEventListener("pageshow", this._onWindowCreated, true);
     handler.removeEventListener("pagehide", this._onWindowHidden, true);
@@ -2092,10 +2057,18 @@ DebuggerProgressListener.prototype = {
   },
 
   _getWindowsInDocShell: function(docShell) {
-    return getChildDocShells(docShell).map(d => {
-      return d.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindow);
-    });
+    let docShellsEnum = docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let windows = [];
+    while (docShellsEnum.hasMoreElements()) {
+      let w = docShellsEnum.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIDOMWindow);
+      windows.push(w);
+    }
+    return windows;
   },
 
   onWindowCreated: DevToolsUtils.makeInfallible(function(evt) {
