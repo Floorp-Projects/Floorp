@@ -421,10 +421,8 @@ void MediaDecoder::DestroyDecodedStream()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (GetDecodedStream()) {
-    GetStateMachine()->ResyncMediaStreamClock();
-  } else {
-    // Avoid the redundant blocking to output stream.
+  // Avoid the redundant blocking to output stream.
+  if (!GetDecodedStream()) {
     return;
   }
 
@@ -456,9 +454,6 @@ void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
   GetReentrantMonitor().AssertCurrentThreadIn();
   if (!mDecodedStream) {
     return;
-  }
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetSyncPointForMediaStream();
   }
   bool blockForStateMachineNotPlaying =
     mDecoderStateMachine && !mDecoderStateMachine->IsPlaying() &&
@@ -629,11 +624,6 @@ void MediaDecoder::Shutdown()
 
   mShuttingDown = true;
 
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    DestroyDecodedStream();
-  }
-
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
@@ -659,6 +649,12 @@ void MediaDecoder::Shutdown()
 MediaDecoder::~MediaDecoder()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  {
+    // Don't destroy the decoded stream until destructor in order to keep the
+    // invariant that the decoded stream is always available in capture mode.
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    DestroyDecodedStream();
+  }
   MediaMemoryTracker::RemoveMediaDecoder(this);
   UnpinForSeek();
   MOZ_COUNT_DTOR(MediaDecoder);
@@ -1353,12 +1349,7 @@ void MediaDecoder::PlaybackPositionChanged()
         // and we don't want to override the seek algorithm and change the
         // current time after the seek has started but before it has
         // completed.
-        if (GetDecodedStream()) {
-          mCurrentTime = mDecoderStateMachine->GetCurrentTimeViaMediaStreamSync()/
-            static_cast<double>(USECS_PER_S);
-        } else {
-          mCurrentTime = mDecoderStateMachine->GetCurrentTime();
-        }
+        mCurrentTime = mDecoderStateMachine->GetCurrentTime();
       }
       mDecoderStateMachine->ClearPositionChangeFlag();
     }
