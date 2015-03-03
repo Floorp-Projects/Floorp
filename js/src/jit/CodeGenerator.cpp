@@ -8670,18 +8670,15 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
 
 template <typename T>
 static inline void
-StoreToTypedArray(MacroAssembler &masm, Scalar::Type writeType, const LAllocation *value, const T &dest)
+StoreToTypedArray(MacroAssembler &masm, Scalar::Type arrayType, const LAllocation *value, const T &dest)
 {
-    if (Scalar::isSimdType(writeType) ||
-        writeType == Scalar::Float32 ||
-        writeType == Scalar::Float64)
-    {
-        masm.storeToTypedFloatArray(writeType, ToFloatRegister(value), dest);
+    if (arrayType == Scalar::Float32 || arrayType == Scalar::Float64) {
+        masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())
-            masm.storeToTypedIntArray(writeType, Imm32(ToInt32(value)), dest);
+            masm.storeToTypedIntArray(arrayType, Imm32(ToInt32(value)), dest);
         else
-            masm.storeToTypedIntArray(writeType, ToRegister(value), dest);
+            masm.storeToTypedIntArray(arrayType, ToRegister(value), dest);
     }
 }
 
@@ -8691,16 +8688,16 @@ CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
     Register elements = ToRegister(lir->elements());
     const LAllocation *value = lir->value();
 
-    Scalar::Type writeType = lir->mir()->writeType();
-    int width = Scalar::byteSize(lir->mir()->arrayType());
+    Scalar::Type arrayType = lir->mir()->arrayType();
+    int width = Scalar::byteSize(arrayType);
 
     if (lir->index()->isConstant()) {
         Address dest(elements, ToInt32(lir->index()) * width + lir->mir()->offsetAdjustment());
-        StoreToTypedArray(masm, writeType, value, dest);
+        StoreToTypedArray(masm, arrayType, value, dest);
     } else {
         BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width),
                        lir->mir()->offsetAdjustment());
-        StoreToTypedArray(masm, writeType, value, dest);
+        StoreToTypedArray(masm, arrayType, value, dest);
     }
 }
 

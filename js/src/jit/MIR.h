@@ -9067,7 +9067,6 @@ class MStoreTypedArrayElement
     public StoreTypedArrayPolicy::Data
 {
     Scalar::Type arrayType_;
-    Scalar::Type writeType_;
     bool requiresBarrier_;
     int32_t offsetAdjustment_;
 
@@ -9079,7 +9078,6 @@ class MStoreTypedArrayElement
                             int32_t offsetAdjustment)
       : MTernaryInstruction(elements, index, value),
         arrayType_(arrayType),
-        writeType_(arrayType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
         offsetAdjustment_(offsetAdjustment),
         racy_(false)
@@ -9105,17 +9103,8 @@ class MStoreTypedArrayElement
                                                   requiresBarrier, offsetAdjustment);
     }
 
-    void setWriteType(Scalar::Type type) {
-        writeType_ = type;
-    }
-    Scalar::Type writeType() const {
-        return writeType_;
-    }
     Scalar::Type arrayType() const {
         return arrayType_;
-    }
-    bool isSimdWrite() const {
-        return Scalar::isSimdType(writeType());
     }
     bool isByteArray() const {
         return arrayType_ == Scalar::Int8 ||
