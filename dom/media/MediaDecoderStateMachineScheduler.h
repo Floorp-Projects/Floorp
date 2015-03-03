@@ -21,8 +21,6 @@ class ReentrantMonitor;
 class MediaDecoderStateMachineScheduler {
   enum State {
     SCHEDULER_STATE_NONE,
-    SCHEDULER_STATE_FROZEN,
-    SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK,
     SCHEDULER_STATE_SHUTDOWN
   };
 public:
@@ -34,8 +32,6 @@ public:
   nsresult Schedule(int64_t aUsecs = 0);
   void ScheduleAndShutdown();
   nsresult TimeoutExpired(int aTimerId);
-  void FreezeScheduling();
-  void ThawScheduling();
 
   bool OnStateMachineThread() const;
   bool IsScheduled() const;
@@ -46,11 +42,6 @@ public:
 
   nsIEventTarget* GetStateMachineThread() const {
     return mEventTarget;
-  }
-
-  bool IsFrozen() const {
-    return mState == SCHEDULER_STATE_FROZEN ||
-           mState == SCHEDULER_STATE_FROZEN_WITH_PENDING_TASK;
   }
 
 private:
