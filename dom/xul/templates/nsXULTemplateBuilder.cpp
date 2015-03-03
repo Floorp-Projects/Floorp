@@ -773,7 +773,8 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
     if (aNewResult) {
         // only allow a result to be inserted into containers with a matching tag
         nsIAtom* tag = aQuerySet->GetTag();
-        if (aInsertionPoint && tag && tag != aInsertionPoint->Tag())
+        if (aInsertionPoint && tag &&
+            tag != aInsertionPoint->NodeInfo()->NameAtom())
             return NS_OK;
 
         int32_t findpriority = aQuerySet->Priority();
@@ -1438,7 +1439,8 @@ nsXULTemplateBuilder::DetermineMatchedRule(nsIContent *aContainer,
         // If a tag was specified, it must match the tag of the container
         // where content is being inserted.
         nsIAtom* tag = rule->GetTag();
-        if ((!aContainer || !tag || tag == aContainer->Tag()) &&
+        if ((!aContainer || !tag ||
+             tag == aContainer->NodeInfo()->NameAtom()) &&
             rule->CheckMatch(aResult)) {
             *aMatchedRule = rule;
             *aRuleIndex = r;

@@ -140,8 +140,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   if (!targetContent) {
     return NS_OK;
   }
-  if (targetContent->Tag() == nsGkAtoms::browser &&
-      targetContent->IsXULElement() &&
+  if (targetContent->IsXULElement(nsGkAtoms::browser) &&
       EventStateManager::IsRemoteTarget(targetContent)) {
     return NS_OK;
   }
@@ -191,8 +190,8 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   // to show, we know (guaranteed) that we're dealing with a menu or
   // submenu of an already-showing popup.  We don't need to do anything at all.
   if (!mIsContext) {
-    nsIAtom *tag = targetContent ? targetContent->Tag() : nullptr;
-    if (tag == nsGkAtoms::menu || tag == nsGkAtoms::menuitem)
+    if (targetContent &&
+        targetContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem))
       return NS_OK;
   }
 
@@ -307,7 +306,7 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag)
   for (nsIContent* child = aContent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->Tag() == aTag) {
+    if (child->IsXULElement(aTag)) {
       nsCOMPtr<nsIContent> ret = child;
       return ret.forget();
     }

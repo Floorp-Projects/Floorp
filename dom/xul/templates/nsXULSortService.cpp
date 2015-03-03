@@ -75,30 +75,26 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   for (nsIContent* child = content->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsXULElement()) {
-      nsIAtom *tag = child->Tag();
-
-      if (tag == nsGkAtoms::treecols) {
-        SetSortColumnHints(child, sortResource, sortDirection);
-      } else if (tag == nsGkAtoms::treecol) {
-        nsAutoString value;
-        child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
-        // also check the resource attribute for older code
-        if (value.IsEmpty())
-          child->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
-        if (value == sortResource) {
-          child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                         NS_LITERAL_STRING("true"), true);
-          child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                         sortDirection, true);
-          // Note: don't break out of loop; want to set/unset
-          // attribs on ALL sort columns
-        } else if (!value.IsEmpty()) {
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
-                           true);
-          child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                           true);
-        }
+    if (child->IsXULElement(nsGkAtoms::treecols)) {
+      SetSortColumnHints(child, sortResource, sortDirection);
+    } else if (child->IsXULElement(nsGkAtoms::treecol)) {
+      nsAutoString value;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
+      // also check the resource attribute for older code
+      if (value.IsEmpty())
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
+      if (value == sortResource) {
+        child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
+                       NS_LITERAL_STRING("true"), true);
+        child->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                       sortDirection, true);
+        // Note: don't break out of loop; want to set/unset
+        // attribs on ALL sort columns
+      } else if (!value.IsEmpty()) {
+        child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
+                         true);
+        child->UnsetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                         true);
       }
     }
   }
@@ -177,7 +173,7 @@ XULSortServiceImpl::GetTemplateItemsToSort(nsIContent* aContainer,
       cinfo->content = child;
       cinfo->result = result;
     }
-    else if (aContainer->Tag() != nsGkAtoms::_template) {
+    else if (!aContainer->IsXULElement(nsGkAtoms::_template)) {
       rv = GetTemplateItemsToSort(child, aBuilder, aSortState, aSortItems);
       NS_ENSURE_SUCCESS(rv, rv);
     }
