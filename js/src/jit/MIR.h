@@ -3153,7 +3153,8 @@ class MSimdBox
         MOZ_ASSERT(IsSimdType(op->type()));
         setMovable();
         setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        if (constraints)
+            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
     }
 
   public:
