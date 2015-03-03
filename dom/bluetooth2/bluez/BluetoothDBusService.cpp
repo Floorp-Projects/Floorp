@@ -408,6 +408,18 @@ DispatchToBtThread(nsIRunnable* aRunnable)
   return sBluetoothThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
+static void
+DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
+                       const BluetoothValue& aValue,
+                       const nsAString& aErrorStr)
+{
+  if (!aErrorStr.IsEmpty()) {
+    DispatchReplyError(aRunnable, aErrorStr);
+  } else {
+    DispatchReplySuccess(aRunnable, aValue);
+  }
+}
+
 BluetoothDBusService::BluetoothDBusService()
 {
   sGetPropertyMonitor = new Monitor("BluetoothService.sGetPropertyMonitor");
