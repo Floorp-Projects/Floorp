@@ -29,11 +29,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=886646
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.setBoolPref("layout.css.sticky.enabled", true);
-document.getElementById("iframe").src = "file_position_sticky.html";
+SpecialPowers.pushPrefEnv({"set":[["layout.css.sticky.enabled", true]]}, function() {
+  document.getElementById("iframe").src = "file_position_sticky.html";
+});
 
 function finish() {
-  SpecialPowers.clearUserPref("layout.css.sticky.enabled");
   SimpleTest.finish();
 }
 </script>

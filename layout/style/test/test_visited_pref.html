@@ -21,7 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=147777
 <iframe id="iframe" src="visited-pref-iframe.html" style="width: 10em; height: 5em"></iframe>
 <pre id="test">
 <script type="application/javascript">
-
 /** Test for Bug 147777 **/
 
 function reinsert_node(e) {
@@ -34,11 +33,6 @@ function reinsert_node(e) {
 function get_pref()
 {
     return SpecialPowers.getBoolPref("layout.css.visited_links_enabled");
-}
-
-function set_pref(val)
-{
-    SpecialPowers.setBoolPref("layout.css.visited_links_enabled", val);
 }
 
 function snapshotsEqual(snap1, snap2)
@@ -90,14 +84,12 @@ function poll_for_visited_style()
   } else {
     var end = Date.now();
     timeout = 3 * Math.max(end - start, 300);
-    step2();
+    SpecialPowers.pushPrefEnv({"set":[["layout.css.visited_links_enabled", false]]}, step2);
   }
 }
 
 function step2()
 {
-  set_pref(false);
-
   // we don't handle dynamic changes of this pref; it only takes effect
   // when a new page loads
   reinsert_node(link);
@@ -110,9 +102,6 @@ function step3()
   var snapshot = snapshotWindow(subwin, false);
   ok(snapshotsEqual(unvisref, snapshot),
      ":visited selector does not apply given false preference");
-
-  // Set the pref back for the rest of the tests.
-  set_pref(true);
 
   SimpleTest.finish();
 }

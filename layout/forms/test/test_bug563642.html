@@ -37,9 +37,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563642
 
 /** Test for Bug 563642 **/
 
-// Turn off Spatial Navigation because it hijacks down and up key events.
-SpecialPowers.setBoolPref("snav.enabled", false);
-
 function pageUpDownTest(id,index) {
   var elm = document.getElementById(id);
   elm.focus();
@@ -76,9 +73,11 @@ function runTest() {
 
   SimpleTest.finish();
 }
-
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTest)
+// Turn off Spatial Navigation because it hijacks down and up key events.
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
+})
 
 </script>
 </pre>
