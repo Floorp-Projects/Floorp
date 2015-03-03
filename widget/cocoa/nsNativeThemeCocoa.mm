@@ -280,9 +280,9 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
   if (!content)
     return NO;
 
-  if (content->Tag() == nsGkAtoms::toolbar ||
-      content->Tag() == nsGkAtoms::toolbox ||
-      content->Tag() == nsGkAtoms::statusbar)
+  if (content->IsAnyOfXULElements(nsGkAtoms::toolbar,
+                                  nsGkAtoms::toolbox,
+                                  nsGkAtoms::statusbar))
     return YES;
 
   switch (aFrame->StyleDisplay()->mAppearance) {
