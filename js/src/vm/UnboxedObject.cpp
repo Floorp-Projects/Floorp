@@ -253,7 +253,7 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
             return false;
         MOZ_ASSERT(!types.empty());
         for (size_t j = 0; j < types.length(); j++)
-            AddTypePropertyId(cx, nativeGroup, id, types[j]);
+            AddTypePropertyId(cx, nativeGroup, nullptr, id, types[j]);
         HeapTypeSet *nativeProperty = nativeGroup->maybeGetProperty(id);
         if (nativeProperty->canSetDefinite(i))
             nativeProperty->setDefinite(i);

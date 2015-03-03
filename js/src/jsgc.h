@@ -1163,8 +1163,8 @@ class RelocationOverlay
 
     void forwardTo(Cell *cell) {
         MOZ_ASSERT(!isForwarded());
-        static_assert(offsetof(JSObject, shape_) == offsetof(RelocationOverlay, newLocation_),
-                      "forwarding pointer and shape should be at same location, "
+        static_assert(offsetof(JSObject, group_) == offsetof(RelocationOverlay, newLocation_),
+                      "forwarding pointer and group should be at same location, "
                       "so that obj->zone() works on forwarded objects");
         newLocation_ = cell;
         magic_ = Relocated;
