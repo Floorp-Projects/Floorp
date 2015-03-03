@@ -37,6 +37,22 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         ]
     ]
 
+EXPORTS.mozilla.media += ['MediaChild.h',
+            'MediaParent.h',
+            'MediaUtils.h'
+]
+UNIFIED_SOURCES += ['MediaChild.cpp',
+                    'MediaParent.cpp',
+                    'MediaUtils.cpp'
+]
+IPDL_SOURCES += [
+    'PMedia.ipdl',
+]
+# /dom/base needed for nsGlobalWindow.h in MediaChild.cpp
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
