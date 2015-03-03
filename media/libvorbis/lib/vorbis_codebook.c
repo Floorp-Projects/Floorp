@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2015             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: basic codebook pack/unpack/code/decode operations
- last mod: $Id: codebook.c 19057 2014-01-22 12:32:31Z xiphmont $
+ last mod: $Id: codebook.c 19457 2015-03-03 00:15:29Z giles $
 
  ********************************************************************/
 
@@ -57,12 +57,12 @@ int vorbis_staticbook_pack(const static_codebook *c,oggpack_buffer *opb){
       char last=c->lengthlist[i-1];
       if(this>last){
         for(j=last;j<this;j++){
-          oggpack_write(opb,i-count,_ilog(c->entries-count));
+          oggpack_write(opb,i-count,ov_ilog(c->entries-count));
           count=i;
         }
       }
     }
-    oggpack_write(opb,i-count,_ilog(c->entries-count));
+    oggpack_write(opb,i-count,ov_ilog(c->entries-count));
 
   }else{
     /* length random.  Again, we don't code the codeword itself, just
@@ -159,7 +159,7 @@ static_codebook *vorbis_staticbook_unpack(oggpack_buffer *opb){
   s->entries=oggpack_read(opb,24);
   if(s->entries==-1)goto _eofout;
 
-  if(_ilog(s->dim)+_ilog(s->entries)>24)goto _eofout;
+  if(ov_ilog(s->dim)+ov_ilog(s->entries)>24)goto _eofout;
 
   /* codeword ordering.... length ordered or unordered? */
   switch((int)oggpack_read(opb,1)){
@@ -203,7 +203,7 @@ static_codebook *vorbis_staticbook_unpack(oggpack_buffer *opb){
       s->lengthlist=_ogg_malloc(sizeof(*s->lengthlist)*s->entries);
 
       for(i=0;i<s->entries;){
-        long num=oggpack_read(opb,_ilog(s->entries-i));
+        long num=oggpack_read(opb,ov_ilog(s->entries-i));
         if(num==-1)goto _eofout;
         if(length>32 || num>s->entries-i ||
            (num>0 && (num-1)>>(length-1)>1)){
@@ -311,6 +311,12 @@ STIN long decode_packed_entry_number(codebook *book, oggpack_buffer *b){
     lo=0;
     hi=book->used_entries;
   }
+
+  /* Single entry codebooks use a firsttablen of 1 and a
+     dec_maxlength of 1.  If a single-entry codebook gets here (due to
+     failure to read one bit above), the next look attempt will also
+     fail and we'll correctly kick out instead of trying to walk the
+     underformed tree */
 
   lok = oggpack_look(b, read);
 
