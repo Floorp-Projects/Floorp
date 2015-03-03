@@ -976,11 +976,11 @@ const DownloadsView = {
     }
 
     let dataTransfer = aEvent.dataTransfer;
-    dataTransfer.mozSetDataAt("application/x-moz-file", localFile, 0);
+    dataTransfer.mozSetDataAt("application/x-moz-file", file, 0);
     dataTransfer.effectAllowed = "copyMove";
-    var url = Services.io.newFileURI(localFile).spec;
-    dataTransfer.setData("text/uri-list", url);
-    dataTransfer.setData("text/plain", url);
+    let spec = NetUtil.newURI(file).spec;
+    dataTransfer.setData("text/uri-list", spec);
+    dataTransfer.setData("text/plain", spec);
     dataTransfer.addElement(element);
 
     aEvent.stopPropagation();
