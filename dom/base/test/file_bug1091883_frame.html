@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Frame I am.</h2>
+<script>
+var subframeOrigin = location.hash.substr(1);  // e.g., "http://example.com"
+var subframe = document.createElement("iframe");
+subframe.src = subframeOrigin +
+               "/tests/dom/base/test/file_bug1091883_subframe.html";
+document.body.appendChild(subframe);
+</script>
+</body>
+</html>

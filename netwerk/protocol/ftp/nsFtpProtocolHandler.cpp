@@ -31,7 +31,6 @@ using namespace mozilla::net;
 #include "nsIObserverService.h"
 #include "nsEscape.h"
 #include "nsAlgorithm.h"
-#include "nsICacheSession.h"
 
 //-----------------------------------------------------------------------------
 

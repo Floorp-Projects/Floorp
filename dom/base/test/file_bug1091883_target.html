@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<h3>Target I am.</h3>
+<script>
+var testRun = location.hash.substr(1);
+parent.parent.postMessage(document.referrer + " " + testRun,
+                          "http://mochi.test:8888");
+</script>
+</head>
+<body>
+</body>
+</html>
