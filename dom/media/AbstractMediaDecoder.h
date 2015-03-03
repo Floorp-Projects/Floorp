@@ -137,17 +137,18 @@ public:
   // to ensure all parsed and decoded frames are reported on all return paths.
   class AutoNotifyDecoded {
   public:
-    AutoNotifyDecoded(AbstractMediaDecoder* aDecoder, uint32_t& aParsed, uint32_t& aDecoded)
-      : mDecoder(aDecoder), mParsed(aParsed), mDecoded(aDecoded) {}
+    explicit AutoNotifyDecoded(AbstractMediaDecoder* aDecoder)
+      : mParsed(0), mDecoded(0), mDecoder(aDecoder) {}
     ~AutoNotifyDecoded() {
       if (mDecoder) {
         mDecoder->NotifyDecodedFrames(mParsed, mDecoded);
       }
     }
+    uint32_t mParsed;
+    uint32_t mDecoded;
+
   private:
     AbstractMediaDecoder* mDecoder;
-    uint32_t& mParsed;
-    uint32_t& mDecoded;
   };
 
 #ifdef MOZ_EME
