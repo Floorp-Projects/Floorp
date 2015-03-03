@@ -216,25 +216,24 @@ SVGUseElement::CreateAnonymousContent()
 
   LookupHref();
   nsIContent* targetContent = mSource.get();
-  if (!targetContent || !targetContent->IsSVGElement())
+  if (!targetContent)
     return nullptr;
 
   // make sure target is valid type for <use>
   // QIable nsSVGGraphicsElement would eliminate enumerating all elements
-  nsIAtom *tag = targetContent->Tag();
-  if (tag != nsGkAtoms::svg &&
-      tag != nsGkAtoms::symbol &&
-      tag != nsGkAtoms::g &&
-      tag != nsGkAtoms::path &&
-      tag != nsGkAtoms::text &&
-      tag != nsGkAtoms::rect &&
-      tag != nsGkAtoms::circle &&
-      tag != nsGkAtoms::ellipse &&
-      tag != nsGkAtoms::line &&
-      tag != nsGkAtoms::polyline &&
-      tag != nsGkAtoms::polygon &&
-      tag != nsGkAtoms::image &&
-      tag != nsGkAtoms::use)
+  if (!targetContent->IsAnyOfSVGElements(nsGkAtoms::svg,
+                                         nsGkAtoms::symbol,
+                                         nsGkAtoms::g,
+                                         nsGkAtoms::path,
+                                         nsGkAtoms::text,
+                                         nsGkAtoms::rect,
+                                         nsGkAtoms::circle,
+                                         nsGkAtoms::ellipse,
+                                         nsGkAtoms::line,
+                                         nsGkAtoms::polyline,
+                                         nsGkAtoms::polygon,
+                                         nsGkAtoms::image,
+                                         nsGkAtoms::use))
     return nullptr;
 
   // circular loop detection
@@ -362,7 +361,7 @@ SVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
       target->SetLength(aName, mLengthAttributes[index]);
       return;
     }
-    if (mClone->Tag() == nsGkAtoms::svg) {
+    if (mClone->IsSVGElement(nsGkAtoms::svg)) {
       // Our width/height attribute is now no longer explicitly set, so we
       // need to revert the clone's width/height to the width/height of the
       // content that's being cloned.
