@@ -33,7 +33,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
                                           Image* aImage,
                                           TimeStamp aTargetTime)
 {
-  if (!aImage->IsValid()) {
+  if (aImage && !aImage->IsValid()) {
     return;
   }
 
