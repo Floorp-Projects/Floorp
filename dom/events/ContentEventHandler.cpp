@@ -195,8 +195,7 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
 // we don't want to include the bogus BRs at the end.
 static bool IsContentBR(nsIContent* aContent)
 {
-  return aContent->IsHTMLElement() &&
-         aContent->Tag() == nsGkAtoms::br &&
+  return aContent->IsHTMLElement(nsGkAtoms::br) &&
          !aContent->AttrValueIs(kNameSpaceID_None,
                                 nsGkAtoms::type,
                                 nsGkAtoms::moz,
@@ -1392,7 +1391,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
 
   nsIContent* brContent = node->GetChildAt(nodeOffset - 1);
   while (brContent && brContent->IsHTMLElement()) {
-    if (brContent->Tag() != nsGkAtoms::br || IsContentBR(brContent)) {
+    if (!brContent->IsHTMLElement(nsGkAtoms::br) || IsContentBR(brContent)) {
       break;
     }
     brContent = node->GetChildAt(--nodeOffset - 1);
