@@ -1857,7 +1857,11 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
-        return jsop_getelem();
+        if (!jsop_getelem())
+            return false;
+        if (op == JSOP_CALLELEM && !improveThisTypesForCall())
+            return false;
+        return true;
 
       case JSOP_SETELEM:
       case JSOP_STRICTSETELEM:
@@ -1882,7 +1886,11 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLPROP:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
-        return jsop_getprop(name);
+        if (!jsop_getprop(name))
+            return false;
+        if (op == JSOP_CALLPROP && !improveThisTypesForCall())
+            return false;
+        return true;
       }
 
       case JSOP_SETPROP:
@@ -7632,6 +7640,14 @@ IonBuilder::jsop_getelem()
     if (!resumeAfter(ins))
         return false;
 
+    if (*pc == JSOP_CALLELEM && IsNullOrUndefined(obj->type())) {
+        // Due to inlining, it's possible the observed TypeSet is non-empty,
+        // even though we know |obj| is null/undefined and the MCallGetElement
+        // will throw. Don't push a TypeBarrier in this case, to avoid
+        // inlining the following (unreachable) JSOP_CALL.
+        return true;
+    }
+
     TemporaryTypeSet *types = bytecodeTypes(pc);
     return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
 }
@@ -9917,7 +9933,50 @@ IonBuilder::jsop_getprop(PropertyName *name)
     if (!resumeAfter(call))
         return false;
 
+    if (*pc == JSOP_CALLPROP && IsNullOrUndefined(obj->type())) {
+        // Due to inlining, it's possible the observed TypeSet is non-empty,
+        // even though we know |obj| is null/undefined and the MCallGetProperty
+        // will throw. Don't push a TypeBarrier in this case, to avoid
+        // inlining the following (unreachable) JSOP_CALL.
+        return true;
+    }
+
     return pushTypeBarrier(call, types, BarrierKind::TypeSet);
+}
+
+bool
+IonBuilder::improveThisTypesForCall()
+{
+    // After a CALLPROP (or CALLELEM) for obj.prop(), the this-value and callee
+    // for the call are on top of the stack:
+    //
+    // ... [this: obj], [callee: obj.prop]
+    //
+    // If obj is null or undefined, obj.prop would have thrown an exception so
+    // at this point we can remove null and undefined from obj's TypeSet, to
+    // improve type information for the call that will follow.
+
+    MOZ_ASSERT(*pc == JSOP_CALLPROP || *pc == JSOP_CALLELEM);
+
+    // Ensure |this| has types {object, null/undefined}.
+    MDefinition *thisDef = current->peek(-2);
+    if (thisDef->type() != MIRType_Value ||
+        !thisDef->mightBeType(MIRType_Object) ||
+        !thisDef->resultTypeSet() ||
+        !thisDef->resultTypeSet()->objectOrSentinel())
+    {
+        return true;
+    }
+
+    // Remove null/undefined from the TypeSet.
+    TemporaryTypeSet *types = thisDef->resultTypeSet()->cloneObjectsOnly(alloc_->lifoAlloc());
+    if (!types)
+        return false;
+
+    MFilterTypeSet *filter = MFilterTypeSet::New(alloc(), thisDef, types);
+    current->add(filter);
+    current->rewriteAtDepth(-2, filter);
+    return true;
 }
 
 bool
