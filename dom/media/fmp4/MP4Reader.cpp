@@ -672,8 +672,7 @@ MP4Reader::Update(TrackType aTrack)
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
-  uint32_t parsed = 0, decoded = 0;
-  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+  AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
 
   bool needInput = false;
   bool needOutput = false;
@@ -688,7 +687,7 @@ MP4Reader::Update(TrackType aTrack)
     }
     if (aTrack == kVideo) {
       uint64_t delta = decoder.mNumSamplesOutput - mLastReportedNumDecodedFrames;
-      decoded = static_cast<uint32_t>(delta);
+      a.mDecoded = static_cast<uint32_t>(delta);
       mLastReportedNumDecodedFrames = decoder.mNumSamplesOutput;
     }
     if (decoder.HasPromise()) {
@@ -722,7 +721,7 @@ MP4Reader::Update(TrackType aTrack)
     if (sample) {
       decoder.mDecoder->Input(sample);
       if (aTrack == kVideo) {
-        parsed++;
+        a.mParsed++;
       }
     } else {
       {
