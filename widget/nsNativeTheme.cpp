@@ -449,12 +449,12 @@ nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
     return false;
 
   // A tree column picker is always the last header cell.
-  if (aFrame->GetContent()->Tag() == nsGkAtoms::treecolpicker)
+  if (aFrame->GetContent()->IsXULElement(nsGkAtoms::treecolpicker))
     return true;
 
   // Find the parent tree.
   nsIContent* parent = aFrame->GetContent()->GetParent();
-  while (parent && parent->Tag() != nsGkAtoms::tree) {
+  while (parent && !parent->IsXULElement(nsGkAtoms::tree)) {
     parent = parent->GetParent();
   }
 
@@ -490,7 +490,8 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
 
   nsIFrame* first = aFrame->GetParent()->GetFirstPrincipalChild();
   while (first) {
-    if (first->GetRect().width > 0 && first->GetContent()->Tag() == nsGkAtoms::tab)
+    if (first->GetRect().width > 0 &&
+        first->GetContent()->IsXULElement(nsGkAtoms::tab))
       return (first == aFrame);
     first = first->GetNextSibling();
   }
@@ -575,7 +576,7 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
     return false;
 
   nsIContent* parentContent = aFrame->GetContent()->GetParent();
-  if (!parentContent || parentContent->Tag() != nsGkAtoms::menu)
+  if (!parentContent || !parentContent->IsXULElement(nsGkAtoms::menu))
     return false;
 
   nsIFrame* parent = aFrame;

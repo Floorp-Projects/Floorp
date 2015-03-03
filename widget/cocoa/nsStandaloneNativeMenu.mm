@@ -37,9 +37,7 @@ nsStandaloneNativeMenu::Init(nsIDOMElement * aDOMElement)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIAtom * tag = content->Tag();
-  if (!content->IsXULElement() ||
-      (tag != nsGkAtoms::menu && tag != nsGkAtoms::menupopup))
+  if (!content->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup))
     return NS_ERROR_FAILURE;
 
   rv = nsMenuGroupOwnerX::Create(content);
