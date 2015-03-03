@@ -419,8 +419,8 @@ class Files(SubContext):
     most one entity.
 
     Patterns with ``*`` or ``**`` are wildcard matches. ``*`` matches files
-    within a single directory. ``**`` matches files across several directories.
-    Here are some examples:
+    at least within a single directory. ``**`` matches files across several
+    directories.
 
     ``foo.html``
        Will match only the ``foo.html`` file in the current directory.
@@ -431,11 +431,18 @@ class Files(SubContext):
     ``foo/*.css``
        Will match all ``.css`` files in the ``foo/`` directory.
     ``bar/*``
-       Will match all files in the ``bar/`` directory but not any files in
-       child directories of ``bar/``, such as ``bar/dir1/baz``.
-    ``baz/**``
-       Will match all files in the ``baz/`` directory and all directories
-       underneath.
+       Will match all files in the ``bar/`` directory and all of its
+       children directories.
+    ``bar/**``
+       This is equivalent to ``bar/*`` above.
+    ``bar/**/foo``
+       Will match all ``foo`` files in the ``bar/`` directory and all of its
+       children directories.
+
+    The difference in behavior between ``*`` and ``**`` is only evident if
+    a pattern follows the ``*`` or ``**``. A pattern ending with ``*`` is
+    greedy. ``**`` is needed when you need an additional pattern after the
+    wildcard. e.g. ``**/foo``.
     """
 
     VARIABLES = {
