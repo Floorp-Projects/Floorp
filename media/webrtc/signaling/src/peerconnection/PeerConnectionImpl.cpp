@@ -903,6 +903,10 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   bool h264Enabled = hardwareH264Supported || softwareH264Enabled;
 
+  bool vp9Enabled = false;
+  branch->GetBoolPref("media.peerconnection.video.vp9_enabled",
+                      &vp9Enabled);
+  
   auto& codecs = mJsepSession->Codecs();
 
   // We use this to sort the list of codecs once everything is configured
@@ -952,7 +956,11 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
             if (hardwareH264Supported) {
               comparator.AddHardwareCodec(videoCodec.mDefaultPt);
             }
-          } else if (codec.mName == "VP8") {
+          } else if (codec.mName == "VP8" || codec.mName == "VP9") {
+            if (videoCodec.mName == "VP9" && !vp9Enabled) {
+              videoCodec.mEnabled = false;
+              break;
+            }
             int32_t maxFs = 0;
             branch->GetIntPref("media.navigator.video.max_fs", &maxFs);
             if (maxFs <= 0) {
@@ -966,6 +974,7 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
               maxFr = 60; // We must specify something other than 0
             }
             videoCodec.mMaxFr = maxFr;
+
           }
         }
         break;

@@ -2348,6 +2348,16 @@ JsepSessionImpl::SetupDefaultCodecs()
   vp8->mMaxFr = 60;
   mCodecs.push_back(vp8);
 
+  JsepVideoCodecDescription* vp9 = new JsepVideoCodecDescription(
+      "121",
+      "VP9",
+      90000
+      );
+  // Defaults for mandatory params
+  vp9->mMaxFs = 12288;
+  vp9->mMaxFr = 60;
+  mCodecs.push_back(vp9);
+
   JsepVideoCodecDescription* h264_1 = new JsepVideoCodecDescription(
       "126",
       "H264",
