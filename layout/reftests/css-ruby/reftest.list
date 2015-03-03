@@ -16,6 +16,7 @@ default-preferences pref(layout.css.ruby.enabled,true)
 == dynamic-removal-2.html dynamic-removal-2-ref.html
 == dynamic-removal-3.html dynamic-removal-3-ref.html
 == float-handling.html float-handling-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == inflated-ruby-1.html inflated-ruby-1-ref.html
 == intra-level-whitespace-1.html intra-level-whitespace-1-ref.html
 == intra-level-whitespace-2.html intra-level-whitespace-2-ref.html
 == intra-level-whitespace-3.html intra-level-whitespace-3-ref.html
