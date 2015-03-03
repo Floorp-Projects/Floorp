@@ -1577,16 +1577,8 @@ MediaManager::GetUserMedia(
 #endif //MOZ_B2G
   }
 
-  // Store the WindowID in a hash table and mark as active. The entry is removed
-  // when this window is closed or navigated away from.
   uint64_t windowID = aWindow->WindowID();
-  // This is safe since we're on main-thread, and the windowlist can only
-  // be invalidated from the main-thread (see OnNavigation)
-  StreamListeners* listeners = GetActiveWindows()->Get(windowID);
-  if (!listeners) {
-    listeners = new StreamListeners;
-    GetActiveWindows()->Put(windowID, listeners);
-  }
+  StreamListeners* listeners = AddWindowID(windowID);
 
   // Create a disabled listener to act as a placeholder
   GetUserMediaCallbackMediaStreamListener* listener =
@@ -1828,6 +1820,21 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
   return NS_OK;
 }
 
+nsresult
+MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
+                               nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                               nsIDOMGetUserMediaErrorCallback* aOnFailure)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  MediaStreamConstraints c;
+  c.mVideo.SetAsBoolean() = true;
+  c.mAudio.SetAsBoolean() = true;
+
+  AddWindowID(aWindow->WindowID());
+  return GetUserMediaDevices(aWindow, c, aOnSuccess, aOnFailure, 0);
+}
+
 MediaEngine*
 MediaManager::GetBackend(uint64_t aWindowId)
 {
@@ -1894,6 +1901,22 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   } else {
     RemoveWindowID(aWindowID);
   }
+}
+
+StreamListeners*
+MediaManager::AddWindowID(uint64_t aWindowId)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  // Store the WindowID in a hash table and mark as active. The entry is removed
+  // when this window is closed or navigated away from.
+  // This is safe since we're on main-thread, and the windowlist can only
+  // be invalidated from the main-thread (see OnNavigation)
+  StreamListeners* listeners = GetActiveWindows()->Get(aWindowId);
+  if (!listeners) {
+    listeners = new StreamListeners;
+    GetActiveWindows()->Put(aWindowId, listeners);
+  }
+  return listeners;
 }
 
 void

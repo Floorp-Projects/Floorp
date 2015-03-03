@@ -596,11 +596,18 @@ public:
     nsIGetUserMediaDevicesSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError,
     uint64_t aInnerWindowID = 0);
+
+  nsresult EnumerateDevices(nsPIDOMWindow* aWindow,
+                            nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
+                            nsIDOMGetUserMediaErrorCallback* aOnFailure);
+
+  nsresult EnumerateDevices(nsPIDOMWindow* aWindow, dom::Promise& aPromise);
   void OnNavigation(uint64_t aWindowID);
 
   MediaEnginePrefs mPrefs;
 
 private:
+  StreamListeners* AddWindowID(uint64_t aWindowId);
   WindowTable *GetActiveWindows() {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
     return &mActiveWindows;
