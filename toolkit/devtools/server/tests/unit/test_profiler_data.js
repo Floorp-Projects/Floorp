@@ -12,10 +12,22 @@ const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 const INITIAL_WAIT_TIME = 100; // ms
 const MAX_WAIT_TIME = 20000; // ms
 
+function connect_client(callback)
+{
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      callback(client, response.profilerActor);
+    });
+  });
+}
+
 function run_test()
 {
-  get_chrome_actors((client, form) => {
-    let actor = form.profilerActor;
+  DebuggerServer.init();
+  DebuggerServer.addBrowserActors();
+
+  connect_client((client, actor) => {
     activate_profiler(client, actor, () => {
       test_data(client, actor, () => {
         deactivate_profiler(client, actor, () => {

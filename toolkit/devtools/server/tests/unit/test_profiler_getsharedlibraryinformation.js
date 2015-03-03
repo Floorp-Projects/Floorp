@@ -9,10 +9,22 @@
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 
+function connect_client(callback)
+{
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      callback(client, response.profilerActor);
+    });
+  });
+}
+
 function run_test()
 {
-  get_chrome_actors((client, form) => {
-    let actor = form.profilerActor;
+  DebuggerServer.init();
+  DebuggerServer.addBrowserActors();
+
+  connect_client((client, actor) => {
     test_getsharedlibraryinformation(client, actor, () => {
       client.close(() => {
         do_test_finished();
