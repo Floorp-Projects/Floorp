@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Mozilla Foundation
+ * Copyright (C) 2013-2015 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,524 +15,706 @@
  */
 
 #include "TestGonkCameraHardware.h"
-
 #include "CameraPreferences.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/dom/BlobEvent.h"
+#include "mozilla/dom/ErrorEvent.h"
+#include "mozilla/dom/CameraFacesDetectedEvent.h"
+#include "mozilla/dom/CameraStateChangeEvent.h"
+#include "DOMCameraDetectedFace.h"
+#include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
+#include "nsICameraTestHardware.h"
 
 using namespace android;
 using namespace mozilla;
+using namespace mozilla::dom;
+
+static void
+CopyFaceFeature(int32_t (&aDst)[2], bool aExists, const DOMPoint* aSrc)
+{
+  if (aExists && aSrc) {
+    aDst[0] = static_cast<int32_t>(aSrc->X());
+    aDst[1] = static_cast<int32_t>(aSrc->Y());
+  } else {
+    aDst[0] = -2000;
+    aDst[1] = -2000;
+  }
+}
+
+class TestGonkCameraHardwareListener : public nsIDOMEventListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  TestGonkCameraHardwareListener(nsGonkCameraControl* aTarget, nsIThread* aCameraThread)
+    : mTarget(aTarget)
+    , mCameraThread(aCameraThread)
+  {
+    MOZ_COUNT_CTOR(TestGonkCameraHardwareListener);
+  }
+
+protected:
+  virtual ~TestGonkCameraHardwareListener()
+  {
+    MOZ_COUNT_DTOR(TestGonkCameraHardwareListener);
+  }
+
+  nsRefPtr<nsGonkCameraControl> mTarget;
+  nsCOMPtr<nsIThread> mCameraThread;
+};
+
+NS_IMETHODIMP
+TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsString eventType;
+  aEvent->GetType(eventType);
+
+  DOM_CAMERA_LOGI("Inject '%s' event",
+    NS_ConvertUTF16toUTF8(eventType).get());
+
+  if (eventType.EqualsLiteral("focus")) {
+    CameraStateChangeEvent* event = aEvent->InternalDOMEvent()->AsCameraStateChangeEvent();
+
+    if (!NS_WARN_IF(!event)) {
+      nsString state;
+
+      event->GetNewState(state);
+      if (state.EqualsLiteral("focused")) {
+        OnAutoFocusComplete(mTarget, true);
+      } else if (state.EqualsLiteral("unfocused")) {
+        OnAutoFocusComplete(mTarget, false);
+      } else if (state.EqualsLiteral("focusing")) {
+        OnAutoFocusMoving(mTarget, true);
+      } else if (state.EqualsLiteral("not_focusing")) {
+        OnAutoFocusMoving(mTarget, false);
+      } else {
+        DOM_CAMERA_LOGE("Unhandled focus state '%s'\n",
+          NS_ConvertUTF16toUTF8(state).get());
+      }
+    }
+  } else if (eventType.EqualsLiteral("shutter")) {
+    DOM_CAMERA_LOGI("Inject shutter event");
+    OnShutter(mTarget);
+  } else if (eventType.EqualsLiteral("picture")) {
+    BlobEvent* event = aEvent->InternalDOMEvent()->AsBlobEvent();
+
+    if (!NS_WARN_IF(!event)) {
+      File* file = event->GetData();
+
+      if (file) {
+        static const uint64_t MAX_FILE_SIZE = 2147483647;
+        uint64_t dataLength = 0;
+        nsresult rv = file->GetSize(&dataLength);
+
+        if (NS_WARN_IF(NS_FAILED(rv) || dataLength > MAX_FILE_SIZE)) {
+          return NS_OK;
+        }
+
+        nsCOMPtr<nsIInputStream> inputStream;
+        rv = file->GetInternalStream(getter_AddRefs(inputStream));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_OK;
+        }
+
+        uint8_t* data = new uint8_t[dataLength];
+        rv = NS_ReadInputStreamToBuffer(inputStream,
+                                        reinterpret_cast<void**>(&data),
+                                        static_cast<uint32_t>(dataLength));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          delete [] data;
+          return NS_OK;
+        }
+
+        OnTakePictureComplete(mTarget, data, dataLength);
+        delete [] data;
+      } else {
+        OnTakePictureComplete(mTarget, nullptr, 0);
+      }
+    }
+  } else if(eventType.EqualsLiteral("error")) {
+    ErrorEvent* event = aEvent->InternalDOMEvent()->AsErrorEvent();
+
+    if (!NS_WARN_IF(!event)) {
+      nsString errorType;
+
+      event->GetMessage(errorType);
+      if (errorType.EqualsLiteral("picture")) {
+        OnTakePictureError(mTarget);
+      } else if (errorType.EqualsLiteral("system")) {
+        if (!NS_WARN_IF(!mCameraThread)) {
+          class DeferredSystemFailure : public nsRunnable
+          {
+          public:
+            DeferredSystemFailure(nsGonkCameraControl* aTarget)
+              : mTarget(aTarget)
+            { }
+
+            NS_IMETHODIMP
+            Run()
+            {
+              OnSystemError(mTarget, CameraControlListener::kSystemService, 100, 0);
+              return NS_OK;
+            }
+
+          protected:
+            nsRefPtr<nsGonkCameraControl> mTarget;
+          };
+
+          mCameraThread->Dispatch(new DeferredSystemFailure(mTarget), NS_DISPATCH_NORMAL);
+        }
+      } else {
+        DOM_CAMERA_LOGE("Unhandled error event type '%s'\n",
+          NS_ConvertUTF16toUTF8(errorType).get());
+      }
+    }
+  } else if(eventType.EqualsLiteral("facesdetected")) {
+    CameraFacesDetectedEvent* event = aEvent->InternalDOMEvent()->AsCameraFacesDetectedEvent();
+
+    if (!NS_WARN_IF(!event)) {
+      Nullable<nsTArray<nsRefPtr<DOMCameraDetectedFace>>> faces;
+      event->GetFaces(faces);
+
+      camera_frame_metadata_t metadata;
+      memset(&metadata, 0, sizeof(metadata));
+
+      if (faces.IsNull()) {
+        OnFacesDetected(mTarget, &metadata);
+      } else {
+        const nsTArray<nsRefPtr<DOMCameraDetectedFace>>& facesData = faces.Value();
+        uint32_t i = facesData.Length();
+
+        metadata.number_of_faces = i;
+        metadata.faces = new camera_face_t[i];
+        memset(metadata.faces, 0, sizeof(camera_face_t) * i);
+
+        while (i > 0) {
+          --i;
+          const nsRefPtr<DOMCameraDetectedFace>& face = facesData[i];
+          camera_face_t& f = metadata.faces[i];
+          const DOMRect& bounds = *face->Bounds();
+          f.rect[0] = static_cast<int32_t>(bounds.Left());
+          f.rect[1] = static_cast<int32_t>(bounds.Top());
+          f.rect[2] = static_cast<int32_t>(bounds.Right());
+          f.rect[3] = static_cast<int32_t>(bounds.Bottom());
+          CopyFaceFeature(f.left_eye, face->HasLeftEye(), face->GetLeftEye());
+          CopyFaceFeature(f.right_eye, face->HasRightEye(), face->GetRightEye());
+          CopyFaceFeature(f.mouth, face->HasMouth(), face->GetMouth());
+          f.id = face->Id();
+          f.score = face->Score();
+        }
+
+        OnFacesDetected(mTarget, &metadata);
+        delete [] metadata.faces;
+      }
+    }
+  } else {
+    DOM_CAMERA_LOGE("Unhandled injected event '%s'",
+      NS_ConvertUTF16toUTF8(eventType).get());
+  }
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(TestGonkCameraHardwareListener, nsIDOMEventListener)
+
+class TestGonkCameraHardware::ControlMessage : public nsRunnable
+{
+public:
+  ControlMessage(TestGonkCameraHardware* aTestHw)
+    : mTestHw(aTestHw)
+  { }
+
+  NS_IMETHOD
+  Run() MOZ_OVERRIDE
+  {
+    if (NS_WARN_IF(!mTestHw)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    MutexAutoLock lock(mTestHw->mMutex);
+
+    mTestHw->mStatus = RunInline();
+    nsresult rv = mTestHw->mCondVar.Notify();
+    NS_WARN_IF(NS_FAILED(rv));
+    return NS_OK;
+  }
+
+  nsresult
+  RunInline()
+  {
+    if (NS_WARN_IF(!mTestHw)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv;
+    mJSTestWrapper = do_GetService("@mozilla.org/cameratesthardware;1", &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      DOM_CAMERA_LOGE("Cannot get camera test service\n");
+      return rv;
+    }
+
+    rv = RunImpl();
+    mJSTestWrapper = nullptr;
+    return rv;
+  }
+
+protected:
+  NS_IMETHOD RunImpl() = 0;
+  virtual ~ControlMessage() { }
+
+  nsCOMPtr<nsICameraTestHardware> mJSTestWrapper;
+
+  /* Since we block the control thread until we have finished
+     processing the request on the main thread, we know that this
+     pointer will not go out of scope because the control thread
+     and calling class is the owner. */
+  TestGonkCameraHardware* mTestHw;
+};
 
 TestGonkCameraHardware::TestGonkCameraHardware(nsGonkCameraControl* aTarget,
                                                uint32_t aCameraId,
                                                const sp<Camera>& aCamera)
   : GonkCameraHardware(aTarget, aCameraId, aCamera)
+  , mMutex("TestGonkCameraHardware::mMutex")
+  , mCondVar(mMutex, "TestGonkCameraHardware::mCondVar")
 {
   DOM_CAMERA_LOGA("v===== Created TestGonkCameraHardware =====v\n");
   DOM_CAMERA_LOGT("%s:%d : this=%p (aTarget=%p)\n",
     __func__, __LINE__, this, aTarget);
   MOZ_COUNT_CTOR(TestGonkCameraHardware);
+  mCameraThread = NS_GetCurrentThread();
 }
 
 TestGonkCameraHardware::~TestGonkCameraHardware()
 {
   MOZ_COUNT_DTOR(TestGonkCameraHardware);
+
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
+
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      if (mTestHw->mDomListener) {
+        mTestHw->mDomListener = nullptr;
+        nsresult rv = mJSTestWrapper->SetHandler(nullptr);
+        NS_WARN_IF(NS_FAILED(rv));
+      }
+      return NS_OK;
+    }
+  };
+
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARN_IF(NS_FAILED(rv));
   DOM_CAMERA_LOGA("^===== Destroyed TestGonkCameraHardware =====^\n");
 }
 
-void
-TestGonkCameraHardware::InjectFakeSystemFailure()
+nsresult
+TestGonkCameraHardware::WaitWhileRunningOnMainThread(nsRefPtr<ControlMessage> aRunnable)
 {
-  DOM_CAMERA_LOGA("====== Fake Camera Hardware Failure ======\n");
-  // The values '100' and '0' below seem to be what the AOSP layer
-  // throws back when the mediaserver process fails.
-  OnSystemError(mTarget, CameraControlListener::kSystemService, 100, 0);
+  MutexAutoLock lock(mMutex);
+
+  if (NS_WARN_IF(!aRunnable)) {
+    mStatus = NS_ERROR_INVALID_ARG;
+  } else if (!NS_IsMainThread()) {
+    nsresult rv = NS_DispatchToMainThread(aRunnable);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mCondVar.Wait();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    /* Cannot dispatch to main thread since we would block on
+       the condvar, so we need to run inline. */
+    mStatus = aRunnable->RunInline();
+  }
+  return mStatus;
 }
 
 nsresult
 TestGonkCameraHardware::Init()
 {
-  class DeferredSystemFailure : public nsRunnable
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+
+  class Delegate : public ControlMessage
   {
   public:
-    DeferredSystemFailure(TestGonkCameraHardware* aCameraHw)
-      : mCameraHw(aCameraHw)
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
     { }
 
-    NS_IMETHODIMP
-    Run()
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
     {
-      mCameraHw->InjectFakeSystemFailure();
+      nsresult rv = mJSTestWrapper->InitCamera();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      mTestHw->mDomListener = new TestGonkCameraHardwareListener(mTestHw->mTarget, mTestHw->mCameraThread);
+      if (NS_WARN_IF(!mTestHw->mDomListener)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = mJSTestWrapper->SetHandler(mTestHw->mDomListener);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       return NS_OK;
     }
-
-  protected:
-    android::sp<TestGonkCameraHardware> mCameraHw;
   };
 
-  if (IsTestCase("init-failure")) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  if (IsTestCase("post-init-system-failure")) {
-    nsCOMPtr<nsIThread> me = NS_GetCurrentThread();
-    if (me) {
-      me->Dispatch(new DeferredSystemFailure(this), NS_DISPATCH_NORMAL);
-    }
-  }
-
-  return GonkCameraHardware::Init();
-}
-
-const nsCString
-TestGonkCameraHardware::TestCase()
-{
-  nsCString test;
-  CameraPreferences::GetPref("camera.control.test.hardware", test);
-  return test;
-}
-
-const nsCString
-TestGonkCameraHardware::GetExtraParameters()
-{
-  /**
-   * The contents of this pref are appended to the flattened string of
-   * parameters stuffed into GonkCameraParameters by the camera library.
-   * It consists of semicolon-delimited key=value pairs, e.g.
-   *
-   *   focus-mode=auto;flash-mode=auto;preview-size=1024x768
-   *
-   * The unflattening process breaks this string up on semicolon boundaries
-   * and sets an entry in a hashtable of strings with the token before
-   * the equals sign as the key, and the token after as the value. Because
-   * the string is parsed in order, key=value pairs occuring later in the
-   * string will replace value pairs appearing earlier, making it easy to
-   * inject fake, testable values into the parameters table.
-   *
-   * One constraint of this approach is that neither the key nor the value
-   * may contain equals signs or semicolons. We don't enforce that here
-   * so that we can also test correct handling of improperly-formatted values.
-   */
-  nsCString parameters;
-  CameraPreferences::GetPref("camera.control.test.hardware.gonk.parameters", parameters);
-  DOM_CAMERA_LOGA("TestGonkCameraHardware : extra-parameters '%s'\n",
-    parameters.get());
-  return parameters;
-}
-
-bool
-TestGonkCameraHardware::IsTestCaseInternal(const char* aTest, const char* aFile, int aLine)
-{
-  if (TestCase().EqualsASCII(aTest)) {
-    DOM_CAMERA_LOGA("TestGonkCameraHardware : test-case '%s' (%s:%d)\n",
-      aTest, aFile, aLine);
-    return true;
-  }
-
-  return false;
-}
-
-int
-TestGonkCameraHardware::TestCaseError(int aDefaultError)
-{
-  // for now, just return the default error
-  return aDefaultError;
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARN_IF(NS_FAILED(rv));
+  return rv;
 }
 
 int
 TestGonkCameraHardware::AutoFocus()
 {
-  class AutoFocusFailure : public nsRunnable
+  class Delegate : public ControlMessage
   {
   public:
-    AutoFocusFailure(nsGonkCameraControl* aTarget)
-      : mTarget(aTarget)
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
     { }
 
-    NS_IMETHODIMP
-    Run()
-    {
-      OnAutoFocusComplete(mTarget, false);
-      return NS_OK;
-    }
-
   protected:
-    nsGonkCameraControl* mTarget;
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->AutoFocus();
+    }
   };
 
-  if (IsTestCase("auto-focus-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
-  if (IsTestCase("auto-focus-process-failure")) {
-    nsresult rv = NS_DispatchToCurrentThread(new AutoFocusFailure(mTarget));
-    if (NS_SUCCEEDED(rv)) {
-      return OK;
-    }
-    DOM_CAMERA_LOGE("Failed to dispatch AutoFocusFailure runnable (0x%08x)\n", rv);
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return UNKNOWN_ERROR;
   }
-
-  return GonkCameraHardware::AutoFocus();
+  return OK;
 }
-
-// These classes have to be external to StartFaceDetection(), at least
-// until we pick up gcc 4.5, which supports local classes as template
-// arguments.
-class FaceDetected : public nsRunnable
-{
-public:
-  FaceDetected(nsGonkCameraControl* aTarget)
-    : mTarget(aTarget)
-  { }
-
-  ~FaceDetected()
-  {
-    ReleaseFacesArray();
-  }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    InitMetaData();
-    OnFacesDetected(mTarget, &mMetaData);
-    return NS_OK;
-  }
-
-protected:
-  virtual nsresult InitMetaData() = 0;
-
-  nsresult
-  AllocateFacesArray(uint32_t num)
-  {
-    mMetaData.faces = new camera_face_t[num];
-    return NS_OK;
-  }
-
-  nsresult
-  ReleaseFacesArray()
-  {
-    delete [] mMetaData.faces;
-    mMetaData.faces = nullptr;
-    return NS_OK;
-  }
-
-  nsRefPtr<nsGonkCameraControl> mTarget;
-  camera_frame_metadata_t mMetaData;
-};
-
-class OneFaceDetected : public FaceDetected
-{
-public:
-  OneFaceDetected(nsGonkCameraControl* aTarget)
-    : FaceDetected(aTarget)
-  { }
-
-  nsresult
-  InitMetaData() MOZ_OVERRIDE
-  {
-    mMetaData.number_of_faces = 1;
-    AllocateFacesArray(1);
-    mMetaData.faces[0].id = 1;
-    mMetaData.faces[0].score = 2;
-    mMetaData.faces[0].rect[0] = 3;
-    mMetaData.faces[0].rect[1] = 4;
-    mMetaData.faces[0].rect[2] = 5;
-    mMetaData.faces[0].rect[3] = 6;
-    mMetaData.faces[0].left_eye[0] = 7;
-    mMetaData.faces[0].left_eye[1] = 8;
-    mMetaData.faces[0].right_eye[0] = 9;
-    mMetaData.faces[0].right_eye[1] = 10;
-    mMetaData.faces[0].mouth[0] = 11;
-    mMetaData.faces[0].mouth[1] = 12;
-
-    return NS_OK;
-  }
-};
-
-class TwoFacesDetected : public FaceDetected
-{
-public:
-  TwoFacesDetected(nsGonkCameraControl* aTarget)
-    : FaceDetected(aTarget)
-  { }
-
-  nsresult
-  InitMetaData() MOZ_OVERRIDE
-  {
-    mMetaData.number_of_faces = 2;
-    AllocateFacesArray(2);
-    mMetaData.faces[0].id = 1;
-    mMetaData.faces[0].score = 2;
-    mMetaData.faces[0].rect[0] = 3;
-    mMetaData.faces[0].rect[1] = 4;
-    mMetaData.faces[0].rect[2] = 5;
-    mMetaData.faces[0].rect[3] = 6;
-    mMetaData.faces[0].left_eye[0] = 7;
-    mMetaData.faces[0].left_eye[1] = 8;
-    mMetaData.faces[0].right_eye[0] = 9;
-    mMetaData.faces[0].right_eye[1] = 10;
-    mMetaData.faces[0].mouth[0] = 11;
-    mMetaData.faces[0].mouth[1] = 12;
-    mMetaData.faces[1].id = 13;
-    mMetaData.faces[1].score = 14;
-    mMetaData.faces[1].rect[0] = 15;
-    mMetaData.faces[1].rect[1] = 16;
-    mMetaData.faces[1].rect[2] = 17;
-    mMetaData.faces[1].rect[3] = 18;
-    mMetaData.faces[1].left_eye[0] = 19;
-    mMetaData.faces[1].left_eye[1] = 20;
-    mMetaData.faces[1].right_eye[0] = 21;
-    mMetaData.faces[1].right_eye[1] = 22;
-    mMetaData.faces[1].mouth[0] = 23;
-    mMetaData.faces[1].mouth[1] = 24;
-
-    return NS_OK;
-  }
-};
-
-class OneFaceNoFeaturesDetected : public FaceDetected
-{
-public:
-  OneFaceNoFeaturesDetected(nsGonkCameraControl* aTarget)
-    : FaceDetected(aTarget)
-  { }
-
-  nsresult
-  InitMetaData() MOZ_OVERRIDE
-  {
-    mMetaData.number_of_faces = 1;
-    AllocateFacesArray(1);
-    mMetaData.faces[0].id = 1;
-    // Test clamping 'score' to 100.
-    mMetaData.faces[0].score = 1000;
-    mMetaData.faces[0].rect[0] = 3;
-    mMetaData.faces[0].rect[1] = 4;
-    mMetaData.faces[0].rect[2] = 5;
-    mMetaData.faces[0].rect[3] = 6;
-    // Nullable values set to 'not-supported' specific values
-    mMetaData.faces[0].left_eye[0] = -2000;
-    mMetaData.faces[0].left_eye[1] = -2000;
-    // Test other 'not-supported' values as well. We treat
-    // anything outside the range [-1000, 1000] as invalid.
-    mMetaData.faces[0].right_eye[0] = 1001;
-    mMetaData.faces[0].right_eye[1] = -1001;
-    mMetaData.faces[0].mouth[0] = -2000;
-    mMetaData.faces[0].mouth[1] = 2000;
-
-    return NS_OK;
-  }
-};
-
-class NoFacesDetected : public FaceDetected
-{
-public:
-  NoFacesDetected(nsGonkCameraControl* aTarget)
-    : FaceDetected(aTarget)
-  { }
-
-  nsresult
-  InitMetaData() MOZ_OVERRIDE
-  {
-    mMetaData.number_of_faces = 0;
-    mMetaData.faces = nullptr;
-
-    return NS_OK;
-  }
-};
 
 int
 TestGonkCameraHardware::StartFaceDetection()
 {
-  nsRefPtr<FaceDetected> faceDetected;
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
 
-  if (IsTestCase("face-detection-detected-one-face")) {
-    faceDetected = new OneFaceDetected(mTarget);
-  } else if (IsTestCase("face-detection-detected-two-faces")) {
-    faceDetected = new TwoFacesDetected(mTarget);
-  } else if (IsTestCase("face-detection-detected-one-face-no-features")) {
-    faceDetected = new OneFaceNoFeaturesDetected(mTarget);
-  } else if (IsTestCase("face-detection-no-faces-detected")) {
-    faceDetected = new NoFacesDetected(mTarget);
-  }
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StartFaceDetection();
+    }
+  };
 
-  if (!faceDetected) {
-    return GonkCameraHardware::StartFaceDetection();
-  }
-
-  nsresult rv = NS_DispatchToCurrentThread(faceDetected);
-  if (NS_FAILED(rv)) {
-    DOM_CAMERA_LOGE("Failed to dispatch FaceDetected runnable (0x%08x)\n", rv);
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return UNKNOWN_ERROR;
   }
-
   return OK;
 }
 
 int
 TestGonkCameraHardware::StopFaceDetection()
 {
-  if (IsTestCase("face-detection-detected-one-face") ||
-      IsTestCase("face-detection-detected-two-faces") ||
-      IsTestCase("face-detection-detected-one-face-no-features") ||
-      IsTestCase("face-detection-no-faces-detected"))
+  class Delegate : public ControlMessage
   {
-    return OK;
-  }
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
 
-  return GonkCameraHardware::StopFaceDetection();
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StopFaceDetection();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
+  }
+  return OK;
 }
 
 int
 TestGonkCameraHardware::TakePicture()
 {
-  class TakePictureFailure : public nsRunnable
+  class Delegate : public ControlMessage
   {
   public:
-    TakePictureFailure(nsGonkCameraControl* aTarget)
-      : mTarget(aTarget)
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
     { }
 
-    NS_IMETHODIMP
-    Run()
-    {
-      OnTakePictureError(mTarget);
-      return NS_OK;
-    }
-
   protected:
-    nsGonkCameraControl* mTarget;
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->TakePicture();
+    }
   };
 
-  if (IsTestCase("take-picture-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
-  if (IsTestCase("take-picture-process-failure")) {
-    nsresult rv = NS_DispatchToCurrentThread(new TakePictureFailure(mTarget));
-    if (NS_SUCCEEDED(rv)) {
-      return OK;
-    }
-    DOM_CAMERA_LOGE("Failed to dispatch TakePictureFailure runnable (0x%08x)\n", rv);
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return UNKNOWN_ERROR;
   }
+  return OK;
+}
 
-  return GonkCameraHardware::TakePicture();
+void
+TestGonkCameraHardware::CancelTakePicture()
+{
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
+
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->CancelTakePicture();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 int
 TestGonkCameraHardware::StartPreview()
 {
-  if (IsTestCase("start-preview-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
-
-  return GonkCameraHardware::StartPreview();
-}
-
-int
-TestGonkCameraHardware::StartAutoFocusMoving(bool aIsMoving)
-{
-  class AutoFocusMoving : public nsRunnable
+  class Delegate : public ControlMessage
   {
   public:
-    AutoFocusMoving(nsGonkCameraControl* aTarget, bool aIsMoving)
-      : mTarget(aTarget)
-      , mIsMoving(aIsMoving)
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
     { }
 
-    NS_IMETHODIMP
-    Run()
-    {
-      OnAutoFocusMoving(mTarget, mIsMoving);
-      return NS_OK;
-    }
-
   protected:
-    nsGonkCameraControl* mTarget;
-    bool mIsMoving;
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StartPreview();
+    }
   };
 
-  nsresult rv = NS_DispatchToCurrentThread(new AutoFocusMoving(mTarget, aIsMoving));
-  if (NS_SUCCEEDED(rv)) {
-    return OK;
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
   }
-  DOM_CAMERA_LOGE("Failed to dispatch AutoFocusMoving runnable (0x%08x)\n", rv);
-  return UNKNOWN_ERROR;
+  return OK;
 }
+
+void
+TestGonkCameraHardware::StopPreview()
+{
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
+
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StopPreview();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  NS_WARN_IF(NS_FAILED(rv));
+}
+
+class TestGonkCameraHardware::PushParametersDelegate : public ControlMessage
+{
+public:
+  PushParametersDelegate(TestGonkCameraHardware* aTestHw, String8* aParams)
+    : ControlMessage(aTestHw)
+    , mParams(aParams)
+  { }
+
+protected:
+  NS_IMETHOD
+  RunImpl() MOZ_OVERRIDE
+  {
+    if (NS_WARN_IF(!mParams)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    DOM_CAMERA_LOGI("Push test parameters: %s\n", mParams->string());
+    return mJSTestWrapper->PushParameters(NS_ConvertASCIItoUTF16(mParams->string()));
+  }
+
+  String8* mParams;
+};
+
+class TestGonkCameraHardware::PullParametersDelegate : public ControlMessage
+{
+public:
+  PullParametersDelegate(TestGonkCameraHardware* aTestHw, nsString* aParams)
+    : ControlMessage(aTestHw)
+    , mParams(aParams)
+  { }
+
+protected:
+  NS_IMETHOD
+  RunImpl() MOZ_OVERRIDE
+  {
+    if (NS_WARN_IF(!mParams)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv = mJSTestWrapper->PullParameters(*mParams);
+    DOM_CAMERA_LOGI("Pull test parameters: %s\n",
+      NS_LossyConvertUTF16toASCII(*mParams).get());
+    return rv;
+  }
+
+  nsString* mParams;
+};
 
 int
 TestGonkCameraHardware::PushParameters(const GonkCameraParameters& aParams)
 {
-  if (IsTestCase("push-parameters-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  String8 s = aParams.Flatten();
+  nsresult rv = WaitWhileRunningOnMainThread(new PushParametersDelegate(this, &s));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
   }
-
-  nsString focusMode;
-  GonkCameraParameters& params = const_cast<GonkCameraParameters&>(aParams);
-  params.Get(CAMERA_PARAM_FOCUSMODE, focusMode);
-  if (focusMode.EqualsASCII("continuous-picture") ||
-      focusMode.EqualsASCII("continuous-video"))
-  {
-    if (IsTestCase("autofocus-moving-true")) {
-      return StartAutoFocusMoving(true);
-    } else if (IsTestCase("autofocus-moving-false")) {
-      return StartAutoFocusMoving(false);
-    }
-  }
-
-  return GonkCameraHardware::PushParameters(aParams);
+  return OK;
 }
 
 nsresult
 TestGonkCameraHardware::PullParameters(GonkCameraParameters& aParams)
 {
-  if (IsTestCase("pull-parameters-failure")) {
-    return static_cast<nsresult>(TestCaseError(UNKNOWN_ERROR));
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsString as;
+  nsresult rv = WaitWhileRunningOnMainThread(new PullParametersDelegate(this, &as));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  String8 s = mCamera->getParameters();
-  nsCString extra = GetExtraParameters();
-  if (!extra.IsEmpty()) {
-    s += ";";
-    s += extra.get();
+  String8 s(NS_LossyConvertUTF16toASCII(as).get());
+  aParams.Unflatten(s);
+  return NS_OK;
+}
+
+int
+TestGonkCameraHardware::PushParameters(const CameraParameters& aParams)
+{
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  String8 s = aParams.flatten();
+  nsresult rv = WaitWhileRunningOnMainThread(new PushParametersDelegate(this, &s));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
+  }
+  return OK;
+}
+
+void
+TestGonkCameraHardware::PullParameters(CameraParameters& aParams)
+{
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsString as;
+  nsresult rv = WaitWhileRunningOnMainThread(new PullParametersDelegate(this, &as));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    as.Truncate();
   }
 
-  return aParams.Unflatten(s);
+  String8 s(NS_LossyConvertUTF16toASCII(as).get());
+  aParams.unflatten(s);
 }
 
 int
 TestGonkCameraHardware::StartRecording()
 {
-  if (IsTestCase("start-recording-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
 
-  return GonkCameraHardware::StartRecording();
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StartRecording();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
+  }
+  return OK;
 }
 
 int
 TestGonkCameraHardware::StopRecording()
 {
-  if (IsTestCase("stop-recording-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
+
+  protected:
+    NS_IMETHOD
+    RunImpl() MOZ_OVERRIDE
+    {
+      return mJSTestWrapper->StopRecording();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
   }
-
-  return GonkCameraHardware::StopRecording();
-}
-
-int
-TestGonkCameraHardware::SetListener(const sp<GonkCameraListener>& aListener)
-{
-  if (IsTestCase("set-listener-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
-
-  return GonkCameraHardware::SetListener(aListener);
+  return OK;
 }
 
 int
 TestGonkCameraHardware::StoreMetaDataInBuffers(bool aEnabled)
 {
-  if (IsTestCase("store-metadata-in-buffers-failure")) {
-    return TestCaseError(UNKNOWN_ERROR);
-  }
-
-  return GonkCameraHardware::StoreMetaDataInBuffers(aEnabled);
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  return OK;
 }
+
