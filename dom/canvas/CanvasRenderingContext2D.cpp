@@ -96,6 +96,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/dom/CanvasPath.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/SVGMatrix.h"

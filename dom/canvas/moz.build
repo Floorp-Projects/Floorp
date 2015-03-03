@@ -25,6 +25,7 @@ EXPORTS.mozilla.ipc += [
 
 EXPORTS.mozilla.dom += [
     'CanvasGradient.h',
+    'CanvasPath.h',
     'CanvasPattern.h',
     'CanvasRenderingContext2D.h',
     'CanvasUtils.h',
