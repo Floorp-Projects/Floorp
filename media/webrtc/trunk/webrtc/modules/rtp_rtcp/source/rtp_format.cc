@@ -25,6 +25,7 @@ RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
     case kRtpVideoVp8:
       assert(rtp_type_header != NULL);
       return new RtpPacketizerVp8(rtp_type_header->VP8, max_payload_len);
+    case kRtpVideoVp9:
     case kRtpVideoGeneric:
       return new RtpPacketizerGeneric(frame_type, max_payload_len);
     case kRtpVideoNone:
@@ -39,6 +40,7 @@ RtpDepacketizer* RtpDepacketizer::Create(RtpVideoCodecTypes type) {
       return new RtpDepacketizerH264();
     case kRtpVideoVp8:
       return new RtpDepacketizerVp8();
+    case kRtpVideoVp9: // XXX fix vp9 packetization (bug 1138629)
     case kRtpVideoGeneric:
       return new RtpDepacketizerGeneric();
     case kRtpVideoNone:
