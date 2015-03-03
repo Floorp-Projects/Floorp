@@ -186,8 +186,8 @@ DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
   aMappedSurface->mData = map.bits;
   aMappedSurface->mStride = map.pitch;
 
-  mIsMapped = true;
-  return true;
+  mIsMapped = !!aMappedSurface->mData;
+  return mIsMapped;
 }
 
 void
