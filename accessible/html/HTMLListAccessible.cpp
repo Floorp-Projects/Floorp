@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLListAccessible, HyperTextAccessible)
 role
 HTMLListAccessible::NativeRole()
 {
-  if (mContent->Tag() == nsGkAtoms::dl)
+  if (mContent->IsHTMLElement(nsGkAtoms::dl))
     return roles::DEFINITION_LIST;
 
   return roles::LIST;
@@ -69,7 +69,7 @@ HTMLLIAccessible::Shutdown()
 role
 HTMLLIAccessible::NativeRole()
 {
-  if (mContent->Tag() == nsGkAtoms::dt)
+  if (mContent->IsHTMLElement(nsGkAtoms::dt))
     return roles::TERM;
 
   return roles::LISTITEM;

@@ -92,7 +92,7 @@ XULLabelAccessible::RelationByType(RelationType aType)
   if (aType == RelationType::LABEL_FOR) {
     // Caption is the label for groupbox
     nsIContent* parent = mContent->GetFlattenedTreeParent();
-    if (parent && parent->Tag() == nsGkAtoms::caption) {
+    if (parent && parent->IsXULElement(nsGkAtoms::caption)) {
       Accessible* parent = Parent();
       if (parent && parent->Role() == roles::GROUPING)
         rel.AppendTarget(parent);
