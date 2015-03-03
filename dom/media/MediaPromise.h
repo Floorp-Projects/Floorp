@@ -440,6 +440,16 @@ public:
   MediaPromiseHolder()
     : mMonitor(nullptr) {}
 
+  // Move semantics.
+  MediaPromiseHolder& operator=(MediaPromiseHolder&& aOther)
+  {
+    MOZ_ASSERT(!mMonitor && !aOther.mMonitor);
+    MOZ_DIAGNOSTIC_ASSERT(!mPromise);
+    mPromise = aOther.mPromise;
+    aOther.mPromise = nullptr;
+    return *this;
+  }
+
   ~MediaPromiseHolder() { MOZ_ASSERT(!mPromise); }
 
   already_AddRefed<PromiseType> Ensure(const char* aMethodName) {
