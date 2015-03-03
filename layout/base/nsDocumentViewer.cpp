@@ -1785,6 +1785,13 @@ nsDocumentViewer::SetDocumentInternal(nsIDocument* aDocument,
   aDocument->SetContainer(mContainer);
 
   if (mDocument != aDocument) {
+    if (aForceReuseInnerWindow) {
+      // Transfer the navigation timing information to the new document, since
+      // we're keeping the same inner and hence should really have the same
+      // timing information.
+      aDocument->SetNavigationTiming(mDocument->GetNavigationTiming());
+    }
+
     if (mDocument->IsStaticDocument()) {
       mDocument->SetScriptGlobalObject(nullptr);
       mDocument->Destroy();
