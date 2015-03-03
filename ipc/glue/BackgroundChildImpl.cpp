@@ -7,6 +7,7 @@
 #include "ActorsChild.h" // IndexedDB
 #include "BroadcastChannelChild.h"
 #include "FileDescriptorSetChild.h"
+#include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -278,6 +279,19 @@ bool
 BackgroundChildImpl::DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor)
 {
   dom::cache::DeallocPCacheStreamControlChild(aActor);
+  return true;
+}
+
+media::PMediaChild*
+BackgroundChildImpl::AllocPMediaChild()
+{
+  return media::CreateMediaChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPMediaChild(media::PMediaChild *aActor)
+{
+  delete aActor;
   return true;
 }
 
