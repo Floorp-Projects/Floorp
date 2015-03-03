@@ -111,6 +111,8 @@ toolbarbutton.social-provider-menuitem > .toolbarbutton-icon {
 menu.subviewbutton > .menu-right {
   -moz-appearance: none;
   list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg#arrow);
+  /* Reset the rect we inherit from the button: */
+  -moz-image-region: auto;
 }
 
 menu[disabled="true"].subviewbutton > .menu-right {
