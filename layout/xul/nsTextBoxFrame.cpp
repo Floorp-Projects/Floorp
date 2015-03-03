@@ -406,7 +406,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     // A mask of all possible decorations.
     uint8_t decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
 
-    bool vertical = GetWritingMode().IsVertical();
+    WritingMode wm = GetWritingMode();
+    bool vertical = wm.IsVertical();
 
     nsIFrame* f = this;
     do {  // find decoration colors
@@ -461,8 +462,18 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     nscoord size;
     nscoord ascent = fontMet->MaxAscent();
 
-    nscoord baseline =
-      presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
+    nsPoint baselinePt;
+    if (wm.IsVertical()) {
+      baselinePt.x =
+        presContext->RoundAppUnitsToNearestDevPixels(aTextRect.x +
+            (wm.IsVerticalRL() ? aTextRect.width - ascent : ascent));
+      baselinePt.y = aTextRect.y;
+    } else {
+      baselinePt.x = aTextRect.x;
+      baselinePt.y =
+        presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
+    }
+
     nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(presContext->AppUnitsToGfxUnits(aTextRect.x),
                 presContext->AppUnitsToGfxUnits(aTextRect.y));
@@ -470,6 +481,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     gfxFloat ascentPixel = presContext->AppUnitsToGfxUnits(ascent);
     Float xInFrame = Float(PresContext()->AppUnitsToGfxUnits(mTextDrawRect.x));
     gfxRect dirtyRect(presContext->AppUnitsToGfxUnits(aDirtyRect));
+
+    // XXX todo: vertical-mode support for decorations not tested yet,
+    // probably won't be positioned correctly
 
     // Underlines are drawn before overlines, and both before the text
     // itself, per http://www.w3.org/TR/CSS21/zindex.html point 7.2.1.4.1.1.
@@ -523,7 +537,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
                                            refContext, *fontMet,
-                                           aTextRect.x, baseline,
+                                           baselinePt.x, baselinePt.y,
                                            &posResolve,
                                            1);
           mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
@@ -534,7 +548,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
                                            refContext, *fontMet,
-                                           aTextRect.x, baseline);
+                                           baselinePt.x, baselinePt.y);
       }
     }
     if (NS_FAILED(rv)) {
@@ -554,7 +568,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
        }
 
        fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
-                           aTextRect.x, baseline, &aRenderingContext,
+                           baselinePt.x, baselinePt.y, &aRenderingContext,
                            &refContext);
     }
 
@@ -949,11 +963,16 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
                                              mCroppedTitle.Length(),
                                              aBoxLayoutState.GetRenderingContext());
 
-    textRect.x -= metrics.leftBearing;
-    textRect.width = metrics.width;
+    WritingMode wm = GetWritingMode();
+    LogicalRect tr(wm, textRect, GetSize().width);
+
+    tr.IStart(wm) -= metrics.leftBearing;
+    tr.ISize(wm) = metrics.width;
     // In DrawText() we always draw with the baseline at MaxAscent() (relative to mTextDrawRect), 
-    textRect.y += fontMet->MaxAscent() - metrics.ascent;
-    textRect.height = metrics.ascent + metrics.descent;
+    tr.BStart(wm) += fontMet->MaxAscent() - metrics.ascent;
+    tr.BSize(wm) = metrics.ascent + metrics.descent;
+
+    textRect = tr.GetPhysicalRect(wm, GetSize().width);
 
     // Our scrollable overflow is our bounds; our visual overflow may
     // extend beyond that.
@@ -1019,6 +1038,9 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
         if (rendContext) {
             GetTextSize(presContext, *rendContext,
                         mTitle, size, mAscent);
+            if (GetWritingMode().IsVertical()) {
+                Swap(size.width, size.height);
+            }
             mTextSize = size;
             mNeedsRecalc = false;
         }
@@ -1028,16 +1050,21 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 void
 nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
 {
-    nsRect textRect(nsPoint(0, 0), GetSize());
+    WritingMode wm = GetWritingMode();
+
+    LogicalRect textRect(wm, LogicalPoint(wm, 0, 0), GetLogicalSize(wm));
     nsMargin borderPadding;
     GetBorderAndPadding(borderPadding);
-    textRect.Deflate(borderPadding);
+    textRect.Deflate(wm, LogicalMargin(wm, borderPadding));
 
     // determine (cropped) title and underline position
     nsPresContext* presContext = PresContext();
-    // determine (cropped) title which fits in aRect.width and its width
+    // determine (cropped) title which fits in aRect, and its width
+    // (where "width" is the text measure along its baseline, i.e. actually
+    // a physical height in vertical writing modes)
     nscoord titleWidth =
-        CalculateTitleForWidth(presContext, aRenderingContext, textRect.width);
+        CalculateTitleForWidth(presContext, aRenderingContext,
+                               textRect.ISize(wm));
 
 #ifdef ACCESSIBILITY
     // Make sure to update the accessible tree in case when cropped title is
@@ -1053,24 +1080,22 @@ nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
     UpdateAccessIndex();
 
     // make the rect as small as our (cropped) text.
-    nscoord outerWidth = textRect.width;
-    textRect.width = titleWidth;
+    nscoord outerISize = textRect.ISize(wm);
+    textRect.ISize(wm) = titleWidth;
 
     // Align our text within the overall rect by checking our text-align property.
-    const nsStyleVisibility* vis = StyleVisibility();
     const nsStyleText* textStyle = StyleText();
-
-    if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER)
-      textRect.x += (outerWidth - textRect.width)/2;
-    else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT ||
-             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT &&
-              vis->mDirection == NS_STYLE_DIRECTION_RTL) ||
-             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_END &&
-              vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
-      textRect.x += (outerWidth - textRect.width);
+    if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_CENTER) {
+      textRect.IStart(wm) += (outerISize - textRect.ISize(wm)) / 2;
+    } else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_END ||
+             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_LEFT &&
+              !wm.IsBidiLTR()) ||
+             (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT &&
+              wm.IsBidiLTR())) {
+      textRect.IStart(wm) += (outerISize - textRect.ISize(wm));
     }
 
-    mTextDrawRect = textRect;
+    mTextDrawRect = textRect.GetPhysicalRect(wm, GetSize().width);
 }
 
 /**
@@ -1103,8 +1128,13 @@ nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
     DISPLAY_MIN_SIZE(this, size);
 
     // if there is cropping our min width becomes our border and padding
-    if (mCropType != CropNone)
-        size.width = 0;
+    if (mCropType != CropNone) {
+        if (GetWritingMode().IsVertical()) {
+            size.height = 0;
+        } else {
+            size.width = 0;
+        }
+    }
 
     AddBorderAndPadding(size);
     bool widthSet, heightSet;
@@ -1122,7 +1152,9 @@ nsTextBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 
     nsMargin m(0,0,0,0);
     GetBorderAndPadding(m);
-    ascent += m.top;
+
+    WritingMode wm = GetWritingMode();
+    ascent += LogicalMargin(wm, m).BStart(wm);
 
     return ascent;
 }
