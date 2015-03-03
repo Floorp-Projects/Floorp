@@ -1790,15 +1790,13 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
       if (firstAncestorRS) {
         nsIContent* frameContent = firstAncestorRS->frame->GetContent();
         if (frameContent) {
-          nsIAtom *contentTag = frameContent->Tag();
-          NS_ASSERTION(contentTag == nsGkAtoms::html, "First ancestor is not HTML");
+          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::html), "First ancestor is not HTML");
         }
       }
       if (secondAncestorRS) {
         nsIContent* frameContent = secondAncestorRS->frame->GetContent();
         if (frameContent) {
-          nsIAtom *contentTag = frameContent->Tag();
-          NS_ASSERTION(contentTag == nsGkAtoms::body, "Second ancestor is not BODY");
+          NS_ASSERTION(frameContent->IsHTMLElement(nsGkAtoms::body), "Second ancestor is not BODY");
         }
       }
 #endif

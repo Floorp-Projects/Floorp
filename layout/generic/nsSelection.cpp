@@ -755,7 +755,7 @@ nsIAtom *GetTag(nsINode *aNode)
     return nullptr;
   }
   
-  return content->Tag();
+  return content->NodeInfo()->NameAtom();
 }
 
 // Returns the parent
@@ -2189,9 +2189,7 @@ nsFrameSelection::NotifySelectionListeners(SelectionType aType)
 
 static bool IsCell(nsIContent *aContent)
 {
-  return ((aContent->Tag() == nsGkAtoms::td ||
-           aContent->Tag() == nsGkAtoms::th) &&
-          aContent->IsHTMLElement());
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th);
 }
 
 nsITableCellLayout* 
@@ -2947,8 +2945,7 @@ nsFrameSelection::GetParentTable(nsIContent *aCell) const
 
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
-    if (parent->Tag() == nsGkAtoms::table &&
-        parent->IsHTMLElement()) {
+    if (parent->IsHTMLElement(nsGkAtoms::table)) {
       return parent;
     }
   }
@@ -3088,9 +3085,7 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
     return NS_OK;
   }
 
-  nsIAtom *tag = startContent->Tag();
-
-  if (tag == nsGkAtoms::tr)
+  if (startContent->IsHTMLElement(nsGkAtoms::tr))
   {
     *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
   }
@@ -3100,11 +3095,9 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
     if (!child)
       return NS_ERROR_FAILURE;
 
-    tag = child->Tag();
-
-    if (tag == nsGkAtoms::table)
+    if (child->IsHTMLElement(nsGkAtoms::table))
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
-    else if (tag == nsGkAtoms::tr)
+    else if (child->IsHTMLElement(nsGkAtoms::tr))
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
   }
 
@@ -4828,7 +4821,7 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   nsCOMPtr<nsIContent> content = do_QueryInterface(&aParentNode);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(&aParentNode);
   printf ("Sel. Collapse to %p %s %d\n", &aParentNode,
-          content ? nsAtomCString(content->Tag()).get()
+          content ? nsAtomCString(content->NodeInfo()->NameAtom()).get()
                   : (doc ? "DOCUMENT" : "???"),
           aOffset);
 #endif
@@ -5367,7 +5360,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(&aParentNode);
   printf ("Sel. Extend to %p %s %d\n", content.get(),
-          nsAtomCString(content->Tag()).get(), aOffset);
+          nsAtomCString(content->NodeInfo()->NameAtom()).get(), aOffset);
 #endif
   res = mFrameSelection->NotifySelectionListeners(GetType());
   if (NS_FAILED(res)) {

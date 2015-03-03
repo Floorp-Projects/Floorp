@@ -378,8 +378,8 @@ nsPluginFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   nscoord result = 0;
 
   if (!IsHidden(false)) {
-    nsIAtom *atom = mContent->Tag();
-    if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
+    if (mContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
+                                      nsGkAtoms::embed)) {
       bool vertical = GetWritingMode().IsVertical();
       result = nsPresContext::CSSPixelsToAppUnits(
         vertical ? EMBED_DEF_HEIGHT : EMBED_DEF_WIDTH);
@@ -440,8 +440,8 @@ nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
   aMetrics.Height() = aReflowState.ComputedHeight();
 
   // for EMBED and APPLET, default to 240x200 for compatibility
-  nsIAtom *atom = mContent->Tag();
-  if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
+  if (mContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
+                                    nsGkAtoms::embed)) {
     if (aMetrics.Width() == NS_UNCONSTRAINEDSIZE) {
       aMetrics.Width() = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
                                aReflowState.ComputedMinWidth(),
@@ -731,7 +731,7 @@ nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const
   }
 
   // only <embed> tags support the HIDDEN attribute
-  if (mContent->Tag() == nsGkAtoms::embed) {
+  if (mContent->IsHTMLElement(nsGkAtoms::embed)) {
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...

@@ -759,27 +759,26 @@ nsImageMap::SearchForAreas(nsIContent* aParent, bool& aFoundArea,
   for (i = 0; i < n; i++) {
     nsIContent *child = aParent->GetChildAt(i);
 
-    if (child->IsHTMLElement()) {
-      // If we haven't determined that the map element contains an
-      // <a> element yet, then look for <area>.
-      if (!aFoundAnchor && child->Tag() == nsGkAtoms::area) {
-        aFoundArea = true;
-        rv = AddArea(child);
-        NS_ENSURE_SUCCESS(rv, rv);
+    // If we haven't determined that the map element contains an
+    // <a> element yet, then look for <area>.
+    if (!aFoundAnchor && child->IsHTMLElement(nsGkAtoms::area)) {
+      aFoundArea = true;
+      rv = AddArea(child);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        // Continue to next child. This stops mContainsBlockContents from
-        // getting set. It also makes us ignore children of <area>s which
-        // is consistent with how we react to dynamic insertion of such
-        // children.
-        continue;
-      }
-      // If we haven't determined that the map element contains an
-      // <area> element yet, then look for <a>.
-      if (!aFoundArea && child->Tag() == nsGkAtoms::a) {
-        aFoundAnchor = true;
-        rv = AddArea(child);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // Continue to next child. This stops mContainsBlockContents from
+      // getting set. It also makes us ignore children of <area>s which
+      // is consistent with how we react to dynamic insertion of such
+      // children.
+      continue;
+    }
+
+    // If we haven't determined that the map element contains an
+    // <area> element yet, then look for <a>.
+    if (!aFoundArea && child->IsHTMLElement(nsGkAtoms::a)) {
+      aFoundAnchor = true;
+      rv = AddArea(child);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (child->IsElement()) {
