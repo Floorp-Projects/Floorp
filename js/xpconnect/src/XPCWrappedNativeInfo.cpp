@@ -49,6 +49,7 @@ bool
 XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
                          HandleObject parent, jsval *vp)
 {
+    MOZ_ASSERT(iface == GetInterface());
     if (IsConstant()) {
         RootedValue resultVal(ccx);
         nsXPIDLCString name;
@@ -287,12 +288,19 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
         } else {
             // XXX need better way to find dups
             // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
-            cur = &members[realTotalCount++];
+            if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+                NS_WARNING("Too many members in interface");
+                failed = true;
+                break;
+            }
+            cur = &members[realTotalCount];
             cur->SetName(name);
             if (info->IsGetter())
                 cur->SetReadOnlyAttribute(i);
             else
                 cur->SetMethod(i);
+            cur->SetIndexInInterface(realTotalCount);
+            ++realTotalCount;
         }
     }
 
@@ -315,10 +323,16 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
 
             // XXX need better way to find dups
             //MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
-
-            cur = &members[realTotalCount++];
+            if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+                NS_WARNING("Too many members in interface");
+                failed = true;
+                break;
+            }
+            cur = &members[realTotalCount];
             cur->SetName(name);
             cur->SetConstant(i);
+            cur->SetIndexInInterface(realTotalCount);
+            ++realTotalCount;
         }
     }
 
