@@ -4588,7 +4588,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
         if (key->isSingleton())
             obj = key->singleton();
         else
-            obj = key->proto().toObjectOrNull();
+            obj = key->proto().isLazy() ? nullptr : key->proto().toObjectOrNull();
 
         while (obj) {
             if (!obj->getClass()->isNative())
