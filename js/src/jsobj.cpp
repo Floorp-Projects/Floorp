@@ -4112,29 +4112,6 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassIn
     }
 }
 
-bool
-JSObject::hasIdempotentProtoChain() const
-{
-    // Return false if obj (or an object on its proto chain) is non-native or
-    // has a resolve or lookup hook.
-    JSObject *obj = const_cast<JSObject *>(this);
-    while (true) {
-        if (!obj->isNative())
-            return false;
-
-        JSResolveOp resolve = obj->getClass()->resolve;
-        if (resolve && resolve != js::fun_resolve && resolve != js::str_resolve)
-            return false;
-
-        if (obj->getOps()->lookupProperty)
-            return false;
-
-        obj = obj->getProto();
-        if (!obj)
-            return true;
-    }
-}
-
 void
 JSObject::markChildren(JSTracer *trc)
 {

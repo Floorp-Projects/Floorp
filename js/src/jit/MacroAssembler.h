@@ -285,18 +285,20 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadObjShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
     }
+    void loadObjGroup(Register objReg, Register dest) {
+        loadPtr(Address(objReg, JSObject::offsetOfGroup()), dest);
+    }
     void loadBaseShape(Register objReg, Register dest) {
-        loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
-
+        loadObjShape(objReg, dest);
         loadPtr(Address(dest, Shape::offsetOfBase()), dest);
     }
     void loadObjClass(Register objReg, Register dest) {
-        loadPtr(Address(objReg, JSObject::offsetOfGroup()), dest);
+        loadObjGroup(objReg, dest);
         loadPtr(Address(dest, ObjectGroup::offsetOfClasp()), dest);
     }
     void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class *clasp,
                             Label *label) {
-        loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+        loadObjGroup(obj, scratch);
         branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
@@ -304,6 +306,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void branchTestObjShape(Condition cond, Register obj, Register shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
+    }
+    void branchTestObjGroup(Condition cond, Register obj, ObjectGroup *group, Label *label) {
+        branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), ImmGCPtr(group), label);
+    }
+    void branchTestObjGroup(Condition cond, Register obj, Register group, Label *label) {
+        branchPtr(cond, Address(obj, JSObject::offsetOfGroup()), group, label);
     }
     void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
                                       const void *handlerp, Label *label) {
