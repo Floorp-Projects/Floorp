@@ -32,6 +32,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
+#include "nsDataHashtable.h"
 
 #define ENSURE_BLUETOOTH_IS_READY(runnable, result)                    \
   do {                                                                 \
@@ -71,6 +72,12 @@ static bool sAdapterDiscovering(false);
 static bool sAdapterEnabled(false);
 // InfallibleTArray is an alias for nsTArray.
 static InfallibleTArray<nsString> sAdapterBondedAddressArray;
+
+// Use a static hash table to keep the name of remote device during the pairing
+// procedure. In this manner, BT service and adapter can get the name of paired
+// device name when bond state changed.
+// The hash Key is BD address, the Value is remote BD name.
+static nsDataHashtable<nsStringHashKey, nsString> sPairingNameTable;
 
 static BluetoothInterface* sBtInterface;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
@@ -1211,10 +1218,6 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
       sAdapterDiscovering = false;
       BT_APPEND_NAMED_VALUE(props, "Discovering", false);
     }
-    if (!sAdapterBondedAddressArray.IsEmpty()) {
-      BT_APPEND_NAMED_VALUE(props, "PairedDevices",
-                            InfallibleTArray<nsString>());
-    }
 
     BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
                            NS_LITERAL_STRING(KEY_ADAPTER), props);
@@ -1240,6 +1243,7 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     sFetchUuidsRunnableArray.Clear();
     sBondingRunnableArray.Clear();
     sUnbondingRunnableArray.Clear();
+    sPairingNameTable.Clear();
 
     // Bluetooth scan mode is SCAN_MODE_CONNECTABLE by default, i.e., it should
     // be connectable and non-discoverable.
@@ -1304,10 +1308,7 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
 
       // Whenever reloading paired devices, force refresh
       sAdapterBondedAddressArray.Clear();
-
-      for (size_t index = 0; index < p.mStringArray.Length(); index++) {
-        sAdapterBondedAddressArray.AppendElement(p.mStringArray[index]);
-      }
+      sAdapterBondedAddressArray.AppendElements(p.mStringArray);
 
       BT_APPEND_NAMED_VALUE(propertiesArray, "PairedDevices",
                             sAdapterBondedAddressArray);
@@ -1525,6 +1526,8 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
   BT_APPEND_NAMED_VALUE(propertiesArray, "type",
                         NS_LITERAL_STRING(PAIRING_REQ_TYPE_ENTERPINCODE));
 
+  sPairingNameTable.Put(nsString(aRemoteBdAddr), nsString(aBdName));
+
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
                                    NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
                                    BluetoothValue(propertiesArray)));
@@ -1571,6 +1574,8 @@ BluetoothServiceBluedroid::SspRequestNotification(
   BT_APPEND_NAMED_VALUE(propertiesArray, "passkey", passkey);
   BT_APPEND_NAMED_VALUE(propertiesArray, "type", pairingType);
 
+  sPairingNameTable.Put(nsString(aRemoteBdAddr), nsString(aBdName));
+
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PairingRequest"),
                                    NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
                                    BluetoothValue(propertiesArray)));
@@ -1604,14 +1609,25 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
   BT_APPEND_NAMED_VALUE(propertiesArray, "Paired", bonded);
 
+  // Retrieve device name from hash table of pairing device name.
+  nsString deviceName = EmptyString();
+  bool nameExists = sPairingNameTable.Get(aRemoteBdAddr, &deviceName);
+  if (nameExists) {
+    sPairingNameTable.Remove(aRemoteBdAddr);
+  }
+
+  // Update attribute BluetoothDevice.name if the device is paired.
+  if (bonded && STATUS_SUCCESS) {
+    MOZ_ASSERT(nameExists);
+    BT_APPEND_NAMED_VALUE(propertiesArray, "Name", deviceName);
+  }
+
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
                                    nsString(aRemoteBdAddr),
                                    BluetoothValue(propertiesArray)));
-  propertiesArray.Clear();
 
-  // Append signal properties and notify adapter.
-  BT_APPEND_NAMED_VALUE(propertiesArray, "Address", nsString(aRemoteBdAddr));
-  BT_APPEND_NAMED_VALUE(propertiesArray, "Paired", bonded);
+  // Insert address to signal properties and notify adapter.
+  BT_INSERT_NAMED_VALUE(propertiesArray, 0, "Address", nsString(aRemoteBdAddr));
 
   nsString signalName = bonded ? NS_LITERAL_STRING(DEVICE_PAIRED_ID)
                                : NS_LITERAL_STRING(DEVICE_UNPAIRED_ID);
