@@ -37,6 +37,67 @@ private:
   nsRefPtr<Promise> mPromise;
 };
 
+class MediaDevices::EnumDevResolver : public nsIGetUserMediaDevicesSuccessCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit EnumDevResolver(Promise* aPromise) : mPromise(aPromise) {}
+
+  NS_IMETHOD
+  OnSuccess(nsIVariant* aDevices) override
+  {
+    // Cribbed from MediaPermissionGonk.cpp
+    nsIID elementIID;
+    uint16_t elementType;
+
+    // Create array for nsIMediaDevice
+    nsTArray<nsCOMPtr<nsIMediaDevice>> devices;
+    // Contain the fumes
+    {
+      void* rawArray;
+      uint32_t arrayLen;
+      nsresult rv;
+      rv = aDevices->GetAsArray(&elementType, &elementIID, &arrayLen, &rawArray);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (elementType != nsIDataType::VTYPE_INTERFACE) {
+        NS_Free(rawArray);
+        return NS_ERROR_FAILURE;
+      }
+
+      nsISupports **supportsArray = reinterpret_cast<nsISupports **>(rawArray);
+      for (uint32_t i = 0; i < arrayLen; ++i) {
+        nsCOMPtr<nsIMediaDevice> device(do_QueryInterface(supportsArray[i]));
+        devices.AppendElement(device);
+        NS_IF_RELEASE(supportsArray[i]); // explicitly decrease refcount for rawptr
+      }
+      NS_Free(rawArray); // explicitly free memory from nsIVariant::GetAsArray
+    }
+    nsTArray<nsRefPtr<MediaDeviceInfo>> infos;
+    for (auto& device : devices) {
+      nsString type;
+      device->GetType(type);
+      bool isVideo = type.EqualsLiteral("video");
+      bool isAudio = type.EqualsLiteral("audio");
+      if (isVideo || isAudio) {
+        MediaDeviceKind kind = isVideo ?
+            MediaDeviceKind::Videoinput : MediaDeviceKind::Audioinput;
+        // TODO: return anonymized id, +label (origins w/gUM permission) (1046245)
+        nsRefPtr<MediaDeviceInfo> info = new MediaDeviceInfo(nsString(), kind,
+                                                             nsString());
+        infos.AppendElement(info);
+      }
+    }
+    mPromise->MaybeResolve(infos);
+    return NS_OK;
+  }
+
+private:
+  virtual ~EnumDevResolver() {}
+  nsRefPtr<Promise> mPromise;
+};
+
 class MediaDevices::GumRejecter : public nsIDOMGetUserMediaErrorCallback
 {
 public:
@@ -61,23 +122,38 @@ private:
 };
 
 NS_IMPL_ISUPPORTS(MediaDevices::GumResolver, nsIDOMGetUserMediaSuccessCallback)
+NS_IMPL_ISUPPORTS(MediaDevices::EnumDevResolver, nsIGetUserMediaDevicesSuccessCallback)
 NS_IMPL_ISUPPORTS(MediaDevices::GumRejecter, nsIDOMGetUserMediaErrorCallback)
 
 already_AddRefed<Promise>
 MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
                            ErrorResult &aRv)
 {
-  ErrorResult rv;
   nsPIDOMWindow* window = GetOwner();
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
   nsRefPtr<Promise> p = Promise::Create(go, aRv);
-  NS_ENSURE_TRUE(!rv.Failed(), nullptr);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   nsRefPtr<GumResolver> resolver = new GumResolver(p);
   nsRefPtr<GumRejecter> rejecter = new GumRejecter(p);
 
   aRv = MediaManager::Get()->GetUserMedia(window, aConstraints,
                                           resolver, rejecter);
+  return p.forget();
+}
+
+already_AddRefed<Promise>
+MediaDevices::EnumerateDevices(ErrorResult &aRv)
+{
+  nsPIDOMWindow* window = GetOwner();
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  nsRefPtr<EnumDevResolver> resolver = new EnumDevResolver(p);
+  nsRefPtr<GumRejecter> rejecter = new GumRejecter(p);
+
+  aRv = MediaManager::Get()->EnumerateDevices(window, resolver, rejecter);
   return p.forget();
 }
 
