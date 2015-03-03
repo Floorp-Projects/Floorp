@@ -391,7 +391,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
       continue;
     }
 
-    parsed++;
+    a.mParsed++;
     if (frame.mShouldSkip && mSkipCount < MAX_DROPPED_FRAMES) {
       mSkipCount++;
       continue;
@@ -469,7 +469,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
     }
 
     a.mDecoded++;
-    NS_ASSERTION(decoded <= parsed, "Expect to decode fewer frames than parsed in OMX decoder...");
+    NS_ASSERTION(a.mDecoded <= a.mParsed, "Expect to decode fewer frames than parsed in OMX decoder...");
 
     mVideoQueue.Push(v);
 
