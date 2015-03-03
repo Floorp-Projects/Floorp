@@ -461,11 +461,14 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 var gPopupBlockerObserver = {
   _reportButton: null,
 
-  onReportButtonClick: function (aEvent)
+  onReportButtonEvent: function (aEvent)
   {
-    if (aEvent.button != 0 || aEvent.target != this._reportButton)
-      return;
-
+    if ((aEvent.type == "click" && aEvent.button != 0) ||
+        (aEvent.target != this._reportButton) ||
+        (aEvent.type == "keypress" && aEvent.charCode != Ci.nsIDOMKeyEvent.DOM_VK_SPACE &&
+         aEvent.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN)) {
+      return; // We're only interested in left click and space and enter keypresses
+    }
     document.getElementById("blockedPopupOptions")
             .openPopup(this._reportButton, "after_end", 0, 2, false, false, aEvent);
   },

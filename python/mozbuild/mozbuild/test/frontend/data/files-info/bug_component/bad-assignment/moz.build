@@ -1,0 +1,2 @@
+with Files('*'):
+    BUG_COMPONENT = 'bad value'

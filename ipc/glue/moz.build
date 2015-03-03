@@ -87,7 +87,7 @@ elif CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     UNIFIED_SOURCES += [
         'ProcessUtils_bsd.cpp'
     ]
-elif CONFIG['OS_ARCH'] in ('Darwin'):
+elif CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'ProcessUtils_mac.mm'
     ]
