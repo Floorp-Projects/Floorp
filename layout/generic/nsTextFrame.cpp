@@ -1964,7 +1964,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (mLineContainer->HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
       // All MathML tokens except <mtext> use 'math' script.
       if (!(parent && parent->GetContent() &&
-          parent->GetContent()->Tag() == nsGkAtoms::mtext_)) {
+          parent->GetContent()->IsMathMLElement(nsGkAtoms::mtext_))) {
         textFlags |= gfxTextRunFactory::TEXT_USE_MATH_SCRIPT;
       }
       nsIMathMLFrame* mathFrame = do_QueryFrame(parent);
