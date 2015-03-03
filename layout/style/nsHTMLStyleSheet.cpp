@@ -253,11 +253,9 @@ NS_IMPL_ISUPPORTS(nsHTMLStyleSheet, nsIStyleRuleProcessor)
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
-  if (aData->mElement->IsHTMLElement() && !ruleWalker->AuthorStyleDisabled()) {
-    nsIAtom* tag = aData->mElement->Tag();
-
+  if (!ruleWalker->AuthorStyleDisabled()) {
     // if we have anchor colors, check if this is an anchor with an href
-    if (tag == nsGkAtoms::a) {
+    if (aData->mElement->IsHTMLElement(nsGkAtoms::a)) {
       if (mLinkRule || mVisitedRule || mActiveRule) {
         EventStates state =
           nsCSSRuleProcessor::GetContentStateForVisitedHandling(
@@ -284,10 +282,10 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       } // end link/visited/active rules
     } // end A tag
     // add the rule to handle text-align for a <th>
-    else if (tag == nsGkAtoms::th) {
+    else if (aData->mElement->IsHTMLElement(nsGkAtoms::th)) {
       ruleWalker->Forward(mTableTHRule);
     }
-    else if (tag == nsGkAtoms::table) {
+    else if (aData->mElement->IsHTMLElement(nsGkAtoms::table)) {
       if (aData->mTreeMatchContext.mCompatMode == eCompatibility_NavQuirks) {
         ruleWalker->Forward(mTableQuirkColorRule);
       }

@@ -662,7 +662,7 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
     *aRv = NS_OK;
   }
 
-  MOZ_ASSERT(!aContent || aContent->Tag() == nsGkAtoms::style,
+  MOZ_ASSERT(!aContent || aContent->NodeInfo()->NameAtom() == nsGkAtoms::style,
       "aContent passed to CSPAllowsInlineStyle "
       "for an element that is not <style>");
 
