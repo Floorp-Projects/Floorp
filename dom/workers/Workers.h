@@ -24,6 +24,7 @@
 
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
+class nsIGlobalObject;
 class nsIScriptContext;
 class nsPIDOMWindow;
 
@@ -242,6 +243,15 @@ void
 ThrowDOMExceptionForNSResult(JSContext* aCx, nsresult aNSResult);
 
 } // namespace exceptions
+
+nsIGlobalObject*
+GetGlobalObjectForGlobal(JSObject* global);
+
+bool
+IsWorkerGlobal(JSObject* global);
+
+bool
+IsDebuggerGlobal(JSObject* global);
 
 // Throws the JSMSG_GETTER_ONLY exception.  This shouldn't be used going
 // forward -- getter-only properties should just use JS_PSG for the setter

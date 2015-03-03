@@ -241,8 +241,41 @@ public:
   IMPL_EVENT_HANDLER(message)
 };
 
-JSObject*
-CreateGlobalScope(JSContext* aCx);
+class WorkerDebuggerGlobalScope MOZ_FINAL : public DOMEventTargetHelper,
+                                            public nsIGlobalObject
+{
+  WorkerPrivate* mWorkerPrivate;
+
+public:
+  explicit WorkerDebuggerGlobalScope(WorkerPrivate* aWorkerPrivate);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  {
+    MOZ_CRASH("Shouldn't get here!");
+  }
+
+  virtual bool
+  WrapGlobalObject(JSContext* aCx,
+                   JS::MutableHandle<JSObject*> aReflector);
+
+  virtual JSObject*
+  GetGlobalJSObject(void) MOZ_OVERRIDE
+  {
+    return GetWrapper();
+  }
+
+  void
+  GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal);
+
+  void
+  Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
+
+private:
+  virtual ~WorkerDebuggerGlobalScope();
+};
 
 END_WORKERS_NAMESPACE
 

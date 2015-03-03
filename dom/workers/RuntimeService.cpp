@@ -840,6 +840,57 @@ PreserveWrapper(JSContext *cx, JSObject *obj)
     return mozilla::dom::TryPreserveWrapper(obj);
 }
 
+class DebuggeeGlobalSecurityWrapper : public js::CrossCompartmentSecurityWrapper {
+public:
+  DebuggeeGlobalSecurityWrapper()
+  : js::CrossCompartmentSecurityWrapper(CROSS_COMPARTMENT, false)
+  {
+  }
+
+  bool enter(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
+             js::Wrapper::Action act, bool* bp) const
+  {
+    *bp = false;
+    return false;
+  }
+
+  static const DebuggeeGlobalSecurityWrapper singleton;
+};
+
+const DebuggeeGlobalSecurityWrapper DebuggeeGlobalSecurityWrapper::singleton;
+
+JSObject*
+Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
+{
+  JSObject* targetGlobal = JS::CurrentGlobalOrNull(cx);
+  if (!IsDebuggerGlobal(targetGlobal)) {
+    MOZ_CRASH("There should be no edges from the debuggee to the debugger.");
+  }
+
+  JSObject* originGlobal = js::GetGlobalForObjectCrossCompartment(obj);
+
+  const js::Wrapper* wrapper = nullptr;
+  if (IsDebuggerGlobal(originGlobal)) {
+    wrapper = &js::CrossCompartmentWrapper::singleton;
+  } else {
+    if (obj != originGlobal) {
+      MOZ_CRASH("The should be only edges from the debugger to the debuggee global.");
+    }
+
+    wrapper = &DebuggeeGlobalSecurityWrapper::singleton;
+  }
+
+  if (existing) {
+    js::Wrapper::Renew(cx, existing, obj, wrapper);
+  }
+  return js::Wrapper::New(cx, obj, wrapper);
+}
+
+static const JSWrapObjectCallbacks WrapObjectCallbacks = {
+  Wrap,
+  nullptr,
+};
+
 class WorkerJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
@@ -853,6 +904,7 @@ public:
   {
     js::SetPreserveWrapperCallback(Runtime(), PreserveWrapper);
     JS_InitDestroyPrincipalsCallback(Runtime(), DestroyWorkerPrincipals);
+    JS_SetWrapObjectCallbacks(Runtime(), &WrapObjectCallbacks);
   }
 
   ~WorkerJSRuntime()
