@@ -1051,10 +1051,9 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, char16_t **aText,
     if (currElement) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(currElement));
       if (content) {
-        nsIAtom *tagAtom = content->Tag();
-        if (tagAtom != mTag_dialog &&
-            tagAtom != mTag_dialogheader &&
-            tagAtom != mTag_window) {
+        if (!content->IsAnyOfXULElements(mTag_dialog,
+                                         mTag_dialogheader,
+                                         mTag_window)) {
           // first try the normal title attribute...
           currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
           if (outText.Length()) {
