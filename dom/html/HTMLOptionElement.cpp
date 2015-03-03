@@ -361,7 +361,7 @@ HTMLOptionElement::GetSelect()
     if (select) {
       return select;
     }
-    if (parent->Tag() != nsGkAtoms::optgroup) {
+    if (!parent->IsHTMLElement(nsGkAtoms::optgroup)) {
       break;
     }
   }

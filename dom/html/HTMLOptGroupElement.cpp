@@ -73,10 +73,10 @@ HTMLOptGroupElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) && parent->IsHTMLElement()) {
-    if (parent->Tag() == nsGkAtoms::select) {
+    if (parent->IsHTMLElement(nsGkAtoms::select)) {
       return parent;
     }
-    if (parent->Tag() != nsGkAtoms::optgroup) {
+    if (!parent->IsHTMLElement(nsGkAtoms::optgroup)) {
       break;
     }
   }

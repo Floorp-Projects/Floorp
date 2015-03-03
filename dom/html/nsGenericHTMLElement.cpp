@@ -802,7 +802,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
 EventHandlerNonNull*                                                          \
 nsGenericHTMLElement::GetOn##name_()                                          \
 {                                                                             \
-  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+  if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     /* XXXbz note to self: add tests for this! */                             \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
     if (win) {                                                                \
@@ -818,7 +818,7 @@ nsGenericHTMLElement::GetOn##name_()                                          \
 void                                                                          \
 nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 {                                                                             \
-  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+  if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
     if (!win) {                                                               \
       return;                                                                 \
@@ -835,7 +835,7 @@ nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 already_AddRefed<EventHandlerNonNull>                                         \
 nsGenericHTMLElement::GetOn##name_()                                          \
 {                                                                             \
-  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+  if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     /* XXXbz note to self: add tests for this! */                             \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
     if (win) {                                                                \
@@ -857,7 +857,7 @@ nsGenericHTMLElement::GetOn##name_()                                          \
 void                                                                          \
 nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 {                                                                             \
-  if (Tag() == nsGkAtoms::body || Tag() == nsGkAtoms::frameset) {             \
+  if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
     if (!win) {                                                               \
       return;                                                                 \
@@ -1005,7 +1005,7 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 
       aResult.ParseAtom(aValue);
 
-      if (CanHaveName(Tag())) {
+      if (CanHaveName(NodeInfo()->NameAtom())) {
         SetHasName();
         AddToNameTable(aResult.GetAtomValue());
       }
@@ -1790,16 +1790,14 @@ nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
 bool
 nsGenericHTMLElement::IsLabelable() const
 {
-  return Tag() == nsGkAtoms::progress ||
-         Tag() == nsGkAtoms::meter;
+  return IsAnyOfHTMLElements(nsGkAtoms::progress, nsGkAtoms::meter);
 }
 
 bool
 nsGenericHTMLElement::IsInteractiveHTMLContent() const
 {
-  return Tag() == nsGkAtoms::details ||
-         Tag() == nsGkAtoms::embed ||
-         Tag() == nsGkAtoms::keygen ||
+  return IsAnyOfHTMLElements(nsGkAtoms::details, nsGkAtoms::embed,
+                             nsGkAtoms::keygen) ||
          HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
 }
 
