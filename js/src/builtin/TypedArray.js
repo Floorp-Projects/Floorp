@@ -2,6 +2,77 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// ES6 draft 20150304 %TypedArray%.prototype.copyWithin
+function TypedArrayCopyWithin(target, start, end = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, target, start, end,
+                            "TypedArrayCopyWithin");
+    }
+
+    // Bug 1101256: detachment checks mandated by ValidateTypedArray
+
+    // Steps 1-2.
+    var obj = this;
+
+    // Steps 3-4, modified for the typed array case.
+    var len = TypedArrayLength(obj);
+
+    assert(0 <= len && len <= 0x7FFFFFFF,
+           "assumed by some of the math below, see also the other assertions");
+
+    // Steps 5-7.
+    var relativeTarget = ToInteger(target);
+
+    var to = relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0)
+                                : std_Math_min(relativeTarget, len);
+
+    // Steps 8-10.
+    var relativeStart = ToInteger(start);
+
+    var from = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
+                                 : std_Math_min(relativeStart, len);
+
+    // Steps 11-13.
+    var relativeEnd = end === undefined ? len
+                                        : ToInteger(end);
+
+    var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
+                                : std_Math_min(relativeEnd, len);
+
+    // Step 14.
+    var count = std_Math_min(final - from, len - to);
+
+    assert(0 <= to && to <= 0x7FFFFFFF,
+           "typed array |to| index assumed int32_t");
+    assert(0 <= from && from <= 0x7FFFFFFF,
+           "typed array |from| index assumed int32_t");
+
+    // Negative counts are possible for cases like tarray.copyWithin(0, 3, 0)
+    // where |count === final - from|.  As |to| is within the [0, len] range,
+    // only |final - from| may underflow; with |final| in the range [0, len]
+    // and |from| in the range [0, len] the overall subtraction range is
+    // [-len, len] for |count| -- and with |len| bounded by implementation
+    // limits to 2**31 - 1, there can be no exceeding int32_t.
+    assert(-0x7FFFFFFF - 1 <= count && count <= 0x7FFFFFFF,
+           "typed array element count assumed int32_t");
+
+    // Steps 15-17.
+    //
+    // Note that getting or setting a typed array element must throw if the
+    // typed array is neutered, so the intrinsic below checks for neutering.
+    // This happens *only* if a get/set occurs, i.e. when |count > 0|.
+    //
+    // Also note that this copies elements effectively by memmove, *not* in
+    // step 17's specified order.  This is unobservable, but it would be if we
+    // used this method to implement shared typed arrays' copyWithin.
+    if (count > 0)
+        MoveTypedArrayElements(obj, to | 0, from | 0, count | 0);
+
+    // Step 18.
+    return obj;
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.6 %TypedArray%.prototype.entries()
 function TypedArrayEntries() {
     // Step 1.
