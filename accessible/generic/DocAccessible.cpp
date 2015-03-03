@@ -1500,15 +1500,13 @@ DocAccessible::AddDependentIDsFor(dom::Element* aRelProviderElm,
       continue;
 
     if (relAttr == nsGkAtoms::_for) {
-      if (!aRelProviderElm->IsHTMLElement() ||
-          (aRelProviderElm->Tag() != nsGkAtoms::label &&
-           aRelProviderElm->Tag() != nsGkAtoms::output))
+      if (!aRelProviderElm->IsAnyOfHTMLElements(nsGkAtoms::label,
+                                                nsGkAtoms::output))
         continue;
 
     } else if (relAttr == nsGkAtoms::control) {
-      if (!aRelProviderElm->IsXULElement() ||
-          (aRelProviderElm->Tag() != nsGkAtoms::label &&
-           aRelProviderElm->Tag() != nsGkAtoms::description))
+      if (!aRelProviderElm->IsAnyOfXULElements(nsGkAtoms::label,
+                                               nsGkAtoms::description))
         continue;
     }
 

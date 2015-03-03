@@ -929,7 +929,7 @@ HTMLTableAccessible::IsProbablyLayoutTable()
     RETURN_LAYOUT_ANSWER(false, "Has role attribute, weak role, and role is table");
   }
 
-  if (mContent->Tag() != nsGkAtoms::table)
+  if (!mContent->IsHTMLElement(nsGkAtoms::table))
     RETURN_LAYOUT_ANSWER(true, "table built by CSS display:table style");
 
   // Check if datatable attribute has "0" value.
@@ -954,18 +954,18 @@ HTMLTableAccessible::IsProbablyLayoutTable()
     if (!childElm->IsHTMLElement())
       continue;
 
-    if (childElm->Tag() == nsGkAtoms::col ||
-        childElm->Tag() == nsGkAtoms::colgroup ||
-        childElm->Tag() == nsGkAtoms::tfoot ||
-        childElm->Tag() == nsGkAtoms::thead) {
+    if (childElm->IsAnyOfHTMLElements(nsGkAtoms::col,
+                                      nsGkAtoms::colgroup,
+                                      nsGkAtoms::tfoot,
+                                      nsGkAtoms::thead)) {
       RETURN_LAYOUT_ANSWER(false,
                            "Has col, colgroup, tfoot or thead -- legitimate table structures");
     }
 
-    if (childElm->Tag() == nsGkAtoms::tbody) {
+    if (childElm->IsHTMLElement(nsGkAtoms::tbody)) {
       for (nsIContent* rowElm = childElm->GetFirstChild(); rowElm;
            rowElm = rowElm->GetNextSibling()) {
-        if (rowElm->IsHTMLElement() && rowElm->Tag() == nsGkAtoms::tr) {
+        if (rowElm->IsHTMLElement(nsGkAtoms::tr)) {
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
             if (cellElm->IsHTMLElement()) {

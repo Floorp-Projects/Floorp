@@ -565,8 +565,7 @@ public:
 
   inline bool IsAbbreviation() const
   {
-    return mContent->IsHTMLElement() &&
-      (mContent->Tag() == nsGkAtoms::abbr || mContent->Tag() == nsGkAtoms::acronym);
+    return mContent->IsAnyOfHTMLElements(nsGkAtoms::abbr, nsGkAtoms::acronym);
   }
 
   bool IsApplication() const { return mType == eApplicationType; }
