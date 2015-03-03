@@ -199,6 +199,11 @@ Sanitizer.prototype = {
           cookieMgr.removeAll();
         }
 
+        // Clear deviceIds. Done asynchronously (returns before complete).
+        let mediaMgr = Components.classes["@mozilla.org/mediaManagerService;1"]
+                                 .getService(Ci.nsIMediaManagerService);
+        mediaMgr.sanitizeDeviceIds(this.range && this.range[0]);
+
         // Clear plugin data.
         const phInterface = Ci.nsIPluginHost;
         const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
