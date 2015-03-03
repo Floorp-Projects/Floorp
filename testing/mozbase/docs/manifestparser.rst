@@ -75,7 +75,7 @@ advantages:
 .. code-block:: text
 
      [test_works_on_windows_only.js]
-     run-if = os == 'win'
+     skip-if = os != 'win'
 
 * ability to markup tests with metadata. We have a large, complicated,
   and always changing infrastructure.  key, value metadata may be used
@@ -253,7 +253,7 @@ metadata. Despite the internal variable being called `self.tests`
 (an oversight), this layer has nothing in particular to do with tests.
 
 2. TestManifest: this is a harness-agnostic integration layer that is
-test-specific. TestManifest faciliates `skip-if` and `run-if` logic.
+test-specific. TestManifest faciliates `skip-if` logic.
 
 3. Optionally, a harness will have an integration layer than inherits
 from TestManifest if more harness-specific customization is desired at
@@ -283,7 +283,7 @@ By default, `active_tests` runs the filters found in
 
 1. `exists`: if True (default), filter out tests that do not exist on the local file system.
 2. `disabled`: if True (default), do not filter out tests containing the 'disabled' key
-   (which can be set by `skip-if`, `run-if` or manually).
+   (which can be set by `skip-if` manually).
 
 This works for simple cases, but there are other built-in filters, or even custom filters
 that can be applied to the `TestManifest`. To do so, add the filter to `TestManifest.filters`:
