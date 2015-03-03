@@ -337,13 +337,12 @@ bool
 IntelWebMVideoDecoder::DecodeVideoFrame(bool& aKeyframeSkip,
                                         int64_t aTimeThreshold)
 {
-  uint32_t parsed = 0, decoded = 0;
-  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mReader->GetDecoder(), parsed, decoded);
+  AbstractMediaDecoder::AutoNotifyDecoded a(mReader->GetDecoder());
 
   MOZ_ASSERT(mPlatform && mReader->GetDecoder());
 
   if (aKeyframeSkip) {
-    bool ok = SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed);
+    bool ok = SkipVideoDemuxToNextKeyFrame(aTimeThreshold, a.mParsed);
     if (!ok) {
       NS_WARNING("Failed to skip demux up to next keyframe");
       return false;
@@ -360,7 +359,7 @@ IntelWebMVideoDecoder::DecodeVideoFrame(bool& aKeyframeSkip,
     // mNumSamplesOutput field since the last time we were called.
     MonitorAutoLock mon(mMonitor);
     uint64_t delta = mNumSamplesOutput - mLastReportedNumDecodedFrames;
-    decoded = static_cast<uint32_t>(delta);
+    a.mDecoded = static_cast<uint32_t>(delta);
     mLastReportedNumDecodedFrames = mNumSamplesOutput;
   }
   return rv;
