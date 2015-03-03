@@ -349,7 +349,7 @@ public class BaseResource implements Resource {
     this.go(request);
   }
 
-  protected static StringEntity stringEntityWithContentTypeApplicationJSON(String s) throws UnsupportedEncodingException {
+  protected static StringEntity stringEntityWithContentTypeApplicationJSON(String s) {
     StringEntity e = new StringEntity(s, "UTF-8");
     e.setContentType("application/json");
     return e;
@@ -359,7 +359,7 @@ public class BaseResource implements Resource {
    * Helper for turning a JSON object into a payload.
    * @throws UnsupportedEncodingException
    */
-  protected static StringEntity jsonEntity(JSONObject body) throws UnsupportedEncodingException {
+  protected static StringEntity jsonEntity(JSONObject body) {
     return stringEntityWithContentTypeApplicationJSON(body.toJSONString());
   }
 
@@ -367,7 +367,7 @@ public class BaseResource implements Resource {
    * Helper for turning an extended JSON object into a payload.
    * @throws UnsupportedEncodingException
    */
-  protected static StringEntity jsonEntity(ExtendedJSONObject body) throws UnsupportedEncodingException {
+  protected static StringEntity jsonEntity(ExtendedJSONObject body) {
     return stringEntityWithContentTypeApplicationJSON(body.toJSONString());
   }
 
@@ -456,7 +456,7 @@ public class BaseResource implements Resource {
     put(jsonEntity(jsonObject));
   }
 
-  public void post(ExtendedJSONObject o) throws UnsupportedEncodingException {
+  public void post(ExtendedJSONObject o) {
     post(jsonEntity(o));
   }
 

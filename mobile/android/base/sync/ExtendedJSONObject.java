@@ -173,6 +173,37 @@ public class ExtendedJSONObject {
     this.object = o;
   }
 
+  public ExtendedJSONObject deepCopy() {
+    final ExtendedJSONObject out = new ExtendedJSONObject();
+    @SuppressWarnings("unchecked")
+    final Set<Map.Entry<String, Object>> entries = this.object.entrySet();
+    for (Map.Entry<String, Object> entry : entries) {
+      final String key = entry.getKey();
+      final Object value = entry.getValue();
+      if (value instanceof JSONArray) {
+        // Oh god.
+        try {
+          out.put(key, new JSONParser().parse(((JSONArray) value).toJSONString()));
+        } catch (ParseException e) {
+          // This should never occur, because we're round-tripping.
+        }
+        continue;
+      }
+      if (value instanceof JSONObject) {
+        out.put(key, new ExtendedJSONObject((JSONObject) value).deepCopy().object);
+        continue;
+      }
+      if (value instanceof ExtendedJSONObject) {
+        out.put(key, ((ExtendedJSONObject) value).deepCopy());
+        continue;
+      }
+      // Oh well.
+      out.put(key, value);
+    }
+
+    return out;
+  }
+
   public ExtendedJSONObject(Reader in) throws IOException, ParseException, NonObjectJSONException {
     if (in == null) {
       this.object = new JSONObject();
@@ -191,9 +222,26 @@ public class ExtendedJSONObject {
     this(jsonString == null ? null : new StringReader(jsonString));
   }
 
+  @Override
+  public ExtendedJSONObject clone() {
+    return new ExtendedJSONObject((JSONObject) this.object.clone());
+  }
+
   // Passthrough methods.
   public Object get(String key) {
     return this.object.get(key);
+  }
+
+  public long getLong(String key, long def) {
+    if (!object.containsKey(key)) {
+      return def;
+    }
+
+    Long val = getLong(key);
+    if (val == null) {
+      return def;
+    }
+    return val.longValue();
   }
 
   public Long getLong(String key) {
@@ -304,7 +352,7 @@ public class ExtendedJSONObject {
     if (o instanceof JSONObject) {
       return new ExtendedJSONObject((JSONObject) o);
     }
-    throw new NonObjectJSONException("key must be a JSON object: " + key);
+    throw new NonObjectJSONException("value must be a JSON object for key: " + key);
   }
 
   @SuppressWarnings("unchecked")
