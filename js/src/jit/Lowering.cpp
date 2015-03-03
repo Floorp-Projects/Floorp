@@ -2984,9 +2984,9 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     if (ins->isSimdWrite()) {
         MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32x4, ins->value()->type() == MIRType_Float32x4);
         MOZ_ASSERT_IF(ins->writeType() == Scalar::Int32x4, ins->value()->type() == MIRType_Int32x4);
-    } else if (ins->isFloatArray()) {
-        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
-        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
+    } else if (ins->isFloatWrite()) {
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
     } else {
         MOZ_ASSERT(ins->value()->type() == MIRType_Int32);
     }
@@ -2996,7 +2996,7 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     LAllocation value;
 
     // For byte arrays, the value has to be in a byte register on x86.
-    if (ins->isByteArray() && !ins->isSimdWrite())
+    if (ins->isByteWrite())
         value = useByteOpRegisterOrNonDoubleConstant(ins->value());
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
@@ -3023,7 +3023,7 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->length()->type() == MIRType_Int32);
 
-    if (ins->isFloatArray()) {
+    if (ins->isFloatWrite()) {
         MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
         MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
     } else {
@@ -3036,7 +3036,7 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
     LAllocation value;
 
     // For byte arrays, the value has to be in a byte register on x86.
-    if (ins->isByteArray())
+    if (ins->isByteWrite())
         value = useByteOpRegisterOrNonDoubleConstant(ins->value());
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
