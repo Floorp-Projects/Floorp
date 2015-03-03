@@ -939,9 +939,9 @@ let UI = {
       this.toolboxPromise = null;
       return toolboxPromise.then(toolbox => {
         return toolbox.destroy();
-      }).catch(console.error)
+      }).then(null, console.error)
         .then(() => this._closeToolboxUI())
-        .catch(console.error);
+        .then(null, console.error);
     }
     return promise.resolve();
   },
