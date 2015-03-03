@@ -6079,12 +6079,12 @@ class LRest : public LCallInstructionHelper<1, 1, 3>
     }
 };
 
-class LGuardShapePolymorphic : public LInstructionHelper<0, 1, 1>
+class LGuardReceiverPolymorphic : public LInstructionHelper<0, 1, 1>
 {
   public:
-    LIR_HEADER(GuardShapePolymorphic)
+    LIR_HEADER(GuardReceiverPolymorphic)
 
-    LGuardShapePolymorphic(const LAllocation &in, const LDefinition &temp) {
+    LGuardReceiverPolymorphic(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
         setTemp(0, temp);
     }
@@ -6094,8 +6094,8 @@ class LGuardShapePolymorphic : public LInstructionHelper<0, 1, 1>
     const LDefinition *temp() {
         return getTemp(0);
     }
-    const MGuardShapePolymorphic *mir() const {
-        return mir_->toGuardShapePolymorphic();
+    const MGuardReceiverPolymorphic *mir() const {
+        return mir_->toGuardReceiverPolymorphic();
     }
 };
 

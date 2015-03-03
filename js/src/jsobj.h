@@ -313,8 +313,6 @@ class JSObject : public js::gc::Cell
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info);
 
-    bool hasIdempotentProtoChain() const;
-
     /*
      * Marks this object as having a singleton type, and leave the group lazy.
      * Constructs a new, unique shape for the object.

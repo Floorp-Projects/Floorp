@@ -1104,16 +1104,19 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    JSObject *holder, HandleShape shape, RegisterSet &liveRegs, Register object,
                    TypedOrValueRegister output, void *returnAddr, Label *failures = nullptr)
 {
-    MOZ_ASSERT(obj->isNative());
     MOZ_ASSERT(output.hasValue());
 
     // Use the passed in label if there was one. Otherwise, we'll have to make our own.
     Label stubFailure;
     failures = failures ? failures : &stubFailure;
 
-    // Initial shape check.
-    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
-                   ImmGCPtr(obj->lastProperty()), failures);
+    // Initial shape/group check.
+    if (obj->isNative())
+        masm.branchTestObjShape(Assembler::NotEqual, object, obj->lastProperty(), failures);
+    else if (obj->is<UnboxedPlainObject>())
+        masm.branchTestObjGroup(Assembler::NotEqual, object, obj->group(), failures);
+    else
+        MOZ_CRASH("Unexpected object");
 
     Register scratchReg = output.valueReg().scratchReg();
     bool spillObjReg = scratchReg == object;
@@ -2055,8 +2058,6 @@ SetPropertyIC::attachSetSlot(JSContext *cx, HandleScript outerScript, IonScript 
 static bool
 IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape shape)
 {
-    MOZ_ASSERT(obj->isNative());
-
     if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
@@ -2068,8 +2069,6 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
 static bool
 IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShape shape)
 {
-    MOZ_ASSERT(obj->isNative());
-
     if (!shape || !IsCacheableProtoChainForIon(obj, holder))
         return false;
 
@@ -2081,8 +2080,6 @@ IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShap
 static bool
 IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder, HandleShape shape)
 {
-    MOZ_ASSERT(obj->isNative());
-
     if (!shape)
         return false;
 
@@ -2563,16 +2560,16 @@ SetPropertyIC::attachCallSetter(JSContext *cx, HandleScript outerScript, IonScri
                                 HandleObject obj, HandleObject holder, HandleShape shape,
                                 void *returnAddr)
 {
-    MOZ_ASSERT(obj->isNative());
-
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     RepatchStubAppender attacher(*this);
 
     Label failure;
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(object(), JSObject::offsetOfShape()),
-                   ImmGCPtr(obj->lastProperty()),
-                   &failure);
+    if (obj->isNative())
+        masm.branchTestObjShape(Assembler::NotEqual, object(), obj->lastProperty(), &failure);
+    else if (obj->is<UnboxedPlainObject>())
+        masm.branchTestObjGroup(Assembler::NotEqual, object(), obj->group(), &failure);
+    else
+        MOZ_CRASH("Unexpected object");
 
     if (!GenerateCallSetter(cx, ion, masm, attacher, obj, holder, shape, strict(),
                             object(), value(), &failure, liveRegs_, returnAddr))
@@ -2839,12 +2836,12 @@ CanAttachNativeSetProp(JSContext *cx, HandleObject obj, HandleId id, ConstantOrR
                        bool needsTypeBarrier, MutableHandleObject holder,
                        MutableHandleShape shape, bool *checkTypeset)
 {
-    if (!obj->isNative())
-        return SetPropertyIC::CanAttachNone;
-
     // See if the property exists on the object.
-    if (IsPropertySetInlineable(&obj->as<NativeObject>(), id, shape, val, needsTypeBarrier, checkTypeset))
+    if (obj->isNative() && IsPropertySetInlineable(&obj->as<NativeObject>(), id, shape, val,
+                                                   needsTypeBarrier, checkTypeset))
+    {
         return SetPropertyIC::CanAttachSetSlot;
+    }
 
     // If we couldn't find the property on the object itself, do a full, but
     // still pure lookup for setters.

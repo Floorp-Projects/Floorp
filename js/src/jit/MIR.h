@@ -10052,16 +10052,18 @@ class MGuardShape
     }
 };
 
-// Bail if the object's shape is not one of the shapes in shapes_.
-class MGuardShapePolymorphic
+// Bail if the object's shape or unboxed group is not in the input list.
+class MGuardReceiverPolymorphic
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
     Vector<Shape *, 4, JitAllocPolicy> shapes_;
+    Vector<ObjectGroup *, 4, JitAllocPolicy> unboxedGroups_;
 
-    MGuardShapePolymorphic(TempAllocator &alloc, MDefinition *obj)
+    MGuardReceiverPolymorphic(TempAllocator &alloc, MDefinition *obj)
       : MUnaryInstruction(obj),
-        shapes_(alloc)
+        shapes_(alloc),
+        unboxedGroups_(alloc)
     {
         setGuard();
         setMovable();
@@ -10069,15 +10071,16 @@ class MGuardShapePolymorphic
     }
 
   public:
-    INSTRUCTION_HEADER(GuardShapePolymorphic)
+    INSTRUCTION_HEADER(GuardReceiverPolymorphic)
 
-    static MGuardShapePolymorphic *New(TempAllocator &alloc, MDefinition *obj) {
-        return new(alloc) MGuardShapePolymorphic(alloc, obj);
+    static MGuardReceiverPolymorphic *New(TempAllocator &alloc, MDefinition *obj) {
+        return new(alloc) MGuardReceiverPolymorphic(alloc, obj);
     }
 
     MDefinition *obj() const {
         return getOperand(0);
     }
+
     bool addShape(Shape *shape) {
         return shapes_.append(shape);
     }
@@ -10086,6 +10089,16 @@ class MGuardShapePolymorphic
     }
     Shape *getShape(size_t i) const {
         return shapes_[i];
+    }
+
+    bool addUnboxedGroup(ObjectGroup *group) {
+        return unboxedGroups_.append(group);
+    }
+    size_t numUnboxedGroups() const {
+        return unboxedGroups_.length();
+    }
+    ObjectGroup *getUnboxedGroup(size_t i) const {
+        return unboxedGroups_[i];
     }
 
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE;
