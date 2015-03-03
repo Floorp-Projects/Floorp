@@ -248,8 +248,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x9c090b44, 0x754b, 0x413c, \
- { 0x9d, 0xd5, 0xe4, 0x3d, 0xc4, 0x54, 0x96, 0xe3 } }
+{ 0xe8fdd227, 0x27da, 0x46ee, \
+  { 0xbe, 0xf3, 0x1a, 0xef, 0x5a, 0x8f, 0xc5, 0xb4 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -561,17 +561,6 @@ public:
   const nsString& LocalName() const
   {
     return mNodeInfo->LocalName();
-  }
-
-  /**
-   * Get the tag for this element. This will always return a non-null atom
-   * pointer (as implied by the naming of the method).  For elements this is
-   * the non-namespaced tag, and for other nodes it's something like "#text",
-   * "#comment", "#document", etc.
-   */
-  nsIAtom* Tag() const
-  {
-    return mNodeInfo->NameAtom();
   }
 
   /**
