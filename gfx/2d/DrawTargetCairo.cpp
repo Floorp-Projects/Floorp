@@ -210,6 +210,8 @@ CopyToImageSurface(unsigned char *aData,
                    int32_t aStride,
                    SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aData);
+
   cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
                                                      aRect.width,
                                                      aRect.height);
@@ -262,6 +264,10 @@ cairo_surface_t* CreateSubImageForData(unsigned char* aData,
                                        int aStride,
                                        SurfaceFormat aFormat)
 {
+  if (!aData) {
+    gfxWarning() << "DrawTargetCairo.CreateSubImageForData null aData";
+    return nullptr;
+  }
   unsigned char *data = aData +
                         aRect.y * aStride +
                         aRect.x * BytesPerPixel(aFormat);
@@ -374,8 +380,8 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface,
   // covers the details of how to run into it, but the full detailed
   // investigation hasn't been done to determine the underlying cause.  We
   // will just handle the failure to allocate the surface to avoid a crash.
-  if (cairo_surface_status(surf)) {
-    if (cairo_surface_status(surf) == CAIRO_STATUS_INVALID_STRIDE) {
+  if (!surf || cairo_surface_status(surf)) {
+    if (surf && (cairo_surface_status(surf) == CAIRO_STATUS_INVALID_STRIDE)) {
       // If we failed because of an invalid stride then copy into
       // a new surface with a stride that cairo chooses. No need to
       // set user data since we're not dependent on the original
@@ -1353,8 +1359,16 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              int32_t aStride,
                                              SurfaceFormat aFormat) const
 {
+  if (!aData) {
+    gfxWarning() << "DrawTargetCairo::CreateSourceSurfaceFromData null aData";
+    return nullptr;
+  }
+
   cairo_surface_t* surf = CopyToImageSurface(aData, IntRect(IntPoint(), aSize),
                                              aStride, aFormat);
+  if (!surf) {
+    return nullptr;
+  }
 
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);
