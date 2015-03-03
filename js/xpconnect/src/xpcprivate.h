@@ -1253,6 +1253,7 @@ private:
 /***************************************************************************/
 // Slots we use for our functions
 #define XPC_FUNCTION_NATIVE_MEMBER_SLOT 0
+#define XPC_FUNCTION_PARENT_OBJECT_SLOT 1
 
 /***************************************************************************/
 // XPCNativeMember represents a single idl declared method, attribute or

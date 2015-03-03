@@ -85,7 +85,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, parent, GetName());
+    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, nullptr, GetName());
     if (!fun)
         return false;
 
@@ -95,6 +95,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
 
     js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_NATIVE_MEMBER_SLOT,
                                   PrivateValue(this));
+    js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_PARENT_OBJECT_SLOT,
+                                  ObjectValue(*parent));
 
     *vp = OBJECT_TO_JSVAL(funobj);
 
