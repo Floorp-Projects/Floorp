@@ -920,19 +920,16 @@ public:
   static inline bool
   ShouldExposeNameAsHTMLDocumentProperty(Element* aElement)
   {
-    return aElement->IsHTMLElement() && CanHaveName(aElement->Tag());
+    return aElement->IsHTMLElement() &&
+           CanHaveName(aElement->NodeInfo()->NameAtom());
   }
   static inline bool
   ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
   {
-    if (!aElement->IsHTMLElement()) {
-      return false;
-    }
-    nsIAtom* tag = aElement->Tag();
-    return tag == nsGkAtoms::img ||
-           tag == nsGkAtoms::applet ||
-           tag == nsGkAtoms::embed ||
-           tag == nsGkAtoms::object;
+    return aElement->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                         nsGkAtoms::applet,
+                                         nsGkAtoms::embed,
+                                         nsGkAtoms::object);
   }
 
   static bool
