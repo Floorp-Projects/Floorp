@@ -608,6 +608,13 @@ public:
       return mVsyncSource;
     }
 
+    /**
+     * True if layout rendering should use ASAP mode, which means
+     * the refresh driver and compositor should render ASAP.
+     * Used for talos testing purposes
+     */
+    static bool IsInLayoutAsapMode();
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
