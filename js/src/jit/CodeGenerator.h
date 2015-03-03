@@ -472,6 +472,22 @@ class CodeGenerator : public CodeGeneratorSpecific
 #if defined(JS_ION_PERF)
     PerfSpewer perfSpewer_;
 #endif
+
+    // This integer is a bit mask of all SimdTypeDescr::Type indexes.  When a
+    // MSimdBox instruction is encoded, it might have either been created by
+    // IonBuilder, or by the Eager Simd Unbox phase.
+    //
+    // As the template objects are weak references, the JitCompartment is using
+    // Read Barriers, but such barrier cannot be used during the compilation. To
+    // work around this issue, the barriers are captured during
+    // CodeGenerator::link.
+    //
+    // Instead of saving the pointers, we just save the index of the Read
+    // Barriered objects in a bit mask.
+    uint32_t simdRefreshTemplatesDuringLink_;
+
+    void registerSimdTemplate(InlineTypedObject *templateObject);
+    void captureSimdTemplate(JSContext *cx);
 };
 
 } // namespace jit
