@@ -743,23 +743,20 @@ nsHTMLEditor::NodeIsBlockStatic(const dom::Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  nsIAtom* tagAtom = aElement->Tag();
-  MOZ_ASSERT(tagAtom);
-
   // Nodes we know we want to treat as block
   // even though the parser says they're not:
-  if (tagAtom == nsGkAtoms::body ||
-      tagAtom == nsGkAtoms::head ||
-      tagAtom == nsGkAtoms::tbody ||
-      tagAtom == nsGkAtoms::thead ||
-      tagAtom == nsGkAtoms::tfoot ||
-      tagAtom == nsGkAtoms::tr ||
-      tagAtom == nsGkAtoms::th ||
-      tagAtom == nsGkAtoms::td ||
-      tagAtom == nsGkAtoms::li ||
-      tagAtom == nsGkAtoms::dt ||
-      tagAtom == nsGkAtoms::dd ||
-      tagAtom == nsGkAtoms::pre) {
+  if (aElement->IsAnyOfHTMLElements(nsGkAtoms::body,
+                                    nsGkAtoms::head,
+                                    nsGkAtoms::tbody,
+                                    nsGkAtoms::thead,
+                                    nsGkAtoms::tfoot,
+                                    nsGkAtoms::tr,
+                                    nsGkAtoms::th,
+                                    nsGkAtoms::td,
+                                    nsGkAtoms::li,
+                                    nsGkAtoms::dt,
+                                    nsGkAtoms::dd,
+                                    nsGkAtoms::pre)) {
     return true;
   }
 
@@ -769,11 +766,12 @@ nsHTMLEditor::NodeIsBlockStatic(const dom::Element* aElement)
   nsresult rv =
 #endif
     nsContentUtils::GetParserService()->
-    IsBlock(nsContentUtils::GetParserService()->HTMLAtomTagToId(tagAtom),
+    IsBlock(nsContentUtils::GetParserService()->HTMLAtomTagToId(
+              aElement->NodeInfo()->NameAtom()),
             isBlock);
   MOZ_ASSERT(rv == NS_OK);
 
-  AssertParserServiceIsCorrect(tagAtom, isBlock);
+  AssertParserServiceIsCorrect(aElement->NodeInfo()->NameAtom(), isBlock);
 
   return isBlock;
 }
@@ -1594,7 +1592,7 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
   while (!CanContain(*parent, *node)) {
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert
-    if (parent->Tag() == nsGkAtoms::body ||
+    if (parent->IsHTMLElement(nsGkAtoms::body) ||
         nsHTMLEditUtils::IsTableElement(parent)) {
       return NS_ERROR_FAILURE;
     }
@@ -2295,7 +2293,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
     // stop at table cells, but that's too messy when you are trying to find
     // the parent table
     if (current->GetParentElement() &&
-        current->GetParentElement()->Tag() == nsGkAtoms::body) {
+        current->GetParentElement()->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
   }
@@ -4742,7 +4740,7 @@ nsHTMLEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
   MOZ_ASSERT(aNode1);
   MOZ_ASSERT(aNode2);
 
-  if (aNode1->Tag() != aNode2->Tag()) {
+  if (aNode1->NodeInfo()->NameAtom() != aNode2->NodeInfo()->NameAtom()) {
     return false;
   }
 
@@ -4796,13 +4794,14 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
   }
   while (childElement && (childElement->AsDOMNode() != aPreviousBlock)) {
     if (nsHTMLEditUtils::IsInlineStyle(childElement) ||
-        childElement->Tag() == nsGkAtoms::span) {
+        childElement->IsHTMLElement(nsGkAtoms::span)) {
       if (newStyles) {
-        newStyles = InsertContainerAbove(newStyles, childElement->Tag());
+        newStyles = InsertContainerAbove(newStyles,
+                                         childElement->NodeInfo()->NameAtom());
         NS_ENSURE_STATE(newStyles);
       } else {
-        deepestStyle = newStyles = CreateNode(childElement->Tag(), newBlock,
-                                              0);
+        deepestStyle = newStyles =
+          CreateNode(childElement->NodeInfo()->NameAtom(), newBlock, 0);
         NS_ENSURE_STATE(newStyles);
       }
       CloneAttributes(newStyles, childElement);

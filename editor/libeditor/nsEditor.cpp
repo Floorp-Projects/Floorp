@@ -3137,7 +3137,7 @@ nsEditor::CanContain(nsINode& aParent, nsIContent& aChild)
   switch (aParent.NodeType()) {
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContain(*aParent.Tag(), aChild);
+    return TagCanContain(*aParent.NodeInfo()->NameAtom(), aChild);
   }
   return false;
 }
@@ -3148,7 +3148,7 @@ nsEditor::CanContainTag(nsINode& aParent, nsIAtom& aChildTag)
   switch (aParent.NodeType()) {
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContainTag(*aParent.Tag(), aChildTag);
+    return TagCanContainTag(*aParent.NodeInfo()->NameAtom(), aChildTag);
   }
   return false;
 }
@@ -3160,7 +3160,7 @@ nsEditor::TagCanContain(nsIAtom& aParentTag, nsIContent& aChild)
   case nsIDOMNode::TEXT_NODE:
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContainTag(aParentTag, *aChild.Tag());
+    return TagCanContainTag(aParentTag, *aChild.NodeInfo()->NameAtom());
   }
   return false;
 }
@@ -3410,12 +3410,12 @@ nsEditor::GetTag(nsIDOMNode *aNode)
 
   if (!content) 
   {
-    NS_ASSERTION(aNode, "null node passed to nsEditor::Tag()");
+    NS_ASSERTION(aNode, "null node passed to nsEditor::GetTag()");
 
     return nullptr;
   }
   
-  return content->Tag();
+  return content->NodeInfo()->NameAtom();
 }
 
 
@@ -3427,7 +3427,7 @@ nsEditor::GetTagString(nsIDOMNode *aNode, nsAString& outString)
 {
   if (!aNode) 
   {
-    NS_NOTREACHED("null node passed to nsEditor::GetTag()");
+    NS_NOTREACHED("null node passed to nsEditor::GetTagString()");
     return NS_ERROR_NULL_POINTER;
   }
   
@@ -3468,7 +3468,7 @@ nsEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
 {
   MOZ_ASSERT(aNode1);
   MOZ_ASSERT(aNode2);
-  return aNode1->Tag() == aNode2->Tag();
+  return aNode1->NodeInfo()->NameAtom() == aNode2->NodeInfo()->NameAtom();
 }
 
 
