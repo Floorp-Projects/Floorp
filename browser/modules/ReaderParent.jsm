@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 
-const gStringBundle = Services.strings.createBundle("chrome://browser/locale/readerMode.properties");
+const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 let ReaderParent = {
 
@@ -107,7 +107,7 @@ let ReaderParent = {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       button.setAttribute("readeractive", true);
       button.hidden = false;
-      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerView.exit"));
+      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerView.close"));
     } else {
       button.removeAttribute("readeractive");
       button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerView.enter"));

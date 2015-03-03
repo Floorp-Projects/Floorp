@@ -1,0 +1,2 @@
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Build Config')

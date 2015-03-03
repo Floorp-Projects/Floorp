@@ -1,0 +1,5 @@
+with Files('foo'):
+    BUG_COMPONENT = ('FooProduct', 'FooComponent')
+
+with Files('bar'):
+    BUG_COMPONENT = ('BarProduct', 'BarComponent')

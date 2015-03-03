@@ -141,7 +141,9 @@
 <!ENTITY pref_category_devtools_summary "Remote debugging, paint flashing">
 <!ENTITY pref_developer_paint_flashing "Paint flashing">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
+<!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons "Remember passwords">
+<!ENTITY pref_manage_logins "Manage logins">
 
 <!ENTITY pref_category_home "Home">
 <!ENTITY pref_category_home_summary "Customize your homepage">
@@ -287,6 +289,7 @@ size. -->
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
+<!ENTITY logins "Logins">
 <!ENTITY downloads "Downloads">
 <!ENTITY apps "Apps">
 <!ENTITY char_encoding "Character Encoding">

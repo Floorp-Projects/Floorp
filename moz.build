@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**/Makefile.in'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+    FINAL = True
+
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',
@@ -66,7 +70,7 @@ if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
         DIRS += ['config/external/icu']
     DIRS += ['js/src']
 
-if not CONFIG['JS_STANDALONE']:
+if not CONFIG['JS_STANDALONE'] and CONFIG['MOZ_BUILD_APP']:
     # Bring in the configuration for the configured application.
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
 

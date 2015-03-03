@@ -3565,8 +3565,11 @@ UpdateManager.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  refreshUpdateStatus: function UM_refreshUpdateStatus(aUpdate) {
-    var update = this._activeUpdate ? this._activeUpdate : aUpdate;
+  refreshUpdateStatus: function UM_refreshUpdateStatus() {
+    var update = this._activeUpdate;
+    if (!update) {
+      return;
+    }
     var updateSucceeded = true;
     var status = readStatusFile(getUpdatesDir());
     var ary = status.split(":");
