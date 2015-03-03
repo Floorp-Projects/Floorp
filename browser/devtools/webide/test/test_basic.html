@@ -21,6 +21,10 @@
         Task.spawn(function* () {
             let win = yield openWebIDE();
 
+            const {gDevToolsBrowser} = Cu.import("resource:///modules/devtools/gDevTools.jsm");
+            yield gDevToolsBrowser.isWebIDEInitialized.promise;
+            ok(true, "WebIDE was initialized");
+
             ok(win, "Found a window");
             ok(win.AppManager, "App Manager accessible");
             let appmgr = win.AppManager;
