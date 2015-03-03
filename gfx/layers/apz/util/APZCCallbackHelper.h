@@ -123,6 +123,7 @@ public:
     static nsEventStatus DispatchSynthesizedMouseEvent(uint32_t aMsg,
                                                        uint64_t aTime,
                                                        const LayoutDevicePoint& aRefPoint,
+                                                       Modifiers aModifiers,
                                                        nsIWidget* aWidget);
 
     /* Dispatch a mouse event with the given parameters.
@@ -139,6 +140,7 @@ public:
     /* Fire a single-tap event at the given point. The event is dispatched
      * via the given widget. */
     static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
+                                   Modifiers aModifiers,
                                    nsIWidget* aWidget);
 
     /* Perform hit-testing on the touch points of |aEvent| to determine

@@ -480,6 +480,8 @@ struct WeakMapTracer;
  * weak map that was live at the time of the last garbage collection.
  *
  * m will be nullptr if the weak map is not contained in a JS Object.
+ *
+ * The callback should not GC (and will assert in a debug build if it does so.)
  */
 typedef void
 (* WeakMapTraceCallback)(WeakMapTracer *trc, JSObject *m, JS::GCCellPtr key, JS::GCCellPtr value);

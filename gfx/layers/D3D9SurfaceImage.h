@@ -41,12 +41,6 @@ public:
   // Returns the description of the shared surface.
   const D3DSURFACE_DESC& GetDesc() const;
 
-  // Returns the HANDLE that can be used to open the image as a shared resource.
-  // If the operation to copy the original resource to the shared resource
-  // hasn't finished yet, this function blocks until the synchronization is
-  // complete.
-  HANDLE GetShareHandle();
-
   gfx::IntSize GetSize() MOZ_OVERRIDE;
 
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
@@ -54,18 +48,16 @@ public:
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE { return nullptr; }
 
-private:
+  virtual bool IsValid() MOZ_OVERRIDE;
 
-  // Blocks the calling thread until the copy operation started in SetData()
-  // is complete, whereupon the texture is safe to use.
-  void EnsureSynchronized();
+private:
 
   gfx::IntSize mSize;
   RefPtr<IDirect3DTexture9> mTexture;
-  RefPtr<IDirect3DQuery9> mQuery;
   RefPtr<TextureClient> mTextureClient;
   HANDLE mShareHandle;
   D3DSURFACE_DESC mDesc;
+  bool mIsValid;
 };
 
 } // namepace layers
