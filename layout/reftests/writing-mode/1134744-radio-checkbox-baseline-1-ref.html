@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1134744 testcase</title>
+<meta charset="utf-8">
+<style>
+div {
+  height: 200px;
+  margin: 1px;
+  padding: 1px;
+}
+</style>
+</head>
+<body>
+<!-- these two blocks should look the same -->
+<div style="writing-mode: vertical-lr; text-orientation: sideways-right">
+ <label><input type="checkbox">Checkbox</label></br>
+ <label><input type="radio">Radio</label></br>
+</div>
+<div style="writing-mode: vertical-rl; text-orientation: sideways-right">
+ <label><input type="radio">Radio</label></br>
+ <label><input type="checkbox">Checkbox</label></br>
+</div>
+</body>
+</html>
