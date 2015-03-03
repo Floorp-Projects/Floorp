@@ -84,7 +84,7 @@ PRLogModuleInfo* gFocusNavigationLog;
   {                                                             \
     nsAutoCString tag(NS_LITERAL_CSTRING("(none)"));            \
     if (content) {                                              \
-      content->Tag()->ToUTF8String(tag);                        \
+      content->NodeInfo()->NameAtom()->ToUTF8String(tag);       \
     }                                                           \
     PR_LOG(log, 4, (format, tag.get()));                        \
   }
@@ -328,7 +328,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
       if (menulist) {
         menulist->GetInputField(getter_AddRefs(inputField));
       }
-      else if (aContent->Tag() == nsGkAtoms::scale) {
+      else if (aContent->IsXULElement(nsGkAtoms::scale)) {
         nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
         if (!doc)
           return nullptr;
@@ -336,7 +336,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
         nsINodeList* children = doc->BindingManager()->GetAnonymousNodesFor(aContent);
         if (children) {
           nsIContent* child = children->Item(0);
-          if (child && child->Tag() == nsGkAtoms::slider)
+          if (child && child->IsXULElement(nsGkAtoms::slider))
             return child;
         }
       }
@@ -1552,7 +1552,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
     return nullptr;
   }
 
-  if (aContent->Tag() == nsGkAtoms::area && aContent->IsHTMLElement()) {
+  if (aContent->IsHTMLElement(nsGkAtoms::area)) {
     // HTML areas do not have their own frame, and the img frame we get from
     // GetPrimaryFrame() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
@@ -2503,8 +2503,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
   int32_t tabIndex = forward ? 1 : 0;
   if (startContent) {
     nsIFrame* frame = startContent->GetPrimaryFrame();
-    if (startContent->Tag() == nsGkAtoms::area &&
-        startContent->IsHTMLElement())
+    if (startContent->IsHTMLElement(nsGkAtoms::area))
       startContent->IsFocusable(&tabIndex);
     else if (frame)
       frame->IsFocusable(&tabIndex, 0);
@@ -2812,8 +2811,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       }
     }
     else if (getNextFrame &&
-             (!iterStartContent || iterStartContent->Tag() != nsGkAtoms::area ||
-              !iterStartContent->IsHTMLElement())) {
+             (!iterStartContent ||
+              !iterStartContent->IsHTMLElement(nsGkAtoms::area))) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content nodes per frame, so don't skip over the starting frame.
       if (aForward)
@@ -2842,7 +2841,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
       nsIContent* currentContent = frame->GetContent();
       if (tabIndex >= 0) {
         NS_ASSERTION(currentContent, "IsFocusable set a tabindex for a frame with no content");
-        if (currentContent->Tag() == nsGkAtoms::img &&
+        if (currentContent->IsHTMLElement(nsGkAtoms::img) &&
             currentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usemap)) {
           // This is an image with a map. Image map areas are not traversed by
           // nsIFrameTraversal so look for the next or previous area element.
@@ -3075,7 +3074,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
     nsCOMPtr<Element> docElement = aWindow->GetFrameElementInternal();
     // document navigation skips iframes and frames that are specifically non-focusable
     if (docElement) {
-      if (docElement->Tag() == nsGkAtoms::iframe)
+      if (docElement->NodeInfo()->NameAtom() == nsGkAtoms::iframe)
         return nullptr;
 
       nsIFrame* frame = docElement->GetPrimaryFrame();
@@ -3228,7 +3227,7 @@ nsFocusManager::GetNextTabbablePanel(nsIDocument* aDocument, nsIFrame* aCurrentP
     }
 
     // Skip over non-panels
-    if (popupFrame->GetContent()->Tag() != nsGkAtoms::panel ||
+    if (!popupFrame->GetContent()->IsXULElement(nsGkAtoms::panel) ||
         (aDocument && popupFrame->GetContent()->GetComposedDoc() != aDocument)) {
       continue;
     }

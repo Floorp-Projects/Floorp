@@ -544,7 +544,7 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
 bool 
 nsDocumentEncoder::IsTag(nsIContent* aContent, nsIAtom* aAtom)
 {
-  return aContent && aContent->Tag() == aAtom;
+  return aContent && aContent->NodeInfo()->NameAtom() == aAtom;
 }
 
 static nsresult
@@ -1378,9 +1378,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
        selContent = selContent->GetParent())
   {
     // checking for selection inside a plaintext form widget
-    nsIAtom *atom = selContent->Tag();
-    if (atom == nsGkAtoms::input ||
-        atom == nsGkAtoms::textarea)
+    if (selContent->IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea))
     {
       mIsTextWidget = true;
       break;
@@ -1521,34 +1519,32 @@ nsHTMLCopyEncoder::IncludeInContext(nsINode *aNode)
   if (!content)
     return false;
 
-  nsIAtom *tag = content->Tag();
-
-  return (tag == nsGkAtoms::b        ||
-          tag == nsGkAtoms::i        ||
-          tag == nsGkAtoms::u        ||
-          tag == nsGkAtoms::a        ||
-          tag == nsGkAtoms::tt       ||
-          tag == nsGkAtoms::s        ||
-          tag == nsGkAtoms::big      ||
-          tag == nsGkAtoms::small    ||
-          tag == nsGkAtoms::strike   ||
-          tag == nsGkAtoms::em       ||
-          tag == nsGkAtoms::strong   ||
-          tag == nsGkAtoms::dfn      ||
-          tag == nsGkAtoms::code     ||
-          tag == nsGkAtoms::cite     ||
-          tag == nsGkAtoms::var      ||
-          tag == nsGkAtoms::abbr     ||
-          tag == nsGkAtoms::font     ||
-          tag == nsGkAtoms::script   ||
-          tag == nsGkAtoms::span     ||
-          tag == nsGkAtoms::pre      ||
-          tag == nsGkAtoms::h1       ||
-          tag == nsGkAtoms::h2       ||
-          tag == nsGkAtoms::h3       ||
-          tag == nsGkAtoms::h4       ||
-          tag == nsGkAtoms::h5       ||
-          tag == nsGkAtoms::h6);
+  return content->IsAnyOfHTMLElements(nsGkAtoms::b,
+                                      nsGkAtoms::i,
+                                      nsGkAtoms::u,
+                                      nsGkAtoms::a,
+                                      nsGkAtoms::tt,
+                                      nsGkAtoms::s,
+                                      nsGkAtoms::big,
+                                      nsGkAtoms::small,
+                                      nsGkAtoms::strike,
+                                      nsGkAtoms::em,
+                                      nsGkAtoms::strong,
+                                      nsGkAtoms::dfn,
+                                      nsGkAtoms::code,
+                                      nsGkAtoms::cite,
+                                      nsGkAtoms::var,
+                                      nsGkAtoms::abbr,
+                                      nsGkAtoms::font,
+                                      nsGkAtoms::script,
+                                      nsGkAtoms::span,
+                                      nsGkAtoms::pre,
+                                      nsGkAtoms::h1,
+                                      nsGkAtoms::h2,
+                                      nsGkAtoms::h3,
+                                      nsGkAtoms::h4,
+                                      nsGkAtoms::h5,
+                                      nsGkAtoms::h6);
 }
 
 
@@ -1712,10 +1708,11 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
         if (bResetPromotion)
         {
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
-          if (content)
+          if (content && content->IsHTMLElement())
           {
             bool isBlock = false;
-            parserService->IsBlock(parserService->HTMLAtomTagToId(content->Tag()), isBlock);
+            parserService->IsBlock(parserService->HTMLAtomTagToId(
+                                     content->NodeInfo()->NameAtom()), isBlock);
             if (isBlock)
             {
               bResetPromotion = false;
@@ -1794,10 +1791,11 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
         if (bResetPromotion)
         {
           nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
-          if (content)
+          if (content && content->IsHTMLElement())
           {
             bool isBlock = false;
-            parserService->IsBlock(parserService->HTMLAtomTagToId(content->Tag()), isBlock);
+            parserService->IsBlock(parserService->HTMLAtomTagToId(
+                                     content->NodeInfo()->NameAtom()), isBlock);
             if (isBlock)
             {
               bResetPromotion = false;
@@ -2015,12 +2013,12 @@ nsHTMLCopyEncoder::GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorA
       break;
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    if (!content || !content->IsHTMLElement() ||
-        (content->Tag() != nsGkAtoms::tr    &&
-         content->Tag() != nsGkAtoms::thead &&
-         content->Tag() != nsGkAtoms::tbody &&
-         content->Tag() != nsGkAtoms::tfoot &&
-         content->Tag() != nsGkAtoms::table)) {
+    if (!content ||
+        !content->IsAnyOfHTMLElements(nsGkAtoms::tr,
+                                      nsGkAtoms::thead,
+                                      nsGkAtoms::tbody,
+                                      nsGkAtoms::tfoot,
+                                      nsGkAtoms::table)) {
       break;
     }
     ++j;

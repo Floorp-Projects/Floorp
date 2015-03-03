@@ -1660,16 +1660,14 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
       continue;
     }
 
-    nsIAtom* localName = content->Tag();
-
     // Skip elements that usually contain non-translatable text content.
-    if (localName == nsGkAtoms::script ||
-        localName == nsGkAtoms::iframe ||
-        localName == nsGkAtoms::frameset ||
-        localName == nsGkAtoms::frame ||
-        localName == nsGkAtoms::code ||
-        localName == nsGkAtoms::noscript ||
-        localName == nsGkAtoms::style) {
+    if (content->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                     nsGkAtoms::iframe,
+                                     nsGkAtoms::frameset,
+                                     nsGkAtoms::frame,
+                                     nsGkAtoms::code,
+                                     nsGkAtoms::noscript,
+                                     nsGkAtoms::style)) {
       continue;
     }
 
