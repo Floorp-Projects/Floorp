@@ -8,7 +8,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content">
 
-    <ScrollView android:layout_width="?attr/arrowPopupWidth"
+    <ScrollView android:layout_width="@dimen/arrow_popup_container_width"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:background="@drawable/arrow_popup_bg">
