@@ -561,8 +561,9 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
       nsresult rv = blob->GetSize(&size);
       if (NS_SUCCEEDED(rv)) {
         AutoJSAPI jsapi;
-        jsapi.Init(mGlobal);
-        JS_updateMallocCounter(jsapi.cx(), size);
+        if (jsapi.Init(mGlobal)) {
+          JS_updateMallocCounter(jsapi.cx(), size);
+        }
       }
 
       nsRefPtr<File> newBlob = new File(mGlobal, blob->Impl());
