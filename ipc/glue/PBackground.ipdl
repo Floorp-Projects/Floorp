@@ -11,6 +11,7 @@ include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 include protocol PVsync;
+include protocol PMedia;
 
 include DOMTypes;
 include PBackgroundSharedTypes;
@@ -34,6 +35,7 @@ sync protocol PBackground
   manages PCacheStreamControl;
   manages PFileDescriptorSet;
   manages PVsync;
+  manages PMedia;
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
@@ -42,6 +44,7 @@ parent:
   PBackgroundIDBFactory(LoggingInfo loggingInfo);
 
   PVsync();
+  PMedia();
 
   PBroadcastChannel(PrincipalInfo pInfo, nsString origin, nsString channel);
 
