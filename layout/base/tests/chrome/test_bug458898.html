@@ -22,14 +22,13 @@ var win = window.openDialog("data:text/html,<div style='height:200px; width:100p
 
 function loaded() {
   var disableWindowResizePref = "dom.disable_window_move_resize";
-  var oldPrefValue = SpecialPowers.getBoolPref(disableWindowResizePref);
-  SpecialPowers.setBoolPref(disableWindowResizePref, false);
-  win.sizeToContent();
-  ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
-  ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
-  win.close();
-  SpecialPowers.setBoolPref(disableWindowResizePref, oldPrefValue);
-  SimpleTest.finish();
+  SpecialPowers.pushPrefEnv({"set":[[disableWindowResizePref, false]]}, function() {
+    win.sizeToContent();
+    ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
+    ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
+    win.close();
+    SimpleTest.finish();
+ });
 }
 
 win.addEventListener("load", loaded, false);
