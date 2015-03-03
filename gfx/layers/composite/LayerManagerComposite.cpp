@@ -443,7 +443,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
 #endif
 
     float fillRatio = mCompositor->GetFillRatio();
-    mFPS->DrawFPS(now, drawFrameColorBars ? 10 : 0, 0, unsigned(fillRatio), mCompositor);
+    mFPS->DrawFPS(now, drawFrameColorBars ? 10 : 1, 2, unsigned(fillRatio), mCompositor);
 
     if (mUnusedApzTransformWarning) {
       // If we have an unused APZ transform on this composite, draw a 20x20 red box
