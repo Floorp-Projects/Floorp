@@ -2993,15 +2993,17 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (aFlags & PAINT_IGNORE_SUPPRESSION) {
     builder.IgnorePaintSuppression();
   }
-  // Windowed plugins aren't allowed in popups
+
+  // If the root has embedded plugins, flag the builder so we know we'll need
+  // to update plugin geometry after painting.
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
       !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE) &&
       rootPresContext->NeedToComputePluginGeometryUpdates()) {
     builder.SetWillComputePluginGeometry(true);
   }
-  nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
 
+  nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
   bool ignoreViewportScrolling =
     aFrame->GetParent() ? false : presShell->IgnoringViewportScrolling();
   if (ignoreViewportScrolling && rootScrollFrame) {
@@ -3263,28 +3265,25 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   if (builder.WillComputePluginGeometry()) {
-    rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
-
-    // We're not going to get a WillPaintWindow event here if we didn't do
-    // widget invalidation, so just apply the plugin geometry update here instead.
-    // We could instead have the compositor send back an equivalent to WillPaintWindow,
-    // but it should be close enough to now not to matter.
-    if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (XRE_GetProcessType() == GeckoProcessType_Content) {
-        // If this is a remotely managed widget (PluginWidgetProxy in content)
-        // store this information in the compositor, which ships this
-        // over to chrome for application when we paint.
-        rootPresContext->CollectPluginGeometryUpdates(layerManager);
-      } else
-#endif
-      {
+    // For single process compute and apply plugin geometry updates to plugin
+    // windows, then request composition. For content processes skip eveything
+    // except requesting composition. Geometry updates were calculated and
+    // shipped to the chrome process in nsDisplayList when the layer
+    // transaction completed.
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
+      // We're not going to get a WillPaintWindow event here if we didn't do
+      // widget invalidation, so just apply the plugin geometry update here
+      // instead. We could instead have the compositor send back an equivalent
+      // to WillPaintWindow, but it should be close enough to now not to matter.
+      if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
         rootPresContext->ApplyPluginGeometryUpdates();
       }
     }
 
-    // We told the compositor thread not to composite when it received the transaction because
-    // we wanted to update plugins first. Schedule the composite now.
+    // We told the compositor thread not to composite when it received the
+    // transaction because we wanted to update plugins first. Schedule the
+    // composite now.
     if (layerManager) {
       layerManager->Composite();
     }
@@ -7228,14 +7227,25 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
        f = f->GetParent()) {
     nsIContent* content = f->GetContent();
     nsIAtom* fType = f->GetType();
+    nsIFrame* parent = f->GetParent();
     // Also, if there is more than one frame corresponding to a single
     // content node, we want the outermost one.
-    if (!(f->GetParent() && f->GetParent()->GetContent() == content) &&
+    if (!(parent && parent->GetContent() == content) &&
         // ignore width/height on inlines since they don't apply
         fType != nsGkAtoms::inlineFrame &&
         // ignore width on radios and checkboxes since we enlarge them and
         // they have width/height in ua.css
         fType != nsGkAtoms::formControlFrame) {
+      // ruby annotations should have the same inflation as its
+      // grandparent, which is the ruby frame contains the annotation.
+      if (fType == nsGkAtoms::rubyTextFrame) {
+        MOZ_ASSERT(parent &&
+                   parent->GetType() == nsGkAtoms::rubyTextContainerFrame);
+        nsIFrame* grandparent = parent->GetParent();
+        MOZ_ASSERT(grandparent &&
+                   grandparent->GetType() == nsGkAtoms::rubyFrame);
+        return FontSizeInflationFor(grandparent);
+      }
       nsStyleCoord stylePosWidth = f->StylePosition()->mWidth;
       nsStyleCoord stylePosHeight = f->StylePosition()->mHeight;
       if (stylePosWidth.GetUnit() != eStyleUnit_Auto ||
