@@ -572,6 +572,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     Scalar::Type accessType = mir->accessType();
     const LAllocation *ptr = ins->ptr();
 
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
     MOZ_ASSERT(ptr->isRegister());
     BaseIndex srcAddr(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
@@ -618,6 +619,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
 
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
     MOZ_ASSERT(ptr->isRegister());
     BaseIndex srcAddr(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
