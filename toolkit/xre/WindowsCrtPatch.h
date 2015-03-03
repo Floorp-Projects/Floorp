@@ -105,7 +105,7 @@ patched_RtlImageNtHeader(HMODULE module)
 {
   PIMAGE_NT_HEADERS headers = stub_RtlImageNtHeader(module);
 
-  if (module == GetModuleHandleA("msvcr120.dll")) {
+  if (module == GetModuleHandleW(L"msvcr120.dll")) {
     PatchModuleImports(module, headers);
   }
 
