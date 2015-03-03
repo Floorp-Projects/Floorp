@@ -158,7 +158,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
     aEvent->InternalDOMEvent()->GetCurrentTarget());
   mSourceNode = do_GetWeakReference(sourceContent);
 #ifdef MOZ_XUL
-  mIsSourceTree = sourceContent->Tag() == nsGkAtoms::treechildren;
+  mIsSourceTree = sourceContent->IsXULElement(nsGkAtoms::treechildren);
   if (mIsSourceTree)
     CheckTreeBodyMove(mouseEvent);
 #endif
@@ -182,11 +182,9 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
                                     nsGkAtoms::_true, eCaseMatters)) {
       nsCOMPtr<nsIContent> targetContent = do_QueryInterface(eventTarget);
       while (targetContent && targetContent != sourceContent) {
-        nsIAtom* tag = targetContent->Tag();
-        if (targetContent->GetNameSpaceID() == kNameSpaceID_XUL &&
-            (tag == nsGkAtoms::menupopup ||
-             tag == nsGkAtoms::panel ||
-             tag == nsGkAtoms::tooltip)) {
+        if (targetContent->IsAnyOfXULElements(nsGkAtoms::menupopup,
+                                              nsGkAtoms::panel,
+                                              nsGkAtoms::tooltip)) {
           mSourceNode = nullptr;
           return;
         }
@@ -539,7 +537,7 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
   for (uint32_t i = 0; i < childCount; i++) {
     nsIContent *child = aContent->GetChildAt(i);
 
-    if (child->Tag() == aTag) {
+    if (child->IsXULElement(aTag)) {
       *aResult = child;
       NS_ADDREF(*aResult);
       return;
