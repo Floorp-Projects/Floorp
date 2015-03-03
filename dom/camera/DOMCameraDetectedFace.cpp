@@ -37,8 +37,8 @@ DOMCameraDetectedFace::Constructor(const GlobalObject& aGlobal,
                                    const dom::CameraDetectedFaceInit& aFace,
                                    ErrorResult& aRv)
 {
-  nsCOMPtr<nsISupports> s = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<DOMCameraDetectedFace> face = new DOMCameraDetectedFace(s, aFace);
+  nsRefPtr<DOMCameraDetectedFace> face =
+    new DOMCameraDetectedFace(aGlobal.GetAsSupports(), aFace);
   return face.forget();
 }
 
