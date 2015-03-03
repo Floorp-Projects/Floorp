@@ -1646,6 +1646,15 @@ nsMemoryReporterManager::UnregisterStrongReporter(nsIMemoryReporter* aReporter)
     return NS_OK;
   }
 
+  // We don't register new reporters when the block is in place, but we do
+  // unregister existing reporters. This is so we don't keep holding strong
+  // references that these reporters aren't expecting (which can keep them
+  // alive longer than intended).
+  if (mSavedStrongReporters && mSavedStrongReporters->Contains(aReporter)) {
+    mSavedStrongReporters->RemoveEntry(aReporter);
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -1659,6 +1668,15 @@ nsMemoryReporterManager::UnregisterWeakReporter(nsIMemoryReporter* aReporter)
 
   if (mWeakReporters->Contains(aReporter)) {
     mWeakReporters->RemoveEntry(aReporter);
+    return NS_OK;
+  }
+
+  // We don't register new reporters when the block is in place, but we do
+  // unregister existing reporters. This is so we don't keep holding weak
+  // references that the old reporters aren't expecting (which can end up as
+  // dangling pointers that lead to use-after-frees).
+  if (mSavedWeakReporters && mSavedWeakReporters->Contains(aReporter)) {
+    mSavedWeakReporters->RemoveEntry(aReporter);
     return NS_OK;
   }
 
