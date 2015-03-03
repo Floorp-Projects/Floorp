@@ -1291,14 +1291,14 @@ const int ZealCheckHashTablesOnMinorGC = 13;
 const int ZealCompactValue = 14;
 const int ZealLimit = 14;
 
-extern const char *ZealModeHelpText;
-
 enum VerifierType {
     PreBarrierVerifier,
     PostBarrierVerifier
 };
 
 #ifdef JS_GC_ZEAL
+
+extern const char *ZealModeHelpText;
 
 /* Check that write barriers have been used correctly. See jsgc.cpp. */
 void
