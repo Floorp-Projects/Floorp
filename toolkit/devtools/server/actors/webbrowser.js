@@ -1017,24 +1017,10 @@ TabActor.prototype = {
     }
 
     if (webProgress.DOMWindow == this._originalWindow) {
-      // If the original top level document we connected to is removed,
-      // we try to switch to any other top level document
-      let rootDocShells = this.docShells
-                              .filter(d => {
-                                return d != this.docShell &&
-                                       this._isRootDocShell(d);
-                              });
-      if (rootDocShells.length > 0) {
-        let newRoot = rootDocShells[0];
-        this._originalWindow = newRoot.DOMWindow;
-        this._changeTopLevelDocument(this._originalWindow);
-      } else {
-        // If for some reason (typically during Firefox shutdown), the original
-        // document is destroyed, and there is no other top level docshell,
-        // we detach the tab actor to unregister all listeners and prevent any
-        // exception
-        this.exit();
-      }
+      // If for some reason (typically during Firefox shutdown), the original
+      // document is destroyed, we detach the tab actor to unregister all listeners
+      // and prevent any exception.
+      this.exit();
       return;
     }
 
