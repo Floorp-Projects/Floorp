@@ -42,12 +42,12 @@ SVGContentUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
   nsIContent *ancestor = aSVGElement->GetFlattenedTreeParent();
 
   while (ancestor && ancestor->IsSVGElement() &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject) {
+                     !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
     element = ancestor;
     ancestor = element->GetFlattenedTreeParent();
   }
 
-  if (element && element->Tag() == nsGkAtoms::svg) {
+  if (element && element->IsSVGElement(nsGkAtoms::svg)) {
     return static_cast<SVGSVGElement*>(element);
   }
   return nullptr;
@@ -101,7 +101,7 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
       return eContinuousStroke;
     }
     Float pathScale = 1.0;
-    if (aElement->Tag() == nsGkAtoms::path) {
+    if (aElement->IsSVGElement(nsGkAtoms::path)) {
       pathScale = static_cast<SVGPathElement*>(aElement)->
         GetPathLengthScale(SVGPathElement::eForStroking);
       if (pathScale <= 0) {
@@ -365,10 +365,9 @@ SVGContentUtils::EstablishesViewport(nsIContent *aContent)
   // Although SVG 1.1 states that <image> is an element that establishes a
   // viewport, this is really only for the document it references, not
   // for any child content, which is what this function is used for.
-  return aContent && aContent->IsSVGElement() &&
-           (aContent->Tag() == nsGkAtoms::svg ||
-            aContent->Tag() == nsGkAtoms::foreignObject ||
-            aContent->Tag() == nsGkAtoms::symbol);
+  return aContent && aContent->IsAnyOfSVGElements(nsGkAtoms::svg,
+                                                  nsGkAtoms::foreignObject,
+                                                  nsGkAtoms::symbol);
 }
 
 nsSVGElement*
@@ -378,7 +377,7 @@ SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
 
   while (element && element->IsSVGElement()) {
     if (EstablishesViewport(element)) {
-      if (element->Tag() == nsGkAtoms::foreignObject) {
+      if (element->IsSVGElement(nsGkAtoms::foreignObject)) {
         return nullptr;
       }
       return static_cast<nsSVGElement*>(element);
@@ -397,7 +396,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
   nsIContent *ancestor = aElement->GetFlattenedTreeParent();
 
   while (ancestor && ancestor->IsSVGElement() &&
-                     ancestor->Tag() != nsGkAtoms::foreignObject) {
+                     !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
     element = static_cast<nsSVGElement*>(ancestor);
     matrix *= element->PrependLocalTransformsTo(gfxMatrix()); // i.e. *A*ppend
     if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
@@ -415,7 +414,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
     // didn't find a nearestViewportElement
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
-  if (element->Tag() != nsGkAtoms::svg) {
+  if (!element->IsSVGElement(nsGkAtoms::svg)) {
     // Not a valid SVG fragment
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }

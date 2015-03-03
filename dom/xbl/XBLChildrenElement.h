@@ -133,7 +133,7 @@ public:
   {
     NS_ASSERTION(!mIncludes.IsEmpty(),
                  "Shouldn't check for includes on default insertion point");
-    return mIncludes.Contains(aChild->Tag());
+    return mIncludes.Contains(aChild->NodeInfo()->NameAtom());
   }
 
   bool IsDefaultInsertion()
