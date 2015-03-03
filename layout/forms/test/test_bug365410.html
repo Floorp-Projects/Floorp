@@ -74,9 +74,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=365410
 
 /** Test for Bug 365410 **/
 
-// Turn off spatial nav so that it does not hijack the up and down events.
-SpecialPowers.setBoolPref("snav.enabled", false);
-
 function pageUpDownTest(id,index) {
   var elm = document.getElementById(id);
   elm.focus();
@@ -126,7 +123,10 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTest)
+// Turn off spatial nav so that it does not hijack the up and down events.
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
+});
 
 </script>
 </pre>

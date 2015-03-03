@@ -28,67 +28,69 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345267
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 345267 **/
-
+SimpleTest.waitForExplicitFinish();
 // Turn off Spatial Navigation to stop if from hijacking "left" keypress event.
-SpecialPowers.setBoolPref('snav.enabled', false);
+SpecialPowers.pushPrefEnv({"set":[['snav.enabled', false]]}, runTest);
 
-is($("d1").value, "abcde",
-   "Displayed initial value should not be truncated by maxlength");
-is($("u1").value, "abcdef",
-   "Undisplayed initial value should not be truncated by maxlength");
+function runTest() {
+  is($("d1").value, "abcde",
+     "Displayed initial value should not be truncated by maxlength");
+  is($("u1").value, "abcdef",
+     "Undisplayed initial value should not be truncated by maxlength");
 
-$("d2").value = "abcdefg";
-is($("d2").value, "abcdefg",
-   "Displayed set value should not be truncated by maxlength");
+  $("d2").value = "abcdefg";
+  is($("d2").value, "abcdefg",
+     "Displayed set value should not be truncated by maxlength");
 
-$("u2").value = "abcdefgh";
-is($("u2").value, "abcdefgh",
-   "Undisplayed set value should not be truncated by maxlength");
+  $("u2").value = "abcdefgh";
+  is($("u2").value, "abcdefgh",
+     "Undisplayed set value should not be truncated by maxlength");
 
-$("d3").defaultValue = "abcdefghi";
-is($("d3").value, "abcdefghi",
-   "Displayed set defaultValue should not be truncated by maxlength");
+  $("d3").defaultValue = "abcdefghi";
+  is($("d3").value, "abcdefghi",
+     "Displayed set defaultValue should not be truncated by maxlength");
 
-$("u3").defaultValue = "abcdefghij";
-is($("u3").value, "abcdefghij",
-   "Undisplayed set defaultValue should not be truncated by maxlength");
+  $("u3").defaultValue = "abcdefghij";
+  is($("u3").value, "abcdefghij",
+     "Undisplayed set defaultValue should not be truncated by maxlength");
 
-$("d4").maxLength = "3";
-is($("d4").value, "abcdefghijk",
-   "Displayed: setting maxLength should not truncate existing value");
+  $("d4").maxLength = "3";
+  is($("d4").value, "abcdefghijk",
+     "Displayed: setting maxLength should not truncate existing value");
 
-$("u4").maxLength = "3";
-is($("u4").value, "abcdefghijkl",
-   "Undisplayed: setting maxLength should not truncate existing value");
+  $("u4").maxLength = "3";
+  is($("u4").value, "abcdefghijkl",
+     "Undisplayed: setting maxLength should not truncate existing value");
 
-// Now start the editing tests
-is($("target").value, "abcdefghijklm", "Test starting state incorrect");
-$("target").focus();
-$("target").selectionStart = $("target").selectionEnd = 13;
-sendKey("back_space");
-is($("target").value, "abcdefghijkl", "Should only delete one char");
-sendKey("back_space");
-is($("target").value, "abcdefghijk", "Should only delete one char again");
-(function () {
-  SpecialPowers.wrap($("target")).controllers.getControllerForCommand('cmd_undo')
+  // Now start the editing tests
+  is($("target").value, "abcdefghijklm", "Test starting state incorrect");
+  $("target").focus();
+  $("target").selectionStart = $("target").selectionEnd = 13;
+  sendKey("back_space");
+  is($("target").value, "abcdefghijkl", "Should only delete one char");
+  sendKey("back_space");
+  is($("target").value, "abcdefghijk", "Should only delete one char again");
+  (function () {
+    SpecialPowers.wrap($("target")).controllers.getControllerForCommand('cmd_undo')
                          .doCommand('cmd_undo');
-})();
-is($("target").value, "abcdefghijklm",
-   "Should be able to undo deletion in the face of maxlength");
-sendString("nopq");
-is($("target").value, "abcdefghijklm",
-   "Typing should have no effect when already past maxlength");
+  })();
+  is($("target").value, "abcdefghijklm",
+     "Should be able to undo deletion in the face of maxlength");
+  sendString("nopq");
+  is($("target").value, "abcdefghijklm",
+     "Typing should have no effect when already past maxlength");
 
-$("target").value = "";
-sendString("abcde");
-is($("target").value, "abc", "Typing should be limited by maxlength");
+  $("target").value = "";
+  sendString("abcde");
+  is($("target").value, "abc", "Typing should be limited by maxlength");
 
-$("target").value = "";
-sendString("ad");
-sendKey("left");
-sendString("bc");
-is($("target").value, "abd", "Typing should be limited by maxlength again");
-
+  $("target").value = "";
+  sendString("ad");
+  sendKey("left");
+  sendString("bc");
+  is($("target").value, "abd", "Typing should be limited by maxlength again");
+  SimpleTest.finish();
+}
 </script>
 </pre>
 </body>
