@@ -14,6 +14,7 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 
+#include "js/GCAPI.h"
 #include "vm/GlobalObject.h"
 #include "vm/WeakMapObject.h"
 
@@ -132,8 +133,11 @@ WeakMapBase::traceAllMappings(WeakMapTracer *tracer)
 {
     JSRuntime *rt = tracer->runtime;
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+        for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
+            // The WeakMapTracer callback is not allowed to GC.
+            JS::AutoSuppressGCAnalysis nogc;
             m->traceMappings(tracer);
+        }
     }
 }
 

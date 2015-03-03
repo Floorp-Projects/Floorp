@@ -7,6 +7,7 @@
 #define APZCCallbackHandler_h__
 
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/EventForwards.h"  // for Modifiers
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "GeneratedJNIWrappers.h"
@@ -45,14 +46,14 @@ public: // GeckoContentController methods
     void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
     void AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
                                  const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
-    void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+    void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                          const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+    void HandleSingleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                          const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+    void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                        const mozilla::layers::ScrollableLayerGuid& aGuid,
                        uint64_t aInputBlockId) MOZ_OVERRIDE;
-    void HandleLongTapUp(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+    void HandleLongTapUp(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                          const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect& aContentRect,
                                  const mozilla::CSSSize& aScrollableSize) MOZ_OVERRIDE;

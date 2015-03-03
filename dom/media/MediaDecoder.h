@@ -937,7 +937,8 @@ public:
         mReentrantMonitor("MediaDecoder::FrameStats"),
         mParsedFrames(0),
         mDecodedFrames(0),
-        mPresentedFrames(0) {}
+        mPresentedFrames(0),
+        mDroppedFrames(0) {}
 
     // Returns number of frames which have been parsed from the media.
     // Can be called on any thread.
@@ -961,14 +962,22 @@ public:
       return mPresentedFrames;
     }
 
+    // Number of frames that have been skipped because they have missed their
+    // compoisition deadline.
+    uint32_t GetDroppedFrames() {
+      return mDroppedFrames;
+    }
+
     // Increments the parsed and decoded frame counters by the passed in counts.
     // Can be called on any thread.
-    void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) {
-      if (aParsed == 0 && aDecoded == 0)
+    void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
+                             uint32_t aDropped) {
+      if (aParsed == 0 && aDecoded == 0 && aDropped == 0)
         return;
       ReentrantMonitorAutoEnter mon(mReentrantMonitor);
       mParsedFrames += aParsed;
       mDecodedFrames += aDecoded;
+      mDroppedFrames += aDropped;
     }
 
     // Increments the presented frame counters.
@@ -994,6 +1003,8 @@ public:
     // Number of decoded frames which were actually sent down the rendering
     // pipeline to be painted ("presented"). Access protected by mReentrantMonitor.
     uint32_t mPresentedFrames;
+
+    uint32_t mDroppedFrames;
   };
 
   // Return the frame decode/paint related statistics.
@@ -1001,9 +1012,10 @@ public:
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) MOZ_OVERRIDE
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
+                                   uint32_t aDropped) MOZ_OVERRIDE
   {
-    GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded);
+    GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded, aDropped);
   }
 
 protected:

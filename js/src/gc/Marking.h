@@ -251,13 +251,6 @@ MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapValue *dst_slot, cons
 /*** Special Cases ***/
 
 /*
- * MarkChildren<JSObject> is exposed solely for preWriteBarrier on
- * JSObject::swap. It should not be considered external interface.
- */
-void
-MarkChildren(JSTracer *trc, JSObject *obj);
-
-/*
  * Trace through the shape and any shapes it contains to mark
  * non-shape children. This is exposed to the JS API as
  * JS_TraceShapeCycleCollectorChildren.
