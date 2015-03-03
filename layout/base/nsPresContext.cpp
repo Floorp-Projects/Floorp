@@ -2920,7 +2920,9 @@ nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
   // This is not happening during a paint event.
   ApplyPluginGeometryUpdates();
 #else
-  InitApplyPluginGeometryTimer();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    InitApplyPluginGeometryTimer();
+  }
 #endif
 }
 

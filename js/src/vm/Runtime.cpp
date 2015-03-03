@@ -848,3 +848,9 @@ JS::UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime *runtime, uint32_t generati
     runtime->setProfilerSampleBufferGen(generation);
     runtime->updateProfilerSampleBufferLapCount(lapCount);
 }
+
+JS_FRIEND_API(bool)
+JS::IsProfilingEnabledForRuntime(JSRuntime *runtime)
+{
+    return runtime->spsProfiler.enabled();
+}

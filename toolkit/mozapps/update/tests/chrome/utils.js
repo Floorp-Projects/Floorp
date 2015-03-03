@@ -206,7 +206,7 @@ var gDisableNoUpdateAddon = false;
 // Set to true to log additional information for debugging. To log additional
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // onload function.
-var DEBUG_AUS_TEST = true;
+var DEBUG_AUS_TEST = false;
 
 const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/data/";
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);

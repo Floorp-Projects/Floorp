@@ -489,7 +489,8 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   uint32_t startBufferGen = aProfile.bufferGeneration();
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
-  {
+  // Only walk jit stack if profiling frame iterator is turned on.
+  if (JS::IsProfilingEnabledForRuntime(pseudoStack->mRuntime)) {
     AutoWalkJSStack autoWalkJSStack;
     const uint32_t maxFrames = mozilla::ArrayLength(jsFrames);
 

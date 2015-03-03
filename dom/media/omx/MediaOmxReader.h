@@ -30,8 +30,9 @@ class AbstractMediaDecoder;
 
 class MediaOmxReader : public MediaOmxCommonReader
 {
-  // This flag protect the mIsShutdown variable, that may access by decoder / main / IO thread.
-  Mutex mMutex;
+  // This mutex is held when accessing the mIsShutdown variable, which is
+  // modified on the decode task queue and read on main and IO threads.
+  Mutex mShutdownMutex;
   nsCString mType;
   bool mHasVideo;
   bool mHasAudio;
@@ -42,6 +43,8 @@ class MediaOmxReader : public MediaOmxCommonReader
   int64_t mLastParserDuration;
   int32_t mSkipCount;
   bool mUseParserDuration;
+  // If mIsShutdown is false, and mShutdownMutex is held, then
+  // AbstractMediaDecoder::mDecoder will be non-null.
   bool mIsShutdown;
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
@@ -107,18 +110,24 @@ public:
 
   virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
 
+  android::sp<android::MediaSource> GetAudioOffloadTrack();
+
+  // This method is intended only for private use but public only for
+  // MediaPromise::InvokeCallbackMethod().
+  void ReleaseDecoder();
+
+private:
+  class ProcessCachedDataTask;
+  class NotifyDataArrivedRunnable;
+
   bool IsShutdown() {
-    MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mShutdownMutex);
     return mIsShutdown;
   }
 
-  void ReleaseDecoder();
-
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
 
-  void CancelProcessCachedData();
-
-  android::sp<android::MediaSource> GetAudioOffloadTrack();
+  already_AddRefed<AbstractMediaDecoder> SafeGetDecoder();
 };
 
 } // namespace mozilla

@@ -87,6 +87,9 @@
                   android:icon="@drawable/ic_menu_addons"
                   android:title="@string/addons"/>
 
+            <item android:id="@+id/logins"
+                  android:title="@string/logins"/>
+
             <item android:id="@+id/apps"
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>

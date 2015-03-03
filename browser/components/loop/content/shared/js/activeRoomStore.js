@@ -396,6 +396,38 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
+     * Handles switching browser (aka tab) sharing to a new window. Should
+     * only be used for browser sharing.
+     *
+     * @param {Number} windowId  The new windowId to start sharing.
+     */
+    _handleSwitchBrowserShare: function(err, windowId) {
+      if (err) {
+        console.error("Error getting the windowId: " + err);
+        return;
+      }
+
+      var screenSharingState = this.getStoreState().screenSharingState;
+
+      if (screenSharingState === SCREEN_SHARE_STATES.INACTIVE) {
+        // Screen sharing is still pending, so assume that we need to kick it off.
+        var options = {
+          videoSource: "browser",
+          constraints: {
+            browserWindow: windowId,
+            scrollWithPage: true
+          },
+        };
+        this._sdkDriver.startScreenShare(options);
+      } else if (screenSharingState === SCREEN_SHARE_STATES.ACTIVE) {
+        // Just update the current share.
+        this._sdkDriver.switchAcquiredWindow(windowId);
+      } else {
+        console.error("Unexpectedly received windowId for browser sharing when pending");
+      }
+    },
+
+    /**
      * Initiates a screen sharing publisher.
      *
      * @param {sharedActions.StartScreenShare} actionData
@@ -409,19 +441,12 @@ loop.store.ActiveRoomStore = (function() {
         videoSource: actionData.type
       };
       if (options.videoSource === "browser") {
-        this._mozLoop.getActiveTabWindowId(function(err, windowId) {
-          if (err || !windowId) {
-            this.dispatchAction(new sharedActions.ScreenSharingState({
-              state: SCREEN_SHARE_STATES.INACTIVE
-            }));
-            return;
-          }
-          options.constraints = {
-            browserWindow: windowId,
-            scrollWithPage: true
-          };
-          this._sdkDriver.startScreenShare(options);
-        }.bind(this));
+        this._browserSharingListener = this._handleSwitchBrowserShare.bind(this);
+
+        // Set up a listener for watching screen shares. This will get notified
+        // with the first windowId when it is added, so we start off the sharing
+        // from within the listener.
+        this._mozLoop.addBrowserSharingListener(this._browserSharingListener);
       } else {
         this._sdkDriver.startScreenShare(options);
       }
@@ -431,6 +456,12 @@ loop.store.ActiveRoomStore = (function() {
      * Ends an active screenshare session.
      */
     endScreenShare: function() {
+      if (this._browserSharingListener) {
+        // Remove the browser sharing listener as we don't need it now.
+        this._mozLoop.removeBrowserSharingListener(this._browserSharingListener);
+        this._browserSharingListener = null;
+      }
+
       if (this._sdkDriver.endScreenShare()) {
         this.dispatchAction(new sharedActions.ScreenSharingState({
           state: SCREEN_SHARE_STATES.INACTIVE

@@ -10,6 +10,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
 
+/* Constants for password prompt telemetry.
+ * Mirrored in mobile/android/components/LoginManagerPrompter.js */
+const PROMPT_DISPLAYED = 0;
+
+const PROMPT_ADD = 1;
+const PROMPT_NOTNOW = 2;
+const PROMPT_NEVER = 3;
+
+const PROMPT_UPDATE = 1;
+
 /*
  * LoginManagerPromptFactory
  *
@@ -732,6 +742,7 @@ LoginManagerPrompter.prototype = {
    */
   promptToSavePassword : function (aLogin) {
     var notifyObj = this._getPopupNote() || this._getNotifyBox();
+    Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
 
     if (notifyObj)
       this._showSaveLoginNotification(notifyObj, aLogin);
@@ -772,7 +783,6 @@ LoginManagerPrompter.prototype = {
     }
   },
 
-
   /*
    * _showSaveLoginNotification
    *
@@ -784,7 +794,6 @@ LoginManagerPrompter.prototype = {
    *        A notification box or a popup notification.
    */
   _showSaveLoginNotification : function (aNotifyObj, aLogin) {
-
     // Ugh. We can't use the strings from the popup window, because they
     // have the access key marked in the string (eg "Mo&zilla"), along
     // with some weird rules for handling access keys that do not occur
@@ -815,6 +824,7 @@ LoginManagerPrompter.prototype = {
     // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
     // without a getService() call.
     var pwmgr = this._pwmgr;
+    let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION");
 
     // Notification is a PopupNotification
     if (aNotifyObj == this._getPopupNote()) {
@@ -823,6 +833,7 @@ LoginManagerPrompter.prototype = {
         label:     rememberButtonText,
         accessKey: rememberButtonAccessKey,
         callback: function(aNotifyObj, aButton) {
+          promptHistogram.add(PROMPT_ADD);
           pwmgr.addLogin(aLogin);
           browser.focus();
         }
@@ -834,6 +845,7 @@ LoginManagerPrompter.prototype = {
           label:     neverButtonText,
           accessKey: neverButtonAccessKey,
           callback: function(aNotifyObj, aButton) {
+            promptHistogram.add(PROMPT_NEVER);
             pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
             browser.focus();
           }
@@ -1023,6 +1035,7 @@ LoginManagerPrompter.prototype = {
     // without a getService() call.
     var self = this;
 
+    let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION");
     // Notification is a PopupNotification
     if (aNotifyObj == this._getPopupNote()) {
       // "Yes" button
@@ -1032,11 +1045,13 @@ LoginManagerPrompter.prototype = {
         popup:     null,
         callback:  function(aNotifyObj, aButton) {
           self._updateLogin(aOldLogin, aNewPassword);
+          promptHistogram.add(PROMPT_UPDATE);
         }
       };
 
       var { browser } = this._getNotifyWindow();
 
+      Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
       aNotifyObj.show(browser, "password-change", notificationText,
                       "password-notification-icon", mainAction,
                       null, { timeout: Date.now() + 10000,

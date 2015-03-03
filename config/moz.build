@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Build Config')
+
 NO_DIST_INSTALL = True
 # For sanity's sake, we compile nsinstall without the wrapped system
 # headers, so that we can use it to set up the wrapped system headers.
@@ -30,6 +33,7 @@ if CONFIG['MOZ_SHARED_ICU']:
     DEFINES['MOZ_SHARED_ICU'] = True
 
 PYTHON_UNIT_TESTS += [
+    'tests/test_mozbuild_reading.py',
     'tests/unit-expandlibs.py',
     'tests/unit-mozunit.py',
     'tests/unit-nsinstall.py',

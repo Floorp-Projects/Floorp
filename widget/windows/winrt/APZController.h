@@ -39,17 +39,17 @@ public:
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics);
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId, const uint32_t& aScrollGeneration);
   virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid);
   virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid);
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint,
-                             int32_t aModifiers,
+                             Modifiers aModifiers,
                              const mozilla::layers::ScrollableLayerGuid& aGuid,
                              uint64_t aInputBlockId);
   virtual void HandleLongTapUp(const mozilla::CSSPoint& aPoint,
-                               int32_t aModifiers,
+                               Modifiers aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid);
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);

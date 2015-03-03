@@ -1204,14 +1204,10 @@
         while (list.firstChild)
           list.firstChild.remove();
 
-        let hiddenList;
-        try {
-          let pref =
-            Services.prefs.getCharPref("browser.search.hiddenOneOffs");
-          hiddenList = pref ? pref.split(",") : [];
-        } catch(e) {
-          hiddenList = [];
-        }
+        let Preferences =
+          Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+        let pref = Preferences.get("browser.search.hiddenOneOffs");
+        let hiddenList = pref ? pref.split(",") : [];
 
         let currentEngineName = Services.search.currentEngine.name;
         let engines = Services.search.getVisibleEngines()

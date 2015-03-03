@@ -7466,6 +7466,18 @@
     "n_buckets" : 40,
     "description": "Time in days each saved login was last used"
   },
+  "PWMGR_PROMPT_REMEMBER_ACTION" : {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "Action taken by user through prompt for creating a login. (0=Prompt displayed [always recorded], 1=Add login, 2=Don't save now, 3=Never save)"
+  },
+  "PWMGR_PROMPT_UPDATE_ACTION" : {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login)"
+  },
   "PWMGR_SAVING_ENABLED": {
     "expires_in_version": "never",
     "kind": "boolean",
