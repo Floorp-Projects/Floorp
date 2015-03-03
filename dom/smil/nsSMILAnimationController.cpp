@@ -778,7 +778,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // animateTransform can only animate transforms, conversely transforms
   // can only be animated by animateTransform
   if (IsTransformAttribute(attributeNamespaceID, attributeName) !=
-      (aAnimElem->Tag() == nsGkAtoms::animateTransform))
+      (aAnimElem->IsSVGElement(nsGkAtoms::animateTransform)))
     return false;
 
   // Look up target (animated) attribute-type
