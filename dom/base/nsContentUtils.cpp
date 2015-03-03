@@ -1508,42 +1508,41 @@ nsContentUtils::IsHTMLWhitespaceOrNBSP(char16_t aChar)
 
 /* static */
 bool
-nsContentUtils::IsHTMLBlock(nsIAtom* aLocalName)
+nsContentUtils::IsHTMLBlock(nsIContent* aContent)
 {
-  return
-    (aLocalName == nsGkAtoms::address) ||
-    (aLocalName == nsGkAtoms::article) ||
-    (aLocalName == nsGkAtoms::aside) ||
-    (aLocalName == nsGkAtoms::blockquote) ||
-    (aLocalName == nsGkAtoms::center) ||
-    (aLocalName == nsGkAtoms::dir) ||
-    (aLocalName == nsGkAtoms::div) ||
-    (aLocalName == nsGkAtoms::dl) || // XXX why not dt and dd?
-    (aLocalName == nsGkAtoms::fieldset) ||
-    (aLocalName == nsGkAtoms::figure) || // XXX shouldn't figcaption be on this list
-    (aLocalName == nsGkAtoms::footer) ||
-    (aLocalName == nsGkAtoms::form) ||
-    (aLocalName == nsGkAtoms::h1) ||
-    (aLocalName == nsGkAtoms::h2) ||
-    (aLocalName == nsGkAtoms::h3) ||
-    (aLocalName == nsGkAtoms::h4) ||
-    (aLocalName == nsGkAtoms::h5) ||
-    (aLocalName == nsGkAtoms::h6) ||
-    (aLocalName == nsGkAtoms::header) ||
-    (aLocalName == nsGkAtoms::hgroup) ||
-    (aLocalName == nsGkAtoms::hr) ||
-    (aLocalName == nsGkAtoms::li) ||
-    (aLocalName == nsGkAtoms::listing) ||
-    (aLocalName == nsGkAtoms::menu) ||
-    (aLocalName == nsGkAtoms::multicol) || // XXX get rid of this one?
-    (aLocalName == nsGkAtoms::nav) ||
-    (aLocalName == nsGkAtoms::ol) ||
-    (aLocalName == nsGkAtoms::p) ||
-    (aLocalName == nsGkAtoms::pre) ||
-    (aLocalName == nsGkAtoms::section) ||
-    (aLocalName == nsGkAtoms::table) ||
-    (aLocalName == nsGkAtoms::ul) ||
-    (aLocalName == nsGkAtoms::xmp);
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::address,
+                                       nsGkAtoms::article,
+                                       nsGkAtoms::aside,
+                                       nsGkAtoms::blockquote,
+                                       nsGkAtoms::center,
+                                       nsGkAtoms::dir,
+                                       nsGkAtoms::div,
+                                       nsGkAtoms::dl, // XXX why not dt and dd?
+                                       nsGkAtoms::fieldset,
+                                       nsGkAtoms::figure, // XXX shouldn't figcaption be on this list
+                                       nsGkAtoms::footer,
+                                       nsGkAtoms::form,
+                                       nsGkAtoms::h1,
+                                       nsGkAtoms::h2,
+                                       nsGkAtoms::h3,
+                                       nsGkAtoms::h4,
+                                       nsGkAtoms::h5,
+                                       nsGkAtoms::h6,
+                                       nsGkAtoms::header,
+                                       nsGkAtoms::hgroup,
+                                       nsGkAtoms::hr,
+                                       nsGkAtoms::li,
+                                       nsGkAtoms::listing,
+                                       nsGkAtoms::menu,
+                                       nsGkAtoms::multicol, // XXX get rid of this one?
+                                       nsGkAtoms::nav,
+                                       nsGkAtoms::ol,
+                                       nsGkAtoms::p,
+                                       nsGkAtoms::pre,
+                                       nsGkAtoms::section,
+                                       nsGkAtoms::table,
+                                       nsGkAtoms::ul,
+                                       nsGkAtoms::xmp);
 }
 
 /* static */

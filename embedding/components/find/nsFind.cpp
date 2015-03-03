@@ -744,8 +744,7 @@ bool nsFind::IsBlockNode(nsIContent* aContent)
     return true;
   }
 
-  return aContent->IsHTMLElement() &&
-         nsContentUtils::IsHTMLBlock(aContent->NodeInfo()->NameAtom());
+  return nsContentUtils::IsHTMLBlock(aContent);
 }
 
 bool nsFind::IsTextNode(nsIDOMNode* aNode)
