@@ -7415,14 +7415,20 @@ GsmPDUHelperObject.prototype = {
           let dstp = (this.readHexOctet() << 8) | this.readHexOctet();
           let orip = (this.readHexOctet() << 8) | this.readHexOctet();
           dataAvailable -= 4;
-          // 3GPP TS 23.040 clause 9.2.3.24.4: "A receiving entity shall
-          // ignore any information element where the value of the
-          // Information-Element-Data is Reserved or not supported"
-          if ((dstp < PDU_APA_VALID_16BIT_PORTS)
-              && (orip < PDU_APA_VALID_16BIT_PORTS)) {
-            header.destinationPort = dstp;
-            header.originatorPort = orip;
+          if ((dstp >= PDU_APA_VALID_16BIT_PORTS) ||
+              (orip >= PDU_APA_VALID_16BIT_PORTS)) {
+            // 3GPP TS 23.040 clause 9.2.3.24.4: "A receiving entity shall
+            // ignore any information element where the value of the
+            // Information-Element-Data is Reserved or not supported"
+            // Bug 1130292, some carriers set originatorPort to reserved port
+            // numbers for wap push. We rise this as a warning in debug message
+            // instead of ingoring this IEI to allow user to receive Wap Push
+            // under these carriers.
+            this.context.debug("Warning: Invalid port numbers [dstp, orip]: " +
+                               JSON.stringify([dstp, orip]));
           }
+          header.destinationPort = dstp;
+          header.originatorPort = orip;
           break;
         }
         case PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT: {
