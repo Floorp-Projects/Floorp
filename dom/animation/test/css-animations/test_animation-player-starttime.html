@@ -42,6 +42,7 @@
 const CSS_ANIM_EVENTS = ['animationstart', 'animationiteration', 'animationend'];
 const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
+const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 
 /**
  * These helpers get the value that the startTime needs to be set to, to put an
@@ -298,7 +299,7 @@ test(function(t)
 {
   var div = addDiv(t, {'class': 'animated-div'});
 
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
 
   var player = div.getAnimationPlayers()[0];
 
@@ -334,7 +335,7 @@ async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
 
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
 
   var player = div.getAnimationPlayers()[0];
 
@@ -370,7 +371,7 @@ async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
 
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
 
   var player = div.getAnimationPlayers()[0];
 
@@ -435,7 +436,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   player.startTime = startTimeForActivePhase(player.timeline);
@@ -450,7 +451,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   player.startTime = startTimeForAfterPhase(player.timeline);
@@ -465,7 +466,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   eventWatcher.waitForEvent('animationstart').then(function() {
@@ -484,7 +485,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   eventWatcher.waitForEvent('animationstart').then(function() {
@@ -503,7 +504,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
@@ -522,7 +523,7 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
   eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
@@ -541,7 +542,7 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  div.style.animation = ANIM_PROPERTY_VAL;
 
   var player = div.getAnimationPlayers()[0];
 
