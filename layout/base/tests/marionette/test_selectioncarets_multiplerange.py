@@ -37,8 +37,7 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self._nonsel1 = self.marionette.find_element(By.ID, 'nonsel1')
 
     def openTestHtml2(self, enabled=True):
-        # Open html for testing and enable selectioncaret and
-        # non-editable support
+        # Open html for testing and enable selectioncaret
         self.marionette.execute_script(
             'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
             ('true' if enabled else 'false'))
@@ -48,6 +47,17 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
 
         self._body2 = self.marionette.find_element(By.ID, 'bd2')
         self._longtext = self.marionette.find_element(By.ID, 'longtext')
+
+    def openTestHtml3(self, enabled=True):
+        # Open html for testing and enable selectioncaret
+        self.marionette.execute_script(
+            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
+            ('true' if enabled else 'false'))
+
+        test_html3 = self.marionette.absolute_url('test_selectioncarets_iframe.html')
+        self.marionette.navigate(test_html3)
+
+        self._iframe = self.marionette.find_element(By.ID, 'frame')
 
     def _long_press_to_select_word(self, el, wordOrdinal):
         sel = SelectionManager(el)
@@ -165,3 +175,25 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self.marionette.set_orientation('portrait')
 
         self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()), 'o')
+
+    def test_select_word_inside_an_iframe(self):
+        '''Bug 1088552
+        The scroll offset in iframe should be taken into consideration properly.
+        In this test, we scroll content in the iframe to the bottom to cause a
+        huge offset. If we use the right coordinate system, selection should
+        work. Otherwise, it would be hard to trigger select word.
+        '''
+        self.openTestHtml3(enabled=True)
+
+        # switch to inner iframe and scroll to the bottom
+        self.marionette.switch_to_frame(self._iframe)
+        self.marionette.execute_script(
+         'document.getElementById("bd2").scrollTop += 999')
+
+        # long press to select bottom text
+        self._body2 = self.marionette.find_element(By.ID, 'bd2')
+        sel = SelectionManager(self._body2)
+        self._bottomtext = self.marionette.find_element(By.ID, 'bottomtext')
+        long_press_without_contextmenu(self.marionette, self._bottomtext, self._long_press_time)
+
+        self.assertNotEqual(self._to_unix_line_ending(sel.selected_content.strip()), '')
