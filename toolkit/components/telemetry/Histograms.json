@@ -5467,6 +5467,12 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
+  "VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "The H.264 constraint set flag as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, with the addition of 0 for unknown values."
+  },
   "VIDEO_CANPLAYTYPE_H264_LEVEL": {
     "expires_in_version": "40",
     "kind": "enumerated",
