@@ -338,7 +338,7 @@ GetFirstSubsumedSavedFrame(JSContext *cx, HandleObject savedFrame)
 
 /* static */ bool
 SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
-                      MutableHandleSavedFrame frame)
+                      MutableHandleObject frame)
 {
     const Value &thisValue = args.thisv();
 
@@ -364,10 +364,10 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
         return false;
     }
 
-    // The caller might not have the principals to see this frame's data, so get
-    // the first one they _do_ have access to.
-    RootedSavedFrame rooted(cx, &thisObject->as<SavedFrame>());
-    frame.set(GetFirstSubsumedFrame(cx, rooted));
+    // Now set "frame" to the actual object we were invoked in (which may be a
+    // wrapper), not the unwrapped version.  Consumers will need to know what
+    // that original object was, and will do principal checks as needed.
+    frame.set(&thisValue.toObject());
     return true;
 }
 
@@ -384,7 +384,7 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
 //   - Rooted<SavedFrame *> frame (will be non-null)
 #define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)             \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
-    RootedSavedFrame frame(cx);                                        \
+    RootedObject frame(cx);                                            \
     if (!checkThis(cx, args, fnName, &frame))                          \
         return false;
 
