@@ -49,7 +49,7 @@ function runTest() {
      "update's promptWaitTime attribute value was set from the " +
      PREF_APP_UPDATE_PROMPTWAITTIME + " preference");
 
-  gUpdateManager.refreshUpdateStatus(gUpdateManager.activeUpdate);
+  gUpdateManager.refreshUpdateStatus();
 }
 
 ]]>

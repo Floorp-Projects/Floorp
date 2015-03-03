@@ -10,6 +10,16 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+/* Constants for password prompt telemetry.
+ * Mirrored in nsLoginManagerPrompter.js */
+const PROMPT_DISPLAYED = 0;
+
+const PROMPT_ADD = 1;
+const PROMPT_NOTNOW = 2;
+const PROMPT_NEVER = 3;
+
+const PROMPT_UPDATE = 1;
+
 /* ==================== LoginManagerPrompter ==================== */
 /*
  * LoginManagerPrompter
@@ -118,6 +128,7 @@ LoginManagerPrompter.prototype = {
      */
     promptToSavePassword : function (aLogin) {
         this._showSaveLoginNotification(aLogin);
+        Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
     },
 
 
@@ -175,17 +186,20 @@ LoginManagerPrompter.prototype = {
         // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
         // without a getService() call.
         var pwmgr = this._pwmgr;
+        let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION");
 
         var buttons = [
             {
                 label: this._getLocalizedString("saveButton"),
                 callback: function() {
                     pwmgr.addLogin(aLogin);
+                    promptHistogram.add(PROMPT_ADD);
                 }
             },
             {
                 label: this._getLocalizedString("dontSaveButton"),
                 callback: function() {
+                    promptHistogram.add(PROMPT_NOTNOW);
                     // Don't set a permanent exception
                 }
             }
@@ -204,6 +218,7 @@ LoginManagerPrompter.prototype = {
      */
     promptToChangePassword : function (aOldLogin, aNewLogin) {
         this._showChangeLoginNotification(aOldLogin, aNewLogin.password);
+        Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
     },
 
     /*
@@ -225,17 +240,20 @@ LoginManagerPrompter.prototype = {
         // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
         // without a getService() call.
         var self = this;
+        let promptHistogram = Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION");
 
         var buttons = [
             {
                 label: this._getLocalizedString("updateButton"),
                 callback:  function() {
                     self._updateLogin(aOldLogin, aNewPassword);
+                    promptHistogram.add(PROMPT_UPDATE);
                 }
             },
             {
                 label: this._getLocalizedString("dontUpdateButton"),
                 callback:  function() {
+                    promptHistogram.add(PROMPT_NOTNOW);
                     // do nothing
                 }
             }

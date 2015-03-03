@@ -28,7 +28,7 @@
       <!-- One off providers -->
       <preference id="browser.search.hiddenOneOffs"
                   name="browser.search.hiddenOneOffs"
-                  type="string"/>
+                  type="unichar"/>
 
     </preferences>
 
