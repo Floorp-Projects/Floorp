@@ -403,7 +403,7 @@ nsResizerFrame::ResizeContent(nsIContent* aContent, const Direction& aDirection,
 {
   // for XUL elements, just set the width and height attributes. For
   // other elements, set style.width and style.height
-  if (aContent->IsXUL()) {
+  if (aContent->IsXULElement()) {
     if (aOriginalSizeInfo) {
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::width,
                         aOriginalSizeInfo->width);

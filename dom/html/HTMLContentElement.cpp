@@ -65,8 +65,7 @@ HTMLContentElement::BindToTree(nsIDocument* aDocument,
   if (containingShadow && !oldContainingShadow) {
     nsINode* parentNode = nsINode::GetParentNode();
     while (parentNode && parentNode != containingShadow) {
-      if (parentNode->IsElement() &&
-          parentNode->AsElement()->IsHTML(nsGkAtoms::content)) {
+      if (parentNode->IsHTMLElement(nsGkAtoms::content)) {
         // Content element in fallback content is not an insertion point.
         return NS_OK;
       }

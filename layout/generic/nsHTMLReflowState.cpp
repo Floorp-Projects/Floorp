@@ -391,8 +391,8 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
               // Don't set NS_FRAME_IN_CONSTRAINED_HEIGHT on body or html
               // elements.
              (frame->GetContent() &&
-            !(frame->GetContent()->IsHTML(nsGkAtoms::body) ||
-              frame->GetContent()->IsHTML(nsGkAtoms::html)))) {
+            !(frame->GetContent()->IsAnyOfHTMLElements(nsGkAtoms::body,
+                                                       nsGkAtoms::html)))) {
 
     // If our height was specified as a percentage, then this could
     // actually resolve to 'auto', based on:

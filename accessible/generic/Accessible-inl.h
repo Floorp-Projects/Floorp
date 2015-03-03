@@ -48,7 +48,7 @@ inline bool
 Accessible::IsSearchbox() const
 {
   return (mRoleMapEntry && mRoleMapEntry->Is(nsGkAtoms::searchbox)) ||
-    (mContent->IsHTML(nsGkAtoms::input) &&
+    (mContent->IsHTMLElement(nsGkAtoms::input) &&
      mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                            nsGkAtoms::textInputType, eCaseMatters));
 }

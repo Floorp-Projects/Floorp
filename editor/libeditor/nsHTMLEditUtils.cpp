@@ -409,7 +409,7 @@ bool
 nsHTMLEditUtils::IsNamedAnchor(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
-  if (!aNode->IsElement() || !aNode->AsElement()->IsHTML(nsGkAtoms::a)) {
+  if (!aNode->IsHTMLElement(nsGkAtoms::a)) {
     return false;
   }
 

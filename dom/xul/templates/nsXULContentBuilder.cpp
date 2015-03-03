@@ -1263,7 +1263,7 @@ bool
 nsXULContentBuilder::IsOpen(nsIContent* aElement)
 {
     // Determine if this is a <treeitem> or <menu> element
-    if (!aElement->IsXUL())
+    if (!aElement->IsXULElement())
         return true;
 
     // XXXhyatt Use the XBL service to obtain a base tag.

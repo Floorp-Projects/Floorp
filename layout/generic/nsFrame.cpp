@@ -488,9 +488,9 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
                    // outer one should be considered a container.
                    // (Important, e.g., for nsSelectsAreaFrame.)
                    (aFrame->GetParent()->GetContent() == content) ||
-                   (content && (content->IsHTML(nsGkAtoms::option) ||
-                                content->IsHTML(nsGkAtoms::optgroup) ||
-                                content->IsHTML(nsGkAtoms::select) ||
+                   (content && (content->IsAnyOfHTMLElements(nsGkAtoms::option,
+                                                             nsGkAtoms::optgroup,
+                                                             nsGkAtoms::select) ||
                                 content->IsInNativeAnonymousSubtree()))) &&
                   !(aFrame->IsBoxFrame() && aFrame->GetParent()->IsBoxFrame());
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
@@ -7983,7 +7983,7 @@ nsIFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
     isFocusable = mContent->IsFocusable(&tabIndex, aWithMouse);
     if (!isFocusable && !aWithMouse &&
         GetType() == nsGkAtoms::scrollFrame &&
-        mContent->IsHTML() &&
+        mContent->IsHTMLElement() &&
         !mContent->IsRootOfNativeAnonymousSubtree() &&
         mContent->GetParent() &&
         !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
@@ -8757,7 +8757,7 @@ nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
                                  nsDisplayList* aList)
 {
   if (GetContent() &&
-      GetContent()->IsXUL() &&
+      GetContent()->IsXULElement() &&
       GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
     aList->AppendNewToTop(new (aBuilder) 
         nsDisplayOwnLayer(aBuilder, this, aList));

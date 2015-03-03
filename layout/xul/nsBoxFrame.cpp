@@ -1313,7 +1313,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   mozilla::layers::FrameMetrics::ViewID scrollTargetId =
     mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
-  if (GetContent()->IsXUL()) {
+  if (GetContent()->IsXULElement()) {
     // forcelayer is only supported on XUL elements with box layout
     if (GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
       forceLayer = true;

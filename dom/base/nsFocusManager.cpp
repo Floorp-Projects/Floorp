@@ -316,7 +316,7 @@ nsIContent*
 nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 {
 #ifdef MOZ_XUL
-  if (aContent->IsXUL()) {
+  if (aContent->IsXULElement()) {
     nsCOMPtr<nsIDOMNode> inputField;
 
     nsCOMPtr<nsIDOMXULTextBoxElement> textbox = do_QueryInterface(aContent);
@@ -1552,7 +1552,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
     return nullptr;
   }
 
-  if (aContent->Tag() == nsGkAtoms::area && aContent->IsHTML()) {
+  if (aContent->Tag() == nsGkAtoms::area && aContent->IsHTMLElement()) {
     // HTML areas do not have their own frame, and the img frame we get from
     // GetPrimaryFrame() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
@@ -2504,7 +2504,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
   if (startContent) {
     nsIFrame* frame = startContent->GetPrimaryFrame();
     if (startContent->Tag() == nsGkAtoms::area &&
-        startContent->IsHTML())
+        startContent->IsHTMLElement())
       startContent->IsFocusable(&tabIndex);
     else if (frame)
       frame->IsFocusable(&tabIndex, 0);
@@ -2813,7 +2813,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
     }
     else if (getNextFrame &&
              (!iterStartContent || iterStartContent->Tag() != nsGkAtoms::area ||
-              !iterStartContent->IsHTML())) {
+              !iterStartContent->IsHTMLElement())) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content nodes per frame, so don't skip over the starting frame.
       if (aForward)

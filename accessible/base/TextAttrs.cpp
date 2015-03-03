@@ -872,7 +872,7 @@ TextAttrsMgr::TextPosTextAttr::
   }
 
   const nsIContent* content = aFrame->GetContent();
-  if (content && content->IsHTML()) {
+  if (content && content->IsHTMLElement()) {
     const nsIAtom* tagName = content->Tag();
     if (tagName == nsGkAtoms::sup)
       return eTextPosSuper;

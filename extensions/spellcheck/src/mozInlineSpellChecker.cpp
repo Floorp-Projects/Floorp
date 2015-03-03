@@ -1237,14 +1237,14 @@ mozInlineSpellChecker::ShouldSpellCheckNode(nsIEditor* aEditor,
   if (flags & nsIPlaintextEditor::eEditorMailMask) {
     nsIContent *parent = content->GetParent();
     while (parent) {
-      if (parent->IsHTML(nsGkAtoms::blockquote) &&
+      if (parent->IsHTMLElement(nsGkAtoms::blockquote) &&
           parent->AttrValueIs(kNameSpaceID_None,
                               nsGkAtoms::type,
                               nsGkAtoms::cite,
                               eIgnoreCase)) {
         return false;
       }
-      if (parent->IsHTML(nsGkAtoms::pre) &&
+      if (parent->IsHTMLElement(nsGkAtoms::pre) &&
           parent->AttrValueIs(kNameSpaceID_None,
                               nsGkAtoms::_class,
                               nsGkAtoms::mozsignature,
@@ -1278,7 +1278,7 @@ mozInlineSpellChecker::ShouldSpellCheckNode(nsIEditor* aEditor,
     // Get HTML element ancestor (might be aNode itself, although probably that
     // has to be a text node in real life here)
     nsIContent *parent = content;
-    while (!parent->IsHTML()) {
+    while (!parent->IsHTMLElement()) {
       parent = parent->GetParent();
       if (!parent) {
         return true;

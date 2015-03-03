@@ -920,12 +920,12 @@ public:
   static inline bool
   ShouldExposeNameAsHTMLDocumentProperty(Element* aElement)
   {
-    return aElement->IsHTML() && CanHaveName(aElement->Tag());
+    return aElement->IsHTMLElement() && CanHaveName(aElement->Tag());
   }
   static inline bool
   ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
   {
-    if (!aElement->IsHTML()) {
+    if (!aElement->IsHTMLElement()) {
       return false;
     }
     nsIAtom* tag = aElement->Tag();

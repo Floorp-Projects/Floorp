@@ -703,21 +703,21 @@ nsHTMLEditRules::GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL)
 
     if (!curElement) {
       bNonList = true;
-    } else if (curElement->IsHTML(nsGkAtoms::ul)) {
+    } else if (curElement->IsHTMLElement(nsGkAtoms::ul)) {
       *aUL = true;
-    } else if (curElement->IsHTML(nsGkAtoms::ol)) {
+    } else if (curElement->IsHTMLElement(nsGkAtoms::ol)) {
       *aOL = true;
-    } else if (curElement->IsHTML(nsGkAtoms::li)) {
+    } else if (curElement->IsHTMLElement(nsGkAtoms::li)) {
       if (dom::Element* parent = curElement->GetParentElement()) {
-        if (parent->IsHTML(nsGkAtoms::ul)) {
+        if (parent->IsHTMLElement(nsGkAtoms::ul)) {
           *aUL = true;
-        } else if (parent->IsHTML(nsGkAtoms::ol)) {
+        } else if (parent->IsHTMLElement(nsGkAtoms::ol)) {
           *aOL = true;
         }
       }
-    } else if (curElement->IsHTML(nsGkAtoms::dl) ||
-               curElement->IsHTML(nsGkAtoms::dt) ||
-               curElement->IsHTML(nsGkAtoms::dd)) {
+    } else if (curElement->IsAnyOfHTMLElements(nsGkAtoms::dl,
+                                               nsGkAtoms::dt,
+                                               nsGkAtoms::dd)) {
       *aDL = true;
     } else {
       bNonList = true;
@@ -753,15 +753,15 @@ nsHTMLEditRules::GetListItemState(bool *aMixed, bool *aLI, bool *aDT, bool *aDD)
     nsCOMPtr<dom::Element> element = do_QueryInterface(curNode);
     if (!element) {
       bNonList = true;
-    } else if (element->IsHTML(nsGkAtoms::ul) ||
-               element->IsHTML(nsGkAtoms::ol) ||
-               element->IsHTML(nsGkAtoms::li)) {
+    } else if (element->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                            nsGkAtoms::ol,
+                                            nsGkAtoms::li)) {
       *aLI = true;
-    } else if (element->IsHTML(nsGkAtoms::dt)) {
+    } else if (element->IsHTMLElement(nsGkAtoms::dt)) {
       *aDT = true;
-    } else if (element->IsHTML(nsGkAtoms::dd)) {
+    } else if (element->IsHTMLElement(nsGkAtoms::dd)) {
       *aDD = true;
-    } else if (element->IsHTML(nsGkAtoms::dl)) {
+    } else if (element->IsHTMLElement(nsGkAtoms::dl)) {
       // need to look inside dl and see which types of items it has
       bool bDT, bDD;
       GetDefinitionListItemTypes(element, &bDT, &bDD);
@@ -2458,7 +2458,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
                 mHTMLEditor->IsVisTextNode(content, &join, true);
               } else {
                 NS_ENSURE_STATE(mHTMLEditor);
-                join = content->IsHTML(nsGkAtoms::br) &&
+                join = content->IsHTMLElement(nsGkAtoms::br) &&
                        !mHTMLEditor->IsVisBreak(somenode);
               }
             }
@@ -4484,11 +4484,12 @@ nsHTMLEditRules::ConvertListType(Element* aList,
   {
     if (child->IsElement()) {
       dom::Element* element = child->AsElement();
-      if (nsHTMLEditUtils::IsListItem(element) && !element->IsHTML(aItemType)) {
+      if (nsHTMLEditUtils::IsListItem(element) &&
+          !element->IsHTMLElement(aItemType)) {
         child = mHTMLEditor->ReplaceContainer(element, aItemType);
         NS_ENSURE_STATE(child);
       } else if (nsHTMLEditUtils::IsList(element) &&
-                 !element->IsHTML(aListType)) {
+                 !element->IsHTMLElement(aListType)) {
         nsCOMPtr<dom::Element> temp;
         nsresult rv = ConvertListType(child->AsElement(), getter_AddRefs(temp),
                                       aListType, aItemType);
@@ -4499,7 +4500,7 @@ nsHTMLEditRules::ConvertListType(Element* aList,
     child = child->GetNextSibling();
   }
 
-  if (aList->IsElement() && aList->AsElement()->IsHTML(aListType)) {
+  if (aList->IsHTMLElement(aListType)) {
     nsCOMPtr<dom::Element> list = aList->AsElement();
     list.forget(aOutList);
     return NS_OK;
@@ -6135,9 +6136,9 @@ nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
   NS_ENSURE_STATE(curNode);
 
   while (curNode->IsElement() &&
-         (curNode->AsElement()->IsHTML(nsGkAtoms::div) ||
+         (curNode->IsHTMLElement(nsGkAtoms::div) ||
           nsHTMLEditUtils::IsList(curNode) ||
-          curNode->AsElement()->IsHTML(nsGkAtoms::blockquote))) {
+          curNode->IsHTMLElement(nsGkAtoms::blockquote))) {
     // dive as long as there is only one child, and it is a list, div, blockquote
     NS_ENSURE_STATE(mHTMLEditor);
     uint32_t numChildren = mHTMLEditor->CountEditableChildren(curNode);
@@ -6153,9 +6154,9 @@ nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
     }
 
     dom::Element* element = tmp->AsElement();
-    if (!element->IsHTML(nsGkAtoms::div) &&
+    if (!element->IsHTMLElement(nsGkAtoms::div) &&
         !nsHTMLEditUtils::IsList(element) &&
-        !element->IsHTML(nsGkAtoms::blockquote)) {
+        !element->IsHTMLElement(nsGkAtoms::blockquote)) {
       break;
     }
 
@@ -6166,9 +6167,8 @@ nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
   // we've found innermost list/blockquote/div: 
   // replace the one node in the array with these nodes
   aNodeArray.RemoveObjectAt(0);
-  if (curNode->IsElement() &&
-      (curNode->AsElement()->IsHTML(nsGkAtoms::div) ||
-       curNode->AsElement()->IsHTML(nsGkAtoms::blockquote))) {
+  if (curNode->IsAnyOfHTMLElements(nsGkAtoms::div,
+                                   nsGkAtoms::blockquote)) {
     int32_t j = 0;
     return GetInnerContent(curNode->AsDOMNode(), aNodeArray, &j, false, false);
   }
@@ -6185,7 +6185,7 @@ void
 nsHTMLEditRules::GetDefinitionListItemTypes(dom::Element* aElement, bool* aDT, bool* aDD)
 {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->IsHTML(nsGkAtoms::dl));
+  MOZ_ASSERT(aElement->IsHTMLElement(nsGkAtoms::dl));
   MOZ_ASSERT(aDT);
   MOZ_ASSERT(aDD);
 
@@ -6193,9 +6193,9 @@ nsHTMLEditRules::GetDefinitionListItemTypes(dom::Element* aElement, bool* aDT, b
   for (nsIContent* child = aElement->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsHTML(nsGkAtoms::dt)) {
+    if (child->IsHTMLElement(nsGkAtoms::dt)) {
       *aDT = true;
-    } else if (child->IsHTML(nsGkAtoms::dd)) {
+    } else if (child->IsHTMLElement(nsGkAtoms::dd)) {
       *aDD = true;
     }
   }
@@ -7090,14 +7090,14 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       res = mHTMLEditor->RemoveBlockContainer(curNode); 
       NS_ENSURE_SUCCESS(res, res);
     } else if (curElement &&
-               (curElement->IsHTML(nsGkAtoms::table)      ||
-                curElement->IsHTML(nsGkAtoms::tr)         ||
-                curElement->IsHTML(nsGkAtoms::tbody)      ||
-                curElement->IsHTML(nsGkAtoms::td)         ||
-                nsHTMLEditUtils::IsList(curElement)       ||
-                curElement->IsHTML(nsGkAtoms::li)         ||
-                curElement->IsHTML(nsGkAtoms::blockquote) ||
-                curElement->IsHTML(nsGkAtoms::div))) {
+               (curElement->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                                nsGkAtoms::tr,
+                                                nsGkAtoms::tbody,
+                                                nsGkAtoms::td,
+                                                nsGkAtoms::li,
+                                                nsGkAtoms::blockquote,
+                                                nsGkAtoms::div) ||
+                nsHTMLEditUtils::IsList(curElement))) {
       // process any partial progress saved
       if (curBlock)
       {
@@ -8072,18 +8072,18 @@ nsHTMLEditRules::RemoveEmptyNodes()
 
       if (node->IsElement()) {
         dom::Element* element = node->AsElement();
-        if (element->IsHTML(nsGkAtoms::body)) {
+        if (element->IsHTMLElement(nsGkAtoms::body)) {
           // don't delete the body
         } else if ((bIsMailCite = nsHTMLEditUtils::IsMailCite(element))  ||
-                   element->IsHTML(nsGkAtoms::a)                         ||
+                   element->IsHTMLElement(nsGkAtoms::a)                  ||
                    nsHTMLEditUtils::IsInlineStyle(element)               ||
                    nsHTMLEditUtils::IsList(element)                      ||
-                   element->IsHTML(nsGkAtoms::div)) {
+                   element->IsHTMLElement(nsGkAtoms::div)) {
           // only consider certain nodes to be empty for purposes of removal
           bIsCandidate = true;
         } else if (nsHTMLEditUtils::IsFormatNode(element) ||
                    nsHTMLEditUtils::IsListItem(element)   ||
-                   element->IsHTML(nsGkAtoms::blockquote)) {
+                   element->IsHTMLElement(nsGkAtoms::blockquote)) {
           // these node types are candidates if selection is not in them
           // if it is one of these, don't delete if selection inside.
           // this is so we can create empty headings, etc, for the
@@ -9007,7 +9007,7 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
   // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
   // removing the DIV container instead of just removing the CSS property.
   nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
-  if (!node || !node->IsHTML(nsGkAtoms::div) ||
+  if (!node || !node->IsHTMLElement(nsGkAtoms::div) ||
       !mHTMLEditor ||
       node == mHTMLEditor->GetActiveEditingHost() ||
       !mHTMLEditor->IsDescendantOfEditorRoot(node) ||

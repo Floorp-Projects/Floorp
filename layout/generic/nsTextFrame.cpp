@@ -4915,7 +4915,7 @@ nsTextFrame::GetTextDecorations(
 
     // In quirks mode, if we're on an HTML table element, we're done.
     if (compatMode == eCompatibility_NavQuirks &&
-        f->GetContent()->IsHTML(nsGkAtoms::table)) {
+        f->GetContent()->IsHTMLElement(nsGkAtoms::table)) {
       break;
     }
 

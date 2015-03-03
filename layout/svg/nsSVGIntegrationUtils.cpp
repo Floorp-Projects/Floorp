@@ -437,7 +437,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
   bool hasSVGLayout = (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
   if (hasSVGLayout) {
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
-    if (!svgChildFrame || !aFrame->GetContent()->IsSVG()) {
+    if (!svgChildFrame || !aFrame->GetContent()->IsSVGElement()) {
       NS_ASSERTION(false, "why?");
       return;
     }

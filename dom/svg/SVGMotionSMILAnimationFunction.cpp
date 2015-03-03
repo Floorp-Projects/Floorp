@@ -134,7 +134,7 @@ GetFirstMPathChild(nsIContent* aElem)
   for (nsIContent* child = aElem->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsSVG(nsGkAtoms::mpath)) {
+    if (child->IsSVGElement(nsGkAtoms::mpath)) {
       return static_cast<SVGMPathElement*>(child);
     }
   }
@@ -152,7 +152,7 @@ SVGMotionSMILAnimationFunction::
   MOZ_ASSERT(mPathVertices.IsEmpty(),
              "regenerating when we already have vertices");
 
-  if (!aContextElem->IsSVG()) {
+  if (!aContextElem->IsSVGElement()) {
     NS_ERROR("Uh oh, SVG animateMotion element targeting a non-SVG node");
     return;
   }

@@ -1107,7 +1107,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   // assuming CreateBogusNodeIfNeeded() has been called first
   NS_ENSURE_TRUE(lastChild, NS_ERROR_NULL_POINTER);
 
-  if (!lastChild->IsHTML(nsGkAtoms::br)) {
+  if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
     nsCOMPtr<nsIDOMNode> domBody = do_QueryInterface(body);
     return CreateMozBR(domBody, body->Length());

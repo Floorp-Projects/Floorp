@@ -141,7 +141,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   if (targetContent->Tag() == nsGkAtoms::browser &&
-      targetContent->IsXUL() &&
+      targetContent->IsXULElement() &&
       EventStateManager::IsRemoteTarget(targetContent)) {
     return NS_OK;
   }

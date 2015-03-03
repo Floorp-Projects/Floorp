@@ -75,7 +75,7 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   for (nsIContent* child = content->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsXUL()) {
+    if (child->IsXULElement()) {
       nsIAtom *tag = child->Tag();
 
       if (tag == nsGkAtoms::treecols) {

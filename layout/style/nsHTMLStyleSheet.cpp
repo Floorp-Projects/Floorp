@@ -253,7 +253,7 @@ NS_IMPL_ISUPPORTS(nsHTMLStyleSheet, nsIStyleRuleProcessor)
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
-  if (aData->mElement->IsHTML() && !ruleWalker->AuthorStyleDisabled()) {
+  if (aData->mElement->IsHTMLElement() && !ruleWalker->AuthorStyleDisabled()) {
     nsIAtom* tag = aData->mElement->Tag();
 
     // if we have anchor colors, check if this is an anchor with an href
@@ -297,7 +297,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
   // just get the style rules from the content.  For SVG we do this even if
   // author style is disabled, because SVG presentational hints aren't
   // considered style.
-  if (!ruleWalker->AuthorStyleDisabled() || aData->mElement->IsSVG()) {
+  if (!ruleWalker->AuthorStyleDisabled() || aData->mElement->IsSVGElement()) {
     aData->mElement->WalkContentStyleRules(ruleWalker);
   }
 
@@ -314,7 +314,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 /* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mElement->IsHTML(nsGkAtoms::a) &&
+  if (aData->mElement->IsHTMLElement(nsGkAtoms::a) &&
       nsCSSRuleProcessor::IsLink(aData->mElement) &&
       ((mActiveRule && aData->mStateMask.HasState(NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)) ||
@@ -353,7 +353,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
   Element *element = aData->mElement;
   if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
-      element->IsHTML(nsGkAtoms::a)) {
+      element->IsHTMLElement(nsGkAtoms::a)) {
     return eRestyle_Self;
   }
 
@@ -365,7 +365,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
     // cellpadding on tables is special and requires reresolving all
     // the cells in the table
     if (aData->mAttribute == nsGkAtoms::cellpadding &&
-        element->IsHTML(nsGkAtoms::table)) {
+        element->IsHTMLElement(nsGkAtoms::table)) {
       return eRestyle_Subtree;
     }
     return eRestyle_Self;

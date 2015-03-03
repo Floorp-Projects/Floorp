@@ -93,7 +93,7 @@ struct BidiParagraphData {
       for (nsIContent* content = aBlockFrame->GetContent() ; content; 
            content = content->GetParent()) {
         if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) ||
-            content->IsXUL()) {
+            content->IsXULElement()) {
           mIsVisual = false;
           break;
         }
@@ -1148,7 +1148,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
         // U+FFFC"
         // <wbr>, however, is treated as U+200B ZERO WIDTH SPACE. See
         // http://dev.w3.org/html5/spec/Overview.html#phrasing-content-1
-        aBpd->AppendUnichar(content->IsHTML(nsGkAtoms::wbr) ?
+        aBpd->AppendUnichar(content->IsHTMLElement(nsGkAtoms::wbr) ?
                             kZWSP : kObjectSubstitute);
         if (!frame->IsInlineOutside()) {
           // if it is not inline, end the paragraph

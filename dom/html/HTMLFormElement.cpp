@@ -702,7 +702,7 @@ HTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
     if (formEvent) {
       nsIContent* originator = formEvent->originator;
       if (originator) {
-        if (!originator->IsHTML()) {
+        if (!originator->IsHTMLElement()) {
           return NS_ERROR_UNEXPECTED;
         }
         originatingElement = static_cast<nsGenericHTMLElement*>(originator);
@@ -1966,7 +1966,7 @@ HTMLFormElement::CheckValidFormSubmission()
              i < length; ++i) {
           // Input elements can trigger a form submission and we want to
           // update the style in that case.
-          if (mControls->mElements[i]->IsHTML(nsGkAtoms::input) &&
+          if (mControls->mElements[i]->IsHTMLElement(nsGkAtoms::input) &&
               nsContentUtils::IsFocusedContent(mControls->mElements[i])) {
             static_cast<HTMLInputElement*>(mControls->mElements[i])
               ->UpdateValidityUIBits(true);

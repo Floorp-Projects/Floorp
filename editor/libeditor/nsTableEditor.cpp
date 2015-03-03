@@ -3369,7 +3369,7 @@ nsHTMLEditor::IsEmptyCell(dom::Element* aCell)
 
   // We insert a single break into a cell by default
   //   to have some place to locate a cursor -- it is dispensable
-  if (cellChild->IsElement() && cellChild->AsElement()->IsHTML(nsGkAtoms::br)) {
+  if (cellChild->IsHTMLElement(nsGkAtoms::br)) {
     return true;
   }
 

@@ -41,7 +41,7 @@ nsSVGInnerSVGFrame::Init(nsIContent*       aContent,
                          nsContainerFrame* aParent,
                          nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::svg),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svg),
                "Content is not an SVG 'svg' element!");
 
   nsSVGInnerSVGFrameBase::Init(aContent, aParent, aPrevInFlow);

@@ -737,7 +737,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
 bool nsFind::IsBlockNode(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsHTMLElement()) {
     return false;
   }
 
@@ -786,7 +786,7 @@ bool nsFind::SkipNode(nsIContent* aContent)
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
   return (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-          (aContent->IsHTML() &&
+          (aContent->IsHTMLElement() &&
            (atom == sScriptAtom ||
             atom == sNoframesAtom ||
             atom == sSelectAtom)));
@@ -803,7 +803,7 @@ bool nsFind::SkipNode(nsIContent* aContent)
     atom = content->Tag();
 
     if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-        (content->IsHTML() &&
+        (content->IsHTMLElement() &&
          (atom == nsGkAtoms::script ||
           atom == nsGkAtoms::noframes ||
           atom == nsGkAtoms::select)))

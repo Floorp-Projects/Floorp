@@ -341,7 +341,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed
-    if (!child->IsHTML())
+    if (!child->IsHTMLElement())
       continue;
 
     nsIAtom *tag = child->Tag();

@@ -56,7 +56,7 @@ nsSVGForeignObjectFrame::Init(nsIContent*       aContent,
                               nsContainerFrame* aParent,
                               nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::foreignObject),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::foreignObject),
                "Content is not an SVG foreignObject!");
 
   nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);

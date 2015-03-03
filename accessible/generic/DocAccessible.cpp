@@ -94,7 +94,7 @@ DocAccessible::
   mPresShell->SetDocAccessible(this);
 
   // If this is a XUL Document, it should not implement nsHyperText
-  if (mDocumentNode && mDocumentNode->IsXUL())
+  if (mDocumentNode && mDocumentNode->IsXULDocument())
     mGenericTypes &= ~eHyperText;
 }
 
@@ -875,7 +875,8 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   }
 
   // ARIA or XUL selection
-  if ((aAccessible->GetContent()->IsXUL() && aAttribute == nsGkAtoms::selected) ||
+  if ((aAccessible->GetContent()->IsXULElement() &&
+       aAttribute == nsGkAtoms::selected) ||
       aAttribute == nsGkAtoms::aria_selected) {
     Accessible* widget =
       nsAccUtils::GetSelectableContainer(aAccessible, aAccessible->State());
@@ -1337,7 +1338,7 @@ DocAccessible::ProcessInvalidationList()
 Accessible*
 DocAccessible::GetAccessibleEvenIfNotInMap(nsINode* aNode) const
 {
-if (!aNode->IsContent() || !aNode->AsContent()->IsHTML(nsGkAtoms::area))
+if (!aNode->IsContent() || !aNode->AsContent()->IsHTMLElement(nsGkAtoms::area))
     return GetAccessible(aNode);
 
   // XXX Bug 135040, incorrect when multiple images use the same map.
@@ -1499,13 +1500,13 @@ DocAccessible::AddDependentIDsFor(dom::Element* aRelProviderElm,
       continue;
 
     if (relAttr == nsGkAtoms::_for) {
-      if (!aRelProviderElm->IsHTML() ||
+      if (!aRelProviderElm->IsHTMLElement() ||
           (aRelProviderElm->Tag() != nsGkAtoms::label &&
            aRelProviderElm->Tag() != nsGkAtoms::output))
         continue;
 
     } else if (relAttr == nsGkAtoms::control) {
-      if (!aRelProviderElm->IsXUL() ||
+      if (!aRelProviderElm->IsXULElement() ||
           (aRelProviderElm->Tag() != nsGkAtoms::label &&
            aRelProviderElm->Tag() != nsGkAtoms::description))
         continue;
