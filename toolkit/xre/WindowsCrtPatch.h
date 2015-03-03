@@ -128,7 +128,8 @@ Init()
   MOZ_ASSERT(!GetModuleHandleA("msvcr120d.dll"));
 
 #if defined(_M_IX86) && defined(_MSC_VER)
-  if (!mozilla::IsXPSP3OrLater()) {
+  // Add the hook on all XP because we can't trust the SP version (bug 1137609)
+  if (!mozilla::IsWin2003OrLater()) {
     NtdllIntercept.Init("ntdll.dll");
     NtdllIntercept.AddHook("RtlImageNtHeader",
                            reinterpret_cast<intptr_t>(patched_RtlImageNtHeader),
