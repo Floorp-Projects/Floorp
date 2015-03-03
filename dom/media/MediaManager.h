@@ -458,20 +458,6 @@ private:
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
 };
 
-class OriginUuid
-{
-public:
-  OriginUuid(char *aUuid, bool aPrivateBrowsing)
-  : mPrivateBrowsing(aPrivateBrowsing) {
-    mUuid.Append(aUuid);
-  }
-  OriginUuid(const nsACString& aUuid, bool aPrivateBrowsing)
-  : mUuid(aUuid), mPrivateBrowsing(aPrivateBrowsing) {}
-
-  nsCString mUuid;
-  bool mPrivateBrowsing;
-};
-
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
 typedef nsClassHashtable<nsUint64HashKey, StreamListeners> WindowTable;
 
@@ -523,13 +509,9 @@ typedef void (*WindowListenerCallback)(MediaManager *aThis,
                                        StreamListeners *aListeners,
                                        void *aData);
 
-class GetUserMediaDevicesTask;
-
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver
 {
-  friend GetUserMediaDevicesTask;
-
 public:
   static already_AddRefed<MediaManager> GetInstance();
 
@@ -539,6 +521,9 @@ public:
   static MediaManager* Get();
   static MediaManager* GetIfExists();
   static MessageLoop* GetMessageLoop();
+#ifdef DEBUG
+  static bool IsInMediaThread();
+#endif
 
   static bool Exists()
   {
@@ -615,10 +600,6 @@ private:
                               void *aData);
 
   void StopMediaStreams();
-
-  // ONLY access from MediaManagerThread so we don't need to lock
-  nsClassHashtable<nsCStringHashKey, OriginUuid> mOriginUuids;
-  nsCOMPtr<nsIFile> mProfileDir;
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
