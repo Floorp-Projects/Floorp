@@ -354,8 +354,7 @@ Accessible::VisibilityState()
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
     if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
-      if (deckFrame->GetContent()->IsXULElement() &&
-          deckFrame->GetContent()->Tag() == nsGkAtoms::tabpanels)
+      if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels))
         return states::OFFSCREEN;
 
       NS_NOTREACHED("Children of not selected deck panel are not accessible.");
@@ -820,7 +819,7 @@ Accessible::XULElmName(DocAccessible* aDocument,
   nsIContent* parent =
     bindingParent? bindingParent->GetParent() : aElm->GetParent();
   while (parent) {
-    if (parent->Tag() == nsGkAtoms::toolbaritem &&
+    if (parent->IsXULElement(nsGkAtoms::toolbaritem) &&
         parent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
       aName.CompressWhitespace();
       return;
@@ -1531,7 +1530,7 @@ Accessible::RelationByType(RelationType aType)
     case RelationType::LABEL_FOR: {
       Relation rel(new RelatedAccIterator(Document(), mContent,
                                           nsGkAtoms::aria_labelledby));
-      if (mContent->Tag() == nsGkAtoms::label && mContent->IsXULElement())
+      if (mContent->IsXULElement(nsGkAtoms::label))
         rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::control));
 
       return rel;
@@ -1553,8 +1552,7 @@ Accessible::RelationByType(RelationType aType)
       // This affectively adds an optional control attribute to xul:description,
       // which only affects accessibility, by allowing the description to be
       // tied to a control.
-      if (mContent->Tag() == nsGkAtoms::description &&
-          mContent->IsXULElement())
+      if (mContent->IsXULElement(nsGkAtoms::description))
         rel.AppendIter(new IDRefsIterator(mDoc, mContent,
                                           nsGkAtoms::control));
 

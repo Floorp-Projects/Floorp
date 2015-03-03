@@ -713,7 +713,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
   dom::Element* elm = aNode->AsElement();
 
   nsAutoCString tag;
-  elm->Tag()->ToUTF8String(tag);
+  elm->NodeInfo()->NameAtom()->ToUTF8String(tag);
 
   nsIAtom* idAtom = elm->GetID();
   nsAutoCString id;

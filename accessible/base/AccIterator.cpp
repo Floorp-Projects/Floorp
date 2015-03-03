@@ -141,7 +141,7 @@ HTMLLabelIterator::Next()
   // element, or <label> ancestor which implicitly point to it.
   Accessible* label = nullptr;
   while ((label = mRelIter.Next())) {
-    if (label->GetContent()->Tag() == nsGkAtoms::label)
+    if (label->GetContent()->IsHTMLElement(nsGkAtoms::label))
       return label;
   }
 
@@ -155,16 +155,14 @@ HTMLLabelIterator::Next()
   Accessible* walkUp = mAcc->Parent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpElm = walkUp->GetContent();
-    if (walkUpElm->IsHTMLElement()) {
-      if (walkUpElm->Tag() == nsGkAtoms::label &&
-          !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
-        mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
-        return walkUp;
-      }
-
-      if (walkUpElm->Tag() == nsGkAtoms::form)
-        break;
+    if (walkUpElm->IsHTMLElement(nsGkAtoms::label) &&
+        !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
+      mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
+      return walkUp;
     }
+
+    if (walkUpElm->IsHTMLElement(nsGkAtoms::form))
+      break;
 
     walkUp = walkUp->Parent();
   }
@@ -188,7 +186,7 @@ HTMLOutputIterator::Next()
 {
   Accessible* output = nullptr;
   while ((output = mRelIter.Next())) {
-    if (output->GetContent()->Tag() == nsGkAtoms::output)
+    if (output->GetContent()->IsHTMLElement(nsGkAtoms::output))
       return output;
   }
 
@@ -211,7 +209,7 @@ XULLabelIterator::Next()
 {
   Accessible* label = nullptr;
   while ((label = mRelIter.Next())) {
-    if (label->GetContent()->Tag() == nsGkAtoms::label)
+    if (label->GetContent()->IsXULElement(nsGkAtoms::label))
       return label;
   }
 
@@ -234,7 +232,7 @@ XULDescriptionIterator::Next()
 {
   Accessible* descr = nullptr;
   while ((descr = mRelIter.Next())) {
-    if (descr->GetContent()->Tag() == nsGkAtoms::description)
+    if (descr->GetContent()->IsXULElement(nsGkAtoms::description))
       return descr;
   }
 

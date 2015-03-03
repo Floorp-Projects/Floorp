@@ -893,8 +893,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
   nsImageFrame* imageFrame = do_QueryFrame(frame);
-  NS_ASSERTION(imageFrame && content->IsHTMLElement() &&
-               content->Tag() == nsGkAtoms::area,
+  NS_ASSERTION(imageFrame && content->IsHTMLElement(nsGkAtoms::area),
                "Unknown case of not main content for the frame!");
 #endif
     return nullptr;
@@ -902,8 +901,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
   nsImageFrame* imageFrame = do_QueryFrame(frame);
-  NS_ASSERTION(!imageFrame || !content->IsHTMLElement() ||
-               content->Tag() != nsGkAtoms::area,
+  NS_ASSERTION(!imageFrame || !content->IsHTMLElement(nsGkAtoms::area),
                "Image map manages the area accessible creation!");
 #endif
 
@@ -933,8 +931,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return newAcc;
   }
 
-  bool isHTML = content->IsHTMLElement();
-  if (isHTML && content->Tag() == nsGkAtoms::map) {
+  if (content->IsHTMLElement(nsGkAtoms::map)) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
     // map rect is empty then it is used for links grouping. Otherwise it should
@@ -973,7 +970,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     roleMapEntry = nullptr;
   }
 
-  if (!newAcc && isHTML) {  // HTML accessibles
+  if (!newAcc && content->IsHTMLElement()) {  // HTML accessibles
     bool isARIATableOrCell = roleMapEntry &&
       (roleMapEntry->accTypes & (eTableCell | eTable));
 
@@ -1011,9 +1008,9 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
                  aContext->ARIARoleMap() == &aria::gEmptyRoleMap) {
         roleMapEntry = &aria::gEmptyRoleMap;
 
-      } else if (content->Tag() == nsGkAtoms::dt ||
-                 content->Tag() == nsGkAtoms::li ||
-                 content->Tag() == nsGkAtoms::dd ||
+      } else if (content->IsAnyOfHTMLElements(nsGkAtoms::dt,
+                                              nsGkAtoms::li,
+                                              nsGkAtoms::dd) ||
                  frame->AccessibleType() == eHTMLLiType) {
         nsRoleMapEntry* contextRoleMap = aContext->ARIARoleMap();
         if (!contextRoleMap->IsOfType(eList))
@@ -1059,11 +1056,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         // polyline and image. A 'use' and 'text' graphic elements require
         // special support.
         newAcc = new EnumRoleAccessible(content, document, roles::GRAPHIC);
-      } else if (content->Tag() == nsGkAtoms::svg) {
+      } else if (content->IsSVGElement(nsGkAtoms::svg)) {
         newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
       }
     } else if (content->IsMathMLElement()) {
-      if (content->Tag() == nsGkAtoms::math)
+      if (content->IsMathMLElement(nsGkAtoms::math))
         newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
       else
         newAcc = new HyperTextAccessible(content, document);
@@ -1074,13 +1071,15 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   // of some property that makes this object interesting
   // We don't do this for <body>, <html>, <window>, <dialog> etc. which
   // correspond to the doc accessible and will be created in any case
-  if (!newAcc && content->Tag() != nsGkAtoms::body && content->GetParent() &&
+  if (!newAcc && !content->IsHTMLElement(nsGkAtoms::body) &&
+      content->GetParent() &&
       (roleMapEntry || MustBeAccessible(content, document) ||
-       (isHTML && nsCoreUtils::HasClickListener(content)))) {
+       (content->IsHTMLElement() &&
+        nsCoreUtils::HasClickListener(content)))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
-    if (isHTML) {
+    if (content->IsHTMLElement()) {
       // Interesting HTML container which may have selectable text and/or embedded objects
       newAcc = new HyperTextAccessibleWrap(content, document);
     } else {  // XUL, SVG, MathML etc.
@@ -1298,7 +1297,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     // implementations on each platform for a consistent scripting environment, but
     // then strip out redundant accessibles in the AccessibleWrap class for each platform.
     nsIContent *parent = aContent->GetParent();
-    if (parent && parent->IsXULElement() && parent->Tag() == nsGkAtoms::menu)
+    if (parent && parent->IsXULElement(nsGkAtoms::menu))
       return nullptr;
 #endif
 
@@ -1392,45 +1391,45 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   }
 
   // This method assumes we're in an HTML namespace.
-  nsIAtom* tag = aContent->Tag();
-  if (tag == nsGkAtoms::figcaption) {
+  if (aContent->IsHTMLElement(nsGkAtoms::figcaption)) {
     nsRefPtr<Accessible> accessible =
       new HTMLFigcaptionAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::figure) {
+  if (aContent->IsHTMLElement(nsGkAtoms::figure)) {
     nsRefPtr<Accessible> accessible =
       new HTMLFigureAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::legend) {
+  if (aContent->IsHTMLElement(nsGkAtoms::legend)) {
     nsRefPtr<Accessible> accessible =
       new HTMLLegendAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::option) {
+  if (aContent->IsHTMLElement(nsGkAtoms::option)) {
     nsRefPtr<Accessible> accessible =
       new HTMLSelectOptionAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::optgroup) {
+  if (aContent->IsHTMLElement(nsGkAtoms::optgroup)) {
     nsRefPtr<Accessible> accessible =
       new HTMLSelectOptGroupAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::ul || tag == nsGkAtoms::ol ||
-      tag == nsGkAtoms::dl) {
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                    nsGkAtoms::ol,
+                                    nsGkAtoms::dl)) {
     nsRefPtr<Accessible> accessible =
       new HTMLListAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::a) {
+  if (aContent->IsHTMLElement(nsGkAtoms::a)) {
     // Only some roles truly enjoy life as HTMLLinkAccessibles, for details
     // see closed bug 494807.
     nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aContent);
@@ -1451,13 +1450,13 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     // it unconditionally by tag name. nsBlockFrame creates the list item
     // accessible for other elements styled as list items.
     if (aContext->GetContent() == aContent->GetParent()) {
-      if (tag == nsGkAtoms::dt || tag == nsGkAtoms::li) {
+      if (aContent->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::li)) {
         nsRefPtr<Accessible> accessible =
           new HTMLLIAccessible(aContent, document);
         return accessible.forget();
       }
 
-      if (tag == nsGkAtoms::dd) {
+      if (aContent->IsHTMLElement(nsGkAtoms::dd)) {
         nsRefPtr<Accessible> accessible =
           new HyperTextAccessibleWrap(aContent, document);
         return accessible.forget();
@@ -1467,42 +1466,42 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     return nullptr;
   }
 
-  if (tag == nsGkAtoms::abbr ||
-      tag == nsGkAtoms::acronym ||
-      tag == nsGkAtoms::article ||
-      tag == nsGkAtoms::aside ||
-      tag == nsGkAtoms::blockquote ||
-      tag == nsGkAtoms::form ||
-      tag == nsGkAtoms::footer ||
-      tag == nsGkAtoms::header ||
-      tag == nsGkAtoms::h1 ||
-      tag == nsGkAtoms::h2 ||
-      tag == nsGkAtoms::h3 ||
-      tag == nsGkAtoms::h4 ||
-      tag == nsGkAtoms::h5 ||
-      tag == nsGkAtoms::h6 ||
-      tag == nsGkAtoms::nav ||
-      tag == nsGkAtoms::q ||
-      tag == nsGkAtoms::section ||
-      tag == nsGkAtoms::time) {
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::abbr,
+                                    nsGkAtoms::acronym,
+                                    nsGkAtoms::article,
+                                    nsGkAtoms::aside,
+                                    nsGkAtoms::blockquote,
+                                    nsGkAtoms::form,
+                                    nsGkAtoms::footer,
+                                    nsGkAtoms::header,
+                                    nsGkAtoms::h1,
+                                    nsGkAtoms::h2,
+                                    nsGkAtoms::h3,
+                                    nsGkAtoms::h4,
+                                    nsGkAtoms::h5,
+                                    nsGkAtoms::h6,
+                                    nsGkAtoms::nav,
+                                    nsGkAtoms::q,
+                                    nsGkAtoms::section,
+                                    nsGkAtoms::time)) {
     nsRefPtr<Accessible> accessible =
       new HyperTextAccessibleWrap(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::label) {
+  if (aContent->IsHTMLElement(nsGkAtoms::label)) {
     nsRefPtr<Accessible> accessible =
       new HTMLLabelAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::output) {
+  if (aContent->IsHTMLElement(nsGkAtoms::output)) {
     nsRefPtr<Accessible> accessible =
       new HTMLOutputAccessible(aContent, document);
     return accessible.forget();
   }
 
-  if (tag == nsGkAtoms::progress) {
+  if (aContent->IsHTMLElement(nsGkAtoms::progress)) {
     nsRefPtr<Accessible> accessible =
       new HTMLProgressMeterAccessible(aContent, document);
     return accessible.forget();
@@ -1620,7 +1619,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;
     case eHyperTextType:
-      if (aContent->Tag() != nsGkAtoms::dt && aContent->Tag() != nsGkAtoms::dd)
+      if (!aContent->IsAnyOfHTMLElements(nsGkAtoms::dt, nsGkAtoms::dd))
         newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
 

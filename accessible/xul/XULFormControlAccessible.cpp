@@ -182,7 +182,7 @@ XULButtonAccessible::IsAcceptableChild(Accessible* aPossibleChild) const
   // Button type="menu-button" contains a real button. Get an accessible
   // for it. Ignore dropmarker button which is placed as a last child.
   if (role != roles::PUSHBUTTON ||
-      aPossibleChild->GetContent()->Tag() == nsGkAtoms::dropMarker)
+      aPossibleChild->GetContent()->IsXULElement(nsGkAtoms::dropMarker))
     return false;
 
   return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
@@ -569,9 +569,10 @@ bool
 XULToolbarButtonAccessible::IsSeparator(Accessible* aAccessible)
 {
   nsIContent* content = aAccessible->GetContent();
-  return content && ((content->Tag() == nsGkAtoms::toolbarseparator) ||
-                     (content->Tag() == nsGkAtoms::toolbarspacer) ||
-                     (content->Tag() == nsGkAtoms::toolbarspring)); }
+  return content && content->IsAnyOfXULElements(nsGkAtoms::toolbarseparator,
+                                                nsGkAtoms::toolbarspacer,
+                                                nsGkAtoms::toolbarspring);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
