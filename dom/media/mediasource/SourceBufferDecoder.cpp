@@ -184,9 +184,10 @@ SourceBufferDecoder::GetResource() const
 }
 
 void
-SourceBufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded)
+SourceBufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
+                                         uint32_t aDropped)
 {
-  return mParentDecoder->NotifyDecodedFrames(aParsed, aDecoded);
+  return mParentDecoder->NotifyDecodedFrames(aParsed, aDecoded, aDropped);
 }
 
 void

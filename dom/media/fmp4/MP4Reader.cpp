@@ -567,7 +567,7 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
     if (!eos && NS_FAILED(mVideo.mDecoder->Flush())) {
       NS_WARNING("Failed to skip/flush video when skipping-to-next-keyframe.");
     }
-    mDecoder->NotifyDecodedFrames(parsed, 0);
+    mDecoder->NotifyDecodedFrames(parsed, 0, parsed);
   }
 
   MonitorAutoLock lock(mVideo.mMonitor);
