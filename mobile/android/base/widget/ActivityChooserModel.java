@@ -21,8 +21,11 @@
 package org.mozilla.gecko.widget;
 
 // Mozilla: New import
+import android.content.pm.PackageManager;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.R;
 import java.io.File;
 
 import android.content.BroadcastReceiver;
@@ -736,8 +739,29 @@ public class ActivityChooserModel extends DataSetObservable {
             List<ResolveInfo> resolveInfos = mContext.getPackageManager()
                     .queryIntentActivities(mIntent, 0);
             final int resolveInfoCount = resolveInfos.size();
+
+            /**
+             * Mozilla: Temporary variables to prevent performance degradation in the loop.
+             */
+            final PackageManager packageManager = mContext.getPackageManager();
+            final String channelToRemoveLabel = mContext.getResources().getString(R.string.overlay_share_label);
+
             for (int i = 0; i < resolveInfoCount; i++) {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
+
+                /**
+                 * Mozilla: We want "Add to Firefox" to appear differently inside of Firefox than
+                 * from external applications - override the name and icon here.
+                 *
+                 * Note: we check both the class name and the label to ensure we only change the
+                 * label of the current channel.
+                 */
+                if (ShareDialog.class.getCanonicalName().equals(resolveInfo.activityInfo.name) &&
+                        channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
+                    resolveInfo.labelRes = R.string.overlay_share_send_other;
+                    resolveInfo.icon = R.drawable.share_plane;
+                }
+
                 mActivities.add(new ActivityResolveInfo(resolveInfo));
             }
             return true;
