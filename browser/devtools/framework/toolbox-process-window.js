@@ -41,9 +41,7 @@ let connect = Task.async(function*() {
         openToolbox({ form: addonActor, chrome: true, isTabActor: false });
       });
     } else {
-      gClient.attachProcess().then(aResponse => {
-        openToolbox({ form: aResponse.form, chrome: true });
-      });
+      gClient.listTabs(openToolbox);
     }
   });
 });
@@ -54,7 +52,6 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.profiler.ui.show-platform-data", true);
   Services.prefs.setBoolPref("browser.devedition.theme.showCustomizeButton", false);
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
-  Services.prefs.setBoolPref("browser.dom.window.dump.enabled", true);
 }
 
 window.addEventListener("load", function() {
