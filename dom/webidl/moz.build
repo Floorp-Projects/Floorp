@@ -549,6 +549,7 @@ WEBIDL_FILES = [
     'WifiOptions.webidl',
     'WindowRoot.webidl',
     'Worker.webidl',
+    'WorkerDebuggerGlobalScope.webidl',
     'WorkerGlobalScope.webidl',
     'WorkerLocation.webidl',
     'WorkerNavigator.webidl',
