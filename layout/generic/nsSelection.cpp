@@ -2191,7 +2191,7 @@ static bool IsCell(nsIContent *aContent)
 {
   return ((aContent->Tag() == nsGkAtoms::td ||
            aContent->Tag() == nsGkAtoms::th) &&
-          aContent->IsHTML());
+          aContent->IsHTMLElement());
 }
 
 nsITableCellLayout* 
@@ -2948,7 +2948,7 @@ nsFrameSelection::GetParentTable(nsIContent *aCell) const
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
     if (parent->Tag() == nsGkAtoms::table &&
-        parent->IsHTML()) {
+        parent->IsHTMLElement()) {
       return parent;
     }
   }
@@ -3082,7 +3082,7 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
     return NS_OK;
 
   nsIContent* startContent = static_cast<nsIContent*>(startNode);
-  if (!(startNode->IsElement() && startContent->IsHTML())) {
+  if (!(startNode->IsElement() && startContent->IsHTMLElement())) {
     // Implies a check for being an element; if we ever make this work
     // for non-HTML, need to keep checking for elements.
     return NS_OK;

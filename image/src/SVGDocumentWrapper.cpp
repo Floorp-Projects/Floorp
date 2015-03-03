@@ -410,7 +410,7 @@ SVGDocumentWrapper::GetRootSVGElem()
     return nullptr; // Can happen during destruction
 
   Element* rootElem = mViewer->GetDocument()->GetRootElement();
-  if (!rootElem || !rootElem->IsSVG(nsGkAtoms::svg)) {
+  if (!rootElem || !rootElem->IsSVGElement(nsGkAtoms::svg)) {
     return nullptr;
   }
 

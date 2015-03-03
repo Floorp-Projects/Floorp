@@ -684,9 +684,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  if (!IsHTML() || !docShell) { // no docshell for text/html XHR
-    charsetSource = IsHTML() ? kCharsetFromFallback
-                             : kCharsetFromDocTypeDefault;
+  if (!IsHTMLDocument() || !docShell) { // no docshell for text/html XHR
+    charsetSource = IsHTMLDocument() ? kCharsetFromFallback
+                                     : kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
     TryChannelCharset(aChannel, charsetSource, charset, executor);
     parserCharsetSource = charsetSource;
@@ -778,7 +778,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->SetDocumentCharset(parserCharset, parserCharsetSource);
   mParser->SetCommand(aCommand);
 
-  if (!IsHTML()) {
+  if (!IsHTMLDocument()) {
     MOZ_ASSERT(!loadAsHtml5);
     nsCOMPtr<nsIXMLContentSink> xmlsink;
     NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri,
@@ -863,7 +863,7 @@ nsHTMLDocument::EndLoad()
 void
 nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 {
-  NS_ASSERTION(IsHTML() || aMode == eCompatibility_FullStandards,
+  NS_ASSERTION(IsHTMLDocument() || aMode == eCompatibility_FullStandards,
                "Bad compat mode for XHTML document!");
 
   mCompatMode = aMode;
@@ -1017,7 +1017,8 @@ nsHTMLDocument::GetBody()
   for (nsIContent* child = html->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsHTML(nsGkAtoms::body) || child->IsHTML(nsGkAtoms::frameset)) {
+    if (child->IsHTMLElement(nsGkAtoms::body) ||
+        child->IsHTMLElement(nsGkAtoms::frameset)) {
       return static_cast<nsGenericHTMLElement*>(child);
     }
   }
@@ -1039,7 +1040,7 @@ NS_IMETHODIMP
 nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 {
   nsCOMPtr<nsIContent> newBody = do_QueryInterface(aBody);
-  MOZ_ASSERT(!newBody || newBody->IsHTML(),
+  MOZ_ASSERT(!newBody || newBody->IsHTMLElement(),
              "How could we be an nsIContent but not actually HTML here?");
   ErrorResult rv;
   SetBody(static_cast<nsGenericHTMLElement*>(newBody.get()), rv);
@@ -1056,7 +1057,7 @@ nsHTMLDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
   // body.
   if (!newBody || !(newBody->Tag() == nsGkAtoms::body ||
                     newBody->Tag() == nsGkAtoms::frameset) ||
-      !root || !root->IsHTML() ||
+      !root || !root->IsHTMLElement() ||
       root->Tag() != nsGkAtoms::html) {
     rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
@@ -1410,7 +1411,7 @@ nsHTMLDocument::Open(JSContext* cx,
 {
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
-  if (!IsHTML() || mDisableDocWrite || !IsMasterDocument()) {
+  if (!IsHTMLDocument() || mDisableDocWrite || !IsMasterDocument()) {
     // No calling document.open() on XHTML
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -1756,7 +1757,7 @@ nsHTMLDocument::Close()
 void
 nsHTMLDocument::Close(ErrorResult& rv)
 {
-  if (!IsHTML()) {
+  if (!IsHTMLDocument()) {
     // No calling document.close() on XHTML!
 
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1841,7 +1842,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   NS_ENSURE_STATE(!mTooDeepWriteRecursion);
 
-  if (!IsHTML() || mDisableDocWrite || !IsMasterDocument()) {
+  if (!IsHTMLDocument() || mDisableDocWrite || !IsMasterDocument()) {
     // No calling document.write*() on XHTML!
 
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -1987,7 +1988,7 @@ nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
 static bool MatchItems(nsIContent* aContent, int32_t aNameSpaceID, 
                        nsIAtom* aAtom, void* aData)
 {
-  if (!(aContent->IsElement() && aContent->AsElement()->IsHTML())) {
+  if (!aContent->IsHTMLElement()) {
     return false;
   }
 

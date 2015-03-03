@@ -884,7 +884,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     // Keep testing while startContent is equal to something,
     // eventually we'll run out of ancestors
 
-    if (startContent->IsHTML()) {
+    if (startContent->IsHTMLElement()) {
       nsCOMPtr<mozilla::dom::Link> link(do_QueryInterface(startContent));
       if (link) {
         // Check to see if inside HTML link

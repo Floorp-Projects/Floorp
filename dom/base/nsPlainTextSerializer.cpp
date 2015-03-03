@@ -1773,7 +1773,7 @@ nsPlainTextSerializer::IsCurrentNodeConverted()
 nsIAtom*
 nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsHTMLElement()) {
     return nullptr;
   }
 

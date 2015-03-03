@@ -198,7 +198,7 @@ static void GetStopInformation(nsIFrame* aStopFrame,
                                float *aStopOpacity)
 {
   nsIContent* stopContent = aStopFrame->GetContent();
-  MOZ_ASSERT(stopContent && stopContent->IsSVG(nsGkAtoms::stop));
+  MOZ_ASSERT(stopContent && stopContent->IsSVGElement(nsGkAtoms::stop));
 
   static_cast<SVGStopElement*>(stopContent)->
     GetAnimatedNumberValues(aOffset, nullptr);
@@ -410,7 +410,7 @@ nsSVGLinearGradientFrame::Init(nsIContent*       aContent,
                                nsContainerFrame* aParent,
                                nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::linearGradient),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::linearGradient),
                "Content is not an SVG linearGradient");
 
   nsSVGLinearGradientFrameBase::Init(aContent, aParent, aPrevInFlow);
@@ -519,7 +519,7 @@ nsSVGRadialGradientFrame::Init(nsIContent*       aContent,
                                nsContainerFrame* aParent,
                                nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::radialGradient),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::radialGradient),
                "Content is not an SVG radialGradient");
 
   nsSVGRadialGradientFrameBase::Init(aContent, aParent, aPrevInFlow);

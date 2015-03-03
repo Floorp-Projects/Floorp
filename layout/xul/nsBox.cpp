@@ -468,7 +468,7 @@ nsIFrame::GetOrdinal()
 
   // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();
-  if (content && content->IsXUL()) {
+  if (content && content->IsXULElement()) {
     nsresult error;
     nsAutoString value;
 
@@ -640,7 +640,7 @@ nsIFrame::AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &a
     // ignore 'height' and 'width' attributes if the actual element is not XUL
     // For example, we might be magic XUL frames whose primary content is an HTML
     // <select>
-    if (content && content->IsXUL()) {
+    if (content && content->IsXULElement()) {
         nsAutoString value;
         nsresult error;
 
@@ -741,7 +741,7 @@ nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
     // calc() with percentage is treated like '0' (unset)
 
     nsIContent* content = aBox->GetContent();
-    if (content && content->IsXUL()) {
+    if (content && content->IsXULElement()) {
         nsAutoString value;
         nsresult error;
 
@@ -804,7 +804,7 @@ nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
     // percentages and calc() with percentages are treated like 'none'
 
     nsIContent* content = aBox->GetContent();
-    if (content && content->IsXUL()) {
+    if (content && content->IsXULElement()) {
         nsAutoString value;
         nsresult error;
 
@@ -843,7 +843,7 @@ nsIFrame::AddCSSFlex(nsBoxLayoutState& aState, nsIFrame* aBox, nscoord& aFlex)
 
     // attribute value overrides CSS
     nsIContent* content = aBox->GetContent();
-    if (content && content->IsXUL()) {
+    if (content && content->IsXULElement()) {
         nsresult error;
         nsAutoString value;
 

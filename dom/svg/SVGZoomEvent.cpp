@@ -56,7 +56,7 @@ SVGZoomEvent::SVGZoomEvent(EventTarget* aOwner,
         // (e.g. if this event was created by calling createEvent on a
         // non-SVGDocument), then the "New" and "Previous"
         // properties will be left null which is probably what we want.
-        if (rootElement->IsSVG(nsGkAtoms::svg)) {
+        if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
           SVGSVGElement *SVGSVGElem =
             static_cast<SVGSVGElement*>(rootElement);
 

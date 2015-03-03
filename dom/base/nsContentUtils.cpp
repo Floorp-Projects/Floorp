@@ -4101,7 +4101,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
   nsCOMPtr<nsIDocument> document = aContextNode->OwnerDoc();
-  bool isHTML = document->IsHTML();
+  bool isHTML = document->IsHTMLDocument();
 #ifdef DEBUG
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
   NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
@@ -4120,7 +4120,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
-    if (contextAsContent && !contextAsContent->IsHTML(nsGkAtoms::html)) {
+    if (contextAsContent && !contextAsContent->IsHTMLElement(nsGkAtoms::html)) {
       aRv = ParseFragmentHTML(aFragment, frag,
                               contextAsContent->Tag(),
                               contextAsContent->GetNameSpaceID(),
@@ -4749,8 +4749,9 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
     // as downloadable. If this check fails we will just do the normal thing
     // (i.e. navigate to the resource).
     nsAutoString fileName;
-    if ((!aContent->IsHTML(nsGkAtoms::a) && !aContent->IsHTML(nsGkAtoms::area) &&
-         !aContent->IsSVG(nsGkAtoms::a)) ||
+    if ((!aContent->IsHTMLElement(nsGkAtoms::a) &&
+         !aContent->IsHTMLElement(nsGkAtoms::area) &&
+         !aContent->IsSVGElement(nsGkAtoms::a)) ||
         !aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::download, fileName) ||
         NS_FAILED(aContent->NodePrincipal()->CheckMayLoad(aLinkURI, false, true))) {
       fileName.SetIsVoid(true); // No actionable download attribute was found.
@@ -6895,7 +6896,7 @@ nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
   }
 
   // Check if the content is a web components content insertion point.
-  if (aContent->IsHTML(nsGkAtoms::content)) {
+  if (aContent->IsHTMLElement(nsGkAtoms::content)) {
     return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
   }
 

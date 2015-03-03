@@ -273,7 +273,8 @@ HTMLOptionElement::GetText(nsAString& aText)
         child->NodeType() == nsIDOMNode::CDATA_SECTION_NODE) {
       child->AppendTextTo(text);
     }
-    if (child->IsHTML(nsGkAtoms::script) || child->IsSVG(nsGkAtoms::script)) {
+    if (child->IsHTMLElement(nsGkAtoms::script) ||
+        child->IsSVGElement(nsGkAtoms::script)) {
       child = child->GetNextNonChildNode(this);
     } else {
       child = child->GetNextNode(this);
@@ -336,7 +337,7 @@ HTMLOptionElement::IntrinsicState() const
     state &= ~NS_EVENT_STATE_ENABLED;
   } else {
     nsIContent* parent = GetParent();
-    if (parent && parent->IsHTML(nsGkAtoms::optgroup) &&
+    if (parent && parent->IsHTMLElement(nsGkAtoms::optgroup) &&
         parent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
       state |= NS_EVENT_STATE_DISABLED;
       state &= ~NS_EVENT_STATE_ENABLED;
@@ -355,7 +356,7 @@ HTMLOptionElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
-         parent->IsHTML()) {
+         parent->IsHTMLElement()) {
     HTMLSelectElement* select = HTMLSelectElement::FromContent(parent);
     if (select) {
       return select;

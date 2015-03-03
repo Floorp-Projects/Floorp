@@ -1099,7 +1099,7 @@ IsListItemChild(nsListBoxBodyFrame* aParent, nsIContent* aChild,
                 nsIFrame** aChildFrame)
 {
   *aChildFrame = nullptr;
-  if (!aChild->IsXUL() || aChild->Tag() != nsGkAtoms::listitem) {
+  if (!aChild->IsXULElement() || aChild->Tag() != nsGkAtoms::listitem) {
     return false;
   }
   nsIFrame* existingFrame = aChild->GetPrimaryFrame();

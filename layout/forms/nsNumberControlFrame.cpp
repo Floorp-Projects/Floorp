@@ -530,7 +530,7 @@ nsNumberControlFrame::GetNumberControlFrameForTextField(nsIFrame* aFrame)
   if (content->IsInNativeAnonymousSubtree() &&
       content->GetParent() && content->GetParent()->GetParent()) {
     nsIContent* grandparent = content->GetParent()->GetParent();
-    if (grandparent->IsHTML(nsGkAtoms::input) &&
+    if (grandparent->IsHTMLElement(nsGkAtoms::input) &&
         grandparent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                  nsGkAtoms::number, eCaseMatters)) {
       return do_QueryFrame(grandparent->GetPrimaryFrame());
@@ -552,7 +552,7 @@ nsNumberControlFrame::GetNumberControlFrameForSpinButton(nsIFrame* aFrame)
       content->GetParent() && content->GetParent()->GetParent() &&
       content->GetParent()->GetParent()->GetParent()) {
     nsIContent* greatgrandparent = content->GetParent()->GetParent()->GetParent();
-    if (greatgrandparent->IsHTML(nsGkAtoms::input) &&
+    if (greatgrandparent->IsHTMLElement(nsGkAtoms::input) &&
         greatgrandparent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                       nsGkAtoms::number, eCaseMatters)) {
       return do_QueryFrame(greatgrandparent->GetPrimaryFrame());

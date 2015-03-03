@@ -2894,7 +2894,8 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
     return rv;
   }
   if (nsGkAtoms::start == aAttribute ||
-      (nsGkAtoms::reversed == aAttribute && mContent->IsHTML(nsGkAtoms::ol))) {
+      (nsGkAtoms::reversed == aAttribute &&
+       mContent->IsHTMLElement(nsGkAtoms::ol))) {
     nsPresContext* presContext = PresContext();
 
     // XXX Not sure if this is necessary anymore
@@ -6263,8 +6264,7 @@ static void ComputeVisualOverflowArea(nsLineList& aLines,
 bool
 nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  if (mContent->IsHTML() && (mContent->Tag() == nsGkAtoms::html ||
-                             mContent->Tag() == nsGkAtoms::body))
+  if (mContent->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::body))
     return true;
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
@@ -6801,7 +6801,7 @@ bool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsHTML())
+  if (!content || !content->IsHTMLElement())
     return false;
 
   nsIAtom *localName = content->NodeInfo()->NameAtom();
@@ -6820,7 +6820,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
     return false;
   }
 
-  MOZ_ASSERT(mContent->IsHTML(),
+  MOZ_ASSERT(mContent->IsHTMLElement(),
              "FrameStartsCounterScope should only return true for HTML elements");
 
   // Setup initial list ordinal value
@@ -6847,7 +6847,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
     ordinal = 0;
     for (nsIContent* kid = mContent->GetFirstChild(); kid;
          kid = kid->GetNextSibling()) {
-      if (kid->IsHTML(nsGkAtoms::li)) {
+      if (kid->IsHTMLElement(nsGkAtoms::li)) {
         // FIXME: This isn't right in terms of what CSS says to do for
         // overflow of counters (but it only matters when this node has
         // more than numeric_limits<int32_t>::max() children).

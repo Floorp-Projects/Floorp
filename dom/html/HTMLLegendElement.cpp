@@ -26,7 +26,7 @@ HTMLLegendElement::GetFieldSet() const
 {
   nsIContent* parent = GetParent();
 
-  if (parent && parent->IsHTML(nsGkAtoms::fieldset)) {
+  if (parent && parent->IsHTMLElement(nsGkAtoms::fieldset)) {
     return parent;
   }
 
@@ -140,7 +140,7 @@ already_AddRefed<HTMLFormElement>
 HTMLLegendElement::GetForm()
 {
   Element* form = GetFormElement();
-  MOZ_ASSERT_IF(form, form->IsHTML(nsGkAtoms::form));
+  MOZ_ASSERT_IF(form, form->IsHTMLElement(nsGkAtoms::form));
   nsRefPtr<HTMLFormElement> ret = static_cast<HTMLFormElement*>(form);
   return ret.forget();
 }

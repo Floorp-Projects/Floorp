@@ -305,7 +305,8 @@ private:
                               nsIDocShell* aParentNode);
 
   nsIAtom* TypeAttrName() const {
-    return mOwnerContent->IsXUL() ? nsGkAtoms::type : nsGkAtoms::mozframetype;
+    return mOwnerContent->IsXULElement()
+             ? nsGkAtoms::type : nsGkAtoms::mozframetype;
   }
 
   // Update the permission manager's app-id refcount based on mOwnerContent's

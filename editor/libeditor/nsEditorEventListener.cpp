@@ -1144,7 +1144,7 @@ nsEditorEventListener::IsFileControlTextBox()
     return false;
   }
   nsIContent* parent = root->FindFirstNonChromeOnlyAccessContent();
-  if (!parent || !parent->IsHTML(nsGkAtoms::input)) {
+  if (!parent || !parent->IsHTMLElement(nsGkAtoms::input)) {
     return false;
   }
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(parent);

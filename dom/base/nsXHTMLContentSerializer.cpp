@@ -466,7 +466,7 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
     for (nsIContent* child = aContent->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      if (child->IsHTML(nsGkAtoms::meta) &&
+      if (child->IsHTMLElement(nsGkAtoms::meta) &&
           child->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
         nsAutoString header;
         child->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);

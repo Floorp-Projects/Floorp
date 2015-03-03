@@ -141,22 +141,22 @@ Accessible::Name(nsString& aName)
     return nameFlag;
 
   // In the end get the name from tooltip.
-  if (mContent->IsHTML()) {
+  if (mContent->IsHTMLElement()) {
     if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
-  } else if (mContent->IsXUL()) {
+  } else if (mContent->IsXULElement()) {
     if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
-  } else if (mContent->IsSVG()) {
+  } else if (mContent->IsSVGElement()) {
     // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
     // for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
-      if (childElm->IsSVG(nsGkAtoms::desc)) {
+      if (childElm->IsSVGElement(nsGkAtoms::desc)) {
         nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
         return eNameFromTooltip;
       }
@@ -186,7 +186,7 @@ Accessible::Description(nsString& aDescription)
                            aDescription);
 
   if (aDescription.IsEmpty()) {
-    bool isXUL = mContent->IsXUL();
+    bool isXUL = mContent->IsXULElement();
     if (isXUL) {
       // Try XUL <description control="[id]">description text</description>
       XULDescriptionIterator iter(Document(), mContent);
@@ -199,14 +199,14 @@ Accessible::Description(nsString& aDescription)
 
     if (aDescription.IsEmpty()) {
       // Keep the Name() method logic.
-      if (mContent->IsHTML()) {
+      if (mContent->IsHTMLElement()) {
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aDescription);
-      } else if (mContent->IsXUL()) {
+      } else if (mContent->IsXULElement()) {
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aDescription);
-      } else if (mContent->IsSVG()) {
+      } else if (mContent->IsSVGElement()) {
         for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
              childElm = childElm->GetNextSibling()) {
-          if (childElm->IsSVG(nsGkAtoms::desc)) {
+          if (childElm->IsSVGElement(nsGkAtoms::desc)) {
             nsTextEquivUtils::AppendTextEquivFromContent(this, childElm,
                                                          &aDescription);
             break;
@@ -237,14 +237,14 @@ Accessible::AccessKey() const
     Accessible* label = nullptr;
 
     // Copy access key from label node.
-    if (mContent->IsHTML()) {
+    if (mContent->IsHTMLElement()) {
       // Unless it is labeled via an ancestor <label>, in which case that would
       // be redundant.
       HTMLLabelIterator iter(Document(), this,
                              HTMLLabelIterator::eSkipAncestorLabel);
       label = iter.Next();
 
-    } else if (mContent->IsXUL()) {
+    } else if (mContent->IsXULElement()) {
       XULLabelIterator iter(Document(), mContent);
       label = iter.Next();
     }
@@ -354,7 +354,7 @@ Accessible::VisibilityState()
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
     if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
-      if (deckFrame->GetContent()->IsXUL() &&
+      if (deckFrame->GetContent()->IsXULElement() &&
           deckFrame->GetContent()->Tag() == nsGkAtoms::tabpanels)
         return states::OFFSCREEN;
 
@@ -435,7 +435,7 @@ Accessible::NativeState()
 
     // XXX we should look at layout for non XUL box frames, but need to decide
     // how that interacts with ARIA.
-    if (HasOwnContent() && mContent->IsXUL() && frame->IsBoxFrame()) {
+    if (HasOwnContent() && mContent->IsXULElement() && frame->IsBoxFrame()) {
       const nsStyleXUL* xulStyle = frame->StyleXUL();
       if (xulStyle && frame->IsBoxFrame()) {
         // In XUL all boxes are either vertical or horizontal
@@ -448,7 +448,7 @@ Accessible::NativeState()
   }
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
-  if (HasOwnContent() && mContent->IsXUL() &&
+  if (HasOwnContent() && mContent->IsXULElement() &&
       mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
     state |= states::HASPOPUP;
 
@@ -485,7 +485,7 @@ Accessible::NativeLinkState() const
 bool
 Accessible::NativelyUnavailable() const
 {
-  if (mContent->IsHTML())
+  if (mContent->IsHTMLElement())
     return mContent->AsElement()->State().HasState(NS_EVENT_STATE_DISABLED);
 
   return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
@@ -1519,9 +1519,9 @@ Accessible::RelationByType(RelationType aType)
     case RelationType::LABELLED_BY: {
       Relation rel(new IDRefsIterator(mDoc, mContent,
                                       nsGkAtoms::aria_labelledby));
-      if (mContent->IsHTML()) {
+      if (mContent->IsHTMLElement()) {
         rel.AppendIter(new HTMLLabelIterator(Document(), this));
-      } else if (mContent->IsXUL()) {
+      } else if (mContent->IsXULElement()) {
         rel.AppendIter(new XULLabelIterator(Document(), mContent));
       }
 
@@ -1531,7 +1531,7 @@ Accessible::RelationByType(RelationType aType)
     case RelationType::LABEL_FOR: {
       Relation rel(new RelatedAccIterator(Document(), mContent,
                                           nsGkAtoms::aria_labelledby));
-      if (mContent->Tag() == nsGkAtoms::label && mContent->IsXUL())
+      if (mContent->Tag() == nsGkAtoms::label && mContent->IsXULElement())
         rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::control));
 
       return rel;
@@ -1540,7 +1540,7 @@ Accessible::RelationByType(RelationType aType)
     case RelationType::DESCRIBED_BY: {
       Relation rel(new IDRefsIterator(mDoc, mContent,
                                       nsGkAtoms::aria_describedby));
-      if (mContent->IsXUL())
+      if (mContent->IsXULElement())
         rel.AppendIter(new XULDescriptionIterator(Document(), mContent));
 
       return rel;
@@ -1554,7 +1554,7 @@ Accessible::RelationByType(RelationType aType)
       // which only affects accessibility, by allowing the description to be
       // tied to a control.
       if (mContent->Tag() == nsGkAtoms::description &&
-          mContent->IsXUL())
+          mContent->IsXULElement())
         rel.AppendIter(new IDRefsIterator(mDoc, mContent,
                                           nsGkAtoms::control));
 
@@ -1639,7 +1639,7 @@ Accessible::RelationByType(RelationType aType)
       return Relation();
 
     case RelationType::DEFAULT_BUTTON: {
-      if (mContent->IsHTML()) {
+      if (mContent->IsHTMLElement()) {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(mContent));
         if (control) {
@@ -1874,7 +1874,7 @@ Accessible::ARIAName(nsString& aName)
 ENameValueFlag
 Accessible::NativeName(nsString& aName)
 {
-  if (mContent->IsHTML()) {
+  if (mContent->IsHTMLElement()) {
     Accessible* label = nullptr;
     HTMLLabelIterator iter(Document(), this);
     while ((label = iter.Next())) {
@@ -1890,7 +1890,7 @@ Accessible::NativeName(nsString& aName)
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
 
-  if (mContent->IsXUL()) {
+  if (mContent->IsXULElement()) {
     XULElmName(mDoc, mContent, aName);
     if (!aName.IsEmpty())
       return eNameOK;
@@ -1899,12 +1899,12 @@ Accessible::NativeName(nsString& aName)
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
 
-  if (mContent->IsSVG()) {
+  if (mContent->IsSVGElement()) {
     // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
     // for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
-      if (childElm->IsSVG(nsGkAtoms::title)) {
+      if (childElm->IsSVGElement(nsGkAtoms::title)) {
         nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
         return eNameOK;
       }
@@ -2526,7 +2526,7 @@ Accessible::GetActionRule() const
     return eNoAction;
 
   // Return "click" action on elements that have an attached popup menu.
-  if (mContent->IsXUL())
+  if (mContent->IsXULElement())
     if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
       return eClickAction;
 

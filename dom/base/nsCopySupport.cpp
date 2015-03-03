@@ -505,7 +505,7 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document, &rv);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  NS_ENSURE_TRUE(document->IsHTML(), NS_OK);
+  NS_ENSURE_TRUE(document->IsHTMLDocument(), NS_OK);
 
   // init encoder with document and node
   rv = docEncoder->NativeInit(document, NS_LITERAL_STRING(kHTMLMime),

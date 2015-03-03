@@ -294,7 +294,7 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
   Accessible* descendant = nullptr;
   if (findNode) {
     nsCOMPtr<nsIContent> findContent(do_QueryInterface(findNode));
-    if (findContent && findContent->IsHTML() &&
+    if (findContent && findContent->IsHTMLElement() &&
         findContent->NodeInfo()->Equals(nsGkAtoms::br) &&
         findContent->AttrValueIs(kNameSpaceID_None,
                                  nsGkAtoms::mozeditorbogusnode,
@@ -1692,7 +1692,7 @@ HyperTextAccessible::NativeName(nsString& aName)
 {
   // Check @alt attribute for invalid img elements.
   bool hasImgAlt = false;
-  if (mContent->IsHTML(nsGkAtoms::img)) {
+  if (mContent->IsHTMLElement(nsGkAtoms::img)) {
     hasImgAlt = mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
     if (!aName.IsEmpty())
       return eNameOK;

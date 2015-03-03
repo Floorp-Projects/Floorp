@@ -72,7 +72,7 @@ nsIContent*
 HTMLOptGroupElement::GetSelect()
 {
   nsIContent* parent = this;
-  while ((parent = parent->GetParent()) && parent->IsHTML()) {
+  while ((parent = parent->GetParent()) && parent->IsHTMLElement()) {
     if (parent->Tag() == nsGkAtoms::select) {
       return parent;
     }
@@ -114,7 +114,7 @@ HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     // disabled attribute. We should make sure their state is updated.
     for (nsIContent* child = nsINode::GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      if (child->IsHTML(nsGkAtoms::option)) {
+      if (child->IsHTMLElement(nsGkAtoms::option)) {
         // No need to call |IsElement()| because it's an HTML element.
         child->AsElement()->UpdateState(true);
       }
