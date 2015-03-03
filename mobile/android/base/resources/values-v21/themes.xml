@@ -12,7 +12,6 @@
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="arrowPopupWidth">match_parent</item>
     </style>
 
 </resources>
