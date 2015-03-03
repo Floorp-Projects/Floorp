@@ -668,7 +668,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
                                  NodeMatchContext& aNodeContext)
 {
   int32_t nameSpace = aElement->GetNameSpaceID();
-  nsIAtom* tag = aElement->Tag();
+  nsIAtom* tag = aElement->NodeInfo()->NameAtom();
   nsIAtom* id = aElement->GetID();
   const nsAttrValue* classList = aElement->GetClasses();
 
@@ -1764,7 +1764,7 @@ static bool SelectorMatches(Element* aElement,
     nsIAtom* selectorTag =
       (aTreeMatchContext.mIsHTMLDocument && aElement->IsHTMLElement()) ?
         aSelector->mLowercaseTag : aSelector->mCasedTag;
-    if (selectorTag != aElement->Tag()) {
+    if (selectorTag != aElement->NodeInfo()->NameAtom()) {
       return false;
     }
   }
@@ -1875,7 +1875,7 @@ static bool SelectorMatches(Element* aElement,
           } while (child &&
                    (!IsSignificantChild(child, true, false) ||
                     (child->GetNameSpaceID() == aElement->GetNameSpaceID() &&
-                     child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
+                     child->NodeInfo()->NameAtom()->Equals(nsDependentString(pseudoClass->u.mString)))));
           if (child != nullptr) {
             return false;
           }
@@ -3713,7 +3713,7 @@ AncestorFilter::PushAncestor(Element *aElement)
 #ifdef DEBUG
   mElements.AppendElement(aElement);
 #endif
-  mHashes.AppendElement(aElement->Tag()->hash());
+  mHashes.AppendElement(aElement->NodeInfo()->NameAtom()->hash());
   nsIAtom *id = aElement->GetID();
   if (id) {
     mHashes.AppendElement(id->hash());

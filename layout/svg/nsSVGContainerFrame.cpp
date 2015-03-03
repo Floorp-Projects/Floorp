@@ -381,8 +381,8 @@ nsSVGDisplayContainerFrame::ReflowSVG()
   // come from transforms, which are accounted for by nsDisplayTransform.
   // Note that we rely on |overflow:visible| to allow display list items to be
   // created for our children.
-  MOZ_ASSERT(mContent->Tag() == nsGkAtoms::svg ||
-             (mContent->Tag() == nsGkAtoms::use &&
+  MOZ_ASSERT(mContent->IsSVGElement(nsGkAtoms::svg) ||
+             (mContent->IsSVGElement(nsGkAtoms::use) &&
               mRect.Size() == nsSize(0,0)) ||
              mRect.IsEqualEdges(nsRect()),
              "Only inner-<svg>/<use> is expected to have mRect set");
