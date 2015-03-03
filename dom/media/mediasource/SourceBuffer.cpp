@@ -21,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 #include <time.h>
+#include "TimeUnits.h"
 
 struct JSContext;
 class JSObject;
@@ -286,9 +287,8 @@ SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
 {
   MSE_DEBUG("DoRangeRemoval(%f, %f)", aStart, aEnd);
   if (mTrackBuffer && !IsInfinite(aStart)) {
-    int64_t start = aStart * USECS_PER_S;
-    int64_t end = IsInfinite(aEnd) ? INT64_MAX : (int64_t)(aEnd * USECS_PER_S);
-    mTrackBuffer->RangeRemoval(start, end);
+    mTrackBuffer->RangeRemoval(media::Microseconds::FromSeconds(aStart),
+                               media::Microseconds::FromSeconds(aEnd));
   }
 }
 
