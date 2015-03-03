@@ -188,41 +188,47 @@ AddRawValueRoot(JSContext *cx, JS::Value *vp, const char *name);
 JS_FRIEND_API(void)
 RemoveRawValueRoot(JSContext *cx, JS::Value *vp);
 
-} /* namespace js */
-
 #ifdef JS_DEBUG
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
- * the debugger find them and to support temporarily hacking js_Dump* calls
+ * the debugger find them and to support temporarily hacking js::Dump* calls
  * into other code.
  */
 
 extern JS_FRIEND_API(void)
-js_DumpString(JSString *str);
+DumpString(JSString *str);
 
 extern JS_FRIEND_API(void)
-js_DumpAtom(JSAtom *atom);
+DumpAtom(JSAtom *atom);
 
 extern JS_FRIEND_API(void)
-js_DumpObject(JSObject *obj);
+DumpObject(JSObject *obj);
 
 extern JS_FRIEND_API(void)
-js_DumpChars(const char16_t *s, size_t n);
+DumpChars(const char16_t *s, size_t n);
 
 extern JS_FRIEND_API(void)
-js_DumpValue(const JS::Value &val);
+DumpValue(const JS::Value &val);
 
 extern JS_FRIEND_API(void)
-js_DumpId(jsid id);
+DumpId(jsid id);
 
 extern JS_FRIEND_API(void)
-js_DumpInterpreterFrame(JSContext *cx, js::InterpreterFrame *start = nullptr);
+DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start = nullptr);
+
+extern JS_FRIEND_API(bool)
+DumpPC(JSContext *cx);
+
+extern JS_FRIEND_API(bool)
+DumpScript(JSContext *cx, JSScript *scriptArg);
 
 #endif
 
 extern JS_FRIEND_API(void)
-js_DumpBacktrace(JSContext *cx);
+DumpBacktrace(JSContext *cx);
+
+} // namespace js
 
 namespace JS {
 

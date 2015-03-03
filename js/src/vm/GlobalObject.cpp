@@ -59,7 +59,7 @@ JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 JSObject *
 js::InitViaClassSpec(JSContext *cx, Handle<JSObject*> obj)
 {
-    MOZ_CRASH("js_InitViaClassSpec() should not be called.");
+    MOZ_CRASH("InitViaClassSpec() should not be called.");
 }
 
 static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
@@ -105,7 +105,7 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
     // There are two different kinds of initialization hooks. One of them is
-    // the class js_InitFoo hook, defined in a JSProtoKey-keyed table at the
+    // the class js::InitFoo hook, defined in a JSProtoKey-keyed table at the
     // top of this file. The other lives in the ClassSpec for classes that
     // define it. Classes may use one or the other, but not both.
     ClassInitializerOp init = protoTable[key].init;
