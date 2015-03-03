@@ -2368,6 +2368,24 @@ MediaManager::StopMediaStreams()
   }
 }
 
+bool
+MediaManager::IsWindowActivelyCapturing(uint64_t aWindowId)
+{
+  nsCOMPtr<nsISupportsArray> array;
+  GetActiveMediaCaptureWindows(getter_AddRefs(array));
+  uint32_t len;
+  array->Count(&len);
+  for (uint32_t i = 0; i < len; i++) {
+    nsCOMPtr<nsISupports> window;
+    array->GetElementAt(i, getter_AddRefs(window));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(window));
+    if (win && win->WindowID() == aWindowId) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 GetUserMediaCallbackMediaStreamListener::AudioConfig(bool aEchoOn,
               uint32_t aEcho,
