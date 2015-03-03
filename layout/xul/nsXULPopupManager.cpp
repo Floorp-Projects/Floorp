@@ -1569,7 +1569,7 @@ nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, bool aIsTooltip)
   // fired. In this case, just use the cached node, as the popup is not yet in
   // the list of open popups.
   if (mOpeningPopup && mOpeningPopup->GetCurrentDoc() == aDocument &&
-      aIsTooltip == (mOpeningPopup->Tag() == nsGkAtoms::tooltip)) {
+      aIsTooltip == mOpeningPopup->IsXULElement(nsGkAtoms::tooltip)) {
     node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(GetPopupFrameForContent(mOpeningPopup, false)));
   }
   else {
@@ -2358,13 +2358,12 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
                                    nsIContent* aContent,
                                    bool aOnPopup)
 {
-  int32_t ns = aContent->GetNameSpaceID();
-  nsIAtom *tag = aContent->Tag();
-  if (ns == kNameSpaceID_XUL) {
-    if (tag != nsGkAtoms::menu && tag != nsGkAtoms::menuitem)
+  if (aContent->IsXULElement()) {
+    if (!aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {
       return false;
+    }
   }
-  else if (ns != kNameSpaceID_XHTML || !aOnPopup || tag != nsGkAtoms::option) {
+  else if (!aOnPopup || !aContent->IsHTMLElement(nsGkAtoms::option)) {
     return false;
   }
 
