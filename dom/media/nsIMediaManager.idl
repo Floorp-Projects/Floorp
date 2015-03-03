@@ -12,7 +12,7 @@ interface nsIDOMWindow;
 #define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
 %}
 
-[scriptable, builtinclass, uuid(9b10661f-77b3-47f7-a8de-ee58daaff5d2)]
+[scriptable, builtinclass, uuid(24b23e01-33fd-401f-ba25-6e52658750b0)]
 interface nsIMediaManagerService : nsISupports
 {
   /* return a array of inner windows that have active captures */
@@ -22,4 +22,8 @@ interface nsIMediaManagerService : nsISupports
   void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio,
                                [optional] out boolean aScreenShare, [optional] out boolean aWindowShare,
                                [optional] out boolean aAppShare, [optional] out boolean aBrowserShare);
+
+  /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices
+     sinceTime is milliseconds since 1 January 1970 00:00:00 UTC. 0 = clear all */
+  void sanitizeDeviceIds(in long long sinceWhen);
 };
