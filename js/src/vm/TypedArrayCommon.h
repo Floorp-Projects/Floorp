@@ -481,7 +481,12 @@ class TypedArrayMethods
     typedef typename SomeTypedArray::template OfType<uint8_clamped>::Type Uint8ClampedArrayType;
 
   public:
-    /* subarray(start[, end]) */
+    // subarray(start[, end])
+    // %TypedArray%.prototype.subarray is a self-hosted method, so this code is
+    // only used for shared typed arrays.  We should self-host both methods
+    // eventually (but note TypedArraySubarray will require changes to be used
+    // with shared typed arrays), but we need to rejigger the shared typed
+    // array prototype chain before we can do that.
     static bool
     subarray(JSContext *cx, CallArgs args)
     {
