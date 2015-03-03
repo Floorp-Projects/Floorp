@@ -58,6 +58,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
+#include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
@@ -3581,13 +3582,17 @@ runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    JSRuntime *rt = cx->runtime();
+    if (OffThreadParsingMustWaitForGC(rt))
+        gc::AutoFinishGC finishgc(rt);
+
     void *token = offThreadState.waitUntilDone(cx);
     if (!token) {
         JS_ReportError(cx, "called runOffThreadScript when no compilation is pending");
         return false;
     }
 
-    RootedScript script(cx, JS::FinishOffThreadScript(cx, cx->runtime(), token));
+    RootedScript script(cx, JS::FinishOffThreadScript(cx, rt, token));
     if (!script)
         return false;
 
