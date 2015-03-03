@@ -5524,7 +5524,7 @@ nsDocument::SetupCustomElement(Element* aElement,
     return;
   }
 
-  nsCOMPtr<nsIAtom> tagAtom = aElement->Tag();
+  nsCOMPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
   nsCOMPtr<nsIAtom> typeAtom = aTypeExtension ?
     do_GetAtom(*aTypeExtension) : tagAtom;
 
@@ -6352,7 +6352,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       // Make sure that the element name matches the name in the definition.
       // (e.g. a definition for x-button extending button should match
       // <button is="x-button"> but not <x-button>.
-      if (elem->Tag() != nameAtom) {
+      if (elem->NodeInfo()->NameAtom() != nameAtom) {
         //Skip over this element because definition does not apply.
         continue;
       }
@@ -7101,7 +7101,7 @@ nsDocument::GetTitle(nsString& aTitle)
       break;
 #endif
     case kNameSpaceID_SVG:
-      if (rootElement->Tag() == nsGkAtoms::svg) {
+      if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through

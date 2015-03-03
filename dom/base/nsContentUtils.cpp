@@ -2546,7 +2546,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     // we can't figure out form info.  Append the tag name if it's an element
     // to avoid restoring state for one type of element on another type.
     if (aContent->IsElement()) {
-      KeyAppendString(nsDependentAtomString(aContent->Tag()), aKey);
+      KeyAppendString(nsDependentAtomString(aContent->NodeInfo()->NameAtom()),
+                      aKey);
     }
     else {
       // Append a character that is not "d" or "f" to disambiguate from
@@ -4122,7 +4123,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     
     if (contextAsContent && !contextAsContent->IsHTMLElement(nsGkAtoms::html)) {
       aRv = ParseFragmentHTML(aFragment, frag,
-                              contextAsContent->Tag(),
+                              contextAsContent->NodeInfo()->NameAtom(),
                               contextAsContent->GetNameSpaceID(),
                               (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),

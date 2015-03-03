@@ -731,10 +731,10 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
                 do_QueryInterface(aVisitor.mEvent->originalTarget);
               nsAutoString ot, ct, rt;
               if (originalTarget) {
-                originalTarget->Tag()->ToString(ot);
+                originalTarget->NodeInfo()->NameInfo()->ToString(ot);
               }
-              Tag()->ToString(ct);
-              relatedTarget->Tag()->ToString(rt);
+              NodeInfo()->NameAtom()->ToString(ct);
+              relatedTarget->NodeInfo()->NameAtom()->ToString(rt);
               printf("Stopping %s propagation:"
                      "\n\toriginalTarget=%s \n\tcurrentTarget=%s %s"
                      "\n\trelatedTarget=%s %s \n%s",
@@ -2429,7 +2429,7 @@ AppendEncodedAttributeValue(nsAutoString* aValue, StringBuilder& aBuilder)
 static void
 StartElement(Element* aContent, StringBuilder& aBuilder)
 {
-  nsIAtom* localName = aContent->Tag();
+  nsIAtom* localName = aContent->NodeInfo()->NameAtom();
   int32_t tagNS = aContent->GetNameSpaceID();
 
   aBuilder.Append("<");
@@ -2541,7 +2541,7 @@ ShouldEscape(nsIContent* aParent)
     }
   }
 
-  nsIAtom* tag = aParent->Tag();
+  nsIAtom* tag = aParent->NodeInfo()->NameAtom();
   if (sFilter.mightContain(tag)) {
     for (uint32_t i = 0; i < ArrayLength(nonEscapingElements); ++i) {
       if (tag == nonEscapingElements[i]) {
@@ -2590,7 +2590,7 @@ IsVoidTag(Element* aElement)
   if (!aElement->IsHTMLElement()) {
     return false;
   }
-  return IsVoidTag(aElement->Tag());
+  return IsVoidTag(aElement->NodeInfo()->NameAtom());
 }
 
 /* static */
@@ -2669,7 +2669,7 @@ Serialize(FragmentOrElement* aRoot, bool aDescendentsOnly, nsAString& aOut)
         nsIContent* elem = static_cast<nsIContent*>(current);
         if (elem->IsHTMLElement() || elem->IsSVGElement() ||
             elem->IsMathMLElement()) {
-          builder.Append(elem->Tag());
+          builder.Append(elem->NodeInfo()->NameAtom());
         } else {
           builder.Append(current->NodeName());
         }
@@ -2840,13 +2840,13 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
 
   nsAutoScriptLoaderDisabler sld(doc);
 
-  nsIAtom* contextLocalName = Tag();
+  nsIAtom* contextLocalName = NodeInfo()->NameAtom();
   int32_t contextNameSpaceID = GetNameSpaceID();
 
   ShadowRoot* shadowRoot = ShadowRoot::FromNode(this);
   if (shadowRoot) {
     // Fix up the context to be the host of the ShadowRoot.
-    contextLocalName = shadowRoot->GetHost()->Tag();
+    contextLocalName = shadowRoot->GetHost()->NodeInfo()->NameAtom();
     contextNameSpaceID = shadowRoot->GetHost()->GetNameSpaceID();
   }
 

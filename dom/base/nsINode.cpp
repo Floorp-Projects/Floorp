@@ -1672,7 +1672,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         // HTML template elements and ShadowRoot hosts need
         // to be checked to ensure that they are not inserted into
         // the hosted content.
-        aNewChild->Tag() == nsGkAtoms::_template ||
+        aNewChild->NodeInfo()->NameAtom() == nsGkAtoms::_template ||
         aNewChild->GetShadowRoot()) &&
        nsContentUtils::ContentIsHostIncludingDescendantOf(aParent,
                                                           aNewChild))) {

@@ -405,7 +405,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    MOZ_ASSERT(thisContent->Tag() != nsGkAtoms::link,
+    MOZ_ASSERT(thisContent->NodeInfo()->NameAtom() != nsGkAtoms::link,
                "<link> is not 'inline', and needs different CSP checks");
     if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent,
                                            thisContent->NodePrincipal(),

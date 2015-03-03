@@ -454,10 +454,8 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
                                             nsIContent *aOriginalElement,
                                             nsAString& aStr)
 {
-  nsIAtom *name = aContent->Tag();
-  if (aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
-      mRewriteEncodingDeclaration &&
-      name == nsGkAtoms::head) {
+  if (mRewriteEncodingDeclaration &&
+      aContent->IsHTMLElement(nsGkAtoms::head)) {
 
     // Check if there already are any content-type meta children.
     // If there are, they will be modified to use the correct charset.
@@ -501,12 +499,9 @@ nsXHTMLContentSerializer::AfterElementEnd(nsIContent * aContent,
 {
   NS_ASSERTION(!mIsHTMLSerializer, "nsHTMLContentSerializer shouldn't call this method !");
 
-  int32_t namespaceID = aContent->GetNameSpaceID();
-  nsIAtom *name = aContent->Tag();
-
   // this method is not called by nsHTMLContentSerializer
   // so we don't have to check HTML element, just XHTML
-  if (kNameSpaceID_XHTML == namespaceID && name == nsGkAtoms::body) {
+  if (aContent->IsHTMLElement(nsGkAtoms::body)) {
     --mInBody;
   }
 }
@@ -533,21 +528,17 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
                  aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
-  nsIAtom *name = aContent->Tag();
-  int32_t namespaceID = aContent->GetNameSpaceID();
-
-  if (namespaceID == kNameSpaceID_XHTML) {
-    if (name == nsGkAtoms::br &&
-        (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
-        PreLevel() > 0) {
-      AppendNewLineToString(aStr);
-      return false;
-    }
-
-    if (name == nsGkAtoms::body) {
-      ++mInBody;
-    }
+  if (aContent->IsHTMLElement(nsGkAtoms::br) &&
+      (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
+      PreLevel() > 0) {
+    AppendNewLineToString(aStr);
+    return false;
   }
+
+  if (aContent->IsHTMLElement(nsGkAtoms::body)) {
+    ++mInBody;
+  }
+
   return true;
 }
 
@@ -561,13 +552,10 @@ nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
   aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
                  aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
-  nsIAtom *name = aContent->Tag();
-  int32_t namespaceID = aContent->GetNameSpaceID();
-
   // this method is not called by nsHTMLContentSerializer
   // so we don't have to check HTML element, just XHTML
-  if (namespaceID == kNameSpaceID_XHTML) {
-    if (mIsCopying && name == nsGkAtoms::ol) {
+  if (aContent->IsHTMLElement()) {
+    if (mIsCopying && aContent->IsHTMLElement(nsGkAtoms::ol)) {
       NS_ASSERTION((!mOLStateStack.IsEmpty()), "Cannot have an empty OL Stack");
       /* Though at this point we must always have an state to be deleted as all 
       the OL opening tags are supposed to push an olState object to the stack*/
@@ -583,7 +571,8 @@ nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
         bool isContainer;
 
         parserService->
-          IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(name),
+          IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(
+                        aContent->NodeInfo()->NameAtom()),
                       isContainer);
         if (!isContainer) {
           // non-container HTML elements are already closed,
@@ -847,18 +836,15 @@ void
 nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
   if (!ShouldMaintainPreLevel() ||
-      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+      !aNode->IsHTMLElement()) {
     return;
   }
 
-  nsIAtom *name = aNode->Tag();
-
   if (IsElementPreformatted(aNode) ||
-      name == nsGkAtoms::script ||
-      name == nsGkAtoms::style ||
-      name == nsGkAtoms::noscript ||
-      name == nsGkAtoms::noframes
-      ) {
+      aNode->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                 nsGkAtoms::style,
+                                 nsGkAtoms::noscript,
+                                 nsGkAtoms::noframes)) {
     PreLevel()++;
   }
 }
@@ -867,17 +853,15 @@ void
 nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
   if (!ShouldMaintainPreLevel() ||
-      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+      !aNode->IsHTMLElement()) {
     return;
   }
 
-  nsIAtom *name = aNode->Tag();
   if (IsElementPreformatted(aNode) ||
-      name == nsGkAtoms::script ||
-      name == nsGkAtoms::style ||
-      name == nsGkAtoms::noscript ||
-      name == nsGkAtoms::noframes
-    ) {
+      aNode->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                 nsGkAtoms::style,
+                                 nsGkAtoms::noscript,
+                                 nsGkAtoms::noframes)) {
     --PreLevel();
   }
 }
