@@ -672,6 +672,57 @@ js::intrinsic_TypedArrayLength(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
+js::intrinsic_MoveTypedArrayElements(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+
+    Rooted<TypedArrayObject*> tarray(cx, &args[0].toObject().as<TypedArrayObject>());
+    uint32_t to = uint32_t(args[1].toInt32());
+    uint32_t from = uint32_t(args[2].toInt32());
+    uint32_t count = uint32_t(args[3].toInt32());
+
+    MOZ_ASSERT(count > 0,
+               "don't call this method if copying no elements, because then "
+               "the not-neutered requirement is wrong");
+
+    if (tarray->hasBuffer() && tarray->buffer()->isNeutered()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        return false;
+    }
+
+    // Don't multiply by |tarray->bytesPerElement()| in case the compiler can't
+    // strength-reduce multiplication by 1/2/4/8 into the equivalent shift.
+    const size_t ElementShift = TypedArrayShift(tarray->type());
+
+    MOZ_ASSERT((UINT32_MAX >> ElementShift) > to);
+    uint32_t byteDest = to << ElementShift;
+
+    MOZ_ASSERT((UINT32_MAX >> ElementShift) > from);
+    uint32_t byteSrc = from << ElementShift;
+
+    MOZ_ASSERT((UINT32_MAX >> ElementShift) >= count);
+    uint32_t byteSize = count << ElementShift;
+
+#ifdef DEBUG
+    {
+        uint32_t viewByteLength = tarray->byteLength();
+        MOZ_ASSERT(byteSize <= viewByteLength);
+        MOZ_ASSERT(byteDest < viewByteLength);
+        MOZ_ASSERT(byteSrc < viewByteLength);
+        MOZ_ASSERT(byteDest <= viewByteLength - byteSize);
+        MOZ_ASSERT(byteSrc <= viewByteLength - byteSize);
+    }
+#endif
+
+    uint8_t *data = static_cast<uint8_t*>(tarray->viewData());
+    mozilla::PodMove(&data[byteDest], &data[byteSrc], byteSize);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+bool
 CallSelfHostedNonGenericMethod(JSContext *cx, CallArgs args)
 {
     // This function is called when a self-hosted method is invoked on a
@@ -908,6 +959,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsTypedArray",            intrinsic_IsTypedArray,            1,0),
     JS_FN("TypedArrayLength",        intrinsic_TypedArrayLength,        1,0),
+
+    JS_FN("MoveTypedArrayElements",  intrinsic_MoveTypedArrayElements,  4,0),
 
     JS_FN("CallTypedArrayMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<TypedArrayObject>>, 2, 0),

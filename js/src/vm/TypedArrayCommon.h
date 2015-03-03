@@ -569,6 +569,11 @@ class TypedArrayMethods
 
     /* copyWithin(target, start[, end]) */
     // ES6 draft rev 26, 22.2.3.5
+    // %TypedArray%.prototype.copyWithin is a self-hosted method, so this code
+    // is only used for shared typed arrays.  We should self-host both methods
+    // eventually (but note TypedArrayCopyWithin will require changes to be
+    // usable for shared typed arrays), but we need to rejigger the shared
+    // typed array prototype chain before we can do that.
     static bool
     copyWithin(JSContext *cx, CallArgs args)
     {
