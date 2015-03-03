@@ -116,7 +116,7 @@ static nsresult ReportParseError(nsIFrame* aFrame, const char16_t* aAttribute,
   nsIContent* content = aFrame->GetContent();
 
   const char16_t* params[] =
-    { aValue, aAttribute, content->Tag()->GetUTF16String() };
+    { aValue, aAttribute, content->NodeInfo()->NameAtom()->GetUTF16String() };
 
   return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                          NS_LITERAL_CSTRING("Layout: MathML"),
@@ -643,7 +643,8 @@ ListMathMLTree(nsIFrame* atLeast)
   nsIFrame* f = atLeast;
   for ( ; f; f = f->GetParent()) {
     nsIContent* c = f->GetContent();
-    if (!c || c->Tag() == nsGkAtoms::math || c->Tag() == nsGkAtoms::body)
+    if (!c || c->IsMathMLElement(nsGkAtoms::math) ||
+        c->NodeInfo()->NameAtom(nsGkAtoms::body))  // XXXbaku which kind of body tag?
       break;
   }
   if (!f) f = atLeast;
@@ -1135,7 +1136,8 @@ nsMathMLmtdFrame::GetRowSpan()
   int32_t rowspan = 1;
 
   // Don't look at the content's rowspan if we're not an mtd or a pseudo cell.
-  if ((mContent->Tag() == nsGkAtoms::mtd_) && !StyleContext()->GetPseudo()) {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtd_) &&
+      !StyleContext()->GetPseudo()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
     if (!value.IsEmpty()) {
@@ -1155,7 +1157,8 @@ nsMathMLmtdFrame::GetColSpan()
   int32_t colspan = 1;
 
   // Don't look at the content's colspan if we're not an mtd or a pseudo cell.
-  if ((mContent->Tag() == nsGkAtoms::mtd_) && !StyleContext()->GetPseudo()) {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtd_) &&
+      !StyleContext()->GetPseudo()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
     if (!value.IsEmpty()) {

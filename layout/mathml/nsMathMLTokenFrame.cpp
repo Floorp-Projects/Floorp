@@ -37,7 +37,7 @@ eMathMLFrameType
 nsMathMLTokenFrame::GetMathMLFrameType()
 {
   // treat everything other than <mi> as ordinary...
-  if (mContent->Tag() != nsGkAtoms::mi_) {
+  if (!mContent->IsMathMLElement(nsGkAtoms::mi_)) {
     return eMathMLFrameType_Ordinary;
   }
 
@@ -75,7 +75,7 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
       }
     }
   }
-  if (mContent->Tag() == nsGkAtoms::mi_ && childCount == 1) {
+  if (mContent->IsMathMLElement(nsGkAtoms::mi_) && childCount == 1) {
     nsAutoString data;
     if (!nsContentUtils::GetNodeTextContent(mContent, false, data)) {
       NS_RUNTIMEABORT("OOM");
