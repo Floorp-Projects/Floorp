@@ -30,35 +30,35 @@ var sel = window.getSelection();
 var smoothScrollPref = "general.smoothScroll";
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.setBoolPref(smoothScrollPref, false);
 t.scrollTop = 0;
 var targetY = target.getBoundingClientRect().top;
 
 SimpleTest.waitForFocus(function() {
-  is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to waitForFocus");
-  t.focus();
-  is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to focus change");
-
-  // Move the caret to scroll it into view
-  sel.collapse(target.firstChild, 2);
-  synthesizeKey("VK_LEFT", {});
-
-  // Delay until next repaint in case stuff is asynchronous. Also
-  // take a trip through the event loop.
-  setTimeout(function() {
-    window.mozRequestAnimationFrame(function() {
-      is(sel.anchorNode, target.firstChild, "Should have selected 'target' text node");
-      is(sel.anchorOffset, 1, "Selection should have moved left one character");
-      // We should not have needed to scroll the caret into view
-      is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled");
-      SpecialPowers.clearUserPref(smoothScrollPref);
-      SimpleTest.finish();
-    });
-    // Make sure repainting actually happens.
-    target.style.background = "yellow";
-  });
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
 });
+function runTest() {
+    is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to waitForFocus");
+    t.focus();
+    is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to focus change");
 
+    // Move the caret to scroll it into view
+    sel.collapse(target.firstChild, 2);
+    synthesizeKey("VK_LEFT", {});
+
+    // Delay until next repaint in case stuff is asynchronous. Also
+    // take a trip through the event loop.
+    setTimeout(function() {
+      window.mozRequestAnimationFrame(function() {
+        is(sel.anchorNode, target.firstChild, "Should have selected 'target' text node");
+        is(sel.anchorOffset, 1, "Selection should have moved left one character");
+        // We should not have needed to scroll the caret into view
+        is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled");
+        SimpleTest.finish();
+      });
+      // Make sure repainting actually happens.
+      target.style.background = "yellow";
+    });
+}
 </script>
 </pre>
 </body>

@@ -13,9 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
   /** Test for Bug 291082 **/
 
 
-  // Turn off Spatial Navigation because it hijacks arrow keydown events.
-  SpecialPowers.setBoolPref("snav.enabled", false);
-
   SimpleTest.waitForExplicitFinish();
 
   function preventDefault(event) {
@@ -23,6 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
   }
 
   function test() {
+    // Turn off Spatial Navigation because it hijacks arrow keydown events.
+    SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
+  }
+
+  function runTest() {
     document.getElementById("keydown").addEventListener("keydown", preventDefault);
     document.getElementById("keypress").addEventListener("keypress", preventDefault);
 
