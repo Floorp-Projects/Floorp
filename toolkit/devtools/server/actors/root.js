@@ -10,6 +10,9 @@ const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main");
+const makeDebugger = require("./utils/make-debugger");
+
+loader.lazyRequireGetter(this, "StyleSheetActor", "devtools/server/actors/stylesheets", true);
 
 loader.lazyGetter(this, "ppmm", () => {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
@@ -96,10 +99,14 @@ function RootActor(aConnection, aParameters) {
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._extraActors = {};
 
-  this._globalActorPool = new ActorPool(this.conn);
-  this.conn.addActorPool(this._globalActorPool);
+  // Map of DOM stylesheets to StyleSheetActors
+  this._styleSheetActors = new Map();
 
-  this._chromeActor = null;
+  // This creates a Debugger instance for chrome debugging all globals.
+  this.makeDebugger = makeDebugger.bind(null, {
+    findDebuggees: dbg => dbg.findAllGlobals(),
+    shouldAddNewGlobalAsDebuggee: () => true
+  });
 }
 
 RootActor.prototype = {
@@ -153,16 +160,7 @@ RootActor.prototype = {
     getUsedFontFaces: true,
     // Trait added in Gecko 38, indicating that all features necessary for
     // grabbing allocations from the MemoryActor are available for the performance tool
-    memoryActorAllocations: true,
-    // Whether root actor exposes tab actors
-    // if allowChromeProcess is true, you can fetch a ChromeActor instance
-    // to debug chrome and any non-content ressource via attachProcess request
-    // if allocChromeProcess is defined, but not true, it means that root actor
-    // no longer expose tab actors, but also that attachProcess forbids
-    // exposing actors for security reasons
-    get allowChromeProcess() {
-      return DebuggerServer.allowChromeProcess;
-    },
+    memoryActorAllocations: true
   },
 
   /**
@@ -176,6 +174,66 @@ RootActor.prototype = {
       testConnectionPrefix: this.conn.prefix,
       traits: this.traits
     };
+  },
+
+  /**
+   * This is true for the root actor only, used by some child actors
+   */
+  get isRootActor() true,
+
+  /**
+   * The (chrome) window, for use by child actors
+   */
+  get window() isWorker ? null : Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
+
+  /**
+   * The list of all windows
+   */
+  get windows() {
+    return this.docShells.map(docShell => {
+      return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
+    });
+  },
+
+  /**
+   * URL of the chrome window.
+   */
+  get url() { return this.window ? this.window.document.location.href : null; },
+
+  /**
+   * The top level window's docshell
+   */
+  get docShell() {
+    return this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell);
+  },
+
+  /**
+   * The list of all docshells
+   */
+  get docShells() {
+    let docShellsEnum = this.docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let docShells = [];
+    while (docShellsEnum.hasMoreElements()) {
+      docShells.push(docShellsEnum.getNext());
+    }
+
+    return docShells;
+  },
+
+  /**
+   * Getter for the best nsIWebProgress for to watching this window.
+   */
+  get webProgress() {
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
   },
 
   /**
@@ -193,6 +251,8 @@ RootActor.prototype = {
       this._parameters.onShutdown();
     }
     this._extraActors = null;
+    this._styleSheetActors.clear();
+    this._styleSheetActors = null;
   },
 
   /* The 'listTabs' request and the 'tabListChanged' notification. */
@@ -320,34 +380,13 @@ RootActor.prototype = {
   },
 
   onAttachProcess: function (aRequest) {
-    if (!DebuggerServer.allowChromeProcess) {
-      return { error: "forbidden",
-               message: "You are not allowed to debug chrome." };
+    let mm = ppmm.getChildAt(aRequest.id);
+    if (!mm) {
+      return { error: "noProcess",
+               message: "There is no process with id '" + aRequest.id + "'." };
     }
-    if (("id" in aRequest) && typeof(aRequest.id) != "number") {
-      return { error: "wrongParameter",
-               message: "attachProcess requires a valid `id` attribute." };
-    }
-    // If the request doesn't contains id parameter or id is 0
-    // (id == 0, based on onListProcesses implementation)
-    if ((!("id" in aRequest)) || aRequest.id === 0) {
-      if (!this._chromeActor) {
-        // Create a ChromeActor for the parent process
-        let { ChromeActor } = require("devtools/server/actors/chrome");
-        this._chromeActor = new ChromeActor(this.conn);
-        this._globalActorPool.addActor(this._chromeActor);
-      }
-
-      return { form: this._chromeActor.form() };
-    } else {
-      let mm = ppmm.getChildAt(aRequest.id);
-      if (!mm) {
-        return { error: "noProcess",
-                 message: "There is no process with id '" + aRequest.id + "'." };
-      }
-      return DebuggerServer.connectToContent(this.conn, mm)
-                           .then(form => ({ form }));
-    }
+    return DebuggerServer.connectToContent(this.conn, mm)
+                         .then(form => ({ form: form }));
   },
 
   /* This is not in the spec, but it's used by tests. */
@@ -366,6 +405,60 @@ RootActor.prototype = {
   /* Support for DebuggerServer.addGlobalActor. */
   _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors,
+
+  /* ThreadActor hooks. */
+
+  /**
+   * Prepare to enter a nested event loop by disabling debuggee events.
+   */
+  preNest: function() {
+    // Disable events in all open windows.
+    let e = Services.wm.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.suppressEventHandling(true);
+      windowUtils.suspendTimeouts();
+    }
+  },
+
+  /**
+   * Prepare to exit a nested event loop by enabling debuggee events.
+   */
+  postNest: function(aNestData) {
+    // Enable events in all open windows.
+    let e = Services.wm.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.resumeTimeouts();
+      windowUtils.suppressEventHandling(false);
+    }
+  },
+
+  /**
+   * Create or return the StyleSheetActor for a style sheet. This method
+   * is here because the Style Editor and Inspector share style sheet actors.
+   *
+   * @param DOMStyleSheet styleSheet
+   *        The style sheet to create an actor for.
+   * @return StyleSheetActor actor
+   *         The actor for this style sheet.
+   *
+   */
+  createStyleSheetActor: function(styleSheet) {
+    if (this._styleSheetActors.has(styleSheet)) {
+      return this._styleSheetActors.get(styleSheet);
+    }
+    let actor = new StyleSheetActor(styleSheet, this);
+    this._styleSheetActors.set(styleSheet, actor);
+
+    this._globalActorPool.addActor(actor);
+
+    return actor;
+  },
 
   /**
    * Remove the extra actor (added by DebuggerServer.addGlobalActor or
