@@ -5,16 +5,6 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        Base application theme. This could be overridden by GeckoBaseTheme
-        in other res/values-XXX/themes.xml.
-    -->
-    <style name="GeckoBase" parent="@android:style/Theme.Holo.Light">
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-    </style>
-
     <style name="GeckoStartPane" parent="Gecko.Dialog"/>
     
 </resources>
