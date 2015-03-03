@@ -969,7 +969,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
 
     docShell->GetRestoringDocument(&restoring);
     if (!restoring) {
-      NS_ASSERTION(mDocument->IsXUL() || // readyState for XUL is bogus
+      NS_ASSERTION(mDocument->IsXULDocument() || // readyState for XUL is bogus
                    mDocument->GetReadyStateEnum() ==
                      nsIDocument::READYSTATE_INTERACTIVE ||
                    // test_stricttransportsecurity.html has old-style
@@ -2195,7 +2195,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   // The document will fill in the document sheets when we create the presshell
 
   if (aDocument->IsBeingUsedAsImage()) {
-    MOZ_ASSERT(aDocument->IsSVG(),
+    MOZ_ASSERT(aDocument->IsSVGDocument(),
                "Do we want to skip most sheets for this new image type?");
 
     // SVG-as-an-image must be kept as light and small as possible. We
@@ -2275,7 +2275,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     styleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, sheet);
   }
 
-  if (!aDocument->IsSVG()) {
+  if (!aDocument->IsSVGDocument()) {
     // !!! IMPORTANT - KEEP THIS BLOCK IN SYNC WITH
     // !!! SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded.
 

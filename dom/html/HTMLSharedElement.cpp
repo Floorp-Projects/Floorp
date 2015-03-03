@@ -157,7 +157,7 @@ SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
 
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
-    if (child->IsHTML(nsGkAtoms::base) &&
+    if (child->IsHTMLElement(nsGkAtoms::base) &&
         child->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
       if (aMustMatch && child != aMustMatch) {
         return;
@@ -194,7 +194,7 @@ SetBaseTargetUsingFirstBaseWithTarget(nsIDocument* aDocument,
 
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
-    if (child->IsHTML(nsGkAtoms::base) &&
+    if (child->IsHTMLElement(nsGkAtoms::base) &&
         child->HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
       if (aMustMatch && child != aMustMatch) {
         return;

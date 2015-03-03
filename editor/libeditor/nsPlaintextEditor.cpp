@@ -1268,7 +1268,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   {
     dom::Element* rootElement = GetRoot();
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-    if (!rootElement->IsHTML(nsGkAtoms::body)) {
+    if (!rootElement->IsHTMLElement(nsGkAtoms::body)) {
       rv = docEncoder->SetNativeContainerNode(rootElement);
       NS_ENSURE_SUCCESS(rv, rv);
     }

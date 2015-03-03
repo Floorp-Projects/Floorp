@@ -633,7 +633,7 @@ ImageDocument::CreateSyntheticDocument()
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::img, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);

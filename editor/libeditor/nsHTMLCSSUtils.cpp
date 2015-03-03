@@ -588,7 +588,7 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
   nsresult res = RemoveCSSProperty(*element, *aProperty, aPropertyValue);
   NS_ENSURE_SUCCESS(res, res);
 
-  if (!element->IsHTML(nsGkAtoms::span) ||
+  if (!element->IsHTMLElement(nsGkAtoms::span) ||
       nsHTMLEditor::HasAttributes(element)) {
     return NS_OK;
   }

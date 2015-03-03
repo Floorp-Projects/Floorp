@@ -281,7 +281,7 @@ txMozillaXMLOutput::endElement()
 
     // Handle html-elements
     if (!mNoFixup) {
-        if (element->IsHTML()) {
+        if (element->IsHTMLElement()) {
             rv = endHTMLElement(element);
             NS_ENSURE_SUCCESS(rv, rv);
         }

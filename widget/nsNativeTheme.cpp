@@ -61,7 +61,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
   bool isXULCheckboxRadio = 
     (aWidgetType == NS_THEME_CHECKBOX ||
      aWidgetType == NS_THEME_RADIO) &&
-    aFrame->GetContent()->IsXUL();
+    aFrame->GetContent()->IsXULElement();
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
@@ -80,7 +80,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
     // <input type=number> needs special handling since its nested native
     // anonymous <input type=text> takes focus for it.
     if (aWidgetType == NS_THEME_NUMBER_INPUT &&
-        frameContent->IsHTML(nsGkAtoms::input)) {
+        frameContent->IsHTMLElement(nsGkAtoms::input)) {
       nsNumberControlFrame *numberControlFrame = do_QueryFrame(aFrame);
       if (numberControlFrame && numberControlFrame->IsFocused()) {
         flags |= NS_EVENT_STATE_FOCUS;
@@ -140,7 +140,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (!content)
     return false;
 
-  if (content->IsHTML())
+  if (content->IsHTMLElement())
     return content->HasAttr(kNameSpaceID_None, aAtom);
 
   // For XML/XUL elements, an attribute must be equal to the literal
@@ -173,7 +173,7 @@ nsNativeTheme::GetProgressValue(nsIFrame* aFrame)
 {
   // When we are using the HTML progress element,
   // we can get the value from the IDL property.
-  if (aFrame && aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
+  if (aFrame && aFrame->GetContent()->IsHTMLElement(nsGkAtoms::progress)) {
     return static_cast<HTMLProgressElement*>(aFrame->GetContent())->Value();
   }
 
@@ -186,7 +186,7 @@ nsNativeTheme::GetProgressMaxValue(nsIFrame* aFrame)
 {
   // When we are using the HTML progress element,
   // we can get the max from the IDL property.
-  if (aFrame && aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
+  if (aFrame && aFrame->GetContent()->IsHTMLElement(nsGkAtoms::progress)) {
     return static_cast<HTMLProgressElement*>(aFrame->GetContent())->Max();
   }
 
@@ -201,7 +201,7 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected)
 
   nsIContent* content = aFrame->GetContent();
 
-  if (content->IsXUL()) {
+  if (content->IsXULElement()) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the checked state
     aFrame = aFrame->GetParent();
@@ -250,7 +250,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 
   nsIContent* content = aFrame->GetContent();
 
-  if (content->IsXUL()) {
+  if (content->IsXULElement()) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the state
     return CheckBooleanAttr(aFrame->GetParent(), nsGkAtoms::indeterminate);
@@ -349,7 +349,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_LISTBOX ||
           aWidgetType == NS_THEME_DROPDOWN) &&
-         aFrame->GetContent()->IsHTML() &&
+         aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
                                                NS_AUTHOR_SPECIFIED_BORDER |
                                                NS_AUTHOR_SPECIFIED_BACKGROUND);
@@ -367,7 +367,7 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates)
     return false;
   }
 
-  if (content->IsHTML()) {
+  if (content->IsHTMLElement()) {
     return aEventStates.HasState(NS_EVENT_STATE_DISABLED);
   }
 
@@ -395,7 +395,7 @@ nsNativeTheme::IsHTMLContent(nsIFrame *aFrame)
     return false;
   }
   nsIContent* content = aFrame->GetContent();
-  return content && content->IsHTML();
+  return content && content->IsHTMLElement();
 }
 
 
@@ -544,7 +544,7 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
   if (!aFrame || !aFrame->GetContent())
     return false;
 
-  if (aFrame->GetContent()->IsHTML(nsGkAtoms::progress)) {
+  if (aFrame->GetContent()->IsHTMLElement(nsGkAtoms::progress)) {
     return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
   }
 

@@ -155,7 +155,7 @@ HTMLLabelIterator::Next()
   Accessible* walkUp = mAcc->Parent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpElm = walkUp->GetContent();
-    if (walkUpElm->IsHTML()) {
+    if (walkUpElm->IsHTMLElement()) {
       if (walkUpElm->Tag() == nsGkAtoms::label &&
           !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
         mLabelFilter = eSkipAncestorLabel; // prevent infinite loop

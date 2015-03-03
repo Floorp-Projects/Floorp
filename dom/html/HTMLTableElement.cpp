@@ -119,7 +119,7 @@ NS_INTERFACE_MAP_END
       /* TBodies */                                                  \
       for (nsIContent* _node = mParent->nsINode::GetFirstChild();    \
            _node; _node = _node->GetNextSibling()) {                 \
-        if (_node->IsHTML(nsGkAtoms::tbody)) {                       \
+        if (_node->IsHTMLElement(nsGkAtoms::tbody)) {                \
           rowGroup = static_cast<HTMLTableSectionElement*>(_node);   \
           rows = rowGroup->Rows();                                   \
           do { /* gives scoping */                                   \
@@ -474,7 +474,7 @@ HTMLTableElement::CreateTBody()
   for (nsIContent* child = nsINode::GetLastChild();
        child;
        child = child->GetPreviousSibling()) {
-    if (child->IsHTML(nsGkAtoms::tbody)) {
+    if (child->IsHTMLElement(nsGkAtoms::tbody)) {
       referenceNode = child->GetNextSibling();
       break;
     }
@@ -552,7 +552,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
     for (nsIContent* child = nsINode::GetLastChild();
          child;
          child = child->GetPreviousSibling()) {
-      if (child->IsHTML(nsGkAtoms::tbody)) {
+      if (child->IsHTMLElement(nsGkAtoms::tbody)) {
         rowGroup = child;
         break;
       }

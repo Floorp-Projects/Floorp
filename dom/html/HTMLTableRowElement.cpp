@@ -51,9 +51,10 @@ HTMLTableSectionElement*
 HTMLTableRowElement::GetSection() const
 {
   nsIContent* parent = GetParent();
-  if (parent && parent->IsHTML() && (parent->Tag() == nsGkAtoms::thead ||
-                                     parent->Tag() == nsGkAtoms::tbody ||
-                                     parent->Tag() == nsGkAtoms::tfoot)) {
+  if (parent && parent->IsHTMLElement() &&
+      (parent->Tag() == nsGkAtoms::thead ||
+       parent->Tag() == nsGkAtoms::tbody ||
+       parent->Tag() == nsGkAtoms::tfoot)) {
     return static_cast<HTMLTableSectionElement*>(parent);
   }
   return nullptr;
@@ -124,7 +125,7 @@ IsCell(nsIContent *aContent, int32_t aNamespaceID,
   nsIAtom* tag = aContent->Tag();
 
   return ((tag == nsGkAtoms::td || tag == nsGkAtoms::th) &&
-          aContent->IsHTML());
+          aContent->IsHTMLElement());
 }
 
 nsIHTMLCollection*

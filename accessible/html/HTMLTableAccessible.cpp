@@ -951,7 +951,7 @@ HTMLTableAccessible::IsProbablyLayoutTable()
 
   for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
        childElm = childElm->GetNextSibling()) {
-    if (!childElm->IsHTML())
+    if (!childElm->IsHTMLElement())
       continue;
 
     if (childElm->Tag() == nsGkAtoms::col ||
@@ -965,10 +965,10 @@ HTMLTableAccessible::IsProbablyLayoutTable()
     if (childElm->Tag() == nsGkAtoms::tbody) {
       for (nsIContent* rowElm = childElm->GetFirstChild(); rowElm;
            rowElm = rowElm->GetNextSibling()) {
-        if (rowElm->IsHTML() && rowElm->Tag() == nsGkAtoms::tr) {
+        if (rowElm->IsHTMLElement() && rowElm->Tag() == nsGkAtoms::tr) {
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
-            if (cellElm->IsHTML()) {
+            if (cellElm->IsHTMLElement()) {
 
               if (cellElm->NodeInfo()->Equals(nsGkAtoms::th)) {
                 RETURN_LAYOUT_ANSWER(false,

@@ -642,7 +642,7 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   // This could fire in OOM situations
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
-  NS_ASSERTION(!aElement->OwnerDoc()->IsHTML() ||
+  NS_ASSERTION(!aElement->OwnerDoc()->IsHTMLDocument() ||
                mIdContentList.IndexOf(aElement) >= 0,
                "Removing id entry that doesn't exist");
 
@@ -5500,7 +5500,7 @@ nsIDocument::CreateElement(const nsAString& aTagName, ErrorResult& rv)
     return nullptr;
   }
 
-  bool needsLowercase = IsHTML() && !IsLowercaseASCII(aTagName);
+  bool needsLowercase = IsHTMLDocument() && !IsLowercaseASCII(aTagName);
   nsAutoString lcTagName;
   if (needsLowercase) {
     nsContentUtils::ASCIIToLower(aTagName, lcTagName);
@@ -5703,7 +5703,7 @@ already_AddRefed<CDATASection>
 nsIDocument::CreateCDATASection(const nsAString& aData,
                                 ErrorResult& rv)
 {
-  if (IsHTML()) {
+  if (IsHTMLDocument()) {
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
@@ -6161,7 +6161,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   // Only convert NAME to lowercase in HTML documents. Note that NAME is
   // options.extends.
   nsAutoString lcName;
-  if (IsHTML()) {
+  if (IsHTMLDocument()) {
     nsContentUtils::ASCIIToLower(aOptions.mExtends, lcName);
   } else {
     lcName.Assign(aOptions.mExtends);
@@ -7024,7 +7024,7 @@ Element*
 nsIDocument::GetHtmlElement() const
 {
   Element* rootElement = GetRootElement();
-  if (rootElement && rootElement->IsHTML(nsGkAtoms::html))
+  if (rootElement && rootElement->IsHTMLElement(nsGkAtoms::html))
     return rootElement;
   return nullptr;
 }
@@ -7041,7 +7041,7 @@ nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
   for (nsIContent* child = html->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsHTML(aTag))
+    if (child->IsHTMLElement(aTag))
       return child->AsElement();
   }
   return nullptr;
@@ -7228,7 +7228,7 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (!mHasWarnedAboutBoxObjects && !aElement->IsXUL()) {
+  if (!mHasWarnedAboutBoxObjects && !aElement->IsXULElement()) {
     mHasWarnedAboutBoxObjects = true;
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("BoxObjects"), this,
@@ -8179,7 +8179,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   // make sure that layout is started as needed.  But we can skip that
   // part if we have no presshell or if it's already done an initial
   // reflow.
-  if ((!IsHTML() ||
+  if ((!IsHTMLDocument() ||
        (aType > Flush_ContentAndNotify && mPresShell &&
         !mPresShell->DidInitialize())) &&
       (mParser || mWeakSink)) {
@@ -8352,7 +8352,7 @@ nsRadioGroupStruct*
 nsDocument::GetRadioGroupInternal(const nsAString& aName) const
 {
 #ifdef DEBUG
-  if (IsHTML()) {
+  if (IsHTMLDocument()) {
     nsAutoString lcName;
     ToLowerCase(aName, lcName);
     MOZ_ASSERT(aName == lcName);
@@ -8371,7 +8371,7 @@ nsRadioGroupStruct*
 nsDocument::GetRadioGroup(const nsAString& aName) const
 {
   nsAutoString tmKey(aName);
-  if (IsHTML()) {
+  if (IsHTMLDocument()) {
     ToLowerCase(tmKey); //should case-insensitive.
   }
 
@@ -8382,7 +8382,7 @@ nsRadioGroupStruct*
 nsDocument::GetOrCreateRadioGroup(const nsAString& aName)
 {
   nsAutoString tmKey(aName);
-  if (IsHTML()) {
+  if (IsHTMLDocument()) {
     ToLowerCase(tmKey); //should case-insensitive.
   }
 
@@ -8452,7 +8452,7 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
     else if (++index >= numRadios) {
       index = 0;
     }
-    NS_ASSERTION(static_cast<nsGenericHTMLFormElement*>(radioGroup->mRadioButtons[index])->IsHTML(nsGkAtoms::input),
+    NS_ASSERTION(static_cast<nsGenericHTMLFormElement*>(radioGroup->mRadioButtons[index])->IsHTMLElement(nsGkAtoms::input),
                  "mRadioButtons holding a non-radio button");
     radio = static_cast<HTMLInputElement*>(radioGroup->mRadioButtons[index]);
   } while (radio->Disabled() && radio != currentRadio);

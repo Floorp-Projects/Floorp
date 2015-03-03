@@ -167,7 +167,7 @@ Attr::GetNameAtom(nsIContent* aContent)
   if (!mNsAware &&
       mNodeInfo->NamespaceID() == kNameSpaceID_None &&
       aContent->IsInHTMLDocument() &&
-      aContent->IsHTML()) {
+      aContent->IsHTMLElement()) {
     nsString name;
     mNodeInfo->GetName(name);
     nsAutoString lowercaseName;

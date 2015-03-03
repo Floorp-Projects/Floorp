@@ -530,7 +530,7 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
             current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
           DocumentFragment* frag = static_cast<DocumentFragment*>(current);
           nsIContent* host = frag->GetHost();
-          if (host && host->IsHTML(nsGkAtoms::_template)) {
+          if (host && host->IsHTMLElement(nsGkAtoms::_template)) {
             current = host;
           }
         }
@@ -1093,7 +1093,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
           NS_ENSURE_SUCCESS(rv, rv);
         }
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        if (content && content->IsHTML(nsGkAtoms::tr)) {
+        if (content && content->IsHTMLElement(nsGkAtoms::tr)) {
           nsINode* n = content;
           if (!prevNode) {
             // Went from a non-<tr> to a <tr>
@@ -1411,7 +1411,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
 
   // also consider ourselves in a text widget if we can't find an html document
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-  if (!(htmlDoc && mDocument->IsHTML())) {
+  if (!(htmlDoc && mDocument->IsHTMLDocument())) {
     mIsTextWidget = true;
     mSelection = aSelection;
     // mMimeType is set to text/plain when encoding starts.
@@ -1856,7 +1856,7 @@ nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
   MOZ_ASSERT(aNode);
   nsCOMPtr<Element> element = do_QueryInterface(aNode);
   return element &&
-         element->IsHTML(nsGkAtoms::br) &&
+         element->IsHTMLElement(nsGkAtoms::br) &&
          element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                               NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
@@ -2015,11 +2015,12 @@ nsHTMLCopyEncoder::GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorA
       break;
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    if (!content || !content->IsHTML() || (content->Tag() != nsGkAtoms::tr    &&
-                                           content->Tag() != nsGkAtoms::thead &&
-                                           content->Tag() != nsGkAtoms::tbody &&
-                                           content->Tag() != nsGkAtoms::tfoot &&
-                                           content->Tag() != nsGkAtoms::table)) {
+    if (!content || !content->IsHTMLElement() ||
+        (content->Tag() != nsGkAtoms::tr    &&
+         content->Tag() != nsGkAtoms::thead &&
+         content->Tag() != nsGkAtoms::tbody &&
+         content->Tag() != nsGkAtoms::tfoot &&
+         content->Tag() != nsGkAtoms::table)) {
       break;
     }
     ++j;

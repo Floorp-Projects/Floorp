@@ -195,7 +195,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
     desiredRows = 0;
   }
   else if (baseElement->Tag() == nsGkAtoms::select &&
-           baseElement->IsHTML()) {
+           baseElement->IsHTMLElement()) {
     min.width = CalcMaxRowWidth();
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::size, size);
@@ -1787,7 +1787,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
   nsIContent* baseElement = GetBaseElement();
 
   if (baseElement && baseElement->Tag() == nsGkAtoms::select &&
-      baseElement->IsHTML()) {
+      baseElement->IsHTMLElement()) {
     // If we are an intrinsically sized select widget, we may need to
     // resize, if the widest item was removed or a new item was added.
     // XXX optimize this more
@@ -4319,7 +4319,7 @@ nsTreeBodyFrame::GetBaseElement()
 
       if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
           (ni->Equals(nsGkAtoms::select) &&
-           content->IsHTML()))
+           content->IsHTMLElement()))
         return content;
     }
 

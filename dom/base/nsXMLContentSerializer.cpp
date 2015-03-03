@@ -766,9 +766,9 @@ bool
 nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAtom,
                                      int32_t aAttrNamespaceID, const nsAString& aValueString)
 {
-  bool isHtml = aContent->IsHTML();
-  bool isXul = aContent->IsXUL();
-  bool isSvg = aContent->IsSVG();
+  bool isHtml = aContent->IsHTMLElement();
+  bool isXul = aContent->IsXULElement();
+  bool isSvg = aContent->IsSVGElement();
 
   if (aAttrNamespaceID == kNameSpaceID_None &&
       (isHtml || isXul || isSvg) &&

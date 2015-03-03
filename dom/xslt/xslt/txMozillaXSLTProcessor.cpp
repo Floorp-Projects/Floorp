@@ -194,7 +194,7 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             NS_ASSERTION(domdoc, "unable to get ownerdocument");
             nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
 
-            if (doc && doc->IsHTML()) {
+            if (doc && doc->IsHTMLDocument()) {
                 format.mMethod = eHTMLOutput;
             } else {
                 format.mMethod = eXMLOutput;

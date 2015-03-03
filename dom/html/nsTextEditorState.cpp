@@ -133,7 +133,7 @@ nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
   aWrapProp = eHTMLTextWrap_Soft; // the default
 
   nsAutoString wrap;
-  if (aContent->IsHTML()) {
+  if (aContent->IsHTMLElement()) {
     static nsIContent::AttrValuesArray strings[] =
       {&nsGkAtoms::HARD, &nsGkAtoms::OFF, nullptr};
 

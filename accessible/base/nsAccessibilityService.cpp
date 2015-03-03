@@ -893,7 +893,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
   nsImageFrame* imageFrame = do_QueryFrame(frame);
-  NS_ASSERTION(imageFrame && content->IsHTML() && content->Tag() == nsGkAtoms::area,
+  NS_ASSERTION(imageFrame && content->IsHTMLElement() &&
+               content->Tag() == nsGkAtoms::area,
                "Unknown case of not main content for the frame!");
 #endif
     return nullptr;
@@ -901,7 +902,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
   nsImageFrame* imageFrame = do_QueryFrame(frame);
-  NS_ASSERTION(!imageFrame || !content->IsHTML() || content->Tag() != nsGkAtoms::area,
+  NS_ASSERTION(!imageFrame || !content->IsHTMLElement() ||
+               content->Tag() != nsGkAtoms::area,
                "Image map manages the area accessible creation!");
 #endif
 
@@ -931,7 +933,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return newAcc;
   }
 
-  bool isHTML = content->IsHTML();
+  bool isHTML = content->IsHTMLElement();
   if (isHTML && content->Tag() == nsGkAtoms::map) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
@@ -1021,7 +1023,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   // Accessible XBL types and deck stuff are used in XUL only currently.
-  if (!newAcc && content->IsXUL()) {
+  if (!newAcc && content->IsXULElement()) {
     // No accessible for not selected deck panel and its children.
     if (!aContext->IsXULTabpanels()) {
       nsDeckFrame* deckFrame = do_QueryFrame(frame->GetParent());
@@ -1050,7 +1052,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   if (!newAcc) {
-    if (content->IsSVG()) {
+    if (content->IsSVGElement()) {
       nsSVGPathGeometryFrame* pathGeometryFrame = do_QueryFrame(frame);
       if (pathGeometryFrame) {
         // A graphic elements: rect, circle, ellipse, line, path, polygon,
@@ -1060,7 +1062,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       } else if (content->Tag() == nsGkAtoms::svg) {
         newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
       }
-    } else if (content->IsMathML()){
+    } else if (content->IsMathMLElement()) {
       if (content->Tag() == nsGkAtoms::math)
         newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
       else
@@ -1264,7 +1266,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
     for (nsIContent* child = listItem->GetFirstChild(); child;
          child = child->GetNextSibling()) {
-      if (child->IsXUL(nsGkAtoms::listcell) && child != aContent) {
+      if (child->IsXULElement(nsGkAtoms::listcell) && child != aContent) {
         accessible = new XULListCellAccessibleWrap(aContent, aDoc);
         break;
       }
@@ -1296,7 +1298,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     // implementations on each platform for a consistent scripting environment, but
     // then strip out redundant accessibles in the AccessibleWrap class for each platform.
     nsIContent *parent = aContent->GetParent();
-    if (parent && parent->IsXUL() && parent->Tag() == nsGkAtoms::menu)
+    if (parent && parent->IsXULElement() && parent->Tag() == nsGkAtoms::menu)
       return nullptr;
 #endif
 

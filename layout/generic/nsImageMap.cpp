@@ -759,7 +759,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, bool& aFoundArea,
   for (i = 0; i < n; i++) {
     nsIContent *child = aParent->GetChildAt(i);
 
-    if (child->IsHTML()) {
+    if (child->IsHTMLElement()) {
       // If we haven't determined that the map element contains an
       // <a> element yet, then look for <area>.
       if (!aFoundAnchor && child->Tag() == nsGkAtoms::area) {
@@ -926,7 +926,7 @@ nsImageMap::AttributeChanged(nsIDocument*  aDocument,
   // are the only cases we care about.
   if ((aElement->NodeInfo()->Equals(nsGkAtoms::area) ||
        aElement->NodeInfo()->Equals(nsGkAtoms::a)) &&
-      aElement->IsHTML() &&
+      aElement->IsHTMLElement() &&
       aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::shape ||
        aAttribute == nsGkAtoms::coords)) {

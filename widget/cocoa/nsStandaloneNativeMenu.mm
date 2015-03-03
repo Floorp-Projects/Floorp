@@ -38,7 +38,7 @@ nsStandaloneNativeMenu::Init(nsIDOMElement * aDOMElement)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIAtom * tag = content->Tag();
-  if (!content->IsXUL() ||
+  if (!content->IsXULElement() ||
       (tag != nsGkAtoms::menu && tag != nsGkAtoms::menupopup))
     return NS_ERROR_FAILURE;
 

@@ -872,7 +872,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
     do_QueryInterface(aContent->OwnerDoc());
-  if (!xulDoc && !aContent->IsXUL())
+  if (!xulDoc && !aContent->IsXULElement())
     return true;
 
     // For XUL we do visibility checks.
@@ -890,7 +890,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
   if (control)
     return true;
 
-  if (aContent->IsHTML()) {
+  if (aContent->IsHTMLElement()) {
     nsIAtom* tag = aContent->Tag();
 
     // HTML area, label and legend elements are never focusable, so
@@ -900,7 +900,7 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
         tag == nsGkAtoms::legend)
       return true;
 
-  } else if (aContent->IsXUL()) {
+  } else if (aContent->IsXULElement()) {
     // XUL label elements are never focusable, so we need to check for them
     // explicitly before giving up.
     if (aContent->Tag() == nsGkAtoms::label)
@@ -1126,7 +1126,7 @@ EventStateManager::IsRemoteTarget(nsIContent* target) {
   // <browser/iframe remote=true> from XUL
   if ((target->Tag() == nsGkAtoms::browser ||
        target->Tag() == nsGkAtoms::iframe) &&
-      target->IsXUL() &&
+      target->IsXULElement() &&
       target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
                           nsGkAtoms::_true, eIgnoreCase)) {
     return true;
@@ -1387,7 +1387,7 @@ EventStateManager::FireContextClick()
     nsIAtom *tag = mGestureDownContent->Tag();
     bool allowedToDispatch = true;
 
-    if (mGestureDownContent->IsXUL()) {
+    if (mGestureDownContent->IsXULElement()) {
       if (tag == nsGkAtoms::scrollbar ||
           tag == nsGkAtoms::scrollbarbutton ||
           tag == nsGkAtoms::button)
@@ -1408,7 +1408,7 @@ EventStateManager::FireContextClick()
         }
       }
     }
-    else if (mGestureDownContent->IsHTML()) {
+    else if (mGestureDownContent->IsHTMLElement()) {
       nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
       if (formCtrl) {
@@ -2646,7 +2646,7 @@ static bool
 NodeAllowsClickThrough(nsINode* aNode)
 {
   while (aNode) {
-    if (aNode->IsElement() && aNode->AsElement()->IsXUL()) {
+    if (aNode->IsXULElement()) {
       mozilla::dom::Element* element = aNode->AsElement();
       static nsIContent::AttrValuesArray strings[] =
         {&nsGkAtoms::always, &nsGkAtoms::never, nullptr};
@@ -2888,7 +2888,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             EnsureDocument(mPresContext);
             if (mDocument) {
 #ifdef XP_MACOSX
-              if (!activeContent || !activeContent->IsXUL())
+              if (!activeContent || !activeContent->IsXULElement())
 #endif
                 fm->ClearFocus(mDocument->GetWindow());
               fm->SetFocusedWindow(mDocument->GetWindow());
@@ -4807,7 +4807,7 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
    * the current link. We want to make sure that the UI gets informed when they
    * are actually removed from the DOM.
    */
-  if (aContent->IsHTML() &&
+  if (aContent->IsHTMLElement() &&
       (aContent->Tag() == nsGkAtoms::a || aContent->Tag() == nsGkAtoms::area) &&
       (aContent->AsElement()->State().HasAtLeastOneOfStates(NS_EVENT_STATE_FOCUS |
                                                             NS_EVENT_STATE_HOVER))) {

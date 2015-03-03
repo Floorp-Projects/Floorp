@@ -180,13 +180,13 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
   for (nsIContent* content = aFrame->GetContent(); content;
        content = content->GetFlattenedTreeParent()) {
     nsIAtom* tag = content->Tag();
-    if (content->IsHTML() && stopAt && tag == stopAt) {
+    if (content->IsHTMLElement() && stopAt && tag == stopAt) {
       break;
     }
     if (HasTouchListener(content) || HasMouseListener(content)) {
       return true;
     }
-    if (content->IsHTML()) {
+    if (content->IsHTMLElement()) {
       if (tag == nsGkAtoms::button ||
           tag == nsGkAtoms::input ||
           tag == nsGkAtoms::select ||
@@ -204,7 +204,7 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
                                nsGkAtoms::_true, eIgnoreCase)) {
         return true;
       }
-    } else if (content->IsXUL()) {
+    } else if (content->IsXULElement()) {
       nsIAtom* tag = content->Tag();
       // See nsCSSFrameConstructor::FindXULTagData. This code is not
       // really intended to be used with XUL, though.

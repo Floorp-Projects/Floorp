@@ -352,7 +352,7 @@ IsElementAnchor(nsIContent* aContent)
 {
   // Make sure we are dealing with either an <A> or <AREA> element in the HTML
   // or XHTML namespace.
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsHTMLElement()) {
     return false;
   }
   nsIAtom* nameAtom = aContent->Tag();
@@ -2620,7 +2620,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   }
   nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
   if (frameElement &&
-      frameElement->IsHTML(nsGkAtoms::iframe) &&
+      frameElement->IsHTMLElement(nsGkAtoms::iframe) &&
       !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
       !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
     return NS_OK;
@@ -13426,7 +13426,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   if (IsElementAnchor(aContent)) {
-    MOZ_ASSERT(aContent->IsHTML());
+    MOZ_ASSERT(aContent->IsHTMLElement());
     nsAutoString referrer;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);

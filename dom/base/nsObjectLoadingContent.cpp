@@ -965,7 +965,7 @@ nsObjectLoadingContent::BuildParametersArray()
 
   int32_t start = 0, end = content->GetAttrCount(), step = 1;
   // HTML attributes are stored in reverse order.
-  if (content->IsHTML() && content->IsInHTMLDocument()) {
+  if (content->IsHTMLElement() && content->IsInHTMLDocument()) {
     start = end - 1;
     end = -1;
     step = -1;
@@ -2895,7 +2895,7 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
-  if (!thisContent->IsHTML() || mContentType.IsEmpty()) {
+  if (!thisContent->IsHTMLElement() || mContentType.IsEmpty()) {
     // Don't let custom fallback handlers run outside HTML, tags without a
     // determined type should always just be alternate content
     aType = eFallbackAlternate;
@@ -2909,7 +2909,7 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
     // Show alternate content instead, if it exists
     for (nsIContent* child = thisContent->GetFirstChild();
          child; child = child->GetNextSibling()) {
-      if (!child->IsHTML(nsGkAtoms::param) &&
+      if (!child->IsHTMLElement(nsGkAtoms::param) &&
           nsStyleUtil::IsSignificantChild(child, true, false)) {
         aType = eFallbackAlternate;
         break;

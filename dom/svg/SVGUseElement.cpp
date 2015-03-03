@@ -216,7 +216,7 @@ SVGUseElement::CreateAnonymousContent()
 
   LookupHref();
   nsIContent* targetContent = mSource.get();
-  if (!targetContent || !targetContent->IsSVG())
+  if (!targetContent || !targetContent->IsSVGElement())
     return nullptr;
 
   // make sure target is valid type for <use>
@@ -248,7 +248,7 @@ SVGUseElement::CreateAnonymousContent()
     for (nsCOMPtr<nsIContent> content = GetParent();
          content;
          content = content->GetParent()) {
-      if (content->IsSVG(nsGkAtoms::use) &&
+      if (content->IsSVGElement(nsGkAtoms::use) &&
           static_cast<SVGUseElement*>(content.get())->mOriginal == mOriginal) {
         return nullptr;
       }
@@ -268,7 +268,7 @@ SVGUseElement::CreateAnonymousContent()
   if (!newcontent)
     return nullptr;
 
-  if (newcontent->IsSVG(nsGkAtoms::symbol)) {
+  if (newcontent->IsSVGElement(nsGkAtoms::symbol)) {
     nsIDocument *document = GetComposedDoc();
     if (!document)
       return nullptr;
@@ -312,8 +312,7 @@ SVGUseElement::CreateAnonymousContent()
     newcontent = svgNode;
   }
 
-  if (newcontent->IsSVG() && (newcontent->Tag() == nsGkAtoms::svg ||
-                              newcontent->Tag() == nsGkAtoms::symbol)) {
+  if (newcontent->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol)) {
     nsSVGElement *newElement = static_cast<nsSVGElement*>(newcontent.get());
 
     if (mLengthAttributes[ATTR_WIDTH].IsExplicitlySet())
@@ -342,8 +341,7 @@ SVGUseElement::DestroyAnonymousContent()
 bool
 SVGUseElement::OurWidthAndHeightAreUsed() const
 {
-  return mClone && mClone->IsSVG() && (mClone->Tag() == nsGkAtoms::svg ||
-                                       mClone->Tag() == nsGkAtoms::symbol);
+  return mClone && mClone->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol);
 }
 
 //----------------------------------------------------------------------

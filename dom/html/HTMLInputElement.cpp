@@ -1885,7 +1885,7 @@ HTMLInputElement::GetList() const
   }
 
   Element* element = doc->GetElementById(dataListId);
-  if (!element || !element->IsHTML(nsGkAtoms::datalist)) {
+  if (!element || !element->IsHTMLElement(nsGkAtoms::datalist)) {
     return nullptr;
   }
 
