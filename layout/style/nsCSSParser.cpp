@@ -5326,18 +5326,29 @@ CSSParserImpl::ParseAttributeSelector(int32_t&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
+  bool gotEOF = false;
   if (! GetToken(true)) { // premature EOF
+    // Treat this just like we saw a ']', but do still output the
+    // warning, similar to what ExpectSymbol does.
     REPORT_UNEXPECTED_EOF(PEAttSelInnerEOF);
-    return eSelectorParsingStatus_Error;
+    gotEOF = true;
   }
-  if ((eCSSToken_Symbol == mToken.mType) ||
+  if (gotEOF ||
+      (eCSSToken_Symbol == mToken.mType) ||
       (eCSSToken_Includes == mToken.mType) ||
       (eCSSToken_Dashmatch == mToken.mType) ||
       (eCSSToken_Beginsmatch == mToken.mType) ||
       (eCSSToken_Endsmatch == mToken.mType) ||
       (eCSSToken_Containsmatch == mToken.mType)) {
     uint8_t func;
-    if (eCSSToken_Includes == mToken.mType) {
+    // Important: Check the EOF/']' case first, since if gotEOF we
+    // don't want to be examining mToken.
+    if (gotEOF || ']' == mToken.mSymbol) {
+      aDataMask |= SEL_MASK_ATTRIB;
+      aSelector.AddAttribute(nameSpaceID, attr);
+      func = NS_ATTR_FUNC_SET;
+    }
+    else if (eCSSToken_Includes == mToken.mType) {
       func = NS_ATTR_FUNC_INCLUDES;
     }
     else if (eCSSToken_Dashmatch == mToken.mType) {
@@ -5351,11 +5362,6 @@ CSSParserImpl::ParseAttributeSelector(int32_t&       aDataMask,
     }
     else if (eCSSToken_Containsmatch == mToken.mType) {
       func = NS_ATTR_FUNC_CONTAINSMATCH;
-    }
-    else if (']' == mToken.mSymbol) {
-      aDataMask |= SEL_MASK_ATTRIB;
-      aSelector.AddAttribute(nameSpaceID, attr);
-      func = NS_ATTR_FUNC_SET;
     }
     else if ('=' == mToken.mSymbol) {
       func = NS_ATTR_FUNC_EQUALS;
@@ -5372,11 +5378,15 @@ CSSParserImpl::ParseAttributeSelector(int32_t&       aDataMask,
       }
       if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
         nsAutoString  value(mToken.mIdent);
+        bool gotClosingBracket;
         if (! GetToken(true)) { // premature EOF
+          // Report a warning, but then treat it as a closing bracket.
           REPORT_UNEXPECTED_EOF(PEAttSelCloseEOF);
-          return eSelectorParsingStatus_Error;
+          gotClosingBracket = true;
+        } else {
+          gotClosingBracket = mToken.IsSymbol(']');
         }
-        if (mToken.IsSymbol(']')) {
+        if (gotClosingBracket) {
           bool isCaseSensitive = true;
 
           // For cases when this style sheet is applied to an HTML
