@@ -749,6 +749,52 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
     return false;
 }
 
+// ES6 draft 20150304 %TypedArray%.prototype.subarray
+function TypedArraySubarray(begin, end) {
+    // Step 1.
+    var obj = this;
+
+    // Steps 2-3.
+    // This function is not generic.
+    if (!IsObject(obj) || !IsTypedArray(obj)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, begin, end,
+                            "TypedArraySubarray");
+    }
+
+    // Steps 4-6.
+    var buffer = TypedArrayBuffer(obj);
+    var srcLength = TypedArrayLength(obj);
+
+    // Steps 7-9.
+    var relativeBegin = ToInteger(begin);
+    var beginIndex = relativeBegin < 0 ? std_Math_max(srcLength + relativeBegin, 0)
+                                       : std_Math_min(relativeBegin, srcLength);
+
+    // Steps 10-12.
+    var relativeEnd = end === undefined ? srcLength : ToInteger(end);
+    var endIndex = relativeEnd < 0 ? std_Math_max(srcLength + relativeEnd, 0)
+                                   : std_Math_min(relativeEnd, srcLength);
+
+    // Step 13.
+    var newLength = std_Math_max(endIndex - beginIndex, 0);
+
+    // Steps 14-15, altered to use a shift instead of a size for performance.
+    var elementShift = TypedArrayElementShift(obj);
+
+    // Step 16.
+    var srcByteOffset = TypedArrayByteOffset(obj);
+
+    // Step 17.
+    var beginByteOffset = srcByteOffset + (beginIndex << elementShift);
+
+    // Steps 18-20.
+    var defaultConstructor = _ConstructorForTypedArray(obj);
+    var constructor = SpeciesConstructor(obj, defaultConstructor);
+
+    // Steps 21-22.
+    return new constructor(buffer, beginByteOffset, newLength);
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
 function TypedArrayValues() {
     // Step 1.
