@@ -42,9 +42,8 @@ nsMathMLsemanticsFrame::GetSelectedFrame()
   // However some people use this syntax so we take care of this case too.
   bool firstChildIsAnnotation = false;
   nsIContent* childContent = childFrame->GetContent();
-  if (childContent->GetNameSpaceID() == kNameSpaceID_MathML &&
-      (childContent->Tag() == nsGkAtoms::annotation_ ||
-       childContent->Tag() == nsGkAtoms::annotation_xml_)) {
+  if (childContent->IsAnyOfMathMLElements(nsGkAtoms::annotation_,
+                                          nsGkAtoms::annotation_xml_)) {
     firstChildIsAnnotation = true;
   }
 
@@ -67,9 +66,7 @@ nsMathMLsemanticsFrame::GetSelectedFrame()
   for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
     nsIContent* childContent = childFrame->GetContent();
 
-    if (childContent->GetNameSpaceID() != kNameSpaceID_MathML) continue;
-
-    if (childContent->Tag() == nsGkAtoms::annotation_) {
+    if (childContent->IsMathMLElement(nsGkAtoms::annotation_)) {
 
       // If the <annotation> element has an src attribute we ignore it.
       // XXXfredw Should annotation images be supported? See the related
@@ -82,7 +79,7 @@ nsMathMLsemanticsFrame::GetSelectedFrame()
       break;
     }
 
-    if (childContent->Tag() == nsGkAtoms::annotation_xml_) {
+    if (childContent->IsMathMLElement(nsGkAtoms::annotation_xml_)) {
 
       // If the <annotation-xml> element has an src attribute we ignore it.
       if (childContent->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) continue;

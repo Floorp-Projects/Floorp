@@ -41,7 +41,7 @@ nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
   // Special for <mtable>: In the frame construction code, we also use
   // this frame class as a wrapper for mtable. Hence, we should pass the
   // notification to the real mtable
-  if (mContent->Tag() == nsGkAtoms::mtable_) {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     nsIFrame* frame = mFrames.FirstChild();
     for ( ; frame; frame = frame->GetFirstPrincipalChild()) {
       // drill down to the real mtable
