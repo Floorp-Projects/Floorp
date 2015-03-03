@@ -1442,11 +1442,17 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 {
   WritingMode lineWM = mRootSpan->mWritingMode;
 
-  // Record ascent and update max-ascent and max-descent values
-  if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+  // If the frame's block direction does not match the line's, we can't use
+  // its ascent; instead, treat it as a block with baseline at the block-end
+  // edge (or block-begin in the case of an "inverted" line).
+  if (pfd->mFrame->GetWritingMode().GetBlockDir() != lineWM.GetBlockDir()) {
+    pfd->mAscent = lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM);
   } else {
-    pfd->mAscent = aMetrics.BlockStartAscent();
+    if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+    } else {
+      pfd->mAscent = aMetrics.BlockStartAscent();
+    }
   }
 
   // Advance to next inline coordinate
