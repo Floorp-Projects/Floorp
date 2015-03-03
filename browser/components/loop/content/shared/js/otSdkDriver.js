@@ -100,12 +100,32 @@ loop.OTSdkDriver = (function() {
      * @param {Object} options Hash containing options for the SDK
      */
     startScreenShare: function(options) {
+      // For browser sharing, we store the window Id so that we can avoid unnecessary
+      // re-triggers.
+      if (options.videoSource === "browser") {
+        this._windowId = options.constraints.browserWindow;
+      }
+
       var config = _.extend(this._getCopyPublisherConfig(), options);
 
       this.screenshare = this.sdk.initPublisher(this.getScreenShareElementFunc(),
         config);
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
+    },
+
+    /**
+     * Initiates switching the browser window that is being shared.
+     *
+     * @param {Integer} windowId  The windowId of the browser.
+     */
+    switchAcquiredWindow: function(windowId) {
+      if (windowId === this._windowId) {
+        return;
+      }
+
+      this._windowId = windowId;
+      this.screenshare._.switchAcquiredWindow(windowId);
     },
 
     /**
@@ -123,6 +143,7 @@ loop.OTSdkDriver = (function() {
       this.screenshare.off("accessAllowed accessDenied");
       this.screenshare.destroy();
       delete this.screenshare;
+      delete this._windowId;
       return true;
     },
 

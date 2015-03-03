@@ -29,10 +29,14 @@ import tokenize
 import traceback
 import types
 
-from collections import OrderedDict
+from collections import (
+    defaultdict,
+    OrderedDict,
+)
 from io import StringIO
 
 from mozbuild.util import (
+    EmptyValue,
     memoize,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
@@ -58,11 +62,13 @@ from .sandbox import (
 from .context import (
     Context,
     ContextDerivedValue,
+    Files,
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
     SPECIAL_VARIABLES,
     SUBCONTEXTS,
+    SubContext,
     TemplateContext,
 )
 
@@ -76,6 +82,48 @@ else:
 
 def log(logger, level, action, params, formatter):
     logger.log(level, formatter, extra={'action': action, 'params': params})
+
+
+class EmptyConfig(object):
+    """A config object that is empty.
+
+    This config object is suitable for using with a BuildReader on a vanilla
+    checkout, without any existing configuration. The config is simply
+    bootstrapped from a top source directory path.
+    """
+    class PopulateOnGetDict(ReadOnlyDefaultDict):
+        """A variation on ReadOnlyDefaultDict that populates during .get().
+
+        This variation is needed because CONFIG uses .get() to access members.
+        Without it, None (instead of our EmptyValue types) would be returned.
+        """
+        def get(self, key, default=None):
+            return self[key]
+
+    def __init__(self, topsrcdir):
+        self.topsrcdir = topsrcdir
+        self.topobjdir = ''
+
+        self.substs = self.PopulateOnGetDict(EmptyValue, {
+            # These 2 variables are used semi-frequently and it isn't worth
+            # changing all the instances.
+            b'MOZ_APP_NAME': b'empty',
+            b'MOZ_CHILD_PROCESS_NAME': b'empty',
+            # Set manipulations are performed within the moz.build files. But
+            # set() is not an exposed symbol, so we can't create an empty set.
+            b'NECKO_PROTOCOLS': set(),
+            # Needed to prevent js/src's config.status from loading.
+            b'JS_STANDALONE': b'1',
+        })
+        udict = {}
+        for k, v in self.substs.items():
+            if isinstance(v, str):
+                udict[k.decode('utf-8')] = v.decode('utf-8')
+            else:
+                udict[k] = v
+        self.substs_unicode = self.PopulateOnGetDict(EmptyValue, udict)
+        self.defines = self.substs
+        self.external_source_dir = None
 
 
 def is_read_allowed(path, config):
@@ -135,20 +183,25 @@ class MozbuildSandbox(Sandbox):
         self.exports = set(exports.keys())
         context.update(exports)
         self.templates = self.metadata.setdefault('templates', {})
+        self.special_variables = self.metadata.setdefault('special_variables',
+                                                          SPECIAL_VARIABLES)
+        self.functions = self.metadata.setdefault('functions', FUNCTIONS)
+        self.subcontext_types = self.metadata.setdefault('subcontexts',
+                                                         SUBCONTEXTS)
 
     def __getitem__(self, key):
-        if key in SPECIAL_VARIABLES:
-            return SPECIAL_VARIABLES[key][0](self._context)
-        if key in FUNCTIONS:
-            return self._create_function(FUNCTIONS[key])
-        if key in SUBCONTEXTS:
-            return self._create_subcontext(SUBCONTEXTS[key])
+        if key in self.special_variables:
+            return self.special_variables[key][0](self._context)
+        if key in self.functions:
+            return self._create_function(self.functions[key])
+        if key in self.subcontext_types:
+            return self._create_subcontext(self.subcontext_types[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        if key in SPECIAL_VARIABLES or key in FUNCTIONS or key in SUBCONTEXTS:
+        if key in self.special_variables or key in self.functions or key in self.subcontext_types:
             raise KeyError()
         if key in self.exports:
             self._context[key] = value
@@ -356,12 +409,20 @@ class MozbuildSandbox(Sandbox):
         func, code, path = template
 
         def template_function(*args, **kwargs):
-            context = TemplateContext(VARIABLES, self._context.config)
+            context = TemplateContext(self._context._allowed_variables,
+                                      self._context.config)
             context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
 
-            sandbox = MozbuildSandbox(context, {
+            sandbox = MozbuildSandbox(context, metadata={
+                # We should arguably set these defaults to something else.
+                # Templates, for example, should arguably come from the state
+                # of the sandbox from when the template was declared, not when
+                # it was instantiated. Bug 1137319.
+                'functions': self.metadata.get('functions', {}),
+                'special_variables': self.metadata.get('special_variables', {}),
+                'subcontexts': self.metadata.get('subcontexts', {}),
                 'templates': self.metadata.get('templates', {})
             })
             for k, v in inspect.getcallargs(func, *args, **kwargs).items():
@@ -972,6 +1033,11 @@ class BuildReader(object):
         sandbox.exec_file(path)
         context.execution_time = time.time() - time_start
 
+        # Yield main context before doing any processing. This gives immediate
+        # consumers an opportunity to change state before our remaining
+        # processing is performed.
+        yield context
+
         # We first collect directories populated in variables.
         dir_vars = ['DIRS']
 
@@ -1016,8 +1082,6 @@ class BuildReader(object):
             context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
             sandbox.subcontexts.append(gyp_context)
 
-        yield context
-
         for subcontext in sandbox.subcontexts:
             yield subcontext
 
@@ -1035,12 +1099,11 @@ class BuildReader(object):
                             mozpath.relpath(d, context.srcdir), var), context)
 
                 recurse_info[d] = {}
-                if 'templates' in sandbox.metadata:
-                    recurse_info[d]['templates'] = dict(
-                        sandbox.metadata['templates'])
-                if 'exports' in sandbox.metadata:
-                    sandbox.recompute_exports()
-                    recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
+                for key in sandbox.metadata:
+                    if key == 'exports':
+                        sandbox.recompute_exports()
+
+                    recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
             child_path = path.join('moz.build')
@@ -1062,3 +1125,159 @@ class BuildReader(object):
                 yield res
 
         self._execution_stack.pop()
+
+    def _find_relevant_mozbuilds(self, paths):
+        """Given a set of filesystem paths, find all relevant moz.build files.
+
+        We assume that a moz.build file in the directory ancestry of a given path
+        is relevant to that path. Let's say we have the following files on disk::
+
+           moz.build
+           foo/moz.build
+           foo/baz/moz.build
+           foo/baz/file1
+           other/moz.build
+           other/file2
+
+        If ``foo/baz/file1`` is passed in, the relevant moz.build files are
+        ``moz.build``, ``foo/moz.build``, and ``foo/baz/moz.build``. For
+        ``other/file2``, the relevant moz.build files are ``moz.build`` and
+        ``other/moz.build``.
+
+        Returns a dict of input paths to a list of relevant moz.build files.
+        The root moz.build file is first and the leaf-most moz.build is last.
+        """
+        root = self.config.topsrcdir
+        result = {}
+
+        @memoize
+        def exists(path):
+            return os.path.exists(path)
+
+        def itermozbuild(path):
+            subpath = ''
+            yield 'moz.build'
+            for part in mozpath.split(path):
+                subpath = mozpath.join(subpath, part)
+                yield mozpath.join(subpath, 'moz.build')
+
+        for path in sorted(paths):
+            path = mozpath.normpath(path)
+            if os.path.isabs(path):
+                if not mozpath.basedir(path, [root]):
+                    raise Exception('Path outside topsrcdir: %s' % path)
+                path = mozpath.relpath(path, root)
+
+            result[path] = [p for p in itermozbuild(path)
+                              if exists(mozpath.join(root, p))]
+
+        return result
+
+    def read_relevant_mozbuilds(self, paths):
+        """Read and process moz.build files relevant for a set of paths.
+
+        For an iterable of relative-to-root filesystem paths ``paths``,
+        find all moz.build files that may apply to them based on filesystem
+        hierarchy and read those moz.build files.
+
+        The return value is a 2-tuple. The first item is a dict mapping each
+        input filesystem path to a list of Context instances that are relevant
+        to that path. The second item is a list of all Context instances. Each
+        Context instance is in both data structures.
+        """
+        relevants = self._find_relevant_mozbuilds(paths)
+
+        topsrcdir = self.config.topsrcdir
+
+        # Source moz.build file to directories to traverse.
+        dirs = defaultdict(set)
+        # Relevant path to absolute paths of relevant contexts.
+        path_mozbuilds = {}
+
+        # There is room to improve this code (and the code in
+        # _find_relevant_mozbuilds) to better handle multiple files in the same
+        # directory. Bug 1136966 tracks.
+        for path, mbpaths in relevants.items():
+            path_mozbuilds[path] = [mozpath.join(topsrcdir, p) for p in mbpaths]
+
+            for i, mbpath in enumerate(mbpaths[0:-1]):
+                source_dir = mozpath.dirname(mbpath)
+                target_dir = mozpath.dirname(mbpaths[i + 1])
+
+                d = mozpath.normpath(mozpath.join(topsrcdir, mbpath))
+                dirs[d].add(mozpath.relpath(target_dir, source_dir))
+
+        # Exporting doesn't work reliably in tree traversal mode. Override
+        # the function to no-op.
+        functions = dict(FUNCTIONS)
+        def export(sandbox):
+            return lambda varname: None
+        functions['export'] = tuple([export] + list(FUNCTIONS['export'][1:]))
+
+        metadata = {
+            'functions': functions,
+        }
+
+        contexts = defaultdict(list)
+        all_contexts = []
+        for context in self.read_mozbuild(mozpath.join(topsrcdir, 'moz.build'),
+                                          self.config, metadata=metadata):
+            # Explicitly set directory traversal variables to override default
+            # traversal rules.
+            if not isinstance(context, SubContext):
+                for v in ('DIRS', 'GYP_DIRS', 'TEST_DIRS'):
+                    context[v][:] = []
+
+                context['DIRS'] = sorted(dirs[context.main_path])
+
+            contexts[context.main_path].append(context)
+            all_contexts.append(context)
+
+        result = {}
+        for path, paths in path_mozbuilds.items():
+            result[path] = reduce(lambda x, y: x + y, (contexts[p] for p in paths), [])
+
+        return result, all_contexts
+
+    def files_info(self, paths):
+        """Obtain aggregate data from Files for a set of files.
+
+        Given a set of input paths, determine which moz.build files may
+        define metadata for them, evaluate those moz.build files, and
+        apply file metadata rules defined within to determine metadata
+        values for each file requested.
+
+        Essentially, for each input path:
+
+        1. Determine the set of moz.build files relevant to that file by
+           looking for moz.build files in ancestor directories.
+        2. Evaluate moz.build files starting with the most distant.
+        3. Iterate over Files sub-contexts.
+        4. If the file pattern matches the file we're seeking info on,
+           apply attribute updates.
+        5. Return the most recent value of attributes.
+        """
+        paths, _ = self.read_relevant_mozbuilds(paths)
+
+        r = {}
+
+        for path, ctxs in paths.items():
+            flags = Files(Context())
+
+            for ctx in ctxs:
+                if not isinstance(ctx, Files):
+                    continue
+
+                relpath = mozpath.relpath(path, ctx.relsrcdir)
+                pattern = ctx.pattern
+
+                # Only do wildcard matching if the '*' character is present.
+                # Otherwise, mozpath.match will match directories, which we've
+                # arbitrarily chosen to not allow.
+                if pattern == relpath or \
+                        ('*' in pattern and mozpath.match(relpath, pattern)):
+                    flags += ctx
+
+            r[path] = flags
+
+        return r
