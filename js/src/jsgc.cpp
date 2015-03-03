@@ -6607,6 +6607,7 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
     for (ZoneCellIter iter(source->zone(), FINALIZE_OBJECT_GROUP); !iter.done(); iter.next()) {
         ObjectGroup *group = iter.get<ObjectGroup>();
         group->setGeneration(target->zone()->types.generation);
+        group->compartment_ = target;
     }
 
     // Fixup zone pointers in source's zone to refer to target's zone.
