@@ -26,11 +26,12 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
                              XPCNativeMember**    pMember)
 {
     funobj = js::UncheckedUnwrap(funobj);
-    jsval ifaceVal = js::GetFunctionNativeReserved(funobj, 0);
-    jsval memberVal = js::GetFunctionNativeReserved(funobj, 1);
+    jsval memberVal =
+        js::GetFunctionNativeReserved(funobj,
+                                      XPC_FUNCTION_NATIVE_MEMBER_SLOT);
 
-    *pInterface = (XPCNativeInterface*) ifaceVal.toPrivate();
-    *pMember = (XPCNativeMember*) memberVal.toPrivate();
+    *pMember = static_cast<XPCNativeMember*>(memberVal.toPrivate());
+    *pInterface = (*pMember)->GetInterface();
 
     return true;
 }
@@ -92,8 +93,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
     if (!funobj)
         return false;
 
-    js::SetFunctionNativeReserved(funobj, 0, PRIVATE_TO_JSVAL(iface));
-    js::SetFunctionNativeReserved(funobj, 1, PRIVATE_TO_JSVAL(this));
+    js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_NATIVE_MEMBER_SLOT,
+                                  PrivateValue(this));
 
     *vp = OBJECT_TO_JSVAL(funobj);
 
