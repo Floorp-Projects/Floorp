@@ -465,6 +465,9 @@ public:
   : mPrivateBrowsing(aPrivateBrowsing) {
     mUuid.Append(aUuid);
   }
+  OriginUuid(const nsACString& aUuid, bool aPrivateBrowsing)
+  : mUuid(aUuid), mPrivateBrowsing(aPrivateBrowsing) {}
+
   nsCString mUuid;
   bool mPrivateBrowsing;
 };
@@ -615,6 +618,7 @@ private:
 
   // ONLY access from MediaManagerThread so we don't need to lock
   nsClassHashtable<nsCStringHashKey, OriginUuid> mOriginUuids;
+  nsCOMPtr<nsIFile> mProfileDir;
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
