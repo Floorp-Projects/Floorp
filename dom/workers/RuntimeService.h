@@ -155,7 +155,7 @@ public:
 
   nsresult
   CreateServiceWorkerFromLoadInfo(JSContext* aCx,
-                                  WorkerLoadInfo* aLoadInfo,
+                                  WorkerPrivate::LoadInfo* aLoadInfo,
                                   const nsAString& aScriptURL,
                                   const nsACString& aScope,
                                   ServiceWorker** aServiceWorker);
@@ -308,7 +308,7 @@ private:
 
   nsresult
   CreateSharedWorkerFromLoadInfo(JSContext* aCx,
-                                 WorkerLoadInfo* aLoadInfo,
+                                 WorkerPrivate::LoadInfo* aLoadInfo,
                                  const nsAString& aScriptURL,
                                  const nsACString& aName,
                                  WorkerType aType,
