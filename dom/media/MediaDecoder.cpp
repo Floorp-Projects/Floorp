@@ -483,7 +483,7 @@ void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
 void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   DestroyDecodedStream();
