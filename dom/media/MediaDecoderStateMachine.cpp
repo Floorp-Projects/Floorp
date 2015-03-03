@@ -3096,12 +3096,13 @@ void MediaDecoderStateMachine::AdvanceFrame()
 #endif
     while (IsRealTime() || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->GetEndTime();
-#ifdef PR_LOGGING
       if (currentFrame) {
+        mDecoder->NotifyDecodedFrames(0, 0, 1);
+#ifdef PR_LOGGING
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
                     currentFrame->mTime, clock_time, ++droppedFrames);
-      }
 #endif
+      }
       currentFrame = frame;
       nsRefPtr<VideoData> releaseMe = VideoQueue().PopFront();
       // Notify the decode thread that the video queue's buffers may have

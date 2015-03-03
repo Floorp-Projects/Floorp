@@ -342,11 +342,12 @@ IntelWebMVideoDecoder::DecodeVideoFrame(bool& aKeyframeSkip,
   MOZ_ASSERT(mPlatform && mReader->GetDecoder());
 
   if (aKeyframeSkip) {
-    bool ok = SkipVideoDemuxToNextKeyFrame(aTimeThreshold, a.mParsed);
+    bool ok = SkipVideoDemuxToNextKeyFrame(aTimeThreshold, a.mDropped);
     if (!ok) {
       NS_WARNING("Failed to skip demux up to next keyframe");
       return false;
     }
+    a.mParsed = a.mDropped;
     aKeyframeSkip = false;
     nsresult rv = mMediaDataDecoder->Flush();
     NS_ENSURE_SUCCESS(rv, false);

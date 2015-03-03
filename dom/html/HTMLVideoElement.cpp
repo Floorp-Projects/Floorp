@@ -209,8 +209,8 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     if (mDecoder) {
       MediaDecoder::FrameStatistics& stats = mDecoder->GetFrameStatistics();
       totalFrames = stats.GetParsedFrames();
-      droppedFrames = totalFrames - stats.GetPresentedFrames();
-      corruptedFrames = totalFrames - stats.GetDecodedFrames();
+      droppedFrames = stats.GetDroppedFrames();
+      corruptedFrames = 0;
     }
   }
 
