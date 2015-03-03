@@ -2098,12 +2098,12 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_COLSPAN:
-            colspan = SN_OFFSET_TO_COLSPAN(js_GetSrcNoteOffset(sn, 0));
+            colspan = SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, 0));
             Sprint(sp, "%d", colspan);
             break;
 
           case SRC_SETLINE:
-            lineno = js_GetSrcNoteOffset(sn, 0);
+            lineno = GetSrcNoteOffset(sn, 0);
             Sprint(sp, " lineno %u", lineno);
             break;
 
@@ -2113,30 +2113,30 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 
           case SRC_FOR:
             Sprint(sp, " cond %u update %u tail %u",
-                   unsigned(js_GetSrcNoteOffset(sn, 0)),
-                   unsigned(js_GetSrcNoteOffset(sn, 1)),
-                   unsigned(js_GetSrcNoteOffset(sn, 2)));
+                   unsigned(GetSrcNoteOffset(sn, 0)),
+                   unsigned(GetSrcNoteOffset(sn, 1)),
+                   unsigned(GetSrcNoteOffset(sn, 2)));
             break;
 
           case SRC_IF_ELSE:
-            Sprint(sp, " else %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            Sprint(sp, " else %u", unsigned(GetSrcNoteOffset(sn, 0)));
             break;
 
           case SRC_FOR_IN:
           case SRC_FOR_OF:
-            Sprint(sp, " closingjump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            Sprint(sp, " closingjump %u", unsigned(GetSrcNoteOffset(sn, 0)));
             break;
 
           case SRC_COND:
           case SRC_WHILE:
           case SRC_NEXTCASE:
-            Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            Sprint(sp, " offset %u", unsigned(GetSrcNoteOffset(sn, 0)));
             break;
 
           case SRC_TABLESWITCH: {
             JSOp op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_TABLESWITCH);
-            Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            Sprint(sp, " length %u", unsigned(GetSrcNoteOffset(sn, 0)));
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
             break;
@@ -2144,8 +2144,8 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_CONDSWITCH: {
             JSOp op = JSOp(script->code()[offset]);
             MOZ_ASSERT(op == JSOP_CONDSWITCH);
-            Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
-            unsigned caseOff = (unsigned) js_GetSrcNoteOffset(sn, 1);
+            Sprint(sp, " length %u", unsigned(GetSrcNoteOffset(sn, 0)));
+            unsigned caseOff = (unsigned) GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 Sprint(sp, " first case offset %u", caseOff);
             UpdateSwitchTableBounds(cx, script, offset,
@@ -2155,7 +2155,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 
           case SRC_TRY:
             MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
-            Sprint(sp, " offset to jump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            Sprint(sp, " offset to jump %u", unsigned(GetSrcNoteOffset(sn, 0)));
             break;
 
           default:

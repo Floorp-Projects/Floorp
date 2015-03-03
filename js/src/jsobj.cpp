@@ -3045,7 +3045,7 @@ js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, JSObject **
             do {
                 const Class *clasp = obj->getClass();
                 if (!clasp->resolve)
-                break;
+                    break;
                 if (clasp->resolve == fun_resolve && !FunctionHasResolveHook(cx->names(), id))
                     break;
                 if (clasp->resolve == str_resolve && !JSID_IS_INT(id))
@@ -3736,7 +3736,7 @@ js::ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
- * the debugger find them and to support temporarily hacking js_Dump* calls
+ * the debugger find them and to support temporarily hacking js::Dump* calls
  * into other code.
  */
 
@@ -3799,14 +3799,14 @@ dumpValue(const Value &v)
 }
 
 JS_FRIEND_API(void)
-js_DumpValue(const Value &val)
+js::DumpValue(const Value &val)
 {
     dumpValue(val);
     fputc('\n', stderr);
 }
 
 JS_FRIEND_API(void)
-js_DumpId(jsid id)
+js::DumpId(jsid id)
 {
     fprintf(stderr, "jsid %p = ", (void *) JSID_BITS(id));
     dumpValue(IdToValue(id));
@@ -3966,7 +3966,7 @@ MaybeDumpValue(const char *name, const Value &v)
 }
 
 JS_FRIEND_API(void)
-js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
+js::DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
 {
     /* This should only called during live debugging. */
     ScriptFrameIter i(cx, ScriptFrameIter::GO_THROUGH_SAVED);
@@ -4036,7 +4036,7 @@ js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
 #endif /* DEBUG */
 
 JS_FRIEND_API(void)
-js_DumpBacktrace(JSContext *cx)
+js::DumpBacktrace(JSContext *cx)
 {
     Sprinter sprinter(cx);
     sprinter.init();

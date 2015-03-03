@@ -797,6 +797,37 @@ js::Disassemble(JSContext *cx, HandleScript script, bool lines, Sprinter *sp)
     return DisassembleAtPC(cx, script, lines, nullptr, false, sp);
 }
 
+JS_FRIEND_API(bool)
+js::DumpPC(JSContext *cx)
+{
+    gc::AutoSuppressGC suppressGC(cx);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return false;
+    ScriptFrameIter iter(cx);
+    if (iter.done()) {
+        fprintf(stdout, "Empty stack.\n");
+        return true;
+    }
+    RootedScript script(cx, iter.script());
+    bool ok = DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
+    fprintf(stdout, "%s", sprinter.string());
+    return ok;
+}
+
+JS_FRIEND_API(bool)
+js::DumpScript(JSContext *cx, JSScript *scriptArg)
+{
+    gc::AutoSuppressGC suppressGC(cx);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return false;
+    RootedScript script(cx, scriptArg);
+    bool ok = Disassemble(cx, script, true, &sprinter);
+    fprintf(stdout, "%s", sprinter.string());
+    return ok;
+}
+
 static char *
 QuoteString(Sprinter *sp, JSString *str, char16_t quote);
 
