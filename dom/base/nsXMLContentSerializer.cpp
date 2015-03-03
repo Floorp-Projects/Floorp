@@ -895,7 +895,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   uint32_t skipAttr = ScanNamespaceDeclarations(content,
                           aOriginalElement, tagNamespaceURI);
 
-  nsIAtom *name = content->Tag();
+  nsIAtom *name = content->NodeInfo()->NameAtom();
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(content->GetNameSpaceID(), name);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
@@ -985,7 +985,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   bool forceFormat = false, outputElementEnd;
   outputElementEnd = CheckElementEnd(content, forceFormat, aStr);
 
-  nsIAtom *name = content->Tag();
+  nsIAtom *name = content->NodeInfo()->NameAtom();
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     DecrIndentation(name);

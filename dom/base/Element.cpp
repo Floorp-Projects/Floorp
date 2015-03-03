@@ -3222,8 +3222,8 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
     nsIAtom* localName;
     int32_t namespaceID;
     if (parent->IsElement()) {
-      localName = static_cast<nsIContent*>(parent.get())->Tag();
-      namespaceID = static_cast<nsIContent*>(parent.get())->GetNameSpaceID();
+      localName = parent->NodeInfo()->NameAtom();
+      namespaceID = parent->NodeInfo()->NamespaceID();
     } else {
       NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
         "How come the parent isn't a document, a fragment or an element?");
@@ -3321,7 +3321,7 @@ Element::InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
        (position == eAfterBegin && !GetFirstChild()))) {
     int32_t oldChildCount = destination->GetChildCount();
     int32_t contextNs = destination->GetNameSpaceID();
-    nsIAtom* contextLocal = destination->Tag();
+    nsIAtom* contextLocal = destination->NodeInfo()->NameAtom();
     if (contextLocal == nsGkAtoms::html && contextNs == kNameSpaceID_XHTML) {
       // For compat with IE6 through IE9. Willful violation of HTML5 as of
       // 2011-04-06. CreateContextualFragment does the same already.
