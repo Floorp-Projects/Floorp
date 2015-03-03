@@ -67,6 +67,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=732665
   // enough to make the cross-compartment call. So rather than exhausting the
   // stack entirely and then checking for 10 chrome frames, we leave ourselves
   // one frame's worth, and check for 11.
+  //
+  // If this assertion fails, the current work-around so far is to measure
+  // again the worst frame size, by using the JS Shell to run
+  // test_bug732665_meta.js . This script will output numbers to update
+  // XPCJSRuntime.cpp comment, as well as the kTrustedScriptBuffer constant.
   contentSb.nnslChrome = chromeSb.nearNativeStackLimit;
   var nestedLimit = Cu.evalInSandbox("nearNativeStackLimit(1, function() { nestedLimit = nnslChrome(0);}); nestedLimit;", contentSb);
   ok(nestedLimit >= 11, "Chrome should be invokable from content script with an exhausted stack: " + nestedLimit);

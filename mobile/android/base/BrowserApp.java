@@ -2939,6 +2939,7 @@ public class BrowserApp extends GeckoApp
                                                         ClearOnShutdownPref.PREF,
                                                         new HashSet<String>()).isEmpty();
         aMenu.findItem(R.id.quit).setVisible(visible);
+        aMenu.findItem(R.id.logins).setVisible(AppConstants.NIGHTLY_BUILD);
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
@@ -3164,6 +3165,11 @@ public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.addons) {
             Tabs.getInstance().loadUrlInTab(AboutPages.ADDONS);
+            return true;
+        }
+
+        if (itemId == R.id.logins) {
+            Tabs.getInstance().loadUrlInTab(AboutPages.PASSWORDS);
             return true;
         }
 

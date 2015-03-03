@@ -61,9 +61,11 @@ public:
   // from the resource.
   virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) = 0;
 
-  // Increments the parsed and decoded frame counters by the passed in counts.
+  // Increments the parsed, decoded and dropped frame counters by the passed in
+  // counts.
   // Can be called on any thread.
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded) = 0;
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
+                                   uint32_t aDropped) = 0;
 
   // Return the duration of the media in microseconds.
   virtual int64_t GetMediaDuration() = 0;
@@ -137,17 +139,19 @@ public:
   // to ensure all parsed and decoded frames are reported on all return paths.
   class AutoNotifyDecoded {
   public:
-    AutoNotifyDecoded(AbstractMediaDecoder* aDecoder, uint32_t& aParsed, uint32_t& aDecoded)
-      : mDecoder(aDecoder), mParsed(aParsed), mDecoded(aDecoded) {}
+    explicit AutoNotifyDecoded(AbstractMediaDecoder* aDecoder)
+      : mParsed(0), mDecoded(0), mDropped(0), mDecoder(aDecoder) {}
     ~AutoNotifyDecoded() {
       if (mDecoder) {
-        mDecoder->NotifyDecodedFrames(mParsed, mDecoded);
+        mDecoder->NotifyDecodedFrames(mParsed, mDecoded, mDropped);
       }
     }
+    uint32_t mParsed;
+    uint32_t mDecoded;
+    uint32_t mDropped;
+
   private:
     AbstractMediaDecoder* mDecoder;
-    uint32_t& mParsed;
-    uint32_t& mDecoded;
   };
 
 #ifdef MOZ_EME

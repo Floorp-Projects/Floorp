@@ -18,6 +18,7 @@ import os
 import stat
 import sys
 import time
+import types
 
 from collections import (
     defaultdict,
@@ -48,6 +49,17 @@ def hash_file(path, hasher=None):
             h.update(data)
 
     return h.hexdigest()
+
+
+class EmptyValue(unicode):
+    """A dummy type that behaves like an empty string and sequence.
+
+    This type exists in order to support
+    :py:class:`mozbuild.frontend.reader.EmptyConfig`. It should likely not be
+    used elsewhere.
+    """
+    def __init__(self):
+        super(EmptyValue, self).__init__()
 
 
 class ReadOnlyDict(dict):
@@ -254,9 +266,9 @@ class ListMixin(object):
         return super(ListMixin, self).__setslice__(i, j, sequence)
 
     def __add__(self, other):
-        # Allow None is a special case because it makes undefined variable
-        # references in moz.build behave better.
-        other = [] if other is None else other
+        # Allow None and EmptyValue is a special case because it makes undefined
+        # variable references in moz.build behave better.
+        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
@@ -265,7 +277,7 @@ class ListMixin(object):
         return new_list
 
     def __iadd__(self, other):
-        other = [] if other is None else other
+        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
@@ -815,6 +827,56 @@ class memoized_property(object):
         if not hasattr(instance, name):
             setattr(instance, name, self.func(instance))
         return getattr(instance, name)
+
+
+def TypedNamedTuple(name, fields):
+    """Factory for named tuple types with strong typing.
+
+    Arguments are an iterable of 2-tuples. The first member is the
+    the field name. The second member is a type the field will be validated
+    to be.
+
+    Construction of instances varies from ``collections.namedtuple``.
+
+    First, if a single tuple argument is given to the constructor, this is
+    treated as the equivalent of passing each tuple value as a separate
+    argument into __init__. e.g.::
+
+        t = (1, 2)
+        TypedTuple(t) == TypedTuple(1, 2)
+
+    This behavior is meant for moz.build files, so vanilla tuples are
+    automatically cast to typed tuple instances.
+
+    Second, fields in the tuple are validated to be instances of the specified
+    type. This is done via an ``isinstance()`` check. To allow multiple types,
+    pass a tuple as the allowed types field.
+    """
+    cls = collections.namedtuple(name, (name for name, typ in fields))
+
+    class TypedTuple(cls):
+        __slots__ = ()
+
+        def __new__(klass, *args, **kwargs):
+            if len(args) == 1 and not kwargs and isinstance(args[0], tuple):
+                args = args[0]
+
+            return super(TypedTuple, klass).__new__(klass, *args, **kwargs)
+
+        def __init__(self, *args, **kwargs):
+            for i, (fname, ftype) in enumerate(self._fields):
+                value = self[i]
+
+                if not isinstance(value, ftype):
+                    raise TypeError('field in tuple not of proper type: %s; '
+                                    'got %s, expected %s' % (fname,
+                                    type(value), ftype))
+
+            super(TypedTuple, self).__init__(*args, **kwargs)
+
+    TypedTuple._fields = fields
+
+    return TypedTuple
 
 
 class TypedListMixin(object):

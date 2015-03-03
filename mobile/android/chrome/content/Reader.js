@@ -35,27 +35,6 @@ let Reader = {
         mm.broadcastAsyncMessage("Reader:Removed", { url: aData });
         break;
       }
-      case "Gesture:DoubleTap": {
-        // Ideally, we would just do this all with web APIs in AboutReader.jsm (bug 1118487)
-        if (!BrowserApp.selectedBrowser.currentURI.spec.startsWith("about:reader")) {
-          return;
-        }
-
-        let win = BrowserApp.selectedBrowser.contentWindow;
-        let scrollBy;
-        // Arbitrary choice of innerHeight (50) to give some context after scroll.
-        if (JSON.parse(aData).y < (win.innerHeight / 2)) {
-          scrollBy = - win.innerHeight + 50;
-        } else {
-          scrollBy = win.innerHeight - 50;
-        }
-
-        let viewport = BrowserApp.selectedTab.getViewport();
-        let newY = Math.min(Math.max(viewport.cssY + scrollBy, viewport.cssPageTop), viewport.cssPageBottom);
-        let newRect = new Rect(viewport.cssX, newY, viewport.cssWidth, viewport.cssHeight);
-        ZoomHelper.zoomToRect(newRect, -1);
-        break;
-      }
     }
   },
 
@@ -171,7 +150,7 @@ let Reader = {
     let browser = tab.browser;
     if (browser.currentURI.spec.startsWith("about:reader")) {
       this.pageAction.id = PageActions.add({
-        title: Strings.browser.GetStringFromName("readerView.exit"),
+        title: Strings.reader.GetStringFromName("readerView.close"),
         icon: "drawable://reader_active",
         clickCallback: () => this.pageAction.readerModeCallback(tab.id),
         important: true
@@ -188,7 +167,7 @@ let Reader = {
 
     if (browser.isArticle) {
       this.pageAction.id = PageActions.add({
-        title: Strings.browser.GetStringFromName("readerView.enter"),
+        title: Strings.reader.GetStringFromName("readerView.enter"),
         icon: "drawable://reader",
         clickCallback: () => this.pageAction.readerModeCallback(tab.id),
         longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),

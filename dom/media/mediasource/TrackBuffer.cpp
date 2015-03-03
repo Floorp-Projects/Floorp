@@ -840,14 +840,6 @@ TrackBuffer::BreakCycles()
 }
 
 void
-TrackBuffer::ResetDecode()
-{
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    mDecoders[i]->GetReader()->ResetDecode();
-  }
-}
-
-void
 TrackBuffer::ResetParserState()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -979,16 +971,17 @@ TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
 }
 
 bool
-TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
+TrackBuffer::RangeRemoval(media::Microseconds aStart,
+                          media::Microseconds aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
 
   nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  int64_t bufferedEnd = Buffered(buffered) * USECS_PER_S;
-  int64_t bufferedStart = buffered->GetStartTime() * USECS_PER_S;
+  media::Microseconds bufferedEnd = media::Microseconds::FromSeconds(Buffered(buffered));
+  media::Microseconds bufferedStart = media::Microseconds::FromSeconds(buffered->GetStartTime());
 
-  if (bufferedStart < 0 || aStart > bufferedEnd || aEnd < bufferedStart) {
+  if (bufferedStart < media::Microseconds(0) || aStart > bufferedEnd || aEnd < bufferedStart) {
     // Nothing to remove.
     return false;
   }
@@ -1008,14 +1001,14 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
     for (size_t i = 0; i < decoders.Length(); ++i) {
       nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
       decoders[i]->GetBuffered(buffered);
-      if (int64_t(buffered->GetEndTime() * USECS_PER_S) < aEnd) {
+      if (media::Microseconds::FromSeconds(buffered->GetEndTime()) < aEnd) {
         // Can be fully removed.
         MSE_DEBUG("remove all bufferedEnd=%f time=%f, size=%lld",
                   buffered->GetEndTime(), time,
                   decoders[i]->GetResource()->GetSize());
         decoders[i]->GetResource()->EvictAll();
       } else {
-        int64_t offset = decoders[i]->ConvertToByteOffset(aEnd);
+        int64_t offset = decoders[i]->ConvertToByteOffset(aEnd.ToSeconds());
         MSE_DEBUG("removing some bufferedEnd=%f offset=%lld size=%lld",
                   buffered->GetEndTime(), offset,
                   decoders[i]->GetResource()->GetSize());
@@ -1027,11 +1020,11 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
   } else {
     // Only trimming existing buffers.
     for (size_t i = 0; i < decoders.Length(); ++i) {
-      if (aStart <= int64_t(buffered->GetStartTime() * USECS_PER_S)) {
+      if (aStart <= media::Microseconds::FromSeconds(buffered->GetStartTime())) {
         // It will be entirely emptied, can clear all data.
         decoders[i]->GetResource()->EvictAll();
       } else {
-        decoders[i]->Trim(aStart);
+        decoders[i]->Trim(aStart.mValue);
       }
     }
   }

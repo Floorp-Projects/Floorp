@@ -1,0 +1,2 @@
+with Files('**'):
+    BUG_COMPONENT = ('default_product', 'default_component')
