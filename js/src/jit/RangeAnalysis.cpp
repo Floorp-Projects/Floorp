@@ -2645,21 +2645,21 @@ MDefinition::TruncateKind
 MStoreTypedArrayElement::operandTruncateKind(size_t index) const
 {
     // An integer store truncates the stored value.
-    return index == 2 && !isFloatArray() && !isSimdWrite() ? Truncate : NoTruncate;
+    return index == 2 && isIntegerWrite() ? Truncate : NoTruncate;
 }
 
 MDefinition::TruncateKind
 MStoreTypedArrayElementHole::operandTruncateKind(size_t index) const
 {
     // An integer store truncates the stored value.
-    return index == 3 && !isFloatArray() ? Truncate : NoTruncate;
+    return index == 3 && isIntegerWrite() ? Truncate : NoTruncate;
 }
 
 MDefinition::TruncateKind
 MStoreTypedArrayElementStatic::operandTruncateKind(size_t index) const
 {
     // An integer store truncates the stored value.
-    return index == 1 && !isFloatArray() ? Truncate : NoTruncate;
+    return index == 1 && isIntegerWrite() ? Truncate : NoTruncate;
 }
 
 MDefinition::TruncateKind
