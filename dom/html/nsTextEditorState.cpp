@@ -567,7 +567,7 @@ nsTextInputSelectionImpl::CompleteMove(bool aForward, bool aExtend)
     {
       nsIContent *child = parentDIV->GetLastChild();
 
-      if (child->Tag() == nsGkAtoms::br)
+      if (child->IsHTMLElement(nsGkAtoms::br))
       {
         --offset;
         hint = CARET_ASSOCIATE_AFTER; // for Bug 106855

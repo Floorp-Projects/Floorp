@@ -1055,10 +1055,10 @@ nsHTMLDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
   // The body element must be either a body tag or a frameset tag. And we must
   // have a html root tag, otherwise GetBody will not return the newly set
   // body.
-  if (!newBody || !(newBody->Tag() == nsGkAtoms::body ||
-                    newBody->Tag() == nsGkAtoms::frameset) ||
+  if (!newBody ||
+      !newBody->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset) ||
       !root || !root->IsHTMLElement() ||
-      root->Tag() != nsGkAtoms::html) {
+      !root->IsHTMLElement(nsGkAtoms::html)) {
     rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
   }
