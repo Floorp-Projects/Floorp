@@ -273,6 +273,14 @@ class MediaDecoder : public nsIObserver,
                      public AbstractMediaDecoder
 {
 public:
+  struct SeekResolveValue {
+    SeekResolveValue(bool aAtEnd, MediaDecoderEventVisibility aEventVisibility)
+      : mAtEnd(aAtEnd), mEventVisibility(aEventVisibility) {}
+    bool mAtEnd;
+    MediaDecoderEventVisibility mEventVisibility;
+  };
+
+  typedef MediaPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
   class DecodedStreamGraphListener;
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -795,13 +803,22 @@ public:
   // Call on the main thread only.
   void PlaybackEnded();
 
-  // Seeking has stopped. Inform the element on the main
-  // thread.
-  void SeekingStopped(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void OnSeekRejected() { mSeekRequest.Complete(); }
+  void OnSeekResolvedInternal(bool aAtEnd, MediaDecoderEventVisibility aEventVisibility);
 
-  // Seeking has stopped at the end of the resource. Inform the element on the main
-  // thread.
-  void SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void OnSeekResolved(SeekResolveValue aVal)
+  {
+    mSeekRequest.Complete();
+    OnSeekResolvedInternal(aVal.mAtEnd, aVal.mEventVisibility);
+  }
+
+#ifdef MOZ_AUDIO_OFFLOAD
+  // Temporary hack - see bug 1139206.
+  void SimulateSeekResolvedForAudioOffload(MediaDecoderEventVisibility aEventVisibility)
+  {
+    OnSeekResolvedInternal(false, aEventVisibility);
+  }
+#endif
 
   // Seeking has started. Inform the element on the main
   // thread.
@@ -1133,6 +1150,8 @@ protected:
   // If the SeekTarget's IsValid() accessor returns false, then no seek has
   // been requested. When a seek is started this is reset to invalid.
   SeekTarget mRequestedSeekTarget;
+
+  MediaPromiseConsumerHolder<SeekPromise> mSeekRequest;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set
