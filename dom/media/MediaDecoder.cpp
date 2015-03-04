@@ -190,7 +190,14 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
 
   if (mIsDormant) {
     DECODER_LOG("UpdateDormantState() entering DORMANT state");
-    mDecoderStateMachine->SetDormant(true);
+    // enter dormant state
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethodWithArg<bool>(
+        mDecoderStateMachine,
+        &MediaDecoderStateMachine::SetDormant,
+        true);
+    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
+
     if (IsEnded()) {
       mWasEndedWhenEnteredDormant = true;
     }
@@ -198,7 +205,14 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
     ChangeState(PLAY_STATE_LOADING);
   } else {
     DECODER_LOG("UpdateDormantState() leaving DORMANT state");
-    mDecoderStateMachine->SetDormant(false);
+    // exit dormant state
+    // trigger to state machine.
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethodWithArg<bool>(
+        mDecoderStateMachine,
+        &MediaDecoderStateMachine::SetDormant,
+        false);
+    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 }
 
