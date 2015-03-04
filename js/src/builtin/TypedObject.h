@@ -369,7 +369,7 @@ class ArrayTypeDescr;
  * is no `class_` field because `ArrayType` is just a native
  * constructor function.
  */
-class ArrayMetaTypeDescr : public JSObject
+class ArrayMetaTypeDescr : public NativeObject
 {
   private:
     // Helper for creating a new ArrayType object.
@@ -433,7 +433,7 @@ class ArrayTypeDescr : public ComplexTypeDescr
  * is no `class_` field because `StructType` is just a native
  * constructor function.
  */
-class StructMetaTypeDescr : public JSObject
+class StructMetaTypeDescr : public NativeObject
 {
   private:
     static JSObject *create(JSContext *cx, HandleObject structTypeGlobal,
@@ -510,7 +510,6 @@ class TypedObjectModuleObject : public NativeObject {
 /* Base type for transparent and opaque typed objects. */
 class TypedObject : public JSObject
 {
-  private:
     static const bool IsTypedObjectClass = true;
 
     static bool obj_getArrayElement(JSContext *cx,
@@ -520,6 +519,8 @@ class TypedObject : public JSObject
                                     MutableHandleValue vp);
 
   protected:
+    HeapPtrShape shape_;
+
     static bool obj_lookupProperty(JSContext *cx, HandleObject obj,
                                    HandleId id, MutableHandleObject objp,
                                    MutableHandleShape propp);
@@ -601,6 +602,8 @@ class TypedObject : public JSObject
     /* Accessors for self hosted code. */
     static bool GetBuffer(JSContext *cx, unsigned argc, Value *vp);
     static bool GetByteOffset(JSContext *cx, unsigned argc, Value *vp);
+
+    Shape *shapeFromGC() { return shape_; }
 };
 
 typedef Handle<TypedObject*> HandleTypedObject;
@@ -711,8 +714,6 @@ class InlineTypedObject : public TypedObject
     }
 
     uint8_t *inlineTypedMem() const {
-        static_assert(offsetof(InlineTypedObject, data_) == sizeof(JSObject),
-                      "The data for an inline typed object must follow the shape and type.");
         return (uint8_t *) &data_;
     }
 

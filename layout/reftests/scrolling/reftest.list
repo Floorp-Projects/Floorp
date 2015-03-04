@@ -33,3 +33,4 @@ skip-if(B2G) == huge-vertical-overflow.html huge-vertical-overflow-ref.html
 skip-if(B2G&&browserIsRemote) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html
 == frame-scrolling-attr-1.html frame-scrolling-attr-ref.html
 == frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
+== move-item.html move-item-ref.html # bug 1125750

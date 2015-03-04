@@ -66,7 +66,8 @@ class Nursery
         numNurseryChunks_(0),
         finalizers_(nullptr),
         profileThreshold_(0),
-        enableProfiling_(false)
+        enableProfiling_(false),
+        freeHugeSlotsTask(nullptr)
     {}
     ~Nursery();
 
@@ -138,6 +139,8 @@ class Nursery
         if (IsMinorCollectionTracer(trc) && isInside(oldData))
             setForwardingPointer(oldData, newData, direct);
     }
+
+    void waitBackgroundFreeEnd();
 
     size_t sizeOfHeapCommitted() const {
         return numActiveChunks_ * gc::ChunkSize;
@@ -221,6 +224,10 @@ class Nursery
      */
     typedef HashSet<HeapSlot *, PointerHasher<HeapSlot *, 3>, SystemAllocPolicy> HugeSlotsSet;
     HugeSlotsSet hugeSlots;
+
+    /* A task structure used to free the huge slots on a background thread. */
+    struct FreeHugeSlotsTask;
+    FreeHugeSlotsTask *freeHugeSlotsTask;
 
     /*
      * During a collection most hoisted slot and element buffers indicate their

@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import marionette_test
+from marionette import MarionetteTestCase
 
-class TestSession(marionette_test.MarionetteTestCase):
+class TestSession(MarionetteTestCase):
     def setUp(self):
         super(TestSession, self).setUp()
         self.marionette.delete_session()
