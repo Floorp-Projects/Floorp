@@ -47,7 +47,7 @@ const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 /**
  * These helpers get the value that the startTime needs to be set to, to put an
  * animation that uses the above ANIM_DELAY_MS and ANIM_DUR_MS values into the
- * before, active and after phases, respectively.
+ * middle of various phases or points through the active duration.
  */
 function startTimeForBeforePhase(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS / 2;
@@ -57,6 +57,18 @@ function startTimeForActivePhase(timeline) {
 }
 function startTimeForAfterPhase(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS - ANIM_DELAY_MS / 2;
+}
+function startTimeForStartOfActiveInterval(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS;
+}
+function startTimeForFiftyPercentThroughActiveInterval(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5;
+}
+function startTimeForNinetyPercentThroughActiveInterval(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9;
+}
+function startTimeForEndOfActiveInterval(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS;
 }
 
 
@@ -342,18 +354,18 @@ async_test(function(t) {
   player.ready.then(t.step_func(function() {
     checkStateOnReadyPromiseResolved(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS; // jump to start of active interval
+    player.startTime = startTimeForStartOfActiveInterval(player.timeline);
     return eventWatcher.waitForEvent('animationstart');
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalStartTime(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5; // 50% through active interval
+    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9; // 90% through active interval
+    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
     checkStateAtNinetyPctOfActiveInterval(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS; // end of active interval
+    player.startTime = startTimeForEndOfActiveInterval(player.timeline);
     return eventWatcher.waitForEvent('animationend');
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalEndTime(player);
@@ -375,7 +387,7 @@ async_test(function(t) {
 
   var player = div.getAnimationPlayers()[0];
 
-  player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS; // end of active interval
+  player.startTime = startTimeForEndOfActiveInterval(player.timeline);
 
   // Skipping over the active interval will dispatch an 'animationstart' then
   // an 'animationend' event. We need to wait for these events before we start
@@ -386,7 +398,7 @@ async_test(function(t) {
     // that after the events we're still in the same end time state:
     checkStateAtActiveIntervalEndTime(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9; // 90% through active interval
+    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
 
     // Despite going backwards from after the end of the animation to just
     // before the end of the animation, we now expect an animationstart event
@@ -395,10 +407,10 @@ async_test(function(t) {
   })).then(t.step_func(function() {
     checkStateAtNinetyPctOfActiveInterval(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5; // 50% through active interval
+    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
 
-    player.startTime = document.timeline.currentTime - ANIM_DELAY_MS; // jump to start of active interval
+    player.startTime = startTimeForStartOfActiveInterval(player.timeline);
     checkStateAtActiveIntervalStartTime(player);
 
     player.startTime = document.timeline.currentTime;
