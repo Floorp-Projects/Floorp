@@ -14,6 +14,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
