@@ -69,6 +69,7 @@ struct PCacheResponse
   PHeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   PCacheReadStreamOrVoid body;
+  nsCString securityInfo;
 };
 
 union PCacheResponseOrVoid
