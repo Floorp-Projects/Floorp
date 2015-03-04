@@ -150,6 +150,11 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
     return;
   }
 
+  DECODER_LOG("UpdateDormantState aTimeout=%d aActivity=%d mIsDormant=%d "
+              "ownerActive=%d ownerHidden=%d mIsHeuristicDormant=%d mPlayState=%s",
+              aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
+              mOwner->IsHidden(), mIsHeuristicDormant, PlayStateStr());
+
   bool prevDormant = mIsDormant;
   mIsDormant = false;
   if (!mOwner->IsActive()) {
@@ -184,7 +189,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   }
 
   if (mIsDormant) {
-    // enter dormant state
+    DECODER_LOG("UpdateDormantState() entering DORMANT state");
     mDecoderStateMachine->SetDormant(true);
 
     int64_t timeUsecs = 0;
@@ -194,8 +199,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
     mNextState = mPlayState;
     ChangeState(PLAY_STATE_LOADING);
   } else {
-    // exit dormant state
-    // trigger to state machine.
+    DECODER_LOG("UpdateDormantState() leaving DORMANT state");
     mDecoderStateMachine->SetDormant(false);
   }
 }
@@ -874,6 +878,21 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
   }
 }
 
+const char*
+MediaDecoder::PlayStateStr()
+{
+  switch (mPlayState) {
+    case PLAY_STATE_START: return "PLAY_STATE_START";
+    case PLAY_STATE_LOADING: return "PLAY_STATE_LOADING";
+    case PLAY_STATE_PAUSED: return "PLAY_STATE_PAUSED";
+    case PLAY_STATE_PLAYING: return "PLAY_STATE_PLAYING";
+    case PLAY_STATE_SEEKING: return "PLAY_STATE_SEEKING";
+    case PLAY_STATE_ENDED: return "PLAY_STATE_ENDED";
+    case PLAY_STATE_SHUTDOWN: return "PLAY_STATE_SHUTDOWN";
+    default: return "INVALID_PLAY_STATE";
+  }
+}
+
 void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                     bool aRestoredFromDormant)
 {
@@ -883,9 +902,11 @@ void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
     return;
   }
 
-  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
+  NS_ASSERTION(!mIsDormant, "Expected not to be dormant here");
+
+  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mIsDormant=%d",
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
-              aInfo->HasAudio(), aInfo->HasVideo());
+              aInfo->HasAudio(), aInfo->HasVideo(), PlayStateStr(), mIsDormant);
 
   mInfo = aInfo.forget();
 
