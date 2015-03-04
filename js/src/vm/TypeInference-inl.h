@@ -364,7 +364,7 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
             CrashAtUnhandlableOOM("Could not allocate ObjectGroup in EnsureTrackPropertyTypes");
             return;
         }
-        if (!obj->group()->unknownProperties() && !obj->group()->getProperty(cx, id)) {
+        if (!obj->group()->unknownProperties() && !obj->group()->getProperty(cx, obj, id)) {
             MOZ_ASSERT(obj->group()->unknownProperties());
             return;
         }
@@ -417,8 +417,8 @@ HasTypePropertyId(JSObject *obj, jsid id, const Value &value)
     return HasTypePropertyId(obj, id, TypeSet::GetValueType(value));
 }
 
-void AddTypePropertyId(ExclusiveContext *cx, ObjectGroup *group, jsid id, TypeSet::Type type);
-void AddTypePropertyId(ExclusiveContext *cx, ObjectGroup *group, jsid id, const Value &value);
+void AddTypePropertyId(ExclusiveContext *cx, ObjectGroup *group, JSObject *obj, jsid id, TypeSet::Type type);
+void AddTypePropertyId(ExclusiveContext *cx, ObjectGroup *group, JSObject *obj, jsid id, const Value &value);
 
 /* Add a possible type for a property of obj. */
 inline void
@@ -426,7 +426,7 @@ AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, TypeSet::Type ty
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
-        AddTypePropertyId(cx, obj->group(), id, type);
+        AddTypePropertyId(cx, obj->group(), obj, id, type);
 }
 
 inline void
@@ -434,7 +434,7 @@ AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, const Value &val
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
-        AddTypePropertyId(cx, obj->group(), id, value);
+        AddTypePropertyId(cx, obj->group(), obj, id, value);
 }
 
 inline void
@@ -456,7 +456,7 @@ MarkTypePropertyNonData(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
-        obj->group()->markPropertyNonData(cx, id);
+        obj->group()->markPropertyNonData(cx, obj, id);
 }
 
 inline void
@@ -464,7 +464,7 @@ MarkTypePropertyNonWritable(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
-        obj->group()->markPropertyNonWritable(cx, id);
+        obj->group()->markPropertyNonWritable(cx, obj, id);
 }
 
 inline bool
@@ -1019,11 +1019,13 @@ ObjectGroup::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-ObjectGroup::getProperty(ExclusiveContext *cx, jsid id)
+ObjectGroup::getProperty(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
+    MOZ_ASSERT_IF(obj, obj->group() == this);
+    MOZ_ASSERT_IF(singleton(), obj);
 
     if (HeapTypeSet *types = maybeGetProperty(id))
         return types;
@@ -1047,7 +1049,7 @@ ObjectGroup::getProperty(ExclusiveContext *cx, jsid id)
     setBasePropertyCount(propertyCount);
     *pprop = base;
 
-    updateNewPropertyTypes(cx, id, &base->types);
+    updateNewPropertyTypes(cx, obj, id, &base->types);
 
     if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
         // We hit the maximum number of properties the object can have, mark

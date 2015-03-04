@@ -917,7 +917,7 @@ GetContentBR(dom::Element* aElement)
     return nullptr;
   }
   nsIContent* content = static_cast<nsIContent*>(aElement);
-  return content->IsHTML(nsGkAtoms::br) ? content : nullptr;
+  return content->IsHTMLElement(nsGkAtoms::br) ? content : nullptr;
 }
 
 void

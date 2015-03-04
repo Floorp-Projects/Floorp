@@ -211,16 +211,6 @@ function setPassword()
   return success;
 }
 
-function getPassword()
-{
-  // grab what was entered
-  params.SetString(2, pw1.value);
-  // Return value
-  params.SetInt(1, 1);
-  // Terminate dialog
-  return true;
-}
-
 function setP12Password()
 {
   // grab what was entered

@@ -352,11 +352,7 @@ IsElementAnchor(nsIContent* aContent)
 {
   // Make sure we are dealing with either an <A> or <AREA> element in the HTML
   // or XHTML namespace.
-  if (!aContent->IsHTML()) {
-    return false;
-  }
-  nsIAtom* nameAtom = aContent->Tag();
-  return nameAtom == nsGkAtoms::a || nameAtom == nsGkAtoms::area;
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area);
 }
 
 static void
@@ -2620,7 +2616,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   }
   nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
   if (frameElement &&
-      frameElement->IsHTML(nsGkAtoms::iframe) &&
+      frameElement->IsHTMLElement(nsGkAtoms::iframe) &&
       !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
       !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
     return NS_OK;
@@ -13396,7 +13392,8 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   // XXX When the linking node was HTMLFormElement, it is synchronous event.
   //     That is, the caller of this method is not |OnLinkClickEvent::Run()|
   //     but |HTMLFormElement::SubmitSubmission(...)|.
-  if (nsGkAtoms::form == aContent->Tag() && ShouldBlockLoadingForBackButton()) {
+  if (aContent->IsHTMLElement(nsGkAtoms::form) &&
+      ShouldBlockLoadingForBackButton()) {
     return NS_OK;
   }
 
@@ -13426,7 +13423,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   if (IsElementAnchor(aContent)) {
-    MOZ_ASSERT(aContent->IsHTML());
+    MOZ_ASSERT(aContent->IsHTMLElement());
     nsAutoString referrer;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);

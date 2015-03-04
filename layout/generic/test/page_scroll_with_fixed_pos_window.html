@@ -52,8 +52,10 @@ function scrollDownOnePageWithContinuation(cont) {
 
 function test() {
   var smoothScrollPref = "general.smoothScroll";
-  SpecialPowers.setBoolPref(smoothScrollPref, false);
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+}
 
+function runTest() {
   showFixedPosElements(false);
   showFixedPosElements2(false);
   scrollDownOnePageWithContinuation(function() {
@@ -84,7 +86,6 @@ function test() {
 
             // Scroll back up so test results are visible
             document.documentElement.scrollTop = 0;
-            SpecialPowers.clearUserPref(smoothScrollPref);
             SimpleTest.finish();
             window.close();
           });

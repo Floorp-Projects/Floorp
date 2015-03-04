@@ -163,7 +163,7 @@ HTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
 {
   bool firstLegendHasChanged = false;
 
-  if (aChild->IsHTML(nsGkAtoms::legend)) {
+  if (aChild->IsHTMLElement(nsGkAtoms::legend)) {
     if (!mFirstLegend) {
       mFirstLegend = aChild;
       // We do not want to notify the first time mFirstElement is set.
@@ -199,7 +199,7 @@ HTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
     firstLegendHasChanged = true;
 
     for (; child; child = child->GetNextSibling()) {
-      if (child->IsHTML(nsGkAtoms::legend)) {
+      if (child->IsHTMLElement(nsGkAtoms::legend)) {
         mFirstLegend = child;
         break;
       }

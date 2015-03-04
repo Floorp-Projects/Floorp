@@ -12,10 +12,6 @@
 #include "nsGConfService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
 #endif
-#ifdef MOZ_ENABLE_GNOMEVFS
-#include "nsGnomeVFSService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
-#endif
 #ifdef MOZ_ENABLE_GIO
 #include "nsGIOService.h"
 #include "nsGSettingsService.h"
@@ -30,9 +26,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSystemAlertsService, Init)
 #ifdef MOZ_ENABLE_GCONF
 NS_DEFINE_NAMED_CID(NS_GCONFSERVICE_CID);
 #endif
-#ifdef MOZ_ENABLE_GNOMEVFS
-NS_DEFINE_NAMED_CID(NS_GNOMEVFSSERVICE_CID);
-#endif
 #ifdef MOZ_ENABLE_GIO
 NS_DEFINE_NAMED_CID(NS_GIOSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GSETTINGSSERVICE_CID);
@@ -43,9 +36,6 @@ NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
 static const mozilla::Module::CIDEntry kGnomeCIDs[] = {
 #ifdef MOZ_ENABLE_GCONF
   { &kNS_GCONFSERVICE_CID, false, nullptr, nsGConfServiceConstructor },
-#endif
-#ifdef MOZ_ENABLE_GNOMEVFS
-  { &kNS_GNOMEVFSSERVICE_CID, false, nullptr, nsGnomeVFSServiceConstructor },
 #endif
 #ifdef MOZ_ENABLE_GIO
   { &kNS_GIOSERVICE_CID, false, nullptr, nsGIOServiceConstructor },
@@ -59,9 +49,6 @@ static const mozilla::Module::CIDEntry kGnomeCIDs[] = {
 static const mozilla::Module::ContractIDEntry kGnomeContracts[] = {
 #ifdef MOZ_ENABLE_GCONF
   { NS_GCONFSERVICE_CONTRACTID, &kNS_GCONFSERVICE_CID },
-#endif
-#ifdef MOZ_ENABLE_GNOMEVFS
-  { NS_GNOMEVFSSERVICE_CONTRACTID, &kNS_GNOMEVFSSERVICE_CID },
 #endif
 #ifdef MOZ_ENABLE_GIO
   { NS_GIOSERVICE_CONTRACTID, &kNS_GIOSERVICE_CID },

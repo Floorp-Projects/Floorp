@@ -3655,7 +3655,7 @@ SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher
                         return nullptr;
                 } else {
                     /* Only string entries have been accounted for so far. */
-                    AddTypePropertyId(cx, group, JSID_VOID, UndefinedValue());
+                    AddTypePropertyId(cx, group, nullptr, JSID_VOID, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return nullptr;
                 }
@@ -3786,7 +3786,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return false;
-    AddTypePropertyId(cx, group, JSID_VOID, TypeSet::StringType());
+    AddTypePropertyId(cx, group, nullptr, JSID_VOID, TypeSet::StringType());
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;

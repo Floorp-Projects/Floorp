@@ -26,11 +26,12 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
                              XPCNativeMember**    pMember)
 {
     funobj = js::UncheckedUnwrap(funobj);
-    jsval ifaceVal = js::GetFunctionNativeReserved(funobj, 0);
-    jsval memberVal = js::GetFunctionNativeReserved(funobj, 1);
+    jsval memberVal =
+        js::GetFunctionNativeReserved(funobj,
+                                      XPC_FUNCTION_NATIVE_MEMBER_SLOT);
 
-    *pInterface = (XPCNativeInterface*) ifaceVal.toPrivate();
-    *pMember = (XPCNativeMember*) memberVal.toPrivate();
+    *pMember = static_cast<XPCNativeMember*>(memberVal.toPrivate());
+    *pInterface = (*pMember)->GetInterface();
 
     return true;
 }
@@ -49,6 +50,7 @@ bool
 XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
                          HandleObject parent, jsval *vp)
 {
+    MOZ_ASSERT(iface == GetInterface());
     if (IsConstant()) {
         RootedValue resultVal(ccx);
         nsXPIDLCString name;
@@ -83,7 +85,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, parent, GetName());
+    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, nullptr, GetName());
     if (!fun)
         return false;
 
@@ -91,8 +93,10 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
     if (!funobj)
         return false;
 
-    js::SetFunctionNativeReserved(funobj, 0, PRIVATE_TO_JSVAL(iface));
-    js::SetFunctionNativeReserved(funobj, 1, PRIVATE_TO_JSVAL(this));
+    js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_NATIVE_MEMBER_SLOT,
+                                  PrivateValue(this));
+    js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_PARENT_OBJECT_SLOT,
+                                  ObjectValue(*parent));
 
     *vp = OBJECT_TO_JSVAL(funobj);
 
@@ -287,12 +291,19 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
         } else {
             // XXX need better way to find dups
             // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
-            cur = &members[realTotalCount++];
+            if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+                NS_WARNING("Too many members in interface");
+                failed = true;
+                break;
+            }
+            cur = &members[realTotalCount];
             cur->SetName(name);
             if (info->IsGetter())
                 cur->SetReadOnlyAttribute(i);
             else
                 cur->SetMethod(i);
+            cur->SetIndexInInterface(realTotalCount);
+            ++realTotalCount;
         }
     }
 
@@ -315,10 +326,16 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
 
             // XXX need better way to find dups
             //MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
-
-            cur = &members[realTotalCount++];
+            if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+                NS_WARNING("Too many members in interface");
+                failed = true;
+                break;
+            }
+            cur = &members[realTotalCount];
             cur->SetName(name);
             cur->SetConstant(i);
+            cur->SetIndexInInterface(realTotalCount);
+            ++realTotalCount;
         }
     }
 

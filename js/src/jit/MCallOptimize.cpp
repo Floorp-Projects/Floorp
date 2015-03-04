@@ -351,6 +351,9 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == js::simd_float32x4_bitselect)
         return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::TYPE_FLOAT32);
 
+    if (native == js::simd_int32x4_swizzle)
+        return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_INT32);
+
     return InliningStatus_NotInlined;
 }
 
@@ -3097,6 +3100,22 @@ IonBuilder::inlineSimdCheck(CallInfo &callInfo, JSNative native, SimdTypeDescr::
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdSwizzle(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type)
+{
+    InlineTypedObject *templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 5, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition *lanes[4];
+    for (size_t i = 0; i < 4; i++)
+        lanes[i] = callInfo.getArg(1 + i);
+
+    MIRType mirType = SimdTypeDescrToMIRType(type);
+    MSimdGeneralSwizzle *ins = MSimdGeneralSwizzle::New(alloc(), callInfo.getArg(0), lanes, mirType);
+    return boxSimd(callInfo, ins, templateObj);
 }
 
 } // namespace jit

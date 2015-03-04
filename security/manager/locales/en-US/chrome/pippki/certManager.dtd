@@ -39,10 +39,6 @@
 <!ENTITY certmgr.editcert.trustssl            "This certificate can identify websites.">
 <!ENTITY certmgr.editcert.trustemail          "This certificate can identify mail users.">
 <!ENTITY certmgr.editcert.trustobjsign        "This certificate can identify software makers.">
-<!ENTITY certmgr.editemailcert.title          "Edit email certificate trust settings">
-<!ENTITY certmgr.editemailcert.edittrust      "Edit certificate trust settings:">
-<!ENTITY certmgr.editemailcert.dotrust        "Trust the authenticity of this certificate.">
-<!ENTITY certmgr.editemailcert.donttrust      "Do not trust the authenticity of this certificate.">
 
 <!ENTITY certmgr.deletecert.title             "Delete Certificate">
 
@@ -61,8 +57,6 @@
 <!ENTITY certmgr.view2.accesskey              "V">
 <!ENTITY certmgr.edit3.label                  "Edit Trust…">
 <!ENTITY certmgr.edit3.accesskey              "E">
-<!ENTITY certmgr.editca.label                 "Edit CA Trust">
-<!ENTITY certmgr.editca.accesskey             "d">
 <!ENTITY certmgr.export.label                 "Export…">
 <!ENTITY certmgr.export.accesskey             "x">
 <!ENTITY certmgr.delete2.label                "Delete…">

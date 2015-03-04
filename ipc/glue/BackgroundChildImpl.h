@@ -84,6 +84,24 @@ protected:
 
   virtual bool
   DeallocPBroadcastChannelChild(PBroadcastChannelChild* aActor) MOZ_OVERRIDE;
+
+  virtual dom::cache::PCacheStorageChild*
+  AllocPCacheStorageChild(const dom::cache::Namespace& aNamespace,
+                          const PrincipalInfo& aPrincipalInfo) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPCacheStorageChild(dom::cache::PCacheStorageChild* aActor) MOZ_OVERRIDE;
+
+  virtual dom::cache::PCacheChild* AllocPCacheChild() MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPCacheChild(dom::cache::PCacheChild* aActor) MOZ_OVERRIDE;
+
+  virtual dom::cache::PCacheStreamControlChild*
+  AllocPCacheStreamControlChild() MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPCacheStreamControlChild(dom::cache::PCacheStreamControlChild* aActor) MOZ_OVERRIDE;
 };
 
 class BackgroundChildImpl::ThreadLocal MOZ_FINAL

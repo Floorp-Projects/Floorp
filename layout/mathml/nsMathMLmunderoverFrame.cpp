@@ -79,7 +79,7 @@ nsMathMLmunderoverFrame::ScriptIncrement(nsIFrame* aFrame)
   }
   child = child->GetNextSibling();
   if (aFrame == child) {
-    if (mContent->Tag() == nsGkAtoms::mover_) {
+    if (mContent->IsMathMLElement(nsGkAtoms::mover_)) {
       return mIncrementOver ? 1 : 0;
     }
     return mIncrementUnder ? 1 : 0;
@@ -128,19 +128,19 @@ XXX The winner is the outermost setting in conflicting settings like these:
   nsIFrame* overscriptFrame = nullptr;
   nsIFrame* underscriptFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();
-  nsIAtom* tag = mContent->Tag();
 
   if (baseFrame) {
-    if (tag == nsGkAtoms::munder_ ||
-        tag == nsGkAtoms::munderover_) {
+    if (mContent->IsAnyOfMathMLElements(nsGkAtoms::munder_,
+                                        nsGkAtoms::munderover_)) {
       underscriptFrame = baseFrame->GetNextSibling();
     } else {
-      NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
+      NS_ASSERTION(mContent->IsMathMLElement(nsGkAtoms::mover_),
+                   "mContent->NodeInfo()->NameAtom() not recognized");
       overscriptFrame = baseFrame->GetNextSibling();
     }
   }
   if (underscriptFrame &&
-      tag == nsGkAtoms::munderover_) {
+      mContent->IsMathMLElement(nsGkAtoms::munderover_)) {
     overscriptFrame = underscriptFrame->GetNextSibling();
 
   }
@@ -155,8 +155,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
   // and its core <mo> is an accent
   nsEmbellishData embellishData;
   nsAutoString value;
-  if (tag == nsGkAtoms::munder_ ||
-      tag == nsGkAtoms::munderover_) {
+  if (mContent->IsAnyOfMathMLElements(nsGkAtoms::munder_,
+                                      nsGkAtoms::munderover_)) {
     GetEmbellishDataFrom(underscriptFrame, embellishData);
     if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags)) {
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
@@ -176,8 +176,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
 
   // The default value of accent is false, unless the overscript is embellished
   // and its core <mo> is an accent
-  if (tag == nsGkAtoms::mover_ ||
-      tag == nsGkAtoms::munderover_) {
+  if (mContent->IsAnyOfMathMLElements(nsGkAtoms::mover_,
+                                      nsGkAtoms::munderover_)) {
     GetEmbellishDataFrom(overscriptFrame, embellishData);
     if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags)) {
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
@@ -224,14 +224,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
      that math accents and \overline change uncramped styles to their
      cramped counterparts.
   */
-  if (tag == nsGkAtoms::mover_ ||
-      tag == nsGkAtoms::munderover_) {
+  if (mContent->IsAnyOfMathMLElements(nsGkAtoms::mover_,
+                                      nsGkAtoms::munderover_)) {
     uint32_t compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
       ? NS_MATHML_COMPRESSED : 0;
     mIncrementOver =
       !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) ||
       subsupDisplay;
-    SetIncrementScriptLevel(tag == nsGkAtoms::mover_ ? 1 : 2, mIncrementOver);
+    SetIncrementScriptLevel(mContent->IsMathMLElement(nsGkAtoms::mover_) ? 1 : 2, mIncrementOver);
     if (mIncrementOver) {
       PropagateFrameFlagFor(overscriptFrame,
                             NS_FRAME_MATHML_SCRIPT_DESCENDANT);
@@ -242,8 +242,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
      The TeXBook treats 'under' like a subscript, so p.141 or Rule 13a 
      say it should be compressed
   */
-  if (tag == nsGkAtoms::munder_ ||
-      tag == nsGkAtoms::munderover_) {
+  if (mContent->IsAnyOfMathMLElements(nsGkAtoms::munder_,
+                                      nsGkAtoms::munderover_)) {
     mIncrementUnder =
       !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags) ||
       subsupDisplay;
@@ -306,18 +306,17 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                                nsHTMLReflowMetrics& aDesiredSize)
 {
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  nsIAtom* tag = mContent->Tag();
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
     //place like sub sup or subsup
-    if (tag == nsGkAtoms::munderover_) {
+    if (mContent->IsMathMLElement(nsGkAtoms::munderover_)) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
                                                           this, 0, 0,
                                                           fontSizeInflation);
-    } else if (tag == nsGkAtoms::munder_) {
+    } else if (mContent->IsMathMLElement( nsGkAtoms::munder_)) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
@@ -325,7 +324,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                                                           this, 0, 0,
                                                           fontSizeInflation);
     } else {
-      NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
+      NS_ASSERTION(mContent->IsMathMLElement(nsGkAtoms::mover_),
+                   "mContent->NodeInfo()->NameAtom() not recognized");
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
@@ -350,30 +350,30 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   overSize.SetBlockStartAscent(0);
   bool haveError = false;
   if (baseFrame) {
-    if (tag == nsGkAtoms::munder_ ||
-        tag == nsGkAtoms::munderover_) {
+    if (mContent->IsAnyOfMathMLElements(nsGkAtoms::munder_,
+                                        nsGkAtoms::munderover_)) {
       underFrame = baseFrame->GetNextSibling();
-    } else if (tag == nsGkAtoms::mover_) {
+    } else if (mContent->IsMathMLElement(nsGkAtoms::mover_)) {
       overFrame = baseFrame->GetNextSibling();
     }
   }
-  if (underFrame && tag == nsGkAtoms::munderover_) {
+  if (underFrame && mContent->IsMathMLElement(nsGkAtoms::munderover_)) {
     overFrame = underFrame->GetNextSibling();
   }
   
-  if (tag == nsGkAtoms::munder_) {
+  if (mContent->IsMathMLElement(nsGkAtoms::munder_)) {
     if (!baseFrame || !underFrame || underFrame->GetNextSibling()) {
       // report an error, encourage people to get their markups in order
       haveError = true;
     }
   }
-  if (tag == nsGkAtoms::mover_) {
+  if (mContent->IsMathMLElement(nsGkAtoms::mover_)) {
     if (!baseFrame || !overFrame || overFrame->GetNextSibling()) {
       // report an error, encourage people to get their markups in order
       haveError = true;
     }
   }
-  if (tag == nsGkAtoms::munderover_) {
+  if (mContent->IsMathMLElement(nsGkAtoms::munderover_)) {
     if (!baseFrame || !underFrame || !overFrame || overFrame->GetNextSibling()) {
       // report an error, encourage people to get their markups in order
       haveError = true;

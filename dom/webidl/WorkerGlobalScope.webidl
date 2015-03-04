@@ -36,6 +36,12 @@ partial interface WorkerGlobalScope {
   readonly attribute WorkerNavigator navigator;
 };
 
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#self-caches
+partial interface WorkerGlobalScope {
+[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled"]
+readonly attribute CacheStorage caches;
+};
+
 WorkerGlobalScope implements WindowTimers;
 WorkerGlobalScope implements WindowBase64;
 WorkerGlobalScope implements GlobalFetch;

@@ -484,8 +484,8 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
   }
   else if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
            !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
-           !aElement->IsHTML(nsGkAtoms::object) &&
-           !aElement->IsHTML(nsGkAtoms::input)) {
+           !aElement->IsHTMLElement(nsGkAtoms::object) &&
+           !aElement->IsHTMLElement(nsGkAtoms::input)) {
     // Use a sized box if we have no alt text.  This means no alt attribute
     // and the node is not an object or an input (since those always have alt
     // text).
@@ -1323,7 +1323,8 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
     nsIContent* content = GetContent();
     if (content) {
       nsXPIDLString altText;
-      nsCSSFrameConstructor::GetAlternateTextFor(content, content->Tag(),
+      nsCSSFrameConstructor::GetAlternateTextFor(content,
+                                                 content->NodeInfo()->NameAtom(),
                                                  altText);
       DisplayAltText(PresContext(), aRenderingContext, altText, inner);
     }

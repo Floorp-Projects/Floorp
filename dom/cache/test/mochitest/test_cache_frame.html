@@ -1,0 +1,87 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for SharedWorker</title>
+</head>
+<body>
+<script type="text/javascript">
+  "use strict";
+  addEventListener("message", function messageListener(evt) {
+    removeEventListener("message", messageListener);
+    var success = true;
+    var c = null
+    // FIXME(nsm): Can't use a Request object for now since the operations
+    // consume it's 'body'. See
+    // https://github.com/slightlyoff/ServiceWorker/issues/510.
+    var request = "http://example.com/hmm?q=foobar";
+    var response = new Response("This is some Response!");
+    success = success && !!caches;
+    caches.open("foobar").then(function(openCache) {
+      success = success && (openCache instanceof Cache);
+      c = openCache;
+      return c.put(request, response);
+    }).then(function(putResponse) {
+      success = success && putResponse === undefined;
+      return c.keys(request);
+    }).then(function(keys) {
+      success = success && !!keys;
+      success = success && keys.length === 1;
+      return c.keys();
+    }).then(function(keys) {
+      success = success && !!keys;
+      success = success && keys.length === 1;
+      return c.matchAll(request);
+    }).then(function(matchAllResponses) {
+      success = success && !!matchAllResponses &&
+                matchAllResponses.length === 1;
+      return c.match(request);
+    }).then(function(matchResponse) {
+      success = success && !!matchResponse;
+      return caches.match(request);
+    }).then(function(storageMatchResponse) {
+      success = success && !!storageMatchResponse;
+      return caches.match(request, {cacheName:"foobar"});
+    }).then(function(storageMatchResponse) {
+      success = success && !!storageMatchResponse;
+      var request2 = new Request("http://example.com/hmm?q=snafu");
+      return c.match(request2, {ignoreSearch:true});
+    }).then(function(match2Response) {
+      success = success && !!match2Response;
+      return c.delete(request);
+    }).then(function(deleteResult) {
+      success = success && deleteResult;
+      return c.keys();
+    }).then(function(keys) {
+      success = success && !!keys;
+      success = success && keys.length === 0;
+      return c.matchAll(request);
+    }).then(function(matchAll2Responses) {
+      success = success && !!matchAll2Responses &&
+                matchAll2Responses.length === 0;
+      return caches.has("foobar");
+    }).then(function(hasResult) {
+      success = success && hasResult;
+      return caches.keys();
+    }).then(function(keys) {
+      success = success && !!keys;
+      success = success && keys.length === 1;
+      success = success && keys.indexOf("foobar") === 0;
+      return caches.delete("foobar");
+    }).then(function(deleteResult) {
+      success = success && deleteResult;
+      return caches.has("foobar");
+    }).then(function(hasMissingCache) {
+      success = success && !hasMissingCache;
+      parent.postMessage({
+        type: "result",
+        success: success
+      }, "*");
+    });
+  });
+</script>
+</body>
+</html>

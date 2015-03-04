@@ -11,6 +11,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -31,6 +32,9 @@
 #endif
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
+using mozilla::dom::cache::PCacheParent;
+using mozilla::dom::cache::PCacheStorageParent;
+using mozilla::dom::cache::PCacheStreamControlParent;
 
 namespace {
 
@@ -544,6 +548,48 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar()
   MOZ_ASSERT(service);
 
   service->Shutdown();
+  return true;
+}
+
+PCacheStorageParent*
+BackgroundParentImpl::AllocPCacheStorageParent(const Namespace& aNamespace,
+                                               const PrincipalInfo& aPrincipalInfo)
+{
+  return dom::cache::AllocPCacheStorageParent(this, aNamespace, aPrincipalInfo);
+}
+
+bool
+BackgroundParentImpl::DeallocPCacheStorageParent(PCacheStorageParent* aActor)
+{
+  dom::cache::DeallocPCacheStorageParent(aActor);
+  return true;
+}
+
+PCacheParent*
+BackgroundParentImpl::AllocPCacheParent()
+{
+  MOZ_CRASH("CacheParent actor must be provided to PBackground manager");
+  return nullptr;
+}
+
+bool
+BackgroundParentImpl::DeallocPCacheParent(PCacheParent* aActor)
+{
+  dom::cache::DeallocPCacheParent(aActor);
+  return true;
+}
+
+PCacheStreamControlParent*
+BackgroundParentImpl::AllocPCacheStreamControlParent()
+{
+  MOZ_CRASH("CacheStreamControlParent actor must be provided to PBackground manager");
+  return nullptr;
+}
+
+bool
+BackgroundParentImpl::DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor)
+{
+  dom::cache::DeallocPCacheStreamControlParent(aActor);
   return true;
 }
 

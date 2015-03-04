@@ -849,7 +849,7 @@ nsXMLContentSink::PushContent(nsIContent *aContent)
 
   // When an XML parser would append a node to a template element, it
   // must instead append it to the template element's template contents.
-  if (contentToPush->IsHTML(nsGkAtoms::_template)) {
+  if (contentToPush->IsHTMLElement(nsGkAtoms::_template)) {
     HTMLTemplateElement* templateElement =
       static_cast<HTMLTemplateElement*>(contentToPush);
     contentToPush = templateElement->Content();
@@ -1116,7 +1116,7 @@ nsXMLContentSink::HandleEndElement(const char16_t *aName,
   }
   DidAddContent();
 
-  if (content->IsSVG(nsGkAtoms::svg)) {
+  if (content->IsSVGElement(nsGkAtoms::svg)) {
     FlushTags();
     nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(content);
     if (NS_FAILED(NS_DispatchToMainThread(event))) {

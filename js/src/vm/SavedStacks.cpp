@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include <math.h>
 
@@ -33,6 +34,7 @@
 using mozilla::AddToHash;
 using mozilla::DebugOnly;
 using mozilla::HashString;
+using mozilla::Maybe;
 
 namespace js {
 
@@ -338,7 +340,7 @@ GetFirstSubsumedSavedFrame(JSContext *cx, HandleObject savedFrame)
 
 /* static */ bool
 SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
-                      MutableHandleSavedFrame frame)
+                      MutableHandleObject frame)
 {
     const Value &thisValue = args.thisv();
 
@@ -364,10 +366,10 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
         return false;
     }
 
-    // The caller might not have the principals to see this frame's data, so get
-    // the first one they _do_ have access to.
-    RootedSavedFrame rooted(cx, &thisObject->as<SavedFrame>());
-    frame.set(GetFirstSubsumedFrame(cx, rooted));
+    // Now set "frame" to the actual object we were invoked in (which may be a
+    // wrapper), not the unwrapped version.  Consumers will need to know what
+    // that original object was, and will do principal checks as needed.
+    frame.set(&thisValue.toObject());
     return true;
 }
 
@@ -384,13 +386,55 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName,
 //   - Rooted<SavedFrame *> frame (will be non-null)
 #define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)             \
     CallArgs args = CallArgsFromVp(argc, vp);                          \
-    RootedSavedFrame frame(cx);                                        \
+    RootedObject frame(cx);                                            \
     if (!checkThis(cx, args, fnName, &frame))                          \
         return false;
 
 } /* namespace js */
 
 namespace JS {
+
+namespace {
+
+// It's possible that our caller is privileged (and hence would see the entire
+// stack) but we're working with an SavedFrame object that was captured in
+// unprivileged code.  If so, drop privileges down to its level.  The idea is
+// that this way devtools code that's asking an exception object for a stack to
+// display will end up with the stack the web developer would see via doing
+// .stack in a web page, with Firefox implementation details excluded.
+//
+// We want callers to pass us the object they were actually passed, not an
+// unwrapped form of it.  That way Xray access to SavedFrame objects should not
+// be affected by AutoMaybeEnterFrameCompartment and the only things that will
+// be affected will be cases in which privileged code works with some C++ object
+// that then pokes at an unprivileged StackFrame it has on hand.
+class MOZ_STACK_CLASS AutoMaybeEnterFrameCompartment
+{
+public:
+    AutoMaybeEnterFrameCompartment(JSContext *cx,
+                                   HandleObject obj
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        // Note that obj might be null here, since we're doing this
+        // before UnwrapSavedFrame.
+        if (obj && cx->compartment() != obj->compartment())
+        {
+            JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes;
+            if (subsumes && subsumes(cx->compartment()->principals,
+                                     obj->compartment()->principals))
+            {
+                ac_.emplace(cx, obj);
+            }
+        }
+    }
+
+ private:
+    Maybe<JSAutoCompartment> ac_;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} // anonymous namespace
 
 static inline js::SavedFrame *
 UnwrapSavedFrame(JSContext *cx, HandleObject obj)
@@ -407,6 +451,7 @@ UnwrapSavedFrame(JSContext *cx, HandleObject obj)
 JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameSource(JSContext *cx, HandleObject savedFrame, MutableHandleString sourcep)
 {
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
     if (!frame) {
         sourcep.set(cx->runtime()->emptyString);
@@ -420,6 +465,7 @@ JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameLine(JSContext *cx, HandleObject savedFrame, uint32_t *linep)
 {
     MOZ_ASSERT(linep);
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
     if (!frame) {
         *linep = 0;
@@ -433,6 +479,7 @@ JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameColumn(JSContext *cx, HandleObject savedFrame, uint32_t *columnp)
 {
     MOZ_ASSERT(columnp);
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
     if (!frame) {
         *columnp = 0;
@@ -445,6 +492,7 @@ GetSavedFrameColumn(JSContext *cx, HandleObject savedFrame, uint32_t *columnp)
 JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameFunctionDisplayName(JSContext *cx, HandleObject savedFrame, MutableHandleString namep)
 {
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
     if (!frame) {
         namep.set(nullptr);
@@ -457,6 +505,7 @@ GetSavedFrameFunctionDisplayName(JSContext *cx, HandleObject savedFrame, Mutable
 JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject parentp)
 {
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
     if (!frame) {
         parentp.set(nullptr);
@@ -470,6 +519,7 @@ GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject 
 JS_PUBLIC_API(bool)
 StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString stringp)
 {
+    AutoMaybeEnterFrameCompartment ac(cx, stack);
     js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, stack));
     if (!frame) {
         stringp.set(cx->runtime()->emptyString);

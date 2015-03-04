@@ -3234,13 +3234,13 @@ LIRGenerator::visitPolyInlineGuard(MPolyInlineGuard *ins)
 }
 
 void
-LIRGenerator::visitGuardShapePolymorphic(MGuardShapePolymorphic *ins)
+LIRGenerator::visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic *ins)
 {
     MOZ_ASSERT(ins->obj()->type() == MIRType_Object);
     MOZ_ASSERT(ins->type() == MIRType_Object);
 
-    LGuardShapePolymorphic *guard =
-        new(alloc()) LGuardShapePolymorphic(useRegister(ins->obj()), temp());
+    LGuardReceiverPolymorphic *guard =
+        new(alloc()) LGuardReceiverPolymorphic(useRegister(ins->obj()), temp());
     assignSnapshot(guard, Bailout_ShapeGuard);
     add(guard, ins);
     redefine(ins, ins->obj());
@@ -3940,6 +3940,29 @@ LIRGenerator::visitSimdSwizzle(MSimdSwizzle *ins)
     } else if (ins->input()->type() == MIRType_Float32x4) {
         LUse use = useRegisterAtStart(ins->input());
         LSimdSwizzleF *lir = new (alloc()) LSimdSwizzleF(use);
+        define(lir, ins);
+    } else {
+        MOZ_CRASH("Unknown SIMD kind when getting lane");
+    }
+}
+
+void
+LIRGenerator::visitSimdGeneralSwizzle(MSimdGeneralSwizzle *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    LAllocation lanesUses[4];
+    for (size_t i = 0; i < 4; i++)
+        lanesUses[i] = use(ins->lane(i));
+
+    if (ins->input()->type() == MIRType_Int32x4) {
+        LSimdGeneralSwizzleI *lir = new (alloc()) LSimdGeneralSwizzleI(useRegister(ins->input()),
+                                                                       lanesUses, temp());
+        define(lir, ins);
+    } else if (ins->input()->type() == MIRType_Float32x4) {
+        LSimdGeneralSwizzleF *lir = new (alloc()) LSimdGeneralSwizzleF(useRegister(ins->input()),
+                                                                       lanesUses, temp());
         define(lir, ins);
     } else {
         MOZ_CRASH("Unknown SIMD kind when getting lane");
