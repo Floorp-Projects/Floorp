@@ -2186,6 +2186,17 @@ ContainerState::PopPaintedLayerData()
   int32_t lastIndex = mPaintedLayerDataStack.Length() - 1;
   PaintedLayerData* data = mPaintedLayerDataStack[lastIndex];
 
+  nsRefPtr<PaintedLayer> paintedLayer =
+    CreateOrRecyclePaintedLayer(data->mAnimatedGeometryRoot,
+                                data->mReferenceFrame,
+                                data->mAnimatedGeometryRootOffset);
+
+  data->mLayer = paintedLayer.get();
+
+  NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, data->mLayer) < 0,
+               "Layer already in list???");
+  mNewChildLayers[data->mNewChildLayersIndex].mLayer = data->mLayer;
+
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
 
@@ -2660,12 +2671,8 @@ ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
 
   PaintedLayerData* paintedLayerData = nullptr;
   if (lowestUsableLayerWithScrolledRoot < 0) {
-    nsRefPtr<PaintedLayer> layer =
-      CreateOrRecyclePaintedLayer(aAnimatedGeometryRoot, aItem->ReferenceFrame(), aTopLeft);
-
     paintedLayerData = new PaintedLayerData();
     mPaintedLayerDataStack.AppendElement(paintedLayerData);
-    paintedLayerData->mLayer = layer;
     paintedLayerData->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
     paintedLayerData->mAnimatedGeometryRootOffset = aTopLeft;
     paintedLayerData->mFixedPosFrameForLayerData =
@@ -2675,11 +2682,8 @@ ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
     paintedLayerData->mReferenceFrame = aItem->ReferenceFrame();
     paintedLayerData->mSingleItemFixedToViewport = aShouldFixToViewport;
 
-    NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
-                 "Layer already in list???");
     paintedLayerData->mNewChildLayersIndex = mNewChildLayers.Length();
     NewLayerEntry* newLayerEntry = mNewChildLayers.AppendElement();
-    newLayerEntry->mLayer = layer.forget();
     newLayerEntry->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
     newLayerEntry->mFixedPosFrameForLayerData = paintedLayerData->mFixedPosFrameForLayerData;
     // newLayerEntry->mOpaqueRegion is filled in later from
