@@ -17,6 +17,12 @@ this.EXPORTED_SYMBOLS = ["ContentCollector"];
 
 var ContentCollector = {
   init: function() {
+      let processType = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType;
+      if (processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+        // In the main process, we handle triggering collections in browser-test.js
+        return;
+      }
+
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                  .getService(Ci.nsISyncMessageSender);
     cpmm.addMessageListener("browser-test:collect-request", this);
