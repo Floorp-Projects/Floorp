@@ -4,35 +4,24 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-notification,
-.messageText > .text-link {
-  color: InfoText !important;
-}
-
 notification {
+  color: InfoText;
   background-color: InfoBackground;
   text-shadow: none;
 }
 
-notification[type="info"],
-notification[type="info"] .messageText > .text-link {
-  color: -moz-DialogText !important;
-}
-
 notification[type="info"] {
+  color: -moz-DialogText;
   background-color: -moz-Dialog;
 }
 
-notification[type="critical"],
-notification[type="critical"] .messageText > .text-link {
-  color: white !important;
-}
-
 notification[type="critical"] {
+  color: white;
   background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
 }
 
 .messageText > .text-link {
+  color: inherit !important;
   text-decoration: underline;
 }
 
