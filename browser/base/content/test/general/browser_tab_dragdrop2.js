@@ -1,52 +1,57 @@
-function test()
-{
-  waitForExplicitFinish();
+"use strict";
 
-  var level1 = false;
-  var level2 = false;
-  function test1() {
-    // Load the following URI (which runs some child popup tests) in a new window (B),
-    // then add a blank tab to B and call replaceTabWithWindow to detach the URI tab
-    // into yet a new window (C), then close B.
-    // Now run the tests again and then close C.
-    // The test results does not matter, all this is just to exercise some code to
-    // catch assertions or crashes.
-    var chromeroot = getRootDirectory(gTestPath);
-    var uri = chromeroot + "browser_tab_dragdrop2_frame1.xul";
-    let window_B = openDialog(location, "_blank", "chrome,all,dialog=no,left=200,top=200,width=200,height=200", uri);
-    window_B.addEventListener("load", function(aEvent) {
-      window_B.removeEventListener("load", arguments.callee, false);
-      if (level1) return; level1=true;
-      executeSoon(function () {
-        window_B.gBrowser.addEventListener("load", function(aEvent) {
-          window_B.removeEventListener("load", arguments.callee, true);
-          if (level2) return; level2=true;
-          is(window_B.gBrowser.getBrowserForTab(window_B.gBrowser.tabs[0]).contentWindow.location, uri, "sanity check");
-          //alert("1:"+window_B.gBrowser.getBrowserForTab(window_B.gBrowser.tabs[0]).contentWindow.location);
-          var windowB_tab2 = window_B.gBrowser.addTab("about:blank", {skipAnimation: true});
-          setTimeout(function () {
-            //alert("2:"+window_B.gBrowser.getBrowserForTab(window_B.gBrowser.tabs[0]).contentWindow.location);
-            window_B.gBrowser.addEventListener("pagehide", function(aEvent) {
-              window_B.gBrowser.removeEventListener("pagehide", arguments.callee, true);
-              executeSoon(function () {
-                // alert("closing window_B which has "+ window_B.gBrowser.tabs.length+" tabs\n"+
-                //      window_B.gBrowser.getBrowserForTab(window_B.gBrowser.tabs[0]).contentWindow.location);
-                window_B.close();
+const ROOT = getRootDirectory(gTestPath);
+const URI = ROOT + "browser_tab_dragdrop2_frame1.xul";
 
-                var doc = window_C.gBrowser.getBrowserForTab(window_C.gBrowser.tabs[0])
-                            .docShell.contentViewer.DOMDocument;
-                var calls = doc.defaultView.test_panels();
-                window_C.close();
-                finish();
-              });
-            }, true);
-            window_B.gBrowser.selectedTab = window_B.gBrowser.tabs[0];
-            var window_C = window_B.gBrowser.replaceTabWithWindow(window_B.gBrowser.tabs[0]);
-            }, 1000);  // 1 second to allow the tests to create the popups
-        }, true);
-      });
-    }, false);
-  }
+// Load the test page (which runs some child popup tests) in a new window.
+// After the tests were run, tear off the tab into a new window and run popup
+// tests a second time. We don't care about tests results, exceptions and
+// crashes will be caught.
+add_task(function* () {
+  // Open a new window.
+  let args = "chrome,all,dialog=no";
+  let win = window.openDialog(getBrowserURL(), "_blank", args, URI);
 
-  test1();
+  // Wait until the tests were run.
+  yield promiseTestsDone(win);
+  ok(true, "tests succeeded");
+
+  // Create a second tab so that we can move the original one out.
+  win.gBrowser.addTab("about:blank", {skipAnimation: true});
+
+  // Tear off the original tab.
+  let browser = win.gBrowser.selectedBrowser;
+  let tabClosed = promiseWaitForEvent(browser, "pagehide", true);
+  let win2 = win.gBrowser.replaceTabWithWindow(win.gBrowser.tabs[0]);
+
+  // Add a 'TestsDone' event listener to ensure that the docShells is properly
+  // swapped to the new window instead of the page being loaded again. If this
+  // works fine we should *NOT* see a TestsDone event.
+  let onTestsDone = () => ok(false, "shouldn't run tests when tearing off");
+  win2.addEventListener("TestsDone", onTestsDone);
+
+  // Wait until the original tab is gone and the new window is ready.
+  yield Promise.all([tabClosed, promiseDelayedStartupFinished(win2)]);
+
+  // Remove the 'TestsDone' event listener as now
+  // we're kicking off a new test run manually.
+  win2.removeEventListener("TestsDone", onTestsDone);
+
+  // Run tests once again.
+  let promise = promiseTestsDone(win2);
+  win2.content.test_panels();
+  yield promise;
+  ok(true, "tests succeeded a second time");
+
+  // Cleanup.
+  yield promiseWindowClosed(win2);
+  yield promiseWindowClosed(win);
+});
+
+function promiseTestsDone(win) {
+  return promiseWaitForEvent(win, "TestsDone");
+}
+
+function promiseDelayedStartupFinished(win) {
+  return new Promise(resolve => whenDelayedStartupFinished(win, resolve));
 }

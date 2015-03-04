@@ -37,10 +37,11 @@ SimpleTest.waitForExplicitFinish();
 
 var currentTest = null;
 
-var i = 0;
+var i, waitSteps;
 var my_debug = false;
 function test_panels()
 {
+  i = waitSteps = 0;
   checkTreeCoords();
 
   addEventListener("popupshown", popupShown, false);
@@ -52,16 +53,17 @@ function nextTest()
 {
   ok(true,"popuphidden " + i)
   if (i == tests.length) {
+    let details = {bubbles: true, cancelable: false};
+    document.dispatchEvent(new CustomEvent("TestsDone", details));
     return i;
   }
 
   currentTest = tests[i];
   var panel = createPanel(currentTest.attrs);
-  currentTest.test(panel);
+  SimpleTest.waitForFocus(() => currentTest.test(panel));
   return i;
 }
 
-var waitSteps = 0;
 function popupShown(event)
 {
   var panel = event.target;
