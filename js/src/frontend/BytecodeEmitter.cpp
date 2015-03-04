@@ -1926,6 +1926,8 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = false;
         return true;
 
+      case PNK_BREAK:
+      case PNK_CONTINUE:
       case PNK_DEBUGGER:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         *answer = true;
@@ -2030,6 +2032,15 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_COLON:
+      case PNK_CASE:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (!checkSideEffects(pn->pn_left, answer))
+            return false;
+        if (*answer)
+            return true;
+        return checkSideEffects(pn->pn_right, answer);
+
       // More getters.
       case PNK_ELEM:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -2045,6 +2056,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       // These affect visible names in this code, or in other code.
       case PNK_IMPORT:
       case PNK_EXPORT_FROM:
+      case PNK_EXPORT_DEFAULT:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -2055,19 +2067,32 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
-      case PNK_BREAK:
-      case PNK_CONTINUE:
-      case PNK_EXPORT_BATCH_SPEC:
-      case PNK_FRESHENBLOCK:
-      case PNK_EXPORT_DEFAULT:
-      case PNK_COLON:
-      case PNK_CASE:
-      case PNK_SHORTHAND:
+      // Every part of a loop might be effect-free, but looping infinitely *is*
+      // an effect.  (Language lawyer trivia: C++ says threads can be assumed
+      // to exit or have side effects, C++14 [intro.multithread]p27, so a C++
+      // implementation's equivalent of the below could set |*answer = false;|
+      // if all loop sub-nodes set |*answer = false|!)
       case PNK_DOWHILE:
       case PNK_WHILE:
+      case PNK_FOR:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Declarations affect the name set of the relevant scope.
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_LET:
+      case PNK_GLOBALCONST:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = true;
+        return true;
+
+      case PNK_EXPORT_BATCH_SPEC:
+      case PNK_FRESHENBLOCK:
+      case PNK_SHORTHAND:
       case PNK_SWITCH:
       case PNK_LETBLOCK:
-      case PNK_FOR:
       case PNK_CLASSMETHOD:
       case PNK_WITH:
       case PNK_CLASSNAMES:
@@ -2076,9 +2101,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_YIELD:
       case PNK_RETURN:
       case PNK_CONDITIONAL:
-      case PNK_FORIN:
-      case PNK_FOROF:
-      case PNK_FORHEAD:
       case PNK_CLASS:
       case PNK_IF:
       case PNK_TRY:
@@ -2113,10 +2135,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_STATEMENTLIST:
       case PNK_ARGSBODY:
       case PNK_ARRAYCOMP:
-      case PNK_VAR:
-      case PNK_CONST:
-      case PNK_LET:
-      case PNK_GLOBALCONST:
       case PNK_OBJECT:
       case PNK_CLASSMETHODLIST:
       case PNK_TEMPLATE_STRING_LIST:
@@ -2134,6 +2152,11 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_IMPORT_SPEC:
       case PNK_CALLSITEOBJ:
         break; // for now
+
+      case PNK_FORIN:
+      case PNK_FOROF:
+      case PNK_FORHEAD:
+        MOZ_CRASH("handled by parent nodes");
 
       case PNK_LIMIT: // invalid sentinel value
         MOZ_CRASH("invalid node kind");
