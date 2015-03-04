@@ -23,7 +23,7 @@
   </head>
   <body>
     <div id="log"></div>
-    <script type="text/javascript;version=1.8">
+    <script type="text/javascript">
 
 'use strict';
 
@@ -114,8 +114,8 @@ function EventWatcher(watchedNode, eventTypes)
     resolveFunc(evt);
   }
 
-  for (let event of eventTypes) {
-    watchedNode.addEventListener(event, eventHandler);
+  for (var i = 0; i < eventTypes.length; i++) {
+    watchedNode.addEventListener(eventTypes[i], eventHandler);
   }
 
   this.waitForEvent = function(type) {
@@ -154,8 +154,8 @@ function EventWatcher(watchedNode, eventTypes)
   };
 
   this.stopWatching = function() {
-    for (let event of eventTypes) {
-      watchedNode.removeEventListener(event, eventHandler);
+    for (var i = 0; i < eventTypes.length; i++) {
+      watchedNode.removeEventListener(eventTypes[i], eventHandler);
     }
   };
 
@@ -431,7 +431,7 @@ async_test(function(t) {
   var divs = new Array(6);
   var eventWatchers = new Array(6);
   var players = new Array(6);
-  for (let i = 0; i < 6; i++) {
+  for (var i = 0; i < 6; i++) {
     divs[i] = addDiv(t, {'class': 'animated-div'});
     eventWatchers[i] = new EventWatcher(divs[i], CSS_ANIM_EVENTS);
     divs[i].style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
@@ -481,7 +481,7 @@ async_test(function(t) {
   // See the long comment documenting this async_test for an explanation of
   // why we have this timeout and its relationship to intermittent failure.
   setTimeout(function() {
-    for (let i = 0; i < 6; i++) {
+    for (var i = 0; i < 6; i++) {
       eventWatchers[i].stopWatching();
     }
     t.done();
