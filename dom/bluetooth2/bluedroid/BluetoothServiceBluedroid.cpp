@@ -1617,8 +1617,13 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   }
 
   // Update attribute BluetoothDevice.name if the device is paired.
-  if (bonded && STATUS_SUCCESS) {
+  if (bonded && aStatus == STATUS_SUCCESS) {
     MOZ_ASSERT(nameExists);
+
+    // We don't assert |!deviceName.IsEmpty()| here since empty string is also
+    // a valid name.
+    // According to Bluetooth Core Spec. v3.0 - Sec. 6.22, a valid Bluetooth
+    // name is a UTF-8 encoding string which is up to 248 bytes in length.
     BT_APPEND_NAMED_VALUE(propertiesArray, "Name", deviceName);
   }
 
