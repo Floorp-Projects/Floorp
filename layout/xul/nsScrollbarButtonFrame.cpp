@@ -232,7 +232,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsPresContext* aPresContext,
 
     if (child) {
       // see if it is the child
-       if (child->Tag() == atom)
+       if (child->IsXULElement(atom))
        {
          result = childFrame;
 
@@ -264,7 +264,7 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start,
         // get the content node
         nsIContent* child = start->GetContent();
 
-        if (child && child->Tag() == toFind) {
+        if (child && child->IsXULElement(toFind)) {
           result = start;
           return NS_OK;
         }

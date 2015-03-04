@@ -28,6 +28,8 @@
     _(SimdInsertElementI)           \
     _(SimdInsertElementF)           \
     _(SimdSignMaskX4)               \
+    _(SimdGeneralSwizzleI)          \
+    _(SimdGeneralSwizzleF)          \
     _(SimdSwizzleI)                 \
     _(SimdSwizzleF)                 \
     _(SimdShuffle)                  \
@@ -201,7 +203,7 @@
     _(StoreSlotV)                   \
     _(StoreSlotT)                   \
     _(GuardShape)                   \
-    _(GuardShapePolymorphic)        \
+    _(GuardReceiverPolymorphic)     \
     _(GuardObjectGroup)             \
     _(GuardObjectIdentity)          \
     _(GuardClass)                   \

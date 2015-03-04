@@ -189,7 +189,7 @@ nsSVGFilterFrame::Init(nsIContent*       aContent,
                        nsContainerFrame* aParent,
                        nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::filter),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::filter),
                "Content is not an SVG filter");
 
   nsSVGFilterFrameBase::Init(aContent, aParent, aPrevInFlow);

@@ -30,6 +30,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/FileService.h"
+#include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/LazyIdleThread.h"
@@ -1419,8 +1420,8 @@ QuotaManager::Init()
     NS_WARNING("Unable to respond to testing pref changes!");
   }
 
-  static_assert(Client::IDB == 0 && Client::ASMJS == 1 && Client::TYPE_MAX == 2,
-                "Fix the registration!");
+  static_assert(Client::IDB == 0 && Client::ASMJS == 1 && Client::DOMCACHE == 2 &&
+                Client::TYPE_MAX == 3, "Fix the registration!");
 
   NS_ASSERTION(mClients.Capacity() == Client::TYPE_MAX,
                "Should be using an auto array with correct capacity!");
@@ -1430,6 +1431,7 @@ QuotaManager::Init()
   // Register clients.
   mClients.AppendElement(idbClient);
   mClients.AppendElement(asmjscache::CreateClient());
+  mClients.AppendElement(cache::CreateQuotaClient());
 
   return NS_OK;
 }

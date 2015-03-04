@@ -13,7 +13,7 @@
 inline bool
 nsIContent::IsInHTMLDocument() const
 {
-  return OwnerDoc()->IsHTML();
+  return OwnerDoc()->IsHTMLDocument();
 }
 
 #endif // nsIContentInlines_h

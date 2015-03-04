@@ -72,6 +72,16 @@ public:
 protected:
     virtual bool RecvStart() MOZ_OVERRIDE;
 
+    virtual PTestBridgeMainSubChild*
+    AllocPTestBridgeMainSubChild(Transport* transport,
+                                 ProcessId otherProcess) MOZ_OVERRIDE
+    {
+        // This shouldn't be called. It's just a byproduct of testing that
+        // the right code is generated for a bridged protocol that's also
+        // opened, but we only test bridging here.
+        MOZ_CRASH();
+    }
+
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
     IPDLUnitTestSubprocess* mSubprocess;

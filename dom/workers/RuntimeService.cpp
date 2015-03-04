@@ -156,6 +156,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #endif
 
 #define PREF_DOM_FETCH_ENABLED         "dom.fetch.enabled"
+#define PREF_DOM_CACHES_ENABLED        "dom.caches.enabled"
 #define PREF_WORKERS_LATEST_JS_VERSION "dom.workers.latestJSVersion"
 #define PREF_INTL_ACCEPT_LANGUAGES     "intl.accept_languages"
 
@@ -1778,6 +1779,10 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_DOM_FETCH_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DOM_FETCH))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
+                                  PREF_DOM_CACHES_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DOM_CACHES))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -1967,6 +1972,10 @@ RuntimeService::Cleanup()
         NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_DOM_CACHES_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DOM_CACHES))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
                                   PREF_DOM_FETCH_ENABLED,
@@ -2559,6 +2568,12 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
     key = WORKERPREF_DOM_FETCH;
     sDefaultPreferences[WORKERPREF_DOM_FETCH] =
       Preferences::GetBool(PREF_DOM_FETCH_ENABLED, false);
+  }
+
+  if (key == WORKERPREF_DOM_CACHES) {
+    key = WORKERPREF_DOM_CACHES;
+    sDefaultPreferences[WORKERPREF_DOM_CACHES] =
+      Preferences::GetBool(PREF_DOM_CACHES_ENABLED, false);
   }
 
   // This function should never be registered as a callback for a preference it

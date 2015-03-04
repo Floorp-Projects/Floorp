@@ -49,13 +49,6 @@ class MediaTrackListListener;
 
 class MediaStreamDirectListener;
 
-// For classes that need fixed track IDs
-enum {
-  kVideoTrack = 1,
-  kAudioTrack = 2,
-  kTrackCount
-};
-
 #define NS_DOMMEDIASTREAM_IID \
 { 0x8cb65468, 0x66c0, 0x444e, \
   { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
@@ -184,28 +177,17 @@ public:
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
 
-  // Indicate what track types we eventually expect to add to this stream
-  enum {
-    HINT_CONTENTS_AUDIO = 1 << 0,
-    HINT_CONTENTS_VIDEO = 1 << 1,
-    HINT_CONTENTS_UNKNOWN = 1 << 2
-  };
-  TrackTypeHints GetHintContents() const { return mHintContents; }
-  void SetHintContents(TrackTypeHints aHintContents);
-
-  TrackTypeHints GetTrackTypesAvailable() const { return mTrackTypesAvailable; }
-
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
+  CreateSourceStream(nsIDOMWindow* aWindow);
 
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
+  CreateTrackUnionStream(nsIDOMWindow* aWindow);
 
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
@@ -220,14 +202,8 @@ public:
 
   class OnTracksAvailableCallback {
   public:
-    explicit OnTracksAvailableCallback(uint8_t aExpectedTracks = 0)
-      : mExpectedTracks(aExpectedTracks) {}
     virtual ~OnTracksAvailableCallback() {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
-    TrackTypeHints GetExpectedTracks() { return mExpectedTracks; }
-    void SetExpectedTracks(TrackTypeHints aExpectedTracks) { mExpectedTracks = aExpectedTracks; }
-  private:
-    TrackTypeHints mExpectedTracks;
   };
   // When one track of the appropriate type has been added for each bit set
   // in aCallback->GetExpectedTracks(), run aCallback->NotifyTracksAvailable.
@@ -273,11 +249,15 @@ protected:
   virtual ~DOMMediaStream();
 
   void Destroy();
-  void InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
-  void InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
+  void InitSourceStream(nsIDOMWindow* aWindow);
+  void InitTrackUnionStream(nsIDOMWindow* aWindow);
   void InitStreamCommon(MediaStream* aStream);
   already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
   already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
+
+  // Called when MediaStreamGraph has finished an iteration where tracks were
+  // created.
+  void TracksCreated();
 
   void CheckTracksAvailable();
 
@@ -299,15 +279,14 @@ protected:
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
 
+  // Set to true after MediaStreamGraph has created tracks for mStream.
+  bool mTracksCreated;
+
   nsString mID;
 
   // Keep these alive until the stream finishes
   nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;
 
-  // Indicate what track types we eventually expect to add to this stream
-  uint8_t mHintContents;
-  // Indicate what track types have arrived in this stream
-  uint8_t mTrackTypesAvailable;
   bool mNotifiedOfMediaStreamGraphShutdown;
 
   // Send notifications to AudioTrackList or VideoTrackList, if this MediaStream
@@ -352,13 +331,13 @@ public:
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
+  CreateSourceStream(nsIDOMWindow* aWindow);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents = 0);
+  CreateTrackUnionStream(nsIDOMWindow* aWindow);
 
 protected:
   virtual ~DOMLocalMediaStream();
@@ -381,8 +360,7 @@ public:
    */
   static already_AddRefed<DOMAudioNodeMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                         AudioNode* aNode,
-                         TrackTypeHints aHintContents = 0);
+                         AudioNode* aNode);
 
 protected:
   ~DOMAudioNodeMediaStream();

@@ -707,7 +707,7 @@ CountOptionsAndOptgroups(nsIFrame* aFrame)
     nsIFrame* child = e.get();
     nsIContent* content = child->GetContent();
     if (content) {
-      if (content->IsHTML(nsGkAtoms::option)) {
+      if (content->IsHTMLElement(nsGkAtoms::option)) {
         ++count;
       } else {
         nsCOMPtr<nsIDOMHTMLOptGroupElement> optgroup = do_QueryInterface(content);

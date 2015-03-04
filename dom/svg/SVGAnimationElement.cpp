@@ -138,7 +138,8 @@ SVGAnimationElement::GetTargetElement()
   // We'll just call the other GetTargetElement method, and QI to the right type
   nsIContent* target = GetTargetElementContent();
 
-  return (target && target->IsSVG()) ? static_cast<nsSVGElement*>(target) : nullptr;
+  return (target && target->IsSVGElement())
+           ? static_cast<nsSVGElement*>(target) : nullptr;
 }
 
 float

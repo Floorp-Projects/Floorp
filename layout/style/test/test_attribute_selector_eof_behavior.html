@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for EOF behavior of attribute selectors in selectors API</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  assert_equals(document.querySelector("[id"),
+                document.getElementById("log"),
+                "We only have one element with an id");
+}, "']' should be implied if EOF after attribute name");
+test(function() {
+  assert_equals(document.querySelector('[id="log"'),
+                document.getElementById("log"),
+                "We should find the element with id=log");
+}, "']' should be implied if EOF after attribute value");
+</script>

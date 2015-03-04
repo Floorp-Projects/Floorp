@@ -53,7 +53,7 @@ void nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
     nsIFrame* selectedFrame = outFrames.ElementAt(i);
     while (selectedFrame &&
            !(selectedFrame->GetContent() &&
-             selectedFrame->GetContent()->IsHTML(nsGkAtoms::option))) {
+             selectedFrame->GetContent()->IsHTMLElement(nsGkAtoms::option))) {
       selectedFrame = selectedFrame->GetParent();
     }
     if (selectedFrame) {

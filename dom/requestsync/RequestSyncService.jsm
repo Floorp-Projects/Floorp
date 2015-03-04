@@ -249,9 +249,8 @@ this.RequestSyncService = {
     debug('removeRegistrationInternal');
 
     let obj = this._registrations[aKey][aTaskName];
-    if (obj.timer) {
-      obj.timer.cancel();
-    }
+
+    this.removeTimer(obj);
 
     // It can be that this task has been already schedulated.
     this.removeTaskFromQueue(obj);

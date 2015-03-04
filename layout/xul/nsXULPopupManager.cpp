@@ -1569,7 +1569,7 @@ nsXULPopupManager::GetLastTriggerNode(nsIDocument* aDocument, bool aIsTooltip)
   // fired. In this case, just use the cached node, as the popup is not yet in
   // the list of open popups.
   if (mOpeningPopup && mOpeningPopup->GetCurrentDoc() == aDocument &&
-      aIsTooltip == (mOpeningPopup->Tag() == nsGkAtoms::tooltip)) {
+      aIsTooltip == mOpeningPopup->IsXULElement(nsGkAtoms::tooltip)) {
     node = do_QueryInterface(nsMenuPopupFrame::GetTriggerContent(GetPopupFrameForContent(mOpeningPopup, false)));
   }
   else {
@@ -1833,13 +1833,13 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   for (nsCOMPtr<nsIContent> grandChild = aPopup->GetFirstChild();
        grandChild;
        grandChild = grandChild->GetNextSibling()) {
-    if (grandChild->IsXUL(nsGkAtoms::menugroup)) {
+    if (grandChild->IsXULElement(nsGkAtoms::menugroup)) {
       if (grandChild->GetChildCount() == 0) {
         continue;
       }
       grandChild = grandChild->GetFirstChild();
     }
-    if (grandChild->IsXUL(nsGkAtoms::menuitem)) {
+    if (grandChild->IsXULElement(nsGkAtoms::menuitem)) {
       // See if we have a command attribute.
       nsAutoString command;
       grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
@@ -1873,7 +1873,7 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
       }
     }
     if (!grandChild->GetNextSibling() &&
-        grandChild->GetParent()->IsXUL(nsGkAtoms::menugroup)) {
+        grandChild->GetParent()->IsXULElement(nsGkAtoms::menugroup)) {
       grandChild = grandChild->GetParent();
     }
   }
@@ -2241,7 +2241,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
   if (aStart) {
     if (aStart->GetNextSibling())
       currFrame = aStart->GetNextSibling();
-    else if (aStart->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+    else if (aStart->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = aStart->GetParent()->GetNextSibling();
   }
   else
@@ -2253,11 +2253,11 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
-    if (currFrameContent->IsXUL(nsGkAtoms::menugroup) &&
+    if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
       currFrame = currFrame->GetFirstPrincipalChild();
     else if (!currFrame->GetNextSibling() &&
-             currFrame->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+             currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();
     else
       currFrame = currFrame->GetNextSibling();
@@ -2272,11 +2272,11 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
-    if (currFrameContent->IsXUL(nsGkAtoms::menugroup) &&
+    if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
       currFrame = currFrame->GetFirstPrincipalChild();
     else if (!currFrame->GetNextSibling() &&
-             currFrame->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+             currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();
     else
       currFrame = currFrame->GetNextSibling();
@@ -2304,7 +2304,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
   if (aStart) {
     if (aStart->GetPrevSibling())
       currFrame = aStart->GetPrevSibling();
-    else if (aStart->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+    else if (aStart->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = aStart->GetParent()->GetPrevSibling();
   }
   else
@@ -2316,13 +2316,13 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
     if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
-    if (currFrameContent->IsXUL(nsGkAtoms::menugroup) &&
+    if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0) {
       const nsFrameList& menugroupFrames(currFrame->PrincipalChildList());
       currFrame = menugroupFrames.LastChild();
     }
     else if (!currFrame->GetPrevSibling() &&
-             currFrame->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+             currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetPrevSibling();
     else
       currFrame = currFrame->GetPrevSibling();
@@ -2337,13 +2337,13 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
     if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
-    if (currFrameContent->IsXUL(nsGkAtoms::menugroup) &&
+    if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0) {
       const nsFrameList& menugroupFrames(currFrame->PrincipalChildList());
       currFrame = menugroupFrames.LastChild();
     }
     else if (!currFrame->GetPrevSibling() &&
-             currFrame->GetParent()->GetContent()->IsXUL(nsGkAtoms::menugroup))
+             currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetPrevSibling();
     else
       currFrame = currFrame->GetPrevSibling();
@@ -2358,13 +2358,12 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
                                    nsIContent* aContent,
                                    bool aOnPopup)
 {
-  int32_t ns = aContent->GetNameSpaceID();
-  nsIAtom *tag = aContent->Tag();
-  if (ns == kNameSpaceID_XUL) {
-    if (tag != nsGkAtoms::menu && tag != nsGkAtoms::menuitem)
+  if (aContent->IsXULElement()) {
+    if (!aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {
       return false;
+    }
   }
-  else if (ns != kNameSpaceID_XHTML || !aOnPopup || tag != nsGkAtoms::option) {
+  else if (!aOnPopup || !aContent->IsHTMLElement(nsGkAtoms::option)) {
     return false;
   }
 

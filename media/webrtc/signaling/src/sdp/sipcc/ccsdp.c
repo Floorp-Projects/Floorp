@@ -326,6 +326,7 @@ const char * ccsdpCodecName(rtp_ptype ptype)
     case RTP_ILBC:       return "iLBC";
     case RTP_OPUS:       return "OPUS";
     case RTP_VP8:        return "VP8";
+    case RTP_VP9:        return "VP9";
     case RTP_I420:       return "I420";
     /* case RTP_ISAC:       return "ISAC"; */
   }

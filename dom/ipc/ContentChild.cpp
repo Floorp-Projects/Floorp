@@ -615,6 +615,14 @@ ContentChild::Init(MessageLoop* aIOLoop,
     // urgent messages.
     GetIPCChannel()->BlockScripts();
 
+    // If communications with the parent have broken down, take the process
+    // down so it's not hanging around.
+    bool abortOnError = true;
+#ifdef MOZ_NUWA_PROCESS
+    abortOnError &= !IsNuwaProcess();
+#endif
+    GetIPCChannel()->SetAbortOnError(abortOnError);
+
 #ifdef MOZ_X11
     // Send the parent our X socket to act as a proxy reference for our X
     // resources.
@@ -2570,6 +2578,8 @@ ContentChild::RecvShutdown()
     if (os) {
         os->NotifyObservers(this, "content-child-shutdown", nullptr);
     }
+
+    GetIPCChannel()->SetAbortOnError(false);
 
     // Ignore errors here. If this fails, the parent will kill us after a
     // timeout.

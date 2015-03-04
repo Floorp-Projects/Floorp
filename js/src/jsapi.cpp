@@ -3242,7 +3242,7 @@ JS_BindCallable(JSContext *cx, HandleObject target, HandleObject newThis)
 }
 
 static bool
-js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
+GenericNativeMethodDispatcher(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3311,7 +3311,7 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs,
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             JSFunction *fun = DefineFunction(cx, ctor, id,
-                                             js_generic_native_method_dispatcher,
+                                             GenericNativeMethodDispatcher,
                                              fs->nargs + 1, flags,
                                              JSFunction::ExtendedFinalizeKind);
             if (!fun)

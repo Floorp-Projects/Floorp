@@ -184,10 +184,10 @@ public:
       if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
         mElementContexts.Put(aContent, aStyleContext);
       } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
-        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentbefore);
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         mBeforePseudoContexts.Put(aContent->GetParent(), aStyleContext);
       } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
-        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentafter);
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterPseudoContexts.Put(aContent->GetParent(), aStyleContext);
       }
     }
@@ -199,11 +199,11 @@ public:
         return mElementContexts.GetWeak(aContent);
       }
       if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
-        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentbefore);
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
         return mBeforePseudoContexts.GetWeak(aContent->GetParent());
       }
       if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentafter);
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
         return mAfterPseudoContexts.GetWeak(aContent->GetParent());
       }
       MOZ_ASSERT(false, "unexpected aPseudoType");

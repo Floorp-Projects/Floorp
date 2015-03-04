@@ -21,7 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=785588
 SimpleTest.waitForExplicitFinish();
 
 var smoothScrollPref = "general.smoothScroll";
-SpecialPowers.setBoolPref(smoothScrollPref, false);
 
 var d = document.getElementById("d");
 d.scrollTop = 0;
@@ -38,7 +37,6 @@ function onFrame() {
 function onScroll() {
   is(state, "didOnFrame", "Must have got requestAnimationFrame callback already");
   ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
-  SpecialPowers.clearUserPref(smoothScrollPref);
   SimpleTest.finish();
 }
 
@@ -49,7 +47,9 @@ function doTest() {
   sendKey("DOWN");
 }
 
-SimpleTest.waitForFocus(doTest);
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, doTest);
+});
 </script>
 </pre>
 </body>

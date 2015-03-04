@@ -3699,10 +3699,10 @@ ScrollFrameHelper::ReloadChildFrames()
           NS_ASSERTION(!mVScrollbarBox, "Found multiple vertical scrollbars?");
           mVScrollbarBox = frame;
         }
-      } else if (content->Tag() == nsGkAtoms::resizer) {
+      } else if (content->IsXULElement(nsGkAtoms::resizer)) {
         NS_ASSERTION(!mResizerBox, "Found multiple resizers");
         mResizerBox = frame;
-      } else if (content->Tag() == nsGkAtoms::scrollcorner) {
+      } else if (content->IsXULElement(nsGkAtoms::scrollcorner)) {
         // probably a scrollcorner
         NS_ASSERTION(!mScrollCornerBox, "Found multiple scrollcorners");
         mScrollCornerBox = frame;
