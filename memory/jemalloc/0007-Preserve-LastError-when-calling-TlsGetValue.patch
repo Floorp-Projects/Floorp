@@ -1,0 +1,45 @@
+From f44c19741e98f4a87cf20e59e31634bb8a29c657 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Wed, 4 Mar 2015 10:54:10 +0900
+Subject: [PATCH] Preserve LastError when calling TlsGetValue
+
+TlsGetValue has a semantic difference with pthread_getspecific, in that it
+can return a non-error NULL value, so it always sets the LastError.
+But allocator callers may not be expecting calling e.g. free() to change
+the value of the last error, so preserve it.
+---
+ include/jemalloc/internal/tsd.h | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/include/jemalloc/internal/tsd.h b/include/jemalloc/internal/tsd.h
+index dbb91a2..62a887e 100644
+--- a/include/jemalloc/internal/tsd.h
++++ b/include/jemalloc/internal/tsd.h
+@@ -277,9 +277,11 @@ a_name##tsd_set(a_type *val)						\
+ a_attr bool								\
+ a_name##tsd_cleanup_wrapper(void)					\
+ {									\
+-	a_name##tsd_wrapper_t *wrapper;					\
++	DWORD error = GetLastError();					\
++	a_name##tsd_wrapper_t *wrapper = (a_name##tsd_wrapper_t *)	\
++	    TlsGetValue(a_name##tsd_tsd);				\
++	SetLastError(error);						\
+ 									\
+-	wrapper = (a_name##tsd_wrapper_t *)TlsGetValue(a_name##tsd_tsd);\
+ 	if (wrapper == NULL)						\
+ 		return (false);						\
+ 	if (a_cleanup != malloc_tsd_no_cleanup &&			\
+@@ -307,8 +309,10 @@ a_name##tsd_wrapper_set(a_name##tsd_wrapper_t *wrapper)			\
+ a_attr a_name##tsd_wrapper_t *						\
+ a_name##tsd_wrapper_get(void)						\
+ {									\
++	DWORD error = GetLastError();					\
+ 	a_name##tsd_wrapper_t *wrapper = (a_name##tsd_wrapper_t *)	\
+ 	    TlsGetValue(a_name##tsd_tsd);				\
++	SetLastError(error);						\
+ 									\
+ 	if (unlikely(wrapper == NULL)) {				\
+ 		wrapper = (a_name##tsd_wrapper_t *)			\
+-- 
+2.3.0.3.g98027e3
+
