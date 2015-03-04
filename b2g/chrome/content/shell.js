@@ -48,10 +48,6 @@ XPCOMUtils.defineLazyServiceGetter(this, 'gSystemMessenger',
                                    '@mozilla.org/system-message-internal;1',
                                    'nsISystemMessagesInternal');
 
-XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
-                                   '@mozilla.org/focus-manager;1',
-                                   'nsIFocusManager');
-
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
          .getService(Ci.nsIMessageListenerManager);
@@ -344,7 +340,6 @@ var shell = {
     chromeEventHandler.addEventListener('keyup', this, true);
 
     window.addEventListener('MozApplicationManifest', this);
-    window.addEventListener('mozfullscreenchange', this);
     window.addEventListener('MozAfterPaint', this);
     window.addEventListener('sizemodechange', this);
     window.addEventListener('unload', this);
@@ -377,7 +372,6 @@ var shell = {
     window.removeEventListener('keydown', this, true);
     window.removeEventListener('keyup', this, true);
     window.removeEventListener('MozApplicationManifest', this);
-    window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
     this.contentBrowser.removeEventListener('mozbrowserselectionstatechanged', this, true);
@@ -440,13 +434,6 @@ var shell = {
       case 'keydown':
       case 'keyup':
         this.broadcastHardwareKeys(evt);
-        break;
-      case 'mozfullscreenchange':
-        // When the screen goes fullscreen make sure to set the focus to the
-        // main window so noboby can prevent the ESC key to get out fullscreen
-        // mode
-        if (document.mozFullScreen)
-          Services.fm.focusedWindow = window;
         break;
       case 'sizemodechange':
         if (window.windowState == window.STATE_MINIMIZED && !this.visibleNormalAudioActive) {
