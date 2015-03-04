@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.R;
 import java.io.File;
 
@@ -753,11 +754,18 @@ public class ActivityChooserModel extends DataSetObservable {
                  * Mozilla: We want "Add to Firefox" to appear differently inside of Firefox than
                  * from external applications - override the name and icon here.
                  *
+                 * Do not display the menu item if there are no devices to share to.
+                 *
                  * Note: we check both the class name and the label to ensure we only change the
                  * label of the current channel.
                  */
                 if (ShareDialog.class.getCanonicalName().equals(resolveInfo.activityInfo.name) &&
                         channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
+                    // Don't add the menu item if there are no devices to share to.
+                    if (getOtherSyncedClientCount() <= 0) {
+                        continue;
+                    }
+
                     resolveInfo.labelRes = R.string.overlay_share_send_other;
                     resolveInfo.icon = R.drawable.share_plane;
                 }
@@ -1274,6 +1282,14 @@ public class ActivityChooserModel extends DataSetObservable {
 
             mReloadActivities = true;
         }
+    }
+
+    /**
+     * Mozilla: Get the count of other synced clients.
+     */
+    private int getOtherSyncedClientCount() {
+        final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(mContext);
+        return db.clientsCount();
     }
 }
 
