@@ -139,7 +139,10 @@ public:
                            bool aIsEndOffset) const;
 
   /**
-   * Convert start and end hypertext offsets into DOM range.
+   * Convert start and end hypertext offsets into DOM range.  Note that if
+   * aStartOffset and/or aEndOffset is in generated content such as ::before or
+   * ::after, the result range excludes the generated content.  See also
+   * ClosestNotGeneratedDOMPoint() for more information.
    *
    * @param  aStartOffset  [in] the given start hypertext offset
    * @param  aEndOffset    [in] the given end hypertext offset
@@ -517,6 +520,23 @@ protected:
   void GetSelectionDOMRanges(int16_t aType, nsTArray<nsRange*>* aRanges);
 
   nsresult SetSelectionRange(int32_t aStartPos, int32_t aEndPos);
+
+  /**
+   * Convert the given DOM point to a DOM point in non-generated contents.
+   *
+   * If aDOMPoint is in ::before, the result is immediately after it.
+   * If aDOMPoint is in ::after, the result is immediately before it.
+   *
+   * @param aDOMPoint       [in] A DOM node and an index of its child. This may
+   *                             be in a generated content such as ::before or
+   *                             ::after.
+   * @param aElementContent [in] An nsIContent representing an element of
+   *                             aDOMPoint.node.
+   * @return                An DOM point which must not be in generated
+   *                        contents.
+   */
+  DOMPoint ClosestNotGeneratedDOMPoint(const DOMPoint& aDOMPoint,
+                                       nsIContent* aElementContent);
 
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame* aFrame, int32_t aOffset,

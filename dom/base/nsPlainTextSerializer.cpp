@@ -88,7 +88,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // Flow
   mEmptyLines = 1; // The start of the document is an "empty line" in itself,
   mInWhitespace = false;
-  mPreFormatted = false;
+  mPreFormattedMail = false;
   mStartedOutput = false;
 
   mPreformattedBlockBoundary = false;
@@ -499,7 +499,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
 
   if (aTag == nsGkAtoms::body) {
     // Try to figure out here whether we have a
-    // preformatted style attribute.
+    // preformatted style attribute set by Thunderbird.
     //
     // Trigger on the presence of a "pre-wrap" in the
     // style attribute. That's a very simplistic way to do
@@ -513,9 +513,9 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
 
       if (kNotFound != style.Find("pre-wrap", true, whitespace)) {
 #ifdef DEBUG_preformatted
-        printf("Set mPreFormatted based on style pre-wrap\n");
+        printf("Set mPreFormattedMail based on style pre-wrap\n");
 #endif
-        mPreFormatted = true;
+        mPreFormattedMail = true;
         int32_t widthOffset = style.Find("width:");
         if (widthOffset >= 0) {
           // We have to search for the ch before the semicolon,
@@ -541,16 +541,16 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
       }
       else if (kNotFound != style.Find("pre", true, whitespace)) {
 #ifdef DEBUG_preformatted
-        printf("Set mPreFormatted based on style pre\n");
+        printf("Set mPreFormattedMail based on style pre\n");
 #endif
-        mPreFormatted = true;
+        mPreFormattedMail = true;
         mWrapColumn = 0;
       }
     } 
     else {
       /* See comment at end of function. */
       mInWhitespace = true;
-      mPreFormatted = false;
+      mPreFormattedMail = false;
     }
 
     return NS_OK;
@@ -1035,7 +1035,7 @@ nsPlainTextSerializer::DoAddText(bool aIsLineBreak, const nsAString& aText)
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
     if ((mFlags & nsIDocumentEncoder::OutputPreformatted) ||
-        (mPreFormatted && !mWrapColumn) ||
+        (mPreFormattedMail && !mWrapColumn) ||
         IsInPre()) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
@@ -1556,14 +1556,14 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // We have two major codepaths here. One that does preformatted text and one
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
-  if ((mPreFormatted && !mWrapColumn) || IsInPre()
+  if ((mPreFormattedMail && !mWrapColumn) || (IsInPre() && !mPreFormattedMail)
       || ((mSpanLevel > 0 || mDontWrapAnyQuotes)
           && mEmptyLines >= 0 && str.First() == char16_t('>'))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_ASSERTION(mCurrentLine.IsEmpty() || IsInPre(),
+    NS_ASSERTION(mCurrentLine.IsEmpty() || (IsInPre() && !mPreFormattedMail),
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();
@@ -1701,7 +1701,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
         }
       }
       // If we're already in whitespace and not preformatted, just skip it:
-      if (mInWhitespace && (nextpos == bol) && !mPreFormatted &&
+      if (mInWhitespace && (nextpos == bol) && !mPreFormattedMail &&
           !(mFlags & nsIDocumentEncoder::OutputPreformatted)) {
         // Skip whitespace
         bol++;
@@ -1720,7 +1720,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
       mInWhitespace = true;
       
       offsetIntoBuffer = str.get() + bol;
-      if (mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
+      if (mPreFormattedMail || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
         // Preserve the real whitespace character
         nextpos++;
         AddToLine(offsetIntoBuffer, nextpos-bol);
