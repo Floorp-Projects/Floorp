@@ -306,7 +306,7 @@ test(function(t)
   // the past or is resolved in the future.
 
   var currentTime = document.timeline.currentTime;
-  player.startTime = document.timeline.currentTime;
+  player.startTime = currentTime;
   assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
     'Check setting of startTime actually works');
 
