@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-const TOOLKIT_ID                      = "toolkit@mozilla.org"
+const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
 const FILE_BLOCKLIST                  = "blocklist.xml";
@@ -278,26 +278,6 @@ function parseRegExp(aStr) {
   let pattern = aStr.slice(1, lastSlash);
   let flags = aStr.slice(lastSlash + 1);
   return new RegExp(pattern, flags);
-}
-
-/**
- * Helper function to test if the blockEntry matches with the plugin.
- *
- * @param   blockEntry
- *          The plugin blocklist entries to compare against.
- * @param   plugin
- *          The nsIPluginTag to get the blocklist state for.
- * @returns True if the blockEntry matches the plugin, false otherwise.
- */
-function matchesAllPluginNames(blockEntry, plugin) {
-  for (let name in blockEntry.matches) {
-    if (!(name in plugin) ||
-        typeof(plugin[name]) != "string" ||
-        !blockEntry.matches[name].test(plugin[name])) {
-      return false;
-    }
-  }
-  return true;
 }
 
 /**
@@ -1046,8 +1026,8 @@ Blocklist.prototype = {
   },
 
   /**
-   * Private version of getPluginBlocklistState that allows the caller to pass in
-   * the plugin blocklist entries.
+   * Private helper to get the blocklist entry for a plugin given a set of
+   * blocklist entries and versions.
    *
    * @param   plugin
    *          The nsIPluginTag to get the blocklist state for.
@@ -1059,13 +1039,13 @@ Blocklist.prototype = {
    * @param   toolkitVersion
    *          The toolkit version to compare to, will use the current version if
    *          null.
-   * @returns The blocklist state for the item, one of the STATE constants as
-   *          defined in nsIBlocklistService.
+   * @returns {entry: blocklistEntry, version: blocklistEntryVersion},
+   *          or null if there is no matching entry.
    */
-  _getPluginBlocklistState: function Blocklist_getPluginBlocklistState(plugin,
+  _getPluginBlocklistEntry: function Blocklist_getPluginBlocklistEntry(plugin,
                             pluginEntries, appVersion, toolkitVersion) {
     if (!gBlocklistEnabled)
-      return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+      return null;
 
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
     if (!appVersion && !gApp.version)
@@ -1092,52 +1072,67 @@ Blocklist.prototype = {
 
       for (let blockEntryVersion of blockEntry.versions) {
         if (blockEntryVersion.includesItem(plugin.version, appVersion,
-                                                toolkitVersion)) {
-          if (blockEntryVersion.severity >= gBlocklistLevel)
-            return Ci.nsIBlocklistService.STATE_BLOCKED;
-          if (blockEntryVersion.severity == SEVERITY_OUTDATED) {
-            let vulnerabilityStatus = blockEntryVersion.vulnerabilityStatus;
-            if (vulnerabilityStatus == VULNERABILITYSTATUS_UPDATE_AVAILABLE)
-              return Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE;
-            if (vulnerabilityStatus == VULNERABILITYSTATUS_NO_UPDATE)
-              return Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE;
-            return Ci.nsIBlocklistService.STATE_OUTDATED;
-          }
-          return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
+                                           toolkitVersion)) {
+          return {entry: blockEntry, version: blockEntryVersion};
         }
       }
     }
 
-    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+    return null;
   },
 
   /**
-   * Get the matching blocklist entry for the passed plugin, if
-   * available.
-   * @param plugin The plugin to find the block entry for.
-   * @returns The block entry which matches the passed plugin, null
-   *          otherwise.
+   * Private version of getPluginBlocklistState that allows the caller to pass in
+   * the plugin blocklist entries.
+   *
+   * @param   plugin
+   *          The nsIPluginTag to get the blocklist state for.
+   * @param   pluginEntries
+   *          The plugin blocklist entries to compare against.
+   * @param   appVersion
+   *          The application version to compare to, will use the current
+   *          version if null.
+   * @param   toolkitVersion
+   *          The toolkit version to compare to, will use the current version if
+   *          null.
+   * @returns The blocklist state for the item, one of the STATE constants as
+   *          defined in nsIBlocklistService.
    */
-  _getPluginBlockEntry: function (plugin) {
-    if (!gBlocklistEnabled)
-      return null;
+  _getPluginBlocklistState: function Blocklist_getPluginBlocklistState(plugin,
+                            pluginEntries, appVersion, toolkitVersion) {
 
-    if (!this._isBlocklistLoaded())
-      this._loadBlocklist();
-
-    for each (let blockEntry in this._pluginEntries) {
-      if (matchesAllPluginNames(blockEntry, plugin)) {
-        return blockEntry;
-      }
+    let r = this._getPluginBlocklistEntry(plugin, pluginEntries,
+                                          appVersion, toolkitVersion);
+    if (!r) {
+      return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
     }
 
-	  return null;
+    let {entry: blockEntry, version: blockEntryVersion} = r;
+
+    if (blockEntryVersion.severity >= gBlocklistLevel)
+      return Ci.nsIBlocklistService.STATE_BLOCKED;
+    if (blockEntryVersion.severity == SEVERITY_OUTDATED) {
+      let vulnerabilityStatus = blockEntryVersion.vulnerabilityStatus;
+      if (vulnerabilityStatus == VULNERABILITYSTATUS_UPDATE_AVAILABLE)
+        return Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE;
+      if (vulnerabilityStatus == VULNERABILITYSTATUS_NO_UPDATE)
+        return Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE;
+      return Ci.nsIBlocklistService.STATE_OUTDATED;
+    }
+    return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
   },
 
   /* See nsIBlocklistService */
   getPluginBlocklistURL: function Blocklist_getPluginBlocklistURL(plugin) {
-    let blockEntry = this._getPluginBlockEntry(plugin);
-    if (!blockEntry || !blockEntry.blockID) {
+    if (!this._isBlocklistLoaded())
+      this._loadBlocklist();
+
+    let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);
+    if (!r) {
+      return null;
+    }
+    let {entry: blockEntry, version: blockEntryVersion} = r;
+    if (!blockEntry.blockID) {
       return null;
     }
 
@@ -1146,8 +1141,15 @@ Blocklist.prototype = {
 
   /* See nsIBlocklistService */
   getPluginInfoURL: function (plugin) {
-    let blockEntry = this._getPluginBlockEntry(plugin);
-    if (!blockEntry || !blockEntry.blockID) {
+    if (!this._isBlocklistLoaded())
+      this._loadBlocklist();
+
+    let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);
+    if (!r) {
+      return null;
+    }
+    let {entry: blockEntry, version: blockEntryVersion} = r;
+    if (!blockEntry.blockID) {
       return null;
     }
 

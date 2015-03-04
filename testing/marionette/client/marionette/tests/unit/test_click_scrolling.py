@@ -4,7 +4,7 @@
 
 from marionette_driver.by import By
 from marionette_driver.errors import MoveTargetOutOfBoundsException
-from marionette_test import MarionetteTestCase, skip
+from marionette import MarionetteTestCase, skip
 
 
 class TestClickScrolling(MarionetteTestCase):

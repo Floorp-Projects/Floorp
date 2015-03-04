@@ -30,7 +30,9 @@ MockPlugin.prototype = {
 const PLUGINS = [
   new MockPlugin('test_with_infoURL', '5', Ci.nsIPluginTag.STATE_ENABLED),
   new MockPlugin('test_with_altInfoURL', '5', Ci.nsIPluginTag.STATE_ENABLED),
-  new MockPlugin('test_no_infoURL', '5', Ci.nsIPluginTag.STATE_ENABLED)
+  new MockPlugin('test_no_infoURL', '5', Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPlugin('test_newVersion', '1', Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPlugin('test_newVersion', '3', Ci.nsIPluginTag.STATE_ENABLED)
 ];
 
 /**
@@ -77,4 +79,12 @@ add_task(function* test_altInfoURL() {
 add_task(function* test_infoURL_missing() {
   Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[2]), null,
     'Should be null when no infoURL tag is available.');
+});
+
+add_task(function* test_intoURL_newVersion() {
+  let testInfoURL = 'http://test.url2.com/';
+  Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[3]),
+    testInfoURL, 'Old plugin should match');
+  Assert.strictEqual(Services.blocklist.getPluginInfoURL(PLUGINS[4]),
+    null, 'New plugin should not match');
 });

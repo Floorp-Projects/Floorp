@@ -60,6 +60,7 @@ const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2
 var gBrowser;
 // Are we testing web content loaded in a separate process?
 var gBrowserIsRemote;           // bool
+var gB2GisMulet;                // bool
 // Are we using <iframe mozbrowser>?
 var gBrowserIsIframe;           // bool
 var gBrowserMessageManager;
@@ -246,6 +247,12 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
         gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote.autostart");
     } catch (e) {
         gBrowserIsRemote = false;
+    }
+
+    try {
+        gB2GisMulet = prefs.getBoolPref("b2g.is_mulet");
+    } catch (e) {
+        gB2GisMulet = false;
     }
 
     try {
@@ -730,6 +737,7 @@ function BuildConditionSandbox(aURL) {
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;
+    sandbox.Mulet = gB2GisMulet;
 
     try {
         sandbox.asyncPanZoom = prefs.getBoolPref("layers.async-pan-zoom.enabled");
