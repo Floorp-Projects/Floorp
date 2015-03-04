@@ -35,6 +35,11 @@ static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
+enum class MediaDecoderEventVisibility : int8_t {
+  Observable,
+  Suppressed
+};
+
 /**
  * The AbstractMediaDecoder class describes the public interface for a media decoder
  * and is used by the MediaReader classes.
@@ -90,9 +95,9 @@ public:
   // Return true if the transport layer supports seeking.
   virtual bool IsMediaSeekable() = 0;
 
-  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, bool aRestoredFromDormant) = 0;
+  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, MediaDecoderEventVisibility aEventVisibility) = 0;
   virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) = 0;
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, bool aRestoredFromDormant) = 0;
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
 
   virtual void RemoveMediaTracks() = 0;
 
@@ -166,17 +171,17 @@ protected:
   MetadataContainer(AbstractMediaDecoder* aDecoder,
                     nsAutoPtr<MediaInfo> aInfo,
                     nsAutoPtr<MetadataTags> aTags,
-                    bool aRestoredFromDormant)
+                    MediaDecoderEventVisibility aEventVisibility)
     : mDecoder(aDecoder),
       mInfo(aInfo),
       mTags(aTags),
-      mRestoredFromDormant(aRestoredFromDormant)
+      mEventVisibility(aEventVisibility)
   {}
 
   nsRefPtr<AbstractMediaDecoder> mDecoder;
   nsAutoPtr<MediaInfo>  mInfo;
   nsAutoPtr<MetadataTags> mTags;
-  bool mRestoredFromDormant;
+  MediaDecoderEventVisibility mEventVisibility;
 };
 
 class MetadataEventRunner : public nsRunnable, private MetadataContainer
@@ -185,13 +190,13 @@ public:
   MetadataEventRunner(AbstractMediaDecoder* aDecoder,
                       nsAutoPtr<MediaInfo> aInfo,
                       nsAutoPtr<MetadataTags> aTags,
-                      bool aRestoredFromDormant = false)
-    : MetadataContainer(aDecoder, aInfo, aTags, aRestoredFromDormant)
+                      MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
+    : MetadataContainer(aDecoder, aInfo, aTags, aEventVisibility)
   {}
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
-    mDecoder->MetadataLoaded(mInfo, mTags, mRestoredFromDormant);
+    mDecoder->MetadataLoaded(mInfo, mTags, mEventVisibility);
     return NS_OK;
   }
 };
@@ -201,13 +206,13 @@ class FirstFrameLoadedEventRunner : public nsRunnable, private MetadataContainer
 public:
   FirstFrameLoadedEventRunner(AbstractMediaDecoder* aDecoder,
                               nsAutoPtr<MediaInfo> aInfo,
-                              bool aRestoredFromDormant = false)
-    : MetadataContainer(aDecoder, aInfo, nsAutoPtr<MetadataTags>(nullptr), aRestoredFromDormant)
+                              MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
+    : MetadataContainer(aDecoder, aInfo, nsAutoPtr<MetadataTags>(nullptr), aEventVisibility)
   {}
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
-    mDecoder->FirstFrameLoaded(mInfo, mRestoredFromDormant);
+    mDecoder->FirstFrameLoaded(mInfo, mEventVisibility);
     return NS_OK;
   }
 };
@@ -218,16 +223,16 @@ public:
   MetadataUpdatedEventRunner(AbstractMediaDecoder* aDecoder,
                              nsAutoPtr<MediaInfo> aInfo,
                              nsAutoPtr<MetadataTags> aTags,
-                             bool aRestoredFromDormant = false)
-    : MetadataContainer(aDecoder, aInfo, aTags, aRestoredFromDormant)
+                             MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
+    : MetadataContainer(aDecoder, aInfo, aTags, aEventVisibility)
   {}
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsAutoPtr<MediaInfo> info(new MediaInfo());
     *info = *mInfo;
-    mDecoder->MetadataLoaded(info, mTags, mRestoredFromDormant);
-    mDecoder->FirstFrameLoaded(mInfo, mRestoredFromDormant);
+    mDecoder->MetadataLoaded(info, mTags, mEventVisibility);
+    mDecoder->FirstFrameLoaded(mInfo, mEventVisibility);
     return NS_OK;
   }
 };
