@@ -600,7 +600,7 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
         JSObject *pobj = obj;
         size_t ind = 0;
         do {
-            ni->shapes_array[ind++] = pobj->lastProperty();
+            ni->shapes_array[ind++] = pobj->as<NativeObject>().lastProperty();
             pobj = pobj->getProto();
         } while (pobj);
         MOZ_ASSERT(ind == slength);
@@ -711,12 +711,12 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
             if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                 obj->isNative() &&
                 obj->as<NativeObject>().hasEmptyElements() &&
-                obj->lastProperty() == lastni->shapes_array[0])
+                obj->as<NativeObject>().lastProperty() == lastni->shapes_array[0])
             {
                 JSObject *proto = obj->getProto();
                 if (proto->isNative() &&
                     proto->as<NativeObject>().hasEmptyElements() &&
-                    proto->lastProperty() == lastni->shapes_array[1] &&
+                    proto->as<NativeObject>().lastProperty() == lastni->shapes_array[1] &&
                     !proto->getProto())
                 {
                     objp.set(last);
@@ -747,7 +747,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleOb
                     shapes.clear();
                     goto miss;
                 }
-                Shape *shape = pobj->lastProperty();
+                Shape *shape = pobj->as<NativeObject>().lastProperty();
                 key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
                 if (!shapes.append(shape))
                     return false;
