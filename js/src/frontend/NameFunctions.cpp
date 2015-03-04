@@ -321,6 +321,7 @@ class NameResolver
           case PNK_EXPORT_BATCH_SPEC:
           case PNK_FRESHENBLOCK:
           case PNK_SUPERPROP:
+          case PNK_OBJECT_PROPERTY_NAME:
             MOZ_ASSERT(cur->isArity(PN_NULLARY));
             goto done;
 
@@ -499,9 +500,77 @@ class NameResolver
             }
             goto done;
 
-          case PNK_OBJECT_PROPERTY_NAME:
+          // The first child of a class is a pair of names referring to it,
+          // inside and outside the class.  The second is the class's heritage,
+          // if any.  The third is the class body.
           case PNK_CLASS:
-          case PNK_CLASSMETHODLIST:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->isKind(PNK_CLASSNAMES));
+            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->isArity(PN_BINARY));
+            MOZ_ASSERT_IF(cur->pn_kid1 && cur->pn_kid1->pn_left,
+                          cur->pn_kid1->pn_left->isKind(PNK_NAME));
+            MOZ_ASSERT_IF(cur->pn_kid1 && cur->pn_kid1->pn_left,
+                          !cur->pn_kid1->pn_left->maybeExpr());
+            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->pn_right->isKind(PNK_NAME));
+            MOZ_ASSERT_IF(cur->pn_kid1, !cur->pn_kid1->pn_right->maybeExpr());
+            if (cur->pn_kid2) {
+                if (!resolve(cur->pn_kid2, prefix))
+                    return false;
+            }
+            if (!resolve(cur->pn_kid3, prefix))
+                return false;
+            goto done;
+
+          // The condition and consequent are non-optional, but the alternative
+          // might be omitted.
+          case PNK_IF:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (!resolve(cur->pn_kid1, prefix))
+                return false;
+            if (!resolve(cur->pn_kid2, prefix))
+                return false;
+            if (cur->pn_kid3) {
+                if (!resolve(cur->pn_kid3, prefix))
+                    return false;
+            }
+            goto done;
+
+          // The statements in the try-block are mandatory.  The catch-blocks
+          // and finally block are optional (but at least one or the other must
+          // be present).
+          case PNK_TRY:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (!resolve(cur->pn_kid1, prefix))
+                return false;
+            MOZ_ASSERT(cur->pn_kid2 || cur->pn_kid3);
+            if (ParseNode* catchList = cur->pn_kid2) {
+                MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+                if (!resolve(catchList, prefix))
+                    return false;
+            }
+            if (ParseNode* finallyBlock = cur->pn_kid3) {
+                if (!resolve(finallyBlock, prefix))
+                    return false;
+            }
+            goto done;
+
+          // The first child, the catch-pattern, may contain functions via
+          // computed property names.  The optional catch-conditions may
+          // contain any expression.  The catch statements, of course, may
+          // contain arbitrary expressions.
+          case PNK_CATCH:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (!resolve(cur->pn_kid1, prefix))
+                return false;
+            if (cur->pn_kid2) {
+                if (!resolve(cur->pn_kid2, prefix))
+                    return false;
+            }
+            if (!resolve(cur->pn_kid3, prefix))
+                return false;
+            goto done;
+
+          // Nodes with arbitrary-expression children.
           case PNK_OR:
           case PNK_AND:
           case PNK_BITOR:
@@ -529,8 +598,16 @@ class NameResolver
           case PNK_NEW:
           case PNK_CALL:
           case PNK_GENEXP:
+            MOZ_ASSERT(cur->isArity(PN_LIST));
+            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+                if (!resolve(element, prefix))
+                    return false;
+            }
+            goto done;
+
           case PNK_ARRAY:
           case PNK_OBJECT:
+          case PNK_CLASSMETHODLIST:
           case PNK_TEMPLATE_STRING_LIST:
           case PNK_TAGGED_TEMPLATE:
           case PNK_CALLSITEOBJ:
@@ -544,9 +621,6 @@ class NameResolver
           case PNK_EXPORT_SPEC_LIST:
           case PNK_SEQ:
           case PNK_ARGSBODY:
-          case PNK_IF:
-          case PNK_TRY:
-          case PNK_CATCH:
           case PNK_LABEL:
           case PNK_DOT:
           case PNK_LEXICALSCOPE:
