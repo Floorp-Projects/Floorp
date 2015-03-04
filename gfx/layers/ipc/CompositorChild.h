@@ -80,6 +80,9 @@ public:
                                  const nsIntRegion& aVisibleRegion,
                                  nsTArray<PluginWindowData>&& aPlugins) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvUpdatePluginVisibility(nsTArray<uintptr_t>&& aWindowList) MOZ_OVERRIDE;
+
   /**
    * Request that the parent tell us when graphics are ready on GPU.
    * When we get that message, we bounce it to the TabParent via

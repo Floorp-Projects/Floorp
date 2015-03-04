@@ -259,6 +259,20 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
 }
 
 bool
+CompositorChild::RecvUpdatePluginVisibility(nsTArray<uintptr_t>&& aVisibleIdList)
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("CompositorChild::RecvUpdatePluginVisibility calls "
+                "unexpected on this platform.");
+  return false;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIWidget::UpdateRegisteredPluginWindowVisibility(aVisibleIdList);
+  return true;
+#endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+}
+
+bool
 CompositorChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId)
 {
   if (mLayerManager) {
