@@ -67,6 +67,7 @@ typedef enum {
   GNOME_DIALOG_NORMAL
 } GnomeDialogType;
 
+#if defined(MOZ_X11) && (MOZ_WIDGET_GTK == 2)
 typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
                                                  const GnomeModuleInfo *, int,
                                                  char **, const char *, ...);
@@ -76,6 +77,7 @@ typedef GnomeClient * (*_gnome_master_client_fn)(void);
 typedef void (*_gnome_client_set_restart_command_fn)(GnomeClient*, gint, gchar*[]);
 
 static _gnome_client_set_restart_command_fn gnome_client_set_restart_command;
+#endif
 
 gboolean save_yourself_cb(GnomeClient *client, gint phase,
                           GnomeSaveStyle style, gboolean shutdown,

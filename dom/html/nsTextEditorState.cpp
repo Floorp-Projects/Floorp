@@ -1713,7 +1713,7 @@ nsTextEditorState::InitializeRootNode()
   nsAutoString classValue;
   classValue.AppendLiteral("anonymous-div");
   int32_t wrapCols = GetWrapCols();
-  if (wrapCols >= 0) {
+  if (wrapCols > 0) {
     classValue.AppendLiteral(" wrap");
   }
   if (!IsSingleLineTextControl()) {

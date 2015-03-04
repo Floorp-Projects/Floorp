@@ -17,7 +17,6 @@
 
   const { 'utils': Cu } = Components;
   Cu.import("resource://gre/modules/ContactDB.jsm", window);
-  Cu.importGlobalProperties(["indexedDB"]);
 
   let contactsDB = new ContactDB();
   contactsDB.init();
