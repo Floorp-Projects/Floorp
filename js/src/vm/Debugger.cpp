@@ -2048,7 +2048,7 @@ Debugger::updateObservesAllExecutionOnDebuggees(JSContext *cx, IsObserving obser
     if (!obs.init())
         return false;
 
-    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
         GlobalObject *global = r.front();
         JSCompartment *comp = global->compartment();
 
@@ -2069,7 +2069,7 @@ Debugger::updateObservesAllExecutionOnDebuggees(JSContext *cx, IsObserving obser
 void
 Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
 {
-    for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
         GlobalObject *global = r.front();
         JSCompartment *comp = global->compartment();
 
@@ -2212,12 +2212,12 @@ Debugger::markAll(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime();
     for (Debugger *dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
-        GlobalObjectSet &debuggees = dbg->debuggees;
-        for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
+        WeakGlobalObjectSet &debuggees = dbg->debuggees;
+        for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
             MarkObjectUnbarriered(trc, &global, "Global Object");
             if (global != e.front())
-                e.rekeyFront(global);
+                e.rekeyFront(ReadBarrieredGlobalObject(global));
         }
 
         HeapPtrNativeObject &dbgobj = dbg->toJSObjectRef();
@@ -2295,7 +2295,7 @@ Debugger::sweepAll(FreeOp *fop)
              * might be GC'd too. Since detaching requires access to both
              * objects, this must be done before finalize time.
              */
-            for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+            for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
                 dbg->removeDebuggeeGlobal(fop, e.front(), &e);
         }
     }
@@ -2625,7 +2625,7 @@ Debugger::setAllowUnobservedAsmJS(JSContext *cx, unsigned argc, Value *vp)
         return false;
     dbg->allowUnobservedAsmJS = ToBoolean(args[0]);
 
-    for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
         GlobalObject *global = r.front();
         JSCompartment *comp = global->compartment();
         comp->updateDebuggerObservesAsmJS();
@@ -2783,7 +2783,7 @@ Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
     if (!obs.init())
         return false;
 
-    for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
+    for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
         Rooted<GlobalObject *> global(cx, e.front());
         dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), global, &e);
 
@@ -2826,8 +2826,8 @@ Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
     unsigned i = 0;
     {
         JS::AutoCheckCannotGC nogc;
-        for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-            debuggees[i++].setObject(*e.front());
+        for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+            debuggees[i++].setObject(*e.front().get());
     }
 
     RootedArrayObject arrobj(cx, NewDenseFullyAllocatedArray(cx, count));
@@ -2872,7 +2872,7 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
 Debugger::clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
-    for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
+    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
         r.front()->compartment()->clearBreakpointsIn(cx->runtime()->defaultFreeOp(),
                                                      dbg, NullPtr());
     return true;
@@ -3040,7 +3040,8 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 }
 
 void
-Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global, GlobalObjectSet::Enum *debugEnum)
+Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                               WeakGlobalObjectSet::Enum *debugEnum)
 {
     /*
      * The caller might have found global by enumerating this->debuggees; if
@@ -3394,7 +3395,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     bool matchAllDebuggeeGlobals() {
         MOZ_ASSERT(compartments.count() == 0);
         /* Build our compartment set from the debugger's set of debuggee globals. */
-        for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
+        for (WeakGlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
             if (!addCompartment(r.front()->compartment())) {
                 ReportOutOfMemory(cx);
                 return false;
