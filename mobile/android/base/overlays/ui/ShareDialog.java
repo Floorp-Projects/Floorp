@@ -50,7 +50,21 @@ import android.widget.Toast;
  * A transparent activity that displays the share overlay.
  */
 public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabTargetSelectedListener {
+
+    private enum State {
+        DEFAULT,
+        DEVICES_ONLY // Only display the device list.
+    }
+
     private static final String LOGTAG = "GeckoShareDialog";
+
+    /** Flag that we should only show the devices for send tab in this dialog. **/
+    public static final String INTENT_EXTRA_DEVICES_ONLY = "org.mozilla.gecko.intent.extra.DEVICES_ONLY";
+
+    /** The maximum number of devices we'll show in the dialog when in State.DEFAULT. **/
+    private static final int MAXIMUM_INLINE_DEVICES = 2;
+
+    private State state = State.DEFAULT;
 
     private String url;
     private String title;
@@ -86,6 +100,15 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
         ParcelableClientRecord[] clientrecords = (ParcelableClientRecord[]) intent.getParcelableArrayExtra(SendTab.EXTRA_CLIENT_RECORDS);
         sendTabList.setSyncClients(clientrecords);
+
+        if (state == State.DEVICES_ONLY || sendTabList.getCount() <= MAXIMUM_INLINE_DEVICES) {
+            // Show the list of devices in-line.
+            sendTabList.switchState(SendTabList.State.LIST);
+            return;
+        }
+
+        // Just show a button to launch the list of devices to choose from.
+        sendTabList.switchState(SendTabList.State.SHOW_DEVICES);
     }
 
     @Override
@@ -188,7 +211,26 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         foxIcon.setOnClickListener(launchBrowser);
         topBar.setOnClickListener(launchBrowser);
 
+        // Send tab.
+        final SendTabList sendTabList = (SendTabList) findViewById(R.id.overlay_send_tab_btn);
+
+        // Register ourselves as both the listener and the context for the Adapter.
+        final SendTabDeviceListArrayAdapter adapter = new SendTabDeviceListArrayAdapter(this, this);
+        sendTabList.setAdapter(adapter);
+        sendTabList.setSendTabTargetSelectedListener(this);
+
         final OverlayDialogButton bookmarkBtn = (OverlayDialogButton) findViewById(R.id.overlay_share_bookmark_btn);
+        final OverlayDialogButton readinglistBtn = (OverlayDialogButton) findViewById(R.id.overlay_share_reading_list_btn);
+
+        if (intent.getBooleanExtra(INTENT_EXTRA_DEVICES_ONLY, false)) {
+            // Note: we update the device list state after the device list is received. We have to
+            // do it this way because the list doesn't handle switching state while it is loading.
+            state = State.DEVICES_ONLY;
+
+            readinglistBtn.setVisibility(View.GONE);
+            bookmarkBtn.setVisibility(View.GONE);
+            return;
+        }
 
         final String bookmarkEnabledLabel = resources.getString(R.string.overlay_share_bookmark_btn_label);
         final Drawable bookmarkEnabledIcon = resources.getDrawable(R.drawable.overlay_bookmark_icon);
@@ -204,16 +246,6 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
                 addBookmark();
             }
         });
-
-        // Send tab.
-        SendTabList sendTabList = (SendTabList) findViewById(R.id.overlay_send_tab_btn);
-
-        // Register ourselves as both the listener and the context for the Adapter.
-        SendTabDeviceListArrayAdapter adapter = new SendTabDeviceListArrayAdapter(this, this);
-        sendTabList.setAdapter(adapter);
-        sendTabList.setSendTabTargetSelectedListener(this);
-
-        final OverlayDialogButton readinglistBtn = (OverlayDialogButton) findViewById(R.id.overlay_share_reading_list_btn);
 
         final String readingListEnabledLabel = resources.getString(R.string.overlay_share_reading_list_btn_label);
         final Drawable readingListEnabledIcon = resources.getDrawable(R.drawable.overlay_readinglist_icon);
