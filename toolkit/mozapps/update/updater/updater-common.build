@@ -47,11 +47,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     USE_LIBS += [
-        '/modules/libmar/sign/signmar',
         'nss',
+        'signmar',
         'updatecommon',
     ]
-    OS_LIBS += CONFIG['NSPR_LIBS']
+    OS_LIBS += CONFIG['nspr']
 else:
     USE_LIBS += [
         'updatecommon',
@@ -80,7 +80,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'launchchild_osx.mm',
         'progressui_osx.mm',
     ]
-    OS_LIBS += ['-framework Cocoa -framework Security']
+    OS_LIBS += [
+        '-framework Cocoa',
+        '-framework Security',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     have_progressui = 1
     srcs += [
@@ -98,8 +101,7 @@ if have_progressui == 0:
         'progressui_null.cpp',
     ]
 
-srcs.sort()
-SOURCES += ['%s%s' % (updater_rel_path, f) for f in srcs]
+SOURCES += ['%s%s' % (updater_rel_path, f) for f in sorted(srcs)]
 
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True

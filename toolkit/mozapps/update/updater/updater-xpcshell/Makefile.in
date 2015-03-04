@@ -8,15 +8,6 @@
 XPCSHELLTESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/toolkit/mozapps/update/tests
 MOCHITESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
 
-ifndef MOZ_PROFILE_GENERATE
-ifdef COMPILE_ENVIRONMENT
-INSTALL_TARGETS += xpcshell-updater
-xpcshell-updater_TARGET  := libs
-xpcshell-updater_DEST    := $(XPCSHELLTESTROOT)/data
-xpcshell-updater_FILES   := $(DIST)/bin/updater-xpcshell$(BIN_SUFFIX)
-endif
-endif # Not MOZ_PROFILE_GENERATE
-
 include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_WINCONSOLE
@@ -27,12 +18,6 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
-ifdef MOZ_WIDGET_GTK
-libs:: ../updater.png
-	$(NSINSTALL) -D $(DIST)/bin/icons
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
-endif
-
 libs::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	# Copy for xpcshell tests
@@ -41,8 +26,8 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/../macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS/updater-xpcshell
-	$(NSINSTALL) $(XPCSHELLTESTROOT)/data/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
-	rm -f $(XPCSHELLTESTROOT)/data/updater-xpcshell
+	$(NSINSTALL) $(PROGRAM) $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
+	rm -f $(PROGRAM)
 	rm -Rf $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell.app $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater
@@ -50,7 +35,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	# Copy for mochitest chrome tests
 	rsync -a -C $(XPCSHELLTESTROOT)/data/updater.app $(MOCHITESTROOT)/data/updater.app
 else
-	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
+	mv $(PROGRAM) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
 	cp $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX) $(MOCHITESTROOT)/data/updater$(BIN_SUFFIX)
 endif
 
