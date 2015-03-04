@@ -7,7 +7,7 @@ import time
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.wait import Wait
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 class TestSubmit(MarionetteTestCase):
 

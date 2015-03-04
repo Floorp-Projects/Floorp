@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import errors
-import marionette_test
+from marionette import marionette_test
 
 
 class TestHandleError(marionette_test.MarionetteTestCase):

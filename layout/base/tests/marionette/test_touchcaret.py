@@ -6,7 +6,7 @@
 from marionette_driver.by import By
 from marionette_driver.marionette import Actions
 from marionette_driver.selection import SelectionManager
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 
 class TouchCaretTest(MarionetteTestCase):
