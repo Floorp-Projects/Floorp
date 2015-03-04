@@ -9,6 +9,8 @@
 <script type="application/javascript">
   "use strict";
 
+  Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
   var Ci = Components.interfaces;
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
   var pluginsbundle = strBundleService.createBundle("chrome://global/locale/plugins.properties");
@@ -56,7 +58,7 @@
    */
   navigator.plugins.refresh(false);
 
-  addMessageListener("PluginList", function({ data: aPlugins }) {
+  AddonManager.getAddonsByTypes(["plugin"], function (aPlugins) {
     var fragment = document.createDocumentFragment();
 
     // "Installed plugins"
@@ -213,8 +215,6 @@
 
     document.getElementById("outside").appendChild(fragment);
   });
-
-  sendAsyncMessage("RequestPlugins");
 </script>
 </div>
 </body>
