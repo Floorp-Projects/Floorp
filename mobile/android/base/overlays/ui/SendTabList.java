@@ -114,15 +114,6 @@ public class SendTabList extends ListView {
         final ParcelableClientRecord[] clients = c == null ? new ParcelableClientRecord[0] : c;
 
         clientListAdapter.setClientRecordList(Arrays.asList(clients));
-
-        if (clients.length <= MAXIMUM_INLINE_ELEMENTS) {
-            // Show the list of devices in-line.
-            switchState(LIST);
-            return;
-        }
-
-        // Just show a button to launch the list of devices to choose from.
-        switchState(SHOW_DEVICES);
     }
 
     /**
