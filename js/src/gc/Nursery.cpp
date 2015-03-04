@@ -691,14 +691,15 @@ js::Nursery::moveObjectToTenured(MinorCollectionTracer *trc,
         NativeObject *ndst = &dst->as<NativeObject>(), *nsrc = &src->as<NativeObject>();
         tenuredSize += moveSlotsToTenured(ndst, nsrc, dstKind);
         tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
+
+        // The shape's list head may point into the old object. This can only
+        // happen for dictionaries, which are native objects.
+        if (&nsrc->shape_ == ndst->shape_->listp)
+            ndst->shape_->listp = &ndst->shape_;
     }
 
     if (src->is<InlineTypedObject>())
         InlineTypedObject::objectMovedDuringMinorGC(trc, dst, src);
-
-    /* The shape's list head may point into the old object. */
-    if (&src->shape_ == dst->shape_->listp)
-        dst->shape_->listp = &dst->shape_;
 
     return tenuredSize;
 }

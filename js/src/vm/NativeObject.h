@@ -341,6 +341,9 @@ DenseRangeWriteBarrierPost(JSRuntime *rt, NativeObject *obj, uint32_t start, uin
 class NativeObject : public JSObject
 {
   protected:
+    // Property layout description and other state.
+    HeapPtrShape shape_;
+
     /* Slots for object properties. */
     js::HeapSlot *slots_;
 
@@ -378,6 +381,19 @@ class NativeObject : public JSObject
     }
 
   public:
+    Shape *lastProperty() const {
+        MOZ_ASSERT(shape_);
+        return shape_;
+    }
+
+    uint32_t propertyCount() const {
+        return lastProperty()->entryCount();
+    }
+
+    bool hasShapeTable() const {
+        return lastProperty()->hasTable();
+    }
+
     HeapSlotArray getDenseElements() {
         return HeapSlotArray(elements_, !getElementsHeader()->isCopyOnWrite());
     }

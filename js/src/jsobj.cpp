@@ -2213,7 +2213,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         if (!res)
             return nullptr;
 
-        RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->lastProperty(),
+        RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->as<PlainObject>().lastProperty(),
                                                               TaggedProto(proto), parent, kind));
         if (!newShape || !res->setLastProperty(cx, newShape))
             return nullptr;
@@ -2294,7 +2294,7 @@ JSObject::fixDictionaryShapeAfterSwap()
     // Dictionary shapes can point back to their containing objects, so after
     // swapping the guts of those objects fix the pointers up.
     if (isNative() && as<NativeObject>().inDictionaryMode())
-        shape_->listp = &shape_;
+        as<NativeObject>().shape_->listp = &as<NativeObject>().shape_;
 }
 
 /* Use this method with extreme caution. It trades the guts of two objects. */
@@ -3660,7 +3660,7 @@ js::GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 
     Shape *shape;
     if (obj->isNative()) {
-        shape = obj->lastProperty();
+        shape = obj->as<NativeObject>().lastProperty();
         while (shape && (!shape->hasSlot() || shape->slot() != slot))
             shape = shape->previous();
     } else {
@@ -3937,7 +3937,7 @@ JSObject::dump()
     if (obj->isNative()) {
         fprintf(stderr, "properties:\n");
         Vector<Shape *, 8, SystemAllocPolicy> props;
-        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
+        for (Shape::Range<NoGC> r(obj->as<NativeObject>().lastProperty()); !r.empty(); r.popFront())
             props.append(&r.front());
         for (size_t i = props.length(); i-- != 0;)
             DumpProperty(&obj->as<NativeObject>(), *props[i]);
@@ -4117,14 +4117,15 @@ JSObject::markChildren(JSTracer *trc)
 {
     MarkObjectGroup(trc, &group_, "group");
 
-    MarkShape(trc, &shape_, "shape");
-
     const Class *clasp = group_->clasp();
     if (clasp->trace)
         clasp->trace(trc, this);
 
-    if (shape_->isNative()) {
+    if (clasp->isNative()) {
         NativeObject *nobj = &as<NativeObject>();
+
+        MarkShape(trc, &nobj->shape_, "shape");
+
         MarkObjectSlots(trc, nobj, 0, nobj->slotSpan());
 
         do {
@@ -4142,4 +4143,17 @@ JSObject::markChildren(JSTracer *trc)
                                "objectElements");
         } while (false);
     }
+}
+
+JSObject *
+JSObject::getParent() const
+{
+    if (Shape *shape = maybeShape())
+        return shape->getObjectParent();
+
+    // Avoid the parent-link checking in JSObject::global. Unboxed plain
+    // objects keep their compartment's global alive through their layout, and
+    // don't need a read barrier here.
+    MOZ_ASSERT(is<UnboxedPlainObject>());
+    return compartment()->unsafeUnbarrieredMaybeGlobal();
 }

@@ -1633,6 +1633,8 @@ OutlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
 {
     OutlineTypedObject &typedObj = object->as<OutlineTypedObject>();
 
+    MarkShape(trc, &typedObj.shape_, "OutlineTypedObject_shape");
+
     if (!typedObj.owner_)
         return;
 
@@ -2156,10 +2158,13 @@ InlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
 {
     InlineTypedObject &typedObj = object->as<InlineTypedObject>();
 
-    // Inline transparent objects do not have references and do not need to be
-    // traced. If they have an entry in the compartment's LazyArrayBufferTable,
+    MarkShape(trc, &typedObj.shape_, "InlineTypedObject_shape");
+
+    // Inline transparent objects do not have references and do not need more
+    // tracing. If there is an entry in the compartment's LazyArrayBufferTable,
     // tracing that reference will be taken care of by the table itself.
-    MOZ_ASSERT(typedObj.is<InlineOpaqueTypedObject>());
+    if (typedObj.is<InlineTransparentTypedObject>())
+        return;
 
     // When this is called for compacting GC, the related objects we touch here
     // may not have had their slots updated yet.
@@ -2337,7 +2342,7 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 
 DEFINE_TYPEDOBJ_CLASS(OutlineTransparentTypedObject, OutlineTypedObject::obj_trace);
 DEFINE_TYPEDOBJ_CLASS(OutlineOpaqueTypedObject,      OutlineTypedObject::obj_trace);
-DEFINE_TYPEDOBJ_CLASS(InlineTransparentTypedObject,  nullptr);
+DEFINE_TYPEDOBJ_CLASS(InlineTransparentTypedObject,  InlineTypedObject::obj_trace);
 DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject,       InlineTypedObject::obj_trace);
 
 static int32_t
