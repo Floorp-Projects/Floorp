@@ -198,6 +198,18 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 }
 
 void
+LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
+{
+    lowerAsmJSCompareExchangeHeap(ins, LDefinition::BogusTemp());
+}
+
+void
+LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
+{
+    lowerAsmJSAtomicBinopHeap(ins, LDefinition::BogusTemp());
+}
+
+void
 LIRGeneratorX64::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
     define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);

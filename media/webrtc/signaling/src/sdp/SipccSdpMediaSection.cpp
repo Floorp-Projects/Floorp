@@ -282,6 +282,8 @@ SipccSdpMediaSection::AddCodec(const std::string& pt, const std::string& name,
     codec = SdpRtpmapAttributeList::kPCMA;
   } else if (name == "VP8") {
     codec = SdpRtpmapAttributeList::kVP8;
+  } else if (name == "VP9") {
+    codec = SdpRtpmapAttributeList::kVP9;
   } else if (name == "H264") {
     codec = SdpRtpmapAttributeList::kH264;
   }

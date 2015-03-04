@@ -737,19 +737,14 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
 bool nsFind::IsBlockNode(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
-    return false;
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                    nsGkAtoms::hr,
+                                    nsGkAtoms::th,
+                                    nsGkAtoms::td)) {
+    return true;
   }
 
-  nsIAtom *atom = aContent->Tag();
-
-  if (atom == nsGkAtoms::img ||
-      atom == nsGkAtoms::hr ||
-      atom == nsGkAtoms::th ||
-      atom == nsGkAtoms::td)
-    return true;
-
-  return nsContentUtils::IsHTMLBlock(atom);
+  return nsContentUtils::IsHTMLBlock(aContent);
 }
 
 bool nsFind::IsTextNode(nsIDOMNode* aNode)
@@ -778,18 +773,13 @@ bool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
 
 bool nsFind::SkipNode(nsIContent* aContent)
 {
-  nsIAtom *atom;
-
 #ifdef HAVE_BIDI_ITERATOR
-  atom = aContent->Tag();
-
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
   return (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-          (aContent->IsHTML() &&
-           (atom == sScriptAtom ||
-            atom == sNoframesAtom ||
-            atom == sSelectAtom)));
+          aContent->IsAnyOfHTMLElements(sScriptAtom,
+                                        sNoframesAtom,
+                                        sSelectAtom));
 
 #else /* HAVE_BIDI_ITERATOR */
   // Temporary: eventually we will have an iterator to do this,
@@ -800,13 +790,10 @@ bool nsFind::SkipNode(nsIContent* aContent)
   nsIContent *content = aContent;
   while (content)
   {
-    atom = content->Tag();
-
     if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-        (content->IsHTML() &&
-         (atom == nsGkAtoms::script ||
-          atom == nsGkAtoms::noframes ||
-          atom == nsGkAtoms::select)))
+        content->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                     nsGkAtoms::noframes,
+                                     nsGkAtoms::select))
     {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");

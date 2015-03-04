@@ -184,7 +184,7 @@ SN_COLSPAN_TO_OFFSET(ptrdiff_t colspan) {
 }
 
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
-                                 : js_SrcNoteLength(sn))
+                                 : js::SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
 
 struct JSSrcNoteSpec {
@@ -193,12 +193,18 @@ struct JSSrcNoteSpec {
 };
 
 extern JS_FRIEND_DATA(const JSSrcNoteSpec) js_SrcNoteSpec[];
-extern JS_FRIEND_API(unsigned)         js_SrcNoteLength(jssrcnote *sn);
+
+namespace js {
+
+extern JS_FRIEND_API(unsigned)
+SrcNoteLength(jssrcnote *sn);
 
 /*
  * Get and set the offset operand identified by which (0 for the first, etc.).
  */
 extern JS_FRIEND_API(ptrdiff_t)
-js_GetSrcNoteOffset(jssrcnote *sn, unsigned which);
+GetSrcNoteOffset(jssrcnote *sn, unsigned which);
+
+}
 
 #endif /* frontend_SourceNotes_h */

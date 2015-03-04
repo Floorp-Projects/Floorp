@@ -11,7 +11,7 @@ STANDALONE_MAKEFILE := 1
 PACKAGE_BASE_DIR	= $(DIST)
 
 # Default output location for update archive
-STAGE_DIR	= $(DIST)/$(PKG_UPDATE_PATH)
+STAGE_DIR      = $(abspath $(DIST)/$(PKG_UPDATE_PATH))
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef UNIVERSAL_BINARY
@@ -85,9 +85,9 @@ automation-partial-patch: complete-patch
 	  if test -n "$$latestmar"; then \
 	    wget -O $(STAGE_DIR)/previous.mar http://$(UPLOAD_HOST)/$(LATEST_MAR_DIR)/$$latestmar && \
 	    (cd previous; \
-	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '../$(STAGE_DIR)/previous.mar') && \
+	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '$(STAGE_DIR)/previous.mar') && \
 	    (cd current; \
-	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '../$(DIST)/$(COMPLETE_MAR)') && \
+	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '$(abspath $(DIST)/$(COMPLETE_MAR))') && \
 	    find current -name \*.pgc -print -delete && \
 	    find previous -name \*.pgc -print -delete && \
 	    rm -f $(STAGE_DIR)/*.partial.*.mar && \

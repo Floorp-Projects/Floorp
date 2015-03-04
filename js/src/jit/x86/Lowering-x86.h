@@ -53,6 +53,8 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     void visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     void visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
+    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
+    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     void visitSubstr(MSubstr *ins);
     void lowerPhi(MPhi *phi);

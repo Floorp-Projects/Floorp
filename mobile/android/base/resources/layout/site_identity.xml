@@ -29,28 +29,28 @@
             <TextView android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="14sp"
-                      android:textColor="@color/doorhanger_text"
+                      android:textColor="@color/placeholder_active_grey"
                       android:text="@string/identity_connected_to"/>
 
             <TextView android:id="@+id/host"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="20sp"
-                      android:textColor="@color/doorhanger_text"
+                      android:textColor="@color/placeholder_active_grey"
                       android:textStyle="bold"/>
 
             <TextView android:id="@+id/owner_label"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="14sp"
-                      android:textColor="@color/doorhanger_text"
+                      android:textColor="@color/placeholder_active_grey"
                       android:text="@string/identity_run_by"
                       android:paddingTop="12dip"/>
 
             <TextView android:id="@+id/owner"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:textColor="@color/doorhanger_text"
+                      android:textColor="@color/placeholder_active_grey"
                       android:textSize="16sp"
                       android:textStyle="bold"/>
 
@@ -58,7 +58,7 @@
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="14sp"
-                      android:textColor="@color/doorhanger_text"
+                      android:textColor="@color/placeholder_active_grey"
                       android:paddingTop="12dip"/>
 
         </LinearLayout>

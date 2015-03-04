@@ -1221,7 +1221,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsAutoCString id;
   nsIContent* cnt = accessible->GetContent();
   if (cnt) {
-    cnt->Tag()->ToString(tag);
+    cnt->NodeInfo()->NameAtom()->ToString(tag);
     nsIAtom* aid = cnt->GetID();
     if (aid)
       aid->ToUTF8String(id);

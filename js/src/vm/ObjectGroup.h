@@ -127,6 +127,10 @@ AsTaggedProto(HandleObject obj)
             reinterpret_cast<TaggedProto const*>(obj.address()));
 }
 
+namespace gc {
+void MergeCompartments(JSCompartment *source, JSCompartment *target);
+}
+
 /*
  * Lazy object groups overview.
  *
@@ -150,18 +154,16 @@ AsTaggedProto(HandleObject obj)
 /* Type information about an object accessed by a script. */
 class ObjectGroup : public gc::TenuredCell
 {
+    friend void gc::MergeCompartments(JSCompartment *source, JSCompartment *target);
+
     /* Class shared by objects in this group. */
     const Class *clasp_;
 
     /* Prototype shared by objects in this group. */
     HeapPtrObject proto_;
 
-    /*
-     * Whether there is a singleton JS object with this group. That JS object
-     * must appear in type sets instead of this; we include the back reference
-     * here to allow reverting the JS object to a lazy group.
-     */
-    HeapPtrObject singleton_;
+    /* Compartment shared by objects in this group. */
+    JSCompartment *compartment_;
 
   public:
 
@@ -177,27 +179,25 @@ class ObjectGroup : public gc::TenuredCell
         return TaggedProto(proto_);
     }
 
-    JSObject *singleton() const {
-        return singleton_;
-    }
-
     // For use during marking, don't call otherwise.
     HeapPtrObject &protoRaw() { return proto_; }
-    HeapPtrObject &singletonRaw() { return singleton_; }
 
     void setProto(TaggedProto proto);
     void setProtoUnchecked(TaggedProto proto);
 
-    void initSingleton(JSObject *singleton) {
-        singleton_ = singleton;
+    bool singleton() const {
+        return flagsDontCheckGeneration() & OBJECT_FLAG_SINGLETON;
     }
 
-    /*
-     * Value held by singleton if this is a standin group for a singleton JS
-     * object whose group has not been constructed yet.
-     */
-    static const size_t LAZY_SINGLETON = 1;
-    bool lazy() const { return singleton() == (JSObject *) LAZY_SINGLETON; }
+    bool lazy() const {
+        bool res = flagsDontCheckGeneration() & OBJECT_FLAG_LAZY_SINGLETON;
+        MOZ_ASSERT_IF(res, singleton());
+        return res;
+    }
+
+    JSCompartment *compartment() const {
+        return compartment_;
+    }
 
   private:
     /* Flags for this group. */
@@ -258,7 +258,7 @@ class ObjectGroup : public gc::TenuredCell
     TypeNewScript *anyNewScript();
     void detachNewScript(bool writeBarrier, ObjectGroup *replacement);
 
-    ObjectGroupFlags flagsDontCheckGeneration() {
+    ObjectGroupFlags flagsDontCheckGeneration() const {
         return flags_;
     }
 
@@ -433,7 +433,8 @@ class ObjectGroup : public gc::TenuredCell
     Property **propertySet;
   public:
 
-    inline ObjectGroup(const Class *clasp, TaggedProto proto, ObjectGroupFlags initialFlags);
+    inline ObjectGroup(const Class *clasp, TaggedProto proto, JSCompartment *comp,
+                       ObjectGroupFlags initialFlags);
 
     inline bool hasAnyFlags(ObjectGroupFlags flags) {
         MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
@@ -485,7 +486,7 @@ class ObjectGroup : public gc::TenuredCell
      * Get or create a property of this object. Only call this for properties which
      * a script accesses explicitly.
      */
-    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
+    inline HeapTypeSet *getProperty(ExclusiveContext *cx, JSObject *obj, jsid id);
 
     /* Get a property only if it already exists. */
     inline HeapTypeSet *maybeGetProperty(jsid id);
@@ -495,11 +496,11 @@ class ObjectGroup : public gc::TenuredCell
 
     /* Helpers */
 
-    void updateNewPropertyTypes(ExclusiveContext *cx, jsid id, HeapTypeSet *types);
+    void updateNewPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id, HeapTypeSet *types);
     bool addDefiniteProperties(ExclusiveContext *cx, Shape *shape);
     bool matchDefiniteProperties(HandleObject obj);
-    void markPropertyNonData(ExclusiveContext *cx, jsid id);
-    void markPropertyNonWritable(ExclusiveContext *cx, jsid id);
+    void markPropertyNonData(ExclusiveContext *cx, JSObject *obj, jsid id);
+    void markPropertyNonWritable(ExclusiveContext *cx, JSObject *obj, jsid id);
     void markStateChange(ExclusiveContext *cx);
     void setFlags(ExclusiveContext *cx, ObjectGroupFlags flags);
     void markUnknown(ExclusiveContext *cx);

@@ -1928,6 +1928,7 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     const LAllocation *ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
@@ -1965,6 +1966,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
 
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
 
     Label rejoin;

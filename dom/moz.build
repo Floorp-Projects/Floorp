@@ -47,6 +47,7 @@ DIRS += [
     'bindings',
     'battery',
     'browser-element',
+    'cache',
     'canvas',
     'cellbroadcast',
     'contacts',

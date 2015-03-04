@@ -9,6 +9,7 @@ import re
 import string
 import math
 import textwrap
+import functools
 
 from WebIDL import BuiltinTypes, IDLBuiltinType, IDLNullValue, IDLSequenceType, IDLType, IDLAttribute, IDLInterfaceMember, IDLUndefinedValue, IDLEmptySequenceValue, IDLDictionary
 from Configuration import NoSuchDescriptorError, getTypesFromDescriptor, getTypesFromDictionary, getTypesFromCallback, getAllTypes, Descriptor
@@ -100,6 +101,24 @@ def indent(s, indentLevel=2):
     return re.sub(lineStartDetector, indentLevel * " ", s)
 
 
+# dedent() and fill() are often called on the same string multiple
+# times.  We want to memoize their return values so we don't keep
+# recomputing them all the time.
+def memoize(fn):
+    """
+    Decorator to memoize a function of one argument.  The cache just
+    grows without bound.
+    """
+    cache = {}
+    @functools.wraps(fn)
+    def wrapper(arg):
+        retval = cache.get(arg)
+        if retval is None:
+            retval = cache[arg] = fn(arg)
+        return retval
+    return wrapper
+
+@memoize
 def dedent(s):
     """
     Remove all leading whitespace from s, and remove a blank line
@@ -108,6 +127,54 @@ def dedent(s):
     if s.startswith('\n'):
         s = s[1:]
     return textwrap.dedent(s)
+
+
+# This works by transforming the fill()-template to an equivalent
+# string.Template.
+fill_multiline_substitution_re = re.compile(r"( *)\$\*{(\w+)}(\n)?")
+
+
+@memoize
+def compile_fill_template(template):
+    """
+    Helper function for fill().  Given the template string passed to fill(),
+    do the reusable part of template processing and return a pair (t,
+    argModList) that can be used every time fill() is called with that
+    template argument.
+
+    argsModList is list of tuples that represent modifications to be
+    made to args.  Each modification has, in order: i) the arg name,
+    ii) the modified name, iii) the indent depth.
+    """
+    t = dedent(template)
+    assert t.endswith("\n") or "\n" not in t
+    argModList = []
+
+    def replace(match):
+        """
+        Replaces a line like '  $*{xyz}\n' with '${xyz_n}',
+        where n is the indent depth, and add a corresponding entry to
+        argModList.
+
+        Note that this needs to close over argModList, so it has to be
+        defined inside compile_fill_template().
+        """
+        indentation, name, nl = match.groups()
+        depth = len(indentation)
+
+        # Check that $*{xyz} appears by itself on a line.
+        prev = match.string[:match.start()]
+        if (prev and not prev.endswith("\n")) or nl is None:
+            raise ValueError("Invalid fill() template: $*{%s} must appear by itself on a line" % name)
+
+        # Now replace this whole line of template with the indented equivalent.
+        modified_name = name + "_" + str(depth)
+        argModList.append((name, modified_name, depth))
+        return "${" + modified_name + "}"
+
+    t = re.sub(fill_multiline_substitution_re, replace, t)
+    return (string.Template(t), argModList)
+
 
 def fill(template, **args):
     """
@@ -138,40 +205,13 @@ def fill(template, **args):
         line.
     """
 
-    # This works by transforming the fill()-template to an equivalent
-    # string.Template.
-    multiline_substitution_re = re.compile(r"( *)\$\*{(\w+)}(\n)?")
-
-    def replace(match):
-        """
-        Replaces a line like '  $*{xyz}\n' with '${xyz_n}',
-        where n is the indent depth, and add a corresponding entry to args.
-        """
-        indentation, name, nl = match.groups()
-        depth = len(indentation)
-
-        # Check that $*{xyz} appears by itself on a line.
-        prev = match.string[:match.start()]
-        if (prev and not prev.endswith("\n")) or nl is None:
-            raise ValueError("Invalid fill() template: $*{%s} must appear by itself on a line" % name)
-
-        # Multiline text without a newline at the end is probably a mistake.
+    t, argModList = compile_fill_template(template)
+    # Now apply argModList to args
+    for (name, modified_name, depth) in argModList:
         if not (args[name] == "" or args[name].endswith("\n")):
             raise ValueError("Argument %s with value %r is missing a newline" % (name, args[name]))
+        args[modified_name] = indent(args[name], depth)
 
-        # Now replace this whole line of template with the indented equivalent.
-        modified_name = name + "_" + str(depth)
-        indented_value = indent(args[name], depth)
-        if modified_name in args:
-            assert args[modified_name] == indented_value
-        else:
-            args[modified_name] = indented_value
-        return "${" + modified_name + "}"
-
-    t = dedent(template)
-    assert t.endswith("\n") or "\n" not in t
-    t = re.sub(multiline_substitution_re, replace, t)
-    t = string.Template(t)
     return t.substitute(args)
 
 

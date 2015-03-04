@@ -1103,7 +1103,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
 # if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    uint8_t *faultingAddress = static_cast<uint8_t *>(info->si_addr);
+    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(info->si_addr);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)

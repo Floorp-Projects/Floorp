@@ -397,7 +397,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
     , mVisitedHandling(aVisitedHandling)
     , mDocument(aDocument)
     , mScopedRoot(nullptr)
-    , mIsHTMLDocument(aDocument->IsHTML())
+    , mIsHTMLDocument(aDocument->IsHTMLDocument())
     , mCompatMode(aDocument->GetCompatibilityMode())
     , mUsingPrivateBrowsing(false)
     , mSkippingParentDisplayBasedStyleFixup(false)

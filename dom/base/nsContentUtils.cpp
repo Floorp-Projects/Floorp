@@ -1508,42 +1508,41 @@ nsContentUtils::IsHTMLWhitespaceOrNBSP(char16_t aChar)
 
 /* static */
 bool
-nsContentUtils::IsHTMLBlock(nsIAtom* aLocalName)
+nsContentUtils::IsHTMLBlock(nsIContent* aContent)
 {
-  return
-    (aLocalName == nsGkAtoms::address) ||
-    (aLocalName == nsGkAtoms::article) ||
-    (aLocalName == nsGkAtoms::aside) ||
-    (aLocalName == nsGkAtoms::blockquote) ||
-    (aLocalName == nsGkAtoms::center) ||
-    (aLocalName == nsGkAtoms::dir) ||
-    (aLocalName == nsGkAtoms::div) ||
-    (aLocalName == nsGkAtoms::dl) || // XXX why not dt and dd?
-    (aLocalName == nsGkAtoms::fieldset) ||
-    (aLocalName == nsGkAtoms::figure) || // XXX shouldn't figcaption be on this list
-    (aLocalName == nsGkAtoms::footer) ||
-    (aLocalName == nsGkAtoms::form) ||
-    (aLocalName == nsGkAtoms::h1) ||
-    (aLocalName == nsGkAtoms::h2) ||
-    (aLocalName == nsGkAtoms::h3) ||
-    (aLocalName == nsGkAtoms::h4) ||
-    (aLocalName == nsGkAtoms::h5) ||
-    (aLocalName == nsGkAtoms::h6) ||
-    (aLocalName == nsGkAtoms::header) ||
-    (aLocalName == nsGkAtoms::hgroup) ||
-    (aLocalName == nsGkAtoms::hr) ||
-    (aLocalName == nsGkAtoms::li) ||
-    (aLocalName == nsGkAtoms::listing) ||
-    (aLocalName == nsGkAtoms::menu) ||
-    (aLocalName == nsGkAtoms::multicol) || // XXX get rid of this one?
-    (aLocalName == nsGkAtoms::nav) ||
-    (aLocalName == nsGkAtoms::ol) ||
-    (aLocalName == nsGkAtoms::p) ||
-    (aLocalName == nsGkAtoms::pre) ||
-    (aLocalName == nsGkAtoms::section) ||
-    (aLocalName == nsGkAtoms::table) ||
-    (aLocalName == nsGkAtoms::ul) ||
-    (aLocalName == nsGkAtoms::xmp);
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::address,
+                                       nsGkAtoms::article,
+                                       nsGkAtoms::aside,
+                                       nsGkAtoms::blockquote,
+                                       nsGkAtoms::center,
+                                       nsGkAtoms::dir,
+                                       nsGkAtoms::div,
+                                       nsGkAtoms::dl, // XXX why not dt and dd?
+                                       nsGkAtoms::fieldset,
+                                       nsGkAtoms::figure, // XXX shouldn't figcaption be on this list
+                                       nsGkAtoms::footer,
+                                       nsGkAtoms::form,
+                                       nsGkAtoms::h1,
+                                       nsGkAtoms::h2,
+                                       nsGkAtoms::h3,
+                                       nsGkAtoms::h4,
+                                       nsGkAtoms::h5,
+                                       nsGkAtoms::h6,
+                                       nsGkAtoms::header,
+                                       nsGkAtoms::hgroup,
+                                       nsGkAtoms::hr,
+                                       nsGkAtoms::li,
+                                       nsGkAtoms::listing,
+                                       nsGkAtoms::menu,
+                                       nsGkAtoms::multicol, // XXX get rid of this one?
+                                       nsGkAtoms::nav,
+                                       nsGkAtoms::ol,
+                                       nsGkAtoms::p,
+                                       nsGkAtoms::pre,
+                                       nsGkAtoms::section,
+                                       nsGkAtoms::table,
+                                       nsGkAtoms::ul,
+                                       nsGkAtoms::xmp);
 }
 
 /* static */
@@ -2546,7 +2545,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     // we can't figure out form info.  Append the tag name if it's an element
     // to avoid restoring state for one type of element on another type.
     if (aContent->IsElement()) {
-      KeyAppendString(nsDependentAtomString(aContent->Tag()), aKey);
+      KeyAppendString(nsDependentAtomString(aContent->NodeInfo()->NameAtom()),
+                      aKey);
     }
     else {
       // Append a character that is not "d" or "f" to disambiguate from
@@ -4101,7 +4101,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
   nsCOMPtr<nsIDocument> document = aContextNode->OwnerDoc();
-  bool isHTML = document->IsHTML();
+  bool isHTML = document->IsHTMLDocument();
 #ifdef DEBUG
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
   NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
@@ -4120,9 +4120,9 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
-    if (contextAsContent && !contextAsContent->IsHTML(nsGkAtoms::html)) {
+    if (contextAsContent && !contextAsContent->IsHTMLElement(nsGkAtoms::html)) {
       aRv = ParseFragmentHTML(aFragment, frag,
-                              contextAsContent->Tag(),
+                              contextAsContent->NodeInfo()->NameAtom(),
                               contextAsContent->GetNameSpaceID(),
                               (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),
@@ -4749,8 +4749,9 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
     // as downloadable. If this check fails we will just do the normal thing
     // (i.e. navigate to the resource).
     nsAutoString fileName;
-    if ((!aContent->IsHTML(nsGkAtoms::a) && !aContent->IsHTML(nsGkAtoms::area) &&
-         !aContent->IsSVG(nsGkAtoms::a)) ||
+    if ((!aContent->IsHTMLElement(nsGkAtoms::a) &&
+         !aContent->IsHTMLElement(nsGkAtoms::area) &&
+         !aContent->IsSVGElement(nsGkAtoms::a)) ||
         !aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::download, fileName) ||
         NS_FAILED(aContent->NodePrincipal()->CheckMayLoad(aLinkURI, false, true))) {
       fileName.SetIsVoid(true); // No actionable download attribute was found.
@@ -5730,7 +5731,7 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult)
 
 /* static */
 nsresult
-nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsCString& aOrigin)
+nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsACString& aOrigin)
 {
   NS_PRECONDITION(aPrincipal, "missing principal");
 
@@ -5751,7 +5752,7 @@ nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal, nsCString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
+nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
 
@@ -5805,7 +5806,7 @@ nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
+nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin)
 {
   NS_PRECONDITION(aPrincipal, "missing principal");
 
@@ -5826,7 +5827,7 @@ nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
 
 /* static */
 nsresult
-nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
+nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
 
@@ -6895,7 +6896,7 @@ nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
   }
 
   // Check if the content is a web components content insertion point.
-  if (aContent->IsHTML(nsGkAtoms::content)) {
+  if (aContent->IsHTMLElement(nsGkAtoms::content)) {
     return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
   }
 

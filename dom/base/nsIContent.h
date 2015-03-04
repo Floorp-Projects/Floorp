@@ -39,8 +39,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x697a2fe1, 0x5549, 0x48e7, \
-  { 0x9a, 0x1a, 0xc2, 0x9d, 0xab, 0x14, 0xe2, 0x39 } }
+{ 0x70f7e9ea, 0xa9bf, 0x48cc, \
+  { 0xad, 0x9d, 0x8a, 0xca, 0xee, 0xd2, 0x9b, 0x68 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -250,60 +250,69 @@ public:
     return mNodeInfo->NamespaceID();
   }
 
-  /**
-   * Get the NodeInfo for this element
-   * @return the nodes node info
-   */
-  inline mozilla::dom::NodeInfo* NodeInfo() const
-  {
-    return mNodeInfo;
-  }
-
-  inline bool IsInNamespace(int32_t aNamespace) const
-  {
-    return mNodeInfo->NamespaceID() == aNamespace;
-  }
-
-  inline bool IsHTML() const
+  inline bool IsHTMLElement() const
   {
     return IsInNamespace(kNameSpaceID_XHTML);
   }
 
-  inline bool IsHTML(nsIAtom* aTag) const
+  inline bool IsHTMLElement(nsIAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag, kNameSpaceID_XHTML);
   }
 
-  inline bool IsSVG() const
+  template<typename First, typename... Args>
+  inline bool IsAnyOfHTMLElements(First aFirst, Args... aArgs) const
+  {
+    return IsHTMLElement() && IsNodeInternal(aFirst, aArgs...);
+  }
+
+  inline bool IsSVGElement() const
   {
     return IsInNamespace(kNameSpaceID_SVG);
   }
 
-  inline bool IsSVG(nsIAtom* aTag) const
+  inline bool IsSVGElement(nsIAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag, kNameSpaceID_SVG);
   }
 
-  inline bool IsXUL() const
+  template<typename First, typename... Args>
+  inline bool IsAnyOfSVGElements(First aFirst, Args... aArgs) const
+  {
+    return IsSVGElement() && IsNodeInternal(aFirst, aArgs...);
+  }
+
+  inline bool IsXULElement() const
   {
     return IsInNamespace(kNameSpaceID_XUL);
   }
 
-  inline bool IsXUL(nsIAtom* aTag) const
+  inline bool IsXULElement(nsIAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag, kNameSpaceID_XUL);
   }
 
-  inline bool IsMathML() const
+  template<typename First, typename... Args>
+  inline bool IsAnyOfXULElements(First aFirst, Args... aArgs) const
+  {
+    return IsXULElement() && IsNodeInternal(aFirst, aArgs...);
+  }
+
+  inline bool IsMathMLElement() const
   {
     return IsInNamespace(kNameSpaceID_MathML);
   }
 
-  inline bool IsMathML(nsIAtom* aTag) const
+  inline bool IsMathMLElement(nsIAtom* aTag) const
   {
     return mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
   }
 
+  template<typename First, typename... Args>
+  inline bool IsAnyOfMathMLElements(First aFirst, Args... aArgs) const
+  {
+    return IsMathMLElement() && IsNodeInternal(aFirst, aArgs...);
+  }
   inline bool IsActiveChildrenElement() const
   {
     return mNodeInfo->Equals(nsGkAtoms::children, kNameSpaceID_XBL) &&
@@ -910,7 +919,7 @@ public:
         // XHTML1 section C.7).
         bool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
                                           aResult);
-        if (!hasAttr && (content->IsHTML() || content->IsSVG())) {
+        if (!hasAttr && (content->IsHTMLElement() || content->IsSVGElement())) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                      aResult);
         }

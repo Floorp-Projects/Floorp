@@ -70,9 +70,13 @@ nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
   // Treat radio buttons and checkboxes as having an intrinsic baseline
-  // at the bottom of the control (use the bottom content edge rather
-  // than the bottom margin edge).
-  return BSize(aWritingMode) -
+  // at the block-end of the control (use the block-end content edge rather
+  // than the margin edge).
+  // For "inverted" lines (typically in writing-mode:vertical-lr), use the
+  // block-start end instead.
+  return aWritingMode.IsLineInverted()
+    ? GetLogicalUsedBorderAndPadding(aWritingMode).BStart(aWritingMode)
+    : BSize(aWritingMode) -
          GetLogicalUsedBorderAndPadding(aWritingMode).BEnd(aWritingMode);
 }
 

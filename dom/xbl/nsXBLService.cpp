@@ -666,7 +666,8 @@ MayBindToContent(nsXBLPrototypeBinding* aProtoBinding, nsIContent* aBoundElement
 
   // We let XUL content and content in XUL documents through, since XUL is
   // restricted anyway and we want to minimize remote XUL breakage.
-  if (aBoundElement->IsXUL() || aBoundElement->OwnerDoc()->IsXUL()) {
+  if (aBoundElement->IsXULElement() ||
+      aBoundElement->OwnerDoc()->IsXULElement()) {
     return true;
   }
 
@@ -955,7 +956,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                   ni->Equals(nsGkAtoms::thumb, kNameSpaceID_XUL) ||
                   ((ni->Equals(nsGkAtoms::input) ||
                     ni->Equals(nsGkAtoms::select)) &&
-                   aBoundElement->IsHTML()))) && !aForceSyncLoad) {
+                   aBoundElement->IsHTMLElement()))) && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be

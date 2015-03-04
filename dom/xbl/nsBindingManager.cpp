@@ -250,7 +250,7 @@ nsBindingManager::ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID)
   }
 
   *aNameSpaceID = aContent->GetNameSpaceID();
-  return aContent->Tag();
+  return aContent->NodeInfo()->NameAtom();
 }
 
 nsresult

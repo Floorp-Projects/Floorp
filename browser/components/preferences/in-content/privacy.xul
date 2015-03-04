@@ -131,37 +131,33 @@
     <label>&historyHeader.post.label;</label>
   </hbox>
   <deck id="historyPane">
-    <vbox align="center" id="historyRememberPane">
+    <vbox id="historyRememberPane">
       <hbox align="center" flex="1">
-        <spacer flex="1" class="indent"/>
-        <vbox flex="2">
+        <vbox>
           <description>&rememberDescription.label;</description>
-          <separator/>
+          <separator class="thin"/>
           <description>&rememberActions.pre.label;<html:a
           class="inline-link" id="historyRememberClear" href="#"
           >&rememberActions.clearHistory.label;</html:a>&rememberActions.middle.label;<html:a
           class="inline-link" id="historyRememberCookies" href="#"
           >&rememberActions.removeCookies.label;</html:a>&rememberActions.post.label;</description>
         </vbox>
-        <spacer flex="1" class="indent"/>
       </hbox>
     </vbox>
-    <vbox align="center" id="historyDontRememberPane">
+    <vbox id="historyDontRememberPane">
       <hbox align="center" flex="1">
-        <spacer flex="1" class="indent"/>
-        <vbox flex="2">
+        <vbox>
           <description>&dontrememberDescription.label;</description>
-          <separator/>
+          <separator class="thin"/>
           <description>&dontrememberActions.pre.label;<html:a
           class="inline-link" id="historyDontRememberClear" href="#"
           >&dontrememberActions.clearHistory.label;</html:a>&dontrememberActions.post.label;</description>
         </vbox>
-        <spacer flex="1" class="indent"/>
       </hbox>
     </vbox>
     <vbox id="historyCustomPane">
       <separator class="thin"/>
-      <vbox class="indent">
+      <vbox>
         <vbox align="start">
           <checkbox id="privateBrowsingAutoStart"
                     label="&privateBrowsingPermanent2.label;"
