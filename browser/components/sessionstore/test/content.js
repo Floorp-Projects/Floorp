@@ -25,10 +25,7 @@ gFrameTree.addObserver({
   }
 });
 
-
-docShell.QueryInterface(Ci.nsIWebNavigation).
-  sessionHistory.addSHistoryListener({
-
+let historyListener = {
   OnHistoryNewEntry: function () {
     sendAsyncMessage("ss-test:OnHistoryNewEntry");
   },
@@ -66,7 +63,10 @@ docShell.QueryInterface(Ci.nsIWebNavigation).
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference
   ])
-});
+};
+
+docShell.QueryInterface(Ci.nsIWebNavigation).
+  sessionHistory.addSHistoryListener(historyListener);
 
 /**
  * This frame script is only loaded for sessionstore mochitests. It enables us
