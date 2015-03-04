@@ -793,10 +793,20 @@ js::CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *reportp
         onError(cx, message, reportp);
 }
 
-void
-js::ReportIsNotDefined(JSContext *cx, const char *name)
+bool
+js::ReportIsNotDefined(JSContext *cx, HandleId id)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, name);
+    JSAutoByteString printable;
+    if (ValueToPrintable(cx, IdToValue(id), &printable))
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.ptr());
+    return false;
+}
+
+bool
+js::ReportIsNotDefined(JSContext *cx, HandlePropertyName name)
+{
+    RootedId id(cx, NameToId(name));
+    return ReportIsNotDefined(cx, id);
 }
 
 bool
