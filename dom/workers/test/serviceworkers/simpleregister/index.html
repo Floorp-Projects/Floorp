@@ -36,15 +36,6 @@
             }
           });
 
-          navigator.serviceWorker.getRegistration('http://mochi.test:8888/with_star/*')
-            .then(function(a) {
-            window.parent.postMessage({ type: "check", status: true,
-                                        msg: "getRegistration returns a ServiceWorkerRegistration" }, "*");
-            a.onupdatefound = function(e) {
-              eventReceived();
-            }
-          });
-
           navigator.serviceWorker.getRegistration('http://www.something_else.net/')
             .then(function(a) {
             window.parent.postMessage({ type: "check", status: false,
