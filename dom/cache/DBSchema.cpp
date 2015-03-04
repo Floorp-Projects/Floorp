@@ -20,6 +20,7 @@ namespace dom {
 namespace cache {
 
 
+const int32_t DBSchema::kMaxWipeSchemaVersion = 1;
 const int32_t DBSchema::kLatestSchemaVersion = 1;
 const int32_t DBSchema::kMaxEntriesPerStatement = 255;
 
