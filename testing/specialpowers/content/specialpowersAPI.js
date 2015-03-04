@@ -19,7 +19,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["File"]);
+if (!this.File) {
+    Cu.importGlobalProperties(["File"]);
+}
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
