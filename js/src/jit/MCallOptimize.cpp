@@ -217,8 +217,12 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     // TypedArray intrinsics.
     if (native == intrinsic_IsTypedArray)
         return inlineIsTypedArray(callInfo);
+    if (native == intrinsic_IsPossiblyWrappedTypedArray)
+        return inlineIsPossiblyWrappedTypedArray(callInfo);
     if (native == intrinsic_TypedArrayLength)
         return inlineTypedArrayLength(callInfo);
+    if (native == intrinsic_SetDisjointTypedElements)
+        return inlineSetDisjointTypedElements(callInfo);
 
     // TypedObject intrinsics.
     if (native == js::ObjectIsTypedObject)
@@ -2219,10 +2223,11 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineIsTypedArray(CallInfo& callInfo)
+IonBuilder::inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappingBehavior)
 {
     MOZ_ASSERT(!callInfo.constructing());
     MOZ_ASSERT(callInfo.argc() == 1);
+
     if (callInfo.getArg(0)->type() != MIRType_Object)
         return InliningStatus_NotInlined;
     if (getInlineReturnType() != MIRType_Boolean)
@@ -2238,12 +2243,22 @@ IonBuilder::inlineIsTypedArray(CallInfo& callInfo)
     bool result = false;
     switch (types->forAllClasses(constraints(), IsTypedArrayClass)) {
       case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-      case TemporaryTypeSet::ForAllResult::EMPTY:
+      case TemporaryTypeSet::ForAllResult::EMPTY: {
+        // Wrapped typed arrays won't appear to be typed arrays per a
+        // |forAllClasses| query.  If wrapped typed arrays are to be considered
+        // typed arrays, a negative answer is not conclusive.  Don't inline in
+        // that case.
+        if (wrappingBehavior == AllowWrappedTypedArrays)
+            return InliningStatus_NotInlined;
+
         result = false;
         break;
+      }
+
       case TemporaryTypeSet::ForAllResult::ALL_TRUE:
         result = true;
         break;
+
       case TemporaryTypeSet::ForAllResult::MIXED:
         return InliningStatus_NotInlined;
     }
@@ -2252,6 +2267,18 @@ IonBuilder::inlineIsTypedArray(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsTypedArray(CallInfo& callInfo)
+{
+    return inlineIsTypedArrayHelper(callInfo, RejectWrappedTypedArrays);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsPossiblyWrappedTypedArray(CallInfo& callInfo)
+{
+    return inlineIsTypedArrayHelper(callInfo, AllowWrappedTypedArrays);
 }
 
 IonBuilder::InliningStatus
@@ -2269,6 +2296,58 @@ IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
 
     MInstruction* length = addTypedArrayLength(callInfo.getArg(0));
     current->push(length);
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSetDisjointTypedElements(CallInfo& callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
+
+    // Initial argument requirements.
+
+    MDefinition* target = callInfo.getArg(0);
+    if (target->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Undefined)
+        return InliningStatus_NotInlined;
+
+    MDefinition* targetOffset = callInfo.getArg(1);
+    MOZ_ASSERT(targetOffset->type() == MIRType_Int32);
+
+    MDefinition* sourceTypedArray = callInfo.getArg(2);
+    if (sourceTypedArray->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    // Only attempt to optimize if |target| and |sourceTypedArray| are both
+    // definitely typed arrays.  (The former always is.  The latter is not,
+    // necessarily, because of wrappers.)
+
+    MDefinition* arrays[] = { target, sourceTypedArray };
+
+    for (MDefinition* def : arrays) {
+        TemporaryTypeSet* types = def->resultTypeSet();
+        if (!types)
+            return InliningStatus_NotInlined;
+
+        if (types->forAllClasses(constraints(), IsTypedArrayClass) !=
+            TemporaryTypeSet::ForAllResult::ALL_TRUE)
+        {
+            return InliningStatus_NotInlined;
+        }
+    }
+
+    auto sets = MSetDisjointTypedElements::New(alloc(), target, targetOffset, sourceTypedArray);
+    current->add(sets);
+
+    pushConstant(UndefinedValue());
+
+    if (!resumeAfter(sets))
+        return InliningStatus_Error;
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
