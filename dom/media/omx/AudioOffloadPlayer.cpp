@@ -360,8 +360,11 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
   mDispatchSeekEvents = aDispatchSeekEvents;
 
   if (mDispatchSeekEvents) {
-    nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-        &MediaDecoder::SeekingStarted);
+    nsCOMPtr<nsIRunnable> nsEvent =
+      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+        mObserver,
+        &MediaDecoder::SeekingStarted,
+        MediaDecoderEventVisibility::Observable);
     NS_DispatchToCurrentThread(nsEvent);
   }
 
@@ -380,8 +383,11 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
     if (mDispatchSeekEvents) {
       mDispatchSeekEvents = false;
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Fake seek complete during pause"));
-      nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-          &MediaDecoder::SeekingStopped);
+      nsCOMPtr<nsIRunnable> nsEvent =
+        NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+          mObserver,
+          &MediaDecoder::SeekingStopped,
+          MediaDecoderEventVisibility::Observable);
       NS_DispatchToCurrentThread(nsEvent);
     }
   }
@@ -440,8 +446,11 @@ void AudioOffloadPlayer::NotifyAudioEOS()
 
 void AudioOffloadPlayer::NotifyPositionChanged()
 {
-  nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-      &MediaOmxCommonDecoder::PlaybackPositionChanged);
+  nsCOMPtr<nsIRunnable> nsEvent =
+    NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+      mObserver,
+      &MediaOmxCommonDecoder::PlaybackPositionChanged,
+      MediaDecoderEventVisibility::Observable);
   NS_DispatchToMainThread(nsEvent);
 }
 
@@ -559,8 +568,11 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
         if (mDispatchSeekEvents && !mSeekDuringPause) {
           mDispatchSeekEvents = false;
           AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("FillBuffer posting SEEK_COMPLETE"));
-          nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-              &MediaDecoder::SeekingStopped);
+          nsCOMPtr<nsIRunnable> nsEvent =
+            NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+              mObserver,
+              &MediaDecoder::SeekingStopped,
+              MediaDecoderEventVisibility::Observable);
           NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
 
         } else if (mSeekDuringPause) {
