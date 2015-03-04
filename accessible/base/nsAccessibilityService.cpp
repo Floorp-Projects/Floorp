@@ -1055,13 +1055,13 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         // A graphic elements: rect, circle, ellipse, line, path, polygon,
         // polyline and image. A 'use' and 'text' graphic elements require
         // special support.
-        newAcc = new EnumRoleAccessible(content, document, roles::GRAPHIC);
+        newAcc = new RoleTAccessible<roles::GRAPHIC>(content, document);
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
-        newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
+        newAcc = new RoleTAccessible<roles::DIAGRAM>(content, document);
       }
     } else if (content->IsMathMLElement()) {
       if (content->IsMathMLElement(nsGkAtoms::math))
-        newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
+        newAcc = new RoleTAccessible<roles::EQUATION>(content, document);
       else
         newAcc = new HyperTextAccessible(content, document);
     }
@@ -1307,14 +1307,14 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULMenuSeparatorAccessible(aContent, aDoc);
 
   } else if(role.EqualsLiteral("xul:pane")) {
-    accessible = new EnumRoleAccessible(aContent, aDoc, roles::PANE);
+    accessible = new RoleTAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:panel")) {
     if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
                               nsGkAtoms::_true, eCaseMatters))
       accessible = new XULAlertAccessible(aContent, aDoc);
     else
-      accessible = new EnumRoleAccessible(aContent, aDoc, roles::PANE);
+      accessible = new RoleTAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:progressmeter")) {
     accessible = new XULProgressMeterAccessible(aContent, aDoc);
@@ -1341,7 +1341,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULLabelAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:textbox")) {
-    accessible = new EnumRoleAccessible(aContent, aDoc, roles::SECTION);
+    accessible = new RoleTAccessible<roles::SECTION>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:thumb")) {
     accessible = new XULThumbAccessible(aContent, aDoc);
@@ -1567,7 +1567,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSelectListAccessible(aContent, document);
       break;
     case eHTMLMediaType:
-      newAcc = new EnumRoleAccessible(aContent, document, roles::GROUPING);
+      newAcc = new RoleTAccessible<roles::GROUPING>(aContent, document);
       break;
     case eHTMLRadioButtonType:
       newAcc = new HTMLRadioButtonAccessible(aContent, document);
