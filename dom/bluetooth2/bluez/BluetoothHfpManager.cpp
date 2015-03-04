@@ -1885,8 +1885,7 @@ BluetoothHfpManager::OnScoConnectSuccess()
 {
   // For active connection request, we need to reply the DOMRequest
   if (mScoRunnable) {
-    DispatchBluetoothReply(mScoRunnable,
-                           BluetoothValue(true), EmptyString());
+    DispatchReplySuccess(mScoRunnable);
     mScoRunnable = nullptr;
   }
 
@@ -1900,9 +1899,8 @@ void
 BluetoothHfpManager::OnScoConnectError()
 {
   if (mScoRunnable) {
-    NS_NAMED_LITERAL_STRING(replyError, "Failed to create SCO socket!");
-    DispatchBluetoothReply(mScoRunnable, BluetoothValue(), replyError);
-
+    DispatchReplyError(mScoRunnable,
+                       NS_LITERAL_STRING("Failed to create SCO socket!"));
     mScoRunnable = nullptr;
   }
 
