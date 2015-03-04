@@ -7,31 +7,9 @@ const Cr = Components.results;
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/MockRegistrar.js");
 
 do_get_profile();
-
-// Dynamically generates a classID for our component, registers it to mask
-// the existing component, and stored the masked components classID to be
-// restored later, when we unregister.
-function registerTemporaryComponent(comp)
-{
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  if (!comp.prototype.classID) {
-    let uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-    comp.prototype.classID = uuidgen.generateUUID();
-  }
-  comp.prototype.maskedClassID = Components.ID(Cc[comp.prototype.contractID].number);
-  if (!comp.prototype.factory)
-    comp.prototype.factory = getFactory(comp);
-  registrar.registerFactory(comp.prototype.classID, "", comp.prototype.contractID, comp.prototype.factory);
-}
-
-function unregisterTemporaryComponent(comp)
-{
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.unregisterFactory(comp.prototype.classID, comp.prototype.factory);
-  registrar.registerFactory(comp.prototype.maskedClassID, "", comp.prototype.contractID, null);
-}
 
 let DownloadListener = {
   init: function () {
@@ -57,22 +35,9 @@ DownloadListener.init();
 function HelperAppDlg() { }
 HelperAppDlg.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
-  contractID: "@mozilla.org/helperapplauncherdialog;1",
   show: function (launcher, ctx, reason, usePrivateUI) {
     launcher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToFile;
     launcher.launchWithApplication(null, false);
-  }
-}
-
-// Stolen from XPCOMUtils, since this handy function is not public there
-function getFactory(comp)
-{
-  return {
-    createInstance: function (outer, iid) {
-      if (outer)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
-      return (new comp()).QueryInterface(iid);
-    }
   }
 }
 
@@ -81,7 +46,6 @@ function getFactory(comp)
 function DownloadMgrUI() { }
 DownloadMgrUI.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI]),
-  contractID: "@mozilla.org/download-manager-ui;1",
   show: function (ir, aID, reason) { },
 
   visible: false,
@@ -92,13 +56,15 @@ DownloadMgrUI.prototype = {
 function AlertsSVC() { }
 AlertsSVC.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAlertsService]),
-  contractID: "@mozilla.org/alerts-service;1",
   showAlertNotification: function (url, title, text, clickable, cookie, listener, name) { },
 }
 
-registerTemporaryComponent(HelperAppDlg);
-registerTemporaryComponent(DownloadMgrUI);
-registerTemporaryComponent(AlertsSVC);
+MockRegistrar.register("@mozilla.org/helperapplauncherdialog;1",
+                       HelperAppDlg);
+MockRegistrar.register("@mozilla.org/download-manager-ui;1",
+                       DownloadMgrUI);
+MockRegistrar.register("@mozilla.org/alerts-service;1",
+                       AlertsSVC);
 
 function initChildTestEnv()
 {
