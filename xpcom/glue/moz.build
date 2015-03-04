@@ -80,10 +80,6 @@ EXPORTS.mozilla += [
     'ReentrantMonitor.h',
 ]
 
-EXPORTS.mozilla.threads += [
-    'nsThreadIDs.h',
-]
-
 include('objs.mozbuild')
 
 UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs

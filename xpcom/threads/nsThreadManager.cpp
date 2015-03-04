@@ -19,13 +19,6 @@
 
 using namespace mozilla;
 
-#ifdef XP_WIN
-#include <windows.h>
-DWORD gTLSThreadIDIndex = TlsAlloc();
-#elif defined(NS_TLS)
-NS_TLS mozilla::threads::ID gTLSThreadID = mozilla::threads::Generic;
-#endif
-
 static mozilla::ThreadLocal<bool> sTLSIsMainThread;
 
 bool
@@ -189,12 +182,6 @@ nsThreadManager::Init()
   // We need to keep a pointer to the current thread, so we can satisfy
   // GetIsMainThread calls that occur post-Shutdown.
   mMainThread->GetPRThread(&mMainPRThread);
-
-#ifdef XP_WIN
-  TlsSetValue(gTLSThreadIDIndex, (void*)mozilla::threads::Main);
-#elif defined(NS_TLS)
-  gTLSThreadID = mozilla::threads::Main;
-#endif
 
   mInitialized = true;
   return NS_OK;
