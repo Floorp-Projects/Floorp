@@ -222,7 +222,7 @@ UnwrapDOMObjectToISupports(JSObject* aObject)
     return nullptr;
   }
 
-  return UnwrapDOMObject<nsISupports>(aObject);
+  return UnwrapPossiblyNotInitializedDOMObject<nsISupports>(aObject);
 }
 
 inline bool
@@ -3036,8 +3036,10 @@ struct CreateGlobalOptions<nsGlobalWindow>
 nsresult
 RegisterDOMNames();
 
+// The return value is whatever the ProtoHandleGetter we used
+// returned.  This should be the DOM prototype for the global.
 template <class T, ProtoHandleGetter GetProto>
-bool
+JS::Handle<JSObject*>
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
              const JSClass* aClass, JS::CompartmentOptions& aOptions,
              JSPrincipals* aPrincipal, bool aInitStandardClasses,
@@ -3049,7 +3051,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
                                  JS::DontFireOnNewGlobalHook, aOptions));
   if (!aGlobal) {
     NS_WARNING("Failed to create global");
-    return false;
+    return JS::NullPtr();
   }
 
   JSAutoCompartment ac(aCx, aGlobal);
@@ -3064,7 +3066,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
                                     CreateGlobalOptions<T>::ProtoAndIfaceCacheKind);
 
     if (!CreateGlobalOptions<T>::PostCreateGlobal(aCx, aGlobal)) {
-      return false;
+      return JS::NullPtr();
     }
   }
 
@@ -3072,16 +3074,16 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
       !CreateGlobalOptions<T>::ForceInitStandardClassesToFalse &&
       !JS_InitStandardClasses(aCx, aGlobal)) {
     NS_WARNING("Failed to init standard classes");
-    return false;
+    return JS::NullPtr();
   }
 
   JS::Handle<JSObject*> proto = GetProto(aCx, aGlobal);
   if (!proto || !JS_SplicePrototype(aCx, aGlobal, proto)) {
     NS_WARNING("Failed to set proto");
-    return false;
+    return JS::NullPtr();
   }
 
-  return true;
+  return proto;
 }
 
 /*
