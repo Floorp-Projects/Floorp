@@ -611,7 +611,6 @@ public:
     mContainerLayer(aContainerLayer),
     mContainerBounds(aContainerBounds),
     mParameters(aParameters),
-    mNextFreeRecycledPaintedLayer(0),
     mContainerUniformBackgroundColor(aBackgroundColor),
     mFlattenToSingleLayer(aFlattenToSingleLayer)
   {
@@ -733,16 +732,14 @@ protected:
    * a recycled PaintedLayer, and sets up the transform on the PaintedLayer
    * to account for scrolling.
    */
-  already_AddRefed<PaintedLayer> CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
-                                                             const nsIFrame *aReferenceFrame,
-                                                             const nsPoint& aTopLeft);
+  already_AddRefed<PaintedLayer> CreateOrRecyclePaintedLayer(PaintedLayerData* aData);
 
   /**
    * Find a PaintedLayer for recycling, recycle it and prepare it for use, or
    * return null if no suitable layer was found.
    */
   already_AddRefed<PaintedLayer> AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
-                                                              const nsIFrame *aReferenceFrame,
+                                                              nsDisplayItem* aItem,
                                                               const nsPoint& aTopLeft);
   /**
    * Recycle aLayer and do any necessary invalidation.
@@ -971,7 +968,7 @@ protected:
    */
   typedef nsAutoTArray<NewLayerEntry,1> AutoLayersArray;
   AutoLayersArray                  mNewChildLayers;
-  nsTArray<nsRefPtr<PaintedLayer> > mRecycledPaintedLayers;
+  nsTHashtable<nsRefPtrHashKey<PaintedLayer>> mPaintedLayersAvailableForRecycling;
   nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
     mRecycledMaskImageLayers;
   /**
@@ -979,7 +976,6 @@ protected:
    * first PaintedLayerData layer in the PaintedLayerDataStack.
    */
   PossiblyInfiniteRegion           mVisibleAboveBackgroundRegion;
-  uint32_t                         mNextFreeRecycledPaintedLayer;
   nscoord                          mAppUnitsPerDevPixel;
   /**
    * The uniform opaque color from behind this container layer, or
@@ -1735,16 +1731,18 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
 
 already_AddRefed<PaintedLayer>
 ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
-                                             const nsIFrame* aReferenceFrame,
+                                             nsDisplayItem* aItem,
                                              const nsPoint& aTopLeft)
 {
-  if (mNextFreeRecycledPaintedLayer >= mRecycledPaintedLayers.Length()) {
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem);
+  if (!oldLayer || !oldLayer->AsPaintedLayer() ||
+      !mPaintedLayersAvailableForRecycling.Contains(oldLayer->AsPaintedLayer())) {
     return nullptr;
   }
 
   // Try to recycle a layer
-  nsRefPtr<PaintedLayer> layer = mRecycledPaintedLayers[mNextFreeRecycledPaintedLayer];
-  ++mNextFreeRecycledPaintedLayer;
+  nsRefPtr<PaintedLayer> layer = oldLayer->AsPaintedLayer();
+  mPaintedLayersAvailableForRecycling.RemoveEntry(layer);
 
   // Check if the layer hint has changed and whether or not the layer should
   // be recreated because of it.
@@ -1756,7 +1754,7 @@ ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRo
   PaintedDisplayItemLayerUserData* data =
     RecyclePaintedLayer(layer, aAnimatedGeometryRoot,
                         didResetScrollPositionForLayerPixelAlignment);
-  PreparePaintedLayerForUse(layer, data, aAnimatedGeometryRoot, aReferenceFrame,
+  PreparePaintedLayerForUse(layer, data, aAnimatedGeometryRoot, aItem->ReferenceFrame(),
                             aTopLeft,
                             didResetScrollPositionForLayerPixelAlignment);
 
@@ -1764,33 +1762,38 @@ ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRo
 }
 
 already_AddRefed<PaintedLayer>
-ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoot,
-                                            const nsIFrame* aReferenceFrame,
-                                            const nsPoint& aTopLeft)
+ContainerState::CreateOrRecyclePaintedLayer(PaintedLayerData* aData)
 {
-  // We need a new painted layer
-  nsRefPtr<PaintedLayer> layer =
-    AttemptToRecyclePaintedLayer(aAnimatedGeometryRoot, aReferenceFrame, aTopLeft);
-  if (layer) {
-    return layer.forget();
+  // Try to recycle one of the old layers of the display items assigned to
+  // this layer.
+  for (auto& item : aData->mAssignedDisplayItems) {
+    MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
+
+    nsRefPtr<PaintedLayer> layer =
+      AttemptToRecyclePaintedLayer(aData->mAnimatedGeometryRoot, item.mItem,
+                                   aData->mAnimatedGeometryRootOffset);
+    if (layer) {
+      return layer.forget();
+    }
   }
 
   LayerManager::PaintedLayerCreationHint creationHint =
-    GetLayerCreationHint(aAnimatedGeometryRoot);
+    GetLayerCreationHint(aData->mAnimatedGeometryRoot);
 
   // Create a new painted layer
-  layer = mManager->CreatePaintedLayerWithHint(creationHint);
+  nsRefPtr<PaintedLayer> layer = mManager->CreatePaintedLayerWithHint(creationHint);
   if (!layer) {
     return nullptr;
   }
 
   // Mark this layer as being used for painting display items
-  PaintedDisplayItemLayerUserData* data = new PaintedDisplayItemLayerUserData();
-  layer->SetUserData(&gPaintedDisplayItemLayerUserData, data);
-  ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
+  PaintedDisplayItemLayerUserData* userData = new PaintedDisplayItemLayerUserData();
+  layer->SetUserData(&gPaintedDisplayItemLayerUserData, userData);
+  ResetScrollPositionForLayerPixelAlignment(aData->mAnimatedGeometryRoot);
 
-  PreparePaintedLayerForUse(layer, data, aAnimatedGeometryRoot,
-                            aReferenceFrame, aTopLeft, true);
+  PreparePaintedLayerForUse(layer, userData, aData->mAnimatedGeometryRoot,
+                            aData->mReferenceFrame,
+                            aData->mAnimatedGeometryRootOffset, true);
 
   return layer.forget();
 }
@@ -2186,11 +2189,7 @@ ContainerState::PopPaintedLayerData()
   int32_t lastIndex = mPaintedLayerDataStack.Length() - 1;
   PaintedLayerData* data = mPaintedLayerDataStack[lastIndex];
 
-  nsRefPtr<PaintedLayer> paintedLayer =
-    CreateOrRecyclePaintedLayer(data->mAnimatedGeometryRoot,
-                                data->mReferenceFrame,
-                                data->mAnimatedGeometryRootOffset);
-
+  nsRefPtr<PaintedLayer> paintedLayer = CreateOrRecyclePaintedLayer(data);
   data->mLayer = paintedLayer.get();
 
   NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, data->mLayer) < 0,
@@ -3652,7 +3651,7 @@ ContainerState::CollectOldLayers()
                  "Mask layer in layer tree; could not be recycled.");
     if (layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsPaintedLayer(), "Wrong layer type");
-      mRecycledPaintedLayers.AppendElement(static_cast<PaintedLayer*>(layer));
+      mPaintedLayersAvailableForRecycling.PutEntry(static_cast<PaintedLayer*>(layer));
     }
 
     if (Layer* maskLayer = layer->GetMaskLayer()) {
