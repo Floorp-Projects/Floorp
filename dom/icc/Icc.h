@@ -111,6 +111,8 @@ public:
   IMPL_EVENT_HANDLER(stksessionend)
 
 private:
+  ~Icc() {}
+
   bool mLive;
   uint32_t mClientId;
   nsString mIccId;
