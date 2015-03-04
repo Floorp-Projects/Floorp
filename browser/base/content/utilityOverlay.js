@@ -516,18 +516,33 @@ function openPreferences(paneID, extraArgs)
 
   if (getBoolPref("browser.preferences.inContent")) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win) {
-      return;
-    }
-
     let friendlyCategoryName = internalPrefCategoryNameToFriendlyName(paneID);
     let preferencesURL = "about:preferences" +
                          (friendlyCategoryName ? "#" + friendlyCategoryName : "");
-    let newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
-    let browser = win.gBrowser.selectedBrowser;
+    let newLoad = true;
+    let browser = null;
+    if (!win) {
+      const Cc = Components.classes;
+      const Ci = Components.interfaces;
+      let windowArguments = Cc["@mozilla.org/supports-array;1"]
+                              .createInstance(Ci.nsISupportsArray);
+      let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
+                                    .createInstance(Ci.nsISupportsString);
+      supportsStringPrefURL.data = preferencesURL;
+      windowArguments.AppendElement(supportsStringPrefURL);
+
+      win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
+                                   "_blank", "chrome,dialog=no,all", windowArguments);
+    } else {
+      newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
+      browser = win.gBrowser.selectedBrowser;
+    }
 
     if (newLoad) {
       Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
+        if (!browser) {
+          browser = win.gBrowser.selectedBrowser;
+        }
         if (prefWin != browser.contentWindow) {
           return;
         }
