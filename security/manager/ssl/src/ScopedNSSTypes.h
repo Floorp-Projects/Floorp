@@ -23,6 +23,7 @@
 #include "keyhi.h"
 #include "cryptohi.h"
 #include "pk11pub.h"
+#include "pkcs12.h"
 #include "sechash.h"
 #include "secpkcs7.h"
 #include "secport.h"
@@ -240,6 +241,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS7ContentInfo,
                                           SEC_PKCS7ContentInfo,
                                           SEC_PKCS7DestroyContentInfo)
 
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSEC_PKCS12DecoderContext,
+                                          SEC_PKCS12DecoderContext,
+                                          SEC_PKCS12DecoderFinish)
 namespace internal {
 
 inline void
@@ -307,6 +311,11 @@ inline void SECOID_DestroyAlgorithmID_true(SECAlgorithmID * a)
   return SECOID_DestroyAlgorithmID(a, true);
 }
 
+inline void SECKEYEncryptedPrivateKeyInfo_true(SECKEYEncryptedPrivateKeyInfo * epki)
+{
+  return SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE);
+}
+
 } // namespace internal
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
@@ -316,6 +325,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
                                           SECKEYPrivateKey,
                                           SECKEY_DestroyPrivateKey)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYEncryptedPrivateKeyInfo,
+                                          SECKEYEncryptedPrivateKeyInfo,
+                                          internal::SECKEYEncryptedPrivateKeyInfo_true)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
                                           SECKEYPublicKey,
                                           SECKEY_DestroyPublicKey)
