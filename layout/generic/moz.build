@@ -4,6 +4,62 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('nsBlock*'):
+    # Parts of these files are really Layout: Floats
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('nsLine*'):
+    # Parts of these files are really Layout: Floats
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('nsInlineFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('nsBRFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('nsBulletFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('nsFirstLetterFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
+with Files('MathML*'):
+    BUG_COMPONENT = ('Core', 'MathML')
+
+with Files('Text*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+
+with Files('nsText*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+
+with Files('nsFrameSetFrame*'):
+    BUG_COMPONENT = ('Core', 'Layout: HTML Frames')
+
+with Files('nsSubDocumentFrame*'):
+    BUG_COMPONENT = ('Core', 'Layout: HTML Frames')
+
+with Files('nsFloatManager.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Floats')
+
+with Files('nsIntervalSet.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Floats')
+
+with Files('nsHTMLCanvasFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+
+with Files('nsImage*'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+
+with Files('nsAbsoluteContainingBlock.*'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+
+with Files('nsPluginFrame.*'):
+    BUG_COMPONENT = ('Core', 'Plug-ins')
+
+with Files('nsVideoFrame.*'):
+    BUG_COMPONENT = ('Core', 'Video/Audio')
+
 EXPORTS += [
     'nsCanvasFrame.h',
     'nsContainerFrame.h',

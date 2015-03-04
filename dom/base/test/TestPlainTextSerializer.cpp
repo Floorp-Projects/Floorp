@@ -163,6 +163,39 @@ TestBlockElement()
 }
 
 nsresult
+TestPreWrapElementForThunderbird()
+{
+  // This test examines the magic pre-wrap setup that Thunderbird relies on.
+  nsString test;
+  test.AppendLiteral(
+    "<html>" NS_LINEBREAK
+    "<body style=\"white-space: pre-wrap; width: 10ch;\">" NS_LINEBREAK
+    "<pre>" NS_LINEBREAK
+    "  first line is too long" NS_LINEBREAK
+    "  second line is even loooonger  " NS_LINEBREAK
+    "</pre>" NS_LINEBREAK
+    "</body>" NS_LINEBREAK "</html>");
+
+  ConvertBufToPlainText(test, nsIDocumentEncoder::OutputWrap);
+  // "\n\n  first\nline is\ntoo long\n  second\nline is\neven\nloooonger\n\n\n"
+  if (!test.EqualsLiteral(NS_LINEBREAK NS_LINEBREAK
+                          "  first" NS_LINEBREAK
+                          "line is" NS_LINEBREAK
+                          "too long" NS_LINEBREAK
+                          "  second" NS_LINEBREAK
+                          "line is" NS_LINEBREAK
+                          "even" NS_LINEBREAK
+                          "loooonger" NS_LINEBREAK
+                          NS_LINEBREAK NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
+}
+
+nsresult
 TestPlainTextSerializer()
 {
   nsString test;
@@ -189,6 +222,9 @@ TestPlainTextSerializer()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = TestBlockElement();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreWrapElementForThunderbird();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add new tests here...

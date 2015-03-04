@@ -3018,17 +3018,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        (aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext()));
   }
 
-  if (aBuilder->IsPaintingToWindow() &&
-      !mShouldBuildScrollableLayer &&
-      shouldBuildLayer)
-  {
-    if (nsDisplayLayerEventRegions *eventRegions = aBuilder->GetLayerEventRegions()) {
-      // Make sure that APZ will dispatch events back to content so we can
-      // create a displayport for this frame.
-      eventRegions->AddInactiveScrollPort(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
-    }
-  }
-
   mScrollParentID = aBuilder->GetCurrentScrollParentId();
 
   nsDisplayListCollection scrolledContent;
@@ -3138,31 +3127,49 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       wrapper.WrapListsInPlace(aBuilder, mOuter, scrolledContent);
     }
 
+    // Make sure that APZ will dispatch events back to content so we can create
+    // a displayport for this frame. We'll add the item later on.
+    nsDisplayLayerEventRegions* inactiveRegionItem = nullptr;
+    if (aBuilder->IsPaintingToWindow() &&
+        !mShouldBuildScrollableLayer &&
+        shouldBuildLayer &&
+        gfxPrefs::LayoutEventRegionsEnabled())
+    {
+      inactiveRegionItem = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame);
+      inactiveRegionItem->AddInactiveScrollPort(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
+    }
+
     // In case we are not using displayport or the nsDisplayScrollLayers are
     // flattened during visibility computation, we still need to export the
     // metadata about this scroll box to the compositor process.
     nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
       aBuilder, mScrolledFrame, mOuter);
+
     nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
+    nsDisplayList* destinationList = nullptr;
     if (BuildScrollContainerLayers()) {
       // We process display items from bottom to top, so if we need to flatten after
       // the scroll layer items have been processed we need to be on the top.
       if (!positionedDescendants->IsEmpty()) {
         layerItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
-        positionedDescendants->AppendNewToTop(layerItem);
+        destinationList = positionedDescendants;
       } else {
-        aLists.Outlines()->AppendNewToTop(layerItem);
+        destinationList = aLists.Outlines();
       }
     } else {
       int32_t zindex =
         MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
       if (zindex >= 0) {
         layerItem->SetOverrideZIndex(zindex);
-        positionedDescendants->AppendNewToTop(layerItem);
+        destinationList = positionedDescendants;
       } else {
-        scrolledContent.Outlines()->AppendNewToTop(layerItem);
+        destinationList = scrolledContent.Outlines();
       }
     }
+    if (inactiveRegionItem) {
+      destinationList->AppendNewToTop(inactiveRegionItem);
+    }
+    destinationList->AppendNewToTop(layerItem);
   }
   // Now display overlay scrollbars and the resizer, if we have one.
   AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent, usingDisplayport,
