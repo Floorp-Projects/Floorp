@@ -482,7 +482,7 @@ TraceActiveWindowGlobal(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aCl
 
 #ifdef MOZ_XUL
     nsIDocument* doc = aWindow->GetExtantDoc();
-    if (doc && doc->IsXUL()) {
+    if (doc && doc->IsXULDocument()) {
       XULDocument* xulDoc = static_cast<XULDocument*>(doc);
       xulDoc->TraceProtos(closure->mTrc, closure->mGCNumber);
     }

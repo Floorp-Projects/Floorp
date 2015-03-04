@@ -56,56 +56,56 @@ public:
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               File& aBlob,
                               const objectURLOptions& aOptions,
-                              nsString& aResult,
+                              nsAString& aResult,
                               ErrorResult& aError);
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               DOMMediaStream& aStream,
                               const objectURLOptions& aOptions,
-                              nsString& aResult,
+                              nsAString& aResult,
                               ErrorResult& aError);
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               MediaSource& aSource,
                               const objectURLOptions& aOptions,
-                              nsString& aResult,
+                              nsAString& aResult,
                               ErrorResult& aError);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
                               const nsAString& aURL);
 
-  void GetHref(nsString& aHref, ErrorResult& aRv) const;
+  void GetHref(nsAString& aHref, ErrorResult& aRv) const;
 
   void SetHref(const nsAString& aHref, ErrorResult& aRv);
 
-  void GetOrigin(nsString& aOrigin, ErrorResult& aRv) const;
+  void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const;
 
-  void GetProtocol(nsString& aProtocol, ErrorResult& aRv) const;
+  void GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const;
 
   void SetProtocol(const nsAString& aProtocol, ErrorResult& aRv);
 
-  void GetUsername(nsString& aUsername, ErrorResult& aRv) const;
+  void GetUsername(nsAString& aUsername, ErrorResult& aRv) const;
 
   void SetUsername(const nsAString& aUsername, ErrorResult& aRv);
 
-  void GetPassword(nsString& aPassword, ErrorResult& aRv) const;
+  void GetPassword(nsAString& aPassword, ErrorResult& aRv) const;
 
   void SetPassword(const nsAString& aPassword, ErrorResult& aRv);
 
-  void GetHost(nsString& aHost, ErrorResult& aRv) const;
+  void GetHost(nsAString& aHost, ErrorResult& aRv) const;
 
   void SetHost(const nsAString& aHost, ErrorResult& aRv);
 
-  void GetHostname(nsString& aHostname, ErrorResult& aRv) const;
+  void GetHostname(nsAString& aHostname, ErrorResult& aRv) const;
 
   void SetHostname(const nsAString& aHostname, ErrorResult& aRv);
 
-  void GetPort(nsString& aPort, ErrorResult& aRv) const;
+  void GetPort(nsAString& aPort, ErrorResult& aRv) const;
 
   void SetPort(const nsAString& aPort, ErrorResult& aRv);
 
-  void GetPathname(nsString& aPathname, ErrorResult& aRv) const;
+  void GetPathname(nsAString& aPathname, ErrorResult& aRv) const;
 
   void SetPathname(const nsAString& aPathname, ErrorResult& aRv);
 
-  void GetSearch(nsString& aRetval, ErrorResult& aRv) const;
+  void GetSearch(nsAString& aRetval, ErrorResult& aRv) const;
 
   void SetSearch(const nsAString& aArg, ErrorResult& aRv);
 
@@ -113,11 +113,11 @@ public:
 
   void SetSearchParams(URLSearchParams& aSearchParams);
 
-  void GetHash(nsString& aRetval, ErrorResult& aRv) const;
+  void GetHash(nsAString& aRetval, ErrorResult& aRv) const;
 
   void SetHash(const nsAString& aArg, ErrorResult& aRv);
 
-  void Stringify(nsString& aRetval, ErrorResult& aRv) const
+  void Stringify(nsAString& aRetval, ErrorResult& aRv) const
   {
     GetHref(aRetval, aRv);
   }
@@ -141,7 +141,7 @@ private:
                                       nsISupports* aObject,
                                       const nsACString& aScheme,
                                       const objectURLOptions& aOptions,
-                                      nsString& aResult,
+                                      nsAString& aResult,
                                       ErrorResult& aError);
 
   nsCOMPtr<nsIURI> mURI;

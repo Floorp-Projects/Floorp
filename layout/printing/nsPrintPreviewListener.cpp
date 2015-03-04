@@ -162,7 +162,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(
     aEvent ? aEvent->InternalDOMEvent()->GetOriginalTarget() : nullptr);
-  if (content && !content->IsXUL()) {
+  if (content && !content->IsXULElement()) {
     eEventAction action = ::GetActionForEvent(aEvent);
     switch (action) {
       case eEventAction_Tab:

@@ -1442,11 +1442,17 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 {
   WritingMode lineWM = mRootSpan->mWritingMode;
 
-  // Record ascent and update max-ascent and max-descent values
-  if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+  // If the frame's block direction does not match the line's, we can't use
+  // its ascent; instead, treat it as a block with baseline at the block-end
+  // edge (or block-begin in the case of an "inverted" line).
+  if (pfd->mFrame->GetWritingMode().GetBlockDir() != lineWM.GetBlockDir()) {
+    pfd->mAscent = lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM);
   } else {
-    pfd->mAscent = aMetrics.BlockStartAscent();
+    if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+    } else {
+      pfd->mAscent = aMetrics.BlockStartAscent();
+    }
   }
 
   // Advance to next inline coordinate
@@ -2162,8 +2168,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // "raises" the box by the given distance while a negative value
       // "lowers" the box by the given distance (with zero being the
       // baseline). Since Y coordinates increase towards the bottom of
-      // the screen we reverse the sign.
-      nscoord revisedBaselineBCoord = baselineBCoord - offset;
+      // the screen we reverse the sign, unless the line orientation is
+      // inverted relative to block direction.
+      nscoord revisedBaselineBCoord = baselineBCoord - offset *
+        lineWM.FlowRelativeToLineRelativeFactor();
       pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
       pfd->mBlockDirAlign = VALIGN_OTHER;
     }
@@ -2258,11 +2266,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     if (!applyMinLH && isLastLine) {
       nsIContent* blockContent = mRootSpan->mFrame->mFrame->GetContent();
       if (blockContent) {
-        nsIAtom *blockTagAtom = blockContent->Tag();
         // (3) above, if the last line of LI, DT, or DD
-        if (blockTagAtom == nsGkAtoms::li ||
-            blockTagAtom == nsGkAtoms::dt ||
-            blockTagAtom == nsGkAtoms::dd) {
+        if (blockContent->IsAnyOfHTMLElements(nsGkAtoms::li,
+                                              nsGkAtoms::dt,
+                                              nsGkAtoms::dd)) {
           applyMinLH = true;
         }
       }

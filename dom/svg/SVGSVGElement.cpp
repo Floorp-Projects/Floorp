@@ -785,13 +785,12 @@ SVGSVGElement::WillBeOutermostSVG(nsIContent* aParent,
 {
   nsIContent* parent = aBindingParent ? aBindingParent : aParent;
 
-  while (parent && parent->IsSVG()) {
-    nsIAtom* tag = parent->Tag();
-    if (tag == nsGkAtoms::foreignObject) {
+  while (parent && parent->IsSVGElement()) {
+    if (parent->IsSVGElement(nsGkAtoms::foreignObject)) {
       // SVG in a foreignObject must have its own <svg> (nsSVGOuterSVGFrame).
       return false;
     }
-    if (tag == nsGkAtoms::svg) {
+    if (parent->IsSVGElement(nsGkAtoms::svg)) {
       return false;
     }
     parent = parent->GetParent();
@@ -826,7 +825,7 @@ SVGSVGElement::GetCurrentViewElement() const
     nsIDocument* doc = GetUncomposedDoc();
     if (doc) {
       Element *element = doc->GetElementById(*mCurrentViewID);
-      if (element && element->IsSVG(nsGkAtoms::view)) {
+      if (element && element->IsSVGElement(nsGkAtoms::view)) {
         return static_cast<SVGViewElement*>(element);
       }
     }

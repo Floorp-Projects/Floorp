@@ -2303,3 +2303,15 @@ gfxPlatform::CreateHardwareVsyncSource()
   nsRefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
   return softwareVsync.forget();
 }
+
+/* static */ bool
+gfxPlatform::IsInLayoutAsapMode()
+{
+  // There are 2 modes of ASAP mode.
+  // 1 is that the refresh driver and compositor are in lock step
+  // the second is that the compositor goes ASAP and the refresh driver
+  // goes at whatever the configurated rate is. This only checks the version
+  // talos uses, which is the refresh driver and compositor are in lockstep.
+  return Preferences::GetInt("layout.frame_rate", -1) == 0;
+}
+

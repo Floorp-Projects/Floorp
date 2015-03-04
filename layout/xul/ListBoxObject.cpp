@@ -145,7 +145,7 @@ ListBoxObject::GetIndexOfItem(Element& aElement)
 static nsIContent*
 FindBodyContent(nsIContent* aParent)
 {
-  if (aParent->Tag() == nsGkAtoms::listboxbody) {
+  if (aParent->IsXULElement(nsGkAtoms::listboxbody)) {
     return aParent;
   }
 

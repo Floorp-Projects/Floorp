@@ -68,23 +68,21 @@ HTMLAllCollection::Collection()
 static bool
 IsAllNamedElement(nsIContent* aContent)
 {
-  nsIAtom* tag = aContent->Tag();
-  return
-    tag == nsGkAtoms::a ||
-    tag == nsGkAtoms::applet ||
-    tag == nsGkAtoms::button ||
-    tag == nsGkAtoms::embed ||
-    tag == nsGkAtoms::form ||
-    tag == nsGkAtoms::iframe ||
-    tag == nsGkAtoms::img ||
-    tag == nsGkAtoms::input ||
-    tag == nsGkAtoms::map ||
-    tag == nsGkAtoms::meta ||
-    tag == nsGkAtoms::object ||
-    tag == nsGkAtoms::select ||
-    tag == nsGkAtoms::textarea ||
-    tag == nsGkAtoms::frame ||
-    tag == nsGkAtoms::frameset;
+  return aContent->IsAnyOfHTMLElements(nsGkAtoms::a,
+                                       nsGkAtoms::applet,
+                                       nsGkAtoms::button,
+                                       nsGkAtoms::embed,
+                                       nsGkAtoms::form,
+                                       nsGkAtoms::iframe,
+                                       nsGkAtoms::img,
+                                       nsGkAtoms::input,
+                                       nsGkAtoms::map,
+                                       nsGkAtoms::meta,
+                                       nsGkAtoms::object,
+                                       nsGkAtoms::select,
+                                       nsGkAtoms::textarea,
+                                       nsGkAtoms::frame,
+                                       nsGkAtoms::frameset);
 }
 
 static bool

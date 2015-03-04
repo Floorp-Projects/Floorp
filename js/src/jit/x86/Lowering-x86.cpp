@@ -271,6 +271,18 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
 }
 
 void
+LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
+{
+    lowerAsmJSCompareExchangeHeap(ins, temp());
+}
+
+void
+LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
+{
+    lowerAsmJSAtomicBinopHeap(ins, temp());
+}
+
+void
 LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
     define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);

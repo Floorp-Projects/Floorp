@@ -137,9 +137,9 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
     nsIContent* content = GetCurrentContent();
     if (content &&
         (content->NodeInfo()->NamespaceEquals(kNameSpaceID_XBL) ||
-         (content->NodeInfo()->NamespaceEquals(kNameSpaceID_XUL) &&
-          content->Tag() != nsGkAtoms::label &&
-          content->Tag() != nsGkAtoms::description))) {
+         (content->IsXULElement() &&
+          !content->IsAnyOfXULElements(nsGkAtoms::label,
+                                       nsGkAtoms::description)))) {
 
       bool isWS = true;
       if (mTextLength > 0) {
@@ -884,7 +884,7 @@ nsresult
 nsXBLContentSink::AddAttributes(const char16_t** aAtts,
                                 nsIContent* aContent)
 {
-  if (aContent->IsXUL())
+  if (aContent->IsXULElement())
     return NS_OK; // Nothing to do, since the proto already has the attrs.
 
   return nsXMLContentSink::AddAttributes(aAtts, aContent);

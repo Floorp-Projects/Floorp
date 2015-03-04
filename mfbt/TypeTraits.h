@@ -162,21 +162,34 @@ template<typename T>
 struct IsArray : detail::IsArrayHelper<typename RemoveCV<T>::Type>
 {};
 
+namespace detail {
+
+template<typename T>
+struct IsPointerHelper : FalseType {};
+
+template<typename T>
+struct IsPointerHelper<T*> : TrueType {};
+
+} // namespace detail
+
 /**
- * IsPointer determines whether a type is a pointer type (but not a pointer-to-
- * member type).
+ * IsPointer determines whether a type is a possibly-CV-qualified pointer type
+ * (but not a pointer-to-member type).
  *
  * mozilla::IsPointer<struct S*>::value is true;
+ * mozilla::IsPointer<int*>::value is true;
  * mozilla::IsPointer<int**>::value is true;
+ * mozilla::IsPointer<const int*>::value is true;
+ * mozilla::IsPointer<int* const>::value is true;
+ * mozilla::IsPointer<int* volatile>::value is true;
  * mozilla::IsPointer<void (*)(void)>::value is true;
  * mozilla::IsPointer<int>::value is false;
  * mozilla::IsPointer<struct S>::value is false.
+ * mozilla::IsPointer<int(struct S::*)>::value is false
  */
 template<typename T>
-struct IsPointer : FalseType {};
-
-template<typename T>
-struct IsPointer<T*> : TrueType {};
+struct IsPointer : detail::IsPointerHelper<typename RemoveCV<T>::Type>
+{};
 
 /**
  * IsLvalueReference determines whether a type is an lvalue reference.
@@ -944,6 +957,42 @@ struct RemoveExtent<T[N]>
 };
 
 /* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
+
+namespace detail {
+
+template<typename T, typename CVRemoved>
+struct RemovePointerHelper
+{
+  typedef T Type;
+};
+
+template<typename T, typename Pointee>
+struct RemovePointerHelper<T, Pointee*>
+{
+  typedef Pointee Type;
+};
+
+} // namespac detail
+
+/**
+ * Produces the pointed-to type if a pointer is provided, else returns the input
+ * type.  Note that this does not dereference pointer-to-member pointers.
+ *
+ * struct S { bool m; void f(); };
+ * mozilla::RemovePointer<int>::Type is int;
+ * mozilla::RemovePointer<int*>::Type is int;
+ * mozilla::RemovePointer<int* const>::Type is int;
+ * mozilla::RemovePointer<int* volatile>::Type is int;
+ * mozilla::RemovePointer<const long*>::Type is const long;
+ * mozilla::RemovePointer<void* const>::Type is void;
+ * mozilla::RemovePointer<void (S::*)()>::Type is void (S::*)();
+ * mozilla::RemovePointer<void (*)()>::Type is void();
+ * mozilla::RemovePointer<bool S::*>::Type is bool S::*.
+ */
+template<typename T>
+struct RemovePointer
+  : detail::RemovePointerHelper<T, typename RemoveCV<T>::Type>
+{};
 
 /* 20.9.7.6 Other transformations [meta.trans.other] */
 

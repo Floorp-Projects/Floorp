@@ -348,7 +348,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
-            nsCOMPtr<nsIAtom> localName = aNode.Content()->Tag();
+            nsCOMPtr<nsIAtom> localName =
+                aNode.Content()->NodeInfo()->NameAtom();
             return localName.forget();
         }
 
@@ -420,7 +421,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
     // Check for html
     if (aNode.Content()->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
-        aNode.Content()->IsHTML()) {
+        aNode.Content()->IsHTMLElement()) {
         nsContentUtils::ASCIIToUpper(aLocalName);
     }
 }

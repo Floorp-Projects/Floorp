@@ -83,7 +83,7 @@ SVGViewFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
                    nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::view),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::view),
                "Content is not an SVG view");
 
   SVGViewFrameBase::Init(aContent, aParent, aPrevInFlow);
@@ -109,7 +109,7 @@ SVGViewFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::viewTarget)) {
 
     nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    NS_ASSERTION(outerSVGFrame->GetContent()->IsSVG(nsGkAtoms::svg),
+    NS_ASSERTION(outerSVGFrame->GetContent()->IsSVGElement(nsGkAtoms::svg),
                  "Expecting an <svg> element");
 
     SVGSVGElement* svgElement =

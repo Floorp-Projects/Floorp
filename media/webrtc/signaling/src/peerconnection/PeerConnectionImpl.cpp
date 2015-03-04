@@ -182,10 +182,7 @@ public:
                           size_t numNewVideoTracks,
                           const std::string& pcHandle,
                           nsRefPtr<PeerConnectionObserver> aObserver)
-  : DOMMediaStream::OnTracksAvailableCallback(
-      // Once DOMMediaStream can handle more than one of each, this will change.
-      (numNewAudioTracks ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-      (numNewVideoTracks ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0))
+  : DOMMediaStream::OnTracksAvailableCallback()
   , mObserver(aObserver)
   , mPcHandle(pcHandle)
   {}
@@ -450,10 +447,10 @@ PeerConnectionImpl::~PeerConnectionImpl()
 }
 
 already_AddRefed<DOMMediaStream>
-PeerConnectionImpl::MakeMediaStream(uint32_t aHint)
+PeerConnectionImpl::MakeMediaStream()
 {
   nsRefPtr<DOMMediaStream> stream =
-    DOMMediaStream::CreateSourceStream(GetWindow(), aHint);
+    DOMMediaStream::CreateSourceStream(GetWindow());
 
 #ifdef MOZILLA_INTERNAL_API
   // Make the stream data (audio/video samples) accessible to the receiving page.
@@ -486,16 +483,10 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   MOZ_ASSERT(aInfo);
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  // We need to pass a dummy hint here because FakeMediaStream currently
-  // needs to actually propagate a hint for local streams.
-  // TODO(ekr@rtfm.com): Clean up when we have explicit track lists.
-  // See bug 834835.
-  nsRefPtr<DOMMediaStream> stream = MakeMediaStream(0);
+  nsRefPtr<DOMMediaStream> stream = MakeMediaStream();
   if (!stream) {
     return NS_ERROR_FAILURE;
   }
-
-  static_cast<SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
   remote = new RemoteSourceStreamInfo(stream.forget(), mMedia, aStreamID);
@@ -912,6 +903,10 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   bool h264Enabled = hardwareH264Supported || softwareH264Enabled;
 
+  bool vp9Enabled = false;
+  branch->GetBoolPref("media.peerconnection.video.vp9_enabled",
+                      &vp9Enabled);
+  
   auto& codecs = mJsepSession->Codecs();
 
   // We use this to sort the list of codecs once everything is configured
@@ -961,7 +956,11 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
             if (hardwareH264Supported) {
               comparator.AddHardwareCodec(videoCodec.mDefaultPt);
             }
-          } else if (codec.mName == "VP8") {
+          } else if (codec.mName == "VP8" || codec.mName == "VP9") {
+            if (videoCodec.mName == "VP9" && !vp9Enabled) {
+              videoCodec.mEnabled = false;
+              break;
+            }
             int32_t maxFs = 0;
             branch->GetIntPref("media.navigator.video.max_fs", &maxFs);
             if (maxFs <= 0) {
@@ -975,6 +974,7 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
               maxFr = 60; // We must specify something other than 0
             }
             videoCodec.mMaxFr = maxFr;
+
           }
         }
         break;

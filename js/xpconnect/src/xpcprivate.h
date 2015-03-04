@@ -1251,6 +1251,11 @@ private:
 };
 
 /***************************************************************************/
+// Slots we use for our functions
+#define XPC_FUNCTION_NATIVE_MEMBER_SLOT 0
+#define XPC_FUNCTION_PARENT_OBJECT_SLOT 1
+
+/***************************************************************************/
 // XPCNativeMember represents a single idl declared method, attribute or
 // constant.
 
@@ -1306,6 +1311,14 @@ public:
     void SetWritableAttribute()
         {MOZ_ASSERT(mFlags == GETTER,"bad"); mFlags = GETTER | SETTER_TOO;}
 
+    static uint16_t GetMaxIndexInInterface()
+        {return (1<<12) - 1;}
+
+    inline XPCNativeInterface* GetInterface() const;
+
+    void SetIndexInInterface(uint16_t index)
+        {mIndexInInterface = index;}
+
     /* default ctor - leave random contents */
     XPCNativeMember()  {MOZ_COUNT_CTOR(XPCNativeMember);}
     ~XPCNativeMember() {MOZ_COUNT_DTOR(XPCNativeMember);}
@@ -1319,13 +1332,24 @@ private:
         CONSTANT    = 0x02,
         GETTER      = 0x04,
         SETTER_TOO  = 0x08
+        // If you add a flag here, you may need to make mFlags wider and either
+        // make mIndexInInterface narrower (and adjust
+        // XPCNativeInterface::NewInstance accordingly) or make this object
+        // bigger.
     };
 
 private:
     // our only data...
     jsid     mName;
     uint16_t mIndex;
-    uint16_t mFlags;
+    // mFlags needs to be wide enogh to hold the flags in the above enum.
+    uint16_t mFlags : 4;
+    // mIndexInInterface is the index of this in our XPCNativeInterface's
+    // mMembers.  In theory our XPCNativeInterface could have as many as 2^15-1
+    // members (since mMemberCount is 15-bit) but in practice we prevent
+    // creation of XPCNativeInterfaces which have more than 2^12 members.
+    // If the width of this field changes, update GetMaxIndexInInterface.
+    uint16_t mIndexInInterface : 12;
 };
 
 /***************************************************************************/
@@ -1350,6 +1374,7 @@ class XPCNativeInterface
     inline XPCNativeMember* FindMember(jsid name) const;
 
     inline bool HasAncestor(const nsIID* iid) const;
+    static inline size_t OffsetOfMembers();
 
     uint16_t GetMemberCount() const {
         return mMemberCount;
