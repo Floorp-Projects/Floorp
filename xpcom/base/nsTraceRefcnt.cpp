@@ -118,8 +118,6 @@ struct nsTraceRefcntStats
   uint64_t mReleases;
   uint64_t mCreates;
   uint64_t mDestroys;
-  double mRefsOutstandingTotal;
-  double mRefsOutstandingSquared;
   double mObjsOutstandingTotal;
   double mObjsOutstandingSquared;
 };
@@ -279,8 +277,6 @@ public:
     aStats->mReleases = 0;
     aStats->mCreates = 0;
     aStats->mDestroys = 0;
-    aStats->mRefsOutstandingTotal = 0;
-    aStats->mRefsOutstandingSquared = 0;
     aStats->mObjsOutstandingTotal = 0;
     aStats->mObjsOutstandingSquared = 0;
   }
@@ -291,8 +287,6 @@ public:
     mAllStats.mReleases += mNewStats.mReleases;
     mAllStats.mCreates += mNewStats.mCreates;
     mAllStats.mDestroys += mNewStats.mDestroys;
-    mAllStats.mRefsOutstandingTotal += mNewStats.mRefsOutstandingTotal;
-    mAllStats.mRefsOutstandingSquared += mNewStats.mRefsOutstandingSquared;
     mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal;
     mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared;
     Clear(&mNewStats);
@@ -304,7 +298,6 @@ public:
     if (aRefcnt == 1) {
       Ctor();
     }
-    AccountRefs();
   }
 
   void Release(nsrefcnt aRefcnt)
@@ -313,7 +306,6 @@ public:
     if (aRefcnt == 0) {
       Dtor();
     }
-    AccountRefs();
   }
 
   void Ctor()
@@ -326,13 +318,6 @@ public:
   {
     mNewStats.mDestroys++;
     AccountObjs();
-  }
-
-  void AccountRefs()
-  {
-    uint64_t cnt = (mNewStats.mAddRefs - mNewStats.mReleases);
-    mNewStats.mRefsOutstandingTotal += cnt;
-    mNewStats.mRefsOutstandingSquared += cnt * cnt;
   }
 
   void AccountObjs()
@@ -367,10 +352,6 @@ public:
     aTotal->mAllStats.mReleases += mNewStats.mReleases + mAllStats.mReleases;
     aTotal->mAllStats.mCreates += mNewStats.mCreates + mAllStats.mCreates;
     aTotal->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
-    aTotal->mAllStats.mRefsOutstandingTotal +=
-      mNewStats.mRefsOutstandingTotal + mAllStats.mRefsOutstandingTotal;
-    aTotal->mAllStats.mRefsOutstandingSquared +=
-      mNewStats.mRefsOutstandingSquared + mAllStats.mRefsOutstandingSquared;
     aTotal->mAllStats.mObjsOutstandingTotal +=
       mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
     aTotal->mAllStats.mObjsOutstandingSquared +=
