@@ -1453,8 +1453,7 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     if (!win)
         return true;
 
-    nsIDocShell* docShell = win->GetDocShell();
-    if (docShell && docShell->GetIsPrerendered()) {
+    if (win->GetIsPrerendered()) {
         // We cannot display a dialog if the page is being prerendered, so
         // just kill the page.
         mozilla::dom::HandlePrerenderingViolation(win);
