@@ -21,9 +21,11 @@
 package org.mozilla.gecko.widget;
 
 // Mozilla: New import
+import android.accounts.Account;
 import android.content.pm.PackageManager;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.R;
@@ -328,6 +330,11 @@ public class ActivityChooserModel extends DataSetObservable {
     private OnChooseActivityListener mActivityChooserModelPolicy;
 
     /**
+     * Mozilla: Share overlay variables.
+     */
+    private final SyncStatusListener mSyncStatusListener = new SyncStatusListener();
+
+    /**
      * Gets the data model backed by the contents of the provided file with historical data.
      * Note that only one data model is backed by a given file, thus multiple calls with
      * the same file name will return the same model instance. If no such instance is present
@@ -375,6 +382,12 @@ public class ActivityChooserModel extends DataSetObservable {
          * Mozilla: Uses modified receiver
          */
         mPackageMonitor.register(mContext);
+
+        /**
+         * Mozilla: Add Sync Status Listener.
+         */
+        // TODO: We only need to add a sync status listener if the ShareDialog passes the intent filter.
+        FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
     }
 
     /**
@@ -692,6 +705,7 @@ public class ActivityChooserModel extends DataSetObservable {
          * Mozilla: Not needed for the application.
          */
         mPackageMonitor.unregister();
+        FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
     }
 
     /**
@@ -1290,6 +1304,34 @@ public class ActivityChooserModel extends DataSetObservable {
     private int getOtherSyncedClientCount() {
         final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(mContext);
         return db.clientsCount();
+    }
+
+    /**
+     * Mozilla: Reload activities on sync.
+     */
+    private class SyncStatusListener implements FirefoxAccounts.SyncStatusListener {
+        @Override
+        public Context getContext() {
+            return mContext;
+        }
+
+        @Override
+        public Account getAccount() {
+            return FirefoxAccounts.getFirefoxAccount(getContext());
+        }
+
+        @Override
+        public void onSyncStarted() {
+        }
+
+        @Override
+        public void onSyncFinished() {
+            // TODO: We only need to reload activities when the number of devices changes.
+            // This may not be worth it if we have to touch the DB to get the client count.
+            synchronized (mInstanceLock) {
+                mReloadActivities = true;
+            }
+        }
     }
 }
 
