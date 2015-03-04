@@ -423,8 +423,6 @@ class NameResolver
           case PNK_MULASSIGN:
           case PNK_DIVASSIGN:
           case PNK_MODASSIGN:
-          case PNK_IMPORT_SPEC:
-          case PNK_EXPORT_SPEC:
           case PNK_ELEM:
           case PNK_LETEXPR:
           case PNK_COLON:
@@ -651,6 +649,13 @@ class NameResolver
           case PNK_CALL:
           case PNK_GENEXP:
           case PNK_ARRAY:
+          case PNK_STATEMENTLIST:
+          // Initializers for individual variables, and computed property names
+          // within destructuring patterns, may contain unnamed functions.
+          case PNK_VAR:
+          case PNK_CONST:
+          case PNK_LET:
+          case PNK_GLOBALCONST:
             MOZ_ASSERT(cur->isArity(PN_LIST));
             for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
                 if (!resolve(element, prefix))
@@ -681,14 +686,26 @@ class NameResolver
                 return false;
             goto done;
 
-          case PNK_VAR:
-          case PNK_CONST:
-          case PNK_LET:
-          case PNK_GLOBALCONST:
-          case PNK_CATCHLIST:
-          case PNK_STATEMENTLIST:
-          case PNK_IMPORT_SPEC_LIST:
+          // Import/export spec lists contain only import/export specs
+          // containing only pairs of names.
+          case PNK_IMPORT_SPEC_LIST: {
           case PNK_EXPORT_SPEC_LIST:
+            MOZ_ASSERT(cur->isArity(PN_LIST));
+#ifdef DEBUG
+            bool isImport = cur->isKind(PNK_IMPORT_SPEC_LIST);
+            for (ParseNode* item = cur->pn_head; item; item = item->pn_next) {
+                MOZ_ASSERT(item->isKind(isImport ? PNK_IMPORT_SPEC : PNK_EXPORT_SPEC));
+                MOZ_ASSERT(item->isArity(PN_BINARY));
+                MOZ_ASSERT(item->pn_left->isKind(PNK_NAME));
+                MOZ_ASSERT(!item->pn_left->maybeExpr());
+                MOZ_ASSERT(item->pn_right->isKind(PNK_NAME));
+                MOZ_ASSERT(!item->pn_right->maybeExpr());
+            }
+#endif
+            goto done;
+          }
+
+          case PNK_CATCHLIST:
           case PNK_SEQ:
           case PNK_ARGSBODY:
           case PNK_LABEL:
@@ -705,8 +722,12 @@ class NameResolver
                 return false;
             goto done;
 
-          case PNK_CALLSITEOBJ:
-            MOZ_CRASH("should have been handled by a parent PNK_TAGGED_TEMPLATE node");
+          // Kinds that should be handled by parent node resolution.
+
+          case PNK_IMPORT_SPEC: // by PNK_IMPORT_SPEC_LIST
+          case PNK_EXPORT_SPEC: // by PNK_EXPORT_SPEC_LIST
+          case PNK_CALLSITEOBJ: // by PNK_TAGGED_TEMPLATE
+            MOZ_CRASH("should have been handled by a parent node");
 
           case PNK_LIMIT: // invalid sentinel value
             MOZ_CRASH("invalid node kind");
