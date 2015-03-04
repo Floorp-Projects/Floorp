@@ -163,7 +163,6 @@ private:
 
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
-  nsCOMPtr<nsISupports> mSecurityInfo;
   nsRefPtr<InterceptStreamListener> mInterceptListener;
   nsRefPtr<nsInputStreamPump> mSynthesizedResponsePump;
 
