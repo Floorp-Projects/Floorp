@@ -572,7 +572,7 @@ load 1054010-1.html
 load 1058954-1.html
 load 1134531.html
 load 1134667.html
-asserts(3-4) load 1137723-1.html # bug 1019192
+asserts(3) load 1137723-1.html # bug 1019192
 asserts(3-6) load 1137723-2.html # bug 1019192, bug 1138133
 # The tests for bug 1137723 above causes delayed assertions too,
 # the next 3 lines can be removed once that is fixed.
