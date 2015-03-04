@@ -45,11 +45,11 @@ function testSetBreakpoint() {
   let sourceForm = getSourceForm(gSources, JS_URL);
   let source = gDebugger.gThreadClient.source(sourceForm);
 
-  source.setBreakpoint({ line: 30, column: 21 }, aResponse => {
+  source.setBreakpoint({ line: 30 }, aResponse => {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a js file.");
     ok(!aResponse.actualLocation,
-      "Should be able to set a breakpoint on line 30 and column 10.");
+      "Should be able to set a breakpoint on line 30.");
 
     gDebugger.gClient.addOneTimeListener("resumed", () => {
       waitForCaretAndScopes(gPanel, 30).then(() => {
