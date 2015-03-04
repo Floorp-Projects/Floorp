@@ -24,11 +24,12 @@ public:
   MediaOmxCommonDecoder();
 
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                bool aRestoredFromDormant);
+                                MediaDecoderEventVisibility aEventVisibility);
   virtual void ChangeState(PlayState aState);
   virtual void ApplyStateToStateMachine(PlayState aState);
   virtual void SetVolume(double aVolume);
-  virtual void PlaybackPositionChanged();
+  virtual void PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility =
+                                         MediaDecoderEventVisibility::Observable);
   virtual void UpdateReadyStateForData();
   virtual void SetElementVisibility(bool aIsVisible);
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio);
