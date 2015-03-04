@@ -7,9 +7,17 @@
  * @param t  The testharness.js Test object. If provided, this will be used
  *           to register a cleanup callback to remove the div when the test
  *           finishes.
+ *
+ * @param attrs  A dictionary object with attribute names and values to set on
+ *               the div.
  */
-function addDiv(t) {
+function addDiv(t, attrs) {
   var div = document.createElement('div');
+  if (attrs) {
+    for (var attrName in attrs) {
+      div.setAttribute(attrName, attrs[attrName]);
+    }
+  }
   document.body.appendChild(div);
   if (t && typeof t.add_cleanup === 'function') {
     t.add_cleanup(function() {
