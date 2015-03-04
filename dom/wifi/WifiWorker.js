@@ -3469,7 +3469,7 @@ WifiWorker.prototype = {
 
     WifiManager.importCert(msg.data, function(data) {
       if (data.status === 0) {
-        let usageString = ["ServerCert"];
+        let usageString = ["ServerCert", "UserCert"];
         let usageArray = [];
         for (let i = 0; i < usageString.length; i++) {
           if (data.usageFlag & (0x01 << i)) {
@@ -3513,9 +3513,11 @@ WifiWorker.prototype = {
     }
     let importedCerts = {
       ServerCert: [],
+      UserCert: [],
     };
     let UsageMapping = {
       SERVERCERT: "ServerCert",
+      USERCERT: "UserCert",
     };
 
     while (certListEnum.hasMoreElements()) {

@@ -71,7 +71,7 @@ function test() {
     is(ed.getOption("enableCodeFolding"), undefined, "enableCodeFolding is correct");
     is(ed.getOption("indentWithTabs"), false, "indentWithTabs is correct");
     is(ed.getOption("keyMap"), "sublime", "keyMap is correct");
-    is(ed.getOption("autoCloseBrackets"), "()[]{}''\"\"", "autoCloseBrackets is correct");
+    is(ed.getOption("autoCloseBrackets"), "()[]{}''\"\"``", "autoCloseBrackets is correct");
     is(ed.getOption("autocomplete"), true, "autocomplete is correct");
     ok(ed.isAutocompletionEnabled(), "Autocompletion is enabled");
 
