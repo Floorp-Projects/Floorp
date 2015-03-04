@@ -183,15 +183,14 @@ a11y::PlatformInit()
 #if (MOZ_WIDGET_GTK == 3)
   if (atk_bridge_adaptor_init) {
     atk_bridge_adaptor_init(nullptr, nullptr);
-  } else {
+  } else
 #endif
+  {
     nsresult rv = LoadGtkModule(sAtkBridge);
     if (NS_SUCCEEDED(rv)) {
       (*sAtkBridge.init)();
     }
-#if (MOZ_WIDGET_GTK == 3)
   }
-#endif
 
   if (!sToplevel_event_hook_added) {
     sToplevel_event_hook_added = true;
