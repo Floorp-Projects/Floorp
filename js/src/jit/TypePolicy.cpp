@@ -876,9 +876,13 @@ InstanceOfPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 }
 
 bool
-StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins, int arrayType,
-                                        MDefinition *value, int valueOperand)
+StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
+                                        Scalar::Type writeType, MDefinition *value, int valueOperand)
 {
+    // Storing a SIMD value just implies that we might need a SimdUnbox.
+    if (Scalar::isSimdType(writeType))
+        return MaybeSimdUnbox(alloc, ins, ScalarTypeToMIRType(writeType), valueOperand);
+
     MDefinition *curValue = value;
     // First, ensure the value is int32, boolean, double or Value.
     // The conversion is based on TypedArrayObjectTemplate::setElementTail.
@@ -919,7 +923,7 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
                value->type() == MIRType_Float32 ||
                value->type() == MIRType_Value);
 
-    switch (arrayType) {
+    switch (writeType) {
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -966,7 +970,7 @@ StoreTypedArrayPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     MOZ_ASSERT(IsValidElementsType(store->elements(), store->offsetAdjustment()));
     MOZ_ASSERT(store->index()->type() == MIRType_Int32);
 
-    return adjustValueInput(alloc, ins, store->arrayType(), store->value(), 2);
+    return adjustValueInput(alloc, store, store->writeType(), store->value(), 2);
 }
 
 bool

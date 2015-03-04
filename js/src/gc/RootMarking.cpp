@@ -430,7 +430,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
             if (!c->zone()->isCollecting())
                 c->markCrossCompartmentWrappers(trc);
         }
-        Debugger::markAllCrossCompartmentEdges(trc);
+        Debugger::markIncomingCrossCompartmentEdges(trc);
     }
 
     {

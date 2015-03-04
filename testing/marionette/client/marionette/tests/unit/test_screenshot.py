@@ -1,7 +1,7 @@
 import base64
 import imghdr
 
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 
 RED_ELEMENT_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAVUlEQVRoge3PsQ0AIAzAsI78fzBwBhHykD2ePev80LweAAGJB1ILpBZILZBaILVAaoHUAqkFUgukFkgtkFogtUBqgdQCqQVSC6QWSC2QWiC1QGp9A7ma+7nyXgOpzQAAAABJRU5ErkJggg=='

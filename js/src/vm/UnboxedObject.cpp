@@ -288,28 +288,11 @@ UnboxedPlainObject::convertToNative(JSContext *cx, JSObject *obj)
             return false;
     }
 
-    uint32_t objectFlags = obj->lastProperty()->getObjectFlags();
-    RootedObject metadata(cx, obj->getMetadata());
-
     obj->setGroup(layout.nativeGroup());
     obj->as<PlainObject>().setLastPropertyMakeNative(cx, layout.nativeShape());
 
     for (size_t i = 0; i < values.length(); i++)
         obj->as<PlainObject>().initSlotUnchecked(i, values[i]);
-
-    if (objectFlags) {
-        RootedObject objRoot(cx, obj);
-        if (!obj->setFlags(cx, objectFlags))
-            return false;
-        obj = objRoot;
-    }
-
-    if (metadata) {
-        RootedObject objRoot(cx, obj);
-        RootedObject metadataRoot(cx, metadata);
-        if (!setMetadata(cx, objRoot, metadataRoot))
-            return false;
-    }
 
     return true;
 }
@@ -325,6 +308,9 @@ UnboxedPlainObject::create(JSContext *cx, HandleObjectGroup group, NewObjectKind
                                                                      allocKind, newKind);
     if (!res)
         return nullptr;
+
+    // Avoid spurious shape guard hits.
+    res->dummy_ = nullptr;
 
     // Initialize reference fields of the object. All fields in the object will
     // be overwritten shortly, but references need to be safe for the GC.

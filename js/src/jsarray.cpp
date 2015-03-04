@@ -2754,7 +2754,7 @@ GetIndexedPropertiesInRange(JSContext *cx, HandleObject obj, uint32_t begin, uin
 
         // Append sparse elements.
         if (pobj->isIndexed()) {
-            Shape::Range<NoGC> r(pobj->lastProperty());
+            Shape::Range<NoGC> r(pobj->as<NativeObject>().lastProperty());
             for (; !r.empty(); r.popFront()) {
                 Shape &shape = r.front();
                 jsid id = shape.propid();
@@ -3535,7 +3535,7 @@ js::NewDenseFullyAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSOb
     allocKind = GetBackgroundAllocKind(allocKind);
 
     RootedObjectGroup group(cx, templateObject->group());
-    RootedShape shape(cx, templateObject->lastProperty());
+    RootedShape shape(cx, templateObject->as<ArrayObject>().lastProperty());
 
     gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
     Rooted<ArrayObject *> arr(cx, ArrayObject::createArray(cx, allocKind,

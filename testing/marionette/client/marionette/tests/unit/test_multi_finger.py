@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase
-from marionette import MultiActions, Actions
+from marionette import MarionetteTestCase
+from marionette.marionette import MultiActions, Actions
 
 class testMultiFinger(MarionetteTestCase):
     def test_move_element(self):

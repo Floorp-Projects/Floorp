@@ -151,7 +151,10 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 // how their properties are stored.
 class UnboxedPlainObject : public JSObject
 {
-    // Start of the inline data, which immediately follows the shape and type.
+    // Placeholder for extra properties. See bug 1137180.
+    void *dummy_;
+
+    // Start of the inline data, which immediately follows the group and extra properties.
     uint8_t data_[1];
 
   public:

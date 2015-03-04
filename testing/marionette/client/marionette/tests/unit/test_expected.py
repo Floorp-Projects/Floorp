@@ -7,7 +7,7 @@ import urllib
 from marionette_driver import expected
 from marionette_driver.by import By
 
-import marionette_test
+from marionette import marionette_test
 
 
 def inline(doc):
