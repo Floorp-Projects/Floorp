@@ -12,7 +12,11 @@ function addDiv(t) {
   var div = document.createElement('div');
   document.body.appendChild(div);
   if (t && typeof t.add_cleanup === 'function') {
-    t.add_cleanup(function() { div.remove(); });
+    t.add_cleanup(function() {
+      if (div.parentNode) {
+        div.parentNode.removeChild(div);
+      }
+    });
   }
   return div;
 }
