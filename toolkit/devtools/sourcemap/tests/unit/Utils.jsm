@@ -126,113 +126,6 @@ define('test/source-map/util', ['require', 'exports', 'module' ,  'lib/source-ma
     sourceRoot: '',
     mappings: 'CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID;CCDb,IAAI,IAAM,SAAUE,GAClB,OAAOA'
   };
-  // This mapping is identical to above, but uses the indexed format instead.
-  exports.indexedTestMap = {
-    version: 3,
-    file: 'min.js',
-    sections: [
-      {
-        offset: {
-          line: 0,
-          column: 0
-        },
-        map: {
-          version: 3,
-          sources: [
-            "one.js"
-          ],
-          sourcesContent: [
-            ' ONE.foo = function (bar) {\n' +
-            '   return baz(bar);\n' +
-            ' };',
-          ],
-          names: [
-            "bar",
-            "baz"
-          ],
-          mappings: "CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID",
-          file: "min.js",
-          sourceRoot: "/the/root"
-        }
-      },
-      {
-        offset: {
-          line: 1,
-          column: 0
-        },
-        map: {
-          version: 3,
-          sources: [
-            "two.js"
-          ],
-          sourcesContent: [
-            ' TWO.inc = function (n) {\n' +
-            '   return n + 1;\n' +
-            ' };'
-          ],
-          names: [
-            "n"
-          ],
-          mappings: "CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOA",
-          file: "min.js",
-          sourceRoot: "/the/root"
-        }
-      }
-    ]
-  };
-  exports.indexedTestMapDifferentSourceRoots = {
-    version: 3,
-    file: 'min.js',
-    sections: [
-      {
-        offset: {
-          line: 0,
-          column: 0
-        },
-        map: {
-          version: 3,
-          sources: [
-            "one.js"
-          ],
-          sourcesContent: [
-            ' ONE.foo = function (bar) {\n' +
-            '   return baz(bar);\n' +
-            ' };',
-          ],
-          names: [
-            "bar",
-            "baz"
-          ],
-          mappings: "CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID",
-          file: "min.js",
-          sourceRoot: "/the/root"
-        }
-      },
-      {
-        offset: {
-          line: 1,
-          column: 0
-        },
-        map: {
-          version: 3,
-          sources: [
-            "two.js"
-          ],
-          sourcesContent: [
-            ' TWO.inc = function (n) {\n' +
-            '   return n + 1;\n' +
-            ' };'
-          ],
-          names: [
-            "n"
-          ],
-          mappings: "CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOA",
-          file: "min.js",
-          sourceRoot: "/different/root"
-        }
-      }
-    ]
-  };
   exports.testMapWithSourcesContent = {
     version: 3,
     file: 'min.js',
@@ -275,13 +168,12 @@ define('test/source-map/util', ['require', 'exports', 'module' ,  'lib/source-ma
 
 
   function assertMapping(generatedLine, generatedColumn, originalSource,
-                         originalLine, originalColumn, name, bias, map, assert,
+                         originalLine, originalColumn, name, map, assert,
                          dontTestGenerated, dontTestOriginal) {
     if (!dontTestOriginal) {
       var origMapping = map.originalPositionFor({
         line: generatedLine,
-        column: generatedColumn,
-        bias: bias
+        column: generatedColumn
       });
       assert.equal(origMapping.name, name,
                    'Incorrect name, expected ' + JSON.stringify(name)
@@ -314,8 +206,7 @@ define('test/source-map/util', ['require', 'exports', 'module' ,  'lib/source-ma
       var genMapping = map.generatedPositionFor({
         source: originalSource,
         line: originalLine,
-        column: originalColumn,
-        bias: bias
+        column: originalColumn
       });
       assert.equal(genMapping.line, generatedLine,
                    'Incorrect line, expected ' + JSON.stringify(generatedLine)
@@ -630,7 +521,7 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
       return cmp;
     }
 
-    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    cmp = strcmp(mappingA.name, mappingB.name);
     if (cmp) {
       return cmp;
     }
@@ -640,7 +531,7 @@ define('lib/source-map/util', ['require', 'exports', 'module' , ], function(requ
       return cmp;
     }
 
-    return strcmp(mappingA.name, mappingB.name);
+    return mappingA.generatedColumn - mappingB.generatedColumn;
   };
   exports.compareByOriginalPositions = compareByOriginalPositions;
 
