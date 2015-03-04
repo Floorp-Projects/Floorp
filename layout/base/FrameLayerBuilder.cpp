@@ -1844,19 +1844,16 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
                                           const nsPoint& aTopLeft,
                                           bool didResetScrollPositionForLayerPixelAlignment)
 {
-  PaintedLayer* layer = aLayer;
-  PaintedDisplayItemLayerUserData* data = aData;
+  aData->mXScale = mParameters.mXScale;
+  aData->mYScale = mParameters.mYScale;
+  aData->mLastAnimatedGeometryRootOrigin = aData->mAnimatedGeometryRootOrigin;
+  aData->mAnimatedGeometryRootOrigin = aTopLeft;
+  aData->mAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
+  aLayer->SetAllowResidualTranslation(mParameters.AllowResidualTranslation());
 
-  data->mXScale = mParameters.mXScale;
-  data->mYScale = mParameters.mYScale;
-  data->mLastAnimatedGeometryRootOrigin = data->mAnimatedGeometryRootOrigin;
-  data->mAnimatedGeometryRootOrigin = aTopLeft;
-  data->mAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
-  layer->SetAllowResidualTranslation(mParameters.AllowResidualTranslation());
+  mLayerBuilder->SavePreviousDataForLayer(aLayer, aData->mMaskClipCount);
 
-  mLayerBuilder->SavePreviousDataForLayer(layer, data->mMaskClipCount);
-
-  // Set up transform so that 0,0 in the Painted layer corresponds to the
+  // Set up transform so that 0,0 in the PaintedLayer corresponds to the
   // (pixel-snapped) top-left of the aAnimatedGeometryRoot.
   nsPoint offset = aAnimatedGeometryRoot->GetOffsetToCrossDoc(aReferenceFrame);
   nscoord appUnitsPerDevPixel = aAnimatedGeometryRoot->PresContext()->AppUnitsPerDevPixel();
@@ -1864,13 +1861,13 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
       NSAppUnitsToDoublePixels(offset.x, appUnitsPerDevPixel)*mParameters.mXScale,
       NSAppUnitsToDoublePixels(offset.y, appUnitsPerDevPixel)*mParameters.mYScale);
   // We call RoundToMatchResidual here so that the residual after rounding
-  // is close to data->mAnimatedGeometryRootPosition if possible.
-  nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, data->mAnimatedGeometryRootPosition.x),
-                       RoundToMatchResidual(scaledOffset.y, data->mAnimatedGeometryRootPosition.y));
-  data->mTranslation = pixOffset;
+  // is close to aData->mAnimatedGeometryRootPosition if possible.
+  nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, aData->mAnimatedGeometryRootPosition.x),
+                       RoundToMatchResidual(scaledOffset.y, aData->mAnimatedGeometryRootPosition.y));
+  aData->mTranslation = pixOffset;
   pixOffset += mParameters.mOffset;
   Matrix matrix = Matrix::Translation(pixOffset.x, pixOffset.y);
-  layer->SetBaseTransform(Matrix4x4::From2D(matrix));
+  aLayer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_WIDGET_ANDROID
@@ -1880,11 +1877,11 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
-  if (!animatedGeometryRootTopLeft.WithinEpsilonOf(data->mAnimatedGeometryRootPosition, SUBPIXEL_OFFSET_EPSILON)) {
-    data->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
-    InvalidateEntirePaintedLayer(layer, aAnimatedGeometryRoot, "subpixel offset");
+  if (!animatedGeometryRootTopLeft.WithinEpsilonOf(aData->mAnimatedGeometryRootPosition, SUBPIXEL_OFFSET_EPSILON)) {
+    aData->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
+    InvalidateEntirePaintedLayer(aLayer, aAnimatedGeometryRoot, "subpixel offset");
   } else if (didResetScrollPositionForLayerPixelAlignment) {
-    data->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
+    aData->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
   }
 #else
   unused << didResetScrollPositionForLayerPixelAlignment;
