@@ -16,8 +16,31 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-        info("simpleRegister() just before calling register");
-    return navigator.serviceWorker.register("worker.js", { scope: "unregister/" });
+    return navigator.serviceWorker.register("worker.js", { scope: "unregister/" }).then(function(swr) {
+      if (swr.installing) {
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(e) {
+                if (swr.active) {
+                  resolve();
+                } else if (swr.waiting && swr.waiting.state == "redundant") {
+                  reject("Should not go into redundant");
+                }
+              }
+            } else {
+              if (swr.active) {
+                resolve();
+              } else {
+                reject("No waiting and no active!");
+              }
+            }
+          }
+        });
+      } else {
+        return Promise.reject("Installing should be non-null");
+      }
+    });
   }
 
   function testControlled() {
@@ -49,6 +72,11 @@
   function unregister() {
     return navigator.serviceWorker.getRegistration("unregister/")
            .then(function(reg) {
+             if (!reg) {
+               info("Registration already removed");
+               return;
+             }
+
              info("getRegistration() succeeded " + reg.scope);
              return reg.unregister().then(function(v) {
                ok(v, "Unregister should resolve to true");
