@@ -109,9 +109,10 @@ def format_module(m):
             'Sub-Context: %s' % subcontext,
             '=============' + '=' * len(subcontext),
             '',
-            prepare_docstring(cls.__doc__)[0],
-            '',
         ])
+        lines.extend(prepare_docstring(cls.__doc__))
+        if lines[-1]:
+            lines.append('')
 
         for k, v in sorted(cls.VARIABLES.items()):
             lines.extend(variable_reference(k, *v))
