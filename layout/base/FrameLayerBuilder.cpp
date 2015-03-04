@@ -727,12 +727,10 @@ protected:
     GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot);
 
   /**
-   * Grab the next recyclable PaintedLayer, or create one if there are no
-   * more recyclable PaintedLayers. Does any necessary invalidation of
-   * a recycled PaintedLayer, and sets up the transform on the PaintedLayer
+   * Creates a new PaintedLayer and sets up the transform on the PaintedLayer
    * to account for scrolling.
    */
-  already_AddRefed<PaintedLayer> CreateOrRecyclePaintedLayer(PaintedLayerData* aData);
+  already_AddRefed<PaintedLayer> CreatePaintedLayer(PaintedLayerData* aData);
 
   /**
    * Find a PaintedLayer for recycling, recycle it and prepare it for use, or
@@ -749,9 +747,9 @@ protected:
                                                        bool& didResetScrollPositionForLayerPixelAlignment);
 
   /**
-   * Perform the last step of CreateOrRecyclePaintedLayer: Initialize aData,
-   * set up the layer's transform for scrolling, and invalidate the layer for
-   * layer pixel alignment changes if necessary.
+   * Perform the last step of CreatePaintedLayer / AttemptToRecyclePaintedLayer:
+   * Initialize aData, set up the layer's transform for scrolling, and
+   * invalidate the layer for layer pixel alignment changes if necessary.
    */
   void PreparePaintedLayerForUse(PaintedLayer* aLayer,
                                  PaintedDisplayItemLayerUserData* aData,
@@ -1762,21 +1760,8 @@ ContainerState::AttemptToRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRo
 }
 
 already_AddRefed<PaintedLayer>
-ContainerState::CreateOrRecyclePaintedLayer(PaintedLayerData* aData)
+ContainerState::CreatePaintedLayer(PaintedLayerData* aData)
 {
-  // Try to recycle one of the old layers of the display items assigned to
-  // this layer.
-  for (auto& item : aData->mAssignedDisplayItems) {
-    MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
-
-    nsRefPtr<PaintedLayer> layer =
-      AttemptToRecyclePaintedLayer(aData->mAnimatedGeometryRoot, item.mItem,
-                                   aData->mAnimatedGeometryRootOffset);
-    if (layer) {
-      return layer.forget();
-    }
-  }
-
   LayerManager::PaintedLayerCreationHint creationHint =
     GetLayerCreationHint(aData->mAnimatedGeometryRoot);
 
@@ -2189,12 +2174,15 @@ ContainerState::PopPaintedLayerData()
   int32_t lastIndex = mPaintedLayerDataStack.Length() - 1;
   PaintedLayerData* data = mPaintedLayerDataStack[lastIndex];
 
-  nsRefPtr<PaintedLayer> paintedLayer = CreateOrRecyclePaintedLayer(data);
-  data->mLayer = paintedLayer.get();
+  if (!data->mLayer) {
+    // No layer was recycled, so we create a new one.
+    nsRefPtr<PaintedLayer> paintedLayer = CreatePaintedLayer(data);
+    data->mLayer = paintedLayer;
 
-  NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, data->mLayer) < 0,
-               "Layer already in list???");
-  mNewChildLayers[data->mNewChildLayersIndex].mLayer = data->mLayer;
+    NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, paintedLayer) < 0,
+                 "Layer already in list???");
+    mNewChildLayers[data->mNewChildLayersIndex].mLayer = paintedLayer.forget();
+  }
 
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
@@ -3256,6 +3244,19 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         opaquePixels.AndWith(itemVisibleRect);
         paintedLayerData->Accumulate(this, item, opaquePixels,
             itemVisibleRect, itemClip, layerState);
+
+        if (!paintedLayerData->mLayer) {
+          // Try to recycle the old layer of this display item.
+          nsRefPtr<PaintedLayer> layer =
+            AttemptToRecyclePaintedLayer(animatedGeometryRoot, item, topLeft);
+          if (layer) {
+            paintedLayerData->mLayer = layer;
+
+            NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
+                         "Layer already in list???");
+            mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer = layer.forget();
+          }
+        }
       }
     }
 
