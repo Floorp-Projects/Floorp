@@ -235,22 +235,16 @@ struct SeekTarget {
   SeekTarget()
     : mTime(-1.0)
     , mType(SeekTarget::Invalid)
-    , mEventVisibility(MediaDecoderEventVisibility::Observable)
   {
   }
-  SeekTarget(int64_t aTimeUsecs,
-             Type aType,
-             MediaDecoderEventVisibility aEventVisibility =
-               MediaDecoderEventVisibility::Observable)
+  SeekTarget(int64_t aTimeUsecs, Type aType)
     : mTime(aTimeUsecs)
     , mType(aType)
-    , mEventVisibility(aEventVisibility)
   {
   }
   SeekTarget(const SeekTarget& aOther)
     : mTime(aOther.mTime)
     , mType(aOther.mType)
-    , mEventVisibility(aOther.mEventVisibility)
   {
   }
   bool IsValid() const {
@@ -266,7 +260,6 @@ struct SeekTarget {
   // "Fast" seeks to the seek point preceeding mTime, whereas
   // "Accurate" seeks as close as possible to mTime.
   Type mType;
-  MediaDecoderEventVisibility mEventVisibility;
 };
 
 class MediaDecoder : public nsIObserver,
@@ -583,10 +576,9 @@ public:
   // Call on the main thread only.
   virtual bool IsSeeking() const;
 
-  // Return true if the decoder has reached the end of playback or the decoder
-  // has shutdown.
+  // Return true if the decoder has reached the end of playback.
   // Call on the main thread only.
-  virtual bool IsEndedOrShutdown() const;
+  virtual bool IsEnded() const;
 
   // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
@@ -774,12 +766,12 @@ public:
   // state machine. Call on the main thread only.
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                               nsAutoPtr<MetadataTags> aTags,
-                              MediaDecoderEventVisibility aEventVisibility) MOZ_OVERRIDE;
+                              bool aRestoredFromDormant) MOZ_OVERRIDE;
 
   // Called when the first audio and/or video from the media file has been loaded
   // by the state machine. Call on the main thread only.
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                MediaDecoderEventVisibility aEventVisibility) MOZ_OVERRIDE;
+                                bool aRestoredFromDormant) MOZ_OVERRIDE;
 
   // Called from MetadataLoaded(). Creates audio tracks and adds them to its
   // owner's audio track list, and implies to video tracks respectively.
@@ -803,20 +795,20 @@ public:
 
   // Seeking has stopped. Inform the element on the main
   // thread.
-  void SeekingStopped(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void SeekingStopped();
 
   // Seeking has stopped at the end of the resource. Inform the element on the main
   // thread.
-  void SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void SeekingStoppedAtEnd();
 
   // Seeking has started. Inform the element on the main
   // thread.
-  void SeekingStarted(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void SeekingStarted();
 
   // Called when the backend has changed the current playback
   // position. It dispatches a timeupdate event and invalidates the frame.
   // This must be called on the main thread only.
-  virtual void PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  virtual void PlaybackPositionChanged();
 
   // Calls mElement->UpdateReadyStateForData, telling it whether we have
   // data for the next frame and if we're buffering. Main thread only.
@@ -1036,9 +1028,6 @@ protected:
   // Cancel a timer for heuristic dormant.
   void CancelDormantTimer();
 
-  // Return true if the decoder has reached the end of playback
-  bool IsEnded() const;
-
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
@@ -1156,8 +1145,6 @@ protected:
   // Ensures our media stream has been unpinned.
   void UnpinForSeek();
 
-  const char* PlayStateStr();
-
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
   // The decoder does not add a reference the element.
@@ -1206,12 +1193,6 @@ protected:
 
   // True if MediaDecoder is in dormant state.
   bool mIsDormant;
-
-  // True if MediaDecoder was PLAY_STATE_ENDED state, when entering to dormant.
-  // When MediaCodec is in dormant during PLAY_STATE_ENDED state, PlayState
-  // becomes different from PLAY_STATE_ENDED. But the MediaDecoder need to act
-  // as in PLAY_STATE_ENDED state to MediaDecoderOwner.
-  bool mWasEndedWhenEnteredDormant;
 
   // True if heuristic dormant is supported.
   const bool mIsHeuristicDormantSupported;

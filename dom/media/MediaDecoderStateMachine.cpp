@@ -1245,10 +1245,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
   if (!mPositionChangeQueued || fragmentEnded) {
     mPositionChangeQueued = true;
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-        mDecoder,
-        &MediaDecoder::PlaybackPositionChanged,
-        MediaDecoderEventVisibility::Observable);
+      NS_NewRunnableMethod(mDecoder, &MediaDecoder::PlaybackPositionChanged);
     NS_DispatchToMainThread(event);
   }
 
@@ -1457,12 +1454,8 @@ bool MediaDecoderStateMachine::IsDormantNeeded()
 
 void MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
-  MOZ_ASSERT(OnStateMachineThread(), "Should be on state machine thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    return;
-  }
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  AssertCurrentThreadInMonitor();
 
   if (!mReader) {
     return;
@@ -1471,22 +1464,12 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
   DECODER_LOG("SetDormant=%d", aDormant);
 
   if (aDormant) {
-    if (mState == DECODER_STATE_SEEKING) {
-      if (mQueuedSeekTarget.IsValid()) {
-        // Keep latest seek target
-      } else if (mSeekTarget.IsValid()) {
+    if (mState == DECODER_STATE_SEEKING && !mQueuedSeekTarget.IsValid()) {
+      if (mSeekTarget.IsValid()) {
         mQueuedSeekTarget = mSeekTarget;
       } else if (mCurrentSeekTarget.IsValid()) {
         mQueuedSeekTarget = mCurrentSeekTarget;
-      } else {
-        mQueuedSeekTarget = SeekTarget(mCurrentFrameTime,
-                                       SeekTarget::Accurate,
-                                       MediaDecoderEventVisibility::Suppressed);
       }
-    } else {
-      mQueuedSeekTarget = SeekTarget(mCurrentFrameTime,
-                                     SeekTarget::Accurate,
-                                     MediaDecoderEventVisibility::Suppressed);
     }
     mSeekTarget.Reset();
     mCurrentSeekTarget.Reset();
@@ -1592,11 +1575,6 @@ void MediaDecoderStateMachine::PlayInternal()
     DispatchDecodeTasksIfNeeded();
   }
 
-  if (mDecodingFrozenAtStateDecoding) {
-    mDecodingFrozenAtStateDecoding = false;
-    DispatchDecodeTasksIfNeeded();
-  }
-
   // Some state transitions still happen synchronously on the main thread. So
   // if the main thread invokes Play() and then Seek(), the seek will initiate
   // synchronously on the main thread, and the asynchronous PlayInternal task
@@ -1616,6 +1594,11 @@ void MediaDecoderStateMachine::PlayInternal()
   // when the state machine notices the decoder's state change to PLAYING.
   if (mState == DECODER_STATE_BUFFERING) {
     StartDecoding();
+  }
+
+  if (mDecodingFrozenAtStateDecoding) {
+    mDecodingFrozenAtStateDecoding = false;
+    DispatchDecodeTasksIfNeeded();
   }
 
   ScheduleStateMachine();
@@ -1757,7 +1740,7 @@ MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
   seekTime = std::max(mStartTime, seekTime);
   NS_ASSERTION(seekTime >= mStartTime && seekTime <= end,
                "Can only seek in range [0,duration]");
-  mSeekTarget = SeekTarget(seekTime, aTarget.mType, aTarget.mEventVisibility);
+  mSeekTarget = SeekTarget(seekTime, aTarget.mType);
 
   DECODER_LOG("Changed state to SEEKING (to %lld)", mSeekTarget.mTime);
   SetState(DECODER_STATE_SEEKING);
@@ -2274,11 +2257,8 @@ MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
 {
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
-  MediaDecoderEventVisibility visibility = mSentLoadedMetadataEvent?
-                                    MediaDecoderEventVisibility::Suppressed :
-                                    MediaDecoderEventVisibility::Observable;
   nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new MetadataEventRunner(mDecoder, info, mMetadataTags, visibility);
+    new MetadataEventRunner(mDecoder, info, mMetadataTags, mSentLoadedMetadataEvent);
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
   mSentLoadedMetadataEvent = true;
 }
@@ -2288,11 +2268,8 @@ MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
 {
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
-  MediaDecoderEventVisibility visibility = mSentFirstFrameLoadedEvent?
-                                    MediaDecoderEventVisibility::Suppressed :
-                                    MediaDecoderEventVisibility::Observable;
   nsCOMPtr<nsIRunnable> event =
-    new FirstFrameLoadedEventRunner(mDecoder, info, visibility);
+    new FirstFrameLoadedEventRunner(mDecoder, info, mSentFirstFrameLoadedEvent);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   mSentFirstFrameLoadedEvent = true;
 }
@@ -2497,10 +2474,7 @@ void MediaDecoderStateMachine::DecodeSeek()
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     nsCOMPtr<nsIRunnable> startEvent =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-        mDecoder,
-        &MediaDecoder::SeekingStarted,
-        mCurrentSeekTarget.mEventVisibility);
+      NS_NewRunnableMethod(mDecoder, &MediaDecoder::SeekingStarted);
     NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
   }
   if (mState != DECODER_STATE_SEEKING) {
@@ -2578,15 +2552,6 @@ MediaDecoderStateMachine::OnSeekFailed(nsresult aResult)
     // Try again.
     mCurrentSeekTarget = mSeekTarget;
     mSeekTarget.Reset();
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      nsCOMPtr<nsIRunnable> startEvent =
-        NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-          mDecoder,
-          &MediaDecoder::SeekingStarted,
-          mCurrentSeekTarget.mEventVisibility);
-      NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
-    }
     mReader->Seek(mCurrentSeekTarget.mTime, mEndTime)
            ->Then(DecodeTaskQueue(), __func__, this,
                   &MediaDecoderStateMachine::OnSeekCompleted,
@@ -2673,20 +2638,14 @@ MediaDecoderStateMachine::SeekCompleted()
     // this if we're playing a live stream, since the end of media will advance
     // once we download more data!
     DECODER_LOG("Changed state from SEEKING (to %lld) to COMPLETED", seekTime);
-    stopEvent = NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-                  mDecoder,
-                  &MediaDecoder::SeekingStoppedAtEnd,
-                  mCurrentSeekTarget.mEventVisibility);
+    stopEvent = NS_NewRunnableMethod(mDecoder, &MediaDecoder::SeekingStoppedAtEnd);
     // Explicitly set our state so we don't decode further, and so
     // we report playback ended to the media element.
     SetState(DECODER_STATE_COMPLETED);
     DispatchDecodeTasksIfNeeded();
   } else {
     DECODER_LOG("Changed state from SEEKING (to %lld) to DECODING", seekTime);
-    stopEvent = NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-                  mDecoder,
-                  &MediaDecoder::SeekingStopped,
-                  mCurrentSeekTarget.mEventVisibility);
+    stopEvent = NS_NewRunnableMethod(mDecoder, &MediaDecoder::SeekingStopped);
     StartDecoding();
   }
 
