@@ -45,10 +45,10 @@ const ANIM_DUR_MS = 1000000; // 1000s
 
 // Expected computed 'margin-left' values at points during the active interval:
 // When we assert_between_inclusive using these values we could in theory cause
-// intermittent failure due to long refresh driver delays, but since the active
-// duration is 1000s long, a delay would need to be around 100s to cause that.
-// If that's happening than we have issues that we should solve anyway, so a
-// failure to make us look into that seems like a good thing.
+// intermittent failure due to very long delays between paints, but since the
+// active duration is 1000s long, a delay would need to be around 100s to cause
+// that. If that's happening then there are likely other issues that should be
+// fixed, so a failure to make us look into that seems like a good thing.
 const UNANIMATED_POSITION = 10;
 const INITIAL_POSITION = 100;
 const TEN_PCT_POSITION = 110;
