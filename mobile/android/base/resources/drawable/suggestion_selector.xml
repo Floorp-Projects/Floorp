@@ -4,7 +4,7 @@
     <item android:state_pressed="true">
         <shape>
             <gradient android:angle="90"
-                      android:startColor="#E66000"
+                      android:startColor="@color/action_orange"
                       android:endColor="@color/fennec_ui_orange"
                       android:type="linear"/>
 
@@ -21,7 +21,7 @@
                       android:type="linear"/>
 
             <stroke android:width="2dp"
-                    android:color="#E66000" />
+                    android:color="@color/action_orange" />
 
             <corners android:radius="4dp"/>
         </shape>

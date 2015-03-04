@@ -1163,8 +1163,8 @@ class RelocationOverlay
 
     void forwardTo(Cell *cell) {
         MOZ_ASSERT(!isForwarded());
-        static_assert(offsetof(JSObject, shape_) == offsetof(RelocationOverlay, newLocation_),
-                      "forwarding pointer and shape should be at same location, "
+        static_assert(offsetof(JSObject, group_) == offsetof(RelocationOverlay, newLocation_),
+                      "forwarding pointer and group should be at same location, "
                       "so that obj->zone() works on forwarded objects");
         newLocation_ = cell;
         magic_ = Relocated;
@@ -1291,14 +1291,14 @@ const int ZealCheckHashTablesOnMinorGC = 13;
 const int ZealCompactValue = 14;
 const int ZealLimit = 14;
 
-extern const char *ZealModeHelpText;
-
 enum VerifierType {
     PreBarrierVerifier,
     PostBarrierVerifier
 };
 
 #ifdef JS_GC_ZEAL
+
+extern const char *ZealModeHelpText;
 
 /* Check that write barriers have been used correctly. See jsgc.cpp. */
 void

@@ -1304,8 +1304,10 @@ ScanObjectGroup(GCMarker *gcmarker, ObjectGroup *group)
     if (group->proto().isObject())
         gcmarker->traverse(group->proto().toObject());
 
-    if (group->singleton() && !group->lazy())
-        gcmarker->traverse(group->singleton());
+    group->compartment()->mark();
+
+    if (GlobalObject *global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
+        PushMarkStack(gcmarker, global);
 
     if (group->newScript())
         group->newScript()->trace(gcmarker);
@@ -1337,9 +1339,6 @@ gc::MarkChildren(JSTracer *trc, ObjectGroup *group)
 
     if (group->proto().isObject())
         MarkObject(trc, &group->protoRaw(), "group_proto");
-
-    if (group->singleton() && !group->lazy())
-        MarkObject(trc, &group->singletonRaw(), "group_singleton");
 
     if (group->newScript())
         group->newScript()->trace(trc);

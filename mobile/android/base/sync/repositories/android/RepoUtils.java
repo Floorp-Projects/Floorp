@@ -259,12 +259,27 @@ public class RepoUtils {
     if (a == b) return true;
     if (a == null && b != null) return false;
     if (a != null && b == null) return false;
-    
+
     return a.equals(b);
   }
 
+  public static String computeSQLLongInClause(long[] items, String field) {
+    final StringBuilder builder = new StringBuilder(field);
+    builder.append(" IN (");
+    int i = 0;
+    for (; i < items.length - 1; ++i) {
+      builder.append(items[i]);
+      builder.append(", ");
+    }
+    if (i < items.length) {
+      builder.append(items[i]);
+    }
+    builder.append(")");
+    return builder.toString();
+  }
+
   public static String computeSQLInClause(int items, String field) {
-    StringBuilder builder = new StringBuilder(field);
+    final StringBuilder builder = new StringBuilder(field);
     builder.append(" IN (");
     int i = 0;
     for (; i < items - 1; ++i) {

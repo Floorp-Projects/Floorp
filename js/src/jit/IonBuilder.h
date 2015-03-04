@@ -398,8 +398,12 @@ class IonBuilder
     MDefinition *addMaybeCopyElementsForWrite(MDefinition *object);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
-    MInstruction *addShapeGuardPolymorphic(MDefinition *obj,
-                                           const BaselineInspector::ShapeVector &shapes);
+    MInstruction *addGroupGuard(MDefinition *obj, ObjectGroup *group, BailoutKind bailoutKind);
+
+    MInstruction *
+    addShapeGuardPolymorphic(MDefinition *obj,
+                             const BaselineInspector::ShapeVector &shapes,
+                             const BaselineInspector::ObjectGroupVector &unboxedGroups);
 
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
                                                        Scalar::Type viewType);
@@ -611,6 +615,7 @@ class IonBuilder
         return length;
     }
 
+    bool improveThisTypesForCall();
 
     MDefinition *getCallee();
     MDefinition *getAliasedVar(ScopeCoordinate sc);
@@ -827,6 +832,7 @@ class IonBuilder
     InliningStatus inlineSimdWith(CallInfo &callInfo, JSNative native, SimdLane lane,
                                   SimdTypeDescr::Type type);
     InliningStatus inlineSimdSplat(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
+    InliningStatus inlineSimdSwizzle(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
     InliningStatus inlineSimdCheck(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
     InliningStatus inlineSimdConvert(CallInfo &callInfo, JSNative native, bool isCast,
                                      SimdTypeDescr::Type from, SimdTypeDescr::Type to);
@@ -899,9 +905,11 @@ class IonBuilder
     bool testShouldDOMCall(TypeSet *inTypes,
                            JSFunction *func, JSJitInfo::OpType opType);
 
-    MDefinition *addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Shape *holderShape,
-                                               const BaselineInspector::ShapeVector &receiverShapes,
-                                               bool isOwnProperty);
+    MDefinition *
+    addShapeGuardsForGetterSetter(MDefinition *obj, JSObject *holder, Shape *holderShape,
+                                  const BaselineInspector::ShapeVector &receiverShapes,
+                                  const BaselineInspector::ObjectGroupVector &receiverGroups,
+                                  bool isOwnProperty);
 
     bool annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
                                   TemporaryTypeSet *objTypes,

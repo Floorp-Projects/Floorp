@@ -92,8 +92,8 @@ RootAccessible::NativeRole()
 {
   // If it's a <dialog> or <wizard>, use roles::DIALOG instead
   dom::Element* rootElm = mDocumentNode->GetRootElement();
-  if (rootElm && (rootElm->Tag() == nsGkAtoms::dialog ||
-                  rootElm->Tag() == nsGkAtoms::wizard))
+  if (rootElm && rootElm->IsAnyOfXULElements(nsGkAtoms::dialog,
+                                             nsGkAtoms::wizard))
     return roles::DIALOG;
 
   return DocAccessibleWrap::NativeRole();

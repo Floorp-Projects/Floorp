@@ -227,9 +227,6 @@ public:
   void ActivateUpdateHitRegion();
   void DeactivateUpdateHitRegion();
 
-  // Properly retrieves documentSize of any subdocument type.
-  nsresult GetWindowDimensions(nsIntRect& aRect);
-
 private:
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -285,6 +282,9 @@ private:
   nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
 
+  // Properly retrieves documentSize of any subdocument type.
+  nsresult GetWindowDimensions(nsIntRect& aRect);
+
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
   void UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame);
@@ -305,7 +305,8 @@ private:
                               nsIDocShell* aParentNode);
 
   nsIAtom* TypeAttrName() const {
-    return mOwnerContent->IsXUL() ? nsGkAtoms::type : nsGkAtoms::mozframetype;
+    return mOwnerContent->IsXULElement()
+             ? nsGkAtoms::type : nsGkAtoms::mozframetype;
   }
 
   // Update the permission manager's app-id refcount based on mOwnerContent's

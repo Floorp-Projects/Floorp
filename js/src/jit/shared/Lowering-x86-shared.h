@@ -58,8 +58,8 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitSimdValueX4(MSimdValueX4 *ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
-    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
-    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
+    void lowerAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins, const LDefinition& addrTemp);
+    void lowerAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins, const LDefinition& addrTemp);
 };
 
 } // namespace jit

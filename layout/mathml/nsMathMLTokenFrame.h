@@ -23,7 +23,7 @@ public:
   TransmitAutomaticData() MOZ_OVERRIDE {
     // The REC defines the following elements to be space-like:
     // * an mtext, mspace, maligngroup, or malignmark element;
-    if (mContent->Tag() == nsGkAtoms::mtext_) {
+    if (mContent->IsMathMLElement(nsGkAtoms::mtext_)) {
       mPresentationData.flags |= NS_MATHML_SPACE_LIKE;
     }
     return NS_OK;

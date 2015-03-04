@@ -84,10 +84,15 @@ static void
 PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno, bool padFirstLine)
 {
     unsigned colno = startColno;
+    unsigned indent = 0;
     const char *it = text;
 
     if (padFirstLine)
         printf("%*s", startColno, "");
+
+    /* Skip any leading spaces. */
+    while (*it != '\0' && isspace(*it))
+        ++it;
 
     while (*it != '\0') {
         MOZ_ASSERT(!isspace(*it));
@@ -105,7 +110,7 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
         size_t tokLen = limit - it;
         MOZ_ASSERT(tokLen);
         if (tokLen + colno >= limitColno) {
-            printf("\n%*s%.*s", startColno, "", int(tokLen), it);
+            printf("\n%*s%.*s", startColno + indent, "", int(tokLen), it);
             colno = startColno + tokLen;
         } else {
             printf("%.*s", int(tokLen), it);
@@ -128,9 +133,11 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
             colno = startColno;
             it = limit + 1;
             /* Could also have line-leading spaces. */
+            indent = 0;
             while (*it == ' ') {
                 putchar(' ');
                 ++colno;
+                ++indent;
                 ++it;
             }
             break;

@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+namespace cache {
+
+protocol PCacheStreamControl
+{
+  manager PBackground;
+
+parent:
+  NoteClosed(nsID aStreamId);
+
+child:
+  Close(nsID aStreamId);
+  CloseAll();
+  __delete__();
+};
+
+} // namespace cache
+} // namespace dom
+} // namespace mozilla

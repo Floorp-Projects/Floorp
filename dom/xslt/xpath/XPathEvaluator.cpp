@@ -121,7 +121,8 @@ XPathEvaluator::CreateExpression(const nsAString& aExpression,
                                  XPathNSResolver* aResolver, ErrorResult& aRv)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    XPathEvaluatorParseContext pContext(aResolver, !(doc && doc->IsHTML()));
+    XPathEvaluatorParseContext pContext(aResolver,
+                                        !(doc && doc->IsHTMLDocument()));
     return CreateExpression(aExpression, &pContext, doc, aRv);
 }
 
@@ -130,7 +131,8 @@ XPathEvaluator::CreateExpression(const nsAString& aExpression,
                                  nsINode* aResolver, ErrorResult& aRv)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    XPathEvaluatorParseContext pContext(aResolver, !(doc && doc->IsHTML()));
+    XPathEvaluatorParseContext pContext(aResolver,
+                                        !(doc && doc->IsHTMLDocument()));
     return CreateExpression(aExpression, &pContext, doc, aRv);
 }
 

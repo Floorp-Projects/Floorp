@@ -35,7 +35,7 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:checked="true"
-              android:textColor="@color/doorhanger_text"
+              android:textColor="@color/placeholder_active_grey"
               android:visibility="gone"/>
 
     <View android:id="@+id/divider_choices"
