@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    function test() {
+      focus();
+      var div = document.querySelector("div");
+      div.focus();
+      getSelection().collapse(div.firstChild, 0);
+    }
+  </script>
+  <body onload="test()">
+    <div contenteditable spellcheck="false" style="outline: none">foo<span>bar</span>baz</div>
+  </body>
+</html>

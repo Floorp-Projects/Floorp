@@ -10,12 +10,12 @@
 }
 
 *|*:-moz-read-write :-moz-read-only {
-  -moz-user-select: all !important;
+  -moz-user-select: all;
 }
 
 input:-moz-read-write > .anonymous-div:-moz-read-only,
 textarea:-moz-read-write > .anonymous-div:-moz-read-only {
-  -moz-user-select: text !important;
+  -moz-user-select: text;
 }
 
 /* Use default arrow over objects with size that 
@@ -55,7 +55,7 @@ a:link:-moz-read-write {
 *|*:-moz-read-write > input:-moz-read-only,
 *|*:-moz-read-write > button:-moz-read-only,
 *|*:-moz-read-write > textarea:-moz-read-only {
-  -moz-user-select: all !important;
+  -moz-user-select: all;
   -moz-user-input: auto !important;
   -moz-user-focus: none !important;
 }
@@ -70,7 +70,7 @@ input[contenteditable="true"]:disabled,
 input[contenteditable="true"][type="checkbox"],
 input[contenteditable="true"][type="radio"],
 input[contenteditable="true"][type="file"] {
-  -moz-user-select: all !important;
+  -moz-user-select: all;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
 }
@@ -91,15 +91,15 @@ input[contenteditable="true"][type="hidden"] {
 }
 
 label:-moz-read-write {
-    -moz-user-select: all !important;
+    -moz-user-select: all;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
-  -moz-user-select: text !important;
+  -moz-user-select: text;
 }
 
 option:-moz-read-write {
-  -moz-user-select: text !important;
+  -moz-user-select: text;
 }
 
 /* the following rules are for Image Resizing */
@@ -215,7 +215,7 @@ a[\_moz_anonclass="mozTableAddColumnBefore"] {
   background-image: url("resource://gre/res/table-add-column-before.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
@@ -237,7 +237,7 @@ a[\_moz_anonclass="mozTableAddColumnAfter"] {
   background-image: url("resource://gre/res/table-add-column-after.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
@@ -259,7 +259,7 @@ a[\_moz_anonclass="mozTableRemoveColumn"] {
   background-image: url("resource://gre/res/table-remove-column.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
@@ -281,7 +281,7 @@ a[\_moz_anonclass="mozTableAddRowBefore"] {
   background-image: url("resource://gre/res/table-add-row-before.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
@@ -303,7 +303,7 @@ a[\_moz_anonclass="mozTableAddRowAfter"] {
   background-image: url("resource://gre/res/table-add-row-after.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
@@ -325,7 +325,7 @@ a[\_moz_anonclass="mozTableRemoveRow"] {
   background-image: url("resource://gre/res/table-remove-row.gif");
   background-repeat: no-repeat;
   background-position: center center;
-  -moz-user-select: none !important;
+  -moz-user-select: none;
   -moz-user-focus: none !important;
 }
 
