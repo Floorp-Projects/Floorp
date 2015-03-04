@@ -128,7 +128,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
       gfxMatrix toChildsUserSpace = mMatrixForChildren;
       nsIFrame* child = do_QueryFrame(SVGFrame);
       nsIContent* childContent = child->GetContent();
-      if (childContent->IsSVG()) {
+      if (childContent->IsSVGElement()) {
         toChildsUserSpace =
           static_cast<const nsSVGElement*>(childContent)->
             PrependLocalTransformsTo(mMatrixForChildren,
@@ -328,7 +328,7 @@ nsSVGClipPathFrame::Init(nsIContent*       aContent,
                          nsContainerFrame* aParent,
                          nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::clipPath),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::clipPath),
                "Content is not an SVG clipPath!");
 
   AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);

@@ -21,14 +21,19 @@ vout.mozSrcObject = v.mozCaptureStream();
 vout_untilended.mozSrcObject = v.mozCaptureStreamUntilEnded();
 
 function dumpEvent(event) {
-  dump("GOT EVENT " + event.type + " currentTime=" + event.target.currentTime +
-       " paused=" + event.target.paused + " ended=" + event.target.ended +
-       " readyState=" + event.target.readyState + "\n");
+  var v = event.target;
+  info(v.name + " GOT EVENT " + event.type +
+       " currentTime=" + v.currentTime +
+       " paused=" + v.paused +
+       " ended=" + v.ended +
+       " readyState=" + v.readyState);
 }
+
 var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
 for (var i = 0; i < events.length; ++i) {
   v.addEventListener(events[i], dumpEvent, false);
 }
+
 function isWithinEps(a, b, msg) {
   ok(Math.abs(a - b) < 0.01,
      "Got " + a + ", expected " + b + "; " + msg);
@@ -43,6 +48,7 @@ function startTest(test) {
 	            "checking vout.currentTime after seeking, playing through and reloading");
     SimpleTest.finish();
   };
+
   function endedAfterSeek() {
     isWithinEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
     isWithinEps(vout.currentTime, (test.duration - seekTime) + test.duration,
@@ -52,6 +58,7 @@ function startTest(test) {
     v.src = test.name + "?1";
     v.play();
   };
+
   function seeked() {
     isWithinEps(v.currentTime, seekTime, "Finished seeking");
     isWithinEps(vout.currentTime, test.duration,
@@ -65,23 +72,38 @@ function startTest(test) {
     v.addEventListener("ended", endedAfterSeek, false);
     v.play();
   };
+
   function ended() {
+    // Don't compare current time until both v and vout_untilended are ended,
+    // otherwise, current time could be smaller than the duration.
+    if (!v.ended || !vout_untilended.ended) {
+      return;
+    }
+
     isWithinEps(vout.currentTime, test.duration, "checking vout.currentTime at first 'ended' event");
     isWithinEps(v.currentTime, test.duration, "checking v.currentTime at first 'ended' event");
     is(vout.ended, false, "checking vout has not ended");
     is(vout_untilended.ended, true, "checking vout_untilended has actually ended");
+
+    v.removeEventListener("ended", ended, false);
     vout_untilended.removeEventListener("ended", ended, false);
+
     v.pause();
     v.currentTime = seekTime;
     v.addEventListener("seeked", seeked, false);
   };
+
+  v.addEventListener("ended", ended, false);
   vout_untilended.addEventListener("ended", ended, false);
 
   v.src = test.name;
+  v.name = test.name;
   v.play();
+
   function checkNoEnded() {
     ok(false, "ended event received unexpectedly");
   };
+
   vout.addEventListener("ended", checkNoEnded, false);
   vout.play();
   vout_untilended.play();

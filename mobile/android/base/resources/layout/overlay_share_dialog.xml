@@ -48,7 +48,7 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:scrollHorizontally="true"
-                android:textColor="@color/text_color_primary"
+                android:textColor="@color/placeholder_active_grey"
                 android:textSize="17sp"/>
 
             <!-- Subtitle (url) -->
@@ -56,7 +56,7 @@
                 android:id="@+id/subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_color_secondary"/>
+                android:textColor="@color/placeholder_grey"/>
 
         </LinearLayout>
 

@@ -104,8 +104,8 @@ bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool 
 class JSObject : public js::gc::Cell
 {
   protected:
-    js::HeapPtrShape shape_;
     js::HeapPtrObjectGroup group_;
+    js::HeapPtrShape shape_;
 
   private:
     friend class js::Shape;
@@ -157,7 +157,7 @@ class JSObject : public js::gc::Cell
      * object will have its group constructed lazily as needed by analysis.
      */
     bool isSingleton() const {
-        return !!group_->singleton();
+        return group_->singleton();
     }
 
     /*
@@ -169,7 +169,7 @@ class JSObject : public js::gc::Cell
     }
 
     JSCompartment *compartment() const {
-        return lastProperty()->base()->compartment();
+        return group_->compartment();
     }
 
     /*
@@ -289,7 +289,7 @@ class JSObject : public js::gc::Cell
     static bool isNullLike(const JSObject *obj) { return uintptr_t(obj) < (1 << MaxTagBits); }
 
     MOZ_ALWAYS_INLINE JS::Zone *zone() const {
-        return shape_->zone();
+        return group_->zone();
     }
     MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const {
         return JS::shadow::Zone::asShadowZone(zone());
@@ -312,8 +312,6 @@ class JSObject : public js::gc::Cell
     }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info);
-
-    bool hasIdempotentProtoChain() const;
 
     /*
      * Marks this object as having a singleton type, and leave the group lazy.

@@ -98,6 +98,7 @@ void VCMPacket::Reset() {
 void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
   switch (videoHeader.codec) {
     case kRtpVideoVp8:
+    case kRtpVideoVp9:
       // Handle all packets within a frame as depending on the previous packet
       // TODO(holmer): This should be changed to make fragments independent
       // when the VP8 RTP receiver supports fragments.
@@ -110,7 +111,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       else
         completeNALU = kNaluIncomplete;
 
-      codec = kVideoCodecVP8;
+      codec = videoHeader.codec == kRtpVideoVp8 ? kVideoCodecVP8 : kVideoCodecVP9;
       return;
     case kRtpVideoH264:
       isFirstPacket = videoHeader.isFirstPacket;
@@ -130,6 +131,14 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       return;
     case kRtpVideoGeneric:
     case kRtpVideoNone:
+      if (isFirstPacket && markerBit)
+        completeNALU = kNaluComplete;
+      else if (isFirstPacket)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
       codec = kVideoCodecUnknown;
       return;
   }

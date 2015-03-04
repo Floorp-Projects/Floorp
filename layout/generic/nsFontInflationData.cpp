@@ -292,7 +292,7 @@ DoCharCountOfLargestOption(nsIFrame *aContainer)
   for (nsIFrame* option = aContainer->GetFirstPrincipalChild();
        option; option = option->GetNextSibling()) {
     uint32_t optionResult;
-    if (option->GetContent()->IsHTML(nsGkAtoms::optgroup)) {
+    if (option->GetContent()->IsHTMLElement(nsGkAtoms::optgroup)) {
       optionResult = DoCharCountOfLargestOption(option);
     } else {
       // REVIEW: Check the frame structure for this!

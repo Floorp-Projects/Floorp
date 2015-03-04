@@ -33,7 +33,7 @@ nsSVGGFrame::Init(nsIContent*       aContent,
                   nsContainerFrame* aParent,
                   nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG() &&
+  NS_ASSERTION(aContent->IsSVGElement() &&
                static_cast<nsSVGElement*>(aContent)->IsTransformable(),
                "The element doesn't support nsIDOMSVGTransformable");
 

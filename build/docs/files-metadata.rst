@@ -19,9 +19,9 @@ files. e.g.::
     with Files('**/Makefile.in'):
         BUG_COMPONENT = ('Core', 'Build Config')
 
-This working example says, *for all Makefile.in files in all directories
-in this one and underneath it, set the Bugzilla component to
-Core :: Build Config*.
+This working example says, *for all Makefile.in files in every directory
+underneath this one - including this directory - set the Bugzilla
+component to Core :: Build Config*.
 
 For more info, read the
 :ref:`docs on Files <mozbuild_subcontext_Files>`.

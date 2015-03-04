@@ -15,11 +15,6 @@
 <!ENTITY resetPassword.title  "Reset Master Password">
 <!ENTITY resetPassword.text  "If you reset your master password, all your stored web and e-mail passwords, form data, personal certificates, and private keys will be forgotten. Are you sure you want to reset your master password?">
 
-<!-- Values for getpassword.xul -->
-<!ENTITY getPassword.title  "Enter Master Password">
-<!ENTITY getPassword.tokenName2.label "Security Device:">
-<!ENTITY getPassword.password.label "Password:">
-
 <!-- Downloading a cert -->
 <!ENTITY downloadCert.title "Downloading Certificate">
 <!ENTITY downloadCert.message1 "You have been asked to trust a new Certificate Authority (CA).">

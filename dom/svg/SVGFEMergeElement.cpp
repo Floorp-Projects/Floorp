@@ -42,7 +42,7 @@ SVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
   for (nsIContent* child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsSVG(nsGkAtoms::feMergeNode)) {
+    if (child->IsSVGElement(nsGkAtoms::feMergeNode)) {
       SVGFEMergeNodeElement* node = static_cast<SVGFEMergeNodeElement*>(child);
       aSources.AppendElement(nsSVGStringInfo(node->GetIn1(), node));
     }

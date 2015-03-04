@@ -353,7 +353,7 @@ SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect*
 void
 SVGFEImageElement::Invalidate()
 {
-  if (GetParent() && GetParent()->IsSVG(nsGkAtoms::filter)) {
+  if (GetParent() && GetParent()->IsSVGElement(nsGkAtoms::filter)) {
     static_cast<SVGFilterElement*>(GetParent())->Invalidate();
   }
 }

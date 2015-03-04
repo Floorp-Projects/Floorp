@@ -2646,7 +2646,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-    if (content->IsSVG(nsGkAtoms::img))
+    if (content->IsSVGElement(nsGkAtoms::img))
     {
         StoreURIAttributeNS(aNode, "http://www.w3.org/1999/xlink", "href");
         return NS_OK;
@@ -2665,22 +2665,22 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-    if (content->IsHTML(nsGkAtoms::body)) {
+    if (content->IsHTMLElement(nsGkAtoms::body)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    if (content->IsHTML(nsGkAtoms::table)) {
+    if (content->IsHTMLElement(nsGkAtoms::table)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    if (content->IsHTML(nsGkAtoms::tr)) {
+    if (content->IsHTMLElement(nsGkAtoms::tr)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    if (content->IsHTML(nsGkAtoms::td) || content->IsHTML(nsGkAtoms::th)) {
+    if (content->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
@@ -2692,7 +2692,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-    if (content->IsSVG(nsGkAtoms::script))
+    if (content->IsSVGElement(nsGkAtoms::script))
     {
         StoreURIAttributeNS(aNode, "http://www.w3.org/1999/xlink", "href");
         return NS_OK;
@@ -2948,7 +2948,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsHTML(nsGkAtoms::body)) {
+    if (content->IsHTMLElement(nsGkAtoms::body)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -2957,7 +2957,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsHTML(nsGkAtoms::table)) {
+    if (content->IsHTMLElement(nsGkAtoms::table)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -2966,7 +2966,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsHTML(nsGkAtoms::tr)) {
+    if (content->IsHTMLElement(nsGkAtoms::tr)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -2975,7 +2975,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsHTML(nsGkAtoms::td) || content->IsHTML(nsGkAtoms::th)) {
+    if (content->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -3026,7 +3026,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsSVG(nsGkAtoms::img))
+    if (content->IsSVGElement(nsGkAtoms::img))
     {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
@@ -3054,7 +3054,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    if (content->IsSVG(nsGkAtoms::script))
+    if (content->IsSVGElement(nsGkAtoms::script))
     {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)

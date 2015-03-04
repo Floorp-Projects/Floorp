@@ -142,7 +142,7 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
                       nsContainerFrame* aParent,
                       nsIFrame*         aPrevInFlow)
 {
-  NS_ASSERTION(aContent->IsSVG(nsGkAtoms::image),
+  NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::image),
                "Content is not an SVG image!");
 
   nsSVGImageFrameBase::Init(aContent, aParent, aPrevInFlow);

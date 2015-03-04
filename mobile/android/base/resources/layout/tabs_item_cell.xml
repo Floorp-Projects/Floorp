@@ -40,7 +40,7 @@
                       android:padding="4dip"
                       style="@style/TabLayoutItemTextAppearance"
                       android:textSize="12sp"
-                      android:textColor="#FF222222"
+                      android:textColor="@color/placeholder_active_grey"
                       android:singleLine="true"
                       android:duplicateParentState="true"/>
 

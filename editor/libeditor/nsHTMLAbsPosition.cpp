@@ -548,7 +548,8 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     }
 
     nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-    if (element && element->IsHTML(nsGkAtoms::div) && !HasStyleOrIdOrClass(element)) {
+    if (element && element->IsHTMLElement(nsGkAtoms::div) &&
+        !HasStyleOrIdOrClass(element)) {
       nsRefPtr<nsHTMLEditRules> htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
       nsresult res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);

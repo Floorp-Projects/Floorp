@@ -403,6 +403,24 @@ MessageLoop* CompositorParent::CompositorLoop()
   return CompositorThread() ? CompositorThread()->message_loop() : nullptr;
 }
 
+static bool
+IsInCompositorAsapMode()
+{
+  // Returns true if the compositor is allowed to be in ASAP mode
+  // and layout is not in ASAP mode
+  return gfxPrefs::LayersCompositionFrameRate() == 0 &&
+            !gfxPlatform::IsInLayoutAsapMode();
+}
+
+static bool
+UseVsyncComposition()
+{
+  return gfxPrefs::VsyncAlignedCompositor()
+          && gfxPrefs::HardwareVsyncEnabled()
+          && !IsInCompositorAsapMode()
+          && !gfxPlatform::IsInLayoutAsapMode();
+}
+
 CompositorParent::CompositorParent(nsIWidget* aWidget,
                                    bool aUseExternalSurfaceSize,
                                    int aSurfaceWidth, int aSurfaceHeight)
@@ -445,7 +463,8 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     mApzcTreeManager = new APZCTreeManager();
   }
 
-  if (gfxPrefs::VsyncAlignedCompositor() && gfxPrefs::HardwareVsyncEnabled()) {
+  if (UseVsyncComposition()) {
+    NS_WARNING("Enabling vsync compositor\n");
     mCompositorVsyncObserver = new CompositorVsyncObserver(this, aWidget);
   }
 

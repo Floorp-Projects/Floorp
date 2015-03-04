@@ -1212,12 +1212,13 @@ js::array_join(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static inline bool
-InitArrayTypes(JSContext *cx, ObjectGroup *group, const Value *vector, unsigned count)
+InitArrayTypes(JSContext *cx, ObjectGroup *group, JSObject *obj,
+               const Value *vector, unsigned count)
 {
     if (!group->unknownProperties()) {
         AutoEnterAnalysis enter(cx);
 
-        HeapTypeSet *types = group->getProperty(cx, JSID_VOID);
+        HeapTypeSet *types = group->getProperty(cx, obj, JSID_VOID);
         if (!types)
             return false;
 
@@ -1248,7 +1249,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     ObjectGroup *group = obj->getGroup(cx);
     if (!group)
         return false;
-    if (updateTypes && !InitArrayTypes(cx, group, vector, count))
+    if (updateTypes && !InitArrayTypes(cx, group, obj, vector, count))
         return false;
 
     /*
@@ -3060,7 +3061,7 @@ IsArrayConstructor(const Value &v)
 static bool
 ArrayFromCallArgs(JSContext *cx, HandleObjectGroup group, CallArgs &args)
 {
-    if (!InitArrayTypes(cx, group, args.array(), args.length()))
+    if (!InitArrayTypes(cx, group, nullptr, args.array(), args.length()))
         return false;
     JSObject *obj = (args.length() == 0)
         ? NewDenseEmptyArray(cx)

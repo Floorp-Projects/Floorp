@@ -39,44 +39,44 @@ scientists.
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
 var is = window.opener.wrappedJSObject.is;
-
+var t, e, utils, iterations;
 var smoothScrollPref = "general.smoothScroll";
-SpecialPowers.setBoolPref(smoothScrollPref, false);
 
 function startTest() {
-  var t = document.getElementById("t");
-  var e = t.contentDocument.getElementById("e");
-  t.contentWindow.scrollTo(0,0);
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                 getInterface(Components.interfaces.nsIDOMWindowUtils);
-  var iterations = 0;
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
+}
+function runTest() {
+    t = document.getElementById("t");
+    e = t.contentDocument.getElementById("e");
+    t.contentWindow.scrollTo(0,0);
+    utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                   getInterface(Components.interfaces.nsIDOMWindowUtils);
+    iterations = 0;
 
-  function nextIteration() {
-    var painted = utils.checkAndClearPaintedState(e);
-    is(painted, false, "Fully-visible scrolled element should not have been painted");
-    if (++iterations == 10) {
-      SpecialPowers.clearUserPref(smoothScrollPref);
-      SimpleTest.finish();
-      window.close();
-    } else {
-      t.contentWindow.scrollByLines(1);
-      waitForAllPaintsFlushed(nextIteration);
-    }
-  }
-  
   // Do a couple of scrolls to ensure we've triggered activity heuristics.
-  waitForAllPaintsFlushed(function () {
-    t.contentWindow.scrollByLines(1);
     waitForAllPaintsFlushed(function () {
       t.contentWindow.scrollByLines(1);
       waitForAllPaintsFlushed(function () {
-        // Clear paint state now and scroll again.
-        utils.checkAndClearPaintedState(e);
         t.contentWindow.scrollByLines(1);
-        waitForAllPaintsFlushed(nextIteration);
+        waitForAllPaintsFlushed(function () {
+          // Clear paint state now and scroll again.
+          utils.checkAndClearPaintedState(e);
+          t.contentWindow.scrollByLines(1);
+          waitForAllPaintsFlushed(nextIteration);
+        });
       });
     });
-  });
+}
+function nextIteration() {
+  var painted = utils.checkAndClearPaintedState(e);
+  is(painted, false, "Fully-visible scrolled element should not have been painted");
+  if (++iterations == 10) {
+    SimpleTest.finish();
+    window.close();
+  } else {
+    t.contentWindow.scrollByLines(1);
+    waitForAllPaintsFlushed(nextIteration);
+  }
 }
 </script>
 </pre>
