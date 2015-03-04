@@ -44,7 +44,7 @@ ArrayObject::createArrayInternal(ExclusiveContext *cx, gc::AllocKind kind, gc::I
     MOZ_ASSERT(shape->numFixedSlots() == 0);
 
     size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), group->clasp());
-    JSObject *obj = NewGCObject<CanGC>(cx, kind, nDynamicSlots, heap, group->clasp());
+    JSObject *obj = Allocate<JSObject>(cx, kind, nDynamicSlots, heap, group->clasp());
     if (!obj)
         return nullptr;
 
