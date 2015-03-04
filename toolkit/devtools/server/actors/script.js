@@ -4723,13 +4723,27 @@ BreakpointActor.prototype = {
    *
    * @param aFrame Debugger.Frame
    *        The frame to evaluate the condition in
+   * @returns Boolean
+   *          Indicates whether to pause or not, returns undefined when
+   *          evaluation was killed
    */
-  isValidCondition: function(aFrame) {
-    if (!this.condition) {
-      return true;
+  checkCondition: function(aFrame) {
+    let completion = aFrame.eval(this.condition);
+    if (completion) {
+      if (completion.throw) {
+        // The evaluation failed and threw an error, currently
+        // we will only return true to break on the error
+        return true;
+      } else if (completion.yield) {
+        dbg_assert(false,
+                   "Shouldn't ever get yield completions from an eval");
+      } else {
+        return completion.return ? true : false;
+      }
+    } else {
+      // The evaluation was killed (possibly by the slow script dialog)
+      return undefined;
     }
-    var res = aFrame.eval(this.condition);
-    return res.return;
   },
 
   /**
@@ -4747,18 +4761,20 @@ BreakpointActor.prototype = {
     let url = originalSourceActor.url;
 
     if (this.threadActor.sources.isBlackBoxed(url)
-        || aFrame.onStep
-        || !this.isValidCondition(aFrame)) {
+        || aFrame.onStep) {
       return undefined;
     }
 
     let reason = {};
+
     if (this.threadActor._hiddenBreakpoints.has(this.actorID)) {
       reason.type = "pauseOnDOMEvents";
-    } else {
+    } else if (!this.condition || this.checkCondition(aFrame)) {
       reason.type = "breakpoint";
       // TODO: add the rest of the breakpoints on that line (bug 676602).
       reason.actors = [ this.actorID ];
+    } else {
+      return undefined;
     }
     return this.threadActor._pauseAndRespond(aFrame, reason);
   },

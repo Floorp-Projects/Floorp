@@ -620,9 +620,13 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = 
-    SUCCEEDED(SHOpenWithDialogFn(hwndParent, poainfo)) ? NS_OK :
-                                                         NS_ERROR_FAILURE;
+  nsresult rv;
+  HRESULT hr = SHOpenWithDialogFn(hwndParent, poainfo);
+  if (SUCCEEDED(hr) || (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))) {
+    rv = NS_OK;
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
   FreeLibrary(shellDLL);
   return rv;
 }
