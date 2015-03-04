@@ -94,8 +94,6 @@ struct nsTraceRefcntStats
   uint64_t mReleases;
   uint64_t mCreates;
   uint64_t mDestroys;
-  double mObjsOutstandingTotal;
-  double mObjsOutstandingSquared;
 };
 
 #ifdef DEBUG
@@ -253,8 +251,6 @@ public:
     aStats->mReleases = 0;
     aStats->mCreates = 0;
     aStats->mDestroys = 0;
-    aStats->mObjsOutstandingTotal = 0;
-    aStats->mObjsOutstandingSquared = 0;
   }
 
   void Accumulate()
@@ -263,8 +259,6 @@ public:
     mAllStats.mReleases += mNewStats.mReleases;
     mAllStats.mCreates += mNewStats.mCreates;
     mAllStats.mDestroys += mNewStats.mDestroys;
-    mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal;
-    mAllStats.mObjsOutstandingSquared += mNewStats.mObjsOutstandingSquared;
     Clear(&mNewStats);
   }
 
@@ -287,20 +281,11 @@ public:
   void Ctor()
   {
     mNewStats.mCreates++;
-    AccountObjs();
   }
 
   void Dtor()
   {
     mNewStats.mDestroys++;
-    AccountObjs();
-  }
-
-  void AccountObjs()
-  {
-    uint64_t cnt = (mNewStats.mCreates - mNewStats.mDestroys);
-    mNewStats.mObjsOutstandingTotal += cnt;
-    mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
   static int DumpEntry(PLHashEntry* aHashEntry, int aIndex, void* aArg)
@@ -328,10 +313,6 @@ public:
     aTotal->mAllStats.mReleases += mNewStats.mReleases + mAllStats.mReleases;
     aTotal->mAllStats.mCreates += mNewStats.mCreates + mAllStats.mCreates;
     aTotal->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
-    aTotal->mAllStats.mObjsOutstandingTotal +=
-      mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
-    aTotal->mAllStats.mObjsOutstandingSquared +=
-      mNewStats.mObjsOutstandingSquared + mAllStats.mObjsOutstandingSquared;
     uint64_t count = (mNewStats.mCreates + mAllStats.mCreates);
     aTotal->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
     aTotal->mTotalLeaked += (uint64_t)(mClassSize *
