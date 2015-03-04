@@ -294,6 +294,12 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
 #endif
         masm.storeDouble(value, dest);
         break;
+      case Scalar::Float32x4:
+        masm.storeUnalignedFloat32x4(value, dest);
+        break;
+      case Scalar::Int32x4:
+        masm.storeUnalignedInt32x4(value, dest);
+        break;
       default:
         MOZ_CRASH("Invalid typed array type");
     }
@@ -355,6 +361,12 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
         loadDouble(src, dest.fpu());
         if (canonicalizeDoubles)
             canonicalizeDouble(dest.fpu());
+        break;
+      case Scalar::Int32x4:
+        loadUnalignedInt32x4(src, dest.fpu());
+        break;
+      case Scalar::Float32x4:
+        loadUnalignedFloat32x4(src, dest.fpu());
         break;
       default:
         MOZ_CRASH("Invalid typed array type");
@@ -1207,8 +1219,10 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
 {
     // Fast initialization of an empty object returned by allocateObject().
 
-    storePtr(ImmGCPtr(templateObj->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObj->group()), Address(obj, JSObject::offsetOfGroup()));
+
+    if (Shape *shape = templateObj->maybeShape())
+        storePtr(ImmGCPtr(shape), Address(obj, JSObject::offsetOfShape()));
 
     if (templateObj->isNative()) {
         NativeObject *ntemplate = &templateObj->as<NativeObject>();
@@ -1267,6 +1281,8 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
         }
     } else if (templateObj->is<UnboxedPlainObject>()) {
         const UnboxedLayout &layout = templateObj->as<UnboxedPlainObject>().layout();
+
+        storePtr(ImmWord(0), Address(obj, JSObject::offsetOfShape()));
 
         // Initialize reference fields of the object, per UnboxedPlainObject::create.
         if (const int32_t *list = layout.traceList()) {

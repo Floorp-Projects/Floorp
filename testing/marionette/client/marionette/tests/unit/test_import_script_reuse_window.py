@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 class TestImportScriptContent(MarionetteTestCase):
 

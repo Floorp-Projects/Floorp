@@ -3508,6 +3508,8 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *t
     } else if (constant->toString() == TypeName(JSTYPE_FUNCTION, names)) {
         if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
             filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    } else {
+        return true;
     }
 
     TemporaryTypeSet *type;

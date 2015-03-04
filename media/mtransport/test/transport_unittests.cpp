@@ -968,13 +968,13 @@ TEST_F(TransportTest, TestConnectTwoDigests) {
 TEST_F(TransportTest, TestConnectTwoDigestsFirstBad) {
   SetDtlsPeer(2, 1);
 
-  ConnectSocketExpectFail();
+  ConnectSocket();
 }
 
 TEST_F(TransportTest, TestConnectTwoDigestsSecondBad) {
   SetDtlsPeer(2, 2);
 
-  ConnectSocketExpectFail();
+  ConnectSocket();
 }
 
 TEST_F(TransportTest, TestConnectTwoDigestsBothBad) {

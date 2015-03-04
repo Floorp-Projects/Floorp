@@ -13,7 +13,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 
 class RenderedElementTests(MarionetteTestCase):
