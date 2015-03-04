@@ -2845,11 +2845,18 @@ SourceActor.prototype = {
    */
   setBreakpoint: function (originalLine, originalColumn, condition) {
     let originalLocation = new OriginalLocation(this, originalLine, originalColumn);
+
+    let actor = this.breakpointActorMap.getActor(originalLocation);
+    if (!actor) {
+      actor = new BreakpointActor(this.threadActor, originalLocation);
+      this.threadActor.threadLifetimePool.addActor(actor);
+      this.breakpointActorMap.setActor(originalLocation, actor);
+    }
+
+    actor.condition = condition;
+
     return this.threadActor.sources.getGeneratedLocation(originalLocation)
                                    .then(generatedLocation => {
-      let actor = this._getOrCreateBreakpointActor(originalLocation,
-                                                   generatedLocation,
-                                                   condition);
       return generatedLocation.generatedSourceActor
                               .setBreakpointForActor(actor, generatedLocation);
     });
@@ -4665,15 +4672,10 @@ FrameActor.prototype.requestTypes = {
  *
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this breakpoint.
- * @param OriginalLocation originalLocation
+ * @param OriginalLocation aOriginalLocation
  *        The original location of the breakpoint.
- * @param GeneratedLocation generatedLocation
- *        The generated location of the breakpoint.
- * @param string aCondition
- *        Optional. A condition which, when false, will cause the breakpoint to
- *        be skipped.
  */
-function BreakpointActor(aThreadActor, aOriginalLocation, aGeneratedLocation, aCondition)
+function BreakpointActor(aThreadActor, aOriginalLocation)
 {
   // The set of Debugger.Script instances that this breakpoint has been set
   // upon.
@@ -4681,8 +4683,7 @@ function BreakpointActor(aThreadActor, aOriginalLocation, aGeneratedLocation, aC
 
   this.threadActor = aThreadActor;
   this.originalLocation = aOriginalLocation;
-  this.generatedLocation = aGeneratedLocation;
-  this.condition = aCondition;
+  this.condition = null;
 }
 
 BreakpointActor.prototype = {

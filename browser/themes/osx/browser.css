@@ -4647,6 +4647,17 @@ window > chatbox {
   list-style-image: url("chrome://browser/skin/drm-icon.svg#chains-pressed");
 }
 
+#eme-notification-icon[firstplay=true] {
+  animation: emeTeachingMoment 0.2s linear 0s 5 normal;
+}
+
+@keyframes emeTeachingMoment {
+  0% {transform: translateX(0); }
+  25% {transform: translateX(3px) }
+  75% {transform: translateX(-3px) }
+  100% { transform: translateX(0); }
+}
+
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css

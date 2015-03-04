@@ -51,7 +51,6 @@
 
   <!-- (bug 1077195) Focused state values are temporary. -->
   <color name="new_tablet_highlight_focused">#C0C9D0</color>
-  <color name="new_tablet_highlight_pb">#222222</color>
   <color name="new_tablet_highlight_focused_pb">#363B40</color>
 
   <!-- highlight on shaped button: 20% white over background_tabs -->
@@ -70,15 +69,11 @@
   <color name="firstrun_background">#99000000</color>
   <color name="firstrun_tabstrip">#1193CB</color>
   <color name="firstrun_pager_background">#16A3DF</color>
-  <color name="firstrun_pager_button">#E66000</color>
-  <color name="firstrun_pager_button_pressed">#DC5600</color>
 
   <!--
       Application theme colors
   -->
   <!-- Default colors -->
-  <color name="text_color_primary">#222222</color>
-  <color name="text_color_secondary">#777777</color>
   <color name="text_color_tertiary">#9198A1</color>
 
   <!-- Default inverse colors -->
@@ -119,7 +114,6 @@
   <color name="splash_urlfont">#000000</color>
   <color name="splash_content">#ffffff</color>
 
-  <color name="doorhanger_text">#FF222222</color>
   <color name="doorhanger_link">#FF2AA1FE</color>
   <color name="doorhanger_background_dark">#FFDDE4EA</color>
 
@@ -146,7 +140,6 @@
   <color name="home_button_bar_bg">#FFF5F7F9</color>
 
   <!-- Colour used for share overlay button labels -->
-  <color name="home_text_color">@color/text_color_primary</color>
   <color name="home_text_color_disabled">#AFB1B3</color>
 
   <color name="panel_image_item_background">#D1D9E1</color>
@@ -162,7 +155,6 @@
   <color name="swipe_refresh_orange4">#FFB44C</color>
 
   <!-- Remote tabs setup -->
-  <color name="remote_tabs_setup_button_background">#E66000</color>
   <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 
   <!-- Button toast colors. -->
