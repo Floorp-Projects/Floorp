@@ -41,7 +41,6 @@ EXTRA_JS_MODULES += [
     'PropertyListUtils.jsm',
     'RemoteController.jsm',
     'RemoteFinder.jsm',
-    'RemotePageManager.jsm',
     'RemoteSecurityUI.jsm',
     'RemoteWebNavigation.jsm',
     'RemoteWebProgress.jsm',
