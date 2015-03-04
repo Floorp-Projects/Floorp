@@ -35,6 +35,10 @@ namespace js {
 class Breakpoint;
 class DebuggerMemory;
 
+typedef HashSet<ReadBarrieredGlobalObject,
+                DefaultHasher<ReadBarrieredGlobalObject>,
+                SystemAllocPolicy> WeakGlobalObjectSet;
+
 /*
  * A weakmap from GC thing keys to JSObject values that supports the keys being
  * in different compartments to the values. All values must be in the same
@@ -238,7 +242,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
   private:
     HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
-    GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
+    WeakGlobalObjectSet debuggees;      /* Debuggee globals. Cross-compartment weak references. */
     js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
     JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */
@@ -325,7 +329,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     class ObjectQuery;
 
     bool addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> obj);
-    void removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global, GlobalObjectSet::Enum *debugEnum);
+    void removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
+                              WeakGlobalObjectSet::Enum *debugEnum);
 
     /*
      * Cope with an error or exception in a debugger hook.
@@ -529,7 +534,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool hasMemory() const;
     DebuggerMemory &memory() const;
 
-    GlobalObjectSet::Range allDebuggees() const { return debuggees.all(); }
+    WeakGlobalObjectSet::Range allDebuggees() const { return debuggees.all(); }
 
     /*********************************** Methods for interaction with the GC. */
 
@@ -889,7 +894,8 @@ Debugger::observesNewGlobalObject() const
 bool
 Debugger::observesGlobal(GlobalObject *global) const
 {
-    return debuggees.has(global);
+    ReadBarriered<GlobalObject*> debuggee(global);
+    return debuggees.has(debuggee);
 }
 
 /* static */ void
