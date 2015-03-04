@@ -43,6 +43,17 @@ namespace mozilla {
 namespace ipc {
 class PrincipalInfo;
 }
+
+namespace dom {
+// If you change this, the corresponding list in nsIWorkerDebugger.idl needs to
+// be updated too.
+enum WorkerType
+{
+  WorkerTypeDedicated,
+  WorkerTypeShared,
+  WorkerTypeService
+};
+}
 }
 
 BEGIN_WORKERS_NAMESPACE
