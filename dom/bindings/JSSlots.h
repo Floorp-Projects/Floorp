@@ -26,7 +26,8 @@
 #define DOM_INTERFACE_SLOTS_BASE 0
 
 // Interface prototype objects store a number of reserved slots equal to
-// DOM_INTERFACE_PROTO_SLOTS_BASE.
+// DOM_INTERFACE_PROTO_SLOTS_BASE or DOM_INTERFACE_PROTO_SLOTS_BASE + 1 if a
+// slot for the unforgeable holder is needed.
 #define DOM_INTERFACE_PROTO_SLOTS_BASE 0
 
 #endif /* mozilla_dom_DOMSlots_h */

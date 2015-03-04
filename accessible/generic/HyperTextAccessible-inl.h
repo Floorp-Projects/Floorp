@@ -55,11 +55,22 @@ HyperTextAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset)
 inline void
 HyperTextAccessible::ReplaceText(const nsAString& aText)
 {
-  int32_t numChars = CharacterCount();
-  if (numChars != 0)
-    DeleteText(0, numChars);
+  // We need to call DeleteText() even if there is no contents because we need
+  // to ensure to move focus to the editor via SetSelectionRange() called in
+  // DeleteText().
+  DeleteText(0, CharacterCount());
 
-  InsertText(aText, 0);
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIPlaintextEditor> plaintextEditor(do_QueryInterface(editor));
+  if (!plaintextEditor) {
+    return;
+  }
+
+  // DeleteText() may cause inserting <br> element in some cases. Let's
+  // select all again and replace whole contents.
+  editor->SelectAll();
+
+  plaintextEditor->InsertText(aText);
 }
 
 inline void

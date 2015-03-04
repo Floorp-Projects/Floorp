@@ -852,7 +852,6 @@ else:
         'trunk/src/opts/SkTextureCompression_opts_none.cpp',
         'trunk/src/opts/SkUtils_opts_none.cpp',
         'trunk/src/opts/SkXfermode_opts_none.cpp',
-        'trunk/src/ports/SkDiscardableMemory_none.cpp',
     ]
 
 

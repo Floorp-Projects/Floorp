@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1133624 - Test for lang-specific default stylesheet for ruby</title>
+  <link rel="stylesheet" href="common.css">
+</head>
+<body style="font: 200%/normal Ahem !important">
+  <p><ruby><rb>base x x<rt style="ruby-align: space-around; font-size: 50%">text x x</ruby></p>
+  <p><ruby><rb>base x x<rt style="ruby-align: space-around; font-size: 50%">text x x</ruby></p>
+  <p><ruby><rb>base x x<rt style="ruby-align: center; font-size: 50%">text x x</ruby></p>
+  <p><ruby><rb>base x x<rt style="ruby-align: center; font-size: 30%">text x x</ruby></p>
+</body>
+</html>

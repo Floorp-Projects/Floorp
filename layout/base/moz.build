@@ -4,6 +4,42 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('ActiveLayerTracker.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('Display*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('FrameLayerBuilder.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('LayerState.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('MaskLayerImageCache.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('PaintTracker.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('nsCSSRendering.*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('nsDisplay*'):
+    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
+
+with Files('Restyle*'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+
+with Files('nsStyle*'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+
+with Files('nsChangeHint.h'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+
+with Files('nsBidi*'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+
 XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
 ]

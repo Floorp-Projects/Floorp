@@ -1208,6 +1208,17 @@ protected:
   // sites.
   bool mDidUnprefixWebkitBoxInEarlierDecl; // not :1 so we can use AutoRestore
 
+#ifdef DEBUG
+  // True if any parsing of URL values requires a sheet principal to have
+  // been passed in the nsCSSScanner constructor.  This is usually the case.
+  // It can be set to false, for example, when we create an nsCSSParser solely
+  // to parse a property value to test it for syntactic correctness.  When
+  // false, an assertion that mSheetPrincipal is non-null is skipped.  Should
+  // not be set to false if any nsCSSValues created during parsing can escape
+  // out of the parser.
+  bool mSheetPrincipalRequired;
+#endif
+
   // Stack of rule groups; used for @media and such.
   InfallibleTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
@@ -1285,6 +1296,9 @@ CSSParserImpl::CSSParserImpl()
     mInFailingSupportsRule(false),
     mSuppressErrors(false),
     mDidUnprefixWebkitBoxInEarlierDecl(false),
+#ifdef DEBUG
+    mSheetPrincipalRequired(true),
+#endif
     mNextFree(nullptr)
 {
 }
@@ -7608,8 +7622,9 @@ bool
 CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
 {
   if (!mSheetPrincipal) {
-    NS_NOTREACHED("Codepaths that expect to parse URLs MUST pass in an "
-                  "origin principal");
+    NS_ASSERTION(!mSheetPrincipalRequired,
+                 "Codepaths that expect to parse URLs MUST pass in an "
+                 "origin principal");
     return false;
   }
 
@@ -15275,6 +15290,17 @@ CSSParserImpl::IsValueValidForProperty(const nsCSSProperty aPropID,
   nsCSSScanner scanner(aPropValue, 0);
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, nullptr);
   InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
+
+#ifdef DEBUG
+  // We normally would need to pass in a sheet principal to InitScanner,
+  // because we might parse a URL value.  However, we will never use the
+  // parsed nsCSSValue (and so whether we have a sheet principal or not
+  // doesn't really matter), so to avoid failing the assertion in
+  // SetValueToURL, we set mSheetPrincipalRequired to false to declare
+  // that it's safe to skip the assertion.
+  AutoRestore<bool> autoRestore(mSheetPrincipalRequired);
+  mSheetPrincipalRequired = false;
+#endif
 
   nsAutoSuppressErrors suppressErrors(this);
 
