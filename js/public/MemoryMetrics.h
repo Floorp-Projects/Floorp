@@ -19,6 +19,7 @@
 #include "jspubtd.h"
 
 #include "js/HashTable.h"
+#include "js/TracingAPI.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 
