@@ -1,8 +1,7 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from marionette_test import MarionetteTestCase
-import unittest
+from marionette import MarionetteTestCase
 
 class TestRunJSTest(MarionetteTestCase):
     def test_basic(self):
