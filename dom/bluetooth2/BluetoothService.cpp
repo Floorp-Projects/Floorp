@@ -325,6 +325,20 @@ BluetoothService::UnregisterAllSignalHandlers(BluetoothSignalObserver* aHandler)
 }
 
 void
+BluetoothService::DistributeSignal(const nsAString& aName, const nsAString& aPath)
+{
+  DistributeSignal(aName, aPath, BluetoothValue(true));
+}
+
+void
+BluetoothService::DistributeSignal(const nsAString& aName, const nsAString& aPath,
+                                   const BluetoothValue& aValue)
+{
+  BluetoothSignal signal(nsString(aName), nsString(aPath), aValue);
+  DistributeSignal(signal);
+}
+
+void
 BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -653,11 +667,10 @@ BluetoothService::FireAdapterStateChanged(bool aEnable)
 
   InfallibleTArray<BluetoothNamedValue> props;
   BT_APPEND_NAMED_VALUE(props, "State", aEnable);
-  BluetoothValue value(props);
 
-  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
-                         NS_LITERAL_STRING(KEY_ADAPTER), value);
-  DistributeSignal(signal);
+  DistributeSignal(NS_LITERAL_STRING("PropertyChanged"),
+                   NS_LITERAL_STRING(KEY_ADAPTER),
+                   BluetoothValue(props));
 }
 
 void
