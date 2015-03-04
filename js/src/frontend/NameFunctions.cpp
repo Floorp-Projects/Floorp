@@ -650,6 +650,8 @@ class NameResolver
           case PNK_GENEXP:
           case PNK_ARRAY:
           case PNK_STATEMENTLIST:
+          case PNK_SEQ:
+          case PNK_ARGSBODY:
           // Initializers for individual variables, and computed property names
           // within destructuring patterns, may contain unnamed functions.
           case PNK_VAR:
@@ -661,6 +663,17 @@ class NameResolver
                 if (!resolve(element, prefix))
                     return false;
             }
+            goto done;
+
+          // Array comprehension nodes are lists with a single child -- PNK_FOR for
+          // comprehensions, PNK_LEXICALSCOPE for legacy comprehensions.  Probably
+          // this should be a non-list eventually.
+          case PNK_ARRAYCOMP:
+            MOZ_ASSERT(cur->isArity(PN_LIST));
+            MOZ_ASSERT(cur->pn_count == 1);
+            MOZ_ASSERT(cur->pn_head->isKind(PNK_LEXICALSCOPE) || cur->pn_head->isKind(PNK_FOR));
+            if (!resolve(cur->pn_head, prefix))
+                return false;
             goto done;
 
           case PNK_OBJECT:
@@ -705,16 +718,31 @@ class NameResolver
             goto done;
           }
 
-          case PNK_CATCHLIST:
-          case PNK_SEQ:
-          case PNK_ARGSBODY:
+          case PNK_CATCHLIST: {
+            MOZ_ASSERT(cur->isArity(PN_LIST));
+            for (ParseNode* catchNode = cur->pn_head; catchNode; catchNode = catchNode->pn_next) {
+                MOZ_ASSERT(catchNode->isKind(PNK_LEXICALSCOPE));
+                MOZ_ASSERT(catchNode->expr()->isKind(PNK_CATCH));
+                MOZ_ASSERT(catchNode->expr()->isArity(PN_TERNARY));
+                if (!resolve(catchNode->expr(), prefix))
+                    return false;
+            }
+            goto done;
+          }
+
           case PNK_LABEL:
           case PNK_DOT:
+            MOZ_ASSERT(cur->isArity(PN_NAME));
+            if (!resolve(cur->expr(), prefix))
+                return false;
+            goto done;
+
           case PNK_LEXICALSCOPE:
-          case PNK_ARRAYCOMP:
           case PNK_NAME:
-          case PNK_CLASSNAMES:
-            break; // for now
+            MOZ_ASSERT(cur->isArity(PN_NAME));
+            if (!resolve(cur->maybeExpr(), prefix))
+                return false;
+            goto done;
 
           case PNK_FUNCTION:
             MOZ_ASSERT(cur->isArity(PN_CODE));
@@ -727,6 +755,7 @@ class NameResolver
           case PNK_IMPORT_SPEC: // by PNK_IMPORT_SPEC_LIST
           case PNK_EXPORT_SPEC: // by PNK_EXPORT_SPEC_LIST
           case PNK_CALLSITEOBJ: // by PNK_TAGGED_TEMPLATE
+          case PNK_CLASSNAMES:  // by PNK_CLASS
             MOZ_CRASH("should have been handled by a parent node");
 
           case PNK_LIMIT: // invalid sentinel value
