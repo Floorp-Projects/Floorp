@@ -252,6 +252,8 @@ GetAccService()
 inline bool
 IPCAccessibilityActive()
 {
+	// XXX reenable when crashes are fixed
+	return false;
 #ifdef MOZ_B2G
   return false;
 #else
