@@ -16,7 +16,7 @@ interface nsIURI;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(9d127b63-dfad-484d-a0e1-cb82697a095b)]
+[scriptable, uuid(155378c1-ebb2-4492-917f-85483430d5f5)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -59,6 +59,11 @@ interface nsIInterceptedChannel : nsISupports
      * True if the underlying request was caused by a navigation attempt.
      */
     readonly attribute bool isNavigation;
+
+    /**
+     * This method allows to override the security info for the channel.
+     */
+    void setSecurityInfo(in nsISupports securityInfo);
 };
 
 /**

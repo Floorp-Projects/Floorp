@@ -375,7 +375,6 @@ private:
     void SetPushedStream(Http2PushedStream *stream);
 
 private:
-    nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
 
     nsRefPtr<nsInputStreamPump>       mTransactionPump;
