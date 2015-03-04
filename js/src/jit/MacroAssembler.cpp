@@ -1219,8 +1219,10 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
 {
     // Fast initialization of an empty object returned by allocateObject().
 
-    storePtr(ImmGCPtr(templateObj->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObj->group()), Address(obj, JSObject::offsetOfGroup()));
+
+    if (Shape *shape = templateObj->maybeShape())
+        storePtr(ImmGCPtr(shape), Address(obj, JSObject::offsetOfShape()));
 
     if (templateObj->isNative()) {
         NativeObject *ntemplate = &templateObj->as<NativeObject>();
@@ -1279,6 +1281,8 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
         }
     } else if (templateObj->is<UnboxedPlainObject>()) {
         const UnboxedLayout &layout = templateObj->as<UnboxedPlainObject>().layout();
+
+        storePtr(ImmWord(0), Address(obj, JSObject::offsetOfShape()));
 
         // Initialize reference fields of the object, per UnboxedPlainObject::create.
         if (const int32_t *list = layout.traceList()) {
