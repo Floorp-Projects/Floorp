@@ -600,7 +600,7 @@ JitCode *
 JitCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, uint32_t headerSize,
              ExecutablePool *pool, CodeKind kind)
 {
-    JitCode *codeObj = js::NewJitCode<allowGC>(cx);
+    JitCode *codeObj = Allocate<JitCode, allowGC>(cx);
     if (!codeObj) {
         pool->release(headerSize + bufferSize, kind);
         return nullptr;
