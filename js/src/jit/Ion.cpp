@@ -1777,7 +1777,7 @@ TrackAllProperties(JSContext *cx, JSObject *obj)
 {
     MOZ_ASSERT(obj->isSingleton());
 
-    for (Shape::Range<NoGC> range(obj->lastProperty()); !range.empty(); range.popFront())
+    for (Shape::Range<NoGC> range(obj->as<NativeObject>().lastProperty()); !range.empty(); range.popFront())
         EnsureTrackPropertyTypes(cx, obj, range.front().propid());
 }
 

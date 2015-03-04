@@ -4,7 +4,7 @@
 
 import sys
 
-import marionette_test
+from marionette import marionette_test
 from marionette_driver import errors
 from marionette_driver.errors import ErrorCodes
 

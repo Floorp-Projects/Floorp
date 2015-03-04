@@ -2921,7 +2921,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
     {}
 
     ICStub *getStub(ICStubSpace *space) {
-        RootedShape shape(cx, obj_->lastProperty());
+        RootedShape shape(cx, obj_->as<NativeObject>().lastProperty());
         if (kind == ICStub::GetElem_NativeSlot) {
             MOZ_ASSERT(obj_ == holder_);
             return ICStub::New<ICGetElem_NativeSlot>(
@@ -2930,7 +2930,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
         }
 
         MOZ_ASSERT(obj_ != holder_);
-        RootedShape holderShape(cx, holder_->lastProperty());
+        RootedShape holderShape(cx, holder_->as<NativeObject>().lastProperty());
         if (kind == ICStub::GetElem_NativePrototypeSlot) {
             return ICStub::New<ICGetElem_NativePrototypeSlot>(
                     space, getStubCode(), firstMonitorStub_, shape, name_, acctype_, needsAtomize_,
@@ -3812,7 +3812,7 @@ class ICGetProp_Primitive : public ICMonitoredStub
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            RootedShape protoShape(cx, prototype_->lastProperty());
+            RootedShape protoShape(cx, prototype_->as<NativeObject>().lastProperty());
             return ICStub::New<ICGetProp_Primitive>(space, getStubCode(), firstMonitorStub_,
                                                     protoShape, offset_);
         }
@@ -3929,7 +3929,7 @@ class ReceiverGuard
     static Token objectToken(JSObject *obj) {
         if (obj->is<UnboxedPlainObject>())
             return groupToken(obj->group());
-        return shapeToken(obj->lastProperty());
+        return shapeToken(obj->maybeShape());
     }
 
     explicit ReceiverGuard(Token token)
@@ -4421,7 +4421,7 @@ class ICGetProp_CallScripted : public ICGetPropCallPrototypeGetter
 
         ICStub *getStub(ICStubSpace *space) {
             ReceiverGuard::Token guard = ReceiverGuard::objectToken(receiver_);
-            Shape *holderShape = holder_->lastProperty();
+            Shape *holderShape = holder_->as<NativeObject>().lastProperty();
             return ICStub::New<ICGetProp_CallScripted>(space, getStubCode(), firstMonitorStub_,
                                                        guard, holder_, holderShape, getter_,
                                                        pcOffset_);
@@ -4467,7 +4467,7 @@ class ICGetProp_CallNative : public ICGetPropCallGetter
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            RootedShape shape(cx, holder_->lastProperty());
+            RootedShape shape(cx, holder_->as<NativeObject>().lastProperty());
             return ICStub::New<ICGetProp_CallNative>(space, getStubCode(), firstMonitorStub_,
                                                      holder_, shape, getter_, pcOffset_);
         }
@@ -4514,7 +4514,7 @@ class ICGetProp_CallNativePrototype : public ICGetPropCallPrototypeGetter
 
         ICStub *getStub(ICStubSpace *space) {
             ReceiverGuard::Token guard = ReceiverGuard::objectToken(receiver_);
-            Shape *holderShape = holder_->lastProperty();
+            Shape *holderShape = holder_->as<NativeObject>().lastProperty();
             return ICStub::New<ICGetProp_CallNativePrototype>(space, getStubCode(), firstMonitorStub_,
                                                               guard, holder_, holderShape,
                                                               getter_, pcOffset_);
@@ -4964,7 +4964,7 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler
         if (newGroup == oldGroup_)
             newGroup = nullptr;
 
-        RootedShape newShape(cx, obj_->lastProperty());
+        RootedShape newShape(cx, obj_->as<NativeObject>().lastProperty());
 
         return ICStub::New<ICSetProp_NativeAddImpl<ProtoChainDepth>>(
                     space, getStubCode(), oldGroup_, shapes, newShape, newGroup, offset_);
@@ -5230,7 +5230,7 @@ class ICSetProp_CallScripted : public ICSetPropCallSetter
 
         ICStub *getStub(ICStubSpace *space) {
             ReceiverGuard::Token guard = ReceiverGuard::objectToken(obj_);
-            Shape *holderShape = holder_->lastProperty();
+            Shape *holderShape = holder_->as<NativeObject>().lastProperty();
             return ICStub::New<ICSetProp_CallScripted>(space, getStubCode(), guard, holder_,
                                                        holderShape, setter_, pcOffset_);
         }
@@ -5266,7 +5266,7 @@ class ICSetProp_CallNative : public ICSetPropCallSetter
 
         ICStub *getStub(ICStubSpace *space) {
             ReceiverGuard::Token guard = ReceiverGuard::objectToken(obj_);
-            Shape *holderShape = holder_->lastProperty();
+            Shape *holderShape = holder_->as<NativeObject>().lastProperty();
             return ICStub::New<ICSetProp_CallNative>(space, getStubCode(), guard, holder_,
                                                      holderShape, setter_, pcOffset_);
         }

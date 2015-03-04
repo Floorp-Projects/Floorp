@@ -442,7 +442,8 @@ class StoreTypedArrayElementStaticPolicy;
 class StoreTypedArrayPolicy : public TypePolicy
 {
   private:
-    static bool adjustValueInput(TempAllocator &alloc, MInstruction *ins, int arrayType, MDefinition *value, int valueOperand);
+    static bool adjustValueInput(TempAllocator &alloc, MInstruction *ins, Scalar::Type arrayType,
+                                 MDefinition *value, int valueOperand);
 
     friend class StoreTypedArrayHolePolicy;
     friend class StoreTypedArrayElementStaticPolicy;

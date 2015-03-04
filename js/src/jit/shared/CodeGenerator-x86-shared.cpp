@@ -2512,6 +2512,10 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
     }
 
     if (ins->lanesMatch(0, 1, 0, 1)) {
+        if (AssemblerX86Shared::HasSSE3() && !AssemblerX86Shared::HasAVX()) {
+            masm.vmovddup(input, output);
+            return;
+        }
         FloatRegister inputCopy = masm.reusedInputFloat32x4(input, output);
         masm.vmovlhps(input, inputCopy, output);
         return;

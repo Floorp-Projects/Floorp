@@ -3802,7 +3802,7 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
 }
 
 const LAZY_RESIZE_INTERVAL_MS = 200;
-const OVERFLOW_PANEL_HIDE_DELAY_MS = 500
+const OVERFLOW_PANEL_HIDE_DELAY_MS = 500;
 
 function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
@@ -4197,17 +4197,17 @@ OverflowableToolbar.prototype = {
 
   _hideTimeoutId: null,
   _showWithTimeout: function() {
-    this.show();
-    let window = this._toolbar.ownerDocument.defaultView;
-    if (this._hideTimeoutId) {
-      window.clearTimeout(this._hideTimeoutId);
-      this._hideTimeoutId = null;
-    }
-    this._hideTimeoutId = window.setTimeout(() => {
-      if (!this._panel.firstChild.matches(":hover")) {
-        this._panel.hidePopup();
+    this.show().then(function () {
+      let window = this._toolbar.ownerDocument.defaultView;
+      if (this._hideTimeoutId) {
+        window.clearTimeout(this._hideTimeoutId);
       }
-    }, OVERFLOW_PANEL_HIDE_DELAY_MS);
+      this._hideTimeoutId = window.setTimeout(() => {
+        if (!this._panel.firstChild.matches(":hover")) {
+          this._panel.hidePopup();
+        }
+      }, OVERFLOW_PANEL_HIDE_DELAY_MS);
+    }.bind(this));
   },
 };
 
