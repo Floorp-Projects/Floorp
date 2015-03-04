@@ -154,8 +154,8 @@ let gSyncPane = {
       if (this.selectedCount)
         this.clearSelection();
     });
-    setEventListener("syncComputerName", "change", function () {
-      gSyncUtils.changeName(this);
+    setEventListener("syncComputerName", "change", function (e) {
+      gSyncUtils.changeName(e.target);
     });
     setEventListener("unlinkDevice", "click", function () {
       gSyncPane.startOver(true);
@@ -203,8 +203,8 @@ let gSyncPane = {
     setEventListener("rejectUnlinkFxaAccount", "click", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
-    setEventListener("fxaSyncComputerName", "change", function () {
-      gSyncUtils.changeName(this);
+    setEventListener("fxaSyncComputerName", "change", function (e) {
+      gSyncUtils.changeName(e.target);
     });
     setEventListener("tosPP-small-ToS", "click", gSyncPane.openToS);
     setEventListener("tosPP-small-PP", "click", gSyncPane.openPrivacyPolicy);
