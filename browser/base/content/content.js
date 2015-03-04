@@ -1109,3 +1109,8 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
       break;
   }
 });
+
+addMessageListener("ContextMenu:Canvas:ToDataURL", (message) => {
+  let dataURL = message.objects.target.toDataURL();
+  sendAsyncMessage("ContextMenu:Canvas:ToDataURL:Result", { dataURL });
+});
