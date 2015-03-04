@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Testing', 'Reftest')
+
 if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev', 'mobile/android'):
     DEFINES['BOOTSTRAP'] = True
     if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev'):

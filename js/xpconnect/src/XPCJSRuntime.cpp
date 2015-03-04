@@ -20,6 +20,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIDebug2.h"
+#include "nsIDocShell.h"
 #include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -1451,6 +1452,13 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     }
     if (!win)
         return true;
+
+    if (win->GetIsPrerendered()) {
+        // We cannot display a dialog if the page is being prerendered, so
+        // just kill the page.
+        mozilla::dom::HandlePrerenderingViolation(win);
+        return false;
+    }
 
     // Show the prompt to the user, and kill if requested.
     nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog();

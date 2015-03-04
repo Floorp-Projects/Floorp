@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1133624 - Test for lang-specific default stylesheet for ruby</title>
+  <link rel="stylesheet" href="common.css">
+</head>
+<body style="font: 200%/normal Ahem !important">
+  <p lang="en"><ruby><rb>base x x<rt>text x x</ruby></p>
+  <p lang="ja"><ruby><rb>base x x<rt>text x x</ruby></p>
+  <p lang="zh-CN"><ruby><rb>base x x<rt>text x x</ruby></p>
+  <p lang="zh-TW"><ruby><rb>base x x<rt>text x x</ruby></p>
+</body>
+</html>

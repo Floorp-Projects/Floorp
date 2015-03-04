@@ -2417,13 +2417,7 @@ EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj)
     return true;
   }
 
-  nsIDocShell* docShell = window->GetDocShell();
-  if (!docShell) {
-    // Without a docshell, we cannot check the safety.
-    return true;
-  }
-
-  if (docShell->GetIsPrerendered()) {
+  if (window->GetIsPrerendered()) {
     HandlePrerenderingViolation(window);
     // When the bindings layer sees a false return value, it returns false form
     // the JSNative in order to trigger an uncatchable exception.
