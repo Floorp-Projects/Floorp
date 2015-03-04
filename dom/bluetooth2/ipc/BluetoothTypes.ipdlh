@@ -14,7 +14,6 @@ namespace bluetooth {
  * Value structure for returns from bluetooth. Currently modeled after dbus
  * returns, which can be a 32-bit int, an UTF16 string, a bool, or an array of
  * UTF16 strings. Can also hold key-value pairs for dictionary-ish access.
- * 
  */
 union BluetoothValue
 {
@@ -29,7 +28,6 @@ union BluetoothValue
 /**
  * Key-value pair for dicts returned by the bluetooth backend. Used for things
  * like property updates, where the property will have a name and a type.
- * 
  */
 struct BluetoothNamedValue
 {
