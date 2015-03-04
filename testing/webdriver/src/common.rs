@@ -168,8 +168,8 @@ impl LocatorStrategy {
             "link text" => Ok(LocatorStrategy::LinkText),
             "partial link text" => Ok(LocatorStrategy::PartialLinkText),
             "xpath" => Ok(LocatorStrategy::XPath),
-            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                         "Unknown locator strategy"))
+            x => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                         &format!("Unknown locator strategy {}", x)[..]))
         }
     }
 }
