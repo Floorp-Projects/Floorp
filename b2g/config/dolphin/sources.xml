@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="ef937d1aca7c4cf89ecb5cc43ae8c21c2000a9db">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="eff3321ab4e65da3f906688ebb55ddf1e93d9452"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="b8f7c020b14629decf79d332557b0dd60cc02eee"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2e85143db5d5f6edc4c2b97263c02b558fee757e"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -102,7 +102,7 @@
   <project name="platform/external/yaffs2" path="external/yaffs2" revision="a2cff2275e1b501ff478b03757d6e4f05fddc2db"/>
   <project name="platform/external/zlib" path="external/zlib" revision="a5c7131da47c991585a6c6ac0c063b6d7d56e3fc"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="2d12cb68a6c680e1ef50c6fbd19f782f67aec9de"/>
-  <project name="platform/frameworks/native" path="frameworks/native" revision="b6018ccb81af66e0523a4bfdc45f0bd2ab472b55"/>
+  <project name="platform/frameworks/native" path="frameworks/native" revision="a1a6f7f8ca11eb722f363a05fb60c2e66c8fbf0c"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="dbbe673145107e99883f62bafd70c5f43f11065c"/>
   <project name="platform/frameworks/wilhelm" path="frameworks/wilhelm" revision="aac6c4bb59a6577c97cbda68699829b507b7490d"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="fbeca55f4695dd07c0291213403533b8fbca4885"/>
