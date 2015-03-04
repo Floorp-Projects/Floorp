@@ -41,30 +41,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void
-NS_MeanAndStdDev(double aNumberOfValues,
-                 double aSumOfValues, double aSumOfSquaredValues,
-                 double* aMeanResult, double* aStdDevResult)
-{
-  double mean = 0.0, var = 0.0, stdDev = 0.0;
-  if (aNumberOfValues > 0.0 && aSumOfValues >= 0) {
-    mean = aSumOfValues / aNumberOfValues;
-    double temp =
-      (aNumberOfValues * aSumOfSquaredValues) - (aSumOfValues * aSumOfValues);
-    if (temp < 0.0 || aNumberOfValues <= 1) {
-      var = 0.0;
-    } else {
-      var = temp / (aNumberOfValues * (aNumberOfValues - 1));
-    }
-    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-    stdDev = var != 0.0 ? sqrt(var) : 0.0;
-  }
-  *aMeanResult = mean;
-  *aStdDevResult = stdDev;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 #define NS_IMPL_REFCNT_LOGGING
 
 #ifdef NS_IMPL_REFCNT_LOGGING
@@ -388,8 +364,8 @@ public:
 
     fprintf(aOut,
             "\n" \
-            "     |<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<---References-->|\n" \
-            "                                              Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem\n");
+            "     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|<--References--->|\n" \
+            "                                              Per-Inst   Leaked    Total      Rem    Total      Rem\n");
 
     this->DumpTotal(aOut);
 
@@ -404,20 +380,11 @@ public:
       return;
     }
 
-    double meanObjs;
-    double stddevObjs;
-    NS_MeanAndStdDev(stats->mCreates + stats->mDestroys,
-                     stats->mObjsOutstandingTotal,
-                     stats->mObjsOutstandingSquared,
-                     &meanObjs, &stddevObjs);
-
     if ((stats->mAddRefs - stats->mReleases) != 0 ||
         stats->mAddRefs != 0 ||
         (stats->mCreates - stats->mDestroys) != 0 ||
-        stats->mCreates != 0 ||
-        meanObjs != 0 ||
-        stddevObjs != 0) {
-      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f) %8" PRIu64 " %8" PRIu64 "\n",
+        stats->mCreates != 0) {
+      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " %8" PRIu64 "\n",
               aIndex + 1, mClassName,
               (int32_t)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))
@@ -425,8 +392,6 @@ public:
                 : mTotalLeaked,
               stats->mCreates,
               (stats->mCreates - stats->mDestroys),
-              meanObjs,
-              stddevObjs,
               stats->mAddRefs,
               (stats->mAddRefs - stats->mReleases));
     }
