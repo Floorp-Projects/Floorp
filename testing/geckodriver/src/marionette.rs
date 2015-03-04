@@ -352,7 +352,7 @@ impl MarionetteSession {
 
                 WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
             },
-            GetCookie(_) => {
+            GetCookie => {
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
                              ErrorStatus::UnknownError,
@@ -673,7 +673,7 @@ impl ToMarionette for WebDriverMessage {
                                         ErrorStatus::UnknownError,
                                         "Marionette response was not an object").clone();
                 data.insert("element".to_string(), e.id.to_json());
-                (Some("findElement"), Some(Ok(Json::Object(data.clone()))))
+                (Some("findElements"), Some(Ok(Json::Object(data.clone()))))
             },
             IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
             IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
@@ -707,7 +707,7 @@ impl ToMarionette for WebDriverMessage {
             },
             ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
             ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
-            GetCookie(ref x) => (Some("getCookies"), Some(x.to_marionette())),
+            GetCookie => (Some("getCookies"), None),
             AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
             DismissAlert => (Some("dismissDialog"), None),
             AcceptAlert => (Some("acceptDialog"), None),
@@ -757,7 +757,9 @@ impl ToMarionette for WindowSizeParameters {
 
 impl ToMarionette for SwitchToWindowParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        Ok(self.to_json())
+        let mut data = BTreeMap::new();
+        data.insert("name".to_string(), self.handle.to_json());
+        Ok(Json::Object(data))
     }
 }
 
@@ -770,7 +772,7 @@ impl ToMarionette for LocatorParameters {
 impl ToMarionette for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
         let mut data = BTreeMap::new();
-        data.insert("id".to_string(), try!(self.id.to_marionette()));
+        data.insert("id".to_string(), self.id.to_json());
         Ok(Json::Object(data))
     }
 }
