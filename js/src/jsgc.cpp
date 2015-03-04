@@ -2632,7 +2632,7 @@ GCRuntime::updatePointersToRelocatedCells()
 
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
         Debugger::markAll(&trc);
-        Debugger::markAllCrossCompartmentEdges(&trc);
+        Debugger::markIncomingCrossCompartmentEdges(&trc);
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             WeakMapBase::markAll(c, &trc);
