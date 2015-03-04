@@ -1022,10 +1022,8 @@ BluetoothA2dpManager::GetPlayStatusNotification()
     return;
   }
 
-  bs->DistributeSignal(
-    BluetoothSignal(NS_LITERAL_STRING(REQUEST_MEDIA_PLAYSTATUS_ID),
-                    NS_LITERAL_STRING(KEY_ADAPTER),
-                    InfallibleTArray<BluetoothNamedValue>()));
+  bs->DistributeSignal(NS_LITERAL_STRING(REQUEST_MEDIA_PLAYSTATUS_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER));
 }
 
 /* Player application settings is optional for AVRCP 1.3. B2G
