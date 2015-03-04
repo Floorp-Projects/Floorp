@@ -665,6 +665,12 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
 
   mResponse = BeginAndGetFilteredResponse(response);
 
+  nsCOMPtr<nsISupports> securityInfo;
+  rv = channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (securityInfo) {
+    mResponse->SetSecurityInfo(securityInfo);
+  }
+
   // We open a pipe so that we can immediately set the pipe's read end as the
   // response's body. Setting the segment size to UINT32_MAX means that the
   // pipe has infinite space. The nsIChannel will continue to buffer data in
