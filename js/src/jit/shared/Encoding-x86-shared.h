@@ -130,6 +130,7 @@ enum TwoByteOpcodeID {
     OP2_MOVPS_VpsWps    = 0x10,
     OP2_MOVSD_WsdVsd    = 0x11,
     OP2_MOVPS_WpsVps    = 0x11,
+    OP2_MOVDDUP_VqWq    = 0x12,
     OP2_MOVHLPS_VqUq    = 0x12,
     OP2_MOVSLDUP_VpsWps = 0x12,
     OP2_UNPCKLPS_VsdWsd = 0x14,

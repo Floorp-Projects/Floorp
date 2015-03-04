@@ -49,7 +49,6 @@ SEARCH_PATHS = [
     'testing/web-platform',
     'testing/web-platform/harness',
     'testing/marionette/client',
-    'testing/marionette/client/marionette',
     'testing/marionette/transport',
     'testing/marionette/driver',
     'testing/mozbase/mozcrash',

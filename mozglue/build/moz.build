@@ -88,3 +88,13 @@ LDFLAGS += CONFIG['MOZ_GLUE_WRAP_LDFLAGS']
 
 if not CONFIG['_MSC_VER']:
     FAIL_ON_WARNINGS = True
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    # On OSX 10.10.3, a dead lock happens in some cases involving dynamic
+    # symbol resolution for symbols that jemalloc itself uses. While it
+    # might be possible to find a way to avoid all such symbol resolutions,
+    # it's currently not possible because at the very least there's a call
+    # to pthread_self from tsd_init_check_recursion, which is necessary
+    # because somehow clang doesn't want to accept the __thread keyword
+    # for TLS.
+    LDFLAGS += ['-Wl,-bind_at_load']

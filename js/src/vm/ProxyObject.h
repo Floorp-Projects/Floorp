@@ -16,6 +16,8 @@ namespace js {
 // instantiated.
 class ProxyObject : public JSObject
 {
+    HeapPtrShape shape;
+
     // GetProxyDataLayout computes the address of this field.
     ProxyDataLayout data;
 

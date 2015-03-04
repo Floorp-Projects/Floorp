@@ -300,6 +300,8 @@ public:
 
   void UpdateSticky();
 
+  void UpdatePrevScrolledRect();
+
   bool IsRectNearlyVisible(const nsRect& aRect) const;
   nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const;
 
@@ -421,6 +423,8 @@ public:
 
   // The scroll position where we last updated image visibility.
   nsPoint mLastUpdateImagesPos;
+
+  nsRect mPrevScrolledRect;
 
   FrameMetrics::ViewID mScrollParentID;
 

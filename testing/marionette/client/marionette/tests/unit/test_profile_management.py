@@ -4,7 +4,7 @@
 
 import os
 from marionette_driver.errors import JavascriptException
-from marionette_test import MarionetteTestCase
+from marionette import MarionetteTestCase
 
 class TestLog(MarionetteTestCase):
     def setUp(self):

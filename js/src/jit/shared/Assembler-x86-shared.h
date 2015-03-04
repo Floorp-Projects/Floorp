@@ -2170,6 +2170,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void vmovddup(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE3());
+        masm.vmovddup_rr(src.encoding(), dest.encoding());
+    }
     void vmovhlps(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.vmovhlps_rr(src1.encoding(), src0.encoding(), dest.encoding());

@@ -1678,9 +1678,6 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         ObjectGroup *group = obj->groupFromGC();
         traverse(group);
 
-        Shape *shape = obj->lastProperty();
-        PushMarkStack(this, shape);
-
         /* Call the trace hook if necessary. */
         const Class *clasp = group->clasp();
         if (clasp->trace) {
@@ -1691,11 +1688,13 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
                             (!obj->compartment()->options().getTrace() || !obj->isOwnGlobal())),
                           clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             if (clasp->trace == InlineTypedObject::obj_trace) {
-                TypeDescr *descr = &obj->as<InlineOpaqueTypedObject>().typeDescr();
+                Shape *shape = obj->as<InlineTypedObject>().shapeFromGC();
+                PushMarkStack(this, shape);
+                TypeDescr *descr = &obj->as<InlineTypedObject>().typeDescr();
                 if (!descr->hasTraceList())
                     return;
                 unboxedTraceList = descr->traceList();
-                unboxedMemory = obj->as<InlineOpaqueTypedObject>().inlineTypedMem();
+                unboxedMemory = obj->as<InlineTypedObject>().inlineTypedMem();
                 goto scan_unboxed;
             }
             if (clasp == &UnboxedPlainObject::class_) {
@@ -1709,10 +1708,14 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             clasp->trace(this, obj);
         }
 
-        if (!shape->isNative())
+        if (!clasp->isNative())
             return;
 
         NativeObject *nobj = &obj->as<NativeObject>();
+
+        Shape *shape = nobj->lastProperty();
+        PushMarkStack(this, shape);
+
         unsigned nslots = nobj->slotSpan();
 
         do {

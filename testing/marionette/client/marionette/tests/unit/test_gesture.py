@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase
-from gestures import smooth_scroll, pinch
+from marionette import MarionetteTestCase
+from marionette.gestures import smooth_scroll
 
 class testGestures(MarionetteTestCase):
     check_in_viewport = """
