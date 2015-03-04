@@ -566,7 +566,6 @@ pref("media.fragmented-mp4.android-media-codec.enabled", true);
 pref("media.fragmented-mp4.android-media-codec.preferred", true);
 
 // optimize images memory usage
-pref("image.downscale-during-decode.enabled", true);
 pref("image.mem.decodeondraw", true);
 
 #ifdef NIGHTLY_BUILD
