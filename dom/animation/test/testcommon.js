@@ -46,3 +46,19 @@ function waitForFrame() {
 function waitForAllPlayers(players) {
   return Promise.all(players.map(function(player) { return player.ready; }));
 }
+
+/**
+ * Returns a Promise that is resolved after the next two animation frames have
+ * occured (that is, after two consecutive requestAnimationFrame callbacks
+ * have been called).
+ */
+function waitForTwoAnimationFrames() {
+   return new Promise(function(resolve, reject) {
+     window.requestAnimationFrame(function() {
+       window.requestAnimationFrame(function() {
+         resolve();
+       });
+     });
+   });
+}
+

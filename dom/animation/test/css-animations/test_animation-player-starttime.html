@@ -43,6 +43,22 @@ const CSS_ANIM_EVENTS = ['animationstart', 'animationiteration', 'animationend']
 const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
 
+/**
+ * These helpers get the value that the startTime needs to be set to, to put an
+ * animation that uses the above ANIM_DELAY_MS and ANIM_DUR_MS values into the
+ * before, active and after phases, respectively.
+ */
+function startTimeForBeforePhase(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS / 2;
+}
+function startTimeForActivePhase(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS / 2;
+}
+function startTimeForAfterPhase(timeline) {
+  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS - ANIM_DELAY_MS / 2;
+}
+
+
 // Expected computed 'margin-left' values at points during the active interval:
 // When we assert_between_inclusive using these values we could in theory cause
 // intermittent failure due to very long delays between paints, but since the
@@ -407,86 +423,120 @@ async_test(function(t) {
 }, 'Skipping backwards through animation');
 
 
-// Here we have multiple tests to check that redundant startTime changes do NOT
+// Next we have multiple tests to check that redundant startTime changes do NOT
 // dispatch events. It's impossible to distinguish between events not being
 // dispatched and events just taking an incredibly long time to dispatch
-// without some sort of risk of creating intermittent failure. We have a short
-// timeout here since we don't want to delay the completion of this test file
-// waiting for a long time to make "more sure" events weren't dispatched rather
-// than being late.
-//
-// We test:
-//
-//   * before -> active, then back
-//   * before -> after, then back
-//   * active -> before, then back
-//   * active -> after, then back
-//   * after -> before, then back
-//   * after -> active, then back
-//
-// We do all these tests in a single async_test since that allows us to share
-// the timeout that we use to wait so that this test file isn't delayed by the
-// timeout time multiplied by number of tests.
+// without waiting an infinitely long time. Obviously we don't want to do that
+// (block this test from finishing forever), so instead we just listen for
+// events until two animation frames (i.e. requestAnimationFrame callbacks)
+// have happened, then assume that no events will ever be dispatched for the
+// redundant changes if no events were detected in that time.
+
 async_test(function(t) {
-  var divs = new Array(6);
-  var eventWatchers = new Array(6);
-  var players = new Array(6);
-  for (var i = 0; i < 6; i++) {
-    divs[i] = addDiv(t, {'class': 'animated-div'});
-    eventWatchers[i] = new EventWatcher(divs[i], CSS_ANIM_EVENTS);
-    divs[i].style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
-    players[i] = divs[i].getAnimationPlayers()[0];
-  }
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
 
-  var beforeTime = document.timeline.currentTime - ANIM_DELAY_MS / 2;
-  var activeTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS / 2;
-  var afterTime = document.timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS - ANIM_DELAY_MS / 2;
+  player.startTime = startTimeForActivePhase(player.timeline);
+  player.startTime = startTimeForBeforePhase(player.timeline);
 
-  // before -> active, then back:
-  players[0].startTime = activeTime;
-  players[0].startTime = beforeTime;
-
-  // before -> after, then back:
-  players[1].startTime = afterTime;
-  players[1].startTime = beforeTime;
-
-  // active -> before, then back:
-  eventWatchers[2].waitForEvent('animationstart').then(function() {
-    players[2].startTime = beforeTime;
-    players[2].startTime = activeTime;
-  });
-  players[2].startTime = activeTime; // get us into the initial state
-
-  // active -> after, then back:
-  eventWatchers[3].waitForEvent('animationstart').then(function() {
-    players[3].startTime = afterTime;
-    players[3].startTime = activeTime;
-  });
-  players[3].startTime = activeTime; // get us into the initial state
-
-  // after -> before, then back:
-  eventWatchers[4].waitForEvents(['animationstart', 'animationend']).then(function() {
-    players[4].startTime = beforeTime;
-    players[4].startTime = afterTime;
-  });
-  players[4].startTime = afterTime; // get us into the initial state
-
-  // after -> active, then back:
-  eventWatchers[5].waitForEvents(['animationstart', 'animationend']).then(function() {
-    players[5].startTime = activeTime;
-    players[5].startTime = afterTime;
-  });
-  players[5].startTime = afterTime; // get us into the initial state
-
-  // See the long comment documenting this async_test for an explanation of
-  // why we have this timeout and its relationship to intermittent failure.
-  setTimeout(function() {
-    for (var i = 0; i < 6; i++) {
-      eventWatchers[i].stopWatching();
-    }
+  waitForTwoAnimationFrames().then(function() {
+    eventWatcher.stopWatching();
     t.done();
-  }, 1000);
-}, 'Redundant changes');
+  });
+}, 'Redundant change, before -> active, then back');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
+
+  player.startTime = startTimeForAfterPhase(player.timeline);
+  player.startTime = startTimeForBeforePhase(player.timeline);
+
+  waitForTwoAnimationFrames().then(function() {
+    eventWatcher.stopWatching();
+    t.done();
+  });
+}, 'Redundant change, before -> after, then back');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
+
+  eventWatcher.waitForEvent('animationstart').then(function() {
+    player.startTime = startTimeForBeforePhase(player.timeline);
+    player.startTime = startTimeForActivePhase(player.timeline);
+
+    waitForTwoAnimationFrames().then(function() {
+      eventWatcher.stopWatching();
+      t.done();
+    });
+  });
+  // get us into the initial state:
+  player.startTime = startTimeForActivePhase(player.timeline);
+}, 'Redundant change, active -> before, then back');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
+
+  eventWatcher.waitForEvent('animationstart').then(function() {
+    player.startTime = startTimeForAfterPhase(player.timeline);
+    player.startTime = startTimeForActivePhase(player.timeline);
+
+    waitForTwoAnimationFrames().then(function() {
+      eventWatcher.stopWatching();
+      t.done();
+    });
+  });
+  // get us into the initial state:
+  player.startTime = startTimeForActivePhase(player.timeline);
+}, 'Redundant change, active -> after, then back');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
+
+  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+    player.startTime = startTimeForBeforePhase(player.timeline);
+    player.startTime = startTimeForAfterPhase(player.timeline);
+
+    waitForTwoAnimationFrames().then(function() {
+      eventWatcher.stopWatching();
+      t.done();
+    });
+  });
+  // get us into the initial state:
+  player.startTime = startTimeForAfterPhase(player.timeline);
+}, 'Redundant change, after -> before, then back');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  div.style.animation = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
+  var player = div.getAnimationPlayers()[0];
+
+  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+    player.startTime = startTimeForActivePhase(player.timeline);
+    player.startTime = startTimeForAfterPhase(player.timeline);
+
+    waitForTwoAnimationFrames().then(function() {
+      eventWatcher.stopWatching();
+      t.done();
+    });
+  });
+  // get us into the initial state:
+  player.startTime = startTimeForAfterPhase(player.timeline);
+}, 'Redundant change, after -> active, then back');
 
 
 async_test(function(t) {
