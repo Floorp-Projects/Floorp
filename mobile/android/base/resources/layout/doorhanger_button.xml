@@ -7,6 +7,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:minHeight="48dip"
-        android:textColor="#FF222222"
+        android:textColor="@color/placeholder_active_grey"
         android:textSize="14sp"
         android:background="@drawable/action_bar_button"/>

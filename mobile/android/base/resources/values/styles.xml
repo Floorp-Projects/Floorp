@@ -198,9 +198,11 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:paddingTop">0dp</item>
-        <item name="android:stretchMode">columnWidth</item>
+        <item name="android:stretchMode">spacingWidth</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+        <item name="android:gravity">center</item>
         <item name="android:numColumns">auto_fit</item>
-        <item name="android:columnWidth">@dimen/tabs_grid_view_column_width</item>
+        <item name="android:columnWidth">@dimen/new_tablet_tab_panel_column_width</item>
         <item name="android:horizontalSpacing">2dp</item>
         <item name="android:verticalSpacing">@dimen/new_tablet_tab_panel_grid_vspacing</item>
         <item name="android:drawSelectorOnTop">true</item>
@@ -278,7 +280,7 @@
         <item name="android:layout_width">@dimen/firstrun_content_width</item>
         <item name="android:layout_height">60dp</item>
         <item name="android:textColor">@color/android:white</item>
-        <item name="android:background">@color/firstrun_pager_button</item>
+        <item name="android:background">@color/action_orange</item>
         <item name="android:textSize">18sp</item>
     </style>
 
@@ -412,12 +414,12 @@
     </style>
 
     <style name="TextAppearance.Widget.DoorHanger.Medium" parent="TextAppearance.Medium">
-        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
     <style name="TextAppearance.Widget.DoorHanger.Small" parent="TextAppearance.Small">
-        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
@@ -655,7 +657,7 @@
     </style>
 
     <style name="WebView.Titlebar.Title">
-        <item name="android:textColor">#ff222222</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
     </style>
 
     <style name="GeckoDialogTitle">
@@ -775,7 +777,7 @@
 
     <style name="GeckoActionBar.Buttons">
         <item name="android:background">@android:color/transparent</item>
-        <item name="android:textColor">@color/text_color_primary</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:gravity">right</item>
     </style>
 
@@ -834,13 +836,13 @@
 
     <style name="TextAppearance.FirstrunRegular.Body">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">#777777</item>
+        <item name="android:textColor">@color/placeholder_grey</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
     <style name="TextAppearance.FirstrunRegular.Link">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">#0096DD</item>
+        <item name="android:textColor">@color/link_blue</item>
     </style>
 
     <!-- Remote Tabs home panel -->
@@ -862,7 +864,7 @@
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance">
-        <item name="android:textColor">#777777</item>
+        <item name="android:textColor">@color/placeholder_grey</item>
         <item name="android:textSize">16sp</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
         <item name="android:layout_marginLeft">8dp</item>
@@ -870,7 +872,7 @@
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance.Header">
-        <item name="android:textColor">#222222</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
         <item name="android:textSize">20sp</item>
         <item name="android:layout_marginBottom">8dp</item>
     </style>

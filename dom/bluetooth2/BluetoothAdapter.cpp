@@ -893,9 +893,10 @@ BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aValue.get_ArrayOfBluetoothNamedValue();
 
-  MOZ_ASSERT(arr.Length() == 2 &&
+  MOZ_ASSERT(arr.Length() == 3 &&
              arr[0].value().type() == BluetoothValue::TnsString && // Address
-             arr[1].value().type() == BluetoothValue::Tbool);      // Paired
+             arr[1].value().type() == BluetoothValue::Tbool &&     // Paired
+             arr[2].value().type() == BluetoothValue::TnsString);  // Name
   MOZ_ASSERT(!arr[0].value().get_nsString().IsEmpty() &&
              arr[1].value().get_bool());
 

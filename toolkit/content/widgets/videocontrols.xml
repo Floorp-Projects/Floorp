@@ -104,6 +104,7 @@
           this.durationValue = "";
           this.valueBar = null;
           this.isDragging = false;
+          this.isDraggingComplete = true;
           this.wasPausedBeforeDrag = true;
 
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
@@ -173,12 +174,16 @@
                 this.isDragging = isDragging;
                 if (isDragging) {
                     this.wasPausedBeforeDrag = this.Utils.video.paused;
+                    this.isDraggingComplete = false;
                     this.previousPlaybackRate = this.Utils.video.playbackRate;
                     this.Utils.video.pause();
-                } else if (!this.wasPausedBeforeDrag) {
+                } else if (!this.wasPausedBeforeDrag && !this.isDraggingComplete) {
+                    this.isDraggingComplete = true;
                     // After the drag ends, resume playing.
                     this.Utils.video.playbackRate = this.previousPlaybackRate;
                     this.Utils.video.play();
+                } else {
+                    this.isDraggingComplete = true;
                 }
             }
           ]]>
@@ -1008,6 +1013,7 @@
                     if (!element.hasAttribute("fadeout"))
                         return;
 
+                    this.scrubber.dragStateChanged(false);
                     element.hidden = true;
                 },
 

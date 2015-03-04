@@ -13,9 +13,18 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothNamedValue;
-class BluetoothValue;
 class BluetoothReplyRunnable;
+class BluetoothValue;
 
+//
+// BluetoothUuid <-> uuid string conversion
+//
+
+/**
+ * Convert BluetoothUuid object to xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx uuid string.
+ * This utility function is used by gecko internal only to convert BluetoothUuid
+ * created by bluetooth stack to uuid string representation.
+ */
 void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
 
@@ -27,10 +36,9 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
 void
 StringToUuid(const char* aString, BluetoothUuid& aUuid);
 
-bool
-SetJsObject(JSContext* aContext,
-            const BluetoothValue& aValue,
-            JS::Handle<JSObject*> aObj);
+//
+// Broadcast system message
+//
 
 bool
 BroadcastSystemMessage(const nsAString& aType,
@@ -40,41 +48,59 @@ bool
 BroadcastSystemMessage(const nsAString& aType,
                        const InfallibleTArray<BluetoothNamedValue>& aData);
 
+//
+// Dispatch bluetooth reply to main thread
+//
+
 /**
- * Dispatch BluetoothReply to main thread. The reply contains an error string
- * if the request fails.
+ * Dispatch successful bluetooth reply with NO value to reply request.
+ *
+ * @param aRunnable  the runnable to reply bluetooth request.
+ */
+void
+DispatchReplySuccess(BluetoothReplyRunnable* aRunnable);
+
+/**
+ * Dispatch successful bluetooth reply with value to reply request.
+ *
+ * @param aRunnable  the runnable to reply bluetooth request.
+ * @param aValue     the BluetoothValue to reply successful request.
+ */
+void
+DispatchReplySuccess(BluetoothReplyRunnable* aRunnable,
+                     const BluetoothValue& aValue);
+
+/**
+ * Dispatch failed bluetooth reply with error string.
  *
  * This function is for methods returning DOMRequest. If |aErrorStr| is not
  * empty, the DOMRequest property 'error.name' would be updated to |aErrorStr|
  * before callback function 'onerror' is fired.
  *
+ * NOTE: For methods returning Promise, |aErrorStr| would be ignored and only
+ * STATUS_FAIL is returned in BluetoothReplyRunnable.
+ *
  * @param aRunnable  the runnable to reply bluetooth request.
- * @param aValue     the BluetoothValue used to reply successful request.
- * @param aErrorStr  the error string used to reply failed request.
+ * @param aErrorStr  the error string to reply failed request.
  */
 void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue,
-                       const nsAString& aErrorStr);
+DispatchReplyError(BluetoothReplyRunnable* aRunnable,
+                   const nsAString& aErrorStr);
 
 /**
- * Dispatch BluetoothReply to main thread. The reply contains an error string
- * if the request fails.
+ * Dispatch failed bluetooth reply with error status.
  *
- * This function is for methods returning Promise. If |aStatusCode| is not
- * STATUS_SUCCESS, the Promise would reject with an Exception object with
- * nsError associated with |aStatusCode|. The name and messege of Exception
- * (defined in dom/base/domerr.msg) are filled automatically during promise
- * rejection.
+ * This function is for methods returning Promise. The Promise would reject
+ * with an Exception object that carries nsError associated with |aStatus|.
+ * The name and messege of Exception (defined in dom/base/domerr.msg) are
+ * filled automatically during promise rejection.
  *
- * @param aRunnable   the runnable to reply bluetooth request.
- * @param aValue      the BluetoothValue to reply successful request.
- * @param aStatusCode the error status to reply failed request.
+ * @param aRunnable  the runnable to reply bluetooth request.
+ * @param aStatus    the error status to reply failed request.
  */
 void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue,
-                       const enum BluetoothStatus aStatusCode);
+DispatchReplyError(BluetoothReplyRunnable* aRunnable,
+                   const enum BluetoothStatus aStatus);
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
