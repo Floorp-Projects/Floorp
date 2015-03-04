@@ -42,7 +42,7 @@ pub enum WebDriverCommand {
     IsEnabled(WebElement),
     ExecuteScript(JavascriptCommandParameters),
     ExecuteAsyncScript(JavascriptCommandParameters),
-    GetCookie(GetCookieParameters),
+    GetCookie,
     AddCookie(AddCookieParameters),
     SetTimeouts(TimeoutsParameters),
     //Actions(ActionsParameters),
@@ -247,8 +247,7 @@ impl WebDriverMessage {
                 WebDriverCommand::ExecuteAsyncScript(parameters)
             },
             Route::GetCookie => {
-                let parameters: GetCookieParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::GetCookie(parameters)
+                WebDriverCommand::GetCookie
             },
             Route::AddCookie => {
                 let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
@@ -294,7 +293,7 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::IsSelected(_) | WebDriverCommand::GetElementAttribute(_, _) |
             WebDriverCommand::GetCSSValue(_, _) | WebDriverCommand::GetElementText(_) |
             WebDriverCommand::GetElementTagName(_) | WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::IsEnabled(_) | WebDriverCommand::AddCookie(_) |
+            WebDriverCommand::IsEnabled(_) | WebDriverCommand::GetCookie |
             WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
             WebDriverCommand::GetAlertText | WebDriverCommand::ElementClick(_) |
             WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) => {
@@ -312,7 +311,7 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
             WebDriverCommand::ExecuteScript(ref x) |
             WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
-            WebDriverCommand::GetCookie(ref x) => Some(x.to_json()),
+            WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
             WebDriverCommand::TakeScreenshot(ref x) => Some(x.to_json())
         };
@@ -435,7 +434,7 @@ impl ToJson for WindowSizeParameters {
 
 #[derive(PartialEq)]
 pub struct SwitchToWindowParameters {
-    handle: String
+    pub handle: String
 }
 
 impl Parameters for SwitchToWindowParameters {
