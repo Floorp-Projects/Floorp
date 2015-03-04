@@ -11,6 +11,7 @@
 
 #include "builtin/MapObject.h"
 #include "builtin/TypedObject.h"
+#include "gc/Allocator.h"
 #include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
 #include "vm/NumberObject.h"

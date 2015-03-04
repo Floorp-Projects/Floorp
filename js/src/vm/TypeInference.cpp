@@ -34,7 +34,6 @@
 #include "vm/UnboxedObject.h"
 
 #include "jsatominlines.h"
-#include "jsgcinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/NativeObject-inl.h"
