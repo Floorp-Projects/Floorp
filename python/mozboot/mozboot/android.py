@@ -24,6 +24,8 @@ ANDROID_PACKAGES = [
     ANDROID_PLATFORM,
     'extra-android-support',
     'extra-google-google_play_services',
+    'extra-google-m2repository',
+    'extra-android-m2repository',
 ]
 
 ANDROID_NDK_EXISTS = '''
