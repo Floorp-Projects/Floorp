@@ -508,9 +508,10 @@ let Impl = {
     let si = Services.startup.getStartupInfo();
 
     // Measurements common to chrome and content processes.
+    let elapsedTime = Date.now() - si.process;
     var ret = {
-      // uptime in minutes
-      uptime: Math.round((new Date() - si.process) / 60000)
+      totalTime: Math.round(elapsedTime / 1000), // totalTime, in seconds
+      uptime: Math.round(elapsedTime / 60000) // uptime in minutes
     }
 
     // Look for app-specific timestamps
