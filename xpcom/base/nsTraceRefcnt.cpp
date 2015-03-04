@@ -407,8 +407,8 @@ public:
 
     fprintf(aOut,
             "\n" \
-            "     |<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|\n" \
-            "                                              Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev\n");
+            "     |<----------------Class--------------->|<-----Bytes------>|<----------------Objects---------------->|<---References-->|\n" \
+            "                                              Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem\n");
 
     this->DumpTotal(aOut);
 
@@ -423,13 +423,6 @@ public:
       return;
     }
 
-    double meanRefs;
-    double stddevRefs;
-    NS_MeanAndStdDev(stats->mAddRefs + stats->mReleases,
-                     stats->mRefsOutstandingTotal,
-                     stats->mRefsOutstandingSquared,
-                     &meanRefs, &stddevRefs);
-
     double meanObjs;
     double stddevObjs;
     NS_MeanAndStdDev(stats->mCreates + stats->mDestroys,
@@ -439,13 +432,11 @@ public:
 
     if ((stats->mAddRefs - stats->mReleases) != 0 ||
         stats->mAddRefs != 0 ||
-        meanRefs != 0 ||
-        stddevRefs != 0 ||
         (stats->mCreates - stats->mDestroys) != 0 ||
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
-      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f) %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f)\n",
+      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f) %8" PRIu64 " %8" PRIu64 "\n",
               aIndex + 1, mClassName,
               (int32_t)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))
@@ -456,9 +447,7 @@ public:
               meanObjs,
               stddevObjs,
               stats->mAddRefs,
-              (stats->mAddRefs - stats->mReleases),
-              meanRefs,
-              stddevRefs);
+              (stats->mAddRefs - stats->mReleases));
     }
   }
 
