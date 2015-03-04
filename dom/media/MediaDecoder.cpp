@@ -150,11 +150,6 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
     return;
   }
 
-  DECODER_LOG("UpdateDormantState aTimeout=%d aActivity=%d mIsDormant=%d "
-              "ownerActive=%d ownerHidden=%d mIsHeuristicDormant=%d mPlayState=%s",
-              aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
-              mOwner->IsHidden(), mIsHeuristicDormant, PlayStateStr());
-
   bool prevDormant = mIsDormant;
   mIsDormant = false;
   if (!mOwner->IsActive()) {
@@ -170,7 +165,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   mIsHeuristicDormant = false;
   if (mIsHeuristicDormantSupported && mOwner->IsHidden()) {
     if (aDormantTimeout && !aActivity &&
-        (mPlayState == PLAY_STATE_PAUSED || IsEnded())) {
+        (mPlayState == PLAY_STATE_PAUSED || mPlayState == PLAY_STATE_ENDED)) {
       // Enable heuristic dormant
       mIsHeuristicDormant = true;
     } else if(prevHeuristicDormant && !aActivity) {
@@ -189,30 +184,19 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   }
 
   if (mIsDormant) {
-    DECODER_LOG("UpdateDormantState() entering DORMANT state");
     // enter dormant state
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<bool>(
-        mDecoderStateMachine,
-        &MediaDecoderStateMachine::SetDormant,
-        true);
-    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
+    mDecoderStateMachine->SetDormant(true);
 
-    if (IsEnded()) {
-      mWasEndedWhenEnteredDormant = true;
-    }
+    int64_t timeUsecs = 0;
+    SecondsToUsecs(mCurrentTime, timeUsecs);
+    mRequestedSeekTarget = SeekTarget(timeUsecs, SeekTarget::Accurate);
+
     mNextState = mPlayState;
     ChangeState(PLAY_STATE_LOADING);
   } else {
-    DECODER_LOG("UpdateDormantState() leaving DORMANT state");
     // exit dormant state
     // trigger to state machine.
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<bool>(
-        mDecoderStateMachine,
-        &MediaDecoderStateMachine::SetDormant,
-        false);
-    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
+    mDecoderStateMachine->SetDormant(false);
   }
 }
 
@@ -236,7 +220,7 @@ void MediaDecoder::StartDormantTimer()
       !mOwner ||
       !mOwner->IsHidden() ||
       (mPlayState != PLAY_STATE_PAUSED &&
-       !IsEnded()))
+       mPlayState != PLAY_STATE_ENDED))
   {
     return;
   }
@@ -263,7 +247,7 @@ void MediaDecoder::Pause()
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mPlayState == PLAY_STATE_LOADING ||
       mPlayState == PLAY_STATE_SEEKING ||
-      IsEnded()) {
+      mPlayState == PLAY_STATE_ENDED) {
     mNextState = PLAY_STATE_PAUSED;
     return;
   }
@@ -596,7 +580,6 @@ MediaDecoder::MediaDecoder() :
   mMinimizePreroll(false),
   mMediaTracksConstructed(false),
   mIsDormant(false),
-  mWasEndedWhenEnteredDormant(false),
   mIsHeuristicDormantSupported(
     Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false)),
   mHeuristicDormantTimeout(
@@ -765,11 +748,12 @@ nsresult MediaDecoder::Play()
   }
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
-  if (IsEnded()) {
-    return Seek(0, SeekTarget::PrevSyncPoint);
-  } else if (mPlayState == PLAY_STATE_LOADING || mPlayState == PLAY_STATE_SEEKING) {
+  if (mPlayState == PLAY_STATE_LOADING || mPlayState == PLAY_STATE_SEEKING) {
     mNextState = PLAY_STATE_PLAYING;
     return NS_OK;
+  }
+  if (mPlayState == PLAY_STATE_ENDED) {
+    return Seek(0, SeekTarget::PrevSyncPoint);
   }
 
   ChangeState(PLAY_STATE_PLAYING);
@@ -790,7 +774,6 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
 
   mRequestedSeekTarget = SeekTarget(timeUsecs, aSeekType);
   mCurrentTime = aTime;
-  mWasEndedWhenEnteredDormant = false;
 
   // If we are already in the seeking state, the new seek overrides the old one.
   if (mPlayState != PLAY_STATE_LOADING) {
@@ -855,7 +838,7 @@ MediaDecoder::IsExpectingMoreData()
 
 void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                                   nsAutoPtr<MetadataTags> aTags,
-                                  MediaDecoderEventVisibility aEventVisibility)
+                                  bool aRestoredFromDormant)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -885,29 +868,14 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    if (!aRestoredFromDormant) {
       mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
     }
   }
 }
 
-const char*
-MediaDecoder::PlayStateStr()
-{
-  switch (mPlayState) {
-    case PLAY_STATE_START: return "PLAY_STATE_START";
-    case PLAY_STATE_LOADING: return "PLAY_STATE_LOADING";
-    case PLAY_STATE_PAUSED: return "PLAY_STATE_PAUSED";
-    case PLAY_STATE_PLAYING: return "PLAY_STATE_PLAYING";
-    case PLAY_STATE_SEEKING: return "PLAY_STATE_SEEKING";
-    case PLAY_STATE_ENDED: return "PLAY_STATE_ENDED";
-    case PLAY_STATE_SHUTDOWN: return "PLAY_STATE_SHUTDOWN";
-    default: return "INVALID_PLAY_STATE";
-  }
-}
-
 void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                    MediaDecoderEventVisibility aEventVisibility)
+                                    bool aRestoredFromDormant)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -915,17 +883,15 @@ void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
     return;
   }
 
-  NS_ASSERTION(!mIsDormant, "Expected not to be dormant here");
-
-  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mIsDormant=%d",
+  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
-              aInfo->HasAudio(), aInfo->HasVideo(), PlayStateStr(), mIsDormant);
+              aInfo->HasAudio(), aInfo->HasVideo());
 
   mInfo = aInfo.forget();
 
   if (mOwner) {
     Invalidate();
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    if (!aRestoredFromDormant) {
       mOwner->FirstFrameLoaded();
     }
   }
@@ -1011,16 +977,10 @@ bool MediaDecoder::IsSeeking() const
     (mPlayState == PLAY_STATE_LOADING && mRequestedSeekTarget.IsValid()));
 }
 
-bool MediaDecoder::IsEndedOrShutdown() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return IsEnded() || mPlayState == PLAY_STATE_SHUTDOWN;
-}
-
 bool MediaDecoder::IsEnded() const
 {
-  return mPlayState == PLAY_STATE_ENDED ||
-         (mWasEndedWhenEnteredDormant && (mPlayState != PLAY_STATE_SHUTDOWN));
+  MOZ_ASSERT(NS_IsMainThread());
+  return mPlayState == PLAY_STATE_ENDED || mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
 void MediaDecoder::PlaybackEnded()
@@ -1203,15 +1163,14 @@ void MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 void MediaDecoder::UpdateReadyStateForData()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mOwner || mShuttingDown || !mDecoderStateMachine) {
+  if (!mOwner || mShuttingDown || !mDecoderStateMachine)
     return;
-  }
   MediaDecoderOwner::NextFrameStatus frameStatus =
     mDecoderStateMachine->GetNextFrameStatus();
   mOwner->UpdateReadyStateForData(frameStatus);
 }
 
-void MediaDecoder::SeekingStopped(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::SeekingStopped()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1229,17 +1188,15 @@ void MediaDecoder::SeekingStopped(MediaDecoderEventVisibility aEventVisibility)
       seekWasAborted = true;
     } else {
       UnpinForSeek();
-      if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-        ChangeState(mNextState);
-      }
+      ChangeState(mNextState);
     }
   }
 
-  PlaybackPositionChanged(aEventVisibility);
+  PlaybackPositionChanged();
 
   if (mOwner) {
     UpdateReadyStateForData();
-    if (!seekWasAborted && (aEventVisibility != MediaDecoderEventVisibility::Suppressed)) {
+    if (!seekWasAborted) {
       mOwner->SeekCompleted();
     }
   }
@@ -1247,7 +1204,7 @@ void MediaDecoder::SeekingStopped(MediaDecoderEventVisibility aEventVisibility)
 
 // This is called when seeking stopped *and* we're at the end of the
 // media.
-void MediaDecoder::SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::SeekingStoppedAtEnd()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1271,11 +1228,11 @@ void MediaDecoder::SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibil
     }
   }
 
-  PlaybackPositionChanged(aEventVisibility);
+  PlaybackPositionChanged();
 
   if (mOwner) {
     UpdateReadyStateForData();
-    if (!seekWasAborted && (aEventVisibility != MediaDecoderEventVisibility::Suppressed)) {
+    if (!seekWasAborted) {
       mOwner->SeekCompleted();
       if (fireEnded) {
         mOwner->PlaybackEnded();
@@ -1284,7 +1241,7 @@ void MediaDecoder::SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibil
   }
 }
 
-void MediaDecoder::SeekingStarted(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::SeekingStarted()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown)
@@ -1292,9 +1249,7 @@ void MediaDecoder::SeekingStarted(MediaDecoderEventVisibility aEventVisibility)
 
   if (mOwner) {
     UpdateReadyStateForData();
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-      mOwner->SeekStarted();
-    }
+    mOwner->SeekStarted();
   }
 }
 
@@ -1326,7 +1281,7 @@ void MediaDecoder::ChangeState(PlayState aState)
 
   if (mPlayState == PLAY_STATE_PLAYING) {
     ConstructMediaTracks();
-  } else if (IsEnded()) {
+  } else if (mPlayState == PLAY_STATE_ENDED) {
     RemoveMediaTracks();
   }
 
@@ -1362,7 +1317,7 @@ void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
   }
 }
 
-void MediaDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::PlaybackPositionChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown)
@@ -1398,9 +1353,7 @@ void MediaDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVis
   // frame has reflowed and the size updated beforehand.
   Invalidate();
 
-  if (mOwner &&
-      (aEventVisibility != MediaDecoderEventVisibility::Suppressed) &&
-      lastTime != mCurrentTime) {
+  if (mOwner && lastTime != mCurrentTime) {
     FireTimeUpdate();
   }
 }
