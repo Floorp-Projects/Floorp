@@ -2881,9 +2881,20 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     // to the style context (as is done by nsTransformedTextRun objects, which
     // can be referenced by a text frame's mTextRun longer than the frame's
     // mStyleContext).
-    ContextToClear* toClear = mContextsToClear.AppendElement();
-    toClear->mStyleContext = Move(oldContext);
-    toClear->mStructs = swappedStructs;
+    //
+    // We coalesce entries in mContextsToClear when we detect that the last
+    // style context appended has oldContext as its parent, as
+    // ClearCachedInheritedStyleDataOnDescendants handles a whole subtree
+    // of style contexts.
+    if (!mContextsToClear.IsEmpty() &&
+        mContextsToClear.LastElement().mStyleContext->GetParent() == oldContext &&
+        mContextsToClear.LastElement().mStructs == swappedStructs) {
+      mContextsToClear.LastElement().mStyleContext = Move(oldContext);
+    } else {
+      ContextToClear* toClear = mContextsToClear.AppendElement();
+      toClear->mStyleContext = Move(oldContext);
+      toClear->mStructs = swappedStructs;
+    }
   }
 
   mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
