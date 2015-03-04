@@ -117,8 +117,8 @@ final class GeckoEditable
 
         static Action newReplaceText(CharSequence text, int start, int end) {
             if (start < 0 || start > end) {
-                throw new IllegalArgumentException(
-                    "invalid replace text offsets: " + start + " to " + end);
+                Log.e(LOGTAG, "invalid replace text offsets: " + start + " to " + end);
+                throw new IllegalArgumentException("invalid replace text offsets");
             }
 
             int actionType = TYPE_REPLACE_TEXT;
@@ -146,8 +146,8 @@ final class GeckoEditable
             // start == -1 when the start offset should remain the same
             // end == -1 when the end offset should remain the same
             if (start < -1 || end < -1) {
-                throw new IllegalArgumentException(
-                    "invalid selection offsets: " + start + " to " + end);
+                Log.e(LOGTAG, "invalid selection offsets: " + start + " to " + end);
+                throw new IllegalArgumentException("invalid selection offsets");
             }
             final Action action = new Action(TYPE_SET_SELECTION);
             action.mStart = start;
@@ -157,8 +157,8 @@ final class GeckoEditable
 
         static Action newSetSpan(Object object, int start, int end, int flags) {
             if (start < 0 || start > end) {
-                throw new IllegalArgumentException(
-                    "invalid span offsets: " + start + " to " + end);
+                Log.e(LOGTAG, "invalid span offsets: " + start + " to " + end);
+                throw new IllegalArgumentException("invalid span offsets");
             }
             final Action action = new Action(TYPE_SET_SPAN);
             action.mSpanObject = object;
@@ -820,8 +820,9 @@ final class GeckoEditable
             Log.d(LOGTAG, "onSelectionChange(" + start + ", " + end + ")");
         }
         if (start < 0 || start > mText.length() || end < 0 || end > mText.length()) {
-            throw new IllegalArgumentException("invalid selection notification range: " +
-                start + " to " + end + ", length: " + mText.length());
+            Log.e(LOGTAG, "invalid selection notification range: " +
+                  start + " to " + end + ", length: " + mText.length());
+            throw new IllegalArgumentException("invalid selection notification range");
         }
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
@@ -876,16 +877,18 @@ final class GeckoEditable
             Log.d(LOGTAG, sb.toString());
         }
         if (start < 0 || start > unboundedOldEnd) {
-            throw new IllegalArgumentException("invalid text notification range: " +
-                start + " to " + unboundedOldEnd);
+            Log.e(LOGTAG, "invalid text notification range: " +
+                  start + " to " + unboundedOldEnd);
+            throw new IllegalArgumentException("invalid text notification range");
         }
         /* For the "end" parameters, Gecko can pass in a large
            number to denote "end of the text". Fix that here */
         final int oldEnd = unboundedOldEnd > mText.length() ? mText.length() : unboundedOldEnd;
         // new end should always match text
         if (start != 0 && unboundedNewEnd != (start + text.length())) {
-            throw new IllegalArgumentException("newEnd does not match text: " +
-                unboundedNewEnd + " vs " + (start + text.length()));
+            Log.e(LOGTAG, "newEnd does not match text: " + unboundedNewEnd + " vs " +
+                  (start + text.length()));
+            throw new IllegalArgumentException("newEnd does not match text");
         }
         final int newEnd = start + text.length();
 
@@ -1120,8 +1123,9 @@ final class GeckoEditable
 
         CharSequence text = source;
         if (start < 0 || start > end || end > text.length()) {
-            throw new IllegalArgumentException("invalid replace offsets: " +
-                start + " to " + end + ", length: " + text.length());
+            Log.e(LOGTAG, "invalid replace offsets: " +
+                  start + " to " + end + ", length: " + text.length());
+            throw new IllegalArgumentException("invalid replace offsets");
         }
         if (start != 0 || end != text.length()) {
             text = text.subSequence(start, end);
