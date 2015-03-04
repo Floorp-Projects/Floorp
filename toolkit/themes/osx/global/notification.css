@@ -10,40 +10,29 @@ notification {
   text-shadow: none;
 }
 
-notification[type="info"],
-notification[type="info"] .messageText > .text-link {
-  color: rgba(255,255,255,0.95) !important;
-}
-
 notification[type="info"] {
+  color: rgba(255,255,255,0.95);
   background: url("chrome://global/skin/notification/info-bar-background.png") #404040 repeat-x top left;
   border-top: 1px solid #707070;
   border-bottom: 1px solid #2a2a2a;
 }
 
-notification[type="warning"],
-notification[type="warning"] .messageText > .text-link {
-  color: rgba(0,0,0,0.95) !important;
-}
-
 notification[type="warning"] {
+  color: rgba(0,0,0,0.95);
   background: url("chrome://global/skin/notification/warning-bar-background.png") #ffc703 repeat-x top left;
   border-top: 1px solid #ffe970;
   border-bottom: 1px solid #bf8a01;
 }
 
-notification[type="critical"],
-notification[type="critical"] .messageText > .text-link {
-  color: rgba(255,255,255,0.95) !important;
-}
-
 notification[type="critical"] {
+  color: rgba(255,255,255,0.95);
   background: url("chrome://global/skin/notification/critical-bar-background.png") #980000 repeat-x top left;
   border-top: 1px solid #e35959;
   border-bottom: 1px solid #5d0000;
 }
 
 .messageText > .text-link {
+  color: inherit !important;
   text-decoration: underline;
 }
 
