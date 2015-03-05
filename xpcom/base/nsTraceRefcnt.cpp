@@ -62,7 +62,19 @@ static PLHashTable* gObjectsToLog;
 static PLHashTable* gSerialNumbers;
 static intptr_t gNextSerialNumber;
 
-static bool gLogging;
+// By default, debug builds only do bloat logging. Bloat logging
+// only tries to record when an object is created or destroyed, so we
+// optimize the common case in NS_LogAddRef and NS_LogRelease where
+// only bloat logging is enabled and no logging needs to be done.
+enum LoggingType
+{
+  NoLogging,
+  OnlyBloatLogging,
+  FullLogging
+};
+
+static LoggingType gLogging;
+
 static bool gLogLeaksOnly;
 
 #define BAD_TLS_INDEX ((unsigned)-1)
@@ -460,8 +472,8 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
 
   LOCK_TRACELOG();
 
-  bool wasLogging = gLogging;
-  gLogging = false;  // turn off logging for this method
+  LoggingType wasLogging = gLogging;
+  gLogging = NoLogging;  // turn off logging for this method
 
   BloatEntry total("TOTAL", 0);
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
@@ -797,8 +809,12 @@ InitTraceLog()
   }
 
 
-  if (gBloatLog || gRefcntsLog || gAllocLog || gCOMPtrLog) {
-    gLogging = true;
+  if (gBloatLog) {
+    gLogging = OnlyBloatLogging;
+  }
+
+  if (gRefcntsLog || gAllocLog || gCOMPtrLog) {
+    gLogging = FullLogging;
   }
 
   gTraceLock = PR_NewLock();
@@ -961,7 +977,10 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
   if (!gInitialized) {
     InitTraceLog();
   }
-  if (gLogging) {
+  if (gLogging == NoLogging) {
+    return;
+  }
+  if (aRefcnt == 1 || gLogging == FullLogging) {
     LOCK_TRACELOG();
 
     if (aRefcnt == 1 && gBloatLog) {
@@ -1014,7 +1033,10 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
   if (!gInitialized) {
     InitTraceLog();
   }
-  if (gLogging) {
+  if (gLogging == NoLogging) {
+    return;
+  }
+  if (aRefcnt == 0 || gLogging == FullLogging) {
     LOCK_TRACELOG();
 
     if (aRefcnt == 0 && gBloatLog) {
@@ -1074,7 +1096,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     InitTraceLog();
   }
 
-  if (gLogging) {
+  if (gLogging != NoLogging) {
     LOCK_TRACELOG();
 
     if (gBloatLog) {
@@ -1112,7 +1134,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     InitTraceLog();
   }
 
-  if (gLogging) {
+  if (gLogging != NoLogging) {
     LOCK_TRACELOG();
 
     if (gBloatLog) {
@@ -1166,7 +1188,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
   if (!gInitialized) {
     InitTraceLog();
   }
-  if (gLogging) {
+  if (gLogging == FullLogging) {
     LOCK_TRACELOG();
 
     int32_t* count = GetCOMPtrCount(object);
@@ -1209,7 +1231,7 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
   if (!gInitialized) {
     InitTraceLog();
   }
-  if (gLogging) {
+  if (gLogging == FullLogging) {
     LOCK_TRACELOG();
 
     int32_t* count = GetCOMPtrCount(object);
