@@ -1,0 +1,9 @@
+/*.app/***
+/*.dylib
+/b2g
+/certutil
+/gtest/***
+/pk12util
+/ssltunnel
+/xpcshell
+/XUL
