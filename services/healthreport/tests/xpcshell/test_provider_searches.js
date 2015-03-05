@@ -148,20 +148,9 @@ add_task(function* test_default_search_engine() {
 
   let m = provider.getMeasurement("engines", 1);
 
-  // Ensure no collection if Telemetry not enabled.
-  Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
-
   let now = new Date();
   yield provider.collectDailyData();
-
   let data = yield m.getValues();
-  Assert.equal(data.days.hasDay(now), false);
-
-  // Now enable telemetry and ensure we populate.
-  Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
-
-  yield provider.collectDailyData();
-  data = yield m.getValues();
   Assert.ok(data.days.hasDay(now));
 
   let day = data.days.getDay(now);
