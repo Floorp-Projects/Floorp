@@ -303,6 +303,7 @@ if test -n "$gonkdir" ; then
             MOZ_B2G_BT_DAEMON=1
         fi
         MOZ_NFC=1
+        MOZ_RTSP=1
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
