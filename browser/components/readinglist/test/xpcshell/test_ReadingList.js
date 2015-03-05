@@ -46,7 +46,8 @@ add_task(function* prepare() {
   }
 
   for (let item of gItems) {
-    yield gList.addItem(item);
+    let addedItem = yield gList.addItem(item);
+    checkItems(addedItem, item);
   }
 });
 
@@ -78,6 +79,9 @@ add_task(function* item_properties() {
   Assert.ok(typeof(item.favorite) == "boolean");
   Assert.ok(typeof(item.isArticle) == "boolean");
   Assert.ok(typeof(item.unread) == "boolean");
+
+  Assert.equal(item.domain, "example.com");
+  Assert.equal(item.id, hash(item.url));
 });
 
 add_task(function* constraints() {
@@ -92,16 +96,6 @@ add_task(function* constraints() {
   checkError(err);
 
   // add a new item with an existing guid
-  function kindOfClone(item) {
-    let newItem = {};
-    for (let prop in item) {
-      newItem[prop] = item[prop];
-      if (typeof(newItem[prop]) == "string") {
-        newItem[prop] += " -- make this string different";
-      }
-    }
-    return newItem;
-  }
   let item = kindOfClone(gItems[0]);
   item.guid = gItems[0].guid;
   err = null;
@@ -585,6 +579,45 @@ add_task(function* item_setProperties() {
   Assert.equal(sameItem.title, newTitle);
 });
 
+add_task(function* listeners() {
+  // add an item
+  let resolve;
+  let listenerPromise = new Promise(r => resolve = r);
+  let listener = {
+    onItemAdded: resolve,
+  };
+  gList.addListener(listener);
+  let item = kindOfClone(gItems[0]);
+  let items = yield Promise.all([listenerPromise, gList.addItem(item)]);
+  Assert.ok(items[0]);
+  Assert.ok(items[0] === items[1]);
+  gList.removeListener(listener);
+
+  // update an item
+  listenerPromise = new Promise(r => resolve = r);
+  listener = {
+    onItemUpdated: resolve,
+  };
+  gList.addListener(listener);
+  items[0].title = "listeners new title";
+  let listenerItem = yield listenerPromise;
+  Assert.ok(listenerItem);
+  Assert.ok(listenerItem === items[0]);
+  gList.removeListener(listener);
+
+  // delete an item
+  listenerPromise = new Promise(r => resolve = r);
+  listener = {
+    onItemDeleted: resolve,
+  };
+  gList.addListener(listener);
+  items[0].delete();
+  listenerItem = yield listenerPromise;
+  Assert.ok(listenerItem);
+  Assert.ok(listenerItem === items[0]);
+  gList.removeListener(listener);
+});
+
 // This test deletes items so it should probably run last.
 add_task(function* deleteItem() {
   // delete first item with item.delete()
@@ -639,4 +672,30 @@ function checkItems(actualItems, expectedItems) {
 function checkError(err) {
   Assert.ok(err);
   Assert.ok(err instanceof Cu.getGlobalForObject(Sqlite).Error);
+}
+
+function kindOfClone(item) {
+  let newItem = {};
+  for (let prop in item) {
+    newItem[prop] = item[prop];
+    if (typeof(newItem[prop]) == "string") {
+      newItem[prop] += " -- make this string different";
+    }
+  }
+  return newItem;
+}
+
+function hash(str) {
+  let hasher = Cc["@mozilla.org/security/hash;1"].
+               createInstance(Ci.nsICryptoHash);
+  hasher.init(Ci.nsICryptoHash.MD5);
+  let stream = Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(Ci.nsIStringInputStream);
+  stream.data = str;
+  hasher.updateFromStream(stream, -1);
+  let binaryStr = hasher.finish(false);
+  let hexStr =
+    [("0" + binaryStr.charCodeAt(i).toString(16)).slice(-2) for (i in hash)].
+    join("");
+  return hexStr;
 }
