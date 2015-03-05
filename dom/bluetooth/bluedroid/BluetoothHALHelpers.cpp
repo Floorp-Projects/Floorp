@@ -40,8 +40,9 @@ Convert(ConvertNamedValue& aIn, bt_property_t& aOut)
 
   if (aIn.mNamedValue.value().type() == BluetoothValue::Tuint32_t) {
     // Set discoverable timeout
-    aOut.val =
-      reinterpret_cast<void*>(aIn.mNamedValue.value().get_uint32_t());
+    aOut.val = const_cast<void*>(static_cast<const void*>(
+      &(aIn.mNamedValue.value().get_uint32_t())));
+      aOut.len = sizeof(uint32_t);
   } else if (aIn.mNamedValue.value().type() == BluetoothValue::TnsString) {
     // Set name
     aIn.mStringValue =
