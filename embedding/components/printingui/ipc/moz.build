@@ -19,11 +19,15 @@ if CONFIG['NS_PRINTING']:
         'PrintingParent.cpp',
         'PrintProgressDialogChild.cpp',
         'PrintProgressDialogParent.cpp',
+        'PrintSettingsDialogChild.cpp',
+        'PrintSettingsDialogParent.cpp',
     ]
 
 IPDL_SOURCES += [
     'PPrinting.ipdl',
+    'PPrintingTypes.ipdlh',
     'PPrintProgressDialog.ipdl',
+    'PPrintSettingsDialog.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

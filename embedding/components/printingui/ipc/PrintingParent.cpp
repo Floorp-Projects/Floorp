@@ -18,6 +18,7 @@
 #include "PrintingParent.h"
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogParent.h"
+#include "PrintSettingsDialogParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -65,50 +66,58 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
   return true;
 }
 
-bool
-PrintingParent::RecvShowPrintDialog(PBrowserParent* parent,
-                                    const PrintData& data,
-                                    PrintData* retVal,
-                                    bool* success)
+nsresult
+PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
+                                const PrintData& aData,
+                                PrintData* aResult)
 {
-  *success = false;
-
-  nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(parent);
+  nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(aParent);
   if (!parentWin) {
-    return true;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
   if (!pps) {
-    return true;
+    return NS_ERROR_FAILURE;
   }
 
   // The initSettings we got can be wrapped using
   // PrintDataUtils' MockWebBrowserPrint, which implements enough of
   // nsIWebBrowserPrint to keep the dialogs happy.
-  nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(data);
+  nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
 
   nsresult rv;
   nsCOMPtr<nsIPrintOptions> po = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrintSettings> settings;
   rv = po->CreatePrintSettings(getter_AddRefs(settings));
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = po->DeserializeToPrintSettings(data, settings);
-  NS_ENSURE_SUCCESS(rv, true);
+  rv = po->DeserializeToPrintSettings(aData, settings);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = pps->ShowPrintDialog(parentWin, wbp, settings);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // And send it back.
-  PrintData result;
-  rv = po->SerializeToPrintData(settings, nullptr, &result);
-  NS_ENSURE_SUCCESS(rv, true);
+  rv = po->SerializeToPrintData(settings, nullptr, aResult);
+  return rv;
+}
 
-  *retVal = result;
-  *success = true;
+bool
+PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
+                                    PBrowserParent* aParent,
+                                    const PrintData& aData)
+{
+  PrintData resultData;
+  nsresult rv = ShowPrintDialog(aParent, aData, &resultData);
+
+  // The child has been spinning an event loop while waiting
+  // to hear about the print settings. We return the results
+  // with an async message which frees the child process from
+  // its nested event loop.
+  mozilla::unused << aDialog->Send__delete__(aDialog, rv, resultData);
   return true;
 }
 
@@ -154,6 +163,19 @@ PrintingParent::DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* do
   // refcount instead.
   PrintProgressDialogParent* actor = static_cast<PrintProgressDialogParent*>(doomed);
   NS_RELEASE(actor);
+  return true;
+}
+
+PPrintSettingsDialogParent*
+PrintingParent::AllocPPrintSettingsDialogParent()
+{
+  return new PrintSettingsDialogParent();
+}
+
+bool
+PrintingParent::DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aDoomed)
+{
+  delete aDoomed;
   return true;
 }
 
