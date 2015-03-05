@@ -2,7 +2,8 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <title>Tests for the effect of setting a CSS animation's AnimationPlayer.startTime</title>
+    <title>Tests for the effect of setting a CSS animation's
+           AnimationPlayer.startTime</title>
     <style>
 
 .animated-div {
@@ -39,7 +40,8 @@
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1108055
 
 
-const CSS_ANIM_EVENTS = ['animationstart', 'animationiteration', 'animationend'];
+const CSS_ANIM_EVENTS =
+  ['animationstart', 'animationiteration', 'animationend'];
 const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
 const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
@@ -341,7 +343,8 @@ test(function(t)
     'Check setting of startTime actually works');
 
   checkStateOnSettingStartTimeToAnimationCreationTime(player);
-}, 'Sanity test to check round-tripping assigning to new animation\'s startTime');
+}, 'Sanity test to check round-tripping assigning to new animation\'s ' +
+   'startTime');
 
 
 async_test(function(t) {
@@ -360,10 +363,12 @@ async_test(function(t) {
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalStartTime(player);
 
-    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
 
-    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForNinetyPercentThroughActiveInterval(player.timeline);
     checkStateAtNinetyPctOfActiveInterval(player);
 
     player.startTime = startTimeForEndOfActiveInterval(player.timeline);
@@ -396,7 +401,8 @@ async_test(function(t) {
   // an 'animationend' event. We need to wait for these events before we start
   // testing going backwards since EventWatcher will fail the test if it gets
   // an event that we haven't told it about.
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(t.step_func(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(t.step_func(function() {
     assert_true(document.timeline.currentTime - previousTimelineTime <
                   ANIM_DUR_MS,
                 'Sanity check that seeking worked rather than the events ' +
@@ -407,7 +413,8 @@ async_test(function(t) {
     // that after the events we're still in the same end time state:
     checkStateAtActiveIntervalEndTime(player);
 
-    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForNinetyPercentThroughActiveInterval(player.timeline);
 
     // Despite going backwards from after the end of the animation to just
     // before the end of the animation, we now expect an animationstart event
@@ -416,7 +423,8 @@ async_test(function(t) {
   })).then(t.step_func(function() {
     checkStateAtNinetyPctOfActiveInterval(player);
 
-    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
 
     player.startTime = startTimeForStartOfActiveInterval(player.timeline);
@@ -528,7 +536,8 @@ async_test(function(t) {
   div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(function() {
     player.startTime = startTimeForBeforePhase(player.timeline);
     player.startTime = startTimeForAfterPhase(player.timeline);
 
@@ -547,7 +556,8 @@ async_test(function(t) {
   div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(function() {
     player.startTime = startTimeForActivePhase(player.timeline);
     player.startTime = startTimeForAfterPhase(player.timeline);
 
