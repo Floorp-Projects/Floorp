@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
+  "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -31,9 +33,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
-                                   "@mozilla.org/feed-unescapehtml;1",
-                                   "nsIScriptableUnescapeHTML");
 
 function promiseSetAnnotation(aURI, providerList) {
   let deferred = Promise.defer();
@@ -528,180 +527,4 @@ this.OpenGraphBuilder = {
       endpointURL = endpointURL + "?" + str.join("&");
     return endpointURL;
   },
-
-  getData: function(aDocument, target) {
-    let res = {
-      url: this._validateURL(aDocument, aDocument.documentURI),
-      title: aDocument.title,
-      previews: []
-    };
-    this._getMetaData(aDocument, res);
-    this._getLinkData(aDocument, res);
-    this._getPageData(aDocument, res);
-    res.microdata = this.getMicrodata(aDocument, target);
-    return res;
-  },
-
-  getMicrodata: function (aDocument, target) {
-    return getMicrodata(aDocument, target);
-  },
-
-  _getMetaData: function(aDocument, o) {
-    // query for standardized meta data
-    let els = aDocument.querySelectorAll("head > meta[property], head > meta[name]");
-    if (els.length < 1)
-      return;
-    let url;
-    for (let el of els) {
-      let value = el.getAttribute("content")
-      if (!value)
-        continue;
-      value = unescapeService.unescape(value.trim());
-      let key = el.getAttribute("property") || el.getAttribute("name");
-      if (!key)
-        continue;
-      // There are a wide array of possible meta tags, expressing articles,
-      // products, etc. so all meta tags are passed through but we touch up the
-      // most common attributes.
-      o[key] = value;
-      switch (key) {
-        case "title":
-        case "og:title":
-          o.title = value;
-          break;
-        case "description":
-        case "og:description":
-          o.description = value;
-          break;
-        case "og:site_name":
-          o.siteName = value;
-          break;
-        case "medium":
-        case "og:type":
-          o.medium = value;
-          break;
-        case "og:video":
-          url = this._validateURL(aDocument, value);
-          if (url)
-            o.source = url;
-          break;
-        case "og:url":
-          url = this._validateURL(aDocument, value);
-          if (url)
-            o.url = url;
-          break;
-        case "og:image":
-          url = this._validateURL(aDocument, value);
-          if (url)
-            o.previews.push(url);
-          break;
-      }
-    }
-  },
-
-  _getLinkData: function(aDocument, o) {
-    let els = aDocument.querySelectorAll("head > link[rel], head > link[id]");
-    for (let el of els) {
-      let url = el.getAttribute("href");
-      if (!url)
-        continue;
-      url = this._validateURL(aDocument, unescapeService.unescape(url.trim()));
-      switch (el.getAttribute("rel") || el.getAttribute("id")) {
-        case "shorturl":
-        case "shortlink":
-          o.shortUrl = url;
-          break;
-        case "canonicalurl":
-        case "canonical":
-          o.url = url;
-          break;
-        case "image_src":
-          o.previews.push(url);
-          break;
-        case "alternate":
-          // expressly for oembed support but we're liberal here and will let
-          // other alternate links through. oembed defines an href, supplied by
-          // the site, where you can fetch additional meta data about a page.
-          // We'll let the client fetch the oembed data themselves, but they
-          // need the data from this link.
-          if (!o.alternate)
-            o.alternate = [];
-          o.alternate.push({
-            "type": el.getAttribute("type"),
-            "href": el.getAttribute("href"),
-            "title": el.getAttribute("title")
-          })
-      }
-    }
-  },
-
-  // scrape through the page for data we want
-  _getPageData: function(aDocument, o) {
-    if (o.previews.length < 1)
-      o.previews = this._getImageUrls(aDocument);
-  },
-
-  _validateURL: function(aDocument, url) {
-    let docURI = Services.io.newURI(aDocument.documentURI, null, null);
-    let uri = Services.io.newURI(docURI.resolve(url), null, null);
-    if (["http", "https", "ftp", "ftps"].indexOf(uri.scheme) < 0)
-      return null;
-    uri.userPass = "";
-    return uri.spec;
-  },
-
-  _getImageUrls: function(aDocument) {
-    let l = [];
-    let els = aDocument.querySelectorAll("img");
-    for (let el of els) {
-      let src = el.getAttribute("src");
-      if (src) {
-        l.push(this._validateURL(aDocument, unescapeService.unescape(src)));
-        // we don't want a billion images
-        if (l.length > 5)
-          break;
-      }
-    }
-    return l;
-  }
 };
-
-// getMicrodata (and getObject) based on wg algorythm to convert microdata to json
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/microdata-2.html#json
-function  getMicrodata(document, target) {
-
-  function _getObject(item) {
-    let result = {};
-    if (item.itemType.length)
-      result.types = [i for (i of item.itemType)];
-    if (item.itemId)
-      result.itemId = item.itemid;
-    if (item.properties.length)
-      result.properties = {};
-    for (let elem of item.properties) {
-      let value;
-      if (elem.itemScope)
-        value = _getObject(elem);
-      else if (elem.itemValue)
-        value = elem.itemValue;
-      // handle mis-formatted microdata
-      else if (elem.hasAttribute("content"))
-        value = elem.getAttribute("content");
-
-      for (let prop of elem.itemProp) {
-        if (!result.properties[prop])
-          result.properties[prop] = [];
-        result.properties[prop].push(value);
-      }
-    }
-    return result;
-  }
-
-  let result = { items: [] };
-  let elms = target ? [target] : document.getItems();
-  for (let el of elms) {
-    if (el.itemScope)
-      result.items.push(_getObject(el));
-  }
-  return result;
-}
