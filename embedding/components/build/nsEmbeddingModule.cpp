@@ -40,7 +40,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
 #ifdef PROXY_PRINTING
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingProxy, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPrintingProxy,
+                                         nsPrintingProxy::GetInstance)
 #endif
 #endif
 #endif
