@@ -99,8 +99,8 @@ public:
    * Both GetMinISize and GetPrefISize use the intrinsic width metrics
    * returned by GetIntrinsicMetrics, including ink overflow.
    */
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   /**
    * Return the intrinsic horizontal metrics of the frame's content area.
@@ -399,7 +399,7 @@ protected:
   /**
    * Recompute mIntrinsicWidth if it's not already up to date.
    */
-  void UpdateIntrinsicWidth(nsRenderingContext *aRenderingContext);
+  void UpdateIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   nscoord mIntrinsicWidth;
 
