@@ -1002,6 +1002,27 @@ XrayTraits::cloneExpandoChain(JSContext *cx, HandleObject dst, HandleObject src)
     MOZ_ASSERT(getExpandoChain(dst) == nullptr);
 
     RootedObject oldHead(cx, getExpandoChain(src));
+
+#ifdef DEBUG
+    // When this is called from dom::ReparentWrapper() there will be no native
+    // set for |dst|. Eventually it will be set to that of |src|.  This will
+    // prevent attachExpandoObject() from preserving the wrapper, but this is
+    // not a problem because in this case the wrapper will already have been
+    // preserved when expandos were originally added to |src|. In this case
+    // assert the wrapper for |src| has been preserved.
+    if (oldHead) {
+        nsISupports *dstId = mozilla::dom::UnwrapDOMObjectToISupports(dst);
+        if (!dstId) {
+            nsISupports *srcId = mozilla::dom::UnwrapDOMObjectToISupports(src);
+            if (srcId) {
+              nsWrapperCache* cache = nullptr;
+              CallQueryInterface(srcId, &cache);
+              MOZ_ASSERT_IF(cache, cache->PreservingWrapper());
+            }
+        }
+    }
+#endif
+
     while (oldHead) {
         RootedObject exclusive(cx, JS_GetReservedSlot(oldHead,
                                                       JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
