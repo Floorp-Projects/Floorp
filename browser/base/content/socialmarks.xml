@@ -150,21 +150,21 @@
         let URLTemplate = provider.markURL;
         let _dataFn;
         if (!pageData) {
-          messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
-            messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+          messageManager.addMessageListener("PageMetadata:PageDataResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("PageMetadata:PageDataResult", _dataFn);
             this.loadPanel(msg.json, target);
           });
-          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetPageData");
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
           return;
         }
         // if this is a share of a selected item, get any microdata
         if (!pageData.microdata && target) {
-          messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
-            messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+          messageManager.addMessageListener("PageMetadata:MicrodataResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("PageMetadata:MicrodataResult", _dataFn);
             pageData.microdata = msg.data;
             this.loadPanel(pageData, target);
           });
-          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetMicrodata", null, target);
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, target);
           return;
         }
         this.pageData = pageData;
