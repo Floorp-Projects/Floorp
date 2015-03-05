@@ -64,22 +64,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-static bool
-BuildScrollContainerLayers()
-{
-  static bool sContainerlessScrollingEnabled;
-  static bool sContainerlessScrollingPrefCached = false;
-
-  if (!sContainerlessScrollingPrefCached) {
-    sContainerlessScrollingPrefCached = true;
-    Preferences::AddBoolVarCache(&sContainerlessScrollingEnabled,
-                                 "layout.async-containerless-scrolling.enabled",
-                                 true);
-  }
-
-  return !sContainerlessScrollingEnabled;
-}
-
 static uint32_t
 GetOverflowChange(const nsRect& aCurScrolledRect, const nsRect& aPrevScrolledRect)
 {
@@ -3121,29 +3105,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // scroll layer count. The display lists depend on this.
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
 
-    if (mShouldBuildScrollableLayer && BuildScrollContainerLayers()) {
-      DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-
-      // For root scrollframes in documents where the CSS viewport has been
-      // modified, the CSS viewport no longer corresponds to what is visible,
-      // so we don't want to clip the content to it. For root scrollframes
-      // in documents where the CSS viewport is NOT modified, the mScrollPort
-      // is the same as the CSS viewport, modulo scrollbars.
-      if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
-        nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-        if (mClipAllDescendants) {
-          clipState.ClipContentDescendants(clip);
-        } else {
-          clipState.ClipContainingBlockDescendants(clip);
-        }
-      }
-
-      // Once a displayport is set, assume that scrolling needs to be fast
-      // so create a layer with all the content inside. The compositor
-      // process will be able to scroll the content asynchronously.
-      wrapper.WrapListsInPlace(aBuilder, mOuter, scrolledContent);
-    }
-
     // Make sure that APZ will dispatch events back to content so we can create
     // a displayport for this frame. We'll add the item later on.
     nsDisplayLayerEventRegions* inactiveRegionItem = nullptr;
@@ -3164,24 +3125,13 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
     nsDisplayList* destinationList = nullptr;
-    if (BuildScrollContainerLayers()) {
-      // We process display items from bottom to top, so if we need to flatten after
-      // the scroll layer items have been processed we need to be on the top.
-      if (!positionedDescendants->IsEmpty()) {
-        layerItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
-        destinationList = positionedDescendants;
-      } else {
-        destinationList = aLists.Outlines();
-      }
+    int32_t zindex =
+      MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
+    if (zindex >= 0) {
+      layerItem->SetOverrideZIndex(zindex);
+      destinationList = positionedDescendants;
     } else {
-      int32_t zindex =
-        MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
-      if (zindex >= 0) {
-        layerItem->SetOverrideZIndex(zindex);
-        destinationList = positionedDescendants;
-      } else {
-        destinationList = scrolledContent.Outlines();
-      }
+      destinationList = scrolledContent.Outlines();
     }
     if (inactiveRegionItem) {
       destinationList->AppendNewToTop(inactiveRegionItem);
@@ -3209,7 +3159,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     *aClipRect = scrollport;
   }
 
-  if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
+  if (!mShouldBuildScrollableLayer) {
     return;
   }
 

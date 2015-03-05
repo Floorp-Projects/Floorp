@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+    function test() {
+      focus();
+      synthesizeMouseAtCenter(document.querySelector("span"), {});
+    }
+    function focused() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <body onload="setTimeout(test, 0)">
+    <div contenteditable spellcheck="false" onfocus="focused()"
+      style="outline: none">foo<span contenteditable=false
+      style="-moz-user-select: none">bar</span>baz</div>
+  </body>
+</html>

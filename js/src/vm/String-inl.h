@@ -125,7 +125,7 @@ JSRope::new_(js::ExclusiveContext *cx,
 {
     if (!validateLength(cx, length))
         return nullptr;
-    JSRope *str = (JSRope *)js::NewGCString<allowGC>(cx);
+    JSRope *str = static_cast<JSRope *>(js::Allocate<JSString, allowGC>(cx));
     if (!str)
         return nullptr;
     str->init(cx, left, right, length);
@@ -181,7 +181,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
                : js::NewInlineString<char16_t>(cx, base, start, length);
     }
 
-    JSDependentString *str = (JSDependentString *)js::NewGCString<js::NoGC>(cx);
+    JSDependentString *str = static_cast<JSDependentString *>(js::Allocate<JSString, js::NoGC>(cx));
     if (str) {
         str->init(cx, baseArg, start, length);
         return str;
@@ -189,7 +189,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
 
     js::RootedLinearString base(cx, baseArg);
 
-    str = (JSDependentString *)js::NewGCString<js::CanGC>(cx);
+    str = static_cast<JSDependentString *>(js::Allocate<JSString>(cx));
     if (!str)
         return nullptr;
     str->init(cx, base, start, length);
@@ -221,7 +221,7 @@ JSFlatString::new_(js::ExclusiveContext *cx, const CharT *chars, size_t length)
     if (!validateLength(cx, length))
         return nullptr;
 
-    JSFlatString *str = (JSFlatString *)js::NewGCString<allowGC>(cx);
+    JSFlatString *str = static_cast<JSFlatString *>(js::Allocate<JSString, allowGC>(cx));
     if (!str)
         return nullptr;
 
@@ -248,14 +248,14 @@ template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSThinInlineString *
 JSThinInlineString::new_(js::ExclusiveContext *cx)
 {
-    return (JSThinInlineString *)js::NewGCString<allowGC>(cx);
+    return static_cast<JSThinInlineString *>(js::Allocate<JSString, allowGC>(cx));
 }
 
 template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSFatInlineString *
 JSFatInlineString::new_(js::ExclusiveContext *cx)
 {
-    return js::NewGCFatInlineString<allowGC>(cx);
+    return js::Allocate<JSFatInlineString, allowGC>(cx);
 }
 
 template<>
@@ -317,7 +317,7 @@ JSExternalString::new_(JSContext *cx, const char16_t *chars, size_t length,
 
     if (!validateLength(cx, length))
         return nullptr;
-    JSExternalString *str = js::NewGCExternalString(cx);
+    JSExternalString *str = js::Allocate<JSExternalString>(cx);
     if (!str)
         return nullptr;
     str->init(chars, length, fin);

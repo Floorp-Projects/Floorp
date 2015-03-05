@@ -4189,6 +4189,16 @@ InlinePropertyTable::hasFunction(JSFunction *func) const
     return false;
 }
 
+bool
+InlinePropertyTable::hasObjectGroup(ObjectGroup *group) const
+{
+    for (size_t i = 0; i < numEntries(); i++) {
+        if (entries_[i]->group == group)
+            return true;
+    }
+    return false;
+}
+
 TemporaryTypeSet *
 InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
 {

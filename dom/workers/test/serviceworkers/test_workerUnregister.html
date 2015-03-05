@@ -14,7 +14,31 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    return navigator.serviceWorker.register("worker_unregister.js", { scope: "unregister/" });
+    return navigator.serviceWorker.register("worker_unregister.js", { scope: "unregister/" }).then(function(swr) {
+      if (swr.installing) {
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(e) {
+                if (swr.active) {
+                  resolve();
+                } else if (swr.waiting && swr.waiting.state == "redundant") {
+                  reject("Should not go into redundant");
+                }
+              }
+            } else {
+              if (swr.active) {
+                resolve();
+              } else {
+                reject("No waiting and no active!");
+              }
+            }
+          }
+        });
+      } else {
+        return Promise.reject("Installing should be non-null");
+      }
+    });
   }
 
   function waitForMessages(sw) {

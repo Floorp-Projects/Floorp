@@ -90,7 +90,7 @@ JSObject *
 NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap,
             const js::Class *clasp)
 {
-    return js::NewGCObject<CanGC>(cx, allocKind, 0, initialHeap, clasp);
+    return js::Allocate<JSObject>(cx, allocKind, 0, initialHeap, clasp);
 }
 
 bool

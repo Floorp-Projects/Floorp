@@ -23,6 +23,8 @@ enum CancelAnimationFlags : uint32_t {
   ExcludeOverscroll = 1   /* Don't clear overscroll */
 };
 
+typedef uint32_t TouchBehaviorFlags;
+
 }
 }
 
