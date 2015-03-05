@@ -39,7 +39,8 @@ ParseInteger(const nsAString& aString, int32_t& aInt)
   return !(parseResult &
            ( nsContentUtils::eParseHTMLInteger_Error |
              nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput |
-             nsContentUtils::eParseHTMLInteger_IsPercent ));
+             nsContentUtils::eParseHTMLInteger_IsPercent |
+             nsContentUtils::eParseHTMLInteger_NonStandard ));
 }
 
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent *aContent)
