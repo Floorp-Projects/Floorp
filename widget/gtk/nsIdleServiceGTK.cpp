@@ -34,6 +34,9 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceGTK, nsIdleService)
 
 static void Initialize()
 {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+        return;
+
     // This will leak - See comments in ~nsIdleServiceGTK().
     PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
     if (!xsslib) // ouch.
@@ -136,4 +139,3 @@ nsIdleServiceGTK::UsePollMode()
 {
     return sInitialized;
 }
-

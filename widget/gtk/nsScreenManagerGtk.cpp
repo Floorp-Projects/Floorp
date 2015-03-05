@@ -53,6 +53,7 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
   : mXineramalib(nullptr)
   , mRootWindow(nullptr)
+  , mNetWorkareaAtom(0)
 {
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -100,8 +101,9 @@ nsScreenManagerGtk :: EnsureInit()
                                      GDK_PROPERTY_CHANGE_MASK));
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
 #ifdef MOZ_X11
-  mNetWorkareaAtom =
-    XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
+  if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+      mNetWorkareaAtom =
+        XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
 #endif
 
   return Init();
@@ -114,7 +116,9 @@ nsScreenManagerGtk :: Init()
   XineramaScreenInfo *screenInfo = nullptr;
   int numScreens;
 
-  if (!mXineramalib) {
+  bool useXinerama = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+
+  if (useXinerama && !mXineramalib) {
     mXineramalib = PR_LoadLibrary("libXinerama.so.1");
     if (!mXineramalib) {
       mXineramalib = SCREEN_MANAGER_LIBRARY_LOAD_FAILED;
