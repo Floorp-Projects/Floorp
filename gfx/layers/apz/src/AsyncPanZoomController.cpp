@@ -2906,14 +2906,6 @@ AsyncPanZoomController::HasReadyTouchBlock()
   return GetInputQueue()->HasReadyTouchBlock();
 }
 
-AsyncPanZoomController::TouchBehaviorFlags
-AsyncPanZoomController::GetAllowedTouchBehavior(ScreenIntPoint& aPoint) {
-  // Here we need to perform a hit testing over the touch-action regions attached to the
-  // layer associated with current apzc.
-  // Currently they are in progress, for more info see bug 928833.
-  return AllowedTouchBehavior::UNKNOWN;
-}
-
 void AsyncPanZoomController::SetState(PanZoomState aNewState)
 {
   PanZoomState oldState;

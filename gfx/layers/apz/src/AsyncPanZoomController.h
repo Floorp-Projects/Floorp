@@ -75,7 +75,6 @@ class AsyncPanZoomController {
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
-  typedef uint32_t TouchBehaviorFlags;
 
 public:
   enum GestureBehavior {
@@ -301,17 +300,6 @@ public:
    * Clear any overscroll on this APZC.
    */
   void ClearOverscroll();
-
-  /**
-   * Returns allowed touch behavior for the given point on the scrollable layer.
-   * Internally performs a kind of hit testing based on the regions constructed
-   * on the main thread and attached to the current scrollable layer. Each of such regions
-   * contains info about allowed touch behavior. If regions info isn't enough it returns
-   * UNKNOWN value and we should switch to the fallback approach - asking content.
-   * TODO: for now it's only a stub and returns hardcoded magic value. As soon as bug 928833
-   * is done we should integrate its logic here.
-   */
-  TouchBehaviorFlags GetAllowedTouchBehavior(ScreenIntPoint& aPoint);
 
   /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
