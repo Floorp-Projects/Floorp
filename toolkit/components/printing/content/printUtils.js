@@ -166,6 +166,8 @@ var PrintUtils = {
                       "to a browser.");
     }
 
+    let printSettings = this.getPrintSettings();
+
     let mm = aBrowser.messageManager;
 
     mm.addMessageListener("Printing:Print:Done", function onPrintingDone(msg) {
@@ -191,6 +193,7 @@ var PrintUtils = {
     });
 
     mm.sendAsyncMessage("Printing:Print", null, {
+      printSettings: printSettings,
       contentWindow: aWindow,
     });
   },
@@ -458,7 +461,9 @@ var PrintUtils = {
     // listener.
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
+    let printSettings = this.getPrintSettings();
     mm.sendAsyncMessage("Printing:Preview:Enter", null, {
+      printSettings: printSettings,
       contentWindow: this._sourceBrowser.contentWindowAsCPOW,
     });
 
