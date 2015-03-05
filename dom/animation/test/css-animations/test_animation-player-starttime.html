@@ -390,11 +390,19 @@ async_test(function(t) {
 
   player.startTime = startTimeForEndOfActiveInterval(player.timeline);
 
+  var previousTimelineTime = player.timeline.currentTime;
+
   // Skipping over the active interval will dispatch an 'animationstart' then
   // an 'animationend' event. We need to wait for these events before we start
   // testing going backwards since EventWatcher will fail the test if it gets
   // an event that we haven't told it about.
   eventWatcher.waitForEvents(['animationstart', 'animationend']).then(t.step_func(function() {
+    assert_true(document.timeline.currentTime - previousTimelineTime <
+                  ANIM_DUR_MS,
+                'Sanity check that seeking worked rather than the events ' +
+                'firing after normal playback through the very long ' +
+                'animation duration');
+
     // Now we can start the tests for skipping backwards, but first we check
     // that after the events we're still in the same end time state:
     checkStateAtActiveIntervalEndTime(player);
