@@ -48,8 +48,13 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.c 276914 2015-01-10 20:49:57Z
 #include <netinet/sctp_asconf.h>
 #include <netinet/sctp_sysctl.h>
 #include <netinet/sctp_indata.h>
+#if defined(ANDROID)
+#include <unistd.h>
+#include <ifaddrs-android-ext.h>
+#else
 #if defined(__FreeBSD__)
 #include <sys/unistd.h>
+#endif
 #endif
 
 /* Declare all of our malloc named types */
