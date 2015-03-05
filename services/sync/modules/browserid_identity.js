@@ -144,7 +144,7 @@ this.BrowserIDManager.prototype = {
     // re-entering of credentials by the user is necessary we don't take any
     // further action - an observer will fire when the user does that.
     if (Weave.Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
-      return Promise.reject();
+      return Promise.reject(new Error("User needs to re-authenticate"));
     }
 
     // So - we've a previous auth problem and aren't currently attempting to
