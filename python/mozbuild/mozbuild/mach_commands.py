@@ -599,6 +599,18 @@ class Build(MachCommandBase):
         return self._run_command_in_objdir(args=args, pass_thru=True,
             ensure_exit_code=False)
 
+@CommandProvider
+class Doctor(MachCommandBase):
+    """Provide commands for diagnosing common build environment problems"""
+    @Command('doctor', category='devenv',
+        description='')
+    @CommandArgument('--fix', default=None, action='store_true',
+        help='Attempt to fix found problems.')
+    def doctor(self, fix=None):
+        self._activate_virtualenv()
+        from mozbuild.doctor import Doctor
+        doctor = Doctor(self.topsrcdir, self.topobjdir, fix)
+        return doctor.check_all()
 
 @CommandProvider
 class Warnings(MachCommandBase):

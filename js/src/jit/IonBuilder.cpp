@@ -3494,6 +3494,8 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *t
         filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
         if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
             filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
+        filter.addType(TypeSet::BooleanType(), alloc_->lifoAlloc());
     } else if (constant->toString() == TypeName(JSTYPE_NUMBER, names)) {
         filter.addType(TypeSet::Int32Type(), alloc_->lifoAlloc());
         filter.addType(TypeSet::DoubleType(), alloc_->lifoAlloc());
@@ -5352,12 +5354,6 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets, BoolVec
     }
     retPhi->reserveLength(count);
 
-    // During inlining the 'this' value is assigned a type set which is
-    // specialized to the groups which can generate that inlining target.
-    // After inlining the original type set is restored.
-    TemporaryTypeSet *cacheObjectTypeSet =
-        maybeCache ? maybeCache->object()->resultTypeSet() : nullptr;
-
     // Inline each of the inlineable targets.
     for (uint32_t i = 0; i < targets.length(); i++) {
         // Target must be inlineable.
@@ -5405,12 +5401,16 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets, BoolVec
         inlineInfo.setFun(funcDef);
 
         if (maybeCache) {
+            // Assign the 'this' value a TypeSet specialized to the groups that
+            // can generate this inlining target.
             MOZ_ASSERT(callInfo.thisArg() == maybeCache->object());
-            TemporaryTypeSet *targetThisTypes =
-                maybeCache->propTable()->buildTypeSetForFunction(target);
-            if (!targetThisTypes)
+            TemporaryTypeSet *thisTypes = maybeCache->propTable()->buildTypeSetForFunction(target);
+            if (!thisTypes)
                 return false;
-            maybeCache->object()->setResultTypeSet(targetThisTypes);
+
+            MFilterTypeSet *filter = MFilterTypeSet::New(alloc(), inlineInfo.thisArg(), thisTypes);
+            inlineBlock->add(filter);
+            inlineInfo.setThis(filter);
         }
 
         // Inline the call into the inlineBlock.
@@ -5445,27 +5445,68 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets, BoolVec
     }
 
     // Patch the InlinePropertyTable to not dispatch to vetoed paths.
+    bool useFallback;
     if (maybeCache) {
-        maybeCache->object()->setResultTypeSet(cacheObjectTypeSet);
-
         InlinePropertyTable *propTable = maybeCache->propTable();
         propTable->trimTo(targets, choiceSet);
 
-        // If all paths were vetoed, output only a generic fallback path.
         if (propTable->numEntries() == 0) {
+            // If all paths were vetoed, output only a generic fallback path.
             MOZ_ASSERT(dispatch->numCases() == 0);
             maybeCache = nullptr;
+            useFallback = true;
+        } else {
+            // We need a fallback path if the ObjectGroup dispatch does not
+            // handle all incoming objects.
+            useFallback = false;
+            TemporaryTypeSet *objectTypes = maybeCache->object()->resultTypeSet();
+            for (uint32_t i = 0; i < objectTypes->getObjectCount(); i++) {
+                TypeSet::ObjectKey *obj = objectTypes->getObject(i);
+                if (!obj)
+                    continue;
+
+                if (!obj->isGroup()) {
+                    useFallback = true;
+                    break;
+                }
+
+                if (!propTable->hasObjectGroup(obj->group())) {
+                    useFallback = true;
+                    break;
+                }
+            }
+
+            if (!useFallback) {
+                // The object group dispatch handles all possible incoming
+                // objects, so the cache and barrier will not be reached and
+                // can be eliminated.
+                if (callInfo.fun()->isGetPropertyCache()) {
+                    MOZ_ASSERT(callInfo.fun() == maybeCache);
+                } else {
+                    MTypeBarrier *barrier = callInfo.fun()->toTypeBarrier();
+                    MOZ_ASSERT(!barrier->hasUses());
+                    MOZ_ASSERT(barrier->type() == MIRType_Object);
+                    MOZ_ASSERT(barrier->input()->isGetPropertyCache());
+                    MOZ_ASSERT(barrier->input()->toGetPropertyCache() == maybeCache);
+                    barrier->block()->discard(barrier);
+                }
+
+                MOZ_ASSERT(!maybeCache->hasUses());
+                maybeCache->block()->discard(maybeCache);
+            }
         }
+    } else {
+        useFallback = dispatch->numCases() < targets.length();
     }
 
     // If necessary, generate a fallback path.
-    // MObjectGroupDispatch always uses a fallback path.
-    if (maybeCache || dispatch->numCases() < targets.length()) {
+    if (useFallback) {
         // Generate fallback blocks, and set |current| to the fallback return block.
         if (maybeCache) {
             MBasicBlock *fallbackTarget;
-            if (!inlineObjectGroupFallback(callInfo, dispatchBlock, (MObjectGroupDispatch *)dispatch,
-                                          maybeCache, &fallbackTarget))
+            if (!inlineObjectGroupFallback(callInfo, dispatchBlock,
+                                           dispatch->toObjectGroupDispatch(),
+                                           maybeCache, &fallbackTarget))
             {
                 return false;
             }

@@ -1749,7 +1749,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 
   // Cache the plugin data for this remote layer tree
   state->mPluginData = aPlugins;
-  state->mUpdatedPluginDataAvailable = !!state->mPluginData.Length();
+  state->mUpdatedPluginDataAvailable = true;
 
   state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
       aPaintSequenceNumber, aIsRepeatTransaction);
@@ -1763,12 +1763,13 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   aLayerTree->SetPendingTransactionId(aTransactionId);
 }
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 // Sends plugin window state changes to the main thread
 static void
 UpdatePluginWindowState(uint64_t aId)
 {
   CompositorParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
-  if (!lts.mPluginData.Length()) {
+  if (!lts.mPluginData.Length() && !lts.mUpdatedPluginDataAvailable) {
     return;
   }
 
@@ -1779,8 +1780,17 @@ UpdatePluginWindowState(uint64_t aId)
   bool shouldHidePlugin = (!lts.mRoot ||
                            !lts.mRoot->GetParent()) &&
                           !lts.mUpdatedPluginDataAvailable;
-
   if (shouldComposePlugin) {
+    if (!lts.mPluginData.Length()) {
+      // We will pass through here in cases where the previous shadow layer
+      // tree contained visible plugins and the new tree does not. All we need
+      // to do here is hide the plugins for the old tree, so don't waste time
+      // calculating clipping.
+      nsTArray<uintptr_t> aVisibleIdList;
+      unused << lts.mParent->SendUpdatePluginVisibility(aVisibleIdList);
+      return;
+    }
+
     // Retrieve the offset and visible region of the layer that hosts
     // the plugins, CompositorChild needs these in calculating proper
     // plugin clipping.
@@ -1818,6 +1828,7 @@ UpdatePluginWindowState(uint64_t aId)
     lts.mPluginData.Clear();
   }
 }
+#endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 
 void
 CrossProcessCompositorParent::DidComposite(uint64_t aId)
@@ -1828,7 +1839,9 @@ CrossProcessCompositorParent::DidComposite(uint64_t aId)
     unused << SendDidComposite(aId, layerTree->GetPendingTransactionId());
     layerTree->SetPendingTransactionId(0);
   }
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   UpdatePluginWindowState(aId);
+#endif
 }
 
 void

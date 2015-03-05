@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.c 258765 2013-11-30 12:51:19Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_bsd_addr.c 276914 2015-01-10 20:49:57Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -360,7 +360,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 					continue;
 				}
 				ifa = (struct ifaddrs*)malloc(sizeof(struct ifaddrs));
-				ifa->ifa_name = strdup(pAdapt->AdapterName);
+				ifa->ifa_name = _strdup(pAdapt->AdapterName);
 				ifa->ifa_flags = pAdapt->Flags;
 				ifa->ifa_addr = (struct sockaddr *)malloc(sizeof(struct sockaddr_in));
 				memcpy(ifa->ifa_addr, pUnicast->Address.lpSockaddr, sizeof(struct sockaddr_in));
@@ -408,7 +408,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 		if (pAdapt->IfType == IF_TYPE_IEEE80211 || pAdapt->IfType == IF_TYPE_ETHERNET_CSMACD) {
 			for (pUnicast = pAdapt->FirstUnicastAddress; pUnicast; pUnicast = pUnicast->Next) {
 				ifa = (struct ifaddrs*)malloc(sizeof(struct ifaddrs));
-				ifa->ifa_name = strdup(pAdapt->AdapterName);
+				ifa->ifa_name = _strdup(pAdapt->AdapterName);
 				ifa->ifa_flags = pAdapt->Flags;
 				ifa->ifa_addr = (struct sockaddr *)malloc(sizeof(struct sockaddr_in6));
 				memcpy(ifa->ifa_addr, pUnicast->Address.lpSockaddr, sizeof(struct sockaddr_in6));
@@ -750,7 +750,7 @@ sctp_addr_change(struct ifaddr *ifa, int cmd)
 		                       ifa->ifa_ifp->if_index,
 		                       ifa->ifa_ifp->if_xname);
 #endif
-		                      
+
 		/* We don't bump refcount here so when it completes
 		 * the final delete will happen.
 		 */
@@ -842,23 +842,40 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 		}
 
 		if (SCTP_BUF_IS_EXTENDED(m) == 0) {
-		  sctp_m_freem(m);
-		  return (NULL);
+			sctp_m_freem(m);
+			return (NULL);
 		}
 	}
 	SCTP_BUF_LEN(m) = 0;
 	SCTP_BUF_NEXT(m) = SCTP_BUF_NEXT_PKT(m) = NULL;
 
-#if defined(__Userspace__)
 	/* __Userspace__
 	 * Check if anything need to be done to ensure logging works
 	 */
-#endif
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if (SCTP_BUF_IS_EXTENDED(m)) {
-			sctp_log_mb(m, SCTP_MBUF_IALLOC);
+		sctp_log_mb(m, SCTP_MBUF_IALLOC);
+	}
+#endif
+#elif defined(__FreeBSD__) && __FreeBSD_version > 1100052
+	m =  m_getm2(NULL, space_needed, how, type, want_header ? M_PKTHDR : 0);
+	if (m == NULL) {
+		/* bad, no memory */
+		return (m);
+	}
+	if (allonebuf) {
+		if (SCTP_BUF_SIZE(m) < space_needed) {
+			m_freem(m);
+			return (NULL);
 		}
+	}
+	if (SCTP_BUF_NEXT(m)) {
+		sctp_m_freem(SCTP_BUF_NEXT(m));
+		SCTP_BUF_NEXT(m) = NULL;
+	}
+#ifdef SCTP_MBUF_LOGGING
+	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
+		sctp_log_mb(m, SCTP_MBUF_IALLOC);
 	}
 #endif
 #elif defined(__FreeBSD__) && __FreeBSD_version > 602000
@@ -883,14 +900,12 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 		}
 	}
 	if (SCTP_BUF_NEXT(m)) {
-		sctp_m_freem( SCTP_BUF_NEXT(m));
+		sctp_m_freem(SCTP_BUF_NEXT(m));
 		SCTP_BUF_NEXT(m) = NULL;
 	}
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if (SCTP_BUF_IS_EXTENDED(m)) {
-			sctp_log_mb(m, SCTP_MBUF_IALLOC);
-		}
+		sctp_log_mb(m, SCTP_MBUF_IALLOC);
 	}
 #endif
 #else
@@ -951,9 +966,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header,
 	SCTP_BUF_NEXT(m) = SCTP_BUF_NEXT_PKT(m) = NULL;
 #ifdef SCTP_MBUF_LOGGING
 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_MBUF_LOGGING_ENABLE) {
-		if (SCTP_BUF_IS_EXTENDED(m)) {
-			sctp_log_mb(m, SCTP_MBUF_IALLOC);
-		}
+		sctp_log_mb(m, SCTP_MBUF_IALLOC);
 	}
 #endif
 #endif

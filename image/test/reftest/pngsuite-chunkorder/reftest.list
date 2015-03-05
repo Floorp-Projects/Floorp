@@ -4,18 +4,18 @@
 # same, so they share common HTML reference files.
 
 # oi1n0g16 - grayscale mother image with 1 idat-chunk
-fails-if(Android) == oi1n0g16.png grayscale.html
+== oi1n0g16.png grayscale.html
 # oi1n2c16 - color mother image with 1 idat-chunk
-fails-if(Android) == oi1n2c16.png color.html
+== oi1n2c16.png color.html
 # oi2n0g16 - grayscale image with 2 idat-chunks
-fails-if(Android) == oi2n0g16.png grayscale.html
+== oi2n0g16.png grayscale.html
 # oi2n2c16 - color image with 2 idat-chunks
-fails-if(Android) == oi2n2c16.png color.html
+== oi2n2c16.png color.html
 # oi4n0g16 - grayscale image with 4 unequal sized idat-chunks
-fails-if(Android) == oi4n0g16.png grayscale.html
+== oi4n0g16.png grayscale.html
 # oi4n2c16 - color image with 4 unequal sized idat-chunks
-fails-if(Android) == oi4n2c16.png color.html
+== oi4n2c16.png color.html
 # oi9n0g16 - grayscale image with all idat-chunks length one
-fails-if(Android) == oi9n0g16.png grayscale.html
+== oi9n0g16.png grayscale.html
 # oi9n2c16 - color image with all idat-chunks length one 
-fails-if(Android) == oi9n2c16.png color.html
+== oi9n2c16.png color.html

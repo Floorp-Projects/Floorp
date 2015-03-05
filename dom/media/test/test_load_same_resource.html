@@ -11,6 +11,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
 function cloneLoaded(event) {
@@ -31,6 +32,19 @@ function tryClone(event) {
   var e = event.target;
   var clone = e.cloneNode(false);
   clone.token = e.token;
+
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause"];
+  function logEvent(evt) {
+    var e = evt.target;
+    info(e.token + ": got " + evt.type);
+  }
+  events.forEach(function(e) {
+    clone.addEventListener(e, logEvent, false);
+  });
+
 
   if (e._expectedDuration) {
     ok(Math.abs(e.duration - e._expectedDuration) < 0.1,

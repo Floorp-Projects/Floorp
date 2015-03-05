@@ -192,7 +192,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
-        mSiteIdentityPopup.setAnchor(mSiteSecurity);
+        mSiteIdentityPopup.setAnchor(getDoorHangerAnchor());
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
@@ -557,11 +557,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     View getDoorHangerAnchor() {
-        if (!HardwareUtils.isTablet()) {
-            return mFavicon;
-        } else {
-            return mSiteSecurity;
-        }
+        return this;
     }
 
     void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {

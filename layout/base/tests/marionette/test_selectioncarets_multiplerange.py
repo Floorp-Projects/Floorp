@@ -36,18 +36,28 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self._sel6 = self.marionette.find_element(By.ID, 'sel6')
         self._nonsel1 = self.marionette.find_element(By.ID, 'nonsel1')
 
-    def openTestHtml2(self, enabled=True):
-        # Open html for testing and enable selectioncaret and
-        # non-editable support
+    def openTestHtmlLongText(self, enabled=True):
+        # Open html for testing and enable selectioncaret
         self.marionette.execute_script(
             'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
             ('true' if enabled else 'false'))
 
-        test_html2 = self.marionette.absolute_url('test_selectioncarets_longtext.html')
-        self.marionette.navigate(test_html2)
+        test_html = self.marionette.absolute_url('test_selectioncarets_longtext.html')
+        self.marionette.navigate(test_html)
 
-        self._body2 = self.marionette.find_element(By.ID, 'bd2')
+        self._body = self.marionette.find_element(By.ID, 'bd')
         self._longtext = self.marionette.find_element(By.ID, 'longtext')
+
+    def openTestHtmlIframe(self, enabled=True):
+        # Open html for testing and enable selectioncaret
+        self.marionette.execute_script(
+            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
+            ('true' if enabled else 'false'))
+
+        test_html = self.marionette.absolute_url('test_selectioncarets_iframe.html')
+        self.marionette.navigate(test_html)
+
+        self._iframe = self.marionette.find_element(By.ID, 'frame')
 
     def _long_press_to_select_word(self, el, wordOrdinal):
         sel = SelectionManager(el)
@@ -147,21 +157,43 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         if not self.marionette.session_capabilities['rotatable']:
             return
 
-        self.openTestHtml2(enabled=True)
+        self.openTestHtmlLongText(enabled=True)
 
         # Select word in portrait mode, then change to landscape mode
         self.marionette.set_orientation('portrait')
         self._long_press_to_select_word(self._longtext, 12)
-        sel = SelectionManager(self._body2)
+        sel = SelectionManager(self._body)
         (p_start_caret_x, p_start_caret_y), (p_end_caret_x, p_end_caret_y) = sel.selection_carets_location()
         self.marionette.set_orientation('landscape')
         (l_start_caret_x, l_start_caret_y), (l_end_caret_x, l_end_caret_y) = sel.selection_carets_location()
 
         # Drag end caret to the start caret to change the selected content
-        self.actions.flick(self._body2, l_end_caret_x, l_end_caret_y, l_start_caret_x, l_start_caret_y).perform()
+        self.actions.flick(self._body, l_end_caret_x, l_end_caret_y, l_start_caret_x, l_start_caret_y).perform()
 
         # Change orientation back to portrait mode to prevent affecting
         # other tests
         self.marionette.set_orientation('portrait')
 
         self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()), 'o')
+
+    def test_select_word_inside_an_iframe(self):
+        '''Bug 1088552
+        The scroll offset in iframe should be taken into consideration properly.
+        In this test, we scroll content in the iframe to the bottom to cause a
+        huge offset. If we use the right coordinate system, selection should
+        work. Otherwise, it would be hard to trigger select word.
+        '''
+        self.openTestHtmlIframe(enabled=True)
+
+        # switch to inner iframe and scroll to the bottom
+        self.marionette.switch_to_frame(self._iframe)
+        self.marionette.execute_script(
+         'document.getElementById("bd").scrollTop += 999')
+
+        # long press to select bottom text
+        self._body = self.marionette.find_element(By.ID, 'bd')
+        sel = SelectionManager(self._body)
+        self._bottomtext = self.marionette.find_element(By.ID, 'bottomtext')
+        long_press_without_contextmenu(self.marionette, self._bottomtext, self._long_press_time)
+
+        self.assertNotEqual(self._to_unix_line_ending(sel.selected_content.strip()), '')

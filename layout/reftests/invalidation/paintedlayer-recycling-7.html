@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>When a PaintedLayer is split up into two, the lower items should stay in their layer and the higher items should get a new one.</title>
+<!-- The motivation for this is that we don't ever want to assign a new layer to the canvas background just because an item is split from it. -->
+
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.onTopOfFixed {
+  position: absolute;
+  top: 120px;
+  left: 260px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.onTopOfFixed.reftest-no-paint {
+  left: 20px;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="fixed content">
+  <!--
+    This layer is just there to force .onTopOfFixed into PaintedLayers above
+    the page background.
+  -->
+</div>
+
+<div class="onTopOfFixed reftest-no-paint content">
+  <!--
+    This item should start out sharing a PaintedLayer with the other
+    .onTopOfFixed item.
+  -->
+</div>
+
+<div class="fixed content" id="aboutToBecomeVisible" style="visibility: hidden">
+  <!--
+    This layer starts out hidden. When it becomes visible, it forces the two
+    .onTopOfFixed items into separate layers.
+  -->
+</div>
+
+<div class="onTopOfFixed content">
+  <!--
+    This item should start out sharing a PaintedLayer with the other
+    .onTopOfFixed item, but when the two items get split up, it should be this
+    one that changes layers, not the other one.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToBecomeVisible").style.visibility = "visible";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

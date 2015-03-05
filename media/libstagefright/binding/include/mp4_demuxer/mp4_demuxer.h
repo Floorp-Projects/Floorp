@@ -43,8 +43,9 @@ enum TrackType { kVideo = 1, kAudio };
 class MP4Demuxer
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MP4Demuxer)
+
   explicit MP4Demuxer(Stream* aSource, Monitor* aMonitor);
-  ~MP4Demuxer();
 
   bool Init();
   Microseconds Duration();
@@ -76,6 +77,9 @@ public:
   // Returns timestamp of next keyframe, or -1 if demuxer can't
   // report this.
   Microseconds GetNextKeyframeTime();
+
+protected:
+  ~MP4Demuxer();
 
 private:
   AudioDecoderConfig mAudioConfig;

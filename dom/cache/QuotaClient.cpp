@@ -194,7 +194,7 @@ private:
   ~CacheQuotaClient() { }
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient)
+  NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, MOZ_OVERRIDE)
 };
 
 } // anonymous namespace;

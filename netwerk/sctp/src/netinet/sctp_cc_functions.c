@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 240158 2012-09-06 07:03:56Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_cc_functions.c 271672 2014-09-16 13:48:46Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -1218,12 +1218,9 @@ sctp_cwnd_update_after_packet_dropped(struct sctp_tcb *stcb,
 	uint32_t *bottle_bw, uint32_t *on_queue)
 {
 	uint32_t bw_avail;
-	int rtt;
 	unsigned int incr;
 	int old_cwnd = net->cwnd;
 
-	/* need real RTT in msd for this calc */
-	rtt = net->rtt / 1000;
 	/* get bottle neck bw */
 	*bottle_bw = ntohl(cp->bottle_bw);
 	/* and whats on queue */
@@ -1232,10 +1229,11 @@ sctp_cwnd_update_after_packet_dropped(struct sctp_tcb *stcb,
 	 * adjust the on-queue if our flight is more it could be
 	 * that the router has not yet gotten data "in-flight" to it
 	 */
-	if (*on_queue < net->flight_size)
+	if (*on_queue < net->flight_size) {
 		*on_queue = net->flight_size;
-		/* calculate the available space */
-	bw_avail = (*bottle_bw * rtt) / 1000;
+	}
+	/* rtt is measured in micro seconds, bottle_bw in bytes per second */
+	bw_avail = (uint32_t)(((uint64_t)(*bottle_bw) * net->rtt) / (uint64_t)1000000);
 	if (bw_avail > *bottle_bw) {
 		/*
 		 * Cap the growth to no more than the bottle neck.
@@ -1253,8 +1251,8 @@ sctp_cwnd_update_after_packet_dropped(struct sctp_tcb *stcb,
 		 * else to be "added to the fire".
 		 */
 		int seg_inflight, seg_onqueue, my_portion;
-			net->partial_bytes_acked = 0;
 
+		net->partial_bytes_acked = 0;
 		/* how much are we over queue size? */
 		incr = *on_queue - bw_avail;
 		if (stcb->asoc.seen_a_sack_this_pkt) {

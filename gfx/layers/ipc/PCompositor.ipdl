@@ -66,6 +66,12 @@ child:
                                    nsIntRegion aVisibleRegion,
                                    PluginWindowData[] aPlugins);
 
+  /**
+   * Sets the list of currently visible plugin windows based on a
+   * list of plugin window ids.
+   */
+  async UpdatePluginVisibility(uintptr_t[] aVisibleIdList);
+
 parent:
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();

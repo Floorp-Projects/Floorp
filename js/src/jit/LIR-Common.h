@@ -2154,7 +2154,7 @@ class LFunctionDispatch : public LInstructionHelper<0, 1, 0>
         setOperand(0, in);
     }
 
-    MFunctionDispatch *mir() {
+    MFunctionDispatch *mir() const {
         return mir_->toFunctionDispatch();
     }
 };
@@ -2167,6 +2167,10 @@ class LObjectGroupDispatch : public LInstructionHelper<0, 1, 1>
   public:
     LIR_HEADER(ObjectGroupDispatch);
 
+    const char *extraName() const {
+        return mir()->hasFallback() ? "HasFallback" : "NoFallback";
+    }
+
     LObjectGroupDispatch(const LAllocation &in, const LDefinition &temp) {
         setOperand(0, in);
         setTemp(0, temp);
@@ -2176,7 +2180,7 @@ class LObjectGroupDispatch : public LInstructionHelper<0, 1, 1>
         return getTemp(0);
     }
 
-    MObjectGroupDispatch *mir() {
+    MObjectGroupDispatch *mir() const {
         return mir_->toObjectGroupDispatch();
     }
 };
