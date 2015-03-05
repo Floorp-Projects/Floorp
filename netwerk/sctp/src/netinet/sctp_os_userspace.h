@@ -496,7 +496,7 @@ struct sx {int dummy;};
 /* for getifaddrs */
 #include <sys/types.h>
 #if !defined(__Userspace_os_Windows)
-#if defined(INET) || defined(INET6)
+#if !defined(ANDROID) && (defined(INET) || defined(INET6))
 #include <ifaddrs.h>
 #endif
 
