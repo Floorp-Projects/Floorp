@@ -88,7 +88,20 @@ GCIfNeeded(ExclusiveContext *cx)
         }
     }
 
-    return true;
+    // Trigger a full, non-incremental GC if we are over the limit.
+    JSRuntime *unsafeRt = cx->zone()->runtimeFromAnyThread();
+    if (unsafeRt->gc.usage.gcBytes() >= unsafeRt->gc.tunables.gcMaxBytes()) {
+        if (cx->isJSContext()) {
+            JSRuntime *rt = cx->asJSContext()->runtime();
+            JS::PrepareForFullGC(rt);
+            AutoKeepAtoms keepAtoms(cx->perThreadData);
+            rt->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
+            rt->gc.waitBackgroundSweepOrAllocEnd();
+        }
+    }
+
+    // Check our heap constraints and fail the allocation if we are over them.
+    return unsafeRt->gc.usage.gcBytes() < unsafeRt->gc.tunables.gcMaxBytes();
 }
 
 template <AllowGC allowGC>
@@ -96,8 +109,10 @@ static inline bool
 CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
 {
     if (allowGC) {
-        if (!GCIfNeeded(cx))
+        if (!GCIfNeeded(cx)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     }
 
     if (!cx->isJSContext())
