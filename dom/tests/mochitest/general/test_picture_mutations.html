@@ -65,7 +65,7 @@
       info("test 1");
       img.srcset = testPNG100;
       img.src = testPNG50;
-      is(img.currentSrc, null, "Should not have synchronously selected source");
+      is(img.currentSrc, '', "Should not have synchronously selected source");
 
       // No events should have fired synchronously, now we should get just one load (and no 404 error)
       expectEvents(1, 0, nextTest);
