@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsPrintingProxy_h
-#define __nsPrintingProxy_h
+#ifndef __nsPrintingPromptServiceProxy_h
+#define __nsPrintingPromptServiceProxy_h
 
 #include "nsIPrintingPromptService.h"
 #include "mozilla/embedding/PPrintingChild.h"
 
-class nsPrintingProxy: public nsIPrintingPromptService,
-                       public mozilla::embedding::PPrintingChild
+class nsPrintingPromptServiceProxy: public nsIPrintingPromptService,
+                                    public mozilla::embedding::PPrintingChild
 {
-    virtual ~nsPrintingProxy();
+    virtual ~nsPrintingPromptServiceProxy();
 
 public:
-    nsPrintingProxy();
+    nsPrintingPromptServiceProxy();
 
     nsresult Init();
 

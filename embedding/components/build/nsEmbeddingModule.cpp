@@ -20,7 +20,7 @@
 
 #ifdef NS_PRINTING
 #include "nsPrintingPromptService.h"
-#include "nsPrintingProxy.h"
+#include "nsPrintingPromptServiceProxy.h"
 #endif
 
 
@@ -40,7 +40,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
 #ifdef PROXY_PRINTING
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingProxy, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptServiceProxy, Init)
 #endif
 #endif
 #endif
@@ -70,7 +70,7 @@ static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 #ifdef PROXY_PRINTING
     { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceConstructor,
       mozilla::Module::MAIN_PROCESS_ONLY },
-    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingProxyConstructor,
+    { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceProxyConstructor,
       mozilla::Module::CONTENT_PROCESS_ONLY },
 #else
     { &kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr, nsPrintingPromptServiceConstructor },

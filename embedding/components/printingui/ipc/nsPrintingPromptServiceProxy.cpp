@@ -11,7 +11,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIPrintingPromptService.h"
 #include "nsPIDOMWindow.h"
-#include "nsPrintingProxy.h"
+#include "nsPrintingPromptServiceProxy.h"
 #include "nsPrintOptionsImpl.h"
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogChild.h"
@@ -20,27 +20,27 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::embedding;
 
-NS_IMPL_ISUPPORTS(nsPrintingProxy, nsIPrintingPromptService)
+NS_IMPL_ISUPPORTS(nsPrintingPromptServiceProxy, nsIPrintingPromptService)
 
-nsPrintingProxy::nsPrintingProxy()
+nsPrintingPromptServiceProxy::nsPrintingPromptServiceProxy()
 {
 }
 
-nsPrintingProxy::~nsPrintingProxy()
+nsPrintingPromptServiceProxy::~nsPrintingPromptServiceProxy()
 {
 }
 
 nsresult
-nsPrintingProxy::Init()
+nsPrintingPromptServiceProxy::Init()
 {
   mozilla::unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
-                                 nsIWebBrowserPrint *webBrowserPrint,
-                                 nsIPrintSettings *printSettings)
+nsPrintingPromptServiceProxy::ShowPrintDialog(nsIDOMWindow *parent,
+                                              nsIWebBrowserPrint *webBrowserPrint,
+                                              nsIPrintSettings *printSettings)
 {
   NS_ENSURE_ARG(parent);
   NS_ENSURE_ARG(webBrowserPrint);
@@ -86,14 +86,14 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
-                              nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
-                              nsIPrintSettings*        printSettings,      // ok to be null
-                              nsIObserver*             openDialogObserver, // ok to be null
-                              bool                     isForPrinting,
-                              nsIWebProgressListener** webProgressListener,
-                              nsIPrintProgressParams** printProgressParams,
-                              bool*                  notifyOnOpen)
+nsPrintingPromptServiceProxy::ShowProgress(nsIDOMWindow*            parent,
+                                           nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
+                                           nsIPrintSettings*        printSettings,      // ok to be null
+                                           nsIObserver*             openDialogObserver, // ok to be null
+                                           bool                     isForPrinting,
+                                           nsIWebProgressListener** webProgressListener,
+                                           nsIPrintProgressParams** printProgressParams,
+                                           bool*                  notifyOnOpen)
 {
   NS_ENSURE_ARG(parent);
   NS_ENSURE_ARG(webProgressListener);
@@ -129,37 +129,37 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPageSetup(nsIDOMWindow *parent,
-                               nsIPrintSettings *printSettings,
-                               nsIObserver *aObs)
+nsPrintingPromptServiceProxy::ShowPageSetup(nsIDOMWindow *parent,
+                                            nsIPrintSettings *printSettings,
+                                            nsIObserver *aObs)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrinterProperties(nsIDOMWindow *parent,
-                                       const char16_t *printerName,
-                                       nsIPrintSettings *printSettings)
+nsPrintingPromptServiceProxy::ShowPrinterProperties(nsIDOMWindow *parent,
+                                                    const char16_t *printerName,
+                                                    nsIPrintSettings *printSettings)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 PPrintProgressDialogChild*
-nsPrintingProxy::AllocPPrintProgressDialogChild()
+nsPrintingPromptServiceProxy::AllocPPrintProgressDialogChild()
 {
   // The parent process will never initiate the PPrintProgressDialog
   // protocol connection, so no need to provide an allocator here.
   NS_NOTREACHED("Allocator for PPrintProgressDialogChild should not be "
-                "called on nsPrintingProxy.");
+                "called on nsPrintingPromptServiceProxy.");
   return nullptr;
 }
 
 bool
-nsPrintingProxy::DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor)
+nsPrintingPromptServiceProxy::DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor)
 {
   // The parent process will never initiate the PPrintProgressDialog
   // protocol connection, so no need to provide an deallocator here.
   NS_NOTREACHED("Deallocator for PPrintProgressDialogChild should not be "
-                "called on nsPrintingProxy.");
+                "called on nsPrintingPromptServiceProxy.");
   return false;
 }
