@@ -468,6 +468,24 @@ add_identity_test(this, function test_shouldReportError_master_password() {
   yield deferred.promise;
 });
 
+// Test that even if we don't have a cluster URL, a login failure due to
+// authentication errors is always reported.
+add_identity_test(this, function test_shouldReportLoginFailureWithNoCluster() {
+  // Ensure no clusterURL - any error not specific to login should not be reported.
+  Service.serverURL  = "";
+  Service.clusterURL = "";
+
+  // Test explicit "login rejected" state.
+  Status.resetSync();
+  // If we have a LOGIN_REJECTED state, we always report the error.
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  do_check_true(errorHandler.shouldReportError());
+  // But any other status with a missing clusterURL is treated as a mid-sync
+  // 401 (ie, should be treated as a node reassignment)
+  Status.login = LOGIN_SUCCEEDED;
+  do_check_false(errorHandler.shouldReportError());
+});
+
 // XXX - how to arrange for 'Service.identity.basicPassword = null;' in
 // an fxaccounts environment?
 add_task(function test_login_syncAndReportErrors_non_network_error() {

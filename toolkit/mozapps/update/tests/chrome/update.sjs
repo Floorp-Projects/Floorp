@@ -220,26 +220,26 @@ function parseQueryString(aQueryString) {
  */
 function getUpdateRDF(aParams) {
   let addonVersion;
+  let maxVersion;
   let addonID = aParams.addonID;
   let addonUpdateType = addonID.split("_")[0];
-  let maxVersion = aParams.platformVersion;
 
   switch (addonUpdateType) {
     case "updatecompatibility":
       // Use "1.0" for the add-on version for the compatibility update case since
       // the tests create all add-ons with "1.0" for the version.
       addonVersion = "1.0";
+      maxVersion = aParams.newerPlatformVersion;
       break;
     case "updateversion":
       // Use "2.0" for the add-on version for the version update case since the
       // tests create all add-ons with "1.0" for the version.
       addonVersion = "2.0";
+      maxVersion = aParams.newerPlatformVersion;
       break;
     default:
-      return "<?xml version=\"1.0\"?>\n" +
-             "<RDF:RDF xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" " +
-             "         xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n" +
-             "</RDF:RDF>\n";
+      addonVersion = "1.0";
+      maxVersion = aParams.platformVersion;
   }
 
   return "<?xml version=\"1.0\"?>\n" +
