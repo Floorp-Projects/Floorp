@@ -25,7 +25,7 @@ public:
 
 private:
   bool ProcessResponse(int32_t aType, const android::Parcel& aParcel, EventOptions& aOptions);
-  bool GeneralResponse(int32_t aResponse, const android::Parcel& aParcel, EventOptions& aOptions);
+  bool GeneralResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool ChangeRFStateRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool ChangeRFStateResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool ReadNDEFRequest(android::Parcel& aParcel, const CommandOptions& options);

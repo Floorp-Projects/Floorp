@@ -69,14 +69,12 @@
 <!-- LOCALIZATION NOTE (cmd.unblock.label):
      This command may be shown in the context menu, as a menu button item, or as
      a text link when malware or potentially unwanted downloads are blocked.
-     Note: This string doesn't exist in the UI yet.  See bug 1053890.
      -->
 <!ENTITY cmd.unblock.label                "Unblock">
 <!ENTITY cmd.unblock.accesskey            "U">
 <!-- LOCALIZATION NOTE (cmd.removeFile.label):
      This command may be shown in the context menu or as a menu button label
      when malware or potentially unwanted downloads are blocked.
-     Note: This string doesn't exist in the UI yet.  See bug 1053890.
      -->
 <!ENTITY cmd.removeFile.label             "Remove File">
 <!ENTITY cmd.removeFile.accesskey         "m">
