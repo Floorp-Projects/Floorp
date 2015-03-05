@@ -82,25 +82,6 @@ public:
 
   static void ShutDown();
 
-  // Beware that these methods don't override their super-class equivalent (which
-  // are not virtual), they just overload them.
-  // All of these Send* methods just add a sanity check (that it is not too late
-  // send a message) and forward the call to the super-class's equivalent method.
-  // This means that it is correct to call directly the super-class methods, but
-  // you won't get the extra safety provided here.
-  bool SendWillStop();
-  bool SendPause();
-  bool SendResume();
-  bool SendNotifyChildCreated(const uint64_t& id);
-  bool SendAdoptChild(const uint64_t& id);
-  bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot, const nsIntRect& dirtyRect);
-  bool SendFlushRendering();
-  bool SendGetTileSize(int32_t* tileWidth, int32_t* tileHeight);
-  bool SendStartFrameTimeRecording(const int32_t& bufferSize, uint32_t* startIndex);
-  bool SendStopFrameTimeRecording(const uint32_t& startIndex, nsTArray<float>* intervals);
-  bool SendNotifyRegionInvalidated(const nsIntRegion& region);
-  bool SendRequestNotifyAfterRemotePaint();
-
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorChild();
@@ -167,9 +148,6 @@ private:
 
   // When we receive overfill numbers, notify these client layer managers
   nsAutoTArray<ClientLayerManager*,0> mOverfillObservers;
-
-  // True until the beginning of the two-step shutdown sequence of this actor.
-  bool mCanSend;
 };
 
 } // layers
