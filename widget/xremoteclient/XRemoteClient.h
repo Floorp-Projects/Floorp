@@ -15,6 +15,10 @@ public:
   ~XRemoteClient();
 
   virtual nsresult Init();
+  virtual nsresult SendCommand(const char *aProgram, const char *aUsername,
+                               const char *aProfile, const char *aCommand,
+                               const char* aDesktopStartupID,
+                               char **aResponse, bool *aSucceeded);
   virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
                                    const char *aProfile,
                                    int32_t argc, char **argv,
@@ -30,7 +34,18 @@ private:
   nsresult       FreeLock         (Window aWindow);
   Window         FindBestWindow   (const char *aProgram,
                                    const char *aUsername,
-                                   const char *aProfile);
+                                   const char *aProfile,
+                                   bool aSupportsCommandLine);
+  nsresult     SendCommandInternal(const char *aProgram, const char *aUsername,
+                                   const char *aProfile, const char *aCommand,
+                                   int32_t argc, char **argv,
+                                   const char* aDesktopStartupID,
+                                   char **aResponse, bool *aWindowFound);
+  nsresult       DoSendCommand    (Window aWindow,
+                                   const char *aCommand,
+                                   const char* aDesktopStartupID,
+                                   char **aResponse,
+                                   bool *aDestroyed);
   nsresult       DoSendCommandLine(Window aWindow,
                                    int32_t argc, char **argv,
                                    const char* aDesktopStartupID,
@@ -43,6 +58,7 @@ private:
 
   Atom           mMozVersionAtom;
   Atom           mMozLockAtom;
+  Atom           mMozCommandAtom;
   Atom           mMozCommandLineAtom;
   Atom           mMozResponseAtom;
   Atom           mMozWMStateAtom;
