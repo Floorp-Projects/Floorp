@@ -59,12 +59,7 @@ public:
   NS_IMETHOD Fetch(FetchDriverObserver* aObserver);
 
   void
-  SetDocument(nsIDocument* aDocument)
-  {
-    // Cannot set document after Fetch() has been called.
-    MOZ_ASSERT(mFetchRecursionCount == 0);
-    mDocument = aDocument;
-  }
+  SetDocument(nsIDocument* aDocument);
 
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
