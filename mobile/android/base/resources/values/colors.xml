@@ -164,7 +164,6 @@
   <color name="toast_button_text">#FFFFFFFF</color>
 
   <!-- Tab History colors. -->
-  <color name="tab_history_background">#EBEBF0</color>
   <color name="tab_history_timeline_separator">#D7D9DB</color>
   <color name="tab_history_favicon_border">#D7D9DB</color>
   <color name="tab_history_favicon_background">#FFFFFF</color>

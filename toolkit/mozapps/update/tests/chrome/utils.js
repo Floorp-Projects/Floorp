@@ -925,7 +925,8 @@ function setupPrefs() {
     gExtUpdateURL = Services.prefs.getCharPref(PREF_EXTENSIONS_UPDATE_URL);
   }
   let extUpdateUrl = URL_HTTP_UPDATE_XML + "?addonID=%ITEM_ID%" +
-                     "&platformVersion=" + getNewerPlatformVersion();
+                     "&platformVersion=" + Services.appinfo.platformVersion +
+                     "&newerPlatformVersion=" + getNewerPlatformVersion();
   Services.prefs.setCharPref(PREF_EXTENSIONS_UPDATE_URL, extUpdateUrl);
 
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
@@ -1124,17 +1125,21 @@ function setupAddons(aCallback) {
   function setNoUpdateAddonsDisabledState() {
     AddonManager.getAllAddons(function(aAddons) {
       aAddons.forEach(function(aAddon) {
-        if (aAddon.name.indexOf("noupdate") != 0) {
-          return;
-        }
-
-        if (gDisableNoUpdateAddon) {
+        if (aAddon.name.indexOf("appdisabled") == 0) {
           if (!aAddon.userDisabled) {
             aAddon.userDisabled = true;
           }
-        } else {
-          if (aAddon.userDisabled) {
-            aAddon.userDisabled = false;
+        }
+
+        if (aAddon.name.indexOf("noupdate") == 0) {
+          if (gDisableNoUpdateAddon) {
+            if (!aAddon.userDisabled) {
+              aAddon.userDisabled = true;
+            }
+          } else {
+            if (aAddon.userDisabled) {
+              aAddon.userDisabled = false;
+            }
           }
         }
       });
