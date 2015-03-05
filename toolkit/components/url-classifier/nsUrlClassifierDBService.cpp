@@ -18,6 +18,7 @@
 #include "nsIProperties.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIUrlClassifierUtils.h"
+#include "nsIXULRuntime.h"
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsUrlClassifierProxies.h"
@@ -1101,6 +1102,14 @@ nsUrlClassifierDBService::Init()
     gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
 #endif
   MOZ_ASSERT(NS_IsMainThread(), "Must initialize DB service on main thread");
+  nsCOMPtr<nsIXULRuntime> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  if (appInfo) {
+    bool inSafeMode = false;
+    appInfo->GetInSafeMode(&inSafeMode);
+    if (inSafeMode) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
 
   // Retrieve all the preferences.
   mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
