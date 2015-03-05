@@ -208,6 +208,8 @@ class JitcodeGlobalEntry
         }
 
         void markJitcode(JSTracer *trc);
+        bool isJitcodeMarkedFromAnyThread();
+        bool isJitcodeAboutToBeFinalized();
     };
 
     struct IonEntry : public BaseEntry
@@ -357,6 +359,8 @@ class JitcodeGlobalEntry
         mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *ptr);
 
         void mark(JSTracer *trc);
+        void sweep();
+        bool isMarkedFromAnyThread();
     };
 
     struct BaselineEntry : public BaseEntry
@@ -409,6 +413,10 @@ class JitcodeGlobalEntry
 
         void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
                                          JSScript **script, jsbytecode **pc) const;
+
+        void mark(JSTracer *trc);
+        void sweep();
+        bool isMarkedFromAnyThread();
     };
 
     struct IonCacheEntry : public BaseEntry
@@ -437,6 +445,8 @@ class JitcodeGlobalEntry
 
         void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
                                          JSScript **script, jsbytecode **pc) const;
+
+        bool isMarkedFromAnyThread(JSRuntime *rt);
     };
 
     // Dummy entries are created for jitcode generated when profiling is not turned on,
@@ -801,6 +811,61 @@ class JitcodeGlobalEntry
         return ionEntry().allTrackedTypes();
     }
 
+    Zone *zone() {
+        return baseEntry().jitcode()->zone();
+    }
+
+    void mark(JSTracer *trc) {
+        baseEntry().markJitcode(trc);
+        switch (kind()) {
+          case Ion:
+            ionEntry().mark(trc);
+            break;
+          case Baseline:
+            baselineEntry().mark(trc);
+            break;
+          case IonCache:
+          case Dummy:
+            break;
+          default:
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+        }
+    }
+
+    void sweep() {
+        switch (kind()) {
+          case Ion:
+            ionEntry().sweep();
+            break;
+          case Baseline:
+            baselineEntry().sweep();
+            break;
+          case IonCache:
+          case Dummy:
+            break;
+          default:
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+        }
+    }
+
+    bool isMarkedFromAnyThread(JSRuntime *rt) {
+        if (!baseEntry().isJitcodeMarkedFromAnyThread())
+            return false;
+        switch (kind()) {
+          case Ion:
+            return ionEntry().isMarkedFromAnyThread();
+          case Baseline:
+            return baselineEntry().isMarkedFromAnyThread();
+          case IonCache:
+            return ionCacheEntry().isMarkedFromAnyThread(rt);
+          case Dummy:
+            break;
+          default:
+            MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+        }
+        return true;
+    }
+
     //
     // When stored in a free-list, entries use 'tower_' to store a
     // pointer to the next entry.  In this context only, 'tower_'
@@ -884,10 +949,11 @@ class JitcodeGlobalTable
         return addEntry(JitcodeGlobalEntry(entry), rt);
     }
 
-    void removeEntry(void *startAddr, JSRuntime *rt);
-    void releaseEntry(void *startAddr, JSRuntime *rt);
+    void removeEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
+    void releaseEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
 
     void mark(JSTracer *trc);
+    void sweep(JSRuntime *rt);
 
   private:
     bool addEntry(const JitcodeGlobalEntry &entry, JSRuntime *rt);

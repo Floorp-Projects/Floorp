@@ -687,6 +687,59 @@ TypeSet::readBarrier(const TypeSet *types)
 }
 
 bool
+TypeSet::IsTypeMarkedFromAnyThread(TypeSet::Type *v)
+{
+    bool rv;
+    if (v->isSingletonUnchecked()) {
+        JSObject *obj = v->singleton();
+        rv = IsObjectMarkedFromAnyThread(&obj);
+        *v = TypeSet::ObjectType(obj);
+    } else if (v->isGroupUnchecked()) {
+        ObjectGroup *group = v->group();
+        rv = IsObjectGroupMarkedFromAnyThread(&group);
+        *v = TypeSet::ObjectType(group);
+    } else {
+        rv = true;
+    }
+    return rv;
+}
+
+static inline bool
+IsObjectKeyAboutToBeFinalized(TypeSet::ObjectKey **keyp)
+{
+    TypeSet::ObjectKey *key = *keyp;
+    bool isAboutToBeFinalized;
+    if (key->isGroup()) {
+        ObjectGroup *group = key->groupNoBarrier();
+        isAboutToBeFinalized = IsObjectGroupAboutToBeFinalized(&group);
+        if (!isAboutToBeFinalized)
+            *keyp = TypeSet::ObjectKey::get(group);
+    } else {
+        MOZ_ASSERT(key->isSingleton());
+        JSObject *singleton = key->singletonNoBarrier();
+        isAboutToBeFinalized = IsObjectAboutToBeFinalized(&singleton);
+        if (!isAboutToBeFinalized)
+            *keyp = TypeSet::ObjectKey::get(singleton);
+    }
+    return isAboutToBeFinalized;
+}
+
+bool
+TypeSet::IsTypeAboutToBeFinalized(TypeSet::Type *v)
+{
+    bool isAboutToBeFinalized;
+    if (v->isObjectUnchecked()) {
+        TypeSet::ObjectKey *key = v->objectKey();
+        isAboutToBeFinalized = IsObjectKeyAboutToBeFinalized(&key);
+        if (!isAboutToBeFinalized)
+            *v = TypeSet::ObjectType(key);
+    } else {
+        isAboutToBeFinalized = false;
+    }
+    return isAboutToBeFinalized;
+}
+
+bool
 TypeSet::clone(LifoAlloc *alloc, TemporaryTypeSet *result) const
 {
     MOZ_ASSERT(result->empty());
@@ -3096,26 +3149,6 @@ js::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args, b
         TypeScript::SetArgument(cx, script, arg, UndefinedValue());
 }
 
-static inline bool
-IsAboutToBeFinalized(TypeSet::ObjectKey **keyp)
-{
-    TypeSet::ObjectKey *key = *keyp;
-    bool isAboutToBeFinalized;
-    if (key->isGroup()) {
-        ObjectGroup *group = key->groupNoBarrier();
-        isAboutToBeFinalized = IsObjectGroupAboutToBeFinalized(&group);
-        if (!isAboutToBeFinalized)
-            *keyp = TypeSet::ObjectKey::get(group);
-    } else {
-        MOZ_ASSERT(key->isSingleton());
-        JSObject *singleton = key->singletonNoBarrier();
-        isAboutToBeFinalized = IsObjectAboutToBeFinalized(&singleton);
-        if (!isAboutToBeFinalized)
-            *keyp = TypeSet::ObjectKey::get(singleton);
-    }
-    return isAboutToBeFinalized;
-}
-
 void
 js::FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap)
 {
@@ -3870,7 +3903,7 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
             ObjectKey *key = oldArray[i];
             if (!key)
                 continue;
-            if (!IsAboutToBeFinalized(&key)) {
+            if (!IsObjectKeyAboutToBeFinalized(&key)) {
                 ObjectKey **pentry =
                     TypeHashSet::Insert<ObjectKey *, ObjectKey, ObjectKey>
                         (zone->types.typeLifoAlloc, objectSet, objectCount, key);
@@ -3902,7 +3935,7 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
         setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
         ObjectKey *key = (ObjectKey *) objectSet;
-        if (!IsAboutToBeFinalized(&key)) {
+        if (!IsObjectKeyAboutToBeFinalized(&key)) {
             objectSet = reinterpret_cast<ObjectKey **>(key);
         } else {
             // As above, mark type sets containing objects with unknown
