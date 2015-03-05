@@ -27,6 +27,8 @@ typedef enum
   pmPostScript
 } PrintMethod;
 
+class nsPrintSettingsGTK;
+
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
 {
 public:
@@ -45,22 +47,26 @@ public:
   NS_IMETHOD EndPage() MOZ_OVERRIDE { return NS_OK; }
 
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
-  
+
 protected:
   virtual ~nsDeviceContextSpecGTK();
-  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  nsCOMPtr<nsPrintSettingsGTK> mPrintSettings;
   bool mToPrinter : 1;      /* If true, print to printer */
   bool mIsPPreview : 1;     /* If true, is print preview */
   char   mPath[PATH_MAX];     /* If toPrinter = false, dest file */
   char   mPrinter[256];       /* Printer name */
-  GtkPrintJob*      mPrintJob;
-  GtkPrinter*       mGtkPrinter;
   GtkPrintSettings* mGtkPrintSettings;
   GtkPageSetup*     mGtkPageSetup;
 
   nsCString         mSpoolName;
   nsCOMPtr<nsIFile> mSpoolFile;
+  nsCString         mTitle;
 
+private:
+  void EnumeratePrinters();
+  static gboolean PrinterEnumerator(GtkPrinter *aPrinter, gpointer aData);
+  static void StartPrintJob(nsDeviceContextSpecGTK *spec,
+                            GtkPrinter *printer);
 };
 
 //-------------------------------------------------------------------------
