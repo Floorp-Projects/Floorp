@@ -142,8 +142,14 @@ public:
 #endif
 
   virtual bool IsAsync() const MOZ_OVERRIDE {
+    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
     return (!GetAudioReader() || GetAudioReader()->IsAsync()) &&
            (!GetVideoReader() || GetVideoReader()->IsAsync());
+  }
+
+  virtual bool VideoIsHardwareAccelerated() const MOZ_OVERRIDE {
+    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+    return GetVideoReader() && GetVideoReader()->VideoIsHardwareAccelerated();
   }
 
   // Returns true if aReader is a currently active audio or video
