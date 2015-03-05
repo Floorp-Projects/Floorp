@@ -256,20 +256,6 @@ public:
     Clear(&mNewStats);
   }
 
-  void AddRef(nsrefcnt aRefcnt)
-  {
-    if (aRefcnt == 1) {
-      Ctor();
-    }
-  }
-
-  void Release(nsrefcnt aRefcnt)
-  {
-    if (aRefcnt == 0) {
-      Dtor();
-    }
-  }
-
   void Ctor()
   {
     mNewStats.mCreates++;
@@ -978,10 +964,10 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
   if (gLogging) {
     LOCK_TRACELOG();
 
-    if (gBloatLog) {
+    if (aRefcnt == 1 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, aClassSize);
       if (entry) {
-        entry->AddRef(aRefcnt);
+        entry->Ctor();
       }
     }
 
@@ -1031,10 +1017,10 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
   if (gLogging) {
     LOCK_TRACELOG();
 
-    if (gBloatLog) {
+    if (aRefcnt == 0 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, 0);
       if (entry) {
-        entry->Release(aRefcnt);
+        entry->Dtor();
       }
     }
 
