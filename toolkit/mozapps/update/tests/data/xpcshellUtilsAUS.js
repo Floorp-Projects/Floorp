@@ -3128,22 +3128,26 @@ const updateCheckListener = {
   },
 
   onCheckComplete: function UCL_onCheckComplete(aRequest, aUpdates, aUpdateCount) {
-    gRequestURL = aRequest.channel.originalURI.spec;
+    // The mock xmlhttprequest used by tests doesn't have a real nsIRequest so
+    // use _url to get the url to prevent the following error:
+    // ReferenceError: reference to undefined property "QueryInterface"
+    gRequestURL = gXHR._url;
     gUpdateCount = aUpdateCount;
     gUpdates = aUpdates;
     logTestInfo("url = " + gRequestURL + ", " +
                 "request.status = " + aRequest.status + ", " +
-                "update.statusText = " + aRequest.statusText + ", " +
                 "updateCount = " + aUpdateCount);
     // Use a timeout to allow the XHR to complete
     do_execute_soon(gCheckFunc);
   },
 
   onError: function UCL_onError(aRequest, aUpdate) {
-    gRequestURL = aRequest.channel.originalURI.spec;
+    // The mock xmlhttprequest used by tests doesn't have a real nsIRequest so
+    // use _url to get the url to prevent the following error:
+    // ReferenceError: reference to undefined property "QueryInterface"
+    gRequestURL = gXHR._url;
     gStatusCode = aRequest.status;
-
-    gStatusText = aUpdate.statusText;
+    gStatusText = aUpdate.statusText ? aUpdate.statusText : null;
     logTestInfo("url = " + gRequestURL + ", " +
                 "request.status = " + gStatusCode + ", " +
                 "update.statusText = " + gStatusText);

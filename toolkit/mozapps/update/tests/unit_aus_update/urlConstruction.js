@@ -29,6 +29,9 @@ function run_test() {
 // Callback function used by the custom XMLHttpRequest implementation to
 // call the nsIDOMEventListener's handleEvent method for onload.
 function callHandleEvent() {
+  // The mock xmlhttprequest needs a status code to return to the consumer and
+  // the value is not important for this test.
+  gXHR.status = 404;
   let e = { target: gXHR };
   gXHR.onload(e);
 }
