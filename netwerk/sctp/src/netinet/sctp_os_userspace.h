@@ -103,7 +103,6 @@ typedef HANDLE userland_thread_t;
 #define n_time     unsigned __int32
 #define sa_family_t unsigned __int8
 #define ssize_t    __int64
-#define IFNAMSIZ   64
 #define __func__	__FUNCTION__
 
 #ifndef EWOULDBLOCK
@@ -220,12 +219,10 @@ typedef char* caddr_t;
 #define bzero(buf, len) memset(buf, 0, len)
 #define bcopy(srcKey, dstKey, len) memcpy(dstKey, srcKey, len)
 #if _MSC_VER < 1900
-#define snprintf(data, size, format, name) _snprintf_s(data, size, _TRUNCATE, format, name)
+#define snprintf(data, size, format, ...) _snprintf_s(data, size, _TRUNCATE, format, __VA_ARGS__)
 #endif
 #define inline __inline
 #define __inline__ __inline
-#define random() rand()
-#define srandom(s) srand(s)
 #define	MSG_EOR		0x8		/* data completes record */
 #define	MSG_DONTWAIT	0x80		/* this message should be nonblocking */
 
@@ -267,6 +264,32 @@ typedef char* caddr_t;
 
 #define SCTP_GET_IF_INDEX_FROM_ROUTE(ro) 1 /* compiles...  TODO use routing socket to determine */
 
+#define BIG_ENDIAN 1
+#define LITTLE_ENDIAN 0
+#ifdef WORDS_BIGENDIAN
+#define BYTE_ORDER BIG_ENDIAN
+#else
+#define BYTE_ORDER LITTLE_ENDIAN
+#endif
+
+#else /* !defined(Userspace_os_Windows) */
+#include <sys/cdefs.h> /* needed? added from old __FreeBSD__ */
+#include <sys/socket.h>
+#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_NaCl)
+#include <pthread.h>
+#endif
+typedef pthread_mutex_t userland_mutex_t;
+typedef pthread_cond_t userland_cond_t;
+typedef pthread_t userland_thread_t;
+#endif
+
+#if defined(__Userspace_os_Windows) || defined(__Userspace_os_NaCl)
+
+#define IFNAMSIZ 64
+
+#define random() rand()
+#define srandom(s) srand(s)
+
 #define timeradd(tvp, uvp, vvp)   \
 	do {                          \
 	    (vvp)->tv_sec = (tvp)->tv_sec + (uvp)->tv_sec;  \
@@ -287,30 +310,57 @@ typedef char* caddr_t;
 		}                       \
 	} while (0)
 
-#define BIG_ENDIAN 1
-#define LITTLE_ENDIAN 0
-#ifdef WORDS_BIGENDIAN
-#define BYTE_ORDER BIG_ENDIAN
-#else
-#define BYTE_ORDER LITTLE_ENDIAN
-#endif
+/*#include <packon.h>
+#pragma pack(push, 1)*/
+struct ip {
+	u_char    ip_hl:4, ip_v:4;
+	u_char    ip_tos;
+	u_short   ip_len;
+	u_short   ip_id;
+	u_short   ip_off;
+#define IP_RP 0x8000
+#define IP_DF 0x4000
+#define IP_MF 0x2000
+#define IP_OFFMASK 0x1fff
+	u_char    ip_ttl;
+	u_char    ip_p;
+	u_short   ip_sum;
+    struct in_addr ip_src, ip_dst;
+};
+
+struct ifaddrs {
+	struct ifaddrs  *ifa_next;
+	char		*ifa_name;
+	unsigned int		 ifa_flags;
+	struct sockaddr	*ifa_addr;
+	struct sockaddr	*ifa_netmask;
+	struct sockaddr	*ifa_dstaddr;
+	void		*ifa_data;
+};
+
+struct udphdr {
+	uint16_t uh_sport;
+	uint16_t uh_dport;
+	uint16_t uh_ulen;
+	uint16_t uh_sum;
+};
 
 struct iovec {
-	ULONG len;
-	CHAR FAR *buf;
+	unsigned long len;
+	char *buf;
 };
 
 #define iov_base buf
 #define iov_len	len
 
 struct ifa_msghdr {
-	unsigned __int16 ifam_msglen;
+	uint16_t         ifam_msglen;
 	unsigned char    ifam_version;
 	unsigned char    ifam_type;
-	__int32          ifam_addrs;
-	__int32          ifam_flags;
-	unsigned __int16 ifam_index;
-	__int32          ifam_metric;
+	uint32_t         ifam_addrs;
+	uint32_t         ifam_flags;
+	uint16_t         ifam_index;
+	uint32_t         ifam_metric;
 };
 
 struct ifdevmtu {
@@ -343,7 +393,7 @@ struct ifreq {
 		char*  ifru_data;
 		struct ifdevmtu ifru_devmtu;
 		struct ifkpi  ifru_kpi;
-		unsigned __int32 ifru_wake_flags;
+		uint32_t ifru_wake_flags;
 	} ifr_ifru;
 #define ifr_addr        ifr_ifru.ifru_addr
 #define ifr_dstaddr     ifr_ifru.ifru_dstaddr
@@ -361,55 +411,13 @@ struct ifreq {
 #define ifr_wake_flags  ifr_ifru.ifru_wake_flags
 };
 
-/*#include <packon.h>
-#pragma pack(push, 1)*/
-struct ip {
-	u_char    ip_hl:4, ip_v:4;
-	u_char    ip_tos;
-	u_short   ip_len;
-	u_short   ip_id;
-	u_short   ip_off;
-#define IP_RP 0x8000
-#define IP_DF 0x4000
-#define IP_MF 0x2000
-#define IP_OFFMASK 0x1fff
-	u_char    ip_ttl;
-	u_char    ip_p;
-	u_short   ip_sum;
-    struct in_addr ip_src, ip_dst;
-};
+#endif
 
-struct ifaddrs {
-	struct ifaddrs  *ifa_next;
-	char		*ifa_name;
-	unsigned int		 ifa_flags;
-	struct sockaddr	*ifa_addr;
-	struct sockaddr	*ifa_netmask;
-	struct sockaddr	*ifa_dstaddr;
-	void		*ifa_data;
-};
-
-struct udphdr {
-	unsigned __int16 uh_sport;
-	unsigned __int16 uh_dport;
-	unsigned __int16 uh_ulen;
-	unsigned __int16 uh_sum;
-};
-
+#if defined(__Userspace_os_Windows)
 int Win_getifaddrs(struct ifaddrs**);
 #define getifaddrs(interfaces)  (int)Win_getifaddrs(interfaces)
 int win_if_nametoindex(const char *);
 #define if_nametoindex(x) win_if_nametoindex(x)
-
-#else /* !defined(Userspace_os_Windows) */
-#include <sys/cdefs.h> /* needed? added from old __FreeBSD__ */
-#include <sys/socket.h>
-#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_Linux) || defined(__Userspace_os_NetBSD) || defined(__Userspace_os_OpenBSD) || defined(ANDROID)
-#include <pthread.h>
-#endif
-typedef pthread_mutex_t userland_mutex_t;
-typedef pthread_cond_t userland_cond_t;
-typedef pthread_t userland_thread_t;
 #endif
 
 #define mtx_lock(arg1)
@@ -471,11 +479,13 @@ struct sx {int dummy;};
  *  userspace as well? */
 /* on FreeBSD, this results in a redefintion of struct route */
 /* #include <net/route.h> */
-#if !defined(__Userspace_os_Windows)
+#if !defined(__Userspace_os_Windows) && !defined(__Userspace_os_NaCl)
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+#endif
+#if defined(HAVE_NETINET_IP_ICMP_H)
 #include <netinet/ip_icmp.h>
 #else
 #include <user_ip_icmp.h>
@@ -486,7 +496,7 @@ struct sx {int dummy;};
 /* for getifaddrs */
 #include <sys/types.h>
 #if !defined(__Userspace_os_Windows)
-#if !defined(ANDROID) && (defined(INET) || defined(INET6))
+#if defined(INET) || defined(INET6)
 #include <ifaddrs.h>
 #endif
 
@@ -1093,7 +1103,7 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 /* with the current included files, this is defined in Linux but
  *  in FreeBSD, it is behind a _KERNEL in sys/socket.h ...
  */
-#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD)
+#if defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_NaCl)
 /* stolen from /usr/include/sys/socket.h */
 #define CMSG_ALIGN(n)   _ALIGN(n)
 #elif defined(__Userspace_os_NetBSD)
@@ -1151,4 +1161,12 @@ sctp_get_mbuf_for_msg(unsigned int space_needed, int want_header, int how, int a
 #define TAILQ_FOREACH_SAFE TAILQ_FOREACH_MUTABLE
 #define LIST_FOREACH_SAFE LIST_FOREACH_MUTABLE
 #endif
+
+#if defined(__Userspace_os_NaCl)
+#define	timercmp(tvp, uvp, cmp)						\
+	(((tvp)->tv_sec == (uvp)->tv_sec) ?				\
+	    ((tvp)->tv_usec cmp (uvp)->tv_usec) :			\
+	    ((tvp)->tv_sec cmp (uvp)->tv_sec))
+#endif
+
 #endif

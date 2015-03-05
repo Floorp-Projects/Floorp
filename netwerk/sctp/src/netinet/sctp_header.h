@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 240198 2012-09-07 13:36:42Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_header.h 273168 2014-10-16 15:36:04Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_HEADER_H_
@@ -93,12 +93,6 @@ struct sctp_supported_addr_param {
 	struct sctp_paramhdr ph;/* type=SCTP_SUPPORTED_ADDRTYPE */
 	uint16_t addr_type[2];	/* array of supported address types */
 } SCTP_PACKED;
-
-/* ECN parameter */
-struct sctp_ecn_supported_param {
-	struct sctp_paramhdr ph;/* type=SCTP_ECN_CAPABLE */
-} SCTP_PACKED;
-
 
 /* heartbeat info parameter */
 struct sctp_heartbeat_info_param {
@@ -474,6 +468,11 @@ struct sctp_pktdrop_chunk {
 
 /**********STREAM RESET STUFF ******************/
 
+struct sctp_stream_reset_request {
+	struct sctp_paramhdr ph;
+	uint32_t request_seq;
+} SCTP_PACKED;
+
 struct sctp_stream_reset_out_request {
 	struct sctp_paramhdr ph;
 	uint32_t request_seq;	/* monotonically increasing seq no */
@@ -487,7 +486,6 @@ struct sctp_stream_reset_in_request {
 	uint32_t request_seq;
 	uint16_t list_of_streams[];	/* if not all list of streams */
 } SCTP_PACKED;
-
 
 struct sctp_stream_reset_tsn_request {
 	struct sctp_paramhdr ph;

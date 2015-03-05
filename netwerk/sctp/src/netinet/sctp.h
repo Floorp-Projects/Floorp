@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 254248 2013-08-12 13:52:15Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp.h 269945 2014-08-13 15:50:16Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_H_
@@ -53,13 +53,13 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp.h 254248 2013-08-12 13:52:15Z tuexen $
 #endif
 
 /*
- * SCTP protocol - RFC2960.
+ * SCTP protocol - RFC4960.
  */
 struct sctphdr {
 	uint16_t src_port;	/* source port */
 	uint16_t dest_port;	/* destination port */
 	uint32_t v_tag;		/* verification tag of packet */
-	uint32_t checksum;	/* Adler32 C-Sum */
+	uint32_t checksum;	/* CRC32C checksum */
 	/* chunks follow... */
 } SCTP_PACKED;
 
@@ -131,6 +131,13 @@ struct sctp_paramhdr {
 #define SCTP_DEFAULT_PRINFO             0x00000022
 #define SCTP_PEER_ADDR_THLDS            0x00000023
 #define SCTP_REMOTE_UDP_ENCAPS_PORT     0x00000024
+#define SCTP_ECN_SUPPORTED              0x00000025
+#define SCTP_PR_SUPPORTED               0x00000026
+#define SCTP_AUTH_SUPPORTED             0x00000027
+#define SCTP_ASCONF_SUPPORTED           0x00000028
+#define SCTP_RECONFIG_SUPPORTED         0x00000029
+#define SCTP_NRSACK_SUPPORTED           0x00000030
+#define SCTP_PKTDROP_SUPPORTED          0x00000031
 
 /*
  * read-only options
@@ -143,6 +150,8 @@ struct sctp_paramhdr {
 #define SCTP_GET_ASSOC_NUMBER           0x00000104 /* ro */
 #define SCTP_GET_ASSOC_ID_LIST          0x00000105 /* ro */
 #define SCTP_TIMEOUTS                   0x00000106
+#define SCTP_PR_STREAM_STATUS           0x00000107
+#define SCTP_PR_ASSOC_STATUS            0x00000108
 
 /*
  * user socket options: BSD implementation specific
@@ -379,6 +388,12 @@ struct sctp_paramhdr {
 /*
  * error cause parameters (user visible)
  */
+struct sctp_gen_error_cause {
+	uint16_t code;
+	uint16_t length;
+	uint8_t info[];
+} SCTP_PACKED;
+
 struct sctp_error_cause {
 	uint16_t code;
 	uint16_t length;
@@ -414,6 +429,11 @@ struct sctp_error_unresolv_addr {
 struct sctp_error_unrecognized_chunk {
 	struct sctp_error_cause cause;	/* code=SCTP_ERROR_UNRECOG_CHUNK */
 	struct sctp_chunkhdr ch;/* header from chunk in error */
+} SCTP_PACKED;
+
+struct sctp_error_no_user_data {
+	struct sctp_error_cause cause;	/* code=SCTP_CAUSE_NO_USER_DATA */
+	uint32_t tsn;			/* TSN of the empty data chunk */
 } SCTP_PACKED;
 
 /*
