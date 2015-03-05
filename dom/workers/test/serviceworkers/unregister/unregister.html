@@ -12,7 +12,7 @@
 <body>
 <script type="text/javascript">
 
-  onmessage = function(e) { parent.postMessage(e.data, "*"); }
+  navigator.serviceWorker.onmessage = function(e) { parent.postMessage(e.data, "*"); }
   navigator.serviceWorker.controller.postMessage("GO");
 
 </script>

@@ -272,7 +272,7 @@ nsFileStreamBase::Write(const char *buf, uint32_t count, uint32_t *result)
     *result = cnt;
     return NS_OK;
 }
-    
+
 nsresult
 nsFileStreamBase::WriteFrom(nsIInputStream *inStr, uint32_t count, uint32_t *_retval)
 {
@@ -408,7 +408,7 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
 nsresult
 nsFileInputStream::Open(nsIFile* aFile, int32_t aIOFlags, int32_t aPerm)
-{   
+{
     nsresult rv = NS_OK;
 
     // If the previous file is open, close it
@@ -688,7 +688,7 @@ nsPartialFileInputStream::Init(nsIFile* aFile, uint64_t aStart,
     nsresult rv = nsFileInputStream::Init(aFile, aIOFlags, aPerm,
                                           aBehaviorFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return nsFileInputStream::Seek(NS_SEEK_SET, mStart);
 }
 
@@ -823,7 +823,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsFileOutputStream,
                             nsFileStreamBase,
                             nsIOutputStream,
                             nsIFileOutputStream)
- 
+
 nsresult
 nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -964,7 +964,7 @@ nsAtomicFileOutputStream::Finish()
 #ifdef DEBUG
             bool equal;
             if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
-                NS_ERROR("mTempFile not equal to mTargetFile");
+                NS_WARNING("mTempFile not equal to mTargetFile");
 #endif
         }
         else {

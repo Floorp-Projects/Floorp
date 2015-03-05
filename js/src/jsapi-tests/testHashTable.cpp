@@ -287,3 +287,52 @@ BEGIN_TEST(testHashRekeyManualRemoval)
     return true;
 }
 END_TEST(testHashRekeyManualRemoval)
+
+// A type that is not copyable, only movable.
+struct MoveOnlyType {
+    uint32_t val;
+
+    explicit MoveOnlyType(uint32_t val) : val(val) { }
+
+    MoveOnlyType(MoveOnlyType &&rhs) {
+        val = rhs.val;
+    }
+
+    MoveOnlyType &operator=(MoveOnlyType &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~MoveOnlyType();
+        new(this) MoveOnlyType(mozilla::Move(rhs));
+        return *this;
+    }
+
+    struct HashPolicy {
+        typedef MoveOnlyType Lookup;
+
+        static js::HashNumber hash(const Lookup &lookup) {
+            return lookup.val;
+        }
+
+        static bool match(const MoveOnlyType &existing, const Lookup &lookup) {
+            return existing.val == lookup.val;
+        }
+    };
+
+  private:
+    MoveOnlyType(const MoveOnlyType &) = delete;
+    MoveOnlyType& operator=(const MoveOnlyType &) = delete;
+};
+
+BEGIN_TEST(testHashSetOfMoveOnlyType)
+{
+    typedef js::HashSet<MoveOnlyType, MoveOnlyType::HashPolicy, js::SystemAllocPolicy> Set;
+
+    Set set;
+    set.init();
+
+    MoveOnlyType a(1);
+
+    set.put(mozilla::Move(a)); // This shouldn't generate a compiler error.
+
+    return true;
+}
+END_TEST(testHashSetOfMoveOnlyType)
