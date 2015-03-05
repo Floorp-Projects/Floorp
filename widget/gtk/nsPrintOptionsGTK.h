@@ -33,7 +33,6 @@ public:
                                            nsIPrintSettings* settings);
 
   virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
-
 };
 
 
