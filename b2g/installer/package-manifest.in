@@ -438,6 +438,8 @@
 @BINPATH@/components/NetworkStatsManager.manifest
 @BINPATH@/components/NetworkStatsServiceProxy.js
 @BINPATH@/components/NetworkStatsServiceProxy.manifest
+@BINPATH@/components/TetheringService.js
+@BINPATH@/components/TetheringService.manifest
 @BINPATH@/components/WifiWorker.js
 @BINPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
