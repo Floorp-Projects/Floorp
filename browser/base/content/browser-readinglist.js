@@ -89,7 +89,7 @@ let ReadingListUI = {
     }
   },
 
-  onReadingListPopupShowing(target) {
+  onReadingListPopupShowing: Task.async(function* (target) {
     if (target.id == "BMB_readingListPopup") {
       // Setting this class in the .xul file messes with the way
       // browser-places.js inserts bookmarks in the menu.
@@ -105,55 +105,56 @@ let ReadingListUI = {
     if (insertPoint.classList.contains("subviewbutton"))
       classList += " subviewbutton";
 
-    ReadingList.getItems().then(items => {
-      for (let item of items) {
-        let menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("label", item.title || item.url.spec);
-        menuitem.setAttribute("class", classList);
+    let hasItems = false;
+    yield ReadingList.forEachItem(item => {
+      hasItems = true;
 
-        let node = menuitem._placesNode = {
-          // Passing the PlacesUtils.nodeIsURI check is required for the
-          // onCommand handler to load our URI.
-          type: Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
+      let menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("label", item.title || item.url);
+      menuitem.setAttribute("class", classList);
 
-          // makes PlacesUIUtils.canUserRemove return false.
-          // The context menu is broken without this.
-          parent: {type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER},
+      let node = menuitem._placesNode = {
+        // Passing the PlacesUtils.nodeIsURI check is required for the
+        // onCommand handler to load our URI.
+        type: Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
 
-          // A -1 id makes this item a non-bookmark, which avoids calling
-          // PlacesUtils.annotations.itemHasAnnotation to check if the
-          // bookmark should be opened in the sidebar (this call fails for
-          // readinglist item, and breaks loading our URI).
-          itemId: -1,
+        // makes PlacesUIUtils.canUserRemove return false.
+        // The context menu is broken without this.
+        parent: {type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER},
 
-          // Used by the tooltip and onCommand handlers.
-          uri: item.url.spec,
+        // A -1 id makes this item a non-bookmark, which avoids calling
+        // PlacesUtils.annotations.itemHasAnnotation to check if the
+        // bookmark should be opened in the sidebar (this call fails for
+        // readinglist item, and breaks loading our URI).
+        itemId: -1,
 
-          // Used by the tooltip.
-          title: item.title
-        };
+        // Used by the tooltip and onCommand handlers.
+        uri: item.url,
 
-        Favicons.getFaviconURLForPage(item.url, uri => {
-          if (uri) {
-            menuitem.setAttribute("image",
-                                  Favicons.getFaviconLinkForIcon(uri).spec);
-          }
-        });
+        // Used by the tooltip.
+        title: item.title
+      };
 
-        target.insertBefore(menuitem, insertPoint);
-      }
+      Favicons.getFaviconURLForPage(item.uri, uri => {
+        if (uri) {
+          menuitem.setAttribute("image",
+                                Favicons.getFaviconLinkForIcon(uri).spec);
+        }
+      });
 
-      if (!items.length) {
-        let menuitem = document.createElement("menuitem");
-        let bundle =
-          Services.strings.createBundle("chrome://browser/locale/places/places.properties");
-        menuitem.setAttribute("label", bundle.GetStringFromName("bookmarksMenuEmptyFolder"));
-        menuitem.setAttribute("class", "bookmark-item");
-        menuitem.setAttribute("disabled", true);
-        target.insertBefore(menuitem, insertPoint);
-      }
+      target.insertBefore(menuitem, insertPoint);
     });
-  },
+
+    if (!hasItems) {
+      let menuitem = document.createElement("menuitem");
+      let bundle =
+        Services.strings.createBundle("chrome://browser/locale/places/places.properties");
+      menuitem.setAttribute("label", bundle.GetStringFromName("bookmarksMenuEmptyFolder"));
+      menuitem.setAttribute("class", "bookmark-item");
+      menuitem.setAttribute("disabled", true);
+      target.insertBefore(menuitem, insertPoint);
+    }
+  }),
 
   /**
    * Hide the ReadingList sidebar, if it is currently shown.
