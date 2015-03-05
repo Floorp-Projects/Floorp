@@ -168,6 +168,28 @@ var PrintUtils = {
 
     let mm = aBrowser.messageManager;
 
+    mm.addMessageListener("Printing:Print:Done", function onPrintingDone(msg) {
+      mm.removeMessageListener("Printing:Print:Done", onPrintingDone);
+      let rv = msg.data.rv;
+      let printSettings = msg.objects.printSettings;
+      if (rv != Components.results.NS_OK &&
+          rv != Components.results.NS_ERROR_ABORT) {
+        Cu.reportError(`In Printing:Print:Done handler, got unexpected rv
+                        ${rv}.`);
+      }
+
+      if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+        let PSSVC =
+          Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Components.interfaces.nsIPrintSettingsService);
+
+        PSSVC.savePrintSettingsToPrefs(printSettings, true,
+                                       printSettings.kInitSaveAll);
+        PSSVC.savePrintSettingsToPrefs(printSettings, false,
+                                       printSettings.kInitSavePrinterName);
+      }
+    });
+
     mm.sendAsyncMessage("Printing:Print", null, {
       contentWindow: aWindow,
     });
