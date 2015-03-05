@@ -103,7 +103,8 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
       referrerURI: aReferrerURI,
-      initiatingDoc: event ? event.target.ownerDocument : null
+      referrerPolicy: Components.interfaces.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+      initiatingDoc: event ? event.target.ownerDocument : null,
     };
   }
 
@@ -197,7 +198,8 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
     params = {
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
-      referrerURI: aReferrerURI
+      referrerURI: aReferrerURI,
+      referrerPolicy: Components.interfaces.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
     };
   }
 
@@ -209,12 +211,16 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 function openLinkIn(url, where, params) {
   if (!where || !url)
     return;
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
 
   var aFromChrome           = params.fromChrome;
   var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
   var aPostData             = params.postData;
   var aCharset              = params.charset;
   var aReferrerURI          = params.referrerURI;
+  var aReferrerPolicy       = ('referrerPolicy' in params ?
+      params.referrerPolicy : Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
   var aRelatedToCurrent     = params.relatedToCurrent;
   var aAllowMixedContent    = params.allowMixedContent;
   var aInBackground         = params.inBackground;
@@ -231,11 +237,10 @@ function openLinkIn(url, where, params) {
         "where == 'save' but without initiatingDoc.  See bug 814264.");
       return;
     }
+    // TODO(1073187): propagate referrerPolicy.
     saveURL(url, null, null, true, null, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
     return;
   }
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
 
   var w = getTopWin();
   if ((where == "tab" || where == "tabshifted") &&
@@ -245,6 +250,7 @@ function openLinkIn(url, where, params) {
   }
 
   if (!w || where == "window") {
+    // This propagates to window.arguments.
     var sa = Cc["@mozilla.org/supports-array;1"].
              createInstance(Ci.nsISupportsArray);
 
@@ -263,11 +269,23 @@ function openLinkIn(url, where, params) {
                                        createInstance(Ci.nsISupportsPRBool);
     allowThirdPartyFixupSupports.data = aAllowThirdPartyFixup;
 
+    var referrerURISupports = null;
+    if (aReferrerURI && !aNoReferrer) {
+      referrerURISupports = Cc["@mozilla.org/supports-string;1"].
+                            createInstance(Ci.nsISupportsString);
+      referrerURISupports.data = aReferrerURI.spec;
+    }
+
+    var referrerPolicySupports = Cc["@mozilla.org/supports-PRUint32;1"].
+                                 createInstance(Ci.nsISupportsPRUint32);
+    referrerPolicySupports.data = aReferrerPolicy;
+
     sa.AppendElement(wuri);
     sa.AppendElement(charset);
-    sa.AppendElement(aNoReferrer ? null : aReferrerURI);
+    sa.AppendElement(referrerURISupports);
     sa.AppendElement(aPostData);
     sa.AppendElement(allowThirdPartyFixupSupports);
+    sa.AppendElement(referrerPolicySupports);
 
     let features = "chrome,dialog=no,all";
     if (aIsPrivate) {
@@ -327,7 +345,12 @@ function openLinkIn(url, where, params) {
     if (aDisallowInheritPrincipal && !(uriObj && uriObj.schemeIs("javascript")))
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
 
-    w.gBrowser.loadURIWithFlags(url, flags, aNoReferrer ? null : aReferrerURI, null, aPostData);
+    w.gBrowser.loadURIWithFlags(url, {
+      flags: flags,
+      referrerURI: aNoReferrer ? null : aReferrerURI,
+      referrerPolicy: aReferrerPolicy,
+      postData: aPostData,
+    });
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
@@ -335,6 +358,7 @@ function openLinkIn(url, where, params) {
   case "tab":
     w.gBrowser.loadOneTab(url, {
       referrerURI: aReferrerURI,
+      referrerPolicy: aReferrerPolicy,
       charset: aCharset,
       postData: aPostData,
       inBackground: loadInBackground,
@@ -661,9 +685,11 @@ function makeURLAbsolute(aBase, aUrl)
  *        be undefined in which case it is treated as false.
  * @param [optional] aReferrer
  *        This will be used as the referrer. There will be no security check.
+ * @param [optional] aReferrerPolicy
+ *        Referrer policy - Ci.nsIHttpChannel.REFERRER_POLICY_*.
  */ 
 function openNewTabWith(aURL, aDocument, aPostData, aEvent,
-                        aAllowThirdPartyFixup, aReferrer) {
+                        aAllowThirdPartyFixup, aReferrer, aReferrerPolicy) {
 
   // As in openNewWindowWith(), we want to pass the charset of the
   // current document over to a new tab.
@@ -675,14 +701,17 @@ function openNewTabWith(aURL, aDocument, aPostData, aEvent,
              { charset: originCharset,
                postData: aPostData,
                allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aReferrer });
+               referrerURI: aReferrer,
+               referrerPolicy: aReferrerPolicy,
+             });
 }
 
 /**
  * @param aDocument
  *        Note this parameter is ignored. See openNewTabWith()
  */
-function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup, aReferrer) {
+function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
+                           aReferrer, aReferrerPolicy) {
   // Extract the current charset menu setting from the current document and
   // use it to initialize the new browser window...
   let originCharset = null;
@@ -693,7 +722,9 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup, aR
              { charset: originCharset,
                postData: aPostData,
                allowThirdPartyFixup: aAllowThirdPartyFixup,
-               referrerURI: aReferrer });
+               referrerURI: aReferrer,
+               referrerPolicy: aReferrerPolicy,
+             });
 }
 
 // aCalledFromModal is optional
