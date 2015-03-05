@@ -239,6 +239,10 @@ TraceLoggerThread::enable(JSContext *cx)
 
             script = it.script();
             engine = it.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
+        } else if (act->isAsmJS()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL,
+                                 "not yet supported in asmjs code");
+            return false;
         } else {
             MOZ_ASSERT(act->isInterpreter());
             InterpreterFrame *fp = act->asInterpreter()->current();
