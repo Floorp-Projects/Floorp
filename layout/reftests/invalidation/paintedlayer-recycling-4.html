@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Removing an existing display item from the bottom of an existing PaintedLayer shouldn't cause the other items in that layer to change layers</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.onTopOfFixed {
+  position: absolute;
+  top: 120px;
+  left: 260px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+#aboutToBecomeHidden {
+  left: 20px;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="fixed content">
+  <!--
+    This layer is just there to force .onTopOfFixed into a PaintedLayer above
+    the page background.
+  -->
+</div>
+
+<div class="onTopOfFixed content" id="aboutToBecomeHidden" style="visibility: visible">
+  <!--
+    This item starts out visible, in the same layer as the other .onTopOfFixed item.
+  -->
+</div>
+
+<div class="onTopOfFixed reftest-no-paint content">
+  <!--
+    This item shouldn't repaint when the other .onTopOfFixed item becomes invisible.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToBecomeHidden").style.visibility = "hidden";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

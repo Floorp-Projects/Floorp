@@ -889,6 +889,7 @@ class GCRuntime
     void markGrayReferencesInCurrentGroup(gcstats::Phase phase);
     void markAllWeakReferences(gcstats::Phase phase);
     void markAllGrayReferences(gcstats::Phase phase);
+    void markJitcodeGlobalTable();
 
     void beginSweepPhase(bool lastGC);
     void findZoneGroups();

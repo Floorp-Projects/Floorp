@@ -31,6 +31,8 @@
 #include "jstypes.h"
 #include "prmjtime.h"
 
+#include "js/Class.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;

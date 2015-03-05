@@ -35,6 +35,7 @@
 extern "C" {
 #endif
 
+#include <errno.h>
 #include <sys/types.h>
 #ifdef _WIN32
 #ifdef _MSC_VER
@@ -776,28 +777,6 @@ struct sctp_cc_option {
 	struct sctp_assoc_value aid_value;
 };
 
-struct sctp_cwnd_args {
-	struct sctp_nets *net;   /* network to */ /* FIXME: LP64 issue */
-	uint32_t cwnd_new_value; /* cwnd in k */
-	uint32_t pseudo_cumack;
-	uint16_t inflight;       /* flightsize in k */
-	uint16_t cwnd_augment;   /* increment to it */
-	uint8_t meets_pseudo_cumack;
-	uint8_t need_new_pseudo_cumack;
-	uint8_t cnt_in_send;
-	uint8_t cnt_in_str;
-};
-
-struct sctp_blk_args {
-	uint32_t onsb;            /* in 1k bytes */
-	uint32_t sndlen;          /* len of send being attempted */
-	uint32_t peer_rwnd;       /* rwnd of peer */
-	uint16_t send_sent_qcnt;  /* chnk cnt */
-	uint16_t stream_qcnt;     /* chnk cnt */
-	uint16_t chunks_on_oque;  /* chunks out */
-	uint16_t flight_size;     /* flight size in k */
-};
-
 struct sctp_timeouts {
 	sctp_assoc_t stimo_assoc_id;
 	uint32_t stimo_init;
@@ -847,6 +826,8 @@ struct sctp_timeouts {
 #define SCTP_SS_FIRST_COME          0x00000005
 
 /******************** System calls *************/
+
+struct socket;
 
 void
 usrsctp_init(uint16_t,
@@ -973,6 +954,9 @@ usrsctp_register_address(void *);
 void
 usrsctp_deregister_address(void *);
 
+int
+usrsctp_set_ulpinfo(struct socket *, void *);
+
 #define SCTP_DUMP_OUTBOUND 1
 #define SCTP_DUMP_INBOUND  0
 
@@ -982,7 +966,7 @@ usrsctp_dumppacket(void *, size_t, int);
 void
 usrsctp_freedumpbuffer(char *);
 
-#define USRSCTP_SYSCTL_DECL(__field)           \
+#define USRSCTP_SYSCTL_DECL(__field)                \
 void usrsctp_sysctl_set_ ## __field(uint32_t value);\
 uint32_t usrsctp_sysctl_get_ ## __field(void);
 
@@ -991,6 +975,12 @@ USRSCTP_SYSCTL_DECL(sctp_recvspace)
 USRSCTP_SYSCTL_DECL(sctp_auto_asconf)
 USRSCTP_SYSCTL_DECL(sctp_multiple_asconfs)
 USRSCTP_SYSCTL_DECL(sctp_ecn_enable)
+USRSCTP_SYSCTL_DECL(sctp_pr_enable)
+USRSCTP_SYSCTL_DECL(sctp_auth_enable)
+USRSCTP_SYSCTL_DECL(sctp_asconf_enable)
+USRSCTP_SYSCTL_DECL(sctp_reconfig_enable)
+USRSCTP_SYSCTL_DECL(sctp_nrsack_enable)
+USRSCTP_SYSCTL_DECL(sctp_pktdrop_enable)
 USRSCTP_SYSCTL_DECL(sctp_strict_sacks)
 #if !defined(SCTP_WITH_NO_CSUM)
 USRSCTP_SYSCTL_DECL(sctp_no_csum_on_loopback)
@@ -1023,10 +1013,7 @@ USRSCTP_SYSCTL_DECL(sctp_nr_incoming_streams_default)
 USRSCTP_SYSCTL_DECL(sctp_nr_outgoing_streams_default)
 USRSCTP_SYSCTL_DECL(sctp_cmt_on_off)
 USRSCTP_SYSCTL_DECL(sctp_cmt_use_dac)
-USRSCTP_SYSCTL_DECL(sctp_nr_sack_on_off)
 USRSCTP_SYSCTL_DECL(sctp_use_cwnd_based_maxburst)
-USRSCTP_SYSCTL_DECL(sctp_asconf_auth_nochk)
-USRSCTP_SYSCTL_DECL(sctp_auth_disable)
 USRSCTP_SYSCTL_DECL(sctp_nat_friendly)
 USRSCTP_SYSCTL_DECL(sctp_L2_abc_variable)
 USRSCTP_SYSCTL_DECL(sctp_mbuf_threshold_count)
@@ -1046,6 +1033,7 @@ USRSCTP_SYSCTL_DECL(sctp_udp_tunneling_port)
 USRSCTP_SYSCTL_DECL(sctp_enable_sack_immediately)
 USRSCTP_SYSCTL_DECL(sctp_vtag_time_wait)
 USRSCTP_SYSCTL_DECL(sctp_blackhole)
+USRSCTP_SYSCTL_DECL(sctp_diag_info_code)
 USRSCTP_SYSCTL_DECL(sctp_fr_max_burst_default)
 USRSCTP_SYSCTL_DECL(sctp_path_pf_threshold)
 USRSCTP_SYSCTL_DECL(sctp_default_ss_module)

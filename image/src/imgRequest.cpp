@@ -647,9 +647,12 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     MOZ_ASSERT(!mIsMultiPartChannel, "Something went wrong");
   }
 
-  // If we're not multipart, we shouldn't have an image yet
-  MOZ_ASSERT(mIsMultiPartChannel || !mImage,
-             "Already have an image for non-multipart request");
+  // If we're not multipart, we shouldn't have an image yet.
+  if (mImage && !mIsMultiPartChannel) {
+    MOZ_ASSERT_UNREACHABLE("Already have an image for a non-multipart request");
+    Cancel(NS_IMAGELIB_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
+  }
 
   /*
    * If mRequest is null here, then we need to set it so that we'll be able to

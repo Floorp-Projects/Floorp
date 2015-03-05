@@ -14,10 +14,10 @@
 #include "jit/CompileInfo.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"

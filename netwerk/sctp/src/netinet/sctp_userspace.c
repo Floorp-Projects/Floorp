@@ -35,7 +35,7 @@
 #endif
 #include <netinet/sctp_os_userspace.h>
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__Userspace_os_NaCl)
 int
 sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 {
@@ -52,6 +52,14 @@ sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
 	}
 	close(fd);
 	return ifr.ifr_mtu;
+}
+#endif
+
+#if defined(__Userspace_os_NaCl)
+int
+sctp_userspace_get_mtu_from_ifn(uint32_t if_index, int af)
+{
+	return 1280;
 }
 #endif
 
@@ -90,8 +98,8 @@ getwintimeofday(struct timeval *tv)
 	struct timeb tb;
 
 	ftime(&tb);
-	tv->tv_sec = tb.time;
- 	tv->tv_usec = tb.millitm * 1000;
+	tv->tv_sec = (long)tb.time;
+	tv->tv_usec = (long)(tb.millitm) * 1000L;
 }
 
 int
@@ -138,10 +146,10 @@ Win_getifaddrs(struct ifaddrs** interfaces)
 			SCTPDBG(SCTP_DEBUG_USR, "Can't allocate memory\n");
 			return (-1);
 		}
-		ifa->ifa_name = strdup(pAdapt->AdapterName);
+		ifa->ifa_name = _strdup(pAdapt->AdapterName);
 		ifa->ifa_flags = pAdapt->Flags;
 		ifa->ifa_addr = (struct sockaddr *)addr;
-		memcpy(&addr, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in));
+		memcpy(addr, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in));
 		interfaces[count] = ifa;
 	}
 #endif
@@ -172,10 +180,10 @@ Win_getifaddrs(struct ifaddrs** interfaces)
 				SCTPDBG(SCTP_DEBUG_USR, "Can't allocate memory\n");
 				return (-1);
 			}
-			ifa->ifa_name = strdup(pAdapt->AdapterName);
+			ifa->ifa_name = _strdup(pAdapt->AdapterName);
 			ifa->ifa_flags = pAdapt->Flags;
 			ifa->ifa_addr = (struct sockaddr *)addr6;
-			memcpy(&addr6, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in6));
+			memcpy(addr6, &pAdapt->FirstUnicastAddress->Address.lpSockaddr, sizeof(struct sockaddr_in6));
 			interfaces[count] = ifa;
 		}
 	}
@@ -215,11 +223,11 @@ win_if_nametoindex(const char *ifname)
 }
 
 #if WINVER < 0x0600
-/* These functions are written based on the code at 
+/* These functions are written based on the code at
  * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
  * Therefore, for the rest of the file the following applies:
  *
- * 
+ *
  * Copyright and Licensing Information for ACE(TM), TAO(TM), CIAO(TM),
  * DAnCE(TM), and CoSMIC(TM)
  *
@@ -326,7 +334,7 @@ win_if_nametoindex(const char *ifname)
  * 22. http://www.dre.vanderbilt.edu/~schmidt/
  * 23. http://www.cs.wustl.edu/ACE.html
  */
- 
+
 void
 InitializeXPConditionVariable(userland_cond_t *cv)
 {
@@ -359,8 +367,7 @@ SleepXPConditionVariable(userland_cond_t *cv, userland_mutex_t *mtx)
 	}
 	EnterCriticalSection(&cv->waiters_count_lock);
 	cv->waiters_count--;
-	last_waiter = 
-		result == (C_SIGNAL + C_BROADCAST && (cv->waiters_count == 0));
+	last_waiter = result == (C_SIGNAL + C_BROADCAST && (cv->waiters_count == 0));
 	LeaveCriticalSection(&cv->waiters_count_lock);
 	if (last_waiter)
 		ResetEvent(cv->events_[C_BROADCAST]);

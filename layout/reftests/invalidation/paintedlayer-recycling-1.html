@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Switching the transform to animate shouldn't invalidate the fixed layer</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  background-color: white;
+  top: 20px;
+  left: 240px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.transform {
+  transform: translateY(0.1px);
+}
+
+.aboveTransform {
+  margin-top: 20px;
+  border-color: blue;
+  position: relative;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="transform content" id="aboutToAnimate">
+  <!--
+    This transform starts out inactive and is going to turn active + prerendered.
+  -->
+</div>
+
+<div class="aboveTransform content">
+  <!--
+    This content is on top of .transform in z-order but starts out in the
+    same layer as .transform (and the canvas background). Once the transform
+    turns active, this needs its own PaintedLayer because the prerendered
+    transform might asynchronously move underneath it.
+  -->
+</div>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer gets its own PaintedLayer above the rest.
+    When .aboveTransform requires its own PaintedLayer, it should not cause
+    .fixed to change layers.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToAnimate").style.willChange = "transform";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

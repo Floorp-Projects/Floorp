@@ -39,7 +39,11 @@ __FBSDID("$FreeBSD: head/sys/netinet6/sctp6_var.h 243186 2012-11-17 20:04:04Z tu
 #define _NETINET6_SCTP6_VAR_H_
 
 #if defined(__Userspace__)
-extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *sin6);
+#ifdef INET
+extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *);
+extern void in6_sin6_2_sin_in_sock(struct sockaddr *);
+extern void in6_sin_2_v4mapsin6(struct sockaddr_in *, struct sockaddr_in6 *);
+#endif
 #endif
 #if defined(_KERNEL)
 
@@ -73,10 +77,9 @@ int sctp6_output(struct sctp_inpcb *, struct mbuf *, struct sockaddr *,
 void sctp6_ctlinput(int, struct sockaddr *, void *);
 #endif
 #if !(defined(__FreeBSD__) || defined(__APPLE__))
-extern void in6_sin_2_v4mapsin6(struct sockaddr_in *sin,
-				struct sockaddr_in6 *sin6);
-extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *sin6);
-extern void in6_sin6_2_sin_in_sock(struct sockaddr *nam);
+extern void in6_sin_2_v4mapsin6(struct sockaddr_in *, struct sockaddr_in6 *);
+extern void in6_sin6_2_sin(struct sockaddr_in *, struct sockaddr_in6 *);
+extern void in6_sin6_2_sin_in_sock(struct sockaddr *);
 #endif
 extern void sctp6_notify(struct sctp_inpcb *, struct icmp6_hdr *,
                          struct sctphdr *, struct sockaddr *,

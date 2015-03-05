@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>%APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
-	<string>%MOZ_APP_NAME%</string>
+	<string>%MOZ_APP_NAME%.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.b2g</string>
 	<key>CFBundleInfoDictionaryVersion</key>

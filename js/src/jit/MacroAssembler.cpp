@@ -20,7 +20,6 @@
 #include "js/Conversions.h"
 #include "vm/TraceLogging.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "vm/Interpreter-inl.h"
 

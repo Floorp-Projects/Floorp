@@ -4152,6 +4152,11 @@ pref("dom.imagecapture.enabled", false);
 // W3C touch-action css property (related to touch and pointer events)
 pref("layout.css.touch_action.enabled", false);
 
+// Enables some assertions in nsStyleContext that are too expensive
+// for general use, but might be useful to enable for specific tests.
+// This only has an effect in DEBUG-builds.
+pref("layout.css.expensive-style-struct-assertions.enabled", false);
+
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 

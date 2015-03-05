@@ -60,9 +60,12 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
 
-  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, bool aRestoredFromDormant) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
+                              nsAutoPtr<MetadataTags> aTags,
+                              MediaDecoderEventVisibility aEventVisibility) MOZ_FINAL MOZ_OVERRIDE;
   virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, bool aRestoredFromDormant) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
+                                MediaDecoderEventVisibility aEventVisibility) MOZ_FINAL MOZ_OVERRIDE;
 
   virtual void RemoveMediaTracks() MOZ_FINAL MOZ_OVERRIDE;
 
