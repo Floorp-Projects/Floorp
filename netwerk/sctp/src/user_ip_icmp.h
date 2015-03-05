@@ -54,6 +54,7 @@ struct icmphdr {
 };
 
 #if defined(__Userspace_os_Windows)
+#pragma pack (push, 1)
 struct icmp6_hdr {
 	u_int8_t icmp6_type;
 	u_int8_t icmp6_code;
@@ -63,7 +64,8 @@ struct icmp6_hdr {
 		u_int16_t icmp6_un_data16[2];
 		u_int8_t icmp6_un_data8[4];
 	} icmp6_dataun;
-} __packed;
+};
+#pragma pack()
 
 #define icmp6_data32 icmp6_dataun.icmp6_un_data32
 #define icmp6_mtu icmp6_data32[0]

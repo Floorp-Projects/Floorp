@@ -107,11 +107,4 @@ extern u_short ip_id;
 
 /* necessary for sctp_pcb.c */
 extern int ip_defttl;
-
-
-/* dummy definitions used (temporarily?) for inpcb userspace port */
-
-/* called in sctp_usrreq.c */
-#define in6_sin_2_v4mapsin6(arg1, arg2) /* STUB */
-
 #endif

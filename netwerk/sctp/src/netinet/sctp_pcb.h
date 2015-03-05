@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 254248 2013-08-12 13:52:15Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 275427 2014-12-02 20:29:29Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PCB_H_
@@ -110,7 +110,7 @@ struct sctp_ifa {
 				 */
 	union sctp_sockstore address;
 	uint32_t refcount;	/* number of folks refering to this */
-     	uint32_t flags;
+	uint32_t flags;
 	uint32_t localifa_flags;
 	uint32_t vrf_id;	/* vrf_id of this addr (for deleting) */
 	uint8_t src_is_loop;
@@ -480,7 +480,13 @@ struct sctp_inpcb {
 	uint32_t sctp_context;
 	uint8_t local_strreset_support;
 	uint32_t sctp_cmt_on_off;
-	uint32_t sctp_ecn_enable;
+	uint8_t ecn_supported;
+	uint8_t prsctp_supported;
+	uint8_t auth_supported;
+	uint8_t asconf_supported;
+	uint8_t reconfig_supported;
+	uint8_t nrsack_supported;
+	uint8_t pktdrop_supported;
 	struct sctp_nonpad_sndrcvinfo def_send;
 	/*-
 	 * These three are here for the sosend_dgram
