@@ -31,6 +31,18 @@ def skip_if(tests, values):
         yield test
 
 
+def run_if(tests, values):
+    """
+    Sets disabled on all tests containing the `run-if` tag and whose condition
+    is False. This filter is added by default.
+    """
+    tag = 'run-if'
+    for test in tests:
+        if tag in test and not parse(test[tag], **values):
+            test.setdefault('disabled', '{}: {}'.format(tag, test[tag]))
+        yield test
+
+
 def fail_if(tests, values):
     """
     Sets expected to 'fail' on all tests containing the `fail-if` tag and whose
@@ -217,11 +229,12 @@ class chunk_by_dir(InstanceFilter):
 
 DEFAULT_FILTERS = (
     skip_if,
+    run_if,
     fail_if,
 )
 """
-By default :func:`~.active_tests` will run the :func:`~.skip_if`
-and :func:`~.fail_if` filters.
+By default :func:`~.active_tests` will run the :func:`~.skip_if`,
+:func:`~.run_if` and :func:`~.fail_if` filters.
 """
 
 
