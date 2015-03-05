@@ -5,6 +5,8 @@
 
 <resources>
 
+    <dimen name="arrow_popup_container_width">400dp</dimen>
+
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="browser_toolbar_button_padding">16dp</dimen>
     <dimen name="browser_toolbar_favicon_size">16dp</dimen>

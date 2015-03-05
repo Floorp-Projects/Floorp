@@ -577,6 +577,7 @@ bool TransportLayerDtls::Setup() {
   downward_->SignalPacketReceived.connect(this, &TransportLayerDtls::PacketReceived);
 
   if (downward_->state() == TS_OPEN) {
+    TL_SET_STATE(TS_CONNECTING);
     Handshake();
   }
 
@@ -739,7 +740,15 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
     case TS_OPEN:
       MOZ_MTLOG(ML_ERROR,
                 LAYER_INFO << "Lower layer is now open; starting TLS");
-      Handshake();
+      // Async, since the ICE layer might need to send a STUN response, and we
+      // don't want the handshake to start until that is sent.
+      TL_SET_STATE(TS_CONNECTING);
+      timer_->Cancel();
+      timer_->SetTarget(target_);
+      timer_->InitWithFuncCallback(TimerCallback,
+                                   this,
+                                   0,
+                                   nsITimer::TYPE_ONE_SHOT);
       break;
 
     case TS_CLOSED:
@@ -755,8 +764,6 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
 }
 
 void TransportLayerDtls::Handshake() {
-  TL_SET_STATE(TS_CONNECTING);
-
   // Clear the retransmit timer
   timer_->Cancel();
 

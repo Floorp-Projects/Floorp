@@ -54,7 +54,7 @@ struct sctp_route {
  * retransmission behavior and are included in the routing structure.
  */
 struct sctp_rt_metrics_lite {
-	u_long	rmx_mtu;	/* MTU for this path */
+	uint32_t rmx_mtu;	/* MTU for this path */
 #if 0
 	u_long	rmx_expire;	/* lifetime for route, e.g. redirect */
 	u_long	rmx_pksent;	/* packets sent using this route */

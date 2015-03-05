@@ -26,7 +26,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
 
-#include "jsgcinlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
 
