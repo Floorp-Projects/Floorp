@@ -322,6 +322,10 @@
               break;
             }
 
+            case "DocumentInserted":
+              this._isSyntheticDocument = data.synthetic;
+              break;
+
             case "FullZoomChange": {
               this._fullZoom = data.value;
               let event = document.createEvent("Events");
