@@ -46,8 +46,8 @@
 #elif defined(SCTP_STDINT_INCLUDE)
 #include SCTP_STDINT_INCLUDE
 #else
-#define uint32_t  unsigned __int32
-#define uint64_t  unsigned __int64
+#define uint32_t unsigned __int32
+#define uint64_t unsigned __int64
 #endif
 #include <winsock2.h>
 #endif

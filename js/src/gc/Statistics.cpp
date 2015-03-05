@@ -337,6 +337,7 @@ static const PhaseInfo phases[] = {
             { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers", PHASE_SWEEP_MARK },
             { PHASE_SWEEP_MARK_GRAY, "Mark Gray", PHASE_SWEEP_MARK },
             { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_JITCODE_GLOBAL_TABLE, "Mark JitcodeGlobalTable", PHASE_SWEEP_MARK },
         { PHASE_FINALIZE_START, "Finalize Start Callback", PHASE_SWEEP },
         { PHASE_SWEEP_ATOMS, "Sweep Atoms", PHASE_SWEEP },
         { PHASE_SWEEP_SYMBOL_REGISTRY, "Sweep Symbol Registry", PHASE_SWEEP },

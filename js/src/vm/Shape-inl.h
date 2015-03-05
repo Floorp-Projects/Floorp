@@ -13,13 +13,13 @@
 
 #include "jsobj.h"
 
+#include "gc/Allocator.h"
 #include "vm/Interpreter.h"
 #include "vm/ScopeObject.h"
 #include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsgcinlines.h"
 
 namespace js {
 

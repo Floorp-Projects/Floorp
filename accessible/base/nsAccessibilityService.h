@@ -41,6 +41,8 @@ SelectionManager* SelectionMgr();
 ApplicationAccessible* ApplicationAcc();
 xpcAccessibleApplication* XPCApplicationAcc();
 
+typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
+
 } // namespace a11y
 } // namespace mozilla
 
@@ -191,13 +193,6 @@ private:
     CreateAccessibleByType(nsIContent* aContent, DocAccessible* aDoc);
 
   /**
-   * Create accessible for HTML node by tag name.
-   */
-  already_AddRefed<Accessible>
-    CreateHTMLAccessibleByMarkup(nsIFrame* aFrame, nsIContent* aContent,
-                                 Accessible* aContext);
-
-  /**
    * Create an accessible whose type depends on the given frame.
    */
   already_AddRefed<Accessible>
@@ -227,6 +222,8 @@ private:
    * Indicates whether accessibility service was shutdown.
    */
   static bool gIsShutdown;
+
+  nsDataHashtable<nsPtrHashKey<const nsIAtom>, mozilla::a11y::New_Accessible*> mMarkupMap;
 
   friend nsAccessibilityService* GetAccService();
   friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();

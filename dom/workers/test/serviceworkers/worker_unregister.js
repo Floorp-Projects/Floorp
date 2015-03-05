@@ -1,5 +1,5 @@
 onmessage = function(e) {
-  clients.getServiced().then(function(c) {
+  clients.matchAll().then(function(c) {
     if (c.length == 0) {
       // We cannot proceed.
       return;
