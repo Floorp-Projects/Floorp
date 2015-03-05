@@ -58,10 +58,10 @@ MediaOmxCommonDecoder::CheckDecoderCanOffloadAudio()
 
 void
 MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                        bool aRestoredFromDormant)
+                                        MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MediaDecoder::FirstFrameLoaded(aInfo, aRestoredFromDormant);
+  MediaDecoder::FirstFrameLoaded(aInfo, aEventVisibility);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (!CheckDecoderCanOffloadAudio()) {
@@ -203,7 +203,7 @@ MediaOmxCommonDecoder::ApplyStateToStateMachine(PlayState aState)
 }
 
 void
-MediaOmxCommonDecoder::PlaybackPositionChanged()
+MediaOmxCommonDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mAudioOffloadPlayer) {
@@ -220,7 +220,9 @@ MediaOmxCommonDecoder::PlaybackPositionChanged()
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     mCurrentTime = mAudioOffloadPlayer->GetMediaTimeSecs();
   }
-  if (mOwner && lastTime != mCurrentTime) {
+  if (mOwner &&
+      (aEventVisibility != MediaDecoderEventVisibility::Suppressed) &&
+      lastTime != mCurrentTime) {
     FireTimeUpdate();
   }
 }
