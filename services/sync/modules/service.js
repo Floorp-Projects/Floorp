@@ -978,7 +978,10 @@ Sync11Service.prototype = {
 
       // Ask the identity manager to explicitly login now.
       let cb = Async.makeSpinningCallback();
-      this.identity.ensureLoggedIn().then(cb, cb);
+      this.identity.ensureLoggedIn().then(
+        () => cb(null),
+        err => cb(err || "ensureLoggedIn failed")
+      );
 
       // Just let any errors bubble up - they've more context than we do!
       cb.wait();

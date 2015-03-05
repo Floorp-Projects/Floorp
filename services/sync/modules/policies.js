@@ -737,6 +737,12 @@ ErrorHandler.prototype = {
       return true;
     }
 
+    if (Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
+      // An explicit LOGIN_REJECTED state is always reported (bug 1081158)
+      this._log.trace("shouldReportError: true (login was rejected)");
+      return true;
+    }
+
     let lastSync = Svc.Prefs.get("lastSync");
     if (lastSync && ((Date.now() - Date.parse(lastSync)) >
         Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 1000)) {
