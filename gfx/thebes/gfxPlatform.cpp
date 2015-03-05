@@ -451,6 +451,7 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
 void
 gfxPlatform::Init()
 {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     if (gEverInitialized) {
         NS_RUNTIMEABORT("Already started???");
     }
