@@ -1631,11 +1631,6 @@ this.SearchesProvider.prototype = Object.freeze({
 
   collectDailyData: function () {
     return this.storage.enqueueTransaction(function getDaily() {
-      // We currently only record this if Telemetry is enabled.
-      if (!isTelemetryEnabled(this._prefs)) {
-        return;
-      }
-
       let m = this.getMeasurement(SearchEnginesMeasurement1.prototype.name,
                                   SearchEnginesMeasurement1.prototype.version);
 
