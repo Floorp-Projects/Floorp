@@ -48,27 +48,35 @@
 
 /*** Button icons ***/
 
+.downloadButton.downloadConfirmBlock,
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock,
 richlistitem.download:hover > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock:hover,
 richlistitem.download:hover > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock:active,
 richlistitem.download:hover > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
+richlistitem.download[selected] > .downloadButton.downloadConfirmBlock,
 richlistitem.download[selected] > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
 }
+richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock,
 richlistitem.download:hover[selected] > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
+richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock:hover,
 richlistitem.download:hover[selected] > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 112px, 16px, 96px);
 }
+richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock:active,
 richlistitem.download:hover[selected] > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 128px, 16px, 112px);
 }
@@ -132,27 +140,35 @@ richlistitem.download:hover[selected] > .downloadButton.downloadRetry:active {
     height: 16px;
   }
 
+  .downloadButton.downloadConfirmBlock,
   .downloadButton.downloadCancel {
      -moz-image-region: rect(0px, 32px, 32px, 0px);
   }
+  richlistitem.download:hover > .downloadButton.downloadConfirmBlock,
   richlistitem.download:hover > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
+  richlistitem.download:hover > .downloadButton.downloadConfirmBlock:hover,
   richlistitem.download:hover > .downloadButton.downloadCancel:hover {
     -moz-image-region: rect(0px, 96px, 32px, 64px);
   }
+  richlistitem.download:hover > .downloadButton.downloadConfirmBlock:active,
   richlistitem.download:hover > .downloadButton.downloadCancel:active {
     -moz-image-region: rect(0px, 128px, 32px, 96px);
   }
+  richlistitem.download[selected] > .downloadButton.downloadConfirmBlock,
   richlistitem.download[selected] > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 160px, 32px, 128px);
   }
+  richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock,
   richlistitem.download:hover[selected] > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 192px, 32px, 160px);
   }
+  richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock:hover,
   richlistitem.download:hover[selected] > .downloadButton.downloadCancel:hover {
     -moz-image-region: rect(0px, 224px, 32px, 192px);
   }
+  richlistitem.download:hover[selected] > .downloadButton.downloadConfirmBlock:active,
   richlistitem.download:hover[selected] > .downloadButton.downloadCancel:active {
     -moz-image-region: rect(0px, 256px, 32px, 224px);
   }

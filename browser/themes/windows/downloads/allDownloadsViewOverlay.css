@@ -53,18 +53,22 @@
 
 /*** Button icons ***/
 
+.downloadButton.downloadConfirmBlock,
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock,
 richlistitem.download:hover > .downloadButton.downloadCancel {
    -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock:hover,
 richlistitem.download:hover > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
+richlistitem.download:hover > .downloadButton.downloadConfirmBlock:active,
 richlistitem.download:hover > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
@@ -102,18 +106,22 @@ richlistitem.download:hover > .downloadButton.downloadRetry:active {
 }
 
 %ifndef WINDOWS_AERO
+richlistitem.download[selected] > .downloadButton.downloadConfirmBlock,
 richlistitem.download[selected] > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
 }
 
+richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock,
 richlistitem.download[selected]:hover > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
 
+richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:hover,
 richlistitem.download[selected]:hover > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 112px, 16px, 96px);
 }
 
+richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:active,
 richlistitem.download[selected]:hover > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 128px, 16px, 112px);
 }
