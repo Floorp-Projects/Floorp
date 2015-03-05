@@ -33,6 +33,7 @@ InternalResponse::InternalResponse(const InternalResponse& aOther)
   , mStatus(aOther.mStatus)
   , mStatusText(aOther.mStatusText)
   , mContentType(aOther.mContentType)
+  , mSecurityInfo(aOther.mSecurityInfo)
 {
 }
 
