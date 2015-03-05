@@ -9,7 +9,7 @@ var gExpectedCount;
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing remote update xml attributes");
+  debugDump("testing remote update xml attributes");
 
   setUpdateURLOverride();
   setUpdateChannel("test_channel");
@@ -26,7 +26,7 @@ function run_test_helper_pt1(aMsg, aExpectedCount, aNextRunFunc) {
   gCheckFunc = check_test_helper_pt1;
   gNextRunFunc = aNextRunFunc;
   gExpectedCount = aExpectedCount;
-  logTestInfo(aMsg, Components.stack.caller);
+  debugDump(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -59,7 +59,7 @@ function run_test_pt01() {
 
 // one update available and the update's property values
 function run_test_pt02() {
-  logTestInfo("testing one update available and the update's property values");
+  debugDump("testing one update available and the update's property values");
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt02;
@@ -159,8 +159,8 @@ function check_test_pt02() {
 
 // one update available and the update's property default values
 function run_test_pt03() {
-  logTestInfo("testing one update available and the update's property values " +
-              "with the format prior to bug 530872");
+  debugDump("testing one update available and the update's property values " +
+            "with the format prior to bug 530872");
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt03;

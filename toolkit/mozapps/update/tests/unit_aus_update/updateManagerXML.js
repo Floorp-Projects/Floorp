@@ -6,9 +6,9 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing addition of a successful update to " + FILE_UPDATES_DB +
-              " and verification of update properties including the format " +
-              "prior to bug 530872");
+  debugDump("testing addition of a successful update to " + FILE_UPDATES_DB +
+            " and verification of update properties including the format " +
+            "prior to bug 530872");
 
   setUpdateChannel("test_channel");
 
