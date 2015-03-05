@@ -31,7 +31,10 @@ class nsMathMLContainerFrame : public nsContainerFrame,
                                public nsMathMLFrame {
   friend class nsMathMLmfencedFrame;
 public:
-  explicit nsMathMLContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  explicit nsMathMLContainerFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext)
+    , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
+  {}
 
   NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
   NS_DECL_QUERYFRAME
@@ -133,6 +136,8 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE;
+
+  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
 
   // Notification when an attribute is changed. The MathML module uses the
   // following paradigm:
@@ -390,6 +395,13 @@ protected:
    * The method does nothing if aFirst == nullptr.
    */
   static void DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop = nullptr);
+
+  /**
+   * Recompute mIntrinsicWidth if it's not already up to date.
+   */
+  void UpdateIntrinsicWidth(nsRenderingContext *aRenderingContext);
+
+  nscoord mIntrinsicWidth;
 
 private:
   class RowChildFrameIterator;
