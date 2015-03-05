@@ -97,7 +97,7 @@
     <dimen name="doorhanger_spinner_textsize">9sp</dimen>
     <dimen name="doorhanger_padding">15dp</dimen>
     <dimen name="doorhanger_offsetX">10dp</dimen>
-    <dimen name="doorhanger_offsetY">3dp</dimen>
+    <dimen name="doorhanger_offsetY">7dp</dimen>
 
     <dimen name="flow_layout_spacing">6dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>
