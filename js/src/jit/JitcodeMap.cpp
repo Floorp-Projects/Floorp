@@ -373,6 +373,47 @@ JitcodeGlobalEntry::createScriptString(JSContext *cx, JSScript *script, size_t *
     return str;
 }
 
+
+JitcodeGlobalTable::Enum::Enum(JitcodeGlobalTable &table, JSRuntime *rt)
+  : Range(table),
+    rt_(rt),
+    next_(cur_ ? cur_->tower_->next(0) : nullptr)
+{
+    for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--)
+        prevTower_[level] = nullptr;
+}
+
+void
+JitcodeGlobalTable::Enum::popFront()
+{
+    MOZ_ASSERT(!empty());
+
+    // Did not remove current entry; advance prevTower_.
+    if (cur_ != table_.freeEntries_) {
+        for (int level = cur_->tower_->height() - 1; level >= 0; level--) {
+            JitcodeGlobalEntry *prevTowerEntry = prevTower_[level];
+
+            if (prevTowerEntry) {
+                if (prevTowerEntry->tower_->next(level) == cur_)
+                    prevTower_[level] = cur_;
+            } else {
+                prevTower_[level] = table_.startTower_[level];
+            }
+        }
+    }
+
+    cur_ = next_;
+    if (!empty())
+        next_ = cur_->tower_->next(0);
+}
+
+void
+JitcodeGlobalTable::Enum::removeFront()
+{
+    MOZ_ASSERT(!empty());
+    table_.releaseEntry(*cur_, prevTower_, rt_);
+}
+
 bool
 JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
 {
