@@ -117,7 +117,6 @@ class JitcodeSkiplistTower
     }
 };
 
-
 class JitcodeGlobalEntry
 {
     friend class JitcodeGlobalTable;
@@ -917,6 +916,49 @@ class JitcodeGlobalTable
 #else
     void verifySkiplist() {}
 #endif
+
+  public:
+    class Range
+    {
+      protected:
+        JitcodeGlobalTable &table_;
+        JitcodeGlobalEntry *cur_;
+
+      public:
+        explicit Range(JitcodeGlobalTable &table)
+          : table_(table),
+            cur_(table.startTower_[0])
+        { }
+
+        JitcodeGlobalEntry *front() const {
+            MOZ_ASSERT(!empty());
+            return cur_;
+        }
+
+        bool empty() const {
+            return !cur_;
+        }
+
+        void popFront() {
+            MOZ_ASSERT(!empty());
+            cur_ = cur_->tower_->next(0);
+        }
+    };
+
+    // An enumerator class that can remove entries as it enumerates. If this
+    // functionality is not needed, use Range instead.
+    class Enum : public Range
+    {
+        JSRuntime *rt_;
+        JitcodeGlobalEntry *next_;
+        JitcodeGlobalEntry *prevTower_[JitcodeSkiplistTower::MAX_HEIGHT];
+
+      public:
+        Enum(JitcodeGlobalTable &table, JSRuntime *rt);
+
+        void popFront();
+        void removeFront();
+    };
 };
 
 
