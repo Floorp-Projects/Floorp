@@ -17,16 +17,10 @@ class nsPrintingProxy: public nsIPrintingPromptService,
 public:
     nsPrintingProxy();
 
-    static already_AddRefed<nsPrintingProxy> GetInstance();
-
     nsresult Init();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPRINTINGPROMPTSERVICE
-
-    nsresult SavePrintSettings(nsIPrintSettings* aPS,
-                               bool aUsePrinterNamePrefix,
-                               uint32_t aFlags);
 
     virtual PPrintProgressDialogChild*
     AllocPPrintProgressDialogChild() MOZ_OVERRIDE;

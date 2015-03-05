@@ -102,10 +102,6 @@ parent:
 
   PPrintProgressDialog();
 
-  sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,
-                         uint32_t flags)
-    returns(nsresult rv);
-
 child:
   __delete__();
 };
