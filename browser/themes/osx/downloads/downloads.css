@@ -189,27 +189,35 @@ richlistitem[type="download"]:last-child {
 
 /*** Button icons ***/
 
+.downloadButton.downloadConfirmBlock,
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:hover,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:active,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadConfirmBlock,
 #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
 }
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock,
 #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock:hover,
 #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 112px, 16px, 96px);
 }
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock:active,
 #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 128px, 16px, 112px);
 }
@@ -276,27 +284,35 @@ richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:acti
     height: 16px;
   }
 
+  .downloadButton.downloadConfirmBlock,
   .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 32px, 32px, 0px);
   }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock,
   richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:hover,
   richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
     -moz-image-region: rect(0px, 96px, 32px, 64px);
   }
+  richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:active,
   richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
     -moz-image-region: rect(0px, 128px, 32px, 96px);
   }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadConfirmBlock,
   #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] > stack > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 160px, 32px, 128px);
   }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock,
   #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel {
     -moz-image-region: rect(0px, 192px, 32px, 160px);
   }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock:hover,
   #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:hover {
     -moz-image-region: rect(0px, 224px, 32px, 192px);
   }
+  #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadConfirmBlock:active,
   #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"]:hover[selected] > stack > .downloadButton.downloadCancel:active {
     -moz-image-region: rect(0px, 256px, 32px, 224px);
   }
