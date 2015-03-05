@@ -960,6 +960,8 @@ const DownloadsView = {
     // Set the state attribute so that only the appropriate items are displayed.
     let contextMenu = document.getElementById("downloadsContextMenu");
     contextMenu.setAttribute("state", element.getAttribute("state"));
+    contextMenu.classList.toggle("temporary-block",
+                                 element.classList.contains("temporary-block"));
   },
 
   onDownloadDragStart(aEvent) {
@@ -1025,6 +1027,11 @@ DownloadsViewItem.prototype = {
   },
 
   onChanged() {
+    // This cannot be placed within onStateChanged because
+    // when a download goes from hasBlockedData to !hasBlockedData
+    // it will still remain in the same state.
+    this.element.classList.toggle("temporary-block",
+                                  !!this.download.hasBlockedData);
     this._updateProgress();
   },
 };
@@ -1166,6 +1173,9 @@ DownloadsViewItemController.prototype = {
       case "downloadsCmd_copyLocation":
       case "downloadsCmd_doDefault":
         return true;
+      case "downloadsCmd_unblock":
+      case "downloadsCmd_confirmBlock":
+        return this.download.hasBlockedData;
     }
     return false;
   },
@@ -1194,6 +1204,20 @@ DownloadsViewItemController.prototype = {
     downloadsCmd_cancel() {
       this.download.cancel().catch(() => {});
       this.download.removePartialData().catch(Cu.reportError);
+    },
+
+    downloadsCmd_unblock() {
+      DownloadsPanel.hidePanel();
+      DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
+                                             window).then((confirmed) => {
+        if (confirmed) {
+          return this.download.unblock();
+        }
+      }).catch(Cu.reportError);
+    },
+
+    downloadsCmd_confirmBlock() {
+      this.download.confirmBlock().catch(Cu.reportError);
     },
 
     downloadsCmd_open() {
