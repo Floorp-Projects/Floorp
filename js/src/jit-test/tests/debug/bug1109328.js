@@ -1,3 +1,4 @@
+// |jit-test| allow-oom
 try {
     gcslice(0)(""());
 } catch (e) {}

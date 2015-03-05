@@ -1038,14 +1038,6 @@ GCRuntime::allocateArena(Chunk *chunk, Zone *zone, AllocKind thingKind, const Au
 {
     MOZ_ASSERT(chunk->hasAvailableArenas());
 
-    // Fail the allocation if we are over our heap size limits.
-    if (!isHeapMinorCollecting() &&
-        !isHeapCompacting() &&
-        usage.gcBytes() >= tunables.gcMaxBytes())
-    {
-        return nullptr;
-    }
-
     ArenaHeader *aheader = chunk->allocateArena(rt, zone, thingKind, lock);
     zone->usage.addGCArena();
 
