@@ -135,18 +135,18 @@ class chunk_by_slice(InstanceFilter):
     """
     Basic chunking algorithm that splits tests evenly across total chunks.
 
-    :param this: the current chunk, 1 <= this <= total
-    :param total: the total number of chunks
+    :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
+    :param total_chunks: the total number of chunks
     :param disabled: Whether to include disabled tests in the chunking
                      algorithm. If False, each chunk contains an equal number
                      of non-disabled tests. If True, each chunk contains an
                      equal number of tests (default False)
     """
 
-    def __init__(self, this, total, disabled=False):
-        assert 1 <= this <= total
-        self.this = this
-        self.total = total
+    def __init__(self, this_chunk, total_chunks, disabled=False):
+        assert 1 <= this_chunk <= total_chunks
+        self.this_chunk = this_chunk
+        self.total_chunks = total_chunks
         self.disabled = disabled
 
     def __call__(self, tests, values):
@@ -156,20 +156,20 @@ class chunk_by_slice(InstanceFilter):
         else:
             chunk_tests = [t for t in tests if 'disabled' not in t]
 
-        tests_per_chunk = float(len(chunk_tests)) / self.total
-        start = int(round((self.this - 1) * tests_per_chunk))
-        end = int(round(self.this * tests_per_chunk))
+        tests_per_chunk = float(len(chunk_tests)) / self.total_chunks
+        start = int(round((self.this_chunk - 1) * tests_per_chunk))
+        end = int(round(self.this_chunk * tests_per_chunk))
 
         if not self.disabled:
             # map start and end back onto original list of tests. Disabled
             # tests will still be included in the returned list, but each
             # chunk will contain an equal number of enabled tests.
-            if self.this == 1:
+            if self.this_chunk == 1:
                 start = 0
             else:
                 start = tests.index(chunk_tests[start])
 
-            if self.this == self.total:
+            if self.this_chunk == self.total_chunks:
                 end = len(tests)
             else:
                 end = tests.index(chunk_tests[end])
@@ -188,15 +188,15 @@ class chunk_by_dir(InstanceFilter):
     paths must be relative to the same root (typically the root of the source
     repository).
 
-    :param this: the current chunk, 1 <= this <= total
-    :param total: the total number of chunks
+    :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
+    :param total_chunks: the total number of chunks
     :param depth: the minimum depth of a subdirectory before it will be
                   considered unique
     """
 
-    def __init__(self, this, total, depth):
-        self.this = this
-        self.total = total
+    def __init__(self, this_chunk, total_chunks, depth):
+        self.this_chunk = this_chunk
+        self.total_chunks = total_chunks
         self.depth = depth
 
     def __call__(self, tests, values):
@@ -216,13 +216,61 @@ class chunk_by_dir(InstanceFilter):
                 ordered_dirs.append(path)
             tests_by_dir[path].append(test)
 
-        tests_per_chunk = float(len(tests_by_dir)) / self.total
-        start = int(round((self.this - 1) * tests_per_chunk))
-        end = int(round(self.this * tests_per_chunk))
+        tests_per_chunk = float(len(tests_by_dir)) / self.total_chunks
+        start = int(round((self.this_chunk - 1) * tests_per_chunk))
+        end = int(round(self.this_chunk * tests_per_chunk))
 
         for i in range(start, end):
             for test in tests_by_dir[ordered_dirs[i]]:
                 yield test
+
+
+class chunk_by_runtime(InstanceFilter):
+    """
+    Chunking algorithm that attempts to group tests into chunks based on their
+    average runtimes. It keeps manifests of tests together and pairs slow
+    running manifests with fast ones.
+
+    :param this_chunk: the current chunk, 1 <= this_chunk <= total_chunks
+    :param total_chunks: the total number of chunks
+    :param runtimes: dictionary of test runtime data, of the form
+                     {<test path>: <average runtime>}
+    """
+
+    def __init__(self, this_chunk, total_chunks, runtimes):
+        self.this_chunk = this_chunk
+        self.total_chunks = total_chunks
+
+        # defaultdict(int) assigns all non-existent keys a value of 0. This
+        # essentially means all tests we encounter that don't exist in the
+        # runtimes file won't factor in to the chunking determination.
+        self.runtimes = defaultdict(int)
+        self.runtimes.update(runtimes)
+
+    def __call__(self, tests, values):
+        tests = list(tests)
+        manifests = set(t['manifest'] for t in tests)
+
+        def total_runtime(tests):
+            return sum(self.runtimes[t['relpath']] for t in tests
+                       if 'disabled' not in t)
+
+        tests_by_manifest = []
+        for manifest in manifests:
+            mtests = [t for t in tests if t['manifest'] == manifest]
+            tests_by_manifest.append((total_runtime(mtests), mtests))
+        tests_by_manifest.sort(reverse=True)
+
+        tests_by_chunk = [[0, []] for i in range(self.total_chunks)]
+        for runtime, batch in tests_by_manifest:
+            # sort first by runtime, then by number of tests in case of a tie.
+            # This guarantees the chunk with the fastest runtime will always
+            # get the next batch of tests.
+            tests_by_chunk.sort(key=lambda x: (x[0], len(x[1])))
+            tests_by_chunk[0][0] += runtime
+            tests_by_chunk[0][1].extend(batch)
+
+        return (t for t in tests_by_chunk[self.this_chunk-1][1])
 
 
 # filter container
