@@ -60,6 +60,9 @@
                     tooltiptext="&cmd.show.label;"
 #endif
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
+        <xul:button class="downloadButton downloadConfirmBlock"
+                    tooltiptext="&cmd.removeFile.label;"
+                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_confirmBlock');"/>
       </xul:stack>
     </content>
   </binding>
@@ -103,7 +106,9 @@
                   tooltiptext="&cmd.show.label;"
 #endif
                   oncommand="goDoCommand('downloadsCmd_show')"/>
-
+      <xul:button class="downloadButton downloadConfirmBlock"
+                  tooltiptext="&cmd.removeFile.label;"
+                  oncommand="goDoCommand('downloadsCmd_confirmBlock');"/>
     </content>
   </binding>
 
