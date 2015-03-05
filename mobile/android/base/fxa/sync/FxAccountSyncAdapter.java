@@ -456,10 +456,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       // and extend the background delay even further into the future.
       schedulePolicy.configureBackoffMillisBeforeSyncing(rateLimitBackoffHandler, backgroundBackoffHandler);
 
-      final String audience = fxAccount.getAudience();
       final String authServerEndpoint = fxAccount.getAccountServerURI();
       final String tokenServerEndpoint = fxAccount.getTokenServerURI();
       final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
+      final String audience = FxAccountUtils.getAudienceForURL(tokenServerEndpoint);
 
       // TODO: why doesn't the loginPolicy extract the audience from the account?
       final FxAccountClient client = new FxAccountClient20(authServerEndpoint, executor);
