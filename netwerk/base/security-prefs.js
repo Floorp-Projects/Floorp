@@ -7,6 +7,7 @@ pref("security.tls.version.max", 3);
 pref("security.tls.version.fallback-limit", 3);
 pref("security.tls.insecure_fallback_hosts", "");
 pref("security.tls.insecure_fallback_hosts.use_static_list", true);
+pref("security.tls.unrestricted_rc4_fallback", false);
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
