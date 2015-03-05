@@ -69,7 +69,7 @@
       ok(img.currentSrc.endsWith("non_existent_image.404"), "Should have synchronously selected source");
 
       img.removeAttribute("src");
-      is(img.currentSrc, null, "Should have dropped currentSrc");
+      is(img.currentSrc, '', "Should have dropped currentSrc");
 
       // Load another image while previous load is still pending
       img.src = testPNG200;
