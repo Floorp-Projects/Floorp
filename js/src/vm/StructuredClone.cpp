@@ -1216,7 +1216,7 @@ JSStructuredCloneWriter::write(HandleValue v)
             entries.popBack();
             checkStack();
 
-            if (obj->is<MapObject>()) {
+            if (ObjectClassIs(obj, ESClass_Map, context())) {
                 counts.back()--;
                 RootedValue val(context(), entries.back());
                 entries.popBack();
@@ -1224,7 +1224,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
                 if (!startWrite(key) || !startWrite(val))
                     return false;
-            } else if (obj->is<SetObject>()) {
+            } else if (ObjectClassIs(obj, ESClass_Set, context())) {
                 if (!startWrite(key))
                     return false;
             } else {
