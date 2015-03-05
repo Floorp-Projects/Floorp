@@ -9,5 +9,6 @@
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
   window.addEventListener("DOMWindowCreated", function() { ok(false, "DOMWindowCreated should not have fired"); }, false);
+  window.addEventListener("DOMDocElementInserted", function() { ok(false, "DOMDocElementInserted should not have fired"); }, false);
 
   <iframe src="data:text/plain,Hi"></iframe>

@@ -81,6 +81,42 @@ const NFC_IPC_MSG_ENTRIES = [
                "NFC:SetFocusApp"] }
 ];
 
+// Should be consistent with NfcRequestType defined in NfcOptions.webidl.
+const NfcRequestType = {
+  CHANGE_RF_STATE: "changeRFState",
+  READ_NDEF: "readNDEF",
+  WRITE_NDEF: "writeNDEF",
+  MAKE_READ_ONLY: "makeReadOnly",
+  FORMAT: "format",
+  TRANSCEIVE: "transceive"
+};
+
+// Should be consistent with NfcResponseType defined in NfcOptions.webidl.
+const NfcResponseType = {
+  CHANGE_RF_STATE_RSP: "changeRFStateRsp",
+  READ_NDEF_RSP: "readNDEFRsp",
+  WRITE_NDEF_RSP: "writeNDEFRsp",
+  MAKE_READ_ONLY_RSP: "makeReadOnlyRsp",
+  FORMAT_RSP: "formatRsp",
+  TRANSCEIVE_RSP: "transceiveRsp",
+};
+
+const EventMsgTable = {};
+EventMsgTable[NfcResponseType.CHANGE_RF_STATE_RSP] = "NFC:ChangeRFStateResponse";
+EventMsgTable[NfcResponseType.READ_NDEF_RSP] = "NFC:ReadNDEFResponse";
+EventMsgTable[NfcResponseType.WRITE_NDEF_RSP] = "NFC:WriteNDEFResponse";
+EventMsgTable[NfcResponseType.MAKE_READ_ONLY_RSP] = "NFC:MakeReadOnlyResponse";
+EventMsgTable[NfcResponseType.FORMAT_RSP] = "NFC:FormatResponse";
+EventMsgTable[NfcResponseType.TRANSCEIVE_RSP] = "NFC:TransceiveResponse";
+
+// Should be consistent with NfcNotificationType defined in NfcOptions.webidl.
+const NfcNotificationType = {
+  INITIALIZED: "initialized",
+  TECH_DISCOVERED: "techDiscovered",
+  TECH_LOST: "techLost",
+  HCI_EVENT_TRANSACTION: "hciEventTransaction"
+};
+
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
@@ -241,6 +277,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
                                    sessionToken: sessionToken});
     },
 
+    notifySendFileStatus: function notifySendFileStatus(message) {
+      if (message.data.status) {
+        message.data.errorMsg =
+            this.nfc.getErrorMessage(NFC.NFC_GECKO_ERROR_SEND_FILE_FAILED);
+      }
+      this.nfc.sendFileStatusResponse(message.data);
+    },
+
     callDefaultFoundHandler: function callDefaultFoundHandler(message) {
       let sysMsg = new NfcTechDiscoveredSysMsg(message.sessionToken,
                                                message.isP2P,
@@ -346,12 +390,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:NotifySendFileStatus":
           // Upon receiving the status of sendFile operation, send the response
           // to appropriate content process.
-          message.data.type = "NotifySendFileStatusResponse";
-          if (message.data.status) {
-            message.data.errorMsg =
-              this.nfc.getErrorMessage(NFC.NFC_GECKO_ERROR_SEND_FILE_FAILED);
-          }
-          this.nfc.sendNfcResponse(message.data);
+          this.notifySendFileStatus(message);
           return null;
         case "NFC:CallDefaultFoundHandler":
           this.callDefaultFoundHandler(message.data);
@@ -482,15 +521,33 @@ Nfc.prototype = {
     this.nfcService.sendCommand(message);
   },
 
-  sendNfcResponse: function sendNfcResponse(message) {
-    let target = this.targetsByRequestId[message.requestId];
+  sendFileStatusResponse: function sendFileStatusResponse(message) {
+    let target = this.getTargetByRequestId(message.requestId);
     if (!target) {
-      debug("No target for requestId: " + message.requestId);
       return;
     }
-    delete this.targetsByRequestId[message.requestId];
 
-    target.sendAsyncMessage("NFC:" + message.type, message);
+    target.sendAsyncMessage("NFC:NotifySendFileStatusResponse", message);
+  },
+
+  sendNfcResponse: function sendNfcResponse(message) {
+    let target = this.getTargetByRequestId(message.requestId);
+    if (!target) {
+      return;
+    }
+
+    target.sendAsyncMessage(EventMsgTable[message.type], message);
+  },
+
+  getTargetByRequestId: function getTargetByRequestId(requestId) {
+    let target = this.targetsByRequestId[requestId];
+    if (!target) {
+      debug("No target for requestId: " + requestId);
+      return null;
+    }
+    delete this.targetsByRequestId[requestId];
+
+    return target;
   },
 
   /**
@@ -522,12 +579,12 @@ Nfc.prototype = {
     let message = Cu.cloneInto(event, this);
     DEBUG && debug("Received message from NFC Service: " + JSON.stringify(message));
 
+    message.type = message.rspType || message.ntfType;
     switch (message.type) {
-      case "InitializedNotification":
+      case NfcNotificationType.INITIALIZED:
         // Do nothing.
         break;
-      case "TechDiscoveredNotification":
-        message.type = "techDiscovered";
+      case NfcNotificationType.TECH_DISCOVERED:
         // Update the upper layers with a session token (alias)
         message.sessionToken =
           SessionHelper.registerSession(message.sessionId, message.isP2P);
@@ -548,9 +605,7 @@ Nfc.prototype = {
           gMessageManager.onTagFound(message);
         }
         break;
-      case "TechLostNotification":
-        message.type = "techLost";
-
+      case NfcNotificationType.TECH_LOST:
         // Update the upper layers with a session token (alias)
         message.sessionToken = SessionHelper.getToken(message.sessionId);
         if (SessionHelper.isP2PSession(message.sessionId)) {
@@ -561,10 +616,10 @@ Nfc.prototype = {
 
         SessionHelper.unregisterSession(message.sessionId);
         break;
-     case "HCIEventTransactionNotification":
+      case NfcNotificationType.HCI_EVENT_TRANSACTION:
         this.notifyHCIEventTransaction(message);
         break;
-     case "ChangeRFStateResponse":
+      case NfcResponseType.CHANGE_RF_STATE_RSP:
         this.sendNfcResponse(message);
 
         if (!message.errorMsg) {
@@ -572,11 +627,11 @@ Nfc.prototype = {
           gMessageManager.onRFStateChanged(this.rfState);
         }
         break;
-      case "ReadNDEFResponse": // Fall through.
-      case "MakeReadOnlyResponse":
-      case "FormatResponse":
-      case "TransceiveResponse":
-      case "WriteNDEFResponse":
+      case NfcResponseType.READ_NDEF_RSP: // Fall through.
+      case NfcResponseType.WRITE_NDEF_RSP:
+      case NfcResponseType.MAKE_READ_ONLY_RSP:
+      case NfcResponseType.FORMAT_RSP:
+      case NfcResponseType.TRANSCEIVE_RSP:
         this.sendNfcResponse(message);
         break;
       default:
@@ -617,23 +672,23 @@ Nfc.prototype = {
 
     switch (message.name) {
       case "NFC:ChangeRFState":
-        this.sendToNfcService("changeRFState", message.data);
+        this.sendToNfcService(NfcRequestType.CHANGE_RF_STATE, message.data);
         break;
       case "NFC:ReadNDEF":
-        this.sendToNfcService("readNDEF", message.data);
+        this.sendToNfcService(NfcRequestType.READ_NDEF, message.data);
         break;
       case "NFC:WriteNDEF":
         message.data.isP2P = SessionHelper.isP2PSession(message.data.sessionId);
-        this.sendToNfcService("writeNDEF", message.data);
+        this.sendToNfcService(NfcRequestType.WRITE_NDEF, message.data);
         break;
       case "NFC:MakeReadOnly":
-        this.sendToNfcService("makeReadOnly", message.data);
+        this.sendToNfcService(NfcRequestType.MAKE_READ_ONLY, message.data);
         break;
       case "NFC:Format":
-        this.sendToNfcService("format", message.data);
+        this.sendToNfcService(NfcRequestType.FORMAT, message.data);
         break;
       case "NFC:Transceive":
-        this.sendToNfcService("transceive", message.data);
+        this.sendToNfcService(NfcRequestType.TRANSCEIVE, message.data);
         break;
       case "NFC:SendFile":
         // Chrome process is the arbitrator / mediator between
