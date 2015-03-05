@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsINetworkInterface;
+interface nsIWifiTetheringCallback;
+
+[scriptable, uuid(80d65940-bd99-458f-8529-e438c7348087)]
+interface nsITetheringService : nsISupports
+{
+  /**
+   * Enable or disable Wifi Tethering
+   *
+   * @param enabled
+   *        Boolean that indicates whether tethering should be enabled (true) or
+   *        disabled (false).
+   * @param networkInterface
+   *        The Wifi network interface with at least name of network interface.
+   * @param config
+   *        The Wifi Tethering configuration from settings db.
+   * @param callback
+   *        Callback function used to report status to WifiManager.
+   */
+  void setWifiTethering(in boolean enabled,
+                        in nsINetworkInterface networkInterface,
+                        in jsval config,
+                        in nsIWifiTetheringCallback callback);
+};

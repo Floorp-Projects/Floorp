@@ -404,6 +404,7 @@ class MachCommands(MachCommandBase):
 
     @Command('xpcshell-test', category='testing',
         description='Run XPCOM Shell tests (API direct unit testing)',
+        conditions=[lambda *args: True],
         parser=_parser)
     @CommandArgument('test_paths', default='all', nargs='*', metavar='TEST',
         help='Test to run. Can be specified as a single JS file, a directory, '
