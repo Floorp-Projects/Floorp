@@ -4,8 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIWifiTetheringCallback;
-
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
@@ -97,7 +95,7 @@ interface nsINetworkInterface : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(19822018-2454-11e4-baa7-2b5894f0af6f)]
+[scriptable, uuid(b0ab71bf-4b38-4796-8a3c-4141255f4259)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -179,23 +177,6 @@ interface nsINetworkManager : nsISupports
    *        a previous override is canceled.
    */
   long overrideActive(in nsINetworkInterface network);
-
-  /**
-   * Enable or disable Wifi Tethering
-   *
-   * @param enabled
-   *        Boolean that indicates whether tethering should be enabled (true) or disabled (false).
-   * @param network
-   *        The Wifi network interface with at least name of network interface.
-   * @param config
-   *        The Wifi Tethering configuration from settings db.
-   * @param callback
-   *        Callback function used to report status to WifiManager.
-   */
-  void setWifiTethering(in boolean enabled,
-                        in nsINetworkInterface networkInterface,
-                        in jsval config,
-                        in nsIWifiTetheringCallback callback);
 
   /**
    * Add host route to the specified network into routing table.
