@@ -90,8 +90,6 @@ struct serialNumberRecord
 
 struct nsTraceRefcntStats
 {
-  uint64_t mAddRefs;
-  uint64_t mReleases;
   uint64_t mCreates;
   uint64_t mDestroys;
 };
@@ -247,16 +245,12 @@ public:
 
   static void Clear(nsTraceRefcntStats* aStats)
   {
-    aStats->mAddRefs = 0;
-    aStats->mReleases = 0;
     aStats->mCreates = 0;
     aStats->mDestroys = 0;
   }
 
   void Accumulate()
   {
-    mAllStats.mAddRefs += mNewStats.mAddRefs;
-    mAllStats.mReleases += mNewStats.mReleases;
     mAllStats.mCreates += mNewStats.mCreates;
     mAllStats.mDestroys += mNewStats.mDestroys;
     Clear(&mNewStats);
@@ -264,7 +258,6 @@ public:
 
   void AddRef(nsrefcnt aRefcnt)
   {
-    mNewStats.mAddRefs++;
     if (aRefcnt == 1) {
       Ctor();
     }
@@ -272,7 +265,6 @@ public:
 
   void Release(nsrefcnt aRefcnt)
   {
-    mNewStats.mReleases++;
     if (aRefcnt == 0) {
       Dtor();
     }
@@ -309,8 +301,6 @@ public:
 
   void Total(BloatEntry* aTotal)
   {
-    aTotal->mAllStats.mAddRefs += mNewStats.mAddRefs + mAllStats.mAddRefs;
-    aTotal->mAllStats.mReleases += mNewStats.mReleases + mAllStats.mReleases;
     aTotal->mAllStats.mCreates += mNewStats.mCreates + mAllStats.mCreates;
     aTotal->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
     uint64_t count = (mNewStats.mCreates + mAllStats.mCreates);
@@ -328,8 +318,7 @@ public:
 
   static bool HaveLeaks(nsTraceRefcntStats* aStats)
   {
-    return ((aStats->mAddRefs != aStats->mReleases) ||
-            (aStats->mCreates != aStats->mDestroys));
+    return aStats->mCreates != aStats->mDestroys;
   }
 
   bool PrintDumpHeader(FILE* aOut, const char* aMsg,
@@ -345,8 +334,8 @@ public:
 
     fprintf(aOut,
             "\n" \
-            "     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|<--References--->|\n" \
-            "                                              Per-Inst   Leaked    Total      Rem    Total      Rem\n");
+            "     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|\n" \
+            "                                              Per-Inst   Leaked    Total      Rem\n");
 
     this->DumpTotal(aOut);
 
@@ -361,20 +350,16 @@ public:
       return;
     }
 
-    if ((stats->mAddRefs - stats->mReleases) != 0 ||
-        stats->mAddRefs != 0 ||
-        (stats->mCreates - stats->mDestroys) != 0 ||
+    if ((stats->mCreates - stats->mDestroys) != 0 ||
         stats->mCreates != 0) {
-      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " %8" PRIu64 "\n",
+      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 "\n",
               aIndex + 1, mClassName,
               (int32_t)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))
                 ? (uint64_t)((stats->mCreates - stats->mDestroys) * mClassSize)
                 : mTotalLeaked,
               stats->mCreates,
-              (stats->mCreates - stats->mDestroys),
-              stats->mAddRefs,
-              (stats->mAddRefs - stats->mReleases));
+              (stats->mCreates - stats->mDestroys));
     }
   }
 
