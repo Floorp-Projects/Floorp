@@ -1397,6 +1397,6 @@ nsStyleContext::Initialize()
 {
   Preferences::AddBoolVarCache(
       &sExpensiveStyleStructAssertionsEnabled,
-      "layout.css.expensive-style-struct-assertions.enabed");
+      "layout.css.expensive-style-struct-assertions.enabled");
 }
 #endif
