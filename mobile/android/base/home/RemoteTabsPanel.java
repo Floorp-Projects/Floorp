@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.fxa.AccountLoader;
@@ -24,6 +21,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,24 +41,13 @@ public class RemoteTabsPanel extends HomeFragment {
 
     // Loader ID for Android Account loader.
     private static final int LOADER_ID_ACCOUNT = 0;
+    private static final String FRAGMENT_ACTION = "FRAGMENT_ACTION";
+    private static final String FRAGMENT_ORIENTATION = "FRAGMENT_ORIENTATION";
+    private static final String FRAGMENT_TAG = "FRAGMENT_TAG";
+    private static final String NO_ACCOUNT = "NO_ACCOUNT";
 
     // Callback for loaders.
     private AccountLoaderCallbacks mAccountLoaderCallbacks;
-
-    // The current fragment being shown to reflect the system account state. We
-    // don't want to detach and re-attach panels unnecessarily, because that
-    // causes flickering.
-    private Fragment mCurrentFragment;
-
-    // A lazily-populated cache of fragments corresponding to the possible
-    // system account states. We don't want to re-create panels unnecessarily,
-    // because that can cause flickering. `null` is not a valid key.
-    private final Map<Action, Fragment> mFragmentCache = new EnumMap<>(Action.class);
-
-    // The fragment that corresponds to the null action -- "no Account,
-    // neither Firefox nor Legacy Sync."
-    // Lazily populated.
-    private Fragment mFallbackFragment;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -78,12 +65,24 @@ public class RemoteTabsPanel extends HomeFragment {
 
     @Override
     protected void loadIfVisible() {
-        // Force load the child fragment if fragment is displayed in Tablet with a valid account.
-        if (canLoad() && HardwareUtils.isTablet() && (mCurrentFragment instanceof RemoteTabsBaseFragment)) {
-            load();
-            return;
-        }
+        // Force reload fragment only in tablets when there is valid account and the orientation has changed.
+        Pair<String, Integer> actionOrientationPair;
+        if (canLoad() && HardwareUtils.isTablet() && (actionOrientationPair = getActionAndOrientationForFragmentInBackStack()) != null) {
+            if (actionOrientationPair.first.equals(Action.None.name()) && actionOrientationPair.second != GeckoScreenOrientation.getInstance().getAndroidOrientation()) {
+                // As the fragment becomes visible only after onStart callback, we can safely remove it from the back-stack.
+                // If a portrait fragment is in the back-stack and then a landscape fragment should be shown, there can
+                // be a brief flash as the fragment as replaced.
+                getChildFragmentManager()
+                        .beginTransaction()
+                        .addToBackStack(null)
+                        .remove(getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG))
+                        .commitAllowingStateLoss();
+                getChildFragmentManager().executePendingTransactions();
 
+                load();
+                return;
+            }
+        }
         super.loadIfVisible();
     }
 
@@ -92,24 +91,42 @@ public class RemoteTabsPanel extends HomeFragment {
         getLoaderManager().initLoader(LOADER_ID_ACCOUNT, null, mAccountLoaderCallbacks);
     }
 
-    private void showSubPanel(Fragment subPanel) {
-        if (mCurrentFragment == subPanel) {
+    private void showSubPanel(Account account) {
+        final Action actionNeeded = getActionNeeded(account);
+        final String actionString = actionNeeded != null ? actionNeeded.name() : NO_ACCOUNT;
+        final int orientation = HardwareUtils.isTablet() ? GeckoScreenOrientation.getInstance().getAndroidOrientation()
+                : Configuration.ORIENTATION_UNDEFINED;
+
+        // Check if fragment for given action and orientation is in the back-stack.
+        final Pair<String, Integer> actionOrientationPair = getActionAndOrientationForFragmentInBackStack();
+        if (actionOrientationPair != null && actionOrientationPair.first.equals(actionString) && (actionOrientationPair.second == orientation)) {
             return;
         }
-        mCurrentFragment = subPanel;
 
-        Bundle args = subPanel.getArguments();
-        if (args == null) {
-            args = new Bundle();
-        }
+        // Instantiate the fragment for the action and update the arguments.
+        Fragment subPanel = makeFragmentForAction(actionNeeded);
+        final Bundle args = new Bundle();
         args.putBoolean(HomePager.CAN_LOAD_ARG, getCanLoadHint());
+        args.putString(FRAGMENT_ACTION, actionString);
+        args.putInt(FRAGMENT_ORIENTATION, orientation);
         subPanel.setArguments(args);
 
+        // Add the fragment to the back-stack.
         getChildFragmentManager()
             .beginTransaction()
             .addToBackStack(null)
-            .replace(R.id.remote_tabs_container, subPanel)
+            .replace(R.id.remote_tabs_container, subPanel, FRAGMENT_TAG)
             .commitAllowingStateLoss();
+    }
+
+    private Pair<String, Integer> getActionAndOrientationForFragmentInBackStack() {
+        final Fragment currentFragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
+        if (currentFragment != null && currentFragment.getArguments() != null) {
+            final String fragmentAction  = currentFragment.getArguments().getString(FRAGMENT_ACTION);
+            final int fragmentOrientation = currentFragment.getArguments().getInt(FRAGMENT_ORIENTATION);
+            return Pair.create(fragmentAction, fragmentOrientation);
+        }
+        return null;
     }
 
     /**
@@ -187,36 +204,6 @@ public class RemoteTabsPanel extends HomeFragment {
     }
 
     /**
-     * Get the <code>Fragment</code> that reflects the given
-     * <code>Account</code> and its state.
-     * <p>
-     * A null Account means there is no Account (Sync or Firefox) on the device.
-     *
-     * @param account
-     *            Android Account (Sync or Firefox); may be null.
-     */
-    private Fragment getFragmentNeeded(Account account) {
-        final Action actionNeeded = getActionNeeded(account);
-
-        if (actionNeeded == null) {
-            if (mFallbackFragment == null) {
-                mFallbackFragment = makeFragmentForAction(null);
-            }
-            return mFallbackFragment;
-        }
-
-        Fragment fragment = mFragmentCache.get(actionNeeded);
-        // On a tablet devices with accounts authenticated, create a new fragment based on the current orientation.
-        // The cached fragment in the above case may not be the valid fragment for the current orientation.
-        if (fragment == null || (HardwareUtils.isTablet() && actionNeeded == Action.None)) {
-            fragment = makeFragmentForAction(actionNeeded);
-            mFragmentCache.put(actionNeeded, fragment);
-        }
-
-        return fragment;
-    }
-
-    /**
      * Update the UI to reflect the given <code>Account</code> and its state.
      * <p>
      * A null Account means there is no Account (Sync or Firefox) on the device.
@@ -234,7 +221,7 @@ public class RemoteTabsPanel extends HomeFragment {
             // the setup flow fails. In this case, just abort.
             return;
         }
-        showSubPanel(getFragmentNeeded(account));
+        showSubPanel(account);
     }
 
     private class AccountLoaderCallbacks implements LoaderCallbacks<Account> {
