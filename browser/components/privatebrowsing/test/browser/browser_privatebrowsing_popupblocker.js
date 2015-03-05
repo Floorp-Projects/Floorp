@@ -4,14 +4,14 @@
 
 // This test makes sure that private browsing mode disables the remember option
 // for the popup blocker menu.
-function test() {
-  // initialization
-  waitForExplicitFinish();
-
+add_task(function* test() {
   let testURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/popup.html";
-  let windowsToClose = [];
   let oldPopupPolicy = gPrefService.getBoolPref("dom.disable_open_during_load");
   gPrefService.setBoolPref("dom.disable_open_during_load", true);
+
+  registerCleanupFunction(() => {
+    gPrefService.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
+  });
 
   function testPopupBlockerMenuItem(aExpectedDisabled, aWindow, aCallback) {
 
@@ -51,32 +51,17 @@ function test() {
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 
-  function finishTest() {
-    // cleanup
-    gPrefService.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
-    finish();
-  };
+  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+  yield new Promise(resolve => testPopupBlockerMenuItem(false, win1, resolve));
 
-  function testOnWindow(options, callback) {
-    let win = whenNewWindowLoaded(options, callback);
-    windowsToClose.push(win);
-  };
+  let win2 = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  yield new Promise(resolve => testPopupBlockerMenuItem(true, win2, resolve));
 
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
+  let win3 = yield BrowserTestUtils.openNewBrowserWindow();
+  yield new Promise(resolve => testPopupBlockerMenuItem(false, win3, resolve));
 
-  testOnWindow({}, function(win) {
-    testPopupBlockerMenuItem(false, win, function() {
-      testOnWindow({private: true}, function(win) {
-        testPopupBlockerMenuItem(true, win, function() {
-          testOnWindow({}, function(win) {
-            testPopupBlockerMenuItem(false, win, finishTest);
-          })
-        });
-      })
-    });
-  });
-}
+  // Cleanup
+  yield BrowserTestUtils.closeWindow(win1);
+  yield BrowserTestUtils.closeWindow(win2);
+  yield BrowserTestUtils.closeWindow(win3);
+});
