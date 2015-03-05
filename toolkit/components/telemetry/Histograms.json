@@ -4338,6 +4338,12 @@
     "extended_statistics_ok": true,
     "description": "Number of histograms with total count low errors"
   },
+  "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of discarded content payloads."
+  },
   "TELEMETRY_FILES_EVICTED": {
     "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "36",
