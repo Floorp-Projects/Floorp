@@ -3494,6 +3494,8 @@ IonBuilder::improveTypesAtTypeOfCompare(MCompare *ins, bool trueBranch, MTest *t
         filter.addType(TypeSet::UndefinedType(), alloc_->lifoAlloc());
         if (typeOf->inputMaybeCallableOrEmulatesUndefined() && trueBranch)
             filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
+    } else if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
+        filter.addType(TypeSet::BooleanType(), alloc_->lifoAlloc());
     } else if (constant->toString() == TypeName(JSTYPE_NUMBER, names)) {
         filter.addType(TypeSet::Int32Type(), alloc_->lifoAlloc());
         filter.addType(TypeSet::DoubleType(), alloc_->lifoAlloc());
