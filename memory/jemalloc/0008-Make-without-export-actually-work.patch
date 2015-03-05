@@ -1,0 +1,60 @@
+From 7c46fd59cce6afb14cdc6c819f662b6e81638f84 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Wed, 4 Mar 2015 21:48:01 +0900
+Subject: [PATCH] Make --without-export actually work
+
+9906660 added a --without-export configure option to avoid exporting
+jemalloc symbols, but the option didn't actually work.
+---
+ include/jemalloc/internal/jemalloc_internal_defs.h.in |  6 ++++++
+ include/jemalloc/jemalloc_macros.h.in                 | 14 +++++++++-----
+ 2 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/include/jemalloc/internal/jemalloc_internal_defs.h.in b/include/jemalloc/internal/jemalloc_internal_defs.h.in
+index 0f0db8a..191abc5 100644
+--- a/include/jemalloc/internal/jemalloc_internal_defs.h.in
++++ b/include/jemalloc/internal/jemalloc_internal_defs.h.in
+@@ -232,4 +232,10 @@
+ /* Adaptive mutex support in pthreads. */
+ #undef JEMALLOC_HAVE_PTHREAD_MUTEX_ADAPTIVE_NP
+ 
++/*
++ * If defined, jemalloc symbols are not exported (doesn't work when
++ * JEMALLOC_PREFIX is not defined).
++ */
++#undef JEMALLOC_EXPORT
++
+ #endif /* JEMALLOC_INTERNAL_DEFS_H_ */
+diff --git a/include/jemalloc/jemalloc_macros.h.in b/include/jemalloc/jemalloc_macros.h.in
+index 7d1dcf4..72f2a08 100644
+--- a/include/jemalloc/jemalloc_macros.h.in
++++ b/include/jemalloc/jemalloc_macros.h.in
+@@ -32,16 +32,20 @@
+ 
+ #ifdef JEMALLOC_HAVE_ATTR
+ #  define JEMALLOC_ATTR(s) __attribute__((s))
+-#  define JEMALLOC_EXPORT JEMALLOC_ATTR(visibility("default"))
++#  ifndef JEMALLOC_EXPORT
++#    define JEMALLOC_EXPORT JEMALLOC_ATTR(visibility("default"))
++#  endif
+ #  define JEMALLOC_ALIGNED(s) JEMALLOC_ATTR(aligned(s))
+ #  define JEMALLOC_SECTION(s) JEMALLOC_ATTR(section(s))
+ #  define JEMALLOC_NOINLINE JEMALLOC_ATTR(noinline)
+ #elif _MSC_VER
+ #  define JEMALLOC_ATTR(s)
+-#  ifdef DLLEXPORT
+-#    define JEMALLOC_EXPORT __declspec(dllexport)
+-#  else
+-#    define JEMALLOC_EXPORT __declspec(dllimport)
++#  ifndef JEMALLOC_EXPORT
++#    ifdef DLLEXPORT
++#      define JEMALLOC_EXPORT __declspec(dllexport)
++#    else
++#      define JEMALLOC_EXPORT __declspec(dllimport)
++#    endif
+ #  endif
+ #  define JEMALLOC_ALIGNED(s) __declspec(align(s))
+ #  define JEMALLOC_SECTION(s) __declspec(allocate(s))
+-- 
+2.3.0.4.g34b1174
+
