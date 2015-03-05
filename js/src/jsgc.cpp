@@ -2649,6 +2649,7 @@ GCRuntime::updatePointersToRelocatedCells()
     // Sweep everything to fix up weak pointers
     WatchpointMap::sweepAll(rt);
     Debugger::sweepAll(rt->defaultFreeOp());
+    jit::JitRuntime::SweepJitcodeGlobalTable(rt);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         if (zone->isGCCompacting())
             rt->gc.sweepZoneAfterCompacting(zone);
@@ -4160,6 +4161,15 @@ GCRuntime::markAllGrayReferences(gcstats::Phase phase)
     markGrayReferences<GCZonesIter, GCCompartmentsIter>(phase);
 }
 
+void
+GCRuntime::markJitcodeGlobalTable()
+{
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_MARK_JITCODE_GLOBAL_TABLE);
+    jit::JitRuntime::MarkJitcodeGlobalTable(&marker);
+    SliceBudget budget;
+    marker.drainMarkStack(budget);
+}
+
 #ifdef DEBUG
 
 class js::gc::MarkingValidator
@@ -4277,6 +4287,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
     {
         gcstats::AutoPhase ap1(gc->stats, gcstats::PHASE_SWEEP);
         gcstats::AutoPhase ap2(gc->stats, gcstats::PHASE_SWEEP_MARK);
+        gc->markJitcodeGlobalTable();
+
         gc->markAllWeakReferences(gcstats::PHASE_SWEEP_MARK_WEAK);
 
         /* Update zone state for gray marking. */
@@ -4819,6 +4831,8 @@ GCRuntime::endMarkingZoneGroup()
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_MARK);
 
+    markJitcodeGlobalTable();
+
     /*
      * Mark any incoming black pointers from previously swept compartments
      * whose referents are not marked. This can occur when gray cells become
@@ -5030,6 +5044,10 @@ GCRuntime::beginSweepingZoneGroup()
 
             // Detach unreachable debuggers and global objects from each other.
             Debugger::sweepAll(&fop);
+
+            // Sweep entries containing about-to-be-finalized JitCode and
+            // update relocated TypeSet::Types inside the JitcodeGlobalTable.
+            jit::JitRuntime::SweepJitcodeGlobalTable(rt);
         }
 
         {
