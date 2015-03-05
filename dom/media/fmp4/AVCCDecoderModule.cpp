@@ -35,6 +35,7 @@ public:
   virtual void AllocateMediaResources() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
   virtual void ReleaseDecoder() MOZ_OVERRIDE;
+  virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
 
 private:
   // Will create the required MediaDataDecoder if we have a AVC SPS.
@@ -209,6 +210,15 @@ AVCCMediaDataDecoder::CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample)
   nsresult rv = CreateDecoder();
   NS_ENSURE_SUCCESS(rv, rv);
   return Init();
+}
+
+bool
+AVCCMediaDataDecoder::IsHardwareAccelerated() const
+{
+  if (mDecoder) {
+    return mDecoder->IsHardwareAccelerated();
+  }
+  return MediaDataDecoder::IsHardwareAccelerated();
 }
 
 // AVCCDecoderModule
