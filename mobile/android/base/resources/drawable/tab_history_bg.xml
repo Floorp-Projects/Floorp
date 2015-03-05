@@ -21,7 +21,7 @@
             android:shape="rectangle" >
             <solid
                 android:width="@dimen/tab_history_bg_width"
-                android:color="@color/tab_history_background" />
+                android:color="@color/toolbar_grey" />
         </shape>
     </item>
 </layer-list>
