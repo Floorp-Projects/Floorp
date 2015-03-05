@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 257804 2013-11-07 18:50:11Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_auth.c 271673 2014-09-16 14:20:33Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -135,11 +135,6 @@ sctp_auth_delete_chunk(uint8_t chunk, sctp_auth_chklist_t *list)
 	if (list == NULL)
 		return (-1);
 
-	/* is chunk restricted? */
-	if ((chunk == SCTP_ASCONF) ||
-	    (chunk == SCTP_ASCONF_ACK)) {
-		return (-1);
-	}
 	if (list->chunks[chunk] == 1) {
 		list->chunks[chunk] = 0;
 		list->num_chunks--;
@@ -157,16 +152,6 @@ sctp_auth_get_chklist_size(const sctp_auth_chklist_t *list)
 		return (0);
 	else
 		return (list->num_chunks);
-}
-
-/*
- * set the default list of chunks requiring AUTH
- */
-void
-sctp_auth_set_default_chunks(sctp_auth_chklist_t *list)
-{
-	(void)sctp_auth_add_chunk(SCTP_ASCONF, list);
-	(void)sctp_auth_add_chunk(SCTP_ASCONF_ACK, list);
 }
 
 /*
@@ -397,9 +382,9 @@ sctp_compare_key(sctp_key_t *key1, sctp_key_t *key2)
 		val1 = (i < (maxlen - key1len)) ? 0 : *(key_1++);
 		val2 = (i < (maxlen - key2len)) ? 0 : *(key_2++);
 		if (val1 > val2) {
- 			return (1);
+			return (1);
 		} else if (val1 < val2) {
- 			return (-1);
+			return (-1);
 		}
 	}
 	/* keys are equal value, so check lengths */
@@ -648,7 +633,7 @@ sctp_copy_skeylist(const struct sctp_keyhead *src, struct sctp_keyhead *dest)
 
 
 sctp_hmaclist_t *
-sctp_alloc_hmaclist(uint8_t num_hmacs)
+sctp_alloc_hmaclist(uint16_t num_hmacs)
 {
 	sctp_hmaclist_t *new_list;
 	int alloc_size;
@@ -800,7 +785,7 @@ sctp_verify_hmac_param (struct sctp_auth_hmac_algo *hmacs, uint32_t num_hmacs)
 
 	for (i = 0; i < num_hmacs; i++) {
 		if (ntohs(hmacs->hmac_ids[i]) == SCTP_AUTH_HMAC_ID_SHA1) {
-	 		return (0);
+			return (0);
 		}
 	}
 	return (-1);
@@ -1479,8 +1464,8 @@ sctp_auth_get_cookie_params(struct sctp_tcb *stcb, struct mbuf *m,
 			p_random = (struct sctp_auth_random *)phdr;
 			random_len = plen - sizeof(*p_random);
 		} else if (ptype == SCTP_HMAC_LIST) {
-			int num_hmacs;
-			int i;
+			uint16_t num_hmacs;
+			uint16_t i;
 
 			if (plen > sizeof(hmacs_store))
 				break;
@@ -1554,7 +1539,7 @@ sctp_auth_get_cookie_params(struct sctp_tcb *stcb, struct mbuf *m,
 	    }
 	}
 	if (stcb->asoc.authinfo.random != NULL)
-	    sctp_free_key(stcb->asoc.authinfo.random);
+		sctp_free_key(stcb->asoc.authinfo.random);
 	stcb->asoc.authinfo.random = new_key;
 	stcb->asoc.authinfo.random_len = random_len;
 	sctp_clear_cachedkeys(stcb, stcb->asoc.authinfo.assoc_keyid);
@@ -1818,6 +1803,7 @@ sctp_notify_authentication(struct sctp_tcb *stcb, uint32_t indication,
 
 	SCTP_BUF_LEN(m_notify) = 0;
 	auth = mtod(m_notify, struct sctp_authkey_event *);
+	memset(auth, 0, sizeof(struct sctp_authkey_event));
 	auth->auth_type = SCTP_AUTHENTICATION_EVENT;
 	auth->auth_flags = 0;
 	auth->auth_length = sizeof(*auth);
@@ -1975,8 +1961,7 @@ sctp_validate_init_auth_params(struct mbuf *m, int offset, int limit)
 			"SCTP: peer sent chunk list w/o AUTH\n");
 		return (-1);
 	}
-	if (!SCTP_BASE_SYSCTL(sctp_asconf_auth_nochk) && peer_supports_asconf &&
-	    !peer_supports_auth) {
+	if (peer_supports_asconf && !peer_supports_auth) {
 		SCTPDBG(SCTP_DEBUG_AUTH1,
 			"SCTP: peer supports ASCONF but not AUTH\n");
 		return (-1);

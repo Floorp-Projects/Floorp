@@ -104,8 +104,8 @@ MediaPipeline::DetachTransport_s()
 
   disconnect_all();
   transport_->Detach();
-  rtp_.transport_ = nullptr;
-  rtcp_.transport_ = nullptr;
+  rtp_.Detach();
+  rtcp_.Detach();
 }
 
 nsresult

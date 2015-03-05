@@ -245,7 +245,7 @@ nsSubDocumentFrame::GetSubdocumentPresShellForPainting(uint32_t aFlags)
 
 
 
-nsIntSize
+ScreenIntSize
 nsSubDocumentFrame::GetSubdocumentSize()
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
@@ -257,13 +257,13 @@ nsSubDocumentFrame::GetSubdocumentSize()
       if (detachedViews) {
         nsSize size = detachedViews->GetBounds().Size();
         nsPresContext* presContext = detachedViews->GetFrame()->PresContext();
-        return nsIntSize(presContext->AppUnitsToDevPixels(size.width),
-                         presContext->AppUnitsToDevPixels(size.height));
+        return ScreenIntSize(presContext->AppUnitsToDevPixels(size.width),
+                             presContext->AppUnitsToDevPixels(size.height));
       }
     }
     // Pick some default size for now.  Using 10x10 because that's what the
     // code used to do.
-    return nsIntSize(10, 10);
+    return ScreenIntSize(10, 10);
   } else {
     nsSize docSizeAppUnits;
     nsPresContext* presContext = PresContext();
@@ -286,8 +286,8 @@ nsSubDocumentFrame::GetSubdocumentSize()
       docSizeAppUnits = destRect.Size();
     }
 
-    return nsIntSize(presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
-                     presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
+    return ScreenIntSize(presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
+                         presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
   }
 }
 

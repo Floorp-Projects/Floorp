@@ -96,7 +96,6 @@ class APZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZCTreeManager)
 
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
-  typedef uint32_t TouchBehaviorFlags;
 
   // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
@@ -288,14 +287,6 @@ public:
    * Returns the current dpi value in use.
    */
   static float GetDPI() { return sDPI; }
-
-  /**
-   * Returns values of allowed touch-behavior for the touches of aEvent via out parameter.
-   * Internally performs asks appropriate AsyncPanZoomController to perform
-   * hit testing on its own.
-   */
-  void GetAllowedTouchBehavior(WidgetInputEvent* aEvent,
-                               nsTArray<TouchBehaviorFlags>& aOutValues);
 
   /**
    * Sets allowed touch behavior values for current touch-session for specific

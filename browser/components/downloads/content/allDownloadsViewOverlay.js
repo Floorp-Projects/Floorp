@@ -36,9 +36,9 @@ const DOWNLOAD_META_DATA_ANNO    = "downloads/metaData";
 
 const DOWNLOAD_VIEW_SUPPORTED_COMMANDS =
  ["cmd_delete", "cmd_copy", "cmd_paste", "cmd_selectAll",
-  "downloadsCmd_pauseResume", "downloadsCmd_cancel",
-  "downloadsCmd_open", "downloadsCmd_show", "downloadsCmd_retry",
-  "downloadsCmd_openReferrer", "downloadsCmd_clearDownloads"];
+  "downloadsCmd_pauseResume", "downloadsCmd_cancel", "downloadsCmd_unblock",
+  "downloadsCmd_confirmBlock", "downloadsCmd_open", "downloadsCmd_show",
+  "downloadsCmd_retry", "downloadsCmd_openReferrer", "downloadsCmd_clearDownloads"];
 
 /**
  * Represents a download from the browser history. It implements part of the
@@ -301,6 +301,11 @@ HistoryDownloadElementShell.prototype = {
   },
 
   onChanged() {
+    // This cannot be placed within onStateChanged because
+    // when a download goes from hasBlockedData to !hasBlockedData
+    // it will still remain in the same state.
+    this.element.classList.toggle("temporary-block",
+                                  !!this.download.hasBlockedData);
     this._updateProgress();
   },
 
@@ -336,6 +341,9 @@ HistoryDownloadElementShell.prototype = {
         return this.download.stopped;
       case "downloadsCmd_cancel":
         return !!this._sessionDownload;
+      case "downloadsCmd_confirmBlock":
+      case "downloadsCmd_unblock":
+        return this.download.hasBlockedData;
     }
     return false;
   },
@@ -384,6 +392,19 @@ HistoryDownloadElementShell.prototype = {
         } else {
           this.download.cancel();
         }
+        break;
+      }
+      case "downloadsCmd_unblock": {
+        DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
+                                               window).then((confirmed) => {
+          if (confirmed) {
+            return this.download.unblock();
+          }
+        }).catch(Cu.reportError);
+        break;
+      }
+      case "downloadsCmd_confirmBlock": {
+        this.download.confirmBlock().catch(Cu.reportError);
         break;
       }
     }
@@ -1274,6 +1295,8 @@ DownloadsPlacesView.prototype = {
     let download = element._shell.download;
     contextMenu.setAttribute("state",
                              DownloadsCommon.stateOfDownload(download));
+    contextMenu.classList.toggle("temporary-block",
+                                 !!download.hasBlockedData);
 
     if (!download.stopped) {
       // The hasPartialData property of a download may change at any time after
