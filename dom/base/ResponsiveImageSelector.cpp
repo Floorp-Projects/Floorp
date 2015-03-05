@@ -103,20 +103,18 @@ ResponsiveImageSelector::SetCandidatesFromSourceSet(const nsAString & aSrcSet)
     // Find end of url
     for (;iter != end && !nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
 
-    urlEnd = iter;
-
     // Omit trailing commas from URL.
     // Multiple commas are a non-fatal error.
-    while (urlEnd != url) {
-      if (*(--urlEnd) != char16_t(',')) {
-        urlEnd++;
+    while (iter != url) {
+      if (*(--iter) != char16_t(',')) {
+        iter++;
         break;
       }
     }
 
-    const nsDependentSubstring &urlStr = Substring(url, urlEnd);
+    const nsDependentSubstring &urlStr = Substring(url, iter);
 
-    MOZ_ASSERT(url != urlEnd, "Shouldn't have empty URL at this point");
+    MOZ_ASSERT(url != iter, "Shouldn't have empty URL at this point");
 
     ResponsiveImageCandidate candidate;
     if (candidate.ConsumeDescriptors(iter, end)) {
