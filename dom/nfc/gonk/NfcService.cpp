@@ -98,7 +98,15 @@ public:
       event.prop.Value() = mEvent.prop;              \
     }
 
-    COPY_FIELD(mType)
+    COPY_OPT_FIELD(mRspType, NfcResponseType::EndGuard_)
+    COPY_OPT_FIELD(mNtfType, NfcNotificationType::EndGuard_)
+
+    // Only one of rspType and ntfType should be used.
+    MOZ_ASSERT(((mEvent.mRspType != NfcResponseType::EndGuard_) ||
+                (mEvent.mNtfType != NfcNotificationType::EndGuard_)) &&
+               ((mEvent.mRspType == NfcResponseType::EndGuard_) ||
+                (mEvent.mNtfType == NfcNotificationType::EndGuard_)));
+
     COPY_OPT_FIELD(mRequestId, EmptyString())
     COPY_OPT_FIELD(mStatus, -1)
     COPY_OPT_FIELD(mSessionId, -1)

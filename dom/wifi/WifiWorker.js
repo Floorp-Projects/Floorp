@@ -97,6 +97,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gTetheringService",
+                                   "@mozilla.org/tethering/service;1",
+                                   "nsITetheringService");
+
 // A note about errors and error handling in this file:
 // The libraries that we use in this file are intended for C code. For
 // C code, it is natural to return -1 for errors and 0 for success.
@@ -1136,8 +1140,8 @@ var WifiManager = (function() {
         function doStartWifiTethering() {
           cancelWaitForDriverReadyTimer();
           WifiNetworkInterface.name = libcutils.property_get("wifi.tethering.interface", manager.ifname);
-          gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface,
-                                           configuration, function(result) {
+          gTetheringService.setWifiTethering(enabled, WifiNetworkInterface,
+                                             configuration, function(result) {
             if (result) {
               manager.tetheringState = "UNINITIALIZED";
             } else {
@@ -1164,8 +1168,8 @@ var WifiManager = (function() {
       });
     } else {
       cancelWifiHotspotStatusTimer();
-      gNetworkManager.setWifiTethering(enabled, WifiNetworkInterface,
-                                       configuration, function(result) {
+      gTetheringService.setWifiTethering(enabled, WifiNetworkInterface,
+                                         configuration, function(result) {
         // Should we fire a dom event if we fail to set wifi tethering  ?
         debug("Disable Wifi tethering result: " + (result ? result : "successfully"));
         // Unload wifi driver even if we fail to control wifi tethering.

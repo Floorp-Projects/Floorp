@@ -451,6 +451,8 @@
 @RESPATH@/components/NetworkStatsManager.manifest
 @RESPATH@/components/NetworkStatsServiceProxy.js
 @RESPATH@/components/NetworkStatsServiceProxy.manifest
+@RESPATH@/components/TetheringService.js
+@RESPATH@/components/TetheringService.manifest
 @RESPATH@/components/WifiWorker.js
 @RESPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
