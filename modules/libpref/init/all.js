@@ -488,9 +488,6 @@ pref("media.audio_data.enabled", false);
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", false);
 
-// Whether to enable containerless async scrolling
-pref("layout.async-containerless-scrolling.enabled", true);
-
 // Whether to enable event region building during painting
 pref("layout.event-regions.enabled", false);
 
