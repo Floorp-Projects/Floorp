@@ -66,9 +66,6 @@ function startTimeForStartOfActiveInterval(timeline) {
 function startTimeForFiftyPercentThroughActiveInterval(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5;
 }
-function startTimeForNinetyPercentThroughActiveInterval(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9;
-}
 function startTimeForEndOfActiveInterval(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS;
 }
@@ -84,7 +81,6 @@ const UNANIMATED_POSITION = 10;
 const INITIAL_POSITION = 100;
 const TEN_PCT_POSITION = 110;
 const FIFTY_PCT_POSITION = 150;
-const NINETY_PCT_POSITION = 190;
 const END_POSITION = 200;
 
 /**
@@ -277,17 +273,6 @@ function checkStateAtFiftyPctOfActiveInterval(player)
     'animation at the midpoint of the active interval');
 }
 
-function checkStateAtNinetyPctOfActiveInterval(player)
-{
-  // We don't test player.startTime since our caller just set it.
-
-  var div = player.source.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_between_inclusive(marginLeft, NINETY_PCT_POSITION, END_POSITION,
-    'the computed value of margin-left should be close to the value at the ' +
-    'end of the animation');
-}
-
 // Called when startTime is set to the time the active interval ends.
 function checkStateAtActiveIntervalEndTime(player)
 {
@@ -367,10 +352,6 @@ async_test(function(t) {
       startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
 
-    player.startTime =
-      startTimeForNinetyPercentThroughActiveInterval(player.timeline);
-    checkStateAtNinetyPctOfActiveInterval(player);
-
     player.startTime = startTimeForEndOfActiveInterval(player.timeline);
     return eventWatcher.waitForEvent('animationend');
   })).then(t.step_func(function() {
@@ -414,19 +395,20 @@ async_test(function(t) {
     checkStateAtActiveIntervalEndTime(player);
 
     player.startTime =
-      startTimeForNinetyPercentThroughActiveInterval(player.timeline);
-
-    // Despite going backwards from after the end of the animation to just
-    // before the end of the animation, we now expect an animationstart event
-    // because we went from outside to inside the active interval.
-    return eventWatcher.waitForEvent('animationstart');
-  })).then(t.step_func(function() {
-    checkStateAtNinetyPctOfActiveInterval(player);
-
-    player.startTime =
       startTimeForFiftyPercentThroughActiveInterval(player.timeline);
-    checkStateAtFiftyPctOfActiveInterval(player);
 
+    // Despite going backwards from after the end of the animation (to being
+    // in the active interval), we now expect an 'animationstart' event
+    // because the animation should go from being inactive to active.
+    //
+    // Calling checkStateAtFiftyPctOfActiveInterval will check computed style,
+    // causing computed style to be updated and the 'animationstart' event to
+    // be dispatched synchronously. We need to call waitForEvent first
+    // otherwise eventWatcher will assert that the event was unexpected.
+    var promise = eventWatcher.waitForEvent('animationstart');
+    checkStateAtFiftyPctOfActiveInterval(player);
+    return promise;
+  })).then(t.step_func(function() {
     player.startTime = startTimeForStartOfActiveInterval(player.timeline);
     checkStateAtActiveIntervalStartTime(player);
 
