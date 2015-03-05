@@ -573,7 +573,7 @@ HTMLMediaElement::Ended()
   }
 
   if (mDecoder) {
-    return mDecoder->IsEnded();
+    return mDecoder->IsEndedOrShutdown();
   }
 
   return false;
@@ -2220,7 +2220,7 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   // Even if we just did Load() or ResumeLoad(), we could already have a decoder
   // here if we managed to clone an existing decoder.
   if (mDecoder) {
-    if (mDecoder->IsEnded()) {
+    if (mDecoder->IsEndedOrShutdown()) {
       SetCurrentTime(0);
     }
     if (!mPausedForInactiveDocumentOrChannel) {
@@ -3197,7 +3197,7 @@ void HTMLMediaElement::PlaybackEnded()
   // We changed state which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
 
-  NS_ASSERTION(!mDecoder || mDecoder->IsEnded(),
+  NS_ASSERTION(!mDecoder || mDecoder->IsEndedOrShutdown(),
                "Decoder fired ended, but not in ended state");
 
   // Discard all output streams that have finished now.
@@ -3434,7 +3434,7 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
     return;
   }
 
-  if (mDownloadSuspendedByCache && mDecoder && !mDecoder->IsEnded()) {
+  if (mDownloadSuspendedByCache && mDecoder && !mDecoder->IsEndedOrShutdown()) {
     // The decoder has signaled that the download has been suspended by the
     // media cache. So move readyState into HAVE_ENOUGH_DATA, in case there's
     // script waiting for a "canplaythrough" event; without this forced
@@ -3717,7 +3717,7 @@ bool HTMLMediaElement::IsPlaybackEnded() const
   //   the current playback position is equal to the effective end of the media resource.
   //   See bug 449157.
   return mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
-    mDecoder ? mDecoder->IsEnded() : false;
+    mDecoder ? mDecoder->IsEndedOrShutdown() : false;
 }
 
 already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentPrincipal()
@@ -3791,7 +3791,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
 #endif
       if (mDecoder) {
         mDecoder->Resume(false);
-        if (!mPaused && !mDecoder->IsEnded()) {
+        if (!mPaused && !mDecoder->IsEndedOrShutdown()) {
           mDecoder->Play();
         }
       } else if (mSrcStream) {
@@ -3852,7 +3852,7 @@ void HTMLMediaElement::AddRemoveSelfReference()
   bool needSelfReference = !mShuttingDown &&
     ownerDoc->IsActive() &&
     (mDelayingLoadEvent ||
-     (!mPaused && mDecoder && !mDecoder->IsEnded()) ||
+     (!mPaused && mDecoder && !mDecoder->IsEndedOrShutdown()) ||
      (!mPaused && mSrcStream && !mSrcStream->IsFinished()) ||
      (mDecoder && mDecoder->IsSeeking()) ||
      CanActivateAutoplay() ||
