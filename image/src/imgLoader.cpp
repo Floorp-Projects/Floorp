@@ -930,8 +930,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
      proxy calls to |aObserver|.
    */
 
-  imgRequestProxy *proxyRequest = new imgRequestProxy();
-  NS_ADDREF(proxyRequest);
+  nsRefPtr<imgRequestProxy> proxyRequest = new imgRequestProxy();
 
   /* It is important to call |SetLoadFlags()| before calling |Init()| because
      |Init()| adds the request to the loadgroup.
@@ -943,14 +942,11 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
 
   // init adds itself to imgRequest's list of observers
   nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, uri, aObserver);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(proxyRequest);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // transfer reference to caller
-  *_retval = proxyRequest;
-
+  proxyRequest.forget(_retval);
   return NS_OK;
 }
 
@@ -1239,8 +1235,8 @@ NS_IMETHODIMP imgLoader::FindEntryProperties(nsIURI *uri, nsIProperties **_retva
 
     nsRefPtr<imgRequest> request = entry->GetRequest();
     if (request) {
-      *_retval = request->Properties();
-      NS_ADDREF(*_retval);
+      nsCOMPtr<nsIProperties> properties = request->Properties();
+      properties.forget(_retval);
     }
   }
 
@@ -1535,26 +1531,25 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
     request->mValidator = hvc;
 
-    imgRequestProxy* proxy = static_cast<imgRequestProxy*>
-                               (static_cast<imgIRequest*>(req.get()));
-
     // We will send notifications from imgCacheValidator::OnStartRequest().
     // In the mean time, we must defer notifications because we are added to
     // the imgRequest's proxy list, and we can get extra notifications
     // resulting from methods such as RequestDecode(). See bug 579122.
-    proxy->SetNotificationsDeferred(true);
+    req->SetNotificationsDeferred(true);
 
     // Add the proxy without notifying
-    hvc->AddProxy(proxy);
+    hvc->AddProxy(req);
 
     mozilla::net::PredictorLearn(aURI, aInitialDocumentURI,
         nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, aLoadGroup);
 
     rv = newChannel->AsyncOpen(listener, nullptr);
-    if (NS_SUCCEEDED(rv))
-      NS_ADDREF(*aProxyRequest = req.get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
 
-    return NS_SUCCEEDED(rv);
+    req.forget(aProxyRequest);
+    return true;
   }
 }
 
@@ -2279,13 +2274,10 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationOb
     request->Init(originalURI, uri, channel, channel, entry,
                   aCX, nullptr, imgIRequest::CORS_NONE, RP_Default);
 
-    ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request.get()));
-    NS_ADDREF(pl);
+    nsRefPtr<ProxyListener> pl =
+      new ProxyListener(static_cast<nsIStreamListener*>(request.get()));
+    pl.forget(listener);
 
-    *listener = static_cast<nsIStreamListener*>(pl);
-    NS_ADDREF(*listener);
-
-    NS_RELEASE(pl);
 
     // Try to add the new request into the cache.
     PutIntoCache(originalURI, entry);

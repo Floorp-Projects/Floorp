@@ -17,14 +17,6 @@ function fuzzyEquals(a, b) {
   return Math.abs(a - b) < 0.01;
 }
 
-function range(start, end) {
-  var rv = [];
-  for (var i = start; i < end; ++i) {
-    rv.push(i);
-  }
-  return rv;
-}
-
 runWithMSE(function(ms, el) {
   el.controls = true;
   once(ms, 'sourceopen').then(function() {

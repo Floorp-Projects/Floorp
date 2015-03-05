@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Adding a new display item that has its own PaintedLayer shouldn't cause invalidations in other PaintedLayers on top of it</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.onTopOfFixed {
+  position: absolute;
+  top: 120px;
+  left: 260px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+#aboutToBecomeVisible {
+  left: 20px;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="fixed content">
+  <!--
+    This layer is just there to force .onTopOfFixed into PaintedLayers above
+    the page background.
+  -->
+</div>
+
+<div class="onTopOfFixed content" id="aboutToBecomeVisible" style="visibility: hidden">
+  <!--
+    This item starts out hidden, and will get its own PaintedLayer when it
+    becomes visible.
+  -->
+</div>
+
+<div class="fixed content">
+  <!--
+    This layer is just there to force the next .onTopOfFixed into its own
+    PaintedLayer.
+  -->
+</div>
+
+<div class="onTopOfFixed reftest-no-paint content">
+  <!--
+    This item shouldn't repaint when the other .onTopOfFixed item becomes visible.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToBecomeVisible").style.visibility = "visible";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

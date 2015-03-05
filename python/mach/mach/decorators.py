@@ -47,6 +47,8 @@ def CommandProvider(cls):
         if len(spec.args) == 2:
             pass_context = True
 
+    seen_commands = set()
+
     # We scan __dict__ because we only care about the classes own attributes,
     # not inherited ones. If we did inherited attributes, we could potentially
     # define commands multiple times. We also sort keys so commands defined in
@@ -62,6 +64,8 @@ def CommandProvider(cls):
 
         if command_name is None:
             continue
+
+        seen_commands.add(command_name)
 
         if conditions is None and Registrar.require_conditions:
             continue
@@ -106,9 +110,12 @@ def CommandProvider(cls):
         if not command:
             continue
 
-        if command not in Registrar.command_handlers:
+        if command not in seen_commands:
             raise MachError('Command referenced by sub-command does not '
                 'exist: %s' % command)
+
+        if command not in Registrar.command_handlers:
+            continue
 
         arguments = getattr(value, '_mach_command_args', None)
         argument_group_names = getattr(value, '_mach_command_arg_group_names', None)

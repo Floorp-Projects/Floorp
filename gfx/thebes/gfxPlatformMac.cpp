@@ -549,6 +549,14 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatformMac::CreateHardwareVsyncSource()
 {
   nsRefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
+  VsyncSource::Display& primaryDisplay = osxVsyncSource->GetGlobalDisplay();
+  primaryDisplay.EnableVsync();
+  if (!primaryDisplay.IsVsyncEnabled()) {
+    NS_WARNING("OS X Vsync source not enabled. Falling back to software vsync.\n");
+    return gfxPlatform::CreateHardwareVsyncSource();
+  }
+
+  primaryDisplay.DisableVsync();
   return osxVsyncSource.forget();
 }
 

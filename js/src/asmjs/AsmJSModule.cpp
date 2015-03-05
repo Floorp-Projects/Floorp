@@ -37,6 +37,7 @@
 
 #include "frontend/Parser.h"
 #include "jit/IonCode.h"
+#include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
 
@@ -50,9 +51,10 @@ using namespace js;
 using namespace jit;
 using namespace frontend;
 using mozilla::BinarySearch;
+using mozilla::Compression::LZ4;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
-using mozilla::Compression::LZ4;
+using mozilla::PodZero;
 using mozilla::Swap;
 
 static uint8_t *

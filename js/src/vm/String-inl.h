@@ -14,9 +14,8 @@
 
 #include "jscntxt.h"
 
+#include "gc/Allocator.h"
 #include "gc/Marking.h"
-
-#include "jsgcinlines.h"
 
 namespace js {
 

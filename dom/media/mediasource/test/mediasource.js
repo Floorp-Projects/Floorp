@@ -44,6 +44,14 @@ function fetchWithXHR(uri, onLoadFunction) {
   return p;
 };
 
+function range(start, end) {
+  var rv = [];
+  for (var i = start; i < end; ++i) {
+    rv.push(i);
+  }
+  return rv;
+}
+
 function once(target, name, cb) {
   var p = new Promise(function(resolve, reject) {
     target.addEventListener(name, function() {

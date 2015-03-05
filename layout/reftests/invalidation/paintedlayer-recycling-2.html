@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Starting to scroll the nested scrollbox shouldn't invalidate the fixed layer</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 240px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.scrollable {
+  overflow: auto;
+  padding: 10px;
+}
+
+.scrolled {
+  border: 1px solid gray;
+  height: 400px;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="scrollable content" id="aboutToScroll">
+  <!--
+    This scrollbox starts out without active scrolling and is going to become
+    actively scrolled.
+  -->
+  <div class="scrolled"></div>
+</div>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer gets its own PaintedLayer above the rest.
+    When the contents of .scrollable require their own PaintedLayer, that
+    should not cause .fixed to change layers.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToScroll").scrollTop = 50 - document.querySelector("#aboutToScroll").scrollTop;
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

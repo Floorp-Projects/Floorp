@@ -373,6 +373,47 @@ JitcodeGlobalEntry::createScriptString(JSContext *cx, JSScript *script, size_t *
     return str;
 }
 
+
+JitcodeGlobalTable::Enum::Enum(JitcodeGlobalTable &table, JSRuntime *rt)
+  : Range(table),
+    rt_(rt),
+    next_(cur_ ? cur_->tower_->next(0) : nullptr)
+{
+    for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--)
+        prevTower_[level] = nullptr;
+}
+
+void
+JitcodeGlobalTable::Enum::popFront()
+{
+    MOZ_ASSERT(!empty());
+
+    // Did not remove current entry; advance prevTower_.
+    if (cur_ != table_.freeEntries_) {
+        for (int level = cur_->tower_->height() - 1; level >= 0; level--) {
+            JitcodeGlobalEntry *prevTowerEntry = prevTower_[level];
+
+            if (prevTowerEntry) {
+                if (prevTowerEntry->tower_->next(level) == cur_)
+                    prevTower_[level] = cur_;
+            } else {
+                prevTower_[level] = table_.startTower_[level];
+            }
+        }
+    }
+
+    cur_ = next_;
+    if (!empty())
+        next_ = cur_->tower_->next(0);
+}
+
+void
+JitcodeGlobalTable::Enum::removeFront()
+{
+    MOZ_ASSERT(!empty());
+    table_.releaseEntry(*cur_, prevTower_, rt_);
+}
+
 bool
 JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
 {
@@ -397,6 +438,27 @@ JitcodeGlobalTable::lookupForSampler(void *ptr, JitcodeGlobalEntry *result, JSRu
         return false;
 
     entry->setGeneration(sampleBufferGen);
+
+    // IonCache entries must keep their corresponding Ion entries alive.
+    if (entry->isIonCache()) {
+        JitcodeGlobalEntry rejoinEntry;
+        RejoinEntry(rt, entry->ionCacheEntry(), ptr, &rejoinEntry);
+        rejoinEntry.setGeneration(sampleBufferGen);
+    }
+
+#ifdef DEBUG
+    // JitcodeGlobalEntries are marked during the beginning of the sweep phase
+    // (PHASE_SWEEP_MARK_JITCODE_GLOBAL_TABLE). A read barrier is not needed,
+    // as any JS frames sampled during the sweep phase of the GC must be on
+    // stack, and on-stack frames must already be marked at the beginning of
+    // the sweep phase. This assumption is verified below.
+    if (rt->isHeapBusy() &&
+        rt->gc.stats.currentPhase() >= gcstats::PHASE_SWEEP &&
+        rt->gc.stats.currentPhase() <= gcstats::PHASE_GC_END)
+    {
+        MOZ_ASSERT(entry->isMarkedFromAnyThread(rt));
+    }
+#endif
 
     *result = *entry;
     return true;
@@ -477,57 +539,40 @@ JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry, JSRuntime *rt)
 }
 
 void
-JitcodeGlobalTable::removeEntry(void *startAddr, JSRuntime *rt)
+JitcodeGlobalTable::removeEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower,
+                                JSRuntime *rt)
 {
-    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
-    JitcodeGlobalEntry *searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
-    searchInternal(query, searchTower);
+    MOZ_ASSERT(!rt->isProfilerSamplingEnabled());
 
-    JitcodeGlobalEntry *queryEntry;
-    if (searchTower[0]) {
-        MOZ_ASSERT(searchTower[0]->compareTo(query) < 0);
-        queryEntry = searchTower[0]->tower_->next(0);
-    } else {
-        MOZ_ASSERT(startTower_[0]);
-        queryEntry = startTower_[0];
-    }
-    MOZ_ASSERT(queryEntry->compareTo(query) == 0);
-
-    {
-        // Suppress profiler sampling while table is being mutated.
-        AutoSuppressProfilerSampling suppressSampling(rt);
-
-        // Unlink query entry.
-        for (int level = queryEntry->tower_->height() - 1; level >= 0; level--) {
-            JitcodeGlobalEntry *searchTowerEntry = searchTower[level];
-            if (searchTowerEntry) {
-                MOZ_ASSERT(searchTowerEntry);
-                searchTowerEntry->tower_->setNext(level, queryEntry->tower_->next(level));
-            } else {
-                startTower_[level] = queryEntry->tower_->next(level);
-            }
+    // Unlink query entry.
+    for (int level = entry.tower_->height() - 1; level >= 0; level--) {
+        JitcodeGlobalEntry *prevTowerEntry = prevTower[level];
+        if (prevTowerEntry) {
+            MOZ_ASSERT(prevTowerEntry->tower_->next(level) == &entry);
+            prevTowerEntry->tower_->setNext(level, entry.tower_->next(level));
+        } else {
+            startTower_[level] = entry.tower_->next(level);
         }
-        skiplistSize_--;
-        // verifySkiplist(); - disabled for release.
     }
+    skiplistSize_--;
+    // verifySkiplist(); - disabled for release.
 
     // Entry has been unlinked.
-    queryEntry->destroy();
-    queryEntry->tower_->addToFreeList(&(freeTowers_[queryEntry->tower_->height() - 1]));
-    queryEntry->tower_ = nullptr;
-    *queryEntry = JitcodeGlobalEntry();
-    queryEntry->addToFreeList(&freeEntries_);
+    entry.destroy();
+    entry.tower_->addToFreeList(&(freeTowers_[entry.tower_->height() - 1]));
+    entry.tower_ = nullptr;
+    entry = JitcodeGlobalEntry();
+    entry.addToFreeList(&freeEntries_);
 }
 
 void
-JitcodeGlobalTable::releaseEntry(void *startAddr, JSRuntime *rt)
+JitcodeGlobalTable::releaseEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower,
+                                 JSRuntime *rt)
 {
-    mozilla::DebugOnly<JitcodeGlobalEntry *> entry = lookupInternal(startAddr);
     mozilla::DebugOnly<uint32_t> gen = rt->profilerSampleBufferGen();
     mozilla::DebugOnly<uint32_t> lapCount = rt->profilerSampleBufferLapCount();
-    MOZ_ASSERT(entry);
-    MOZ_ASSERT_IF(gen != UINT32_MAX, !entry->isSampled(gen, lapCount));
-    removeEntry(startAddr, rt);
+    MOZ_ASSERT_IF(gen != UINT32_MAX, !entry.isSampled(gen, lapCount));
+    removeEntry(entry, prevTower, rt);
 }
 
 void
@@ -673,69 +718,193 @@ JitcodeGlobalTable::verifySkiplist()
 }
 #endif // DEBUG
 
-struct JitcodeMapEntryTraceCallback
-{
-    JSTracer *trc;
-    uint32_t gen;
-    uint32_t lapCount;
-
-    explicit JitcodeMapEntryTraceCallback(JSTracer *trc)
-      : trc(trc),
-        gen(trc->runtime()->profilerSampleBufferGen()),
-        lapCount(trc->runtime()->profilerSampleBufferLapCount())
-    {
-        if (!trc->runtime()->spsProfiler.enabled())
-            gen = UINT32_MAX;
-    }
-
-    void operator()(JitcodeGlobalEntry &entry) {
-        // If an entry is not sampled, reset its generation to
-        // the invalid generation, and skip it.
-        if (!entry.isSampled(gen, lapCount)) {
-            entry.setGeneration(UINT32_MAX);
-            return;
-        }
-
-        // Mark jitcode pointed to by this entry.
-        entry.baseEntry().markJitcode(trc);
-
-        // Mark ion entry if necessary.
-        if (entry.isIon())
-            entry.ionEntry().mark(trc);
-    }
-};
-
 void
 JitcodeGlobalTable::mark(JSTracer *trc)
 {
+    // JitcodeGlobalTable must keep entries that are in the sampler buffer
+    // alive. This conditionality is akin to holding the entries weakly.
+    //
+    // If this table were marked at the beginning of the mark phase, then
+    // sampling would require a read barrier for sampling in between
+    // incremental GC slices. However, invoking read barriers from the sampler
+    // is wildly unsafe. The sampler may run at any time, including during GC
+    // itself.
+    //
+    // Instead, JitcodeGlobalTable is marked at the beginning of the sweep
+    // phase. The key assumption is the following. At the beginning of the
+    // sweep phase, any JS frames that the sampler may put in its buffer that
+    // are not already there at the beginning of the mark phase must have
+    // already been marked, as either 1) the frame was on-stack at the
+    // beginning of the sweep phase, or 2) the frame was pushed between
+    // incremental sweep slices. Frames of case 1) are already marked. Frames
+    // of case 2) must have been reachable to have been newly pushed, and thus
+    // are already marked.
+    //
+    // The approach above obviates the need for read barriers. The assumption
+    // above is checked in JitcodeGlobalTable::lookupForSampler.
+    MOZ_ASSERT(trc->runtime()->gc.stats.currentPhase() ==
+               gcstats::PHASE_SWEEP_MARK_JITCODE_GLOBAL_TABLE);
+
     AutoSuppressProfilerSampling suppressSampling(trc->runtime());
-    JitcodeMapEntryTraceCallback traceCallback(trc);
+    uint32_t gen = trc->runtime()->profilerSampleBufferGen();
+    uint32_t lapCount = trc->runtime()->profilerSampleBufferLapCount();
+
+    if (!trc->runtime()->spsProfiler.enabled())
+        gen = UINT32_MAX;
 
     // Find start entry.
-    JitcodeGlobalEntry *entry = startTower_[0];
-    while (entry != nullptr) {
-        traceCallback(*entry);
-        entry = entry->tower_->next(0);
+    for (Range r(*this); !r.empty(); r.popFront()) {
+        JitcodeGlobalEntry *entry = r.front();
+
+        // If an entry is not sampled, reset its generation to the invalid
+        // generation, and conditionally mark the rest of the entry if its
+        // JitCode is not already marked. This conditional marking ensures
+        // that so long as the JitCode *may* be sampled, we keep any
+        // information that may be handed out to the sampler, like tracked
+        // types used by optimizations and scripts used for pc to line number
+        // mapping, alive as well.
+        if (!entry->isSampled(gen, lapCount)) {
+            entry->setGeneration(UINT32_MAX);
+            if (!entry->baseEntry().isJitcodeMarkedFromAnyThread())
+                continue;
+        }
+
+        // The table is runtime-wide. Not all zones may be participating in
+        // the GC.
+        if (!entry->zone()->isCollecting() || entry->zone()->isGCFinished())
+            continue;
+
+        entry->mark(trc);
+    }
+}
+
+void
+JitcodeGlobalTable::sweep(JSRuntime *rt)
+{
+    AutoSuppressProfilerSampling suppressSampling(rt);
+    for (Enum e(*this, rt); !e.empty(); e.popFront()) {
+        JitcodeGlobalEntry *entry = e.front();
+
+        if (!entry->zone()->isCollecting() || entry->zone()->isGCFinished())
+            continue;
+
+        if (entry->baseEntry().isJitcodeAboutToBeFinalized())
+            e.removeFront();
+        else
+            entry->sweep();
     }
 }
 
 void
 JitcodeGlobalEntry::BaseEntry::markJitcode(JSTracer *trc)
 {
-    MarkJitCodeRoot(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
+    MarkJitCodeUnbarriered(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
+}
+
+bool
+JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread()
+{
+    return IsJitCodeMarkedFromAnyThread(&jitcode_);
+}
+
+bool
+JitcodeGlobalEntry::BaseEntry::isJitcodeAboutToBeFinalized()
+{
+    return IsJitCodeAboutToBeFinalized(&jitcode_);
+}
+
+void
+JitcodeGlobalEntry::BaselineEntry::mark(JSTracer *trc)
+{
+    MarkScriptUnbarriered(trc, &script_, "jitcodeglobaltable-baselineentry-script");
+}
+
+void
+JitcodeGlobalEntry::BaselineEntry::sweep()
+{
+    MOZ_ALWAYS_FALSE(IsScriptAboutToBeFinalized(&script_));
+}
+
+bool
+JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread()
+{
+    return IsScriptMarkedFromAnyThread(&script_);
 }
 
 void
 JitcodeGlobalEntry::IonEntry::mark(JSTracer *trc)
 {
+    for (unsigned i = 0; i < numScripts(); i++) {
+        MarkScriptUnbarriered(trc, &sizedScriptList()->pairs[i].script,
+                              "jitcodeglobaltable-ionentry-script");
+    }
+
     if (!optsAllTypes_)
         return;
 
     for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
          iter != optsAllTypes_->end(); iter++)
     {
-        TypeSet::MarkTypeRoot(trc, &(iter->type), "jitcodeglobaltable-ionentry-type");
+        TypeSet::MarkTypeUnbarriered(trc, &(iter->type), "jitcodeglobaltable-ionentry-type");
+        if (iter->hasAllocationSite()) {
+            MarkScriptUnbarriered(trc, &iter->script,
+                                  "jitcodeglobaltable-ionentry-type-addendum-script");
+        } else if (iter->hasConstructor()) {
+            MarkObjectUnbarriered(trc, &iter->constructor,
+                                  "jitcodeglobaltable-ionentry-type-addendum-constructor");
+        }
     }
+}
+
+void
+JitcodeGlobalEntry::IonEntry::sweep()
+{
+    for (unsigned i = 0; i < numScripts(); i++)
+        MOZ_ALWAYS_FALSE(IsScriptAboutToBeFinalized(&sizedScriptList()->pairs[i].script));
+
+    if (!optsAllTypes_)
+        return;
+
+    for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
+         iter != optsAllTypes_->end(); iter++)
+    {
+        // Types may move under compacting GC. This method is only called on
+        // entries that are sampled, and thus are not about to be finalized.
+        MOZ_ALWAYS_FALSE(TypeSet::IsTypeAboutToBeFinalized(&iter->type));
+        if (iter->hasAllocationSite())
+            MOZ_ALWAYS_FALSE(IsScriptAboutToBeFinalized(&iter->script));
+        else if (iter->hasConstructor())
+            MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalized(&iter->constructor));
+    }
+}
+
+bool
+JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
+{
+    for (unsigned i = 0; i < numScripts(); i++) {
+        if (!IsScriptMarkedFromAnyThread(&sizedScriptList()->pairs[i].script))
+            return false;
+    }
+
+    if (!optsAllTypes_)
+        return true;
+
+    for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
+         iter != optsAllTypes_->end(); iter++)
+    {
+        if (!TypeSet::IsTypeMarkedFromAnyThread(&iter->type))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+JitcodeGlobalEntry::IonCacheEntry::isMarkedFromAnyThread(JSRuntime *rt)
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, nativeStartAddr(), &entry);
+    return entry.isMarkedFromAnyThread(rt);
 }
 
 /* static */ void
