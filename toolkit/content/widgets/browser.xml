@@ -133,11 +133,27 @@
             if (!aURI)
               aURI = "about:blank";
 
+            var aReferrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_DEFAULT;
+
+            // Check for loadURIWithFlags(uri, { ... });
+            var params = arguments[1];
+            if (params && typeof(params) == "object") {
+              aFlags = params.flags;
+              aReferrerURI = params.referrerURI;
+              if ('referrerPolicy' in params) {
+                aReferrerPolicy = params.referrerPolicy;
+              }
+              aCharset = params.charset;
+              aPostData = params.postData;
+            }
+
             if (!(aFlags & this.webNavigation.LOAD_FLAGS_FROM_EXTERNAL))
               this.userTypedClear++;
 
             try {
-              this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
+              this.webNavigation.loadURIWithOptions(
+                  aURI, aFlags, aReferrerURI, aReferrerPolicy,
+                  aPostData, null, null);
             } finally {
               if (this.userTypedClear)
                 this.userTypedClear--;
