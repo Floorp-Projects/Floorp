@@ -964,7 +964,7 @@ nsAtomicFileOutputStream::Finish()
 #ifdef DEBUG
             bool equal;
             if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
-                NS_ERROR("mTempFile not equal to mTargetFile");
+                NS_WARNING("mTempFile not equal to mTargetFile");
 #endif
         }
         else {
