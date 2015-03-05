@@ -758,9 +758,11 @@ nsPrintSettingsGTK::SetResolution(int32_t aResolution)
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetDuplex(int32_t *aDuplex)
 {
-  if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_DUPLEX))
-    return NS_ERROR_FAILURE;
-  *aDuplex = gtk_print_settings_get_duplex(mPrintSettings);
+  if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_DUPLEX)) {
+    *aDuplex = GTK_PRINT_DUPLEX_SIMPLEX;
+  } else {
+    *aDuplex = gtk_print_settings_get_duplex(mPrintSettings);
+  }
   return NS_OK;
 }
 
