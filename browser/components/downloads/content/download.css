@@ -34,6 +34,13 @@ richlistitem.download button {
                               [state="4"]) /* Paused             */)
                                            > .downloadCancel,
 
+/* Blocked (dirty) downloads that have not been confirmed and
+   have temporary data. */
+.download-state:not(          [state="8"])
+                                           > .downloadConfirmBlock,
+.download-state[state="8"]:not(.temporary-block)
+                                           > .downloadConfirmBlock,
+
 .download-state[state]:not(:-moz-any([state="2"], /* Failed             */
                                      [state="3"]) /* Canceled           */)
                                                   > .downloadRetry,

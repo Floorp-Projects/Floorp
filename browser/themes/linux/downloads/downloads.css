@@ -176,15 +176,19 @@ richlistitem[type="download"]:last-child {
 
 /*** Button icons ***/
 
+.downloadButton.downloadConfirmBlock,
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:hover,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
+richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:active,
 richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }

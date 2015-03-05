@@ -38,6 +38,13 @@ richlistitem[type="download"]:not([selected]) button {
 .download-state:not(          [state="4"]  /* Paused             */)
                                            .downloadResumeMenuItem,
 
+/* Blocked (dirty) downloads that have not been confirmed and
+   have temporary data. */
+.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
+                                           .downloadUnblockMenuItem,
+.download-state[state="8"]:not(.temporary-block)
+                                           .downloadUnblockMenuItem,
+
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="4"]) /* Paused             */)
                                            .downloadCancelMenuItem,
@@ -70,6 +77,13 @@ richlistitem[type="download"]:not([selected]) button {
                               [state="0"], /* Downloading        */
                               [state="4"]) /* Paused             */)
                                            .downloadCancel,
+
+/* Blocked (dirty) downloads that have not been confirmed and
+   have temporary data. */
+.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
+                                           .downloadConfirmBlock,
+.download-state[state="8"]:not(.temporary-block)
+                                           .downloadConfirmBlock,
 
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="3"]) /* Canceled           */)
