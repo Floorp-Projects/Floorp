@@ -6,9 +6,9 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing removal of an update download in progress for the " +
-              "same version of the application with the same application " +
-              "build id on startup (Bug 536547)");
+  debugDump("testing removal of an update download in progress for the " +
+            "same version of the application with the same application " +
+            "build id on startup (Bug 536547)");
 
   let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_DOWNLOADING);

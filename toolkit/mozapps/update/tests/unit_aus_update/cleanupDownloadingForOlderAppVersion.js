@@ -7,8 +7,8 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing cleanup of an update download in progress for an " +
-              "older version of the application on startup (Bug 485624)");
+  debugDump("testing cleanup of an update download in progress for an " +
+            "older version of the application on startup (Bug 485624)");
 
   let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_DOWNLOADING);
