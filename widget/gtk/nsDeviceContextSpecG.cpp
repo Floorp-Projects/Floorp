@@ -80,9 +80,7 @@ nsTArray<nsString>* GlobalPrinters::mGlobalPrinterList = nullptr;
 //---------------
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
-  : mPrintJob(nullptr)
-  , mGtkPrinter(nullptr)
-  , mGtkPrintSettings(nullptr)
+  : mGtkPrintSettings(nullptr)
   , mGtkPageSetup(nullptr)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
@@ -119,6 +117,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", mPath, width, height));
   nsresult rv;
+
+  // We shouldn't be attempting to get a surface if we've already got a spool
+  // file.
+  MOZ_ASSERT(!mSpoolFile);
 
   // Spool file. Use Glib's temporary file function since we're
   // already dependent on the gtk software stack.
@@ -158,27 +160,18 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
       format = nsIPrintSettings::kOutputFormatPS;
     } else {
       const gchar* fmtGTK = gtk_print_settings_get(mGtkPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
-      if (!fmtGTK && GTK_IS_PRINTER(mGtkPrinter)) {
-        // Likely not print-to-file, check printer's capabilities
-
-        // Prior to gtk 2.24, gtk_printer_accepts_pdf() and
-        // gtk_printer_accepts_ps() always returned true regardless of the
-        // printer's capability.
-        if (gtk_major_version > 2 ||
-            (gtk_major_version == 2 && gtk_minor_version >= 24)) {
-          format =
-            gtk_printer_accepts_pdf(mGtkPrinter) ?
-            static_cast<int16_t>(nsIPrintSettings::kOutputFormatPDF) :
-            static_cast<int16_t>(nsIPrintSettings::kOutputFormatPS);
+      if (fmtGTK) {
+        if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
+          format = nsIPrintSettings::kOutputFormatPDF;
         } else {
           format = nsIPrintSettings::kOutputFormatPS;
         }
-
-      } else if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
-        format = nsIPrintSettings::kOutputFormatPDF;
-      } else {
-        format = nsIPrintSettings::kOutputFormatPS;
       }
+    }
+
+    // If we haven't found the format at this point, we're sunk. :(
+    if (format == nsIPrintSettings::kOutputFormatNative) {
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -217,7 +210,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
       (gtk_major_version == 2 && gtk_minor_version < 10))
     return NS_ERROR_NOT_AVAILABLE;  // I'm so sorry bz
 
-  mPrintSettings = aPS;
+  mPrintSettings = do_QueryInterface(aPS);
+  if (!mPrintSettings)
+    return NS_ERROR_NO_INTERFACE;
+
   mIsPPreview = aIsPrintPreview;
 
   // This is only set by embedders
@@ -226,13 +222,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
 
   mToPrinter = !toFile && !aIsPrintPreview;
 
-  nsCOMPtr<nsPrintSettingsGTK> printSettingsGTK(do_QueryInterface(aPS));
-  if (!printSettingsGTK)
-    return NS_ERROR_NO_INTERFACE;
-
-  mGtkPrinter = printSettingsGTK->GetGtkPrinter();
-  mGtkPrintSettings = printSettingsGTK->GetGtkPrintSettings();
-  mGtkPageSetup = printSettingsGTK->GetGtkPageSetup();
+  mGtkPrintSettings = mPrintSettings->GetGtkPrintSettings();
+  mGtkPageSetup = mPrintSettings->GetGtkPageSetup();
 
   // This is a horrible workaround for some printer driver bugs that treat custom page sizes different
   // to standard ones. If our paper object matches one of a standard one, use a standard paper size
@@ -279,31 +270,81 @@ ns_release_macro(gpointer aData) {
   NS_RELEASE(spoolFile);
 }
 
+/* static */
+gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
+                                                   gpointer aData) {
+  nsDeviceContextSpecGTK *spec = (nsDeviceContextSpecGTK*)aData;
+
+  // Find the printer whose name matches the one inside the settings.
+  nsXPIDLString printerName;
+  nsresult rv =
+    spec->mPrintSettings->GetPrinterName(getter_Copies(printerName));
+  if (NS_SUCCEEDED(rv) && printerName) {
+    NS_ConvertUTF16toUTF8 requestedName(printerName);
+    const char* currentName = gtk_printer_get_name(aPrinter);
+    if (requestedName.Equals(currentName)) {
+      nsDeviceContextSpecGTK::StartPrintJob(spec, aPrinter);
+      return TRUE;
+    }
+  }
+
+  // We haven't found it yet - keep searching...
+  return FALSE;
+}
+
+/* static */
+void nsDeviceContextSpecGTK::StartPrintJob(nsDeviceContextSpecGTK* spec,
+                                           GtkPrinter* printer) {
+  GtkPrintJob* job = gtk_print_job_new(spec->mTitle.get(),
+                                       printer,
+                                       spec->mGtkPrintSettings,
+                                       spec->mGtkPageSetup);
+
+  if (!gtk_print_job_set_source_file(job, spec->mSpoolName.get(), nullptr))
+    return;
+
+  NS_ADDREF(spec->mSpoolFile.get());
+  gtk_print_job_send(job, print_callback, spec->mSpoolFile, ns_release_macro);
+}
+
+void
+nsDeviceContextSpecGTK::EnumeratePrinters()
+{
+  gtk_enumerate_printers(&nsDeviceContextSpecGTK::PrinterEnumerator, this,
+                         nullptr, TRUE);
+}
+
 NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle, char16_t * aPrintToFileName,
                                                     int32_t aStartPage, int32_t aEndPage)
 {
-  if (mToPrinter) {
-    if (!GTK_IS_PRINTER(mGtkPrinter))
-      return NS_ERROR_FAILURE;
-
-    mPrintJob = gtk_print_job_new(NS_ConvertUTF16toUTF8(aTitle).get(), mGtkPrinter,
-                                  mGtkPrintSettings, mGtkPageSetup);
-  }
-
+  mTitle.Truncate();
+  AppendUTF16toUTF8(aTitle, mTitle);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
 {
   if (mToPrinter) {
-    if (!mPrintJob)
-      return NS_OK; // The operation was aborted.
+    // At this point, we might have a GtkPrinter set up in nsPrintSettingsGTK,
+    // or we might not. In the single-process case, we probably will, as this
+    // is populated by the print settings dialog, or set to the default
+    // printer.
+    // In the multi-process case, we proxy the print settings dialog over to
+    // the parent process, and only get the name of the printer back on the
+    // content process side. In that case, we need to enumerate the printers
+    // on the content side, and find a printer with a matching name.
 
-    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), nullptr))
-      return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-
-    NS_ADDREF(mSpoolFile.get());
-    gtk_print_job_send(mPrintJob, print_callback, mSpoolFile, ns_release_macro);
+    GtkPrinter* printer = mPrintSettings->GetGtkPrinter();
+    if (printer) {
+      // We have a printer, so we can print right away.
+      nsDeviceContextSpecGTK::StartPrintJob(this, printer);
+    } else {
+      // We don't have a printer. We have to enumerate the printers and find
+      // one with a matching name.
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(this, &nsDeviceContextSpecGTK::EnumeratePrinters);
+      NS_DispatchToCurrentThread(event);
+    }
   } else {
     // Handle print-to-file ourselves for the benefit of embedders
     nsXPIDLString targetPath;
