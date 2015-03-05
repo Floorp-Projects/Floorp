@@ -135,7 +135,7 @@
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
   <project name="kernel/common" path="kernel" revision="1ef12a094a59d966a2576d0991a3618b591a7da9"/>
-  <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
+  <project name="platform/system/core" path="system/core" revision="a626f6c0ef9e88586569331bd7387b569eaa5ed2"/>
   <project name="u-boot" path="u-boot" revision="f1502910977ac88f43da7bf9277c3523ad4b0b2f"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
   <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="cce8a36e1ec3d136f5eb8ec4b767d9c6ef08c427"/>
