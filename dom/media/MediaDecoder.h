@@ -1145,6 +1145,8 @@ protected:
   // Ensures our media stream has been unpinned.
   void UnpinForSeek();
 
+  const char* PlayStateStr();
+
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
   // The decoder does not add a reference the element.
