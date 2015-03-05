@@ -8,6 +8,7 @@ from manifestparser import TestManifest
 from manifestparser.filters import (
     subsuite,
     skip_if,
+    run_if,
     fail_if,
     enabled,
     exists,
@@ -86,10 +87,11 @@ class BuiltinFilters(unittest.TestCase):
     tests = (
         { "name": "test0" },
         { "name": "test1", "skip-if": "foo == 'bar'" },
-        { "name": "test2", "fail-if": "foo == 'bar'" },
-        { "name": "test3", "disabled": "some reason" },
-        { "name": "test4", "subsuite": "baz" },
-        { "name": "test5", "subsuite": "baz,foo == 'bar'" })
+        { "name": "test2", "run-if": "foo == 'bar'" },
+        { "name": "test3", "fail-if": "foo == 'bar'" },
+        { "name": "test4", "disabled": "some reason" },
+        { "name": "test5", "subsuite": "baz" },
+        { "name": "test6", "subsuite": "baz,foo == 'bar'" })
 
     def test_skip_if(self):
         tests = deepcopy(self.tests)
@@ -100,19 +102,28 @@ class BuiltinFilters(unittest.TestCase):
         tests = list(skip_if(tests, {'foo': 'bar'}))
         self.assertNotIn(self.tests[1], tests)
 
+    def test_run_if(self):
+        tests = deepcopy(self.tests)
+        tests = list(run_if(tests, {}))
+        self.assertNotIn(self.tests[2], tests)
+
+        tests = deepcopy(self.tests)
+        tests = list(run_if(tests, {'foo': 'bar'}))
+        self.assertEquals(len(tests), len(self.tests))
+
     def test_fail_if(self):
         tests = deepcopy(self.tests)
         tests = list(fail_if(tests, {}))
-        self.assertNotIn('expected', tests[2])
+        self.assertNotIn('expected', tests[3])
 
         tests = deepcopy(self.tests)
         tests = list(fail_if(tests, {'foo': 'bar'}))
-        self.assertEquals(tests[2]['expected'], 'fail')
+        self.assertEquals(tests[3]['expected'], 'fail')
 
     def test_enabled(self):
         tests = deepcopy(self.tests)
         tests = list(enabled(tests, {}))
-        self.assertNotIn(self.tests[3], tests)
+        self.assertNotIn(self.tests[4], tests)
 
     def test_subsuite(self):
         sub1 = subsuite()
@@ -120,13 +131,13 @@ class BuiltinFilters(unittest.TestCase):
 
         tests = deepcopy(self.tests)
         tests = list(sub1(tests, {}))
-        self.assertNotIn(self.tests[4], tests)
-        self.assertEquals(tests[-1]['name'], 'test5')
+        self.assertNotIn(self.tests[5], tests)
+        self.assertEquals(tests[-1]['name'], 'test6')
 
         tests = deepcopy(self.tests)
         tests = list(sub2(tests, {}))
         self.assertEquals(len(tests), 1)
-        self.assertIn(self.tests[4], tests)
+        self.assertIn(self.tests[5], tests)
 
     def test_subsuite_condition(self):
         sub1 = subsuite()
@@ -135,11 +146,11 @@ class BuiltinFilters(unittest.TestCase):
         tests = deepcopy(self.tests)
 
         tests = list(sub1(tests, {'foo': 'bar'}))
-        self.assertNotIn(self.tests[4], tests)
         self.assertNotIn(self.tests[5], tests)
+        self.assertNotIn(self.tests[6], tests)
 
         tests = deepcopy(self.tests)
         tests = list(sub2(tests, {'foo': 'bar'}))
         self.assertEquals(len(tests), 2)
-        self.assertEquals(tests[0]['name'], 'test4')
-        self.assertEquals(tests[1]['name'], 'test5')
+        self.assertEquals(tests[0]['name'], 'test5')
+        self.assertEquals(tests[1]['name'], 'test6')
