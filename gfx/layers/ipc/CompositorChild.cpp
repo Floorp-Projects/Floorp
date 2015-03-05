@@ -40,6 +40,7 @@ Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 
 CompositorChild::CompositorChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
+  , mCanSend(true)
 {
 }
 
@@ -59,6 +60,7 @@ CompositorChild::Destroy()
       static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[i]);
     layers->Destroy();
   }
+  MOZ_ASSERT(!mCanSend);
   SendStop();
 }
 
@@ -118,6 +120,7 @@ CompositorChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBac
                                              TextureFactoryIdentifier*,
                                              bool*)
 {
+  MOZ_ASSERT(mCanSend);
   LayerTransactionChild* c = new LayerTransactionChild();
   c->AddIPDLReference();
   return c;
@@ -259,6 +262,20 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
 }
 
 bool
+CompositorChild::RecvUpdatePluginVisibility(nsTArray<uintptr_t>&& aVisibleIdList)
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("CompositorChild::RecvUpdatePluginVisibility calls "
+                "unexpected on this platform.");
+  return false;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIWidget::UpdateRegisteredPluginWindowVisibility(aVisibleIdList);
+  return true;
+#endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+}
+
+bool
 CompositorChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId)
 {
   if (mLayerManager) {
@@ -293,6 +310,7 @@ CompositorChild::AddOverfillObserver(ClientLayerManager* aLayerManager)
 void
 CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
+  MOZ_ASSERT(!mCanSend);
   MOZ_ASSERT(sCompositor == this);
 
 #ifdef MOZ_B2G
@@ -436,6 +454,126 @@ CompositorChild::CancelNotifyAfterRemotePaint(TabChild* aTabChild)
     mWeakTabChild = nullptr;
   }
 }
+
+bool
+CompositorChild::SendWillStop()
+{
+  MOZ_ASSERT(mCanSend);
+  // From now on the only two messages we can send are WillStop and Stop.
+  mCanSend = false;
+  return PCompositorChild::SendWillStop();
+}
+
+bool
+CompositorChild::SendPause()
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendPause();
+}
+
+bool
+CompositorChild::SendResume()
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendResume();
+}
+
+bool
+CompositorChild::SendNotifyChildCreated(const uint64_t& id)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendNotifyChildCreated(id);
+}
+
+bool
+CompositorChild::SendAdoptChild(const uint64_t& id)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendAdoptChild(id);
+}
+
+bool
+CompositorChild::SendMakeSnapshot(const SurfaceDescriptor& inSnapshot, const nsIntRect& dirtyRect)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendMakeSnapshot(inSnapshot, dirtyRect);
+}
+
+bool
+CompositorChild::SendFlushRendering()
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendFlushRendering();
+}
+
+bool
+CompositorChild::SendGetTileSize(int32_t* tileWidth, int32_t* tileHeight)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendGetTileSize(tileWidth, tileHeight);
+}
+
+bool
+CompositorChild::SendStartFrameTimeRecording(const int32_t& bufferSize, uint32_t* startIndex)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendStartFrameTimeRecording(bufferSize, startIndex);
+}
+
+bool
+CompositorChild::SendStopFrameTimeRecording(const uint32_t& startIndex, nsTArray<float>* intervals)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendStopFrameTimeRecording(startIndex, intervals);
+}
+
+bool
+CompositorChild::SendNotifyRegionInvalidated(const nsIntRegion& region)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendNotifyRegionInvalidated(region);
+}
+
+bool
+CompositorChild::SendRequestNotifyAfterRemotePaint()
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendRequestNotifyAfterRemotePaint();
+}
+
 
 } // namespace layers
 } // namespace mozilla

@@ -204,7 +204,6 @@ public:
   TouchBehaviorFlags ContentGetAllowedTouchBehavior(const nsIntPoint& aPoint);
 
   // apzc controller related api
-  void ApzcGetAllowedTouchBehavior(mozilla::WidgetInputEvent* aTransformedEvent, nsTArray<TouchBehaviorFlags>& aOutBehaviors);
   void ApzcSetAllowedTouchBehavior(uint64_t aInputBlockId, nsTArray<TouchBehaviorFlags>& aBehaviors);
 
   // Hit test a point to see if an apzc would consume input there

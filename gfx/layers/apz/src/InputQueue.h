@@ -33,9 +33,6 @@ class InputQueue {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InputQueue)
 
 public:
-  typedef uint32_t TouchBehaviorFlags;
-
-public:
   InputQueue();
 
   /**

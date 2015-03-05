@@ -39,6 +39,7 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots, const
     JSObject *obj = nursery.allocateObject(cx, thingSize, nDynamicSlots, clasp);
     if (obj)
         return obj;
+
     if (allowGC && !rt->mainThread.suppressGC) {
         cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
 
@@ -88,7 +89,20 @@ GCIfNeeded(ExclusiveContext *cx)
         }
     }
 
-    return true;
+    // Trigger a full, non-incremental GC if we are over the limit.
+    JSRuntime *unsafeRt = cx->zone()->runtimeFromAnyThread();
+    if (unsafeRt->gc.usage.gcBytes() >= unsafeRt->gc.tunables.gcMaxBytes()) {
+        if (cx->isJSContext()) {
+            JSRuntime *rt = cx->asJSContext()->runtime();
+            JS::PrepareForFullGC(rt);
+            AutoKeepAtoms keepAtoms(cx->perThreadData);
+            rt->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
+            rt->gc.waitBackgroundSweepOrAllocEnd();
+        }
+    }
+
+    // Check our heap constraints and fail the allocation if we are over them.
+    return unsafeRt->gc.usage.gcBytes() < unsafeRt->gc.tunables.gcMaxBytes();
 }
 
 template <AllowGC allowGC>
@@ -96,8 +110,10 @@ static inline bool
 CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
 {
     if (allowGC) {
-        if (!GCIfNeeded(cx))
+        if (!GCIfNeeded(cx)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     }
 
     if (!cx->isJSContext())
@@ -149,11 +165,13 @@ CheckIncrementalZoneState(ExclusiveContext *cx, T *t)
  * in the partially initialized thing.
  */
 
-template <AllowGC allowGC>
-inline JSObject *
-AllocateObject(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, InitialHeap heap,
-               const Class *clasp)
+template <typename T, AllowGC allowGC /* = CanGC */>
+JSObject *
+js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, InitialHeap heap,
+             const Class *clasp)
 {
+    static_assert(mozilla::IsConvertible<T *, JSObject *>::value, "must be JSObject derived");
+    MOZ_ASSERT(kind >= FINALIZE_OBJECT0 && kind <= FINALIZE_OBJECT_LAST);
     size_t thingSize = Arena::thingSize(kind);
 
     MOZ_ASSERT(thingSize == Arena::thingSize(kind));
@@ -171,6 +189,14 @@ AllocateObject(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initi
                                                      clasp);
         if (obj)
             return obj;
+
+        // Our most common non-jit allocation path is NoGC; thus, if we fail the
+        // alloc and cannot GC, we *must* return nullptr here so that the caller
+        // will do a CanGC allocation to clear the nursery. Failing to do so will
+        // cause all allocations on this path to land in Tenured, and we will not
+        // get the benefit of the nursery.
+        if (!allowGC)
+            return nullptr;
     }
 
     HeapSlot *slots = nullptr;
@@ -194,11 +220,18 @@ AllocateObject(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initi
     TraceTenuredAlloc(obj, kind);
     return obj;
 }
+template JSObject *js::Allocate<JSObject, NoGC>(ExclusiveContext *cx, gc::AllocKind kind,
+                                                size_t nDynamicSlots, gc::InitialHeap heap,
+                                                const Class *clasp);
+template JSObject *js::Allocate<JSObject, CanGC>(ExclusiveContext *cx, gc::AllocKind kind,
+                                                 size_t nDynamicSlots, gc::InitialHeap heap,
+                                                 const Class *clasp);
 
-template <typename T, AllowGC allowGC>
-inline T *
-AllocateNonObject(ExclusiveContext *cx)
+template <typename T, AllowGC allowGC /* = CanGC */>
+T *
+js::Allocate(ExclusiveContext *cx)
 {
+    static_assert(!mozilla::IsConvertible<T*, JSObject*>::value, "must not be JSObject derived");
     static_assert(sizeof(T) >= CellSize,
                   "All allocations must be at least the allocator-imposed minimum size.");
 
@@ -214,142 +247,25 @@ AllocateNonObject(ExclusiveContext *cx)
         t = static_cast<T *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     CheckIncrementalZoneState(cx, t);
-    TraceTenuredAlloc(t, kind);
+    gc::TraceTenuredAlloc(t, kind);
     return t;
 }
 
-/*
- * When allocating for initialization from a cached object copy, we will
- * potentially destroy the cache entry we want to copy if we allow GC. On the
- * other hand, since these allocations are extremely common, we don't want to
- * delay GC from these allocation sites. Instead we allow the GC, but still
- * fail the allocation, forcing the non-cached path.
- */
-template <AllowGC allowGC>
-NativeObject *
-js::gc::AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap,
-                                  const js::Class *clasp)
-{
-    MOZ_ASSERT(clasp->isNative());
+#define FOR_ALL_NON_OBJECT_GC_LAYOUTS(macro) \
+    macro(JS::Symbol) \
+    macro(JSExternalString) \
+    macro(JSFatInlineString) \
+    macro(JSScript) \
+    macro(JSString) \
+    macro(js::AccessorShape) \
+    macro(js::BaseShape) \
+    macro(js::LazyScript) \
+    macro(js::ObjectGroup) \
+    macro(js::Shape) \
+    macro(js::jit::JitCode)
 
-    if (ShouldNurseryAllocateObject(cx->nursery(), heap)) {
-        size_t thingSize = Arena::thingSize(kind);
-
-        MOZ_ASSERT(thingSize == Arena::thingSize(kind));
-        if (!CheckAllocatorState<NoGC>(cx, kind))
-            return nullptr;
-
-        JSObject *obj = TryNewNurseryObject<NoGC>(cx, thingSize, 0, clasp);
-        if (!obj && allowGC) {
-            cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
-            return nullptr;
-        }
-        return reinterpret_cast<NativeObject *>(obj);
-    }
-
-    JSObject *obj = AllocateObject<NoGC>(cx, kind, 0, heap, clasp);
-    if (!obj && allowGC) {
-        cx->runtime()->gc.maybeGC(cx->zone());
-        return nullptr;
-    }
-
-    return reinterpret_cast<NativeObject *>(obj);
-}
-template NativeObject *js::gc::AllocateObjectForCacheHit<CanGC>(JSContext *, AllocKind, InitialHeap,
-                                                                const Class *);
-template NativeObject *js::gc::AllocateObjectForCacheHit<NoGC>(JSContext *, AllocKind, InitialHeap,
-                                                               const Class *);
-
-template <AllowGC allowGC>
-JSObject *
-js::NewGCObject(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots,
-            InitialHeap heap, const Class *clasp)
-{
-    MOZ_ASSERT(kind >= FINALIZE_OBJECT0 && kind <= FINALIZE_OBJECT_LAST);
-    return AllocateObject<allowGC>(cx, kind, nDynamicSlots, heap, clasp);
-}
-template JSObject *js::NewGCObject<CanGC>(ExclusiveContext *, AllocKind, size_t, InitialHeap,
-                                          const Class *);
-template JSObject *js::NewGCObject<NoGC>(ExclusiveContext *, AllocKind, size_t, InitialHeap,
-                                         const Class *);
-
-template <AllowGC allowGC>
-jit::JitCode *
-js::NewJitCode(ExclusiveContext *cx)
-{
-    return AllocateNonObject<jit::JitCode, allowGC>(cx);
-}
-template jit::JitCode *js::NewJitCode<CanGC>(ExclusiveContext *cx);
-template jit::JitCode *js::NewJitCode<NoGC>(ExclusiveContext *cx);
-
-ObjectGroup *
-js::NewObjectGroup(ExclusiveContext *cx)
-{
-    return AllocateNonObject<ObjectGroup, CanGC>(cx);
-}
-
-template <AllowGC allowGC>
-JSString *
-js::NewGCString(ExclusiveContext *cx)
-{
-    return AllocateNonObject<JSString, allowGC>(cx);
-}
-template JSString *js::NewGCString<CanGC>(ExclusiveContext *cx);
-template JSString *js::NewGCString<NoGC>(ExclusiveContext *cx);
-
-template <AllowGC allowGC>
-JSFatInlineString *
-js::NewGCFatInlineString(ExclusiveContext *cx)
-{
-    return AllocateNonObject<JSFatInlineString, allowGC>(cx);
-}
-template JSFatInlineString *js::NewGCFatInlineString<CanGC>(ExclusiveContext *cx);
-template JSFatInlineString *js::NewGCFatInlineString<NoGC>(ExclusiveContext *cx);
-
-JSExternalString *
-js::NewGCExternalString(ExclusiveContext *cx)
-{
-    return AllocateNonObject<JSExternalString, CanGC>(cx);
-}
-
-Shape *
-js::NewGCShape(ExclusiveContext *cx)
-{
-    return AllocateNonObject<Shape, CanGC>(cx);
-}
-
-Shape *
-js::NewGCAccessorShape(ExclusiveContext *cx)
-{
-    return AllocateNonObject<AccessorShape, CanGC>(cx);
-}
-
-JSScript *
-js::NewGCScript(ExclusiveContext *cx)
-{
-    return AllocateNonObject<JSScript, CanGC>(cx);
-}
-
-LazyScript *
-js::NewGCLazyScript(ExclusiveContext *cx)
-{
-    return AllocateNonObject<LazyScript, CanGC>(cx);
-}
-
-template <AllowGC allowGC>
-BaseShape *
-js::NewGCBaseShape(ExclusiveContext *cx)
-{
-    return AllocateNonObject<BaseShape, allowGC>(cx);
-}
-template BaseShape *js::NewGCBaseShape<CanGC>(ExclusiveContext *cx);
-template BaseShape *js::NewGCBaseShape<NoGC>(ExclusiveContext *cx);
-
-template <AllowGC allowGC>
-JS::Symbol *
-js::NewGCSymbol(ExclusiveContext *cx)
-{
-    return AllocateNonObject<JS::Symbol, allowGC>(cx);
-}
-template JS::Symbol *js::NewGCSymbol<CanGC>(ExclusiveContext *cx);
-template JS::Symbol *js::NewGCSymbol<NoGC>(ExclusiveContext *cx);
+#define DECL_ALLOCATOR_INSTANCES(type) \
+    template type *js::Allocate<type, NoGC>(ExclusiveContext *cx);\
+    template type *js::Allocate<type, CanGC>(ExclusiveContext *cx);
+FOR_ALL_NON_OBJECT_GC_LAYOUTS(DECL_ALLOCATOR_INSTANCES)
+#undef DECL_ALLOCATOR_INSTANCES
