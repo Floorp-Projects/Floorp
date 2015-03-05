@@ -303,7 +303,8 @@ function checkStateAtActiveIntervalEndTime(player)
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, UNANIMATED_POSITION,
     'the computed value of margin-left should be unaffected ' +
-    'by the animation at the end of the active duration');
+    'by the animation at the end of the active duration when the ' +
+    'animation-fill-mode is none');
 }
 
 
@@ -340,7 +341,7 @@ test(function(t)
     'Check setting of startTime actually works');
 
   checkStateOnSettingStartTimeToAnimationCreationTime(player);
-}, 'Examine newly created Animation');
+}, 'Sanity test to check round-tripping assigning to new animation\'s startTime');
 
 
 async_test(function(t) {
@@ -582,6 +583,8 @@ async_test(function(t) {
       'AnimationPlayer.startTime not null on ready Promise resolve');
 
     player.pause();
+    // After bug 1109390 we will need to wait here for the ready promise again
+
     assert_equals(player.startTime, null,
       'AnimationPlayer.startTime is null after paused');
     assert_equals(player.playState, 'paused',
