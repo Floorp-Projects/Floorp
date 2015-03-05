@@ -70,6 +70,7 @@ let ContentClick = {
 
     let params = { charset: browser.characterSet,
                    referrerURI: browser.documentURI,
+                   referrerPolicy: json.referrerPolicy,
                    noReferrer: json.noReferrer };
     window.openLinkIn(json.href, where, params);
 
