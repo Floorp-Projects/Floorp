@@ -1495,8 +1495,8 @@ bool MediaDecoderStateMachine::IsDormantNeeded()
 
 void MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(OnStateMachineThread(), "Should be on state machine thread.");
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   if (mState == DECODER_STATE_SHUTDOWN) {
     return;
@@ -1632,6 +1632,11 @@ void MediaDecoderStateMachine::PlayInternal()
     DispatchDecodeTasksIfNeeded();
   }
 
+  if (mDecodingFrozenAtStateDecoding) {
+    mDecodingFrozenAtStateDecoding = false;
+    DispatchDecodeTasksIfNeeded();
+  }
+
   // Some state transitions still happen synchronously on the main thread. So
   // if the main thread invokes Play() and then Seek(), the seek will initiate
   // synchronously on the main thread, and the asynchronous PlayInternal task
@@ -1651,11 +1656,6 @@ void MediaDecoderStateMachine::PlayInternal()
   // when the state machine notices the decoder's state change to PLAYING.
   if (mState == DECODER_STATE_BUFFERING) {
     StartDecoding();
-  }
-
-  if (mDecodingFrozenAtStateDecoding) {
-    mDecodingFrozenAtStateDecoding = false;
-    DispatchDecodeTasksIfNeeded();
   }
 
   ScheduleStateMachine();
