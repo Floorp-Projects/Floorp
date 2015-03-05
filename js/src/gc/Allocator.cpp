@@ -39,6 +39,7 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots, const
     JSObject *obj = nursery.allocateObject(cx, thingSize, nDynamicSlots, clasp);
     if (obj)
         return obj;
+
     if (allowGC && !rt->mainThread.suppressGC) {
         cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
 
@@ -188,6 +189,14 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
                                                      clasp);
         if (obj)
             return obj;
+
+        // Our most common non-jit allocation path is NoGC; thus, if we fail the
+        // alloc and cannot GC, we *must* return nullptr here so that the caller
+        // will do a CanGC allocation to clear the nursery. Failing to do so will
+        // cause all allocations on this path to land in Tenured, and we will not
+        // get the benefit of the nursery.
+        if (!allowGC)
+            return nullptr;
     }
 
     HeapSlot *slots = nullptr;
@@ -260,45 +269,3 @@ js::Allocate(ExclusiveContext *cx)
     template type *js::Allocate<type, CanGC>(ExclusiveContext *cx);
 FOR_ALL_NON_OBJECT_GC_LAYOUTS(DECL_ALLOCATOR_INSTANCES)
 #undef DECL_ALLOCATOR_INSTANCES
-
-/*
- * When allocating for initialization from a cached object copy, we will
- * potentially destroy the cache entry we want to copy if we allow GC. On the
- * other hand, since these allocations are extremely common, we don't want to
- * delay GC from these allocation sites. Instead we allow the GC, but still
- * fail the allocation, forcing the non-cached path.
- */
-template <AllowGC allowGC>
-NativeObject *
-js::gc::AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap,
-                                  const js::Class *clasp)
-{
-    MOZ_ASSERT(clasp->isNative());
-
-    if (ShouldNurseryAllocateObject(cx->nursery(), heap)) {
-        size_t thingSize = Arena::thingSize(kind);
-
-        MOZ_ASSERT(thingSize == Arena::thingSize(kind));
-        if (!CheckAllocatorState<NoGC>(cx, kind))
-            return nullptr;
-
-        JSObject *obj = TryNewNurseryObject<NoGC>(cx, thingSize, 0, clasp);
-        if (!obj && allowGC) {
-            cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
-            return nullptr;
-        }
-        return reinterpret_cast<NativeObject *>(obj);
-    }
-
-    JSObject *obj = Allocate<JSObject, NoGC>(cx, kind, 0, heap, clasp);
-    if (!obj && allowGC) {
-        cx->runtime()->gc.maybeGC(cx->zone());
-        return nullptr;
-    }
-
-    return reinterpret_cast<NativeObject *>(obj);
-}
-template NativeObject *js::gc::AllocateObjectForCacheHit<CanGC>(JSContext *, AllocKind, InitialHeap,
-                                                                const Class *);
-template NativeObject *js::gc::AllocateObjectForCacheHit<NoGC>(JSContext *, AllocKind, InitialHeap,
-                                                               const Class *);
