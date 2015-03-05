@@ -398,6 +398,20 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:CallDefaultLostHandler":
           this.callDefaultLostHandler(message.data);
           return null;
+        case "NFC:SendFile":
+          // Chrome process is the arbitrator / mediator between
+          // system app (content process) that issued nfc 'sendFile' operation
+          // and system app that handles the system message :
+          // 'nfc-manager-send-file'. System app subsequently handover's
+          // the data to alternate carrier's (BT / WiFi) 'sendFile' interface.
+
+          // Notify system app to initiate BT send file operation
+          let sysMsg = new NfcSendFileSysMsg(message.data.requestId,
+                                             message.data.sessionToken,
+                                             message.data.blob);
+          gSystemMessenger.broadcastMessage("nfc-manager-send-file",
+                                            sysMsg);
+          return null;
         default:
           return this.nfc.receiveMessage(message);
       }
@@ -671,8 +685,7 @@ Nfc.prototype = {
         break;
     }
 
-    if (["NFC:ChangeRFState",
-         "NFC:SendFile"].indexOf(message.name) == -1) {
+    if (message.name != "NFC:ChangeRFState") {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
@@ -696,20 +709,6 @@ Nfc.prototype = {
         break;
       case "NFC:Transceive":
         this.sendToNfcService(NfcRequestType.TRANSCEIVE, message.data);
-        break;
-      case "NFC:SendFile":
-        // Chrome process is the arbitrator / mediator between
-        // system app (content process) that issued nfc 'sendFile' operation
-        // and system app that handles the system message :
-        // 'nfc-manager-send-file'. System app subsequently handover's
-        // the data to alternate carrier's (BT / WiFi) 'sendFile' interface.
-
-        // Notify system app to initiate BT send file operation
-        let sysMsg = new NfcSendFileSysMsg(message.data.requestId,
-                                           message.data.sessionToken,
-                                           message.data.blob);
-        gSystemMessenger.broadcastMessage("nfc-manager-send-file",
-                                          sysMsg);
         break;
       default:
         debug("UnSupported : Message Name " + message.name);
