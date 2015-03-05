@@ -61,7 +61,7 @@ private:
   /*out*/ ScopedCERTCertList& mCertChain;
   void* mPinArg; // non-owning!
   ScopedCERTCertificate mTrustedRoot;
-  unsigned int mMinimumNonECCBits;
+  unsigned int mMinRSABits;
 };
 
 } } // namespace mozilla::psm

@@ -56,7 +56,7 @@ public:
                        OCSPCache& ocspCache, void* pinArg,
                        CertVerifier::OcspGetConfig ocspGETConfig,
                        CertVerifier::PinningMode pinningMode,
-                       unsigned int minimumNonECCKeyBits,
+                       unsigned int minRSABits,
           /*optional*/ const char* hostname = nullptr,
       /*optional out*/ ScopedCERTCertList* builtChain = nullptr);
 
@@ -130,7 +130,7 @@ private:
   void* mPinArg; // non-owning!
   const CertVerifier::OcspGetConfig mOCSPGetConfig;
   CertVerifier::PinningMode mPinningMode;
-  const unsigned int mMinimumNonECCBits;
+  const unsigned int mMinRSABits;
   const char* mHostname; // non-owning - only used for pinning checks
   ScopedCERTCertList* mBuiltChain; // non-owning
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;
