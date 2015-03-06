@@ -163,6 +163,10 @@ private:
     uint32_t mAPZCId;
   };
 
+  static PLDHashOperator RemoveSharedMetricsForLayersId(const uint64_t& aKey,
+                                                        nsAutoPtr<SharedFrameMetricsData>& aData,
+                                                        void* aLayerTransactionChild);
+
   nsRefPtr<ClientLayerManager> mLayerManager;
 
   // The ViewID of the FrameMetrics is used as the key for this hash table.
