@@ -10,10 +10,6 @@ ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
 ac_add_options --disable-tests
 
-if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
-  . $topsrcdir/build/win32/mozconfig.vs2013-win64
-else
-  . $topsrcdir/build/win32/mozconfig.vs2010
-fi
+. $topsrcdir/build/win64/mozconfig.vs2013
 
 . "$topsrcdir/xulrunner/config/mozconfigs/common.override"
