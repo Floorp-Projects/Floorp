@@ -14,6 +14,14 @@
 #include "jswrapper.h"
 #include "js/Proxy.h"
 
+// Slot where Xray functions for Web IDL methods store a pointer to
+// the Xray wrapper they're associated with.
+#define XRAY_DOM_FUNCTION_PARENT_WRAPPER_SLOT 0
+// Slot where in debug builds Xray functions for Web IDL methods store
+// a pointer to their JSNative, just so we can assert that they're the
+// sort of functions we expect.
+#define XRAY_DOM_FUNCTION_NATIVE_SLOT_FOR_ASSERT 1
+
 // Xray wrappers re-resolve the original native properties on the native
 // object and always directly access to those properties.
 // Because they work so differently from the rest of the wrapper hierarchy,
