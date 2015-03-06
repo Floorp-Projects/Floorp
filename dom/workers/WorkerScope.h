@@ -98,7 +98,7 @@ public:
   GetExistingNavigator() const;
 
   void
-  Close(JSContext* aCx);
+  Close(JSContext* aCx, ErrorResult& aRv);
 
   OnErrorEventHandlerNonNull*
   GetOnerror();
@@ -216,12 +216,6 @@ public:
   GetScope(nsString& aScope) const
   {
     aScope = mScope;
-  }
-
-  void
-  Close() const
-  {
-    // no-op close.
   }
 
   void
