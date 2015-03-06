@@ -90,6 +90,10 @@ public:
                                        nsString* aText, int32_t* aStartOffset,
                                        int32_t* aEndOffset) MOZ_OVERRIDE;
 
+  virtual bool RecvCharAt(const uint64_t& aID,
+                          const int32_t& aOffset,
+                          uint16_t* aChar) MOZ_OVERRIDE;
+
 private:
   DocAccessible* mDoc;
 };
