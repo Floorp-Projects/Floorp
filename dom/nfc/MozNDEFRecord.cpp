@@ -250,13 +250,13 @@ MozNDEFRecord::ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aRea
 }
 
 void
-MozNDEFRecord::InitType(JSContext* aCx, const Optional<Uint8Array>& aType)
+MozNDEFRecord::InitType(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aType)
 {
-  if (!aType.WasPassed()) {
+  if (!aType.WasPassed() || aType.Value().IsNull()) {
     return;
   }
 
-  const Uint8Array& type = aType.Value();
+  const Uint8Array& type = aType.Value().Value();
   type.ComputeLengthAndData();
   mType = Uint8Array::Create(aCx, this, type.Length(), type.Data());
   IncSize(type.Length());
@@ -279,13 +279,13 @@ MozNDEFRecord::InitType(JSContext* aCx, JSObject& aType, uint32_t aLen)
 }
 
 void
-MozNDEFRecord::InitId(JSContext* aCx, const Optional<Uint8Array>& aId)
+MozNDEFRecord::InitId(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aId)
 {
-  if (!aId.WasPassed()) {
+  if (!aId.WasPassed() || aId.Value().IsNull()) {
     return;
   }
 
-  const Uint8Array& id = aId.Value();
+  const Uint8Array& id = aId.Value().Value();
   id.ComputeLengthAndData();
   mId = Uint8Array::Create(aCx, this, id.Length(), id.Data());
   IncSize(1 /* id_length */ + id.Length());
@@ -299,13 +299,13 @@ MozNDEFRecord::InitId(JSContext* aCx, JSObject& aId, uint32_t aLen)
 }
 
 void
-MozNDEFRecord::InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload)
+MozNDEFRecord::InitPayload(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aPayload)
 {
-  if (!aPayload.WasPassed()) {
+  if (!aPayload.WasPassed() || aPayload.Value().IsNull()) {
     return;
   }
 
-  const Uint8Array& payload = aPayload.Value();
+  const Uint8Array& payload = aPayload.Value().Value();
   payload.ComputeLengthAndData();
   mPayload = Uint8Array::Create(aCx, this, payload.Length(), payload.Data());
   IncSizeForPayload(payload.Length());

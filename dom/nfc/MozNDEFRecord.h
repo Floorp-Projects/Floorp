@@ -103,12 +103,12 @@ private:
   nsRefPtr<nsISupports> mParent;
   void HoldData();
   void DropData();
-  void InitType(JSContext* aCx, const Optional<Uint8Array>& aType);
+  void InitType(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aType);
   void InitType(JSContext* aCx, const RTD rtd);
   void InitType(JSContext* aCx, JSObject& aType, uint32_t aLen);
-  void InitId(JSContext* aCx, const Optional<Uint8Array>& aId);
+  void InitId(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aId);
   void InitId(JSContext* aCx, JSObject& aId, uint32_t aLen);
-  void InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload);
+  void InitPayload(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aPayload);
   void InitPayload(JSContext* aCx, const nsAString& aUri);
   void InitPayload(JSContext* aCx, JSObject& aPayload, uint32_t aLen);
   void IncSize(uint32_t aCount);
