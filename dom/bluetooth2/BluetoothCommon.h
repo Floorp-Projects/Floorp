@@ -192,11 +192,12 @@ extern bool gBluetoothDebugFlag;
 #define BLUETOOTH_APP_ORIGIN                  "app://bluetooth.gaiamobile.org"
 
 /**
- * When a remote device gets paired / unpaired with local bluetooth adapter,
- * we'll dispatch an event.
+ * When a remote device gets paired / unpaired with local bluetooth adapter or
+ * pairing process is aborted, we'll dispatch an event.
  */
 #define DEVICE_PAIRED_ID                     "devicepaired"
 #define DEVICE_UNPAIRED_ID                   "deviceunpaired"
+#define PAIRING_ABORTED_ID                   "pairingaborted"
 
 /**
  * When receiving a query about current play status from remote device, we'll
