@@ -38,6 +38,10 @@ REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
 
 TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
+TREEHERDER_ROUTES = {
+    'staging': 'tc-treeherder-stage',
+    'production': 'tc-treeherder'
+}
 
 DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
@@ -121,6 +125,28 @@ def gaia_info():
             'gaia_rev': gaia['git']['git_revision'],
             'gaia_ref': gaia['git']['branch'],
         }
+
+def decorate_task_treeherder_routes(task, suffix):
+    """
+    Decorate the given task with treeherder routes.
+
+    Uses task.extra.treeherderEnv if available otherwise defaults to only
+    staging.
+
+    :param dict task: task definition.
+    :param str suffix: The project/revision_hash portion of the route.
+    """
+
+    if 'extra' not in task:
+        return
+
+    if 'routes' not in task:
+        task['routes'] = []
+
+    treeheder_env = task['extra'].get('treeherderEnv', ['staging'])
+
+    for env in treeheder_env:
+        task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
 
 @CommandProvider
 class DecisionTask(object):
@@ -232,8 +258,7 @@ class Graph(object):
             'revision_hash': params['revision_hash']
         }.items())
 
-        treeherder_route = '{}.{}.{}'.format(
-            TREEHERDER_ROUTE_PREFIX,
+        treeherder_route = '{}.{}'.format(
             params['project'],
             params.get('revision_hash', '')
         )
@@ -245,7 +270,8 @@ class Graph(object):
         }
 
         if params['revision_hash']:
-            graph['scopes'].append('queue:route:{}'.format(treeherder_route))
+            for env in TREEHERDER_ROUTES:
+                graph['scopes'].append('queue:route:{}.{}'.format(TREEHERDER_ROUTES[env], treeherder_route))
 
         graph['metadata'] = {
             'source': 'http://todo.com/what/goes/here',
@@ -261,10 +287,11 @@ class Graph(object):
             build_task = templates.load(build['task'], build_parameters)
 
             if 'routes' not in build_task['task']:
-                build_task['task']['routes'] = [];
+                build_task['task']['routes'] = []
 
             if params['revision_hash']:
-                build_task['task']['routes'].append(treeherder_route)
+                decorate_task_treeherder_routes(build_task['task'],
+                                                treeherder_route)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
@@ -351,8 +378,8 @@ class Graph(object):
                         test_task['task']['scopes'] = []
 
                     if params['revision_hash']:
-                        test_task['task']['routes'].append(treeherder_route)
-                        test_task['task']['scopes'].append('queue:route:{}'.format(treeherder_route))
+                        decorate_task_treeherder_routes(
+                                test_task['task'], treeherder_route)
 
                     graph['tasks'].append(test_task)
 
