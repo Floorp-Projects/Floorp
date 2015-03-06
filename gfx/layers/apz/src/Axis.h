@@ -75,7 +75,8 @@ public:
    */
   bool AdjustDisplacement(ParentLayerCoord aDisplacement,
                           /* ParentLayerCoord */ float& aDisplacementOut,
-                          /* ParentLayerCoord */ float& aOverscrollAmountOut);
+                          /* ParentLayerCoord */ float& aOverscrollAmountOut,
+                          bool forceOverscroll = false);
 
   /**
    * Overscrolls this axis by the requested amount in the requested direction.

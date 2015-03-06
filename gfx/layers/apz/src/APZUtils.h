@@ -23,6 +23,17 @@ enum CancelAnimationFlags : uint32_t {
   ExcludeOverscroll = 1   /* Don't clear overscroll */
 };
 
+enum class ScrollSource {
+  // scrollTo() or something similar.
+  DOM,
+
+  // Touch-screen or trackpad with gesture support.
+  Touch,
+
+  // Mouse wheel.
+  Wheel
+};
+
 typedef uint32_t TouchBehaviorFlags;
 
 }

@@ -2021,6 +2021,21 @@ GetParentFrameToScroll(nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
+/*static*/ bool
+EventStateManager::CanVerticallyScrollFrameWithWheel(nsIFrame* aFrame)
+{
+  nsIContent* c = aFrame->GetContent();
+  if (!c) {
+    return true;
+  }
+  nsCOMPtr<nsITextControlElement> ctrl =
+    do_QueryInterface(c->IsInAnonymousSubtree() ? c->GetBindingParent() : c);
+  if (ctrl && ctrl->IsSingleLineTextControl()) {
+    return false;
+  }
+  return true;
+}
+
 void
 EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
                                                    WidgetWheelEvent* aEvent,
@@ -2289,10 +2304,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 
     // Don't scroll vertically by mouse-wheel on a single-line text control.
     if (checkIfScrollableY) {
-      nsIContent* c = scrollFrame->GetContent();
-      nsCOMPtr<nsITextControlElement> ctrl =
-        do_QueryInterface(c->IsInAnonymousSubtree() ? c->GetBindingParent() : c);
-      if (ctrl && ctrl->IsSingleLineTextControl()) {
+      if (!CanVerticallyScrollFrameWithWheel(scrollFrame)) {
         continue;
       }
     }
