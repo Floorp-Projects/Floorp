@@ -2838,8 +2838,12 @@ public class BrowserApp extends GeckoApp
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
             GeckoMenuItem share = (GeckoMenuItem) mMenu.findItem(R.id.share);
+            final GeckoMenuItem quickShare = (GeckoMenuItem) mMenu.findItem(R.id.quickshare);
+
             GeckoActionProvider provider = GeckoActionProvider.getForType(GeckoActionProvider.DEFAULT_MIME_TYPE, this);
+
             share.setActionProvider(provider);
+            quickShare.setActionProvider(provider);
         }
 
         return true;
@@ -2926,6 +2930,7 @@ public class BrowserApp extends GeckoApp
         MenuItem back = aMenu.findItem(R.id.back);
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
+        final MenuItem quickShare = aMenu.findItem(R.id.quickshare);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
@@ -2949,6 +2954,7 @@ public class BrowserApp extends GeckoApp
             back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
+            quickShare.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
 
@@ -2988,7 +2994,9 @@ public class BrowserApp extends GeckoApp
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         final boolean shareEnabled = RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_SHARE);
         share.setVisible(shareEnabled);
+        quickShare.setVisible(shareEnabled);
         share.setEnabled(StringUtils.isShareableUrl(url) && shareEnabled);
+        quickShare.setEnabled(StringUtils.isShareableUrl(url) && shareEnabled);
         MenuUtils.safeSetEnabled(aMenu, R.id.apps, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_APPS));
         MenuUtils.safeSetEnabled(aMenu, R.id.addons, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_EXTENSION));
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_DOWNLOADS));
@@ -3005,6 +3013,7 @@ public class BrowserApp extends GeckoApp
 
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
+            // This provider also applies to the quick share menu item.
             final GeckoActionProvider provider = ((GeckoMenuItem) share).getGeckoActionProvider();
             if (provider != null) {
                 Intent shareIntent = provider.getIntent();
