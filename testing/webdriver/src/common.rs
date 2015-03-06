@@ -128,7 +128,8 @@ impl FrameId {
                 Ok(FrameId::Short(id))
             },
             &Json::Null => Ok(FrameId::Null),
-            &Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
+            &Json::Object(_) => Ok(FrameId::Element(
+                try!(WebElement::from_json(data)))),
             _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
                                          "frame id has unexpected type"))
         }
