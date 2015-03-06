@@ -4926,30 +4926,43 @@ BreakpointActor.prototype = {
 
   /**
    * Check if this breakpoint has a condition that doesn't error and
-   * evaluates to true in aFrame
+   * evaluates to true in aFrame.
    *
    * @param aFrame Debugger.Frame
    *        The frame to evaluate the condition in
-   * @returns Boolean
-   *          Indicates whether to pause or not, returns undefined when
-   *          evaluation was killed
+   * @returns Object
+   *          - result: boolean|undefined
+   *            True when the conditional breakpoint should trigger a pause, false otherwise.
+   *            If the condition evaluation failed/killed, `result` will be `undefined`.
+   *          - message: string
+   *            The thrown message converted to a string, when the condition throws.
    */
   checkCondition: function(aFrame) {
     let completion = aFrame.eval(this.condition);
     if (completion) {
       if (completion.throw) {
-        // The evaluation failed and threw an error, currently
-        // we will only return true to break on the error
-        return true;
+        // The evaluation failed and threw
+        let message = "Unknown exception";
+        try {
+          if (completion.throw.getOwnPropertyDescriptor) {
+            message = completion.throw.getOwnPropertyDescriptor("message").value;
+          } else if (completion.toString) {
+            message = completion.toString();
+          }
+        } catch (ex) {}
+        return {
+          result: true,
+          message: message
+        };
       } else if (completion.yield) {
         dbg_assert(false,
                    "Shouldn't ever get yield completions from an eval");
       } else {
-        return completion.return ? true : false;
+        return { result: completion.return ? true : false };
       }
     } else {
       // The evaluation was killed (possibly by the slow script dialog)
-      return undefined;
+      return { result: undefined };
     }
   },
 
@@ -4976,12 +4989,24 @@ BreakpointActor.prototype = {
 
     if (this.threadActor._hiddenBreakpoints.has(this.actorID)) {
       reason.type = "pauseOnDOMEvents";
-    } else if (!this.condition || this.checkCondition(aFrame)) {
+    } else if (!this.condition) {
       reason.type = "breakpoint";
       // TODO: add the rest of the breakpoints on that line (bug 676602).
       reason.actors = [ this.actorID ];
     } else {
-      return undefined;
+      let { result, message } = this.checkCondition(aFrame)
+
+      if (result) {
+        if (!message) {
+          reason.type = "breakpoint";
+        } else {
+          reason.type = "breakpointConditionThrown";
+          reason.message = message;
+        }
+        reason.actors = [ this.actorID ];
+      } else {
+        return undefined;
+      }
     }
     return this.threadActor._pauseAndRespond(aFrame, reason);
   },
