@@ -5,9 +5,9 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing update cleanup when reading the status file returns " +
-              "STATUS_NONE, the version file is for a newer version, and the " +
-              "update xml has an update with STATE_PENDING (Bug 601701).");
+  debugDump("testing update cleanup when reading the status file returns " +
+            "STATUS_NONE, the version file is for a newer version, and the " +
+            "update xml has an update with STATE_PENDING (Bug 601701).");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   let patches = getLocalPatchString(null, null, null, null, null, null,
@@ -20,19 +20,19 @@ function run_test() {
 
   // Check that there is no activeUpdate first so the updates directory is
   // cleaned up by the UpdateManager before the remaining tests.
-  logTestInfo("testing activeUpdate == null");
+  debugDump("testing activeUpdate == null");
   do_check_eq(gUpdateManager.activeUpdate, null);
-  logTestInfo("testing updateCount == 0");
+  debugDump("testing updateCount == 0");
   do_check_eq(gUpdateManager.updateCount, 0);
 
   let dir = getUpdatesDir();
   dir.append("0");
-  logTestInfo("testing " + dir.path + " should exist");
+  debugDump("testing " + dir.path + " should exist");
   do_check_true(dir.exists());
 
   let versionFile = dir.clone();
   versionFile.append(FILE_UPDATE_VERSION);
-  logTestInfo("testing " + versionFile.path + " should not exist");
+  debugDump("testing " + versionFile.path + " should not exist");
   do_check_false(versionFile.exists());
 
   doTestFinish();

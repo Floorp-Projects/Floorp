@@ -9,9 +9,9 @@ const NETWORK_ERROR_OFFLINE = 111;
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing when an update check fails because the network is " +
-              "offline that we check again when the network comes online " +
-              "(Bug 794211).");
+  debugDump("testing when an update check fails because the network is " +
+            "offline that we check again when the network comes online " +
+            "(Bug 794211).");
 
   setUpdateURLOverride();
   Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);

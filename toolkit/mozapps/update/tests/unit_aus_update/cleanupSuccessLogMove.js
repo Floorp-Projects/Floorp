@@ -6,7 +6,7 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing that the update.log is moved after a successful update");
+  debugDump("testing that the update.log is moved after a successful update");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   let patches = getLocalPatchString(null, null, null, null, null, null,
@@ -23,24 +23,24 @@ function run_test() {
 
   standardInit();
 
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   log = dir.clone();
   log.append(FILE_LAST_LOG);
-  logTestInfo("testing " + log.path + " should exist");
+  debugDump("testing " + log.path + " should exist");
   do_check_true(log.exists());
 
-  logTestInfo("testing " + log.path + " contents");
+  debugDump("testing " + log.path + " contents");
   do_check_eq(readFile(log), "Last Update Log");
 
   log = dir.clone();
   log.append(FILE_BACKUP_LOG);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   dir.append("0");
-  logTestInfo("testing " + dir.path + " should exist (bug 512994)");
+  debugDump("testing " + dir.path + " should exist (bug 512994)");
   do_check_true(dir.exists());
 
   doTestFinish();
