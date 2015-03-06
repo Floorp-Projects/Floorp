@@ -63,8 +63,6 @@ class SavedFrame : public NativeObject {
                     HashPolicy,
                     SystemAllocPolicy> Set;
 
-    typedef RootedGeneric<Lookup*> AutoLookupRooter;
-
     class AutoLookupVector;
 
     class MOZ_STACK_CLASS HandleLookup {
@@ -160,6 +158,10 @@ class SavedStacks {
 
     bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
+    bool       adoptAsyncStack(JSContext *cx, HandleSavedFrame asyncStack,
+                               HandleString asyncCause,
+                               MutableHandleSavedFrame adoptedStack,
+                               unsigned maxFrameCount);
     SavedFrame *getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup);
     SavedFrame *createFrameFromLookup(JSContext *cx, SavedFrame::HandleLookup lookup);
     void       chooseSamplingProbability(JSContext* cx);
