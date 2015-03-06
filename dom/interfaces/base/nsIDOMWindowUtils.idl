@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(b39cb73f-ff99-4744-9780-2c26f830c6f7)]
+[scriptable, uuid(dde97573-f4cf-45ce-bbb0-5af4e5f77440)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -205,15 +205,14 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * The effect of this API is for gfx code to allocate more or fewer
    * pixels for rescalable content by a factor of |resolution| in
-   * either or both dimensions.  The scale at which the content is
-   * displayed does not change; if that is desired, use
-   * setResolutionAndScaleTo() instead.
+   * both dimensions.  The scale at which the content is displayed does
+   * not change; if that is desired, use setResolutionAndScaleTo() instead.
    *
    * The caller of this method must have chrome privileges.
    */
-  void setResolution(in float aXResolution, in float aYResolution);
+  void setResolution(in float aResolution);
 
-  void getResolution(out float aXResolution, out float aYResolution);
+  void getResolution(out float aResolution);
 
   /**
    * Similar to setResolution(), but also scales the content by the
@@ -226,7 +225,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * The caller of this method must have chrome privileges.
    */
-  void setResolutionAndScaleTo(in float aXResolution, in float aYResolution);
+  void setResolutionAndScaleTo(in float aResolution);
 
   /**
    * Whether the resolution has been set by the user.
