@@ -35,6 +35,10 @@
           android:title="@string/share"
           android:showAsAction="ifRoom"/>
 
+    <!-- We only show the quick share items so no need for an icon or title -->
+    <item android:id="@+id/quickshare"
+          android:showAsAction="collapseActionView"/>
+
     <item android:id="@+id/new_tab"
           android:icon="@drawable/ic_menu_new_tab"
           android:title="@string/new_tab"/>
