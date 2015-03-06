@@ -52,12 +52,12 @@ def download(url, prefix, dest, force_suffix=True):
             f.write(chunk)
 
 def get_blobber_url(branch, job):
-    job_id = job[8]
+    job_id = job["id"]
     resp = requests.get(urlparse.urljoin(treeherder_base,
                                          "/api/project/%s/artifact/?job_id=%i&name=Job%%20Info" % (branch,
                                                                                                    job_id)))
     job_data = resp.json()
-    print job_data
+
     if job_data:
         assert len(job_data) == 1
         job_data = job_data[0]
@@ -71,20 +71,23 @@ def get_blobber_url(branch, job):
 
 
 def get_structured_logs(branch, commit, dest=None):
-    resp = requests.get(urlparse.urljoin(treeherder_base, "/api/project/%s/resultset/?revision=%s" % (branch,
-                                                                                                      commit)))
+    resp = requests.get(urlparse.urljoin(treeherder_base, "/api/project/%s/resultset/?revision=%s" % (branch, commit)))
+
+    revision_data = resp.json()
+
+    result_set = revision_data["results"][0]["id"]
+
+    resp = requests.get(urlparse.urljoin(treeherder_base, "/api/project/%s/jobs/?result_set_id=%s&count=2000&exclusion_profile=false" % (branch, result_set)))
+
     job_data = resp.json()
 
     for result in job_data["results"]:
-        for platform in result["platforms"]:
-            for group in platform["groups"]:
-                for job in group["jobs"]:
-                    job_type_name = job[13]
-                    if job_type_name.startswith("W3C Web Platform"):
-                        url = get_blobber_url(branch, job)
-                        if url:
-                            prefix = job[14] # platform
-                            download(url, prefix, None)
+        job_type_name = result["job_type_name"]
+        if job_type_name.startswith("W3C Web Platform"):
+            url = get_blobber_url(branch, result)
+            if url:
+                prefix = result["platform"] # platform
+                download(url, prefix, None)
 
 def main():
     parser = create_parser()

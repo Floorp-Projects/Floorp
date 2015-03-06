@@ -14,52 +14,31 @@ small for the human eye to notice causing tests to fail.
 
 ## Components of a Reftest
 
-A reftest has three parts:
+In the simplest case, a reftest consists of a pair of files called the
+*test* and the *reference*.
 
-### 1. The Reftest Test File ###
+The *test* file is the one that makes use of the technology being
+tested. It also contains a `link` element with `rel="match"` or
+`rel="mismatch"` and `href` attribute pointing to the *reference* file
+e.g. `<link rel=match href=references/green-box-ref.html>`.
 
-The test file uses the technology to be tested. This file should
-follow the [format][format] and [style][style] guidelines.
+The *reference* file is typically written to be as simple as possible,
+and does not use the technology under test. It is desirable that the
+reference be rendered correctly even in UAs with relatively poor
+support for CSS and no support for the technology under test.
 
-It is preferable that a reftest is [self-describing][selfdesc],
-since it allows for both machine comparison and manual
-verification. Having the expected rendering described on the page
-lets the tester check that the test and the reference are not
-_both_ being rendered incorrectly and triggering a false pass.
-Designing it for an obvious fail makes it easier to find what went
-wrong when the reftest does fail.
+When the `<link>` element in the *test* has `rel="match"`, the test
+only passes if the *test* and *reference* have pixel-perfect identical
+rendering. `rel="mismatch"` inverts this so the test only passes when
+the renderings differ.
 
-### 2. The Reftest Reference File ###
+In general the files used in a reftest should follow the
+[format][format] and [style][style] guidelines. The *test* should also
+be [self-describing][selfdesc], to allow a human to determine whether
+the the rendering is as expected.
 
-This is a different, usually simpler, file that results in the same
-rendering as the test. The reference file must not use the same
-features that are being tested, but uses a different method to
-produce the same rendering as a test file. Sometimes more than one
-reference file is required. Multiple tests can (and often do) share
-the same reference file. If it is possible to reuse an existing
-reference for a test this should always be preferred as it enables
-substantial speedups when running a large number of tests.
-
-In some cases when creating the reference file, it is necessary to
-use features that, although different from the tested features,
-may themselves fail in such a manner as to cause the reference to
-render identically to a failed test. When this is the case, in
-order to reduce the possibility of false positive testing
-outcomes, multiple reference files should be used, each using a
-different technique to render the reference. One possibility is to
-create one or more references that must **not** match the test
-file, i.e.: a file that renders in the same manner as a failed
-test.
-
-### 3. The Reftest Comparison ###
-
-In a reftest the test is required to either match or mismatch the
-rendering of the reference file. In order to specify this
-relationship, use a `link` element with `rel="match"` or `rel="mismatch"` and
-`href` attribute pointing to the reference file e.g. `<link
-rel=match href=references/green-box.html>`.
-
-If possible, share the same reference file amongst multiple tests.
+Note that references can be shared between tests; this is strongly
+encouraged since it permits optimizations when running tests.
 
 ## Controlling When Comparison Occurs
 

@@ -45,6 +45,7 @@ public:
   static nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                    nsIURI* aTargetURI,
                                    nsISupports* aContext);
+  gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
 
 protected:
   virtual ~nsFontFaceLoader();

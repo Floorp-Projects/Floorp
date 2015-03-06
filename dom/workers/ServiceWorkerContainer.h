@@ -57,18 +57,8 @@ public:
   GetReady(ErrorResult& aRv);
 
   // Testing only.
-  already_AddRefed<Promise>
-  ClearAllServiceWorkerData(ErrorResult& aRv);
-
-  // Testing only.
   void
   GetScopeForUrl(const nsAString& aUrl, nsString& aScope, ErrorResult& aRv);
-
-  // Testing only.
-  void
-  GetControllingWorkerScriptURLForPath(const nsAString& aPath,
-                                       nsString& aScriptURL,
-                                       ErrorResult& aRv);
 
   // DOMEventTargetHelper
   void DisconnectFromOwner() MOZ_OVERRIDE;

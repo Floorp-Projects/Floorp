@@ -11,47 +11,78 @@
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ClientBinding.h"
 
 namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerClient MOZ_FINAL : public nsISupports,
-                                      public nsWrapperCache
+class ServiceWorkerClient;
+class ServiceWorkerWindowClient;
+
+// Used as a container object for information needed to create
+// client objects.
+class ServiceWorkerClientInfo MOZ_FINAL
+{
+  friend class ServiceWorkerClient;
+  friend class ServiceWorkerWindowClient;
+
+public:
+  explicit ServiceWorkerClientInfo(nsIDocument* aDoc);
+
+private:
+  uint64_t mClientId;
+  nsString mUrl;
+
+  // Window Clients
+  VisibilityState mVisibilityState;
+  bool mFocused;
+  FrameType mFrameType;
+};
+
+class ServiceWorkerClient : public nsISupports,
+                            public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ServiceWorkerClient)
 
-  ServiceWorkerClient(nsISupports* aOwner, uint64_t aId)
+  ServiceWorkerClient(nsISupports* aOwner,
+                      const ServiceWorkerClientInfo& aClientInfo)
     : mOwner(aOwner),
-      mId(aId)
+      mId(aClientInfo.mClientId),
+      mUrl(aClientInfo.mUrl)
   {
+    MOZ_ASSERT(aOwner);
   }
 
-  uint32_t Id() const
-  {
-    return mId;
-  }
-
-  nsISupports* GetParentObject() const
+  nsISupports*
+  GetParentObject() const
   {
     return mOwner;
   }
 
-  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const Optional<Sequence<JS::Value>>& aTransferable,
-                   ErrorResult& aRv);
+  void
+  GetUrl(nsAString& aUrl) const
+  {
+    aUrl.Assign(mUrl);
+  }
+
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const Optional<Sequence<JS::Value>>& aTransferable,
+              ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-private:
-  ~ServiceWorkerClient()
-  {
-  }
+protected:
+  virtual ~ServiceWorkerClient()
+  { }
 
+private:
   nsCOMPtr<nsISupports> mOwner;
   uint64_t mId;
+  nsString mUrl;
 };
 
 } // namespace workers

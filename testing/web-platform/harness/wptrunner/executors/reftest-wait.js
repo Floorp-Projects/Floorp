@@ -14,4 +14,9 @@ var root = document.documentElement;
 var observer = new MutationObserver(test);
 
 observer.observe(root, {attributes: true});
-test();
+
+if (document.readyState != "complete") {
+  onload = test
+} else {
+  test();
+}

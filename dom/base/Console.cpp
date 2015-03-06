@@ -858,7 +858,7 @@ Console::Assert(JSContext* aCx, bool aCondition,
 METHOD(Count, "count")
 
 void
-Console::__noSuchMethod__()
+Console::NoopMethod()
 {
   // Nothing to do.
 }
