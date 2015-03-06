@@ -5,9 +5,9 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing update cleanup when reading the status file returns " +
-              "STATUS_NONE and the update xml has an update with " +
-              "STATE_DOWNLOADING (Bug 539717).");
+  debugDump("testing update cleanup when reading the status file returns " +
+            "STATUS_NONE and the update xml has an update with " +
+            "STATE_DOWNLOADING (Bug 539717).");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   let patches = getLocalPatchString(null, null, null, null, null, null,
@@ -20,17 +20,17 @@ function run_test() {
 
   let dir = getUpdatesDir();
   dir.append("0");
-  logTestInfo("testing " + dir.path + " should exist");
+  debugDump("testing " + dir.path + " should exist");
   do_check_true(dir.exists());
 
   let statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
-  logTestInfo("testing " + statusFile.path + " should not exist");
+  debugDump("testing " + statusFile.path + " should not exist");
   do_check_false(statusFile.exists());
 
-  logTestInfo("testing activeUpdate == null");
+  debugDump("testing activeUpdate == null");
   do_check_eq(gUpdateManager.activeUpdate, null);
-  logTestInfo("testing updateCount == 0");
+  debugDump("testing updateCount == 0");
   do_check_eq(gUpdateManager.updateCount, 0);
 
   doTestFinish();

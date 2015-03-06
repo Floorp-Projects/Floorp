@@ -54,8 +54,8 @@ function checkUpdateApplied() {
  */
 function finishCheckUpdateApplied() {
   if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
+    debugDump("testing last modified time on the apply to directory has " +
+              "changed after a successful update (bug 600098)");
     let now = Date.now();
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -64,28 +64,28 @@ function finishCheckUpdateApplied() {
 
   let distributionDir = getApplyDirFile(DIR_RESOURCES + "distribution", true);
   if (IS_MACOSX) {
-    logTestInfo("testing that the distribution directory is moved from the " +
-                "old location to the new location");
-    logTestInfo("testing " + distributionDir.path + " should exist");
+    debugDump("testing that the distribution directory is moved from the " +
+              "old location to the new location");
+    debugDump("testing " + distributionDir.path + " should exist");
     do_check_true(distributionDir.exists());
 
     let testFile = getApplyDirFile(DIR_RESOURCES + "distribution/testFile", true);
-    logTestInfo("testing " + testFile.path + " should exist");
+    debugDump("testing " + testFile.path + " should exist");
     do_check_true(testFile.exists());
 
     testFile = getApplyDirFile(DIR_RESOURCES + "distribution/test/testFile", true);
-    logTestInfo("testing " + testFile.path + " should exist");
+    debugDump("testing " + testFile.path + " should exist");
     do_check_true(testFile.exists());
 
     distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    logTestInfo("testing " + distributionDir.path + " shouldn't exist");
+    debugDump("testing " + distributionDir.path + " shouldn't exist");
     do_check_false(distributionDir.exists());
 
     checkUpdateLogContains("Moving old distribution directory to new location");
   } else {
-    logTestInfo("testing that files aren't added with an add-if instruction " +
-                "when the file's destination directory doesn't exist");
-    logTestInfo("testing " + distributionDir.path + " shouldn't exist");
+    debugDump("testing that files aren't added with an add-if instruction " +
+              "when the file's destination directory doesn't exist");
+    debugDump("testing " + distributionDir.path + " shouldn't exist");
     do_check_false(distributionDir.exists());
   }
 
