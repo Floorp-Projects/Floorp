@@ -1,0 +1,90 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1080109 - Clear ServiceWorker registrations for specific domains</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function start() {
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
+
+    function checkDomainRegistration(domain, exists) {
+      return testFrame("http://" + domain + "/tests/dom/workers/test/serviceworkers/sanitize/example_check_and_unregister.html").then(function(body) {
+        if (body === "FAIL") {
+          ok(false, "Error acquiring registration or unregistering for " + domain);
+        } else {
+          if (exists) {
+            ok(body === true, "Expected " + domain + " to still have a registration.");
+          } else {
+            ok(body === false, "Expected " + domain + " to have no registration.");
+          }
+        }
+      });
+    }
+
+    registerSW().then(function() {
+      return testFrame("http://example.com/tests/dom/workers/test/serviceworkers/sanitize/frame.html").then(function(body) {
+        is(body, "intercepted", "Expected serviceworker to intercept request");
+      });
+    }).then(function() {
+      SpecialPowers.removeServiceWorkerDataForExampleDomain();
+    }).then(function() {
+      return checkDomainRegistration("prefixexample.com", true /* exists */)
+        .then(function(e) {
+          return checkDomainRegistration("example.com", false /* exists */);
+        }).then(function(e) {
+          SimpleTest.finish();
+        });
+    })
+  }
+
+  function testFrame(src) {
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = src;
+      window.onmessage = function(message) {
+        window.onmessage = null;
+        iframe.src = "about:blank";
+        document.body.removeChild(iframe);
+        iframe = null;
+        SpecialPowers.exactGC(window, function() {
+          resolve(message.data);
+        });
+      };
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function registerSW() {
+    return testFrame("http://example.com/tests/dom/workers/test/serviceworkers/sanitize/register.html")
+           .then(function(e) {
+              // Register for prefixexample.com and then ensure it does not get unregistered.
+              return testFrame("http://prefixexample.com/tests/dom/workers/test/serviceworkers/sanitize/register.html");
+            });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, function() {
+    start();
+  });
+</script>
+</pre>
+</body>
+</html>
+
