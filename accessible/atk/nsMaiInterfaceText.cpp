@@ -229,14 +229,20 @@ static gint
 getCaretOffsetCB(AtkText *aText)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return 0;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return 0;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return 0;
+    return static_cast<gint>(text->CaretOffset());
+  }
 
-  return static_cast<gint>(text->CaretOffset());
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return static_cast<gint>(proxy->CaretOffset());
+  }
+
+  return 0;
 }
 
 static AtkAttributeSet*
@@ -461,15 +467,23 @@ static gboolean
 setCaretOffsetCB(AtkText *aText, gint aOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole() || !text->IsValidOffset(aOffset)) {
+      return FALSE;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole() || !text->IsValidOffset(aOffset))
-    return FALSE;
+    text->SetCaretOffset(aOffset);
+    return TRUE;
+  }
 
-  text->SetCaretOffset(aOffset);
-  return TRUE;
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    if (proxy->SetCaretOffset(aOffset)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 }
 

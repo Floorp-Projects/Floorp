@@ -150,6 +150,22 @@ ProxyAccessible::Relations(nsTArray<RelationType>* aTypes,
 }
 
 int32_t
+ProxyAccessible::CaretOffset()
+{
+  int32_t offset = 0;
+  unused << mDoc->SendCaretOffset(mID, &offset);
+  return offset;
+}
+
+bool
+ProxyAccessible::SetCaretOffset(int32_t aOffset)
+{
+  bool valid = false;
+  unused << mDoc->SendSetCaretOffset(mID, aOffset, &valid);
+  return valid;
+}
+
+int32_t
 ProxyAccessible::CharacterCount()
 {
   int32_t count = 0;

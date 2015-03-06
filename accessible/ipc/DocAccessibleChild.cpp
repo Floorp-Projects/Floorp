@@ -9,7 +9,7 @@
 #include "Accessible-inl.h"
 #include "ProxyAccessible.h"
 #include "Relation.h"
-
+#include "HyperTextAccessible-inl.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
@@ -204,6 +204,28 @@ DocAccessibleChild::RecvRelations(const uint64_t& aID,
 #include "RelationTypeMap.h"
 #undef RELATIONTYPE
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCaretOffset(const uint64_t& aID, int32_t* aOffset)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aOffset = acc && acc->IsTextRole() ? acc->CaretOffset() : 0;
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSetCaretOffset(const uint64_t& aID,
+                                       const int32_t& aOffset,
+                                       bool* aRetVal)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aRetVal = false;
+  if (acc && acc->IsTextRole() && acc->IsValidOffset(aOffset)) {
+    *aRetVal = true;
+    acc->SetCaretOffset(aOffset);
+  }
   return true;
 }
 
