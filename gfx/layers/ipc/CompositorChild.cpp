@@ -339,9 +339,11 @@ bool
 CompositorChild::RecvSharedCompositorFrameMetrics(
     const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
     const CrossProcessMutexHandle& handle,
+    const uint64_t& aLayersId,
     const uint32_t& aAPZCId)
 {
-  SharedFrameMetricsData* data = new SharedFrameMetricsData(metrics, handle, aAPZCId);
+  SharedFrameMetricsData* data = new SharedFrameMetricsData(
+    metrics, handle, aLayersId, aAPZCId);
   mFrameMetricsTable.Put(data->GetViewID(), data);
   return true;
 }
@@ -364,9 +366,11 @@ CompositorChild::RecvReleaseSharedCompositorFrameMetrics(
 CompositorChild::SharedFrameMetricsData::SharedFrameMetricsData(
     const ipc::SharedMemoryBasic::Handle& metrics,
     const CrossProcessMutexHandle& handle,
-    const uint32_t& aAPZCId) :
-    mMutex(nullptr),
-    mAPZCId(aAPZCId)
+    const uint64_t& aLayersId,
+    const uint32_t& aAPZCId)
+  : mMutex(nullptr)
+  , mLayersId(aLayersId)
+  , mAPZCId(aAPZCId)
 {
   mBuffer = new ipc::SharedMemoryBasic(metrics);
   mBuffer->Map(sizeof(FrameMetrics));
@@ -401,6 +405,12 @@ CompositorChild::SharedFrameMetricsData::GetViewID()
   // Not locking to read of mScrollId since it should not change after being
   // initially set.
   return frame->GetScrollId();
+}
+
+uint64_t
+CompositorChild::SharedFrameMetricsData::GetLayersId() const
+{
+  return mLayersId;
 }
 
 uint32_t
