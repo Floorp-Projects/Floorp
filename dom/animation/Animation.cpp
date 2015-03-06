@@ -294,7 +294,7 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
       // from the last animation to first. For animations targetting the
       // same property, the later one wins. So if this property is already set,
       // we should not override it.
-      return;
+      continue;
     }
 
     aSetProperties.AddProperty(prop.mProperty);
