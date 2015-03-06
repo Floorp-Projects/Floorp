@@ -17,8 +17,8 @@ function run_test() {
   overrideXHR(xhr_pt1);
   standardInit();
 
-  logTestInfo("testing that error codes set from a directory provider propagate" +
-              "up to AUS.downloadUpdate() correctly (Bug 794211).");
+  debugDump("testing that error codes set from a directory provider propagate" +
+            "up to AUS.downloadUpdate() correctly (Bug 794211).");
 
   gDirProvider = new FakeDirProvider();
 
