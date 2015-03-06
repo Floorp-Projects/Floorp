@@ -705,6 +705,10 @@ this.TelemetryEnvironment = {
         continue;
       }
 
+      // Make sure to have valid dates.
+      let installDate = new Date(Math.max(0, addon.installDate));
+      let updateDate = new Date(Math.max(0, addon.updateDate));
+
       activeAddons[addon.id] = {
         blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
         description: addon.description,
@@ -716,8 +720,8 @@ this.TelemetryEnvironment = {
         type: addon.type,
         foreignInstall: addon.foreignInstall,
         hasBinaryComponents: addon.hasBinaryComponents,
-        installDay: truncateToDays(addon.installDate.getTime()),
-        updateDay: truncateToDays(addon.updateDate.getTime()),
+        installDay: truncateToDays(installDate.getTime()),
+        updateDay: truncateToDays(updateDate.getTime()),
       };
     }
 
@@ -740,6 +744,10 @@ this.TelemetryEnvironment = {
     // We only store information about the active theme.
     let theme = themes.find(theme => theme.isActive);
     if (theme) {
+      // Make sure to have valid dates.
+      let installDate = new Date(Math.max(0, theme.installDate));
+      let updateDate = new Date(Math.max(0, theme.updateDate));
+
       activeTheme = {
         id: theme.id,
         blocklisted: (theme.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
@@ -751,8 +759,8 @@ this.TelemetryEnvironment = {
         scope: theme.scope,
         foreignInstall: theme.foreignInstall,
         hasBinaryComponents: theme.hasBinaryComponents,
-        installDay: truncateToDays(theme.installDate.getTime()),
-        updateDay: truncateToDays(theme.updateDate.getTime()),
+        installDay: truncateToDays(installDate.getTime()),
+        updateDay: truncateToDays(updateDate.getTime()),
       };
     }
 
