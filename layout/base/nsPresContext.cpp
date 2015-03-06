@@ -1852,6 +1852,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
   }
 
   mUsesRootEMUnits = false;
+  mUsesExChUnits = false;
   mUsesViewportUnits = false;
   RebuildUserFontSet();
   RebuildCounterStyles();
