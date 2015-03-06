@@ -10,3 +10,10 @@ EXTRA_JS_MODULES += [
   'AboutReader.jsm',
   'ReaderMode.jsm'
 ]
+
+EXTRA_JS_MODULES.reader = [
+  'JSDOMParser.js',
+  'Readability.js',
+  'ReaderWorker.js',
+  'ReaderWorker.jsm'
+]
