@@ -358,18 +358,10 @@
             gBrowser.selectedBrowser.focus();
 
             let isMouseEvent = aTriggeringEvent instanceof MouseEvent;
-            let altEnter = !isMouseEvent && aTriggeringEvent && aTriggeringEvent.altKey;
-
-            if (altEnter) {
-              // XXX This was added a long time ago, and I'm not sure why it is
-              // necessary. Alt+Enter's default action might cause a system beep,
-              // or something like that?
-              aTriggeringEvent.preventDefault();
-              aTriggeringEvent.stopPropagation();
-            }
 
             // If the current tab is empty, ignore Alt+Enter (just reuse this tab)
-            altEnter = altEnter && !isTabEmpty(gBrowser.selectedTab);
+            let altEnter = !isMouseEvent && aTriggeringEvent &&
+              aTriggeringEvent.altKey && !isTabEmpty(gBrowser.selectedTab);
 
             if (isMouseEvent || altEnter) {
               // Use the standard UI link behaviors for clicks or Alt+Enter
