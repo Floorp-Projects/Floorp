@@ -1,0 +1,113 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Validate Interfaces Exposed to Service Workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="../worker_driver.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+  function setupSW(registration) {
+    var worker = registration.waiting ||
+                 registration.active;
+    window.onmessage = function(event) {
+      if (event.data.type == 'finish') {
+        registration.unregister().then(function(success) {
+          ok(success, "The service worker should be unregistered successfully");
+
+          SimpleTest.finish();
+        });
+      } else if (event.data.type == 'status') {
+        ok(event.data.status, event.data.msg);
+
+      } else if (event.data.type == 'getPrefs') {
+        var result = {};
+        event.data.prefs.forEach(function(pref) {
+          result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
+        });
+        worker.postMessage({
+          type: 'returnPrefs',
+          prefs: event.data.prefs,
+          result: result
+        });
+
+      } else if (event.data.type == 'getPermissions') {
+        var result = {};
+        event.data.permissions.forEach(function(permission) {
+          result[permission] = SpecialPowers.hasPermission(permission, window.document);
+        });
+        worker.postMessage({
+          type: 'returnPermissions',
+          permissions: event.data.permissions,
+          result: result
+        });
+
+      } else if (event.data.type == 'getVersion') {
+        var result = SpecialPowers.Cc['@mozilla.org/xre/app-info;1'].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+        worker.postMessage({
+          type: 'returnVersion',
+          result: result
+        });
+
+      } else if (event.data.type == 'getUserAgent') {
+        worker.postMessage({
+          type: 'returnUserAgent',
+          result: navigator.userAgent
+        });
+      } else if (event.data.type == 'getOSCPU') {
+        worker.postMessage({
+          type: 'returnOSCPU',
+          result: navigator.oscpu
+        });
+      } else if (event.data.type == 'getIsB2G') {
+        worker.postMessage({
+          type: 'returnIsB2G',
+          result: SpecialPowers.isB2G
+        });
+      }
+    }
+
+    worker.onerror = function(event) {
+      ok(false, 'Worker had an error: ' + event.data);
+      SimpleTest.finish();
+    };
+
+    var iframe = document.createElement("iframe");
+    iframe.src = "message_receiver.html";
+    iframe.onload = function() {
+      worker.postMessage({ script: "test_serviceworker_interfaces.js" });
+    };
+    document.body.appendChild(iframe);
+  }
+
+  function runTest() {
+    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."})
+      .then(function(registration) {
+        if (registration.installing) {
+          registration.installing.onstatechange = function(e) {
+            setupSW(registration);
+            e.target.onstatechange = null;
+          };
+        } else {
+          setupSW(registration);
+        }
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+      ["dom.fetch.enabled", true],
+      ["dom.caches.enabled", true]
+    ]}, runTest);
+  };
+</script>
+</body>
+</html>
