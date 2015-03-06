@@ -12,6 +12,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TypedEnumBits.h"
@@ -60,6 +61,9 @@ public:
 
   virtual void Start() = 0;
 
+  virtual bool
+  IsRegisterJob() const { return false; }
+
 protected:
   explicit ServiceWorkerJob(ServiceWorkerJobQueue* aQueue)
     : mQueue(aQueue)
@@ -78,8 +82,13 @@ class ServiceWorkerJobQueue final
   friend class ServiceWorkerJob;
 
   nsTArray<nsRefPtr<ServiceWorkerJob>> mJobs;
+  bool mPopping;
 
 public:
+  explicit ServiceWorkerJobQueue()
+    : mPopping(false)
+  {}
+
   ~ServiceWorkerJobQueue()
   {
     if (!mJobs.IsEmpty()) {
@@ -99,11 +108,16 @@ public:
     }
   }
 
+  void
+  CancelJobs();
+
   // Only used by HandleError, keep it that way!
   ServiceWorkerJob*
   Peek()
   {
-    MOZ_ASSERT(!mJobs.IsEmpty());
+    if (mJobs.IsEmpty()) {
+      return nullptr;
+    }
     return mJobs[0];
   }
 
@@ -111,6 +125,10 @@ private:
   void
   Pop()
   {
+    MOZ_ASSERT(!mPopping,
+               "Pop() called recursively, did you write a job which calls Done() synchronously from Start()?");
+    AutoRestore<bool> savePopping(mPopping);
+    mPopping = true;
     MOZ_ASSERT(!mJobs.IsEmpty());
     mJobs.RemoveElementAt(0);
     if (!mJobs.IsEmpty()) {
@@ -304,6 +322,7 @@ public:
 class ServiceWorkerManager final
   : public nsIServiceWorkerManager
   , public nsIIPCBackgroundChildCreateCallback
+  , public nsIObserver
 {
   friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
@@ -316,6 +335,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERMANAGER
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+  NS_DECL_NSIOBSERVER
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SERVICEWORKERMANAGER_IMPL_IID)
 
   static ServiceWorkerManager* FactoryCreate()
@@ -336,7 +356,7 @@ public:
   // memmoves associated with inserting stuff in the middle of the array.
   nsTArray<nsCString> mOrderedScopes;
 
-  // Scope to registration. 
+  // Scope to registration.
   // The scope should be a fully qualified valid URL.
   nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
 
@@ -397,6 +417,11 @@ public:
 
  void LoadRegistrations(
                  const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
+
+  // Used by remove() and removeAll() when clearing history.
+  // MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!
+  void
+  ForceUnregister(ServiceWorkerRegistrationInfo* aRegistration);
 
   NS_IMETHOD
   AddRegistrationEventListener(const nsAString& aScope,
@@ -503,9 +528,17 @@ private:
                                       void* aUnused);
 
   nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
- 
+
   void
   MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
+
+  // Does all cleanup except removing the registration from
+  // mServiceWorkerRegistrationInfos. This is useful when we clear
+  // registrations via remove()/removeAll() since we are iterating over the
+  // hashtable and can cleanly remove within the hashtable enumeration
+  // function.
+  void
+  RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
 
   mozilla::ipc::PBackgroundChild* mActor;
 

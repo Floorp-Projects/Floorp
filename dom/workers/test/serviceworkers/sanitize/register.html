@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  function done() {
+    parent.postMessage('', '*');
+  }
+
+  navigator.serviceWorker.ready.then(done);
+  navigator.serviceWorker.register("../sanitize_worker.js", {scope: "."});
+</script>
+
