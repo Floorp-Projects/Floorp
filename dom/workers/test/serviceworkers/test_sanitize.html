@@ -1,0 +1,87 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1080109 - Clear ServiceWorker registrations for all domains</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function start() {
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
+
+    function testNotIntercepted() {
+      testFrame("sanitize/frame.html").then(function(body) {
+        is(body, "FAIL", "Expected frame to not be controlled");
+        // No need to unregister since that already happened.
+        navigator.serviceWorker.getRegistration("sanitize/foo").then(function(reg) {
+          ok(reg === undefined, "There should no longer be a valid registration");
+        }, function(e) {
+          ok(false, "getRegistration() should not error");
+        }).then(function(e) {
+          SimpleTest.finish();
+        });
+      });
+    }
+
+    registerSW().then(function() {
+      return testFrame("sanitize/frame.html").then(function(body) {
+        is(body, "intercepted", "Expected serviceworker to intercept request");
+      });
+    }).then(function() {
+      return navigator.serviceWorker.getRegistration("sanitize/foo");
+    }).then(function(reg) {
+      reg.active.onstatechange = function(e) {
+        e.target.onstatechange = null;
+        ok(e.target.state, "redundant", "On clearing data, serviceworker should become redundant");
+        testNotIntercepted();
+      };
+    }).then(function() {
+      SpecialPowers.removeAllServiceWorkerData();
+    });
+  }
+
+  function testFrame(src) {
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = src;
+      window.onmessage = function(message) {
+        window.onmessage = null;
+        iframe.src = "about:blank";
+        document.body.removeChild(iframe);
+        iframe = null;
+        SpecialPowers.exactGC(window, function() {
+          resolve(message.data);
+        });
+      };
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function registerSW() {
+    return testFrame("sanitize/register.html");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, function() {
+    start();
+  });
+</script>
+</pre>
+</body>
+</html>
+

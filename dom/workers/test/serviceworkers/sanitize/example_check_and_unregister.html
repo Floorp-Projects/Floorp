@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<script>
+  function done(exists) {
+    parent.postMessage(exists, '*');
+  }
+
+  function fail() {
+    parent.postMessage("FAIL", '*');
+  }
+
+  navigator.serviceWorker.getRegistration(".").then(function(reg) {
+    if (reg) {
+      reg.unregister().then(done.bind(undefined, true), fail);
+    } else {
+      dump("getRegistration() returned undefined registration\n");
+      done(false);
+    }
+  }, function(e) {
+    dump("getRegistration() failed\n");
+    fail();
+  });
+</script>
+
