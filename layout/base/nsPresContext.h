@@ -1026,6 +1026,14 @@ public:
     mUsesRootEMUnits = aValue;
   }
 
+  bool UsesExChUnits() const {
+    return mUsesExChUnits;
+  }
+
+  void SetUsesExChUnits(bool aValue) {
+    mUsesExChUnits = aValue;
+  }
+
   bool UsesViewportUnits() const {
     return mUsesViewportUnits;
   }
@@ -1348,6 +1356,8 @@ protected:
 
   // Does the associated document use root-em (rem) units?
   unsigned              mUsesRootEMUnits : 1;
+  // Does the associated document use ex or ch units?
+  unsigned              mUsesExChUnits : 1;
   // Does the associated document use viewport units (vw/vh/vmin/vmax)?
   unsigned              mUsesViewportUnits : 1;
 
