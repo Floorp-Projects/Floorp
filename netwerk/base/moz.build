@@ -146,6 +146,7 @@ EXPORTS += [
     'nsMIMEInputStream.h',
     'nsNetUtil.h',
     'nsReadLine.h',
+    'nsSimpleURI.h',
     'nsStreamListenerWrapper.h',
     'nsTemporaryFileInputStream.h',
     'nsURIHashKey.h',
