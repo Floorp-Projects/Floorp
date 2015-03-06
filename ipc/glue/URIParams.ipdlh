@@ -76,12 +76,19 @@ union URIParams
   JARURIParams;
   IconURIParams;
   NullPrincipalURIParams;
+  JSURIParams;
 };
 
 union OptionalURIParams
 {
   void_t;
   URIParams;
+};
+
+struct JSURIParams
+{
+  SimpleURIParams simpleParams;
+  OptionalURIParams baseURI;
 };
 
 } // namespace ipc
