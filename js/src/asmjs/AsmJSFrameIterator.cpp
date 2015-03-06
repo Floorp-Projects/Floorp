@@ -115,8 +115,8 @@ AsmJSFrameIterator::computeLine(uint32_t *column) const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 10;
-static const unsigned StoredFP = 14;
+static const unsigned PushedFP = 13;
+static const unsigned StoredFP = 20;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;

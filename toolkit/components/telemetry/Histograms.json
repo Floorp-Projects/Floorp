@@ -4338,6 +4338,12 @@
     "extended_statistics_ok": true,
     "description": "Number of histograms with total count low errors"
   },
+  "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of discarded content payloads."
+  },
   "TELEMETRY_FILES_EVICTED": {
     "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "36",
@@ -7465,6 +7471,13 @@
     "n_buckets" : 50,
     "extended_statistics_ok": true,
     "description": "Total number of saved logins, including those that cannot be decrypted"
+  },
+  "PWMGR_NUM_HTTPAUTH_PASSWORDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 750,
+    "n_buckets" : 50,
+    "description": "Number of HTTP Auth logins"
   },
   "PWMGR_LOGIN_LAST_USED_DAYS": {
     "expires_in_version": "never",

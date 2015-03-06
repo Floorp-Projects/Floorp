@@ -576,6 +576,7 @@ nsContextMenu.prototype = {
     this.linkURL           = "";
     this.linkURI           = null;
     this.linkProtocol      = "";
+    this.linkHasNoReferrer = false;
     this.onMathML          = false;
     this.inFrame           = false;
     this.inSrcdocFrame     = false;
@@ -738,6 +739,7 @@ nsContextMenu.prototype = {
           this.linkProtocol = this.getLinkProtocol();
           this.onMailtoLink = (this.linkProtocol == "mailto");
           this.onSaveableLink = this.isLinkSaveable( this.link );
+          this.linkHasNoReferrer = BrowserUtils.linkHasNoReferrer(elem);
         }
 
         // Background image?  Don't bother if we've already found a
@@ -864,10 +866,10 @@ nsContextMenu.prototype = {
     return aNode.spellcheck;
   },
 
-  _openLinkInParameters : function (doc, extra) {
-    let params = { charset: doc.characterSet,
-                   referrerURI: doc.documentURIObject,
-                   noReferrer: BrowserUtils.linkHasNoReferrer(this.link) };
+  _openLinkInParameters : function (extra) {
+    let params = { charset: gContextMenuContentData.charSet,
+                   referrerURI: gContextMenuContentData.documentURIObject,
+                   noReferrer: this.linkHasNoReferrer };
     for (let p in extra)
       params[p] = extra[p];
     return params;
@@ -875,41 +877,38 @@ nsContextMenu.prototype = {
 
   // Open linked-to URL in a new window.
   openLink : function () {
-    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, this.principal);
-    openLinkIn(this.linkURL, "window", this._openLinkInParameters(doc));
+    openLinkIn(this.linkURL, "window", this._openLinkInParameters());
   },
 
   // Open linked-to URL in a new private window.
   openLinkInPrivateWindow : function () {
-    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, this.principal);
     openLinkIn(this.linkURL, "window",
-               this._openLinkInParameters(doc, { private: true }));
+               this._openLinkInParameters({ private: true }));
   },
 
   // Open linked-to URL in a new tab.
   openLinkInTab: function() {
-    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, this.principal);
-    var referrerURI = doc.documentURIObject;
+    let referrerURI = gContextMenuContentData.documentURIObject;
 
     // if the mixedContentChannel is present and the referring URI passes
     // a same origin check with the target URI, we can preserve the users
     // decision of disabling MCB on a page for it's child tabs.
-    var persistAllowMixedContentInChildTab = false;
+    let persistAllowMixedContentInChildTab = false;
 
     if (this.browser.docShell && this.browser.docShell.mixedContentChannel) {
       const sm = Services.scriptSecurityManager;
       try {
-        var targetURI = this.linkURI;
+        let targetURI = this.linkURI;
         sm.checkSameOriginURI(referrerURI, targetURI, false);
         persistAllowMixedContentInChildTab = true;
       }
       catch (e) { }
     }
 
-    let params = this._openLinkInParameters(doc, {
+    let params = this._openLinkInParameters({
       allowMixedContent: persistAllowMixedContentInChildTab,
     });
     openLinkIn(this.linkURL, "tab", params);
@@ -917,18 +916,15 @@ nsContextMenu.prototype = {
 
   // open URL in current tab
   openLinkInCurrent: function() {
-    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, this.principal);
-    openLinkIn(this.linkURL, "current", this._openLinkInParameters(doc));
+    openLinkIn(this.linkURL, "current", this._openLinkInParameters());
   },
 
   // Open frame in a new tab.
   openFrameInTab: function() {
-    var doc = this.target.ownerDocument;
-    var frameURL = doc.location.href;
-    var referrer = doc.referrer;
-    openLinkIn(frameURL, "tab",
-               { charset: doc.characterSet,
+    let referrer = gContextMenuContentData.referrer;
+    openLinkIn(gContextMenuContentData.docLocation, "tab",
+               { charset: gContextMenuContentData.charSet,
                  referrerURI: referrer ? makeURI(referrer) : null });
   },
 
@@ -939,25 +935,21 @@ nsContextMenu.prototype = {
 
   // Open clicked-in frame in its own window.
   openFrame: function() {
-    var doc = this.target.ownerDocument;
-    var frameURL = doc.location.href;
-    var referrer = doc.referrer;
-    openLinkIn(frameURL, "window",
-               { charset: doc.characterSet,
+    let referrer = gContextMenuContentData.referrer;
+    openLinkIn(gContextMenuContentData.docLocation, "window",
+               { charset: gContextMenuContentData.charSet,
                  referrerURI: referrer ? makeURI(referrer) : null });
   },
 
   // Open clicked-in frame in the same window.
   showOnlyThisFrame: function() {
-    var doc = this.target.ownerDocument;
-    var frameURL = doc.location.href;
-
-    urlSecurityCheck(frameURL,
+    urlSecurityCheck(gContextMenuContentData.docLocation,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    var referrer = doc.referrer;
-    openUILinkIn(frameURL, "current", { disallowInheritPrincipal: true,
-                                        referrerURI: referrer ? makeURI(referrer) : null });
+    let referrer = gContextMenuContentData.referrer;
+    openUILinkIn(gContextMenuContentData.docLocation, "current",
+                 { disallowInheritPrincipal: true,
+                   referrerURI: referrer ? makeURI(referrer) : null });
   },
 
   reload: function(event) {

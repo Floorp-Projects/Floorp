@@ -467,7 +467,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     try {
       let doc = this.anonymousContentDocument;
       doc.removeAnonymousContent(this._content);
-    } catch (e) {console.error(e)}
+    } catch (e) {}
     events.off(this.tabActor, "navigate", this._onNavigate);
     this.tabActor = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
@@ -610,7 +610,6 @@ function AutoRefreshHighlighter(tabActor) {
   EventEmitter.decorate(this);
 
   this.tabActor = tabActor;
-  this.browser = tabActor.browser;
   this.win = tabActor.window;
 
   this.currentNode = null;
@@ -759,7 +758,6 @@ AutoRefreshHighlighter.prototype = {
 
     this.tabActor = null;
     this.win = null;
-    this.browser = null;
     this.currentNode = null;
     this.layoutHelpers = null;
   }

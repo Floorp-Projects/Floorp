@@ -3,48 +3,33 @@
 
 "use strict";
 
+const { RootActor } = devtools.require("devtools/server/actors/root");
+
 function test_requestTypes_request(aClient, anActor)
 {
-  var calls = [];
+  aClient.request({ to: "root", type: "requestTypes" }, function (aResponse) {
+    var expectedRequestTypes = Object.keys(RootActor.
+                                           prototype.
+                                           requestTypes);
 
-  calls.push(test_existent_actor(aClient, anActor));
+    do_check_true(Array.isArray(aResponse.requestTypes));
+    do_check_eq(JSON.stringify(aResponse.requestTypes),
+                JSON.stringify(expectedRequestTypes));
 
-  promise.all(calls).then(() => {
     aClient.close(() => {
       do_test_finished();
     });
   });
 }
 
-function test_existent_actor(aClient, anActor)
-{
-  let deferred = promise.defer();
-
-  aClient.request({ to: anActor, type: "requestTypes" }, function (aResponse) {
-    var expectedRequestTypes = Object.keys(DebuggerServer.
-                                           globalActorFactories["chromeDebugger"].
-                                           _getConstructor().
-                                           prototype.requestTypes);
-
-    do_check_true(Array.isArray(aResponse.requestTypes));
-    do_check_eq(JSON.stringify(aResponse.requestTypes),
-                JSON.stringify(expectedRequestTypes));
-
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
 function run_test()
 {
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
+
   var client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect(function() {
-    client.listTabs(function(aResponse) {
-      test_requestTypes_request(client, aResponse.chromeDebugger);
-    });
+    test_requestTypes_request(client);
   });
 
   do_test_pending();
