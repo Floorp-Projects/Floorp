@@ -508,7 +508,12 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
             TrackInfo *info = &mTracks.editItemAt(trackIndex);
             sp<AnotherPacketSource> source = info->mSource;
             if (source != NULL) {
+#if ANDROID_VERSION >= 21
+                source->queueDiscontinuity(ATSParser::DISCONTINUITY_SEEK, NULL,
+                                           true /* discard */);
+#else
                 source->queueDiscontinuity(ATSParser::DISCONTINUITY_SEEK, NULL);
+#endif
             }
 
             break;
