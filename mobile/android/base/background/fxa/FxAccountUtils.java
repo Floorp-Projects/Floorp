@@ -12,12 +12,18 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.R.string;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.HKDF;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.PBKDF2;
+
+import android.content.Context;
+import android.os.Build;
 
 public class FxAccountUtils {
   private static final String LOG_TAG = FxAccountUtils.class.getSimpleName();
@@ -196,5 +202,18 @@ public class FxAccountUtils {
   public static String getAudienceForURL(String serverURI) throws URISyntaxException {
     URI uri = new URI(serverURI);
     return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), null, null, null).toString();
+  }
+
+  public static String defaultClientName(Context context) {
+    String name = AppConstants.MOZ_APP_DISPLAYNAME; // The display name is never translated.
+    // Change "Firefox Aurora" or similar into "Aurora".
+    if (name.contains("Aurora")) {
+        name = "Aurora";
+    } else if (name.contains("Beta")) {
+        name = "Beta";
+    } else if (name.contains("Nightly")) {
+        name = "Nightly";
+    }
+    return context.getResources().getString(R.string.sync_default_client_name, name, android.os.Build.MODEL);
   }
 }

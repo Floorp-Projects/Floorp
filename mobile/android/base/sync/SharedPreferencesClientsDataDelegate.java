@@ -4,8 +4,7 @@
 
 package org.mozilla.gecko.sync;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.R;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -54,16 +53,7 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
 
   @Override
   public String getDefaultClientName() {
-    String name = AppConstants.MOZ_APP_DISPLAYNAME; // The display name is never translated.
-    // Change "Firefox Aurora" or similar into "Aurora".
-    if (name.contains("Aurora")) {
-        name = "Aurora";
-    } else if (name.contains("Beta")) {
-        name = "Beta";
-    } else if (name.contains("Nightly")) {
-        name = "Nightly";
-    }
-    return context.getResources().getString(R.string.sync_default_client_name, name, android.os.Build.MODEL);
+    return FxAccountUtils.defaultClientName(context);
   }
 
   @Override
