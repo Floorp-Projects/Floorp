@@ -41,9 +41,11 @@ function callHandleEvent() {
   gXHR.status = 400;
   gXHR.responseText = gResponseBody;
   try {
-    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
-    gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+    if (gResponseBody) {
+      let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                   createInstance(Ci.nsIDOMParser);
+      gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+    }
   } catch (e) {
     gXHR.responseXML = null;
   }
@@ -224,9 +226,9 @@ function check_test_pt03() {
   run_test_pt04();
 }
 
-// Empty update xml
+// Empty update xml (an empty xml file returns a root node name of parsererror)
 function run_test_pt04() {
-  gResponseBody = "\n";
+  gResponseBody = "<parsererror/>";
   run_test_helper_pt1("testing empty update xml",
                       null, run_test_pt05);
 }
