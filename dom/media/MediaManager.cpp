@@ -1098,6 +1098,8 @@ public:
     MOZ_ASSERT(!mOnFailure);
 
     NS_DispatchToMainThread(runnable);
+    // Do after ErrorCallbackRunnable Run()s, as it checks active window list
+    NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, mListener));
   }
 
   void
@@ -1154,11 +1156,8 @@ public:
       manager->RemoveFromWindowList(mWindowID, mListener);
     } else {
       // This will re-check the window being alive on main-thread
-      // Note: we must remove the listener on MainThread as well
+      // and remove the listener on MainThread as well
       Fail(aName, aMessage);
-
-      // MUST happen after ErrorCallbackRunnable Run()s, as it checks the active window list
-      NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, mListener));
     }
 
     MOZ_ASSERT(!mOnSuccess);
