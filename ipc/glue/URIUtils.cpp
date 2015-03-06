@@ -14,6 +14,7 @@
 #include "nsJARURI.h"
 #include "nsIIconURI.h"
 #include "nsNullPrincipalURI.h"
+#include "nsJSProtocolHandler.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -85,6 +86,10 @@ DeserializeURI(const URIParams& aParams)
 
     case URIParams::TJARURIParams:
       serializable = do_CreateInstance(kJARURICID);
+      break;
+
+    case URIParams::TJSURIParams:
+      serializable = new nsJSURI();
       break;
 
     case URIParams::TIconURIParams:
