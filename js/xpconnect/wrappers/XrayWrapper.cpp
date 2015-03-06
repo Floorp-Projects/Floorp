@@ -119,25 +119,10 @@ JSObject *
 XrayAwareCalleeGlobal(JSObject *fun)
 {
   MOZ_ASSERT(js::IsFunctionObject(fun));
-
-  if (!js::FunctionHasNativeReserved(fun)) {
-      // Just a normal function, no Xrays involved.
-      return js::GetGlobalForObjectCrossCompartment(fun);
-  }
-
-  // The functions we expect here have the Xray wrapper they're associated with
-  // in their XRAY_DOM_FUNCTION_PARENT_WRAPPER_SLOT and, in a debug build, their
-  // JSNative in their XRAY_DOM_FUNCTION_NATIVE_SLOT_FOR_ASSERT.  Assert that
-  // last bit.
-  MOZ_ASSERT(js::GetFunctionNativeReserved(fun, XRAY_DOM_FUNCTION_NATIVE_SLOT_FOR_ASSERT).toPrivate() ==
-             js::GetFunctionObjectNative(fun));
-
-  Value v =
-      js::GetFunctionNativeReserved(fun, XRAY_DOM_FUNCTION_PARENT_WRAPPER_SLOT);
-  MOZ_ASSERT(IsXrayWrapper(&v.toObject()));
-
-  JSObject *xrayTarget = js::UncheckedUnwrap(&v.toObject());
-  return js::GetGlobalForObjectCrossCompartment(xrayTarget);
+  JSObject *scope = js::GetObjectParent(fun);
+  if (IsXrayWrapper(scope))
+    scope = js::UncheckedUnwrap(scope);
+  return js::GetGlobalForObjectCrossCompartment(scope);
 }
 
 JSObject *

@@ -687,6 +687,14 @@ IsCallObject(JSObject *obj);
 JS_FRIEND_API(bool)
 CanAccessObjectShape(JSObject *obj);
 
+inline JSObject *
+GetObjectParent(JSObject *obj)
+{
+    MOZ_ASSERT(!IsScopeObject(obj));
+    MOZ_ASSERT(CanAccessObjectShape(obj));
+    return reinterpret_cast<shadow::Object*>(obj)->shape->base->parent;
+}
+
 static MOZ_ALWAYS_INLINE JSCompartment *
 GetObjectCompartment(JSObject *obj)
 {
@@ -746,9 +754,6 @@ GetFunctionNativeReserved(JSObject *fun, size_t which);
 
 JS_FRIEND_API(void)
 SetFunctionNativeReserved(JSObject *fun, size_t which, const JS::Value &val);
-
-JS_FRIEND_API(bool)
-FunctionHasNativeReserved(JSObject *fun);
 
 JS_FRIEND_API(bool)
 GetObjectProto(JSContext *cx, JS::HandleObject obj, JS::MutableHandleObject proto);
