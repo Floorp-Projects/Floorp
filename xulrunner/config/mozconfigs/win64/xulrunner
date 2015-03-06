@@ -10,4 +10,6 @@ ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
 ac_add_options --disable-tests
 
+. $topsrcdir/build/win64/mozconfig.vs2013
+
 . "$topsrcdir/xulrunner/config/mozconfigs/common.override"
