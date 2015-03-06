@@ -2,23 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_plugins_ScopedMethodFactory_h
-#define mozilla_plugins_ScopedMethodFactory_h
+#ifndef mozilla_plugins_TaskFactory_h
+#define mozilla_plugins_TaskFactory_h
 
 #include <base/task.h>
 
 /*
  * This is based on the ScopedRunnableMethodFactory from ipc/chromium/src/base/task.h
- * Chromiums factories assert if tasks are created and run on different threads,
+ * Chromium's factories assert if tasks are created and run on different threads,
  * which is something we need to do in PluginModuleParent (hang UI vs. main thread).
- * ScopedMethodFactory just provides cancellable tasks that don't assert this.
+ * TaskFactory just provides cancellable tasks that don't assert this.
+ * This version also allows both ScopedMethod and regular Tasks to be generated
+ * by the same Factory object.
  */
 
 namespace mozilla {
 namespace plugins {
 
 template<class T>
-class ScopedMethodFactory : public RevocableStore
+class TaskFactory : public RevocableStore
 {
 private:
   template<class TaskType>
@@ -37,7 +39,15 @@ private:
   };
 
 public:
-  explicit ScopedMethodFactory(T* object) : object_(object) { }
+  explicit TaskFactory(T* object) : object_(object) { }
+
+  template <class TaskParamType>
+  inline TaskParamType* NewTask()
+  {
+    typedef TaskWrapper<TaskParamType> TaskWrapper;
+    TaskWrapper* task = new TaskWrapper(this);
+    return task;
+  }
 
   template <class Method>
   inline Task* NewRunnableMethod(Method method) {
@@ -84,4 +94,4 @@ private:
 } // namespace plugins
 } // namespace mozilla
 
-#endif // mozilla_plugins_ScopedMethodFactory_h
+#endif // mozilla_plugins_TaskFactory_h
