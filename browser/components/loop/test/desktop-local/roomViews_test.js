@@ -22,6 +22,7 @@ describe("loop.roomViews", function () {
     };
 
     fakeWindow = {
+      close: sinon.stub(),
       document: {},
       navigator: {
         mozLoop: fakeMozLoop
@@ -290,6 +291,32 @@ describe("loop.roomViews", function () {
         sinon.match.hasOwn("name", "setMute"));
     });
 
+    it("should dispatch a `LeaveRoom` action when the hangup button is pressed and the room has been used", function() {
+      view = mountTestComponent();
+
+      view.setState({used: true});
+
+      var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
+
+      React.addons.TestUtils.Simulate.click(hangupBtn);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.LeaveRoom());
+    });
+
+    it("should close the window when the hangup button is pressed and the room has not been used", function() {
+      view = mountTestComponent();
+
+      view.setState({used: false});
+
+      var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
+
+      React.addons.TestUtils.Simulate.click(hangupBtn);
+
+      sinon.assert.calledOnce(fakeWindow.close);
+    });
+
     describe("#componentWillUpdate", function() {
       function expectActionDispatched(view) {
         sinon.assert.calledOnce(dispatcher.dispatch);
@@ -388,18 +415,6 @@ describe("loop.roomViews", function () {
 
           TestUtils.findRenderedComponentWithType(view,
             loop.shared.views.FeedbackView);
-        });
-
-      it("should NOT render the FeedbackView if the room has not been used",
-        function() {
-          activeRoomStore.setStoreState({
-            roomState: ROOM_STATES.ENDED,
-            used: false
-          });
-
-          view = mountTestComponent();
-
-          expect(view.getDOMNode()).eql(null);
         });
     });
 
