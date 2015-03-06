@@ -118,7 +118,7 @@ interface MozNDEFRecord
 
 dictionary MozNDEFRecordOptions {
   TNF tnf = "empty";
-  Uint8Array type;
-  Uint8Array id;
-  Uint8Array payload;
+  Uint8Array? type;
+  Uint8Array? id;
+  Uint8Array? payload;
 };
