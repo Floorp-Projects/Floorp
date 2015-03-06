@@ -400,18 +400,30 @@ const SNAPSHOT_SCHEMA = {
       required: false,
       type: "object",
       properties: {
-	hasSeccompBPF: {
-	  required: true,
-	  type: "boolean"
-	},
-	canSandboxContent: {
-	  required: false,
-	  type: "boolean"
-	},
-	canSandboxMedia: {
-	  required: false,
-	  type: "boolean"
-	},
+        hasSeccompBPF: {
+          required: true,
+          type: "boolean"
+        },
+        hasSeccompTSync: {
+          required: true,
+          type: "boolean"
+        },
+        hasUserNamespaces: {
+          required: true,
+          type: "boolean"
+        },
+        hasPrivilegedUserNamespaces: {
+          required: true,
+          type: "boolean"
+        },
+        canSandboxContent: {
+          required: false,
+          type: "boolean"
+        },
+        canSandboxMedia: {
+          required: false,
+          type: "boolean"
+        },
       },
     },
   },
