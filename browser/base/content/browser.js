@@ -2105,6 +2105,12 @@ function getShortcutOrURIAndPostData(aURL, aCallback) {
   let keyword = aURL;
   let param = "";
 
+  // XXX Bug 1100294 will remove this little hack by using an async version of
+  // PlacesUtils.getURLAndPostDataForKeyword(). For now we simulate an async
+  // execution with at least a setTimeout(fn, 0).
+  let originalCallback = aCallback;
+  aCallback = data => setTimeout(() => originalCallback(data));
+
   let offset = aURL.indexOf(" ");
   if (offset > 0) {
     keyword = aURL.substr(0, offset);
