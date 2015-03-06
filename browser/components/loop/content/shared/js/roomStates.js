@@ -28,7 +28,7 @@ loop.store.ROOM_STATES = {
     FAILED: "room-failed",
     // The room is full
     FULL: "room-full",
-    // The room conversation has ended
+    // The room conversation has ended, displays the feedback view.
     ENDED: "room-ended",
     // The window is closing
     CLOSING: "room-closing"

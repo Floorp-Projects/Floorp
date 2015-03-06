@@ -24,6 +24,7 @@
 
 class gfxContext;
 class gfxFontGroup;
+class gfxUserFontEntry;
 class gfxUserFontSet;
 class gfxTextContextPaint;
 class nsIAtom;
@@ -864,6 +865,9 @@ public:
     // caches need updating.
     virtual void UpdateUserFonts();
 
+    // search for a specific userfont in the list of fonts
+    bool ContainsUserFont(const gfxUserFontEntry* aUserFont);
+
     bool ShouldSkipDrawing() const {
         return mSkipDrawing;
     }
@@ -1001,6 +1005,8 @@ protected:
             mFontCreated = true;
             mLoading = false;
         }
+
+        bool EqualsUserFont(const gfxUserFontEntry* aUserFont) const;
 
     private:
         nsRefPtr<gfxFontFamily> mFamily;

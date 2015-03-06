@@ -172,6 +172,28 @@ for (var constructor of constructors) {
       assertEq(e, 42, "should have failed converting target to index");
     }
 
+    function neuterAndConvertTo(x) {
+      return { valueOf() { neuter(tarray.buffer, "change-data"); return x; } };
+    }
+
+    // Neutering during argument processing triggers a TypeError.
+    tarray = new constructor([1, 2, 3, 4, 5]);
+    try
+    {
+      tarray.copyWithin(0, 3, neuterAndConvertTo(4));
+      throw new Error("expected to throw");
+    }
+    catch (e)
+    {
+      assertEq(e instanceof TypeError, true,
+               "expected throw with neutered array during set");
+    }
+
+    // ...unless no elements are to be copied.
+    tarray = new constructor([1, 2, 3, 4, 5]);
+    assertDeepEq(tarray.copyWithin(0, 3, neuterAndConvertTo(3)),
+                 new constructor([]));
+
     /* // fails, unclear whether it should, disabling for now
     // test with a proxy object
     var handler = {

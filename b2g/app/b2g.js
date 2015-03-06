@@ -1024,7 +1024,7 @@ pref("apz.fling_curve_function_y1", "0.0");
 pref("apz.fling_curve_function_x2", "0.80");
 pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
-pref("apz.fling_friction", "0.00238");
+pref("apz.fling_friction", "0.0019");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 
 // Tweak default displayport values to reduce the risk of running out of
@@ -1039,9 +1039,9 @@ pref("apz.axis_lock.mode", 2);
 
 // Overscroll-related settings
 pref("apz.overscroll.enabled", true);
-pref("apz.overscroll.stretch_factor", "0.15");
-pref("apz.overscroll.spring_stiffness", "0.002");
-pref("apz.overscroll.spring_friction", "0.02");
+pref("apz.overscroll.stretch_factor", "0.35");
+pref("apz.overscroll.spring_stiffness", "0.0018");
+pref("apz.overscroll.spring_friction", "0.015");
 pref("apz.overscroll.stop_distance_threshold", "5.0");
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 

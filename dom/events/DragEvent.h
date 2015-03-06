@@ -48,6 +48,11 @@ public:
                      DataTransfer* aDataTransfer,
                      ErrorResult& aError);
 
+  static already_AddRefed<DragEvent> Constructor(const GlobalObject& aGlobal,
+                                                 const nsAString& aType,
+                                                 const DragEventInit& aParam,
+                                                 ErrorResult& aRv);
+
 protected:
   ~DragEvent() {}
 };

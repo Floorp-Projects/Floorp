@@ -18,8 +18,8 @@ var gExpectedStatusResult;
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing mar downloads, mar hash verification, and " +
-              "mar download interrupted recovery");
+  debugDump("testing mar downloads, mar hash verification, and " +
+            "mar download interrupted recovery");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   // The HTTP server is only used for the mar file downloads since it is slow
@@ -64,7 +64,7 @@ function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
   gCheckFunc = check_test_helper_pt1_1;
   gNextRunFunc = aNextRunFunc;
   gExpectedStatusResult = aExpectedStatusResult;
-  logTestInfo(aMsg, Components.stack.caller);
+  debugDump(aMsg, Components.stack.caller);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 

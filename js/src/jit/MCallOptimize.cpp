@@ -24,8 +24,9 @@
 
 using mozilla::ArrayLength;
 
-using JS::TrackedStrategy;
+using JS::DoubleNaNValue;
 using JS::TrackedOutcome;
+using JS::TrackedStrategy;
 using JS::TrackedTypeSite;
 
 namespace js {
@@ -2238,7 +2239,6 @@ IonBuilder::inlineTypedArrayLength(CallInfo &callInfo)
     return InliningStatus_Inlined;
 }
 
-
 IonBuilder::InliningStatus
 IonBuilder::inlineObjectIsTypeDescr(CallInfo &callInfo)
 {
@@ -2909,19 +2909,11 @@ IonBuilder::inlineConstructTypedObject(CallInfo &callInfo, TypeDescr *descr)
 IonBuilder::InliningStatus
 IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
 {
-    if (callInfo.argc() == 1)
-        return InliningStatus_NotInlined;
-
     // Generic constructor of SIMD valuesX4.
     MIRType simdType = SimdTypeDescrToMIRType(descr->type());
 
     // TODO Happens for TYPE_FLOAT64 (Bug 1124205)
     if (simdType == MIRType_Undefined)
-        return InliningStatus_NotInlined;
-
-    // We do not inline SIMD constructors if the number of arguments does not
-    // match the number of lanes.
-    if (SimdTypeToLength(simdType) != callInfo.argc())
         return InliningStatus_NotInlined;
 
     // Take the templateObject out of Baseline ICs, such that we can box
@@ -2936,9 +2928,24 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
     InlineTypedObject *inlineTypedObject = &templateObject->as<InlineTypedObject>();
     MOZ_ASSERT(&inlineTypedObject->typeDescr() == descr);
 
-    MSimdValueX4 *values = MSimdValueX4::New(alloc(), simdType,
-                                             callInfo.getArg(0), callInfo.getArg(1),
-                                             callInfo.getArg(2), callInfo.getArg(3));
+    // When there are missing arguments, provide a default value
+    // containing the coercion of 'undefined' to the right type.
+    MConstant *defVal = nullptr;
+    if (callInfo.argc() < SimdTypeToLength(simdType)) {
+        MIRType scalarType = SimdTypeToScalarType(simdType);
+        if (scalarType == MIRType_Int32) {
+            defVal = constant(Int32Value(0));
+        } else {
+            MOZ_ASSERT(IsFloatingPointType(scalarType));
+            defVal = constant(DoubleNaNValue());
+            defVal->setResultType(scalarType);
+        }
+    }
+
+    MSimdValueX4 *values =
+        MSimdValueX4::New(alloc(), simdType,
+                          callInfo.getArgWithDefault(0, defVal), callInfo.getArgWithDefault(1, defVal),
+                          callInfo.getArgWithDefault(2, defVal), callInfo.getArgWithDefault(3, defVal));
     current->add(values);
 
     MSimdBox *obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject,

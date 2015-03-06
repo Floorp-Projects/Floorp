@@ -22,4 +22,9 @@ gdk_x11_window_get_xid(GdkWindow *window)
 {
   return(GDK_WINDOW_XWINDOW(window));
 }
+
+#ifndef GDK_IS_X11_DISPLAY
+#define GDK_IS_X11_DISPLAY(a)   (true)
+#endif
+
 #endif /* GDKX_WRAPPER_H */

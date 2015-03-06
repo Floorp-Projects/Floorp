@@ -5,23 +5,22 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
-    var t = async_test("Event phases order");
-
-    document.addEventListener('DOMContentLoaded', function(){
+async_test(function() {
+    document.addEventListener('DOMContentLoaded', this.step_func_done(function() {
         var parent = document.getElementById('parent');
         var child = document.getElementById('child');
 
         var order = [];
 
-        parent.addEventListener('click', t.step_func(function(){ order.push(1) }), true);
-        child.addEventListener('click', t.step_func(function(){ order.push(2) }), false);
-        parent.addEventListener('click', t.step_func(function(){ order.push(3) }), false);
+        parent.addEventListener('click', this.step_func(function(){ order.push(1) }), true);
+        child.addEventListener('click', this.step_func(function(){ order.push(2) }), false);
+        parent.addEventListener('click', this.step_func(function(){ order.push(3) }), false);
 
         child.click();
 
         assert_array_equals(order, [1, 2, 3]);
-        t.done();
-    });
+    }));
+}, "Event phases order");
 </script>
 
     <div id="parent">

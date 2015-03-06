@@ -38,10 +38,12 @@ let connect = Task.async(function*() {
     if (addonID) {
       gClient.listAddons(({addons}) => {
         let addonActor = addons.filter(addon => addon.id === addonID).pop();
-        openToolbox(addonActor);
+        openToolbox({ form: addonActor, chrome: true, isTabActor: false });
       });
     } else {
-      gClient.listTabs(openToolbox);
+      gClient.attachProcess().then(aResponse => {
+        openToolbox({ form: aResponse.form, chrome: true });
+      });
     }
   });
 });
@@ -52,6 +54,7 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.profiler.ui.show-platform-data", true);
   Services.prefs.setBoolPref("browser.devedition.theme.showCustomizeButton", false);
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
+  Services.prefs.setBoolPref("browser.dom.window.dump.enabled", true);
 }
 
 window.addEventListener("load", function() {
@@ -65,11 +68,12 @@ function onCloseCommand(event) {
   window.close();
 }
 
-function openToolbox(form) {
+function openToolbox({ form, chrome, isTabActor }) {
   let options = {
     form: form,
     client: gClient,
-    chrome: true
+    chrome: chrome,
+    isTabActor: isTabActor
   };
   devtools.TargetFactory.forRemoteTab(options).then(target => {
     let frame = document.getElementById("toolbox-iframe");
