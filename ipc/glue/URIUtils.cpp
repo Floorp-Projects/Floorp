@@ -17,6 +17,7 @@
 #include "nsJSProtocolHandler.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsSimpleNestedURI.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
@@ -98,6 +99,10 @@ DeserializeURI(const URIParams& aParams)
 
     case URIParams::TNullPrincipalURIParams:
       serializable = new nsNullPrincipalURI();
+      break;
+
+    case URIParams::TSimpleNestedURIParams:
+      serializable = new nsSimpleNestedURI();
       break;
 
     default:

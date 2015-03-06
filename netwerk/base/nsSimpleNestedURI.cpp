@@ -10,6 +10,8 @@
 #include "nsIObjectOutputStream.h"
 #include "nsNetUtil.h"
 
+#include "mozilla/ipc/URIUtils.h"
+
 NS_IMPL_ISUPPORTS_INHERITED(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
 
 nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
@@ -56,6 +58,43 @@ nsSimpleNestedURI::Write(nsIObjectOutputStream* aStream)
     rv = aStream->WriteCompoundObject(mInnerURI, NS_GET_IID(nsIURI),
                                       true);
     return rv;
+}
+
+// nsIIPCSerializableURI
+void
+nsSimpleNestedURI::Serialize(mozilla::ipc::URIParams& aParams)
+{
+    using namespace mozilla::ipc;
+
+    SimpleNestedURIParams params;
+    URIParams simpleParams;
+
+    nsSimpleURI::Serialize(simpleParams);
+    params.simpleParams() = simpleParams;
+
+    SerializeURI(mInnerURI, params.innerURI());
+
+    aParams = params;
+}
+
+bool
+nsSimpleNestedURI::Deserialize(const mozilla::ipc::URIParams& aParams)
+{
+    using namespace mozilla::ipc;
+
+    if (aParams.type() != URIParams::TSimpleNestedURIParams) {
+        NS_ERROR("Received unknown parameters from the other process!");
+        return false;
+    }
+
+    const SimpleNestedURIParams& params = aParams.get_SimpleNestedURIParams();
+    if (!nsSimpleURI::Deserialize(params.simpleParams()))
+        return false;
+
+    mInnerURI = DeserializeURI(params.innerURI());
+
+    NS_TryToSetImmutable(mInnerURI);
+    return true;
 }
 
 // nsINestedURI
