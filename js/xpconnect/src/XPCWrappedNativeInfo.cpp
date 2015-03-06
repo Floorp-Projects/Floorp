@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
+#include "nsPrintfCString.h"
 
 using namespace JS;
 using namespace mozilla;
@@ -231,6 +232,27 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     bool canScript;
     if (NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
         return nullptr;
+
+    bool mainProcessScriptableOnly;
+    if (NS_FAILED(aInfo->IsMainProcessScriptableOnly(&mainProcessScriptableOnly)))
+        return nullptr;
+    if (mainProcessScriptableOnly && XRE_GetProcessType() != GeckoProcessType_Default) {
+        nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+        if (console) {
+            char *intfNameChars;
+            aInfo->GetName(&intfNameChars);
+            nsPrintfCString errorMsg("Use of %s in content process is deprecated.", intfNameChars);
+
+            nsAutoString filename;
+            uint32_t lineno = 0;
+            nsJSUtils::GetCallingLocation(cx, filename, &lineno);
+            nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+            error->Init(NS_ConvertUTF8toUTF16(errorMsg),
+                        filename, EmptyString(),
+                        lineno, 0, nsIScriptError::warningFlag, "chrome javascript");
+            console->LogMessage(error);
+        }
+    }
 
     if (NS_FAILED(aInfo->GetMethodCount(&methodCount)) ||
         NS_FAILED(aInfo->GetConstantCount(&constCount)))

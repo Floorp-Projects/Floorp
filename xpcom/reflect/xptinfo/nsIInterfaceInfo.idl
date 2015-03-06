@@ -24,7 +24,7 @@ class nsXPTType;
 %}
 
 /* this is NOT intended to be scriptable */
-[uuid(3f1ae084-607e-45b2-8f1e-8d450b0f9c65)]
+[uuid(4e698ffe-e9b5-42f3-9129-78a6c5fe0e9e)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
@@ -32,6 +32,7 @@ interface nsIInterfaceInfo : nsISupports
 
     boolean isScriptable();
     boolean isBuiltinClass();
+    boolean isMainProcessScriptableOnly();
 
     readonly attribute nsIInterfaceInfo parent;
 
