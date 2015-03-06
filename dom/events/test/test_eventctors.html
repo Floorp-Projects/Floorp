@@ -824,6 +824,21 @@ while (testWheelProps.length) {
   }
 }
 
+// DragEvent
+
+try {
+  e = new DragEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "DragEvent: First parameter is required!");
+ex = false;
+
+e = new DragEvent("hello");
+is(e.type, "hello", "DragEvent: Wrong event type!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "DragEvent: Wrong event!");
+
 // TransitionEvent
 e = new TransitionEvent("hello", { propertyName: "color", elapsedTime: 3.5, pseudoElement: "", foobar: "baz" })
 is("propertyName" in e, true, "Transition events have propertyName property");
