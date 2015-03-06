@@ -920,6 +920,21 @@ gfxUserFontSet::LookupFamily(const nsAString& aFamilyName) const
     return mFontFamilies.GetWeak(key);
 }
 
+bool
+gfxUserFontSet::ContainsUserFontSetFonts(const FontFamilyList& aFontList) const
+{
+    for (const FontFamilyName& name : aFontList.GetFontlist()) {
+        if (name.mType != eFamily_named &&
+            name.mType != eFamily_named_quoted) {
+            continue;
+        }
+        if (LookupFamily(name.mName)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 gfxUserFontFamily*
 gfxUserFontSet::GetFamily(const nsAString& aFamilyName)
 {

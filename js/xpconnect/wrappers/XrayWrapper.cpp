@@ -1008,17 +1008,14 @@ XrayTraits::cloneExpandoChain(JSContext *cx, HandleObject dst, HandleObject src)
     // set for |dst|. Eventually it will be set to that of |src|.  This will
     // prevent attachExpandoObject() from preserving the wrapper, but this is
     // not a problem because in this case the wrapper will already have been
-    // preserved when expandos were originally added to |src|. In this case
-    // assert the wrapper for |src| has been preserved.
+    // preserved when expandos were originally added to |src|. Assert the
+    // wrapper for |src| has been preserved if it has expandos set.
     if (oldHead) {
-        nsISupports *dstId = mozilla::dom::UnwrapDOMObjectToISupports(dst);
-        if (!dstId) {
-            nsISupports *srcId = mozilla::dom::UnwrapDOMObjectToISupports(src);
-            if (srcId) {
-              nsWrapperCache* cache = nullptr;
-              CallQueryInterface(srcId, &cache);
-              MOZ_ASSERT_IF(cache, cache->PreservingWrapper());
-            }
+        nsISupports *identity = mozilla::dom::UnwrapDOMObjectToISupports(src);
+        if (identity) {
+            nsWrapperCache* cache = nullptr;
+            CallQueryInterface(identity, &cache);
+            MOZ_ASSERT_IF(cache, cache->PreservingWrapper());
         }
     }
 #endif

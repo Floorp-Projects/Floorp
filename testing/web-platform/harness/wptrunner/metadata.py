@@ -65,10 +65,7 @@ def update_expected(test_paths, serve_root, log_file_names,
 
 def do_delayed_imports(serve_root):
     global manifest
-
-    sys.path.insert(0, os.path.join(serve_root))
-    sys.path.insert(0, os.path.join(serve_root, "tools", "scripts"))
-    import manifest
+    from manifest import manifest
 
 
 def files_in_repo(repo_root):
@@ -161,8 +158,14 @@ def write_changes(metadata_path, expected_map):
     # First write the new manifest files to a temporary directory
     temp_path = tempfile.mkdtemp(dir=os.path.split(metadata_path)[0])
     write_new_expected(temp_path, expected_map)
-    shutil.copyfile(os.path.join(metadata_path, "MANIFEST.json"),
-                    os.path.join(temp_path, "MANIFEST.json"))
+
+    # Copy all files in the root to the temporary location since
+    # these cannot be ini files
+    keep_files = [item for item in os.listdir(metadata_path) if
+                  not os.path.isdir(os.path.join(metadata_path, item))]
+    for item in keep_files:
+        shutil.copyfile(os.path.join(metadata_path, item),
+                        os.path.join(temp_path, item))
 
     # Then move the old manifest files to a new location
     temp_path_2 = metadata_path + str(uuid.uuid4())
@@ -270,7 +273,7 @@ def create_test_tree(metadata_path, test_manifest):
     expected_map = {}
     id_test_map = {}
     exclude_types = frozenset(["stub", "helper", "manual"])
-    include_types = set(manifest.item_types) ^ exclude_types
+    include_types = set(manifest.item_types) - exclude_types
     for test_path, tests in test_manifest.itertypes(*include_types):
         expected_data = load_expected(test_manifest, metadata_path, test_path, tests)
         if expected_data is None:
