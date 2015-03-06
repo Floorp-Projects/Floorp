@@ -122,6 +122,7 @@ let GMPPrefs = {
   KEY_UPDATE_SECONDS_BETWEEN_CHECKS: "media.gmp-manager.secondsBetweenChecks",
   KEY_APP_DISTRIBUTION: "distribution.id",
   KEY_APP_DISTRIBUTION_VERSION: "distribution.version",
+  KEY_BUILDID: "media.gmp-manager.buildID",
 
   CERTS_BRANCH: "media.gmp-manager.certs."
 };
@@ -426,6 +427,15 @@ GMPInstallManager.prototype = {
     let now = Math.round(Date.now() / 1000);
     GMPPrefs.set(GMPPrefs.KEY_UPDATE_LAST_CHECK, now);
   },
+  _versionchangeOccurred: function() {
+    let savedBuildID = GMPPrefs.get(GMPPrefs.KEY_BUILDID, null);
+    let buildID = Services.appinfo.platformBuildID;
+    if (savedBuildID == buildID) {
+      return false;
+    }
+    GMPPrefs.set(GMPPrefs.KEY_BUILDID, buildID);
+    return true;
+  },
   /**
    * Wrapper for checkForAddons and installAddon.
    * Will only install if not already installed and will log the results.
@@ -436,15 +446,21 @@ GMPInstallManager.prototype = {
   simpleCheckAndInstall: Task.async(function*() {
     let log = getScopedLogger("GMPInstallManager.simpleCheckAndInstall");
 
-    let secondsBetweenChecks =
-      GMPPrefs.get(GMPPrefs.KEY_UPDATE_SECONDS_BETWEEN_CHECKS,
-                   DEFAULT_SECONDS_BETWEEN_CHECKS)
-    let secondsSinceLast = this._getTimeSinceLastCheck();
-    log.info("Last check was: " + secondsSinceLast +
-             " seconds ago, minimum seconds: " + secondsBetweenChecks);
-    if (secondsBetweenChecks > secondsSinceLast) {
-      log.info("Will not check for updates.");
-      return {status: "too-frequent-no-check"};
+    if (this._versionchangeOccurred()) {
+      log.info("A version change occurred. Ignoring " +
+               "media.gmp-manager.lastCheck to check immediately for " +
+               "new or updated GMPs.");
+    } else {
+      let secondsBetweenChecks =
+        GMPPrefs.get(GMPPrefs.KEY_UPDATE_SECONDS_BETWEEN_CHECKS,
+                     DEFAULT_SECONDS_BETWEEN_CHECKS)
+      let secondsSinceLast = this._getTimeSinceLastCheck();
+      log.info("Last check was: " + secondsSinceLast +
+               " seconds ago, minimum seconds: " + secondsBetweenChecks);
+      if (secondsBetweenChecks > secondsSinceLast) {
+        log.info("Will not check for updates.");
+        return {status: "too-frequent-no-check"};
+      }
     }
 
     try {
