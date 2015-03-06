@@ -87,6 +87,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "GeckoProfiler.h"
 #include "Units.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -3007,7 +3008,18 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
-      switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
+
+      // When APZ is enabled, the actual scroll animation might be handled by
+      // the compositor.
+      WheelPrefs::Action action;
+      if (gfxPrefs::AsyncPanZoomEnabled() &&
+          layers::APZCTreeManager::WillHandleWheelEvent(wheelEvent))
+      {
+        action = WheelPrefs::ACTION_NONE;
+      } else {
+        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+      }
+      switch (action) {
         case WheelPrefs::ACTION_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
