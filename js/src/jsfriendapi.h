@@ -756,6 +756,9 @@ JS_FRIEND_API(void)
 SetFunctionNativeReserved(JSObject *fun, size_t which, const JS::Value &val);
 
 JS_FRIEND_API(bool)
+FunctionHasNativeReserved(JSObject *fun);
+
+JS_FRIEND_API(bool)
 GetObjectProto(JSContext *cx, JS::HandleObject obj, JS::MutableHandleObject proto);
 
 JS_FRIEND_API(bool)
