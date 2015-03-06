@@ -94,8 +94,8 @@ function checkUpdateApplied() {
  */
 function finishCheckUpdateApplied() {
   if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
+    debugDump("testing last modified time on the apply to directory has " +
+              "changed after a successful update (bug 600098)");
     let now = Date.now();
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -103,11 +103,11 @@ function finishCheckUpdateApplied() {
   }
 
   if (IS_MACOSX) {
-    logTestInfo("testing that the distribution directory is removed from the " +
-                "old location when there is a distribution directory in the " +
-                "new location");
+    debugDump("testing that the distribution directory is removed from the " +
+              "old location when there is a distribution directory in the " +
+              "new location");
     let distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    logTestInfo("testing " + distributionDir.path + " shouldn't exist");
+    debugDump("testing " + distributionDir.path + " shouldn't exist");
     do_check_false(distributionDir.exists());
 
     checkUpdateLogContains("removing old distribution directory");
@@ -126,7 +126,7 @@ function runHelperProcess(args) {
   let process = Cc["@mozilla.org/process/util;1"].
                 createInstance(Ci.nsIProcess);
   process.init(helperBin);
-  logTestInfo("Running " + helperBin.path + " " + args.join(" "));
+  debugDump("Running " + helperBin.path + " " + args.join(" "));
   process.run(true, args, args.length);
   do_check_eq(process.exitValue, 0);
 }

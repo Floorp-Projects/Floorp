@@ -6,8 +6,8 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing resuming an update download in progress for the same " +
-              "version of the application on startup (Bug 485624)");
+  debugDump("testing resuming an update download in progress for the same " +
+            "version of the application on startup (Bug 485624)");
 
   let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_DOWNLOADING);
