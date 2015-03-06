@@ -224,7 +224,7 @@ FrameNode.prototype = {
     if (uri) {
       functionName = this.location.substring(0, firstParenIndex - 1);
       fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
-      hostName = uri.host;
+      hostName = url.indexOf("jar:") == 0 ? "" : uri.host;
     } else {
       functionName = this.location;
       url = null;
