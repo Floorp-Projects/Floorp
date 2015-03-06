@@ -1078,7 +1078,7 @@ void NrSocketIpc::create_m(const nsACString &host, const uint16_t port) {
     return;
   }
 
-  if (NS_FAILED(socket_child_->Bind(proxy, host, port,
+  if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
                                     /* reuse = */ false,
                                     /* loopback = */ false))) {
     err_ = true;
