@@ -236,6 +236,9 @@ LoginManager.prototype = {
     clearAndGetHistogram("PWMGR_NUM_SAVED_PASSWORDS").add(
       this.countLogins("", "", "")
     );
+    clearAndGetHistogram("PWMGR_NUM_HTTPAUTH_PASSWORDS").add(
+      this.countLogins("", null, "")
+    );
 
     // This is a boolean histogram, and not a flag, because we don't want to
     // record any value if _gatherTelemetry is not called.
