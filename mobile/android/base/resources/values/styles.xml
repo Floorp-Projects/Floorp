@@ -97,9 +97,6 @@
     </style>
 
     <style name="Widget.MenuItemActionView">
-        <item name="android:divider">@drawable/divider_vertical</item>
-        <item name="android:showDividers">middle</item>
-        <item name="android:dividerPadding">0dip</item>
         <item name="android:gravity">left</item>
     </style>
 
