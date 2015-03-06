@@ -1697,12 +1697,10 @@ this.PDU_NL_IDENTIFIER_TAMIL      = 11;
 this.PDU_NL_IDENTIFIER_TELUGU     = 12;
 this.PDU_NL_IDENTIFIER_URDU       = 13;
 
-// National Language Locking Shift Tables, see 3GPP TS 23.038
-this.PDU_NL_LOCKING_SHIFT_TABLES = [
-  /**
-   * National Language Identifier: 0x00
-   * 6.2.1 GSM 7 bit Default Alphabet
-   */
+/*
+ * 3GPP TS 23.038 - 6.2.1 GSM 7 bit Default Alphabet
+ */
+this.PDU_NL_GSM_DEFAULT_ALPHABET =
   // 01.....23.....4.....5.....6.....7.....8.....9.....A.B.....C.....D.E.....F.....
     "@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\n\u00d8\u00f8\r\u00c5\u00e5"
   // 0.....12.....3.....4.....5.....6.....7.....8.....9.....A.....B.....C.....D.....E.....F.....
@@ -1718,7 +1716,15 @@ this.PDU_NL_LOCKING_SHIFT_TABLES = [
   // 0.....123456789ABCDEF
   + "\u00bfabcdefghijklmno"
   // 0123456789AB.....C.....D.....E.....F.....
-  + "pqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0",
+  + "pqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0";
+
+// National Language Locking Shift Tables, see 3GPP TS 23.038
+this.PDU_NL_LOCKING_SHIFT_TABLES = [
+  /**
+   * National Language Identifier: 0x00
+   * 6.2.1 GSM 7 bit Default Alphabet
+   */
+  PDU_NL_GSM_DEFAULT_ALPHABET,
 
   /**
    * National Language Identifier: 0x01
@@ -1744,23 +1750,9 @@ this.PDU_NL_LOCKING_SHIFT_TABLES = [
   /**
    * National Language Identifier: 0x02
    * A.3.2 Void
+   * Fallback to GSM Default Alphabet
    */
-  // 0123456789A.BCD.EF
-    "          \n  \r  "
-  // 0123456789AB.....CDEF
-  + "           \uffff    "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                ",
+  PDU_NL_GSM_DEFAULT_ALPHABET,
 
   /**
    * National Language Identifier: 0x03
