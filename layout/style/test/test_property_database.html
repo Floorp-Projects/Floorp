@@ -145,6 +145,21 @@ for (var prop in gCSSProperties) {
        "being listed as an axis-related property");
   }
 }
+
+/*
+ * Test that DOM properties match the expected rules.
+ */
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  var expectedDOMProp = prop.replace(/-([a-z])/g,
+                                     function(m, p1, offset, str) {
+                                       return p1.toUpperCase();
+                                     });
+  if (expectedDOMProp == "float") {
+    expectedDOMProp = "cssFloat";
+  }
+  is(info.domProp, expectedDOMProp, "DOM property for " + prop);
+}
 </script>
 </pre>
 </body>
