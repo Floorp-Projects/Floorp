@@ -833,6 +833,10 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   } else {
     mVideoDataRequest.Complete();
   }
+  if (IsShutdown()) {
+    // Already shutdown;
+    return;
+  }
 
   // If this is a decode error, delegate to the generic error path.
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
@@ -1943,6 +1947,10 @@ MediaDecoderStateMachine::DispatchAudioDecodeTaskIfNeeded()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
 
+  if (IsShutdown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (NeedToDecodeAudio()) {
     return EnsureAudioDecodeTaskQueued();
   }
@@ -1990,6 +1998,10 @@ MediaDecoderStateMachine::DispatchVideoDecodeTaskIfNeeded()
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
+
+  if (IsShutdown()) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (NeedToDecodeVideo()) {
     return EnsureVideoDecodeTaskQueued();
