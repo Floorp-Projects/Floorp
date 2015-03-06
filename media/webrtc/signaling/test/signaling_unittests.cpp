@@ -3604,7 +3604,6 @@ TEST_F(SignalingAgentTest, CreateOffer) {
               TestStunServer::GetInstance()->port());
   OfferOptions options;
   agent(0)->CreateOffer(options, OFFER_AUDIO, SHOULD_SENDRECV_AUDIO);
-  PR_Sleep(20000);
 }
 
 TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
@@ -3626,7 +3625,6 @@ TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
   TestStunServer::GetInstance()->SetActive(true);
 
   agent(0)->SetLocal(TestObserver::OFFER, agent(0)->offer());
-  PR_Sleep(1000); // Give time for the message queues.
   agent(0)->WaitForGather();
 
   // Verify that we got our candidates.
@@ -4207,7 +4205,7 @@ TEST_P(SignalingTest, AudioCallMismatchDtlsRoles)
   WaitForCompleted();
 
   // Not using ASSERT_TRUE_WAIT here because we expect failure
-  PR_Sleep(kDefaultTimeout * 2); // Wait for some data to get written
+  PR_Sleep(500); // Wait for some data to get written
 
   CloseStreams();
 
