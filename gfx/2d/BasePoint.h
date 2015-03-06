@@ -90,6 +90,12 @@ struct BasePoint {
     return true;
   }
 
+  void Clamp(T aMaxAbsValue)
+  {
+    x = std::max(std::min(x, aMaxAbsValue), -aMaxAbsValue);
+    y = std::max(std::min(y, aMaxAbsValue), -aMaxAbsValue);
+  }
+
   friend std::ostream& operator<<(std::ostream& stream, const BasePoint<T, Sub, Coord>& aPoint) {
     return stream << '(' << aPoint.x << ',' << aPoint.y << ')';
   }

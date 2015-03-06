@@ -44,6 +44,8 @@ public:
 
 public: // GeckoContentController methods
     void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    void RequestFlingSnap(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
+                          const mozilla::CSSPoint& aDestination) MOZ_OVERRIDE;
     void AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
                                  const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
     void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,

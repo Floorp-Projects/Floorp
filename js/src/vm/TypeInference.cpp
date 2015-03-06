@@ -691,11 +691,11 @@ TypeSet::IsTypeMarkedFromAnyThread(TypeSet::Type *v)
 {
     bool rv;
     if (v->isSingletonUnchecked()) {
-        JSObject *obj = v->singleton();
+        JSObject *obj = v->singletonNoBarrier();
         rv = IsObjectMarkedFromAnyThread(&obj);
         *v = TypeSet::ObjectType(obj);
     } else if (v->isGroupUnchecked()) {
-        ObjectGroup *group = v->group();
+        ObjectGroup *group = v->groupNoBarrier();
         rv = IsObjectGroupMarkedFromAnyThread(&group);
         *v = TypeSet::ObjectType(group);
     } else {

@@ -16,7 +16,7 @@ interface nsIDOMElement;
 interface nsITabParent;
 interface nsILoadContext;
 
-[scriptable, builtinclass, uuid(28b6b043-46ec-412f-9be9-db22938b0d6d)]
+[scriptable, builtinclass, uuid(d24f9330-ae4e-11e4-ab27-0800200c9a66)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -120,6 +120,14 @@ interface nsIFrameLoader : nsISupports
    * to the window.
    */
   void requestNotifyAfterRemotePaint();
+
+  /**
+   * Request an event when the layer tree from the remote tab becomes
+   * available or unavailable. When this happens, a mozLayerTreeReady
+   * or mozLayerTreeCleared event is fired.
+   */
+  void requestNotifyLayerTreeReady();
+  void requestNotifyLayerTreeCleared();
 
   /**
    * The default event mode automatically forwards the events
