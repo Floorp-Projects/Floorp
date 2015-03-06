@@ -400,20 +400,10 @@ NS_IMETHODIMP JSStackFrame::GetFilename(nsAString& aFilename)
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, stack);
-
-    JS::Rooted<JS::Value> filenameVal(cx);
-    if (!JS_GetProperty(cx, stack, "source", &filenameVal)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (filenameVal.isNull()) {
-      filenameVal = JS_GetEmptyStringValue(cx);
-    }
-    MOZ_ASSERT(filenameVal.isString());
-
+    JS::Rooted<JSString*> filename(cx);
+    JS::GetSavedFrameSource(cx, stack, &filename);
     nsAutoJSString str;
-    if (!str.init(cx, filenameVal.toString())) {
+    if (!str.init(cx, filename)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -445,16 +435,12 @@ NS_IMETHODIMP JSStackFrame::GetName(nsAString& aFunction)
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, stack);
-    JS::Rooted<JS::Value> nameVal(cx);
+    JS::Rooted<JSString*> name(cx);
     // functionDisplayName can be null
-    if (!JS_GetProperty(cx, stack, "functionDisplayName", &nameVal) ||
-        (!nameVal.isString() && !nameVal.isNull())) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (nameVal.isString()) {
+    JS::GetSavedFrameFunctionDisplayName(cx, stack, &name);
+    if (name) {
       nsAutoJSString str;
-      if (!str.init(cx, nameVal.toString())) {
+      if (!str.init(cx, name)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mFunname = str;
@@ -487,17 +473,9 @@ JSStackFrame::GetLineno(int32_t* aLineNo)
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, stack);
-    JS::Rooted<JS::Value> lineVal(cx);
-    if (!JS_GetProperty(cx, stack, "line", &lineVal)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (lineVal.isNumber()) {
-      mLineno = lineVal.toNumber();
-    } else {
-      MOZ_ASSERT(lineVal.isNull());
-      mLineno = 0;
-    }
+    uint32_t line;
+    JS::GetSavedFrameLine(cx, stack, &line);
+    mLineno = line;
     mLinenoInitialized = true;
   }
 
@@ -520,17 +498,9 @@ JSStackFrame::GetColNo(int32_t* aColNo)
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, stack);
-    JS::Rooted<JS::Value> colVal(cx);
-    if (!JS_GetProperty(cx, stack, "column", &colVal)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (colVal.isNumber()) {
-      mColNo = colVal.toNumber();
-    } else {
-      MOZ_ASSERT(colVal.isNull());
-      mColNo = 0;
-    }
+    uint32_t col;
+    JS::GetSavedFrameColumn(cx, stack, &col);
+    mColNo = col;
     mColNoInitialized = true;
   }
 
@@ -588,15 +558,10 @@ NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
     ThreadsafeAutoJSContext cx;
     JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, stack);
-    JS::Rooted<JS::Value> callerVal(cx);
-    if (!JS_GetProperty(cx, stack, "parent", &callerVal) ||
-        !callerVal.isObjectOrNull()) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    JS::Rooted<JSObject*> caller(cx);
+    JS::GetSavedFrameParent(cx, stack, &caller);
 
-    if (callerVal.isObject()) {
-      JS::Rooted<JSObject*> caller(cx, &callerVal.toObject());
+    if (caller) {
       mCaller = new JSStackFrame(caller);
     } else {
       // Do we really need this dummy frame?  If so, we should document why... I
@@ -621,13 +586,13 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
   // about producing a useful value.
   if (!mFormattedStackInitialized && mStack) {
     ThreadsafeAutoJSContext cx;
-    JS::Rooted<JS::Value> stack(cx, JS::ObjectValue(*mStack));
+    JS::Rooted<JSObject*> stack(cx, mStack);
     JS::ExposeObjectToActiveJS(mStack);
-    JSAutoCompartment ac(cx, mStack);
-    JS::Rooted<JSString*> formattedStack(cx, JS::ToString(cx, stack));
-    if (!formattedStack) {
+    JS::Rooted<JSString*> formattedStack(cx);
+    if (!JS::StringifySavedFrameStack(cx, stack, &formattedStack)) {
       return NS_ERROR_UNEXPECTED;
     }
+
     nsAutoJSString str;
     if (!str.init(cx, formattedStack)) {
       return NS_ERROR_OUT_OF_MEMORY;
