@@ -120,6 +120,8 @@ public:
                            nsString& aText, int32_t* aStartOffset,
                            int32_t* aEndOffset);
 
+  char16_t CharAt(int32_t aOffset);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

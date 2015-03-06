@@ -183,15 +183,21 @@ static gunichar
 getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return 0;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return 0;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return 0;
+    // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
+    return static_cast<gunichar>(text->CharAt(aOffset));
+  }
 
-  // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
-  return static_cast<gunichar>(text->CharAt(aOffset));
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return static_cast<gunichar>(proxy->CharAt(aOffset));
+  }
+
+  return 0;
 }
 
 static gchar*
