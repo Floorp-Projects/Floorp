@@ -66,6 +66,12 @@
     }
   }
 
+  if (isRemote && typeof ShumwayBootstrapUtils !== 'undefined') {
+    // Treat content as non-remote when bootstrap.js or ShumwayUtils.jsm
+    // already registered the Shumway components for current content scope.
+    isRemote = false;
+  }
+
   if (isRemote) {
     addMessageListener('Shumway:Child:refreshSettings', updateSettings);
     updateSettings();
