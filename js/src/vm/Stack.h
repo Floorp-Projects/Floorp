@@ -35,6 +35,8 @@ class StaticBlockObject;
 
 class ScopeCoordinate;
 
+class SavedFrame;
+
 // VM stack layout
 //
 // A JSRuntime's stack consists of a linked list of activations. Every activation
@@ -1064,6 +1066,17 @@ class Activation
     // data structures instead.
     size_t hideScriptedCallerCount_;
 
+    // Youngest saved frame of an async stack that will be iterated during stack
+    // capture in place of the actual stack of previous activations. Note that
+    // the stack of this activation is captured entirely before this is used.
+    //
+    // Usually this is nullptr, meaning that normal stack capture will occur.
+    // When this is set, the stack of any previous activation is ignored.
+    Rooted<SavedFrame *> asyncStack_;
+
+    // Value of asyncCause to be attached to asyncStack_.
+    RootedString asyncCause_;
+
     enum Kind { Interpreter, Jit, AsmJS };
     Kind kind_;
 
@@ -1134,6 +1147,14 @@ class Activation
 
     static size_t offsetOfPrevProfiling() {
         return offsetof(Activation, prevProfiling_);
+    }
+
+    SavedFrame *asyncStack() {
+        return asyncStack_;
+    }
+
+    JSString *asyncCause() {
+        return asyncCause_;
     }
 
   private:

@@ -660,6 +660,22 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AsmJSActivation * volatile asmJSActivationStack_;
 
   public:
+    /*
+     * Youngest frame of a saved stack that will be picked up as an async stack
+     * by any new Activation, and is nullptr when no async stack should be used.
+     *
+     * The JS::AutoSetAsyncStackForNewCalls class can be used to set this.
+     *
+     * New activations will reset this to nullptr on construction after getting
+     * the current value, and will restore the previous value on destruction.
+     */
+    js::SavedFrame *asyncStackForNewActivations;
+
+    /*
+     * Value of asyncCause to be attached to asyncStackForNewActivations.
+     */
+    JSString *asyncCauseForNewActivations;
+
     js::Activation *const *addressOfActivation() const {
         return &activation_;
     }

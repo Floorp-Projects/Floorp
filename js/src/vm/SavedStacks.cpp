@@ -38,6 +38,11 @@ using mozilla::Maybe;
 
 namespace js {
 
+/**
+ * Maximum number of saved frames returned for an async stack.
+ */
+const unsigned ASYNC_STACK_MAX_FRAME_COUNT = 60;
+
 struct SavedFrame::Lookup {
     Lookup(JSAtom *source, uint32_t line, uint32_t column,
            JSAtom *functionDisplayName, JSAtom *asyncCause, SavedFrame *parent,
@@ -49,6 +54,18 @@ struct SavedFrame::Lookup {
         asyncCause(asyncCause),
         parent(parent),
         principals(principals)
+    {
+        MOZ_ASSERT(source);
+    }
+
+    explicit Lookup(SavedFrame &savedFrame)
+      : source(savedFrame.getSource()),
+        line(savedFrame.getLine()),
+        column(savedFrame.getColumn()),
+        functionDisplayName(savedFrame.getFunctionDisplayName()),
+        asyncCause(savedFrame.getAsyncCause()),
+        parent(savedFrame.getParent()),
+        principals(savedFrame.getPrincipals())
     {
         MOZ_ASSERT(source);
     }
@@ -797,13 +814,7 @@ SavedStacks::sweep(JSRuntime *rt)
                 }
 
                 if (obj != temp || parentMoved) {
-                    e.rekeyFront(SavedFrame::Lookup(frame->getSource(),
-                                                    frame->getLine(),
-                                                    frame->getColumn(),
-                                                    frame->getFunctionDisplayName(),
-                                                    frame->getAsyncCause(),
-                                                    frame->getParent(),
-                                                    frame->getPrincipals()),
+                    e.rekeyFront(SavedFrame::Lookup(*frame),
                                  ReadBarriered<SavedFrame *>(frame));
                 }
             }
@@ -864,9 +875,32 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // pointers on the first pass, and then we fill in the parent pointers as we
     // return in the second pass.
 
+    Activation *asyncActivation = nullptr;
+    RootedSavedFrame asyncStack(cx, nullptr);
+    RootedString asyncCause(cx, nullptr);
+
     // Accumulate the vector of Lookup objects in |stackChain|.
     SavedFrame::AutoLookupVector stackChain(cx);
     while (!iter.done()) {
+        Activation &activation = *iter.activation();
+
+        if (!asyncActivation) {
+            asyncStack = activation.asyncStack();
+            if (asyncStack) {
+                // While walking from the youngest to the oldest frame, we found
+                // an activation that has an async stack set. We will use the
+                // youngest frame of the async stack as the parent of the oldest
+                // frame of this activation. We still need to iterate over other
+                // frames in this activation before reaching the oldest frame.
+                asyncCause = activation.asyncCause();
+                asyncActivation = &activation;
+            }
+        } else if (asyncActivation != &activation) {
+            // We found an async stack in the previous activation, and we
+            // walked past the oldest frame of that activation, we're done.
+            break;
+        }
+
         AutoLocationValueRooter location(cx);
 
         {
@@ -891,17 +925,73 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
 
         ++iter;
 
-        if (maxFrameCount == 0) {
-            // If maxFrameCount is zero, then there's no limit on the number of
-            // frames.
+        // If maxFrameCount is zero there's no limit on the number of frames.
+        if (maxFrameCount == 0)
             continue;
-        } else if (maxFrameCount == 1) {
-            // Since we were only asked to save one frame, do not continue
-            // walking the stack and saving frame state.
+
+        if (maxFrameCount == 1) {
+            // The frame we just saved was the last one we were asked to save.
+            // If we had an async stack, ensure we don't use any of its frames.
+            asyncStack.set(nullptr);
             break;
-        } else {
-            maxFrameCount--;
         }
+
+        maxFrameCount--;
+    }
+
+    // Limit the depth of the async stack, if any, and ensure that the
+    // SavedFrame instances we use are stored in the same compartment as the
+    // rest of the synchronous stack chain.
+    RootedSavedFrame parentFrame(cx, nullptr);
+    if (asyncStack && !adoptAsyncStack(cx, asyncStack, asyncCause, &parentFrame, maxFrameCount))
+        return false;
+
+    // Iterate through |stackChain| in reverse order and get or create the
+    // actual SavedFrame instances.
+    for (size_t i = stackChain->length(); i != 0; i--) {
+        SavedFrame::HandleLookup lookup = stackChain[i-1];
+        lookup->parent = parentFrame;
+        parentFrame.set(getOrCreateSavedFrame(cx, lookup));
+        if (!parentFrame)
+            return false;
+    }
+
+    frame.set(parentFrame);
+    return true;
+}
+
+bool
+SavedStacks::adoptAsyncStack(JSContext *cx, HandleSavedFrame asyncStack,
+                             HandleString asyncCause,
+                             MutableHandleSavedFrame adoptedStack,
+                             unsigned maxFrameCount)
+{
+    RootedAtom asyncCauseAtom(cx, AtomizeString(cx, asyncCause));
+    if (!asyncCauseAtom)
+        return false;
+
+    // If maxFrameCount is zero, the caller asked for an unlimited number of
+    // stack frames, but async stacks are not limited by the available stack
+    // memory, so we need to set an arbitrary limit when collecting them. We
+    // still don't enforce an upper limit if the caller requested more frames.
+    if (maxFrameCount == 0)
+        maxFrameCount = ASYNC_STACK_MAX_FRAME_COUNT;
+
+    // Accumulate the vector of Lookup objects in |stackChain|.
+    SavedFrame::AutoLookupVector stackChain(cx);
+    SavedFrame *currentSavedFrame = asyncStack;
+    for (unsigned i = 0; i < maxFrameCount && currentSavedFrame; i++) {
+        // Use growByUninitialized and placement-new instead of just append.
+        // We'd ideally like to use an emplace method once Vector supports it.
+        if (!stackChain->growByUninitialized(1))
+            return false;
+        new (&stackChain->back()) SavedFrame::Lookup(*currentSavedFrame);
+
+        // Attach the asyncCause to the youngest frame.
+        if (i == 0)
+            stackChain->back().asyncCause = asyncCauseAtom;
+
+        currentSavedFrame = currentSavedFrame->getParent();
     }
 
     // Iterate through |stackChain| in reverse order and get or create the
@@ -915,7 +1005,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
             return false;
     }
 
-    frame.set(parentFrame);
+    adoptedStack.set(parentFrame);
     return true;
 }
 

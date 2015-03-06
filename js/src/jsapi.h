@@ -3811,6 +3811,40 @@ JS_SaveFrameChain(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx);
 
+namespace JS {
+
+/*
+ * This class can be used to store a pointer to the youngest frame of a saved
+ * stack in the specified JSContext. This reference will be picked up by any new
+ * calls performed until the class is destroyed, with the specified asyncCause,
+ * that must not be empty.
+ *
+ * Any stack capture initiated during these new calls will go through the async
+ * stack instead of the current stack.
+ *
+ * Capturing the stack before a new call is performed will not be affected.
+ *
+ * The provided chain of SavedFrame objects can live in any compartment,
+ * although it will be copied to the compartment where the stack is captured.
+ */
+class MOZ_STACK_CLASS JS_PUBLIC_API(AutoSetAsyncStackForNewCalls)
+{
+    JSContext *cx;
+    RootedObject oldAsyncStack;
+    RootedString oldAsyncCause;
+
+  public:
+    // The stack parameter cannot be null by design, because it would be
+    // ambiguous whether that would clear any scheduled async stack and make the
+    // normal stack reappear in the new call, or just keep the async stack
+    // already scheduled for the new call, if any.
+    AutoSetAsyncStackForNewCalls(JSContext *cx, HandleObject stack,
+                                 HandleString asyncCause);
+    ~AutoSetAsyncStackForNewCalls();
+};
+
+}
+
 /************************************************************************/
 
 /*
