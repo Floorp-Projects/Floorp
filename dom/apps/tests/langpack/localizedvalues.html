@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Langpack Test : localized values</title>
+    <script>
+function success(data) {
+  return new Promise(function(resolve, reject) {
+    alert(data);
+    resolve();
+  });
+}
+
+function error(domError) {
+  console.log(domError.name);
+  return new Promise(function(resolve, reject) {
+    alert(domError.name);
+    resolve();
+  });
+}
+
+var app;
+
+function getApp() {
+  return new Promise(function(resolve, reject) {
+    var req = navigator.mozApps.getSelf();
+    req.onsuccess = () => { app = req.result; resolve(); }
+    req.onerror = () => { reject(req.error); }
+  });
+}
+
+// Success: unknown language, fallback to manifest.
+function test1() {
+  return app.getLocalizedValue("name", "es")
+            .then(success, error);
+}
+
+// Error : unknown property.
+function test2() {
+  return app.getLocalizedValue("foobar", "fr")
+            .then(success, error);
+}
+
+// Success, value from the langpack.
+function test3() {
+  return app.getLocalizedValue("name", "fr")
+            .then(success, error);
+}
+
+// Success, value from the manifest's entry point.
+function test4() {
+  return app.getLocalizedValue("name", "es", "dialer")
+            .then(success, error);
+}
+
+// Success, value from the langpack's entry point.
+function test5() {
+  return app.getLocalizedValue("name", "fr", "dialer")
+            .then(success, error);
+}
+
+function run() {
+  getApp().then(test1)
+          .then(test2)
+          .then(test3)
+          .then(test4)
+          .then(test5)
+          .catch(error);
+}
+    </script>
+  </head>
+  <body onload="run()">
+    <h1>Langpack Test : localized values</h1>
+  </body>
+</html>
