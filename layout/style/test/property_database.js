@@ -6244,7 +6244,7 @@ if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
 
 if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
   gCSSProperties["-moz-osx-font-smoothing"] = {
-    domProp: "MozOSXFontSmoothing",
+    domProp: "MozOsxFontSmoothing",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
