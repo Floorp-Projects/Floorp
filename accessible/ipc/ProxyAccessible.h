@@ -99,6 +99,9 @@ public:
   void Relations(nsTArray<RelationType>* aTypes,
                  nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
 
+  int32_t CaretOffset();
+  bool SetCaretOffset(int32_t aOffset);
+
   int32_t CharacterCount();
   int32_t SelectionCount();
 
