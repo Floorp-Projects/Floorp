@@ -2179,9 +2179,21 @@ MarionetteServerConnection.prototype = {
    */
   getElementValueOfCssProperty: function MDA_getElementValueOfCssProperty(aRequest){
     let command_id = this.command_id = this.getCommandId();
-    this.sendAsync("getElementValueOfCssProperty",
-                   {id: aRequest.parameters.id, propertyName: aRequest.parameters.propertyName},
-                   command_id);
+    let curWin = this.getCurrentWindow();
+    if (this.context == "chrome") {
+      try {
+        let el = this.curBrowser.elementManager.getKnownElement(aRequest.parameters.id, curWin);
+        this.sendResponse(curWin.document.defaultView.getComputedStyle(el, null).getPropertyValue(
+          aRequest.parameters.propertyName), command_id);
+      } catch (e) {
+        this.sendError(e.message, e.code, e.stack, command_id);
+      }
+    }
+    else {
+      this.sendAsync("getElementValueOfCssProperty",
+                     {id: aRequest.parameters.id, propertyName: aRequest.parameters.propertyName},
+                     command_id);
+    }
   },
 
   /**
