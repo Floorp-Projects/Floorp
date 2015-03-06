@@ -13,13 +13,7 @@
 [Global=(Worker,ServiceWorker),
  Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
-  // FIXME(nsm): Bug 982725
-  // readonly attribute CacheList caches;
-
   readonly attribute Clients clients;
-
-  // FIXME(nsm): Bug 995484
-  // ResponsePromise<any> fetch((Request or [EnsureUTF16] DOMString) request);
 
   void update();
 
@@ -34,10 +28,6 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
 
   // The event.source of these MessageEvents are instances of Client
   attribute EventHandler onmessage;
-
-  // close() method inherited from WorkerGlobalScope is not exposed.
-  // FIXME(nsm): For now, overridden so it can be a no-op.
-  void close();
 };
 
 

@@ -41,7 +41,7 @@ tests.forEach(function(e) {
   var measn = e.ac.createMediaElementSource(a);
   var sp = e.ac.createScriptProcessor(2048, 1);
   // Set a couple expandos to track the status of the test
-  sp.iterationsLeft = 20;
+  sp.iterationsLeft = 200;
   sp.seenSound = false;
 
   measn.connect(sp);

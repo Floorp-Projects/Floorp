@@ -182,14 +182,6 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
 }
 
 // Testing only.
-already_AddRefed<Promise>
-ServiceWorkerContainer::ClearAllServiceWorkerData(ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
-}
-
-// Testing only.
 void
 ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
                                        nsString& aScope,
@@ -204,14 +196,5 @@ ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
   aRv = swm->GetScopeForUrl(aUrl, aScope);
 }
 
-// Testing only.
-void
-ServiceWorkerContainer::GetControllingWorkerScriptURLForPath(
-                                                        const nsAString& aPath,
-                                                        nsString& aScriptURL,
-                                                        ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-}
 } // namespace dom
 } // namespace mozilla

@@ -128,6 +128,7 @@ private:
 
   virtual bool RecvSharedCompositorFrameMetrics(const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
                                                 const CrossProcessMutexHandle& handle,
+                                                const uint64_t& aLayersId,
                                                 const uint32_t& aAPZCId) MOZ_OVERRIDE;
 
   virtual bool RecvReleaseSharedCompositorFrameMetrics(const ViewID& aId,
@@ -142,12 +143,14 @@ private:
     SharedFrameMetricsData(
         const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
         const CrossProcessMutexHandle& handle,
+        const uint64_t& aLayersId,
         const uint32_t& aAPZCId);
 
     ~SharedFrameMetricsData();
 
     void CopyFrameMetrics(FrameMetrics* aFrame);
     FrameMetrics::ViewID GetViewID();
+    uint64_t GetLayersId() const;
     uint32_t GetAPZCId();
 
   private:
@@ -155,9 +158,14 @@ private:
     // the shared FrameMetrics
     nsRefPtr<mozilla::ipc::SharedMemoryBasic> mBuffer;
     CrossProcessMutex* mMutex;
+    uint64_t mLayersId;
     // Unique ID of the APZC that is sharing the FrameMetrics
     uint32_t mAPZCId;
   };
+
+  static PLDHashOperator RemoveSharedMetricsForLayersId(const uint64_t& aKey,
+                                                        nsAutoPtr<SharedFrameMetricsData>& aData,
+                                                        void* aLayerTransactionChild);
 
   nsRefPtr<ClientLayerManager> mLayerManager;
 
