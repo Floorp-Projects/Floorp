@@ -43,6 +43,7 @@ class ServiceWorkerRegistration;
 namespace workers {
 
 class ServiceWorker;
+class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 
 class ServiceWorkerJobQueue;
@@ -379,7 +380,7 @@ public:
 
   void
   GetAllClients(const nsCString& aScope,
-                nsTArray<uint64_t>* aControlledDocuments);
+                nsTArray<ServiceWorkerClientInfo>& aControlledDocuments);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();

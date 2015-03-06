@@ -38,13 +38,7 @@ interface ServiceWorkerContainer : EventTarget {
 // Testing only.
 partial interface ServiceWorkerContainer {
   [Throws,Pref="dom.serviceWorkers.testing.enabled"]
-  Promise<any> clearAllServiceWorkerData();
-
-  [Throws,Pref="dom.serviceWorkers.testing.enabled"]
   DOMString getScopeForUrl(DOMString url);
-
-  [Throws,Pref="dom.serviceWorkers.testing.enabled"]
-  DOMString getControllingWorkerScriptURLForPath(DOMString path);
 };
 
 dictionary RegistrationOptionList {

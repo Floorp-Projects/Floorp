@@ -1803,6 +1803,22 @@ gfxFontGroup::FamilyFace::CheckState(bool& aSkipDrawing)
 }
 
 bool
+gfxFontGroup::FamilyFace::EqualsUserFont(const gfxUserFontEntry* aUserFont) const
+{
+    gfxFontEntry* fe = FontEntry();
+    // if there's a font, the entry is the underlying platform font
+    if (mFontCreated) {
+        gfxFontEntry* pfe = aUserFont->GetPlatformFontEntry();
+        if (pfe == fe) {
+            return true;
+        }
+    } else if (fe == aUserFont) {
+        return true;
+    }
+    return false;
+}
+
+bool
 gfxFontGroup::FontLoadingForFamily(gfxFontFamily* aFamily, uint32_t aCh) const
 {
     uint32_t count = mFonts.Length();
@@ -3028,6 +3044,21 @@ gfxFontGroup::UpdateUserFonts()
 
         mCurrGeneration = GetGeneration();
     }
+}
+
+bool
+gfxFontGroup::ContainsUserFont(const gfxUserFontEntry* aUserFont)
+{
+    UpdateUserFonts();
+    // search through the fonts list for a specific user font
+    uint32_t len = mFonts.Length();
+    for (uint32_t i = 0; i < len; i++) {
+        FamilyFace& ff = mFonts[i];
+        if (ff.EqualsUserFont(aUserFont)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 struct PrefFontCallbackData {
