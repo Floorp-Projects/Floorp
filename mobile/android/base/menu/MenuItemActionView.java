@@ -160,6 +160,10 @@ public class MenuItemActionView extends LinearLayout
         }
     }
 
+    protected int getActionButtonCount() {
+        return mActionButtons.size();
+    }
+
     @Override
     public void onClick(View view) {
         for (View.OnClickListener listener : mActionButtonListeners) {
