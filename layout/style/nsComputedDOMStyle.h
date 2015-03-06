@@ -208,6 +208,7 @@ private:
   void GetImageRectString(nsIURI* aURI,
                           const nsStyleSides& aCropRect,
                           nsString& aString);
+  mozilla::dom::CSSValue* GetScrollSnapPoints(const nsStyleCoord& aCoord);
   void AppendTimingFunction(nsDOMCSSValueList *aValueList,
                             const nsTimingFunction& aTimingFunction);
 
@@ -252,7 +253,7 @@ private:
   mozilla::dom::CSSValue* DoGetFontLanguageOverride();
   mozilla::dom::CSSValue* DoGetFontSize();
   mozilla::dom::CSSValue* DoGetFontSizeAdjust();
-  mozilla::dom::CSSValue* DoGetOSXFontSmoothing();
+  mozilla::dom::CSSValue* DoGetOsxFontSmoothing();
   mozilla::dom::CSSValue* DoGetFontStretch();
   mozilla::dom::CSSValue* DoGetFontStyle();
   mozilla::dom::CSSValue* DoGetFontSynthesis();
@@ -433,6 +434,13 @@ private:
   mozilla::dom::CSSValue* DoGetTransformStyle();
   mozilla::dom::CSSValue* DoGetOrient();
   mozilla::dom::CSSValue* DoGetScrollBehavior();
+  mozilla::dom::CSSValue* DoGetScrollSnapType();
+  mozilla::dom::CSSValue* DoGetScrollSnapTypeX();
+  mozilla::dom::CSSValue* DoGetScrollSnapTypeY();
+  mozilla::dom::CSSValue* DoGetScrollSnapPointsX();
+  mozilla::dom::CSSValue* DoGetScrollSnapPointsY();
+  mozilla::dom::CSSValue* DoGetScrollSnapDestination();
+  mozilla::dom::CSSValue* DoGetScrollSnapCoordinate();
 
   /* User interface properties */
   mozilla::dom::CSSValue* DoGetCursor();

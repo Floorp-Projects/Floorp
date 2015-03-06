@@ -37,6 +37,8 @@ public:
 
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics);
+  virtual void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                                const mozilla::CSSPoint& aDestination);
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId, const uint32_t& aScrollGeneration);
   virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint,
                                Modifiers aModifiers,

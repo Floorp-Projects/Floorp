@@ -2037,6 +2037,14 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
+TabChild::RecvRequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                               const mozilla::CSSPoint& aDestination)
+{
+  APZCCallbackHelper::RequestFlingSnap(aScrollId, aDestination);
+  return true;
+}
+
+bool
 TabChild::RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
                                       const uint32_t& aScrollGeneration)
 {

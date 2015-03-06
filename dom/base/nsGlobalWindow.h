@@ -946,6 +946,7 @@ public:
                      const mozilla::dom::ScrollOptions& aOptions);
   void ScrollByPages(int32_t numPages,
                      const mozilla::dom::ScrollOptions& aOptions);
+  void MozScrollSnap();
   int32_t GetInnerWidth(mozilla::ErrorResult& aError);
   void SetInnerWidth(int32_t aInnerWidth, mozilla::ErrorResult& aError);
   int32_t GetInnerHeight(mozilla::ErrorResult& aError);

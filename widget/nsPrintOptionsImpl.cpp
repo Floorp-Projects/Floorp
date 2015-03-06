@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/embedding/PPrinting.h"
+#include "nsPrintingProxy.h"
 #include "nsPrintOptionsImpl.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
@@ -1297,6 +1298,15 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
                                          uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
+
+  if (GeckoProcessType_Content == XRE_GetProcessType()) {
+    // If we're in the content process, we can't directly write to the
+    // Preferences service - we have to proxy the save up to the
+    // parent process.
+    nsRefPtr<nsPrintingProxy> proxy = nsPrintingProxy::GetInstance();
+    return proxy->SavePrintSettings(aPS, aUsePrinterNamePrefix, aFlags);
+  }
+
   nsAutoString prtName;
 
   // Do not use printer name in Linux because GTK backend does not support

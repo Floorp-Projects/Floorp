@@ -1288,6 +1288,13 @@ class CallInfo
         return args_[i];
     }
 
+    MDefinition *getArgWithDefault(uint32_t i, MDefinition *defaultValue) const {
+        if (i < argc())
+            return args_[i];
+
+        return defaultValue;
+    }
+
     void setArg(uint32_t i, MDefinition *def) {
         MOZ_ASSERT(i < argc());
         args_[i] = def;

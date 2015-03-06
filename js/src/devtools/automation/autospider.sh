@@ -32,7 +32,14 @@ while [ $# -gt 1 ]; do
 done
 
 VARIANT=$1
-if [ ! -f "$ABSDIR/$VARIANT" ]; then
+
+# 'generational' is being retired in favor of 'compacting', but we need to
+# decouple the landings.
+if [[ "$VARIANT" = "generational" ]]; then
+    VARIANT=compacting
+fi
+
+if [ ! -f "$ABSDIR/variants/$VARIANT" ]; then
     echo "Could not find variant '$VARIANT'"
     usage
     exit 1
@@ -44,7 +51,7 @@ TRY_OVERRIDE=$SOURCE/js/src/config.try
 if [ -r $TRY_OVERRIDE ]; then
   CONFIGURE_ARGS="$(cat "$TRY_OVERRIDE")"
 else
-  CONFIGURE_ARGS="$(cat "$ABSDIR/$VARIANT")"
+  CONFIGURE_ARGS="$(cat "$ABSDIR/variants/$VARIANT")"
 fi
 
 OBJDIR="${OBJDIR:-$SOURCE/obj-spider}"
@@ -123,8 +130,7 @@ RUN_JSTESTS=true
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
 
-elif [[ "$VARIANT" = "generational" ]]; then
-    # Generational is currently being used for compacting GC
+elif [[ "$VARIANT" = "compacting" ]]; then
     export JS_GC_ZEAL=14
 
     # Ignore timeouts from tests that are known to take too long with this zeal mode

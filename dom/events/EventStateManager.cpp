@@ -2417,13 +2417,16 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     actualDevPixelScrollAmount.y = 0;
   }
 
+  nsIScrollableFrame::ScrollSnapMode snapMode = nsIScrollableFrame::DISABLE_SNAP;
   nsIAtom* origin = nullptr;
   switch (aEvent->deltaMode) {
     case nsIDOMWheelEvent::DOM_DELTA_LINE:
       origin = nsGkAtoms::mouseWheel;
+      snapMode = nsIScrollableFrame::ENABLE_SNAP;
       break;
     case nsIDOMWheelEvent::DOM_DELTA_PAGE:
       origin = nsGkAtoms::pages;
+      snapMode = nsIScrollableFrame::ENABLE_SNAP;
       break;
     case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
       origin = nsGkAtoms::pixels;
@@ -2476,10 +2479,14 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
       MOZ_CRASH("Invalid scrollType value comes");
   }
 
+  nsIScrollableFrame::ScrollMomentum momentum =
+    aEvent->isMomentum ? nsIScrollableFrame::SYNTHESIZED_MOMENTUM_EVENT
+                       : nsIScrollableFrame::NOT_MOMENTUM;
+
   nsIntPoint overflow;
   aScrollableFrame->ScrollBy(actualDevPixelScrollAmount,
                              nsIScrollableFrame::DEVICE_PIXELS,
-                             mode, &overflow, origin, aEvent->isMomentum);
+                             mode, &overflow, origin, momentum, snapMode);
 
   if (!scrollFrameWeak.IsAlive()) {
     // If the scroll causes changing the layout, we can think that the event
@@ -2980,6 +2987,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     {
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
       ScrollbarsForWheel::MayInactivate();
+      WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
+      nsIScrollableFrame* scrollTarget =
+        ComputeScrollTarget(aTargetFrame, wheelEvent,
+                            COMPUTE_DEFAULT_ACTION_TARGET);
+      if (scrollTarget) {
+        scrollTarget->ScrollSnap();
+      }
     }
     break;
   case NS_WHEEL_WHEEL:
