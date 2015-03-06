@@ -1,0 +1,8 @@
+{
+  "name" : "Version française.",
+  "entry_points": {
+    "dialer": {
+      "name": "téléphone"
+    }
+  }
+}

@@ -6,7 +6,9 @@
       "revision": 201411051234,
       "name": "Français",
       "apps": {
-        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/fr/"
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/fr/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_no_version.webapp": "tests/dom/apps/tests/langpack/fr/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_version_xyz.webapp": "tests/dom/apps/tests/langpack/fr/"
        }
      }
    },

@@ -699,6 +699,24 @@ WebappsApplication.prototype = {
     });
   },
 
+  getLocalizedValue: function(aProperty, aLang, aEntryPoint) {
+    this.addMessageListeners(["Webapps:GetLocalizedValue:Return"]);
+    return this.createPromise((aResolve, aReject) => {
+      cpmm.sendAsyncMessage("Webapps:GetLocalizedValue",
+        { manifestURL: this.manifestURL,
+          oid: this._id,
+          topId: this._topId,
+          property: aProperty,
+          lang: aLang,
+          entryPoint: aEntryPoint,
+          requestID: this.getPromiseResolverId({
+            resolve: aResolve,
+            reject: aReject
+          })
+        });
+    });
+  },
+
   _prepareForContent: function() {
     if (this.__DOM_IMPL__) {
       return this.__DOM_IMPL__;
@@ -736,7 +754,8 @@ WebappsApplication.prototype = {
     if (aMessage.name == "Webapps:Connect:Return:OK" ||
         aMessage.name == "Webapps:Connect:Return:KO" ||
         aMessage.name == "Webapps:GetConnections:Return:OK" ||
-        aMessage.name == "Webapps:Export:Return") {
+        aMessage.name == "Webapps:Export:Return" ||
+        aMessage.name == "Webapps:GetLocalizedValue:Return") {
       req = this.takePromiseResolver(msg.requestID);
     } else {
       req = this.takeRequest(msg.requestID);
@@ -828,6 +847,14 @@ WebappsApplication.prototype = {
         this.removeMessageListeners(["Webapps:Export:Return"]);
         if (msg.success) {
           req.resolve(Cu.cloneInto(msg.blob, this._window));
+        } else {
+          req.reject(new this._window.DOMError(msg.error || ""));
+        }
+        break;
+      case "Webapps:GetLocalizedValue:Return":
+        this.removeMessageListeners(["Webapps:GetLocalizedValue:Return"]);
+        if (msg.success) {
+          req.resolve(msg.value);
         } else {
           req.reject(new this._window.DOMError(msg.error || ""));
         }
