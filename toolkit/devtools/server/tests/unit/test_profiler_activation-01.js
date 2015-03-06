@@ -10,27 +10,16 @@
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 
-function connect_client(callback)
-{
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(() => {
-    client.listTabs(response => {
-      callback(client, response.profilerActor);
-    });
-  });
-}
-
 function run_test()
 {
   // Ensure the profiler is not running when the test starts (it could
   // happen if the MOZ_PROFILER_STARTUP environment variable is set).
   Profiler.StopProfiler();
 
-  DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
-
-  connect_client((client1, actor1) => {
-    connect_client((client2, actor2) => {
+  get_chrome_actors((client1, form1) => {
+    let actor1 = form1.profilerActor;
+    get_chrome_actors((client2, form2) => {
+      let actor2 = form2.profilerActor;
       test_activate(client1, actor1, client2, actor2, () => {
         do_test_finished();
       });

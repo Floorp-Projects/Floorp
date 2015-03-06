@@ -32,6 +32,7 @@ function initDebuggerServer()
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
   }
+  DebuggerServer.allowChromeProcess = true;
 }
 
 function connectToDebugger(aCallback)
@@ -68,20 +69,27 @@ function attachConsole(aListeners, aCallback, aAttachToTab)
       return;
     }
 
-    aState.dbgClient.listTabs(function _onListTabs(aResponse) {
-      if (aResponse.error) {
-        Cu.reportError("listTabs failed: " + aResponse.error + " " +
-                       aResponse.message);
-        aCallback(aState, aResponse);
-        return;
-      }
-      let consoleActor = aAttachToTab ?
-                         aResponse.tabs[aResponse.selected].consoleActor :
-                         aResponse.consoleActor;
-      aState.actor = consoleActor;
-      aState.dbgClient.attachConsole(consoleActor, aListeners,
-                                     _onAttachConsole.bind(null, aState));
-    });
+    if (aAttachToTab) {
+      aState.dbgClient.listTabs(function _onListTabs(aResponse) {
+        if (aResponse.error) {
+          Cu.reportError("listTabs failed: " + aResponse.error + " " +
+                         aResponse.message);
+          aCallback(aState, aResponse);
+          return;
+        }
+        let consoleActor = aResponse.tabs[aResponse.selected].consoleActor;
+        aState.actor = consoleActor;
+        aState.dbgClient.attachConsole(consoleActor, aListeners,
+                                       _onAttachConsole.bind(null, aState));
+      });
+    } else {
+      aState.dbgClient.attachProcess().then(response => {
+        let consoleActor = response.form.consoleActor;
+        aState.actor = consoleActor;
+        aState.dbgClient.attachConsole(consoleActor, aListeners,
+                                       _onAttachConsole.bind(null, aState));
+      });
+    }
   });
 }
 
