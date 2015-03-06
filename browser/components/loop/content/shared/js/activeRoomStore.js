@@ -497,13 +497,6 @@ loop.store.ActiveRoomStore = (function() {
     windowUnload: function() {
       this._leaveRoom(ROOM_STATES.CLOSING);
 
-      // If we're closing the window, then ensure the screensharing state
-      // is cleared. We don't do this on leave room, as we might still be
-      // sharing.
-      this._mozLoop.setScreenShareState(
-        this.getStoreState().windowId,
-        false);
-
       if (!this._onUpdateListener) {
         return;
       }
@@ -520,7 +513,7 @@ loop.store.ActiveRoomStore = (function() {
      * Handles a room being left.
      */
     leaveRoom: function() {
-      this._leaveRoom();
+      this._leaveRoom(ROOM_STATES.ENDED);
     },
 
     /**
@@ -554,14 +547,24 @@ loop.store.ActiveRoomStore = (function() {
      * Handles leaving a room. Clears any membership timeouts, then
      * signals to the server the leave of the room.
      *
-     * @param {ROOM_STATES} nextState Optional; the next state to switch to.
-     *                                Switches to READY if undefined.
+     * @param {ROOM_STATES} nextState The next state to switch to.
      */
     _leaveRoom: function(nextState) {
       if (loop.standaloneMedia) {
         loop.standaloneMedia.multiplexGum.reset();
       }
 
+      this._mozLoop.setScreenShareState(
+        this.getStoreState().windowId,
+        false);
+
+      if (this._browserSharingListener) {
+        // Remove the browser sharing listener as we don't need it now.
+        this._mozLoop.removeBrowserSharingListener(this._browserSharingListener);
+        this._browserSharingListener = null;
+      }
+
+      // We probably don't need to end screen share separately, but lets be safe.
       this._sdkDriver.disconnectSession();
 
       if (this._timeout) {
@@ -577,7 +580,7 @@ loop.store.ActiveRoomStore = (function() {
           this._storeState.sessionToken);
       }
 
-      this.setStoreState({roomState: nextState || ROOM_STATES.ENDED});
+      this.setStoreState({roomState: nextState});
     },
 
     /**
