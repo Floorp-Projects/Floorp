@@ -358,7 +358,7 @@ impl ToJson for GetParameters {
 #[derive(PartialEq)]
 pub struct TimeoutsParameters {
     type_: String,
-    ms: u64
+    ms: f64
 }
 
 impl Parameters for TimeoutsParameters {
@@ -375,9 +375,9 @@ impl Parameters for TimeoutsParameters {
         let ms = try_opt!(
             try_opt!(data.get("ms"),
                      ErrorStatus::InvalidArgument,
-                     "Missing 'ms' parameter").as_u64(),
+                     "Missing 'ms' parameter").as_f64(),
             ErrorStatus::InvalidArgument,
-            "'ms' not an integer");
+            "'ms' not a float");
         return Ok(TimeoutsParameters {
             type_: type_.to_string(),
             ms: ms
@@ -616,9 +616,6 @@ impl ToJson for JavascriptCommandParameters {
         //TODO: Wrap script so that it becomes marionette-compatible
         data.insert("script".to_string(), self.script.to_json());
         data.insert("args".to_string(), self.args.to_json());
-        data.insert("newSandbox".to_string(), false.to_json());
-        data.insert("specialPowers".to_string(), false.to_json());
-        data.insert("scriptTimeout".to_string(), Json::Null);
         Json::Object(data)
     }
 }
