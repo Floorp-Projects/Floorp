@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-const cachedPref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
 const testPref = "Foo,FooDupe";
 
 function promiseNewEngine(basename) {
@@ -67,10 +66,34 @@ add_task(function* test_add() {
      "Adding an engine does not remove engines from hidden list.");
 });
 
+add_task(function* test_diacritics() {
+  const diacritic_engine = "Foo \u2661";
+  let Preferences =
+    Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+
+  Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
+  yield promiseNewEngine("testEngine_diacritics.xml");
+
+  let hiddenOneOffs =
+    Preferences.get("browser.search.hiddenOneOffs").split(",");
+  is(hiddenOneOffs.some(x => x == diacritic_engine), false,
+     "Observer cleans up added hidden engines that include a diacritic.");
+
+  Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
+
+  info("Removing testEngine_diacritics.xml");
+  Services.search.removeEngine(Services.search.getEngineByName(diacritic_engine));
+
+  hiddenOneOffs =
+    Preferences.get("browser.search.hiddenOneOffs").split(",");
+  is(hiddenOneOffs.some(x => x == diacritic_engine), false,
+     "Observer cleans up removed hidden engines that include a diacritic.");
+});
+
 registerCleanupFunction(() => {
   info("Removing testEngine.xml");
   Services.search.removeEngine(Services.search.getEngineByName("Foo"));
   info("Removing testEngine_dupe.xml");
   Services.search.removeEngine(Services.search.getEngineByName("FooDupe"));
-  Services.prefs.setCharPref("browser.search.hiddenOneOffs", cachedPref);
+  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
 });
