@@ -779,7 +779,11 @@ impl ToMarionette for SwitchToFrameParameters {
 
 impl ToMarionette for JavascriptCommandParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        Ok(self.to_json())
+        let mut data = self.to_json().as_object().unwrap().clone();
+        data.insert("newSandbox".to_string(), false.to_json());
+        data.insert("specialPowers".to_string(), false.to_json());
+        data.insert("scriptTimeout".to_string(), Json::Null);
+        Ok(Json::Object(data))
     }
 }
 
