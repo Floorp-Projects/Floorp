@@ -32,7 +32,7 @@ class FetchEvent MOZ_FINAL : public Event
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   nsRefPtr<ServiceWorkerClient> mClient;
   nsRefPtr<Request> mRequest;
-  uint64_t mWindowId;
+  nsAutoPtr<ServiceWorkerClientInfo> mClientInfo;
   bool mIsReload;
   bool mWaitToRespond;
 protected:
@@ -51,7 +51,7 @@ public:
 
   void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                 nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
-                uint64_t aWindowId);
+                nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo);
 
   static already_AddRefed<FetchEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -72,7 +72,7 @@ public:
   }
 
   already_AddRefed<ServiceWorkerClient>
-  Client();
+  GetClient();
 
   bool
   IsReload() const
