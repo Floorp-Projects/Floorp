@@ -3369,6 +3369,15 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   if (frameSelection) {
     frameSelection->SetDragState(false);
     frameSelection->StopAutoScrollTimer();
+    nsIScrollableFrame* scrollFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(this,
+        nsLayoutUtils::SCROLLABLE_SAME_DOC |
+        nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+    if (scrollFrame) {
+      // Perform any additional scrolling needed to maintain CSS snap point
+      // requirements when autoscrolling is over.
+      scrollFrame->ScrollSnap();
+    }
   }
 
   // Do not call any methods of the current object after this point!!!

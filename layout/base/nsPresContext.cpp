@@ -192,9 +192,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mBaseMinFontSize(0),
     mTextZoom(1.0), mFullZoom(1.0), mLastFontInflationScreenWidth(-1.0),
     mPageSize(-1, -1), mPPScale(1.0f),
-    mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO,
-                            NS_STYLE_OVERFLOW_AUTO,
-                            NS_STYLE_SCROLL_BEHAVIOR_AUTO),
+    mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     mAllInvalidated(false),
     mPaintFlashing(false), mPaintFlashingInitialized(false)

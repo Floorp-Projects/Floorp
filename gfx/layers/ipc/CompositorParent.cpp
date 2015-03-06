@@ -1449,6 +1449,22 @@ CompositorParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
   }
 }
 
+/* static */ void
+CompositorParent::RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
+{
+  EnsureLayerTreeMapReady();
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  sIndirectLayerTrees[aLayersId].mLayerTreeReadyObserver = aObserver;
+}
+
+/* static */ void
+CompositorParent::RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver)
+{
+  EnsureLayerTreeMapReady();
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  sIndirectLayerTrees[aLayersId].mLayerTreeClearedObserver = aObserver;
+}
+
 /**
  * This class handles layer updates pushed directly from child
  * processes to the compositor thread.  It's associated with a
@@ -1527,6 +1543,7 @@ public:
                                    uint32_t aPaintSequenceNumber,
                                    bool aIsRepeatTransaction) MOZ_OVERRIDE;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
+  virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) MOZ_OVERRIDE;
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
@@ -1760,6 +1777,12 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
     mNotifyAfterRemotePaint = false;
   }
 
+  if (state->mLayerTreeReadyObserver) {
+    nsRefPtr<CompositorUpdateObserver> observer = state->mLayerTreeReadyObserver;
+    state->mLayerTreeReadyObserver = nullptr;
+    observer->ObserveUpdate(id, true);
+  }
+
   aLayerTree->SetPendingTransactionId(aTransactionId);
 }
 
@@ -1856,6 +1879,23 @@ CrossProcessCompositorParent::ForceComposite(LayerTransactionParent* aLayerTree)
   }
   if (parent) {
     parent->ForceComposite(aLayerTree);
+  }
+}
+
+void
+CrossProcessCompositorParent::NotifyClearCachedResources(LayerTransactionParent* aLayerTree)
+{
+  uint64_t id = aLayerTree->GetId();
+  MOZ_ASSERT(id != 0);
+
+  nsRefPtr<CompositorUpdateObserver> observer;
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    observer = sIndirectLayerTrees[id].mLayerTreeClearedObserver;
+    sIndirectLayerTrees[id].mLayerTreeClearedObserver = nullptr;
+  }
+  if (observer) {
+    observer->ObserveUpdate(id, false);
   }
 }
 

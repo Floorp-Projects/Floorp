@@ -264,6 +264,46 @@ APZCCallbackHelper::GetOrCreateScrollIdentifiers(nsIContent* aContent,
     return utils && (utils->GetPresShellId(aPresShellIdOut) == NS_OK);
 }
 
+class FlingSnapEvent : public nsRunnable
+{
+    typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+
+public:
+    FlingSnapEvent(const ViewID& aScrollId,
+                   const mozilla::CSSPoint& aDestination)
+        : mScrollId(aScrollId)
+        , mDestination(aDestination)
+    {
+    }
+
+    NS_IMETHOD Run() {
+        MOZ_ASSERT(NS_IsMainThread());
+
+        nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(mScrollId);
+        if (sf) {
+            sf->FlingSnap(mDestination);
+        }
+
+        return NS_OK;
+    }
+
+protected:
+    ViewID mScrollId;
+    mozilla::CSSPoint mDestination;
+};
+
+void
+APZCCallbackHelper::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                                     const mozilla::CSSPoint& aDestination)
+{
+    nsCOMPtr<nsIRunnable> r1 = new FlingSnapEvent(aScrollId, aDestination);
+    if (!NS_IsMainThread()) {
+        NS_DispatchToMainThread(r1);
+    } else {
+        r1->Run();
+    }
+}
+
 class AcknowledgeScrollUpdateEvent : public nsRunnable
 {
     typedef mozilla::layers::FrameMetrics::ViewID ViewID;

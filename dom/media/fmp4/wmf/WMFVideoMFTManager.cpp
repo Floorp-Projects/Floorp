@@ -71,13 +71,11 @@ WMFVideoMFTManager::WMFVideoMFTManager(
                             mozilla::layers::LayersBackend aLayersBackend,
                             mozilla::layers::ImageContainer* aImageContainer,
                             bool aDXVAEnabled)
-  : mVideoStride(0)
-  , mVideoWidth(0)
-  , mVideoHeight(0)
-  , mImageContainer(aImageContainer)
+  : mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mLayersBackend(aLayersBackend)
-  , mUseHwAccel(false)
+  // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
+  // Init().
 {
   NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
   MOZ_ASSERT(mImageContainer);
@@ -170,6 +168,7 @@ WMFVideoMFTManager::InitializeDXVA()
 TemporaryRef<MFTDecoder>
 WMFVideoMFTManager::Init()
 {
+  mUseHwAccel = false; // default value; changed if D3D setup succeeds.
   bool useDxva = InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
@@ -227,6 +226,13 @@ WMFVideoMFTManager::Init()
 
   mDecoder = decoder;
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
+
+  // Just in case ConfigureVideoFrameGeometry() does not set these
+  mVideoInfo = VideoInfo();
+  mVideoStride = 0;
+  mVideoWidth = 0;
+  mVideoHeight = 0;
+  mPictureRegion.SetEmpty();
 
   return decoder.forget();
 }
@@ -504,7 +510,7 @@ WMFVideoMFTManager::Shutdown()
 bool
 WMFVideoMFTManager::IsHardwareAccelerated() const
 {
-  return mUseHwAccel;
+  return mDecoder && mUseHwAccel;
 }
 
 } // namespace mozilla

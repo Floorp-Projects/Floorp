@@ -588,8 +588,7 @@ nsListControlFrame::GetScrollbarStyles() const
   // and GetScrollbarStyles can be devirtualized
   int32_t verticalStyle = IsInDropDownMode() ? NS_STYLE_OVERFLOW_AUTO
     : NS_STYLE_OVERFLOW_SCROLL;
-  return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, verticalStyle,
-                         NS_STYLE_SCROLL_BEHAVIOR_AUTO);
+  return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, verticalStyle);
 }
 
 bool

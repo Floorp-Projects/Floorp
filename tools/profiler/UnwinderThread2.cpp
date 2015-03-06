@@ -1208,6 +1208,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
         PCandSP* pairs = nullptr;
         unsigned int nPairs = 0;
         do_lul_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
+        buff->aProfile->addTag( ProfileEntry('T', buff->aProfile->ThreadId()) );
         buff->aProfile->addTag( ProfileEntry('s', "(root)") );
         for (unsigned int i = 0; i < nPairs; i++) {
           /* Skip any outermost frames that
@@ -1246,6 +1247,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       ProfileEntry ent = utb_get_profent(buff, k);
       // We need to insert a sample-start tag before the first frame
       if (k == ix_first_hP) {
+        buff->aProfile->addTag( ProfileEntry('T', buff->aProfile->ThreadId()) );
         buff->aProfile->addTag( ProfileEntry('s', "(root)") );
       }
       // action flush-hints
@@ -1294,6 +1296,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
     }
 
     // BEGIN merge
+    buff->aProfile->addTag( ProfileEntry('T', buff->aProfile->ThreadId()) );
     buff->aProfile->addTag( ProfileEntry('s', "(root)") );
     unsigned int next_N = 0; // index in pairs[]
     unsigned int next_P = ix_first_hP; // index in buff profent array
@@ -1424,6 +1427,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       PCandSP* pairs = nullptr;
       unsigned int nPairs = 0;
       do_lul_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
+      buff->aProfile->addTag( ProfileEntry('T', buff->aProfile->ThreadId()) );
       buff->aProfile->addTag( ProfileEntry('s', "(root)") );
       for (unsigned int i = 0; i < nPairs; i++) {
         buff->aProfile
