@@ -909,7 +909,8 @@ class SignalingAgent {
     mExpectedFrameRequestType(VideoSessionConduit::FrameRequestPli),
     mExpectNack(true),
     mExpectRtcpMuxAudio(true),
-    mExpectRtcpMuxVideo(true) {
+    mExpectRtcpMuxVideo(true),
+    mRemoteDescriptionSet(false) {
     cfg_.addStunServer(stun_addr, stun_port);
 
     PeerConnectionImpl *pcImpl =
@@ -1367,6 +1368,7 @@ class SignalingAgent {
       ASSERT_EQ(pObserver->state, TestObserver::stateSuccess);
     }
 
+    mRemoteDescriptionSet = true;
     for (auto i = deferredCandidates_.begin();
          i != deferredCandidates_.end();
          ++i) {
@@ -1408,7 +1410,7 @@ class SignalingAgent {
 
   void AddIceCandidateStr(const std::string& candidate, const std::string& mid,
                           unsigned short level) {
-    if (getRemoteDescription().empty()) {
+    if (!mRemoteDescriptionSet) {
       // Not time to add this, because the unit-test code hasn't set the
       // description yet.
       DeferredCandidate candidateStruct = {candidate, mid, level, true};
@@ -1550,6 +1552,7 @@ public:
   bool mExpectNack;
   bool mExpectRtcpMuxAudio;
   bool mExpectRtcpMuxVideo;
+  bool mRemoteDescriptionSet;
 
   std::map<Msid, SdpMediaSection::MediaType> mAddedTracks;
 
@@ -1819,6 +1822,7 @@ public:
     if (!trickle) {
       a1_->pObserver->trickleCandidates = false;
     }
+    a2_->mRemoteDescriptionSet = false;
     a1_->SetLocal(TestObserver::OFFER, a1_->offer());
     if (!trickle) {
       a1_->WaitForGather();
@@ -1837,6 +1841,7 @@ public:
     if (!trickle) {
       a2_->pObserver->trickleCandidates = false;
     }
+    a1_->mRemoteDescriptionSet = false;
     a2_->SetLocal(TestObserver::ANSWER, a2_->answer());
     if (!trickle) {
       a2_->WaitForGather();
