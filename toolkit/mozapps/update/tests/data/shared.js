@@ -597,7 +597,7 @@ function getGREBinDir() {
  *         Components.stack.caller will be used.
  */
 function logTestInfo(aText, aCaller) {
-  let caller = (aCaller ? aCaller : Components.stack.caller);
+  let caller = aCaller ? aCaller : Components.stack.caller;
   let now = new Date;
   let hh = now.getHours();
   let mm = now.getMinutes();
@@ -623,7 +623,6 @@ function logTestInfo(aText, aCaller) {
  */
 function debugDump(aText, aCaller) {
   if (DEBUG_AUS_TEST) {
-    let caller = aCaller ? aCaller : Components.stack.caller;
-    logTestInfo(aText, caller);
+    logTestInfo(aText, aCaller);
   }
 }
