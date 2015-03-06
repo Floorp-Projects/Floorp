@@ -12,10 +12,6 @@ onmessage = function(event) {
   postMessage({event: 'trace without function', status: true, last : false});
 
   for (var i = 0; i < 10; ++i) {
-    console.what('1', 123, 321);
-  }
-
-  for (var i = 0; i < 10; ++i) {
     console.log(i, i, i);
   }
 
@@ -81,7 +77,6 @@ function nextSteps(event) {
   namelessTimer();
 
   var str = "Test Message."
-  console.foobar(str); // if this throws, we don't execute following funcs
   console.log(str);
   console.info(str);
   console.warn(str);
@@ -91,6 +86,8 @@ function nextSteps(event) {
   console.assert(false, str);
   console.profile(str);
   console.profileEnd(str);
+  console.timeStamp();
+  console.clear();
   postMessage({event: '4 messages', status: true, last : false});
 
   // Recursive:
