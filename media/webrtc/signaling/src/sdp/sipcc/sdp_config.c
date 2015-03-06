@@ -10,26 +10,6 @@
 
 static const char* logTag = "sdp_config";
 
-/* Function:    sdp_verify_conf_ptr
- * Description: Verify the configuration pointer is valid by checking for
- *              the SDP magic number.  If not valid, display an error.
- *              Note that we can't keep a statistic of this because we
- *              track stats inside the config structure.
- * Parameters:	conf_p    The configuration structure handle.
- *              str       String containing function name to print.
- * Returns:	TRUE or FALSE.
- */
-tinybool sdp_verify_conf_ptr (sdp_conf_options_t *conf_p)
-{
-    if ((conf_p != NULL) && (conf_p->magic_num == SDP_MAGIC_NUM)) {
-        return (TRUE);
-    } else {
-        CSFLogError(logTag, "SDP: Invalid Config pointer: %p (magic=0x%X)",
-                    conf_p, conf_p ? conf_p->magic_num : 0);
-        return (FALSE);
-    }
-}
-
 /* Function:    void *sdp_init_config()
  * Description: Initialize SDP configuration structure with the
  *              following defaults:
@@ -53,9 +33,6 @@ sdp_conf_options_t *sdp_init_config ()
         CSFLogError(logTag, "SDP: could not allocate configuration object.");
         return NULL;
     }
-
-    /* Initialize magic number. */
-    conf_p->magic_num = SDP_MAGIC_NUM;
 
     /* Set default debug flags. */
     conf_p->debug_flag[SDP_DEBUG_TRACE]    = FALSE;
@@ -106,19 +83,18 @@ sdp_conf_options_t *sdp_init_config ()
     conf_p->error_handler           = NULL;
     conf_p->error_handler_context   = NULL;
 
-    CSFLogInfo(logTag, "SDP: Initialized config pointer: %p (magic=0x%X)",
-                conf_p, conf_p ? conf_p->magic_num : 0);
+    CSFLogInfo(logTag, "SDP: Initialized config pointer: %p", conf_p);
 
     return (conf_p);
 }
 
-void sdp_free_config(sdp_conf_options_t* config_p) {
-  if (config_p) {
-    SDP_FREE(config_p);
+void sdp_free_config(sdp_conf_options_t* conf_p) {
+  if (conf_p) {
+    SDP_FREE(conf_p);
   }
 }
 
-/* Function:    void sdp_appl_debug(void *config_p, sdp_debug_e debug_type,
+/* Function:    void sdp_appl_debug(sdp_conf_options_t *conf_p, sdp_debug_e debug_type,
  *                                  tinybool my_bool);
  * Description:	Define the default type of debug for the application.
  *              Valid debug types are ERRORS, WARNINGS, and TRACE.  Each
@@ -129,15 +105,9 @@ void sdp_free_config(sdp_conf_options_t* config_p) {
  *              debug_flag  Defines whether the debug should be enabled or not.
  * Returns:	Nothing.
  */
-void sdp_appl_debug (void *config_p, sdp_debug_e debug_type,
+void sdp_appl_debug (sdp_conf_options_t *conf_p, sdp_debug_e debug_type,
                      tinybool debug_flag)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     if (debug_type < SDP_MAX_DEBUG_TYPES)  {
         conf_p->debug_flag[debug_type] = debug_flag;
     }
@@ -155,47 +125,23 @@ void sdp_appl_debug (void *config_p, sdp_debug_e debug_type,
  *              be required.
  * Returns:	Nothing.
  */
-void sdp_require_version (void *config_p, tinybool version_required)
+void sdp_require_version (sdp_conf_options_t *conf_p, tinybool version_required)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->version_reqd = version_required;
 }
 
-void sdp_require_owner (void *config_p, tinybool owner_required)
+void sdp_require_owner (sdp_conf_options_t *conf_p, tinybool owner_required)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->owner_reqd = owner_required;
 }
 
-void sdp_require_session_name (void *config_p, tinybool sess_name_required)
+void sdp_require_session_name (sdp_conf_options_t *conf_p, tinybool sess_name_required)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->session_name_reqd = sess_name_required;
 }
 
-void sdp_require_timespec (void *config_p, tinybool timespec_required)
+void sdp_require_timespec (sdp_conf_options_t *conf_p, tinybool timespec_required)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->timespec_reqd = timespec_required;
 }
 
@@ -204,20 +150,14 @@ void sdp_require_timespec (void *config_p, tinybool timespec_required)
  * Description: These functions allow the application to specify which
  *              media types it supports. The application must set any/all
  *              as required.  No media types are supported by default.
- * Parameters:  config_p    The config handle returned by sdp_init_config.
+ * Parameters:  conf_p    The config handle returned by sdp_init_config.
  *              nettype     The network type for which support is being set.
  *              media_supported TRUE or FALSE whether the support is provided.
  * Returns:     Nothing.
  */
-void sdp_media_supported (void *config_p, sdp_media_e media_type,
+void sdp_media_supported (sdp_conf_options_t *conf_p, sdp_media_e media_type,
                          tinybool media_supported)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->media_supported[media_type] = media_supported;
 }
 
@@ -227,21 +167,15 @@ void sdp_media_supported (void *config_p, sdp_media_e media_type,
  *              network types it supports.  The application must set
  *              any/all as required.  No network types are supported by
  *              default.
- * Parameters:  config_p    The config handle returned by sdp_init_config.
+ * Parameters:  conf_p    The config handle returned by sdp_init_config.
  *              nettype     The network type for which support is being set.
  *              nettype_supported TRUE or FALSE whether the support is
  *                          provided.
  * Returns:     Nothing.
  */
-void sdp_nettype_supported (void *config_p, sdp_nettype_e nettype,
+void sdp_nettype_supported (sdp_conf_options_t *conf_p, sdp_nettype_e nettype,
                             tinybool nettype_supported)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->nettype_supported[nettype] = nettype_supported;
 }
 
@@ -251,21 +185,15 @@ void sdp_nettype_supported (void *config_p, sdp_nettype_e nettype,
  *              address types it supports.  The application must set
  *              any/all as required.  No address types are supported by
  *              default.
- * Parameters:  config_p    The config handle returned by sdp_init_config.
+ * Parameters:  conf_p    The config handle returned by sdp_init_config.
  *              addrtype    The address type for which support is being set.
  *              addrtype_supported TRUE or FALSE whether the support is
  *                          provided.
  * Returns:     Nothing.
  */
-void sdp_addrtype_supported (void *config_p, sdp_addrtype_e addrtype,
+void sdp_addrtype_supported (sdp_conf_options_t *conf_p, sdp_addrtype_e addrtype,
                              tinybool addrtype_supported)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->addrtype_supported[addrtype] = addrtype_supported;
 }
 
@@ -275,21 +203,15 @@ void sdp_addrtype_supported (void *config_p, sdp_addrtype_e addrtype,
  *              transport types it supports.  The application must set
  *              any/all as required.  No transport types are supported
  *              by default.
- * Parameters:  config_p    The config handle returned by sdp_init_config.
+ * Parameters:  conf_p    The config handle returned by sdp_init_config.
  *              transport   The transport type for which support is being set.
  *              transport_supported  TRUE or FALSE whether the support is
  *                          provided.
  * Returns:     Nothing.
  */
-void sdp_transport_supported (void *config_p, sdp_transport_e transport,
+void sdp_transport_supported (sdp_conf_options_t *conf_p, sdp_transport_e transport,
                               tinybool transport_supported)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     conf_p->transport_supported[transport] = transport_supported;
 }
 
@@ -297,31 +219,23 @@ void sdp_transport_supported (void *config_p, sdp_transport_e transport,
 /* Function:    sdp_allow_choose
  * Description: These functions allow the CHOOSE parameter `$' to be
  *              specified in place of certain parameters.
- * Parameters:  config_p        The config handle returned by sdp_init_config.
+ * Parameters:  conf_p        The config handle returned by sdp_init_config.
  *              param           The param that may or may not be CHOOSE.
  *              choose_allowed  TRUE or FALSE whether the CHOOSE parameter
  *                              should be allowed.
  * Returns:     Nothing.
  */
-void sdp_allow_choose (void *config_p, sdp_choose_param_e param, tinybool choose_allowed)
+void sdp_allow_choose (sdp_conf_options_t *conf_p, sdp_choose_param_e param, tinybool choose_allowed)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
-    if (sdp_verify_conf_ptr(conf_p) == FALSE) {
-        return;
-    }
-
     if (param < SDP_MAX_CHOOSE_PARAMS) {
         conf_p->allow_choose[param] = choose_allowed;
     }
 }
 
-void sdp_config_set_error_handler(void *config_p,
+void sdp_config_set_error_handler(sdp_conf_options_t *conf_p,
                                   sdp_parse_error_handler handler,
                                   void *context)
 {
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
-
     conf_p->error_handler = handler;
     conf_p->error_handler_context = context;
 }
