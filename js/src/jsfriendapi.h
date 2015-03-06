@@ -687,14 +687,6 @@ IsCallObject(JSObject *obj);
 JS_FRIEND_API(bool)
 CanAccessObjectShape(JSObject *obj);
 
-inline JSObject *
-GetObjectParent(JSObject *obj)
-{
-    MOZ_ASSERT(!IsScopeObject(obj));
-    MOZ_ASSERT(CanAccessObjectShape(obj));
-    return reinterpret_cast<shadow::Object*>(obj)->shape->base->parent;
-}
-
 static MOZ_ALWAYS_INLINE JSCompartment *
 GetObjectCompartment(JSObject *obj)
 {
