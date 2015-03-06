@@ -28,12 +28,6 @@ using namespace mozilla::ipc;
 
 namespace {
 
-static const char NFC_SOCKET_NAME[] = "/dev/socket/nfcd";
-
-// Network port to connect to for adb forwarded sockets when doing
-// desktop development.
-static const uint32_t NFC_TEST_PORT = 6400;
-
 class SendNfcSocketDataTask MOZ_FINAL : public nsRunnable
 {
 public:
@@ -172,17 +166,13 @@ NfcListenSocket::OnDisconnect()
 
 NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
   : mListener(aListener)
-  , mShutdown(false)
-{
-  mAddress = NFC_SOCKET_NAME;
-}
+{ }
 
 void
 NfcConsumer::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mShutdown = true;
   Close();
 }
 
