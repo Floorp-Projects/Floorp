@@ -427,7 +427,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
   MOZ_ASSERT(numericTrackId != TRACK_INVALID);
 
-  bool queue_track = stream->QueueTracks();
+  bool queue_track = stream->ShouldQueueTracks();
 
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__ << ": Creating pipeline for "
             << numericTrackId << " -> " << aTrack.GetTrackId());
@@ -482,9 +482,6 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
 
   stream->SyncPipeline(pipeline);
 
-  if (queue_track) {
-    stream->TrackQueued(aTrack.GetTrackId());
-  }
   return NS_OK;
 }
 
