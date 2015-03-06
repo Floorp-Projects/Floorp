@@ -307,9 +307,6 @@ public:
   NS_IMETHOD GetName(nsAString& aFunction) MOZ_OVERRIDE;
   NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
   NS_IMETHOD GetFormattedStack(nsAString& aStack) MOZ_OVERRIDE;
-  virtual bool CallerSubsumes(JSContext* aCx) MOZ_OVERRIDE;
-  NS_IMETHOD GetSanitized(JSContext* aCx,
-                          nsIStackFrame** aSanitized) MOZ_OVERRIDE;
 
 protected:
   virtual bool IsJSFrame() const MOZ_OVERRIDE {
@@ -581,35 +578,6 @@ NS_IMETHODIMP StackFrame::GetSourceLine(nsACString& aSourceLine)
   return NS_OK;
 }
 
-/* [noscript] readonly attribute nsIStackFrame sanitized */
-NS_IMETHODIMP StackFrame::GetSanitized(JSContext*, nsIStackFrame** aSanitized)
-{
-  NS_ADDREF(*aSanitized = this);
-  return NS_OK;
-}
-
-/* [noscript] readonly attribute nsIStackFrame sanitized */
-NS_IMETHODIMP JSStackFrame::GetSanitized(JSContext* aCx, nsIStackFrame** aSanitized)
-{
-  // NB: Do _not_ enter the compartment of the SavedFrame object here, because
-  // we are checking against the caller's compartment's principals in
-  // GetFirstSubsumedSavedFrame.
-
-  JS::RootedObject savedFrame(aCx, mStack);
-  JS::ExposeObjectToActiveJS(mStack);
-
-  savedFrame = js::GetFirstSubsumedSavedFrame(aCx, savedFrame);
-  nsCOMPtr<nsIStackFrame> stackFrame;
-  if (savedFrame) {
-    stackFrame = new JSStackFrame(savedFrame);
-  } else {
-    stackFrame = new StackFrame();
-  }
-
-  stackFrame.forget(aSanitized);
-  return NS_OK;
-}
-
 /* readonly attribute nsIStackFrame caller; */
 NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 {
@@ -729,37 +697,6 @@ NS_IMETHODIMP StackFrame::ToString(nsACString& _retval)
                        NS_ConvertUTF16toUTF8(funname).get(),
                        lineno);
   return NS_OK;
-}
-
-/* virtual */ bool
-StackFrame::CallerSubsumes(JSContext* aCx)
-{
-  return true;
-}
-
-/* virtual */ bool
-JSStackFrame::CallerSubsumes(JSContext* aCx)
-{
-  if (!NS_IsMainThread()) {
-    return true;
-  }
-
-  if (!mStack) {
-    // No problem here, there's no data to leak.
-    return true;
-  }
-
-  nsIPrincipal* callerPrincipal = nsContentUtils::SubjectPrincipal();
-
-  JS::Rooted<JSObject*> unwrappedStack(aCx, js::CheckedUnwrap(mStack));
-  if (!unwrappedStack) {
-    // We can't leak data here either.
-    return true;
-  }
-
-  nsIPrincipal* stackPrincipal =
-    nsJSPrincipals::get(js::GetSavedFramePrincipals(unwrappedStack));
-  return callerPrincipal->SubsumesConsideringDomain(stackPrincipal);
 }
 
 /* static */ already_AddRefed<nsIStackFrame>
