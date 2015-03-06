@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+input { -moz-appearance: textfield; }
+
+</style>
+<script>
+
+function boom()
+{
+    window.getComputedStyle(x, "::-moz-number-spin-down").getPropertyValue("color");
+}
+
+</script>
+<body onload="boom();">
+<input type="number" id="x">
+</body>
+</html>
