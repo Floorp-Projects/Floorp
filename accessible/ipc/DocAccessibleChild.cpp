@@ -292,5 +292,16 @@ DocAccessibleChild::RecvGetTextBeforeOffset(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvCharAt(const uint64_t& aID,
+                               const int32_t& aOffset,
+                               uint16_t* aChar)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aChar = acc && acc->IsTextRole() ?
+    static_cast<uint16_t>(acc->CharAt(aOffset)) : 0;
+  return true;
+}
+
 }
 }

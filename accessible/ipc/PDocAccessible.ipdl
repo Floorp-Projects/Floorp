@@ -75,6 +75,7 @@ child:
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
   prio(high) sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync CharAt(uint64_t aID, int32_t aOffset) returns(uint16_t aChar);
 };
 
 }
