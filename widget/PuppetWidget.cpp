@@ -328,6 +328,30 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 }
 
 
+nsEventStatus
+PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
+{
+  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    DispatchEvent(aEvent, status);
+    return status;
+  }
+
+  if (!mTabChild) {
+    return nsEventStatus_eIgnore;
+  }
+
+  switch (aEvent->mClass) {
+    case eWheelEventClass:
+      mTabChild->SendSynthesizedMouseWheelEvent(*aEvent->AsWheelEvent());
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unsupported event type");
+  }
+
+  return nsEventStatus_eIgnore;
+}
+
 NS_IMETHODIMP_(bool)
 PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                       const mozilla::WidgetKeyboardEvent& aEvent,
