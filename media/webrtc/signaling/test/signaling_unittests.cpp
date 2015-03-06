@@ -60,7 +60,7 @@ bool gTestsComplete = false;
 #error USE_FAKE_PCOBSERVER undefined
 #endif
 
-static int kDefaultTimeout = 7000;
+static int kDefaultTimeout = 10000;
 
 static std::string callerName = "caller";
 static std::string calleeName = "callee";
