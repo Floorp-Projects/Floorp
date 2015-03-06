@@ -11,10 +11,12 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTArray.h"
+#include "SVGTextFrame.h"
 
-static bool StyleContextContainsFont(nsStyleContext* aStyleContext,
-                                     const gfxUserFontSet* aUserFontSet,
-                                     const gfxUserFontEntry* aFont)
+static bool
+StyleContextContainsFont(nsStyleContext* aStyleContext,
+                         const gfxUserFontSet* aUserFontSet,
+                         const gfxUserFontEntry* aFont)
 {
   // if the font is null, simply check to see whether fontlist includes
   // downloadable fonts
@@ -66,6 +68,41 @@ FrameUsesFont(nsIFrame* aFrame, const gfxUserFontEntry* aFont)
   return false;
 }
 
+static void
+ScheduleReflow(nsIPresShell* aShell, nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  if (f->IsFrameOfType(nsIFrame::eSVG) || f->IsSVGText()) {
+    // SVG frames (and the non-SVG descendants of an SVGTextFrame) need special
+    // reflow handling.  We need to search upwards for the first displayed
+    // nsSVGOuterSVGFrame or non-SVG frame, which is the frame we can call
+    // FrameNeedsReflow on.  (This logic is based on
+    // nsSVGUtils::ScheduleReflowSVG and
+    // SVGTextFrame::ScheduleReflowSVGNonDisplayText.)
+    if (f->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+      while (f) {
+        if (!(f->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+          if (NS_SUBTREE_DIRTY(f)) {
+            // This is a displayed frame, so if it is already dirty, we
+            // will be reflowed soon anyway.  No need to call
+            // FrameNeedsReflow again, then.
+            return;
+          }
+          if (f->GetStateBits() & NS_STATE_IS_OUTER_SVG ||
+              !(f->IsFrameOfType(nsIFrame::eSVG) || f->IsSVGText())) {
+            break;
+          }
+          f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+        }
+        f = f->GetParent();
+      }
+      MOZ_ASSERT(f, "should have found an ancestor frame to reflow");
+    }
+  }
+
+  aShell->FrameNeedsReflow(f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+}
+
 /* static */ void
 nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
                                         const gfxUserFontEntry* aFont)
@@ -92,7 +129,7 @@ nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       // if this frame uses the font, mark its descendants dirty
       // and skip checking its children
       if (FrameUsesFont(f, aFont)) {
-        ps->FrameNeedsReflow(f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+        ScheduleReflow(ps, f);
       } else {
         if (f->GetType() == nsGkAtoms::placeholderFrame) {
           nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
