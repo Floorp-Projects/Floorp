@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>test @font-face reflow sanity</title>
+<meta charset="utf-8">
+<style>
+body { margin: 20px }
+
+@font-face {
+  font-family: reflow1a;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=100&test=delay-1a);
+}
+
+@font-face {
+  font-family: reflow1a;
+  src: url(../fonts/markfonts-delay.sjs?font=markB&delay=1000&test=delay-1a);
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: reflow1a;
+  src: url(../fonts/markfonts-delay.sjs?font=markC&delay=1500&test=delay-1a);
+  font-style: italic;
+}
+
+@font-face {
+  font-family: reflow1a;
+  src: url(../fonts/markfonts-delay.sjs?font=markD&delay=2000&test=delay-1a);
+  font-weight: bold;
+  font-style: italic;
+}
+
+div#test {
+  font-family: reflow1a;
+  font-size: 400%;
+  line-height: 1em;
+}
+
+div#test p {
+  margin: 0;
+  display: inline-block;
+}
+</style>
+</head>
+
+<body>
+<div id=test>
+<p>A</p>
+<p style="font-weight: bold">B</p>
+<p style="font-style: italic">C</p>
+<p style="font-style: italic; font-weight: bold">D</p>
+</div>
+</body>
+</html>
