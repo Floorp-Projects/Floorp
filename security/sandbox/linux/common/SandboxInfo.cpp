@@ -5,15 +5,116 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SandboxInfo.h"
+#include "LinuxSched.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "base/posix/eintr_wrapper.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/DebugOnly.h"
+#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/services/linux_syscalls.h"
 
 namespace mozilla {
+
+static bool
+HasSeccompBPF()
+{
+  // Allow simulating the absence of seccomp-bpf support, for testing.
+  if (getenv("MOZ_FAKE_NO_SANDBOX")) {
+    return false;
+  }
+  // Determine whether seccomp-bpf is supported by trying to
+  // enable it with an invalid pointer for the filter.  This will
+  // fail with EFAULT if supported and EINVAL if not, without
+  // changing the process's state.
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr) != -1) {
+    MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr)"
+              " didn't fail");
+  }
+  MOZ_ASSERT(errno == EFAULT || errno == EINVAL);
+  return errno == EFAULT;
+}
+
+static bool
+HasSeccompTSync()
+{
+  // Similar to above, but for thread-sync mode.  See also Chromium's
+  // sandbox::SandboxBPF::SupportsSeccompThreadFilterSynchronization
+  if (getenv("MOZ_FAKE_NO_SECCOMP_TSYNC")) {
+    return false;
+  }
+  if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
+              SECCOMP_FILTER_FLAG_TSYNC, nullptr) != -1) {
+    MOZ_CRASH("seccomp(..., SECCOMP_FILTER_FLAG_TSYNC, nullptr)"
+              " didn't fail");
+  }
+  MOZ_ASSERT(errno == EFAULT || errno == EINVAL || errno == ENOSYS);
+  return errno == EFAULT;
+}
+
+static bool
+HasUserNamespaceSupport()
+{
+  // Note: the /proc/<pid>/ns/* files track setns(2) support, which in
+  // some cases (e.g., pid) significantly postdates kernel support for
+  // the namespace type, so in general this type of check could be a
+  // false negative.  However, for user namespaces, any kernel new
+  // enough for the feature to be usable for us has setns support
+  // (v3.8), so this is okay.
+  if (access("/proc/self/ns/user", F_OK) == -1) {
+    MOZ_ASSERT(errno == ENOENT);
+    return false;
+  }
+  return true;
+}
+
+static bool
+CanCreateUserNamespace()
+{
+  // Unfortunately, the only way to verify that this process can
+  // create a new user namespace is to actually create one; because
+  // this process's namespaces shouldn't be side-effected (yet), it's
+  // necessary to clone (and collect) a child process.  See also
+  // Chromium's sandbox::Credentials::SupportsNewUserNS.
+  //
+  // This is somewhat more expensive than the other tests, so it's
+  // cached in the environment to prevent child processes from having
+  // to re-run the test.
+  //
+  // This is run at static initializer time, while single-threaded, so
+  // locking isn't needed to access the environment.
+  static const char kCacheEnvName[] = "MOZ_ASSUME_USER_NS";
+  const char* cached = getenv(kCacheEnvName);
+  if (cached) {
+    return cached[0] > '0';
+  }
+
+  pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER);
+  if (pid == 0) {
+    // In the child.  Do as little as possible.
+    _exit(0);
+  }
+  if (pid == -1) {
+    // Failure.
+    MOZ_ASSERT(errno == EINVAL || // unsupported
+               errno == EPERM  || // root-only, or we're already chrooted
+               errno == EUSERS);  // already inside 32 nested user namespaces
+    setenv(kCacheEnvName, "0", 1);
+    return false;
+  }
+  // Otherwise, in the parent and successful.
+  DebugOnly<bool> ok = HANDLE_EINTR(waitpid(pid, nullptr, 0)) == pid;
+  MOZ_ASSERT(ok);
+  setenv(kCacheEnvName, "1", 1);
+  return true;
+}
 
 /* static */
 const SandboxInfo SandboxInfo::sSingleton = SandboxInfo();
@@ -22,18 +123,17 @@ SandboxInfo::SandboxInfo() {
   int flags = 0;
   static_assert(sizeof(flags) >= sizeof(Flags), "enum Flags fits in an int");
 
-  // Allow simulating the absence of seccomp-bpf support, for testing.
-  if (!getenv("MOZ_FAKE_NO_SANDBOX")) {
-    // Determine whether seccomp-bpf is supported by trying to
-    // enable it with an invalid pointer for the filter.  This will
-    // fail with EFAULT if supported and EINVAL if not, without
-    // changing the process's state.
-    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr) != -1) {
-      MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr)"
-                " didn't fail");
+  if (HasSeccompBPF()) {
+    flags |= kHasSeccompBPF;
+    if (HasSeccompTSync()) {
+      flags |= kHasSeccompTSync;
     }
-    if (errno == EFAULT) {
-      flags |= kHasSeccompBPF;
+  }
+
+  if (HasUserNamespaceSupport()) {
+    flags |= kHasPrivilegedUserNamespaces;
+    if (CanCreateUserNamespace()) {
+      flags |= kHasUserNamespaces;
     }
   }
 
