@@ -7,6 +7,7 @@
 #define GFX_USER_FONT_SET_H
 
 #include "gfxFont.h"
+#include "gfxFontFamilyList.h"
 #include "nsRefPtrHashtable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -237,6 +238,9 @@ public:
     // Look up and return the gfxUserFontFamily in mFontFamilies with
     // the given name
     gfxUserFontFamily* LookupFamily(const nsAString& aName) const;
+
+    // Look up names in a fontlist and return true if any are in the set
+    bool ContainsUserFontSetFonts(const mozilla::FontFamilyList& aFontList) const;
 
     // Lookup a font entry for a given style, returns null if not loaded.
     // aFamily must be a family returned by our LookupFamily method.
@@ -553,7 +557,7 @@ public:
     virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,
                                         bool aNeedsBold);
 
-    gfxFontEntry* GetPlatformFontEntry() { return mPlatformFontEntry; }
+    gfxFontEntry* GetPlatformFontEntry() const { return mPlatformFontEntry; }
 
     // is the font loading or loaded, or did it fail?
     UserFontLoadState LoadState() const { return mUserFontLoadState; }
