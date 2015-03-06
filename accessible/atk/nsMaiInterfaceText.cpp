@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InterfaceInitFuncs.h"
-
+#include "mozilla/a11y/PDocAccessible.h"
 #include "Accessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
@@ -21,6 +21,65 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 static const char* sAtkTextAttrNames[ATK_TEXT_ATTR_LAST_DEFINED];
+
+void
+ConvertTextAttributeToAtkAttribute(const nsACString& aName,
+                                   const nsAString& aValue,
+                                   AtkAttributeSet** aAttributeSet)
+{
+  // Handle attributes where atk has its own name.
+  const char* atkName = nullptr;
+  nsAutoString atkValue;
+  if (aName.EqualsLiteral("color")) {
+    // The format of the atk attribute is r,g,b and the gecko one is
+    // rgb(r,g,b).
+    atkValue = Substring(aValue, 5, aValue.Length() - 1);
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FG_COLOR];
+  } else if (aName.EqualsLiteral("background-color")) {
+    // The format of the atk attribute is r,g,b and the gecko one is
+    // rgb(r,g,b).
+    atkValue = Substring(aValue, 5, aValue.Length() - 1);
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_BG_COLOR];
+  } else if (aName.EqualsLiteral("font-family")) {
+    atkValue = aValue;
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FAMILY_NAME];
+  } else if (aName.EqualsLiteral("font-size")) {
+    // ATK wants the number of pixels without px at the end.
+    atkValue = StringHead(aValue, aValue.Length() - 2);
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_SIZE];
+  } else if (aName.EqualsLiteral("font-weight")) {
+    atkValue = aValue;
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_WEIGHT];
+  } else if (aName.EqualsLiteral("invalid")) {
+    atkValue = aValue;
+    atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_INVALID];
+  }
+
+  if (atkName) {
+    AtkAttribute* objAttr =
+      static_cast<AtkAttribute*>(g_malloc(sizeof(AtkAttribute)));
+    objAttr->name = g_strdup(atkName);
+    objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(atkValue).get());
+    *aAttributeSet = g_slist_prepend(*aAttributeSet, objAttr);
+  }
+}
+
+static AtkAttributeSet*
+ConvertToAtkTextAttributeSet(nsTArray<Attribute>& aAttributes)
+{
+  AtkAttributeSet* objAttributeSet = nullptr;
+  for (size_t i = 0; i < aAttributes.Length(); ++i) {
+    AtkAttribute* objAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+    objAttr->name = g_strdup(aAttributes[i].Name().get());
+    objAttr->value =
+      g_strdup(NS_ConvertUTF16toUTF8(aAttributes[i].Value()).get());
+    objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
+    ConvertTextAttributeToAtkAttribute(aAttributes[i].Name(),
+                                       aAttributes[i].Value(),
+                                       &objAttributeSet);
+  }
+  return objAttributeSet;
+}
 
 static AtkAttributeSet*
 ConvertToAtkTextAttributeSet(nsIPersistentProperties* aAttributes)
@@ -55,40 +114,7 @@ ConvertToAtkTextAttributeSet(nsIPersistentProperties* aAttributes)
     objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
     objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
 
-    // Handle attributes where atk has its own name.
-    const char* atkName = nullptr;
-    nsAutoString atkValue;
-    if (name.EqualsLiteral("color")) {
-      // The format of the atk attribute is r,g,b and the gecko one is
-      // rgb(r,g,b).
-      atkValue = Substring(value, 5, value.Length() - 1);
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FG_COLOR];
-    } else if (name.EqualsLiteral("background-color")) {
-      // The format of the atk attribute is r,g,b and the gecko one is
-      // rgb(r,g,b).
-      atkValue = Substring(value, 5, value.Length() - 1);
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_BG_COLOR];
-    } else if (name.EqualsLiteral("font-family")) {
-      atkValue = value;
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FAMILY_NAME];
-    } else if (name.EqualsLiteral("font-size")) {
-      // ATK wants the number of pixels without px at the end.
-      atkValue = StringHead(value, value.Length() - 2);
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_SIZE];
-    } else if (name.EqualsLiteral("font-weight")) {
-      atkValue = value;
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_WEIGHT];
-    } else if (name.EqualsLiteral("invalid")) {
-      atkValue = value;
-      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_INVALID];
-    }
-
-    if (atkName) {
-      objAttr = static_cast<AtkAttribute*>(g_malloc(sizeof(AtkAttribute)));
-      objAttr->name = g_strdup(atkName);
-      objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(atkValue).get());
-      objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
-    }
+    ConvertTextAttributeToAtkAttribute(name, value, &objAttributeSet);
   }
 
   // libatk-adaptor will free it
@@ -252,38 +278,58 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
 {
   *aStartOffset = -1;
   *aEndOffset = -1;
+  int32_t startOffset = 0, endOffset = 0;
 
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIPersistentProperties> attributes =
+      text->TextAttributes(false, aOffset, &startOffset, &endOffset);
+
+    *aStartOffset = startOffset;
+    *aEndOffset = endOffset;
+
+    return ConvertToAtkTextAttributeSet(attributes);
+  }
+
+  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText));
+  if (!proxy) {
     return nullptr;
+  }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
-
-  int32_t startOffset = 0, endOffset = 0;
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    text->TextAttributes(false, aOffset, &startOffset, &endOffset);
-
+  nsAutoTArray<Attribute, 10> attrs;
+  proxy->TextAttributes(false, aOffset, &attrs, &startOffset, &endOffset);
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
-
-  return ConvertToAtkTextAttributeSet(attributes);
+  return ConvertToAtkTextAttributeSet(attrs);
 }
 
 static AtkAttributeSet*
 getDefaultAttributesCB(AtkText *aText)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return nullptr;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return nullptr;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
+    nsCOMPtr<nsIPersistentProperties> attributes = text->DefaultTextAttributes();
+    return ConvertToAtkTextAttributeSet(attributes);
+  }
 
-  nsCOMPtr<nsIPersistentProperties> attributes = text->DefaultTextAttributes();
-  return ConvertToAtkTextAttributeSet(attributes);
+  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText));
+  if (!proxy) {
+    return nullptr;
+  }
+
+  nsAutoTArray<Attribute, 10> attrs;
+  proxy->DefaultTextAttributes(&attrs);
+  return ConvertToAtkTextAttributeSet(attrs);
 }
 
 static void
