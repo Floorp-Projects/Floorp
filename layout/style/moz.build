@@ -141,6 +141,7 @@ UNIFIED_SOURCES += [
     'nsDOMCSSRGBColor.cpp',
     'nsDOMCSSValueList.cpp',
     'nsFontFaceLoader.cpp',
+    'nsFontFaceUtils.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsLayoutStylesheetCache.cpp',
