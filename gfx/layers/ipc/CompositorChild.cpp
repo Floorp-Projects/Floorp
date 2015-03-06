@@ -121,7 +121,7 @@ CompositorChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBac
                                              bool*)
 {
   MOZ_ASSERT(mCanSend);
-  LayerTransactionChild* c = new LayerTransactionChild();
+  LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
   return c;
 }
