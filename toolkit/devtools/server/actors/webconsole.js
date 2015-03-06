@@ -1503,6 +1503,9 @@ WebConsoleActor.prototype =
     // This method is called after this.window is changed,
     // so we register new listener on this new window
     this.onStartListeners({listeners: listeners});
+
+    // Also reset the cached top level chrome window being targeted
+    this._lastChromeWindow  = null;
   },
 };
 

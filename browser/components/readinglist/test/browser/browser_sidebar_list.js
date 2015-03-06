@@ -10,7 +10,7 @@ add_task(function*() {
 
   RLUtils.enabled = true;
 
-  yield ReadingListUI.showSidebar();
+  yield RLSidebarUtils.showSidebar();
   let RLSidebar = RLSidebarUtils.RLSidebar;
   let sidebarDoc = SidebarUI.browser.contentDocument;
   Assert.equal(RLSidebar.numItems, 0, "Should start with no items");
@@ -19,7 +19,6 @@ add_task(function*() {
 
   info("Adding first item");
   yield RLUtils.addItem({
-    id: "c3502a49-bcef-4a94-b222-d4834463de33",
     url: "http://example.com/article1",
     title: "Article 1",
   });
@@ -27,11 +26,9 @@ add_task(function*() {
 
   info("Adding more items");
   yield RLUtils.addItem([{
-    id: "e054f5b7-1f4f-463f-bb96-d64c02448c31",
     url: "http://example.com/article2",
     title: "Article 2",
   }, {
-    id: "4207230b-2364-4e97-9587-01312b0ce4e6",
     url: "http://example.com/article3",
     title: "Article 3",
   }]);
@@ -42,12 +39,11 @@ add_task(function*() {
 
   info("Adding another item");
   yield RLUtils.addItem({
-    id: "dae0e855-607e-4df3-b27f-73a5e35c94fe",
     url: "http://example.com/article4",
     title: "Article 4",
   });
 
-  info("Re-eopning sidebar");
-  yield ReadingListUI.showSidebar();
+  info("Re-opening sidebar");
+  yield RLSidebarUtils.showSidebar();
   RLSidebarUtils.expectNumItems(4);
 });

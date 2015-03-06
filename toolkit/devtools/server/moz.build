@@ -39,6 +39,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/canvas.js',
     'actors/child-process.js',
     'actors/childtab.js',
+    'actors/chrome.js',
     'actors/common.js',
     'actors/csscoverage.js',
     'actors/device.js',

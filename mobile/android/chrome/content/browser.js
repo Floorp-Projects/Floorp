@@ -7416,6 +7416,7 @@ var RemoteDebugger = {
         DebuggerServer.init();
         DebuggerServer.addBrowserActors();
         DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
+        DebuggerServer.allowChromeProcess = true;
       }
 
       let pathOrPort = this._getPath();

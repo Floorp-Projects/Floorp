@@ -11,11 +11,6 @@ function run_test()
 {
   let EventEmitter = devtools.require("devtools/toolkit/event-emitter");
 
-  DebuggerServer.init();
-  DebuggerServer.addBrowserActors();
-
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-
   function MonitorClient(client, form) {
     this.client = client;
     this.actor = form.monitorActor;
@@ -25,7 +20,7 @@ function run_test()
     client.registerClient(this);
   }
   MonitorClient.prototype.destroy = function () {
-    client.unregisterClient(this);
+    this.client.unregisterClient(this);
   }
   MonitorClient.prototype.start = function (callback) {
     this.client.request({
@@ -40,15 +35,14 @@ function run_test()
     }, callback);
   }
 
-  let monitor;
+  let monitor, client;
 
   // Start the monitor actor.
-  client.connect(function () {
-    client.listTabs(function(resp) {
-      monitor = new MonitorClient(client, resp);
-      monitor.on("update", gotUpdate);
-      monitor.start(update);
-    });
+  get_chrome_actors((c, form) => {
+    client = c;
+    monitor = new MonitorClient(client, form);
+    monitor.on("update", gotUpdate);
+    monitor.start(update);
   });
 
   let time = Date.now();

@@ -40,6 +40,7 @@ const REASON_IDLE_DAILY = "idle-daily";
 const REASON_GATHER_PAYLOAD = "gather-payload";
 const REASON_TEST_PING = "test-ping";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
+const REASON_SHUTDOWN = "shutdown";
 
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
@@ -64,8 +65,12 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit";
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
+const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
 
 const SESSION_STATE_FILE_NAME = "session-state.json";
+
+// Maximum number of content payloads that we are willing to store.
+const MAX_NUM_CONTENT_PAYLOADS = 10;
 
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
@@ -98,7 +103,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "idleService",
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
+XPCOMUtils.defineLazyServiceGetter(this, "cpml",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageBroadcaster");
+XPCOMUtils.defineLazyServiceGetter(this, "ppml",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
@@ -353,6 +364,13 @@ this.TelemetrySession = Object.freeze({
     return Impl.getPayload(reason, clearSubsession);
   },
   /**
+   * Asks the content processes to send their payloads.
+   * @returns Object
+   */
+  requestChildPayloads: function() {
+    return Impl.requestChildPayloads();
+  },
+  /**
    * Save histograms to a file.
    * Used only for testing purposes.
    *
@@ -491,9 +509,10 @@ let Impl = {
     let si = Services.startup.getStartupInfo();
 
     // Measurements common to chrome and content processes.
+    let elapsedTime = Date.now() - si.process;
     var ret = {
-      // uptime in minutes
-      uptime: Math.round((new Date() - si.process) / 60000)
+      totalTime: Math.round(elapsedTime / 1000), // totalTime, in seconds
+      uptime: Math.round(elapsedTime / 60000) // uptime in minutes
     }
 
     // Look for app-specific timestamps
@@ -1127,7 +1146,7 @@ let Impl = {
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
 
-    ppmm.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
+    ppml.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
 
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
@@ -1178,6 +1197,7 @@ let Impl = {
     }
 
     Services.obs.addObserver(this, "content-child-shutdown", false);
+    cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD, this);
 
     this.gatherStartupHistograms();
 
@@ -1209,9 +1229,11 @@ let Impl = {
     switch (message.name) {
     case MESSAGE_TELEMETRY_PAYLOAD:
     {
-      let target = message.target;
+      let source = message.data.childUUID;
+      delete message.data.childUUID;
+
       for (let child of this._childTelemetry) {
-        if (child.source.get() === target) {
+        if (child.source === source) {
           // Update existing telemetry data.
           child.payload = message.data;
           return;
@@ -1219,9 +1241,20 @@ let Impl = {
       }
       // Did not find existing child in this._childTelemetry.
       this._childTelemetry.push({
-        source: Cu.getWeakReference(target),
+        source: source,
         payload: message.data,
       });
+
+      if (this._childTelemetry.length == MAX_NUM_CONTENT_PAYLOADS + 1) {
+        this._childTelemetry.shift();
+        Telemetry.getHistogramById("TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT").add();
+      }
+
+      break;
+    }
+    case MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD:
+    {
+      this.sendContentProcessPing("saved-session");
       break;
     }
     default:
@@ -1229,15 +1262,46 @@ let Impl = {
     }
   },
 
+  _processUUID: generateUUID(),
+
   sendContentProcessPing: function sendContentProcessPing(reason) {
     this._log.trace("sendContentProcessPing - Reason " + reason);
     const isSubsession = !this._isClassicReason(reason);
     let payload = this.getSessionPayload(reason, isSubsession);
+    payload.childUUID = this._processUUID;
     cpmm.sendAsyncMessage(MESSAGE_TELEMETRY_PAYLOAD, payload);
   },
 
+  /**
+   * Save both the "saved-session" and the "shutdown" pings to disk.
+   */
   savePendingPings: function savePendingPings() {
     this._log.trace("savePendingPings");
+
+#ifndef MOZ_WIDGET_ANDROID
+    let options = {
+      retentionDays: RETENTION_DAYS,
+      addClientId: true,
+      addEnvironment: true,
+      overwrite: true,
+    };
+
+    let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
+    // Make sure we try to save the pending pings, even though we failed saving the shutdown
+    // ping.
+    return TelemetryPing.savePing(getPingType(shutdownPayload), shutdownPayload, options)
+                        .then(() => this.savePendingPingsClassic(),
+                              () => this.savePendingPingsClassic());
+#else
+    return this.savePendingPingsClassic();
+#endif
+  },
+
+  /**
+   * Save the "saved-session" ping and make TelemetryPing save all the pending pings to disk.
+   */
+  savePendingPingsClassic: function savePendingPingsClassic() {
+    this._log.trace("savePendingPingsClassic");
     let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
     let options = {
       retentionDays: RETENTION_DAYS,
@@ -1289,6 +1353,11 @@ let Impl = {
     }
     this.gatherMemory();
     return this.getSessionPayload(reason, clearSubsession);
+  },
+
+  requestChildPayloads: function() {
+    this._log.trace("requestChildPayloads");
+    ppmm.broadcastAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD, {});
   },
 
   gatherStartup: function gatherStartup() {
