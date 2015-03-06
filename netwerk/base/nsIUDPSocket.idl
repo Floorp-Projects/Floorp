@@ -11,6 +11,7 @@ interface nsIUDPMessage;
 interface nsISocketTransport;
 interface nsIOutputStream;
 interface nsIInputStream;
+interface nsIPrincipal;
 
 %{ C++
 #include "nsTArrayForwardDeclare.h"
@@ -29,7 +30,7 @@ native NetAddr(mozilla::net::NetAddr);
  *
  * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(8f28299c-f2ac-468a-8223-190335006bbc)]
+[scriptable, uuid(e0377f7b-34a9-4d0f-8191-7e0cba77a52f)]
 interface nsIUDPSocket : nsISupports
 {
     /**
@@ -45,11 +46,16 @@ interface nsIUDPSocket : nsISupports
      *        local loopback interface.  Otherwise, it will accept connections
      *        from any interface.  To specify a particular network interface,
      *        use initWithAddress.
+     * @param aPrincipal
+     *        The principal connected to this socket.
      * @param aAddressReuse
      *        If true, the socket is allowed to be bound to an address that is
      *        already in use. Default is true.
      */
-    [optional_argc] void init(in long aPort, in boolean aLoopbackOnly, [optional] in boolean aAddressReuse);
+    [optional_argc] void init(in long aPort,
+                              in boolean aLoopbackOnly,
+                              in nsIPrincipal aPrincipal,
+                              [optional] in boolean aAddressReuse);
 
     /**
      * initWithAddress
@@ -59,11 +65,15 @@ interface nsIUDPSocket : nsISupports
      *
      * @param aAddr
      *        The address to which this UDP socket should be bound.
+     * @param aPrincipal
+     *        The principal connected to this socket.
      * @param aAddressReuse
      *        If true, the socket is allowed to be bound to an address that is
      *        already in use. Default is true.
      */
-    [noscript, optional_argc] void initWithAddress([const] in NetAddrPtr aAddr, [optional] in boolean aAddressReuse);
+    [noscript, optional_argc] void initWithAddress([const] in NetAddrPtr aAddr,
+                                                   in nsIPrincipal aPrincipal,
+                                                   [optional] in boolean aAddressReuse);
 
     /**
      * close

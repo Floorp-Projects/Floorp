@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsINetAddr.h"
 #include "nsITimer.h"
+#include "nsNetUtil.h"
 #include "mozilla/net/DNS.h"
 #include "prerror.h"
 
@@ -272,8 +273,16 @@ main(int32_t argc, char *argv[])
   // Create UDPServerListener to process UDP packets
   nsRefPtr<UDPServerListener> serverListener = new UDPServerListener();
 
+  nsCOMPtr<nsIScriptSecurityManager> secman =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, -1);
+
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+  NS_ENSURE_SUCCESS(rv, -1);
+
   // Bind server socket to 0.0.0.0
-  rv = server->Init(0, false, true, 0);
+  rv = server->Init(0, false, systemPrincipal, true, 0);
   NS_ENSURE_SUCCESS(rv, -1);
   int32_t serverPort;
   server->GetPort(&serverPort);
@@ -281,7 +290,7 @@ main(int32_t argc, char *argv[])
 
   // Bind clinet on arbitrary port
   nsRefPtr<UDPClientListener> clientListener = new UDPClientListener();
-  client->Init(0, false, true, 0);
+  client->Init(0, false, systemPrincipal, true, 0);
   client->AsyncListen(clientListener);
 
   // Write data to server

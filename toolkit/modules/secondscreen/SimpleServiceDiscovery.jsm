@@ -144,7 +144,7 @@ var SimpleServiceDiscovery = {
     // Perform a UDP broadcast to search for SSDP devices
     let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
     try {
-      socket.init(SSDP_PORT, false);
+      socket.init(SSDP_PORT, false, Services.scriptSecurityManager.getSystemPrincipal());
       socket.joinMulticast(SSDP_ADDRESS);
       socket.asyncListen(this);
     } catch (e) {
