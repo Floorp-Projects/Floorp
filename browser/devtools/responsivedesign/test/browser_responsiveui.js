@@ -42,7 +42,11 @@ function test() {
     ok(instance, "instance of the module is attached to the tab.");
 
     let originalWidth = content.innerWidth;
+
+    let documentLoaded = waitForDocLoadComplete();
     content.location = "data:text/html;charset=utf-8,mop<div style%3D'height%3A5000px'><%2Fdiv>";
+    yield documentLoaded;
+
     let newWidth = content.innerWidth;
     is(originalWidth, newWidth, "Floating scrollbars are presents");
 
