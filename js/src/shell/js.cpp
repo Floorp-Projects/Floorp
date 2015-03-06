@@ -2584,7 +2584,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_ValueToObject(cx, args[1], &parent))
             return false;
     } else {
-        parent = js::GetGlobalForObjectCrossCompartment(&args.callee());
+        parent = JS_GetParent(&args.callee());
     }
 
     // Should it worry us that we might be getting with wrappers
@@ -3235,6 +3235,34 @@ Elapsed(JSContext *cx, unsigned argc, jsval *vp)
     }
     JS_ReportError(cx, "Wrong number of arguments");
     return false;
+}
+
+static bool
+Parent(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+
+    Value v = args[0];
+    if (v.isPrimitive()) {
+        JS_ReportError(cx, "Only objects have parents!");
+        return false;
+    }
+
+    Rooted<JSObject*> parent(cx, JS_GetParent(&v.toObject()));
+
+    /* Outerize if necessary. */
+    if (parent) {
+        parent = GetOuterObject(cx, parent);
+        if (!parent)
+            return false;
+    }
+
+    args.rval().setObjectOrNull(parent);
+    return true;
 }
 
 static bool
@@ -4903,6 +4931,10 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
 "  cached, so repeatedly getting the same value creates multiple distinct clones."),
+
+    JS_FN_HELP("parent", Parent, 1, 0,
+"parent(obj)",
+"  Returns the parent of obj."),
 
     JS_FN_HELP("line2pc", LineToPC, 0, 0,
 "line2pc([fun,] line)",
