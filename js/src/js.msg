@@ -326,6 +326,7 @@ MSG_DEF(JSMSG_YIELD_IN_ARROW,          0, JSEXN_SYNTAXERR, "arrow function may n
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,        0, JSEXN_SYNTAXERR, "yield in default expression")
 MSG_DEF(JSMSG_BAD_COLUMN_NUMBER,       0, JSEXN_RANGEERR, "column number out of range")
 MSG_DEF(JSMSG_COMPUTED_NAME_IN_PATTERN,0, JSEXN_SYNTAXERR, "computed property names aren't supported in this destructuring declaration")
+MSG_DEF(JSMSG_DEFAULT_IN_PATTERN,      0, JSEXN_SYNTAXERR, "destructuring defaults aren't supported in this destructuring declaration")
 
 // asm.js
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,       1, JSEXN_TYPEERR, "asm.js type error: {0}")

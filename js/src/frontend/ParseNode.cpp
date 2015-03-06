@@ -749,14 +749,8 @@ Parser<FullParseHandler>::cloneDestructuringDefault(ParseNode *opn)
 {
     MOZ_ASSERT(opn->isKind(PNK_ASSIGN));
 
-    ParseNode *target = cloneLeftHandSide(opn->pn_left);
-    if (!target)
-        return nullptr;
-    ParseNode *defaultNode = cloneParseTree(opn->pn_right);
-    if (!defaultNode)
-        return nullptr;
-
-    return handler.new_<BinaryNode>(opn->getKind(), JSOP_NOP, opn->pn_pos, target, defaultNode);
+    report(ParseError, false, opn, JSMSG_DEFAULT_IN_PATTERN);
+    return null();
 }
 
 /*
