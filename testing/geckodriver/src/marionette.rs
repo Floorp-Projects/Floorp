@@ -772,7 +772,11 @@ impl ToMarionette for LocatorParameters {
 impl ToMarionette for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
         let mut data = BTreeMap::new();
-        data.insert("id".to_string(), self.id.to_json());
+        let key = match self.id {
+            FrameId::Short(_) | FrameId::Null => "id",
+            FrameId::Element(_) => "element"
+        };
+        data.insert(key.to_string(), self.id.to_json());
         Ok(Json::Object(data))
     }
 }
