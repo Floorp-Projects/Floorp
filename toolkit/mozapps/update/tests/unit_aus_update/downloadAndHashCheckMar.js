@@ -7,6 +7,11 @@ var gNextRunFunc;
 var gExpectedStatusResult;
 
 function run_test() {
+  // The network code that downloads the mar file accesses the profile to cache
+  // the download, but the profile is only available after calling
+  // do_get_profile in xpcshell tests. This prevents an error from being logged.
+  do_get_profile();
+
   setupTestCommon();
 
   debugDump("testing mar download and mar hash verification");

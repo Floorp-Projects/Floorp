@@ -125,6 +125,11 @@ function check_test_pt4() {
 // url constructed with %LOCALE%
 // Bug 488936 added the update.locale file that stores the update locale
 function run_test_pt5() {
+  // The code that gets the locale accesses the profile which is only available
+  // after calling do_get_profile in xpcshell tests. This prevents an error from
+  // being logged.
+  do_get_profile();
+
   gCheckFunc = check_test_pt5;
   let url = URL_PREFIX + "%LOCALE%/";
   debugDump("testing url constructed with %LOCALE% - " + url);
