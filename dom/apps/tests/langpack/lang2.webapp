@@ -6,14 +6,18 @@
       "revision": 201411051234,
       "name": "Deutsch",
       "apps": {
-        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/de/"
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/de/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_no_version.webapp": "tests/dom/apps/tests/langpack/de/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_version_xyz.webapp": "tests/dom/apps/tests/langpack/de/"
        }
      },
      "pl": {
       "revision": 201411051234,
       "name": "Polski",
       "apps": {
-        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/pl/"
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest.webapp": "tests/dom/apps/tests/langpack/pl/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_no_version.webapp": "tests/dom/apps/tests/langpack/pl/",
+        "http://mochi.test:8888/tests/dom/apps/tests/langpack/manifest_version_xyz.webapp": "tests/dom/apps/tests/langpack/pl/"
        }
      }
    },
