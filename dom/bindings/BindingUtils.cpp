@@ -1783,8 +1783,8 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   // CloneExpandoChain() will use this property of |newobj| when it calls
   // preserveWrapper() via attachExpandoObject() if |aObj| has expandos set, and
   // preserveWrapper() will not do anything in this case.  This is safe because
-  // if expandos are present then the wrapper will already already have been
-  // preserved called for this native.
+  // if expandos are present then the wrapper will already have been preserved
+  // for this native.
   if (!xpc::XrayUtils::CloneExpandoChain(aCx, newobj, aObj)) {
     return NS_ERROR_FAILURE;
   }
