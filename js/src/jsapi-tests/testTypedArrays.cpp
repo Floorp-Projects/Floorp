@@ -33,6 +33,8 @@ BEGIN_TEST(testTypedArrays)
     RootedObject proto(cx);
     JS_GetPrototype(cx, buffer, &proto);
     CHECK(!JS_IsArrayBufferObject(proto));
+    RootedObject dummy(cx, JS_GetParent(proto));
+    CHECK(!JS_IsArrayBufferObject(dummy));
 
     {
         JS::AutoCheckCannotGC nogc;
@@ -70,6 +72,8 @@ TestPlainTypedArray(JSContext *cx)
     RootedObject proto(cx);
     JS_GetPrototype(cx, array, &proto);
     CHECK(!JS_IsTypedArrayObject(proto));
+    RootedObject dummy(cx, JS_GetParent(proto));
+    CHECK(!JS_IsTypedArrayObject(dummy));
 
     CHECK_EQUAL(JS_GetTypedArrayLength(array), 7u);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0u);

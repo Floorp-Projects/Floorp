@@ -1718,6 +1718,13 @@ JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_GetParent(JSObject *obj)
+{
+    MOZ_ASSERT(!obj->is<ScopeObject>());
+    return obj->getParent();
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, HandleObject proto)
 {
     AssertHeapIsIdle(cx);
