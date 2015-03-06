@@ -127,11 +127,18 @@ DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAt
     return true;
 
   nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
-  if (!props)
-    return true;
+  return PersistentPropertiesToArray(props, aAttributes);
+}
 
+bool
+DocAccessibleChild::PersistentPropertiesToArray(nsIPersistentProperties* aProps,
+                                                nsTArray<Attribute>* aAttributes)
+{
+  if (!aProps) {
+    return true;
+  }
   nsCOMPtr<nsISimpleEnumerator> propEnum;
-  nsresult rv = props->Enumerate(getter_AddRefs(propEnum));
+  nsresult rv = aProps->Enumerate(getter_AddRefs(propEnum));
   NS_ENSURE_SUCCESS(rv, false);
 
   bool hasMore;
@@ -323,6 +330,37 @@ DocAccessibleChild::RecvCharAt(const uint64_t& aID,
   *aChar = acc && acc->IsTextRole() ?
     static_cast<uint16_t>(acc->CharAt(aOffset)) : 0;
   return true;
+}
+
+bool
+DocAccessibleChild::RecvTextAttributes(const uint64_t& aID,
+                                       const bool& aIncludeDefAttrs,
+                                       const int32_t& aOffset,
+                                       nsTArray<Attribute>* aAttributes,
+                                       int32_t* aStartOffset,
+                                       int32_t* aEndOffset)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (!acc || !acc->IsTextRole()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPersistentProperties> props =
+    acc->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
+  return PersistentPropertiesToArray(props, aAttributes);
+}
+
+bool
+DocAccessibleChild::RecvDefaultTextAttributes(const uint64_t& aID,
+                                              nsTArray<Attribute> *aAttributes)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (!acc || !acc->IsTextRole()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPersistentProperties> props = acc->DefaultTextAttributes();
+  return PersistentPropertiesToArray(props, aAttributes);
 }
 
 }
