@@ -5485,6 +5485,12 @@
     "n_values": 244,
     "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
   },
+  "VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG": {
+    "expires_in_version": "40",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "A bit pattern to collect H.264 constraint set flag from the decoded SPS. Bits 0 through 5 represent constraint_set0_flag through constraint_set5_flag, respectively."
+  },
   "VIDEO_DECODED_H264_SPS_LEVEL": {
     "expires_in_version": "40",
     "kind": "enumerated",

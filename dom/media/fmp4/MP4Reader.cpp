@@ -72,8 +72,16 @@ bool
 AccumulateSPSTelemetry(const ByteBuffer* aExtradata)
 {
   SPSData spsdata;
-  if (H264::DecodeSPSFromExtraData(aExtradata, spsdata) &&
-      spsdata.profile_idc && spsdata.level_idc) {
+  if (H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
+   uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0) |
+                         (spsdata.constraint_set1_flag ? (1 << 1) : 0) |
+                         (spsdata.constraint_set2_flag ? (1 << 2) : 0) |
+                         (spsdata.constraint_set3_flag ? (1 << 3) : 0) |
+                         (spsdata.constraint_set4_flag ? (1 << 4) : 0) |
+                         (spsdata.constraint_set5_flag ? (1 << 5) : 0);
+    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG,
+                          constraints);
+
     // Collect profile_idc values up to 244, otherwise 0 for unknown.
     Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_PROFILE,
                           spsdata.profile_idc <= 244 ? spsdata.profile_idc : 0);
@@ -720,7 +728,7 @@ MP4Reader::Update(TrackType aTrack)
     nsAutoPtr<MediaSample> sample(PopSample(aTrack));
 
     // Collect telemetry from h264 Annex B SPS.
-    if (sample && !mFoundSPSForTelemetry && AnnexB::HasSPS(sample->mMp4Sample)) {
+    if (!mFoundSPSForTelemetry && sample && AnnexB::HasSPS(sample->mMp4Sample)) {
       nsRefPtr<ByteBuffer> extradata = AnnexB::ExtractExtraData(sample->mMp4Sample);
       mFoundSPSForTelemetry = AccumulateSPSTelemetry(extradata);
     }
