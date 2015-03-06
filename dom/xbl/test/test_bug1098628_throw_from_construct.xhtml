@@ -6,6 +6,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098628
   <title>Test for Bug 1098628</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script class="testbody" type="text/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1098628 **/
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectUncaughtException();
+  SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('flimfniffle')}]);
+  addLoadEvent(function() {
+    SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
+  });
+  ]]>
+  </script>
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="test">
       <implementation>
@@ -23,18 +35,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098628
 
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript">
-<![CDATA[
-
-/** Test for Bug 1098628 **/
-SimpleTest.waitForExplicitFinish();
-SimpleTest.expectUncaughtException();
-SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('flimfniffle')}]);
-addLoadEvent(function() {
-  SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
-});
-]]>
-</script>
 </pre>
 </body>
 </html>
