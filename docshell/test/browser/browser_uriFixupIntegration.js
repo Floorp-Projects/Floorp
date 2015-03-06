@@ -1,80 +1,51 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+"use strict";
 
 const kSearchEngineID = "browser_urifixup_search_engine";
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
-Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
-                                     kSearchEngineURL);
 
-let oldDefaultEngine = Services.search.defaultEngine;
-Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
+add_task(function* setup() {
+  // Add a new fake search engine.
+  Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
+                                       kSearchEngineURL);
 
-let tab;
-let searchParams;
+  let oldDefaultEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
-function checkURL() {
-  let escapedParams = encodeURIComponent(searchParams).replace("%20", "+");
-  let expectedURL = kSearchEngineURL.replace("{searchTerms}", escapedParams);
-  is(tab.linkedBrowser.currentURI.spec, expectedURL,
-     "New tab should have loaded with expected url.");
-}
+  // Remove the fake engine when done.
+  registerCleanupFunction(() => {
+    if (oldDefaultEngine) {
+      Services.search.defaultEngine = oldDefaultEngine;
+    }
 
-function addPageShowListener(aFunc) {
-  gBrowser.selectedBrowser.addEventListener("pageshow", function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", loadListener, false);
-    aFunc();
-  });
-}
-
-function locationBarEnter(aCallback) {
-  executeSoon(function() {
-    gURLBar.focus();
-    EventUtils.synthesizeKey("VK_RETURN", {});
-    addPageShowListener(aCallback);
-  });
-}
-
-let urlbarInput = [
-  "foo bar",
-  "brokenprotocol:somethingelse"
-];
-function test() {
-  waitForExplicitFinish();
-
-  nextTest();
-}
-
-function nextTest() {
-  searchParams = urlbarInput.pop();
-  tab = gBrowser.selectedTab = gBrowser.addTab();
-
-  gURLBar.value = searchParams;
-  locationBarEnter(function() {
-    checkURL();
-    gBrowser.removeTab(tab);
-    tab = null;
-    if (urlbarInput.length) {
-      nextTest();
-    } else {
-      finish();
+    let engine = Services.search.getEngineByName(kSearchEngineID);
+    if (engine) {
+      Services.search.removeEngine(engine);
     }
   });
-}
-
-registerCleanupFunction(function () {
-  if (tab) {
-    gBrowser.removeTab(tab);
-  }
-
-  if (oldDefaultEngine) {
-    Services.search.defaultEngine = oldDefaultEngine;
-  }
-  let engine = Services.search.getEngineByName(kSearchEngineID);
-  if (engine) {
-    Services.search.removeEngine(engine);
-  }
 });
 
+add_task(function* test() {
+  for (let searchParams of ["foo bar", "brokenprotocol:somethingelse"]) {
+    // Add a new blank tab.
+    gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    // Enter search terms and start a search.
+    gURLBar.value = searchParams;
+    gURLBar.focus();
+    EventUtils.synthesizeKey("VK_RETURN", {});
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    // Check that we arrived at the correct URL.
+    let escapedParams = encodeURIComponent(searchParams).replace("%20", "+");
+    let expectedURL = kSearchEngineURL.replace("{searchTerms}", escapedParams);
+    is(gBrowser.selectedBrowser.currentURI.spec, expectedURL,
+       "New tab should have loaded with expected url.");
+
+    // Cleanup.
+    gBrowser.removeCurrentTab();
+  }
+});
