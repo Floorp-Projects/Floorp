@@ -766,6 +766,23 @@ Convert(btrc_remote_features_t aIn, unsigned long& aOut)
 }
 #endif // ANDROID_VERSION >= 19
 
+inline nsresult
+Convert(int aIn, BluetoothGattStatus& aOut)
+{
+  /**
+   * Currently we only map bluedroid's GATT status into GATT_STATUS_SUCCESS and
+   * GATT_STATUS_ERROR. This function needs to be revised if we want to support
+   * specific error status.
+   */
+  if (!aIn) {
+    aOut = GATT_STATUS_SUCCESS;
+  } else {
+    aOut = GATT_STATUS_ERROR;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut);
 
