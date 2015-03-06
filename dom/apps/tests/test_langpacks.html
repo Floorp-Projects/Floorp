@@ -206,6 +206,101 @@ function runTest() {
     req.onerror = mozAppsError;
     yield undefined;
   }
+
+  // Test localized values with a x.y manifest version.
+  installApp(appManifestURL);
+  yield undefined;
+
+  // Install the fr langpack.
+  installApp(lang1ManifestURL);
+  yield undefined;
+
+  // Install the de and pl langpack.
+  installApp(lang2ManifestURL);
+  yield undefined;
+
+  // Opens the iframe to the localized values test page.
+  openPage("localizedvalues.html",
+    ["Localization test app",
+     "UnknownProperty",
+     "Version française.",
+     "dialer",
+     "téléphone"]);
+  yield undefined;
+
+  // Clean up after ourselves by uninstalling apps.
+  info(apps.length + " applications to uninstall.");
+  while (apps.length) {
+    let app = apps.pop();
+    req = navigator.mozApps.mgmt.uninstall(app);
+    req.onsuccess = continueTest;
+    req.onerror = mozAppsError;
+    yield undefined;
+  }
+
+  // Test localized values with versionless manifest.
+  appManifestURL = uriPrefix + "manifest_no_version.webapp";
+  installApp(appManifestURL);
+  yield undefined;
+
+  // Install the fr langpack.
+  installApp(lang1ManifestURL);
+  yield undefined;
+
+  // Install the de and pl langpack.
+  installApp(lang2ManifestURL);
+  yield undefined;
+
+  // Opens the iframe to the localized values test page.
+  openPage("localizedvalues.html",
+    ["Localization test app",
+     "UnknownProperty",
+     "Localization test app",
+     "dialer",
+     "dialer"]);
+  yield undefined;
+
+  // Clean up after ourselves by uninstalling apps.
+  info(apps.length + " applications to uninstall.");
+  while (apps.length) {
+    let app = apps.pop();
+    req = navigator.mozApps.mgmt.uninstall(app);
+    req.onsuccess = continueTest;
+    req.onerror = mozAppsError;
+    yield undefined;
+  }
+
+  // Test localized values with a x.y.z manifest version.
+  appManifestURL = uriPrefix + "manifest_version_xyz.webapp"
+  installApp(appManifestURL);
+  yield undefined;
+
+  // Install the fr langpack.
+  installApp(lang1ManifestURL);
+  yield undefined;
+
+  // Install the de and pl langpack.
+  installApp(lang2ManifestURL);
+  yield undefined;
+
+  // Opens the iframe to the localized values test page.
+  openPage("localizedvalues.html",
+    ["Localization test app",
+     "UnknownProperty",
+     "Version française.",
+     "dialer",
+     "téléphone"]);
+  yield undefined;
+
+  // Clean up after ourselves by uninstalling apps.
+  info(apps.length + " applications to uninstall.");
+  while (apps.length) {
+    let app = apps.pop();
+    req = navigator.mozApps.mgmt.uninstall(app);
+    req.onsuccess = continueTest;
+    req.onerror = mozAppsError;
+    yield undefined;
+  }
 }
 
   </script>
