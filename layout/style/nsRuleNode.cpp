@@ -508,12 +508,14 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       return ScaleCoordRound(aValue, float(aFontSize));
     }
     case eCSSUnit_XHeight: {
+      aPresContext->SetUsesExChUnits(true);
       nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
       return ScaleCoordRound(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
+      aPresContext->SetUsesExChUnits(true);
       nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);

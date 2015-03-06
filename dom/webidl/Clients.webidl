@@ -10,10 +10,11 @@
 
 [Exposed=ServiceWorker]
 interface Clients {
-  // A list of client objects, identifiable by ID, that correspond to windows
-  // (or workers) that are "controlled" by this SW
+  // The objects returned will be new instances every time
   [Throws]
   Promise<sequence<Client>?> matchAll(optional ClientQueryOptions options);
+  Promise<WindowClient> openWindow(USVString url);
+  Promise<void> claim();
 };
 
 dictionary ClientQueryOptions {

@@ -12,11 +12,13 @@ import wpttest
 from mozlog import structured
 
 manifest = None
+manifest_update = None
 
 def do_delayed_imports():
     # This relies on an already loaded module having set the sys.path correctly :(
-    global manifest
-    import manifest
+    global manifest, manifest_update
+    from manifest import manifest
+    from manifest import update as manifest_update
 
 class TestChunker(object):
     def __init__(self, total_chunks, chunk_number):
@@ -187,20 +189,22 @@ class EqualTimeChunker(TestChunker):
 
 
 class TestFilter(object):
-    def __init__(self, include=None, exclude=None, manifest_path=None):
+    def __init__(self, test_manifests, include=None, exclude=None, manifest_path=None):
+        test_manifests = test_manifests
+
         if manifest_path is not None and include is None:
             self.manifest = manifestinclude.get_manifest(manifest_path)
         else:
             self.manifest = manifestinclude.IncludeManifest.create()
 
-        if include is not None:
+        if include:
             self.manifest.set("skip", "true")
             for item in include:
-                self.manifest.add_include(item)
+                self.manifest.add_include(test_manifests, item)
 
-        if exclude is not None:
+        if exclude:
             for item in exclude:
-                self.manifest.add_exclude(item)
+                self.manifest.add_exclude(test_manifests, item)
 
     def __call__(self, manifest_iter):
         for test_path, tests in manifest_iter:
@@ -214,7 +218,6 @@ class TestFilter(object):
 
 
 class ManifestLoader(object):
-
     def __init__(self, test_paths, force_manifest_update=False):
         do_delayed_imports()
         self.test_paths = test_paths
@@ -252,9 +255,9 @@ class ManifestLoader(object):
         if not json_data:
             manifest_file = manifest.Manifest(None, url_base)
         else:
-            manifest_file = manifest.Manifest.from_json(json_data)
+            manifest_file = manifest.Manifest.from_json(tests_path, json_data)
 
-        manifest.update(tests_path, url_base, manifest_file)
+        manifest_update.update(tests_path, url_base, manifest_file)
         manifest.write(manifest_file, manifest_path)
 
     def load_manifest(self, tests_path, metadata_path, url_base="/"):
@@ -262,7 +265,7 @@ class ManifestLoader(object):
         if (not os.path.exists(manifest_path) or
             self.force_manifest_update):
             self.update_manifest(manifest_path, tests_path, url_base)
-        manifest_file = manifest.load(manifest_path)
+        manifest_file = manifest.load(tests_path, manifest_path)
         if manifest_file.url_base != url_base:
             self.logger.info("Updating url_base in manifest from %s to %s" % (manifest_file.url_base,
                                                                               url_base))
@@ -273,7 +276,7 @@ class ManifestLoader(object):
 
 class TestLoader(object):
     def __init__(self,
-                 test_paths,
+                 test_manifests,
                  test_types,
                  test_filter,
                  run_info,
@@ -282,11 +285,10 @@ class TestLoader(object):
                  chunk_number=1,
                  force_manifest_update=False):
 
-        self.test_paths = test_paths
         self.test_types = test_types
         self.test_filter = test_filter
         self.run_info = run_info
-        self.manifests = ManifestLoader(test_paths, force_manifest_update).load()
+        self.manifests = test_manifests
         self.tests = None
         self.disabled_tests = None
 
@@ -316,6 +318,7 @@ class TestLoader(object):
             expected = expected_file.get_test(manifest_test.id)
         else:
             expected = None
+
         return wpttest.from_manifest(manifest_test, expected)
 
     def load_expected_manifest(self, test_manifest, metadata_path, test_path):

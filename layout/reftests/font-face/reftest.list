@@ -169,3 +169,12 @@ HTTP(..) != color-1a.html color-1-notref.html
 HTTP(..) == color-1b.html color-1-ref.html
 
 pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-1.html woff2-1-ref.html
+
+# sanity tests for reflow behavior with downloadable fonts
+HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-1-data.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
+HTTP(..) == reflow-sanity-delay-1a.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-delay-1b.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-delay-1c.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-delay-1-metrics.html reflow-sanity-1-ref.html

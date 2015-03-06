@@ -28,7 +28,19 @@ interface Console {
   void assert(boolean condition, any... data);
   void count(any... data);
 
-  void ___noSuchMethod__();
+  // No-op methods for compatibility with other browsers.
+  [BinaryName="noopMethod"]
+  void clear();
+  [BinaryName="noopMethod"]
+  void dirxml();
+  [BinaryName="noopMethod"]
+  void markTimeline();
+  [BinaryName="noopMethod"]
+  void timeline();
+  [BinaryName="noopMethod"]
+  void timelineEnd();
+  [BinaryName="noopMethod"]
+  void timeStamp();
 };
 
 // This is used to propagate console events to the observers.

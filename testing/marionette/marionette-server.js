@@ -207,15 +207,21 @@ MarionetteServerConnection.prototype = {
         this.logRequest(aPacket.name, aPacket);
         this.requestTypes[aPacket.name].bind(this)(aPacket);
       } catch(e) {
-        this.conn.send({ error: ("error occurred while processing '" +
-                                 aPacket.name),
-                        message: e.message });
+        this.conn.send({from:this.actorID, error: {
+                                                    message: ("error occurred while processing '" +
+                                                              aPacket.name),
+                                                    status: 500,
+                                                    stacktrace: e.message }});
       }
     } else {
-      this.conn.send({ error: "unrecognizedPacketType",
-                       message: ('Marionette does not ' +
-                                 'recognize the packet type "' +
-                                 aPacket.name + '"') });
+      this.conn.send({from:this.actorID, error: {
+                                                  message: "unrecognizedPacketType",
+                                                  status: 500,
+                                                  stacktrace: ('Marionette does not ' +
+                                                               'recognize the packet type "' +
+                                                                aPacket.name + '"')
+                                                }
+                      });
     }
   },
 
