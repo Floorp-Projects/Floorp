@@ -232,7 +232,8 @@ def build_interface(iface, ifaces):
                          constants=consts, resolved=True, parent=parent,
                          scriptable=iface.attributes.scriptable,
                          function=iface.attributes.function,
-                         builtinclass=iface.attributes.builtinclass)
+                         builtinclass=iface.attributes.builtinclass,
+                         main_process_scriptable_only=iface.attributes.main_process_scriptable_only)
 
 def write_typelib(idl, fd, filename):
     """ Generate the typelib. """

@@ -12,7 +12,7 @@ struct PRFileDesc;
 
 [ptr] native PRFileDescStar(PRFileDesc);
 
-[scriptable, builtinclass, uuid(ef454286-2848-4383-9101-660f190dd0a5)]
+[scriptable, builtinclass, uuid(e7a3a954-384b-4aeb-a5f7-55626b0de9be)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
