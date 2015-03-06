@@ -9,9 +9,8 @@
 
 #include "mozilla/dom/MessageEvent.h"
 #include "nsGlobalWindow.h"
+#include "nsIDocument.h"
 #include "WorkerPrivate.h"
-
-#include "mozilla/dom/ClientBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -26,6 +25,31 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerClient)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
+{
+  MOZ_ASSERT(aDoc);
+  MOZ_ASSERT(aDoc->GetWindow());
+
+  nsRefPtr<nsGlobalWindow> outerWindow = static_cast<nsGlobalWindow*>(aDoc->GetWindow());
+  mClientId = outerWindow->WindowID();
+  aDoc->GetURL(mUrl);
+  mVisibilityState = aDoc->VisibilityState();
+
+  ErrorResult result;
+  mFocused = aDoc->HasFocus(result);
+  if (result.Failed()) {
+    NS_WARNING("Failed to get focus information.");
+  }
+
+  if (!outerWindow->IsTopLevelWindow()) {
+    mFrameType = FrameType::Nested;
+  } else if (outerWindow->HadOriginalOpener()) {
+    mFrameType = FrameType::Auxiliary;
+  } else {
+    mFrameType = FrameType::Top_level;
+  }
+}
 
 JSObject*
 ServiceWorkerClient::WrapObject(JSContext* aCx)
@@ -55,7 +79,7 @@ public:
   Run()
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mId);
+    nsGlobalWindow* window = nsGlobalWindow::GetOuterWindowWithId(mId);
     if (!window) {
       return NS_ERROR_FAILURE;
     }

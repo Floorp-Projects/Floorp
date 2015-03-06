@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1058311 - controlled page</title>
+<script class="testbody" type="text/javascript">
+  var frameType = "none";
+  var testWindow = parent;
+
+  if (parent != window) {
+    frameType = "nested";
+  } else if (opener) {
+    frameType = "auxiliary";
+    testWindow = opener;
+  } else if (parent != window) {
+    frameType = "top-level";
+  } else {
+    postResult(false, "Unexpected frameType");
+  }
+
+  window.onload = function() {
+    navigator.serviceWorker.ready.then(function(swr) {
+        swr.active.postMessage("Start");
+    });
+  }
+
+  function postResult(result, msg) {
+    response = {
+      result: result,
+      message: msg
+    };
+
+    testWindow.postMessage(response, "*");
+  }
+
+  navigator.serviceWorker.onmessage = function(msg) {
+    // worker message;
+    result = msg.data.url == window.location;
+    postResult(result, "Client url test");
+
+    result = msg.data.visibilityState === document.visibilityState;
+    postResult(result, "Client visibility test. expected=" +document.visibilityState);
+
+    result = msg.data.focused === document.hasFocus();
+    postResult(result, "Client focus test. expected=" + document.hasFocus());
+
+    result = msg.data.frameType === frameType;
+    postResult(result, "Client frameType test. expected=" + frameType);
+
+    postResult(true, "DONE");
+    window.close();
+  };
+</script>
+
+</head>
+<body>
+</body>
+</html>
