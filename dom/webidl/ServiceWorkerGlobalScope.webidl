@@ -28,10 +28,6 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
 
   // The event.source of these MessageEvents are instances of Client
   attribute EventHandler onmessage;
-
-  // close() method inherited from WorkerGlobalScope is not exposed.
-  // FIXME(nsm): For now, overridden so it can be a no-op.
-  void close();
 };
 
 
