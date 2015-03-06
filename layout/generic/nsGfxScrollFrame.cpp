@@ -1089,13 +1089,12 @@ static bool IsFocused(nsIContent* aContent)
 bool
 ScrollFrameHelper::WantAsyncScroll() const
 {
-  nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
-
-  bool isVScrollable = (scrollRange.height > 0)
-                    && (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
-  bool isHScrollable = (scrollRange.width > 0)
-                    && (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
+  uint32_t directions = mOuter->GetScrollTargetFrame()->GetPerceivedScrollingDirections();
+  bool isVScrollable = !!(directions & nsIScrollableFrame::VERTICAL) &&
+                       (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
+  bool isHScrollable = !!(directions & nsIScrollableFrame::HORIZONTAL) &&
+                       (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
 
 #if defined(MOZ_B2G) || defined(MOZ_WIDGET_ANDROID)
   // Mobile platforms need focus to scroll.
