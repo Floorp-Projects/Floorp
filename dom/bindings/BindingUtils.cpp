@@ -42,6 +42,7 @@
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "WorkerPrivate.h"
 #include "nsDOMClassInfo.h"
@@ -249,26 +250,6 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
   nsresult rv =
     UNWRAP_OBJECT(DOMException, &mJSException.toObject(), domException);
   if (NS_SUCCEEDED(rv)) {
-    // We may have to create a new DOMException object, because the one we
-    // have has a stack that includes the chrome code that threw it, and in
-    // particular has the wrong file/line/column information.
-    JS::Rooted<JS::Value> reflector(aCx);
-    if (!domException->Sanitize(aCx, &reflector)) {
-      // Well, that threw _an_ exception.  Let's forget ours.  We can just
-      // unroot and not change the value, since mJSException is completely
-      // ignored if mResult is not NS_ERROR_DOM_JS_EXCEPTION and we plan to
-      // change mResult to a different value.
-      js::RemoveRawValueRoot(aCx, &mJSException);
-
-      // We no longer have a useful exception but we do want to signal that an
-      // error occured.
-      mResult = NS_ERROR_FAILURE;
-
-      // But do make sure to not ReportJSException here, since we don't have one.
-      return;
-    }
-
-    mJSException = reflector;
     ReportJSException(aCx);
     return;
   }
@@ -307,17 +288,6 @@ ErrorResult::StealJSException(JSContext* cx,
   value.set(mJSException);
   js::RemoveRawValueRoot(cx, &mJSException);
   mResult = NS_OK;
-
-  if (value.isObject()) {
-    // If it's a DOMException we may need to sanitize it.
-    dom::DOMException* domException;
-    nsresult rv =
-      UNWRAP_OBJECT(DOMException, &value.toObject(), domException);
-    if (NS_SUCCEEDED(rv) && !domException->Sanitize(cx, value)) {
-      JS_GetPendingException(cx, value);
-      JS_ClearPendingException(cx);
-    }
-  }
 }
 
 void
@@ -2328,12 +2298,20 @@ bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
               JS::Handle<jsid> aId, bool* aResolvedp)
 {
+  MOZ_ASSERT(JS_IsGlobalObject(aObj),
+             "Should have a global here, since we plan to resolve standard "
+             "classes!");
+
   return JS_ResolveStandardClass(aCx, aObj, aId, aResolvedp);
 }
 
 bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
+  MOZ_ASSERT(JS_IsGlobalObject(aObj),
+             "Should have a global here, since we plan to enumerate standard "
+             "classes!");
+
   return JS_EnumerateStandardClasses(aCx, aObj);
 }
 
@@ -2725,6 +2703,29 @@ UnwrapArgImpl(JS::Handle<JSObject*> src,
     // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
     // there is an outer to avoid nasty recursion.
     return wrappedJS->QueryInterface(iid, ppArg);
+}
+
+bool
+SystemGlobalResolve(JSContext* cx, JS::Handle<JSObject*> obj,
+                    JS::Handle<jsid> id, bool* resolvedp)
+{
+  if (!ResolveGlobal(cx, obj, id, resolvedp)) {
+    return false;
+  }
+
+  if (*resolvedp) {
+    return true;
+  }
+
+  return ResolveSystemBinding(cx, obj, id, resolvedp);
+}
+
+bool
+SystemGlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj)
+{
+  bool ignored = false;
+  return EnumerateGlobal(cx, obj) &&
+         ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
 }
 
 } // namespace dom

@@ -3270,6 +3270,18 @@ GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
   return JS_GetErrorPrototype(aCx);
 }
 
+// Resolve an id on the given global object that wants to be included in
+// Exposed=System webidl annotations.  False return value means exception
+// thrown.
+bool SystemGlobalResolve(JSContext* cx, JS::Handle<JSObject*> obj,
+                         JS::Handle<jsid> id, bool* resolvedp);
+
+// Enumerate all ids on the given global object that wants to be included in
+// Exposed=System webidl annotations.  False return value means exception
+// thrown.
+bool SystemGlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj);
+
+
 } // namespace dom
 } // namespace mozilla
 

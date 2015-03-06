@@ -132,6 +132,7 @@ UNIFIED_SOURCES += [
     'PositionedEventTargeting.cpp',
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
+    'ScrollbarStyles.cpp',
     'SelectionCarets.cpp',
     'StackArena.cpp',
     'TouchCaret.cpp',

@@ -29,6 +29,8 @@ public:
 
     virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) { return nullptr; }
 
+    virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) { }
+
     virtual void ForceComposite(LayerTransactionParent* aLayerTree) { }
     virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                    const TimeStamp& aTime) { return true; }
