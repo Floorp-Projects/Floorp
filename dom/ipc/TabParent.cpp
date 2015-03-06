@@ -1241,6 +1241,7 @@ bool TabParent::RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& 
 
   WidgetWheelEvent localEvent(aEvent);
   localEvent.widget = widget;
+  localEvent.refPoint -= GetChildProcessOffset();
 
   widget->DispatchAPZAwareEvent(&localEvent);
   return true;
