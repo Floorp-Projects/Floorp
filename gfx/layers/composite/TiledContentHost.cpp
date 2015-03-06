@@ -28,7 +28,7 @@ namespace layers {
 class Layer;
 
 TiledLayerBufferComposite::TiledLayerBufferComposite()
-  : mFrameResolution(1.0)
+  : mFrameResolution()
   , mHasDoubleBufferedTiles(false)
   , mIsValid(false)
 {}
@@ -51,7 +51,8 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
   mRetainedWidth = aDescriptor.retainedWidth();
   mRetainedHeight = aDescriptor.retainedHeight();
   mResolution = aDescriptor.resolution();
-  mFrameResolution = CSSToParentLayerScale(aDescriptor.frameResolution());
+  mFrameResolution = CSSToParentLayerScale2D(aDescriptor.frameXResolution(),
+                                             aDescriptor.frameYResolution());
   if (mResolution == 0 || IsNaN(mResolution)) {
     // There are divisions by mResolution so this protects the compositor process
     // against malicious content processes and fuzzing.
@@ -561,9 +562,10 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   // precision layer buffer. Compensate for a changing frame resolution when
   // rendering the low precision buffer.
   if (aLayerBuffer.GetFrameResolution() != mTiledBuffer.GetFrameResolution()) {
-    const CSSToParentLayerScale& layerResolution = aLayerBuffer.GetFrameResolution();
-    const CSSToParentLayerScale& localResolution = mTiledBuffer.GetFrameResolution();
-    layerScale.width = layerScale.height = layerResolution.scale / localResolution.scale;
+    const CSSToParentLayerScale2D& layerResolution = aLayerBuffer.GetFrameResolution();
+    const CSSToParentLayerScale2D& localResolution = mTiledBuffer.GetFrameResolution();
+    layerScale.width = layerResolution.xScale / localResolution.xScale;
+    layerScale.height = layerResolution.yScale / localResolution.yScale;
     aVisibleRegion.ScaleRoundOut(layerScale.width, layerScale.height);
   }
 
