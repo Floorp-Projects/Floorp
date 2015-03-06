@@ -4318,6 +4318,28 @@ JS_RestoreFrameChain(JSContext *cx)
     cx->restoreFrameChain();
 }
 
+JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
+  JSContext *cx, HandleObject stack, HandleString asyncCause)
+  : cx(cx),
+    oldAsyncStack(cx, cx->runtime()->asyncStackForNewActivations),
+    oldAsyncCause(cx, cx->runtime()->asyncCauseForNewActivations)
+{
+    CHECK_REQUEST(cx);
+
+    SavedFrame *asyncStack = &stack->as<SavedFrame>();
+    MOZ_ASSERT(!asyncCause->empty());
+
+    cx->runtime()->asyncStackForNewActivations = asyncStack;
+    cx->runtime()->asyncCauseForNewActivations = asyncCause;
+}
+
+JS::AutoSetAsyncStackForNewCalls::~AutoSetAsyncStackForNewCalls()
+{
+    cx->runtime()->asyncCauseForNewActivations = oldAsyncCause;
+    cx->runtime()->asyncStackForNewActivations =
+      oldAsyncStack ? &oldAsyncStack->as<SavedFrame>() : nullptr;
+}
+
 /************************************************************************/
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)

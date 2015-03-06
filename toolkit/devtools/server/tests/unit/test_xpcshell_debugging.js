@@ -14,30 +14,32 @@ function run_test() {
   let client = new DebuggerClient(transport);
   client.connect(() => {
     // Even though we have no tabs, listTabs gives us the chromeDebugger.
-    client.listTabs(response => {
-      let chromeDebugger = response.chromeDebugger;
-      client.attachThread(chromeDebugger, (response, threadClient) => {
-        threadClient.addOneTimeListener("paused", (event, packet) => {
-        equal(packet.why.type, "breakpoint",
-              "yay - hit the breakpoint at the first line in our script");
-          // Resume again - next stop should be our "debugger" statement.
+    client.attachProcess().then(response => {
+      let actor = response.form.actor;
+      client.attachTab(actor, (response, tabClient) => {
+        tabClient.attachThread(null, (response, threadClient) => {
           threadClient.addOneTimeListener("paused", (event, packet) => {
-            equal(packet.why.type, "debuggerStatement",
-                  "yay - hit the 'debugger' statement in our script");
-            threadClient.resume(() => {
-              finishClient(client);
+          equal(packet.why.type, "breakpoint",
+                "yay - hit the breakpoint at the first line in our script");
+            // Resume again - next stop should be our "debugger" statement.
+            threadClient.addOneTimeListener("paused", (event, packet) => {
+              equal(packet.why.type, "debuggerStatement",
+                    "yay - hit the 'debugger' statement in our script");
+              threadClient.resume(() => {
+                finishClient(client);
+              });
             });
+            threadClient.resume();
           });
-          threadClient.resume();
-        });
-        // tell the thread to do the initial resume.  This would cause the
-        // xpcshell test harness to resume and load the file under test.
-        threadClient.resume(response => {
-          // should have been told to resume the test itself.
-          ok(testResumed);
-          // Now load our test script.
-          load(testFile.path);
-          // and our "paused" listener above should get hit.
+          // tell the thread to do the initial resume.  This would cause the
+          // xpcshell test harness to resume and load the file under test.
+          threadClient.resume(response => {
+            // should have been told to resume the test itself.
+            ok(testResumed);
+            // Now load our test script.
+            load(testFile.path);
+            // and our "paused" listener above should get hit.
+          });
         });
       });
     });

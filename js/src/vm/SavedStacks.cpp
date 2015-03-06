@@ -38,15 +38,34 @@ using mozilla::Maybe;
 
 namespace js {
 
+/**
+ * Maximum number of saved frames returned for an async stack.
+ */
+const unsigned ASYNC_STACK_MAX_FRAME_COUNT = 60;
+
 struct SavedFrame::Lookup {
-    Lookup(JSAtom *source, uint32_t line, uint32_t column, JSAtom *functionDisplayName,
-           SavedFrame *parent, JSPrincipals *principals)
+    Lookup(JSAtom *source, uint32_t line, uint32_t column,
+           JSAtom *functionDisplayName, JSAtom *asyncCause, SavedFrame *parent,
+           JSPrincipals *principals)
       : source(source),
         line(line),
         column(column),
         functionDisplayName(functionDisplayName),
+        asyncCause(asyncCause),
         parent(parent),
         principals(principals)
+    {
+        MOZ_ASSERT(source);
+    }
+
+    explicit Lookup(SavedFrame &savedFrame)
+      : source(savedFrame.getSource()),
+        line(savedFrame.getLine()),
+        column(savedFrame.getColumn()),
+        functionDisplayName(savedFrame.getFunctionDisplayName()),
+        asyncCause(savedFrame.getAsyncCause()),
+        parent(savedFrame.getParent()),
+        principals(savedFrame.getPrincipals())
     {
         MOZ_ASSERT(source);
     }
@@ -55,6 +74,7 @@ struct SavedFrame::Lookup {
     uint32_t     line;
     uint32_t     column;
     JSAtom       *functionDisplayName;
+    JSAtom       *asyncCause;
     SavedFrame   *parent;
     JSPrincipals *principals;
 
@@ -63,6 +83,10 @@ struct SavedFrame::Lookup {
         if (functionDisplayName) {
             gc::MarkStringUnbarriered(trc, &functionDisplayName,
                                       "SavedFrame::Lookup::functionDisplayName");
+        }
+        if (asyncCause) {
+            gc::MarkStringUnbarriered(trc, &asyncCause,
+                                      "SavedFrame::Lookup::asyncCause");
         }
         if (parent) {
             gc::MarkObjectUnbarriered(trc, &parent,
@@ -102,6 +126,7 @@ SavedFrame::HashPolicy::hash(const Lookup &lookup)
                      lookup.column,
                      lookup.source,
                      lookup.functionDisplayName,
+                     lookup.asyncCause,
                      SavedFramePtrHasher::hash(lookup.parent),
                      JSPrincipalsPtrHasher::hash(lookup.principals));
 }
@@ -127,6 +152,10 @@ SavedFrame::HashPolicy::match(SavedFrame *existing, const Lookup &lookup)
 
     JSAtom *functionDisplayName = existing->getFunctionDisplayName();
     if (functionDisplayName != lookup.functionDisplayName)
+        return false;
+
+    JSAtom *asyncCause = existing->getAsyncCause();
+    if (asyncCause != lookup.asyncCause)
         return false;
 
     return true;
@@ -197,6 +226,8 @@ SavedFrame::protoAccessors[] = {
     JS_PSG("line", SavedFrame::lineProperty, 0),
     JS_PSG("column", SavedFrame::columnProperty, 0),
     JS_PSG("functionDisplayName", SavedFrame::functionDisplayNameProperty, 0),
+    JS_PSG("asyncCause", SavedFrame::asyncCauseProperty, 0),
+    JS_PSG("asyncParent", SavedFrame::asyncParentProperty, 0),
     JS_PSG("parent", SavedFrame::parentProperty, 0),
     JS_PS_END
 };
@@ -243,6 +274,16 @@ SavedFrame::getFunctionDisplayName()
     return &s->asAtom();
 }
 
+JSAtom *
+SavedFrame::getAsyncCause()
+{
+    const Value &v = getReservedSlot(JSSLOT_ASYNCCAUSE);
+    if (v.isNull())
+        return nullptr;
+    JSString *s = v.toString();
+    return &s->asAtom();
+}
+
 SavedFrame *
 SavedFrame::getParent()
 {
@@ -271,6 +312,10 @@ SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
     setReservedSlot(JSSLOT_FUNCTIONDISPLAYNAME,
                     lookup->functionDisplayName
                         ? StringValue(lookup->functionDisplayName)
+                        : NullValue());
+    setReservedSlot(JSSLOT_ASYNCCAUSE,
+                    lookup->asyncCause
+                        ? StringValue(lookup->asyncCause)
                         : NullValue());
     setReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(lookup->parent));
     setReservedSlot(JSSLOT_PRIVATE_PARENT, PrivateValue(lookup->parent));
@@ -312,10 +357,14 @@ SavedFrame::construct(JSContext *cx, unsigned argc, Value *vp)
 
 // Return the first SavedFrame in the chain that starts with |frame| whose
 // principals are subsumed by |principals|, according to |subsumes|. If there is
-// no such frame, return nullptr.
+// no such frame, return nullptr. |skippedAsync| is set to true if any of the
+// skipped frames had the |asyncCause| property set, otherwise it is explicitly
+// set to false.
 static SavedFrame *
-GetFirstSubsumedFrame(JSContext *cx, HandleSavedFrame frame)
+GetFirstSubsumedFrame(JSContext *cx, HandleSavedFrame frame, bool &skippedAsync)
 {
+    skippedAsync = false;
+
     JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes;
     if (!subsumes)
         return frame;
@@ -323,8 +372,11 @@ GetFirstSubsumedFrame(JSContext *cx, HandleSavedFrame frame)
     JSPrincipals *principals = cx->compartment()->principals;
 
     RootedSavedFrame rootedFrame(cx, frame);
-    while (rootedFrame && !subsumes(principals, rootedFrame->getPrincipals()))
+    while (rootedFrame && !subsumes(principals, rootedFrame->getPrincipals())) {
+        if (rootedFrame->getAsyncCause())
+            skippedAsync = true;
         rootedFrame = rootedFrame->getParent();
+    }
 
     return rootedFrame;
 }
@@ -334,8 +386,9 @@ GetFirstSubsumedSavedFrame(JSContext *cx, HandleObject savedFrame)
 {
     if (!savedFrame)
         return nullptr;
+    bool skippedAsync;
     RootedSavedFrame frame(cx, &savedFrame->as<SavedFrame>());
-    return GetFirstSubsumedFrame(cx, frame);
+    return GetFirstSubsumedFrame(cx, frame, skippedAsync);
 }
 
 /* static */ bool
@@ -437,7 +490,7 @@ public:
 } // anonymous namespace
 
 static inline js::SavedFrame *
-UnwrapSavedFrame(JSContext *cx, HandleObject obj)
+UnwrapSavedFrame(JSContext *cx, HandleObject obj, bool &skippedAsync)
 {
     if (!obj)
         return nullptr;
@@ -445,14 +498,15 @@ UnwrapSavedFrame(JSContext *cx, HandleObject obj)
     MOZ_ASSERT(savedFrameObj);
     MOZ_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*savedFrameObj));
     js::RootedSavedFrame frame(cx, &savedFrameObj->as<js::SavedFrame>());
-    return GetFirstSubsumedFrame(cx, frame);
+    return GetFirstSubsumedFrame(cx, frame, skippedAsync);
 }
 
 JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameSource(JSContext *cx, HandleObject savedFrame, MutableHandleString sourcep)
 {
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
     if (!frame) {
         sourcep.set(cx->runtime()->emptyString);
         return SavedFrameResult::AccessDenied;
@@ -466,7 +520,8 @@ GetSavedFrameLine(JSContext *cx, HandleObject savedFrame, uint32_t *linep)
 {
     MOZ_ASSERT(linep);
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
     if (!frame) {
         *linep = 0;
         return SavedFrameResult::AccessDenied;
@@ -480,7 +535,8 @@ GetSavedFrameColumn(JSContext *cx, HandleObject savedFrame, uint32_t *columnp)
 {
     MOZ_ASSERT(columnp);
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
     if (!frame) {
         *columnp = 0;
         return SavedFrameResult::AccessDenied;
@@ -493,7 +549,8 @@ JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameFunctionDisplayName(JSContext *cx, HandleObject savedFrame, MutableHandleString namep)
 {
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
     if (!frame) {
         namep.set(nullptr);
         return SavedFrameResult::AccessDenied;
@@ -503,16 +560,72 @@ GetSavedFrameFunctionDisplayName(JSContext *cx, HandleObject savedFrame, Mutable
 }
 
 JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameAsyncCause(JSContext *cx, HandleObject savedFrame, MutableHandleString asyncCausep)
+{
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
+    if (!frame) {
+        asyncCausep.set(nullptr);
+        return SavedFrameResult::AccessDenied;
+    }
+    asyncCausep.set(frame->getAsyncCause());
+    if (!asyncCausep && skippedAsync)
+        asyncCausep.set(cx->names().Async);
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
+GetSavedFrameAsyncParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject asyncParentp)
+{
+    AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
+    if (!frame) {
+        asyncParentp.set(nullptr);
+        return SavedFrameResult::AccessDenied;
+    }
+    js::RootedSavedFrame parent(cx, frame->getParent());
+
+    // The current value of |skippedAsync| is not interesting, because we are
+    // interested in whether we would cross any async parents to get from here
+    // to the first subsumed parent frame instead.
+    js::RootedSavedFrame subsumedParent(cx, GetFirstSubsumedFrame(cx, parent, skippedAsync));
+
+    // Even if |parent| is not subsumed, we still want to return a pointer to it
+    // rather than |subsumedParent| so it can pick up any |asyncCause| from the
+    // inaccessible part of the chain.
+    if (subsumedParent && (subsumedParent->getAsyncCause() || skippedAsync))
+        asyncParentp.set(parent);
+    else
+        asyncParentp.set(nullptr);
+    return SavedFrameResult::Ok;
+}
+
+JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject parentp)
 {
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, skippedAsync));
     if (!frame) {
         parentp.set(nullptr);
         return SavedFrameResult::AccessDenied;
     }
     js::RootedSavedFrame parent(cx, frame->getParent());
-    parentp.set(js::GetFirstSubsumedFrame(cx, parent));
+
+    // The current value of |skippedAsync| is not interesting, because we are
+    // interested in whether we would cross any async parents to get from here
+    // to the first subsumed parent frame instead.
+    js::RootedSavedFrame subsumedParent(cx, GetFirstSubsumedFrame(cx, parent, skippedAsync));
+
+    // Even if |parent| is not subsumed, we still want to return a pointer to it
+    // rather than |subsumedParent| so it can pick up any |asyncCause| from the
+    // inaccessible part of the chain.
+    if (subsumedParent && !(subsumedParent->getAsyncCause() || skippedAsync))
+        parentp.set(parent);
+    else
+        parentp.set(nullptr);
     return SavedFrameResult::Ok;
 }
 
@@ -520,7 +633,8 @@ JS_PUBLIC_API(bool)
 StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString stringp)
 {
     AutoMaybeEnterFrameCompartment ac(cx, stack);
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, stack));
+    bool skippedAsync;
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, stack, skippedAsync));
     if (!frame) {
         stringp.set(cx->runtime()->emptyString);
         return true;
@@ -535,8 +649,13 @@ StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString 
         MOZ_ASSERT_IF(subsumes, (*subsumes)(principals, frame->getPrincipals()));
 
         if (!frame->isSelfHosted()) {
+            RootedString asyncCause(cx, frame->getAsyncCause());
+            if (!asyncCause && skippedAsync) {
+                asyncCause.set(cx->names().Async);
+            }
             js::RootedAtom name(cx, frame->getFunctionDisplayName());
-            if ((name && !sb.append(name))
+            if ((asyncCause && (!sb.append(asyncCause) || !sb.append('*')))
+                || (name && !sb.append(name))
                 || !sb.append('@')
                 || !sb.append(frame->getSource())
                 || !sb.append(':')
@@ -550,7 +669,7 @@ StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString 
         }
 
         parent = frame->getParent();
-        frame = js::GetFirstSubsumedFrame(cx, parent);
+        frame = js::GetFirstSubsumedFrame(cx, parent, skippedAsync);
     } while (frame);
 
     JSString *str = sb.finishString();
@@ -614,6 +733,29 @@ SavedFrame::functionDisplayNameProperty(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* static */ bool
+SavedFrame::asyncCauseProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get asyncCause)", args, frame);
+    RootedString asyncCause(cx);
+    JS::SavedFrameResult result = JS::GetSavedFrameAsyncCause(cx, frame, &asyncCause);
+    if (result == JS::SavedFrameResult::Ok && asyncCause)
+        args.rval().setString(asyncCause);
+    else
+        args.rval().setNull();
+    return true;
+}
+
+/* static */ bool
+SavedFrame::asyncParentProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SAVEDFRAME(cx, argc, vp, "(get asyncParent)", args, frame);
+    RootedObject asyncParent(cx);
+    (void) JS::GetSavedFrameAsyncParent(cx, frame, &asyncParent);
+    args.rval().setObjectOrNull(asyncParent);
+    return true;
+}
+
+/* static */ bool
 SavedFrame::parentProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SAVEDFRAME(cx, argc, vp, "(get parent)", args, frame);
@@ -672,12 +814,7 @@ SavedStacks::sweep(JSRuntime *rt)
                 }
 
                 if (obj != temp || parentMoved) {
-                    e.rekeyFront(SavedFrame::Lookup(frame->getSource(),
-                                                    frame->getLine(),
-                                                    frame->getColumn(),
-                                                    frame->getFunctionDisplayName(),
-                                                    frame->getParent(),
-                                                    frame->getPrincipals()),
+                    e.rekeyFront(SavedFrame::Lookup(*frame),
                                  ReadBarriered<SavedFrame *>(frame));
                 }
             }
@@ -738,9 +875,32 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // pointers on the first pass, and then we fill in the parent pointers as we
     // return in the second pass.
 
+    Activation *asyncActivation = nullptr;
+    RootedSavedFrame asyncStack(cx, nullptr);
+    RootedString asyncCause(cx, nullptr);
+
     // Accumulate the vector of Lookup objects in |stackChain|.
     SavedFrame::AutoLookupVector stackChain(cx);
     while (!iter.done()) {
+        Activation &activation = *iter.activation();
+
+        if (!asyncActivation) {
+            asyncStack = activation.asyncStack();
+            if (asyncStack) {
+                // While walking from the youngest to the oldest frame, we found
+                // an activation that has an async stack set. We will use the
+                // youngest frame of the async stack as the parent of the oldest
+                // frame of this activation. We still need to iterate over other
+                // frames in this activation before reaching the oldest frame.
+                asyncCause = activation.asyncCause();
+                asyncActivation = &activation;
+            }
+        } else if (asyncActivation != &activation) {
+            // We found an async stack in the previous activation, and we
+            // walked past the oldest frame of that activation, we're done.
+            break;
+        }
+
         AutoLocationValueRooter location(cx);
 
         {
@@ -759,22 +919,79 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
           location->column,
           iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr,
           nullptr,
+          nullptr,
           iter.compartment()->principals
         );
 
         ++iter;
 
-        if (maxFrameCount == 0) {
-            // If maxFrameCount is zero, then there's no limit on the number of
-            // frames.
+        // If maxFrameCount is zero there's no limit on the number of frames.
+        if (maxFrameCount == 0)
             continue;
-        } else if (maxFrameCount == 1) {
-            // Since we were only asked to save one frame, do not continue
-            // walking the stack and saving frame state.
+
+        if (maxFrameCount == 1) {
+            // The frame we just saved was the last one we were asked to save.
+            // If we had an async stack, ensure we don't use any of its frames.
+            asyncStack.set(nullptr);
             break;
-        } else {
-            maxFrameCount--;
         }
+
+        maxFrameCount--;
+    }
+
+    // Limit the depth of the async stack, if any, and ensure that the
+    // SavedFrame instances we use are stored in the same compartment as the
+    // rest of the synchronous stack chain.
+    RootedSavedFrame parentFrame(cx, nullptr);
+    if (asyncStack && !adoptAsyncStack(cx, asyncStack, asyncCause, &parentFrame, maxFrameCount))
+        return false;
+
+    // Iterate through |stackChain| in reverse order and get or create the
+    // actual SavedFrame instances.
+    for (size_t i = stackChain->length(); i != 0; i--) {
+        SavedFrame::HandleLookup lookup = stackChain[i-1];
+        lookup->parent = parentFrame;
+        parentFrame.set(getOrCreateSavedFrame(cx, lookup));
+        if (!parentFrame)
+            return false;
+    }
+
+    frame.set(parentFrame);
+    return true;
+}
+
+bool
+SavedStacks::adoptAsyncStack(JSContext *cx, HandleSavedFrame asyncStack,
+                             HandleString asyncCause,
+                             MutableHandleSavedFrame adoptedStack,
+                             unsigned maxFrameCount)
+{
+    RootedAtom asyncCauseAtom(cx, AtomizeString(cx, asyncCause));
+    if (!asyncCauseAtom)
+        return false;
+
+    // If maxFrameCount is zero, the caller asked for an unlimited number of
+    // stack frames, but async stacks are not limited by the available stack
+    // memory, so we need to set an arbitrary limit when collecting them. We
+    // still don't enforce an upper limit if the caller requested more frames.
+    if (maxFrameCount == 0)
+        maxFrameCount = ASYNC_STACK_MAX_FRAME_COUNT;
+
+    // Accumulate the vector of Lookup objects in |stackChain|.
+    SavedFrame::AutoLookupVector stackChain(cx);
+    SavedFrame *currentSavedFrame = asyncStack;
+    for (unsigned i = 0; i < maxFrameCount && currentSavedFrame; i++) {
+        // Use growByUninitialized and placement-new instead of just append.
+        // We'd ideally like to use an emplace method once Vector supports it.
+        if (!stackChain->growByUninitialized(1))
+            return false;
+        new (&stackChain->back()) SavedFrame::Lookup(*currentSavedFrame);
+
+        // Attach the asyncCause to the youngest frame.
+        if (i == 0)
+            stackChain->back().asyncCause = asyncCauseAtom;
+
+        currentSavedFrame = currentSavedFrame->getParent();
     }
 
     // Iterate through |stackChain| in reverse order and get or create the
@@ -788,7 +1005,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
             return false;
     }
 
-    frame.set(parentFrame);
+    adoptedStack.set(parentFrame);
     return true;
 }
 

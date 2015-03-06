@@ -1027,7 +1027,9 @@ public class BrowserApp extends GeckoApp
                 }
 
                 // Temporarily disable doorhanger notifications.
-                mDoorHangerPopup.disable();
+                if (mDoorHangerPopup != null) {
+                    mDoorHangerPopup.disable();
+                }
             }
         });
 
@@ -1050,7 +1052,9 @@ public class BrowserApp extends GeckoApp
                 hideHomePager();
 
                 // Re-enable doorhanger notifications. They may trigger on the selected tab above.
-                mDoorHangerPopup.enable();
+                if (mDoorHangerPopup != null) {
+                    mDoorHangerPopup.enable();
+                }
             }
         });
 
@@ -2247,7 +2251,11 @@ public class BrowserApp extends GeckoApp
                 recordSearch(null, "barkeyword");
 
                 // Otherwise, construct a search query from the bookmark keyword.
-                final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch));
+                // Replace lower case bookmark keywords with URLencoded search query or
+                // replace upper case bookmark keywords with un-encoded search query.
+                // This makes it match the same behaviour as on Firefox for the desktop.
+                final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch)).replace("%S", keywordSearch);
+
                 Tabs.getInstance().loadUrl(searchUrl, Tabs.LOADURL_USER_ENTERED);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL,
                                       TelemetryContract.Method.ACTIONBAR,

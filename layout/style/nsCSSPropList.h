@@ -1813,7 +1813,7 @@ CSS_PROP_FONT(
 CSS_PROP_FONT(
     -moz-osx-font-smoothing,
     osx_font_smoothing,
-    CSS_PROP_DOMPROP_PREFIXED(OSXFontSmoothing),
+    CSS_PROP_DOMPROP_PREFIXED(OsxFontSmoothing),
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
@@ -3058,6 +3058,81 @@ CSS_PROP_DISPLAY(
     "layout.css.scroll-behavior.property-enabled",
     VARIANT_HK,
     kScrollBehaviorKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    scroll-snap-type-x,
+    scroll_snap_type_x,
+    ScrollSnapTypeX,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.scroll-snap.enabled",
+    VARIANT_HK,
+    kScrollSnapTypeKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    scroll-snap-type-y,
+    scroll_snap_type_y,
+    ScrollSnapTypeY,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.scroll-snap.enabled",
+    VARIANT_HK,
+    kScrollSnapTypeKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
+    scroll-snap-type,
+    scroll_snap_type,
+    ScrollSnapType,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.scroll-snap.enabled")
+CSS_PROP_DISPLAY(
+    scroll-snap-points-x,
+    scroll_snap_points_x,
+    ScrollSnapPointsX,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
+    "layout.css.scroll-snap.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    scroll-snap-points-y,
+    scroll_snap_points_y,
+    ScrollSnapPointsY,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
+    "layout.css.scroll-snap.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    scroll-snap-destination,
+    scroll_snap_destination,
+    ScrollSnapDestination,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_STORES_CALC,
+    "layout.css.scroll-snap.enabled",
+    0,
+    kBackgroundPositionKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
+    scroll-snap-coordinate,
+    scroll_snap_coordinate,
+    ScrollSnapCoordinate,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+        CSS_PROPERTY_STORES_CALC,
+    "layout.css.scroll-snap.enabled",
+    0,
+    kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BACKENDONLY(

@@ -1,0 +1,785 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scroll snapping</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="sc" style="margin: 0px; padding: 0px; overflow: scroll; width:250px; height: 250px;">
+  <div id="sd" style="margin: 0px; padding: 0px; width: 1250px; height: 1250px;"></div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var testCases = [
+  {
+    "description"             : "Proximity + Within proximity => Snaps to point (Right)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "525px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 525,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Proximity + Within proximity => Snaps to point (Left)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "475px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 475,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Proximity + Within proximity => Snaps to point (Up)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 475px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 475,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Proximity + Within proximity => Snaps to point (Down)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 525px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 525,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Proximity + Beyond proximity => Does not snap to point (Right)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "700px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 700,
+    "expectedY"               : 500,
+    "notExpected"             : true
+  },
+
+  {
+    "description"             : "Proximity + Beyond proximity => Does not snap to point (Left)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "300px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 300,
+    "expectedY"               : 500,
+    "notExpected"             : true
+  },
+
+  {
+    "description"             : "Proximity + Beyond proximity => Does not snap to point (Up)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 300px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 300,
+    "notExpected"             : true
+  },
+
+  {
+    "description"             : "Proximity + Beyond proximity => Does not snap to point (Down)",
+    "scrollSnapType"          : "proximity",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 700px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 700,
+    "notExpected"             : true
+  },
+
+  {
+    "description"             : "Mandatory + Beyond proximity => Snaps to point (Right)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "700px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 700,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + Beyond proximity => Snaps to point (Left)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "300px 500px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 300,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + Beyond proximity => Snaps to point (Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 300px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 300,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + Beyond proximity => Snaps to point (Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 700px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 700,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + No snap points => Does not snap or scroll (Left)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + No snap points => Does not snap or scroll (Right)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + No snap points => Does not snap or scroll (Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + No snap points => Does not snap or scroll (Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to top of page (Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 200,
+    "key"                     : "VK_UP",
+    "expectedX"               : 0,
+    "expectedY"               : 200,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to top of page (Page Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 200,
+    "key"                     : "VK_PAGE_UP",
+    "expectedX"               : 0,
+    "expectedY"               : 200,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Snaps to highest snap point (Home)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 200,
+    "key"                     : "VK_HOME",
+    "expectedX"               : 0,
+    "expectedY"               : 475,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-x + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to left of page (Left)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(500px)",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 200,
+    "initialY"                : 0,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 200,
+    "expectedY"               : 0,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Does not snap to end of page (Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "-25px -25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 800,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 0,
+    "expectedY"               : 800,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Does not snap to end of page (Page Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "-25px -25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 800,
+    "key"                     : "VK_PAGE_DOWN",
+    "expectedX"               : 0,
+    "expectedY"               : 800,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Snaps to lowest snap point (End)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(500px)",
+    "scrollSnapDestination"   : "-25px -25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 0,
+    "initialY"                : 800,
+    "key"                     : "VK_END",
+    "expectedX"               : 0,
+    "expectedY"               : 525,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-coordinate + No snap point at start of page => Does not snap to top of page (Home)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 100px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_HOME",
+    "expectedX"               : 500,
+    "expectedY"               : 100,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-coordinate + No snap point at end of page => Does not snap to end of page (End)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "500px 900px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_END",
+    "expectedX"               : 500,
+    "expectedY"               : 900,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Left)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(1500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Right)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(1500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(1500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "repeat(1500px)",
+    "scrollSnapDestination"   : "25px 25px",
+    "scrollSnapCoordinate"    : "none",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 500,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #1)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 0,
+    "initialY"                : 0,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 120,
+    "expectedY"               : 0,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #2)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 120,
+    "initialY"                : 0,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 200,
+    "expectedY"               : 0,
+    "notExpected"             : false
+  },
+
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #3)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 200,
+    "initialY"                : 0,
+    "key"                     : "VK_RIGHT",
+    "expectedX"               : 220,
+    "expectedY"               : 0,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #1)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 0,
+    "initialY"                : 300,
+    "key"                     : "VK_UP",
+    "expectedX"               : 0,
+    "expectedY"               : 220,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #2)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 0,
+    "initialY"                : 220,
+    "key"                     : "VK_UP",
+    "expectedX"               : 0,
+    "expectedY"               : 200,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #3)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "repeat(200px)",
+    "scrollSnapPointsY"       : "repeat(200px)",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "120px 120px, 220px 220px",
+    "initialX"                : 0,
+    "initialY"                : 200,
+    "key"                     : "VK_UP",
+    "expectedX"               : 0,
+    "expectedY"               : 120,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the next snap point in the direction of the scroll is selected rather than a closer point in the opposite direction (page Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "600px 600px, 475px 475px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_PAGE_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 600,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the next snap point in the direction of the scroll is selected rather than a closer point in the opposite direction (Page Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "400px 400px, 525px 525px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_PAGE_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 400,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 250px. (Page Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "525px 525px, 550px 550px, 800px 800px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_PAGE_DOWN",
+    "expectedX"               : 500,
+    "expectedY"               : 550,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 250px. (Page Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "475px 475px, 450px 450px, 200px 200px",
+    "initialX"                : 500,
+    "initialY"                : 500,
+    "key"                     : "VK_PAGE_UP",
+    "expectedX"               : 500,
+    "expectedY"               : 450,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 250px. (Page Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "50px 50px, 800px 800px, 900px 900px",
+    "initialX"                : 100,
+    "initialY"                : 100,
+    "key"                     : "VK_PAGE_DOWN",
+    "expectedX"               : 100,
+    "expectedY"               : 800,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 250px. (Page Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
+    "initialX"                : 900,
+    "initialY"                : 900,
+    "key"                     : "VK_PAGE_UP",
+    "expectedX"               : 900,
+    "expectedY"               : 200,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Down)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "50px 50px, 800px 800px, 900px 900px",
+    "initialX"                : 100,
+    "initialY"                : 100,
+    "key"                     : "VK_PAGE_DOWN",
+    "expectedX"               : 100,
+    "expectedY"               : 800,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Up)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
+    "initialX"                : 900,
+    "initialY"                : 900,
+    "key"                     : "VK_PAGE_UP",
+    "expectedX"               : 900,
+    "expectedY"               : 200,
+    "notExpected"             : false
+  },
+
+  {
+    "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Left)",
+    "scrollSnapType"          : "mandatory",
+    "scrollSnapPointsX"       : "none",
+    "scrollSnapPointsY"       : "none",
+    "scrollSnapDestination"   : "0px 0px",
+    "scrollSnapCoordinate"    : "950px 950px, 200px 200px, 100px 100px",
+    "initialX"                : 900,
+    "initialY"                : 900,
+    "key"                     : "VK_LEFT",
+    "expectedX"               : 200,
+    "expectedY"               : 900,
+    "notExpected"             : false
+  }
+];
+
+var step = 0;
+var sc; // Scroll Container
+var sd; // Scrolled Div
+
+var lastScrollTop;
+var lastScrollLeft;
+var stopFrameCount;
+
+function initTest() {
+  var testCase = testCases[step];
+  sc.style.scrollSnapType = testCase.scrollSnapType;
+  sc.style.scrollSnapPointsX = testCase.scrollSnapPointsX;
+  sc.style.scrollSnapPointsY = testCase.scrollSnapPointsY;
+  sc.style.scrollSnapDestination = testCase.scrollSnapDestination;
+  sd.style.scrollSnapCoordinate = testCase.scrollSnapCoordinate;
+  sc.scrollTo(testCase.initialX, testCase.initialY);
+  sc.focus();
+  synthesizeKey(testCase.key, {});
+
+  stopFrameCount = 0;
+  lastScrollTop = sc.scrollTop;
+  lastScrollLeft = sc.scrollLeft;
+
+  window.requestAnimationFrame(waitForScrollStop);
+}
+
+function waitForScrollStop() {
+  if (stopFrameCount > 30) {
+    // We have the same position for 30 consecutive frames -- we are stopped
+    testScrolling();
+  } else {
+    // Still moving
+    if (lastScrollTop == sc.scrollTop && lastScrollLeft == sc.scrollLeft) {
+      stopFrameCount++;
+    } else {
+      stopFrameCount = 0;
+      lastScrollTop = sc.scrollTop;
+      lastScrollLeft = sc.scrollLeft;
+    }
+    window.requestAnimationFrame(waitForScrollStop);
+  }
+}
+
+function testScrollSnapping() {
+  sc = document.getElementById("sc");
+  sd = document.getElementById("sd");
+
+  initTest();
+}
+
+function testScrolling() {
+  var testCase = testCases[step];
+  if (document.getElementById('display').style.direction == "rtl") {
+    if (testCase.notExpected) {
+      isnot("(" + -sc.scrollLeft + "," + sc.scrollTop + ")",
+            "(" + -testCase.expectedX + "," + testCase.expectedY + ")",
+            "rtl: " + testCase.description);
+    } else {
+      is("(" + -sc.scrollLeft + "," + sc.scrollTop + ")",
+         "(" + -testCase.expectedX + "," + testCase.expectedY + ")",
+         "rtl: " + testCase.description);
+    }
+  } else {
+    // ltr direction
+    if (testCase.notExpected) {
+      isnot("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
+            "(" + testCase.expectedX + "," + testCase.expectedY + ")",
+            "ltr: " + testCase.description);
+    } else {
+      is("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
+         "(" + testCase.expectedX + "," + testCase.expectedY + ")",
+         "ltr: " + testCase.description);
+    }
+  }
+
+  step++;
+  if (step < Object.keys(testCases).length) {
+    initTest();
+  } else {
+    if (document.getElementById('display').style.direction == "rtl") {
+      SimpleTest.finish();
+    } else {
+      // Do everything again, but with rtl
+      document.getElementById('display').style.direction = "rtl";
+      step = 0;
+      initTest();
+    }
+  }
+}
+
+function doTest() {
+  SpecialPowers.pushPrefEnv({
+    "set": [["layout.css.scroll-snap.enabled", true],
+            ["layout.css.scroll-snap.proximity-threshold", 100]]},
+    testScrollSnapping);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+</script>
+</pre>
+</body>
+
+</html>

@@ -131,6 +131,26 @@ DragEvent::GetDataTransfer()
   return dragEvent->dataTransfer;
 }
 
+// static
+already_AddRefed<DragEvent>
+DragEvent::Constructor(const GlobalObject& aGlobal,
+                       const nsAString& aType,
+                       const DragEventInit& aParam,
+                       ErrorResult& aRv)
+{
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<DragEvent> e = new DragEvent(t, nullptr, nullptr);
+  bool trusted = e->Init(t);
+  aRv = e->InitDragEvent(aType, aParam.mBubbles, aParam.mCancelable,
+                         aParam.mView, aParam.mDetail, aParam.mScreenX,
+                         aParam.mScreenY, aParam.mClientX, aParam.mClientY,
+                         aParam.mCtrlKey, aParam.mAltKey, aParam.mShiftKey,
+                         aParam.mMetaKey, aParam.mButton, aParam.mRelatedTarget,
+                         aParam.mDataTransfer);
+  e->SetTrusted(trusted);
+  return e.forget();
+}
+
 } // namespace dom
 } // namespace mozilla
 

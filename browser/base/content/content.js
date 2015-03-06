@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
   "resource://gre/modules/AboutReader.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
+  "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
   let ssdp = Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
   // Register targets
@@ -153,6 +155,12 @@ let handleContentContextMenu = function (event) {
   subject.wrappedJSObject = subject;
   Services.obs.notifyObservers(subject, "content-contextmenu", null);
 
+  let doc = event.target.ownerDocument;
+  let docLocation = doc.location.href;
+  let charSet = doc.characterSet;
+  let baseURI = doc.baseURI;
+  let referrer = doc.referrer;
+
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
     let editFlags = SpellCheckHelper.isEditable(event.target, content);
     let spellInfo;
@@ -163,9 +171,10 @@ let handleContentContextMenu = function (event) {
     }
 
     let customMenuItems = PageMenuChild.build(event.target);
-    let principal = event.target.ownerDocument.nodePrincipal;
+    let principal = doc.nodePrincipal;
     sendSyncMessage("contextmenu",
-                    { editFlags, spellInfo, customMenuItems, addonInfo, principal },
+                    { editFlags, spellInfo, customMenuItems, addonInfo,
+                      principal, docLocation, charSet, baseURI, referrer },
                     { event, popupNode: event.target });
   }
   else {
@@ -178,6 +187,10 @@ let handleContentContextMenu = function (event) {
       popupNode: event.target,
       browser: browser,
       addonInfo: addonInfo,
+      documentURIObject: doc.documentURIObject,
+      docLocation: docLocation,
+      charSet: charSet,
+      referrer: referrer,
     };
   }
 }
@@ -1000,30 +1013,29 @@ addEventListener("pageshow", function(event) {
   }
 });
 
-let SocialMessenger = {
+let PageMetadataMessenger = {
   init: function() {
-    addMessageListener("Social:GetPageData", this);
-    addMessageListener("Social:GetMicrodata", this);
-
-    XPCOMUtils.defineLazyGetter(this, "og", function() {
-      let tmp = {};
-      Cu.import("resource:///modules/Social.jsm", tmp);
-      return tmp.OpenGraphBuilder;
-    });
+    addMessageListener("PageMetadata:GetPageData", this);
+    addMessageListener("PageMetadata:GetMicrodata", this);
   },
   receiveMessage: function(aMessage) {
     switch(aMessage.name) {
-      case "Social:GetPageData":
-        sendAsyncMessage("Social:PageDataResult", this.og.getData(content.document));
+      case "PageMetadata:GetPageData": {
+        let result = PageMetadata.getData(content.document);
+        sendAsyncMessage("PageMetadata:PageDataResult", result);
         break;
-      case "Social:GetMicrodata":
+      }
+
+      case "PageMetadata:GetMicrodata": {
         let target = aMessage.objects;
-        sendAsyncMessage("Social:PageDataResult", this.og.getMicrodata(content.document, target));
+        let result = PageMetadata.getMicrodata(content.document, target);
+        sendAsyncMessage("PageMetadata:MicrodataResult", result);
         break;
+      }
     }
   }
 }
-SocialMessenger.init();
+PageMetadataMessenger.init();
 
 addEventListener("ActivateSocialFeature", function (aEvent) {
   let document = content.document;

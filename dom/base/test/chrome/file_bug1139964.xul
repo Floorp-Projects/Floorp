@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
+-->
+<window title="Mozilla Bug 1139964"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="run()">
+  <label value="Mozilla Bug 1139964"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+              .getService(Ci.nsIMessageBroadcaster);
+
+  function ok(cond, msg) {
+    opener.wrappedJSObject.ok(cond, msg);
+  }
+
+  var msgName = "TEST:Global_has_Promise";
+
+  function mmScriptForPromiseTest() {
+    sendAsyncMessage("TEST:Global_has_Promise",
+                     {
+                       hasPromise: ("Promise" in this),
+                       hasTextEncoder: ("TextEncoder" in this),
+                       hasWindow: ("Window" in this),
+                     });
+  }
+
+  function processListener(m) {
+    ppm.removeMessageListener(msgName, processListener);
+    ok(m.data.hasPromise, "ProcessGlobal should have Promise object in the global scope!");
+    ok(m.data.hasTextEncoder, "ProcessGlobal should have TextEncoder object in the global scope!");
+    ok(!m.data.hasWindow, "ProcessGlobal should not have Window object in the global scope!");
+
+    messageManager.addMessageListener(msgName, tabListener)
+    messageManager.loadFrameScript("data:,(" + mmScriptForPromiseTest.toString() + ")()", true);
+  }
+
+  function tabListener(m) {
+    messageManager.removeMessageListener(msgName, tabListener);
+    ok(m.data.hasPromise, "TabChildGlobal should have Promise object in the global scope!");
+    ok(m.data.hasTextEncoder, "TabChildGlobal should have TextEncoder object in the global scope!");
+    ok(!m.data.hasWindow, "TabChildGlobal should not have Window object in the global scope!");
+
+    opener.setTimeout("done()", 0);
+    window.close();
+  }
+
+  function run() {
+    ppm.addMessageListener(msgName, processListener)
+    ppm.loadProcessScript("data:,(" + mmScriptForPromiseTest.toString() + ")()", true);
+  }
+
+  ]]></script>
+  <browser type="content" src="about:blank" id="ifr"/>
+</window>

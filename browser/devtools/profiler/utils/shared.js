@@ -83,14 +83,9 @@ ProfilerConnection.prototype = {
     // Local debugging needs to make the target remote.
     yield this._target.makeRemote();
 
-    // Chrome debugging targets have already obtained a reference
-    // to the profiler actor.
-    if (this._target.chrome) {
-      this._profiler = this._target.form.profilerActor;
-    }
-    // Or when we are debugging content processes, we already have the tab
-    // specific one. Use it immediately.
-    else if (this._target.form && this._target.form.profilerActor) {
+    // Chrome and content process targets already have obtained a reference
+    // to the profiler tab actor. Use it immediately.
+    if (this._target.form && this._target.form.profilerActor) {
       this._profiler = this._target.form.profilerActor;
       yield this._registerEventNotifications();
     }
@@ -100,8 +95,9 @@ ProfilerConnection.prototype = {
       this._profiler = this._target.root.profilerActor;
       yield this._registerEventNotifications();
     }
-    // Otherwise, call `listTabs`.
-    else {
+    // Otherwise, call `listTabs`, but ensure not trying to fetch tab actors
+    // for AddonTarget that are chrome, but do not expose profile at all.
+    else if (!this._target.chrome) {
       this._profiler = (yield listTabs(this._client)).profilerActor;
       yield this._registerEventNotifications();
     }

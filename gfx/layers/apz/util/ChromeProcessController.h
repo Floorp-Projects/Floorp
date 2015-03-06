@@ -37,6 +37,8 @@ public:
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
+  virtual void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                                const mozilla::CSSPoint& aDestination) MOZ_OVERRIDE;
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                        const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
 

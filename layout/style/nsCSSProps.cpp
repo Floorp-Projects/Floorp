@@ -1660,6 +1660,13 @@ const KTableValue nsCSSProps::kScrollBehaviorKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kScrollSnapTypeKTable[] = {
+  eCSSKeyword_none,      NS_STYLE_SCROLL_SNAP_TYPE_NONE,
+  eCSSKeyword_mandatory, NS_STYLE_SCROLL_SNAP_TYPE_MANDATORY,
+  eCSSKeyword_proximity, NS_STYLE_SCROLL_SNAP_TYPE_PROXIMITY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kStackSizingKTable[] = {
   eCSSKeyword_ignore, NS_STYLE_STACK_SIZING_IGNORE,
   eCSSKeyword_stretch_to_fit, NS_STYLE_STACK_SIZING_STRETCH_TO_FIT,
@@ -2590,6 +2597,12 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 // different parsing rules.
 static const nsCSSProperty gMozTransformSubpropTable[] = {
   eCSSProperty_transform,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gScrollSnapTypeSubpropTable[] = {
+  eCSSProperty_scroll_snap_type_x,
+  eCSSProperty_scroll_snap_type_y,
   eCSSProperty_UNKNOWN
 };
 

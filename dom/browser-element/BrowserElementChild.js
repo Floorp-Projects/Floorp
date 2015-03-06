@@ -42,20 +42,24 @@ if (!('BrowserElementIsPreloaded' in this)) {
     }
   }
 
-  if (docShell.asyncPanZoomEnabled === false) {
-    Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js");
-    ContentPanningAPZDisabled.init();
-  }
+  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") == 1) {
+    if (docShell.asyncPanZoomEnabled === false) {
+      Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js");
+      ContentPanningAPZDisabled.init();
+    }
 
-  Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js");
-  ContentPanning.init();
+    Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js");
+    ContentPanning.init();
+  }
 
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js");
 } else {
-  if (docShell.asyncPanZoomEnabled === false) {
-    ContentPanningAPZDisabled.init();
+  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") == 1) {
+    if (docShell.asyncPanZoomEnabled === false) {
+      ContentPanningAPZDisabled.init();
+    }
+    ContentPanning.init();
   }
-  ContentPanning.init();
 }
 
 var BrowserElementIsReady = true;

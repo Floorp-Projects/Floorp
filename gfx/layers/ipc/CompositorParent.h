@@ -130,6 +130,17 @@ private:
   CancelableTask* mSetNeedsCompositeTask;
 };
 
+class CompositorUpdateObserver
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorUpdateObserver);
+
+  virtual void ObserveUpdate(uint64_t aLayersId, bool aActive) = 0;
+
+protected:
+  virtual ~CompositorUpdateObserver() {}
+};
+
 class CompositorParent MOZ_FINAL : public PCompositorParent,
                                    public ShadowLayersManager
 {
@@ -305,6 +316,8 @@ public:
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
+    nsRefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
+    nsRefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
   };
 
   /**
@@ -318,6 +331,9 @@ public:
    * Used by the profiler to denote when a vsync occured
    */
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
+
+  static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
 
   float ComputeRenderIntegrity();
 

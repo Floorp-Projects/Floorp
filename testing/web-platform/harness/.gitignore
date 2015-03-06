@@ -3,3 +3,5 @@
 *#
 \#*
 _virtualenv
+test/test.cfg
+test/metadata/MANIFEST.json

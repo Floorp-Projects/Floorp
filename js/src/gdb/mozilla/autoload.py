@@ -8,6 +8,7 @@ import mozilla.prettyprinters
 
 # Import the pretty-printer modules. As a side effect, loading these
 # modules registers their printers with mozilla.prettyprinters.
+import mozilla.Interpreter
 import mozilla.jsid
 import mozilla.JSObject
 import mozilla.JSString

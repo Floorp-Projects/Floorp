@@ -43,8 +43,8 @@ function checkUpdateApplied() {
 
 function checkUpdate() {
   if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
+    debugDump("testing last modified time on the apply to directory has " +
+              "changed after a successful update (bug 600098)");
     let now = Date.now();
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);

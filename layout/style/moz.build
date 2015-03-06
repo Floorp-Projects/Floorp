@@ -141,6 +141,7 @@ UNIFIED_SOURCES += [
     'nsDOMCSSRGBColor.cpp',
     'nsDOMCSSValueList.cpp',
     'nsFontFaceLoader.cpp',
+    'nsFontFaceUtils.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsLayoutStylesheetCache.cpp',
@@ -184,6 +185,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '../generic',
+    '../svg',
     '../xul',
     '/dom/base',
     '/dom/html',

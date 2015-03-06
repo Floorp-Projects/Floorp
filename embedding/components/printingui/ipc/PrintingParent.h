@@ -31,6 +31,12 @@ public:
                         PrintData* retVal,
                         bool* success);
 
+    virtual bool
+    RecvSavePrintSettings(const PrintData& aData,
+                          const bool& aUsePrinterNamePrefix,
+                          const uint32_t& aFlags,
+                          nsresult* aResult);
+
     virtual PPrintProgressDialogParent*
     AllocPPrintProgressDialogParent();
 

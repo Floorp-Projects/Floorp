@@ -513,6 +513,7 @@ child:
     // The following methods correspond to functions on the GeckoContentController
     // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
     // in that file for these functions.
+    RequestFlingSnap(ViewID aScrollID, CSSPoint aDestination);
     AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
     HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
     HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);

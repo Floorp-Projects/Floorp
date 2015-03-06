@@ -166,6 +166,11 @@ var DebuggerServer = {
   chromeWindowType: null,
 
   /**
+   * Allow debugging chrome of (parent or child) processes.
+   */
+  allowChromeProcess: false,
+
+  /**
    * Initialize the debugger server.
    */
   init: function DS_init() {
@@ -366,8 +371,6 @@ var DebuggerServer = {
 
     if (!restrictPrivileges) {
       this.addTabActors();
-      let { ChromeDebuggerActor } = require("devtools/server/actors/script");
-      this.addGlobalActor(ChromeDebuggerActor, "chromeDebugger");
       this.registerModule("devtools/server/actors/preference", {
         prefix: "preference",
         constructor: "PreferenceActor",
@@ -430,12 +433,12 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/webconsole", {
       prefix: "console",
       constructor: "WebConsoleActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/inspector", {
       prefix: "inspector",
       constructor: "InspectorActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/call-watcher", {
       prefix: "callWatcher",
@@ -445,27 +448,27 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/canvas", {
       prefix: "canvas",
       constructor: "CanvasActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/webgl", {
       prefix: "webgl",
       constructor: "WebGLActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/webaudio", {
       prefix: "webaudio",
       constructor: "WebAudioActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/stylesheets", {
       prefix: "styleSheets",
       constructor: "StyleSheetsActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/styleeditor", {
       prefix: "styleEditor",
       constructor: "StyleEditorActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/storage", {
       prefix: "storage",
@@ -485,17 +488,17 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/framerate", {
       prefix: "framerate",
       constructor: "FramerateActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/eventlooplag", {
       prefix: "eventLoopLag",
       constructor: "EventLoopLagActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/layout", {
       prefix: "reflow",
@@ -505,17 +508,17 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/csscoverage", {
       prefix: "cssUsage",
       constructor: "CSSUsageActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/monitor", {
       prefix: "monitor",
       constructor: "MonitorActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/timeline", {
       prefix: "timeline",
       constructor: "TimelineActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/director-manager", {
       prefix: "directorManager",
@@ -526,13 +529,13 @@ var DebuggerServer = {
       this.registerModule("devtools/server/actors/profiler", {
         prefix: "profiler",
         constructor: "ProfilerActor",
-        type: { global: true, tab: true }
+        type: { tab: true }
       });
     }
     this.registerModule("devtools/server/actors/animation", {
       prefix: "animations",
       constructor: "AnimationsActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
   },
 
