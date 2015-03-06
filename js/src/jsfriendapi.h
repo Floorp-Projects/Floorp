@@ -2391,21 +2391,46 @@ struct JSTypedMethodJitInfo
                                                  have side-effects. */
 };
 
-static MOZ_ALWAYS_INLINE const JSJitInfo *
-FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
+namespace js {
+
+static MOZ_ALWAYS_INLINE shadow::Function *
+FunctionObjectToShadowFunction(JSObject *fun)
 {
-    MOZ_ASSERT(js::GetObjectClass(&v.toObject()) == js::FunctionClassPtr);
-    return reinterpret_cast<js::shadow::Function *>(&v.toObject())->jitinfo;
+    MOZ_ASSERT(GetObjectClass(fun) == FunctionClassPtr);
+    return reinterpret_cast<shadow::Function *>(fun);
 }
 
 /* Statically asserted in jsfun.h. */
-static const unsigned JS_FUNCTION_INTERPRETED_BIT = 0x1;
+static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x1001;
+
+// Return whether the given function object is native.
+static MOZ_ALWAYS_INLINE bool
+FunctionObjectIsNative(JSObject *fun)
+{
+    return !(FunctionObjectToShadowFunction(fun)->flags & JS_FUNCTION_INTERPRETED_BITS);
+}
+
+static MOZ_ALWAYS_INLINE JSNative
+GetFunctionObjectNative(JSObject *fun)
+{
+    MOZ_ASSERT(FunctionObjectIsNative(fun));
+    return FunctionObjectToShadowFunction(fun)->native;
+}
+
+} // namespace js
+
+static MOZ_ALWAYS_INLINE const JSJitInfo *
+FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
+{
+    MOZ_ASSERT(js::FunctionObjectIsNative(&v.toObject()));
+    return js::FunctionObjectToShadowFunction(&v.toObject())->jitinfo;
+}
 
 static MOZ_ALWAYS_INLINE void
 SET_JITINFO(JSFunction * func, const JSJitInfo *info)
 {
     js::shadow::Function *fun = reinterpret_cast<js::shadow::Function *>(func);
-    MOZ_ASSERT(!(fun->flags & JS_FUNCTION_INTERPRETED_BIT));
+    MOZ_ASSERT(!(fun->flags & js::JS_FUNCTION_INTERPRETED_BITS));
     fun->jitinfo = info;
 }
 

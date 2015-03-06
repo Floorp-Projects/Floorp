@@ -60,7 +60,7 @@ class JSFunction : public js::NativeObject
                                LAMBDA | SELF_HOSTED | SELF_HOSTED_CTOR | HAS_REST | ASMJS | ARROW
     };
 
-    static_assert(INTERPRETED == JS_FUNCTION_INTERPRETED_BIT,
+    static_assert((INTERPRETED | INTERPRETED_LAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
                   "jsfriendapi.h's JSFunction::INTERPRETED-alike is wrong");
 
   private:
