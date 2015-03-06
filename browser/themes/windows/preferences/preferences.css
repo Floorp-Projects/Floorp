@@ -49,6 +49,7 @@ radio[pane=paneSync] {
 }
 %endif
 
+/* These lines should be removed as part of fixing bug 1140495 */
 label.small {
   font-size: smaller;
 }
