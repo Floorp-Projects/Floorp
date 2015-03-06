@@ -490,7 +490,7 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
+nsDOMWindowUtils::SetResolution(float aResolution)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -503,15 +503,15 @@ nsDOMWindowUtils::SetResolution(float aXResolution, float aYResolution)
 
   nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
   if (sf) {
-    sf->SetResolution(gfxSize(aXResolution, aYResolution));
-    presShell->SetResolution(aXResolution, aYResolution);
+    sf->SetResolution(aResolution);
+    presShell->SetResolution(aResolution);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetResolutionAndScaleTo(float aXResolution, float aYResolution)
+nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -524,15 +524,15 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aXResolution, float aYResolution
 
   nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
   if (sf) {
-    sf->SetResolutionAndScaleTo(gfxSize(aXResolution, aYResolution));
-    presShell->SetResolutionAndScaleTo(aXResolution, aYResolution);
+    sf->SetResolutionAndScaleTo(aResolution);
+    presShell->SetResolutionAndScaleTo(aResolution);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
+nsDOMWindowUtils::GetResolution(float* aResolution)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -543,12 +543,9 @@ nsDOMWindowUtils::GetResolution(float* aXResolution, float* aYResolution)
 
   nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
   if (sf) {
-    const gfxSize& res = sf->GetResolution();
-    *aXResolution = res.width;
-    *aYResolution = res.height;
+    *aResolution = sf->GetResolution();
   } else {
-    *aXResolution = presShell->GetXResolution();
-    *aYResolution = presShell->GetYResolution();
+    *aResolution = presShell->GetResolution();
   }
 
   return NS_OK;
