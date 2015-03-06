@@ -5,11 +5,11 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing download a complete on partial failure. Calling " +
-              "nsIUpdatePrompt::showUpdateError should call getNewPrompter " +
-              "and alert on the object returned by getNewPrompter when the " +
-              "update.state == " + STATE_FAILED + " and the update.errorCode " +
-              "== " + WRITE_ERROR + " (Bug 595059).");
+  debugDump("testing download a complete on partial failure. Calling " +
+            "nsIUpdatePrompt::showUpdateError should call getNewPrompter " +
+            "and alert on the object returned by getNewPrompter when the " +
+            "update.state == " + STATE_FAILED + " and the update.errorCode " +
+             "== " + WRITE_ERROR + " (Bug 595059).");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 

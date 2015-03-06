@@ -110,8 +110,8 @@ function checkUpdateApplied() {
 
   if (IS_WIN || IS_MACOSX) {
     let running = getPostUpdateFile(".running");
-    logTestInfo("checking that the post update process running file doesn't " +
-                "exist. Path: " + running.path);
+    debugDump("checking that the post update process running file doesn't " +
+              "exist. Path: " + running.path);
     do_check_false(running.exists());
   }
 
@@ -119,43 +119,43 @@ function checkUpdateApplied() {
 
   log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
   if (IS_WIN || IS_MACOSX) {
-    logTestInfo("testing " + log.path + " should exist");
+    debugDump("testing " + log.path + " should exist");
     do_check_true(log.exists());
   } else {
-    logTestInfo("testing " + log.path + " shouldn't exist");
+    debugDump("testing " + log.path + " shouldn't exist");
     do_check_false(log.exists());
   }
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   let updatesDir = getStageDirFile(DIR_UPDATES + "/0", true);
-  logTestInfo("testing " + updatesDir.path + " shouldn't exist");
+  debugDump("testing " + updatesDir.path + " shouldn't exist");
   do_check_false(updatesDir.exists());
 
   log = getStageDirFile(DIR_UPDATES + "/0/" + FILE_UPDATE_LOG, true);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   log = getStageDirFile(DIR_UPDATES + "/" + FILE_LAST_LOG, true);
   if (IS_WIN || IS_MACOSX) {
-    logTestInfo("testing " + log.path + " shouldn't exist");
+    debugDump("testing " + log.path + " shouldn't exist");
     do_check_false(log.exists());
   } else {
-    logTestInfo("testing " + log.path + " should exist");
+    debugDump("testing " + log.path + " should exist");
     do_check_true(log.exists());
   }
 
   log = getStageDirFile(DIR_UPDATES + "/" + FILE_BACKUP_LOG, true);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   // Switch the application to the staged application that was updated by
@@ -228,8 +228,8 @@ function finishCheckUpdateApplied() {
   }
 
   if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
+    debugDump("testing last modified time on the apply to directory has " +
+              "changed after a successful update (bug 600098)");
     let now = Date.now();
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -238,8 +238,8 @@ function finishCheckUpdateApplied() {
 
   if (IS_WIN || IS_MACOSX) {
     let running = getPostUpdateFile(".running");
-    logTestInfo("checking that the post update process running file exists. " +
-                "Path: " + running.path);
+    debugDump("checking that the post update process running file exists. " +
+              "Path: " + running.path);
     do_check_true(running.exists());
   }
 
@@ -255,26 +255,26 @@ function finishCheckUpdateApplied() {
   do_check_eq(update.state, STATE_SUCCEEDED);
 
   let updatesDir = getUpdatesPatchDir();
-  logTestInfo("testing " + updatesDir.path + " should exist");
+  debugDump("testing " + updatesDir.path + " should exist");
   do_check_true(updatesDir.exists());
 
   let log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  logTestInfo("testing " + log.path + " shouldn't exist");
+  debugDump("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
-  logTestInfo("testing " + log.path + " should exist");
+  debugDump("testing " + log.path + " should exist");
   do_check_true(log.exists());
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
   if (IS_WIN || IS_MACOSX) {
-    logTestInfo("testing " + log.path + " should exist");
+    debugDump("testing " + log.path + " should exist");
     do_check_true(log.exists());
   } else {
-    logTestInfo("testing " + log.path + " shouldn't exist");
+    debugDump("testing " + log.path + " shouldn't exist");
     do_check_false(log.exists());
   }
 

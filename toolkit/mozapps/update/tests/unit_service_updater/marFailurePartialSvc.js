@@ -42,8 +42,8 @@ function setupAppFilesFinished() {
  */
 function checkUpdateFinished() {
   if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
+    debugDump("testing last modified time on the apply to directory has " +
+              "changed after a successful update (bug 600098)");
     let now = Date.now();
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
@@ -52,8 +52,8 @@ function checkUpdateFinished() {
 
   if (IS_WIN || IS_MACOSX) {
     let running = getPostUpdateFile(".running");
-    logTestInfo("checking that the post update process running file doesn't " +
-                "exist. Path: " + running.path);
+    debugDump("checking that the post update process running file doesn't " +
+              "exist. Path: " + running.path);
     do_check_false(running.exists());
   }
 
