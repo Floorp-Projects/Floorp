@@ -128,6 +128,7 @@ public:
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
   NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) MOZ_OVERRIDE;
+  nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) MOZ_OVERRIDE;
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
                                  bool aDoCapture) MOZ_OVERRIDE
