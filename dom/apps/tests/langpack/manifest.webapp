@@ -1,3 +1,9 @@
 {
-  "name": "Localization test app"
+  "name": "Localization test app",
+  "version": "2.2",
+  "entry_points": {
+    "dialer": {
+      "name": "dialer"
+    }
+  }
 }

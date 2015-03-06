@@ -54,7 +54,7 @@ class ExpectedManifest(ManifestItem):
         """Add a test to the manifest"""
         ManifestItem.append(self, child)
         self.child_map[child.id] = child
-        assert len(self.child_map) == len(self.children)
+        #assert len(self.child_map) == len(self.children), "%r %r" % (self.child_map, self.children)
 
     def _remove_child(self, child):
         del self.child_map[child.id]
@@ -89,8 +89,6 @@ class TestNode(ManifestItem):
     @property
     def is_empty(self):
         required_keys = set(["type"])
-        if self.test_type == "reftest":
-            required_keys |= set(["reftype", "refurl"])
         if set(self._data.keys()) != required_keys:
             return False
         return all(child.is_empty for child in self.children)
@@ -101,11 +99,7 @@ class TestNode(ManifestItem):
 
     @property
     def id(self):
-        url = urlparse.urljoin(self.parent.url, self.name)
-        if self.test_type == "reftest":
-            return (url, self.get("reftype"), self.get("refurl"))
-        else:
-            return url
+        return urlparse.urljoin(self.parent.url, self.name)
 
     def disabled(self):
         """Boolean indicating whether the test is disabled"""

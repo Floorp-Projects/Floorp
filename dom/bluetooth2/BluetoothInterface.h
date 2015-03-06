@@ -463,7 +463,7 @@ public:
   virtual ~BluetoothGattClientNotificationHandler();
 
   virtual void
-  RegisterClientNotification(int aStatus,
+  RegisterClientNotification(BluetoothGattStatus aStatus,
                              int aClientIf,
                              const BluetoothUuid& aAppUuid)
   { }
@@ -476,20 +476,20 @@ public:
 
   virtual void
   ConnectNotification(int aConnId,
-                      int aStatus,
+                      BluetoothGattStatus aStatus,
                       int aClientIf,
                       const nsAString& aBdAddr)
   { }
 
   virtual void
   DisconnectNotification(int aConnId,
-                         int aStatus,
+                         BluetoothGattStatus aStatus,
                          int aClientIf,
                          const nsAString& aBdAddr)
   { }
 
   virtual void
-  SearchCompleteNotification(int aConnId, int aStatus) { }
+  SearchCompleteNotification(int aConnId, BluetoothGattStatus aStatus) { }
   virtual void
   SearchResultNotification(int aConnId,
                            const BluetoothGattServiceId& aServiceId)
@@ -497,7 +497,7 @@ public:
 
   virtual void
   GetCharacteristicNotification(int aConnId,
-                                int aStatus,
+                                BluetoothGattStatus aStatus,
                                 const BluetoothGattServiceId& aServiceId,
                                 const BluetoothGattId& aCharId,
                                 int aCharProperty)
@@ -505,7 +505,7 @@ public:
 
   virtual void
   GetDescriptorNotification(int aConnId,
-                            int aStatus,
+                            BluetoothGattStatus aStatus,
                             const BluetoothGattServiceId& aServiceId,
                             const BluetoothGattId& aCharId,
                             const BluetoothGattId& aDescriptorId)
@@ -513,7 +513,7 @@ public:
 
   virtual void
   GetIncludedServiceNotification(int aConnId,
-                                 int aStatus,
+                                 BluetoothGattStatus aStatus,
                                  const BluetoothGattServiceId& aServiceId,
                                  const BluetoothGattServiceId& aIncludedServId)
   { }
@@ -521,7 +521,7 @@ public:
   virtual void
   RegisterNotificationNotification(int aConnId,
                                    int aIsRegister,
-                                   int aStatus,
+                                   BluetoothGattStatus aStatus,
                                    const BluetoothGattServiceId& aServiceId,
                                    const BluetoothGattId& aCharId)
   { }
@@ -532,40 +532,40 @@ public:
 
   virtual void
   ReadCharacteristicNotification(int aConnId,
-                                 int aStatus,
+                                 BluetoothGattStatus aStatus,
                                  const BluetoothGattReadParam& aReadParam)
   { }
 
   virtual void
   WriteCharacteristicNotification(int aConnId,
-                                  int aStatus,
+                                  BluetoothGattStatus aStatus,
                                   const BluetoothGattWriteParam& aWriteParam)
   { }
 
   virtual void
   ReadDescriptorNotification(int aConnId,
-                             int aStatus,
+                             BluetoothGattStatus aStatus,
                              const BluetoothGattReadParam& aReadParam)
   { }
 
   virtual void
   WriteDescriptorNotification(int aConnId,
-                              int aStatus,
+                              BluetoothGattStatus aStatus,
                               const BluetoothGattWriteParam& aWriteParam)
   { }
 
   virtual void
-  ExecuteWriteNotification(int aConnId, int aStatus) { }
+  ExecuteWriteNotification(int aConnId, BluetoothGattStatus aStatus) { }
 
   virtual void
   ReadRemoteRssiNotification(int aClientIf,
                              const nsAString& aBdAddr,
                              int aRssi,
-                             int aStatus)
+                             BluetoothGattStatus aStatus)
   { }
 
   virtual void
-  ListenNotification(int aStatus, int aServerIf) { }
+  ListenNotification(BluetoothGattStatus aStatus, int aServerIf) { }
 
 protected:
   BluetoothGattClientNotificationHandler()

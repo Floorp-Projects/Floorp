@@ -1,0 +1,8 @@
+{
+  "name": "Localization test app",
+  "entry_points": {
+    "dialer": {
+      "name": "dialer"
+    }
+  }
+}

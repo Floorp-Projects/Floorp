@@ -1,6 +1,5 @@
 {
   "items": {
-    "helper": [],
     "manual": [],
     "reftest": [],
     "stub": [],
@@ -9,8 +8,11 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {}
+    "items": {},
+    "reftest_nodes": {}
   },
+  "reftest_nodes": {},
   "rev": null,
-  "url_base": "/_mozilla/"
+  "url_base": "/_mozilla/",
+  "version": 2
 }
