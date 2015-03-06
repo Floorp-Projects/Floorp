@@ -188,6 +188,17 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 }
 
 void
+APZController::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
+                                const mozilla::CSSPoint& aDestination)
+{
+#ifdef DEBUG_CONTROLLER
+  WinUtils::Log("APZController::RequestFlingSnap scrollid=%I64d destination: %lu %lu",
+    aScrollId, aDestination.x, aDestination.y);
+#endif
+  mozilla::layers::APZCCallbackHelper::RequestFlingSnap(aScrollId, aDestination);
+}
+
+void
 APZController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                        const uint32_t& aScrollGeneration)
 {

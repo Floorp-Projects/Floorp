@@ -1008,6 +1008,37 @@ SaveStack(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
+CallFunctionWithAsyncStack(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 3) {
+        JS_ReportError(cx, "The function takes exactly three arguments.");
+        return false;
+    }
+    if (!args[0].isObject() || !IsCallable(args[0])) {
+        JS_ReportError(cx, "The first argument should be a function.");
+        return false;
+    }
+    if (!args[1].isObject() || !args[1].toObject().is<SavedFrame>()) {
+        JS_ReportError(cx, "The second argument should be a SavedFrame.");
+        return false;
+    }
+    if (!args[2].isString() || args[2].toString()->empty()) {
+        JS_ReportError(cx, "The third argument should be a non-empty string.");
+        return false;
+    }
+
+    RootedObject function(cx, &args[0].toObject());
+    RootedObject stack(cx, &args[1].toObject());
+    RootedString asyncCause(cx, args[2].toString());
+
+    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, asyncCause);
+    return Call(cx, UndefinedHandleValue, function,
+                JS::HandleValueArray::empty(), args.rval());
+}
+
+static bool
 EnableTrackAllocations(JSContext *cx, unsigned argc, jsval *vp)
 {
     SetObjectMetadataCallback(cx, SavedStacksMetadataCallback);
@@ -2437,6 +2468,13 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Capture a stack. If 'maxDepth' is given, capture at most 'maxDepth' number\n"
 "  of frames. If 'compartment' is given, allocate the js::SavedFrame instances\n"
 "  with the given object's compartment."),
+
+    JS_FN_HELP("callFunctionWithAsyncStack", CallFunctionWithAsyncStack, 0, 0,
+"callFunctionWithAsyncStack(function, stack, asyncCause)",
+"  Call 'function', using the provided stack as the async stack responsible\n"
+"  for the call, and propagate its return value or the exception it throws.\n"
+"  The function is called with no arguments, and 'this' is 'undefined'. The\n"
+"  specified |asyncCause| is attached to the provided stack frame."),
 
     JS_FN_HELP("enableTrackAllocations", EnableTrackAllocations, 0, 0,
 "enableTrackAllocations()",

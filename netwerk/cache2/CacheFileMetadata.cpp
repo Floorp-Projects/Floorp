@@ -25,6 +25,13 @@ namespace net {
 #define kMinMetadataRead 1024  // TODO find optimal value from telemetry
 #define kAlignSize       4096
 
+// Most of the cache entries fit into one chunk due to current chunk size. Make
+// sure to tweak this value if kChunkSize is going to change.
+#define kInitialHashArraySize 1
+
+// Initial elements buffer size.
+#define kInitialBufSize 64
+
 #define kCacheEntryVersion 1
 
 #define NOW_SECONDS() (uint32_t(PR_Now() / PR_USEC_PER_SEC))
@@ -34,7 +41,6 @@ NS_IMPL_ISUPPORTS(CacheFileMetadata, CacheFileIOListener)
 CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString &aKey)
   : CacheMemoryConsumer(NORMAL)
   , mHandle(aHandle)
-  , mFirstRead(true)
   , mHashArray(nullptr)
   , mHashArraySize(0)
   , mHashCount(0)
@@ -46,6 +52,8 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString 
   , mIsDirty(false)
   , mAnonymous(false)
   , mInBrowser(false)
+  , mAllocExactSize(false)
+  , mFirstRead(true)
   , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, handle=%p, key=%s]",
@@ -65,7 +73,6 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString 
 CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
   : CacheMemoryConsumer(aMemoryOnly ? MEMORY_ONLY : NORMAL)
   , mHandle(nullptr)
-  , mFirstRead(true)
   , mHashArray(nullptr)
   , mHashArraySize(0)
   , mHashCount(0)
@@ -77,6 +84,8 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
   , mIsDirty(true)
   , mAnonymous(false)
   , mInBrowser(false)
+  , mAllocExactSize(false)
+  , mFirstRead(true)
   , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, key=%s]",
@@ -97,7 +106,6 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
 CacheFileMetadata::CacheFileMetadata()
   : CacheMemoryConsumer(DONT_REPORT /* This is a helper class */)
   , mHandle(nullptr)
-  , mFirstRead(true)
   , mHashArray(nullptr)
   , mHashArraySize(0)
   , mHashCount(0)
@@ -109,6 +117,8 @@ CacheFileMetadata::CacheFileMetadata()
   , mIsDirty(false)
   , mAnonymous(false)
   , mInBrowser(false)
+  , mAllocExactSize(false)
+  , mFirstRead(true)
   , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p]", this));
@@ -485,10 +495,11 @@ CacheFileMetadata::SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash)
   } else if (aIndex == mHashCount) {
     if ((aIndex + 1) * sizeof(CacheHash::Hash16_t) > mHashArraySize) {
       // reallocate hash array buffer
-      if (mHashArraySize == 0)
-        mHashArraySize = 32 * sizeof(CacheHash::Hash16_t);
-      else
+      if (mHashArraySize == 0) {
+        mHashArraySize = kInitialHashArraySize * sizeof(CacheHash::Hash16_t);
+      } else {
         mHashArraySize *= 2;
+      }
       mHashArray = static_cast<CacheHash::Hash16_t *>(
                      moz_xrealloc(mHashArray, mHashArraySize));
     }
@@ -707,9 +718,17 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
          "empty metadata. [this=%p]", this));
     InitEmptyMetadata();
     retval = NS_OK;
-  }
-  else {
+  } else {
     retval = NS_OK;
+
+    // Shrink elements buffer.
+    mBuf = static_cast<char *>(moz_xrealloc(mBuf, mElementsSize));
+    mBufSize = mElementsSize;
+
+    // There is usually no or just one call to SetMetadataElement() when the
+    // metadata is parsed from disk. Avoid allocating power of two sized buffer
+    // which we do in case of newly created metadata.
+    mAllocExactSize = true;
   }
 
   mListener.swap(listener);
@@ -859,14 +878,11 @@ CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
     memcpy(mHashArray, mBuf + hashesOffset, mHashArraySize);
   }
 
-
   MarkDirty();
 
   mElementsSize = metaposOffset - elementsOffset;
   memmove(mBuf, mBuf + elementsOffset, mElementsSize);
   mOffset = aMetaOffset;
-
-  // TODO: shrink memory if buffer is too big
 
   DoMemoryReport(MemoryUsage());
 
@@ -905,11 +921,30 @@ void
 CacheFileMetadata::EnsureBuffer(uint32_t aSize)
 {
   if (mBufSize < aSize) {
+    if (mAllocExactSize) {
+      // If this is not the only allocation, use power of two for following
+      // allocations.
+      mAllocExactSize = false;
+    } else {
+      // find smallest power of 2 greater than or equal to aSize
+      --aSize;
+      aSize |= aSize >> 1;
+      aSize |= aSize >> 2;
+      aSize |= aSize >> 4;
+      aSize |= aSize >> 8;
+      aSize |= aSize >> 16;
+      ++aSize;
+    }
+
+    if (aSize < kInitialBufSize) {
+      aSize = kInitialBufSize;
+    }
+
     mBufSize = aSize;
     mBuf = static_cast<char *>(moz_xrealloc(mBuf, mBufSize));
-  }
 
-  DoMemoryReport(MemoryUsage());
+    DoMemoryReport(MemoryUsage());
+  }
 }
 
 nsresult

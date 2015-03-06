@@ -22,7 +22,6 @@ struct PCacheQueryParams
   bool ignoreSearch;
   bool ignoreMethod;
   bool ignoreVary;
-  bool prefixMatch;
   bool cacheNameSet;
   nsString cacheName;
 };

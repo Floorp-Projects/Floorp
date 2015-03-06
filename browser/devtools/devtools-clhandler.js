@@ -110,6 +110,7 @@ devtoolsCommandlineHandler.prototype = {
       let debuggerServer = serverLoader.DebuggerServer;
       debuggerServer.init();
       debuggerServer.addBrowserActors();
+      debuggerServer.allowChromeProcess = true;
 
       let listener = debuggerServer.createListener();
       listener.portOrPath = portOrPath;

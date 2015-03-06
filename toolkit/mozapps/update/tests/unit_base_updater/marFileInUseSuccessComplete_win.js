@@ -5,6 +5,9 @@
 /* File in use complete MAR file patch apply success test */
 
 function run_test() {
+  // Set to true due to bug 1123503
+  DEBUG_AUS_TEST = true;
+
   setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;

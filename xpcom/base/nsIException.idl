@@ -10,9 +10,7 @@
 
 #include "nsISupports.idl"
 
-[ptr] native JSContext(JSContext);
-
-[scriptable, uuid(4ed5cd87-401a-425a-8d8d-c28fbc1e88b2)]
+[scriptable, uuid(8272a3d5-2a94-40c0-8ab6-be76583a0221)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -26,20 +24,12 @@ interface nsIStackFrame : nsISupports
     readonly attribute AUTF8String             sourceLine;
     readonly attribute nsIStackFrame           caller;
 
-    // Returns the first frame whose principals are subsumed by the caller's
-    // principals.
-    [noscript, implicit_jscontext] readonly attribute nsIStackFrame sanitized;
-
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
     readonly attribute AString                 formattedStack;
 
     AUTF8String toString();
-
-    // Return whether this stack frame can be accessed by the caller.  This is
-    // safe to call on non-main threads, but will always report "yes" there.
-    [noscript, notxpcom, nostdcall] boolean callerSubsumes(in JSContext aCx);
 };
 
 [scriptable, uuid(1caf1461-be1d-4b79-a552-5292b6bf3c35)]

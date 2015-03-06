@@ -10,8 +10,8 @@
 function run_test() {
   setupTestCommon();
 
-  logTestInfo("testing nsIUpdatePrompt notifications should not be seen when " +
-              "there is already an application update window open");
+  debugDump("testing nsIUpdatePrompt notifications should not be seen when " +
+            "there is already an application update window open");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
@@ -27,7 +27,7 @@ function run_test() {
 
   standardInit();
 
-  logTestInfo("testing showUpdateInstalled should not call openWindow");
+  debugDump("testing showUpdateInstalled should not call openWindow");
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, true);
 
   gCheckFunc = check_showUpdateInstalled;
@@ -36,7 +36,7 @@ function run_test() {
   // didn't throw and otherwise it would report no tests run.
   do_check_true(true);
 
-  logTestInfo("testing showUpdateAvailable should not call openWindow");
+  debugDump("testing showUpdateAvailable should not call openWindow");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   let patches = getLocalPatchString(null, null, null, null, null, null,
                                     STATE_FAILED);

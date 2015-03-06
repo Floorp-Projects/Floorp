@@ -134,7 +134,7 @@ var gEnvLdLibraryPath;
 // Set to true to log additional information for debugging. To log additional
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // run_test function.
-var DEBUG_AUS_TEST = true;
+var DEBUG_AUS_TEST = false;
 // Never set DEBUG_TEST_LOG to true except when running tests locally or on the
 // try server since this will force a test that failed a parallel run to fail
 // when the same test runs non-parallel so the log from parallel test run can
@@ -732,7 +732,7 @@ if (MOZ_APP_NAME == "xulrunner") {
  * Helper function for setting up the test environment.
  */
 function setupTestCommon() {
-  logTestInfo("start - general test setup");
+  debugDump("start - general test setup");
 
   do_test_pending();
 
@@ -775,7 +775,7 @@ function setupTestCommon() {
   // on platforms other than Windows. Since the test hasn't ran yet and the
   // directory shouldn't exist finished this is non-fatal for the test.
   if (applyDir.exists()) {
-    logTestInfo("attempting to remove directory. Path: " + applyDir.path);
+    debugDump("attempting to remove directory. Path: " + applyDir.path);
     try {
       removeDirRecursive(applyDir);
     } catch (e) {
@@ -795,7 +795,7 @@ function setupTestCommon() {
   if (IS_WIN || IS_MACOSX) {
     let updatesDir = getMockUpdRootD();
     if (updatesDir.exists()) {
-      logTestInfo("attempting to remove directory. Path: " + updatesDir.path);
+      debugDump("attempting to remove directory. Path: " + updatesDir.path);
       try {
         removeDirRecursive(updatesDir);
       } catch (e) {
@@ -805,7 +805,7 @@ function setupTestCommon() {
     }
   }
 
-  logTestInfo("finish - general test setup");
+  debugDump("finish - general test setup");
 }
 
 /**
@@ -813,7 +813,7 @@ function setupTestCommon() {
  * as needed and attempts to restore the system to its original state.
  */
 function cleanupTestCommon() {
-  logTestInfo("start - general test cleanup");
+  debugDump("start - general test cleanup");
 
   // Force the update manager to reload the update data to prevent it from
   // writing the old data to the files that have just been removed.
@@ -881,7 +881,7 @@ function cleanupTestCommon() {
     // Try to remove the directory used to apply updates. Since the test has
     // already finished this is non-fatal for the test.
     if (updatesDir.exists()) {
-      logTestInfo("attempting to remove directory. Path: " + updatesDir.path);
+      debugDump("attempting to remove directory. Path: " + updatesDir.path);
       try {
         removeDirRecursive(updatesDir);
       } catch (e) {
@@ -892,8 +892,8 @@ function cleanupTestCommon() {
         let updatesRootDir = gUpdatesRootDir.clone();
         while (updatesRootDir.path != updatesDir.path) {
           if (updatesDir.exists()) {
-            logTestInfo("attempting to remove directory. Path: " +
-                        updatesDir.path);
+            debugDump("attempting to remove directory. Path: " +
+                      updatesDir.path);
             try {
               // Try to remove the directory without the recursive flag set
               // since the top level directory has already had its contents
@@ -916,7 +916,7 @@ function cleanupTestCommon() {
   // Try to remove the directory used to apply updates. Since the test has
   // already finished this is non-fatal for the test.
   if (applyDir.exists()) {
-    logTestInfo("attempting to remove directory. Path: " + applyDir.path);
+    debugDump("attempting to remove directory. Path: " + applyDir.path);
     try {
       removeDirRecursive(applyDir);
     } catch (e) {
@@ -927,7 +927,7 @@ function cleanupTestCommon() {
 
   resetEnvironment();
 
-  logTestInfo("finish - general test cleanup");
+  debugDump("finish - general test cleanup");
 
   if (gRealDump) {
     dump = gRealDump;
@@ -987,8 +987,10 @@ function setDefaultPrefs() {
   // Don't display UI for a successful installation. Some apps may not set this
   // pref to false like Firefox does.
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
-  // Enable Update logging
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
+  if (DEBUG_AUS_TEST) {
+    // Enable Update logging
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
+  }
 }
 
 /**
@@ -1212,7 +1214,7 @@ function getSpecialFolderDir(aCSIDL) {
   if (!path) {
     return null;
   }
-  logTestInfo("SHGetSpecialFolderPath returned path: " + path);
+  debugDump("SHGetSpecialFolderPath returned path: " + path);
   let dir = Cc["@mozilla.org/file/local;1"].
             createInstance(Ci.nsILocalFile);
   dir.initWithPath(path);
@@ -1343,7 +1345,7 @@ function getMockUpdRootDWin() {
   let updatesDir = Cc["@mozilla.org/file/local;1"].
                    createInstance(Ci.nsILocalFile);
   updatesDir.initWithPath(localAppDataDir.path + "\\" + relPathUpdates);
-  logTestInfo("returning UpdRootD Path: " + updatesDir.path);
+  debugDump("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
 
@@ -1384,7 +1386,7 @@ function getMockUpdRootDMac() {
   let updatesDir = Cc["@mozilla.org/file/local;1"].
                    createInstance(Ci.nsILocalFile);
   updatesDir.initWithPath(pathUpdates);
-  logTestInfo("returning UpdRootD Path: " + updatesDir.path);
+  debugDump("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
 
@@ -1406,7 +1408,7 @@ function lockDirectory(aDir) {
   file.QueryInterface(Ci.nsILocalFileWin);
   file.fileAttributesWin |= file.WFA_READONLY;
   file.fileAttributesWin &= ~file.WFA_READWRITE;
-  logTestInfo("testing the successful creation of the lock file");
+  debugDump("testing the successful creation of the lock file");
   do_check_true(file.exists());
   do_check_false(file.isWritable());
 }
@@ -1425,7 +1427,7 @@ function unlockDirectory(aDir) {
   file.QueryInterface(Ci.nsILocalFileWin);
   file.fileAttributesWin |= file.WFA_READWRITE;
   file.fileAttributesWin &= ~file.WFA_READONLY;
-  logTestInfo("removing and testing the successful removal of the lock file");
+  debugDump("removing and testing the successful removal of the lock file");
   file.remove(false);
   do_check_false(file.exists());
 }
@@ -1500,7 +1502,7 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     args = args.concat([callbackApp.parent.path, callbackApp.path]);
     args = args.concat(gCallbackArgs);
   }
-  logTestInfo("running the updater: " + updateBin.path + " " + args.join(" "));
+  debugDump("running the updater: " + updateBin.path + " " + args.join(" "));
 
   let env = Cc["@mozilla.org/process/environment;1"].
             getService(Ci.nsIEnvironment);
@@ -1532,10 +1534,10 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     logTestInfo("contents of " + updateLog.path + ":\n" +
                 readFileBytes(updateLog).replace(/\r\n/g, "\n"));
   }
-  logTestInfo("testing updater binary process exitValue against expected " +
-              "exit value");
+  debugDump("testing updater binary process exitValue against expected " +
+            "exit value");
   do_check_eq(process.exitValue, aExpectedExitValue);
-  logTestInfo("testing update status against expected status");
+  debugDump("testing update status against expected status");
   do_check_eq(status, aExpectedStatus);
 
   if (aCallback !== null) {
@@ -1551,7 +1553,7 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
  * Helper function for updater tests to stage an update.
  */
 function stageUpdate() {
-  logTestInfo("start - attempting to stage update");
+  debugDump("start - attempting to stage update");
   Services.obs.addObserver(gUpdateStagedObserver, "update-staged", false);
 
   setEnvironment();
@@ -1561,7 +1563,7 @@ function stageUpdate() {
     processUpdate(gUpdateManager.activeUpdate);
   resetEnvironment();
 
-  logTestInfo("finish - attempting to stage update");
+  debugDump("finish - attempting to stage update");
 }
 
 /**
@@ -1617,13 +1619,13 @@ function shouldRunServiceTest(aFirstTest, aSkipTest) {
   let process = Cc["@mozilla.org/process/util;1"].
                 createInstance(Ci.nsIProcess);
   process.init(helperBin);
-  logTestInfo("checking if the service exists on this machine.");
+  debugDump("checking if the service exists on this machine.");
   process.run(true, args, args.length);
   if (process.exitValue == 0xEE) {
     do_throw("test registry key exists but this test can only run on systems " +
              "with the maintenance service installed.");
   } else {
-    logTestInfo("service exists, return value: " + process.exitValue);
+    debugDump("service exists, return value: " + process.exitValue);
   }
 
   // If this is the first test in the series, then there is no reason the
@@ -1697,8 +1699,8 @@ function setupAppFilesAsync() {
  * the files.
  */
 function setupAppFiles() {
-  logTestInfo("start - copying or creating symlinks to application files " +
-              "for the test");
+  debugDump("start - copying or creating symlinks to application files " +
+            "for the test");
 
   let destDir = getApplyDirFile(null, true);
   if (!destDir.exists()) {
@@ -1751,8 +1753,8 @@ function setupAppFiles() {
     copyFileToTestAppDir(aAppFile.relPath, aAppFile.inGreDir);
   });
 
-  logTestInfo("finish - copying or creating symlinks to application files " +
-              "for the test");
+  debugDump("finish - copying or creating symlinks to application files " +
+            "for the test");
 }
 
 /**
@@ -1784,9 +1786,8 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
   }
 
   if (IS_MACOSX && !srcFile.exists()) {
-    logTestInfo("unable to copy file since it doesn't exist! Checking if " +
-                 fileRelPath + ".app exists. Path: " +
-                 srcFile.path);
+    debugDump("unable to copy file since it doesn't exist! Checking if " +
+              fileRelPath + ".app exists. Path: " + srcFile.path);
     // gGREDirOrig and gGREBinDirOrig must always be cloned when changing its
     // properties
     srcFile = aInGreDir ? gGREDirOrig.clone() : gGREBinDirOrig.clone();
@@ -1839,7 +1840,7 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
       process.init(ln);
       let args = ["-s", srcFile.path, destFile.path];
       process.run(true, args, args.length);
-      logTestInfo("verifying symlink. Path: " + destFile.path);
+      debugDump("verifying symlink. Path: " + destFile.path);
       do_check_true(destFile.isSymlink());
     } catch (e) {
       do_throw("Unable to create symlink for file! Path: " + srcFile.path +
@@ -1868,15 +1869,15 @@ function attemptServiceInstall(aSkipTest) {
   let maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILESX86);
   if (maintSvcDir) {
     maintSvcDir.append("Mozilla Maintenance Service");
-    logTestInfo("using CSIDL_PROGRAM_FILESX86 - maintenance service install " +
-                "directory path: " + maintSvcDir.path);
+    debugDump("using CSIDL_PROGRAM_FILESX86 - maintenance service install " +
+              "directory path: " + maintSvcDir.path);
   }
   if (!maintSvcDir || !maintSvcDir.exists()) {
     maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILES);
     if (maintSvcDir) {
       maintSvcDir.append("Mozilla Maintenance Service");
-      logTestInfo("using CSIDL_PROGRAM_FILES - maintenance service install " +
-                  "directory path: " + maintSvcDir.path);
+      debugDump("using CSIDL_PROGRAM_FILES - maintenance service install " +
+                "directory path: " + maintSvcDir.path);
     }
   }
   if (!maintSvcDir || !maintSvcDir.exists()) {
@@ -1891,8 +1892,8 @@ function attemptServiceInstall(aSkipTest) {
   let buildMaintSvcBin = getGREBinDir();
   buildMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
   if (readFileBytes(oldMaintSvcBin) == readFileBytes(buildMaintSvcBin)) {
-    logTestInfo("installed maintenance service binary is the same as the " +
-                "build's maintenance service binary");
+    debugDump("installed maintenance service binary is the same as the " +
+              "build's maintenance service binary");
     return true;
   }
   let backupMaintSvcBin = maintSvcDir.clone();
@@ -1949,7 +1950,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   // Check the service logs for a successful update
   function checkServiceLogs(aOriginalContents) {
     let contents = readServiceLogFile();
-    logTestInfo("the contents of maintenanceservice.log:\n" + contents + "\n");
+    debugDump("the contents of maintenanceservice.log:\n" + contents + "\n");
     do_check_neq(contents, aOriginalContents);
     do_check_neq(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1);
   }
@@ -1972,7 +1973,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   }
   function waitForServiceStop(aFailTest) {
     waitServiceApps();
-    logTestInfo("waiting for service to stop if necessary...");
+    debugDump("waiting for service to stop if necessary...");
     // Use the helper bin to ensure the service is stopped. If not
     // stopped then wait for the service to be stopped (at most 120 seconds)
     let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -1982,7 +1983,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     let helperBinProcess = Cc["@mozilla.org/process/util;1"].
                            createInstance(Ci.nsIProcess);
     helperBinProcess.init(helperBin);
-    logTestInfo("stopping service...");
+    debugDump("stopping service...");
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
     if (helperBinProcess.exitValue == 0xEE) {
       do_throw("The service does not exist on this machine.  Return value: " +
@@ -1996,13 +1997,12 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
                     helperBinProcess.exitValue + ".  May cause failures.");
       }
     } else {
-      logTestInfo("service stopped.");
+      debugDump("service stopped");
     }
     waitServiceApps();
   }
   function waitForApplicationStop(aApplication) {
-    logTestInfo("waiting for " + aApplication + " to stop if " +
-                "necessary...");
+    debugDump("waiting for " + aApplication + " to stop if necessary..");
     // Use the helper bin to ensure the application is stopped.
     // If not, then wait for it to be stopped (at most 120 seconds)
     let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -2087,7 +2087,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   let process = Cc["@mozilla.org/process/util;1"].
                 createInstance(Ci.nsIProcess);
   process.init(launchBin);
-  logTestInfo("launching " + launchBin.path + " " + args.join(" "));
+  debugDump("launching " + launchBin.path + " " + args.join(" "));
   // Firefox does not wait for the service command to finish, but
   // we still launch the process sync to avoid intermittent failures with
   // the log file not being written out yet.
@@ -2105,8 +2105,8 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     // could be equal to STATE_PENDING_SVC.
     if (status == STATE_APPLYING ||
         status == STATE_PENDING_SVC) {
-      logTestInfo("still waiting to see the " + aExpectedStatus +
-                  " status, got " + status + " for now...");
+      debugDump("still waiting to see the " + aExpectedStatus +
+                " status, got " + status + " for now...");
       return;
     }
 
@@ -2125,7 +2125,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
       logTestInfo("contents of " + updateLog.path + ":\n" +
                   readFileBytes(updateLog).replace(/\r\n/g, "\n"));
     }
-    logTestInfo("testing update status against expected status");
+    debugDump("testing update status against expected status");
     do_check_eq(status, aExpectedStatus);
 
     if (aCheckSvcLog) {
@@ -2192,7 +2192,7 @@ function waitForHelperSleep() {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper " +
                "message file to no longer be in use. Path: " + output.path);
     }
-    logTestInfo("failed to remove file. Path: " + output.path);
+    debugDump("failed to remove file. Path: " + output.path);
     do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
     return;
   }
@@ -2490,7 +2490,7 @@ function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
   // Don't write the contents of the file to the log to reduce log spam
   // unless there is a failure.
   if (compareLogContents == updateLogContents) {
-    logTestInfo("log contents are correct");
+    debugDump("log contents are correct");
     do_check_true(true);
   } else {
     logTestInfo("log contents are not correct");
@@ -2509,7 +2509,7 @@ function checkUpdateLogContains(aCheckString) {
   updateLog.append(FILE_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
   if (updateLogContents.indexOf(aCheckString) != -1) {
-    logTestInfo("log file does contain: " + aCheckString);
+    debugDump("log file does contain: " + aCheckString);
     do_check_true(true);
   } else {
     logTestInfo("log file does not contain: " + aCheckString);
@@ -2535,10 +2535,10 @@ function checkUpdateLogContains(aCheckString) {
  */
 function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
                                       aToBeDeletedDirExists) {
-  logTestInfo("testing contents of files after a successful update");
+  debugDump("testing contents of files after a successful update");
   gTestFiles.forEach(function CFAUS_TF_FE(aTestFile) {
     let testFile = aGetFileFunc(aTestFile.relPathDir + aTestFile.fileName, true);
-    logTestInfo("testing file: " + testFile.path);
+    debugDump("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
 
@@ -2551,10 +2551,9 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
           logPerms += "original permissions: " +
                       aTestFile.originalPerms.toString(8) + ", ";
         }
-        logPerms += "compare permissions : " +
-                    aTestFile.comparePerms.toString(8) + ", ";
-        logPerms += "updated permissions : " + testFile.permissions.toString(8);
-        logTestInfo(logPerms);
+        debugDump("compare permissions : " +
+                  aTestFile.comparePerms.toString(8) + ", " +
+                  "updated permissions : " + testFile.permissions.toString(8));
         do_check_eq(testFile.permissions & 0xfff, aTestFile.comparePerms & 0xfff);
       }
 
@@ -2565,7 +2564,7 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
       // Don't write the contents of the file to the log to reduce log spam
       // unless there is a failure.
       if (fileContents1 == fileContents2) {
-        logTestInfo("file contents are correct");
+        debugDump("file contents are correct");
         do_check_true(true);
       } else {
         logTestInfo("file contents are not correct");
@@ -2576,11 +2575,11 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
     }
   });
 
-  logTestInfo("testing operations specified in removed-files were performed " +
-              "after a successful update");
+  debugDump("testing operations specified in removed-files were performed " +
+            "after a successful update");
   gTestDirs.forEach(function CFAUS_TD_FE(aTestDir) {
     let testDir = aGetFileFunc(aTestDir.relPathDir, true);
-    logTestInfo("testing directory: " + testDir.path);
+    debugDump("testing directory: " + testDir.path);
     if (aTestDir.dirRemoved) {
       do_check_false(testDir.exists());
     } else {
@@ -2589,7 +2588,7 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
       if (aTestDir.files) {
         aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
           let testFile = aGetFileFunc(aTestDir.relPathDir + aTestFile, true);
-          logTestInfo("testing directory file: " + testFile.path);
+          debugDump("testing directory file: " + testFile.path);
           if (aTestDir.filesRemoved) {
             do_check_false(testFile.exists());
           } else {
@@ -2601,13 +2600,13 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
       if (aTestDir.subDirs) {
         aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
           let testSubDir = aGetFileFunc(aTestDir.relPathDir + aSubDir, true);
-          logTestInfo("testing sub-directory: " + testSubDir.path);
+          debugDump("testing sub-directory: " + testSubDir.path);
           do_check_true(testSubDir.exists());
           if (aTestDir.subDirFiles) {
             aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
               let testFile = aGetFileFunc(aTestDir.relPathDir +
                                           aSubDir + aTestFile, true);
-              logTestInfo("testing sub-directory file: " + testFile.path);
+              debugDump("testing sub-directory file: " + testFile.path);
               do_check_true(testFile.exists());
             });
           }
@@ -2637,10 +2636,10 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
  */
 function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
                                       aToBeDeletedDirExists) {
-  logTestInfo("testing contents of files after a failed update");
+  debugDump("testing contents of files after a failed update");
   gTestFiles.forEach(function CFAUF_TF_FE(aTestFile) {
     let testFile = aGetFileFunc(aTestFile.relPathDir + aTestFile.fileName, true);
-    logTestInfo("testing file: " + testFile.path);
+    debugDump("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
 
@@ -2653,10 +2652,9 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
           logPerms += "original permissions: " +
                       aTestFile.originalPerms.toString(8) + ", ";
         }
-        logPerms += "compare permissions : " +
-                    aTestFile.comparePerms.toString(8) + ", ";
-        logPerms += "updated permissions : " + testFile.permissions.toString(8);
-        logTestInfo(logPerms);
+        debugDump("compare permissions : " +
+                  aTestFile.comparePerms.toString(8) + ", " +
+                  "updated permissions : " + testFile.permissions.toString(8));
         do_check_eq(testFile.permissions & 0xfff, aTestFile.comparePerms & 0xfff);
       }
 
@@ -2667,7 +2665,7 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
       // Don't write the contents of the file to the log to reduce log spam
       // unless there is a failure.
       if (fileContents1 == fileContents2) {
-        logTestInfo("file contents are correct");
+        debugDump("file contents are correct");
         do_check_true(true);
       } else {
         logTestInfo("file contents are not correct");
@@ -2678,17 +2676,17 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
     }
   });
 
-  logTestInfo("testing operations specified in removed-files were not " +
-              "performed after a failed update");
+  debugDump("testing operations specified in removed-files were not " +
+            "performed after a failed update");
   gTestDirs.forEach(function CFAUF_TD_FE(aTestDir) {
     let testDir = aGetFileFunc(aTestDir.relPathDir, true);
-    logTestInfo("testing directory: " + testDir.path);
+    debugDump("testing directory: " + testDir.path);
     do_check_true(testDir.exists());
 
     if (aTestDir.files) {
       aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
         let testFile = aGetFileFunc(aTestDir.relPathDir + aTestFile, true);
-        logTestInfo("testing directory file: " + testFile.path);
+        debugDump("testing directory file: " + testFile.path);
         do_check_true(testFile.exists());
       });
     }
@@ -2696,13 +2694,13 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
     if (aTestDir.subDirs) {
       aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
         let testSubDir = aGetFileFunc(aTestDir.relPathDir + aSubDir, true);
-        logTestInfo("testing sub-directory: " + testSubDir.path);
+        debugDump("testing sub-directory: " + testSubDir.path);
         do_check_true(testSubDir.exists());
         if (aTestDir.subDirFiles) {
           aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
             let testFile = aGetFileFunc(aTestDir.relPathDir +
                                         aSubDir + aTestFile, true);
-            logTestInfo("testing sub-directory file: " + testFile.path);
+            debugDump("testing sub-directory file: " + testFile.path);
             do_check_true(testFile.exists());
           });
         }
@@ -2731,47 +2729,47 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
  */
 function checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
                                      aToBeDeletedDirExists) {
-  logTestInfo("testing extra directories");
+  debugDump("testing extra directories");
 
   let stageDir = getStageDirFile(null, true);
-  logTestInfo("testing directory should " +
-              (aStageDirExists ? "" : "not ") +
-              "exist: " + stageDir.path);
+  debugDump("testing directory should " +
+            (aStageDirExists ? "" : "not ") +
+            "exist: " + stageDir.path);
   do_check_eq(stageDir.exists(), aStageDirExists);
 
   let toBeDeletedDirExists = IS_WIN ? aToBeDeletedDirExists : false;
   let toBeDeletedDir = getApplyDirFile(DIR_TOBEDELETED, true);
-  logTestInfo("testing directory should " +
-              (toBeDeletedDirExists ? "" : "not ") +
-              "exist: " + toBeDeletedDir.path);
+  debugDump("testing directory should " +
+            (toBeDeletedDirExists ? "" : "not ") +
+            "exist: " + toBeDeletedDir.path);
   do_check_eq(toBeDeletedDir.exists(), toBeDeletedDirExists);
 
-  logTestInfo("testing updating directory doesn't exist in the application " +
-              "directory");
+  debugDump("testing updating directory doesn't exist in the application " +
+            "directory");
   let updatingDir = getApplyDirFile("updating", true);
   do_check_false(updatingDir.exists());
 
   if (stageDir.exists()) {
-    logTestInfo("testing updating directory doesn't exist in the staging " +
-                "directory");
+    debugDump("testing updating directory doesn't exist in the staging " +
+              "directory");
     updatingDir = stageDir.clone();
     updatingDir.append("updating");
     do_check_false(updatingDir.exists());
   }
 
-  logTestInfo("testing backup files should not be left behind in the " +
-              "application directory");
+  debugDump("testing backup files should not be left behind in the " +
+            "application directory");
   let applyToDir = getApplyDirFile(null, true);
   checkFilesInDirRecursive(applyToDir, checkForBackupFiles);
 
   if (stageDir.exists()) {
-    logTestInfo("testing backup files should not be left behind in the " +
-                "staging directory");
+    debugDump("testing backup files should not be left behind in the " +
+              "staging directory");
     let applyToDir = getApplyDirFile(null, true);
     checkFilesInDirRecursive(stageDir, checkForBackupFiles);
   }
 
-  logTestInfo("testing patch files should not be left behind");
+  debugDump("testing patch files should not be left behind");
   let updatesDir = getUpdatesPatchDir();
   let entries = updatesDir.QueryInterface(Ci.nsIFile).directoryEntries;
   while (entries.hasMoreElements()) {
@@ -2804,10 +2802,10 @@ function checkCallbackAppLog() {
   }
 
   if (logContents == expectedLogContents) {
-    logTestInfo("callback log file contents are correct");
+    debugDump("callback log file contents are correct");
     do_check_true(true);
   } else {
-    logTestInfo("callback log file contents are not correct");
+    debugDump("callback log file contents are not correct");
     do_check_eq(logContents, expectedLogContents);
   }
 
@@ -2834,7 +2832,7 @@ function checkPostUpdateAppLog() {
   gTimeoutRuns++;
   let postUpdateLog = getPostUpdateFile(".log");
   if (!postUpdateLog.exists()) {
-    logTestInfo("postUpdateLog does not exist. Path: " + postUpdateLog.path);
+    debugDump("postUpdateLog does not exist. Path: " + postUpdateLog.path);
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
                "process to create the post update log. Path: " +
@@ -2859,7 +2857,7 @@ function checkPostUpdateAppLog() {
     return;
   }
 
-  logTestInfo("post update app log file contents are correct");
+  debugDump("post update app log file contents are correct");
   do_check_true(true);
 
   gCheckFunc();
@@ -2882,13 +2880,13 @@ function checkCallbackServiceLog() {
   // value. If the contents are never the expected value then the test will
   // fail by timing out.
   if (logContents != expectedLogContents) {
-    logTestInfo("callback service log not expected value, waiting longer");
+    debugDump("callback service log not expected value, waiting longer");
     do_timeout(TEST_HELPER_TIMEOUT, checkCallbackServiceLog);
     return;
   }
 
-  logTestInfo("testing that the callback application successfully launched " +
-              "and the expected command line arguments were passed to it");
+  debugDump("testing that the callback application successfully launched " +
+            "and the expected command line arguments were passed to it");
   do_check_eq(logContents, expectedLogContents);
 
   waitForFilesInUse();
@@ -2918,10 +2916,10 @@ function waitForFilesInUse() {
           file.copyTo(fileBak.parent, fileBak.leafName);
           file.remove(false);
           fileBak.moveTo(file.parent, file.leafName);
-          logTestInfo("file is not in use. Path: " + file.path);
+          debugDump("file is not in use. Path: " + file.path);
         } catch (e) {
-          logTestInfo("file in use, will try again after " + TEST_CHECK_TIMEOUT +
-                      " ms, Path: " + file.path + ", Exception: " + e);
+          debugDump("file in use, will try again after " + TEST_CHECK_TIMEOUT +
+                    " ms, Path: " + file.path + ", Exception: " + e);
           try {
             if (fileBak.exists()) {
               fileBak.remove(false);
@@ -2937,7 +2935,7 @@ function waitForFilesInUse() {
     }
   }
 
-  logTestInfo("calling doTestFinish");
+  debugDump("calling doTestFinish");
   doTestFinish();
 }
 
@@ -3128,25 +3126,29 @@ const updateCheckListener = {
   },
 
   onCheckComplete: function UCL_onCheckComplete(aRequest, aUpdates, aUpdateCount) {
-    gRequestURL = aRequest.channel.originalURI.spec;
+    // The mock xmlhttprequest used by tests doesn't have a real nsIRequest so
+    // use _url to get the url to prevent the following error:
+    // ReferenceError: reference to undefined property "QueryInterface"
+    gRequestURL = gXHR._url;
     gUpdateCount = aUpdateCount;
     gUpdates = aUpdates;
-    logTestInfo("url = " + gRequestURL + ", " +
-                "request.status = " + aRequest.status + ", " +
-                "update.statusText = " + aRequest.statusText + ", " +
-                "updateCount = " + aUpdateCount);
+    debugDump("url = " + gRequestURL + ", " +
+              "request.status = " + aRequest.status + ", " +
+              "updateCount = " + aUpdateCount);
     // Use a timeout to allow the XHR to complete
     do_execute_soon(gCheckFunc);
   },
 
   onError: function UCL_onError(aRequest, aUpdate) {
-    gRequestURL = aRequest.channel.originalURI.spec;
+    // The mock xmlhttprequest used by tests doesn't have a real nsIRequest so
+    // use _url to get the url to prevent the following error:
+    // ReferenceError: reference to undefined property "QueryInterface"
+    gRequestURL = gXHR._url;
     gStatusCode = aRequest.status;
-
-    gStatusText = aUpdate.statusText;
-    logTestInfo("url = " + gRequestURL + ", " +
-                "request.status = " + gStatusCode + ", " +
-                "update.statusText = " + gStatusText);
+    gStatusText = aUpdate.statusText ? aUpdate.statusText : null;
+    debugDump("url = " + gRequestURL + ", " +
+              "request.status = " + gStatusCode + ", " +
+              "update.statusText = " + gStatusText);
     // Use a timeout to allow the XHR to complete
     do_execute_soon(gCheckFunc.bind(null, aRequest, aUpdate));
   },
@@ -3180,7 +3182,7 @@ const downloadListener = {
  */
 function start_httpserver() {
   let dir = getTestDirFile();
-  logTestInfo("http server directory path: " + dir.path);
+  debugDump("http server directory path: " + dir.path);
 
   if (!dir.isDirectory()) {
     do_throw("A file instead of a directory was specified for HttpServer " +
@@ -3193,7 +3195,7 @@ function start_httpserver() {
   gTestserver.start(-1);
   let testserverPort = gTestserver.identity.primaryPort;
   gURLData = URL_HOST + ":" + testserverPort + "/";
-  logTestInfo("http server port = " + testserverPort);
+  debugDump("http server port = " + testserverPort);
 }
 
 /**
@@ -3296,8 +3298,8 @@ function getProcessArgs(aExtraArgs) {
     scriptContents += appBinPath + " -no-remote -process-updates " +
                       aExtraArgs.join(" ") + " " + PIPE_TO_NULL;
     writeFile(launchScript, scriptContents);
-    logTestInfo("created " + launchScript.path + " containing:\n" +
-                scriptContents);
+    debugDump("created " + launchScript.path + " containing:\n" +
+              scriptContents);
     args = [launchScript.path];
   } else {
     args = ["/D", "/Q", "/C", appBinPath, "-no-remote", "-process-updates"].
@@ -3377,54 +3379,54 @@ function adjustGeneralPaths() {
   ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
   ds.registerProvider(dirProvider);
   do_register_cleanup(function AGP_cleanup() {
-    logTestInfo("start - unregistering directory provider");
+    debugDump("start - unregistering directory provider");
 
     if (gAppTimer) {
-      logTestInfo("start - cancel app timer");
+      debugDump("start - cancel app timer");
       gAppTimer.cancel();
       gAppTimer = null;
-      logTestInfo("finish - cancel app timer");
+      debugDump("finish - cancel app timer");
     }
 
     if (gProcess && gProcess.isRunning) {
-      logTestInfo("start - kill process");
+      debugDump("start - kill process");
       try {
         gProcess.kill();
       } catch (e) {
-        logTestInfo("kill process failed. Exception: " + e);
+        debugDump("kill process failed. Exception: " + e);
       }
       gProcess = null;
-      logTestInfo("finish - kill process");
+      debugDump("finish - kill process");
     }
 
     if (gHandle) {
       try {
-        logTestInfo("start - closing handle");
+        debugDump("start - closing handle");
         let kernel32 = ctypes.open("kernel32");
         let CloseHandle = kernel32.declare("CloseHandle", ctypes.default_abi,
                                            ctypes.bool, /*return*/
                                            ctypes.voidptr_t /*handle*/);
         if (!CloseHandle(gHandle)) {
-          logTestInfo("call to CloseHandle failed");
+          debugDump("call to CloseHandle failed");
         }
         kernel32.close();
         gHandle = null;
-        logTestInfo("finish - closing handle");
+        debugDump("finish - closing handle");
       } catch (e) {
-        logTestInfo("call to CloseHandle failed. Exception: " + e);
+        debugDump("call to CloseHandle failed. Exception: " + e);
       }
     }
 
     // Call end_test first before the directory provider is unregistered
     if (typeof(end_test) == typeof(Function)) {
-      logTestInfo("calling end_test");
+      debugDump("calling end_test");
       end_test();
     }
 
     ds.unregisterProvider(dirProvider);
     cleanupTestCommon();
 
-    logTestInfo("finish - unregistering directory provider");
+    debugDump("finish - unregistering directory provider");
   });
 }
 
@@ -3433,7 +3435,7 @@ function adjustGeneralPaths() {
  * Helper function for launching the application to apply an update.
  */
 function launchAppToApplyUpdate() {
-  logTestInfo("start - launching application to apply update");
+  debugDump("start - launching application to apply update");
 
   let appBin = getApplyDirFile(DIR_MACOS + FILE_APP_BIN, false);
 
@@ -3443,7 +3445,7 @@ function launchAppToApplyUpdate() {
 
   let launchBin = getLaunchBin();
   let args = getProcessArgs();
-  logTestInfo("launching " + launchBin.path + " " + args.join(" "));
+  debugDump("launching " + launchBin.path + " " + args.join(" "));
 
   gProcess = Cc["@mozilla.org/process/util;1"].
              createInstance(Ci.nsIProcess);
@@ -3454,11 +3456,11 @@ function launchAppToApplyUpdate() {
                              Ci.nsITimer.TYPE_ONE_SHOT);
 
   setEnvironment();
-  logTestInfo("launching application");
+  debugDump("launching application");
   gProcess.runAsync(args, args.length, gProcessObserver);
   resetEnvironment();
 
-  logTestInfo("finish - launching application to apply update");
+  debugDump("finish - launching application to apply update");
 }
 
 /**
@@ -3466,8 +3468,8 @@ function launchAppToApplyUpdate() {
  */
 const gProcessObserver = {
   observe: function PO_observe(aSubject, aTopic, aData) {
-    logTestInfo("topic: " + aTopic + ", process exitValue: " +
-                gProcess.exitValue);
+    debugDump("topic: " + aTopic + ", process exitValue: " +
+              gProcess.exitValue);
     if (gAppTimer) {
       gAppTimer.cancel();
       gAppTimer = null;
@@ -3524,8 +3526,8 @@ function setEnvironment() {
             getService(Ci.nsIEnvironment);
   if (IS_WIN && !env.exists("XRE_NO_WINDOWS_CRASH_DIALOG")) {
     gAddedEnvXRENoWindowsCrashDialog = true;
-    logTestInfo("setting the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
-                "variable to 1... previously it didn't exist");
+    debugDump("setting the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
+              "variable to 1... previously it didn't exist");
     env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
   }
 
@@ -3545,8 +3547,8 @@ function setEnvironment() {
       }
 
       if (shouldSetEnv) {
-        logTestInfo("setting DYLD_LIBRARY_PATH environment variable value to " +
-                    appGreBinDir.path);
+        debugDump("setting DYLD_LIBRARY_PATH environment variable value to " +
+                  appGreBinDir.path);
         env.set("DYLD_LIBRARY_PATH", appGreBinDir.path);
       }
     } else {
@@ -3560,8 +3562,8 @@ function setEnvironment() {
       }
 
       if (shouldSetEnv) {
-        logTestInfo("setting LD_LIBRARY_PATH environment variable value to " +
-                    appGreBinDir.path);
+        debugDump("setting LD_LIBRARY_PATH environment variable value to " +
+                  appGreBinDir.path);
         env.set("LD_LIBRARY_PATH", appGreBinDir.path);
       }
     }
@@ -3569,28 +3571,28 @@ function setEnvironment() {
 
   if (env.exists("XPCOM_MEM_LEAK_LOG")) {
     gEnvXPCOMMemLeakLog = env.get("XPCOM_MEM_LEAK_LOG");
-    logTestInfo("removing the XPCOM_MEM_LEAK_LOG environment variable... " +
-                "previous value " + gEnvXPCOMMemLeakLog);
+    debugDump("removing the XPCOM_MEM_LEAK_LOG environment variable... " +
+              "previous value " + gEnvXPCOMMemLeakLog);
     env.set("XPCOM_MEM_LEAK_LOG", "");
   }
 
   if (env.exists("XPCOM_DEBUG_BREAK")) {
     gEnvXPCOMDebugBreak = env.get("XPCOM_DEBUG_BREAK");
-    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable to " +
-                "warn... previous value " + gEnvXPCOMDebugBreak);
+    debugDump("setting the XPCOM_DEBUG_BREAK environment variable to " +
+              "warn... previous value " + gEnvXPCOMDebugBreak);
   } else {
-    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable to " +
-                "warn... previously it didn't exist");
+    debugDump("setting the XPCOM_DEBUG_BREAK environment variable to " +
+              "warn... previously it didn't exist");
   }
 
   env.set("XPCOM_DEBUG_BREAK", "warn");
 
   if (gStageUpdate) {
-    logTestInfo("setting the MOZ_UPDATE_STAGING environment variable to 1");
+    debugDump("setting the MOZ_UPDATE_STAGING environment variable to 1");
     env.set("MOZ_UPDATE_STAGING", "1");
   }
 
-  logTestInfo("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
+  debugDump("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
   env.set("MOZ_NO_SERVICE_FALLBACK", "1");
 }
 
@@ -3610,53 +3612,53 @@ function resetEnvironment() {
             getService(Ci.nsIEnvironment);
 
   if (gEnvXPCOMMemLeakLog) {
-    logTestInfo("setting the XPCOM_MEM_LEAK_LOG environment variable back to " +
-                gEnvXPCOMMemLeakLog);
+    debugDump("setting the XPCOM_MEM_LEAK_LOG environment variable back to " +
+              gEnvXPCOMMemLeakLog);
     env.set("XPCOM_MEM_LEAK_LOG", gEnvXPCOMMemLeakLog);
   }
 
   if (gEnvXPCOMDebugBreak) {
-    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable back to " +
-                gEnvXPCOMDebugBreak);
+    debugDump("setting the XPCOM_DEBUG_BREAK environment variable back to " +
+              gEnvXPCOMDebugBreak);
     env.set("XPCOM_DEBUG_BREAK", gEnvXPCOMDebugBreak);
   } else {
-    logTestInfo("clearing the XPCOM_DEBUG_BREAK environment variable");
+    debugDump("clearing the XPCOM_DEBUG_BREAK environment variable");
     env.set("XPCOM_DEBUG_BREAK", "");
   }
 
   if (IS_UNIX) {
     if (IS_MACOSX) {
       if (gEnvDyldLibraryPath) {
-        logTestInfo("setting DYLD_LIBRARY_PATH environment variable value " +
-                    "back to " + gEnvDyldLibraryPath);
+        debugDump("setting DYLD_LIBRARY_PATH environment variable value " +
+                  "back to " + gEnvDyldLibraryPath);
         env.set("DYLD_LIBRARY_PATH", gEnvDyldLibraryPath);
       } else {
-        logTestInfo("removing DYLD_LIBRARY_PATH environment variable");
+        debugDump("removing DYLD_LIBRARY_PATH environment variable");
         env.set("DYLD_LIBRARY_PATH", "");
       }
     } else {
       if (gEnvLdLibraryPath) {
-        logTestInfo("setting LD_LIBRARY_PATH environment variable value back " +
-                    "to " + gEnvLdLibraryPath);
+        debugDump("setting LD_LIBRARY_PATH environment variable value back " +
+                  "to " + gEnvLdLibraryPath);
         env.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
       } else {
-        logTestInfo("removing LD_LIBRARY_PATH environment variable");
+        debugDump("removing LD_LIBRARY_PATH environment variable");
         env.set("LD_LIBRARY_PATH", "");
       }
     }
   }
 
   if (IS_WIN && gAddedEnvXRENoWindowsCrashDialog) {
-    logTestInfo("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
-                "variable");
+    debugDump("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
+              "variable");
     env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 
   if (gStageUpdate) {
-    logTestInfo("removing the MOZ_UPDATE_STAGING environment variable");
+    debugDump("removing the MOZ_UPDATE_STAGING environment variable");
     env.set("MOZ_UPDATE_STAGING", "");
   }
 
-  logTestInfo("removing MOZ_NO_SERVICE_FALLBACK environment variable");
+  debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
   env.set("MOZ_NO_SERVICE_FALLBACK", "");
 }
