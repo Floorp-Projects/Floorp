@@ -822,12 +822,11 @@
                 <label class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
               </box>
               <hbox id="urlbar-icons">
-                <toolbarbutton id="page-report-button"
-                               class="tabbable urlbar-icon"
-                               hidden="true"
-                               tooltiptext="&pageReportIcon.tooltip;"
-                               onclick="gPopupBlockerObserver.onReportButtonEvent(event);"
-                               onkeypress="gPopupBlockerObserver.onReportButtonEvent(event);"/>
+                <image id="page-report-button"
+                       class="urlbar-icon"
+                       hidden="true"
+                       tooltiptext="&pageReportIcon.tooltip;"
+                       onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
                 <toolbarbutton id="reader-mode-button"
                                class="tabbable"
                                hidden="true"
