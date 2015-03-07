@@ -67,7 +67,8 @@ public class Tabs implements GeckoEventListener {
     private volatile boolean mInitialTabsAdded;
 
     private Context mAppContext;
-    private ContentObserver mContentObserver;
+    private ContentObserver mBookmarksContentObserver;
+    private ContentObserver mReadingListContentObserver;
     private PersistTabsRunnable mPersistTabsRunnable;
 
     private static class PersistTabsRunnable implements Runnable {
@@ -140,11 +141,19 @@ public class Tabs implements GeckoEventListener {
         // The listener will run on the background thread (see 2nd argument).
         mAccountManager.addOnAccountsUpdatedListener(mAccountListener, ThreadUtils.getBackgroundHandler(), false);
 
-        if (mContentObserver != null) {
+        if (mBookmarksContentObserver != null) {
             // It's safe to use the db here since we aren't doing any I/O.
             final GeckoProfile profile = GeckoProfile.get(context);
-            profile.getDB().registerBookmarkObserver(getContentResolver(), mContentObserver);
+            profile.getDB().registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
         }
+
+        if (mReadingListContentObserver != null) {
+            // It's safe to use the db here since we aren't doing any I/O.
+            final GeckoProfile profile = GeckoProfile.get(context);
+            profile.getDB().getReadingListAccessor().registerContentObserver(
+                    mAppContext, mReadingListContentObserver);
+        }
+
     }
 
     /**
@@ -179,10 +188,10 @@ public class Tabs implements GeckoEventListener {
         return -1;
     }
 
-    // Must be synchronized to avoid racing on mContentObserver.
+    // Must be synchronized to avoid racing on mBookmarksContentObserver.
     private void lazyRegisterBookmarkObserver() {
-        if (mContentObserver == null) {
-            mContentObserver = new ContentObserver(null) {
+        if (mBookmarksContentObserver == null) {
+            mBookmarksContentObserver = new ContentObserver(null) {
                 @Override
                 public void onChange(boolean selfChange) {
                     for (Tab tab : mOrder) {
@@ -193,7 +202,26 @@ public class Tabs implements GeckoEventListener {
 
             // It's safe to use the db here since we aren't doing any I/O.
             final GeckoProfile profile = GeckoProfile.get(mAppContext);
-            profile.getDB().registerBookmarkObserver(getContentResolver(), mContentObserver);
+            profile.getDB().registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
+        }
+    }
+
+    // Must be synchronized to avoid racing on mReadingListContentObserver.
+    private void lazyRegisterReadingListObserver() {
+        if (mReadingListContentObserver == null) {
+            mReadingListContentObserver = new ContentObserver(null) {
+                @Override
+                public void onChange(final boolean selfChange) {
+                    for (final Tab tab : mOrder) {
+                        tab.updateReadingList();
+                    }
+                }
+            };
+
+            // It's safe to use the db here since we aren't doing any I/O.
+            final GeckoProfile profile = GeckoProfile.get(mAppContext);
+            profile.getDB().getReadingListAccessor().registerContentObserver(
+                    mAppContext, mReadingListContentObserver);
         }
     }
 
@@ -202,6 +230,7 @@ public class Tabs implements GeckoEventListener {
                                     new Tab(mAppContext, id, url, external, parentId, title);
         synchronized (this) {
             lazyRegisterBookmarkObserver();
+            lazyRegisterReadingListObserver();
             mTabs.put(id, tab);
 
             if (tabIndex > -1) {
