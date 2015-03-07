@@ -120,6 +120,10 @@ TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarra
     tarray->setPrivate(buffer->dataPointer());
 
     tarray->setSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*buffer));
+
+    // Notify compiled jit code that the base pointer has moved.
+    MarkObjectStateChange(cx, tarray);
+
     return true;
 }
 
