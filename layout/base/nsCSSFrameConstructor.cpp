@@ -3471,8 +3471,6 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
   if (aTag == nsGkAtoms::legend &&
       (!aParentFrame ||
        !IsFrameForFieldSet(aParentFrame, aParentFrame->GetType()) ||
-       !aElement->GetParent() ||
-       !aElement->GetParent()->IsHTMLElement(nsGkAtoms::fieldset) ||
        aStyleContext->StyleDisplay()->IsFloatingStyle() ||
        aStyleContext->StyleDisplay()->IsAbsolutelyPositionedStyle())) {
     // <legend> is only special inside fieldset, check both the frame tree
