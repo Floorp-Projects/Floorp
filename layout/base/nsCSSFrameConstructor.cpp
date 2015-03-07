@@ -2598,8 +2598,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else {
-    MOZ_ASSERT(display->mDisplay == NS_STYLE_DISPLAY_BLOCK ||
-               display->mDisplay == NS_STYLE_DISPLAY_CONTENTS,
+    MOZ_ASSERT(display->mDisplay == NS_STYLE_DISPLAY_BLOCK,
                "Unhandled display type for root element");
     contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
     nsFrameItems frameItems;
