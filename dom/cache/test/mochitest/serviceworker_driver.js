@@ -28,7 +28,7 @@ function serviceWorkerTestExec(testFile) {
       document.body.appendChild(iframe);
     }
 
-    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
+    navigator.serviceWorker.register("worker_wrapper.js" + "?" + (Math.random()), {scope: "."})
       .then(function(registration) {
         if (registration.installing) {
           registration.installing.onstatechange = function(e) {
