@@ -2931,6 +2931,7 @@ public class BrowserApp extends GeckoApp
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
+        final MenuItem reader = aMenu.findItem(R.id.reading_list);
         MenuItem back = aMenu.findItem(R.id.back);
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
@@ -2956,6 +2957,7 @@ public class BrowserApp extends GeckoApp
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
+            reader.setEnabled(false);
             back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
@@ -2977,11 +2979,20 @@ public class BrowserApp extends GeckoApp
             return true;
         }
 
+        final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
+
         bookmark.setEnabled(!AboutPages.isAboutReader(tab.getURL()));
-        bookmark.setVisible(!GeckoProfile.get(this).inGuestMode());
+        bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
+
+        reader.setEnabled(true);
+        reader.setVisible(!inGuestMode);
+        reader.setCheckable(true);
+        final boolean isPageInReadingList = tab.isInReadingList();
+        reader.setChecked(isPageInReadingList);
+        reader.setIcon(resolveReadingListIconID(isPageInReadingList));
 
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
@@ -3099,6 +3110,10 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    private int resolveReadingListIconID(final boolean isInReadingList) {
+        return (isInReadingList ? R.drawable.ic_menu_reader_remove : R.drawable.ic_menu_reader_add);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
@@ -3125,6 +3140,22 @@ public class BrowserApp extends GeckoApp
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
                     item.setIcon(resolveBookmarkIconID(true));
+                }
+            }
+            return true;
+        }
+
+        if (itemId == R.id.reading_list) {
+            tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                if (item.isChecked()) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "reading_list");
+                    tab.removeFromReadingList();
+                    item.setIcon(resolveReadingListIconID(false));
+                } else {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "reading_list");
+                    tab.addToReadingList();
+                    item.setIcon(resolveReadingListIconID(true));
                 }
             }
             return true;
