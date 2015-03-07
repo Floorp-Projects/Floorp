@@ -70,7 +70,18 @@ PluginWidgetParent::~PluginWidgetParent()
   // A destroy call can actually get skipped if a widget is associated
   // with the last out-of-process page, make sure and cleanup any left
   // over widgets if we have them.
-  KillWidget();
+  if (mWidget) {
+#if defined(MOZ_WIDGET_GTK)
+    mWidget->SetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR, (uintptr_t)0);
+    mWrapper = nullptr;
+#elif defined(XP_WIN)
+    ::RemovePropW((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW),
+                  kPluginWidgetParentProperty);
+#endif
+    mWidget->UnregisterPluginWindowForRemoteUpdates();
+    mWidget->Destroy();
+    mWidget = nullptr;
+  }
 }
 
 mozilla::dom::TabParent*
@@ -181,29 +192,13 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
 }
 
 void
-PluginWidgetParent::KillWidget()
-{
-  PWLOG("PluginWidgetParent::KillWidget() widget=%p\n", mWidget);
-  if (mWidget) {
-#if defined(MOZ_WIDGET_GTK)
-    mWidget->SetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR, (uintptr_t)0);
-    mWrapper = nullptr;
-#elif defined(XP_WIN)
-    ::RemovePropW((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW),
-                  kPluginWidgetParentProperty);
-#endif
-    mWidget->UnregisterPluginWindowForRemoteUpdates();
-    mWidget->Destroy();
-    mWidget = nullptr;
-  }
-}
-
-void
 PluginWidgetParent::Shutdown(ShutdownType aType)
 {
-  PWLOG("PluginWidgetParent::Shutdown(%s)\n", aType == TAB_CLOSURE ? "TAB_CLOSURE" : "CONTENT");
   if (mWidget) {
-    KillWidget();
+    mWidget->UnregisterPluginWindowForRemoteUpdates();
+    DebugOnly<nsresult> rv = mWidget->Destroy();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "widget destroy failure");
+    mWidget = nullptr;
     unused << SendParentShutdown(aType);
   }
 }
@@ -212,7 +207,6 @@ void
 PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   PWLOG("PluginWidgetParent::ActorDestroy()\n");
-  KillWidget();
 }
 
 // Called by TabParent's Destroy() in response to an early tear down (Early
