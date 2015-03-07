@@ -7,7 +7,7 @@
 
 MARKUPMAP(a,
           New_HTMLLink,
-          0)
+          roles::LINK)
 
 MARKUPMAP(abbr,
           New_HyperText,
@@ -47,11 +47,11 @@ MARKUPMAP(dt,
 
 MARKUPMAP(figcaption,
           New_HTMLFigcaption,
-          0)
+          roles::CAPTION)
 
 MARKUPMAP(figure,
           New_HTMLFigure,
-          0)
+          roles::FIGURE)
 
 MARKUPMAP(form,
           New_HyperText,
@@ -91,11 +91,11 @@ MARKUPMAP(h6,
 
 MARKUPMAP(label,
           New_HTMLLabel,
-          0)
+          roles::LABEL)
 
 MARKUPMAP(legend,
           New_HTMLLegend,
-          0)
+          roles::LABEL)
 
 MARKUPMAP(li,
           New_HTMLListitem,
@@ -107,7 +107,7 @@ MARKUPMAP(nav,
 
 MARKUPMAP(ol,
           New_HTMLList,
-          0)
+          roles::LIST)
 
 MARKUPMAP(option,
           New_HTMLOption,
@@ -119,7 +119,7 @@ MARKUPMAP(optgroup,
 
 MARKUPMAP(output,
           New_HTMLOutput,
-          0)
+          roles::SECTION)
 
 MARKUPMAP(progress,
           New_HTMLProgress,
@@ -147,4 +147,4 @@ MARKUPMAP(th,
 
 MARKUPMAP(ul,
           New_HTMLList,
-          0)
+          roles::LIST)

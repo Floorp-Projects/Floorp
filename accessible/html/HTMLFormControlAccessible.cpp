@@ -762,12 +762,6 @@ HTMLLegendAccessible::RelationByType(RelationType aType)
   return rel;
 }
 
-role
-HTMLLegendAccessible::NativeRole()
-{
-  return roles::LABEL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLFigureAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -788,12 +782,6 @@ HTMLFigureAccessible::NativeAttributes()
   nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                          NS_LITERAL_STRING("figure"));
   return attributes.forget();
-}
-
-role
-HTMLFigureAccessible::NativeRole()
-{
-  return roles::FIGURE;
 }
 
 ENameValueFlag
@@ -842,12 +830,6 @@ HTMLFigcaptionAccessible::
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
-}
-
-role
-HTMLFigcaptionAccessible::NativeRole()
-{
-  return roles::CAPTION;
 }
 
 Relation
