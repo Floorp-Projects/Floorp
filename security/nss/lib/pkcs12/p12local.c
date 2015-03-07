@@ -928,7 +928,8 @@ sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
 	return PR_FALSE;
     }
 
-    if((dest->data[dest->len-1] || dest->data[dest->len-2]) && zeroTerm) {
+    if ((dest->len >= 2) &&
+	(dest->data[dest->len-1] || dest->data[dest->len-2]) && zeroTerm) {
 	if(dest->len + 2 > 3 * src->len) {
 	    if(arena) {
 		dest->data = (unsigned char*)PORT_ArenaGrow(arena, 
