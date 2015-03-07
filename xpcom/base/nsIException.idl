@@ -10,7 +10,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8272a3d5-2a94-40c0-8ab6-be76583a0221)]
+[scriptable, uuid(9787bc41-1ec9-4fe0-8b31-ffee5db6a893)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -22,6 +22,8 @@ interface nsIStackFrame : nsISupports
     readonly attribute int32_t                 lineNumber;
     readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
+    readonly attribute AString                 asyncCause;
+    readonly attribute nsIStackFrame           asyncCaller;
     readonly attribute nsIStackFrame           caller;
 
     // Returns a formatted stack string that looks like the sort of
