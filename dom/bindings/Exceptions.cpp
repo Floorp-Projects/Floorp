@@ -311,6 +311,7 @@ public:
   NS_IMETHOD GetAsyncCaller(nsIStackFrame** aAsyncCaller) MOZ_OVERRIDE;
   NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
   NS_IMETHOD GetFormattedStack(nsAString& aStack) MOZ_OVERRIDE;
+  NS_IMETHOD GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame) MOZ_OVERRIDE;
 
 protected:
   virtual bool IsJSFrame() const MOZ_OVERRIDE {
@@ -747,6 +748,19 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
 NS_IMETHODIMP StackFrame::GetFormattedStack(nsAString& aStack)
 {
   aStack.Truncate();
+  return NS_OK;
+}
+
+/* readonly attribute jsval nativeSavedFrame; */
+NS_IMETHODIMP JSStackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)
+{
+  aSavedFrame.setObjectOrNull(mStack);
+  return NS_OK;
+}
+
+NS_IMETHODIMP StackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)
+{
+  aSavedFrame.setNull();
   return NS_OK;
 }
 
