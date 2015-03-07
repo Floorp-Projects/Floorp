@@ -123,5 +123,5 @@ caches.open('snafu').then(function(openCache) {
 }).then(function(hasMissingCache) {
   ok(!hasMissingCache, 'has should have a result');
 }).then(function() {
-  workerTestDone();
+  testDone();
 })
