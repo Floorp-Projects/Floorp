@@ -4,42 +4,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
+#include "test_io.h"
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <memory>
 
 #include "prerror.h"
-#include "prio.h"
 #include "prlog.h"
 #include "prthread.h"
 
-#include "test_io.h"
+#include "databuffer.h"
 
 namespace nss_test {
 
 static PRDescIdentity test_fd_identity = PR_INVALID_IO_LAYER;
 
-#define UNIMPLEMENTED()                                                 \
-  fprintf(stderr, "Call to unimplemented function %s\n", __FUNCTION__); \
-  PR_ASSERT(PR_FALSE);                                                  \
+#define UNIMPLEMENTED()                          \
+  std::cerr << "Call to unimplemented function " \
+            << __FUNCTION__ << std::endl;        \
+  PR_ASSERT(PR_FALSE);                           \
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0)
 
 #define LOG(a) std::cerr << name_ << ": " << a << std::endl;
 
-struct Packet {
-  Packet() : data_(nullptr), len_(0), offset_(0) {}
+class Packet : public DataBuffer {
+ public:
+  Packet(const DataBuffer& buf) : DataBuffer(buf), offset_(0) {}
 
-  void Assign(const void *data, int32_t len) {
-    data_ = new uint8_t[len];
-    memcpy(data_, data, len);
-    len_ = len;
+  void Advance(size_t delta) {
+    PR_ASSERT(offset_ + delta <= len());
+    offset_ = std::min(len(), offset_ + delta);
   }
 
-  ~Packet() { delete data_; }
-  uint8_t *data_;
-  int32_t len_;
-  int32_t offset_;
+  size_t offset() const { return offset_; }
+  size_t remaining() const { return len() - offset_; }
+
+ private:
+  size_t offset_;
 };
 
 // Implementation of NSPR methods
@@ -246,6 +249,16 @@ static int32_t DummyReserved(PRFileDesc *f) {
   return -1;
 }
 
+DummyPrSocket::~DummyPrSocket() {
+  delete filter_;
+  while (!input_.empty())
+  {
+    Packet* front = input_.front();
+    input_.pop();
+    delete front;
+  }
+}
+
 static const struct PRIOMethods DummyMethods = {
     PR_DESC_LAYERED,  DummyClose,           DummyRead,
     DummyWrite,       DummyAvailable,       DummyAvailable64,
@@ -275,9 +288,8 @@ DummyPrSocket *DummyPrSocket::GetAdapter(PRFileDesc *fd) {
   return reinterpret_cast<DummyPrSocket *>(fd->secret);
 }
 
-void DummyPrSocket::PacketReceived(const void *data, int32_t len) {
-  input_.push(new Packet());
-  input_.back()->Assign(data, len);
+void DummyPrSocket::PacketReceived(const DataBuffer& packet) {
+  input_.push(new Packet(packet));
 }
 
 int32_t DummyPrSocket::Read(void *data, int32_t len) {
@@ -295,16 +307,18 @@ int32_t DummyPrSocket::Read(void *data, int32_t len) {
   }
 
   Packet *front = input_.front();
-  int32_t to_read = std::min(len, front->len_ - front->offset_);
-  memcpy(data, front->data_ + front->offset_, to_read);
-  front->offset_ += to_read;
+  size_t to_read = std::min(static_cast<size_t>(len),
+                            front->len() - front->offset());
+  memcpy(data, static_cast<const void*>(front->data() + front->offset()),
+         to_read);
+  front->Advance(to_read);
 
-  if (front->offset_ == front->len_) {
+  if (!front->remaining()) {
     input_.pop();
     delete front;
   }
 
-  return to_read;
+  return static_cast<int32_t>(to_read);
 }
 
 int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
@@ -314,39 +328,49 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
   }
 
   Packet *front = input_.front();
-  if (buflen < front->len_) {
+  if (buflen < front->len()) {
     PR_ASSERT(false);
     PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
     return -1;
   }
 
-  int32_t count = front->len_;
-  memcpy(buf, front->data_, count);
+  size_t count = front->len();
+  memcpy(buf, front->data(), count);
 
   input_.pop();
   delete front;
 
-  return count;
+  return static_cast<int32_t>(count);
 }
 
 int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
-  if (inspector_) {
-    inspector_->Inspect(this, buf, length);
+  DataBuffer packet(static_cast<const uint8_t*>(buf),
+                    static_cast<size_t>(length));
+  if (filter_) {
+    DataBuffer filtered;
+    if (filter_->Filter(packet, &filtered)) {
+      if (WriteDirect(filtered) != filtered.len()) {
+        PR_SetError(PR_IO_ERROR, 0);
+        return -1;
+      }
+      LOG("Wrote: " << packet);
+      // libssl can't handle if this reports something other than the length of
+      // what was passed in (or less, but we're not doing partial writes).
+      return packet.len();
+    }
   }
 
-  return WriteDirect(buf, length);
+  return WriteDirect(packet);
 }
 
-int32_t DummyPrSocket::WriteDirect(const void *buf, int32_t length) {
+int32_t DummyPrSocket::WriteDirect(const DataBuffer& packet) {
   if (!peer_) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }
 
-  LOG("Wrote " << length);
-
-  peer_->PacketReceived(buf, length);
-  return length;
+  peer_->PacketReceived(packet);
+  return static_cast<int32_t>(packet.len()); // ignore truncation
 }
 
 Poller *Poller::instance;
