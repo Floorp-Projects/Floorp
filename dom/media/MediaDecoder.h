@@ -189,6 +189,7 @@ destroying the MediaDecoder object.
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"
+#include "MediaPromise.h"
 #include "MediaResource.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/gfx/Rect.h"
