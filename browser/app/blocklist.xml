@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1424991539000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1425509726000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -185,12 +185,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i758" id="toolbar10853@findwide.com">
+      <emItem  blockID="i672" id="/^(saamazon@mybrowserbar\.com)|(saebay@mybrowserbar\.com)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
-                  <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i668" id="/^(matchersite(pro(srcs?)?)?\@matchersite(pro(srcs?)?)?\.com)|((pro)?sitematcher(_srcs?|pro|site|sitesrc|-generic)?\@(pro)?sitematcher(_srcs?|pro|site|sitesrc|-generic)?\.com)$/">
@@ -379,10 +377,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i48" id="admin@youtubespeedup.com">
-                          <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i344" id="lrcsTube@hansanddeta.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -395,7 +389,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i860" id="PrivDog@AdTrustMedia.com">
+      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -530,6 +524,14 @@
                         <versionRange  minVersion="0" maxVersion="2.1.0.19.99" severity="1">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i768" id="{f2548724-373f-45fe-be6a-3a85e87b7711}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i172" id="info@bflix.info">
@@ -856,10 +858,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i672" id="/^(saamazon@mybrowserbar\.com)|(saebay@mybrowserbar\.com)$/">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
+      <emItem  blockID="i48" id="admin@youtubespeedup.com">
+                          <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i218" id="ffxtlbr@claro.com">
@@ -1395,12 +1395,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i768" id="{f2548724-373f-45fe-be6a-3a85e87b7711}">
+      <emItem  blockID="i870" id="M1uwW0@47z8gRpK8sULXXLivB.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
-                  <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i246" id="support@vide1flash2.com">
@@ -1593,6 +1591,12 @@
     </emItem>
       <emItem  blockID="i726" id="{d87d56b2-1379-49f4-b081-af2850c79d8e}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i872" id="search-snacks@search-snacks.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2098,6 +2102,14 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i874" id="/^toolbar[0-9]*@findwide\.com$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i588" id="quick_start@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -2172,12 +2184,6 @@
               </prefs>
     </emItem>
       <emItem  blockID="i694" id="59D317DB041748fdB89B47E6F96058F3@jetpack">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
-      <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -2306,14 +2312,6 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
-              </prefs>
-    </emItem>
-      <emItem  blockID="i760" id="toolbar11093@freshy.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
-                  <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i324" id="/^((34qEOefiyYtRJT@IM5Munavn\.com)|(Mro5Fm1Qgrmq7B@ByrE69VQfZvZdeg\.com)|(KtoY3KGxrCe5ie@yITPUzbBtsHWeCdPmGe\.com)|(9NgIdLK5Dq4ZMwmRo6zk@FNt2GCCLGyUuOD\.com)|(NNux7bWWW@RBWyXdnl6VGls3WAwi\.com)|(E3wI2n@PEHTuuNVu\.com)|(2d3VuWrG6JHBXbQdbr@3BmSnQL\.com))$/">
