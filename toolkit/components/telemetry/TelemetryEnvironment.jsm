@@ -24,8 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 #endif
-XPCOMUtils.defineLazyModuleGetter(this, "ProfileTimesAccessor",
-                                  "resource://gre/modules/services/healthreport/profile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
+                                  "resource://gre/modules/ProfileAge.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 
@@ -501,7 +501,7 @@ this.TelemetryEnvironment = {
    * @return Object containing the profile data.
    */
   _getProfile: Task.async(function* () {
-    let profileAccessor = new ProfileTimesAccessor(null, this._log);
+    let profileAccessor = new ProfileAge(null, this._log);
 
     let creationDate = yield profileAccessor.created;
     let resetDate = yield profileAccessor.reset;
