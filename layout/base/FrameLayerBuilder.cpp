@@ -4535,9 +4535,11 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       continue;
 
 #ifdef MOZ_DUMP_PAINTING
-    PROFILER_LABEL_PRINTF("DisplayList", "Draw", js::ProfileEntry::Category::GRAPHICS, "%s %p", cdi->mItem->Name(), cdi->mItem);
+    PROFILER_LABEL_PRINTF("DisplayList", "Draw",
+      js::ProfileEntry::Category::GRAPHICS, "%s", cdi->mItem->Name());
 #else
-    PROFILER_LABEL_PRINTF("DisplayList", "Draw", js::ProfileEntry::Category::GRAPHICS, "%p", cdi->mItem);
+    PROFILER_LABEL("DisplayList", "Draw",
+      js::ProfileEntry::Category::GRAPHICS);
 #endif
 
     // If the new desired clip state is different from the current state,
