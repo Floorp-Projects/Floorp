@@ -72,14 +72,14 @@ impl WindowSizeResponse {
 
 #[derive(RustcEncodable, Debug)]
 pub struct ElementRectResponse {
-    x: u64,
-    y: u64,
-    width: u64,
-    height: u64
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64
 }
 
 impl ElementRectResponse {
-    pub fn new(x: u64, y: u64, width: u64, height: u64) -> ElementRectResponse {
+    pub fn new(x: f64, y: f64, width: f64, height: f64) -> ElementRectResponse {
         ElementRectResponse {
             x: x,
             y: y,
