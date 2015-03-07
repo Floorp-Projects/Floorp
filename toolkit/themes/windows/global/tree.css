@@ -25,7 +25,7 @@ tree {
 /* ::::: tree focusring ::::: */
 
 .focusring > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;  
+  border: 1px solid transparent;
 }
 
 .focusring:-moz-focusring > .tree-stack > .tree-rows > .tree-bodybox {
@@ -236,9 +236,7 @@ treecol[hideheader="true"] {
 treecol:hover:active,
 treecolpicker:hover:active {
   border-top: 2px solid;
-  border-right: 1px solid;
   border-bottom: 1px solid;
-  border-left: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow;
@@ -246,14 +244,14 @@ treecolpicker:hover:active {
   padding-top: 1px;
   padding-bottom: 0px;
   -moz-padding-start: 5px;
-  -moz-padding-end: 4px;
+  -moz-padding-end: 3px;
 }
 
 .treecol-image:hover:active {
   padding-top: 1px;
   padding-bottom: 0px;
   -moz-padding-start: 2px;
-  -moz-padding-end: 1px;
+  -moz-padding-end: 0px;
 }
 
 /* ::::: column drag and drop styles ::::: */
