@@ -75,12 +75,6 @@ HTMLLabelAccessible::RelationByType(RelationType aType)
   return rel;
 }
 
-role
-HTMLLabelAccessible::NativeRole()
-{
-  return roles::LABEL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLOuputAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,12 +89,6 @@ HTMLOutputAccessible::RelationByType(RelationType aType)
     rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
 
   return rel;
-}
-
-role
-HTMLOutputAccessible::NativeRole()
-{
-  return roles::SECTION;
 }
 
 already_AddRefed<nsIPersistentProperties>
