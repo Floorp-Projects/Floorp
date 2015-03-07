@@ -3058,7 +3058,7 @@ class MNewObject
     bool canRecoverOnBailout() const MOZ_OVERRIDE {
         // The template object can safely be used in the recover instruction
         // because it can never be mutated by any other function execution.
-        return true;
+        return templateObject() != nullptr;
     }
 };
 
