@@ -1,17 +1,18 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 //
-// Worker-side wrapper script for the worker_driver.js helper code.  See
-// the comments at the top of worker_driver.js for more information.
+// ServiceWorker equivalent of worker_wrapper.js.
+
+var client;
 
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + ": " + msg + "\n");
-  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+  client.postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
 }
 
 function is(a, b, msg) {
   dump("IS: " + (a===b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
-  postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+  client.postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -26,8 +27,8 @@ function workerTestArrayEquals(a, b) {
   return true;
 }
 
-function workerTestDone() {
-  postMessage({ type: 'finish' });
+function testDone() {
+  client.postMessage({ type: 'finish' });
 }
 
 function workerTestGetPrefs(prefs, cb) {
@@ -39,7 +40,7 @@ function workerTestGetPrefs(prefs, cb) {
     removeEventListener('message', workerTestGetPrefsCB);
     cb(e.data.result);
   });
-  postMessage({
+  client.postMessage({
     type: 'getPrefs',
     prefs: prefs
   });
@@ -54,7 +55,7 @@ function workerTestGetPermissions(permissions, cb) {
     removeEventListener('message', workerTestGetPermissionsCB);
     cb(e.data.result);
   });
-  postMessage({
+  client.postMessage({
     type: 'getPermissions',
     permissions: permissions
   });
@@ -68,7 +69,7 @@ function workerTestGetVersion(cb) {
     removeEventListener('message', workerTestGetVersionCB);
     cb(e.data.result);
   });
-  postMessage({
+  client.postMessage({
     type: 'getVersion'
   });
 }
@@ -81,7 +82,7 @@ function workerTestGetUserAgent(cb) {
     removeEventListener('message', workerTestGetUserAgentCB);
     cb(e.data.result);
   });
-  postMessage({
+  client.postMessage({
     type: 'getUserAgent'
   });
 }
@@ -89,13 +90,24 @@ function workerTestGetUserAgent(cb) {
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;
-  try {
-    importScripts(data.script);
-  } catch(e) {
-    postMessage({
-      type: 'status',
-      status: false,
-      msg: 'worker failed to import ' + data.script + "; error: " + e.message
+  function runScript() {
+    try {
+      importScripts(data.script);
+    } catch(e) {
+      client.postMessage({
+        type: 'status',
+        status: false,
+        msg: 'worker failed to import ' + data.script + "; error: " + e.message
+      });
+    }
+  }
+  if ("ServiceWorker" in self) {
+    self.clients.matchAll().then(function(clients) {
+      client = clients[0];
+      runScript();
     });
+  } else {
+    client = self;
+    runScript();
   }
 });
