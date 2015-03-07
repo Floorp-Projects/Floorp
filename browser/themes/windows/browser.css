@@ -1563,14 +1563,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 /* popup blocker button */
 
 #page-report-button {
-  -moz-appearance: none;
-  padding: 0;
-  border-width: 0;
   list-style-image: url("chrome://browser/skin/urlbar-popup-blocked.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#page-report-button:focus,
 #page-report-button:hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
