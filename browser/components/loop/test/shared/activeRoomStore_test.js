@@ -35,7 +35,8 @@ describe("loop.store.ActiveRoomStore", function () {
     fakeSdkDriver = {
       connectSession: sandbox.stub(),
       disconnectSession: sandbox.stub(),
-      forceDisconnectAll: sandbox.stub().callsArg(0)
+      forceDisconnectAll: sandbox.stub().callsArg(0),
+      retryPublishWithoutVideo: sinon.stub()
     };
 
     fakeMultiplexGum = {
@@ -553,6 +554,26 @@ describe("loop.store.ActiveRoomStore", function () {
       connectionFailureAction = new sharedActions.ConnectionFailure({
         reason: "FAIL"
       });
+    });
+
+    it("should retry publishing if on desktop, and in the videoMuted state", function() {
+      store._isDesktop = true;
+
+      store.connectionFailure(new sharedActions.ConnectionFailure({
+        reason: FAILURE_REASONS.UNABLE_TO_PUBLISH_MEDIA
+      }));
+
+      sinon.assert.calledOnce(fakeSdkDriver.retryPublishWithoutVideo);
+    });
+
+    it("should set videoMuted to try when retrying publishing", function() {
+      store._isDesktop = true;
+
+      store.connectionFailure(new sharedActions.ConnectionFailure({
+        reason: FAILURE_REASONS.UNABLE_TO_PUBLISH_MEDIA
+      }));
+
+      expect(store.getStoreState().videoMuted).eql(true);
     });
 
     it("should store the failure reason", function() {
