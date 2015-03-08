@@ -3,11 +3,11 @@
 == min-height-1.html min-height-1-ref.html
 == max-width-1.html max-width-1-ref.html
 == max-height-1.html max-height-1-ref.html
-# bug 1019840 skip width-special-values-image & width-special-values-block on b2g
-# due to a race condition in imgRequestProxyCode
+# bug 1019840 skip width-special-values-image, width-special-values-block,
+# width-special-values-image-block on b2g due to a race condition in imgRequestProxyCode
 skip-if(B2G) == width-special-values-block.html width-special-values-block-ref.html
 == width-special-values-float.html width-special-values-block-ref.html
-== width-special-values-image-block.html width-special-values-image-block-ref.html
+skip-if(B2G) == width-special-values-image-block.html width-special-values-image-block-ref.html
 skip-if(B2G) == width-special-values-image.html width-special-values-image-ref.html
 == width-special-values-block-intrinsic.html width-special-values-block-intrinsic-ref.html
 == width-special-values-float-intrinsic.html width-special-values-block-intrinsic-ref.html
