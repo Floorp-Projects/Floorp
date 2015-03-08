@@ -8147,9 +8147,9 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 
 typedef bool (*DeletePropertyFn)(JSContext *, HandleValue, HandlePropertyName, bool *);
 static const VMFunction DeletePropertyStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeleteProperty<true>);
+    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<true>);
 static const VMFunction DeletePropertyNonStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeleteProperty<false>);
+    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<false>);
 
 void
 CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
@@ -8165,9 +8165,9 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
 
 typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
 static const VMFunction DeleteElementStrictInfo =
-    FunctionInfo<DeleteElementFn>(DeleteElement<true>);
+    FunctionInfo<DeleteElementFn>(DeleteElementJit<true>);
 static const VMFunction DeleteElementNonStrictInfo =
-    FunctionInfo<DeleteElementFn>(DeleteElement<false>);
+    FunctionInfo<DeleteElementFn>(DeleteElementJit<false>);
 
 void
 CodeGenerator::visitCallDeleteElement(LCallDeleteElement *lir)

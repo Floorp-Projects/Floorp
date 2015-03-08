@@ -80,7 +80,23 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
     block = StartNewTouchBlock(aTarget, aTargetConfirmed, false);
     INPQ_LOG("started new touch block %p for target %p\n", block, aTarget.get());
 
+    // XXX using the chain from |block| here may be wrong in cases where the
+    // target isn't confirmed and the real target turns out to be something
+    // else. For now assume this is rare enough that it's not an issue.
+    if (block == CurrentBlock() &&
+        aEvent.mTouches.Length() == 1 &&
+        block->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
+      // If we're already in a fast fling, and a single finger goes down, then
+      // we want special handling for the touch event, because it shouldn't get
+      // delivered to content. Note that we don't set this flag when going
+      // from a fast fling to a pinch state (i.e. second finger goes down while
+      // the first finger is moving).
+      block->SetDuringFastMotion();
+      INPQ_LOG("block %p tagged as fast-motion\n", block);
+    }
+
     CancelAnimationsForNewBlock(block);
+
     MaybeRequestContentResponse(aTarget, block);
   } else {
     if (!mInputBlockQueue.IsEmpty()) {
@@ -176,17 +192,6 @@ InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
   // being processed) we only do this animation-cancellation if there are no older
   // touch blocks still in the queue.
   if (aBlock == CurrentBlock()) {
-    // XXX using the chain from |block| here may be wrong in cases where the
-    // target isn't confirmed and the real target turns out to be something
-    // else. For now assume this is rare enough that it's not an issue.
-    if (aBlock->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
-      // If we're already in a fast fling, then we want the touch event to stop the fling
-      // and to disallow the touch event from being used as part of a fling.
-      if (TouchBlockState* touch = aBlock->AsTouchBlock()) {
-        touch->SetDuringFastMotion();
-        INPQ_LOG("block %p tagged as fast-motion\n", touch);
-      }
-    }
     aBlock->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll);
   }
 }

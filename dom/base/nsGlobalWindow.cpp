@@ -622,19 +622,19 @@ public:
   virtual bool defineProperty(JSContext* cx,
                               JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
-                              JS::MutableHandle<JSPropertyDescriptor> desc)
-                              const MOZ_OVERRIDE;
+                              JS::MutableHandle<JSPropertyDescriptor> desc,
+                              JS::ObjectOpResult &result) const MOZ_OVERRIDE;
   virtual bool ownPropertyKeys(JSContext *cx,
                                JS::Handle<JSObject*> proxy,
                                JS::AutoIdVector &props) const MOZ_OVERRIDE;
   virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id,
-                       bool *bp) const MOZ_OVERRIDE;
+                       JS::ObjectOpResult &result) const MOZ_OVERRIDE;
   virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                          JS::MutableHandle<JSObject*> vp) const MOZ_OVERRIDE;
-  virtual bool preventExtensions(JSContext *cx,
+  virtual bool preventExtensions(JSContext* cx,
                                  JS::Handle<JSObject*> proxy,
-                                 bool *succeeded) const MOZ_OVERRIDE;
+                                 JS::ObjectOpResult& result) const MOZ_OVERRIDE;
   virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
                             const MOZ_OVERRIDE;
   virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
@@ -646,8 +646,8 @@ public:
   virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
                    JS::Handle<JSObject*> receiver,
                    JS::Handle<jsid> id,
-                   bool strict,
-                   JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> vp,
+                   JS::ObjectOpResult &result) const MOZ_OVERRIDE;
 
   // SpiderMonkey extensions
   virtual bool getPropertyDescriptor(JSContext* cx,
@@ -783,8 +783,8 @@ bool
 nsOuterWindowProxy::defineProperty(JSContext* cx,
                                    JS::Handle<JSObject*> proxy,
                                    JS::Handle<jsid> id,
-                                   JS::MutableHandle<JSPropertyDescriptor> desc)
-                                   const
+                                   JS::MutableHandle<JSPropertyDescriptor> desc,
+                                   JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
@@ -792,7 +792,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
     // since we have no indexed setter or indexed creator.  That means
     // throwing in strict mode (FIXME: Bug 828137), doing nothing in
     // non-strict mode.
-    return true;
+    return result.succeed();
   }
 
   // For now, allow chrome code to define non-configurable properties
@@ -803,7 +803,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
     return ThrowErrorMessage(cx, MSG_DEFINE_NON_CONFIGURABLE_PROP_ON_WINDOW);
   }
 
-  return js::Wrapper::defineProperty(cx, proxy, id, desc);
+  return js::Wrapper::defineProperty(cx, proxy, id, desc, result);
 }
 
 bool
@@ -825,35 +825,31 @@ nsOuterWindowProxy::ownPropertyKeys(JSContext *cx,
 
 bool
 nsOuterWindowProxy::delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
-                            JS::Handle<jsid> id, bool *bp) const
+                            JS::Handle<jsid> id, JS::ObjectOpResult &result) const
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
-    // Reject (which means throw if strict, else return false) the delete.
-    // Except we don't even know whether we're strict.  See bug 803157.
-    *bp = false;
-    return true;
+    // Fail (which means throw if strict, else return false).
+    return result.failCantDeleteWindowElement();
   }
 
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
     // Indexed, but not supported.  Spec says return true.
-    *bp = true;
-    return true;
+    return result.succeed();
   }
 
-  return js::Wrapper::delete_(cx, proxy, id, bp);
+  return js::Wrapper::delete_(cx, proxy, id, result);
 }
 
 bool
-nsOuterWindowProxy::preventExtensions(JSContext *cx,
+nsOuterWindowProxy::preventExtensions(JSContext* cx,
                                       JS::Handle<JSObject*> proxy,
-                                      bool *succeeded) const
+                                      JS::ObjectOpResult& result) const
 {
   // If [[Extensible]] could be false, then navigating a window could navigate
   // to a window that's [[Extensible]] after being at one that wasn't: an
   // invariant violation.  So never change a window's extensibility.
-  *succeeded = false;
-  return true;
+  return result.failCantPreventExtensions();
 }
 
 bool
@@ -917,19 +913,17 @@ bool
 nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
                         JS::Handle<JSObject*> receiver,
                         JS::Handle<jsid> id,
-                        bool strict,
-                        JS::MutableHandle<JS::Value> vp) const
+                        JS::MutableHandle<JS::Value> vp,
+                        JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
     // Reject (which means throw if and only if strict) the set.
-    if (strict) {
-      // XXXbz This needs to throw, but see bug 828137.
-    }
-    return true;
+    // XXX See bug 828137.
+    return result.succeed();
   }
 
-  return js::Wrapper::set(cx, proxy, receiver, id, strict, vp);
+  return js::Wrapper::set(cx, proxy, receiver, id, vp, result);
 }
 
 bool
@@ -2603,7 +2597,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       SetWrapper(outerObject);
 
-      MOZ_ASSERT(js::GetObjectParent(outerObject) == newInnerGlobal);
+      MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(outerObject) == newInnerGlobal);
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outerObject);

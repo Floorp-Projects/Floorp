@@ -351,7 +351,7 @@ js::InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     if (!NativeDefineProperty(cx, proto, byteLengthId, UndefinedHandleValue,
-                              JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, attrs))
+                              JS_DATA_TO_FUNC_PTR(GetterOp, getter), nullptr, attrs))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, ctor, SharedArrayBufferObject::jsstaticfuncs))

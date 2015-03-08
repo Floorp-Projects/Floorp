@@ -18,10 +18,3 @@ BEGIN_TEST(selfTest_NaNsAreSame)
     return true;
 }
 END_TEST(selfTest_NaNsAreSame)
-
-BEGIN_TEST(selfTest_globalHasNoParent)
-{
-    CHECK(JS_GetParent(global) == nullptr);
-    return true;
-}
-END_TEST(selfTest_globalHasNoParent)

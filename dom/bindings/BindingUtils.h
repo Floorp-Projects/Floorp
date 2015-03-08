@@ -349,7 +349,6 @@ class ProtoAndIfaceCache
     }
 
     JS::Heap<JSObject*>& EntrySlotMustExist(size_t i) {
-      MOZ_ASSERT((*this)[i]);
       return (*this)[i];
     }
 
@@ -473,14 +472,21 @@ public:
     }                                                \
   } while(0)
 
+  // Return the JSObject stored in slot i, if that slot exists.  If
+  // the slot does not exist, return null.
   JSObject* EntrySlotIfExists(size_t i) {
     FORWARD_OPERATION(EntrySlotIfExists, (i));
   }
 
+  // Return a reference to slot i, creating it if necessary.  There
+  // may not be an object in the returned slot.
   JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) {
     FORWARD_OPERATION(EntrySlotOrCreate, (i));
   }
 
+  // Return a reference to slot i, which is guaranteed to already
+  // exist.  There may not be an object in the slot, if prototype and
+  // constructor initialization for one of our bindings failed.
   JS::Heap<JSObject*>& EntrySlotMustExist(size_t i) {
     FORWARD_OPERATION(EntrySlotMustExist, (i));
   }
@@ -2450,12 +2456,17 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
  * wrapper is the Xray JS object.
  * obj is the target object of the Xray, a binding's instance object or a
  *     interface or interface prototype object.
+ * id and desc are the parameters for the property to be defined.
+ * result is the out-parameter indicating success (read it only if
+ *     this returns true and also sets *defined to true).
  * defined will be set to true if a property was set as a result of this call.
  */
 bool
 XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined);
+                   JS::MutableHandle<JSPropertyDescriptor> desc,
+                   JS::ObjectOpResult &result,
+                   bool *defined);
 
 /**
  * Add to props the property keys of all indexed or named properties of obj and
@@ -2658,15 +2669,6 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
 // returns false, we couldn't even get a global.
 bool
 ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj);
-
-inline JSObject*
-GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
-{
-  ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
-  JSObject* interfaceProto = protoAndIfaceCache.EntrySlotMustExist(aId);
-  return &js::GetReservedSlot(interfaceProto,
-                              DOM_INTERFACE_PROTO_SLOTS_BASE).toObject();
-}
 
 // Given a JSObject* that represents the chrome side of a JS-implemented WebIDL
 // interface, get the nsIGlobalObject corresponding to the content side, if any.

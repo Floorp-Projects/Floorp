@@ -3271,10 +3271,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
   mUnifiedToolbarHeight = aHeight;
 
-  // Update sheet positioning hint
-  CGFloat topMargin = mUnifiedToolbarHeight - [self titlebarHeight];
-  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
-
   // Redraw the title bar. If we're inside painting, we'll do it right now,
   // otherwise we'll just invalidate it.
   BOOL needSyncRedraw = ([NSView focusView] != nil);
@@ -3312,6 +3308,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   [super setWantsTitleDrawn:aDrawTitle];
   [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
+}
+
+- (void)setSheetAttachmentPosition:(CGFloat)aY
+{
+  CGFloat topMargin = aY - [self titlebarHeight];
+  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
 }
 
 - (void)placeWindowButtons:(NSRect)aRect

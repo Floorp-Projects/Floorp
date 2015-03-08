@@ -1757,7 +1757,8 @@ ReportPropertyError(JSContext *cx,
 
 bool
 TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                                GetterOp getter, SetterOp setter, unsigned attrs,
+                                ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     return ReportTypedObjTypeError(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, typedObj);
@@ -1909,7 +1910,7 @@ TypedObject::obj_getArrayElement(JSContext *cx,
 
 bool
 TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                             MutableHandleValue vp, bool strict)
+                             MutableHandleValue vp, ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
 
@@ -1928,13 +1929,13 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
                                      nullptr, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
                 return false;
             }
-            return SetNonWritableProperty(cx, id, strict);
+            return result.failReadOnly();
         }
 
         uint32_t index;
         if (IdIsIndex(id, &index)) {
             if (obj != receiver)
-                return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+                return SetPropertyByDefining(cx, obj, receiver, id, vp, false, result);
 
             if (index >= uint32_t(typedObj->length())) {
                 JS_ReportErrorNumber(cx, GetErrorMessage,
@@ -1945,7 +1946,9 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
             Rooted<TypeDescr*> elementType(cx);
             elementType = &typedObj->typeDescr().as<ArrayTypeDescr>().elementType();
             size_t offset = elementType->size() * index;
-            return ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp);
+            if (!ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp))
+                return false;
+            return result.succeed();
         }
         break;
       }
@@ -1958,16 +1961,18 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject recei
             break;
 
         if (obj != receiver)
-            return SetPropertyByDefining(cx, obj, receiver, id, vp, strict, false);
+            return SetPropertyByDefining(cx, obj, receiver, id, vp, false, result);
 
         size_t offset = descr->fieldOffset(fieldIndex);
         Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
         RootedAtom fieldName(cx, &descr->fieldName(fieldIndex));
-        return ConvertAndCopyTo(cx, fieldType, typedObj, offset, fieldName, vp);
+        if (!ConvertAndCopyTo(cx, fieldType, typedObj, offset, fieldName, vp))
+            return false;
+        return result.succeed();
       }
     }
 
-    return SetPropertyOnProto(cx, obj, receiver, id, vp, strict);
+    return SetPropertyOnProto(cx, obj, receiver, id, vp, result);
 }
 
 bool
@@ -2054,18 +2059,16 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
 }
 
 bool
-TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id, ObjectOpResult &result)
 {
     if (IsOwnId(cx, obj, id))
         return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
 
     RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        *succeeded = false;
-        return true;
-    }
+    if (!proto)
+        return result.succeed();
 
-    return DeleteProperty(cx, proto, id, succeeded);
+    return DeleteProperty(cx, proto, id, result);
 }
 
 bool

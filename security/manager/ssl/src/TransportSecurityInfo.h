@@ -74,7 +74,7 @@ public:
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
   nsSSLStatus* SSLStatus() { return mSSLStatus; }
-  void SetStatusErrorBits(nsIX509Cert & cert, uint32_t collected_errors);
+  void SetStatusErrorBits(nsNSSCertificate* cert, uint32_t collected_errors);
 
   nsresult SetFailedCertChain(ScopedCERTCertList& certList);
 

@@ -7,6 +7,7 @@ from __future__ import print_function, unicode_literals
 from mach.decorators import (
     CommandProvider,
     Command,
+    CommandArgument,
 )
 
 
@@ -22,11 +23,16 @@ class BuiltinCommands(object):
 
     @Command('mach-debug-commands', category='misc',
         description='Show info about available mach commands.')
-    def debug_commands(self):
+    @CommandArgument('match', metavar='MATCH', default=None, nargs='?',
+        help='Only display commands containing given substring.')
+    def debug_commands(self, match=None):
         import inspect
 
         handlers = self.context.commands.command_handlers
         for command in sorted(handlers.keys()):
+            if match and match not in command:
+                continue
+
             handler = handlers[command]
             cls = handler.cls
             method = getattr(cls, getattr(handler, 'method'))

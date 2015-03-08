@@ -473,8 +473,7 @@ js::NativeObject::toDictionaryMode(ExclusiveContext *cx)
 
 /* static */ Shape *
 NativeObject::addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                          PropertyOp getter, StrictPropertyOp setter,
-                          uint32_t slot, unsigned attrs,
+                          GetterOp getter, SetterOp setter, uint32_t slot, unsigned attrs,
                           unsigned flags, bool allowDictionary)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
@@ -513,7 +512,7 @@ ShouldConvertToDictionary(NativeObject *obj)
 /* static */ Shape *
 NativeObject::addPropertyInternal(ExclusiveContext *cx,
                                   HandleNativeObject obj, HandleId id,
-                                  PropertyOp getter, StrictPropertyOp setter,
+                                  GetterOp getter, SetterOp setter,
                                   uint32_t slot, unsigned attrs,
                                   unsigned flags, ShapeTable::Entry *entry,
                                   bool allowDictionary)
@@ -679,8 +678,8 @@ CheckCanChangeAttrs(ExclusiveContext *cx, JSObject *obj, Shape *shape, unsigned 
 
 /* static */ Shape *
 NativeObject::putProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                          PropertyOp getter, StrictPropertyOp setter,
-                          uint32_t slot, unsigned attrs, unsigned flags)
+                          GetterOp getter, SetterOp setter, uint32_t slot, unsigned attrs,
+                          unsigned flags)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(getter != JS_PropertyStub);
@@ -868,9 +867,8 @@ NativeObject::putProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId
 }
 
 /* static */ Shape *
-NativeObject::changeProperty(ExclusiveContext *cx, HandleNativeObject obj,
-                             HandleShape shape, unsigned attrs,
-                             unsigned mask, PropertyOp getter, StrictPropertyOp setter)
+NativeObject::changeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleShape shape,
+                             unsigned attrs, unsigned mask, GetterOp getter, SetterOp setter)
 {
     MOZ_ASSERT(obj->containsPure(shape));
     MOZ_ASSERT(getter != JS_PropertyStub);

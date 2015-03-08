@@ -37,7 +37,6 @@
 
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
-#include "nsWindowsHelpers.h"
 #include "PluginHangUIParent.h"
 #endif
 
@@ -113,6 +112,67 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
     }
     return PPluginModule::Bridge(aContentParent, chromeParent);
 }
+
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+
+/**
+ * Use for executing CreateToolhelp32Snapshot off main thread
+ */
+class mozilla::plugins::FinishInjectorInitTask : public CancelableTask
+{
+public:
+    FinishInjectorInitTask()
+        : mMutex("FlashInjectorInitTask::mMutex")
+        , mParent(nullptr)
+        , mMainThreadMsgLoop(MessageLoop::current())
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+    }
+
+    void Init(PluginModuleChromeParent* aParent)
+    {
+        MOZ_ASSERT(aParent);
+        mParent = aParent;
+    }
+
+    void PostToMainThread()
+    {
+        mSnapshot.own(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+        bool deleteThis = false;
+        {   // Scope for lock
+            mozilla::MutexAutoLock lock(mMutex);
+            if (mMainThreadMsgLoop) {
+                mMainThreadMsgLoop->PostTask(FROM_HERE, this);
+            } else {
+                deleteThis = true;
+            }
+        }
+        if (deleteThis) {
+            delete this;
+        }
+    }
+
+    void Run() MOZ_OVERRIDE
+    {
+        mParent->DoInjection(mSnapshot);
+    }
+
+    void Cancel() MOZ_OVERRIDE
+    {
+        mozilla::MutexAutoLock lock(mMutex);
+        mMainThreadMsgLoop = nullptr;
+    }
+
+private:
+    mozilla::Mutex            mMutex;
+    nsAutoHandle              mSnapshot;
+    PluginModuleChromeParent* mParent;
+    MessageLoop*              mMainThreadMsgLoop;
+};
+
+#endif // MOZ_CRASHREPORTER_INJECTOR
+
+namespace {
 
 /**
  * Objects of this class remain linked until either an error occurs in the
@@ -263,6 +323,8 @@ PRCList PluginModuleMapping::sModuleListHead =
     PR_INIT_STATIC_CLIST(&PluginModuleMapping::sModuleListHead);
 
 bool PluginModuleMapping::sIsLoadModuleOnStack = false;
+
+} // anonymous namespace
 
 void
 mozilla::plugins::TerminatePlugin(uint32_t aPluginId)
@@ -586,6 +648,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath, uint32
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
     , mFlashProcess2(0)
+    , mFinishInitTask(nullptr)
 #endif
     , mInitOnAsyncConnect(false)
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
@@ -633,6 +696,10 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
         UnregisterInjectorCallback(mFlashProcess1);
     if (mFlashProcess2)
         UnregisterInjectorCallback(mFlashProcess2);
+    if (mFinishInitTask) {
+        // mFinishInitTask will be deleted by the main thread message_loop
+        mFinishInitTask->Cancel();
+    }
 #endif
 
     UnregisterSettingsCallbacks();
@@ -2606,22 +2673,41 @@ PluginModuleChromeParent::InitializeInjector()
         return;
 
     TimeStamp th32Start = TimeStamp::Now();
-    nsAutoHandle snapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (INVALID_HANDLE_VALUE == snapshot)
+    mFinishInitTask = mChromeTaskFactory.NewTask<FinishInjectorInitTask>();
+    mFinishInitTask->Init(this);
+    if (!::QueueUserWorkItem(&PluginModuleChromeParent::GetToolhelpSnapshot,
+                             mFinishInitTask, WT_EXECUTEDEFAULT)) {
+        delete mFinishInitTask;
+        mFinishInitTask = nullptr;
         return;
+    }
     TimeStamp th32End = TimeStamp::Now();
     mTimeBlocked += (th32End - th32Start);
+}
 
+void
+PluginModuleChromeParent::DoInjection(const nsAutoHandle& aSnapshot)
+{
     DWORD pluginProcessPID = GetProcessId(Process()->GetChildProcessHandle());
-    mFlashProcess1 = GetFlashChildOfPID(pluginProcessPID, snapshot);
+    mFlashProcess1 = GetFlashChildOfPID(pluginProcessPID, aSnapshot);
     if (mFlashProcess1) {
         InjectCrashReporterIntoProcess(mFlashProcess1, this);
 
-        mFlashProcess2 = GetFlashChildOfPID(mFlashProcess1, snapshot);
+        mFlashProcess2 = GetFlashChildOfPID(mFlashProcess1, aSnapshot);
         if (mFlashProcess2) {
             InjectCrashReporterIntoProcess(mFlashProcess2, this);
         }
     }
+    mFinishInitTask = nullptr;
+}
+
+DWORD WINAPI
+PluginModuleChromeParent::GetToolhelpSnapshot(LPVOID aContext)
+{
+    FinishInjectorInitTask* task = static_cast<FinishInjectorInitTask*>(aContext);
+    MOZ_ASSERT(task);
+    task->PostToMainThread();
+    return 0;
 }
 
 void

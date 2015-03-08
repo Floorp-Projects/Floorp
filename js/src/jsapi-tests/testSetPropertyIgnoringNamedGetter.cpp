@@ -28,13 +28,13 @@ class CustomProxyHandler : public DirectProxyHandler {
     }
 
     bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-             HandleId id, bool strict, MutableHandleValue vp) const MOZ_OVERRIDE
+             HandleId id, MutableHandleValue vp, ObjectOpResult &result) const MOZ_OVERRIDE
     {
         Rooted<JSPropertyDescriptor> desc(cx);
         if (!DirectProxyHandler::getPropertyDescriptor(cx, proxy, id, &desc))
             return false;
         return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc,
-                                              desc.object() == proxy, strict, vp);
+                                              desc.object() == proxy, vp, result);
     }
 
   private:

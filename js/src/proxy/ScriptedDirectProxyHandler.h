@@ -22,29 +22,32 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                MutableHandle<JSPropertyDescriptor> desc,
+                                ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const MOZ_OVERRIDE;
 
     /* These two are standard internal methods but aren't implemented to spec yet. */
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
-                                MutableHandleObject protop) const MOZ_OVERRIDE;
-    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
-                                bool *bp) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy,
+                              MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult &result) const MOZ_OVERRIDE;
     /* Non-standard, but needed to handle revoked proxies. */
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
 
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
 
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                      MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-                     bool strict, MutableHandleValue vp) const MOZ_OVERRIDE;
+                     MutableHandleValue vp, ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
 

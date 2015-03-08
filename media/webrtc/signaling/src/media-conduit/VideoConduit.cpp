@@ -982,11 +982,14 @@ WebrtcVideoConduit::SelectSendFrameRate(unsigned int framerate)
 
     cur_fs = mb_width * mb_height;
     max_fps = mCurSendCodecConfig->mMaxMBPS/cur_fs;
-    if (max_fps < mSendingFramerate)
+    if (max_fps < mSendingFramerate) {
       mSendingFramerate = max_fps;
+    }
 
-    if (mCurSendCodecConfig->mMaxFrameRate < mSendingFramerate)
+    if (mCurSendCodecConfig->mMaxFrameRate != 0 &&
+      mCurSendCodecConfig->mMaxFrameRate < mSendingFramerate) {
       mSendingFramerate = mCurSendCodecConfig->mMaxFrameRate;
+    }
   }
   if (mSendingFramerate != framerate)
   {

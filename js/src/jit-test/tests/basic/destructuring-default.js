@@ -166,18 +166,32 @@ assertEq(evaled, true);
 assertThrowsInstanceOf(() => new Function('var [...rest = defaults] = [];'), SyntaxError);
 
 // bug 1124480: destructuring defaults should work correctly as part of for-in
-b = undefined;
-for (var [a, b = 10] in " ") {}
-assertEq(b, 10);
+var defaultsSupportedInForVar = false;
+try
+{
+  new Function('for (var [a, b = 10] in " ") {}');
+  defaultsSupportedInForVar = true;
+}
+catch (e)
+{
+}
 
-b = undefined;
-for (let [a, c = 10] in " ") { b = c; }
-assertEq(b, 10);
+if (defaultsSupportedInForVar) {
+  new Function(`
+    b = undefined;
+    for (var [a, b = 10] in " ") {}
+    assertEq(b, 10);
 
-b = undefined;
-for (var {1: b = 10} in " ") {}
-assertEq(b, 10);
+    b = undefined;
+    for (let [a, c = 10] in " ") { b = c; }
+    assertEq(b, 10);
 
-b = undefined;
-for (let {1: c = 10} in " ") { b = c; }
-assertEq(b, 10);
+    b = undefined;
+    for (var {1: b = 10} in " ") {}
+    assertEq(b, 10);
+
+    b = undefined;
+    for (let {1: c = 10} in " ") { b = c; }
+    assertEq(b, 10);
+  `)();
+}

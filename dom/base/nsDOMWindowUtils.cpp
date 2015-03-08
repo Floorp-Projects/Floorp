@@ -1030,9 +1030,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
 
   wheelEvent.refPoint = ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
-  nsEventStatus status;
-  nsresult rv = widget->DispatchEvent(&wheelEvent, status);
-  NS_ENSURE_SUCCESS(rv, rv);
+  widget->DispatchAPZAwareEvent(&wheelEvent);
 
   bool failedX = false;
   if ((aOptions & WHEEL_EVENT_EXPECTED_OVERFLOW_DELTA_X_ZERO) &&

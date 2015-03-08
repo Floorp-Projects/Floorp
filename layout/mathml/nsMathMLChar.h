@@ -163,19 +163,11 @@ public:
   //
   // @param aStretchHint can be the value that will be passed to Stretch().
   // It is used to determine whether the operator is stretchy or a largeop.
-  // @param aMaxSize is the value of the "maxsize" attribute.
-  // @param aMaxSizeIsAbsolute indicates whether the aMaxSize is an absolute
-  // value in app units (true) or a multiplier of the base size (false).
   nscoord
   GetMaxWidth(nsPresContext* aPresContext,
               nsRenderingContext& aRenderingContext,
               float aFontSizeInflation,
-              uint32_t aStretchHint = NS_STRETCH_NORMAL,
-              float aMaxSize = NS_MATHML_OPERATOR_SIZE_INFINITY,
-              // Perhaps just nsOperatorFlags aFlags.
-              // But need DisplayStyle for largeOp,
-              // or remove the largeop bit from flags.
-              bool aMaxSizeIsAbsolute = false);
+              uint32_t aStretchHint = NS_STRETCH_NORMAL);
 
   // Metrics that _exactly_ enclose the char. The char *must* have *already*
   // being stretched before you can call the GetBoundingMetrics() method.
