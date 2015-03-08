@@ -91,6 +91,9 @@ child:
     returns(nsIntRect aRetVal);
   prio(high) sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
     returns(nsIntRect aRetVal);
+
+  prio(high) sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
+    returns(int32_t aRetVal);
 };
 
 }

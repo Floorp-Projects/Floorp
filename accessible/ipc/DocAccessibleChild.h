@@ -121,6 +121,12 @@ public:
                               const int32_t& aOffset,
                               const uint32_t& aCoordType,
                               nsIntRect* aRetVal) MOZ_OVERRIDE;
+
+  virtual bool RecvOffsetAtPoint(const uint64_t& aID,
+                                 const int32_t& aX,
+                                 const int32_t& aY,
+                                 const uint32_t& aCoordType,
+                                 int32_t* aRetVal) MOZ_OVERRIDE;
 private:
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);

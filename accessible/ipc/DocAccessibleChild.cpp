@@ -392,5 +392,20 @@ DocAccessibleChild::RecvCharBounds(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvOffsetAtPoint(const uint64_t& aID,
+                                      const int32_t& aX,
+                                      const int32_t& aY,
+                                      const uint32_t& aCoordType,
+                                      int32_t* aRetVal)
+{
+  *aRetVal = -1;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aRetVal = acc->OffsetAtPoint(aX, aY, aCoordType);
+  }
+  return true;
+}
+
 }
 }
