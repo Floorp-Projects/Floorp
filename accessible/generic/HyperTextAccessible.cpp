@@ -977,25 +977,8 @@ HyperTextAccessible::NativeAttributes()
     }
   }
 
-  if (!HasOwnContent())
-    return attributes.forget();
-
-  if (mContent->IsHTMLElement(nsGkAtoms::section)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("region"));
-  } else if (mContent->IsHTMLElement(nsGkAtoms::article)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("article"));
-  } else if (mContent->IsHTMLElement(nsGkAtoms::time)) {
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                           NS_LITERAL_STRING("time"));
-
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::datetime)) {
-      nsAutoString datetime;
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::datetime, datetime);
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::datetime, datetime);
-    }
-  }
+  if (HasOwnContent())
+    GetAccService()->MarkupAttributes(mContent, attributes);
 
   return attributes.forget();
 }

@@ -17,6 +17,7 @@
 #include "nsIObserver.h"
 
 class nsImageFrame;
+class nsIPersistentProperties;
 class nsPluginFrame;
 class nsITreeView;
 
@@ -44,10 +45,19 @@ xpcAccessibleApplication* XPCApplicationAcc();
 
 typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
 
+struct MarkupAttrInfo {
+  nsIAtom** name;
+  nsIAtom** value;
+
+  nsIAtom** DOMAttrName;
+  nsIAtom** DOMAttrValue;
+};
+
 struct MarkupMapInfo {
   nsIAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
+  MarkupAttrInfo attrs[2];
 };
 
 } // namespace a11y
@@ -181,6 +191,12 @@ public:
       mMarkupMaps.Get(aContent->NodeInfo()->NameAtom());
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
+
+  /**
+   * Set the object attribute defined by markup for the given element.
+   */
+  void MarkupAttributes(const nsIContent* aContent,
+                        nsIPersistentProperties* aAttributes) const;
 
 private:
   // nsAccessibilityService creation is controlled by friend

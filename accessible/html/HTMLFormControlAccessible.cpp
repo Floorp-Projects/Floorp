@@ -89,7 +89,7 @@ HTMLCheckboxAccessible::NativeState()
 
   if (input->Checked())
     return state | states::CHECKED;
-           
+ 
   return state;
 }
 
@@ -770,18 +770,6 @@ HTMLFigureAccessible::
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
-}
-
-already_AddRefed<nsIPersistentProperties>
-HTMLFigureAccessible::NativeAttributes()
-{
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    HyperTextAccessibleWrap::NativeAttributes();
-
-  // Expose figure xml-role.
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                         NS_LITERAL_STRING("figure"));
-  return attributes.forget();
 }
 
 ENameValueFlag
