@@ -4636,7 +4636,7 @@ mozilla::BrowserTabsRemoteAutostart()
     if (gSafeMode) {
       LogE10sBlockedReason("Safe mode");
     } else if (disabledForA11y) {
-      LogE10sBlockedReason("An accessibility tool is active");
+      LogE10sBlockedReason("An accessibility tool is or was active. See bug 1115956.");
     } else if (disabledForIME) {
       LogE10sBlockedReason("The keyboard being used has activated IME");
     } else {
