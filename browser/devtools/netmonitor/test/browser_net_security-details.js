@@ -37,7 +37,7 @@ add_task(function* () {
   is(infobox.hidden, false, "Information box visible.");
 
   // Connection
-  checkLabel("#security-protocol-version-value", "TLSv1");
+  checkLabel("#security-protocol-version-value", "TLSv1.2");
   checkLabel("#security-ciphersuite-value", "TLS_RSA_WITH_AES_128_CBC_SHA");
 
   // Host

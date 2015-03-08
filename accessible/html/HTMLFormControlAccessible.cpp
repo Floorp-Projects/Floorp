@@ -89,7 +89,7 @@ HTMLCheckboxAccessible::NativeState()
 
   if (input->Checked())
     return state | states::CHECKED;
-           
+ 
   return state;
 }
 
@@ -762,12 +762,6 @@ HTMLLegendAccessible::RelationByType(RelationType aType)
   return rel;
 }
 
-role
-HTMLLegendAccessible::NativeRole()
-{
-  return roles::LABEL;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLFigureAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -776,24 +770,6 @@ HTMLFigureAccessible::
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
-}
-
-already_AddRefed<nsIPersistentProperties>
-HTMLFigureAccessible::NativeAttributes()
-{
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    HyperTextAccessibleWrap::NativeAttributes();
-
-  // Expose figure xml-role.
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
-                         NS_LITERAL_STRING("figure"));
-  return attributes.forget();
-}
-
-role
-HTMLFigureAccessible::NativeRole()
-{
-  return roles::FIGURE;
 }
 
 ENameValueFlag
@@ -842,12 +818,6 @@ HTMLFigcaptionAccessible::
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
-}
-
-role
-HTMLFigcaptionAccessible::NativeRole()
-{
-  return roles::CAPTION;
 }
 
 Relation

@@ -33,6 +33,21 @@ loop.OTSdkDriver = (function() {
         "setupStreamElements",
         "setMute"
       ]);
+
+    /**
+     * XXX This is a workaround for desktop machines that do not have a
+     * camera installed. As we don't yet have device enumeration, when
+     * we do, this can be removed (bug 1138851), and the sdk should handle it.
+     */
+    if ("isDesktop" in options && options.isDesktop &&
+        !window.MediaStreamTrack.getSources) {
+      // If there's no getSources function, the sdk defines its own and caches
+      // the result. So here we define the "normal" one which doesn't get cached, so
+      // we can change it later.
+      window.MediaStreamTrack.getSources = function(callback) {
+        callback([{kind: "audio"}, {kind: "video"}]);
+      };
+    }
   };
 
   OTSdkDriver.prototype = {
@@ -57,9 +72,19 @@ loop.OTSdkDriver = (function() {
       this.getRemoteElement = actionData.getRemoteElementFunc;
       this.publisherConfig = actionData.publisherConfig;
 
+      this.sdk.on("exception", this._onOTException.bind(this));
+
       // At this state we init the publisher, even though we might be waiting for
       // the initial connect of the session. This saves time when setting up
       // the media.
+      this._publishLocalStreams();
+    },
+
+    /**
+     * Internal function to publish a local stream.
+     * XXX This can be simplified when bug 1138851 is actioned.
+     */
+    _publishLocalStreams: function() {
       this.publisher = this.sdk.initPublisher(this.getLocalElement(),
         this._getCopyPublisherConfig());
       this.publisher.on("streamCreated", this._onLocalStreamCreated.bind(this));
@@ -67,6 +92,17 @@ loop.OTSdkDriver = (function() {
       this.publisher.on("accessDenied", this._onPublishDenied.bind(this));
       this.publisher.on("accessDialogOpened",
         this._onAccessDialogOpened.bind(this));
+    },
+
+    /**
+     * Forces the sdk into not using video, and starts publishing again.
+     * XXX This is part of the work around that will be removed by bug 1138851.
+     */
+    retryPublishWithoutVideo: function() {
+      window.MediaStreamTrack.getSources = function(callback) {
+        callback([{kind: "audio"}]);
+      };
+      this._publishLocalStreams();
     },
 
     /**
@@ -434,6 +470,22 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
         reason: FAILURE_DETAILS.MEDIA_DENIED
       }));
+    },
+
+    _onOTException: function(event) {
+      if (event.code === OT.ExceptionCodes.UNABLE_TO_PUBLISH &&
+          event.message === "GetUserMedia") {
+        // We free up the publisher here in case the store wants to try
+        // grabbing the media again.
+        if (this.publisher) {
+          this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
+          this.publisher.destroy();
+          delete this.publisher;
+        }
+        this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+          reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+        }));
+      }
     },
 
     /**
