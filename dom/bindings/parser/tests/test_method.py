@@ -169,3 +169,16 @@ def WebIDLTest(parser, harness):
     except Exception, x:
         threw = True
     harness.ok(threw, "Should spell [Throws] correctly on methods")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            void __noSuchMethod__();
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should not allow __noSuchMethod__ methods")

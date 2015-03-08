@@ -154,7 +154,6 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_DOM_WINDOW_DUMP_ENABLED "browser.dom.window.dump.enabled"
 #endif
 
-#define PREF_DOM_FETCH_ENABLED         "dom.fetch.enabled"
 #define PREF_DOM_CACHES_ENABLED        "dom.caches.enabled"
 #define PREF_WORKERS_LATEST_JS_VERSION "dom.workers.latestJSVersion"
 #define PREF_INTL_ACCEPT_LANGUAGES     "intl.accept_languages"
@@ -1423,6 +1422,13 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     NS_ASSERTION(!sharedWorkerScriptSpec.IsEmpty(), "Empty spec!");
   }
 
+  bool exemptFromPerDomainMax = false;
+  if (aWorkerPrivate->IsServiceWorker()) {
+    AssertIsOnMainThread();
+    exemptFromPerDomainMax = Preferences::GetBool("dom.serviceWorkers.exemptFromPerDomainMax",
+                                                  false);
+  }
+
   const nsCString& domain = aWorkerPrivate->Domain();
 
   WorkerDomainInfo* domainInfo;
@@ -1440,7 +1446,8 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     queued = gMaxWorkersPerDomain &&
              domainInfo->ActiveWorkerCount() >= gMaxWorkersPerDomain &&
-             !domain.IsEmpty();
+             !domain.IsEmpty() &&
+             !exemptFromPerDomainMax;
 
     if (queued) {
       domainInfo->mQueuedWorkers.AppendElement(aWorkerPrivate);
@@ -1828,10 +1835,6 @@ RuntimeService::Init()
 #endif
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                   WorkerPrefChanged,
-                                  PREF_DOM_FETCH_ENABLED,
-                                  reinterpret_cast<void *>(WORKERPREF_DOM_FETCH))) ||
-      NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                  WorkerPrefChanged,
                                   PREF_DOM_CACHES_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DOM_CACHES))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
@@ -2027,10 +2030,6 @@ RuntimeService::Cleanup()
                                   WorkerPrefChanged,
                                   PREF_DOM_CACHES_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DOM_CACHES))) ||
-        NS_FAILED(Preferences::UnregisterCallback(
-                                  WorkerPrefChanged,
-                                  PREF_DOM_FETCH_ENABLED,
-                                  reinterpret_cast<void *>(WORKERPREF_DOM_FETCH))) ||
 #if DUMP_CONTROLLED_BY_PREF
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
@@ -2560,18 +2559,11 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
   }
 #endif
 
-  if (key == WORKERPREF_DOM_FETCH) {
-    key = WORKERPREF_DOM_FETCH;
-    sDefaultPreferences[WORKERPREF_DOM_FETCH] =
-      Preferences::GetBool(PREF_DOM_FETCH_ENABLED, false);
-  }
-
   if (key == WORKERPREF_DOM_CACHES) {
     key = WORKERPREF_DOM_CACHES;
     sDefaultPreferences[WORKERPREF_DOM_CACHES] =
       Preferences::GetBool(PREF_DOM_CACHES_ENABLED, false);
   }
-
   // This function should never be registered as a callback for a preference it
   // does not handle.
   MOZ_ASSERT(key != WORKERPREF_COUNT);

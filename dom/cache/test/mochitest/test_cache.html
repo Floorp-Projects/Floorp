@@ -13,8 +13,7 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  "set": [["dom.caches.enabled", true],
-          ["dom.fetch.enabled", true]]
+  "set": [["dom.caches.enabled", true]]
 }, function() {
   var frame = document.getElementById("frame");
   frame.src = "test_cache_frame.html";

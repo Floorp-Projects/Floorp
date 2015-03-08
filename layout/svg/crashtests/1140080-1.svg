@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+
+window.addEventListener("load", function() {
+    var stop = document.getElementsByTagName("stop")[0];
+    stop.setAttribute("offset", "0");
+}, false);
+
+</script>
+<stop/>
+</svg>

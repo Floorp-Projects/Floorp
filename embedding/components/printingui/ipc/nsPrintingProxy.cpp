@@ -95,17 +95,24 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
   rv = po->SerializeToPrintData(printSettings, webBrowserPrint, &inSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PrintData modifiedSettings;
-  bool success;
+  // Now, the waiting game. The parent process should be showing
+  // the printing dialog soon. In the meantime, we need to spin a
+  // nested event loop while we wait for the results of the dialog
+  // to be returned to us.
 
-  mozilla::unused << SendShowPrintDialog(pBrowser, inSettings, &modifiedSettings, &success);
+  nsRefPtr<PrintSettingsDialogChild> dialog = new PrintSettingsDialogChild();
+  SendPPrintSettingsDialogConstructor(dialog);
 
-  if (!success) {
-    // Something failed in the parent.
-    return NS_ERROR_FAILURE;
+  mozilla::unused << SendShowPrintDialog(dialog, pBrowser, inSettings);
+
+  while(!dialog->returned()) {
+    NS_ProcessNextEvent(nullptr, true);
   }
 
-  rv = po->DeserializeToPrintSettings(modifiedSettings, printSettings);
+  rv = dialog->result();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = po->DeserializeToPrintSettings(dialog->data(), printSettings);
   return NS_OK;
 }
 
@@ -205,4 +212,22 @@ nsPrintingProxy::DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aAc
   NS_NOTREACHED("Deallocator for PPrintProgressDialogChild should not be "
                 "called on nsPrintingProxy.");
   return false;
+}
+
+PPrintSettingsDialogChild*
+nsPrintingProxy::AllocPPrintSettingsDialogChild()
+{
+  // The parent process will never initiate the PPrintSettingsDialog
+  // protocol connection, so no need to provide an allocator here.
+  NS_NOTREACHED("Allocator for PPrintSettingsDialogChild should not be "
+                "called on nsPrintingProxy.");
+  return nullptr;
+}
+
+bool
+nsPrintingProxy::DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor)
+{
+  // The PrintSettingsDialogChild implements refcounting, and
+  // will take itself out.
+  return true;
 }

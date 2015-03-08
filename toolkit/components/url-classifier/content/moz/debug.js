@@ -838,6 +838,30 @@ if (G_GDEBUG) {
 this.G_Debug = function G_Debug(who, msg) { }
 this.G_Assert = function G_Assert(who, condition, msg) { }
 this.G_Error = function G_Error(who, msg) { }
-this.G_debugService = { __noSuchMethod__: function() { } };
+this.G_debugService = {
+    alsoDumpToConsole: () => {},
+    logFileIsEnabled: () => {},
+    enableLogFile: () => {},
+    disableLogFile: () => {},
+    getLogFile: () => {},
+    setLogFile: () => {},
+    enableDumpToConsole: () => {},
+    disableDumpToConsole: () => {},
+    getZone: () => {},
+    enableZone: () => {},
+    disableZone: () => {},
+    allZonesEnabled: () => {},
+    enableAllZones: () => {},
+    disableAllZones: () => {},
+    callTracingEnabled: () => {},
+    enableCallTracing: () => {},
+    disableCallTracing: () => {},
+    getLogFileErrorLevel: () => {},
+    setLogFileErrorLevel: () => {},
+    dump: () => {},
+    maybeDumpToFile: () => {},
+    observe: () => {},
+    reportScriptError_: () => {}
+};
 
 #endif

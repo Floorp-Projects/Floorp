@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.style.display = "contents";
+  document.designMode = 'on';
+  document.documentElement.insertAdjacentHTML("beforeEnd", "<span><optgroup>");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
