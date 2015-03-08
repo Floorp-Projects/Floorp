@@ -29,7 +29,6 @@ class nsAXPCNativeCallContext;
 [ptr] native JSFreeOpPtr(JSFreeOp);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValConstPtr(const JS::Value);
-      native JSPropertyOp(JSPropertyOp);
       native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
 [ptr] native voidPtrPtr(void*);
@@ -55,13 +54,13 @@ interface nsIObjectInputStream;
 interface nsIObjectOutputStream;
 
 /***************************************************************************/
-[uuid(909e8641-7c54-4dff-9b94-ba631f057b33)]
+[uuid(73e6ff4a-ab99-4d99-ac00-ba39ccb8e4d7)]
 interface nsIXPConnectJSObjectHolder : nsISupports
 {
     [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(cf6b00de-8ff4-443a-932c-b72ff341367a)]
+[uuid(e787be29-db5d-4a45-a3d6-1de1d6b85c30)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -116,7 +115,7 @@ do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
 
 %}
 
-[uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
+[uuid(3a01b0d6-074b-49ed-bac3-08c76366cae4)]
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */

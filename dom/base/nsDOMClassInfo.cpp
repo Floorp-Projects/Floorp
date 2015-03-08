@@ -1174,13 +1174,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   NS_ENSURE_SUCCESS(rv, rv);
   if (!contentDefinedProperty && desc.object() && !desc.value().isUndefined() &&
       !JS_DefineUCProperty(cx, global, mData->mNameUTF16,
-                           NS_strlen(mData->mNameUTF16),
-                           desc.value(),
-                           // Descriptors never store JSNatives for accessors:
-                           // they have either JSFunctions or JSPropertyOps.
-                           desc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                           JS_PROPERTYOP_GETTER(desc.getter()),
-                           JS_PROPERTYOP_SETTER(desc.setter()))) {
+                           NS_strlen(mData->mNameUTF16), desc)) {
     return NS_ERROR_UNEXPECTED;
   }
 

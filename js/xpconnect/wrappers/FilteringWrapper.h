@@ -53,8 +53,8 @@ class FilteringWrapper : public Base {
     virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint,
                               JS::MutableHandleValue vp) const MOZ_OVERRIDE;
 
-    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, JS::HandleObject wrapper,
+                              JS::MutableHandleObject protop) const MOZ_OVERRIDE;
 
     static const FilteringWrapper singleton;
 };
@@ -73,11 +73,12 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                 JS::Handle<jsid> id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                JS::MutableHandle<JSPropertyDescriptor> desc,
+                                JS::ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                  JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                         JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
+                         JS::Handle<jsid> id, JS::ObjectOpResult &result) const MOZ_OVERRIDE;
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,

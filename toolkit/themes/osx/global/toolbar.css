@@ -4,6 +4,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+toolbox {
+  /* Setting -moz-appearance:toolbox causes sheets to attach under the
+   * toolbox and has no other effects. It doesn't render anything. */
+  -moz-appearance: toolbox;
+}
+
 toolbar {
   min-width: 1px;
   min-height: 20px;

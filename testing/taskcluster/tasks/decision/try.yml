@@ -15,6 +15,7 @@ scopes:
 
 tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
+    reruns: 3
     task:
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'

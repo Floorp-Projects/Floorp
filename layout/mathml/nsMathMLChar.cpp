@@ -1823,8 +1823,7 @@ nscoord
 nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
                           nsRenderingContext& aRenderingContext,
                           float aFontSizeInflation,
-                          uint32_t aStretchHint,
-                          float aMaxSize, bool aMaxSizeIsAbsolute)
+                          uint32_t aStretchHint)
 {
   nsBoundingMetrics bm;
   nsStretchDirection direction = NS_STRETCH_DIRECTION_VERTICAL;

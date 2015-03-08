@@ -52,6 +52,7 @@ class OptimizationAttempt
 };
 
 typedef Vector<OptimizationAttempt, 4, JitAllocPolicy> TempOptimizationAttemptsVector;
+typedef Vector<TypeSet::Type, 1, JitAllocPolicy> TempTypeList;
 
 class UniqueTrackedTypes;
 
@@ -59,7 +60,7 @@ class OptimizationTypeInfo
 {
     JS::TrackedTypeSite site_;
     MIRType mirType_;
-    TypeSet::TypeList types_;
+    TempTypeList types_;
 
   public:
     OptimizationTypeInfo(OptimizationTypeInfo &&other)
@@ -68,9 +69,10 @@ class OptimizationTypeInfo
         types_(mozilla::Move(other.types_))
     { }
 
-    OptimizationTypeInfo(JS::TrackedTypeSite site, MIRType mirType)
+    OptimizationTypeInfo(TempAllocator &alloc, JS::TrackedTypeSite site, MIRType mirType)
       : site_(site),
-        mirType_(mirType)
+        mirType_(mirType),
+        types_(alloc)
     { }
 
     bool trackTypeSet(TemporaryTypeSet *typeSet);
@@ -78,7 +80,7 @@ class OptimizationTypeInfo
 
     JS::TrackedTypeSite site() const { return site_; }
     MIRType mirType() const { return mirType_; }
-    const TypeSet::TypeList &types() const { return types_; }
+    const TempTypeList &types() const { return types_; }
 
     bool operator ==(const OptimizationTypeInfo &other) const;
     bool operator !=(const OptimizationTypeInfo &other) const;

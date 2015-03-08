@@ -2179,9 +2179,21 @@ MarionetteServerConnection.prototype = {
    */
   getElementValueOfCssProperty: function MDA_getElementValueOfCssProperty(aRequest){
     let command_id = this.command_id = this.getCommandId();
-    this.sendAsync("getElementValueOfCssProperty",
-                   {id: aRequest.parameters.id, propertyName: aRequest.parameters.propertyName},
-                   command_id);
+    let curWin = this.getCurrentWindow();
+    if (this.context == "chrome") {
+      try {
+        let el = this.curBrowser.elementManager.getKnownElement(aRequest.parameters.id, curWin);
+        this.sendResponse(curWin.document.defaultView.getComputedStyle(el, null).getPropertyValue(
+          aRequest.parameters.propertyName), command_id);
+      } catch (e) {
+        this.sendError(e.message, e.code, e.stack, command_id);
+      }
+    }
+    else {
+      this.sendAsync("getElementValueOfCssProperty",
+                     {id: aRequest.parameters.id, propertyName: aRequest.parameters.propertyName},
+                     command_id);
+    }
   },
 
   /**
@@ -2603,6 +2615,26 @@ MarionetteServerConnection.prototype = {
       return;
     }
     this.sendOk(command_id);
+  },
+
+  /**
+   * Quits the application with the provided flags and tears down the
+   * current session.
+   */
+  quitApplication: function MDA_quitApplication (aRequest) {
+    let command_id = this.getCommandId();
+    if (appName != "Firefox") {
+      this.sendError("In app initiated quit only supported on Firefox", 500, null, command_id);
+    }
+
+    let flagsArray = aRequest.parameters.flags;
+    let flags = Ci.nsIAppStartup.eAttemptQuit;
+    for (let k of flagsArray) {
+      flags |= Ci.nsIAppStartup[k];
+    }
+
+    this.sessionTearDown();
+    Services.startup.quit(flags);
   },
 
   /**
@@ -3287,6 +3319,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "switchToFrame": MarionetteServerConnection.prototype.switchToFrame,
   "switchToWindow": MarionetteServerConnection.prototype.switchToWindow,
   "deleteSession": MarionetteServerConnection.prototype.deleteSession,
+  "quitApplication": MarionetteServerConnection.prototype.quitApplication,
   "emulatorCmdResult": MarionetteServerConnection.prototype.emulatorCmdResult,
   "importScript": MarionetteServerConnection.prototype.importScript,
   "clearImportedScripts": MarionetteServerConnection.prototype.clearImportedScripts,

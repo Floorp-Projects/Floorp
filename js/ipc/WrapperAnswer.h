@@ -18,8 +18,7 @@ class WrapperAnswer : public virtual JavaScriptShared
   public:
     explicit WrapperAnswer(JSRuntime *rt) : JavaScriptShared(rt) {}
 
-    bool RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
-                               bool *succeeded);
+    bool RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs);
     bool RecvGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                    ReturnStatus *rs,
                                    PPropertyDescriptor *out);
@@ -28,10 +27,8 @@ class WrapperAnswer : public virtual JavaScriptShared
                                       ReturnStatus *rs,
                                       PPropertyDescriptor *out);
     bool RecvDefineProperty(const ObjectId &objId, const JSIDVariant &id,
-                            const PPropertyDescriptor &flags,
-                            ReturnStatus *rs);
-    bool RecvDelete(const ObjectId &objId, const JSIDVariant &id,
-                    ReturnStatus *rs, bool *success);
+                            const PPropertyDescriptor &flags, ReturnStatus *rs);
+    bool RecvDelete(const ObjectId &objId, const JSIDVariant &id, ReturnStatus *rs);
 
     bool RecvHas(const ObjectId &objId, const JSIDVariant &id,
                  ReturnStatus *rs, bool *bp);
@@ -41,8 +38,8 @@ class WrapperAnswer : public virtual JavaScriptShared
                  const JSIDVariant &id,
                  ReturnStatus *rs, JSVariant *result);
     bool RecvSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                 const JSIDVariant &id, const bool &strict,
-                 const JSVariant &value, ReturnStatus *rs, JSVariant *result);
+                 const JSIDVariant &id, const JSVariant &value, ReturnStatus *rs,
+                 JSVariant *result);
 
     bool RecvIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                           bool *result);
@@ -53,7 +50,7 @@ class WrapperAnswer : public virtual JavaScriptShared
     bool RecvObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                            bool *result);
     bool RecvClassName(const ObjectId &objId, nsString *result);
-    bool RecvGetPrototypeOf(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result);
+    bool RecvGetPrototype(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result);
     bool RecvRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source, uint32_t *flags);
 
     bool RecvGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
@@ -68,6 +65,7 @@ class WrapperAnswer : public virtual JavaScriptShared
   private:
     bool fail(JSContext *cx, ReturnStatus *rs);
     bool ok(ReturnStatus *rs);
+    bool ok(ReturnStatus *rs, const JS::ObjectOpResult &result);
 };
 
 } // mozilla

@@ -131,12 +131,6 @@ SourceBufferDecoder::SetMediaEndTime(int64_t aTime)
   MSE_DEBUG("UNIMPLEMENTED");
 }
 
-void
-SourceBufferDecoder::UpdatePlaybackPosition(int64_t aTime)
-{
-  MSE_DEBUG("UNIMPLEMENTED");
-}
-
 bool
 SourceBufferDecoder::HasInitializationData()
 {

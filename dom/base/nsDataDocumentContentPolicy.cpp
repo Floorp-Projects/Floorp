@@ -92,7 +92,7 @@ nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
           requestingPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv) && principalURI) {
           nsScriptSecurityManager::ReportError(
-            nullptr, NS_LITERAL_STRING("CheckSameOriginError"), principalURI,
+            nullptr, NS_LITERAL_STRING("ExternalDataError"), principalURI,
             aContentLocation);
         }
       }
