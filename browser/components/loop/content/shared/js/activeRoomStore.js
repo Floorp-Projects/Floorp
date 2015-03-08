@@ -57,6 +57,8 @@ loop.store.ActiveRoomStore = (function() {
         throw new Error("Missing option sdkDriver");
       }
       this._sdkDriver = options.sdkDriver;
+
+      this._isDesktop = options.isDesktop || false;
     },
 
     /**
@@ -349,6 +351,21 @@ loop.store.ActiveRoomStore = (function() {
      * @param {sharedActions.ConnectionFailure} actionData
      */
     connectionFailure: function(actionData) {
+      /**
+       * XXX This is a workaround for desktop machines that do not have a
+       * camera installed. As we don't yet have device enumeration, when
+       * we do, this can be removed (bug 1138851), and the sdk should handle it.
+       */
+      if (this._isDesktop &&
+          actionData.reason === FAILURE_REASONS.UNABLE_TO_PUBLISH_MEDIA &&
+          this.getStoreState().videoMuted === false) {
+        // We failed to publish with media, so due to the bug, we try again without
+        // video.
+        this.setStoreState({videoMuted: true});
+        this._sdkDriver.retryPublishWithoutVideo();
+        return;
+      }
+
       // Treat all reasons as something failed. In theory, clientDisconnected
       // could be a success case, but there's no way we should be intentionally
       // sending that and still have the window open.
