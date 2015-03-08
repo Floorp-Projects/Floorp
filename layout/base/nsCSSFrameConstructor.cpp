@@ -1059,8 +1059,8 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsContainerFrame* aNewAbsol
    * we're a transformed element.
    */
   mFixedPosIsAbsPos = aPositionedFrame &&
-      (aPositionedFrame->StyleDisplay()->HasTransform(aPositionedFrame) ||
-       aPositionedFrame->StyleDisplay()->HasPerspectiveStyle());
+    (aPositionedFrame->StylePosition()->HasTransform(aPositionedFrame) ||
+     aPositionedFrame->StylePosition()->HasPerspectiveStyle());
 
   if (aNewAbsoluteContainingBlock) {
     aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
@@ -3788,7 +3788,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
 
     // If we need to create a block formatting context to wrap our
     // kids, do it now.
+    const nsStylePosition* position = styleContext->StylePosition();
     const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
+    const nsStylePosition* maybeAbsoluteContainingBlockPosition = position;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
@@ -3814,6 +3816,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       const nsStyleDisplay* blockDisplay = blockContext->StyleDisplay();
       if (blockDisplay->IsPositioned(blockFrame)) {
         maybeAbsoluteContainingBlockDisplay = blockDisplay;
+        maybeAbsoluteContainingBlockPosition = blockContext->StylePosition();
         maybeAbsoluteContainingBlock = blockFrame;
       }
 
@@ -3854,9 +3857,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         // make the inner the containing block.
         if ((maybeAbsoluteContainingBlockDisplay->IsAbsolutelyPositionedStyle() ||
              maybeAbsoluteContainingBlockDisplay->IsRelativelyPositionedStyle() ||
-             (maybeAbsoluteContainingBlockDisplay->HasTransformStyle() &&
+             (maybeAbsoluteContainingBlockPosition->HasTransformStyle() &&
               cb->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) ||
-             maybeAbsoluteContainingBlockDisplay->HasPerspectiveStyle()) &&
+             maybeAbsoluteContainingBlockPosition->HasPerspectiveStyle()) &&
             !cb->IsSVGText()) {
           nsContainerFrame* cf = static_cast<nsContainerFrame*>(cb);
           aState.PushAbsoluteContainingBlock(cf, cf, absoluteSaveState);
@@ -5983,8 +5986,8 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame,
     // not transformed, skip it.
     if (!frame->IsPositioned() ||
         (aType == FIXED_POS &&
-         !frame->StyleDisplay()->HasTransform(frame) &&
-         !frame->StyleDisplay()->HasPerspectiveStyle())) {
+         !frame->StylePosition()->HasTransform(frame) &&
+         !frame->StylePosition()->HasPerspectiveStyle())) {
       continue;
     }
     nsIFrame* absPosCBCandidate = frame;
