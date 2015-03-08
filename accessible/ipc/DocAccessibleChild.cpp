@@ -363,5 +363,34 @@ DocAccessibleChild::RecvDefaultTextAttributes(const uint64_t& aID,
   return PersistentPropertiesToArray(props, aAttributes);
 }
 
+bool
+DocAccessibleChild::RecvTextBounds(const uint64_t& aID,
+                                   const int32_t& aStartOffset,
+                                   const int32_t& aEndOffset,
+                                   const uint32_t& aCoordType,
+                                   nsIntRect* aRetVal)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aRetVal = acc->TextBounds(aStartOffset, aEndOffset, aCoordType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCharBounds(const uint64_t& aID,
+                                   const int32_t& aOffset,
+                                   const uint32_t& aCoordType,
+                                   nsIntRect* aRetVal)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aRetVal = acc->CharBounds(aOffset, aCoordType);
+  }
+
+  return true;
+}
+
 }
 }

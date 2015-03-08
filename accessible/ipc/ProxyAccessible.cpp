@@ -243,5 +243,24 @@ ProxyAccessible::DefaultTextAttributes(nsTArray<Attribute>* aAttrs)
   unused << mDoc->SendDefaultTextAttributes(mID, aAttrs);
 }
 
+nsIntRect
+ProxyAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
+                            uint32_t aCoordType)
+{
+  nsIntRect rect;
+  unused <<
+    mDoc->SendTextBounds(mID, aStartOffset, aEndOffset, aCoordType, &rect);
+  return rect;
+}
+
+nsIntRect
+ProxyAccessible::CharBounds(int32_t aOffset, uint32_t aCoordType)
+{
+  nsIntRect rect;
+  unused <<
+    mDoc->SendCharBounds(mID, aOffset, aCoordType, &rect);
+  return rect;
+}
+
 }
 }
