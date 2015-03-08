@@ -41,6 +41,7 @@ describe("loop.store.ActiveRoomStore", function () {
       connectSession: sinon.stub(),
       disconnectSession: sinon.stub(),
       forceDisconnectAll: sinon.stub().callsArg(0),
+      retryPublishWithoutVideo: sinon.stub(),
       startScreenShare: sinon.stub(),
       switchAcquiredWindow: sinon.stub(),
       endScreenShare: sinon.stub().returns(true)
@@ -607,6 +608,26 @@ describe("loop.store.ActiveRoomStore", function () {
       connectionFailureAction = new sharedActions.ConnectionFailure({
         reason: "FAIL"
       });
+    });
+
+    it("should retry publishing if on desktop, and in the videoMuted state", function() {
+      store._isDesktop = true;
+
+      store.connectionFailure(new sharedActions.ConnectionFailure({
+        reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+      }));
+
+      sinon.assert.calledOnce(fakeSdkDriver.retryPublishWithoutVideo);
+    });
+
+    it("should set videoMuted to try when retrying publishing", function() {
+      store._isDesktop = true;
+
+      store.connectionFailure(new sharedActions.ConnectionFailure({
+        reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+      }));
+
+      expect(store.getStoreState().videoMuted).eql(true);
     });
 
     it("should store the failure reason", function() {
