@@ -736,6 +736,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mDoSmoothScroll);
     WriteParam(aMsg, aParam.mSmoothScrollOffset);
     WriteParam(aMsg, aParam.GetLineScrollAmount());
+    WriteParam(aMsg, aParam.AllowVerticalScrollWithWheel());
     WriteParam(aMsg, aParam.GetContentDescription());
   }
 
@@ -778,6 +779,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mDoSmoothScroll) &&
             ReadParam(aMsg, aIter, &aResult->mSmoothScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
+            ReadParam(aMsg, aIter, &aResult->mAllowVerticalScrollWithWheel) &&
             ReadContentDescription(aMsg, aIter, aResult));
   }
 };

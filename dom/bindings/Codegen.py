@@ -7684,10 +7684,7 @@ class CGResolveHook(CGAbstractBindingMethod):
             // has already defined it on the object.  Don't try to also
             // define it.
             if (!desc.value().isUndefined() &&
-                !JS_DefinePropertyById(cx, obj, id, desc.value(),
-                                       desc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                                       JS_PROPERTYOP_GETTER(desc.getter()),
-                                       JS_PROPERTYOP_SETTER(desc.setter()))) {
+                !JS_DefinePropertyById(cx, obj, id, desc)) {
               return false;
             }
             *resolvedp = true;
@@ -9682,10 +9679,7 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
               // try to also define it.
               if (objDesc.object() &&
                   !objDesc.value().isUndefined() &&
-                  !JS_DefinePropertyById(cx, obj, id, objDesc.value(),
-                                         objDesc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                                         JS_PROPERTYOP_GETTER(objDesc.getter()),
-                                         JS_PROPERTYOP_SETTER(objDesc.setter()))) {
+                  !JS_DefinePropertyById(cx, obj, id, objDesc)) {
                 return false;
               }
             }
@@ -10221,10 +10215,13 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
+        # The usual convention is to name the ObjectOpResult out-parameter
+        # `result`, but that name is a bit overloaded around here.
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('JS::ObjectOpResult&', 'opresult'),
                 Argument('bool*', 'defined')]
         ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True, const=True)
         self.descriptor = descriptor
@@ -10242,7 +10239,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 if (IsArrayIndex(index)) {
                   *defined = true;
                   $*{callSetter}
-                  return true;
+                  return opresult.succeed();
                 }
                 """,
                 callSetter=CGProxyIndexedSetter(self.descriptor).define())
@@ -10255,7 +10252,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             set += fill(
                 """
                 if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
-                  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, "${name}");
+                  return js::IsInNonStrictPropertySet(cx)
+                         ? opresult.succeed()
+                         : ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, "${name}");
                 }
                 """,
                 name=self.descriptor.name)
@@ -10275,7 +10274,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 *defined = true;
                 $*{callSetter}
 
-                return true;
+                return opresult.succeed();
                 """,
                 callSetter=CGProxyNamedSetter(self.descriptor).define())
         else:
@@ -10291,7 +10290,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     $*{presenceChecker}
 
                     if (found) {
-                      return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
+                      return js::IsInNonStrictPropertySet(cx)
+                             ? opresult.succeed()
+                             : ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
                     }
                     """,
                     presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define(),
@@ -10306,7 +10307,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('bool*', 'bp')]
+                Argument('JS::ObjectOpResult&', 'opresult')]
         ClassMethod.__init__(self, "delete_", "bool", args,
                              virtual=True, override=True, const=True)
         self.descriptor = descriptor
@@ -10315,6 +10316,12 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         def getDeleterBody(type, foundVar=None):
             """
             type should be "Named" or "Indexed"
+
+            The possible outcomes:
+            - an error happened                       (the emitted code returns false)
+            - own property not found                  (foundVar=false, deleteSucceeded=true)
+            - own property found and deleted          (foundVar=true,  deleteSucceeded=true)
+            - own property found but can't be deleted (foundVar=true,  deleteSucceeded=false)
             """
             assert type in ("Named", "Indexed")
             deleter = self.descriptor.operations[type + 'Deleter']
@@ -10323,29 +10330,34 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                     raise TypeError("Can't handle a deleter on an interface "
                                     "that has unforgeables.  Figure out how "
                                     "that should work!")
-                decls = ""
-                if (not deleter.signatures()[0][0].isPrimitive() or
-                    deleter.signatures()[0][0].nullable() or
-                    deleter.signatures()[0][0].tag() != IDLType.Tags.bool):
-                    setBp = "*bp = true;\n"
-                else:
-                    decls += "bool result;\n"
+                # See if the deleter method is fallible.
+                t = deleter.signatures()[0][0]
+                if t.isPrimitive() and not t.nullable() and t.tag() == IDLType.Tags.bool:
+                    # The deleter method has a boolean out-parameter. When a
+                    # property is found, the out-param indicates whether it was
+                    # successfully deleted.
+                    decls = "bool result;\n"
                     if foundVar is None:
                         foundVar = "found"
                         decls += "bool found = false;\n"
-                    setBp = fill(
+                    setDS = fill(
                         """
-                        if (${foundVar}) {
-                          *bp = result;
-                        } else {
-                          *bp = true;
+                        if (!${foundVar}) {
+                          deleteSucceeded = true;
                         }
                         """,
                         foundVar=foundVar)
+                else:
+                    # No boolean out-parameter: if a property is found,
+                    # deleting it always succeeds.
+                    decls = ""
+                    setDS = "deleteSucceeded = true;\n"
+
                 deleterClass = globals()["CGProxy%sDeleter" % type]
                 body = (decls +
-                        deleterClass(self.descriptor, resultVar="result", foundVar=foundVar).define() +
-                        setBp)
+                        deleterClass(self.descriptor, resultVar="deleteSucceeded",
+                                     foundVar=foundVar).define() +
+                        setDS)
             elif getattr(self.descriptor, "supports%sProperties" % type)():
                 presenceCheckerClass = globals()["CGProxy%sPresenceChecker" % type]
                 foundDecl = ""
@@ -10356,7 +10368,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                     """
                     $*{foundDecl}
                     $*{presenceChecker}
-                    *bp = !${foundVar};
+                    deleteSucceeded = !${foundVar};
                     """,
                     foundDecl=foundDecl,
                     presenceChecker=presenceCheckerClass(self.descriptor, foundVar=foundVar).define(),
@@ -10377,9 +10389,9 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                 """
                 int32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
+                  bool deleteSucceeded;
                   $*{indexedBody}
-                  // We always return here, even if the property was not found
-                  return true;
+                  return deleteSucceeded ? opresult.succeed() : opresult.failCantDelete();
                 }
                 """,
                 indexedBody=indexedBody)
@@ -10392,9 +10404,10 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             delete += fill(
                 """
                 bool found = false;
+                bool deleteSucceeded;
                 $*{namedBody}
                 if (found) {
-                  return true;
+                  return deleteSucceeded ? opresult.succeed() : opresult.failCantDelete();
                 }
                 """,
                 namedBody=namedBody)
@@ -10412,7 +10425,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
 
         delete += dedent("""
 
-            return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);
+            return dom::DOMProxyHandler::delete_(cx, proxy, id, opresult);
             """)
 
         return delete

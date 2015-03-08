@@ -198,12 +198,12 @@
 **      Macros to convert between function and data pointers of the same
 **      size. Use them like this:
 **
-**      JSPropertyOp nativeGetter;
+**      JSGetterOp nativeGetter;
 **      JSObject *scriptedGetter;
 **      ...
 **      scriptedGetter = JS_FUNC_TO_DATA_PTR(JSObject *, nativeGetter);
 **      ...
-**      nativeGetter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, scriptedGetter);
+**      nativeGetter = JS_DATA_TO_FUNC_PTR(JSGetterOp, scriptedGetter);
 **
 ***********************************************************************/
 

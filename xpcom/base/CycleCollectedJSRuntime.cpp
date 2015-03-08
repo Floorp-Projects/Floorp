@@ -994,7 +994,7 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
     MOZ_ASSERT(js::IsOuterObject(obj));
     // Grab the inner from the outer.
     obj = JS_ObjectToInnerObject(cx, obj);
-    MOZ_ASSERT(!js::GetObjectParent(obj));
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
     if (JS::ObjectIsMarkedGray(obj) &&
         !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
       return true;

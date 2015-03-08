@@ -483,7 +483,7 @@ void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
 void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   DestroyDecodedStream();
@@ -794,6 +794,7 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
 
   // If we are already in the seeking state, the new seek overrides the old one.
   if (mPlayState != PLAY_STATE_LOADING) {
+    mSeekRequest.DisconnectIfExists();
     bool paused = false;
     if (mOwner) {
       paused = mOwner->GetPaused();
@@ -1209,43 +1210,7 @@ void MediaDecoder::UpdateReadyStateForData()
   mOwner->UpdateReadyStateForData(frameStatus);
 }
 
-void MediaDecoder::SeekingStopped(MediaDecoderEventVisibility aEventVisibility)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mShuttingDown)
-    return;
-
-  bool seekWasAborted = false;
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-    // An additional seek was requested while the current seek was
-    // in operation.
-    if (mRequestedSeekTarget.IsValid()) {
-      ChangeState(PLAY_STATE_SEEKING);
-      seekWasAborted = true;
-    } else {
-      UnpinForSeek();
-      if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-        ChangeState(mNextState);
-      }
-    }
-  }
-
-  PlaybackPositionChanged(aEventVisibility);
-
-  if (mOwner) {
-    UpdateReadyStateForData();
-    if (!seekWasAborted && (aEventVisibility != MediaDecoderEventVisibility::Suppressed)) {
-      mOwner->SeekCompleted();
-    }
-  }
-}
-
-// This is called when seeking stopped *and* we're at the end of the
-// media.
-void MediaDecoder::SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::OnSeekResolvedInternal(bool aAtEnd, MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1264,8 +1229,12 @@ void MediaDecoder::SeekingStoppedAtEnd(MediaDecoderEventVisibility aEventVisibil
       seekWasAborted = true;
     } else {
       UnpinForSeek();
-      fireEnded = true;
-      ChangeState(PLAY_STATE_ENDED);
+      fireEnded = aAtEnd;
+      if (aAtEnd) {
+        ChangeState(PLAY_STATE_ENDED);
+      } else if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+        ChangeState(aAtEnd ? PLAY_STATE_ENDED : mNextState);
+      }
     }
   }
 
@@ -1348,7 +1317,11 @@ void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
         mDecoderStateMachine->Play();
         break;
       case PLAY_STATE_SEEKING:
-        mDecoderStateMachine->Seek(mRequestedSeekTarget);
+        mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->GetStateMachineThread(),
+                                          mDecoderStateMachine.get(), __func__,
+                                          &MediaDecoderStateMachine::Seek, mRequestedSeekTarget)
+          ->RefableThen(NS_GetCurrentThread(), __func__, this,
+                        &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
         mRequestedSeekTarget.Reset();
         break;
       default:
@@ -1659,11 +1632,6 @@ void MediaDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
     mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
   }
   UpdateReadyStateForData();
-}
-
-void MediaDecoder::UpdatePlaybackPosition(int64_t aTime)
-{
-  mDecoderStateMachine->UpdatePlaybackPosition(aTime);
 }
 
 // Provide access to the state machine object

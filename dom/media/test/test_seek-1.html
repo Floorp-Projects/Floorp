@@ -27,8 +27,7 @@ var readonly = true;
 var completed = false;
 
 function startTest() {
-  if (completed)
-    return;
+  ok(!completed, "Should not be completed yet");
   ok(!v.seeking, "seeking should default to false");
   try {
     v.seeking = true;
@@ -39,37 +38,28 @@ function startTest() {
   }
   is(readonly, true, "seeking should be readonly");
 
-  v.play();
-  v.currentTime=seekTime;
+  v.currentTime = seekTime;
   seekFlagStart = v.seeking;
 }
 
 function seekStarted() {
-  if (completed)
-    return;
-  ok(v.currentTime >= seekTime - 0.1,
+  ok(!completed, "should not be completed yet");
+  ok(Math.abs(v.currentTime - seekTime) < 0.1,
      "Video currentTime should be around " + seekTime + ": " + v.currentTime + " (seeking)");
-  v.pause();
   startPassed = true;
 }
 
 function seekEnded() {
-  if (completed)
-    return;
-
-  var t = v.currentTime;
-  // Since we were playing, and we only paused asynchronously, we can't be
-  // sure that we paused before the seek finished, so we may have played
-  // ahead arbitrarily far.
-  ok(t >= seekTime - 0.1, "Video currentTime should be around " + seekTime + ": " + t + " (seeked)");
-  v.play();
+  ok(!completed, "shuld not be completed yet");
+  ok(Math.abs(v.currentTime - seekTime) < 0.1,
+     "Video currentTime should be around " + seekTime + ": " + v.currentTime + " (seeked)");
   endPassed = true;
   seekFlagEnd = v.seeking;
+  v.play();
 }
 
 function playbackEnded() {
-  if (completed)
-    return;
+  ok(!completed, "should not be completed yet");
 
   completed = true;
   ok(startPassed, "seeking event");
@@ -79,10 +69,10 @@ function playbackEnded() {
   finish();
 }
 
-v.addEventListener("ended", playbackEnded, false);
-v.addEventListener("loadedmetadata", startTest, false);
-v.addEventListener("seeking", seekStarted, false);
-v.addEventListener("seeked", seekEnded, false);
+once(v, "ended", playbackEnded);
+once(v, "loadedmetadata", startTest);
+once(v, "seeking", seekStarted);
+once(v, "seeked", seekEnded);
 
 }
 

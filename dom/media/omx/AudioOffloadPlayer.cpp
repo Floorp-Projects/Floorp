@@ -386,7 +386,7 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
       nsCOMPtr<nsIRunnable> nsEvent =
         NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
           mObserver,
-          &MediaDecoder::SeekingStopped,
+          &MediaDecoder::SimulateSeekResolvedForAudioOffload,
           MediaDecoderEventVisibility::Observable);
       NS_DispatchToCurrentThread(nsEvent);
     }
@@ -571,7 +571,7 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
           nsCOMPtr<nsIRunnable> nsEvent =
             NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
               mObserver,
-              &MediaDecoder::SeekingStopped,
+              &MediaDecoder::SimulateSeekResolvedForAudioOffload,
               MediaDecoderEventVisibility::Observable);
           NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
 

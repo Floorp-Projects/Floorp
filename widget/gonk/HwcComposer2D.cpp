@@ -328,6 +328,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     uint8_t opacity = std::min(0xFF, (int)(aLayer->GetEffectiveOpacity() * 256.0));
+    if (opacity == 0) {
+        LOGD("%s Layer has zero opacity; skipping", aLayer->Name());
+        return true;
+    }
 #if ANDROID_VERSION < 18
     if (opacity < 0xFF) {
         LOGD("%s Layer has planar semitransparency which is unsupported by hwcomposer", aLayer->Name());

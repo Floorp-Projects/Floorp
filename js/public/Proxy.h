@@ -26,6 +26,7 @@ using JS::MutableHandle;
 using JS::MutableHandleObject;
 using JS::MutableHandleValue;
 using JS::NativeImpl;
+using JS::ObjectOpResult;
 using JS::PrivateValue;
 using JS::Value;
 
@@ -127,13 +128,13 @@ class JS_FRIEND_API(Wrapper);
  * 2.  A proxy can implement more complicated prototype semantics (if, for
  *     example, it wants to delegate the prototype lookup to a wrapped object)
  *     by passing Proxy::LazyProto as the prototype at create time. This
- *     guarantees that the getPrototypeOf() handler method will be called every
+ *     guarantees that the getPrototype() handler method will be called every
  *     time the object's prototype chain is accessed.
  *
- *     This system is implemented with two methods: {get,set}PrototypeOf. The
- *     default implementation of setPrototypeOf throws a TypeError. Since it is
+ *     This system is implemented with two methods: {get,set}Prototype. The
+ *     default implementation of setPrototype throws a TypeError. Since it is
  *     not possible to create an object without a sense of prototype chain,
- *     handlers must implement getPrototypeOf if opting in to the dynamic
+ *     handlers must implement getPrototype if opting in to the dynamic
  *     prototype system.
  */
 
@@ -251,10 +252,13 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const = 0;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc) const = 0;
+                                MutableHandle<JSPropertyDescriptor> desc,
+                                ObjectOpResult &result) const = 0;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const = 0;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const = 0;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult &result) const = 0;
+
     /*
      * Because [[Enumerate]] is one of the standard traps it should be overridden.
      * However for convenience BaseProxyHandler includes a pure virtual implementation,
@@ -267,15 +271,17 @@ class JS_FRIEND_API(BaseProxyHandler)
      * These methods are standard, but the engine does not normally call them.
      * They're opt-in. See "Proxy prototype chains" above.
      *
-     * getPrototypeOf() crashes if called. setPrototypeOf() throws a TypeError.
+     * getPrototype() crashes if called. setPrototype() throws a TypeError.
      */
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
-    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
+    virtual bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult &result) const;
 
-    /* Non-standard but conceptual kin to {g,s}etPrototypeOf, so lives here. */
+    /* Non-standard but conceptual kin to {g,s}etPrototype, so lives here. */
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const;
 
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const = 0;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const = 0;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const = 0;
 
     /*
@@ -289,7 +295,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const;
     virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                     HandleId id, bool strict, MutableHandleValue vp) const;
+                     HandleId id, MutableHandleValue vp, ObjectOpResult &result) const;
 
     /*
      * [[Call]] and [[Construct]] are standard internal methods but according
@@ -367,27 +373,30 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                MutableHandle<JSPropertyDescriptor> desc,
+                                ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
-                         bool *bp) const MOZ_OVERRIDE;
+                         ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            MutableHandleObject objp) const MOZ_OVERRIDE;
-    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
-                                MutableHandleObject protop) const MOZ_OVERRIDE;
-    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
-                                bool *bp) const MOZ_OVERRIDE;
+    virtual bool getPrototype(JSContext *cx, HandleObject proxy,
+                              MutableHandleObject protop) const MOZ_OVERRIDE;
+    virtual bool setPrototype(JSContext *cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
+                                   ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id,
                      bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                     HandleId id, bool strict, MutableHandleValue vp) const MOZ_OVERRIDE;
+                     HandleId id, MutableHandleValue vp,
+                     ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const MOZ_OVERRIDE;
 

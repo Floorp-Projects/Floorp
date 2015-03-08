@@ -139,6 +139,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
 
   @keyframes empty { }
   @keyframes nearlyempty { to { margin-left: 100px; } }
+
+  @keyframes lowerpriority {
+    0% {
+      top: 0px;
+      left: 0px;
+    }
+    100% {
+      top: 100px;
+      left: 100px;
+    }
+  }
+
+  @keyframes overrideleft {
+    0%, 100% { left: 0px }
+  }
+
+  @keyframes overridetop {
+    0%, 100% { top: 0px }
+  }
   </style>
 </head>
 <body>
@@ -1930,6 +1949,24 @@ advance_clock(2000);
 is(cs.marginLeft, "50px",
    "infinitely repeating animation with positive delay takes effect"
    + " (does not overflow)");
+done_div();
+
+/*
+ * Bug 1140134 - A property in a CSS animation being overridden by later
+ * animation causes later properties in that animation to be skipped
+ */
+new_div("position: relative; animation: lowerpriority 1s linear infinite alternate, overridetop 1s linear infinite alternate");
+advance_clock(0);
+advance_clock(500);
+is(cs.getPropertyValue("left"), "50px", "left is animating");
+is(cs.getPropertyValue("top"), "0px", "top is not animating");
+done_div();
+
+new_div("position: relative; animation: lowerpriority 1s linear infinite alternate, overrideleft 1s linear infinite alternate");
+advance_clock(0);
+advance_clock(500);
+is(cs.getPropertyValue("left"), "0px", "left is not animating");
+is(cs.getPropertyValue("top"), "50px", "top is animating");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

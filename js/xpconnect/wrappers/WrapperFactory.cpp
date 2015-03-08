@@ -167,7 +167,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // those objects in a security wrapper, then we need to hand back the
     // wrapper for the new scope instead. Also, global objects don't move
     // between scopes so for those we also want to return the wrapper. So...
-    if (!IS_WN_REFLECTOR(obj) || !js::GetObjectParent(obj))
+    if (!IS_WN_REFLECTOR(obj) || JS_IsGlobalObject(obj))
         return waive ? WaiveXray(cx, obj) : obj;
 
     XPCWrappedNative *wn = XPCWrappedNative::Get(obj);

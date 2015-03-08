@@ -342,8 +342,8 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     bool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
-      bool dummy;
-      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
+      JS::ObjectOpResult ignored;
+      ::JS_DeleteUCProperty(cx, obj, s, name.Length(), ignored);
     }
   }
 }

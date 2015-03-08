@@ -121,3 +121,11 @@ nsCharClipGeometry::nsCharClipGeometry(nsCharClipDisplayItem* aItem, nsDisplayLi
   , mLeftEdge(aItem->mLeftEdge)
   , mRightEdge(aItem->mRightEdge)
 {}
+
+nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(nsDisplayTableItem* aItem,
+                                                       nsDisplayListBuilder* aBuilder,
+                                                       const nsPoint& aFrameOffsetToViewport)
+  : nsDisplayItemGenericGeometry(aItem, aBuilder)
+  , nsImageGeometryMixin(aItem, aBuilder)
+  , mFrameOffsetToViewport(aFrameOffsetToViewport)
+{}

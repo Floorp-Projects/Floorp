@@ -825,9 +825,11 @@ XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
 
 #ifdef DEBUG
   JSObject* jsobj = rval.toObjectOrNull();
-  if (jsobj && !js::GetObjectParent(jsobj))
+  if (jsobj &&
+      js::GetGlobalForObjectCrossCompartment(jsobj) == jsobj) {
     NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
                  "Why did we recreate this wrapper?");
+  }
 #endif
 
   return true;
@@ -979,6 +981,27 @@ GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
   return ifaceAndProtoJSClass->mNativeHooks;
 }
 
+static JSObject*
+XrayCreateFunction(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                   JSNativeWrapper native, unsigned nargs, JS::Handle<jsid> id)
+{
+  JSFunction* fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0,
+                                                    /* parent = */nullptr, id);
+  if (!fun) {
+    return nullptr;
+  }
+
+  SET_JITINFO(fun, native.info);
+  JSObject* obj = JS_GetFunctionObject(fun);
+  js::SetFunctionNativeReserved(obj, XRAY_DOM_FUNCTION_PARENT_WRAPPER_SLOT,
+                                JS::ObjectValue(*wrapper));
+#ifdef DEBUG
+  js::SetFunctionNativeReserved(obj, XRAY_DOM_FUNCTION_NATIVE_SLOT_FOR_SELF,
+                                JS::ObjectValue(*obj));
+#endif
+  return obj;
+}
+
 static bool
 XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
                      JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -1001,23 +1024,18 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
           // way to do this is wrap them up as functions ourselves.
           desc.setAttributes(attrSpec.flags);
           // They all have getters, so we can just make it.
-          JS::Rooted<JSFunction*> fun(cx,
-                                      JS_NewFunctionById(cx, attrSpec.getter.native.op,
-                                                         0, 0, wrapper, id));
-          if (!fun)
+          JS::Rooted<JSObject*> funobj(cx,
+            XrayCreateFunction(cx, wrapper, attrSpec.getter.native, 0, id));
+          if (!funobj)
             return false;
-          SET_JITINFO(fun, attrSpec.getter.native.info);
-          JSObject *funobj = JS_GetFunctionObject(fun);
           desc.setGetterObject(funobj);
           desc.attributesRef() |= JSPROP_GETTER;
           if (attrSpec.setter.native.op) {
             // We have a setter! Make it.
-            fun = JS_NewFunctionById(cx, attrSpec.setter.native.op, 1, 0,
-                                     wrapper, id);
-            if (!fun)
+            funobj =
+              XrayCreateFunction(cx, wrapper, attrSpec.setter.native, 1, id);
+            if (!funobj)
               return false;
-            SET_JITINFO(fun, attrSpec.setter.native.info);
-            funobj = JS_GetFunctionObject(fun);
             desc.setSetterObject(funobj);
             desc.attributesRef() |= JSPROP_SETTER;
           } else {
@@ -1052,22 +1070,24 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
           cacheOnHolder = true;
 
           const JSFunctionSpec& methodSpec = methodSpecs[i];
-          JSFunction *fun;
+          JSObject *funobj;
           if (methodSpec.selfHostedName) {
-            fun = JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id, methodSpec.nargs);
+            JSFunction* fun =
+              JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id,
+                                        methodSpec.nargs);
             if (!fun) {
               return false;
             }
             MOZ_ASSERT(!methodSpec.call.op, "Bad FunctionSpec declaration: non-null native");
             MOZ_ASSERT(!methodSpec.call.info, "Bad FunctionSpec declaration: non-null jitinfo");
+            funobj = JS_GetFunctionObject(fun);
           } else {
-            fun = JS_NewFunctionById(cx, methodSpec.call.op, methodSpec.nargs, 0, wrapper, id);
-            if (!fun) {
+            funobj = XrayCreateFunction(cx, wrapper, methodSpec.call,
+                                        methodSpec.nargs, id);
+            if (!funobj) {
               return false;
             }
-            SET_JITINFO(fun, methodSpec.call.info);
           }
-          JSObject *funobj = JS_GetFunctionObject(fun);
           desc.value().setObject(*funobj);
           desc.setAttributes(methodSpec.flags);
           desc.object().set(wrapper);
@@ -1421,13 +1441,14 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined)
+                   JS::MutableHandle<JSPropertyDescriptor> desc,
+                   JS::ObjectOpResult &result, bool *defined)
 {
   if (!js::IsProxy(obj))
-      return true;
+    return true;
 
   const DOMProxyHandler* handler = GetDOMProxyHandler(obj);
-  return handler->defineProperty(cx, wrapper, id, desc, defined);
+  return handler->defineProperty(cx, wrapper, id, desc, result, defined);
 }
 
 template<typename SpecType>
@@ -1720,7 +1741,8 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   const DOMJSClass* domClass = GetDOMClass(aObj);
 
   // DOM things are always parented to globals.
-  JS::Rooted<JSObject*> oldParent(aCx, JS_GetParent(aObj));
+  JS::Rooted<JSObject*> oldParent(aCx,
+                                  js::GetGlobalForObjectCrossCompartment(aObj));
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(oldParent) == oldParent);
 
   JS::Rooted<JSObject*> newParent(aCx, domClass->mGetParent(aCx, aObj));

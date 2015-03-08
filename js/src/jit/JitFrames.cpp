@@ -1310,9 +1310,16 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         return;
     }
 
-    if (frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>()) {
+    if (frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>() ||
+        frame.isExitFrameLayout<IonOOLSetterOpExitFrameLayout>())
+    {
+        // A SetterOp frame is a different size, but that's the only relevant
+        // difference between the two. The fields that need marking are all in
+        // the common base class.
         IonOOLPropertyOpExitFrameLayout *oolgetter =
-            frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>();
+            frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>()
+            ? frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>()
+            : frame.exitFrame()->as<IonOOLSetterOpExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");

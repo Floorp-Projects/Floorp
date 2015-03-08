@@ -364,7 +364,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
         return false;
 
     RootedValue tmp(cx, v);
-    return SetProperty(cx, obj, obj, id, &tmp, true);
+    return SetProperty(cx, obj, obj, id, &tmp);
 }
 
 /*
@@ -374,13 +374,13 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
  * If an error occurs while attempting to delete the element (that is, the call
  * to [[Delete]] threw), return false.
  *
- * Otherwise set *succeeded to indicate whether the deletion attempt succeeded
- * (that is, whether the call to [[Delete]] returned true or false).  (Deletes
- * generally fail only when the property is non-configurable, but proxies may
- * implement different semantics.)
+ * Otherwise call result.succeed() or result.fail() to indicate whether the
+ * deletion attempt succeeded (that is, whether the call to [[Delete]] returned
+ * true or false).  (Deletes generally fail only when the property is
+ * non-configurable, but proxies may implement different semantics.)
  */
 static bool
-DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeeded)
+DeleteArrayElement(JSContext *cx, HandleObject obj, double index, ObjectOpResult &result)
 {
     MOZ_ASSERT(index >= 0);
     MOZ_ASSERT(floor(index) == index);
@@ -403,38 +403,37 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
             }
         }
 
-        *succeeded = true;
-        return true;
+        return result.succeed();
     }
 
     RootedId id(cx);
     if (!ToId(cx, index, &id))
         return false;
-    return DeleteProperty(cx, obj, id, succeeded);
+    return DeleteProperty(cx, obj, id, result);
 }
 
-/* ES6 20130308 draft 9.3.5 */
+/* ES6 draft rev 32 (2 Febr 2015) 7.3.7 */
 static bool
 DeletePropertyOrThrow(JSContext *cx, HandleObject obj, double index)
 {
-    bool succeeded;
-    if (!DeleteArrayElement(cx, obj, index, &succeeded))
+    ObjectOpResult success;
+    if (!DeleteArrayElement(cx, obj, index, success))
         return false;
-    if (succeeded)
-        return true;
-
-    RootedId id(cx);
-    RootedValue indexv(cx, NumberValue(index));
-    if (!ValueToId<CanGC>(cx, indexv, &id))
-        return false;
-    return obj->reportNotConfigurable(cx, id, JSREPORT_ERROR);
+    if (!success) {
+        RootedId id(cx);
+        RootedValue indexv(cx, NumberValue(index));
+        if (!ValueToId<CanGC>(cx, indexv, &id))
+            return false;
+        return success.reportError(cx, obj, id);
+    }
+    return true;
 }
 
 bool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
-    return SetProperty(cx, obj, obj, cx->names().length, &v, true);
+    return SetProperty(cx, obj, obj, cx->names().length, &v);
 }
 
 /*
@@ -460,7 +459,8 @@ array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandle
 }
 
 static bool
-array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
+array_length_setter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp,
+                    ObjectOpResult &result)
 {
     if (!obj->is<ArrayObject>()) {
         // This array .length property was found on the prototype
@@ -468,13 +468,14 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, M
         // we're here, do an impression of SetPropertyByDefining.
         const Class *clasp = obj->getClass();
         return DefineProperty(cx, obj, cx->names().length, vp,
-                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE, result);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
     MOZ_ASSERT(arr->lengthIsWritable(),
                "setter shouldn't be called if property is non-writable");
-    return ArraySetLength(cx, arr, id, JSPROP_PERMANENT, vp, strict);
+
+    return ArraySetLength(cx, arr, id, JSPROP_PERMANENT, vp, result);
 }
 
 struct ReverseIndexComparator
@@ -507,7 +508,7 @@ js::CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *newLen)
 /* ES6 20130308 draft 8.4.2.4 ArraySetLength */
 bool
 js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
-                   unsigned attrs, HandleValue value, bool setterIsStrict)
+                   unsigned attrs, HandleValue value, ObjectOpResult &result)
 {
     MOZ_ASSERT(id == NameToId(cx->names().length));
 
@@ -530,11 +531,8 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
     // OrdinaryDefineOwnProperty in ES6, the default [[DefineOwnProperty]] in
     // ES5 -- but we reimplement all the conflict-detection bits ourselves here
     // so that we can use a customized length representation.)
-    if (!(attrs & JSPROP_PERMANENT) || (attrs & JSPROP_ENUMERATE)) {
-        if (!setterIsStrict)
-            return true;
-        return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
-    }
+    if (!(attrs & JSPROP_PERMANENT) || (attrs & JSPROP_ENUMERATE))
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
     /* Steps 6-7. */
     bool lengthIsWritable = arr->lengthIsWritable();
@@ -551,14 +549,9 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
     /* Steps 8-9 for arrays with non-writable length. */
     if (!lengthIsWritable) {
         if (newLen == oldLen)
-            return true;
+            return result.succeed();
 
-        if (setterIsStrict) {
-            return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
-                                                JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
-        }
-
-        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+        return result.fail(JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
     }
 
     /* Step 8. */
@@ -627,8 +620,8 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
                 oldLen--;
 
                 /* Steps 15b-d. */
-                bool deleteSucceeded;
-                if (!DeleteElement(cx, arr, oldLen, &deleteSucceeded))
+                ObjectOpResult deleteSucceeded;
+                if (!DeleteElement(cx, arr, oldLen, deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = oldLen + 1;
@@ -687,8 +680,8 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
                 index = indexes[i];
 
                 /* Steps 15b-d. */
-                bool deleteSucceeded;
-                if (!DeleteElement(cx, arr, index, &deleteSucceeded))
+                ObjectOpResult deleteSucceeded;
+                if (!DeleteElement(cx, arr, index, deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = index + 1;
@@ -739,53 +732,20 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
         }
     }
 
-    if (setterIsStrict && !succeeded) {
-        RootedId elementId(cx);
-        if (!IndexToId(cx, newLen - 1, &elementId))
-            return false;
-        return arr->reportNotConfigurable(cx, elementId);
-    }
+    if (!succeeded)
+        return result.fail(JSMSG_CANT_TRUNCATE_ARRAY);
 
-    return true;
+    return result.succeed();
 }
 
 bool
-js::WouldDefinePastNonwritableLength(ExclusiveContext *cx,
-                                     HandleObject obj, uint32_t index, bool strict,
-                                     bool *definesPast)
+js::WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index)
 {
-    if (!obj->is<ArrayObject>()) {
-        *definesPast = false;
-        return true;
-    }
+    if (!obj->is<ArrayObject>())
+        return false;
 
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-    uint32_t length = arr->length();
-    if (index < length) {
-        *definesPast = false;
-        return true;
-    }
-
-    if (arr->lengthIsWritable()) {
-        *definesPast = false;
-        return true;
-    }
-
-    *definesPast = true;
-
-    // Error in strict mode code or warn with strict option.
-    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
-    if (!cx->isJSContext())
-        return true;
-
-    JSContext *ncx = cx->asJSContext();
-
-    if (!strict && !ncx->compartment()->options().extraWarnings(ncx))
-        return true;
-
-    // XXX include the index and maybe array length in the error message
-    return JS_ReportErrorFlagsAndNumber(ncx, flags, GetErrorMessage, nullptr,
-                                        JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+    ArrayObject *arr = &obj->as<ArrayObject>();
+    return !arr->lengthIsWritable() && index >= arr->length();
 }
 
 static bool
@@ -1310,7 +1270,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
         value = *vector++;
         indexv = DoubleValue(index);
         if (!ValueToId<CanGC>(cx, indexv, &id) ||
-            !SetProperty(cx, obj, obj, id, &value, true))
+            !SetProperty(cx, obj, obj, id, &value))
         {
             return false;
         }
@@ -3107,8 +3067,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Steps 9-10.
-    RootedValue v(cx, NumberValue(args.length()));
-    if (!SetProperty(cx, obj, obj, cx->names().length, &v, true))
+    if (!SetLengthProperty(cx, obj, args.length()))
         return false;
 
     // Step 11.

@@ -854,6 +854,13 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   return status;
 }
 
+bool
+APZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
+{
+  return EventStateManager::WheelEventIsScrollAction(aEvent) &&
+         aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE;
+}
+
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
@@ -891,9 +898,7 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
     }
     case eWheelEventClass: {
       WidgetWheelEvent& wheelEvent = *aEvent.AsWheelEvent();
-      if (wheelEvent.deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE ||
-          !EventStateManager::WheelEventIsScrollAction(&wheelEvent))
-      {
+      if (!WillHandleWheelEvent(&wheelEvent)) {
         // Don't send through APZ if we're not scrolling or if the delta mode
         // is not line-based.
         return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);

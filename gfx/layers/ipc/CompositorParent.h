@@ -106,6 +106,7 @@ public:
   bool NeedsComposite();
   void CancelCurrentCompositeTask();
   void Destroy();
+  void OnForceComposeToTarget();
 
 private:
   virtual ~CompositorVsyncObserver();

@@ -104,12 +104,6 @@ public:
   // Set the media end time in microseconds
   virtual void SetMediaEndTime(int64_t aTime) = 0;
 
-  // Make the decoder state machine update the playback position. Called by
-  // the reader on the decoder thread (Assertions for this checked by
-  // mDecoderStateMachine). This must be called with the decode monitor
-  // held.
-  virtual void UpdatePlaybackPosition(int64_t aTime) = 0;
-
   // May be called by the reader to notify this decoder that the metadata from
   // the media file has been read. Call on the decode thread only.
   virtual void OnReadMetadataCompleted() = 0;

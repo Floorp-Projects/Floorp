@@ -353,13 +353,14 @@ sandbox_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue
 
 static bool
 writeToProto_setProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                    bool strict, JS::MutableHandleValue vp)
+                         JS::MutableHandleValue vp, JS::ObjectOpResult &result)
 {
     RootedObject proto(cx);
     if (!JS_GetPrototype(cx, obj, &proto))
         return false;
 
-    return JS_SetPropertyById(cx, proto, id, vp);
+    RootedValue receiver(cx, ObjectValue(*proto));
+    return JS_ForwardSetPropertyTo(cx, proto, id, vp, receiver, result);
 }
 
 static bool
@@ -734,10 +735,10 @@ bool
 xpc::SandboxProxyHandler::set(JSContext *cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<JSObject*> receiver,
                               JS::Handle<jsid> id,
-                              bool strict,
-                              JS::MutableHandle<Value> vp) const
+                              JS::MutableHandle<Value> vp,
+                              JS::ObjectOpResult &result) const
 {
-    return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+    return BaseProxyHandler::set(cx, proxy, receiver, id, vp, result);
 }
 
 bool

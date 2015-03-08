@@ -883,18 +883,38 @@ class Marionette(object):
             self.start_session()
             self._reset_timeouts()
 
-    def restart(self, clean=False):
+    def restart(self, clean=False, in_app=False):
         """
         This will terminate the currently running instance, and spawn a new instance
         with the same profile and then reuse the session id when creating a session again.
 
-        : param prefs: A dictionary whose keys are preference names.
+        : param clean: If False the same profile will be used after the restart. Note
+                       that the in app initiated restart always maintains the same
+                       profile.
+        : param in_app: If True, marionette will cause a restart from within the
+                        browser. Otherwise the browser will be restarted immediately
+                        by killing the process.
         """
         if not self.instance:
             raise errors.MarionetteException("restart can only be called " \
                                              "on gecko instances launched by Marionette")
-        self.delete_session()
-        self.instance.restart(clean=clean)
+
+        if in_app:
+            if clean:
+                raise ValueError
+            # Values here correspond to constants in nsIAppStartup.
+            # See https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIAppStartup
+            restart_flags = [
+                "eForceQuit",
+                "eRestart",
+            ]
+            try:
+                self._send_message('quitApplication', flags=restart_flags)
+            except IOError:
+                self.client.close()
+        else:
+            self.delete_session()
+            self.instance.restart(clean=clean)
         assert(self.wait_for_port()), "Timed out waiting for port!"
         self.start_session(session_id=self.session_id)
         self._reset_timeouts()
