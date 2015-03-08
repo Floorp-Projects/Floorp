@@ -138,6 +138,8 @@ public:
 
   nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
+  int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
