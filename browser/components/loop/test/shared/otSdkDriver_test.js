@@ -10,6 +10,7 @@ describe("loop.OTSdkDriver", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+
   var sandbox;
   var dispatcher, driver, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
@@ -52,9 +53,15 @@ describe("loop.OTSdkDriver", function () {
       }
     }, Backbone.Events);
 
-    sdk = {
+    sdk = _.extend({
       initPublisher: sinon.stub().returns(publisher),
       initSession: sinon.stub().returns(session)
+    }, Backbone.Events);
+
+    window.OT = {
+      ExceptionCodes: {
+        UNABLE_TO_PUBLISH: 1500
+      }
     };
 
     driver = new loop.OTSdkDriver({
@@ -90,6 +97,37 @@ describe("loop.OTSdkDriver", function () {
       }));
 
       sinon.assert.calledOnce(sdk.initPublisher);
+      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
+    });
+  });
+
+  describe("#retryPublishWithoutVideo", function() {
+    beforeEach(function() {
+      sdk.initPublisher.returns(publisher);
+
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
+        getLocalElementFunc: function() {return fakeLocalElement;},
+        getRemoteElementFunc: function() {return fakeRemoteElement;},
+        publisherConfig: publisherConfig
+      }));
+    });
+
+    it("should make MediaStreamTrack.getSources return without a video source", function(done) {
+      driver.retryPublishWithoutVideo();
+
+      window.MediaStreamTrack.getSources(function(sources) {
+        expect(sources.some(function(src) {
+          return src.kind === "video";
+        })).eql(false);
+
+        done();
+      });
+    });
+
+    it("should call initPublisher", function() {
+      driver.retryPublishWithoutVideo();
+
+      sinon.assert.calledTwice(sdk.initPublisher);
       sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
     });
   });
@@ -625,6 +663,32 @@ describe("loop.OTSdkDriver", function () {
         publisher.trigger("accessDialogOpened", fakeEvent);
 
         sinon.assert.calledOnce(fakeEvent.preventDefault);
+      });
+    });
+
+    describe("exception", function() {
+      describe("Unable to publish (GetUserMedia)", function() {
+        it("should destroy the publisher", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "GetUserMedia"
+          });
+
+          sinon.assert.calledOnce(publisher.destroy);
+        });
+
+        it("should dispatch a ConnectionFailure action", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "GetUserMedia"
+          });
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionFailure({
+              reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+            }));
+        });
       });
     });
   });
