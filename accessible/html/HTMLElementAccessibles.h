@@ -80,7 +80,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 
 protected:
