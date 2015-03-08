@@ -235,6 +235,9 @@
             <label control="thepreviewimage" value="&mediaPreview;" class="header"/>
           </vbox>
           <spacer id="imageSaveBoxSpacer" flex="1"/>
+          <button label="&selectall.label;" accesskey="&selectall.accesskey;"
+                  id="selectallbutton"
+                  oncommand="doSelectAllMedia();"/>
           <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
                   icon="save" id="imagesaveasbutton"
                   oncommand="saveMedia();"/>

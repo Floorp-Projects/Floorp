@@ -10,7 +10,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8272a3d5-2a94-40c0-8ab6-be76583a0221)]
+[scriptable, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -22,12 +22,18 @@ interface nsIStackFrame : nsISupports
     readonly attribute int32_t                 lineNumber;
     readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
+    readonly attribute AString                 asyncCause;
+    readonly attribute nsIStackFrame           asyncCaller;
     readonly attribute nsIStackFrame           caller;
 
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
     readonly attribute AString                 formattedStack;
+
+    // Returns the underlying SavedFrame object for native JavaScript stacks,
+    // or null if this is not a native JavaScript stack frame.
+    readonly attribute jsval                   nativeSavedFrame;
 
     AUTF8String toString();
 };

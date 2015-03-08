@@ -3,15 +3,20 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="@dimen/doorhanger_width"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:background="@drawable/anchored_popup_bg">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:background="@drawable/dropshadow"
+              android:padding="3dp">
 
-    <LinearLayout android:id="@+id/content"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical"/>
+    <ScrollView android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/anchored_popup_bg">
 
-</ScrollView>
+        <LinearLayout android:id="@+id/content"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"/>
+
+    </ScrollView>
+</LinearLayout>
