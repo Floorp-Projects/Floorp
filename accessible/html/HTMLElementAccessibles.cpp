@@ -90,15 +90,3 @@ HTMLOutputAccessible::RelationByType(RelationType aType)
 
   return rel;
 }
-
-already_AddRefed<nsIPersistentProperties>
-HTMLOutputAccessible::NativeAttributes()
-{
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    AccessibleWrap::NativeAttributes();
-  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::live,
-                         NS_LITERAL_STRING("polite"));
-
-  return attributes.forget();
-}
-
