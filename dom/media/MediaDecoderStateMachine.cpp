@@ -259,7 +259,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                  MIN_VIDEO_QUEUE_SIZE);
   }
 
-  mBufferingWait = IsRealTime() ? 0 : 30;
+  mBufferingWait = IsRealTime() ? 0 : 15;
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
 
 #ifdef XP_WIN

@@ -1522,7 +1522,6 @@ void MediaDecoder::StartProgressUpdates()
   mIgnoreProgressData = false;
   if (mResource) {
     mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
-    mDecoderPosition = mPlaybackPosition = mResource->Tell();
   }
 }
 
@@ -1537,7 +1536,7 @@ void MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
 void MediaDecoder::UpdatePlaybackOffset(int64_t aOffset)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mPlaybackPosition = std::max(aOffset, mPlaybackPosition);
+  mPlaybackPosition = aOffset;
 }
 
 bool MediaDecoder::OnStateMachineThread() const
