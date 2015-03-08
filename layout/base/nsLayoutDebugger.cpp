@@ -184,13 +184,14 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << " fixed";
   }
 
-  if (aItem->Frame()->StyleDisplay()->mWillChange.Length() > 0) {
+  const nsStylePosition* pos = aItem->Frame()->StylePosition();
+  if (pos->mWillChange.Length() > 0) {
     aStream << " (will-change=";
-    for (size_t i = 0; i < aItem->Frame()->StyleDisplay()->mWillChange.Length(); i++) {
+    for (size_t i = 0; i < pos->mWillChange.Length(); i++) {
       if (i > 0) {
         aStream << ",";
       }
-      aStream << NS_LossyConvertUTF16toASCII(aItem->Frame()->StyleDisplay()->mWillChange[i]).get();
+      aStream << NS_LossyConvertUTF16toASCII(pos->mWillChange[i]).get();
     }
     aStream << ")";
   }

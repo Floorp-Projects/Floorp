@@ -19,8 +19,7 @@ enum HeadersGuardEnum {
 };
 
 [Constructor(optional HeadersInit init),
- Exposed=(Window,Worker),
- Func="mozilla::dom::Headers::PrefEnabled"]
+ Exposed=(Window,Worker)]
 interface Headers {
   [Throws] void append(ByteString name, ByteString value);
   [Throws] void delete(ByteString name);

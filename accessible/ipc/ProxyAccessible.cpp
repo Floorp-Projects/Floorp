@@ -150,6 +150,22 @@ ProxyAccessible::Relations(nsTArray<RelationType>* aTypes,
 }
 
 int32_t
+ProxyAccessible::CaretOffset()
+{
+  int32_t offset = 0;
+  unused << mDoc->SendCaretOffset(mID, &offset);
+  return offset;
+}
+
+bool
+ProxyAccessible::SetCaretOffset(int32_t aOffset)
+{
+  bool valid = false;
+  unused << mDoc->SendSetCaretOffset(mID, aOffset, &valid);
+  return valid;
+}
+
+int32_t
 ProxyAccessible::CharacterCount()
 {
   int32_t count = 0;
@@ -200,6 +216,58 @@ ProxyAccessible::GetTextBeforeOffset(int32_t aOffset,
 {
   unused << mDoc->SendGetTextBeforeOffset(mID, aOffset, aBoundaryType,
                                           &aText, aStartOffset, aEndOffset);
+}
+
+char16_t
+ProxyAccessible::CharAt(int32_t aOffset)
+{
+  uint16_t retval = 0;
+  unused << mDoc->SendCharAt(mID, aOffset, &retval);
+  return static_cast<char16_t>(retval);
+}
+
+void
+ProxyAccessible::TextAttributes(bool aIncludeDefAttrs,
+                                int32_t aOffset,
+                                nsTArray<Attribute>* aAttributes,
+                                int32_t* aStartOffset,
+                                int32_t* aEndOffset)
+{
+  unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset,
+                                     aAttributes, aStartOffset, aEndOffset);
+}
+
+void
+ProxyAccessible::DefaultTextAttributes(nsTArray<Attribute>* aAttrs)
+{
+  unused << mDoc->SendDefaultTextAttributes(mID, aAttrs);
+}
+
+nsIntRect
+ProxyAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
+                            uint32_t aCoordType)
+{
+  nsIntRect rect;
+  unused <<
+    mDoc->SendTextBounds(mID, aStartOffset, aEndOffset, aCoordType, &rect);
+  return rect;
+}
+
+nsIntRect
+ProxyAccessible::CharBounds(int32_t aOffset, uint32_t aCoordType)
+{
+  nsIntRect rect;
+  unused <<
+    mDoc->SendCharBounds(mID, aOffset, aCoordType, &rect);
+  return rect;
+}
+
+int32_t
+ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
+{
+  int32_t retVal = -1;
+  unused << mDoc->SendOffsetAtPoint(mID, aX, aY, aCoordType, &retVal);
+  return retVal;
 }
 
 }

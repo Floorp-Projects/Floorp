@@ -122,9 +122,7 @@ function loadNextTest() {
 }
 
 // start running the tests
-SpecialPowers.pushPrefEnv({"set": [
-  ["dom.fetch.enabled", true]
-]}, loadNextTest);
+loadNextTest();
 
 </script>
 </body>

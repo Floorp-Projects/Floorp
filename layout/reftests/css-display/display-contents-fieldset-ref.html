@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html><head>
+<style>
+fieldset { padding:0; }
+span { display:block; width:10px; height:10px; background:lime; }
+.contents { }
+legend { border: 1px solid; }
+.test2 legend { }
+.test2 legend::after, .test3 legend::after { content:"legend"; }
+.test2 legend.static, .test3 legend.static { display:block; }
+.test2 legend.static::before, .test3 legend.static::before { content:"static "; }
+.test2 legend.static::before { content:"static "; }
+.after::after { content:"::after"; }
+.before::before { content:"::before"; }
+.nb legend.static  { border: 1px solid; }
+.nb legend { border-style:none; }
+.p0 legend { padding:0; }
+</style>
+</head>
+<body>
+<fieldset><div class="test contents"></div></fieldset>
+<fieldset><div class="test contents">x</div></fieldset>
+<fieldset><div class="test contents after"></div></fieldset>
+<fieldset><div class="test contents before"></div></fieldset>
+<fieldset><div class="test contents before after"></div></fieldset>
+<fieldset><legend class="test contents"></legend></fieldset>
+<fieldset><legend class="test contents" style="padding:0"></legend></fieldset>
+<fieldset><legend class="contents"><div class="test contents"></div></legend></fieldset>
+<fieldset class="test2"></fieldset>
+<fieldset class="test2 after"></fieldset>
+<fieldset class="test2"><legend class="static"></legend></fieldset>
+<fieldset class="test2"><legend class="static contents"></legend></fieldset>
+<fieldset class="test2"><legend class="static" style="padding:0"></legend></fieldset>
+<fieldset class="test2 p0"></fieldset>
+<fieldset class="test2 p0"></fieldset>
+<fieldset class="test2 p0"><legend class="static"></legend></fieldset>
+<fieldset class="test2 p0"><legend class="static"></legend></fieldset>
+<script>
+document.body.offsetHeight;
+var tests = document.querySelectorAll('.test');
+for (i=0; i < tests.length; ++i) {
+  test = tests[i];
+  test.appendChild(document.createElement('span'));
+}
+var tests = document.querySelectorAll('.test2,.test3');
+for (i=0; i < tests.length; ++i) {
+  test = tests[i];
+  test.appendChild(document.createElement('legend'));
+}
+</script>
+</body>
+</html>

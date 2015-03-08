@@ -31,6 +31,13 @@ nsStyleImage::GetSubImage(uint8_t aIndex) const
 }
 
 bool
+nsStylePosition::HasTransform(const nsIFrame* aContextFrame) const
+{
+  NS_ASSERTION(aContextFrame->StylePosition() == this, "unexpected aContextFrame");
+  return HasTransformStyle() && aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
+}
+
+bool
 nsStyleText::HasTextShadow() const
 {
   return mTextShadow;
@@ -117,22 +124,23 @@ nsStyleDisplay::IsFloating(const nsIFrame* aContextFrame) const
 }
 
 bool
-nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const
-{
-  NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
-  return HasTransformStyle() && aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
-}
-
-bool
 nsStyleDisplay::IsPositioned(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
-  return (IsAbsolutelyPositionedStyle() ||
-          IsRelativelyPositionedStyle() ||
-          HasTransform(aContextFrame) ||
-          HasPerspectiveStyle()) &&
-         !aContextFrame->IsSVGText();
+  if (aContextFrame->IsSVGText()) {
+    return false;
+  }
+  if (IsAbsolutelyPositionedStyle() ||
+      IsRelativelyPositionedStyle()) {
+    return true;
+  }
+  const nsStylePosition* position = aContextFrame->StylePosition();
+  if (position->HasTransform(aContextFrame) ||
+      position->HasPerspectiveStyle()) {
+    return true;
+  }
+  return false;
 }
 
 bool

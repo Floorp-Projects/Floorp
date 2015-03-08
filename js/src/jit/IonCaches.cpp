@@ -2933,6 +2933,9 @@ CanAttachNativeSetProp(JSContext *cx, HandleObject obj, HandleId id, ConstantOrR
     if (!shape || (obj != holder && shape->hasDefaultSetter() && shape->hasSlot()))
         return SetPropertyIC::MaybeCanAttachAddSlot;
 
+    if (IsImplicitNonNativeProperty(shape))
+        return SetPropertyIC::CanAttachNone;
+
     if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
         IsCacheableSetPropCallNative(obj, holder, shape) ||
         IsCacheableSetPropCallScripted(obj, holder, shape))

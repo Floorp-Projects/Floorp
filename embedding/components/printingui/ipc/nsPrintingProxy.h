@@ -33,6 +33,12 @@ public:
 
     virtual bool
     DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor) MOZ_OVERRIDE;
+
+    virtual PPrintSettingsDialogChild*
+    AllocPPrintSettingsDialogChild() MOZ_OVERRIDE;
+
+    virtual bool
+    DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor) MOZ_OVERRIDE;
 };
 
 #endif

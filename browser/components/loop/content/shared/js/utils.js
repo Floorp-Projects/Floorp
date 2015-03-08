@@ -36,6 +36,7 @@ loop.shared.utils = (function(mozL10n) {
 
   var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
+    UNABLE_TO_PUBLISH_MEDIA: "unable-to-publish-media",
     COULD_NOT_CONNECT: "reason-could-not-connect",
     NETWORK_DISCONNECTED: "reason-network-disconnected",
     EXPIRED_OR_INVALID: "reason-expired-or-invalid",

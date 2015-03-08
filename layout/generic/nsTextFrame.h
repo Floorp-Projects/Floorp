@@ -252,8 +252,7 @@ public:
                                    uint32_t aSkippedStartOffset = 0,
                                    uint32_t aSkippedMaxLength = UINT32_MAX) MOZ_OVERRIDE;
 
-  nsOverflowAreas
-    RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState);
+  nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame);
 
   enum TextRunType {
     // Anything in reflow (but not intrinsic width calculation) or

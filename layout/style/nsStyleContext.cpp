@@ -562,7 +562,14 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // doesn't get confused by looking at the style data.
   if (!mParent) {
     uint8_t displayVal = disp->mDisplay;
-    nsRuleNode::EnsureBlockDisplay(displayVal, true);
+    if (displayVal != NS_STYLE_DISPLAY_CONTENTS) {
+      nsRuleNode::EnsureBlockDisplay(displayVal, true);
+    } else {
+      // http://dev.w3.org/csswg/css-display/#transformations
+      // "... a display-outside of 'contents' computes to block-level
+      //  on the root element."
+      displayVal = NS_STYLE_DISPLAY_BLOCK;
+    }
     if (displayVal != disp->mDisplay) {
       nsStyleDisplay *mutable_display =
         static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));

@@ -6,6 +6,8 @@
 
 include protocol PContent;
 
+using struct nsIntRect from "nsRect.h";
+
 namespace mozilla {
 namespace a11y {
 
@@ -65,6 +67,8 @@ child:
   // AccessibleText
 
   // TextSubstring is getText in IDL.
+  prio(high) sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
+  prio(high) sync SetCaretOffset(uint64_t aID, int32_t aOffset) returns (bool aValid);
   prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync SelectionCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
@@ -73,8 +77,23 @@ child:
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
   prio(high) sync GetTextAtOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+
   prio(high) sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync CharAt(uint64_t aID, int32_t aOffset) returns(uint16_t aChar);
+
+  prio(high) sync TextAttributes(uint64_t aID, bool aIncludeDefAttrs, int32_t aOffset)
+    returns(Attribute[] aAttributes, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync DefaultTextAttributes(uint64_t aID) returns(Attribute[] aAttributes);
+
+  prio(high) sync TextBounds(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                             uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
+  prio(high) sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
+
+  prio(high) sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
+    returns(int32_t aRetVal);
 };
 
 }

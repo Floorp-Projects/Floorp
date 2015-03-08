@@ -220,13 +220,25 @@ New_HTMLTableHeaderCellIfScope(nsIContent* aContent, Accessible* aContext)
 ////////////////////////////////////////////////////////////////////////////////
 // Markup maps array.
 
-#define MARKUPMAP(atom, new_func, r) \
-  { &nsGkAtoms::atom, new_func, static_cast<a11y::role>(r) },
+#define Attr(name, value) \
+  { &nsGkAtoms::name, &nsGkAtoms::value }
+
+#define AttrFromDOM(name, DOMAttrName) \
+  { &nsGkAtoms::name, nullptr, &nsGkAtoms::DOMAttrName }
+
+#define AttrFromDOMIf(name, DOMAttrName, DOMAttrValue) \
+  { &nsGkAtoms::name, nullptr,  &nsGkAtoms::DOMAttrName, &nsGkAtoms::DOMAttrValue }
+
+#define MARKUPMAP(atom, new_func, r, ... ) \
+  { &nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), { __VA_ARGS__ } },
 
 static const MarkupMapInfo sMarkupMapList[] = {
   #include "MarkupMap.h"
 };
 
+#undef Attr
+#undef AttrFromDOM
+#undef AttrFromDOMIf
 #undef MARKUPMAP
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1608,6 +1620,41 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
   }
 
   return newAcc.forget();
+}
+
+void
+nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
+                                         nsIPersistentProperties* aAttributes) const
+{
+  const mozilla::a11y::MarkupMapInfo* markupMap =
+    mMarkupMaps.Get(aContent->NodeInfo()->NameAtom());
+  if (!markupMap)
+    return;
+
+  for (uint32_t i = 0; i < ArrayLength(markupMap->attrs); i++) {
+    const MarkupAttrInfo* info = markupMap->attrs + i;
+    if (!info->name)
+      break;
+
+    if (info->DOMAttrName) {
+      if (info->DOMAttrValue) {
+        if (aContent->AttrValueIs(kNameSpaceID_None, *info->DOMAttrName,
+                                  *info->DOMAttrValue, eCaseMatters)) {
+          nsAccUtils::SetAccAttr(aAttributes, *info->name, *info->DOMAttrValue);
+        }
+        continue;
+      }
+
+      nsAutoString value;
+      aContent->GetAttr(kNameSpaceID_None, *info->DOMAttrName, value);
+      if (!value.IsEmpty())
+        nsAccUtils::SetAccAttr(aAttributes, *info->name, value);
+
+      continue;
+    }
+
+    nsAccUtils::SetAccAttr(aAttributes, *info->name, *info->value);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
