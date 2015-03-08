@@ -11,6 +11,7 @@
 #include "nsIAccessibleText.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace a11y {
@@ -131,6 +132,11 @@ public:
                       int32_t* aStartOffset,
                       int32_t* aEndOffset);
   void DefaultTextAttributes(nsTArray<Attribute>* aAttrs);
+
+  nsIntRect TextBounds(int32_t aStartOffset, int32_t aEndOffset,
+                       uint32_t aCoordType);
+
+  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
   /**
    * Allow the platform to store a pointers worth of data on us.
