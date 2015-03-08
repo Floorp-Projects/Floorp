@@ -64,6 +64,4 @@ toolkit.jar:
    skin/classic/global/in-content/dropdown.svg                 (../../shared/in-content/dropdown.svg)
    skin/classic/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
    skin/classic/global/in-content/radio.svg                    (../../shared/in-content/radio.svg)
-   skin/classic/global/in-content/sorter.png                   (../../shared/in-content/sorter.png)
-   skin/classic/global/in-content/sorter@2x.png                (../../shared/in-content/sorter@2x.png)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
