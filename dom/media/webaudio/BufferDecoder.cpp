@@ -171,12 +171,6 @@ BufferDecoder::SetMediaEndTime(int64_t aTime)
 }
 
 void
-BufferDecoder::UpdatePlaybackPosition(int64_t aTime)
-{
-  // ignore
-}
-
-void
 BufferDecoder::OnReadMetadataCompleted()
 {
   // ignore

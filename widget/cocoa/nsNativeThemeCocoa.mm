@@ -2597,12 +2597,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_TOOLBOX: {
-      HIThemeHeaderDrawInfo hdi = { 0, kThemeStateActive, kHIThemeHeaderKindWindow };
-      HIThemeDrawHeader(&macRect, &hdi, cgContext, HITHEME_ORIENTATION);
-    }
-      break;
-
     case NS_THEME_STATUSBAR: 
       DrawStatusBar(cgContext, macRect, aFrame);
       break;
@@ -3600,7 +3594,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
-    //case NS_THEME_TOOLBOX:
+    case NS_THEME_TOOLBOX:
     //case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
@@ -3812,6 +3806,8 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
     case NS_THEME_TOOLBAR:
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
       return eThemeGeometryTypeToolbar;
+    case NS_THEME_TOOLBOX:
+      return eThemeGeometryTypeToolbox;
     case NS_THEME_WINDOW_BUTTON_BOX:
       return eThemeGeometryTypeWindowButtons;
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:

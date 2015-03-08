@@ -973,38 +973,50 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 static nscoord AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,
                                           nsMathMLContainerFrame* aFrame);
 
+/* virtual */ void
+nsMathMLContainerFrame::MarkIntrinsicISizesDirty()
+{
+  mIntrinsicWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  nsContainerFrame::MarkIntrinsicISizesDirty();
+}
+
+void
+nsMathMLContainerFrame::UpdateIntrinsicWidth(nsRenderingContext* aRenderingContext)
+{
+  if (mIntrinsicWidth == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    nsHTMLReflowMetrics desiredSize(GetWritingMode());
+    GetIntrinsicISizeMetrics(aRenderingContext, desiredSize);
+
+    // Include the additional width added by FixInterFrameSpacing to ensure
+    // consistent width calculations.
+    AddInterFrameSpacingToSize(desiredSize, this);
+    mIntrinsicWidth = desiredSize.ISize(GetWritingMode());
+  }
+}
+
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsMathMLContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  nsHTMLReflowMetrics desiredSize(GetWritingMode());
-  GetIntrinsicISizeMetrics(aRenderingContext, desiredSize);
-
-  // Include the additional width added by FixInterFrameSpacing to ensure
-  // consistent width calculations.
-  AddInterFrameSpacingToSize(desiredSize, this);
-  result = desiredSize.ISize(GetWritingMode());
+  UpdateIntrinsicWidth(aRenderingContext);
+  result = mIntrinsicWidth;
   return result;
 }
 
 /* virtual */ nscoord
-nsMathMLContainerFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsMathMLContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  nsHTMLReflowMetrics desiredSize(GetWritingMode());
-  GetIntrinsicISizeMetrics(aRenderingContext, desiredSize);
-
-  // Include the additional width added by FixInterFrameSpacing to ensure
-  // consistent width calculations.
-  AddInterFrameSpacingToSize(desiredSize, this);
-  result = desiredSize.ISize(GetWritingMode());
+  UpdateIntrinsicWidth(aRenderingContext);
+  result = mIntrinsicWidth;
   return result;
 }
 
 /* virtual */ void
-nsMathMLContainerFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext, nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLContainerFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
+                                                 nsHTMLReflowMetrics& aDesiredSize)
 {
   // Get child widths
   nsIFrame* childFrame = mFrames.FirstChild();

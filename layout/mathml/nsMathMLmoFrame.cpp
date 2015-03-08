@@ -1035,7 +1035,8 @@ nsMathMLmoFrame::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ void
-nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext *aRenderingContext, nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
+                                          nsHTMLReflowMetrics& aDesiredSize)
 {
   ProcessOperatorData();
   if (UseMathMLChar()) {
@@ -1044,8 +1045,7 @@ nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext *aRenderingContext,
     aDesiredSize.Width() = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
                   nsLayoutUtils::FontSizeInflationFor(this),
-                  stretchHint, mMaxSize,
-                  NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
+                  stretchHint);
   }
   else {
     nsMathMLTokenFrame::GetIntrinsicISizeMetrics(aRenderingContext,

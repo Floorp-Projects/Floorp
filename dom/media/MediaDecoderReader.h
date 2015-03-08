@@ -106,11 +106,14 @@ public:
   }
 
   // Resets all state related to decoding, emptying all buffers etc.
-  // Cancels all pending Request*Data() request callbacks, and flushes the
-  // decode pipeline. The decoder must not call any of the callbacks for
-  // outstanding Request*Data() calls after this is called. Calls to
-  // Request*Data() made after this should be processed as usual.
+  // Cancels all pending Request*Data() request callbacks, rejects any
+  // outstanding seek promises, and flushes the decode pipeline. The
+  // decoder must not call any of the callbacks for outstanding
+  // Request*Data() calls after this is called. Calls to Request*Data()
+  // made after this should be processed as usual.
+  //
   // Normally this call preceedes a Seek() call, or shutdown.
+  //
   // The first samples of every stream produced after a ResetDecode() call
   // *must* be marked as "discontinuities". If it's not, seeking work won't
   // properly!
@@ -164,15 +167,6 @@ public:
   // probably be removed somehow.
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) = 0;
-
-  // Cancels an ongoing seek, if any. Any previously-requested seek is
-  // guaranteeed to be resolved or rejected in finite time, though no
-  // guarantees are made about precise nature of the resolve/reject, since the
-  // promise might have already dispatched a resolution or an error code before
-  // the cancel arrived.
-  //
-  // Must be called on the decode task queue.
-  virtual void CancelSeek() { };
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media

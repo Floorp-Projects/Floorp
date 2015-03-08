@@ -45,6 +45,7 @@ class MOZ_STACK_CLASS SourceBufferHolder;
 
 class HandleValueArray;
 
+class ObjectOpResult;
 }
 
 // Do the importing.
@@ -142,6 +143,8 @@ using JS::TrueHandleValue;
 using JS::FalseHandleValue;
 
 using JS::HandleValueArray;
+
+using JS::ObjectOpResult;
 
 using JS::Zone;
 

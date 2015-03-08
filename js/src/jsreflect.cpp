@@ -742,7 +742,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!SetElement(cx, array, array, i, &val, false))
+        if (!DefineElement(cx, array, i, val))
             return false;
     }
 

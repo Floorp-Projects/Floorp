@@ -973,9 +973,9 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 }
 
 nsEventStatus
-nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
-                                  const ScrollableLayerGuid& aGuid,
-                                  uint64_t aInputBlockId)
+nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
+                                           const ScrollableLayerGuid& aGuid,
+                                           uint64_t aInputBlockId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   InputAPZContext context(aGuid, aInputBlockId);
@@ -1012,6 +1012,25 @@ nsBaseWidget::DispatchEventForAPZ(WidgetGUIEvent* aEvent,
     }
   }
 
+  return status;
+}
+
+nsEventStatus
+nsBaseWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
+{
+  if (mAPZC) {
+    uint64_t inputBlockId = 0;
+    ScrollableLayerGuid guid;
+
+    nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+    if (result == nsEventStatus_eConsumeNoDefault) {
+        return result;
+    }
+    return ProcessUntransformedAPZEvent(aEvent, guid, inputBlockId);
+  }
+
+  nsEventStatus status;
+  DispatchEvent(aEvent, status);
   return status;
 }
 

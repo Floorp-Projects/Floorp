@@ -326,7 +326,7 @@ nsWindow::DispatchTouchEventForAPZ(const MultiTouchInput& aInput,
     // for "normal" flow. The event might get sent to the child process still,
     // but if it doesn't we need to notify the APZ of various things. All of
     // that happens in DispatchEventForAPZ
-    DispatchEventForAPZ(&event, aGuid, aInputBlockId);
+    ProcessUntransformedAPZEvent(&event, aGuid, aInputBlockId);
 }
 
 class DispatchTouchInputOnControllerThread : public Task
