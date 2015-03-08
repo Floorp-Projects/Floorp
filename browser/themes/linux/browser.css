@@ -1616,13 +1616,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Popup blocker button */
 #page-report-button {
-  -moz-appearance: none;
-  padding: 0;
   list-style-image: url("chrome://browser/skin/Info.png");
-}
-
-#page-report-button:focus {
-  outline: 1px dotted;
 }
 
 /* Reader mode button */

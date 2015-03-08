@@ -2901,6 +2901,47 @@ nsXPCComponents_Utils::GetJSTestingFunctions(JSContext *cx,
     return NS_OK;
 }
 
+/* jsval callFunctionWithStack(in jsval function, in nsIStackFrame stack,
+                               in AString asyncCause); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CallFunctionWithAsyncStack(HandleValue function,
+                                                  nsIStackFrame *stack,
+                                                  const nsAString &asyncCause,
+                                                  JSContext *cx,
+                                                  MutableHandleValue retval)
+{
+    nsresult rv;
+
+    if (!stack || asyncCause.IsEmpty()) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    JS::Rooted<JS::Value> asyncStack(cx);
+    rv = stack->GetNativeSavedFrame(&asyncStack);
+    if (NS_FAILED(rv))
+        return rv;
+    if (!asyncStack.isObject()) {
+        JS_ReportError(cx, "Must use a native JavaScript stack frame");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    JS::Rooted<JSObject*> asyncStackObj(cx, &asyncStack.toObject());
+    JS::Rooted<JSString*> asyncCauseString(cx, JS_NewUCStringCopyN(cx, asyncCause.BeginReading(),
+                                                                       asyncCause.Length()));
+    if (!asyncCauseString)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, asyncCauseString);
+
+    if (!JS_CallFunctionValue(cx, JS::NullPtr(), function,
+                              JS::HandleValueArray::empty(), retval))
+    {
+        return NS_ERROR_XPC_JAVASCRIPT_ERROR;
+    }
+
+    return NS_OK;
+}
+
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,

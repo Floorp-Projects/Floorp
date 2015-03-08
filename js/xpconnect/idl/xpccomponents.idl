@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(2617a800-63c1-11e4-9803-0800200c9a66)]
+[scriptable, uuid(0354f8b4-08c6-4074-a466-2b6524b64ca3)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -360,6 +360,20 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     jsval getJSTestingFunctions();
+
+    /*
+     * To be called from JS only.
+     *
+     * Call 'function', using the provided stack as the async stack responsible
+     * for the call, and propagate its return value or the exception it throws.
+     * The function is called with no arguments, and 'this' is 'undefined'.
+     *
+     * The code in the function will see the given stack frame as the
+     * asyncCaller of its own stack frame, instead of the current caller.
+     */
+    [implicit_jscontext]
+    jsval callFunctionWithAsyncStack(in jsval function, in nsIStackFrame stack,
+                                     in AString asyncCause);
 
     /*
      * To be called from JS only.
