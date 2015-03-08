@@ -1083,7 +1083,7 @@ nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
-/* static */ void
+void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
   nsStyleContext *bgSC;
@@ -1093,6 +1093,39 @@ nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
     return;
 
   mPartHasFixedBackground = true;
+}
+
+nsDisplayItemGeometry*
+nsDisplayTableItem::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+{
+  return new nsDisplayTableItemGeometry(this, aBuilder,
+      mFrame->GetOffsetTo(mFrame->PresContext()->PresShell()->GetRootFrame()));
+}
+
+void
+nsDisplayTableItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                              const nsDisplayItemGeometry* aGeometry,
+                                              nsRegion *aInvalidRegion)
+{
+  auto geometry =
+    static_cast<const nsDisplayTableItemGeometry*>(aGeometry);
+
+  bool invalidateForAttachmentFixed = false;
+  if (mPartHasFixedBackground) {
+    nsPoint frameOffsetToViewport = mFrame->GetOffsetTo(
+        mFrame->PresContext()->PresShell()->GetRootFrame());
+    invalidateForAttachmentFixed =
+        frameOffsetToViewport != geometry->mFrameOffsetToViewport;
+  }
+
+  if (invalidateForAttachmentFixed ||
+      (aBuilder->ShouldSyncDecodeImages() &&
+       geometry->ShouldInvalidateToSyncDecodeImages())) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  }
+
+  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
 
 class nsDisplayTableBorderBackground : public nsDisplayTableItem {
@@ -1108,10 +1141,6 @@ public:
   }
 #endif
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion *aInvalidRegion) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("TableBorderBackground", TYPE_TABLE_BORDER_BACKGROUND)
@@ -1131,29 +1160,6 @@ IsFrameAllowedInTable(nsIAtom* aType)
 }
 #endif
 
-nsDisplayItemGeometry*
-nsDisplayTableBorderBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
-{
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
-void
-nsDisplayTableBorderBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                                          const nsDisplayItemGeometry* aGeometry,
-                                                          nsRegion *aInvalidRegion)
-{
-  auto geometry =
-    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsDisplayTableItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
-}
-
 void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
@@ -1163,7 +1169,7 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                ToReferenceFrame(),
                                aBuilder->GetBackgroundPaintFlags());
 
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
 }
 
 static int32_t GetTablePartRank(nsDisplayItem* aItem)
@@ -1286,6 +1292,19 @@ AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
   return false;
 }
 
+static void
+UpdateItemForColGroupBackgrounds(nsDisplayTableItem* item,
+                                 const nsFrameList& aFrames) {
+  for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
+    nsTableColGroupFrame* cg = static_cast<nsTableColGroupFrame*>(e.get());
+    item->UpdateForFrameBackground(cg);
+    for (nsTableColFrame* colFrame = cg->GetFirstColumn(); colFrame;
+         colFrame = colFrame->GetNextCol()) {
+      item->UpdateForFrameBackground(colFrame);
+    }
+  }
+}
+
 // table paint code is concerned primarily with borders and bg color
 // SEC: TODO: adjust the rect for captions
 void
@@ -1320,6 +1339,9 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
   DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
+  if (item) {
+    UpdateItemForColGroupBackgrounds(item, mColGroups);
+  }
 }
 
 nsMargin

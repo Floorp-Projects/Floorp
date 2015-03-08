@@ -472,7 +472,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     // Grab a copy of the global and enter its compartment.
     RootedObject global(aJSContext, wrappedGlobal->GetFlatJSObject());
-    MOZ_ASSERT(!js::GetObjectParent(global));
+    MOZ_ASSERT(JS_IsGlobalObject(global));
 
     if (!InitGlobalObject(aJSContext, global, aFlags))
         return UnexpectedFailure(NS_ERROR_FAILURE);

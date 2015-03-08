@@ -225,6 +225,10 @@ public:
   // Returns true if the given WidgetWheelEvent will resolve to a scroll action.
   static bool WheelEventIsScrollAction(WidgetWheelEvent* aEvent);
 
+  // Returns whether or not a frame can be vertically scrolled with a mouse
+  // wheel (as opposed to, say, a selection or touch scroll).
+  static bool CanVerticallyScrollFrameWithWheel(nsIFrame* aFrame);
+
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
   // the pointer is not locked, but we don't update it while the pointer is
