@@ -256,8 +256,10 @@ protected:
   }
 
   nsCOMPtr<nsIStackFrame> mCaller;
+  nsCOMPtr<nsIStackFrame> mAsyncCaller;
   nsString mFilename;
   nsString mFunname;
+  nsString mAsyncCause;
   int32_t mLineno;
   int32_t mColNo;
   uint32_t mLanguage;
@@ -280,7 +282,7 @@ StackFrame::~StackFrame()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(StackFrame, mCaller)
+NS_IMPL_CYCLE_COLLECTION(StackFrame, mCaller, mAsyncCaller)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StackFrame)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StackFrame)
 
@@ -305,8 +307,11 @@ public:
   NS_IMETHOD GetLanguageName(nsACString& aLanguageName) MOZ_OVERRIDE;
   NS_IMETHOD GetFilename(nsAString& aFilename) MOZ_OVERRIDE;
   NS_IMETHOD GetName(nsAString& aFunction) MOZ_OVERRIDE;
+  NS_IMETHOD GetAsyncCause(nsAString& aAsyncCause) MOZ_OVERRIDE;
+  NS_IMETHOD GetAsyncCaller(nsIStackFrame** aAsyncCaller) MOZ_OVERRIDE;
   NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
   NS_IMETHOD GetFormattedStack(nsAString& aStack) MOZ_OVERRIDE;
+  NS_IMETHOD GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame) MOZ_OVERRIDE;
 
 protected:
   virtual bool IsJSFrame() const MOZ_OVERRIDE {
@@ -326,6 +331,8 @@ private:
   bool mFunnameInitialized;
   bool mLinenoInitialized;
   bool mColNoInitialized;
+  bool mAsyncCauseInitialized;
+  bool mAsyncCallerInitialized;
   bool mCallerInitialized;
   bool mFormattedStackInitialized;
 };
@@ -336,6 +343,8 @@ JSStackFrame::JSStackFrame(JS::Handle<JSObject*> aStack)
   , mFunnameInitialized(false)
   , mLinenoInitialized(false)
   , mColNoInitialized(false)
+  , mAsyncCauseInitialized(false)
+  , mAsyncCallerInitialized(false)
   , mCallerInitialized(false)
   , mFormattedStackInitialized(false)
 {
@@ -578,6 +587,84 @@ NS_IMETHODIMP StackFrame::GetSourceLine(nsACString& aSourceLine)
   return NS_OK;
 }
 
+/* readonly attribute AString asyncCause; */
+NS_IMETHODIMP JSStackFrame::GetAsyncCause(nsAString& aAsyncCause)
+{
+  NS_ENSURE_TRUE(mStack, NS_ERROR_NOT_AVAILABLE);
+  ThreadsafeAutoJSContext cx;
+  JS::Rooted<JSString*> asyncCause(cx);
+  bool canCache = false, useCachedValue = false;
+  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameAsyncCause,
+                      mAsyncCauseInitialized, &canCache, &useCachedValue,
+                      &asyncCause);
+
+  if (useCachedValue) {
+    return StackFrame::GetAsyncCause(aAsyncCause);
+  }
+
+  if (asyncCause) {
+    nsAutoJSString str;
+    if (!str.init(cx, asyncCause)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aAsyncCause = str;
+  } else {
+    aAsyncCause.SetIsVoid(true);
+  }
+
+  if (canCache) {
+    mAsyncCause = aAsyncCause;
+    mAsyncCauseInitialized = true;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP StackFrame::GetAsyncCause(nsAString& aAsyncCause)
+{
+  // The async cause must be set to null if empty.
+  if (mAsyncCause.IsEmpty()) {
+    aAsyncCause.SetIsVoid(true);
+  } else {
+    aAsyncCause.Assign(mAsyncCause);
+  }
+
+  return NS_OK;
+}
+
+/* readonly attribute nsIStackFrame asyncCaller; */
+NS_IMETHODIMP JSStackFrame::GetAsyncCaller(nsIStackFrame** aAsyncCaller)
+{
+  NS_ENSURE_TRUE(mStack, NS_ERROR_NOT_AVAILABLE);
+  ThreadsafeAutoJSContext cx;
+  JS::Rooted<JSObject*> asyncCallerObj(cx);
+  bool canCache = false, useCachedValue = false;
+  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameAsyncParent,
+                      mAsyncCallerInitialized, &canCache, &useCachedValue,
+                      &asyncCallerObj);
+
+  if (useCachedValue) {
+    return StackFrame::GetAsyncCaller(aAsyncCaller);
+  }
+
+  nsCOMPtr<nsIStackFrame> asyncCaller =
+    asyncCallerObj ? new JSStackFrame(asyncCallerObj) : nullptr;
+  asyncCaller.forget(aAsyncCaller);
+
+  if (canCache) {
+    mAsyncCaller = *aAsyncCaller;
+    mAsyncCallerInitialized = true;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP StackFrame::GetAsyncCaller(nsIStackFrame** aAsyncCaller)
+{
+  NS_IF_ADDREF(*aAsyncCaller = mAsyncCaller);
+  return NS_OK;
+}
+
 /* readonly attribute nsIStackFrame caller; */
 NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 {
@@ -661,6 +748,19 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
 NS_IMETHODIMP StackFrame::GetFormattedStack(nsAString& aStack)
 {
   aStack.Truncate();
+  return NS_OK;
+}
+
+/* readonly attribute jsval nativeSavedFrame; */
+NS_IMETHODIMP JSStackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)
+{
+  aSavedFrame.setObjectOrNull(mStack);
+  return NS_OK;
+}
+
+NS_IMETHODIMP StackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame)
+{
+  aSavedFrame.setNull();
   return NS_OK;
 }
 
