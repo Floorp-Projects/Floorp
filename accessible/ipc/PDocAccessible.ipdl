@@ -6,6 +6,8 @@
 
 include protocol PContent;
 
+using struct nsIntRect from "nsRect.h";
+
 namespace mozilla {
 namespace a11y {
 
@@ -83,6 +85,12 @@ child:
   prio(high) sync TextAttributes(uint64_t aID, bool aIncludeDefAttrs, int32_t aOffset)
     returns(Attribute[] aAttributes, int32_t aStartOffset, int32_t aEndOffset);
   prio(high) sync DefaultTextAttributes(uint64_t aID) returns(Attribute[] aAttributes);
+
+  prio(high) sync TextBounds(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                             uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
+  prio(high) sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
+    returns(nsIntRect aRetVal);
 };
 
 }
