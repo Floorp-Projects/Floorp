@@ -8374,7 +8374,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
         RootedValue v(cx, rhs);
-        if (!SetProperty(cx, obj, obj, id, &v, op == JSOP_STRICTSETPROP))
+        if (!PutProperty(cx, obj, id, &v, op == JSOP_STRICTSETPROP))
             return false;
     }
 

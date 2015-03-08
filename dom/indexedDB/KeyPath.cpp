@@ -200,11 +200,11 @@ GetJSValFromKeyPathString(JSContext* aCx,
   if (targetObject) {
     // If this fails, we lose, and the web page sees a magical property
     // appear on the object :-(
-    bool succeeded;
-    if (!JS_DeleteUCProperty2(aCx, targetObject,
-                              targetObjectPropName.get(),
-                              targetObjectPropName.Length(),
-                              &succeeded)) {
+    JS::ObjectOpResult succeeded;
+    if (!JS_DeleteUCProperty(aCx, targetObject,
+                             targetObjectPropName.get(),
+                             targetObjectPropName.Length(),
+                             succeeded)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }

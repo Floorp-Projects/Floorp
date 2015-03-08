@@ -7507,7 +7507,11 @@ nsLayoutUtils::GetContentViewerSize(nsPresContext* aPresContext,
 /* static */ nsSize
 nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
 {
-  nsSize size(aFrame->GetSize());
+  // If we have a scrollable frame, restrict the composition bounds to its
+  // scroll port. The scroll port excludes the frame borders and the scroll
+  // bars, which we don't want to be part of the composition bounds.
+  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
+  nsSize size = scrollableFrame ? scrollableFrame->GetScrollPortRect().Size() : aFrame->GetSize();
 
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
@@ -7556,15 +7560,13 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
           size = LayoutDevicePixel::ToAppUnits(contentSize, auPerDevPixel);
         }
       }
-    }
-  }
 
-  // Adjust composition bounds for the size of scroll bars.
-  nsIScrollableFrame* scrollableFrame = aFrame->GetScrollTargetFrame();
-  if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-    nsMargin margins = scrollableFrame->GetActualScrollbarSizes();
-    size.width -= margins.LeftRight();
-    size.height -= margins.TopBottom();
+      if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+        nsMargin margins = scrollableFrame->GetActualScrollbarSizes();
+        size.width -= margins.LeftRight();
+        size.height -= margins.TopBottom();
+      }
+    }
   }
 
   return size;

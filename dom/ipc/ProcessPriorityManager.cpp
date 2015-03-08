@@ -255,7 +255,6 @@ public:
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
   void OnFrameloaderVisibleChanged(nsISupports* aSubject);
-  void OnChannelConnected(nsISupports* aSubject);
 
   ProcessPriority CurrentPriority();
   ProcessPriority ComputePriority();
@@ -566,7 +565,6 @@ ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
   }
 }
 
-
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
                   nsIObserver,
                   nsITimerCallback,
@@ -846,7 +844,6 @@ ParticularProcessPriorityManager::ScheduleResetPriority(const char* aTimeoutPref
   mResetPriorityTimer = do_CreateInstance("@mozilla.org/timer;1");
   mResetPriorityTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
 }
-
 
 NS_IMETHODIMP
 ParticularProcessPriorityManager::Notify(nsITimer* aTimer)

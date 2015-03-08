@@ -348,12 +348,12 @@ JSPropertyDescriptor::trace(JSTracer *trc)
     if ((attrs & JSPROP_GETTER) && getter) {
         JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, getter);
         MarkObjectRoot(trc, &tmp, "Descriptor::get");
-        getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, tmp);
+        getter = JS_DATA_TO_FUNC_PTR(JSGetterOp, tmp);
     }
     if ((attrs & JSPROP_SETTER) && setter) {
         JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, setter);
         MarkObjectRoot(trc, &tmp, "Descriptor::set");
-        setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, tmp);
+        setter = JS_DATA_TO_FUNC_PTR(JSSetterOp, tmp);
     }
 }
 

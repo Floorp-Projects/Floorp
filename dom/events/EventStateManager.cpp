@@ -87,6 +87,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "GeckoProfiler.h"
 #include "Units.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -2020,6 +2021,21 @@ GetParentFrameToScroll(nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
+/*static*/ bool
+EventStateManager::CanVerticallyScrollFrameWithWheel(nsIFrame* aFrame)
+{
+  nsIContent* c = aFrame->GetContent();
+  if (!c) {
+    return true;
+  }
+  nsCOMPtr<nsITextControlElement> ctrl =
+    do_QueryInterface(c->IsInAnonymousSubtree() ? c->GetBindingParent() : c);
+  if (ctrl && ctrl->IsSingleLineTextControl()) {
+    return false;
+  }
+  return true;
+}
+
 void
 EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
                                                    WidgetWheelEvent* aEvent,
@@ -2288,10 +2304,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 
     // Don't scroll vertically by mouse-wheel on a single-line text control.
     if (checkIfScrollableY) {
-      nsIContent* c = scrollFrame->GetContent();
-      nsCOMPtr<nsITextControlElement> ctrl =
-        do_QueryInterface(c->IsInAnonymousSubtree() ? c->GetBindingParent() : c);
-      if (ctrl && ctrl->IsSingleLineTextControl()) {
+      if (!CanVerticallyScrollFrameWithWheel(scrollFrame)) {
         continue;
       }
     }
@@ -3007,7 +3020,18 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
 
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
-      switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
+
+      // When APZ is enabled, the actual scroll animation might be handled by
+      // the compositor.
+      WheelPrefs::Action action;
+      if (gfxPrefs::AsyncPanZoomEnabled() &&
+          layers::APZCTreeManager::WillHandleWheelEvent(wheelEvent))
+      {
+        action = WheelPrefs::ACTION_NONE;
+      } else {
+        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+      }
+      switch (action) {
         case WheelPrefs::ACTION_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.

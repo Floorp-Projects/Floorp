@@ -40,9 +40,9 @@ EXPORTS.mozilla.plugins += [
     'PluginUtilsOSX.h',
     'PluginWidgetChild.h',
     'PluginWidgetParent.h',
-    'ScopedMethodFactory.h',
     'StreamNotifyChild.h',
     'StreamNotifyParent.h',
+    'TaskFactory.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

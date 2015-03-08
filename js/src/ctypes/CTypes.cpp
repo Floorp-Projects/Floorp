@@ -287,7 +287,8 @@ namespace ArrayType {
   bool LengthGetter(JSContext* cx, JS::CallArgs args);
 
   static bool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
-  static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, MutableHandleValue vp);
+  static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
+                     ObjectOpResult &result);
   static bool AddressOfElement(JSContext* cx, unsigned argc, jsval* vp);
 }
 
@@ -300,9 +301,9 @@ namespace StructType {
   bool FieldsArrayGetter(JSContext* cx, JS::CallArgs args);
 
   static bool FieldGetter(JSContext* cx, HandleObject obj, HandleId idval,
-    MutableHandleValue vp);
-  static bool FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, bool strict,
-                            MutableHandleValue vp);
+                          MutableHandleValue vp);
+  static bool FieldSetter(JSContext* cx, HandleObject obj, HandleId idval,
+                          MutableHandleValue vp, ObjectOpResult &result);
   static bool AddressOfField(JSContext* cx, unsigned argc, jsval* vp);
   static bool Define(JSContext* cx, unsigned argc, jsval* vp);
 }
@@ -4625,7 +4626,8 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
 }
 
 bool
-ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, MutableHandleValue vp)
+ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
+                  ObjectOpResult &result)
 {
   // This should never happen, but we'll check to be safe.
   if (!CData::IsCData(obj)) {
@@ -4637,7 +4639,7 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, 
   // CData, regardless of CType.)
   JSObject* typeObj = CData::GetCType(obj);
   if (CType::GetTypeCode(typeObj) != TYPE_array)
-    return true;
+    return result.succeed();
 
   // Convert the index to a size_t and bounds-check it.
   size_t index;
@@ -4647,7 +4649,7 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, 
   if (!ok && JSID_IS_STRING(idval) && !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
-    return true;
+    return result.succeed();
   }
   if (!ok || index >= length) {
     JS_ReportError(cx, "invalid index");
@@ -4657,7 +4659,9 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, 
   JSObject* baseType = GetBaseType(typeObj);
   size_t elementSize = CType::GetSize(baseType);
   char* data = static_cast<char*>(CData::GetData(obj)) + elementSize * index;
-  return ImplicitConvert(cx, vp, baseType, data, false, nullptr);
+  if (!ImplicitConvert(cx, vp, baseType, data, false, nullptr))
+    return false;
+  return result.succeed();
 }
 
 bool
@@ -5290,7 +5294,8 @@ StructType::FieldGetter(JSContext* cx, HandleObject obj, HandleId idval, Mutable
 }
 
 bool
-StructType::FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, bool strict, MutableHandleValue vp)
+StructType::FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
+                        ObjectOpResult &result)
 {
   if (!CData::IsCData(obj)) {
     JS_ReportError(cx, "not a CData");
@@ -5308,7 +5313,9 @@ StructType::FieldSetter(JSContext* cx, HandleObject obj, HandleId idval, bool st
     return false;
 
   char* data = static_cast<char*>(CData::GetData(obj)) + field->mOffset;
-  return ImplicitConvert(cx, vp, field->mType, data, false, nullptr);
+  if (!ImplicitConvert(cx, vp, field->mType, data, false, nullptr))
+    return false;
+  return result.succeed();
 }
 
 bool
