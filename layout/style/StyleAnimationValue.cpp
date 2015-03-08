@@ -3025,14 +3025,14 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_transform_origin: {
-          const nsStyleDisplay *styleDisplay =
-            static_cast<const nsStyleDisplay*>(styleStruct);
+          const nsStylePosition *stylePosition =
+            static_cast<const nsStylePosition*>(styleStruct);
           nsAutoPtr<nsCSSValueTriplet> triplet(new nsCSSValueTriplet);
-          if (!StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
+          if (!StyleCoordToCSSValue(stylePosition->mTransformOrigin[0],
                                     triplet->mXValue) ||
-              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[1],
+              !StyleCoordToCSSValue(stylePosition->mTransformOrigin[1],
                                     triplet->mYValue) ||
-              !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[2],
+              !StyleCoordToCSSValue(stylePosition->mTransformOrigin[2],
                                     triplet->mZValue)) {
             return false;
           }
@@ -3042,12 +3042,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_perspective_origin: {
-          const nsStyleDisplay *styleDisplay =
-            static_cast<const nsStyleDisplay*>(styleStruct);
+          const nsStylePosition *stylePosition =
+            static_cast<const nsStylePosition*>(styleStruct);
           nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          if (!StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[0],
+          if (!StyleCoordToCSSValue(stylePosition->mPerspectiveOrigin[0],
                                     pair->mXValue) ||
-              !StyleCoordToCSSValue(styleDisplay->mPerspectiveOrigin[1],
+              !StyleCoordToCSSValue(stylePosition->mPerspectiveOrigin[1],
                                     pair->mYValue)) {
             return false;
           }
@@ -3147,29 +3147,29 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_clip: {
-          const nsStyleDisplay *display =
-            static_cast<const nsStyleDisplay*>(styleStruct);
-          if (!(display->mClipFlags & NS_STYLE_CLIP_RECT)) {
+          const nsStylePosition* pos =
+            static_cast<const nsStylePosition*>(styleStruct);
+          if (!(pos->mClipFlags & NS_STYLE_CLIP_RECT)) {
             aComputedValue.SetAutoValue();
           } else {
             nsCSSRect *vrect = new nsCSSRect;
-            const nsRect &srect = display->mClip;
-            if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
+            const nsRect &srect = pos->mClip;
+            if (pos->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
               vrect->mTop.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.y, vrect->mTop);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
+            if (pos->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
               vrect->mRight.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.XMost(), vrect->mRight);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
+            if (pos->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
               vrect->mBottom.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.YMost(), vrect->mBottom);
             }
-            if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
+            if (pos->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
               vrect->mLeft.SetAutoValue();
             } else {
               nscoordToCSSValue(srect.x, vrect->mLeft);
@@ -3339,13 +3339,13 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
         }
 
         case eCSSProperty_transform: {
-          const nsStyleDisplay *display =
-            static_cast<const nsStyleDisplay*>(styleStruct);
+          const nsStylePosition* pos =
+            static_cast<const nsStylePosition*>(styleStruct);
           nsAutoPtr<nsCSSValueList> result;
-          if (display->mSpecifiedTransform) {
+          if (pos->mSpecifiedTransform) {
             // Clone, and convert all lengths (not percents) to pixels.
             nsCSSValueList **resultTail = getter_Transfers(result);
-            for (const nsCSSValueList *l = display->mSpecifiedTransform->mHead;
+            for (const nsCSSValueList *l = pos->mSpecifiedTransform->mHead;
                  l; l = l->mNext) {
               nsCSSValueList *clone = new nsCSSValueList;
               *resultTail = clone;
