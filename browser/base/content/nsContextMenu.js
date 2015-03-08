@@ -1005,12 +1005,11 @@ nsContextMenu.prototype = {
   },
 
   viewImageDesc: function(e) {
-    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.imageDescURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink(this.imageDescURL, e, { disallowInheritPrincipal: true,
-                             referrerURI: doc.documentURIObject });
+                                       referrerURI: gContextMenuContentData.documentURIObject });
   },
 
   viewFrameInfo: function() {
@@ -1080,9 +1079,8 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.bgImageURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    var doc = this.target.ownerDocument;
     openUILink(this.bgImageURL, e, { disallowInheritPrincipal: true,
-                                     referrerURI: doc.documentURIObject });
+                                     referrerURI: gContextMenuContentData.documentURIObject });
   },
 
   disableSetDesktopBackground: function() {
