@@ -44,9 +44,15 @@ describe("loop.OTSdkDriver", function () {
       publishVideo: sinon.stub()
     }, Backbone.Events);
 
-    sdk = {
+    sdk = _.extend({
       initPublisher: sinon.stub().returns(publisher),
       initSession: sinon.stub().returns(session)
+    }, Backbone.Events);
+
+    window.OT = {
+      ExceptionCodes: {
+        UNABLE_TO_PUBLISH: 1500
+      }
     };
 
     driver = new loop.OTSdkDriver({
@@ -82,6 +88,37 @@ describe("loop.OTSdkDriver", function () {
       }));
 
       sinon.assert.calledOnce(sdk.initPublisher);
+      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
+    });
+  });
+
+  describe("#retryPublishWithoutVideo", function() {
+    beforeEach(function() {
+      sdk.initPublisher.returns(publisher);
+
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
+        getLocalElementFunc: function() {return fakeLocalElement;},
+        getRemoteElementFunc: function() {return fakeRemoteElement;},
+        publisherConfig: publisherConfig
+      }));
+    });
+
+    it("should make MediaStreamTrack.getSources return without a video source", function(done) {
+      driver.retryPublishWithoutVideo();
+
+      window.MediaStreamTrack.getSources(function(sources) {
+        expect(sources.some(function(src) {
+          return src.kind === "video";
+        })).eql(false);
+
+        done();
+      });
+    });
+
+    it("should call initPublisher", function() {
+      driver.retryPublishWithoutVideo();
+
+      sinon.assert.calledTwice(sdk.initPublisher);
       sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
     });
   });
