@@ -429,18 +429,28 @@ getOffsetAtPointCB(AtkText *aText,
                    AtkCoordType aCoords)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return -1;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return -1;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return -1;
+    return static_cast<gint>(
+      text->OffsetAtPoint(aX, aY,
+                          (aCoords == ATK_XY_SCREEN ?
+                           nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
+                           nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
+  }
 
-  return static_cast<gint>(
-    text->OffsetAtPoint(aX, aY,
-                        (aCoords == ATK_XY_SCREEN ?
-                         nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
-                         nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return static_cast<gint>(
+      proxy->OffsetAtPoint(aX, aY,
+                           (aCoords == ATK_XY_SCREEN ?
+                            nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
+                            nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
+  }
+
+  return -1;
 }
 
 static gint

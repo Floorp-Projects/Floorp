@@ -262,5 +262,13 @@ ProxyAccessible::CharBounds(int32_t aOffset, uint32_t aCoordType)
   return rect;
 }
 
+int32_t
+ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
+{
+  int32_t retVal = -1;
+  unused << mDoc->SendOffsetAtPoint(mID, aX, aY, aCoordType, &retVal);
+  return retVal;
+}
+
 }
 }
