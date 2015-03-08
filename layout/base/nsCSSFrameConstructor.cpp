@@ -5179,6 +5179,17 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     return &sContainerData;
   }
 
+  // Ensure that a stop frame is a child of a gradient and that gradients
+  // can only have stop children.
+  bool parentIsGradient = aParentFrame &&
+    (aParentFrame->GetType() == nsGkAtoms::svgLinearGradientFrame ||
+     aParentFrame->GetType() == nsGkAtoms::svgRadialGradientFrame);
+  bool stop = (aTag == nsGkAtoms::stop);
+  if ((parentIsGradient && !stop) ||
+      (!parentIsGradient && stop)) {
+    return &sSuppressData;
+  }
+
   // Prevent bad frame types being children of filters or parents of filter
   // primitives.  If aParentFrame is null, we know that the frame that will
   // be created will be an nsInlineFrame, so it can never be a filter.
