@@ -1,1 +1,2 @@
 skip-if(B2G) == legend.html legend-ref.html
+pref(dom.webcomponents.enabled,true) == shadow-dom.html shadow-dom-ref.html

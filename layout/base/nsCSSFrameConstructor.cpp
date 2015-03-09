@@ -3473,14 +3473,11 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
        !IsFrameForFieldSet(aParentFrame, aParentFrame->GetType()) ||
        aStyleContext->StyleDisplay()->IsFloatingStyle() ||
        aStyleContext->StyleDisplay()->IsAbsolutelyPositionedStyle())) {
-    // <legend> is only special inside fieldset, check both the frame tree
-    // parent and content tree parent due to XBL issues. For floated or
-    // absolutely positioned legends we want to construct by display type and
+    // <legend> is only special inside fieldset, we only check the frame tree
+    // parent because the content tree parent may not be a <fieldset> due to
+    // display:contents, Shadow DOM, or XBL. For floated or absolutely
+    // positioned legends we want to construct by display type and
     // not do special legend stuff.
-    // XXXbz it would be nice if we could just decide this based on the parent
-    // tag, and hence just use a SIMPLE_TAG_CHAIN for legend below, but the
-    // fact that with XBL we could end up with this legend element in some
-    // totally weird insertion point makes that chancy, I think.
     return nullptr;
   }
 
