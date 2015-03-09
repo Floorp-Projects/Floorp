@@ -421,13 +421,11 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
 
 JS_FRIEND_API(JSFunction *)
 js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
-                            JSObject *parentArg, const char *name)
+                            const char *name)
 {
-    RootedObject parent(cx, parentArg);
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, parent);
 
     RootedAtom atom(cx);
     if (name) {
@@ -437,7 +435,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
     }
 
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom,
+    return NewFunction(cx, NullPtr(), native, nargs, funFlags, NullPtr(), atom,
                        JSFunction::ExtendedFinalizeKind);
 }
 
