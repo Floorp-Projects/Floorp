@@ -53,7 +53,7 @@
       "threshold": { "param": true },
       "knee": { "param": true },
       "ratio": { "param": true },
-      "reduction": {},
+      "reduction": { "param": true },
       "attack": { "param": true },
       "release": { "param": true }
     }
@@ -101,7 +101,7 @@
   },
   "StereoPannerNode": {
     "properties": {
-      "pan": {}
+      "pan": { "param": true }
     }
   }
 }
