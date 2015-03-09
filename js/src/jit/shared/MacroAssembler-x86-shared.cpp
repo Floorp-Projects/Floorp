@@ -56,6 +56,9 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
         storeUnalignedInt32x4(*iter, Address(StackPointer, diffF));
     }
     MOZ_ASSERT(numSimd == 0);
+    // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
+    // GetPushBytesInSize.
+    diffF -= diffF % sizeof(uintptr_t);
     MOZ_ASSERT(diffF == 0);
 }
 
@@ -101,6 +104,9 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     }
     freeStack(reservedF);
     MOZ_ASSERT(numDouble == 0);
+    // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
+    // GetPushBytesInSize.
+    diffF -= diffF % sizeof(uintptr_t);
     MOZ_ASSERT(diffF == 0);
 
     // On x86, use pop to pop the integer registers, if we're not going to
