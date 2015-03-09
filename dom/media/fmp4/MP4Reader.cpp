@@ -497,7 +497,6 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, NS_ERROR_FAILURE);
     nsresult rv = mVideo.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, rv);
-    mInfo.mVideo.mIsHardwareAccelerated = mVideo.mDecoder->IsHardwareAccelerated();
 
     // Collect telemetry from h264 AVCC SPS.
     if (!mFoundSPSForTelemetry) {
@@ -1098,6 +1097,12 @@ MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 #if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
   mSharedDecoderManager = aManager;
 #endif
+}
+
+bool
+MP4Reader::VideoIsHardwareAccelerated() const
+{
+  return mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
 }
 
 } // namespace mozilla
