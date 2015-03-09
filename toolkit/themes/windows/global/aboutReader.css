@@ -454,3 +454,9 @@ body {
 .plus-button {
   background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
 }
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+}
