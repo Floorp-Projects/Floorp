@@ -28,7 +28,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:
 
 TEST_DIRS += [
     'tests',
-    'sample',
     'typelib/xpt/tests',
 ]
 
