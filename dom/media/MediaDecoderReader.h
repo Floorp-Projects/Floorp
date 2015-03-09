@@ -256,6 +256,10 @@ public:
   // the newer async model.
   virtual bool IsAsync() const { return false; }
 
+  // Returns true if this decoder reader uses hardware accelerated video
+  // decoding.
+  virtual bool VideoIsHardwareAccelerated() const { return false; }
+
 protected:
   virtual ~MediaDecoderReader();
 
