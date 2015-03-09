@@ -40,7 +40,8 @@ nsStylePosition::HasTransform(const nsIFrame* aContextFrame) const
 bool
 nsStylePosition::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
 {
-  return (HasTransform(aContextFrame) || HasPerspectiveStyle()) &&
+  return (HasTransform(aContextFrame) || HasPerspectiveStyle() ||
+          !aContextFrame->StyleSVGReset()->mFilters.IsEmpty()) &&
       !aContextFrame->IsSVGText();
 }
 
