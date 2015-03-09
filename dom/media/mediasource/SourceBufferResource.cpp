@@ -47,7 +47,7 @@ nsresult
 SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
   SBR_DEBUGV("Read(aBuffer=%p, aCount=%u, aBytes=%p)",
-             aBytes, aCount, aBytes);
+             aBuffer, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
 
   return ReadInternal(aBuffer, aCount, aBytes, /* aMayBlock = */ true);
@@ -74,7 +74,7 @@ SourceBufferResource::ReadInternal(char* aBuffer, uint32_t aCount, uint32_t* aBy
   uint32_t available = GetLength() - readOffset;
   uint32_t count = std::min(aCount, available);
   SBR_DEBUGV("readOffset=%llu GetLength()=%u available=%u count=%u mEnded=%d",
-             this, readOffset, GetLength(), available, count, mEnded);
+             readOffset, GetLength(), available, count, mEnded);
   if (available == 0) {
     SBR_DEBUGV("reached EOF");
     *aBytes = 0;

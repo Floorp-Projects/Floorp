@@ -75,6 +75,10 @@ public:
   virtual nsresult Flush() MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
   virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE
+  {
+    return true;
+  }
 
   nsresult OutputFrame(CVPixelBufferRef aImage,
                        nsAutoPtr<AppleFrameRef> aFrameRef);
