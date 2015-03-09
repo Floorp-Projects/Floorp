@@ -355,7 +355,7 @@ class TestLoader(object):
 
         for test_path, test_type, test in self.iter_tests():
             enabled = not test.disabled()
-            if not self.include_https and test.protocol == "https":
+            if not self.include_https and test.environment["protocol"] == "https":
                 enabled = False
             key = "enabled" if enabled else "disabled"
             tests[key][test_type].append(test)
