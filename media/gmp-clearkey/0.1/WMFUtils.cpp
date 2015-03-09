@@ -55,7 +55,7 @@ LinkMfplat()
   static bool sInitOk = false;
   if (!sInitDone) {
     sInitDone = true;
-    auto handle = GetModuleHandle("mfplat.dll");
+    auto handle = GetModuleHandleA("mfplat.dll");
 #define MFPLAT_FUNC(_func) \
     if (!(_func = (decltype(_func))(GetProcAddress(handle, #_func)))) { \
       return false; \
@@ -74,9 +74,9 @@ EnsureLibs()
   static bool sInitOk = false;
   if (!sInitDone) {
     sInitOk = LinkMfplat() &&
-      !!GetModuleHandle("msauddecmft.dll") &&
-      !!GetModuleHandle("msmpeg2adec.dll") &&
-      !!GetModuleHandle("msmpeg2vdec.dll");
+      !!GetModuleHandleA("msauddecmft.dll") &&
+      !!GetModuleHandleA("msmpeg2adec.dll") &&
+      !!GetModuleHandleA("msmpeg2vdec.dll");
     sInitDone = true;
   }
   return sInitOk;
@@ -183,7 +183,7 @@ CreateMFT(const CLSID& clsid,
           const char* aDllName,
           CComPtr<IMFTransform>& aOutMFT)
 {
-  HMODULE module = ::GetModuleHandle(aDllName);
+  HMODULE module = ::GetModuleHandleA(aDllName);
   if (!module) {
     LOG("Failed to get %S\n", aDllName);
     return E_FAIL;

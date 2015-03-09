@@ -919,10 +919,11 @@ protected:
   uint32_t mBufferingWait;
   int64_t  mLowDataThresholdUsecs;
 
-  // If we've got more than mAmpleVideoFrames decoded video frames waiting in
+  // If we've got more than this number of decoded video frames waiting in
   // the video queue, we will not decode any more video frames until some have
   // been consumed by the play state machine thread.
-  uint32_t mAmpleVideoFrames;
+  // Must hold monitor.
+  uint32_t GetAmpleVideoFrames() const;
 
   // Low audio threshold. If we've decoded less than this much audio we
   // consider our audio decode "behind", and we may skip video decoding
@@ -961,7 +962,11 @@ protected:
     MOZ_ASSERT(result <= mAmpleAudioThresholdUsecs, "Prerolling will never finish");
     return result;
   }
-  uint32_t VideoPrerollFrames() const { return mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2; }
+
+  uint32_t VideoPrerollFrames() const
+  {
+    return mScheduler->IsRealTime() ? 0 : GetAmpleVideoFrames() / 2;
+  }
 
   bool DonePrerollingAudio()
   {
