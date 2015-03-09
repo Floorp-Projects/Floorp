@@ -125,7 +125,9 @@ describe("loop.webapp", function() {
         client: client,
         conversation: conversation,
         notifications: notifications,
-        sdk: {},
+        sdk: {
+          on: sandbox.stub()
+        },
         feedbackStore: feedbackStore
       });
     });

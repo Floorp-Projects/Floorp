@@ -147,7 +147,8 @@ loop.shared.views = (function(_, OT, l10n) {
       sdk: React.PropTypes.object.isRequired,
       video: React.PropTypes.object,
       audio: React.PropTypes.object,
-      initiate: React.PropTypes.bool
+      initiate: React.PropTypes.bool,
+      isDesktop: React.PropTypes.bool
     },
 
     // height set to 100%" to fix video layout on Google Chrome
@@ -167,6 +168,7 @@ loop.shared.views = (function(_, OT, l10n) {
     getDefaultProps: function() {
       return {
         initiate: true,
+        isDesktop: false,
         video: {enabled: true, visible: true},
         audio: {enabled: true, visible: true}
       };
@@ -187,6 +189,23 @@ loop.shared.views = (function(_, OT, l10n) {
 
     componentDidMount: function() {
       if (this.props.initiate) {
+        /**
+         * XXX This is a workaround for desktop machines that do not have a
+         * camera installed. As we don't yet have device enumeration, when
+         * we do, this can be removed (bug 1138851), and the sdk should handle it.
+         */
+        if (this.props.isDesktop &&
+            !window.MediaStreamTrack.getSources) {
+          // If there's no getSources function, the sdk defines its own and caches
+          // the result. So here we define the "normal" one which doesn't get cached, so
+          // we can change it later.
+          window.MediaStreamTrack.getSources = function(callback) {
+            callback([{kind: "audio"}, {kind: "video"}]);
+          };
+        }
+
+        this.listenTo(this.props.sdk, "exception", this._handleSdkException.bind(this));
+
         this.listenTo(this.props.model, "session:connected",
                                         this._onSessionConnected);
         this.listenTo(this.props.model, "session:stream-created",
@@ -248,6 +267,35 @@ loop.shared.views = (function(_, OT, l10n) {
     _streamCreated: function(event) {
       var incoming = this.getDOMNode().querySelector(".remote");
       this.props.model.subscribe(event.stream, incoming, this.publisherConfig);
+    },
+
+    /**
+     * Handles the SDK Exception event.
+     *
+     * https://tokbox.com/opentok/libraries/client/js/reference/ExceptionEvent.html
+     *
+     * @param {ExceptionEvent} event
+     */
+    _handleSdkException: function(event) {
+      /**
+       * XXX This is a workaround for desktop machines that do not have a
+       * camera installed. As we don't yet have device enumeration, when
+       * we do, this can be removed (bug 1138851), and the sdk should handle it.
+       */
+      if (this.publisher &&
+          event.code === OT.ExceptionCodes.UNABLE_TO_PUBLISH &&
+          event.message === "Unknown Error while getting user media" &&
+          this.state.video.enabled) {
+        this.state.video.enabled = false;
+
+        window.MediaStreamTrack.getSources = function(callback) {
+          callback([{kind: "audio"}]);
+        };
+
+        this.stopListening(this.publisher);
+        this.publisher.destroy();
+        this.startPublishing();
+      }
     },
 
     /**
