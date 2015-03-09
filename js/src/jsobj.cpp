@@ -1801,8 +1801,9 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
         if (!group)
             return nullptr;
         RootedObject proto(cx, group->proto().toObject());
-        RootedObject parent(cx, obj->getParent());
-        clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto, parent, kind,
+        obj->assertParentIs(cx->global());
+        clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto,
+                                              NullPtr(), kind,
                                               newKind);
     }
 
@@ -1869,8 +1870,8 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
 {
     assertSameCompartment(cx, src, dst);
     MOZ_ASSERT(src->getClass() == dst->getClass());
-    MOZ_ASSERT(src->getParent() == dst->getParent());
-    MOZ_ASSERT(dst->getParent() == cx->global());
+    src->assertParentIs(cx->global());
+    dst->assertParentIs(cx->global());
     MOZ_ASSERT(src->getProto() == dst->getProto());
     MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
     MOZ_ASSERT(!src->getMetadata());
@@ -2415,7 +2416,7 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
 static void
 SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 {
-    MOZ_ASSERT(!obj->getParent());
+    obj->assertParentIs(nullptr);
     if (!obj->is<GlobalObject>())
         return;
 
@@ -2426,7 +2427,7 @@ SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 static void
 ClearClassObject(JSObject *obj, JSProtoKey key)
 {
-    MOZ_ASSERT(!obj->getParent());
+    obj->assertParentIs(nullptr);
     if (!obj->is<GlobalObject>())
         return;
 

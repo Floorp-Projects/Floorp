@@ -1927,7 +1927,8 @@ JS_NewObject(JSContext *cx, const JSClass *jsclasp)
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, NullPtr(), NullPtr());
-    MOZ_ASSERT_IF(obj, obj->getParent());
+    if (obj)
+        obj->assertParentIs(cx->global());
     return obj;
 }
 
