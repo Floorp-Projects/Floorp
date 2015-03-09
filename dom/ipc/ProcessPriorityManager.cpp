@@ -195,9 +195,21 @@ public:
    */
   virtual void Notify(const WakeLockInformation& aInfo) MOZ_OVERRIDE;
 
+  /**
+   * Prevents processes from changing priority until unfrozen.
+   */
+  void Freeze();
+
+  /**
+   * Allow process' priorities to change again.  This will immediately adjust
+   * processes whose priority change did not happen because of the freeze.
+   */
+  void Unfreeze();
+
 private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
+  static bool sFrozen;
   static StaticRefPtr<ProcessPriorityManagerImpl> sSingleton;
 
   static void PrefChangedCallback(const char* aPref, void* aClosure);
@@ -271,7 +283,8 @@ class ParticularProcessPriorityManager MOZ_FINAL
 {
   ~ParticularProcessPriorityManager();
 public:
-  explicit ParticularProcessPriorityManager(ContentParent* aContentParent);
+  explicit ParticularProcessPriorityManager(ContentParent* aContentParent,
+                                            bool aFrozen = false);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -310,6 +323,8 @@ public:
   void ResetPriority();
   void ResetPriorityNow();
   void SetPriorityNow(ProcessPriority aPriority, uint32_t aLRU = 0);
+  void Freeze();
+  void Unfreeze();
 
   void ShutDown();
 
@@ -328,6 +343,7 @@ private:
   uint32_t mLRU;
   bool mHoldsCPUWakeLock;
   bool mHoldsHighPriorityWakeLock;
+  bool mFrozen;
 
   /**
    * Used to implement NameWithComma().
@@ -339,6 +355,7 @@ private:
 
 /* static */ bool ProcessPriorityManagerImpl::sInitialized = false;
 /* static */ bool ProcessPriorityManagerImpl::sPrefListenersRegistered = false;
+/* static */ bool ProcessPriorityManagerImpl::sFrozen = false;
 /* static */ StaticRefPtr<ProcessPriorityManagerImpl>
   ProcessPriorityManagerImpl::sSingleton;
 
@@ -469,7 +486,7 @@ ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
   uint64_t cpId = aContentParent->ChildID();
   mParticularManagers.Get(cpId, &pppm);
   if (!pppm) {
-    pppm = new ParticularProcessPriorityManager(aContentParent);
+    pppm = new ParticularProcessPriorityManager(aContentParent, sFrozen);
     pppm->Init();
     mParticularManagers.Put(cpId, pppm);
 
@@ -590,19 +607,56 @@ ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
   }
 }
 
+static PLDHashOperator
+FreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Freeze();
+  return PL_DHASH_NEXT;
+}
+
+void
+ProcessPriorityManagerImpl::Freeze()
+{
+  sFrozen = true;
+  mParticularManagers.EnumerateRead(&FreezeParticularProcessPriorityManagers,
+                                    nullptr);
+}
+
+static PLDHashOperator
+UnfreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Unfreeze();
+  return PL_DHASH_NEXT;
+}
+
+void
+ProcessPriorityManagerImpl::Unfreeze()
+{
+  sFrozen = false;
+  mParticularManagers.EnumerateRead(&UnfreezeParticularProcessPriorityManagers,
+                                    nullptr);
+}
+
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
                   nsIObserver,
                   nsITimerCallback,
                   nsISupportsWeakReference);
 
 ParticularProcessPriorityManager::ParticularProcessPriorityManager(
-  ContentParent* aContentParent)
+  ContentParent* aContentParent, bool aFrozen)
   : mContentParent(aContentParent)
   , mChildID(aContentParent->ChildID())
   , mPriority(PROCESS_PRIORITY_UNKNOWN)
   , mLRU(0)
   , mHoldsCPUWakeLock(false)
   , mHoldsHighPriorityWakeLock(false)
+  , mFrozen(aFrozen)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   LOGP("Creating ParticularProcessPriorityManager.");
@@ -972,6 +1026,7 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   if (!ProcessPriorityManagerImpl::PrefsEnabled() ||
       !mContentParent ||
+      mFrozen ||
       ((mPriority == aPriority) && (mLRU == aLRU))) {
     return;
   }
@@ -1010,6 +1065,19 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   FireTestOnlyObserverNotification("process-priority-set",
     ProcessPriorityToString(mPriority));
+}
+
+void
+ParticularProcessPriorityManager::Freeze()
+{
+  mFrozen = true;
+}
+
+void
+ParticularProcessPriorityManager::Unfreeze()
+{
+  mFrozen = false;
+  ResetPriorityNow();
 }
 
 void
@@ -1314,6 +1382,26 @@ ProcessPriorityManager::AnyProcessHasHighPriority()
   } else {
     return ProcessPriorityManagerChild::Singleton()->
       CurrentProcessIsHighPriority();
+  }
+}
+
+/* static */ void
+ProcessPriorityManager::Freeze()
+{
+  ProcessPriorityManagerImpl* singleton =
+    ProcessPriorityManagerImpl::GetSingleton();
+  if (singleton) {
+    singleton->Freeze();
+  }
+}
+
+/* static */ void
+ProcessPriorityManager::Unfreeze()
+{
+  ProcessPriorityManagerImpl* singleton =
+    ProcessPriorityManagerImpl::GetSingleton();
+  if (singleton) {
+    singleton->Unfreeze();
   }
 }
 
