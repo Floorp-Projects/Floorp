@@ -43,12 +43,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(y.contentWindow, window[1], "Second frame should have correct window");
 
   // set() hook test
-  throws(TypeError, function () {
-    "use strict";
-    window[1] = "FAIL strict";
-  });
-
-  // set() hook test
   window[1] = "FAIL";
   is(window[1].name, "y", "Second frame is still y");
   y.parentNode.removeChild(y);
@@ -77,10 +71,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "We should not have a value here either");
 
   // More set() hook test
-  throws(TypeError, function () {
-    "use strict";
-    window[1] = "FAIL3 strict";
-  });
   window[1] = "FAIL3";
   ok(!("1" in window), "We shouldn't allow indexed expandos");
   is(window[1], undefined, "We should not have a value for an indexed expando");

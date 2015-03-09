@@ -917,9 +917,9 @@ nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
-    // Reject the set.  It's up to the caller to decide whether to throw a
-    // TypeError.  If the caller is strict mode JS code, it'll throw.
-    return result.failReadOnly();
+    // Reject (which means throw if and only if strict) the set.
+    // XXX See bug 828137.
+    return result.succeed();
   }
 
   return js::Wrapper::set(cx, proxy, receiver, id, vp, result);
