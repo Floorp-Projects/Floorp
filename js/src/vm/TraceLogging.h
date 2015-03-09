@@ -195,6 +195,10 @@ class TraceLoggerThread
     bool enable(JSContext *cx);
     bool disable();
 
+  private:
+    bool fail(JSContext *cx, const char *error);
+
+  public:
     // Given the previous iteration and lastEntryId, return an array of events
     // (there could be lost events). At the same time update the iteration and
     // lastEntry and gives back how many events there are.
