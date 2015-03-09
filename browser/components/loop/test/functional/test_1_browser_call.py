@@ -111,8 +111,8 @@ class Test1BrowserCall(MarionetteTestCase):
         room_url = pyperclip.paste()
 
         self.assertIn(urlparse.urlparse(room_url).scheme, ['http', 'https'],
-                      "room URL returned by server " + room_url +
-                      " has invalid scheme")
+                      "room URL returned by server: '" + room_url +
+                      "' has invalid scheme")
         return room_url
 
     def standalone_load_and_join_room(self, url):
