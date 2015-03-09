@@ -111,16 +111,9 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
 
   if (aTouch.mType == MultiTouchInput::MULTITOUCH_MOVE) {
     MutexAutoLock lock(mTouchQueueLock);
+    mTouchMoveEvents.push_back(aTouch);
     if (mResamplingEnabled) {
-      mTouchMoveEvents.push_back(aTouch);
       return;
-    }
-
-    if (mTouchMoveEvents.empty()) {
-      mTouchMoveEvents.push_back(aTouch);
-    } else {
-      // Coalesce touch move events
-      mTouchMoveEvents.back() = aTouch;
     }
 
     layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
