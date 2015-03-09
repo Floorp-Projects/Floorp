@@ -192,6 +192,7 @@ UNIFIED_SOURCES += [
     'MediaStreamGraph.cpp',
     'MediaStreamTrack.cpp',
     'MediaTaskQueue.cpp',
+    'MediaTimer.cpp',
     'MediaTrack.cpp',
     'MediaTrackList.cpp',
     'MP3FrameParser.cpp',
