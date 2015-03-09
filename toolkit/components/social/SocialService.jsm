@@ -601,10 +601,15 @@ this.SocialService = {
         aAddon.userDisabled = false;
       }
       schedule(function () {
-        this._installProvider(data, options, aManifest => {
-          this._notifyProviderListeners("provider-installed", aManifest.origin);
-          installCallback(aManifest);
-        });
+        try {
+          this._installProvider(data, options, aManifest => {
+              this._notifyProviderListeners("provider-installed", aManifest.origin);
+              installCallback(aManifest);
+          });
+        } catch(e) {
+          Cu.reportError("Activation failed: " + e);
+          installCallback(null);
+        }
       }.bind(this));
     }.bind(this));
   },
@@ -615,6 +620,12 @@ this.SocialService = {
 
     if (data.installType == "foreign" && !Services.prefs.getBoolPref("social.remote-install.enabled"))
       throw new Error("Remote install of services is disabled");
+
+    // if installing from any website, the install must happen over https.
+    // "internal" are installs from about:home or similar
+    if (data.installType != "internal" && !Services.io.newURI(data.origin, null, null).schemeIs("https")) {
+      throw new Error("attempt to activate provider over unsecured channel: " + data.origin);
+    }
 
     let installer = new AddonInstaller(data.url, data.manifest, installCallback);
     let bypassPanel = options.bypassInstallPanel ||
