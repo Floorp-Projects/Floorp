@@ -1081,6 +1081,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
+  MOZ_ASSERT(!mCompositorParent,
+    "Should have properly cleaned up the previous CompositorParent beforehand");
+
   // Recreating this is tricky, as we may still have an old and we need
   // to make sure it's properly destroyed by calling DestroyCompositor!
 
@@ -1380,28 +1383,6 @@ bool
 nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   return false;
-}
-
-NS_IMETHODIMP
-nsBaseWidget::SetLayersAcceleration(bool aEnabled)
-{
-  if (mUseLayersAcceleration == aEnabled) {
-    return NS_OK;
-  }
-
-  bool usedAcceleration = mUseLayersAcceleration;
-
-  mUseLayersAcceleration = ComputeShouldAccelerate(aEnabled);
-  // ComputeShouldAccelerate may have set mUseLayersAcceleration to a value
-  // different from aEnabled.
-  if (usedAcceleration == mUseLayersAcceleration) {
-    return NS_OK;
-  }
-  if (mLayerManager) {
-    mLayerManager->Destroy();
-  }
-  mLayerManager = nullptr;
-  return NS_OK;
 }
 
 NS_METHOD nsBaseWidget::RegisterTouchWindow()
