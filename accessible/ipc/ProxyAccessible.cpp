@@ -270,5 +270,45 @@ ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
   return retVal;
 }
 
+bool
+ProxyAccessible::SelectionBoundsAt(int32_t aSelectionNum,
+                                   nsString& aData,
+                                   int32_t* aStartOffset,
+                                   int32_t* aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendSelectionBoundsAt(mID, aSelectionNum, &retVal, &aData,
+                                        aStartOffset, aEndOffset);
+  return retVal;
+}
+
+bool
+ProxyAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
+                                      int32_t aStartOffset,
+                                      int32_t aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendSetSelectionBoundsAt(mID, aSelectionNum, aStartOffset,
+                                           aEndOffset, &retVal);
+  return retVal;
+}
+
+bool
+ProxyAccessible::AddToSelection(int32_t aStartOffset,
+                                int32_t aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendAddToSelection(mID, aStartOffset, aEndOffset, &retVal);
+  return retVal;
+}
+
+bool
+ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum)
+{
+  bool retVal = false;
+  unused << mDoc->SendRemoveFromSelection(mID, aSelectionNum, &retVal);
+  return retVal;
+}
+
 }
 }

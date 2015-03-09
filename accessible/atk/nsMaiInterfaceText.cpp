@@ -478,20 +478,28 @@ getTextSelectionCB(AtkText *aText, gint aSelectionNum,
                    gint *aStartOffset, gint *aEndOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return nullptr;
-
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return nullptr;
-
   int32_t startOffset = 0, endOffset = 0;
-  text->SelectionBoundsAt(aSelectionNum, &startOffset, &endOffset);
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return nullptr;
+    }
 
+    text->SelectionBoundsAt(aSelectionNum, &startOffset, &endOffset);
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
 
     return getTextCB(aText, *aStartOffset, *aEndOffset);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    nsString data;
+    proxy->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);
+    *aStartOffset = startOffset;
+    *aEndOffset = endOffset;
+
+    NS_ConvertUTF16toUTF8 dataAsUTF8(data);
+    return (dataAsUTF8.get()) ? g_strdup(dataAsUTF8.get()) : nullptr;
+  }
+  return nullptr;
 }
 
 // set methods
@@ -501,14 +509,18 @@ addTextSelectionCB(AtkText *aText,
                    gint aEndOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return FALSE;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return FALSE;
+    return text->AddToSelection(aStartOffset, aEndOffset);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return proxy->AddToSelection(aStartOffset, aEndOffset);
+  }
 
-  return text->AddToSelection(aStartOffset, aEndOffset);
+  return FALSE;
 }
 
 static gboolean
@@ -516,14 +528,18 @@ removeTextSelectionCB(AtkText *aText,
                       gint aSelectionNum)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return FALSE;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return FALSE;
+    return text->RemoveFromSelection(aSelectionNum);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return proxy->RemoveFromSelection(aSelectionNum);
+  }
 
-  return text->RemoveFromSelection(aSelectionNum);
+  return FALSE;
 }
 
 static gboolean
@@ -531,14 +547,18 @@ setTextSelectionCB(AtkText *aText, gint aSelectionNum,
                    gint aStartOffset, gint aEndOffset)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return FALSE;
+    }
 
-  HyperTextAccessible* text = accWrap->AsHyperText();
-  if (!text || !text->IsTextRole())
-    return FALSE;
+    return text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return proxy->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  }
 
-  return text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  return FALSE;
 }
 
 static gboolean
