@@ -425,8 +425,7 @@ CreateConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
                   const JSNativeHolder* nativeHolder, unsigned ctorNargs)
 {
   JSFunction* fun = js::NewFunctionWithReserved(cx, Constructor, ctorNargs,
-                                                JSFUN_CONSTRUCTOR, global,
-                                                name);
+                                                JSFUN_CONSTRUCTOR, name);
   if (!fun) {
     return nullptr;
   }

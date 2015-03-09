@@ -1243,7 +1243,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
       }
     } else {
       JSFunction* fun = js::NewFunctionWithReserved(cx, LazyStackGetter, 0, 0,
-                                                    eventObj, "stacktrace");
+                                                    "stacktrace");
       if (!fun) {
         return;
       }
