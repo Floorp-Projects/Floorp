@@ -11,7 +11,7 @@ struct nsFont;
 
 namespace mozilla {
 namespace embedding {
-  class PrintData;
+  struct PrintData;
 }
 }
 %}
