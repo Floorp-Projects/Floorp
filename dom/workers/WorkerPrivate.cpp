@@ -5415,7 +5415,7 @@ WorkerPrivate::AddFeature(JSContext* aCx, WorkerFeature* aFeature)
     }
   }
 
-  NS_ASSERTION(!mFeatures.Contains(aFeature), "Already know about this one!");
+  MOZ_ASSERT(!mFeatures.Contains(aFeature), "Already know about this one!");
   mFeatures.AppendElement(aFeature);
 
   return mFeatures.Length() == 1 ?
@@ -5428,7 +5428,7 @@ WorkerPrivate::RemoveFeature(JSContext* aCx, WorkerFeature* aFeature)
 {
   AssertIsOnWorkerThread();
 
-  NS_ASSERTION(mFeatures.Contains(aFeature), "Didn't know about this one!");
+  MOZ_ASSERT(mFeatures.Contains(aFeature), "Didn't know about this one!");
   mFeatures.RemoveElement(aFeature);
 
   if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(aCx, false)) {
