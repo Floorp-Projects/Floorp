@@ -9,3 +9,6 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Search')

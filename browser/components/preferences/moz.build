@@ -18,3 +18,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
     DEFINES['HAVE_SHELL_SERVICE'] = 1
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Preferences')
