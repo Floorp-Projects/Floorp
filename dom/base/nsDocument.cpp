@@ -6375,7 +6375,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   // Create constructor to return. Store the name of the custom element as the
   // name of the function.
   JSFunction* constructor = JS_NewFunction(aCx, nsDocument::CustomElementConstructor, 0,
-                                           JSFUN_CONSTRUCTOR, JS::NullPtr(),
+                                           JSFUN_CONSTRUCTOR,
                                            NS_ConvertUTF16toUTF8(lcType).get());
   if (!constructor) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
