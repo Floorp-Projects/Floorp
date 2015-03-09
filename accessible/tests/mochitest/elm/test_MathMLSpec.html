@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML a11y spec tests</title>
+  <link id="link" rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../actions.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // math
+
+      obj = {
+        role: ROLE_MATHML_MATH,
+      };
+      testElm("math", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mi
+
+      obj = {
+        role: ROLE_MATHML_IDENTIFIER,
+      };
+      testElm("mi", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mn
+
+      obj = {
+        role: ROLE_MATHML_NUMBER,
+      };
+      testElm("mn", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mo
+
+      obj = {
+        role: ROLE_MATHML_OPERATOR,
+        attributes: { accent: "true", largeop: "true" }
+      };
+      testElm("mo", obj);
+
+      obj = {
+        role: ROLE_MATHML_OPERATOR,
+        attributes: { fence: "true" }
+      };
+      testElm("mo_fence", obj);
+
+      obj = {
+        role: ROLE_MATHML_OPERATOR,
+        attributes: { separator: "true" }
+      };
+      testElm("mo_separator", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mtext
+
+      obj = {
+        role: ROLE_MATHML_TEXT,
+      };
+      testElm("mtext", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ms
+
+      obj = {
+        role: ROLE_MATHML_STRING_LITERAL,
+      };
+      testElm("ms", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mglyph
+
+      obj = {
+        role: ROLE_MATHML_GLYPH,
+      };
+      testElm("mglyph", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mrow
+
+      obj = {
+        role: ROLE_MATHML_ROW,
+      };
+      testElm("mrow", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mfrac
+
+      obj = {
+        role: ROLE_MATHML_FRACTION,
+        attributes: { bevelled: "true", linethickness: "thick" }
+      };
+      testElm("mfrac", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msqrt
+
+      obj = {
+        role: ROLE_MATHML_SQUARE_ROOT,
+      };
+      testElm("msqrt", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mroot
+
+      obj = {
+        role: ROLE_MATHML_ROOT,
+      };
+      testElm("mroot", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mfenced
+
+      obj = {
+        role: ROLE_MATHML_FENCED,
+        attributes: { open: "]", close: "[", separators: "." }
+      };
+      testElm("mfenced", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // menclose
+
+      obj = {
+        role: ROLE_MATHML_ENCLOSED,
+        attributes: { notation: "circle" }
+      };
+      testElm("menclose", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mstyle, mpadded, mphantom
+
+      obj = {
+        role: ROLE_MATHML_STYLE,
+      };
+      testElm("mstyle", obj);
+
+      ok(!isAccessible("mpadded"), "mpadded should not have accessible");
+      ok(!isAccessible("mphantom"), "mphantom should not have accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // msub
+
+      obj = {
+        role: ROLE_MATHML_SUB,
+      };
+      testElm("msub", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msup
+
+      obj = {
+        role: ROLE_MATHML_SUP,
+      };
+      testElm("msup", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msubsup
+
+      obj = {
+        role: ROLE_MATHML_SUB_SUP,
+      };
+      testElm("msubsup", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // munder
+
+      obj = {
+        role: ROLE_MATHML_UNDER,
+        attributes: { accentunder: "true", align: "center" }
+      };
+      testElm("munder", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mover
+
+      obj = {
+        role: ROLE_MATHML_OVER,
+        attributes: { accent: "true", align: "center" }
+      };
+      testElm("mover", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // munderover
+
+      obj = {
+        role: ROLE_MATHML_UNDER_OVER,
+        attributes: { accent: "true", accentunder: "true", align: "center" },
+      };
+      testElm("munderover", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mmultiscripts
+
+      obj = {
+        role: ROLE_MATHML_MULTISCRIPTS,
+      };
+      testElm("mmultiscripts", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mtable
+
+      obj = {
+        role: ROLE_MATHML_TABLE,
+        attributes: { align: "center", columnlines: "solid", rowlines: "solid" }
+      };
+      testElm("mtable", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mlabeledtr
+
+      obj = {
+        role: ROLE_MATHML_LABELED_ROW,
+      };
+      testElm("mlabeledtr", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mtr
+
+      obj = {
+        role: ROLE_MATHML_TABLE_ROW,
+      };
+      testElm("mtr", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mtd
+
+      obj = {
+        role: ROLE_MATHML_CELL,
+      };
+      testElm("mtd", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // maction
+
+      obj = {
+        role: ROLE_MATHML_ACTION,
+        attributes: { actiontype: "toggle", selection: "1" }
+      };
+      testElm("maction", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // merror
+
+      obj = {
+        role: ROLE_MATHML_ERROR,
+      };
+      testElm("merror", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // semantics
+
+      obj = {
+        role: ROLE_MATHML_SEMANTICS,
+      };
+      testElm("semantics", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // annotation
+
+      obj = {
+        role: ROLE_MATHML_ANNOTATION,
+      };
+      testElm("annotation", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // annotation-xml
+
+      obj = {
+        role: ROLE_MATHML_XML_ANNOTATION,
+      };
+      testElm("annotation-xml", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mstack
+
+      obj = {
+        role: ROLE_MATHML_STACK,
+        attributes: { align: "center" }
+      };
+      testElm("mstack", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mlongdiv
+
+      obj = {
+        role: ROLE_MATHML_LONG_DIVISION,
+        attributes: { longdivstyle: "stackedrightright" }
+      };
+      testElm("mlongdiv", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msgroup
+
+      obj = {
+        role: ROLE_MATHML_STACK_GROUP,
+        attributes: { position: "2", shift: "-1" }
+      };
+      testElm("msgroup", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msrow
+
+      obj = {
+        role: ROLE_MATHML_STACK_ROW,
+        attributes: { position: "1" }
+      };
+      testElm("msrow", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mscarries
+
+      obj = {
+        role: ROLE_MATHML_STACK_CARRIES,
+        attributes: { location: "nw", position: "1" }
+      };
+      testElm("mscarries", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // mscarry
+
+      obj = {
+        role: ROLE_MATHML_STACK_CARRY,
+        attributes: { crossout: "updiagonalstrike" }
+      };
+      testElm("mscarry", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // msline
+
+      obj = {
+        role: ROLE_MATHML_STACK_LINE,
+        attributes: { position: "1" }
+      };
+      testElm("msline", obj);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+    </script>
+</head>
+<body>
+
+  <a target="_blank"
+    title="Implement figure and figcaption accessibility"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=658272">
+     Mozilla Bug 658272
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <math id="math">
+    <mrow id="mrow">
+      <mrow>
+        <msup id="msup">
+          <mi id="mi">a</mi>
+          <mn id="mn">2</mn>
+        </msup>
+        <mo id="mo" accent="true" largeop="true">+</mo>
+        <msqrt id="msqrt">
+          <mn>2</mn>
+        </msqrt>
+      </mrow>
+      <mo>=</mo>
+      <msub id="msub">
+        <mi>c</mi>
+        <mn>2</mn>
+      </msub>
+    </mrow>
+    <mspace id="mspace" width="1em"/>
+    <mtext id="mtext">Arbitrary text</mtext>
+    <mspace width="1em"/>
+    <ms id="ms">InterpretedStringLiteral</ms>
+    <mi>
+      <mglyph id="mglyph" src="../letters.gif" alt="letters"/>
+    </mi>
+     <mfrac id="mfrac" bevelled="true" linethickness="thick">
+      <mi>x</mi>
+      <mn>2</mn>
+    </mfrac>
+    <mroot id="mroot">
+      <mi>x</mi>
+      <mn>5</mn>
+    </mroot>
+    <mspace width="1em"/>
+    <mfenced id="mfenced" close="[" open="]" separators=".">
+      <mrow>
+        <mi>x</mi>
+        <mi>y</mi>
+      </mrow>
+    </mfenced>
+    <mrow>
+      <mo id="mo_fence" fence="true">[</mo>
+      <mrow>
+        X
+        <mo id="mo_separator" separator="true">,</mo>
+        Y
+     </mrow>
+     <mo fence="true"> closing-fence </mo>
+  </mrow>
+    <mspace width="1em"/>
+    <menclose id="menclose" notation="circle">
+      <mi>a</mi>
+      <mo>+</mo>
+      <mi>b</mi>
+    </menclose>
+    <mstyle id="mstyle" dir="rtl" mathcolor="blue">
+      <mpadded id="mpadded" height="100px" width="200px">
+        <mi>x</mi>
+        <mphantom id="mphantom">
+          <mo>+</mo>
+          <mi>y</mi>
+        </mphantom>
+      </mpadded>
+    </mstyle>
+
+    <msubsup id="msubsup">
+      <mi>b</mi>
+      <mn>1</mn>
+      <mn>2</mn>
+    </msubsup>
+    <munder id="munder" accentunder="true" align="center">
+      <mrow>
+        <mi> x </mi>
+        <mo> + </mo>
+        <mi> y </mi>
+        <mo> + </mo>
+        <mi> z </mi>
+      </mrow>
+      <mo> &#x23DF;<!--BOTTOM CURLY BRACKET--> </mo>
+    </munder>
+    <mspace width="1em"/>
+    <mover id="mover" accent="true" align="center">
+      <mi> x </mi>
+      <mo> &#x5E;<!--CIRCUMFLEX ACCENT--> </mo>
+    </mover>
+    <munderover id="munderover" accentunder="true" accent="true" align="center">
+      <mo> &#x222B;<!--INTEGRAL--> </mo>
+      <mn> 0 </mn>
+      <mi> &#x221E;<!--INFINITY--> </mi>
+    </munderover>
+    <mmultiscripts id="mmultiscripts">
+      <mi> R </mi>
+      <mi> i </mi>
+      <none/>
+      <none/>
+      <mi> j </mi>
+      <mi> k </mi>
+      <none/>
+      <mi> l </mi>
+      <none/>
+    </mmultiscripts>
+
+    <mtable id="mtable" align="center" columnlines="solid" rowlines="solid">
+      <mlabeledtr id="mlabeledtr">
+        <mtd>
+          <mtext> (2.1) </mtext>
+        </mtd>
+        <mtd>
+          <mrow>
+            <mi>E</mi>
+            <mo>=</mo>
+            <mrow>
+              <mi>m</mi>
+              <mo>&#x2062;<!--INVISIBLE TIMES--></mo>
+              <msup>
+                <mi>c</mi>
+                <mn>2</mn>
+              </msup>
+            </mrow>
+          </mrow>
+        </mtd>
+      </mlabeledtr>
+    </mtable>
+    <mrow>
+      <mo> ( </mo>
+      <mtable>
+        <mtr id="mtr">
+          <mtd id="mtd"> <mn>1</mn> </mtd>
+          <mtd> <mn>0</mn> </mtd>
+          <mtd> <mn>0</mn> </mtd>
+        </mtr>
+        <mtr>
+          <mtd> <mn>0</mn> </mtd>
+          <mtd> <mn>1</mn> </mtd>
+          <mtd> <mn>0</mn> </mtd>
+        </mtr>
+        <mtr>
+          <mtd> <mn>0</mn> </mtd>
+          <mtd> <mn>0</mn> </mtd>
+          <mtd> <mn>1</mn> </mtd>
+        </mtr>
+      </mtable>
+      <mo> ) </mo>
+    </mrow>
+
+    <maction id="maction" actiontype="toggle" selection="1">
+      <mfrac>
+        <mn>6</mn>
+        <mn>8</mn>
+      </mfrac>
+      <mfrac>
+        <mrow>
+          <mn>3</mn>
+          <mo>⋅</mo>
+          <mn>2</mn>
+        </mrow>
+        <mrow>
+          <mn>4</mn>
+          <mo>⋅</mo>
+          <mn>2</mn>
+        </mrow>
+      </mfrac>
+      <mfrac>
+        <mn>3</mn>
+        <mn>4</mn>
+      </mfrac>
+    </maction>
+
+    <merror id="merror">
+      <mrow>
+      <mtext>Division by zero: </mtext>
+      <mfrac>
+        <mn>1</mn>
+        <mn>0</mn>
+      </mfrac>
+      </mrow>
+    </merror>
+
+    <semantics id="semantics">
+      <!-- Presentation MathML -->
+      <mrow>
+        <msup>
+          <mi>x</mi>
+          <mn>2</mn>
+        </msup>
+        <mo>+</mo>
+        <mi>y</mi>
+      </mrow>
+      <!-- Content MathML -->
+      <annotation-xml id="annotation-xml" encoding="MathML-Content">
+        <apply>
+          <plus/>
+          <apply>
+            <power/>
+            <ci>x</ci>
+            <cn type="integer">2</cn>
+          </apply>
+          <ci>y</ci>
+        </apply>
+      </annotation-xml>
+      <!-- annotate TeX -->
+      <annotation id="annotation" encoding="application/x-tex">
+        x^{2} + y
+      </annotation>
+    </semantics>
+
+    <mstack id="mstack" align="center">
+      <mscarries id="mscarries" location="nw" position="1">
+        <none/>
+        <mscarry id="mscarry" crossout="updiagonalstrike">
+          <mn>1</mn>
+        </mscarry>
+        <mscarry location="w">
+          <mn>1</mn>
+        </mscarry>
+      </mscarries>
+      <mn>523</mn>
+      <msrow id="msrow" position="1">
+        <mo>-</mo>
+        <none/>
+        <mn>15</mn>
+      </msrow>
+      <msline id="msline" position="1"/>
+      <mn>508</mn>
+    </mstack>
+    <mspace width="1em"/>
+    <mlongdiv id="mlongdiv" longdivstyle="stackedrightright">
+      <mn>5</mn>
+      <mn>1</mn>
+      <mn>5</mn>
+    </mlongdiv>
+
+    <mstack>
+      <msgroup id="msgroup" position="2" shift="-1">
+        <mn>123</mn>
+        <msrow><mo>&#xD7;<!--MULTIPLICATION SIGN--></mo><mn>321</mn></msrow>
+      </msgroup>
+      <msline/>
+      <msgroup shift="1">
+        <mn>123</mn>
+        <mn>246</mn>
+        <mn>369</mn>
+      </msgroup>
+      <msline/>
+    </mstack>
+  </math>
+
+</body>
+</html>

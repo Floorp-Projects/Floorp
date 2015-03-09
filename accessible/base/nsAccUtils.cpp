@@ -400,7 +400,7 @@ nsAccUtils::TextLength(Accessible* aAccessible)
 
 bool
 nsAccUtils::MustPrune(Accessible* aAccessible)
-{ 
+{
   roles::Role role = aAccessible->Role();
 
   // Don't prune the tree for certain roles if the tree is more complex than
