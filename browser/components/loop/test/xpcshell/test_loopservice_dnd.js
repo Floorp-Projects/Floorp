@@ -33,13 +33,13 @@ add_test(function test_do_not_disturb_disabled_should_open_chat_window() {
 
   mockPushHandler.registrationPushURL = kEndPointUrl;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
+  MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.FXA).then(() => {
     let opened = false;
     Chat.open = function() {
       opened = true;
     };
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
     waitForCondition(function() opened).then(() => {
       run_next_test();
@@ -58,7 +58,7 @@ add_test(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
     opened = true;
   };
 
-  mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
   do_timeout(500, function() {
     do_check_false(opened, "should not open a chat window");
@@ -68,6 +68,8 @@ add_test(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
 
 function run_test() {
   setupFakeLoopServer();
+
+  setupFakeFxAUserProfile();
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
