@@ -817,10 +817,10 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
     void checkAllocatorState(Label *fail);
     bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap);
-    void nurseryAllocate(Register result, Register slots, gc::AllocKind allocKind,
+    void nurseryAllocate(Register result, Register temp, gc::AllocKind allocKind,
                          size_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail);
     void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label *fail);
-    void allocateObject(Register result, Register slots, gc::AllocKind allocKind,
+    void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                         uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail);
     void allocateNonObject(Register result, Register temp, gc::AllocKind allocKind, Label *fail);
     void copySlotsFromTemplate(Register obj, const NativeObject *templateObj,
