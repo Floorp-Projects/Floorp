@@ -476,5 +476,37 @@ DocAccessibleChild::RecvRemoveFromSelection(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvScrollSubstringTo(const uint64_t& aID,
+                                          const int32_t& aStartOffset,
+                                          const int32_t& aEndOffset,
+                                          const uint32_t& aScrollType)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvScrollSubstringToPoint(const uint64_t& aID,
+                                               const int32_t& aStartOffset,
+                                               const int32_t& aEndOffset,
+                                               const uint32_t& aCoordinateType,
+                                               const int32_t& aX,
+                                               const int32_t& aY)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType,
+                                aX, aY);
+  }
+
+  return true;
+}
+
+
 }
 }
