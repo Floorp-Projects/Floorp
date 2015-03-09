@@ -701,9 +701,9 @@ nsNSSComponent::UseWeakCiphersOnSocket(PRFileDesc* fd)
   }
 }
 
-// This function will convert from pref values like 0, 1, ...
-// to the internal values of SSL_LIBRARY_VERSION_3_0,
-// SSL_LIBRARY_VERSION_TLS_1_0, ...
+// This function will convert from pref values like 1, 2, ...
+// to the internal values of SSL_LIBRARY_VERSION_TLS_1_0,
+// SSL_LIBRARY_VERSION_TLS_1_1, ...
 /*static*/ void
 nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
                                     uint32_t minFromPrefs,
@@ -712,8 +712,8 @@ nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
 {
   rangeOut = defaults;
   // determine what versions are supported
-  SSLVersionRange range;
-  if (SSL_VersionRangeGetSupported(ssl_variant_stream, &range)
+  SSLVersionRange supported;
+  if (SSL_VersionRangeGetSupported(ssl_variant_stream, &supported)
         != SECSuccess) {
     return;
   }
@@ -723,7 +723,8 @@ nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
   maxFromPrefs += SSL_LIBRARY_VERSION_3_0;
   // if min/maxFromPrefs are invalid, use defaults
   if (minFromPrefs > maxFromPrefs ||
-      minFromPrefs < range.min || maxFromPrefs > range.max) {
+      minFromPrefs < supported.min || maxFromPrefs > supported.max ||
+      minFromPrefs < SSL_LIBRARY_VERSION_TLS_1_0) {
     return;
   }
 
@@ -889,7 +890,7 @@ nsresult
 nsNSSComponent::setEnabledTLSVersions()
 {
   // keep these values in sync with security-prefs.js
-  // 0 means SSL 3.0, 1 means TLS 1.0, 2 means TLS 1.1, etc.
+  // 1 means TLS 1.0, 2 means TLS 1.1, etc.
   static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 3;
 
