@@ -371,6 +371,24 @@ NfcService::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
   mThread->Dispatch(runnable, nsIEventTarget::DISPATCH_NORMAL);
 }
 
+void
+NfcService::OnConnectSuccess(enum SocketType aSocketType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+void
+NfcService::OnConnectError(enum SocketType aSocketType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+void
+NfcService::OnDisconnect(enum SocketType aSocketType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(NfcService,
                                          NfcService::FactoryCreate)
 
