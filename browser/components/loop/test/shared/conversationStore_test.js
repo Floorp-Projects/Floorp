@@ -770,6 +770,14 @@ describe("loop.store.ConversationStore", function () {
       });
   });
 
+  describe("#windowUnload", function() {
+    it("should disconnect from the servers via the sdk", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+  });
+
   describe("Events", function() {
     describe("Websocket progress", function() {
       beforeEach(function() {

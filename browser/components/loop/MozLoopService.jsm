@@ -15,6 +15,20 @@ const LOOP_SESSION_TYPE = {
   FXA: 2,
 };
 
+/***
+ * Buckets that we segment 2-way media connection length telemetry probes
+ * into.
+ *
+ * @type {{SHORTER_THAN_10S: string, BETWEEN_10S_AND_30S: string,
+ *   BETWEEN_30S_AND_5M: string, MORE_THAN_5M: string}}
+ */
+const TWO_WAY_MEDIA_CONN_LENGTH = {
+  SHORTER_THAN_10S: "SHORTER_THAN_10S",
+  BETWEEN_10S_AND_30S: "BETWEEN_10S_AND_30S",
+  BETWEEN_30S_AND_5M: "BETWEEN_30S_AND_5M",
+  MORE_THAN_5M: "MORE_THAN_5M",
+};
+
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "loop.debug.loglevel";
 
@@ -28,7 +42,7 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE"];
+this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE", "TWO_WAY_MEDIA_CONN_LENGTH"];
 
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");
