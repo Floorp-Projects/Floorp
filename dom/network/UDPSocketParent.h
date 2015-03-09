@@ -12,7 +12,6 @@
 #include "nsIUDPSocket.h"
 #include "nsIUDPSocketFilter.h"
 #include "mozilla/net/OfflineObserver.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +26,7 @@ public:
 
   UDPSocketParent();
 
-  bool Init(const IPC::Principal& aPrincipal, const nsACString& aFilter);
+  bool Init(const nsACString& aFilter);
 
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
                         const bool& aAddressReuse, const bool& aLoopback) MOZ_OVERRIDE;
@@ -58,7 +57,6 @@ private:
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsIUDPSocketFilter> mFilter;
   nsRefPtr<mozilla::net::OfflineObserver> mObserver;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 } // namespace dom
