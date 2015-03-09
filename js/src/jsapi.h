@@ -3067,7 +3067,7 @@ JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v);
  */
 extern JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
-               JS::Handle<JSObject*> parent, const char *name);
+               const char *name);
 
 /*
  * Create the function with the name given by the id. JSID_IS_STRING(id) must
