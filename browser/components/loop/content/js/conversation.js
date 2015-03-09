@@ -68,6 +68,7 @@ loop.conversation = (function(mozL10n) {
             client: this.props.client, 
             conversation: this.props.conversation, 
             sdk: this.props.sdk, 
+            isDesktop: true, 
             conversationAppStore: this.props.conversationAppStore, 
             feedbackStore: this.props.feedbackStore}
           ));
