@@ -407,5 +407,74 @@ DocAccessibleChild::RecvOffsetAtPoint(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvSelectionBoundsAt(const uint64_t& aID,
+                                          const int32_t& aSelectionNum,
+                                          bool* aSucceeded,
+                                          nsString* aData,
+                                          int32_t* aStartOffset,
+                                          int32_t* aEndOffset)
+{
+  *aSucceeded = false;
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded =
+      acc->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+    if (*aSucceeded) {
+      acc->TextSubstring(*aStartOffset, *aEndOffset, *aData);
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSetSelectionBoundsAt(const uint64_t& aID,
+                                             const int32_t& aSelectionNum,
+                                             const int32_t& aStartOffset,
+                                             const int32_t& aEndOffset,
+                                             bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded =
+      acc->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAddToSelection(const uint64_t& aID,
+                                       const int32_t& aStartOffset,
+                                       const int32_t& aEndOffset,
+                                       bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded = acc->AddToSelection(aStartOffset, aEndOffset);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRemoveFromSelection(const uint64_t& aID,
+                                            const int32_t& aSelectionNum,
+                                            bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded = acc->RemoveFromSelection(aSelectionNum);
+  }
+
+  return true;
+}
+
 }
 }

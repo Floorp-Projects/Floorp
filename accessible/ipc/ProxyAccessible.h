@@ -140,6 +140,20 @@ public:
 
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
+  bool SelectionBoundsAt(int32_t aSelectionNum,
+                         nsString& aData,
+                         int32_t* aStartOffset,
+                         int32_t* aEndOffset);
+
+  bool SetSelectionBoundsAt(int32_t aSelectionNum,
+                            int32_t aStartOffset,
+                            int32_t aEndOffset);
+
+  bool AddToSelection(int32_t aStartOffset,
+                      int32_t aEndOffset);
+
+  bool RemoveFromSelection(int32_t aSelectionNum);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
