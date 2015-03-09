@@ -154,6 +154,14 @@ public:
 
   bool RemoveFromSelection(int32_t aSelectionNum);
 
+  void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                         uint32_t aScrollType);
+
+  void ScrollSubstringToPoint(int32_t aStartOffset,
+                              int32_t aEndOffset,
+                              uint32_t aCoordinateType,
+                              int32_t aX, int32_t aY);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

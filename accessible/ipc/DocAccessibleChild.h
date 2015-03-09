@@ -150,6 +150,18 @@ public:
                                        const int32_t& aSelectionNum,
                                        bool* aSucceeded) MOZ_OVERRIDE;
 
+  virtual bool RecvScrollSubstringTo(const uint64_t& aID,
+                                     const int32_t& aStartOffset,
+                                     const int32_t& aEndOffset,
+                                     const uint32_t& aScrollType) MOZ_OVERRIDE;
+
+  virtual bool RecvScrollSubstringToPoint(const uint64_t& aID,
+                                          const int32_t& aStartOffset,
+                                          const int32_t& aEndOffset,
+                                          const uint32_t& aCoordinateType,
+                                          const int32_t& aX,
+                                          const int32_t& aY) MOZ_OVERRIDE;
+
 private:
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);
