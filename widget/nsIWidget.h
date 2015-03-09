@@ -2085,11 +2085,6 @@ public:
                         DoCommandCallback aCallback,
                         void* aCallbackData) = 0;
 
-    /**
-     * Set layers acceleration to 'True' or 'False'
-     */
-    NS_IMETHOD SetLayersAcceleration(bool aEnabled) = 0;
-
     /*
      * Get toggled key states.
      * aKeyCode should be NS_VK_CAPS_LOCK or  NS_VK_NUM_LOCK or
