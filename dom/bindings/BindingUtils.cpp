@@ -1392,7 +1392,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     if (IdEquals(id, "toString") && !JS_ObjectIsFunction(cx, obj)) {
       MOZ_ASSERT(IsDOMIfaceAndProtoClass(js::GetObjectClass(obj)));
 
-      JS::Rooted<JSFunction*> toString(cx, JS_NewFunction(cx, InterfaceObjectToString, 0, 0, wrapper, "toString"));
+      JS::Rooted<JSFunction*> toString(cx, JS_NewFunction(cx, InterfaceObjectToString, 0, 0, "toString"));
       if (!toString) {
         return false;
       }
