@@ -341,7 +341,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
   JS::Rooted<JSObject*> get(aCx,
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldGetter,
-                                                         0, 0, scopeObject, id)));
+                                                         0, 0, id)));
   if (!get) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -351,7 +351,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
   JS::Rooted<JSObject*> set(aCx,
     JS_GetFunctionObject(js::NewFunctionByIdWithReserved(aCx, FieldSetter,
-                                                          1, 0, scopeObject, id)));
+                                                          1, 0, id)));
   if (!set) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
