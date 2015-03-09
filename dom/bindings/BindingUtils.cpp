@@ -984,8 +984,7 @@ static JSObject*
 XrayCreateFunction(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JSNativeWrapper native, unsigned nargs, JS::Handle<jsid> id)
 {
-  JSFunction* fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0,
-                                                    /* parent = */nullptr, id);
+  JSFunction* fun = js::NewFunctionByIdWithReserved(cx, native.op, nargs, 0, id);
   if (!fun) {
     return nullptr;
   }
