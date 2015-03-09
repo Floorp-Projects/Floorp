@@ -146,6 +146,10 @@ MP4Sample* SampleIterator::GetNext()
         sample->crypto.plain_sizes.AppendElement(reader.ReadU16());
         sample->crypto.encrypted_sizes.AppendElement(reader.ReadU32());
       }
+    } else {
+      // No subsample information means the entire sample is encrypted.
+      sample->crypto.plain_sizes.AppendElement(0);
+      sample->crypto.encrypted_sizes.AppendElement(sample->size);
     }
   }
 
