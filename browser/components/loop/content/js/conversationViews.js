@@ -345,10 +345,17 @@ loop.conversationViews = (function(mozL10n) {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
+      isDesktop: React.PropTypes.bool,
       conversationAppStore: React.PropTypes.instanceOf(
         loop.store.ConversationAppStore).isRequired,
       feedbackStore:
         React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
+    },
+
+    getDefaultProps: function() {
+      return {
+        isDesktop: false
+      };
     },
 
     getInitialState: function() {
@@ -403,6 +410,7 @@ loop.conversationViews = (function(mozL10n) {
 
           return (
             React.createElement(sharedViews.ConversationView, {
+              isDesktop: this.props.isDesktop, 
               initiate: true, 
               sdk: this.props.sdk, 
               model: this.props.conversation, 
