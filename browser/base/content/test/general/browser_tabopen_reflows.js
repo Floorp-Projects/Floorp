@@ -55,8 +55,7 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
-function test() {
-  waitForExplicitFinish();
+add_task(function*() {
   let DirectoryLinksProvider = Cu.import("resource:///modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
   let NewTabUtils = Cu.import("resource://gre/modules/NewTabUtils.jsm", {}).NewTabUtils;
   let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
@@ -85,25 +84,36 @@ function test() {
     return watchLinksChangeOnce();
   });
 
-  // run tests when directory source change completes
-  watchLinksChangeOnce().then(() => {
-    // Add a reflow observer and open a new tab.
-    docShell.addWeakReflowObserver(observer);
-    BrowserOpenTab();
-
-    // Wait until the tabopen animation has finished.
-    waitForTransitionEnd(function () {
-      // Remove reflow observer and clean up.
-      docShell.removeWeakReflowObserver(observer);
-      gBrowser.removeCurrentTab();
-      finish();
-    });
-  });
-
   Services.prefs.setBoolPref(PREF_PRELOAD, false);
   // set directory source to dummy/empty links
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, 'data:application/json,{"test":1}');
-}
+
+  // run tests when directory source change completes
+  yield watchLinksChangeOnce();
+
+  // Perform a click in the top left of content to ensure the mouse isn't
+  // hovering over any of the tiles
+  let target = gBrowser.selectedBrowser;
+  let rect = target.getBoundingClientRect();
+  let left = rect.left + 1;
+  let top = rect.top + 1;
+
+  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+  utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
+  utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+
+  // Add a reflow observer and open a new tab.
+  docShell.addWeakReflowObserver(observer);
+  BrowserOpenTab();
+
+  // Wait until the tabopen animation has finished.
+  yield waitForTransitionEnd();
+
+  // Remove reflow observer and clean up.
+  docShell.removeWeakReflowObserver(observer);
+  gBrowser.removeCurrentTab();
+});
 
 let observer = {
   reflow: function (start, end) {
@@ -137,12 +147,14 @@ let observer = {
                                          Ci.nsISupportsWeakReference])
 };
 
-function waitForTransitionEnd(callback) {
-  let tab = gBrowser.selectedTab;
-  tab.addEventListener("transitionend", function onEnd(event) {
-    if (event.propertyName === "max-width") {
-      tab.removeEventListener("transitionend", onEnd);
-      executeSoon(callback);
-    }
+function waitForTransitionEnd() {
+  return new Promise(resolve => {
+    let tab = gBrowser.selectedTab;
+    tab.addEventListener("transitionend", function onEnd(event) {
+      if (event.propertyName === "max-width") {
+        tab.removeEventListener("transitionend", onEnd);
+        resolve();
+      }
+    });
   });
 }
