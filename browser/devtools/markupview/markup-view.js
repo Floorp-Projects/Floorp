@@ -2414,28 +2414,33 @@ ElementEditor.prototype = {
    * Update the state of the editor from the node.
    */
   update: function() {
-    let attrs = this.node.attributes;
-    if (!attrs) {
-      return;
-    }
+    let attrs = this.node.attributes || [];
+    let attrsToRemove = new Set(this.attrList.querySelectorAll(".attreditor"));
 
-    // Hide all the attribute editors, they'll be re-shown if they're
-    // still applicable.  Don't update attributes that are being
-    // actively edited.
-    let attrEditors = this.attrList.querySelectorAll(".attreditor");
-    for (let i = 0; i < attrEditors.length; i++) {
-      if (!attrEditors[i].inplaceEditor) {
-        attrEditors[i].style.display = "none";
-      }
-    }
-
-    // Get the attribute editor for each attribute that exists on
-    // the node and show it.
+    // Only loop through the current attributes on the node, anything that's
+    // been removed will be removed from this DOM because it will be part of
+    // the attrsToRemove set.
     for (let attr of attrs) {
-      let attribute = this._createAttribute(attr);
-      if (!attribute.inplaceEditor) {
+      let el = this.attrs[attr.name];
+      let valueChanged = el && el.querySelector(".attr-value").innerHTML !== attr.value;
+      let isEditing = el && el.querySelector(".editable").inplaceEditor;
+      let needToCreateAttributeEditor = el && (!valueChanged || isEditing);
+
+      if (needToCreateAttributeEditor) {
+        // Element already exists and doesn't need to be recreated.
+        // Just show it (it's hidden by default due to the template).
+        attrsToRemove.delete(el);
+        el.style.removeProperty("display");
+      } else {
+        // Create a new editor, because the value of an existing attribute
+        // has changed.
+        let attribute = this._createAttribute(attr);
         attribute.style.removeProperty("display");
       }
+    }
+
+    for (let el of attrsToRemove) {
+      el.remove();
     }
   },
 
