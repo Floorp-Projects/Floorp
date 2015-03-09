@@ -59,7 +59,7 @@ var objWithSetter = {set "0"(val) { setterCalled = true}, length: 1};
 assertEq(setterCalled, true);
 
 var setHandlerCallCount = 0;
-var proxy = new Proxy({length: 3}, {set(t, i, v, r) { setHandlerCallCount++; return true; }});
+var proxy = new Proxy({length: 3}, {set: function(value) {setHandlerCallCount++;}});
 [].fill.call(proxy, 2);
 assertEq(setHandlerCallCount, 3);
 
