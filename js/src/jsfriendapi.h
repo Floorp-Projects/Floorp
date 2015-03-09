@@ -57,8 +57,7 @@ extern JS_FRIEND_API(bool)
 JS_SplicePrototype(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto);
 
 extern JS_FRIEND_API(JSObject *)
-JS_NewObjectWithUniqueType(JSContext *cx, const JSClass *clasp, JS::HandleObject proto,
-                           JS::HandleObject parent);
+JS_NewObjectWithUniqueType(JSContext *cx, const JSClass *clasp, JS::HandleObject proto);
 
 // Allocate an object in exactly the same way as JS_NewObjectWithGivenProto, but
 // without invoking the metadata callback on it.  This allows creation of
