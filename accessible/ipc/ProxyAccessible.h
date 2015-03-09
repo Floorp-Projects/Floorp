@@ -162,6 +162,18 @@ public:
                               uint32_t aCoordinateType,
                               int32_t aX, int32_t aY);
 
+  void ReplaceText(const nsString& aText);
+
+  void InsertText(const nsString& aText, int32_t aPosition);
+
+  void CopyText(int32_t aStartPos, int32_t aEndPos);
+
+  void CutText(int32_t aStartPos, int32_t aEndPos);
+
+  void DeleteText(int32_t aStartPos, int32_t aEndPos);
+
+  void PasteText(int32_t aPosition);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
