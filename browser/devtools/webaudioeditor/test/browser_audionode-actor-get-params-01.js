@@ -12,6 +12,8 @@ add_task(function*() {
     getN(front, "create-node", 15)
   ]);
 
+  yield loadFrameScripts();
+
   let allNodeParams = yield Promise.all(nodes.map(node => node.getParams()));
   let nodeTypes = [
     "AudioDestinationNode",
@@ -21,10 +23,13 @@ add_task(function*() {
     "StereoPannerNode"
   ];
 
-  nodeTypes.forEach((type, i) => {
+  let defaults = yield Promise.all(nodeTypes.map(type => nodeDefaultValues(type)));
+
+  nodeTypes.map((type, i) => {
     let params = allNodeParams[i];
+
     params.forEach(({param, value, flags}) => {
-      ok(param in NODE_DEFAULT_VALUES[type], "expected parameter for " + type);
+      ok(param in defaults[i], "expected parameter for " + type);
 
       ok(typeof flags === "object", type + " has a flags object");
 
