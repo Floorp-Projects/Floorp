@@ -513,6 +513,8 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     JSContext* cx = workerPrivate->GetJSContext();
     if (NS_WARN_IF(!workerPrivate->AddFeature(cx, bc->mWorkerFeature))) {
       NS_WARNING("Failed to register the BroadcastChannel worker feature.");
+      bc->mWorkerFeature = nullptr;
+      aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
   }
