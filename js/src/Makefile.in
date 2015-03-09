@@ -214,6 +214,9 @@ $(LIBRARY_NAME).pc: js.pc
 install:: $(LIBRARY_NAME).pc
 	$(SYSINSTALL) $^ $(DESTDIR)$(libdir)/pkgconfig
 
+install:: js-config.h
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)
+
 ######################################################
 # BEGIN SpiderMonkey header installation
 #
