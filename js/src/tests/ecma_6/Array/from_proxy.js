@@ -20,7 +20,6 @@ function LoggingProxy(target) {
         set: function (t, id, v) {
             log.push("set", id);
             t[id] = v;
-            return true;
         }
     };
     return new Proxy(target || [], h);

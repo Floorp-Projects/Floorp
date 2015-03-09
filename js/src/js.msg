@@ -345,7 +345,6 @@ MSG_DEF(JSMSG_CANT_DEFINE_NE_AS_NC,    0, JSEXN_TYPEERR, "proxy can't define a n
 MSG_DEF(JSMSG_PROXY_DEFINE_RETURNED_FALSE, 1, JSEXN_TYPEERR, "proxy defineProperty handler returned false for property '{0}'")
 MSG_DEF(JSMSG_PROXY_DELETE_RETURNED_FALSE, 1, JSEXN_TYPEERR, "can't delete property '{0}': proxy deleteProperty handler returned false")
 MSG_DEF(JSMSG_PROXY_PREVENTEXTENSIONS_RETURNED_FALSE, 0, JSEXN_TYPEERR, "proxy preventExtensions handler returned false")
-MSG_DEF(JSMSG_PROXY_SET_RETURNED_FALSE, 1, JSEXN_TYPEERR, "proxy set handler returned false for property '{0}'")
 MSG_DEF(JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE, 0, JSEXN_TYPEERR, "proxy can't report an extensible object as non-extensible")
 MSG_DEF(JSMSG_CANT_REPORT_C_AS_NC,     0, JSEXN_TYPEERR, "proxy can't report existing configurable property as non-configurable")
 MSG_DEF(JSMSG_CANT_REPORT_E_AS_NE,     0, JSEXN_TYPEERR, "proxy can't report an existing own property as non-existent on a non-extensible object")
