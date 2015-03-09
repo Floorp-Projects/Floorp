@@ -508,5 +508,81 @@ DocAccessibleChild::RecvScrollSubstringToPoint(const uint64_t& aID,
 }
 
 
+bool
+DocAccessibleChild::RecvReplaceText(const uint64_t& aID,
+                                    const nsString& aText)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->ReplaceText(aText);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvInsertText(const uint64_t& aID,
+                                   const nsString& aText,
+                                   const int32_t& aPosition)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->InsertText(aText, aPosition);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCopyText(const uint64_t& aID,
+                                 const int32_t& aStartPos,
+                                 const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CopyText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCutText(const uint64_t& aID,
+                                const int32_t& aStartPos,
+                                const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CutText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvDeleteText(const uint64_t& aID,
+                                   const int32_t& aStartPos,
+                                   const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->DeleteText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvPasteText(const uint64_t& aID,
+                                  const int32_t& aPosition)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->PasteText(aPosition);
+  }
+
+  return true;
+}
+
 }
 }

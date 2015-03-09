@@ -114,6 +114,13 @@ child:
                          int32_t aEndOffset,
                          uint32_t aCoordinateType,
                          int32_t aX, int32_t aY);
+
+  prio(high) sync ReplaceText(uint64_t aID, nsString aText);
+  prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition);
+  prio(high) sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync PasteText(uint64_t aID, int32_t aPosition);
 };
 
 }

@@ -327,5 +327,41 @@ ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                              aCoordinateType, aX, aY);
 }
 
+void
+ProxyAccessible::ReplaceText(const nsString& aText)
+{
+  unused << mDoc->SendReplaceText(mID, aText);
+}
+
+void
+ProxyAccessible::InsertText(const nsString& aText, int32_t aPosition)
+{
+  unused << mDoc->SendInsertText(mID, aText, aPosition);
+}
+
+void
+ProxyAccessible::CopyText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendCopyText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::CutText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendCutText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::PasteText(int32_t aPosition)
+{
+  unused << mDoc->SendPasteText(mID, aPosition);
+}
+
 }
 }
