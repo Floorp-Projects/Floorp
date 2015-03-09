@@ -73,13 +73,15 @@ static const char* CSPStrDirectives[] = {
   "frame-ancestors", // FRAME_ANCESTORS_DIRECTIVE
   "reflected-xss",   // REFLECTED_XSS_DIRECTIVE
   "base-uri",        // BASE_URI_DIRECTIVE
-  "form-action",     // FORM_ACTION_DIRECTIVE
-  "referrer"         // REFERRER_DIRECTIVE
+  "form-action"     // FORM_ACTION_DIRECTIVE
 };
+// referrer is disabled for now.
+// see https://bugzilla.mozilla.org/show_bug.cgi?id=1140638
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
 {
-  return CSPStrDirectives[static_cast<uint32_t>(aDir)];
+  uint32_t numDirs = (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]));
+  return CSPStrDirectives[numDirs > aDir ? static_cast<uint32_t>(aDir) : 0];
 }
 
 inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir)

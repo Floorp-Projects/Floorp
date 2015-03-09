@@ -861,6 +861,9 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
 void
 nsCSPParser::referrerDirectiveValue()
 {
+  // Disabled for now
+  return;
+
   // directive-value   = "none" / "none-when-downgrade" / "origin" / "origin-when-cross-origin" / "unsafe-url"
   // directive name is token 0, we need to examine the remaining tokens (and
   // there should only be one token in the value).
