@@ -158,37 +158,6 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Gets the current latest expiry time for urls.
-   *
-   * In seconds since epoch.
-   */
-  get expiryTimeSeconds() {
-    try {
-      return Services.prefs.getIntPref("loop.urlsExpiryTimeSeconds");
-    } catch (x) {
-      // It is ok for the pref not to exist.
-      return 0;
-    }
-  },
-
-  /**
-   * Sets the expiry time to either the specified time, or keeps it the same
-   * depending on which is latest.
-   */
-  set expiryTimeSeconds(time) {
-    if (time > this.expiryTimeSeconds) {
-      Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", time);
-    }
-  },
-
-  /**
-   * Returns true if the expiry time is in the future.
-   */
-  urlExpiryTimeIsInFuture: function() {
-    return this.expiryTimeSeconds * 1000 > Date.now();
-  },
-
-  /**
    * Retrieves MozLoopService Firefox Accounts OAuth token.
    *
    * @return {Object} OAuth token
@@ -390,17 +359,20 @@ let MozLoopServiceInternal = {
     let options = this.mocks.webSocket ? { mockWebSocket: this.mocks.webSocket } : {};
     this.pushHandler.initialize(options); // This can be called more than once.
 
-    let callsID = sessionType == LOOP_SESSION_TYPE.GUEST ?
-          MozLoopService.channelIDs.callsGuest :
-          MozLoopService.channelIDs.callsFxA,
-        roomsID = sessionType == LOOP_SESSION_TYPE.GUEST ?
-          MozLoopService.channelIDs.roomsGuest :
-          MozLoopService.channelIDs.roomsFxA;
-
-    let regPromise = this.createNotificationChannel(
-      callsID, sessionType, "calls", LoopCalls.onNotification).then(() => {
-        return this.createNotificationChannel(
-          roomsID, sessionType, "rooms", roomsPushNotification)});
+    let regPromise;
+    if (sessionType == LOOP_SESSION_TYPE.GUEST) {
+      regPromise = this.createNotificationChannel(
+        MozLoopService.channelIDs.roomsGuest, sessionType, "rooms",
+        roomsPushNotification);
+    } else {
+      regPromise = this.createNotificationChannel(
+        MozLoopService.channelIDs.callsFxA, sessionType, "calls",
+        LoopCalls.onNotification).then(() => {
+          return this.createNotificationChannel(
+            MozLoopService.channelIDs.roomsFxA, sessionType, "rooms",
+            roomsPushNotification);
+        });
+    }
 
     log.debug("assigning to deferredRegistrations for sessionType:", sessionType);
     this.deferredRegistrations.set(sessionType, regPromise);
@@ -587,11 +559,8 @@ let MozLoopServiceInternal = {
           this.setError("login", error);
           throw error;
         });
-      } else if (this.urlExpiryTimeIsInFuture()) {
-        // If there are no Guest URLs in the future, don't use setError to notify the user since
-        // there isn't a need for a Guest registration at this time.
-        this.setError("registration", error);
       }
+      this.setError("registration", error);
       throw error;
     };
 
@@ -1058,7 +1027,6 @@ this.MozLoopService = {
     // Channel ids that will be registered with the PushServer for notifications
     return {
       callsFxA: "25389583-921f-4169-a426-a4673658944b",
-      callsGuest: "801f754b-686b-43ec-bd83-1419bbf58388",
       roomsFxA: "6add272a-d316-477c-8335-f00f73dfde71",
       roomsGuest: "19d3f799-a8f3-4328-9822-b7cd02765832",
     };
@@ -1124,10 +1092,9 @@ this.MozLoopService = {
 
     LoopRooms.on("joined", this.maybeResumeTourOnRoomJoined.bind(this));
 
-    // If expiresTime is not in the future and the user hasn't
+    // If there's no guest room created and the user hasn't
     // previously authenticated then skip registration.
-    if (!MozLoopServiceInternal.urlExpiryTimeIsInFuture() &&
-        !LoopRooms.getGuestCreatedRoom() &&
+    if (!LoopRooms.getGuestCreatedRoom() &&
         !MozLoopServiceInternal.fxAOAuthTokenData) {
       return Promise.resolve("registration not needed");
     }
@@ -1204,11 +1171,10 @@ this.MozLoopService = {
     });
 
     try {
-      if (MozLoopServiceInternal.urlExpiryTimeIsInFuture() ||
-          LoopRooms.getGuestCreatedRoom()) {
+      if (LoopRooms.getGuestCreatedRoom()) {
         yield this.promiseRegisteredWithServers(LOOP_SESSION_TYPE.GUEST);
       } else {
-        log.debug("delayedInitialize: URL expiry time isn't in the future so not registering as a guest");
+        log.debug("delayedInitialize: Guest Room hasn't been created so not registering as a guest");
       }
     } catch (ex) {
       log.debug("MozLoopService: Failure of guest registration", ex);
@@ -1461,7 +1427,7 @@ this.MozLoopService = {
       yield MozLoopServiceInternal.unregisterFromLoopServer(LOOP_SESSION_TYPE.FXA);
     }
     catch (err) {
-      throw err
+      throw err;
     }
     finally {
       MozLoopServiceInternal.clearSessionToken(LOOP_SESSION_TYPE.FXA);
