@@ -6,7 +6,6 @@ const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
                      "init");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-Cu.import("resource://gre/modules/Services.jsm");
 
 const ADDRESS_TEST1 = "224.0.0.200";
 const ADDRESS_TEST2 = "224.0.0.201";
@@ -33,8 +32,7 @@ function setup() {
 }
 
 function createSocketAndJoin(addr) {
-  let socket = new UDPSocket(-1, false,
-                     Services.scriptSecurityManager.getSystemPrincipal());
+  let socket = new UDPSocket(-1, false);
   socket.joinMulticast(addr);
   return socket;
 }
