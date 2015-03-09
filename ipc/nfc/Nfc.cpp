@@ -209,14 +209,23 @@ NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
 void
 NfcConsumer::OnConnectSuccess()
 {
-  // Nothing to do here.
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
+
+  if (mListener) {
+    mListener->OnConnectSuccess(NfcSocketListener::STREAM_SOCKET);
+  }
+  // Nothing to do here.
 }
 
 void
 NfcConsumer::OnConnectError()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
+
+  if (mListener) {
+    mListener->OnConnectError(NfcSocketListener::STREAM_SOCKET);
+  }
+
   Close();
 }
 
@@ -224,6 +233,10 @@ void
 NfcConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
+
+  if (mListener) {
+    mListener->OnDisconnect(NfcSocketListener::STREAM_SOCKET);
+  }
   if (!mShutdown) {
     Connect(new NfcConnector(), mAddress.get(), GetSuggestedConnectDelayMs());
   }
