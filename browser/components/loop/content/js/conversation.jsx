@@ -121,8 +121,13 @@ loop.conversation = (function(mozL10n) {
     var sdkDriver = new loop.OTSdkDriver({
       isDesktop: true,
       dispatcher: dispatcher,
-      sdk: OT
+      sdk: OT,
+      mozLoop: navigator.mozLoop
     });
+
+    // expose for functional tests
+    loop.conversation._sdkDriver = sdkDriver;
+
     var appVersionInfo = navigator.mozLoop.appVersionInfo;
     var feedbackClient = new loop.FeedbackAPIClient(
       navigator.mozLoop.getLoopPref("feedback.baseUrl"), {
@@ -202,7 +207,15 @@ loop.conversation = (function(mozL10n) {
 
   return {
     AppControllerView: AppControllerView,
-    init: init
+    init: init,
+
+    /**
+     * Exposed for the use of functional tests to be able to check
+     * metric-related execution as the call sequence progresses.
+     *
+     * @type loop.OTSdkDriver
+     */
+    _sdkDriver: null
   };
 })(document.mozL10n);
 
