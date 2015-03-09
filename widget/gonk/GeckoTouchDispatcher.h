@@ -50,7 +50,7 @@ public:
   void NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime);
   void DispatchTouchEvent(MultiTouchInput aMultiTouch);
   void DispatchTouchMoveEvents(TimeStamp aVsyncTime);
-  bool NotifyVsync(TimeStamp aVsyncTimestamp);
+  void NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetCompositorVsyncObserver(layers::CompositorVsyncObserver* aObserver);
 
 private:
