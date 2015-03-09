@@ -153,6 +153,15 @@ HelperAppLauncherDialog.prototype = {
       }
     });
 
+    let callback = function(app) {
+      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
+      if (!app.launch(aLauncher.source)) {
+        // Once the app is done we need to get rid of the temp file. This shouldn't
+        // get run in the saveToDisk case.
+        aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+      }
+    }
+
     // See if the user already marked something as the default for this mimetype,
     // and if that app is still installed.
     let preferredApp = this._getPreferredApp(aLauncher);
@@ -162,15 +171,8 @@ HelperAppLauncherDialog.prototype = {
       });
 
       if (pref.length > 0) {
-        pref[0].launch(aLauncher.source);
+        callback(pref[0]);
         return;
-      }
-    }
-
-    let callback = function(app) {
-      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
-      if (!app.launch(aLauncher.source)) {
-        aLauncher.cancel(Cr.NS_BINDING_ABORTED);
       }
     }
 
