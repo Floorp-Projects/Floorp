@@ -19,6 +19,7 @@ skip-if(d2d) pref(layers.acceleration.disabled,true) == blur-cap-large-radius-on
 == brightness-one.html brightness-one-ref.html
 == brightness-percent.html brightness-percent-ref.html
 == brightness-zero.html brightness-zero-ref.html
+== containing-block-1.html containing-block-1-ref.html
 == contrast.html contrast-ref.html
 == contrast-extreme.html contrast-extreme-ref.html
 == contrast-one.html contrast-one-ref.html
