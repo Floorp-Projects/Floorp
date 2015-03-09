@@ -486,8 +486,7 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
         if (fsMatch->selfHostedName) {
             fun = JS::GetSelfHostedFunction(cx, fsMatch->selfHostedName, id, fsMatch->nargs);
         } else {
-            fun = JS_NewFunctionById(cx, fsMatch->call.op, fsMatch->nargs,
-                                     0, wrapper, id);
+            fun = JS_NewFunctionById(cx, fsMatch->call.op, fsMatch->nargs, 0, id);
         }
         if (!fun)
             return false;
