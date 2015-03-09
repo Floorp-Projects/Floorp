@@ -128,6 +128,30 @@ public:
        ErrorResult& aRv);
 
 private:
+  class ListenerProxy : public nsIUDPSocketListener
+                      , public nsIUDPSocketInternal
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIUDPSOCKETLISTENER(mSocket)
+    NS_FORWARD_SAFE_NSIUDPSOCKETINTERNAL(mSocket)
+
+    explicit ListenerProxy(UDPSocket* aSocket)
+      : mSocket(aSocket)
+    {
+    }
+
+    void Disconnect()
+    {
+      mSocket = nullptr;
+    }
+
+  private:
+    virtual ~ListenerProxy() {}
+
+    UDPSocket* mSocket;
+  };
+
   UDPSocket(nsPIDOMWindow* aOwner,
             const nsCString& aRemoteAddress,
             const Nullable<uint16_t>& aRemotePort);
@@ -176,6 +200,7 @@ private:
 
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsIUDPSocketChild> mSocketChild;
+  nsRefPtr<ListenerProxy> mListenerProxy;
 
   struct MulticastCommand {
     enum CommandType { Join, Leave };
