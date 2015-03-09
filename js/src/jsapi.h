@@ -3075,7 +3075,7 @@ JS_NewFunction(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
  */
 extern JS_PUBLIC_API(JSFunction *)
 JS_NewFunctionById(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
-                   JS::Handle<JSObject*> parent, JS::Handle<jsid> id);
+                   JS::Handle<jsid> id);
 
 namespace JS {
 
