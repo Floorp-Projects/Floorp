@@ -453,9 +453,9 @@ pref("media.mediasource.enabled", false);
 #endif
 
 #ifdef RELEASE_BUILD
-pref("media.mediasource.youtubeonly", true);
+pref("media.mediasource.whitelist", true);
 #else
-pref("media.mediasource.youtubeonly", false);
+pref("media.mediasource.whitelist", false);
 #endif // RELEASE_BUILD
 
 pref("media.mediasource.mp4.enabled", true);
