@@ -28,6 +28,9 @@ const TEST_DOC_URL = module.uri.replace(/context-menu\/test-helper\.js$/, "test-
 // WARNING: This looks up items in popups by comparing labels, so don't give two
 // items the same label.
 function TestHelper(assert, done) {
+  // Methods on the wrapped test can be called on this object.
+  for (var prop in assert)
+    this[prop] = () => assert[prop].apply(assert, arguments);
   this.assert = assert;
   this.end = done;
   this.loaders = [];
@@ -56,11 +59,6 @@ TestHelper.prototype = {
 
   get tabBrowser() {
     return this.browserWindow.gBrowser;
-  },
-
-  // Methods on the wrapped test can be called on this object.
-  __noSuchMethod__: function (methodName, args) {
-    this.assert[methodName].apply(this.assert, args);
   },
 
   // Asserts that elt, a DOM element representing item, looks OK.
