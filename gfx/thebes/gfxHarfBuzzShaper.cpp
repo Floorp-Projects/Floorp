@@ -1228,7 +1228,7 @@ gfxHarfBuzzShaper::LoadHmtxTable()
                 // (this method will return FALSE below if mHmtxTable
                 // is null)
                 mHmtxTable = entry->GetFontTable(TRUETYPE_TAG('h','m','t','x'));
-                if (hb_blob_get_length(mHmtxTable) <
+                if (mHmtxTable && hb_blob_get_length(mHmtxTable) <
                     mNumLongHMetrics * sizeof(LongMetric)) {
                     // metrics table is not large enough for the claimed
                     // number of entries: invalid, do not use.
@@ -1267,7 +1267,7 @@ gfxHarfBuzzShaper::InitializeVertical()
             if (mNumLongVMetrics > 0 &&
                 int16_t(vhea->metricDataFormat) == 0) {
                 mVmtxTable = entry->GetFontTable(TRUETYPE_TAG('v','m','t','x'));
-                if (hb_blob_get_length(mVmtxTable) <
+                if (mVmtxTable && hb_blob_get_length(mVmtxTable) <
                     mNumLongVMetrics * sizeof(LongMetric)) {
                     // metrics table is not large enough for the claimed
                     // number of entries: invalid, do not use.
