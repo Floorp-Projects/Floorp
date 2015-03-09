@@ -487,6 +487,31 @@ let emulator = (function() {
   }
 
   /**
+   * Simulate a call dialed out by STK directly.
+   *
+   * @param number
+   *        A string.
+   * @return Promise<TelephonyCall>
+   */
+  function dialSTK(number) {
+    log("STK makes an outgoing call: " + number);
+
+    let p1 = waitForCallsChangedEvent(telephony);
+    let p2 = emulator.runCmd("stk setupcall " + number);
+
+    return Promise.all([p1, p2])
+      .then(result => {
+        let call = result[0];
+
+        ok(call instanceof TelephonyCall, "check instance");
+        is(call.id.number, number, "check number");
+        is(call.state, "dialing", "check call state");
+
+        return waitForNamedStateEvent(call, "alerting");
+      });
+  }
+
+  /**
    * Answer an incoming call.
    *
    * @param call
@@ -1086,6 +1111,7 @@ let emulator = (function() {
   this.gSendMMI = sendMMI;
   this.gDial = dial;
   this.gDialEmergency = dialEmergency;
+  this.gDialSTK = dialSTK;
   this.gAnswer = answer;
   this.gHangUp = hangUp;
   this.gHold = hold;
