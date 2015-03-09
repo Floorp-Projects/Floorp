@@ -132,10 +132,6 @@ class SavedStacks {
       : frames(),
         allocationSamplingProbability(1.0),
         allocationSkipCount(0),
-        // XXX: Initialize the RNG state to 0 so that random_initSeed is lazily
-        // called for us on the first call to random_next (via
-        // random_nextDouble). We need to do this here because /dev/urandom
-        // doesn't exist on Android, resulting in assertion failures.
         rngState(0)
     { }
 
