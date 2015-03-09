@@ -96,6 +96,16 @@ child:
 
   prio(high) sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
     returns(int32_t aRetVal);
+
+  prio(high) sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded, nsString aData, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
+                                       int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  prio(high) sync AddToSelection(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  prio(high) sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded);
 };
 
 }
