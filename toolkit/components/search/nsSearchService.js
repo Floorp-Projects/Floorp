@@ -4703,7 +4703,7 @@ SearchService.prototype = {
     try {
       terms = gTextToSubURI.UnEscapeAndConvert(
                                        mapEntry.engine.queryCharset,
-                                       encodedTerms.replace("+", " ", "g"));
+                                       encodedTerms.replace(/\+/g, " "));
     } catch (ex) {
       // Decoding errors will cause this match to be ignored.
       LOG("Parameter decoding failed. Charset: " +
