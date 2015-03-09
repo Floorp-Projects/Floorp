@@ -25,14 +25,6 @@ const TEST_CASES = [
     input: wpl.STATE_IS_BROKEN | wpl.STATE_USES_WEAK_CRYPTO,
     expected: ["cipher"]
   }, {
-    description: "weak sslv3 protocol",
-    input: wpl.STATE_IS_BROKEN | wpl.STATE_USES_SSL_3,
-    expected: ["sslv3"]
-  }, {
-    description: "weak cipher + sslv3",
-    input: wpl.STATE_IS_BROKEN | wpl.STATE_USES_WEAK_CRYPTO | wpl.STATE_USES_SSL_3,
-    expected: ["sslv3", "cipher"] // order matters for deepEqual
-  }, {
     description: "only STATE_IS_BROKEN flag",
     input: wpl.STATE_IS_BROKEN,
     expected: []
