@@ -50,22 +50,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "We should not have a value here");
 
   // defineProperty() hook test
-  function throws(errorCtor, f) {
-    try {
-      f();
-    } catch (exc) {
-      if (!(exc instanceof errorCtor))
-        throw exc;
-      return;
-    }
-    throw new Error("expected " + errCtor.name + ", no exception thrown: " + f);
-  }
-
   x.parentNode.appendChild(y);
-  throws(TypeError, function () {
-    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
-                                         writable: true });
-  });
+  Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+				       writable: true })
   y.parentNode.removeChild(y);
   ok(!("1" in window), "We no longer have two subframes, again");
   is(window[1], undefined, "We should not have a value here either");
@@ -89,10 +76,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "And now we should be back to no [1] property");
 
   // And more defineProperty()
-  throws(TypeError, function () {
-    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
-                                         writable: true });
-  });
+  Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+				       writable: true })
   ok(!("1" in window), "Defining indexed properties really just shouldn't work");
   is(window[1], undefined, "Defining past end of list should not work");
 

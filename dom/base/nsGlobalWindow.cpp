@@ -789,9 +789,10 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
     // Spec says to Reject whether this is a supported index or not,
-    // since we have no indexed setter or indexed creator.  It is up
-    // to the caller to decide whether to throw a TypeError.
-    return result.failCantDefineWindowElement();
+    // since we have no indexed setter or indexed creator.  That means
+    // throwing in strict mode (FIXME: Bug 828137), doing nothing in
+    // non-strict mode.
+    return result.succeed();
   }
 
   // For now, allow chrome code to define non-configurable properties

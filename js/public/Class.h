@@ -121,10 +121,8 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantRedefineProp();
     JS_PUBLIC_API(bool) failReadOnly();
     JS_PUBLIC_API(bool) failGetterOnly();
-    JS_PUBLIC_API(bool) failCantDelete();
-
     JS_PUBLIC_API(bool) failCantSetInterposed();
-    JS_PUBLIC_API(bool) failCantDefineWindowElement();
+    JS_PUBLIC_API(bool) failCantDelete();
     JS_PUBLIC_API(bool) failCantDeleteWindowElement();
     JS_PUBLIC_API(bool) failCantDeleteWindowNamedProperty();
     JS_PUBLIC_API(bool) failCantPreventExtensions();
