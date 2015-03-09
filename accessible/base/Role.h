@@ -716,17 +716,17 @@ enum Role {
    * An image map -- has child links representing the areas
    */
   IMAGE_MAP = 116,
-  
+
   /**
    * An option in a listbox
    */
   OPTION = 117,
-  
+
   /**
    * A rich option in a listbox, it can have other widgets as children
    */
   RICH_OPTION = 118,
-  
+
   /**
    * A list of options
    */
@@ -736,7 +736,7 @@ enum Role {
    * Represents a mathematical equation in the accessible name
    */
   FLAT_EQUATION = 120,
-  
+
   /**
    * Represents a cell within a grid. It is used for role="gridcell". Unlike
    * CELL, it allows the calculation of the accessible name from subtree.
@@ -790,7 +790,193 @@ enum Role {
    */
   SWITCH = 130,
 
-  LAST_ROLE = SWITCH
+  /**
+   * A block of MathML code (math).
+   */
+  MATHML_MATH = 131,
+
+  /**
+   * A MathML identifier (mi in MathML).
+   */
+  MATHML_IDENTIFIER = 132,
+
+  /**
+   * A MathML number (mn in MathML).
+   */
+  MATHML_NUMBER = 133,
+
+  /**
+   * A MathML operator (mo in MathML).
+   */
+  MATHML_OPERATOR = 134,
+
+  /**
+   * A MathML text (mtext in MathML).
+   */
+  MATHML_TEXT = 135,
+
+  /**
+   * A MathML string literal (ms in MathML).
+   */
+  MATHML_STRING_LITERAL = 136,
+
+  /**
+   * A MathML glyph (mglyph in MathML).
+   */
+  MATHML_GLYPH = 137,
+
+  /**
+   * A MathML row (mrow in MathML).
+   */
+  MATHML_ROW = 138,
+
+  /**
+   * A MathML fraction (mfrac in MathML).
+   */
+  MATHML_FRACTION = 139,
+
+  /**
+   * A MathML square root (msqrt in MathML).
+   */
+  MATHML_SQUARE_ROOT = 140,
+
+  /**
+   * A MathML root (mroot in MathML).
+   */
+  MATHML_ROOT = 141,
+
+  /**
+   * A MathML fenced element (mfenced in MathML).
+   */
+  MATHML_FENCED = 142,
+
+  /**
+   * A MathML enclosed element (menclose in MathML).
+   */
+  MATHML_ENCLOSED = 143,
+
+  /**
+   * A MathML styling element (mstyle in MathML).
+   */
+  MATHML_STYLE = 144,
+
+  /**
+   * A MathML subscript (msub in MathML).
+   */
+  MATHML_SUB = 145,
+
+  /**
+   * A MathML superscript (msup in MathML).
+   */
+  MATHML_SUP = 146,
+
+  /**
+   * A MathML subscript and superscript (msubsup in MathML).
+   */
+  MATHML_SUB_SUP = 147,
+
+  /**
+   * A MathML underscript (munder in MathML).
+   */
+  MATHML_UNDER = 148,
+
+  /**
+   * A MathML overscript (mover in MathML).
+   */
+  MATHML_OVER = 149,
+
+  /**
+   * A MathML underscript and overscript (munderover in MathML).
+   */
+  MATHML_UNDER_OVER = 150,
+
+  /**
+   * A MathML multiple subscript and superscript element (mmultiscripts in
+   * MathML).
+   */
+  MATHML_MULTISCRIPTS = 151,
+
+  /**
+   * A MathML table (mtable in MathML).
+   */
+  MATHML_TABLE = 152,
+
+  /**
+   * A MathML labelled table row (mlabeledtr in MathML).
+   */
+  MATHML_LABELED_ROW = 153,
+
+  /**
+   * A MathML table row (mtr in MathML).
+   */
+  MATHML_TABLE_ROW = 154,
+
+  /**
+   * A MathML table entry or cell (mtd in MathML).
+   */
+  MATHML_CELL = 155,
+
+  /**
+   * A MathML interactive element (maction in MathML).
+   */
+  MATHML_ACTION = 156,
+
+  /**
+   * A MathML error message (merror in MathML).
+   */
+  MATHML_ERROR = 157,
+
+  /**
+   * A MathML semantics annotation element (semantics in MathML).
+   */
+  MATHML_SEMANTICS = 158,
+
+  /**
+   * A MathML annotation (annotation in MathML).
+   */
+  MATHML_ANNOTATION = 159,
+
+  /**
+   * A MathML XML annotation (annotation-xml in MathML).
+   */
+  MATHML_XML_ANNOTATION = 160,
+
+  /**
+   * A MathML stacked (rows of numbers) element (mstack in MathML).
+   */
+  MATHML_STACK = 161,
+
+  /**
+   * A MathML long division element (mlongdiv in MathML).
+   */
+  MATHML_LONG_DIVISION = 162,
+
+  /**
+   * A MathML stack group (msgroup in MathML).
+   */
+  MATHML_STACK_GROUP = 163,
+
+  /**
+   * A MathML stack row (msrow in MathML).
+   */
+  MATHML_STACK_ROW = 164,
+
+  /**
+   * MathML carries, borrows, or crossouts for a row (mscarries in MathML).
+   */
+  MATHML_STACK_CARRIES = 165,
+
+  /**
+   * A MathML carry, borrow, or crossout for a column (mscarry in MathML).
+   */
+  MATHML_STACK_CARRY = 166,
+
+  /**
+   * A MathML line in a stack (msline in MathML).
+   */
+  MATHML_STACK_LINE = 167,
+
+  LAST_ROLE = MATHML_STACK_LINE
 };
 
 } // namespace role
