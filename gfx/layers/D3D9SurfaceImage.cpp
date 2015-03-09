@@ -13,16 +13,10 @@
 namespace mozilla {
 namespace layers {
 
-// Maximum number of ms we're willing to wait for
-// the YUV -> RGB conversion to take before marking
-// the texture as invalid.
-static const uint32_t kMaxWaitSyncMs = 5;
-
 
 D3D9SurfaceImage::D3D9SurfaceImage()
   : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
   , mSize(0, 0)
-  , mIsValid(true)
 {}
 
 D3D9SurfaceImage::~D3D9SurfaceImage()
@@ -142,6 +136,9 @@ D3D9SurfaceImage::SetData(const Data& aData)
   hr = device->StretchRect(surface, &src, textureSurface, nullptr, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
+  // Flush the draw command now, so that by the time we come to draw this
+  // image, we're less likely to need to wait for the draw operation to
+  // complete.
   RefPtr<IDirect3DQuery9> query;
   hr = device->CreateQuery(D3DQUERYTYPE_EVENT, byRef(query));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -151,28 +148,34 @@ D3D9SurfaceImage::SetData(const Data& aData)
   mTexture = texture;
   mShareHandle = shareHandle;
   mSize = gfx::IntSize(region.width, region.height);
+  mQuery = query;
 
-  int iterations = 0;
-  while (true) {
-    HRESULT hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
-    if (hr == S_FALSE) {
-      Sleep(1);
-      iterations++;
-      continue;
-    }
-    if (FAILED(hr) || iterations >= kMaxWaitSyncMs) {
-      mIsValid = false;
-    }
-    break;
-  }
-  
   return S_OK;
 }
 
-bool
-D3D9SurfaceImage::IsValid()
+void
+D3D9SurfaceImage::EnsureSynchronized()
 {
-  return mIsValid;
+  RefPtr<IDirect3DQuery9> query = mQuery;
+  if (!query) {
+    // Not setup, or already synchronized.
+    return;
+  }
+  int iterations = 0;
+  while (iterations < 10 && S_FALSE == query->GetData(nullptr, 0, D3DGETDATA_FLUSH)) {
+    Sleep(1);
+    iterations++;
+  }
+  mQuery = nullptr;
+}
+
+HANDLE
+D3D9SurfaceImage::GetShareHandle()
+{
+  // Ensure the image has completed its synchronization,
+  // and safe to used by the caller on another device.
+  EnsureSynchronized();
+  return mShareHandle;
 }
 
 const D3DSURFACE_DESC&
@@ -190,6 +193,7 @@ D3D9SurfaceImage::GetSize()
 TextureClient*
 D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
 {
+  EnsureSynchronized();
   if (!mTextureClient) {
     RefPtr<SharedTextureClientD3D9> textureClient =
       new SharedTextureClientD3D9(aClient->GetForwarder(),
@@ -211,6 +215,9 @@ D3D9SurfaceImage::GetAsSourceSurface()
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
+
+  // Ensure that the texture is ready to be used.
+  EnsureSynchronized();
 
   // Readback the texture from GPU memory into system memory, so that
   // we can copy it into the Cairo image. This is expensive.
