@@ -82,6 +82,8 @@ public:
 
   virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
 
+  virtual bool VideoIsHardwareAccelerated() const MOZ_OVERRIDE;
+
 private:
 
   bool InitDemuxer();

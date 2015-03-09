@@ -220,7 +220,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVolume(1.0),
   mPlaybackRate(1.0),
   mPreservesPitch(true),
-  mAmpleVideoFrames(MIN_VIDEO_QUEUE_SIZE),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mQuickBufferingLowDataThresholdUsecs(detail::QUICK_BUFFERING_LOW_DATA_USECS),
@@ -579,7 +578,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   AssertCurrentThreadInMonitor();
 
-  if (static_cast<uint32_t>(VideoQueue().GetSize()) < mAmpleVideoFrames * mPlaybackRate) {
+  if (static_cast<uint32_t>(VideoQueue().GetSize()) < GetAmpleVideoFrames() * mPlaybackRate) {
     return false;
   }
 
@@ -835,6 +834,10 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     mAudioDataRequest.Complete();
   } else {
     mVideoDataRequest.Complete();
+  }
+  if (IsShutdown()) {
+    // Already shutdown;
+    return;
   }
 
   // If this is a decode error, delegate to the generic error path.
@@ -1927,6 +1930,10 @@ MediaDecoderStateMachine::DispatchAudioDecodeTaskIfNeeded()
   MOZ_ASSERT(OnStateMachineThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
+  if (IsShutdown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (NeedToDecodeAudio()) {
     return EnsureAudioDecodeTaskQueued();
   }
@@ -1972,6 +1979,10 @@ MediaDecoderStateMachine::DispatchVideoDecodeTaskIfNeeded()
 {
   MOZ_ASSERT(OnStateMachineThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  if (IsShutdown()) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (NeedToDecodeVideo()) {
     return EnsureVideoDecodeTaskQueued();
@@ -2229,13 +2240,10 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
   mInfo = info;
 
   if (HasVideo()) {
-    mAmpleVideoFrames = (mReader->IsAsync() && mInfo.mVideo.mIsHardwareAccelerated)
-      ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
-      : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
     DECODER_LOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
                 mReader->IsAsync(),
-                mInfo.mVideo.mIsHardwareAccelerated,
-                mAmpleVideoFrames);
+                mReader->VideoIsHardwareAccelerated(),
+                GetAmpleVideoFrames());
   }
 
   mDecoder->StartProgressUpdates();
@@ -3502,6 +3510,14 @@ void MediaDecoderStateMachine::OnAudioSinkError()
   // Otherwise notify media decoder/element about this error for it makes
   // no sense to play an audio-only file without sound output.
   DecodeError();
+}
+
+uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
+{
+  AssertCurrentThreadInMonitor();
+  return (mReader->IsAsync() && mReader->VideoIsHardwareAccelerated())
+    ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
+    : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
 } // namespace mozilla

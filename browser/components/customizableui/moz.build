@@ -27,3 +27,6 @@ EXTRA_PP_JS_MODULES += [
     'CustomizeMode.jsm',
     'PanelWideWidgetTracker.jsm',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')

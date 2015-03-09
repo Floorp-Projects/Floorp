@@ -418,6 +418,14 @@ nsRefPtr<ShutdownPromise>
 MediaSourceReader::Shutdown()
 {
   mSeekPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+  // Any previous requests we've been waiting on are now unwanted.
+  mAudioRequest.DisconnectIfExists();
+  mVideoRequest.DisconnectIfExists();
+
+  // Additionally, reject any outstanding promises _we_ made that we might have
+  // been waiting on the above to fulfill.
+  mAudioPromise.RejectIfExists(CANCELED, __func__);
+  mVideoPromise.RejectIfExists(CANCELED, __func__);
 
   MOZ_ASSERT(mMediaSourceShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mMediaSourceShutdownPromise.Ensure(__func__);
