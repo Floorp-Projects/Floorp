@@ -46,7 +46,6 @@ private:
     mDisplay = nsIntSize(aWidth, aHeight);
     mStereoMode = StereoMode::MONO;
     mHasVideo = aHasVideo;
-    mIsHardwareAccelerated = false;
 
     // TODO: TrackInfo should be initialized by its specific codec decoder.
     // This following call should be removed once we have that implemented.
@@ -76,8 +75,6 @@ public:
   bool mHasVideo;
 
   TrackInfo mTrackInfo;
-
-  bool mIsHardwareAccelerated;
 };
 
 class AudioInfo {
