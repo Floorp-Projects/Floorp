@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="-moz-binding: url(#foo)">
+<head>
+
+<xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl">
+<xbl:binding id="foo"><xbl:content><fieldset><xbl:children/></fieldset></xbl:content></xbl:binding>
+</xbl:bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var dE = document.documentElement;
+  var leg = document.createElementNS("http://www.w3.org/1999/xhtml", "legend");
+  leg.appendChild(document.createTextNode("legend"));
+  dE.appendChild(leg);
+  document.documentElement.offsetHeight;
+  dE.removeChild(leg);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();"></body>
+
+</html>
