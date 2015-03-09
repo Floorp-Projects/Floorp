@@ -3038,11 +3038,6 @@ AnalyzePoppedThis(JSContext *cx, ObjectGroup *group,
                 return true;
         }
 
-        // Don't add definite properties to an object which won't fit in its
-        // fixed slots.
-        if (GetGCKindSlots(gc::GetGCObjectKind(baseobj->slotSpan() + 1)) <= baseobj->slotSpan())
-            return true;
-
         // Assignments to new properties must always execute.
         if (!definitelyExecuted)
             return true;
