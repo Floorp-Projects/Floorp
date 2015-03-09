@@ -13,7 +13,7 @@ namespace mozilla
 {
 namespace embedding
 {
-  struct PrintData;
+  class PrintData;
 } // namespace embedding
 } // namespace mozilla
 
