@@ -310,5 +310,22 @@ ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum)
   return retVal;
 }
 
+void
+ProxyAccessible::ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                                   uint32_t aScrollType)
+{
+  unused << mDoc->SendScrollSubstringTo(mID, aStartOffset, aEndOffset, aScrollType);
+}
+
+void
+ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
+                                        int32_t aEndOffset,
+                                        uint32_t aCoordinateType,
+                                        int32_t aX, int32_t aY)
+{
+  unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
+                                             aCoordinateType, aX, aY);
+}
+
 }
 }
