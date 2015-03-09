@@ -60,10 +60,12 @@ private:
   void DispatchMouseEvent(MultiTouchInput& aMultiTouch,
                           bool aForwardToChildren);
 
-  // mTouchQueueLock are used to protect the vector below
-  // as it is accessed on the vsync thread and main thread
+  // mTouchQueueLock is used to protect the vector and state below
+  // as it is accessed on multiple threads.
   Mutex mTouchQueueLock;
   std::vector<MultiTouchInput> mTouchMoveEvents;
+  bool mHavePendingTouchMoves;
+  // end stuff protected by mTouchQueueLock
 
   bool mResamplingEnabled;
   bool mTouchEventsFiltered;
