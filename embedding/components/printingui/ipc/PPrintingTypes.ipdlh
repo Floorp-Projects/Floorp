@@ -6,6 +6,11 @@
 namespace mozilla {
 namespace embedding {
 
+struct CStringKeyValue {
+  nsCString key;
+  nsCString value;
+};
+
 struct PrintData {
   int32_t startPageRange;
   int32_t endPageRange;
@@ -76,7 +81,17 @@ struct PrintData {
   bool isIFrameSelected;
   bool isRangeSelection;
 
-  /* TODO: OS X specific things - specifically, an array of names for the
+  /**
+   * GTK-specific things. Some of these might look like dupes of the
+   * information we're already passing, but the generalized settings that
+   * we hold in nsIPrintSettings don't map perfectly to GTK's GtkPrintSettings,
+   * so there are some nuances. GtkPrintSettings, for example, stores both an
+   * internal name for paper size, as well as the display name.
+   */
+  CStringKeyValue[] GTKPrintSettings;
+
+  /**
+   * TODO: OS X specific things - specifically, an array of names for the
    * document to be supplied by nsIWebBrowserPrint::enumerateDocumentNames
    */
 };
