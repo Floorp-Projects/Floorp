@@ -12,13 +12,13 @@ add_test(function test_openChatWindow_on_notification() {
 
   mockPushHandler.registrationPushURL = kEndPointUrl;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
+  MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.FXA).then(() => {
     let opened = false;
     Chat.open = function() {
       opened = true;
     };
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
     waitForCondition(function() opened).then(() => {
       do_check_true(opened, "should open a chat window");
@@ -36,6 +36,8 @@ add_test(function test_openChatWindow_on_notification() {
 
 function run_test() {
   setupFakeLoopServer();
+
+  setupFakeFxAUserProfile();
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
