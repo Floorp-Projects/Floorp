@@ -10,7 +10,6 @@ function test(id) {
             assertEq(desc.enumerable, true);
             assertEq(desc.configurable, true);
             assertEq(desc.writable, true);
-            return true;
         }
     });
     var hits = 0;

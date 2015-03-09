@@ -5,7 +5,7 @@ var hits = 0;
 var proto = {x: 1};
 var t = Object.create(proto);
 var p = new Proxy(t, {
-    defineProperty(t, id, desc) { hits++; return true; }
+    defineProperty(t, id, desc) { hits++; }
 });
 p.x = 2;
 assertEq(hits, 1);

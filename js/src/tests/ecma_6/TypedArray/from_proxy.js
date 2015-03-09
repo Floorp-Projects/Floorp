@@ -18,7 +18,7 @@ for (var constructor of constructors) {
         var h = {
             defineProperty: function (t, id) {
                 log.push("define", id);
-                return true;
+                return undefined;
             },
             has: function (t, id) {
                 log.push("has", id);
