@@ -1383,7 +1383,7 @@ Search.prototype = {
       queryString = searchString.substring(queryIndex + 1);
     }
     // We need to escape the parameters as if they were the query in a URL
-    queryString = encodeURIComponent(queryString).replace("%20", "+", "g");
+    queryString = encodeURIComponent(queryString).replace(/%20/g, "+");
 
     // The first word could be a keyword, so that's what we'll search.
     let keyword = this._searchTokens[0];
