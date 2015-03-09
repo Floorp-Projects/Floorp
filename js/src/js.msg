@@ -342,7 +342,6 @@ MSG_DEF(JSMSG_CANT_CHANGE_EXTENSIBILITY, 0, JSEXN_TYPEERR, "can't change object'
 MSG_DEF(JSMSG_CANT_DEFINE_INVALID,     0, JSEXN_TYPEERR, "proxy can't define an incompatible property descriptor")
 MSG_DEF(JSMSG_CANT_DEFINE_NEW,         0, JSEXN_TYPEERR, "proxy can't define a new property on a non-extensible object")
 MSG_DEF(JSMSG_CANT_DEFINE_NE_AS_NC,    0, JSEXN_TYPEERR, "proxy can't define a non-existent property as non-configurable")
-MSG_DEF(JSMSG_PROXY_DEFINE_RETURNED_FALSE, 1, JSEXN_TYPEERR, "proxy defineProperty handler returned false for property '{0}'")
 MSG_DEF(JSMSG_PROXY_DELETE_RETURNED_FALSE, 1, JSEXN_TYPEERR, "can't delete property '{0}': proxy deleteProperty handler returned false")
 MSG_DEF(JSMSG_PROXY_PREVENTEXTENSIONS_RETURNED_FALSE, 0, JSEXN_TYPEERR, "proxy preventExtensions handler returned false")
 MSG_DEF(JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE, 0, JSEXN_TYPEERR, "proxy can't report an extensible object as non-extensible")

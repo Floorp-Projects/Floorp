@@ -15,7 +15,6 @@ var q = new Proxy(p, {
         assertEq(desc.writable, true);
         assertEq(desc.value, 3);
         hits++;
-        return true;
     }
 });
 var hits = 0;

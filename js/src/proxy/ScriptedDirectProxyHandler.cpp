@@ -592,9 +592,9 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 12
-    if (!ToBoolean(trapResult))
-        return result.fail(JSMSG_PROXY_DEFINE_RETURNED_FALSE);
+    // FIXME - bug 1132522: Step 12 is not implemented yet.
+    // if (!ToBoolean(trapResult))
+    //     return result.fail(JSMSG_PROXY_DEFINE_RETURNED_FALSE);
 
     // step 13-14
     Rooted<PropertyDescriptor> targetDesc(cx);
