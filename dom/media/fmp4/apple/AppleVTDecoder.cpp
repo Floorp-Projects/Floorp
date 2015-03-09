@@ -41,6 +41,7 @@ AppleVTDecoder::AppleVTDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
   : AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer)
   , mFormat(nullptr)
   , mSession(nullptr)
+  , mIsHardwareAccelerated(false)
 {
   MOZ_COUNT_CTOR(AppleVTDecoder);
   // TODO: Verify aConfig.mime_type.
@@ -314,8 +315,9 @@ AppleVTDecoder::InitializeSession()
     if (rv != noErr) {
       LOG("AppleVTDecoder: system doesn't support hardware acceleration");
     }
+    mIsHardwareAccelerated = rv == noErr && isUsingHW == kCFBooleanTrue;
     LOG("AppleVTDecoder: %s hardware accelerated decoding",
-        (rv == noErr && isUsingHW == kCFBooleanTrue) ? "using" : "not using");
+        mIsHardwareAccelerated ? "using" : "not using");
   } else {
     LOG("AppleVTDecoder: couldn't determine hardware acceleration status.");
   }
