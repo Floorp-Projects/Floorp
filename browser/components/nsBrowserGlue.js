@@ -414,19 +414,6 @@ BrowserGlue.prototype = {
 #endif
         break;
       case "browser-search-engine-modified":
-        // Ensure we cleanup the hiddenOneOffs pref when removing
-        // an engine, and that newly added engines are visible.
-        if (data == "engine-added" || data == "engine-removed") {
-          let engineName = subject.QueryInterface(Ci.nsISearchEngine).name;
-          let Preferences =
-            Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-          let pref = Preferences.get("browser.search.hiddenOneOffs");
-          let hiddenList = pref ? pref.split(",") : [];
-          hiddenList = hiddenList.filter(x => x !== engineName);
-          Preferences.set("browser.search.hiddenOneOffs",
-                          hiddenList.join(","));
-        }
-
         if (data != "engine-default" && data != "engine-current") {
           break;
         }
