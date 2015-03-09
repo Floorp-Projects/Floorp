@@ -387,19 +387,8 @@ UDPSocket::InitLocal(const nsAString& aLocalAddress,
     return rv;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner(), &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
-  if (!principal) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (aLocalAddress.IsEmpty()) {
-    rv = sock->Init(aLocalPort, /* loopback = */ false, principal,
-                    mAddressReuse, /* optionalArgc = */ 1);
+    rv = sock->Init(aLocalPort, /* loopback = */ false, mAddressReuse, /* optionalArgc = */ 1);
   } else {
     PRNetAddr prAddr;
     PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr);
@@ -407,8 +396,7 @@ UDPSocket::InitLocal(const nsAString& aLocalAddress,
 
     mozilla::net::NetAddr addr;
     PRNetAddrToNetAddr(&prAddr, &addr);
-    rv = sock->InitWithAddress(&addr, principal, mAddressReuse,
-                               /* optionalArgc = */ 1);
+    rv = sock->InitWithAddress(&addr, mAddressReuse, /* optionalArgc = */ 1);
   }
   if (NS_FAILED(rv)) {
     return rv;
@@ -470,19 +458,7 @@ UDPSocket::InitRemote(const nsAString& aLocalAddress,
     return rv;
   }
 
-  nsCOMPtr<nsIGlobalObject> obj = do_QueryInterface(GetOwner(), &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = obj->PrincipalOrNull();
-  if (!principal) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = sock->Bind(this, principal,
-                  NS_ConvertUTF16toUTF8(aLocalAddress), aLocalPort,
-                  mAddressReuse, mLoopback);
+  rv = sock->Bind(this, NS_ConvertUTF16toUTF8(aLocalAddress), aLocalPort, mAddressReuse, mLoopback);
   if (NS_FAILED(rv)) {
     return rv;
   }
