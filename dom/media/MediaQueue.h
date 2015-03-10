@@ -157,7 +157,7 @@ template <class T> class MediaQueue : private nsDeque {
     mPopListeners.Clear();
   }
 
-  void AddPopListener(nsIRunnable* aRunnable, nsIEventTarget* aTarget) {
+  void AddPopListener(nsIRunnable* aRunnable, MediaTaskQueue* aTarget) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mPopListeners.AppendElement(Listener(aRunnable, aTarget));
   }
@@ -166,7 +166,7 @@ private:
   mutable ReentrantMonitor mReentrantMonitor;
 
   struct Listener {
-    Listener(nsIRunnable* aRunnable, nsIEventTarget* aTarget)
+    Listener(nsIRunnable* aRunnable, MediaTaskQueue* aTarget)
       : mRunnable(aRunnable)
       , mTarget(aTarget)
     {
@@ -177,7 +177,7 @@ private:
     {
     }
     RefPtr<nsIRunnable> mRunnable;
-    RefPtr<nsIEventTarget> mTarget;
+    RefPtr<MediaTaskQueue> mTarget;
   };
 
   nsTArray<Listener> mPopListeners;
@@ -185,7 +185,7 @@ private:
   void NotifyPopListeners() {
     for (uint32_t i = 0; i < mPopListeners.Length(); i++) {
       Listener& l = mPopListeners[i];
-      l.mTarget->Dispatch(l.mRunnable, NS_DISPATCH_NORMAL);
+      l.mTarget->Dispatch(l.mRunnable);
     }
   }
 
