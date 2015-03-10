@@ -99,12 +99,12 @@ body {
   color: #0095dd;
 }
 
-.light > .header > .domain,
-.sepia > .header > .domain {
+.light > .container > .header > .domain,
+.sepia > .container > .header > .domain {
   border-bottom-color: #333333;
 }
 
-.dark > .header > .domain {
+.dark > .container > .header > .domain {
   border-bottom-color: #eeeeee;
 }
 
@@ -204,12 +204,12 @@ body {
   -moz-padding-start: 16px;
 }
 
-.light > .content blockquote,
-.sepia > .content blockquote {
+.light > .container > .content blockquote,
+.sepia > .container > .content blockquote {
   -moz-border-start: 2px solid #333333;
 }
 
-.dark > .content blockquote {
+.dark > .container > .content blockquote {
   -moz-border-start: 2px solid #eeeeee;
 }
 
