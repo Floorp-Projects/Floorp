@@ -2,8 +2,8 @@ $inherits:
   from: 'tasks/build.yml'
 task:
   metadata:
-    name: '[TC] Mulet Linux x64 Opt'
-    description: Mulet Linux x64 Opt
+    name: '[TC] Mulet Linux'
+    description: Mulet Linux
 
   workerType: b2gbuild-desktop
   scopes:
@@ -29,7 +29,12 @@ task:
         buildbot_step 'Build' ./build-mulet-linux.sh $HOME/workspace
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "?"
       machine:
         platform: mulet-linux64
     # Rather then enforcing particular conventions we require that all build
@@ -38,3 +43,4 @@ task:
     locations:
       build: 'public/build/target.linux-x86_64.tar.bz2'
       tests: 'public/build/target.tests.zip'
+
