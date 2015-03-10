@@ -421,6 +421,9 @@ loop.store.ActiveRoomStore = (function() {
     _handleSwitchBrowserShare: function(err, windowId) {
       if (err) {
         console.error("Error getting the windowId: " + err);
+        this.dispatchAction(new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
         return;
       }
 

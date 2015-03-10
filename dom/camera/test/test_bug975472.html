@@ -193,7 +193,7 @@ var Camera = {
         t.func(Camera.cameraObj);
       } catch(e) {
         if (e instanceof StopIteration) {
-          CameraTest.end();
+          SimpleTest.finish();
         } else {
           throw e;
         }

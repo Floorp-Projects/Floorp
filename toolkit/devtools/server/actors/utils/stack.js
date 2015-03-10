@@ -20,7 +20,7 @@ let StackFrameCache = Class({
     this._framesToCounts = null;
     this._framesToIndices = null;
     this._framesToForms = null;
-    this._lastEventSize = -1;
+    this._lastEventSize = 0;
   },
 
   /**
@@ -35,7 +35,7 @@ let StackFrameCache = Class({
     this._framesToCounts = new Map();
     this._framesToIndices = new Map();
     this._framesToForms = new Map();
-    this._lastEventSize = -1;
+    this._lastEventSize = 0;
   },
 
   /**
@@ -48,7 +48,7 @@ let StackFrameCache = Class({
     this._framesToIndices = null;
     this._framesToForms.clear();
     this._framesToForms = null;
-    this._lastEventSize = -1;
+    this._lastEventSize = 0;
   },
 
   /**
@@ -127,8 +127,8 @@ let StackFrameCache = Class({
 
     let packet = Array(size - this._lastEventSize).fill(null);
     for (let [stack, index] of this._framesToIndices) {
-      if (index > this._lastEventSize) {
-        packet[index - this._lastEventSize - 1] = this._framesToForms.get(stack);
+      if (index >= this._lastEventSize) {
+        packet[index - this._lastEventSize] = this._framesToForms.get(stack);
       }
     }
 

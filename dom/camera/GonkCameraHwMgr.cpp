@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2014 Mozilla Foundation
+ * Copyright (C) 2012-2015 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,18 +221,23 @@ GonkCameraHardware::Init()
 sp<GonkCameraHardware>
 GonkCameraHardware::Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId)
 {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
-  sp<Camera> camera = Camera::connect(aCameraId, /* clientPackageName */String16("gonk.camera"), Camera::USE_CALLING_UID);
-#else
-  sp<Camera> camera = Camera::connect(aCameraId);
-#endif
-
-  if (camera.get() == nullptr) {
-    return nullptr;
-  }
+  sp<Camera> camera;
 
   nsCString test;
   CameraPreferences::GetPref("camera.control.test.enabled", test);
+
+  if (!test.EqualsASCII("hardware")) {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+    camera = Camera::connect(aCameraId, /* clientPackageName */String16("gonk.camera"), Camera::USE_CALLING_UID);
+#else
+    camera = Camera::connect(aCameraId);
+#endif
+
+    if (camera.get() == nullptr) {
+      return nullptr;
+    }
+  }
+
   sp<GonkCameraHardware> cameraHardware;
   if (test.EqualsASCII("hardware")) {
     NS_WARNING("Using test Gonk hardware layer");
@@ -257,8 +262,10 @@ GonkCameraHardware::Close()
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, (void*)this);
 
   mClosing = true;
-  mCamera->stopPreview();
-  mCamera->disconnect();
+  if (mCamera.get()) {
+    mCamera->stopPreview();
+    mCamera->disconnect();
+  }
   if (mNativeWindow.get()) {
     mNativeWindow->abandon();
   }

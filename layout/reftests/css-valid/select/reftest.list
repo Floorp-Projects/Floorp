@@ -7,6 +7,6 @@ needs-focus == select-required-invalid.html select-required-ref.html
 needs-focus == select-required-valid.html select-required-ref.html
 needs-focus == select-required-multiple-invalid.html select-required-multiple-ref.html
 needs-focus == select-required-multiple-valid.html select-required-multiple-ref.html
-fails-if(Android||B2G) needs-focus == select-disabled-fieldset-1.html select-fieldset-ref.html
-fails-if(Android||B2G) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html
+fails-if(Android||B2G||Mulet) needs-focus == select-disabled-fieldset-1.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android||B2G||Mulet) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 needs-focus == select-fieldset-legend.html select-fieldset-legend-ref.html

@@ -30,6 +30,10 @@ public:
   // Great Renaming proposed in bug 983177.
   static bool HasSupport(JSContext* aCx, JSObject* aGlobal);
 
+  static already_AddRefed<DOMCameraDetectedFace> Constructor(const GlobalObject& aGlobal,
+                                                             const dom::CameraDetectedFaceInit& aFace,
+                                                             ErrorResult& aRv);
+
   DOMCameraDetectedFace(nsISupports* aParent, const ICameraControl::Face& aFace);
 
   uint32_t Id()       { return mId; }
@@ -54,6 +58,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
 protected:
+  DOMCameraDetectedFace(nsISupports* aParent, const dom::CameraDetectedFaceInit& aFace);
   virtual ~DOMCameraDetectedFace() { }
 
   nsCOMPtr<nsISupports> mParent;

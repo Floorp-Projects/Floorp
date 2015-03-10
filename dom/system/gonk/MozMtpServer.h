@@ -35,6 +35,9 @@ public:
     : MtpServer(aFd, aDatabase, aPtp, aFileGroup, aFilePerm, aDirectoryPerm)
   {
   }
+
+protected:
+  virtual ~RefCountedMtpServer() {}
 };
 
 class MozMtpServer
@@ -47,6 +50,9 @@ public:
 
   already_AddRefed<RefCountedMtpServer> GetMtpServer();
   already_AddRefed<MozMtpDatabase> GetMozMtpDatabase();
+
+protected:
+  virtual ~MozMtpServer() {}
 
 private:
   nsRefPtr<RefCountedMtpServer> mMtpServer;
