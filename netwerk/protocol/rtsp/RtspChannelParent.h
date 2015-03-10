@@ -34,7 +34,6 @@ public:
   NS_DECL_NSIPARENTCHANNEL
 
   RtspChannelParent(nsIURI *aUri);
-  ~RtspChannelParent();
 
   // nsBaseChannel::nsIChannel
   NS_IMETHOD GetContentType(nsACString & aContentType) MOZ_OVERRIDE MOZ_FINAL;
@@ -69,6 +68,8 @@ public:
   bool Init(const RtspChannelConnectArgs& aArgs);
 
 protected:
+  ~RtspChannelParent();
+
   // Used to connect redirected-to channel in parent with just created
   // ChildChannel. Used during HTTP->RTSP redirection.
   bool ConnectChannel(const uint32_t& channelId);
