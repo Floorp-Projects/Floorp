@@ -2591,52 +2591,6 @@ PresShell::GetTouchCaretElement() const
   return GetCanvasFrame() ? GetCanvasFrame()->GetTouchCaretElement() : nullptr;
 }
 
-void
-PresShell::SetMayHaveTouchCaret(bool aSet)
-{
-  if (!mPresContext) {
-    return;
-  }
-
-  if (!mPresContext->IsRoot()) {
-    nsIPresShell* rootPresShell = GetRootPresShell();
-    if (rootPresShell) {
-      rootPresShell->SetMayHaveTouchCaret(aSet);
-    }
-    return;
-  }
-
-  nsIDocument* document = GetDocument();
-  if (document) {
-    nsPIDOMWindow* innerWin = document->GetInnerWindow();
-    if (innerWin) {
-      innerWin->SetMayHaveTouchCaret(aSet);
-    }
-  }
-}
-
-bool
-PresShell::MayHaveTouchCaret()
-{
-  if (!mPresContext) {
-    return false;
-  }
-
-  if (!mPresContext->IsRoot()) {
-    nsIPresShell* rootPresShell = GetRootPresShell();
-    return rootPresShell ? rootPresShell->MayHaveTouchCaret() : false;
-  }
-
-  nsIDocument* document = GetDocument();
-  if (document) {
-    nsPIDOMWindow* innerWin = document->GetInnerWindow();
-    if (innerWin) {
-      return innerWin->MayHaveTouchCaret();
-    }
-  }
-  return false;
-}
-
 Element*
 PresShell::GetSelectionCaretsStartElement() const
 {

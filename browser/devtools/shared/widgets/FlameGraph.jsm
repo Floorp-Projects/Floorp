@@ -800,10 +800,10 @@ FlameGraph.prototype = {
     }
 
     while (true) {
+      let scaledStep = dataScale * timingStep;
       if (++numIters > maxIters) {
         return scaledStep;
       }
-      let scaledStep = dataScale * timingStep;
       if (scaledStep < spacingMin) {
         timingStep <<= 1;
         continue;

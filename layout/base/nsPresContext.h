@@ -592,15 +592,15 @@ public:
   }
 
   /**
-   * Return the device's screen width in inches, for font size
+   * Return the device's screen size in inches, for font size
    * inflation.
    *
    * If |aChanged| is non-null, then aChanged is filled in with whether
-   * the return value has changed since either:
+   * the screen size value has changed since either:
    *  a. the last time the function was called with non-null aChanged, or
    *  b. the first time the function was called.
    */
-  float ScreenWidthInchesForFontInflation(bool* aChanged = nullptr);
+  gfxSize ScreenSizeInchesForFontInflation(bool* aChanged = nullptr);
 
   static int32_t AppUnitsPerCSSPixel() { return mozilla::AppUnitsPerCSSPixel(); }
   int32_t AppUnitsPerDevPixel() const;
@@ -1259,7 +1259,7 @@ protected:
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
 
-  float                 mLastFontInflationScreenWidth;
+  gfxSize               mLastFontInflationScreenSize;
 
   int32_t               mCurAppUnitsPerDevPixel;
   int32_t               mAutoQualityMinFontSizePixelsPref;

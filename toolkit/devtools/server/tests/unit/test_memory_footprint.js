@@ -20,30 +20,33 @@ function run_test() {
 
 function check_footprint(step, max) {
   var footprint = (gMgr.residentUnique - gRefMemory) / 1024;
-  ok(footprint < max, "Footprint after " + step + " is " + footprint + " kB (should be less than " + max + " kB).");
+  let msg = "Footprint after " + step + " is " + footprint + " kB (should be less than " + max + " kB).\n" +
+            "!!! The devtools server's memory usage increased either significantly, or slowly over time.\n" +
+            "!!! If your patch doesn't cause a big increase, feel free to raise the thresholds for this test as needed.";
+  ok(footprint < max, msg);
   run_next_test();
 }
 
 function init_server() {
   DebuggerServer.init();
-  check_footprint("DebuggerServer.init()", 500);
+  check_footprint("DebuggerServer.init()", 150);
 }
 
 function add_browser_actors() {
   DebuggerServer.addBrowserActors();
-  check_footprint("DebuggerServer.addBrowserActors()", 12000);
+  check_footprint("DebuggerServer.addBrowserActors()", 2000);
 }
 
 function connect_client() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function onConnect() {
-    check_footprint("DebuggerClient.connect()", 12500);
+    check_footprint("DebuggerClient.connect()", 2000);
   });
 }
 
 function list_tabs() {
   gClient.listTabs(function onListTabs(aResponse) {
-    check_footprint("DebuggerClient.listTabs()", 13000);
+    check_footprint("DebuggerClient.listTabs()", 2600);
   });
 }
 

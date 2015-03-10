@@ -612,7 +612,7 @@ public class Tab {
 
         setHasFeeds(false);
         setHasOpenSearch(false);
-        updateIdentityData(null);
+        mSiteIdentity.reset();
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
@@ -629,7 +629,7 @@ public class Tab {
     void handleDocumentStart(boolean restoring, String url) {
         setLoadProgress(LOAD_PROGRESS_START);
         setState((!restoring && shouldShowProgress(url)) ? STATE_LOADING : STATE_SUCCESS);
-        updateIdentityData(null);
+        mSiteIdentity.reset();
     }
 
     void handleDocumentStop(boolean success) {
