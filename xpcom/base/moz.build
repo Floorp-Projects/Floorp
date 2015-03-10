@@ -77,6 +77,7 @@ EXPORTS.mozilla += [
     'CycleCollectedJSRuntime.h',
     'Debug.h',
     'ErrorNames.h',
+    'HoldDropJSObjects.h',
     'LinuxUtils.h',
     'nsMemoryInfoDumper.h',
     'StackWalk.h',
