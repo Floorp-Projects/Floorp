@@ -698,7 +698,6 @@ Nfc.prototype = {
         this.sendToNfcService(NfcRequestType.READ_NDEF, message.data);
         break;
       case "NFC:WriteNDEF":
-        message.data.isP2P = SessionHelper.isP2PSession(message.data.sessionId);
         this.sendToNfcService(NfcRequestType.WRITE_NDEF, message.data);
         break;
       case "NFC:MakeReadOnly":
