@@ -439,37 +439,13 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
             return rv;
         }
 
-#ifdef MOZ_X11
+#ifdef MOZ_ENABLE_GIO
         // check to see whether GVFS can handle this URI scheme.  if it can
         // create a nsIURI for the "scheme:", then we assume it has support for
         // the requested protocol.  otherwise, we failover to using the default
         // protocol handler.
 
         rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gio",
-                            result);
-        if (NS_SUCCEEDED(rv)) {
-            nsAutoCString spec(scheme);
-            spec.Append(':');
-
-            nsIURI *uri;
-            rv = (*result)->NewURI(spec, nullptr, nullptr, &uri);
-            if (NS_SUCCEEDED(rv)) {
-                NS_RELEASE(uri);
-                return rv;
-            }
-
-            NS_RELEASE(*result);
-        }
-
-        // check to see whether GnomeVFS can handle this URI scheme.  if it can
-        // create a nsIURI for the "scheme:", then we assume it has support for
-        // the requested protocol.  otherwise, we failover to using the default
-        // protocol handler.
-
-        // XXX should this be generalized into something that searches a
-        // category?  (see bug 234714)
-
-        rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
                             result);
         if (NS_SUCCEEDED(rv)) {
             nsAutoCString spec(scheme);

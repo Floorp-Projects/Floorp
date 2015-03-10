@@ -948,7 +948,7 @@ NativeRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset, int cha
         } else if (characters == 2) {
             masm.load16ZeroExtend(address, current_character);
         } else {
-            MOZ_ASSERT(characters = 1);
+            MOZ_ASSERT(characters == 1);
             masm.load8ZeroExtend(address, current_character);
         }
     } else {

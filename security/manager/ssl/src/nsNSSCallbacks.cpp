@@ -1140,15 +1140,15 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                            infoObject->GetPort(),
                                            versions.max);
 
-  bool usesWeakProtocol = false;
   bool usesWeakCipher = false;
   SSLChannelInfo channelInfo;
   rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
   MOZ_ASSERT(rv == SECSuccess);
   if (rv == SECSuccess) {
     // Get the protocol version for telemetry
-    // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
+    // 1=tls1, 2=tls1.1, 3=tls1.2
     unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+    MOZ_ASSERT(versionEnum > 0);
     Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
     AccumulateCipherSuite(
       infoObject->IsFullHandshake() ? Telemetry::SSL_CIPHER_SUITE_FULL
@@ -1160,8 +1160,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 sizeof cipherInfo);
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
-      usesWeakProtocol =
-        channelInfo.protocolVersion <= SSL_LIBRARY_VERSION_3_0;
       usesWeakCipher = cipherInfo.symCipher == ssl_calg_rc4;
 
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
@@ -1238,11 +1236,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                              ioLayerHelpers.treatUnsafeNegotiationAsBroken();
 
   uint32_t state;
-  if (usesWeakProtocol || usesWeakCipher || renegotiationUnsafe) {
+  if (usesWeakCipher || renegotiationUnsafe) {
     state = nsIWebProgressListener::STATE_IS_BROKEN;
-    if (usesWeakProtocol) {
-      state |= nsIWebProgressListener::STATE_USES_SSL_3;
-    }
     if (usesWeakCipher) {
       state |= nsIWebProgressListener::STATE_USES_WEAK_CRYPTO;
     }

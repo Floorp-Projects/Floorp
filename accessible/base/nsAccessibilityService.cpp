@@ -1170,11 +1170,21 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
         newAcc = new EnumRoleAccessible<roles::DIAGRAM>(content, document);
       }
+
     } else if (content->IsMathMLElement()) {
-      if (content->IsMathMLElement(nsGkAtoms::math))
-        newAcc = new EnumRoleAccessible<roles::EQUATION>(content, document);
-      else
+      const MarkupMapInfo* markupMap =
+        mMarkupMaps.Get(content->NodeInfo()->NameAtom());
+      if (markupMap && markupMap->new_func)
+        newAcc = markupMap->new_func(content, aContext);
+
+      // Fall back to text when encountering Content MathML.
+      if (!newAcc && !content->IsAnyOfMathMLElements(nsGkAtoms::mpadded_,
+                                                     nsGkAtoms::mphantom_,
+                                                     nsGkAtoms::maligngroup_,
+                                                     nsGkAtoms::malignmark_,
+                                                     nsGkAtoms::mspace_)) {
         newAcc = new HyperTextAccessible(content, document);
+      }
     }
   }
 

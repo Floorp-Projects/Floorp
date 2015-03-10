@@ -2793,14 +2793,11 @@ NetworkDetailsView.prototype = {
 
       // Warning icons
       let cipher = $("#security-warning-cipher");
-      let sslv3 = $("#security-warning-sslv3");
 
       if (securityInfo.state === "weak") {
         cipher.hidden = securityInfo.weaknessReasons.indexOf("cipher") === -1;
-        sslv3.hidden = securityInfo.weaknessReasons.indexOf("sslv3") === -1;
       } else {
         cipher.hidden = true;
-        sslv3.hidden = true;
       }
 
       let enabledLabel = L10N.getStr("netmonitor.security.enabled");

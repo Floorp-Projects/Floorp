@@ -20,6 +20,8 @@
 #include "nsSimpleURI.h"
 #include "nsINestedURI.h"
 
+#include "nsIIPCSerializableURI.h"
+
 class nsSimpleNestedURI : public nsSimpleURI,
                           public nsINestedURI
 {
@@ -51,6 +53,9 @@ public:
     // nsISerializable overrides
     NS_IMETHOD Read(nsIObjectInputStream* aStream) MOZ_OVERRIDE;
     NS_IMETHOD Write(nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
+
+    // nsIIPCSerializableURI overrides
+    NS_DECL_NSIIPCSERIALIZABLEURI
 
     // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
     // nsISerializable impl works right.

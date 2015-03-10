@@ -421,7 +421,8 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     if (idVar.type() == JSIDVariant::TnsString &&
         idVar.get_nsString().EqualsLiteral("toString")) {
-        RootedFunction toString(cx, JS_NewFunction(cx, CPOWToString, 0, 0, proxy, "toString"));
+        RootedFunction toString(cx, JS_NewFunction(cx, CPOWToString, 0, 0,
+                                                   "toString"));
         if (!toString)
             return false;
 
