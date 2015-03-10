@@ -1524,11 +1524,12 @@ nsContextMenu.prototype = {
 
   isDisabledForEvents: function(aNode) {
     let ownerDoc = aNode.ownerDocument;
-    return ownerDoc.defaultView &&
-           ownerDoc.defaultView
-           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-           .getInterface(Components.interfaces.nsIDOMWindowUtils)
-           .isNodeDisabledForEvents(aNode);
+    return
+      ownerDoc.defaultView &&
+      ownerDoc.defaultView
+              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIDOMWindowUtils)
+              .isNodeDisabledForEvents(aNode);
   },
 
   isTargetATextBox: function(node) {
