@@ -32,7 +32,7 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
 }
 
 /* static */ bool
-nsFontInflationData::UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aReflowState)
+nsFontInflationData::UpdateFontInflationDataISizeFor(const nsHTMLReflowState& aReflowState)
 {
   nsIFrame *bfc = aReflowState.frame;
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
@@ -41,24 +41,24 @@ nsFontInflationData::UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aR
   nsFontInflationData *data = static_cast<nsFontInflationData*>(
                                 bfcProps.Get(FontInflationDataProperty()));
   bool oldInflationEnabled;
-  nscoord oldNCAWidth;
+  nscoord oldNCAISize;
   if (data) {
-    oldNCAWidth = data->mNCAWidth;
+    oldNCAISize = data->mNCAISize;
     oldInflationEnabled = data->mInflationEnabled;
   } else {
     data = new nsFontInflationData(bfc);
     bfcProps.Set(FontInflationDataProperty(), data);
-    oldNCAWidth = -1;
+    oldNCAISize = -1;
     oldInflationEnabled = true; /* not relevant */
   }
 
-  data->UpdateWidth(aReflowState);
+  data->UpdateISize(aReflowState);
 
   if (oldInflationEnabled != data->mInflationEnabled)
     return true;
 
   return oldInflationEnabled &&
-         oldNCAWidth != data->mNCAWidth;
+         oldNCAISize != data->mNCAISize;
 }
 
 /* static */ void
@@ -77,7 +77,7 @@ nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame *aBFCFrame)
 
 nsFontInflationData::nsFontInflationData(nsIFrame *aBFCFrame)
   : mBFCFrame(aBFCFrame)
-  , mNCAWidth(0)
+  , mNCAISize(0)
   , mTextAmount(0)
   , mTextThreshold(0)
   , mInflationEnabled(false)
@@ -124,12 +124,12 @@ NearestCommonAncestorFirstInFlow(nsIFrame *aFrame1, nsIFrame *aFrame2,
 }
 
 static nscoord
-ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
+ComputeDescendantISize(const nsHTMLReflowState& aAncestorReflowState,
                        nsIFrame *aDescendantFrame)
 {
   nsIFrame *ancestorFrame = aAncestorReflowState.frame->FirstInFlow();
   if (aDescendantFrame == ancestorFrame) {
-    return aAncestorReflowState.ComputedWidth();
+    return aAncestorReflowState.ComputedISize();
   }
 
   AutoInfallibleTArray<nsIFrame*, 16> frames;
@@ -138,7 +138,7 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
     frames.AppendElement(f);
   }
 
-  // This ignores the width contributions made by scrollbars, though in
+  // This ignores the inline-size contributions made by scrollbars, though in
   // reality we don't have any scrollbars on the sorts of devices on
   // which we use font inflation, so it's not a problem.  But it may
   // occasionally cause problems when writing tests on desktop.
@@ -163,7 +163,7 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
 
   MOZ_ASSERT(reflowStates[len - 1].frame == aDescendantFrame,
              "bad logic in this function");
-  nscoord result = reflowStates[len - 1].ComputedWidth();
+  nscoord result = reflowStates[len - 1].ComputedISize();
 
   for (uint32_t i = len; i-- != 0; ) {
     reflowStates[i].~nsHTMLReflowState();
@@ -174,7 +174,7 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
 }
 
 void
-nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
+nsFontInflationData::UpdateISize(const nsHTMLReflowState &aReflowState)
 {
   nsIFrame *bfc = aReflowState.frame;
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
@@ -195,8 +195,8 @@ nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
              "null-ness should match; NearestCommonAncestorFirstInFlow"
              " will crash when passed null");
 
-  // Particularly when we're computing for the root BFC, the width of
-  // nca might differ significantly for the width of bfc.
+  // Particularly when we're computing for the root BFC, the inline-size of
+  // nca might differ significantly for the inline-size of bfc.
   nsIFrame *nca = NearestCommonAncestorFirstInFlow(firstInflatableDescendant,
                                                    lastInflatableDescendant,
                                                    bfc);
@@ -204,13 +204,13 @@ nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
     nca = nca->GetParent()->FirstInFlow();
   }
 
-  nscoord newNCAWidth = ComputeDescendantWidth(aReflowState, nca);
+  nscoord newNCAISize = ComputeDescendantISize(aReflowState, nca);
 
   // See comment above "font.size.inflation.lineThreshold" in
   // modules/libpref/src/init/all.js .
   nsIPresShell* presShell = bfc->PresContext()->PresShell();
   uint32_t lineThreshold = presShell->FontSizeInflationLineThreshold();
-  nscoord newTextThreshold = (newNCAWidth * lineThreshold) / 100;
+  nscoord newTextThreshold = (newNCAISize * lineThreshold) / 100;
 
   if (mTextThreshold <= mTextAmount && mTextAmount < newTextThreshold) {
     // Because we truncate our scan when we hit sufficient text, we now
@@ -218,7 +218,7 @@ nsFontInflationData::UpdateWidth(const nsHTMLReflowState &aReflowState)
     mTextDirty = true;
   }
 
-  mNCAWidth = newNCAWidth;
+  mNCAISize = newNCAISize;
   mTextThreshold = newTextThreshold;
   mInflationEnabled = mTextAmount >= mTextThreshold;
 }

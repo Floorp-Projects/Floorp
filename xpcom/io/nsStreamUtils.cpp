@@ -609,10 +609,6 @@ NS_AsyncCopy(nsIInputStream*         aSource,
     copier = new nsStreamCopierOB();
   }
 
-  if (!copier) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Start() takes an owning ref to the copier...
   NS_ADDREF(copier);
   rv = copier->Start(aSource, aSink, aTarget, aCallback, aClosure, aChunkSize,

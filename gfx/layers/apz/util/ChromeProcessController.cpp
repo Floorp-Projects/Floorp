@@ -46,7 +46,9 @@ ChromeProcessController::InitializeRoot()
   // actually scrollable (if it is, APZC will set proper margins when it's
   // scrolled).
   nsIPresShell* presShell = GetPresShell();
-  MOZ_ASSERT(presShell);
+  if (!presShell) {
+    return;
+  }
   MOZ_ASSERT(presShell->GetDocument());
   nsIContent* content = presShell->GetDocument()->GetDocumentElement();
   MOZ_ASSERT(content);
@@ -119,15 +121,25 @@ ChromeProcessController::GetPresShellResolution() const
 nsIPresShell*
 ChromeProcessController::GetPresShell() const
 {
-  nsView* view = nsView::GetViewFor(mWidget);
-  MOZ_ASSERT(view);
-  return view->GetPresShell();
+  if (nsView* view = nsView::GetViewFor(mWidget)) {
+    return view->GetPresShell();
+  }
+  return nullptr;
+}
+
+nsIDocument*
+ChromeProcessController::GetDocument() const
+{
+  if (nsIPresShell* presShell = GetPresShell()) {
+    return presShell->GetDocument();
+  }
+  return nullptr;
 }
 
 already_AddRefed<nsIDOMWindowUtils>
 ChromeProcessController::GetDOMWindowUtils() const
 {
-  if (nsIDocument* doc = GetPresShell()->GetDocument()) {
+  if (nsIDocument* doc = GetDocument()) {
     nsCOMPtr<nsIDOMWindowUtils> result = do_GetInterface(doc->GetWindow());
     return result.forget();
   }
@@ -195,7 +207,7 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
     return;
   }
 
-  mAPZEventState->ProcessAPZStateChange(GetPresShell()->GetDocument(), aGuid.mScrollId, aChange, aArg);
+  mAPZEventState->ProcessAPZStateChange(GetDocument(), aGuid.mScrollId, aChange, aArg);
 }
 
 

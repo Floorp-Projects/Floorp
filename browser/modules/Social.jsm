@@ -519,6 +519,10 @@ this.OpenGraphBuilder = {
           query["body"] = body;
         }
       });
+      // if the url template doesn't have title and no text was provided, add the title as the text.
+      if (!query.text && !query.title && pageData.title) {
+        query.text = pageData.title;
+      }
     }
     var str = [];
     for (let p in query)

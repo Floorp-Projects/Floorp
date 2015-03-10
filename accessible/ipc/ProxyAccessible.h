@@ -140,6 +140,40 @@ public:
 
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
+  bool SelectionBoundsAt(int32_t aSelectionNum,
+                         nsString& aData,
+                         int32_t* aStartOffset,
+                         int32_t* aEndOffset);
+
+  bool SetSelectionBoundsAt(int32_t aSelectionNum,
+                            int32_t aStartOffset,
+                            int32_t aEndOffset);
+
+  bool AddToSelection(int32_t aStartOffset,
+                      int32_t aEndOffset);
+
+  bool RemoveFromSelection(int32_t aSelectionNum);
+
+  void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                         uint32_t aScrollType);
+
+  void ScrollSubstringToPoint(int32_t aStartOffset,
+                              int32_t aEndOffset,
+                              uint32_t aCoordinateType,
+                              int32_t aX, int32_t aY);
+
+  void ReplaceText(const nsString& aText);
+
+  void InsertText(const nsString& aText, int32_t aPosition);
+
+  void CopyText(int32_t aStartPos, int32_t aEndPos);
+
+  void CutText(int32_t aStartPos, int32_t aEndPos);
+
+  void DeleteText(int32_t aStartPos, int32_t aEndPos);
+
+  void PasteText(int32_t aPosition);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

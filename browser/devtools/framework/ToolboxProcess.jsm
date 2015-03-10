@@ -218,7 +218,16 @@ BrowserToolboxProcess.prototype = {
       args.push("-purgecaches");
     }
 
+    // Disable safe mode for the new process in case this was opened via the
+    // keyboard shortcut.
+    let nsIEnvironment = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
+    let originalValue = nsIEnvironment.get("MOZ_DISABLE_SAFE_MODE_KEY");
+    nsIEnvironment.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+
     process.runwAsync(args, args.length, { observe: () => this.close() });
+
+    // Now that the process has started, it's safe to reset the env variable.
+    nsIEnvironment.set("MOZ_DISABLE_SAFE_MODE_KEY", originalValue);
 
     this._telemetry.toolOpened("jsbrowserdebugger");
 

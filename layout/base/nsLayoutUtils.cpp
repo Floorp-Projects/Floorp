@@ -7171,7 +7171,8 @@ nsUnsetAttrRunnable::Run()
  * width of the device**, the fonts satisfy our minima.
  */
 static nscoord
-MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
+MinimumFontSizeFor(nsPresContext* aPresContext, WritingMode aWritingMode,
+                   nscoord aContainerISize)
 {
   nsIPresShell* presShell = aPresContext->PresShell();
 
@@ -7182,20 +7183,23 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
   }
 
   // Clamp the container width to the device dimensions
-  nscoord iFrameWidth = aPresContext->GetVisibleArea().width;
-  nscoord effectiveContainerWidth = std::min(iFrameWidth, aContainerWidth);
+  nscoord iFrameISize = aWritingMode.IsVertical()
+    ? aPresContext->GetVisibleArea().height
+    : aPresContext->GetVisibleArea().width;
+  nscoord effectiveContainerISize = std::min(iFrameISize, aContainerISize);
 
   nscoord byLine = 0, byInch = 0;
   if (emPerLine != 0) {
-    byLine = effectiveContainerWidth / emPerLine;
+    byLine = effectiveContainerISize / emPerLine;
   }
   if (minTwips != 0) {
     // REVIEW: Is this giving us app units and sizes *not* counting
     // viewport scaling?
-    float deviceWidthInches =
-      aPresContext->ScreenWidthInchesForFontInflation();
-    byInch = NSToCoordRound(effectiveContainerWidth /
-                            (deviceWidthInches * 1440 /
+    gfxSize screenSize = aPresContext->ScreenSizeInchesForFontInflation();
+    float deviceISizeInches = aWritingMode.IsVertical()
+      ? screenSize.height : screenSize.width;
+    byInch = NSToCoordRound(effectiveContainerISize /
+                            (deviceISizeInches * 1440 /
                              minTwips ));
   }
   return std::max(byLine, byInch);
@@ -7304,14 +7308,14 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
   // We only want to inflate fonts for text that is in a place
   // with room to expand.  The question is what the best heuristic for
   // that is...
-  // For now, we're going to use NS_FRAME_IN_CONSTRAINED_HEIGHT, which
+  // For now, we're going to use NS_FRAME_IN_CONSTRAINED_BSIZE, which
   // indicates whether the frame is inside something with a constrained
-  // height (propagating down the tree), but the propagation stops when
-  // we hit overflow-y: scroll or auto.
+  // block-size (propagating down the tree), but the propagation stops when
+  // we hit overflow-y [or -x, for vertical mode]: scroll or auto.
   const nsStyleText* styleText = aFrame->StyleText();
 
   return styleText->mTextSizeAdjust != NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
-         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
+         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
          // MathML cells need special treatment. See bug 1002526 comment 56.
@@ -7343,7 +7347,8 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
       }
 
       return MinimumFontSizeFor(aFrame->PresContext(),
-                                data->EffectiveWidth());
+                                aFrame->GetWritingMode(),
+                                data->EffectiveISize());
     }
   }
 

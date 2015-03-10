@@ -403,6 +403,10 @@ class BaseMarionetteOptions(OptionParser):
                         action='store_true',
                         default=False,
                         help='Enable the jsdebugger for marionette javascript.')
+        self.add_option('--pydebugger',
+                        dest='pydebugger',
+                        help='Enable python post-mortem debugger when a test fails.'
+                             ' Pass in the debugger you want to use, eg pdb or ipdb.')
         self.add_option('--socket-timeout',
                         dest='socket_timeout',
                         action='store',

@@ -319,12 +319,6 @@ SelectionCarets::SetVisibility(bool aVisible)
 
   dom::Element* endElement = mPresShell->GetSelectionCaretsEndElement();
   SetElementVisibility(endElement, mVisible && mEndCaretVisible);
-
-  // We must call SetHasTouchCaret() in order to get APZC to wait until the
-  // event has been round-tripped and check whether it has been handled,
-  // otherwise B2G will end up panning the document when the user tries to drag
-  // selection caret.
-  mPresShell->SetMayHaveTouchCaret(mVisible);
 }
 
 void
