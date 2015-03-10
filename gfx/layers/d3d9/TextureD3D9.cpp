@@ -290,17 +290,19 @@ TextureSourceD3D9::SurfaceToTexture(DeviceManagerD3D9* aDeviceManager,
                                        reinterpret_cast<unsigned char*>(lockedRect.pBits),
                                        aSize, lockedRect.Pitch,
                                        gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aSurface->GetContentType()));
-    NativeSurface nativeSurf;
-    nativeSurf.mSize = aSize;
-    nativeSurf.mType = NativeSurfaceType::CAIRO_SURFACE;
-    // We don't know that this is actually the right format, but it's the best
-    // we can get for the content type. In practice this probably always works.
-    nativeSurf.mFormat = dt->GetFormat();
-    nativeSurf.mSurface = aSurface->CairoSurface();
 
-    RefPtr<SourceSurface> surf = dt->CreateSourceSurfaceFromNativeSurface(nativeSurf);
+    if (dt) {
+        NativeSurface nativeSurf;
+        nativeSurf.mSize = aSize;
+        nativeSurf.mType = NativeSurfaceType::CAIRO_SURFACE;
+        // We don't know that this is actually the right format, but it's the best
+        // we can get for the content type. In practice this probably always works.
+        nativeSurf.mFormat = dt->GetFormat();
+        nativeSurf.mSurface = aSurface->CairoSurface();
 
-    dt->CopySurface(surf, IntRect(IntPoint(), aSize), IntPoint());
+        RefPtr<SourceSurface> surf = dt->CreateSourceSurfaceFromNativeSurface(nativeSurf);
+        dt->CopySurface(surf, IntRect(IntPoint(), aSize), IntPoint());
+    }
   }
 
   FinishTextures(aDeviceManager, texture, surface);
@@ -618,11 +620,19 @@ CairoTextureClientD3D9::Lock(OpenMode aMode)
 
   if (mNeedsClear) {
     mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+      Unlock();
+      return false;
+    }
     mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
     mNeedsClear = false;
   }
   if (mNeedsClearWhite) {
     mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+      Unlock();
+      return false;
+    }
     mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     mNeedsClearWhite = false;
   }

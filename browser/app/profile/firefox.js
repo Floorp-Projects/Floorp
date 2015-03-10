@@ -1779,6 +1779,14 @@ pref("geo.provider.use_corelocation", true);
 #endif
 #endif
 
+#ifdef XP_WIN
+#ifdef RELEASE_BUILD
+pref("geo.provider.ms-windows-location", false);
+#else
+pref("geo.provider.ms-windows-location", true);
+#endif
+#endif
+
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s
 pref("network.disable.ipc.security", true);

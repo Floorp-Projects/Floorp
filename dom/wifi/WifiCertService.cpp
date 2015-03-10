@@ -471,6 +471,36 @@ WifiCertService::DeleteCert(int32_t aId, const nsAString& aCertNickname)
   return task->Dispatch("WifiDeleteCert");
 }
 
+NS_IMETHODIMP
+WifiCertService::HasPrivateKey(const nsAString& aCertNickname, bool *aHasKey)
+{
+  *aHasKey = false;
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCString certNickname;
+  CopyUTF16toUTF8(aCertNickname, certNickname);
+
+  ScopedCERTCertificate cert(
+    CERT_FindCertByNickname(CERT_GetDefaultCertDB(), certNickname.get())
+  );
+  if (!cert) {
+    return NS_OK;
+  }
+
+  ScopedPK11SlotInfo slot(
+    PK11_KeyForCertExists(cert, nullptr, nullptr)
+  );
+  if (slot) {
+    *aHasKey = true;
+  }
+
+  return NS_OK;
+}
+
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WifiCertService,
                                          WifiCertService::FactoryCreate)
 

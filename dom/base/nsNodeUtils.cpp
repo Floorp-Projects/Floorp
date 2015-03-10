@@ -430,9 +430,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (elm->MayHaveTouchEventListener()) {
             window->SetHasTouchEventListeners();
           }
-          if (elm->MayHaveScrollWheelEventListener()) {
-            window->SetHasScrollWheelEventListeners();
-          }
           if (elm->MayHaveMouseEnterLeaveEventListener()) {
             window->SetHasMouseEnterLeaveEventListeners();
           }

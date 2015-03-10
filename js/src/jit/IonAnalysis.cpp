@@ -373,6 +373,9 @@ MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     MDefinition *branchResult = phi->getOperand(phiBlock->indexForPredecessor(branchBlock));
     MDefinition *initialResult = phi->getOperand(phiBlock->indexForPredecessor(initialBlock));
 
+    if (initialResult != initialTest->input())
+        return;
+
     // OK, we found the desired pattern, now transform the graph.
 
     // Remove the phi from phiBlock.

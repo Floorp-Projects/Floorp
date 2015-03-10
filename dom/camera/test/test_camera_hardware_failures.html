@@ -17,127 +17,155 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940424
 
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var initialConfig = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
+var suite = new CameraTestSuite();
+
+/* Each discrete test case can be added to the test queue here.
+   They won't be run until you call suite setup and run. */
+suite.test('auto-focus-failures', function() {
+  function startAutoFocusFail(p) {
+    suite.hw.attach({
+      autoFocus: function() {
+        suite.hw.fireAutoFocusComplete(false);
+      }
+    });
+    return suite.camera.autoFocus();
   }
-};
 
-var cameraObj;
-
-// Shorthand functions
-function end() {
-  CameraTest.end();
-}
-function next() {
-  CameraTest.next();
-}
-
-// The array of tests
-var tests = [
-  {
-    key: "auto-focus-failure",
-    func: function testAutoFocusApiFailure(camera) {
-      function onSuccess(success) {
-        ok(false, "autoFocus() succeeded incorrectly");
-        end();
-      }
-      function onError(error) {
-        ok(true, "autoFocus() failed correctly with: " + error);
-        next();
-      }
-      camera.autoFocus().then(onSuccess, onError);
-    }
-  },
-  {
-    key: "auto-focus-process-failure",
-    func: function testAutoFocusProcessFailure(camera) {
-      function onSuccess(success) {
-        if (success) {
-          ok(false, "autoFocus() process succeeded incorrectly");
-          end();
-        } else {
-          ok(true, "autoFocus() process failed correctly");
-          next();
-        }
-      }
-      function onError(error) {
-        ok(false, "autoFocus() process failed incorrectly with: " + error);
-        end();
-      }
-      camera.autoFocus().then(onSuccess, onError);
-    }
-  },
-  {
-    key: "take-picture-failure",
-    func: function testTakePictureApiFailure(camera) {
-      function onSuccess(picture) {
-        ok(false, "takePicture() succeeded incorrectly");
-        end();
-      }
-      function onError(error) {
-        ok(true, "takePicture() failed correctly with: " + error);
-        next();
-      }
-      camera.takePicture(null).then(onSuccess, onError);
-    }
-  },
-  {
-    key: "take-picture-process-failure",
-    func: function testTakePictureProcessFailure(camera) {
-      function onSuccess(picture) {
-        ok(false, "takePicture() process succeeded incorrectly");
-        end();
-      }
-      function onError(error) {
-        ok(true, "takePicture() process failed correctly with: " + error);
-        next();
-      }
-      camera.takePicture(null).then(onSuccess, onError);
-    }
-  },
-];
-
-var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
-    yield tests[i];
+  function resolveAutoFocusFail(focused) {
+    ok(!focused, 'autoFocus() should be unfocused: ' + focused);
   }
-}();
 
-window.addEventListener('beforeunload', function() {
-  document.getElementById('viewfinder').mozSrcObject = null;
-  cameraObj.release();
-  cameraObj = null;
+  function startAutoFocusError(p) {
+    suite.hw.attach({
+      autoFocus: function() {
+        throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+      }
+    });
+    return suite.camera.autoFocus();
+  }
+
+  function rejectAutoFocusError(e) {
+    ok(e.name === 'NS_ERROR_FAILURE', 'autoFocus() should fail: ' + e);
+  }
+
+  /* This is the promise chain which drives the test execution.
+
+     suite.getCamera
+       This returns a promise which is resolved when the suite
+       acquires the camera object (i.e. returns as if one
+       called cameraManager.getCamera() directly). It saves
+       the CameraControl reference in suite.camera and will
+       automatically release it for you when the test is
+       completed.
+
+     .then(startAutoFocusFail, suite.rejectGetCamera)
+       If the getCamera promise is resolved, startAutoFocusFail
+       will be called. That function attaches a handler to
+       the camera test hardware to intercept the auto focus
+       driver call so that we can change the behaviour to
+       trigger an OnAutoFocusComplete(false) event. It then
+       calls camera.autoFocus() and returns the promise for
+       that camera call so that the next promise in the chain
+       can block waiting for that promise to be fulfilled.
+
+       If the getCamera promise is rejected,
+       suite.rejectGetCamera will be called. This is a helper
+       handler provided by the test suite; it will log
+       a get camera failure and fail the test via ok, and
+       return a new promise rejecting *without* an error
+       object (i.e. promise parameter is undefined). This is
+       important because all reject handlers further down
+       the promise chain will still be called due to the
+       failure. However since we replaced the promise with
+       an error object, with a promise without one, we can
+       use this to identify errors that have already been
+       handled.
+
+     .then(resolveAutoFocusFail, suite.rejectAutoFocus)
+       If the suite.camera.autoFocus() promise is resolved,
+       resolveAutoFocusFail will be called. That function
+       simply verifies the result from the autoFocus() call.
+       It should be false, given the modified behaviour we
+       gave the driver. Since it doesn't return a new promise
+       explicitly, it will generate a new promise which is
+       already resolved (without the focused state parameter,
+       will now be undefined to the next .then handler).
+
+       If the suite.camera.autoFocus() promise is rejected,
+       we want to fail the test case again, just like when
+       suite.getCamera() failed.
+
+    .then(startAutoFocusError)
+       Assuming the first suite.camera.autoFocus() promise
+       was resolved, startAutoFocusError will be called.
+       That function is similar to startAutoFocusFail but
+       now it throws an error in the intercepted auto focus
+       driver call in order to trigger an OnUserError(kAutoFocus)
+       event. It then calls and returns the promise from
+       suite.camera.autoFocus().
+
+    .then(suite.expectedRejectAutoFocus, rejectAutoFocusError)
+       Now we are expecting the previous suite.camera.autoFocus()
+       promise to be rejected, which would call
+       rejectAutoFocusError. This simply verifies that we
+       got the error we expected.
+
+       If, on the other hand, it somehow succeeded, we
+       let suite.expectedRejectAutoFocus handle it, which
+       similar to the suite.rejectAutoFocus method, will
+       fail and return an empty rejected promise.
+
+    Note that this method itself returns the promise chain.
+    This allows the test suite to 1) capture any unhandled
+    errors in the promise chain and ensure the test case
+    fails as a result, and 2) perform any cleanup operations
+    such as resetting low memory state, releasing the camera,
+    etc, before starting the next test.
+*/
+  return suite.getCamera()
+    .then(startAutoFocusFail, suite.rejectGetCamera)
+    .then(resolveAutoFocusFail, suite.rejectAutoFocus)
+    .then(startAutoFocusError)
+    .then(suite.expectedRejectAutoFocus, rejectAutoFocusError)
 });
 
-CameraTest.begin("hardware", function(test) {
-  function onSuccess(d) {
-    cameraObj = d.camera;
-    document.getElementById('viewfinder').mozSrcObject = cameraObj;
-    CameraTest.next = function() {
-      try {
-        var t = testGenerator.next();
-        test.set(t.key, t.func.bind(undefined, cameraObj));
-      } catch(e) {
-        if (e instanceof StopIteration) {
-          end();
-        } else {
-          throw e;
-        }
+suite.test('take-picture-failures', function() {
+  function startTakePictureProcessError(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        suite.hw.fireTakePictureError();
       }
-    };
-    next();
+    });
+    return suite.camera.takePicture();
   }
-  function onError(error) {
-    ok(false, "getCamera() failed with: " + error);
-    end();
+
+  function rejectTakePictureProcessError(e) {
+    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() process should fail: ' + e);
   }
-  navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
+
+  function startTakePictureError(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+      }
+    });
+    return suite.camera.takePicture();
+  }
+
+  function rejectTakePictureError(e) {
+    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() should fail: ' + e);
+  }
+
+  return suite.getCamera()
+    .catch(suite.rejectGetCamera)
+    .then(startTakePictureProcessError)
+    .then(suite.expectedRejectTakePicture, rejectTakePictureProcessError)
+    .then(startTakePictureError)
+    .then(suite.expectedRejectTakePicture, rejectTakePictureError)
 });
+
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

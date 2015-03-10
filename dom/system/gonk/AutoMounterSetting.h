@@ -19,13 +19,15 @@ public:
   NS_DECL_NSIOBSERVER
 
   AutoMounterSetting();
-  virtual ~AutoMounterSetting();
 
   static void CheckVolumeSettings(const nsACString& aVolumeName);
 
   int32_t GetStatus() { return mStatus; }
   void SetStatus(int32_t aStatus);
   const char *StatusStr(int32_t aStatus);
+
+protected:
+  virtual ~AutoMounterSetting();
 
 private:
   int32_t mStatus;

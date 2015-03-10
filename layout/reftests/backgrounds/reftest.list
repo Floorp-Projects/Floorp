@@ -1,8 +1,8 @@
 include gradient/reftest.list
 include vector/reftest.list
 
-skip-if(B2G) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
-skip-if(B2G) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml
+skip-if(B2G||Mulet) == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == layers-layer-count-cascade-1.xhtml layers-layer-count-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
@@ -15,7 +15,7 @@ fuzzy-if(Android,9,600000) == viewport-translucent-color-1.html viewport-translu
 == translucent-color-2.html translucent-color-ref.html
 == translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
-skip-if(B2G) == root-element-display-none-1.html root-element-display-none-ref.html
+skip-if(B2G||Mulet) == root-element-display-none-1.html root-element-display-none-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == continuous-inline-1a.html continuous-inline-1ab-ref.html
 == continuous-inline-1b.html continuous-inline-1ab-ref.html
 == continuous-inline-1c.html continuous-inline-1cd-ref.html
@@ -23,8 +23,8 @@ skip-if(B2G) == root-element-display-none-1.html root-element-display-none-ref.h
 == continuous-inline-2a.html continuous-inline-2-ref.html
 == continuous-inline-2b.html continuous-inline-2-ref.html
 == continuous-inline-3.html continuous-inline-3-ref.html
-skip-if(B2G) == continuous-inline-4a.html continuous-inline-4-ref.html
-skip-if(B2G) == continuous-inline-4b.html continuous-inline-4-ref.html
+skip-if(B2G||Mulet) == continuous-inline-4a.html continuous-inline-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == continuous-inline-4b.html continuous-inline-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == continuous-inline-5a.html continuous-inline-5-ref.html
 == continuous-inline-5b.html continuous-inline-5-ref.html
 == background-redraw-237766.html background-redraw-237766-ref.html
@@ -32,7 +32,7 @@ skip-if(B2G) == continuous-inline-4b.html continuous-inline-4-ref.html
 == background-clip-1.html background-clip-1-ref.html
 == background-clip-2.html background-clip-2-ref.html
 
-skip-if(B2G) == background-position-1a.html background-position-1-ref.html
+skip-if(B2G||Mulet) == background-position-1a.html background-position-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == background-position-1b.html background-position-1-ref.html
 == background-position-1c.html background-position-1-ref.html
 == background-position-2a.html background-position-2-ref.html
@@ -61,7 +61,7 @@ skip-if(B2G) == background-position-1a.html background-position-1-ref.html
 == background-size-percent-length.html background-size-length-percent-ref.html
 == background-size-percent-percent.html background-size-percent-percent-ref.html
 == background-size-length-length.html background-size-length-length-ref.html
-skip-if(B2G) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html # bug 773482
+skip-if(B2G||Mulet) == background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
 == background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
@@ -87,7 +87,7 @@ fails-if(smallScreen&&Android) != background-size-body-contain-no-repeat.html ba
 == background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
 == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
 
-skip-if(B2G) == background-layers-1a.html background-layers-1-ref.html # bug 773482
+skip-if(B2G||Mulet) == background-layers-1a.html background-layers-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(OSX,1,324) == background-layers-1b.html background-layers-1-ref.html
 
 # box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
@@ -121,12 +121,12 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
 
-random-if(B2G) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
+random-if(B2G||Mulet) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
 
-random-if(B2G) == really-big-background.html really-big-background-ref.html
+random-if(B2G||Mulet) == really-big-background.html really-big-background-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == body-background.html body-background-ref.html
 == table-background.html table-background-ref.html
 == table-background-print.html table-background-print-ref.html

@@ -444,44 +444,6 @@ public:
   }
 
   /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has a scroll wheel event listener.
-   */
-  void SetHasScrollWheelEventListeners()
-  {
-    mMayHaveScrollWheelEventListener = true;
-  }
-
-  bool HasScrollWheelEventListeners()
-  {
-    return mMayHaveScrollWheelEventListener;
-  }
-
-  /**
-   * Returns whether or not any event listeners are present that APZ must be
-   * aware of.
-   */
-  bool HasApzAwareEventListeners()
-  {
-    return HasTouchEventListeners() || HasScrollWheelEventListeners();
-  }
-
-   /**
-   * Will be called when touch caret visibility has changed. mMayHaveTouchCaret
-   * is set if that some node (this window, its document, or content in that
-   * document) has a visible touch caret.
-   */
-  void SetMayHaveTouchCaret(bool aSetValue)
-  {
-    mMayHaveTouchCaret = aSetValue;
-  }
-
-  bool MayHaveTouchCaret()
-  {
-    return mMayHaveTouchCaret;
-  }
-
-  /**
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
    * otherwise exits fullscreen. If aRequireTrust is true, this method only
    * changes window state in a context trusted for write.
@@ -802,8 +764,6 @@ protected:
   bool                   mIsInnerWindow;
   bool                   mMayHavePaintEventListener;
   bool                   mMayHaveTouchEventListener;
-  bool                   mMayHaveTouchCaret;
-  bool                   mMayHaveScrollWheelEventListener;
   bool                   mMayHaveMouseEnterLeaveEventListener;
   bool                   mMayHavePointerEnterLeaveEventListener;
 

@@ -270,5 +270,98 @@ ProxyAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
   return retVal;
 }
 
+bool
+ProxyAccessible::SelectionBoundsAt(int32_t aSelectionNum,
+                                   nsString& aData,
+                                   int32_t* aStartOffset,
+                                   int32_t* aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendSelectionBoundsAt(mID, aSelectionNum, &retVal, &aData,
+                                        aStartOffset, aEndOffset);
+  return retVal;
+}
+
+bool
+ProxyAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
+                                      int32_t aStartOffset,
+                                      int32_t aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendSetSelectionBoundsAt(mID, aSelectionNum, aStartOffset,
+                                           aEndOffset, &retVal);
+  return retVal;
+}
+
+bool
+ProxyAccessible::AddToSelection(int32_t aStartOffset,
+                                int32_t aEndOffset)
+{
+  bool retVal = false;
+  unused << mDoc->SendAddToSelection(mID, aStartOffset, aEndOffset, &retVal);
+  return retVal;
+}
+
+bool
+ProxyAccessible::RemoveFromSelection(int32_t aSelectionNum)
+{
+  bool retVal = false;
+  unused << mDoc->SendRemoveFromSelection(mID, aSelectionNum, &retVal);
+  return retVal;
+}
+
+void
+ProxyAccessible::ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                                   uint32_t aScrollType)
+{
+  unused << mDoc->SendScrollSubstringTo(mID, aStartOffset, aEndOffset, aScrollType);
+}
+
+void
+ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
+                                        int32_t aEndOffset,
+                                        uint32_t aCoordinateType,
+                                        int32_t aX, int32_t aY)
+{
+  unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
+                                             aCoordinateType, aX, aY);
+}
+
+void
+ProxyAccessible::ReplaceText(const nsString& aText)
+{
+  unused << mDoc->SendReplaceText(mID, aText);
+}
+
+void
+ProxyAccessible::InsertText(const nsString& aText, int32_t aPosition)
+{
+  unused << mDoc->SendInsertText(mID, aText, aPosition);
+}
+
+void
+ProxyAccessible::CopyText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendCopyText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::CutText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendCutText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos)
+{
+  unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos);
+}
+
+void
+ProxyAccessible::PasteText(int32_t aPosition)
+{
+  unused << mDoc->SendPasteText(mID, aPosition);
+}
+
 }
 }

@@ -80,6 +80,10 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
                                          IntSize(renderSize.width, renderSize.height),
                                          4 * renderSize.width,
                                          SurfaceFormat::B8G8R8A8);
+    if (!dt) {
+        gfxWarning() << "DocumentRendererChild::RenderDocument failed to Factory::CreateDrawTargetForData";
+        return false;
+    }
     nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
 

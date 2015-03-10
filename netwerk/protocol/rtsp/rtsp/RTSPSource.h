@@ -152,6 +152,8 @@ private:
 
     void onTrackEndOfStream(size_t trackIndex);
 
+    inline bool isValidState();
+
     bool isLiveStream();
 
     // This flag is set if we have just disconnected

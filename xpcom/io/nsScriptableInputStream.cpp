@@ -130,10 +130,6 @@ nsScriptableInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
   }
 
   nsScriptableInputStream* sis = new nsScriptableInputStream();
-  if (!sis) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(sis);
   nsresult rv = sis->QueryInterface(aIID, aResult);
   NS_RELEASE(sis);

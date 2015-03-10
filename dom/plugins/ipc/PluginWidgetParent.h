@@ -63,6 +63,7 @@ public:
 
 private:
   void Shutdown(ShutdownType aType);
+  void KillWidget();
 
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;

@@ -14,6 +14,9 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
+#ifdef MOZ_NFC
+#include "mozilla/dom/MozNDEFRecord.h"
+#endif
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "nsIDOMFileList.h"
@@ -38,7 +41,8 @@ enum StackScopedCloneTags {
     SCTAG_BASE = JS_SCTAG_USER_MIN,
     SCTAG_REFLECTOR,
     SCTAG_BLOB,
-    SCTAG_FUNCTION
+    SCTAG_FUNCTION,
+    SCTAG_DOM_NFC_NDEF
 };
 
 class MOZ_STACK_CLASS StackScopedCloneData {
@@ -121,6 +125,26 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
         return val.toObjectOrNull();
     }
 
+    if (tag == SCTAG_DOM_NFC_NDEF) {
+#ifdef MOZ_NFC
+      nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+      if (!global) {
+        return nullptr;
+      }
+
+      // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+      JS::Rooted<JSObject*> result(cx);
+      {
+        nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
+        result = ndefRecord->ReadStructuredClone(cx, reader) ?
+                 ndefRecord->WrapObject(cx) : nullptr;
+      }
+      return result;
+#else
+      return nullptr;
+#endif
+    }
+
     MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
     return nullptr;
 }
@@ -191,6 +215,16 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
             return false;
         }
     }
+
+#ifdef MOZ_NFC
+    {
+      MozNDEFRecord* ndefRecord;
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, obj, ndefRecord))) {
+        return JS_WriteUint32Pair(writer, SCTAG_DOM_NFC_NDEF, 0) &&
+               ndefRecord->WriteStructuredClone(cx, writer);
+      }
+    }
+#endif
 
     JS_ReportError(cx, "Encountered unsupported value type writing stack-scoped structured clone");
     return false;

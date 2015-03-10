@@ -10,17 +10,20 @@
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "nsIObserver.h"
 
 namespace mozilla {
 namespace dom {
 
 class ContentBridgeParent : public PContentBridgeParent
                           , public nsIContentParent
+                          , public nsIObserver
 {
 public:
   explicit ContentBridgeParent(Transport* aTransport);
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   void DeferredDestroy();

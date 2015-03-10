@@ -63,12 +63,12 @@ fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-met
 == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
 
 == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
-skip-if(Android||B2G||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu))) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
-skip-if(!(Android||B2G)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
+skip-if(Android||B2G||Mulet||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu))) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android||B2G) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
-skip-if(!(Android||B2G)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
+skip-if(Android||B2G||Mulet) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
@@ -104,4 +104,13 @@ HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.h
 HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html
-fails-if(B2G) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
+fails-if(B2G||Mulet) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067 # Initial mulet triage: parity with B2G/B2G Desktop
+
+# Font inflation behaves wrong in vertical writing mode: bug 1138495
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1a.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1b.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != font-inflation-1c.html font-inflation-1-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != font-inflation-1d.html font-inflation-1-ref.html
+pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) != font-inflation-1c.html font-inflation-1d.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1c.html font-inflation-1c-ref.html
+test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1d.html font-inflation-1d-ref.html

@@ -197,15 +197,6 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
     return HitTestResult::HitNothing;
   }
 
-  // When event regions are disabled and we have an APZC on this node, we are
-  // actually storing the touch-sensitive section of the composition bounds in
-  // the clip region, and we don't need to check against the mEventRegions.
-  // If there's no APZC, then we do need to check against the mEventRegions
-  // (which contains the layer's visible region) for obscuration purposes.
-  if (!gfxPrefs::LayoutEventRegionsEnabled() && GetApzc()) {
-    return HitTestResult::HitLayer;
-  }
-
   // convert into Layer coordinate space
   Maybe<LayerPoint> pointInLayerPixels = Untransform(aPoint);
   if (!pointInLayerPixels) {

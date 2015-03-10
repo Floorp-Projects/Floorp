@@ -1,4 +1,4 @@
-skip-if(B2G) == background-common-usage-floating-point.html background-common-usage-ref.html # bug 773482
+skip-if(B2G||Mulet) == background-common-usage-floating-point.html background-common-usage-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == background-common-usage-percent.html background-common-usage-ref.html
 == background-common-usage-pixel.html background-common-usage-ref.html
 == background-draw-nothing-empty-rect.html background-draw-nothing-ref.html
