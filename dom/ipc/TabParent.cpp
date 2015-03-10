@@ -276,6 +276,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mInitedByParent(false)
   , mTabId(aTabId)
   , mCreatingWindow(false)
+  , mNeedLayerTreeReadyNotification(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2315,6 +2316,12 @@ TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
   RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRenderFrame);
   renderFrame->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
   *aLayersId = renderFrame->GetLayersId();
+
+  if (mNeedLayerTreeReadyNotification) {
+    RequestNotifyLayerTreeReady();
+    mNeedLayerTreeReadyNotification = false;
+  }
+
   return true;
 }
 
@@ -2617,11 +2624,11 @@ TabParent::RequestNotifyLayerTreeReady()
 {
   RenderFrameParent* frame = GetRenderFrame();
   if (!frame) {
-    return false;
+    mNeedLayerTreeReadyNotification = true;
+  } else {
+    CompositorParent::RequestNotifyLayerTreeReady(frame->GetLayersId(),
+                                                  new LayerTreeUpdateObserver());
   }
-
-  CompositorParent::RequestNotifyLayerTreeReady(frame->GetLayersId(),
-                                                new LayerTreeUpdateObserver());
   return true;
 }
 
