@@ -7,11 +7,7 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'String')
 
-with Files('nsAlgorithm.h'):
-    BUG_COMPONENT = ('Core', 'XPCOM')
-
 EXPORTS += [
-    'nsAlgorithm.h',
     'nsAString.h',
     'nsCharTraits.h',
     'nsDependentString.h',

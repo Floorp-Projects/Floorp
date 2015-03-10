@@ -42,6 +42,7 @@ EXPORTS += [
     'CodeAddressService.h',
     'ErrorList.h',
     'nsAgg.h',
+    'nsAlgorithm.h',
     'nsAutoPtr.h',
     'nsAutoRef.h',
     'nsCom.h',
