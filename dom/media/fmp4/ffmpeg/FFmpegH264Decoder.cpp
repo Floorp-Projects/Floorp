@@ -11,6 +11,7 @@
 
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/H264.h"
 
 #include "FFmpegH264Decoder.h"
 
@@ -31,8 +32,15 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
   , mCallback(aCallback)
   , mImageContainer(aImageContainer)
+  , mDisplayWidth(aConfig.display_width)
+  , mDisplayHeight(aConfig.display_height)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aConfig.extra_data, spsdata)) {
+    mDisplayWidth = spsdata.display_width;
+    mDisplayHeight = spsdata.display_height;
+  }
 }
 
 nsresult
@@ -91,7 +99,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
   // If we've decoded a frame then we need to output it
   if (decoded) {
     VideoInfo info;
-    info.mDisplay = nsIntSize(mCodecContext->width, mCodecContext->height);
+    info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
     info.mStereoMode = StereoMode::MONO;
     info.mHasVideo = true;
 
