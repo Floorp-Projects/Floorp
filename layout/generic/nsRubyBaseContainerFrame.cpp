@@ -700,22 +700,38 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 {
   const nsHTMLReflowState& baseReflowState = aReflowState.mBaseReflowState;
   const auto& textReflowStates = aReflowState.mTextReflowStates;
+  nscoord istart = baseReflowState.mLineLayout->GetCurrentICoord();
 
   if (aColumn.mBaseFrame) {
-    int32_t pos = baseReflowState.mLineLayout->
-      GetForcedBreakPosition(aColumn.mBaseFrame);
-    MOZ_ASSERT(pos == -1 || pos == 0,
-               "It should either break before, or not break at all.");
-    if (pos >= 0) {
-      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-      return 0;
+    bool allowBreakBefore = aColumnIndex ?
+      aReflowState.mAllowLineBreak : aReflowState.mAllowInitialLineBreak;
+    if (allowBreakBefore) {
+      gfxBreakPriority breakPriority = LineBreakBefore(
+        aColumn.mBaseFrame, baseReflowState.rendContext,
+        baseReflowState.mLineLayout->LineContainerFrame(),
+        baseReflowState.mLineLayout->GetLine());
+      if (breakPriority != gfxBreakPriority::eNoBreak) {
+        int32_t offset;
+        gfxBreakPriority lastBreakPriority;
+        baseReflowState.mLineLayout->
+          GetLastOptionalBreakPosition(&offset, &lastBreakPriority);
+        if (breakPriority >= lastBreakPriority) {
+          // Either we have been overflow, or we are forced
+          // to break here, do break before.
+          if (istart > baseReflowState.AvailableISize() ||
+              baseReflowState.mLineLayout->NotifyOptionalBreakPosition(
+                aColumn.mBaseFrame, 0, true, breakPriority)) {
+            aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+            return 0;
+          }
+        }
+      }
     }
   }
 
   const uint32_t rtcCount = aReflowState.mTextContainers.Length();
   MOZ_ASSERT(aColumn.mTextFrames.Length() == rtcCount);
   MOZ_ASSERT(textReflowStates.Length() == rtcCount);
-  nscoord istart = baseReflowState.mLineLayout->GetCurrentICoord();
   nscoord columnISize = 0;
 
   nsAutoString baseText;
@@ -773,42 +789,10 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
                "Any line break inside ruby box should has been suppressed");
     nscoord baseISize = lineLayout->GetCurrentICoord() - baseIStart;
     columnISize = std::max(columnISize, baseISize);
-
-    bool allowBreakBefore = aColumnIndex ?
-      aReflowState.mAllowLineBreak : aReflowState.mAllowInitialLineBreak;
-    if (allowBreakBefore) {
-      bool shouldBreakBefore = false;
-      gfxBreakPriority breakPriority = LineBreakBefore(
-        aColumn.mBaseFrame, baseReflowState.rendContext,
-        baseReflowState.mLineLayout->LineContainerFrame(),
-        baseReflowState.mLineLayout->GetLine());
-      if (breakPriority != gfxBreakPriority::eNoBreak) {
-        int32_t offset;
-        gfxBreakPriority lastBreakPriority;
-        baseReflowState.mLineLayout->
-          GetLastOptionalBreakPosition(&offset, &lastBreakPriority);
-        shouldBreakBefore = breakPriority >= lastBreakPriority;
-      }
-      if (shouldBreakBefore) {
-        bool fits = istart <= baseReflowState.AvailableISize();
-        DebugOnly<bool> breakBefore =
-          baseReflowState.mLineLayout->NotifyOptionalBreakPosition(
-            aColumn.mBaseFrame, 0, fits, breakPriority);
-        MOZ_ASSERT(!breakBefore, "The break notified here should have "
-                   "triggered at the start of this method.");
-      }
-    }
-  }
-
-  nscoord icoord = istart + columnISize;
-  // If we can break here, do it now.
-  if (icoord > baseReflowState.AvailableISize() &&
-      baseReflowState.mLineLayout->HasOptionalBreakPosition()) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-    return 0;
   }
 
   // Align all the line layout to the new coordinate.
+  nscoord icoord = istart + columnISize;
   nscoord deltaISize = icoord - baseReflowState.mLineLayout->GetCurrentICoord();
   if (deltaISize > 0) {
     baseReflowState.mLineLayout->AdvanceICoord(deltaISize);
