@@ -18,10 +18,10 @@ include $(topsrcdir)/config/config.mk
 
 # L10n jobs are doing make -C config manually before anything else,
 # and need nsinstall to be built as a consequence.
+ifdef COMPILE_ENVIRONMENT
 export:: host
 
 ifneq (WINNT,$(HOST_OS_ARCH))
-ifdef COMPILE_ENVIRONMENT
 # Ensure nsinstall is atomically created
 nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
 	cp $^ $@.tmp
