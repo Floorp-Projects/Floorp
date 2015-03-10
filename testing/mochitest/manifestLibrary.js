@@ -61,6 +61,7 @@ function getTestManifest(url, params, callback) {
 }
 
 // Test Filtering Code
+// TODO Only used by ipc tests, remove once those are implemented sanely
 
 /*
  Open the file referenced by runOnly|exclude and use that to compare against
