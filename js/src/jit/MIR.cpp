@@ -4124,6 +4124,97 @@ MLoadElement::foldsTo(TempAllocator &alloc)
     return foldsToStoredValue(alloc, store->value());
 }
 
+// Gets the MDefinition* representing the source/target object's storage.
+// Usually this is just an MElements*, but sometimes there are layers
+// of indirection or inlining, which are handled elsewhere.
+static inline const MElements *
+MaybeUnwrapElements(const MDefinition *elementsOrObj)
+{
+    // Sometimes there is a level of indirection for conversion.
+    if (elementsOrObj->isConvertElementsToDoubles())
+        return MaybeUnwrapElements(elementsOrObj->toConvertElementsToDoubles()->elements());
+
+    // For inline elements, the object may be passed directly, for example as MUnbox.
+    if (elementsOrObj->type() == MIRType_Object)
+        return nullptr;
+
+    return elementsOrObj->toElements();
+}
+
+// Gets the MDefinition of the target Object for the given store operation.
+static inline const MDefinition *
+GetStoreObject(const MDefinition *store)
+{
+    switch (store->op()) {
+      case MDefinition::Op_StoreElement: {
+        const MDefinition *elementsOrObj = store->toStoreElement()->elements();
+        const MDefinition *elements = MaybeUnwrapElements(elementsOrObj);
+        if (elements)
+            return elements->toElements()->input();
+
+        MOZ_ASSERT(elementsOrObj->type() == MIRType_Object);
+        return elementsOrObj;
+      }
+
+      case MDefinition::Op_StoreElementHole:
+        return store->toStoreElementHole()->object();
+
+      default:
+        return nullptr;
+    }
+}
+
+// Implements mightAlias() logic common to all load operations.
+static bool
+GenericLoadMightAlias(const MDefinition *elementsOrObj, const MDefinition *store)
+{
+    const MElements *elements = MaybeUnwrapElements(elementsOrObj);
+    if (elements)
+        return elements->mightAlias(store);
+
+    // If MElements couldn't be extracted, then storage must be inline.
+    // Refer to IsValidElementsType().
+    const MDefinition *object = elementsOrObj;
+    MOZ_ASSERT(object->type() == MIRType_Object);
+    if (!object->resultTypeSet())
+        return true;
+
+    const MDefinition *storeObject = GetStoreObject(store);
+    if (!storeObject)
+        return true;
+    if (!storeObject->resultTypeSet())
+        return true;
+
+    return object->resultTypeSet()->objectsIntersect(storeObject->resultTypeSet());
+}
+
+bool
+MElements::mightAlias(const MDefinition *store) const
+{
+    if (!input()->resultTypeSet())
+        return true;
+
+    const MDefinition *storeObj = GetStoreObject(store);
+    if (!storeObj)
+        return true;
+    if (!storeObj->resultTypeSet())
+        return true;
+
+    return input()->resultTypeSet()->objectsIntersect(storeObj->resultTypeSet());
+}
+
+bool
+MLoadElement::mightAlias(const MDefinition *store) const
+{
+    return GenericLoadMightAlias(elements(), store);
+}
+
+bool
+MInitializedLength::mightAlias(const MDefinition *store) const
+{
+    return GenericLoadMightAlias(elements(), store);
+}
+
 bool
 MGuardReceiverPolymorphic::congruentTo(const MDefinition *ins) const
 {
