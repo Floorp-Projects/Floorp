@@ -28,7 +28,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIFileURL.h"
 #include "nsCRT.h"
-#include "nsIDocument.h"
 #include "nsINetworkPredictor.h"
 
 #include "nsIApplicationCache.h"
@@ -2046,12 +2045,6 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
       timedChannel->SetInitiatorType(initiatorType);
     }
 
-    // Pass the inner window ID of the loading document, if possible.
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
-    if (doc) {
-      request->SetInnerWindowID(doc->InnerWindowID());
-    }
-
     // create the proxy listener
     nsCOMPtr<nsIStreamListener> pl = new ProxyListener(request.get());
 
@@ -2515,7 +2508,8 @@ NS_IMPL_ISUPPORTS(imgCacheValidator, nsIStreamListener, nsIRequestObserver,
 
 imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
                                      imgLoader* loader, imgRequest *request,
-                                     void *aContext, bool forcePrincipalCheckForCacheEntry)
+                                     nsISupports* aContext,
+                                     bool forcePrincipalCheckForCacheEntry)
  : mProgressProxy(progress),
    mRequest(request),
    mContext(aContext),
