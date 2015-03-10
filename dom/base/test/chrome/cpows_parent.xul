@@ -206,13 +206,31 @@
     function recvDomTest(message) {
       savedElement = message.objects.element;
 
+      is(savedElement.QueryInterface(Components.interfaces.nsISupports), savedElement,
+         "QI to nsISupports works");
+      is(savedElement.QueryInterface(Components.interfaces.nsIDOMNode), savedElement,
+         "QI to a random (implemented) interface works");
+
+      function testNoInterface(savedElement, i) {
+        try {
+          savedElement.QueryInterface(i);
+          ok(false, "should have thrown an exception");
+        } catch (e) {
+          is(e.result, Components.results.NS_ERROR_NO_INTERFACE, "threw the right exception");
+        }
+      }
+
+      testNoInterface(savedElement, Components.interfaces.nsIDOMAttr);
+      testNoInterface(savedElement, Components.interfaces.nsIClassInfo);
+
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
       // See bug 1072980.
       if (test_state == "remote") {
-        // This doesn't work because we intercept toString specially
+        // This doesn't work because we intercept toString and QueryInterface specially
         // and don't cache the function pointer.
         // See bug 1140636.
         todo_is(savedElement.toString, savedElement.toString, "toString identity works");
+        todo_is(savedElement.QueryInterface, savedElement.QueryInterface, "toString identity works");
 
         // This does work because we create a CPOW for isEqualNode that stays
         // alive as long as we have a reference to the first CPOW (so as long
