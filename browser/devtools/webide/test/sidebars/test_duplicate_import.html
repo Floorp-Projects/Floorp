@@ -8,19 +8,20 @@
 
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
-    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <script type="application/javascript;version=1.8" src="../head.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   </head>
 
   <body>
-
     <script type="application/javascript;version=1.8">
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function* () {
+        Task.spawn(function*() {
+          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
           let win = yield openWebIDE();
-          let packagedAppLocation = getTestFilePath("app");
+          let winIframe = win.document.querySelector("#project-listing-panel-details").contentWindow;
+          let packagedAppLocation = getTestFilePath("../app");
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
 
           yield win.AppProjects.load();
@@ -51,16 +52,12 @@
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");
           yield nextTick();
 
-          info("opening panel");
-          yield win.Cmds.showProjectPanel();
-          info("panel open");
-
-          let panelNode = win.document.querySelector("#project-panel");
+          let panelNode = winIframe.document.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
           // 3 controls, + 2 projects
           is(items.length, 5, "5 projects in panel");
-          is(items[3].getAttribute("label"), "A name (in app directory)", "Panel label is correct");
-          is(items[4].getAttribute("label"), "hosted manifest name property", "Panel label is correct");
+          is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
+          is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
           yield closeWebIDE(win);
 
@@ -75,3 +72,4 @@
     </script>
   </body>
 </html>
+

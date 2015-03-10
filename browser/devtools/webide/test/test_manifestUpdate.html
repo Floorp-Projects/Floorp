@@ -25,13 +25,13 @@
             let AppManager = win.AppManager;
 
             function isProjectMarkedAsValid() {
-              let details = win.frames[0];
+              let details = win.frames[1];
               return !details.document.body.classList.contains("error");
             }
 
             let packagedAppLocation = getTestFilePath("app");
 
-            yield win.Cmds.importPackagedApp(packagedAppLocation);
+            yield win.projectList.importPackagedApp(packagedAppLocation);
             yield waitForUpdate(win, "details");
 
             let project = win.AppManager.selectedProject;
