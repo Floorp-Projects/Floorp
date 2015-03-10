@@ -12,27 +12,27 @@ include empty/reftest.list
 == tall--32px-auto--nonpercent-width-nonpercent-height.html ref-tall-lime32x64-aqua32x64.html
 == tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime32x64-aqua32x64.html
 == tall--32px-auto--nonpercent-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
-skip-if(B2G) == tall--32px-auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
-skip-if(B2G) == tall--32px-auto--nonpercent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482
+skip-if(B2G||Mulet) == tall--32px-auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == tall--32px-auto--nonpercent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--32px-auto--nonpercent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
-skip-if(B2G) == tall--32px-auto--omitted-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html # bug 773482
+skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--32px-auto--omitted-width-nonpercent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
 == tall--32px-auto--omitted-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
 == tall--32px-auto--omitted-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
-skip-if(B2G) == tall--32px-auto--omitted-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482
-skip-if(B2G) == tall--32px-auto--omitted-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
+skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-percent-height.html ref-tall-lime32x384-aqua32x384.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--32px-auto--percent-width-nonpercent-height.html ref-tall-lime32x16-aqua32x16.html
 == tall--32px-auto--percent-width-nonpercent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html
 == tall--32px-auto--percent-width-omitted-height.html ref-tall-lime32x384-aqua32x384.html
-skip-if(B2G) == tall--32px-auto--percent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
+skip-if(B2G||Mulet) == tall--32px-auto--percent-width-omitted-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--32px-auto--percent-width-percent-height.html ref-tall-lime32x384-aqua32x384.html
-skip-if(B2G) == tall--32px-auto--percent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482
+skip-if(B2G||Mulet) == tall--32px-auto--percent-width-percent-height-viewbox.html ref-tall-lime32x256-aqua32x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == tall--auto-32px--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html
 == tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime8x16-aqua8x16.html
-skip-if(B2G) == tall--auto-32px--nonpercent-width-omitted-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482
+skip-if(B2G||Mulet) == tall--auto-32px--nonpercent-width-omitted-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--auto-32px--nonpercent-width-omitted-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
-skip-if(B2G) == tall--auto-32px--nonpercent-width-percent-height.html ref-tall-lime8x16-aqua8x16.html
+skip-if(B2G||Mulet) == tall--auto-32px--nonpercent-width-percent-height.html ref-tall-lime8x16-aqua8x16.html # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--auto-32px--nonpercent-width-percent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 == tall--auto-32px--omitted-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto-32px--omitted-width-nonpercent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
@@ -47,7 +47,7 @@ skip-if(B2G) == tall--auto-32px--nonpercent-width-percent-height.html ref-tall-l
 == tall--auto-32px--percent-width-percent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto-32px--percent-width-percent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 
-skip-if(B2G) == tall--auto--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482
+skip-if(B2G||Mulet) == tall--auto--nonpercent-width-nonpercent-height.html ref-tall-lime8x16-aqua8x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--auto--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime8x16-aqua8x16.html
 == tall--auto--nonpercent-width-omitted-height.html ref-tall-lime8x384-aqua8x384.html
 == tall--auto--nonpercent-width-omitted-height-viewbox.html ref-tall-lime8x64-aqua8x64.html
@@ -56,7 +56,7 @@ skip-if(B2G) == tall--auto--nonpercent-width-nonpercent-height.html ref-tall-lim
 == tall--auto--omitted-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
 == tall--auto--omitted-width-nonpercent-height-viewbox.html ref-tall-lime2x16-aqua2x16.html
 == tall--auto--omitted-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html
-skip-if(B2G) == tall--auto--omitted-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482
+skip-if(B2G||Mulet) == tall--auto--omitted-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--auto--omitted-width-percent-height.html ref-tall-lime256x384-aqua256x384.html
 == tall--auto--omitted-width-percent-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
 == tall--auto--percent-width-nonpercent-height.html ref-tall-lime256x16-aqua256x16.html
@@ -68,8 +68,8 @@ skip-if(B2G) == tall--auto--omitted-width-omitted-height-viewbox.html ref-tall-l
 
 == tall--contain--nonpercent-width-nonpercent-height.html ref-tall-lime192x384-aqua192x384.html
 == tall--contain--nonpercent-width-nonpercent-height-viewbox.html ref-tall-lime192x384-aqua192x384.html
-skip-if(B2G) == tall--contain--nonpercent-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html # bug 773482
-skip-if(B2G) == tall--contain--nonpercent-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482
+skip-if(B2G||Mulet) == tall--contain--nonpercent-width-omitted-height.html ref-tall-lime256x384-aqua256x384.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == tall--contain--nonpercent-width-omitted-height-viewbox.html ref-tall-lime48x384-aqua48x384.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == tall--contain--nonpercent-width-percent-height.html ref-tall-lime256x384-aqua256x384.html
 == tall--contain--nonpercent-width-percent-height-viewbox.html ref-tall-lime48x384-aqua48x384.html
 == tall--contain--omitted-width-nonpercent-height.html ref-tall-lime256x384-aqua256x384.html
@@ -107,12 +107,12 @@ skip-if(B2G) == tall--contain--nonpercent-width-omitted-height-viewbox.html ref-
 
 == wide--12px-auto--nonpercent-width-nonpercent-height.html ref-wide-lime12x24-aqua12x24.html
 == wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime12x24-aqua12x24.html
-skip-if(B2G) == wide--12px-auto--nonpercent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
-skip-if(B2G) == wide--12px-auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
+skip-if(B2G||Mulet) == wide--12px-auto--nonpercent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == wide--12px-auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--12px-auto--nonpercent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html
 == wide--12px-auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
-skip-if(B2G) == wide--12px-auto--omitted-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html # bug 773482
-skip-if(B2G) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
+skip-if(B2G||Mulet) == wide--12px-auto--omitted-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--12px-auto--omitted-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
 == wide--12px-auto--omitted-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 == wide--12px-auto--omitted-width-percent-height.html ref-wide-lime12x128-aqua12x128.html
@@ -120,15 +120,15 @@ skip-if(B2G) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.html re
 == wide--12px-auto--percent-width-nonpercent-height.html ref-wide-lime12x16-aqua12x16.html
 == wide--12px-auto--percent-width-nonpercent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 == wide--12px-auto--percent-width-omitted-height.html ref-wide-lime12x128-aqua12x128.html
-skip-if(B2G) == wide--12px-auto--percent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482
-skip-if(B2G) == wide--12px-auto--percent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html # bug 773482
+skip-if(B2G||Mulet) == wide--12px-auto--percent-width-omitted-height-viewbox.html ref-wide-lime12x96-aqua12x96.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == wide--12px-auto--percent-width-percent-height.html ref-wide-lime12x128-aqua12x128.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--12px-auto--percent-width-percent-height-viewbox.html ref-wide-lime12x96-aqua12x96.html
 
 == wide--auto-32px--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-omitted-height.html ref-wide-lime8x16-aqua8x16.html
 == wide--auto-32px--nonpercent-width-omitted-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
-skip-if(B2G) == wide--auto-32px--nonpercent-width-percent-height.html ref-wide-lime8x16-aqua8x16.html # bug 773482
+skip-if(B2G||Mulet) == wide--auto-32px--nonpercent-width-percent-height.html ref-wide-lime8x16-aqua8x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--auto-32px--nonpercent-width-percent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 == wide--auto-32px--omitted-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto-32px--omitted-width-nonpercent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
@@ -143,16 +143,16 @@ skip-if(B2G) == wide--auto-32px--nonpercent-width-percent-height.html ref-wide-l
 == wide--auto-32px--percent-width-percent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto-32px--percent-width-percent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 
-skip-if(B2G) == wide--auto--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html
-skip-if(B2G) == wide--auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html # bug 773482
+skip-if(B2G||Mulet) == wide--auto--nonpercent-width-nonpercent-height.html ref-wide-lime8x16-aqua8x16.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == wide--auto--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime8x16-aqua8x16.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--auto--nonpercent-width-omitted-height.html ref-wide-lime8x128-aqua8x128.html
 == wide--auto--nonpercent-width-omitted-height-viewbox.html ref-wide-lime8x64-aqua8x64.html
 == wide--auto--nonpercent-width-percent-height.html ref-wide-lime8x128-aqua8x128.html
-skip-if(B2G) == wide--auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime8x64-aqua8x64.html # bug 773482
+skip-if(B2G||Mulet) == wide--auto--nonpercent-width-percent-height-viewbox.html ref-wide-lime8x64-aqua8x64.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--auto--omitted-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
 == wide--auto--omitted-width-nonpercent-height-viewbox.html ref-wide-lime2x16-aqua2x16.html
 == wide--auto--omitted-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
-skip-if(B2G) == wide--auto--omitted-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html # bug 773482
+skip-if(B2G||Mulet) == wide--auto--omitted-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--auto--omitted-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--auto--omitted-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 == wide--auto--percent-width-nonpercent-height.html ref-wide-lime768x16-aqua768x16.html
@@ -164,7 +164,7 @@ skip-if(B2G) == wide--auto--omitted-width-omitted-height-viewbox.html ref-wide-l
 
 == wide--contain--nonpercent-width-nonpercent-height.html ref-wide-lime64x128-aqua64x128.html
 == wide--contain--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime64x128-aqua64x128.html
-skip-if(B2G) == wide--contain--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html # bug 773482
+skip-if(B2G||Mulet) == wide--contain--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--contain--nonpercent-width-omitted-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 == wide--contain--nonpercent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--contain--nonpercent-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
@@ -182,13 +182,13 @@ skip-if(B2G) == wide--contain--nonpercent-width-omitted-height.html ref-wide-lim
 == wide--contain--percent-width-percent-height-viewbox.html ref-wide-lime16x128-aqua16x128.html
 
 == wide--cover--nonpercent-width-nonpercent-height.html ref-wide-lime768x256.html
-skip-if(B2G) == wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482
+skip-if(B2G||Mulet) == wide--cover--nonpercent-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--cover--nonpercent-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--nonpercent-width-omitted-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--nonpercent-width-percent-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--nonpercent-width-percent-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--omitted-width-nonpercent-height.html ref-wide-lime768x128-aqua768x128.html
-skip-if(B2G) == wide--cover--omitted-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482
+skip-if(B2G||Mulet) == wide--cover--omitted-width-nonpercent-height-viewbox.html ref-wide-lime768x256.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == wide--cover--omitted-width-omitted-height.html ref-wide-lime768x128-aqua768x128.html
 == wide--cover--omitted-width-omitted-height-viewbox.html ref-wide-lime768x256.html
 == wide--cover--omitted-width-percent-height.html ref-wide-lime768x128-aqua768x128.html

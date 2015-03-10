@@ -9,12 +9,12 @@
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
-random-if(B2G&&browserIsRemote) == dir-11.html dir-11-ref.html
+random-if((B2G&&browserIsRemote)||Mulet) == dir-11.html dir-11-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
-random-if(B2G&&browserIsRemote) == displaystyle-4.html displaystyle-4-ref.html
-skip-if(B2G&&browserIsRemote) random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html
+random-if((B2G&&browserIsRemote)||Mulet) == displaystyle-4.html displaystyle-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -46,7 +46,7 @@ fails-if(winWidget&&d2d) == mfenced-11.html mfenced-11-ref.html
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
 != non-spacing-accent-1.xhtml non-spacing-accent-1-ref.xhtml
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
-skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
+skip-if(B2G||Mulet) == quotes-1.xhtml quotes-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml
 != stretchy-munderover-1a.html stretchy-munderover-1-ref.html
 == stretchy-munderover-1b.html stretchy-munderover-1-ref.html
@@ -179,7 +179,7 @@ fails-if(B2G) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width
 == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
-skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
+skip-if(B2G||Mulet) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
 == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
@@ -187,7 +187,7 @@ skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
-skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
+skip-if(B2G||Mulet) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html
 == whitespace-trim-3.html whitespace-trim-3-ref.html
@@ -198,7 +198,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-random-if(B2G&&browserIsRemote) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics
+random-if((B2G&&browserIsRemote)||Mulet) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
