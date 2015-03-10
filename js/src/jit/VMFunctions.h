@@ -633,7 +633,7 @@ class AutoDetectInvalidation
 
 bool InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Value *rval);
 JSObject *NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap,
-                      const js::Class *clasp);
+                      size_t ndynamic, const js::Class *clasp);
 
 bool CheckOverRecursed(JSContext *cx);
 bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,

@@ -523,9 +523,6 @@
                                    class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
                                    flex="1"
                                    readonly="true"/>
-                          <image class="security-warning-icon"
-                                 id="security-warning-sslv3"
-                                 tooltiptext="&netmonitorUI.security.warning.sslv3;" />
                         </hbox>
                         <hbox id="security-ciphersuite"
                               class="tabpanel-summary-container"

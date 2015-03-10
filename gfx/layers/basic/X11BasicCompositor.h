@@ -49,6 +49,8 @@ public:
 
   virtual TemporaryRef<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) MOZ_OVERRIDE;
+
+  virtual void EndFrame() MOZ_OVERRIDE;
 };
 
 } // namespace layers

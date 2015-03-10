@@ -87,10 +87,10 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
         jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
     }
 
-    JS::RootedObject parent(cx, mScope->GetGlobalJSObject());
-    JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, parent));
+    JS::RootedObject global(cx, mScope->GetGlobalJSObject());
+    JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, global));
     mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(jsclazz),
-                                                proto, parent);
+                                                proto);
 
     bool success = !!mJSProtoObject;
     if (success) {

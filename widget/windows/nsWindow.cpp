@@ -675,6 +675,7 @@ NS_METHOD nsWindow::Destroy()
     mLayerManager->Destroy();
   }
   mLayerManager = nullptr;
+  DestroyCompositor();
 
   /* We should clear our cached resources now and not wait for the GC to
    * delete the nsWindow. */
@@ -3324,6 +3325,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   }
 
   if (!mLayerManager) {
+    MOZ_ASSERT(!mCompositorParent && !mCompositorChild);
     mLayerManager = CreateBasicLayerManager();
   }
 

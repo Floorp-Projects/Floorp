@@ -73,14 +73,12 @@ if CONFIG['ENABLE_TESTS']:
 EXTRA_COMPONENTS += [
     'NetworkInterfaceListService.js',
     'NetworkInterfaceListService.manifest',
+    'NetworkManager.js',
     'NetworkManager.manifest',
     'NetworkService.js',
     'NetworkService.manifest',
     'TetheringService.js',
     'TetheringService.manifest',
-]
-EXTRA_PP_COMPONENTS += [
-    'NetworkManager.js',
 ]
 EXTRA_JS_MODULES += [
     'systemlibs.js',

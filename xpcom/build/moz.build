@@ -33,7 +33,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'PoisonIOInterposerWin.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'mach_override.c',
         'PoisonIOInterposerBase.cpp',
         'PoisonIOInterposerMac.cpp',

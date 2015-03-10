@@ -74,6 +74,8 @@
 #define DEVICESTORAGE_PROPERTIES \
   "chrome://global/content/devicestorage.properties"
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
+#define PREF_STORAGE_WRITABLE_NAME \
+  "device.storage.writable.name"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3625,20 +3627,29 @@ nsDOMDeviceStorage::GetDefaultStorageName(const nsAString& aStorageType,
                                           nsAString& aStorageName)
 {
   // See if the preferred volume is available.
-  nsRefPtr<nsDOMDeviceStorage> ds;
   nsAdoptingString prefStorageName =
-    mozilla::Preferences::GetString("device.storage.writable.name");
+    mozilla::Preferences::GetString(PREF_STORAGE_WRITABLE_NAME);
+
   if (prefStorageName) {
-    aStorageName = prefStorageName;
-    return;
+    nsString status;
+    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType,
+                                                            prefStorageName);
+    dsf->GetStorageStatus(status);
+
+    if (!status.EqualsLiteral("NoMedia")) {
+      aStorageName = prefStorageName;
+      return;
+    }
   }
 
-  // No preferred storage, we'll use the first one (which should be sdcard).
-
+  // If there is no preferred storage or preferred storage is not presented,
+  // we'll use the first one (which should be sdcard).
   VolumeNameArray volNames;
   GetOrderedVolumeNames(volNames);
   if (volNames.Length() > 0) {
     aStorageName = volNames[0];
+    // overwrite the value of "device.storage.writable.name"
+    mozilla::Preferences::SetString(PREF_STORAGE_WRITABLE_NAME, aStorageName);
     return;
   }
 
