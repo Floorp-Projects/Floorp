@@ -2663,8 +2663,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
   mLastContentPaintMetrics = aLayerMetrics;
 
-  mFrameMetrics.SetMayHaveTouchListeners(aLayerMetrics.GetMayHaveTouchListeners());
-  mFrameMetrics.SetMayHaveTouchCaret(aLayerMetrics.GetMayHaveTouchCaret());
   mFrameMetrics.SetScrollParentId(aLayerMetrics.GetScrollParentId());
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 
@@ -2924,12 +2922,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     // animation finishes.
     RequestContentRepaint(endZoomToMetrics);
   }
-}
-
-bool
-AsyncPanZoomController::NeedToWaitForContent() const
-{
-  return (mFrameMetrics.GetMayHaveTouchListeners() || mFrameMetrics.GetMayHaveTouchCaret());
 }
 
 TouchBlockState*

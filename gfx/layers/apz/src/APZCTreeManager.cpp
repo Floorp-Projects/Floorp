@@ -269,14 +269,11 @@ APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
 static EventRegions
 GetEventRegions(const LayerMetricsWrapper& aLayer)
 {
-  if (gfxPrefs::LayoutEventRegionsEnabled()) {
-    if (aLayer.IsScrollInfoLayer()) {
-      return EventRegions(nsIntRegion(ParentLayerIntRect::ToUntyped(
-        RoundedToInt(aLayer.Metrics().mCompositionBounds))));
-    }
-    return aLayer.GetEventRegions();
+  if (aLayer.IsScrollInfoLayer()) {
+    return EventRegions(nsIntRegion(ParentLayerIntRect::ToUntyped(
+      RoundedToInt(aLayer.Metrics().mCompositionBounds))));
   }
-  return EventRegions(aLayer.GetVisibleRegion());
+  return aLayer.GetEventRegions();
 }
 
 already_AddRefed<HitTestingTreeNode>
@@ -1361,35 +1358,6 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
     }
 
     if (*aOutHitResult != HitNothing) {
-      if (result && !gfxPrefs::LayoutEventRegionsEnabled()) {
-        // When event-regions are disabled, we treat scrollinfo layers as
-        // regular scrollable layers. Unfortunately, their "hit region" (which
-        // we create from the composition bounds) is their full area, and they
-        // sit on top of their non-scrollinfo siblings. This means they will get
-        // a HitTestingTreeNode with a hit region that will aggressively match
-        // any input events that might be directed to sub-APZCs of their non-
-        // scrollinfo siblings. Therefore, we need to keep looping through to
-        // see if there are any other non-scrollinfo siblings that have children
-        // that match this input. If so, they should take priority. With event-
-        // regions enabled we use the actual regions from the layer, which are
-        // empty, and so this is unnecessary.
-        AsyncPanZoomController* prevSiblingApzc = nullptr;
-        for (HitTestingTreeNode* n = node->GetPrevSibling(); n; n = n->GetPrevSibling()) {
-          if (n->GetApzc()) {
-            prevSiblingApzc = n->GetApzc();
-            break;
-          }
-        }
-        if (result == prevSiblingApzc) {
-          APZCTM_LOG("Continuing search past probable scrollinfo info layer\n");
-          // We need to reset aOutHitResult in order to keep searching. This is
-          // ok because we know that we will at least hit prevSiblingApzc
-          // again, which is the same as result.
-          *aOutHitResult = HitNothing;
-          continue;
-        }
-      }
-
       return result;
     }
   }

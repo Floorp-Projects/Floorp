@@ -68,10 +68,7 @@ let AddonWatcher = {
     let limit = this._interval * Preferences.get("browser.addon-watch.percentage-limit", 75) * 10;
     for (let addonId in addons) {
       if (!this._ignoreList.has(addonId)) {
-        if (!this._lastAddonTime[addonId]) {
-          this._lastAddonTime[addonId] = 0;
-        }
-        if ((addons[addonId] - this._lastAddonTime[addonId]) > limit) {
+        if (this._lastAddonTime[addonId] && ((addons[addonId] - this._lastAddonTime[addonId]) > limit)) {
           this._callback(addonId);
         }
         this._lastAddonTime[addonId] = addons[addonId];

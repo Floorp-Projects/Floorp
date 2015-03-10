@@ -8199,6 +8199,12 @@ class MLoadElementHole
     {
         setResultType(MIRType_Value);
         setMovable();
+
+        // Set the guard flag to make sure we bail when we see a negative
+        // index. We can clear this flag (and needsNegativeIntCheck_) in
+        // collectRangeInfoPreTrunc.
+        setGuard();
+
         MOZ_ASSERT(elements->type() == MIRType_Elements);
         MOZ_ASSERT(index->type() == MIRType_Int32);
         MOZ_ASSERT(initLength->type() == MIRType_Int32);
