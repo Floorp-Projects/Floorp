@@ -100,6 +100,7 @@ UNIFIED_SOURCES += [
     'CycleCollectedJSRuntime.cpp',
     'Debug.cpp',
     'ErrorNames.cpp',
+    'HoldDropJSObjects.cpp',
     'nsConsoleMessage.cpp',
     'nsConsoleService.cpp',
     'nsCycleCollector.cpp',
