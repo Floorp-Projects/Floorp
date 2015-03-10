@@ -225,7 +225,7 @@ public:
   NS_DECL_NSIPROCESSCHECKER
 
   static nsFrameMessageManager*
-  NewProcessMessageManager(mozilla::dom::nsIContentParent* aProcess);
+  NewProcessMessageManager(bool aIsRemote);
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,

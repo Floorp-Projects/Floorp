@@ -135,6 +135,14 @@ class MessageChannel : HasResultCodes
         return !mCxxStackFrames.empty();
     }
 
+    /**
+     * This function is used by hang annotation code to determine which IPDL
+     * actor is highest in the call stack at the time of the hang. It should
+     * be called from the main thread when a sync or intr message is about to
+     * be sent.
+     */
+    int32_t GetTopmostMessageRoutingId() const;
+
     void FlushPendingInterruptQueue();
 
     // Unsound_IsClosed and Unsound_NumQueuedMessages are safe to call from any

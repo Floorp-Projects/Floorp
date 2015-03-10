@@ -193,6 +193,11 @@ public:
         *name = mMessageName;
     }
 
+    int32_t GetRoutingId() const
+    {
+        return mMessageRoutingId;
+    }
+
 private:
     const char* mMessageName;
     int32_t mMessageRoutingId;
@@ -1824,6 +1829,17 @@ MessageChannel::DumpInterruptStack(const char* const pfx) const
         printf_stderr("%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
                       i, dir, sems, name, id);
     }
+}
+
+int32_t
+MessageChannel::GetTopmostMessageRoutingId() const
+{
+    MOZ_ASSERT(MessageLoop::current() == mWorkerLoop);
+    if (mCxxStackFrames.empty()) {
+        return MSG_ROUTING_NONE;
+    }
+    const InterruptFrame& frame = mCxxStackFrames.back();
+    return frame.GetRoutingId();
 }
 
 bool

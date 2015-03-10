@@ -280,6 +280,7 @@ class JitProfilingFrameIterator
     bool tryInitWithPC(void *pc);
     bool tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt,
                           bool forLastCallSite);
+    void fixBaselineDebugModeOSRReturnAddress();
 
   public:
     JitProfilingFrameIterator(JSRuntime *rt,

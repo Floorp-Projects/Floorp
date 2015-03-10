@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['standalone', 'nomozalloc']
+DIRS += ['standalone']
 
 # On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
 # a statically linked glue lib.
@@ -78,10 +78,6 @@ EXPORTS.mozilla += [
     'Mutex.h',
     'Observer.h',
     'ReentrantMonitor.h',
-]
-
-EXPORTS.mozilla.threads += [
-    'nsThreadIDs.h',
 ]
 
 include('objs.mozbuild')

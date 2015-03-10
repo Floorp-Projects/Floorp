@@ -243,7 +243,7 @@ public:
    */
   struct AnnotationInfo {
     AnnotationInfo(uint32_t aHangIndex,
-                   UniquePtr<HangAnnotations> aAnnotations)
+                   HangAnnotationsPtr aAnnotations)
       : mHangIndex(aHangIndex)
       , mAnnotations(Move(aAnnotations))
     {}
@@ -259,7 +259,7 @@ public:
       return *this;
     }
     uint32_t mHangIndex;
-    UniquePtr<HangAnnotations> mAnnotations;
+    HangAnnotationsPtr mAnnotations;
 
   private:
     // Force move constructor
@@ -269,7 +269,7 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration,
                int32_t aSystemUptime, int32_t aFirefoxUptime,
-               UniquePtr<HangAnnotations> aAnnotations);
+               HangAnnotationsPtr aAnnotations);
   uint32_t GetDuration(unsigned aIndex) const;
   int32_t GetSystemUptime(unsigned aIndex) const;
   int32_t GetFirefoxUptime(unsigned aIndex) const;
@@ -298,7 +298,7 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      uint32_t aDuration,
                      int32_t aSystemUptime,
                      int32_t aFirefoxUptime,
-                     UniquePtr<HangAnnotations> aAnnotations) {
+                     HangAnnotationsPtr aAnnotations) {
   HangInfo info = { aDuration, aSystemUptime, aFirefoxUptime };
   mHangInfo.push_back(info);
   if (aAnnotations) {
@@ -658,7 +658,7 @@ public:
                                Telemetry::ProcessedStack &aStack,
                                int32_t aSystemUptime,
                                int32_t aFirefoxUptime,
-                               UniquePtr<HangAnnotations> aAnnotations);
+                               HangAnnotationsPtr aAnnotations);
 #endif
   static void RecordThreadHangStats(Telemetry::ThreadHangStats& aStats);
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
@@ -2553,9 +2553,9 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
       if (!jsAnnotation) {
         return NS_ERROR_FAILURE;
       }
-      nsAutoPtr<HangAnnotations::Enumerator> annotationsEnum;
-      if (!annotationInfo[iterIndex].mAnnotations->GetEnumerator(
-            annotationsEnum.StartAssignment())) {
+      UniquePtr<HangAnnotations::Enumerator> annotationsEnum =
+        annotationInfo[iterIndex].mAnnotations->GetEnumerator();
+      if (!annotationsEnum) {
         return NS_ERROR_FAILURE;
       }
       nsAutoString  key;
@@ -2840,6 +2840,44 @@ CreateJSHangStack(JSContext* cx, const Telemetry::HangStack& stack)
 }
 
 static JSObject*
+CreateJSHangAnnotations(JSContext* cx, const HangAnnotationsVector& annotations)
+{
+  JS::RootedObject annotationsArray(cx, JS_NewArrayObject(cx, 0));
+  if (!annotationsArray) {
+    return nullptr;
+  }
+  size_t annotationIndex = 0;
+  for (const HangAnnotationsPtr *i = annotations.begin(), *e = annotations.end();
+       i != e; ++i) {
+    JS::RootedObject jsAnnotation(cx, JS_NewPlainObject(cx));
+    if (!jsAnnotation) {
+      continue;
+    }
+    const HangAnnotationsPtr& curAnnotations = *i;
+    UniquePtr<HangAnnotations::Enumerator> annotationsEnum =
+      curAnnotations->GetEnumerator();
+    if (!annotationsEnum) {
+      continue;
+    }
+    nsAutoString key;
+    nsAutoString value;
+    while (annotationsEnum->Next(key, value)) {
+      JS::RootedValue jsValue(cx);
+      jsValue.setString(JS_NewUCStringCopyN(cx, value.get(), value.Length()));
+      if (!JS_DefineUCProperty(cx, jsAnnotation, key.get(), key.Length(),
+                               jsValue, JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+    }
+    if (!JS_SetElement(cx, annotationsArray, annotationIndex, jsAnnotation)) {
+      continue;
+    }
+    ++annotationIndex;
+  }
+  return annotationsArray;
+}
+
+static JSObject*
 CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 {
   JS::RootedObject ret(cx, JS_NewPlainObject(cx));
@@ -2849,11 +2887,16 @@ CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 
   JS::RootedObject stack(cx, CreateJSHangStack(cx, hang.GetStack()));
   JS::RootedObject time(cx, CreateJSTimeHistogram(cx, hang));
+  auto& hangAnnotations = hang.GetAnnotations();
+  JS::RootedObject annotations(cx, CreateJSHangAnnotations(cx, hangAnnotations));
 
   if (!stack ||
       !time ||
+      !annotations ||
       !JS_DefineProperty(cx, ret, "stack", stack, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "histogram", time, JSPROP_ENUMERATE)) {
+      !JS_DefineProperty(cx, ret, "histogram", time, JSPROP_ENUMERATE) ||
+      (!hangAnnotations.empty() && // <-- Only define annotations when nonempty
+        !JS_DefineProperty(cx, ret, "annotations", annotations, JSPROP_ENUMERATE))) {
     return nullptr;
   }
 
@@ -2899,6 +2942,7 @@ CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
   if (!JS_DefineProperty(cx, ret, "hangs", hangs, JSPROP_ENUMERATE)) {
     return nullptr;
   }
+
   return ret;
 }
 
@@ -3333,12 +3377,12 @@ TelemetryImpl::RecordChromeHang(uint32_t aDuration,
                                 Telemetry::ProcessedStack &aStack,
                                 int32_t aSystemUptime,
                                 int32_t aFirefoxUptime,
-                                UniquePtr<HangAnnotations> aAnnotations)
+                                HangAnnotationsPtr aAnnotations)
 {
   if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
 
-  UniquePtr<HangAnnotations> annotations;
+  HangAnnotationsPtr annotations;
   // We only pass aAnnotations if it is not empty.
   if (aAnnotations && !aAnnotations->IsEmpty()) {
     annotations = Move(aAnnotations);
@@ -3607,7 +3651,7 @@ void RecordChromeHang(uint32_t duration,
                       ProcessedStack &aStack,
                       int32_t aSystemUptime,
                       int32_t aFirefoxUptime,
-                      UniquePtr<HangAnnotations> aAnnotations)
+                      HangAnnotationsPtr aAnnotations)
 {
   TelemetryImpl::RecordChromeHang(duration, aStack,
                                   aSystemUptime, aFirefoxUptime,

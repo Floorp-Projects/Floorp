@@ -124,6 +124,11 @@ protected:
             // We have already checked that our parent is visible.
             return true;
           }
+          if (aNode->IsHTMLElement(nsGkAtoms::rp)) {
+            // Ruby parentheses are part of ruby structure, hence
+            // shouldn't be stripped out even if it is not displayed.
+            return true;
+          }
           return false;
         }
         bool isVisible = frame->StyleVisibility()->IsVisible();
