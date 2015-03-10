@@ -5,6 +5,7 @@
 #ifndef _JSEPSESSIONIMPL_H_
 #define _JSEPSESSIONIMPL_H_
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -303,6 +304,9 @@ private:
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;
   std::string mCNAME;
+  // Used to prevent duplicate local SSRCs. Not used to prevent local/remote or
+  // remote-only duplication, which will be important for EKT but not now.
+  std::set<uint32_t> mSsrcs;
   UniquePtr<Sdp> mGeneratedLocalDescription; // Created but not set.
   UniquePtr<Sdp> mCurrentLocalDescription;
   UniquePtr<Sdp> mCurrentRemoteDescription;
