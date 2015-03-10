@@ -46,8 +46,6 @@ public:
     , mScrollableRect(0, 0, 0, 0)
     , mCumulativeResolution(1)
     , mDevPixelsPerCSSPixel(1)
-    , mMayHaveTouchListeners(false)
-    , mMayHaveTouchCaret(false)
     , mIsRoot(false)
     , mHasScrollgrab(false)
     , mScrollId(NULL_SCROLL_ID)
@@ -85,8 +83,6 @@ public:
            mPresShellResolution == aOther.mPresShellResolution &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
-           mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
-           mMayHaveTouchCaret == aOther.mMayHaveTouchCaret &&
            mPresShellId == aOther.mPresShellId &&
            mIsRoot == aOther.mIsRoot &&
            mScrollId == aOther.mScrollId &&
@@ -482,26 +478,6 @@ public:
     mContentDescription = aContentDescription;
   }
 
-  bool GetMayHaveTouchCaret() const
-  {
-    return mMayHaveTouchCaret;
-  }
-
-  void SetMayHaveTouchCaret(bool aMayHaveTouchCaret)
-  {
-    mMayHaveTouchCaret = aMayHaveTouchCaret;
-  }
-
-  bool GetMayHaveTouchListeners() const
-  {
-    return mMayHaveTouchListeners;
-  }
-
-  void SetMayHaveTouchListeners(bool aMayHaveTouchListeners)
-  {
-    mMayHaveTouchListeners = aMayHaveTouchListeners;
-  }
-
   const LayoutDeviceIntSize& GetLineScrollAmount() const
   {
     return mLineScrollAmount;
@@ -591,12 +567,6 @@ private:
   // conversion factor for device pixels to layers pixels is just the
   // resolution.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
-
-  // Whether or not this frame may have touch or scroll wheel listeners.
-  bool mMayHaveTouchListeners;
-
-  // Whether or not this frame may have a touch caret.
-  bool mMayHaveTouchCaret;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRoot;
