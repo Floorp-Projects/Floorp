@@ -146,23 +146,31 @@ class SetObject : public NativeObject {
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
-    static bool keys(JSContext* cx, HandleObject obj, JS::AutoValueVector* keys);
-    static bool values(JSContext* cx, unsigned argc, Value* vp);
-    static bool add(JSContext* cx, HandleObject obj, HandleValue key);
-    static bool has(JSContext* cx, unsigned argc, Value* vp);
-    static SetObject* create(JSContext* cx);
+    static bool keys(JSContext *cx, HandleObject obj, JS::AutoValueVector *keys);
+    static bool values(JSContext *cx, unsigned argc, Value *vp);
+    static bool add(JSContext *cx, HandleObject obj, HandleValue key);
+    static bool has(JSContext *cx, unsigned argc, Value *vp);
+
+    static SetObject* create(JSContext *cx);
+    static uint32_t size(JSContext *cx, HandleObject obj);
+    static bool has(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
+    static bool clear(JSContext *cx, HandleObject obj);
+    static bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
+    static bool delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval);
 
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
     static const JSPropertySpec staticProperties[];
     ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
+    static ValueSet & extract(HandleObject o);
     static ValueSet & extract(CallReceiver call);
     static void mark(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
     static bool is(HandleValue v);
+    static bool is(HandleObject o);
 
     static bool iterator_impl(JSContext* cx, CallArgs args, IteratorKind kind);
 
