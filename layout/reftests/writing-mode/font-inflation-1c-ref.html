@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<style>
+body { writing-mode: vertical-lr; text-orientation: sideways-right; }
+#outer { width: 0; height: 0; }
+/*
+In a 450px container, the minimum font size at 15em per line is 30px.
+This means we map 0px-45px into 30px-45px, so 12px gets mapped to 34px.
+*/
+#inner { font-size: 34px; width: 100%; height: 100%; }
+</style>
+<div id="outer">
+<div id="inner">Inflated?

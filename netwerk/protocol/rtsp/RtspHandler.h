@@ -22,8 +22,10 @@ class RtspHandler MOZ_FINAL : public nsIProtocolHandler
   NS_DECL_NSIPROTOCOLHANDLER
 
   RtspHandler() { }
-  ~RtspHandler() { }
   const static int32_t kDefaultRtspPort = 554;
+
+protected:
+  ~RtspHandler() { }
 };
 
 } // namespace net

@@ -828,18 +828,6 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   metrics.SetZoom(metrics.GetCumulativeResolution() * metrics.GetDevPixelsPerCSSPixel()
                   * layerToParentLayerScale);
 
-  if (presShell) {
-    nsIDocument* document = nullptr;
-    document = presShell->GetDocument();
-    if (document) {
-      nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
-      if (innerWin) {
-        metrics.SetMayHaveTouchListeners(innerWin->HasApzAwareEventListeners());
-      }
-    }
-    metrics.SetMayHaveTouchCaret(presShell->MayHaveTouchCaret());
-  }
-
   // Calculate the composition bounds as the size of the scroll frame and
   // its origin relative to the reference frame.
   // If aScrollFrame is null, we are in a document without a root scroll frame,
@@ -4803,17 +4791,14 @@ nsDisplayScrollInfoLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aContainerParameters)
 {
-  // Only build scrollinfo layers if event-regions are disabled, so that the
-  // compositor knows where the inactive scrollframes are. When event-regions
-  // are enabled, the dispatch-to-content regions generally provide this
-  // information to the APZ code. However, in some cases, there might be
-  // content that cannot be layerized, and so needs to scroll synchronously.
-  // To handle those cases (which are indicated by setting mHoisted to true), we
-  // still want to generate scrollinfo layers.
-  if (gfxPrefs::LayoutEventRegionsEnabled() && !mHoisted) {
-    return nullptr;
-  }
-  return nsDisplayScrollLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+  // In general for APZ with event-regions we no longer have a need for
+  // scrollinfo layers. However, in some cases, there might be content that
+  // cannot be layerized, and so needs to scroll synchronously. To handle those
+  // cases (which are indicated by setting mHoisted to true), we still want to
+  // generate scrollinfo layers.
+  return mHoisted
+    ? nsDisplayScrollLayer::BuildLayer(aBuilder, aManager, aContainerParameters)
+    : nullptr;
 }
 
 LayerState
@@ -4822,10 +4807,9 @@ nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   // See comment in BuildLayer
-  if (gfxPrefs::LayoutEventRegionsEnabled() && !mHoisted) {
-    return LAYER_NONE;
-  }
-  return LAYER_ACTIVE_EMPTY;
+  return mHoisted
+    ? LAYER_ACTIVE_EMPTY
+    : LAYER_NONE;
 }
 
 bool

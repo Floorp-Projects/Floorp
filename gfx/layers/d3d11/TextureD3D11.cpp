@@ -270,11 +270,19 @@ TextureClientD3D11::Lock(OpenMode aMode)
 
   if (mNeedsClear) {
     mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+        Unlock();
+        return false;
+    }
     mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
     mNeedsClear = false;
   }
   if (mNeedsClearWhite) {
     mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+        Unlock();
+        return false;
+    }
     mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     mNeedsClearWhite = false;
   }

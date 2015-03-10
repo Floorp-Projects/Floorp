@@ -1,4 +1,4 @@
-skip-if(B2G) == display-types-01.html display-types-01-ref.html # bug 773482
+skip-if(B2G||Mulet) == display-types-01.html display-types-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == dynamic-attr-01.html dynamic-attr-01-ref.html
 == dynamic-button-01a.html dynamic-button-01-ref.html
 == dynamic-button-01b.html dynamic-button-01-ref.html

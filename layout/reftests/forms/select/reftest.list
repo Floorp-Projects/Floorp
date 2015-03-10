@@ -1,5 +1,5 @@
-skip-if(B2G) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
-skip-if(B2G) == multiple.html multiple-ref.html
+skip-if(B2G||Mulet) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == multiple.html multiple-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == boguskids.html boguskids-ref.html
 == dynamic-boguskids.html boguskids-ref.html
 == option-children.html option-children-ref.html

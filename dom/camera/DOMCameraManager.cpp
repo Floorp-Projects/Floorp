@@ -17,7 +17,6 @@
 #include "nsDOMClassInfo.h"
 #include "CameraCommon.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 
 using namespace mozilla;
