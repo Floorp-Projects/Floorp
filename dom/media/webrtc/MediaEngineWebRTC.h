@@ -255,7 +255,7 @@ public:
 private:
   ~MediaEngineWebRTC() {
     Shutdown();
-#ifdef MOZ_B2G_CAMERA
+#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
     AsyncLatencyLogger::Get()->Release();
 #endif
     gFarendObserver = nullptr;

@@ -18,13 +18,17 @@
 #define DOM_CAMERA_GONKCAMERAPARAMETERS_H
 
 #include <math.h>
-#include "camera/CameraParameters.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "AutoRwLock.h"
-#include "nsPrintfCString.h"
+#include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
 #include "ICameraControl.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include <camera/CameraParameters.h>
+#else
+#include "FallbackCameraPlatform.h"
+#endif
 
 namespace mozilla {
 
@@ -44,7 +48,7 @@ public:
   template<class T> nsresult
   Set(uint32_t aKey, const T& aValue)
   {
-    RwLockAutoEnterWrite lock(mLock);
+    MutexAutoLock lock(mLock);
     nsresult rv = SetTranslated(aKey, aValue);
     mDirty = mDirty || NS_SUCCEEDED(rv);
     return rv;
@@ -53,7 +57,7 @@ public:
   template<class T> nsresult
   Get(uint32_t aKey, T& aValue)
   {
-    RwLockAutoEnterRead lock(mLock);
+    MutexAutoLock lock(mLock);
     return GetTranslated(aKey, aValue);
   }
 
@@ -62,36 +66,17 @@ public:
   {
     bool dirty;
 
-    RwLockAutoEnterWrite lock(mLock);
+    MutexAutoLock lock(mLock);
     dirty = mDirty;
     mDirty = false;
     return dirty;
   }
 
-  android::String8
-  Flatten() const
-  {
-    RwLockAutoEnterRead lock(mLock);
-    return mParams.flatten();
-  }
-
-  nsresult
-  Unflatten(const android::String8& aFlatParameters)
-  {
-    RwLockAutoEnterWrite lock(mLock);
-    mParams.unflatten(aFlatParameters);
-    if (mInitialized) {
-      return NS_OK;
-    }
-
-    // We call Initialize() once when the parameter set is first loaded,
-    // to set up any constant values this class requires internally,
-    // e.g. the exposure compensation step and limits.
-    return Initialize();
-  }
+  android::String8 Flatten() const;
+  nsresult Unflatten(const android::String8& aFlatParameters);
 
 protected:
-  PRRWLock* mLock;
+  mutable Mutex mLock;
   bool mDirty;
   bool mInitialized;
 
@@ -99,55 +84,123 @@ protected:
   double mExposureCompensationStep;
   int32_t mExposureCompensationMinIndex;
   int32_t mExposureCompensationMaxIndex;
+  const char* mVendorSpecificKeyIsoMode;
+  const char* mVendorSpecificKeySupportedIsoModes;
   nsTArray<int> mZoomRatios;
   nsTArray<nsString> mIsoModes;
   nsTArray<nsString> mSceneModes;
   nsTArray<nsString> mMeteringModes;
   nsClassHashtable<nsStringHashKey, nsCString> mIsoModeMap;
+  nsClassHashtable<nsCStringHashKey, nsCString> mParams;
 
-  // This subclass of android::CameraParameters just gives
-  // all of the AOSP getters and setters the same signature.
-  class Parameters : public android::CameraParameters
+  static PLDHashOperator EnumerateFlatten(const nsACString& aKey, nsCString* aValue, void* aUserArg);
+
+  nsresult SetImpl(const char* aKey, const char* aValue)
   {
-  public:
-    Parameters()
-      : mVendorSpecificKeyIsoMode(nullptr)
-      , mVendorSpecificKeySupportedIsoModes(nullptr)
-    { }
-    virtual ~Parameters() { }
+    nsCString key(aKey);
+    mParams.Put(key, new nsCString(aValue));
+    return NS_OK;
+  }
 
-    using android::CameraParameters::set;
-    using android::CameraParameters::get;
-    using android::CameraParameters::TRUE;
-    using android::CameraParameters::FALSE;
+  nsresult SetImpl(const char* aKey, int aValue)
+  {
+    nsCString key(aKey);
+    nsCString* value = new nsCString();
+    value->AppendInt(aValue);
+    mParams.Put(key, value);
+    return NS_OK;
+  }
 
-    void set(const char* aKey, float aValue)      { setFloat(aKey, aValue); }
-    void set(const char* aKey, double aValue)     { setFloat(aKey, aValue); }
-    void set(const char* aKey, bool aValue)       { set(aKey, aValue ? TRUE : FALSE); }
-    void get(const char* aKey, float& aRet)       { aRet = getFloat(aKey); }
-    void get(const char* aKey, double& aRet)      { aRet = getFloat(aKey); }
-    void get(const char* aKey, const char*& aRet) { aRet = get(aKey); }
-    void get(const char* aKey, int& aRet)         { aRet = getInt(aKey); }
+  nsresult SetImpl(const char* aKey, double aValue)
+  {
+    nsCString key(aKey);
+    nsCString* value = new nsCString();
+    value->AppendFloat(aValue);
+    mParams.Put(key, value);
+    return NS_OK;
+  }
 
-    void
-    get(const char* aKey, bool& aRet)
-    {
-      const char* value = get(aKey);
-      aRet = value ? strcmp(value, TRUE) == 0 : false;
+  nsresult SetImpl(const char* aKey, float aValue)
+  {
+    nsCString key(aKey);
+    nsCString* value = new nsCString();
+    value->AppendFloat(aValue);
+    mParams.Put(key, value);
+    return NS_OK;
+  }
+
+  nsresult SetImpl(const char* aKey, bool aValue)
+  {
+    nsCString key(aKey);
+    mParams.Put(key, new nsCString(aValue ? "true" : "false"));
+    return NS_OK;
+  }
+
+  nsresult GetImpl(const char* aKey, const char*& aRet)
+  {
+    nsCString key(aKey);
+    nsCString* value;
+    if (!mParams.Get(key, &value)) {
+      aRet = nullptr;
+      return NS_ERROR_FAILURE;
     }
+    aRet = value->Data();
+    return NS_OK;
+  }
 
-    void remove(const char* aKey)                 { android::CameraParameters::remove(aKey); }
+  nsresult GetImpl(const char* aKey, float& aRet)
+  {
+    nsCString key(aKey);
+    nsCString* value;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mParams.Get(key, &value)) {
+      aRet = value->ToFloat(&rv);
+    } else {
+      aRet = 0.0;
+    }
+    return rv;
+  }
 
-    const char* GetTextKey(uint32_t aKey);
+  nsresult GetImpl(const char* aKey, double& aRet)
+  {
+    nsCString key(aKey);
+    nsCString* value;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mParams.Get(key, &value)) {
+      aRet = value->ToFloat(&rv);
+    } else {
+      aRet = 0.0;
+    }
+    return rv;
+  }
 
-  protected:
-    const char* FindVendorSpecificKey(const char* aPotentialKeys[], size_t aPotentialKeyCount);
+  nsresult GetImpl(const char* aKey, int& aRet)
+  {
+    nsCString key(aKey);
+    nsCString* value;
+    nsresult rv = NS_ERROR_FAILURE;
+    if (mParams.Get(key, &value)) {
+      aRet = value->ToInteger(&rv);
+    } else {
+      aRet = 0.0;
+    }
+    return rv;
+  }
 
-    const char* mVendorSpecificKeyIsoMode;
-    const char* mVendorSpecificKeySupportedIsoModes;
-  };
+  nsresult GetImpl(const char* aKey, bool& aRet)
+  {
+    nsCString key(aKey);
+    nsCString* value;
+    if (!mParams.Get(key, &value)) {
+      aRet = false;
+      return NS_ERROR_FAILURE;
+    }
+    aRet = value->EqualsLiteral("true");
+    return NS_OK;
+  }
 
-  Parameters mParams;
+  const char* GetTextKey(uint32_t aKey);
+  const char* FindVendorSpecificKey(const char* aPotentialKeys[], size_t aPotentialKeyCount);
 
   // The *Impl() templates handle converting the parameter keys from
   // their enum values to string types, if necessary. These are the
@@ -159,41 +212,24 @@ protected:
   template<typename T> nsresult
   SetImpl(uint32_t aKey, const T& aValue)
   {
-    const char* key = mParams.GetTextKey(aKey);
+    const char* key = GetTextKey(aKey);
     NS_ENSURE_TRUE(key, NS_ERROR_NOT_IMPLEMENTED);
-
-    mParams.set(key, aValue);
-    return NS_OK;
+    return SetImpl(key, aValue);
   }
 
   template<typename T> nsresult
   GetImpl(uint32_t aKey, T& aValue)
   {
-    const char* key = mParams.GetTextKey(aKey);
+    const char* key = GetTextKey(aKey);
     NS_ENSURE_TRUE(key, NS_ERROR_NOT_IMPLEMENTED);
-
-    mParams.get(key, aValue);
-    return NS_OK;
-  }
-
-  template<class T> nsresult
-  SetImpl(const char* aKey, const T& aValue)
-  {
-    mParams.set(aKey, aValue);
-    return NS_OK;
-  }
-
-  template<class T> nsresult
-  GetImpl(const char* aKey, T& aValue)
-  {
-    mParams.get(aKey, aValue);
-    return NS_OK;
+    return GetImpl(key, aValue);
   }
 
   nsresult
   ClearImpl(const char* aKey)
   {
-    mParams.remove(aKey);
+    nsCString key(aKey);
+    mParams.Remove(key);
     return NS_OK;
   }
 

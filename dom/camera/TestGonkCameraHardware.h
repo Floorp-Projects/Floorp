@@ -26,6 +26,10 @@ namespace mozilla {
 
 class TestGonkCameraHardware : public android::GonkCameraHardware
 {
+#ifndef MOZ_WIDGET_GONK
+  NS_DECL_ISUPPORTS_INHERITED
+#endif
+
 public:
   virtual nsresult Init() MOZ_OVERRIDE;
   virtual int AutoFocus() MOZ_OVERRIDE;
@@ -40,8 +44,10 @@ public:
   virtual int StartRecording() MOZ_OVERRIDE;
   virtual int StopRecording() MOZ_OVERRIDE;
   virtual int StoreMetaDataInBuffers(bool aEnabled) MOZ_OVERRIDE;
+#ifdef MOZ_WIDGET_GONK
   virtual int PushParameters(const android::CameraParameters& aParams) MOZ_OVERRIDE;
   virtual void PullParameters(android::CameraParameters& aParams) MOZ_OVERRIDE;
+#endif
 
   TestGonkCameraHardware(mozilla::nsGonkCameraControl* aTarget,
                          uint32_t aCameraId,

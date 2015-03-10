@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_B2G_CAMERA']:
     MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS += [
@@ -36,12 +36,20 @@ if CONFIG['MOZ_B2G_CAMERA']:
         'GonkCameraHwMgr.cpp',
         'GonkCameraManager.cpp',
         'GonkCameraParameters.cpp',
-        'GonkCameraSource.cpp',
-        'GonkRecorder.cpp',
         'GonkRecorderProfiles.cpp',
         'TestGonkCameraControl.cpp',
         'TestGonkCameraHardware.cpp',
     ]
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        UNIFIED_SOURCES += [
+            'GonkCameraSource.cpp',
+            'GonkRecorder.cpp',
+        ]
+    else:
+        UNIFIED_SOURCES += [
+            'FallbackCameraPlatform.cpp',
+        ]
 
     EXTRA_COMPONENTS += [
         'CameraTestHardware.js',
