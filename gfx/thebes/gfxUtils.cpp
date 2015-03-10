@@ -14,6 +14,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Vector.h"
@@ -1037,6 +1038,11 @@ gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
     // GPU.
     RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(aSurface->GetSize(), aFormat);
+    if (!dt) {
+      gfxWarning() << "gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat failed in CreateOffscreenContentDrawTarget";
+      return nullptr;
+    }
+
     // Using DrawSurface() here rather than CopySurface() because CopySurface
     // is optimized for memcpy and therefore isn't good for format conversion.
     // Using OP_OVER since in our case it's equivalent to OP_SOURCE and

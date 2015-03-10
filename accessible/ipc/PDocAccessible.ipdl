@@ -96,6 +96,31 @@ child:
 
   prio(high) sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
     returns(int32_t aRetVal);
+
+  prio(high) sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded, nsString aData, int32_t aStartOffset, int32_t aEndOffset);
+  prio(high) sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
+                                       int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  prio(high) sync AddToSelection(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset)
+    returns(bool aSucceeded);
+  prio(high) sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
+    returns(bool aSucceeded);
+
+  ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                    uint32_t aScrollType);
+  ScrollSubstringToPoint(uint64_t aID,
+                         int32_t aStartOffset,
+                         int32_t aEndOffset,
+                         uint32_t aCoordinateType,
+                         int32_t aX, int32_t aY);
+
+  prio(high) sync ReplaceText(uint64_t aID, nsString aText);
+  prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition);
+  prio(high) sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  prio(high) sync PasteText(uint64_t aID, int32_t aPosition);
 };
 
 }

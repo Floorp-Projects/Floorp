@@ -685,9 +685,6 @@ nsMultiplexInputStreamConstructor(nsISupports* aOuter,
   }
 
   nsMultiplexInputStream* inst = new nsMultiplexInputStream();
-  if (!inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(inst);
   nsresult rv = inst->QueryInterface(aIID, aResult);

@@ -46,8 +46,8 @@ AppleVTDecoder::AppleVTDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
   MOZ_COUNT_CTOR(AppleVTDecoder);
   // TODO: Verify aConfig.mime_type.
   LOG("Creating AppleVTDecoder for %dx%d h.264 video",
-      mConfig.image_width,
-      mConfig.image_height
+      mDisplayWidth,
+      mDisplayHeight
      );
 }
 
@@ -262,7 +262,7 @@ AppleVTDecoder::InitializeSession()
 
 #ifdef LOG_MEDIA_SHA1
   SHA1Sum avc_hash;
-  avc_hash.update(mConfig.extra_data->Elements(), mConfig.extra_data->Length());
+  avc_hash.update(mExtraData->Elements(),mExtraData->Length());
   uint8_t digest_buf[SHA1Sum::kHashSize];
   avc_hash.finish(digest_buf);
   nsAutoCString avc_digest;
@@ -270,7 +270,7 @@ AppleVTDecoder::InitializeSession()
     avc_digest.AppendPrintf("%02x", digest_buf[i]);
   }
   LOG("AVCDecoderConfig %ld bytes sha1 %s",
-      mConfig.extra_data->Length(), avc_digest.get());
+      mExtraData->Length(), avc_digest.get());
 #endif // LOG_MEDIA_SHA1
 
   AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
@@ -329,8 +329,8 @@ AppleVTDecoder::CreateDecoderExtensions()
 {
   AutoCFRelease<CFDataRef> avc_data =
     CFDataCreate(kCFAllocatorDefault,
-                 mConfig.extra_data->Elements(),
-                 mConfig.extra_data->Length());
+                 mExtraData->Elements(),
+                 mExtraData->Length());
 
   const void* atomsKey[] = { CFSTR("avcC") };
   const void* atomsValue[] = { avc_data };

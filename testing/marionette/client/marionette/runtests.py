@@ -15,6 +15,8 @@ class MarionetteTestRunner(BaseMarionetteTestRunner):
         self.test_handlers = [MarionetteTestCase, MarionetteJSTestCase]
 
 def startTestRunner(runner_class, options, tests):
+    if options.pydebugger:
+        MarionetteTestCase.pydebugger = __import__(options.pydebugger)
 
     runner = runner_class(**vars(options))
     runner.run_tests(tests)

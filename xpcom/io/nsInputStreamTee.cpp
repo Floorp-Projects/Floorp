@@ -347,10 +347,6 @@ NS_NewInputStreamTeeAsync(nsIInputStream** aResult,
   nsresult rv;
 
   nsCOMPtr<nsIInputStreamTee> tee = new nsInputStreamTee();
-  if (!tee) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   rv = tee->SetSource(aSource);
   if (NS_FAILED(rv)) {
     return rv;

@@ -45,6 +45,7 @@
 #include "pixelflinger/format.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -704,6 +705,9 @@ nsWindow::StartRemoteDrawing()
     mFramebufferTarget = Factory::CreateDrawTargetForData(
          BackendType::CAIRO, (uint8_t*)vaddr,
          IntSize(width, height), mFramebuffer->stride * bytepp, format);
+    if (!mFramebufferTarget) {
+        MOZ_CRASH("nsWindow::StartRemoteDrawing failed in CreateDrawTargetForData");
+    }
     if (!mBackBuffer ||
         mBackBuffer->GetSize() != mFramebufferTarget->GetSize() ||
         mBackBuffer->GetFormat() != mFramebufferTarget->GetFormat()) {

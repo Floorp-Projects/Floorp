@@ -407,5 +407,182 @@ DocAccessibleChild::RecvOffsetAtPoint(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvSelectionBoundsAt(const uint64_t& aID,
+                                          const int32_t& aSelectionNum,
+                                          bool* aSucceeded,
+                                          nsString* aData,
+                                          int32_t* aStartOffset,
+                                          int32_t* aEndOffset)
+{
+  *aSucceeded = false;
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded =
+      acc->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+    if (*aSucceeded) {
+      acc->TextSubstring(*aStartOffset, *aEndOffset, *aData);
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSetSelectionBoundsAt(const uint64_t& aID,
+                                             const int32_t& aSelectionNum,
+                                             const int32_t& aStartOffset,
+                                             const int32_t& aEndOffset,
+                                             bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded =
+      acc->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAddToSelection(const uint64_t& aID,
+                                       const int32_t& aStartOffset,
+                                       const int32_t& aEndOffset,
+                                       bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded = acc->AddToSelection(aStartOffset, aEndOffset);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRemoveFromSelection(const uint64_t& aID,
+                                            const int32_t& aSelectionNum,
+                                            bool* aSucceeded)
+{
+  *aSucceeded = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aSucceeded = acc->RemoveFromSelection(aSelectionNum);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvScrollSubstringTo(const uint64_t& aID,
+                                          const int32_t& aStartOffset,
+                                          const int32_t& aEndOffset,
+                                          const uint32_t& aScrollType)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvScrollSubstringToPoint(const uint64_t& aID,
+                                               const int32_t& aStartOffset,
+                                               const int32_t& aEndOffset,
+                                               const uint32_t& aCoordinateType,
+                                               const int32_t& aX,
+                                               const int32_t& aY)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType,
+                                aX, aY);
+  }
+
+  return true;
+}
+
+
+bool
+DocAccessibleChild::RecvReplaceText(const uint64_t& aID,
+                                    const nsString& aText)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->ReplaceText(aText);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvInsertText(const uint64_t& aID,
+                                   const nsString& aText,
+                                   const int32_t& aPosition)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->InsertText(aText, aPosition);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCopyText(const uint64_t& aID,
+                                 const int32_t& aStartPos,
+                                 const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CopyText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvCutText(const uint64_t& aID,
+                                const int32_t& aStartPos,
+                                const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CutText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvDeleteText(const uint64_t& aID,
+                                   const int32_t& aStartPos,
+                                   const int32_t& aEndPos)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->DeleteText(aStartPos, aEndPos);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvPasteText(const uint64_t& aID,
+                                  const int32_t& aPosition)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->PasteText(aPosition);
+  }
+
+  return true;
+}
+
 }
 }

@@ -390,6 +390,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
                                                                    IntSize(paintRect.right - paintRect.left,
                                                                    paintRect.bottom - paintRect.top));
+          if (!dt) {
+            gfxWarning() << "nsWindow::OnPaint failed in CreateDrawTargetForSurface";
+            return false;
+          }
+
           // don't need to double buffer with anything but GDI
           BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
@@ -627,6 +632,10 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                        dataSurface->GetSize(),
                                        map.mStride,
                                        SurfaceFormat::B8G8R8A8);
+    if (!dt) {
+      gfxWarning() << "nsWindowGfx::CreatesIcon failed in CreateDrawTargetForData";
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     dt->DrawSurface(surface,
                     Rect(0, 0, iconSize.width, iconSize.height),
                     Rect(0, 0, frameSize.width, frameSize.height),

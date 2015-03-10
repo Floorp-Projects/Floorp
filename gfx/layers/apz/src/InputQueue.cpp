@@ -201,9 +201,6 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
                                         CancelableBlockState* aBlock)
 {
   bool waitForMainThread = !aBlock->IsTargetConfirmed();
-  if (!gfxPrefs::LayoutEventRegionsEnabled()) {
-    waitForMainThread |= aTarget->NeedToWaitForContent();
-  }
   if (aBlock->AsTouchBlock() && aBlock->AsTouchBlock()->IsDuringFastMotion()) {
     aBlock->SetConfirmedTargetApzc(aTarget);
     waitForMainThread = false;
