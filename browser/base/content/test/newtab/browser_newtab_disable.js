@@ -31,4 +31,6 @@ function runTests() {
   NewTabUtils.allPages.enabled = true;
   ok(!gridNode.hasAttribute("page-disabled"), "page is not disabled");
   ok(!oldGridNode.hasAttribute("page-disabled"), "old page is not disabled");
+
+  yield restore();
 }
