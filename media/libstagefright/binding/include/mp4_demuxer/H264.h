@@ -31,6 +31,16 @@ struct SPSData
   bool interlaced;
 
   /*
+   Displayed size.
+   display_width and display_height are adjusted according to the display
+   sample aspect ratio.
+   */
+  uint32_t display_width;
+  uint32_t display_height;
+
+  float sample_ratio;
+
+  /*
     H264 decoding parameters according to ITU-T H.264 (T-REC-H.264-201402-I/en)
    http://www.itu.int/rec/T-REC-H.264-201402-I/en
    */
@@ -222,120 +232,86 @@ struct SPSData
   uint32_t sar_width;
   uint32_t sar_height;
 
+  /*
+    video_signal_type_present_flag equal to 1 specifies that video_format,
+    video_full_range_flag and colour_description_present_flag are present.
+    video_signal_type_present_flag equal to 0, specify that video_format,
+    video_full_range_flag and colour_description_present_flag are not present.
+   */
+  bool video_signal_type_present_flag;
+
+  /*
+    overscan_info_present_flag equal to1 specifies that the
+    overscan_appropriate_flag is present. When overscan_info_present_flag is
+    equal to 0 or is not present, the preferred display method for the video
+    signal is unspecified (Unspecified).
+   */
   bool overscan_info_present_flag;
+  /*
+    overscan_appropriate_flag equal to 1 indicates that the cropped decoded
+    pictures output are suitable for display using overscan.
+    overscan_appropriate_flag equal to 0 indicates that the cropped decoded
+    pictures output contain visually important information in the entire region
+    out to the edges of the cropping rectangle of the picture
+   */
   bool overscan_appropriate_flag;
 
+  /*
+    video_format indicates the representation of the pictures as specified in
+    Table E-2, before being coded in accordance with this
+    Recommendation | International Standard. When the video_format syntax element
+    is not present, video_format value shall be inferred to be equal to 5.
+    (Unspecified video format)
+   */
   uint8_t video_format;
+
+  /*
+    video_full_range_flag indicates the black level and range of the luma and
+    chroma signals as derived from E′Y, E′PB, and E′PR or E′R, E′G, and E′B
+    real-valued component signals.
+    When the video_full_range_flag syntax element is not present, the value of
+    video_full_range_flag shall be inferred to be equal to 0.
+   */
   bool video_full_range_flag;
+
+  /*
+    colour_description_present_flag equal to1 specifies that colour_primaries,
+    transfer_characteristics and matrix_coefficients are present.
+    colour_description_present_flag equal to 0 specifies that colour_primaries,
+    transfer_characteristics and matrix_coefficients are not present.
+   */
   bool colour_description_present_flag;
+
+  /*
+    colour_primaries indicates the chromaticity coordinates of the source
+    primaries as specified in Table E-3 in terms of the CIE 1931 definition of
+    x and y as specified by ISO 11664-1.
+    When the colour_primaries syntax element is not present, the value of
+    colour_primaries shall be inferred to be equal to 2 (the chromaticity is
+    unspecified or is determined by the application).
+   */
   uint8_t colour_primaries;
+
+  /*
+    transfer_characteristics indicates the opto-electronic transfer
+    characteristic of the source picture as specified in Table E-4 as a function
+    of a linear optical intensity input Lc with a nominal real-valued range of 0
+    to 1.
+    When the transfer_characteristics syntax element is not present, the value
+    of transfer_characteristics shall be inferred to be equal to 2
+    (the transfer characteristics are unspecified or are determined by the
+    application).
+   */
   uint8_t transfer_characteristics;
+
   uint8_t matrix_coefficients;
   bool chroma_loc_info_present_flag;
   uint32_t chroma_sample_loc_type_top_field;
   uint32_t chroma_sample_loc_type_bottom_field;
+  bool timing_info_present_flag;
   uint32_t num_units_in_tick;
   uint32_t time_scale;
   bool fixed_frame_rate_flag;
-
-  // Bitstream restriction parameters
-
-  /*
-    pic_struct_present_flag equal to 1 specifies that picture timing SEI
-    messages (clause D.2.2) are present that include the pic_struct syntax
-    element. pic_struct_present_flag equal to 0 specifies that the pic_struct
-    syntax element is not present in picture timing SEI messages.
-    When pic_struct_present_flag is not present, its value shall be inferred to
-    be equal to 0.
-   */
-  bool pic_struct_present_flag;
-
-  /*
-    bitstream_restriction_flag equal to 1, specifies that the following coded
-    video sequence bitstream restriction parameters are present.
-    bitstream_restriction_flag equal to 0, specifies that the following coded
-    video sequence bitstream restriction parameters are not present.
-   */
-  bool bitstream_restriction_flag;
-
-  /*
-    motion_vectors_over_pic_boundaries_flag equal to 0 indicates that no
-    sample outside the picture boundaries and no sample at a fractional
-    sample position for which the sample value is derived using one or more
-    samples outside the picture boundaries is used for inter prediction of any
-    sample. motion_vectors_over_pic_boundaries_flag equal to 1 indicates that
-    one or more samples outside picture boundaries may be used in inter
-    prediction. When the motion_vectors_over_pic_boundaries_flag syntax element
-    is not present, motion_vectors_over_pic_boundaries_flag value shall be
-    inferred to be equal to 1.
-   */
-  bool motion_vectors_over_pic_boundaries_flag;
-
-  /*
-    max_bytes_per_pic_denom indicates a number of bytes not exceeded by the
-    sum of the sizes of the VCL NAL units associated with any coded picture in
-    the coded video sequence.
-   */
-  uint32_t max_bytes_per_pic_denom;
-
-  /*
-    max_bits_per_mb_denom indicates an upper bound for the number of coded bits
-    of macroblock_layer( ) data for any macroblock in any picture of the coded
-    video sequence. The value of max_bits_per_mb_denom shall be in the range
-    of 0 to 16, inclusive.
-   */
-  uint32_t max_bits_per_mb_denom;
-
-  /*
-    log2_max_mv_length_horizontal and log2_max_mv_length_vertical indicate the
-    maximum absolute value of a decoded horizontal and vertical motion vector
-    component, respectively, in 1⁄4 luma sample units, for all pictures in the
-    coded video sequence. A value of n asserts that no value of a motion vector
-    component shall exceed the range from −2n to 2n − 1, inclusive, in units
-    of 1⁄4 luma sample displacement. The value of log2_max_mv_length_horizontal
-    shall be in the range of 0 to 16, inclusive. The value of
-    log2_max_mv_length_vertical shall be in the range of 0 to 16, inclusive.
-    When log2_max_mv_length_horizontal is not present, the values of
-    log2_max_mv_length_horizontal and log2_max_mv_length_vertical shall be
-    inferred to be equal to 16.
-   */
-   uint32_t log2_max_mv_length_horizontal;
-   uint32_t log2_max_mv_length_vertical;
-
-  /*
-    max_num_reorder_frames indicates an upper bound for the number of frames
-    buffers, in the decoded picture buffer (DPB), that are required for storing
-    frames, complementary field pairs, and non-paired fields before output.
-    It is a requirement of bitstream conformance that the maximum number of
-    frames, complementary field pairs, or non-paired fields that precede any
-    frame, complementary field pair, or non-paired field in the coded video
-    sequence in decoding order and follow it in output order shall be less than
-    or equal to max_num_reorder_frames. The value of max_num_reorder_frames
-    shall be in the range of 0 to max_dec_frame_buffering, inclusive.
-    When the max_num_reorder_frames syntax element is not present, the value
-    of max_num_reorder_frames value shall be inferred as follows:
-     – If profile_idc is equal to 44, 86, 100, 110, 122, or 244 and
-       constraint_set3_flag is equal to 1, the value of max_num_reorder_frames
-       shall be inferred to be equal to 0.
-     – Otherwise (profile_idc is not equal to 44, 86, 100, 110, 122, or 244 or
-       constraint_set3_flag is equal to 0), the value of max_num_reorder_frames
-       shall be inferred to be equal to MaxDpbFrames.
-   */
-   uint32_t max_num_reorder_frames;
-
-  /*
-    max_dec_frame_buffering specifies the required size of the HRD decoded
-    picture buffer (DPB) in units of frame buffers. It is a requirement of
-    bitstream conformance that the coded video sequence shall not require a
-    decoded picture buffer with size of more than
-    Max( 1, max_dec_frame_buffering ) frame buffers to enable the output of
-    decoded pictures at the output times specified by dpb_output_delay of the
-    picture timing SEI messages. The value of max_dec_frame_buffering shall be
-    greater than or equal to max_num_ref_frames. An upper bound for the value
-    of max_dec_frame_buffering is specified by the level limits in
-    clauses A.3.1, A.3.2, G.10.2.1, and H.10.2.
-   */
-   uint32_t max_dec_frame_buffering;
 
   SPSData();
 };
