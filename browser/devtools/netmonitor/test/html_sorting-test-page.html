@@ -13,35 +13,6 @@
 
   <body>
     <p>Sorting test</p>
-
-    <script type="text/javascript">
-      function get(aAddress, aIndex, aCallback) {
-        var xhr = new XMLHttpRequest();
-        // Use a random parameter to defeat caching.
-        xhr.open("GET" + aIndex, aAddress + "?index=" + aIndex + "&" + Math.random(), true);
-
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            aCallback();
-          }
-        };
-        xhr.send(null);
-      }
-
-      function performRequests() {
-        get("sjs_sorting-test-server.sjs", 1, function() {
-          get("sjs_sorting-test-server.sjs", 5, function() {
-            get("sjs_sorting-test-server.sjs", 2, function() {
-              get("sjs_sorting-test-server.sjs", 4, function() {
-                get("sjs_sorting-test-server.sjs", 3, function() {
-                  // Done.
-                });
-              });
-            });
-          });
-        });
-      }
-    </script>
   </body>
 
 </html>

@@ -15,6 +15,7 @@ Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils", "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
 this.ReaderMode = {
@@ -199,57 +200,41 @@ this.ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  _readerParse: function (uri, doc) {
-    return new Promise((resolve, reject) => {
-      let numTags = doc.getElementsByTagName("*").length;
-      if (numTags > this.MAX_ELEMS_TO_PARSE) {
-        this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
-        resolve(null);
-        return;
-      }
+  _readerParse: Task.async(function* (uri, doc) {
+    let numTags = doc.getElementsByTagName("*").length;
+    if (numTags > this.MAX_ELEMS_TO_PARSE) {
+      this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
+      return null;
+    }
 
-      let worker = new ChromeWorker("chrome://global/content/reader/readerWorker.js");
-      worker.onmessage = evt => {
-        let article = evt.data;
+    let uriParam = {
+      spec: uri.spec,
+      host: uri.host,
+      prePath: uri.prePath,
+      scheme: uri.scheme,
+      pathBase: Services.io.newURI(".", null, uri).spec
+    };
 
-        if (!article) {
-          this.log("Worker did not return an article");
-          resolve(null);
-          return;
-        }
+    let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
+                     createInstance(Ci.nsIDOMSerializer);
+    let serializedDoc = yield Promise.resolve(serializer.serializeToString(doc));
 
-        // Readability returns a URI object, but we only care about the URL.
-        article.url = article.uri.spec;
-        delete article.uri;
+    let article = yield ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
 
-        let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
-        article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
-                                                        .convertToPlainText(article.title, flags, 0);
-        resolve(article);
-      };
+    if (!article) {
+      this.log("Worker did not return an article");
+      return null;
+    }
 
-      worker.onerror = evt => {
-        reject("Error in worker: " + evt.message);
-      };
+    // Readability returns a URI object, but we only care about the URL.
+    article.url = article.uri.spec;
+    delete article.uri;
 
-      try {
-        let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
-                         createInstance(Ci.nsIDOMSerializer);
-        worker.postMessage({
-          uri: {
-            spec: uri.spec,
-            host: uri.host,
-            prePath: uri.prePath,
-            scheme: uri.scheme,
-            pathBase: Services.io.newURI(".", null, uri).spec
-          },
-          doc: serializer.serializeToString(doc)
-        });
-      } catch (e) {
-        reject("Reader: could not build Readability arguments: " + e);
-      }
-    });
-  },
+    let flags = Ci.nsIDocumentEncoder.OutputSelectionOnly | Ci.nsIDocumentEncoder.OutputAbsoluteLinks;
+    article.title = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils)
+                                                    .convertToPlainText(article.title, flags, 0);
+    return article;
+  }),
 
   get _cryptoHash() {
     delete this._cryptoHash;

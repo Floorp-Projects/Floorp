@@ -84,6 +84,25 @@ function installListener(next, aManifest) {
 }
 
 var tests = {
+  testHTTPInstallFailure: function(next) {
+    let activationURL = "http://example.com/browser/browser/base/content/test/social/social_activate.html"
+    addTab(activationURL, function(tab) {
+      let doc = tab.linkedBrowser.contentDocument;
+      let installFrom = doc.nodePrincipal.origin;
+      is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
+      let data = {
+        origin: doc.nodePrincipal.origin,
+        url: doc.location.href,
+        manifest: manifest,
+        window: window
+      }
+      Social.installProvider(data, function(addonManifest) {
+        ok(!addonManifest, "unable to install provider over http");
+        gBrowser.removeTab(tab);
+        next();
+      });
+    });
+  },
   testAddonEnableToggle: function(next) {
     let expectEvent;
     let prefname = getManifestPrefname(manifest);

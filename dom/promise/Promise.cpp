@@ -77,7 +77,20 @@ protected:
       return NS_OK;
     }
 
-    mCallback->Call(cx, value);
+    JS::Rooted<JSObject*> asyncStack(cx, mPromise->mAllocationStack);
+    JS::Rooted<JSString*> asyncCause(cx, JS_NewStringCopyZ(cx, "Promise"));
+    if (!asyncCause) {
+      JS_ClearPendingException(cx);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    {
+      Maybe<JS::AutoSetAsyncStackForNewCalls> sas;
+      if (asyncStack) {
+        sas.emplace(cx, asyncStack, asyncCause);
+      }
+      mCallback->Call(cx, value);
+    }
 
     return NS_OK;
   }

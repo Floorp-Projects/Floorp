@@ -141,9 +141,6 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
 
     public void updateClientsItemView(final boolean isExpanded, final Context context, final View view, final RemoteClient client) {
         final GroupViewHolder holder = (GroupViewHolder) view.getTag();
-        if (!showGroupIndicator) {
-            view.setBackgroundColor(0);
-        }
 
         // UI elements whose state depends on isExpanded, roughly from left to
         // right: device type icon; client name text color; expanded state
@@ -155,11 +152,11 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         if (isExpanded && !client.tabs.isEmpty()) {
             deviceTypeResId = "desktop".equals(client.deviceType) ? R.drawable.sync_desktop : R.drawable.sync_mobile;
             textColorResId = R.color.placeholder_active_grey;
-            deviceExpandedResId = R.drawable.home_group_expanded;
+            deviceExpandedResId = showGroupIndicator ? R.drawable.home_group_expanded : R.drawable.home_group_collapsed;
         } else {
             deviceTypeResId = "desktop".equals(client.deviceType) ? R.drawable.sync_desktop_inactive : R.drawable.sync_mobile_inactive;
             textColorResId = R.color.home_text_color_disabled;
-            deviceExpandedResId = R.drawable.home_group_collapsed;
+            deviceExpandedResId = showGroupIndicator ? R.drawable.home_group_collapsed : 0;
         }
 
         // Now update the UI.
@@ -180,7 +177,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
             holder.deviceTypeView.setImageResource(deviceTypeResId);
         }
 
-        if (showGroupIndicator && holder.deviceExpandedView != null) {
+        if (holder.deviceExpandedView != null) {
             // If there are no tabs to display, don't show an indicator at all.
             holder.deviceExpandedView.setImageResource(client.tabs.isEmpty() ? 0 : deviceExpandedResId);
         }

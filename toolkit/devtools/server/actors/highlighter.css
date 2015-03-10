@@ -57,7 +57,7 @@
 :-moz-native-anonymous .box-model-guide-right,
 :-moz-native-anonymous .box-model-guide-bottom,
 :-moz-native-anonymous .box-model-guide-left {
-  stroke: #08C;
+  stroke: #08c;
   stroke-dasharray: 5 3;
   shape-rendering: crispEdges;
 }
@@ -166,7 +166,7 @@
 :-moz-native-anonymous .css-transform-transformed,
 :-moz-native-anonymous .css-transform-untransformed,
 :-moz-native-anonymous .css-transform-line {
-  stroke: #08C;
+  stroke: #08c;
   stroke-dasharray: 5 3;
   stroke-width: 2;
 }
@@ -177,4 +177,38 @@
   position: absolute;
   background: #80d4ff;
   opacity: 0.8;
+}
+
+/* Element geometry highlighter */
+
+:-moz-native-anonymous .geometry-editor-offset-parent {
+  stroke: #08c;
+  shape-rendering: crispEdges;
+  stroke-dasharray: 5 3;
+  fill: transparent;
+}
+
+:-moz-native-anonymous .geometry-editor-current-node {
+  stroke: #08c;
+  shape-rendering: crispEdges;
+  fill: #87ceeb;
+  opacity: 0.6;
+}
+
+:-moz-native-anonymous .geometry-editor-arrow {
+  stroke: #08c;
+  shape-rendering: crispEdges;
+}
+
+:-moz-native-anonymous .geometry-editor-label-bubble {
+  fill: hsl(214,13%,24%);
+  shape-rendering: crispEdges;
+}
+
+:-moz-native-anonymous .geometry-editor-label-text {
+  fill: hsl(216,33%,97%);
+  font: message-box;
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }
