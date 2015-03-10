@@ -67,18 +67,18 @@ fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemot
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-fuzzy-if(azureQuartz,1,3) skip-if(B2G) == invalidate-1a.html invalidate-1-ref.html
-fuzzy-if(azureQuartz,1,3) skip-if(B2G) == invalidate-1b.html invalidate-1-ref.html
+fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) == invalidate-1a.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) == invalidate-1b.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # test that border-radius is reduced for scrollbars
-skip-if(B2G) fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
-skip-if(B2G) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
+skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-skip-if(B2G) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
+skip-if(B2G||Mulet) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 
-skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,400) fails-if(Android&&AndroidVersion==15) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
+skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,400) fails-if(Android&&AndroidVersion==15) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == transforms-1.html transforms-1-ref.html
 
