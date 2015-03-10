@@ -383,6 +383,7 @@ Decode6Bit(string& aStr)
     } else {
       // Truncate '=' padding at the end of the aString.
       if (aStr[i] != '=') {
+        aStr.erase(i, string::npos);
         return false;
       }
       aStr[i] = '\0';
@@ -397,8 +398,8 @@ Decode6Bit(string& aStr)
 static bool
 DecodeBase64KeyOrId(string& aEncoded, vector<uint8_t>& aOutDecoded)
 {
-  if (aEncoded.size() != 22 || // Can't decode to 16 byte CENC key or keyId.
-      !Decode6Bit(aEncoded)) {
+  if (!Decode6Bit(aEncoded) ||
+      aEncoded.size() != 22) { // Can't decode to 16 byte CENC key or keyId.
     return false;
   }
 
