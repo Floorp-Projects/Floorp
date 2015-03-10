@@ -46,6 +46,7 @@ const KEY_PLUGIN_AUTOUPDATE  = "media.{0}.autoupdate";
 const KEY_PLUGIN_HIDDEN      = "media.{0}.hidden";
 
 const GMP_LICENSE_INFO       = "gmp_license_info";
+const GMP_LEARN_MORE         = "learn_more_label";
 
 const GMP_PLUGINS = [
   {
@@ -63,6 +64,11 @@ const GMP_PLUGINS = [
     id:              "gmp-eme-adobe",
     name:            "eme-adobe_name",
     description:     "eme-adobe_description",
+    // The following learnMoreURL is another hack to be able to support a SUMO page for this
+    // feature.
+    get learnMoreURL() {
+      return Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
+    },
     licenseURL:      "http://help.adobe.com/en_US/primetime/drm/HTML5_CDM_EULA/index.html",
     homepageURL:     "http://help.adobe.com/en_US/primetime/drm/index.html",
     optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
@@ -540,13 +546,19 @@ let GMPProvider = {
     return GMPPrefs.get(KEY_PROVIDER_ENABLED, false);
   },
 
-  generateFullDescription: function(aLicenseURL, aLicenseInfo) {
-    return "<xhtml:a href=\"" + aLicenseURL + "\" target=\"_blank\">" +
-           aLicenseInfo + "</xhtml:a>."
+  generateFullDescription: function(aPlugin) {
+    let rv = [];
+    for (let [urlProp, labelId] of [["learnMoreURL", GMP_LEARN_MORE],
+                                    ["licenseURL", GMP_LICENSE_INFO]]) {
+      if (aPlugin[urlProp]) {
+        let label = pluginsBundle.GetStringFromName(labelId);
+        rv.push(`<xhtml:a href="${aPlugin[urlProp]}" target="_blank">${label}</xhtml:a>.`);
+      }
+    }
+    return rv.length ? rv.join("<xhtml:br /><xhtml:br />") : undefined;
   },
 
   buildPluginList: function() {
-    let licenseInfo = pluginsBundle.GetStringFromName(GMP_LICENSE_INFO);
 
     let map = new Map();
     GMP_PLUGINS.forEach(aPlugin => {
@@ -561,10 +573,7 @@ let GMPProvider = {
           wrapper: null,
           isEME: aPlugin.isEME
         };
-        if (aPlugin.licenseURL) {
-          plugin.fullDescription =
-            this.generateFullDescription(aPlugin.licenseURL, licenseInfo);
-        }
+        plugin.fullDescription = this.generateFullDescription(aPlugin);
         plugin.wrapper = new GMPWrapper(plugin);
         map.set(plugin.id, plugin);
       }
