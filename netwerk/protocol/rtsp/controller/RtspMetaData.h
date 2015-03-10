@@ -22,9 +22,11 @@ class RtspMetaData MOZ_FINAL : public nsIStreamingProtocolMetaData
   NS_DECL_NSISTREAMINGPROTOCOLMETADATA
 
   RtspMetaData();
-  ~RtspMetaData();
 
   nsresult DeserializeRtspMetaData(const InfallibleTArray<RtspMetadataParam>& metaArray);
+
+ protected:
+  ~RtspMetaData();
 
  private:
   uint32_t  mFrameType;
