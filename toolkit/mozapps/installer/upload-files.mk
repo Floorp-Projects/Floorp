@@ -386,7 +386,7 @@ UPLOAD_EXTRA_FILES += \
 INNER_MAKE_GECKOLIBS_AAR= \
   $(PYTHON) -m mozbuild.action.package_geckolibs_aar \
     --verbose \
-    --revision $(geckolibs-revision) \
+    --revision $(geckoaar-revision) \
     --topsrcdir '$(topsrcdir)' \
     --distdir '$(_ABS_DIST)' \
     '$(_ABS_DIST)'
