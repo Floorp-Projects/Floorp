@@ -3787,6 +3787,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     const nsStylePosition* position = styleContext->StylePosition();
     const nsStyleDisplay* maybeAbsoluteContainingBlockDisplay = display;
     const nsStylePosition* maybeAbsoluteContainingBlockPosition = position;
+    nsIFrame* maybeAbsoluteContainingBlockStyleFrame = primaryFrame;
     nsIFrame* maybeAbsoluteContainingBlock = newFrame;
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
@@ -3814,6 +3815,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         maybeAbsoluteContainingBlockDisplay = blockDisplay;
         maybeAbsoluteContainingBlockPosition = blockContext->StylePosition();
         maybeAbsoluteContainingBlock = blockFrame;
+        maybeAbsoluteContainingBlockStyleFrame = blockFrame;
       }
 
       // Our kids should go into the blockFrame
@@ -3845,17 +3847,18 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       if (bits & FCDATA_FORCE_NULL_ABSPOS_CONTAINER) {
         aState.PushAbsoluteContainingBlock(nullptr, nullptr, absoluteSaveState);
       } else if (!(bits & FCDATA_SKIP_ABSPOS_PUSH)) {
-        nsIFrame* cb = maybeAbsoluteContainingBlock;
-        cb->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-        // This check is identical to nsStyleDisplay::IsPositioned except without
-        // the assertion that the style display and frame match. When constructing
-        // scroll frames we intentionally use the style display for the outer, but
-        // make the inner the containing block.
+        maybeAbsoluteContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+        // This check is identical to nsStyleDisplay::IsAbsPosContainingBlock
+        // except without the assertion that the style display and frame match.
+        // When constructing scroll frames we intentionally use the style
+        // display for the outer, but make the inner the containing block.
         if ((maybeAbsoluteContainingBlockDisplay->IsAbsolutelyPositionedStyle() ||
              maybeAbsoluteContainingBlockDisplay->IsRelativelyPositionedStyle() ||
-             maybeAbsoluteContainingBlockPosition->IsFixedPosContainingBlock(cb)) &&
-            !cb->IsSVGText()) {
-          nsContainerFrame* cf = static_cast<nsContainerFrame*>(cb);
+             maybeAbsoluteContainingBlockPosition->IsFixedPosContainingBlock(
+                 maybeAbsoluteContainingBlockStyleFrame)) &&
+            !maybeAbsoluteContainingBlockStyleFrame->IsSVGText()) {
+          nsContainerFrame* cf = static_cast<nsContainerFrame*>(
+              maybeAbsoluteContainingBlock);
           aState.PushAbsoluteContainingBlock(cf, cf, absoluteSaveState);
         }
       }
