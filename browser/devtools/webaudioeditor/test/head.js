@@ -20,6 +20,7 @@ let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUID
 
 let { WebAudioFront } = devtools.require("devtools/server/actors/webaudio");
 let TargetFactory = devtools.TargetFactory;
+let audioNodes = devtools.require("devtools/server/actors/utils/audionodes.json");
 let mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
@@ -128,6 +129,15 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
   executeSoon(() => aTarget.activeTab.navigateTo(aUrl));
   return once(aTarget, aWaitForTargetEvent);
+}
+
+/**
+ * Call manually in tests that use frame script utils after initializing
+ * the shader editor. Call after init but before navigating to different pages.
+ */
+function loadFrameScripts () {
+  mm = gBrowser.selectedBrowser.messageManager;
+  mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
 }
 
 /**
@@ -483,80 +493,51 @@ function evalInDebuggee (script) {
 }
 
 /**
- * List of audio node properties to test against expectations of the AudioNode actor
+ * Takes an AudioNode type and returns it's properties (from audionode.json)
+ * as keys and their default values as keys
  */
+function nodeDefaultValues(nodeName) {
+  let fn = NODE_CONSTRUCTORS[nodeName];
 
-const NODE_DEFAULT_VALUES = {
-  "AudioDestinationNode": {},
-  "MediaElementAudioSourceNode": {},
-  "MediaStreamAudioSourceNode": {},
-  "MediaStreamAudioDestinationNode": {
-    "stream": "MediaStream"
-  },
-  "AudioBufferSourceNode": {
-    "playbackRate": 1,
-    "loop": false,
-    "loopStart": 0,
-    "loopEnd": 0,
-    "buffer": null
-  },
-  "ScriptProcessorNode": {
-    "bufferSize": 4096
-  },
-  "AnalyserNode": {
-    "fftSize": 2048,
-    "minDecibels": -100,
-    "maxDecibels": -30,
-    "smoothingTimeConstant": 0.8,
-    "frequencyBinCount": 1024
-  },
-  "GainNode": {
-    "gain": 1
-  },
-  "DelayNode": {
-    "delayTime": 0
-  },
-  "BiquadFilterNode": {
-    "type": "lowpass",
-    "frequency": 350,
-    "Q": 1,
-    "detune": 0,
-    "gain": 0
-  },
-  "WaveShaperNode": {
-    "curve": null,
-    "oversample": "none"
-  },
-  "PannerNode": {
-    "panningModel": "equalpower",
-    "distanceModel": "inverse",
-    "refDistance": 1,
-    "maxDistance": 10000,
-    "rolloffFactor": 1,
-    "coneInnerAngle": 360,
-    "coneOuterAngle": 360,
-    "coneOuterGain": 0
-  },
-  "ConvolverNode": {
-    "buffer": null,
-    "normalize": true
-  },
-  "ChannelSplitterNode": {},
-  "ChannelMergerNode": {},
-  "DynamicsCompressorNode": {
-    "threshold": -24,
-    "knee": 30,
-    "ratio": 12,
-    "reduction": 0,
-    "attack": 0.003000000026077032,
-    "release": 0.25
-  },
-  "OscillatorNode": {
-    "type": "sine",
-    "frequency": 440,
-    "detune": 0
-  },
-  "StereoPannerNode": {
-    "pan": 0
-  }
+  if(typeof fn === 'undefined') return {};
+
+  let init = nodeName === "AudioDestinationNode" ? "destination" : `create${fn}()`;
+
+  let definition = JSON.stringify(audioNodes[nodeName].properties);
+
+  let evalNode = evalInDebuggee(`
+    let ins = (new AudioContext()).${init};
+    let props = ${definition};
+    let answer = {};
+
+    for(let k in props) {
+      if (props[k].param) {
+        answer[k] = ins[k].defaultValue;
+      } else if (typeof ins[k] === "object" && ins[k] !== null) {
+        answer[k] = ins[k].toString().slice(8, -1);
+      } else {
+        answer[k] = ins[k];
+      }
+    }
+    answer;`);
+
+  return evalNode;
+}
+
+const NODE_CONSTRUCTORS = {
+  "MediaStreamAudioDestinationNode": "MediaStreamDestination",
+  "AudioBufferSourceNode": "BufferSource",
+  "ScriptProcessorNode": "ScriptProcessor",
+  "AnalyserNode": "Analyser",
+  "GainNode": "Gain",
+  "DelayNode": "Delay",
+  "BiquadFilterNode": "BiquadFilter",
+  "WaveShaperNode": "WaveShaper",
+  "PannerNode": "Panner",
+  "ConvolverNode": "Convolver",
+  "ChannelSplitterNode": "ChannelSplitter",
+  "ChannelMergerNode": "ChannelMerger",
+  "DynamicsCompressorNode": "DynamicsCompressor",
+  "OscillatorNode": "Oscillator",
+  "StereoPannerNode": "StereoPanner"
 };

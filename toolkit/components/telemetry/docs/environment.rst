@@ -132,8 +132,8 @@ Structure::
             type: <string>, // "extension", "service", ...
             foreignInstall: <bool>,
             hasBinaryComponents: <bool>
-            installDay: <number>, // days since UNIX epoch
-            updateDay: <number>, // days since UNIX epoch
+            installDay: <number>, // days since UNIX epoch, 0 on failure
+            updateDay: <number>, // days since UNIX epoch, 0 on failure
           },
           ...
         },
@@ -148,8 +148,8 @@ Structure::
           scope: <integer>,
           foreignInstall: <bool>,
           hasBinaryComponents: <bool>
-          installDay: <number>, // days since UNIX epoch
-          updateDay: <number>, // days since UNIX epoch
+          installDay: <number>, // days since UNIX epoch, 0 on failure
+          updateDay: <number>, // days since UNIX epoch, 0 on failure
         },
         activePlugins: [
           {
@@ -160,7 +160,7 @@ Structure::
             disabled: <bool>,
             clicktoplay: <bool>,
             mimeTypes: [<string>, ...],
-            updateDay: <number>, // days since UNIX epoch
+            updateDay: <number>, // days since UNIX epoch, 0 on failure
           },
           ...
         ],

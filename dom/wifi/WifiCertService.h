@@ -8,13 +8,15 @@
 
 #include "nsIWifiCertService.h"
 #include "nsCOMPtr.h"
+#include "nsNSSShutDown.h"
 #include "nsThread.h"
 #include "mozilla/dom/WifiOptionsBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class WifiCertService MOZ_FINAL : public nsIWifiCertService
+class WifiCertService MOZ_FINAL : public nsIWifiCertService,
+                                  public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -27,6 +29,7 @@ public:
 private:
   WifiCertService();
   ~WifiCertService();
+  virtual void virtualDestroyNSSReference() {};
   nsCOMPtr<nsIWifiEventListener> mListener;
 };
 

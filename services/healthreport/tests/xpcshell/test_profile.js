@@ -15,6 +15,7 @@ do_get_profile();
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/services/healthreport/profile.jsm");
+Cu.import("resource://gre/modules/ProfileAge.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 
@@ -64,7 +65,7 @@ add_test(function use_os_file() {
 });
 
 function getAccessor() {
-  let acc = new ProfileTimesAccessor();
+  let acc = new ProfileAge();
   print("Profile is " + acc.profilePath);
   return acc;
 }

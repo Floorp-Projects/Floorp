@@ -37,8 +37,17 @@ add_task(function* () {
   is(infobox.hidden, false, "Information box visible.");
 
   // Connection
-  checkLabel("#security-protocol-version-value", "TLSv1.2");
-  checkLabel("#security-ciphersuite-value", "TLS_RSA_WITH_AES_128_CBC_SHA");
+
+  // The protocol will be TLS but the exact version depends on which protocol
+  // the test server example.com supports.
+  let protocol = $("#security-protocol-version-value").value;
+  ok(protocol.startsWith("TLS"), "The protocol " + protocol + " seems valid.");
+
+  // The cipher suite used by the test server example.com might change at any
+  // moment but all of them should start with "TLS_".
+  // http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+  let suite = $("#security-ciphersuite-value").value;
+  ok(suite.startsWith("TLS_"), "The suite " + suite + " seems valid.");
 
   // Host
   checkLabel("#security-info-host-header", "Host example.com:");

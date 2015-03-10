@@ -23,7 +23,7 @@ fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
 == padding-1.html padding-1-ref.html
 == padding-2.html padding-2-ref.html
-random-if(B2G) == padding-3.html padding-3-ref.html
+random-if(B2G||Mulet) == padding-3.html padding-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == overcontain-1.html overcontain-1-ref.html
 == initial-1.html initial-1-ref.html
 == initial-scroll-1.html initial-scroll-1-ref.html
@@ -48,7 +48,7 @@ fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,102,440) fuzzy-if(Android,8,1533) skip-if(B2G&&browserIsRemote) fuzzy-if(azureQuartz,1,1) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,102,320) fuzzy-if(Android,8,630) fuzzy-if(OSX>=1008,1,11) skip-if(B2G&&browserIsRemote) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,102,440) fuzzy-if(Android,8,1533) skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(azureQuartz,1,1) == block-in-inline-2.html block-in-inline-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(winWidget&&!layersGPUAccelerated,102,320) fuzzy-if(Android,8,630) fuzzy-if(OSX>=1008,1,11) skip-if((B2G&&browserIsRemote)||Mulet) == block-in-inline-3.html block-in-inline-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,102,111) == inner-table-1.html inner-table-1-ref.html
