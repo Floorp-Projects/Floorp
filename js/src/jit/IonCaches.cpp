@@ -1464,11 +1464,11 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext *cx, HandleScript outerScript
 }
 
 static void
-PushObjectOpResult(MacroAssembler &masm, uint32_t value = ObjectOpResult::Uninitialized)
+PushObjectOpResult(MacroAssembler &masm)
 {
-    static_assert(sizeof(ObjectOpResult) == sizeof(int32_t),
+    static_assert(sizeof(ObjectOpResult) == sizeof(uintptr_t),
                   "ObjectOpResult size must match size reserved by masm.Push() here");
-    masm.Push(Imm32(value));
+    masm.Push(ImmWord(uintptr_t(ObjectOpResult::Uninitialized)));
 }
 
 static bool
@@ -1515,7 +1515,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.movePtr(StackPointer, argProxyReg);
 
     // Unused space, to keep the same stack layout as Proxy::set frames.
-    PushObjectOpResult(masm, 0);
+    PushObjectOpResult(masm);
 
     masm.loadJSContext(argJSContextReg);
 
