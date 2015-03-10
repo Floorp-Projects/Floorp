@@ -476,6 +476,10 @@ xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
 }
 
+xul|radio {
+  -moz-margin-start: 0;
+}
+
 xul|*.radio-check {
   -moz-appearance: none;
   width: 23px;
