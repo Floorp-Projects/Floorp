@@ -148,7 +148,8 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
       nsIDocumentEncoder::OutputAbsoluteLinks |
       nsIDocumentEncoder::SkipInvisibleContent |
       nsIDocumentEncoder::OutputDropInvisibleBreak |
-      (aFlags & nsIDocumentEncoder::OutputNoScriptContent);
+      (aFlags & (nsIDocumentEncoder::OutputNoScriptContent |
+                 nsIDocumentEncoder::OutputRubyAnnotation));
 
     mimeType.AssignLiteral(kTextMime);
     rv = docEncoder->Init(domDoc, mimeType, flags);
@@ -273,11 +274,13 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
 
 nsresult
 nsCopySupport::HTMLCopy(nsISelection* aSel, nsIDocument* aDoc,
-                        int16_t aClipboardID)
+                        int16_t aClipboardID, bool aWithRubyAnnotation)
 {
-  return SelectionCopyHelper(aSel, aDoc, true, aClipboardID,
-                             nsIDocumentEncoder::SkipInvisibleContent,
-                             nullptr);
+  uint32_t flags = nsIDocumentEncoder::SkipInvisibleContent;
+  if (aWithRubyAnnotation) {
+    flags |= nsIDocumentEncoder::OutputRubyAnnotation;
+  }
+  return SelectionCopyHelper(aSel, aDoc, true, aClipboardID, flags, nullptr);
 }
 
 nsresult
@@ -691,7 +694,7 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
       return false;
     }
     // call the copy code
-    rv = HTMLCopy(sel, doc, aClipboardType);
+    rv = HTMLCopy(sel, doc, aClipboardType, false);
     if (NS_FAILED(rv)) {
       return false;
     }
