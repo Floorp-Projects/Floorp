@@ -49,9 +49,13 @@ ChromeProcessController::InitializeRoot()
   if (!presShell) {
     return;
   }
+
   MOZ_ASSERT(presShell->GetDocument());
   nsIContent* content = presShell->GetDocument()->GetDocumentElement();
-  MOZ_ASSERT(content);
+  if (!content) {
+    return;
+  }
+
   uint32_t presShellId;
   FrameMetrics::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
