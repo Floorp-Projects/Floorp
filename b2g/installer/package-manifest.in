@@ -867,12 +867,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/crashreporter-override.ini
 #endif
 
-; [Extensions]
-;
-#ifdef MOZ_ENABLE_GNOMEVFS
-bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
-#endif
-
 [b2g]
 #ifndef MOZ_WIDGET_GONK
 #ifdef XP_WIN32
