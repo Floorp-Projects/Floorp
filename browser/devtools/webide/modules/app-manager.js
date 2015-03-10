@@ -327,15 +327,17 @@ let AppManager = exports.AppManager = {
     return this._selectedProject;
   },
 
-  removeSelectedProject: function() {
+  removeSelectedProject: Task.async(function*() {
     let location = this.selectedProject.location;
     AppManager.selectedProject = null;
     // If the user cancels the removeProject operation, don't remove the project
     if (AppManager.selectedProject != null) {
       return;
     }
-    return AppProjects.remove(location);
-  },
+
+    yield AppProjects.remove(location);
+    AppManager.update("project-removed");
+  }),
 
   packageProject: Task.async(function*(project) {
     if (!project) {
