@@ -32,7 +32,9 @@ protected:
 
 public:
   RtspOmxReader(AbstractMediaDecoder* aDecoder)
-    : MediaOmxReader(aDecoder) {
+    : MediaOmxReader(aDecoder)
+    , mEnsureActiveFromSeek(false)
+  {
     MOZ_COUNT_CTOR(RtspOmxReader);
     NS_ASSERTION(mDecoder, "RtspOmxReader mDecoder is null.");
     NS_ASSERTION(mDecoder->GetResource(),
@@ -73,6 +75,8 @@ private:
   // holds the MediaDecoderStateMachine and RtspMediaResource.
   // And MediaDecoderStateMachine holds this RtspOmxReader.
   RtspMediaResource* mRtspResource;
+
+  bool mEnsureActiveFromSeek;
 };
 
 } // namespace mozilla

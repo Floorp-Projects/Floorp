@@ -88,7 +88,6 @@ public:
   }
 
   static BluetoothHfpManager* Get();
-  virtual ~BluetoothHfpManager();
   static void InitHfpInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitHfpInterface(BluetoothProfileResultHandler* aRes);
 
@@ -137,6 +136,9 @@ public:
   void UnknownAtNotification(const nsACString& aAtString,
                              const nsAString& aBdAddress) MOZ_OVERRIDE;
   void KeyPressedNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+
+protected:
+  virtual ~BluetoothHfpManager();
 
 private:
   class GetVolumeTask;

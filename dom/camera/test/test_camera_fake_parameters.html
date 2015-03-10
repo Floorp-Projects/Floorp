@@ -14,472 +14,381 @@
 
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var initialConfig = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
-  }
-};
+var suite = new CameraTestSuite();
 
-var cameraObj = null;
+suite.test('fake-zoom', function() {
+  suite.hw.params['zoom-ratios'] = '100,150,200,300,400';
+  suite.hw.params['max-zoom'] = '4';
 
-// Shorthand functions
-function onError(e) {
-  ok(false, "Error " + e);
-}
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
 
-function end() {
-  CameraTest.end();
-}
-function next() {
-  if (cameraObj) {
-    cameraObj.release().then(
-      function success() {
-        CameraTest.next();
-      },
-      onError
-    );
-    cameraObj = null;
-  } else {
-    CameraTest.next();
-  }
-}
-function run() {
-  CameraTest.run();
-}
+    ok(cap.zoomRatios.length == 5, "zoom ratios length = " + cap.zoomRatios.length);
 
-// The array of tests. Because camera capabilities don't change over the life
-// of a CameraControl object, they are only read once when the CameraControl is
-// created; so we have to call the 'prep' function first to set the fake
-// capability pref, before we call getCamera() and call 'test' to run the test.
-var tests = [
-  {
-    key: "fake-zoom",
-    prep: function setupFakeZoom(test) {
-      test.setFakeParameters("zoom-ratios=100,150,200,300,400;max-zoom=4", function() {
-        run();
-      });
-    },
-    test: function testFakeZoom(cam, cap) {
-      ok(cap.zoomRatios.length == 5, "zoom ratios length = " + cap.zoomRatios.length);
+    // test individual zoom ratios
+    cap.zoomRatios.forEach(function(zoom, index) {
+      cam.zoom = zoom;
+      ok(cam.zoom === zoom,
+        "zoom[" + index + "] = " + zoom + "x, cam.zoom = " + cam.zoom + "x");
+    });
 
-      // test individual zoom ratios
-      cap.zoomRatios.forEach(function(zoom, index) {
-        cam.zoom = zoom;
-        ok(cam.zoom === zoom,
-          "zoom[" + index + "] = " + zoom + "x, cam.zoom = " + cam.zoom + "x");
-      });
+    // test below-lower-bound zoom ratio
+    var zoom = cap.zoomRatios[0] - 0.1;
+    cam.zoom = zoom;
+    ok(cam.zoom === cap.zoomRatios[0],
+      zoom + "x zoom clamps to minimum: " +
+      cap.zoomRatios[0] + "x, cam.zoom = " + cam.zoom + "x");
 
-      // test below-lower-bound zoom ratio
-      var zoom = cap.zoomRatios[0] - 0.1;
+    // test above-upper-bound zoom ratio
+    zoom = cap.zoomRatios.slice(-1)[0] + 1.0;
+    cam.zoom = zoom;
+    ok(cam.zoom === cap.zoomRatios.slice(-1)[0],
+      zoom + "x zoom clamps to maximum: " + cap.zoomRatios.slice(-1)[0] +
+      "x, cam.zoom = " + cam.zoom + "x");
+
+    // test snapping to supported zoom ratio
+    if (cap.zoomRatios.length > 1) {
+      zoom = (cap.zoomRatios[0] + cap.zoomRatios[1]) / 2;
       cam.zoom = zoom;
       ok(cam.zoom === cap.zoomRatios[0],
-        zoom + "x zoom clamps to minimum: " +
-        cap.zoomRatios[0] + "x, cam.zoom = " + cam.zoom + "x");
-
-      // test above-upper-bound zoom ratio
-      zoom = cap.zoomRatios.slice(-1)[0] + 1.0;
-      cam.zoom = zoom;
-      ok(cam.zoom === cap.zoomRatios.slice(-1)[0],
-        zoom + "x zoom clamps to maximum: " + cap.zoomRatios.slice(-1)[0] +
+        zoom + "x zoom rounded down to: " + cap.zoomRatios[0] +
         "x, cam.zoom = " + cam.zoom + "x");
+    }
+  }
 
-      // test snapping to supported zoom ratio
-      if (cap.zoomRatios.length > 1) {
-        zoom = (cap.zoomRatios[0] + cap.zoomRatios[1]) / 2;
-        cam.zoom = zoom;
-        ok(cam.zoom === cap.zoomRatios[0],
-          zoom + "x zoom rounded down to: " + cap.zoomRatios[0] +
-          "x, cam.zoom = " + cam.zoom + "x");
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+
+suite.test('fake-zoom-out-of-order', function() {
+  // We expect the camera library to give us zoom ratios in order; if
+  // it doesn't we ignore the list and just return 1x support.
+  suite.hw.params['zoom-ratios'] = '100,150,200,400,300';
+  suite.hw.params['max-zoom'] = '4';
+
+  function resolve(p) {
+    var cap = suite.camera.capabilities;
+    ok(cap.zoomRatios.length == 1, "zoom ratios length = " + cap.zoomRatios.length);
+    ok(cap.zoomRatios[0] == 1.0, "only supported zoom = " + cap.zoomRatios[0] + "x");
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-high-memory-platform', function() {
+  suite.hw.params['scene-mode-values'] = 'none,snow,beach,hdr,nothdr';
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.sceneModes.length == 5, "scene modes length = " + cap.zoomRatios.length);
+
+    // make sure expected values are present and can be set
+    [ "none", "snow", "beach", "hdr", "nothdr" ].forEach(function(mode) {
+      ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+      cam.sceneMode = mode;
+      ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-low-memory-platform', function() {
+  suite.hw.params['scene-mode-values'] = 'none,hdr,snow,beach,hdr,nothdr';
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.sceneModes.length == 4, "scene modes length = " + cap.zoomRatios.length);
+
+    // make sure expected values are present and can be set
+    [ "none", "snow", "beach", "nothdr" ].forEach(function(mode) {
+      ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
+      cam.sceneMode = mode;
+      ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
+    });
+
+    // make sure unsupported values have been removed, and can't be set
+    var sceneMode = cam.sceneMode;
+    [ "hdr" ].forEach(function(mode) {
+      ok(cap.sceneModes.indexOf(mode) == -1, "Scene mode '" + mode + "' is not present");
+      try {
+        cam.sceneMode = mode;
+      } catch(e) {
       }
+      ok(cam.sceneMode != mode, "Scene mode '" + cam.sceneMode + "' is still set, '"
+        + mode + "' rejected");
+    });
+    ok(cam.sceneMode == sceneMode, "Scene mode '" + cam.sceneMode + "' is still set");
+  }
 
-      next();
-    }
-  },
-  {
-    key: "fake-zoom-out-of-order",
-    prep: function setupFakeZoomOutOfOrder(test) {
-      // We expect the camera library to give us zoom ratios in order; if
-      // it doesn't we ignore the list and just return 1x support.
-      test.setFakeParameters("zoom-ratios=100,150,200,400,300;max-zoom=4", function () {
-        run();
-      });
-    },
-    test: function testFakeZoomOutOfOrder(cam, cap) {
-      ok(cap.zoomRatios.length == 1, "zoom ratios length = " + cap.zoomRatios.length);
-      ok(cap.zoomRatios[0] == 1.0, "only supported zoom = " + cap.zoomRatios[0] + "x");
-      next();
-    }
-  },
-  {
-    key: "fake-high-memory-platform",
-    prep: function setupFakeHighMemoryPlatform(test) {
-      test.setFakeParameters("scene-mode-values=none,snow,beach,hdr,nothdr", function () {
-        run();
-      });
-    },
-    test: function testFakeHighMemoryPlatform(cam, cap) {
-      ok(cap.sceneModes.length == 5, "scene modes length = " + cap.zoomRatios.length);
+  return suite.setLowMemoryPlatform()
+    .then(suite.getCamera)
+    .then(resolve, suite.rejectGetCamera);
+});
 
-      // make sure expected values are present and can be set
-      [ "none", "snow", "beach", "hdr", "nothdr" ].forEach(function(mode) {
-        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
-        cam.sceneMode = mode;
-        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
-      });
+suite.test('fake-iso', function() {
+  suite.hw.params['iso'] = 'auto';
+  suite.hw.params['iso-values'] = 'auto,ISO_HJR,ISO100,foo,ISObar,ISO150moz,ISO200,400,ISO800,1600';
 
-      next();
-    }
-  },
-  {
-    key: "fake-low-memory-platform",
-    prep: function setupFakeLowMemoryPlatform(test) {
-      test.setFakeLowMemoryPlatform(function() {
-        test.setFakeParameters("scene-mode-values=none,hdr,snow,beach,hdr,nothdr", function () {
-          run();
-        });
-      });
-    },
-    test: function testFakeLowMemoryPlatform(cam, cap) {
-      ok(cap.sceneModes.length == 4, "scene modes length = " + cap.zoomRatios.length);
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
 
-      // make sure expected values are present and can be set
-      [ "none", "snow", "beach", "nothdr" ].forEach(function(mode) {
-        ok(cap.sceneModes.indexOf(mode) != -1, "Scene mode '" + mode + "' is present");
-        cam.sceneMode = mode;
-        ok(cam.sceneMode == mode, "Scene mode '" + cam.sceneMode + "' is set");
-      });
+    // make sure we're not leaking any unexpected values formats
+    [ "ISO_HJR", "_HJR", "HJR", "ISO100", "ISO200", "ISO800" ].forEach(function(iso) {
+      ok(cap.isoModes.indexOf(iso) == -1, "ISO mode '" + iso + "' does not appear");
+    });
 
-      // make sure unsupported values have been removed, and can't be set
-      var sceneMode = cam.sceneMode;
-      [ "hdr" ].forEach(function(mode) {
-        ok(cap.sceneModes.indexOf(mode) == -1, "Scene mode '" + mode + "' is not present");
-        try {
-          cam.sceneMode = mode;
-        } catch(e) {
+    // make sure any weird values are dropped entirely
+    [ "foo", "ISObar", "bar", "ISO150moz", "150moz", "150" ].forEach(function(iso) {
+      ok(cap.isoModes.indexOf(iso) == -1, "Unknown ISO mode '" + iso + "' is ignored");
+    });
+
+    // make sure expected values are present
+    [ "auto", "hjr", "100", "200", "400", "800", "1600" ].forEach(function(iso) {
+      ok(cap.isoModes.indexOf(iso) != -1, "ISO mode '" + iso + "' is present");
+    });
+
+    // test setters/getters for individual ISO modes
+    cap.isoModes.forEach(function(iso, index) {
+      cam.iso = iso;
+      ok(cam.iso === iso,
+        "ISO[" + index + "] = " + iso + ", cam.iso = " + cam.iso);
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-metering-areas', function() {
+  suite.hw.params['max-num-metering-areas'] = '1';
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+
+    ok(cap.maxMeteringAreas == 1, "maxMeteringAreas = " + cap.maxMeteringAreas);
+    cam.setMeteringAreas([
+      {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
+    ]);
+    areas = cam.getMeteringAreas();
+    ok(areas.length == 1, "areas length = " + areas.length);
+    ok(areas[0].top == -500, "area[0] top = " + areas[0].top);
+    ok(areas[0].bottom == 500, "area[0] bottom = " + areas[0].bottom);
+    ok(areas[0].left == -500, "area[0] left = " + areas[0].left);
+    ok(areas[0].right == 500, "area[0] right = " + areas[0].right);
+    ok(areas[0].weight == 100, "area[0] weight = " + areas[0].weight);
+    cam.setMeteringAreas([
+      {top: -501, bottom: 502, left: -503, right: 504, weight: 105},
+      {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
+    ]);
+    areas = cam.getMeteringAreas();
+    ok(areas.length == 1, "areas length = " + areas.length);
+    ok(areas[0].top == -501, "area[0] top = " + areas[0].top);
+    ok(areas[0].bottom == 502, "area[0] bottom = " + areas[0].bottom);
+    ok(areas[0].left == -503, "area[0] left = " + areas[0].left);
+    ok(areas[0].right == 504, "area[0] right = " + areas[0].right);
+    ok(areas[0].weight == 105, "area[0] weight = " + areas[0].weight);
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-focus-areas', function() {
+  suite.hw.params['max-num-focus-areas'] = '1';
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+
+    ok(cap.maxFocusAreas == 1, "maxFocusAreas = " + cap.maxFocusAreas);
+    cam.setFocusAreas([
+      {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
+    ]);
+    areas = cam.getFocusAreas();
+    ok(areas.length == 1, "areas length = " + areas.length);
+    ok(areas[0].top == -500, "area[0] top = " + areas[0].top);
+    ok(areas[0].bottom == 500, "area[0] bottom = " + areas[0].bottom);
+    ok(areas[0].left == -500, "area[0] left = " + areas[0].left);
+    ok(areas[0].right == 500, "area[0] right = " + areas[0].right);
+    ok(areas[0].weight == 100, "area[0] weight = " + areas[0].weight);
+    cam.setFocusAreas([
+      {top: -501, bottom: 502, left: -503, right: 504, weight: 105},
+      {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
+    ]);
+    areas = cam.getFocusAreas();
+    ok(areas.length == 1, "areas length = " + areas.length);
+    ok(areas[0].top == -501, "area[0] top = " + areas[0].top);
+    ok(areas[0].bottom == 502, "area[0] bottom = " + areas[0].bottom);
+    ok(areas[0].left == -503, "area[0] left = " + areas[0].left);
+    ok(areas[0].right == 504, "area[0] right = " + areas[0].right);
+    ok(areas[0].weight == 105, "area[0] weight = " + areas[0].weight);
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-exposure-compensation', function() {
+  suite.hw.params['max-num-focus-areas'] = '1';
+  suite.hw.params['exposure-compensation'] = '-1';
+  suite.hw.params['max-exposure-compensation'] = '6';
+  suite.hw.params['min-exposure-compensation'] = '-6';
+  suite.hw.params['exposure-compensation-step'] = '0.5'
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+
+    ok(cap.exposureCompensationStep == 0.5,
+       "exposureCompensationStep = " + cap.exposureCompensationStep);
+    ok(cap.minExposureCompensation == -3.0,
+       "minExposureCompensation = " + cap.minExposureCompensation);
+    ok(cap.maxExposureCompensation == 3.0,
+       "maxExposureCompensation = " + cap.maxExposureCompensation);
+    ok(cam.exposureCompensation == -0.5,
+       "exposureCompensation = " + cam.exposureCompensation);
+
+    // Check normal values
+    cam.exposureCompensation = 0.0;
+    ok(cam.exposureCompensation == 0.0,
+       "exposureCompensation = " + cam.exposureCompensation);
+    cam.exposureCompensation = cap.minExposureCompensation;
+    ok(cam.exposureCompensation == cap.minExposureCompensation,
+       "exposureCompensation(min) = " + cam.exposureCompensation);
+    cam.exposureCompensation = cap.maxExposureCompensation;
+    ok(cam.exposureCompensation == cap.maxExposureCompensation,
+       "exposureCompensation(max) = " + cam.exposureCompensation);
+
+    // Rounding
+    cam.exposureCompensation = 1.24;
+    ok(cam.exposureCompensation == 1.0,
+       "exposureCompensation(1.24) = " + cam.exposureCompensation);
+    cam.exposureCompensation = 1.25;
+    ok(cam.exposureCompensation == 1.5,
+       "exposureCompensation(1.25) = " + cam.exposureCompensation);
+    cam.exposureCompensation = -1.24;
+    ok(cam.exposureCompensation == -1.0,
+       "exposureCompensation(-1.24) = " + cam.exposureCompensation);
+    cam.exposureCompensation = -1.25;
+    ok(cam.exposureCompensation == -1.5,
+       "exposureCompensation(-1.25) = " + cam.exposureCompensation);
+    // Check out-of-bounds values
+    cam.exposureCompensation = cap.minExposureCompensation - 1.0;
+    ok(cam.exposureCompensation == cap.minExposureCompensation,
+       "exposureCompensation(min - 1.0) = " + cam.exposureCompensation);
+    cam.exposureCompensation = cap.maxExposureCompensation + 1.0;
+    ok(cam.exposureCompensation == cap.maxExposureCompensation,
+       "exposureCompensation(max + 1.0) = " + cam.exposureCompensation);
+
+    // Check extreme values
+    cam.exposureCompensation = -1 * Math.pow(2, 32);
+    ok(cam.exposureCompensation == cap.minExposureCompensation,
+       "exposureCompensation(-2^32) = " + cam.exposureCompensation);
+    cam.exposureCompensation = Math.pow(2, 32);
+    ok(cam.exposureCompensation == cap.maxExposureCompensation,
+       "exposureCompensation(2^32) = " + cam.exposureCompensation);
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('bug-1054803', function() {
+  // The important part of this test is that 3264 * 1836 = 5,992,704 = 2448 * 2448,
+  // so we need to make sure that the size-matching algorithm picks the right size.
+  suite.hw.params['picture-size-values'] = '3264x1836,2448x2448,1836x3264';
+
+  function verify(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+
+    var expSizes = [ { height: 3264, width: 1836 },
+                     { height: 1836, width: 3264 },
+                     { height: 2448, width: 2448 } ];
+
+    // validate the capability attribute
+    ok(cap.pictureSizes.length == expSizes.length, "pictureSizes.length = " + cap.pictureSizes.length);
+    var found = 0;
+    expSizes.forEach(function(size) {
+      found = 0;
+      cap.pictureSizes.forEach(function(capSize) {
+        if (capSize.height == size.height && capSize.width == size.width) {
+          ++found;
         }
-        ok(cam.sceneMode != mode, "Scene mode '" + cam.sceneMode + "' is still set, '"
-          + mode + "' rejected");
       });
-      ok(cam.sceneMode == sceneMode, "Scene mode '" + cam.sceneMode + "' is still set");
+      ok(found == 1, "found size " + size.toSource() + " in pictureSizes");
+    });
 
-      next();
-    }
-  },
-  {
-    key: "fake-iso",
-    prep: function setupFakeIso(test) {
-      // we should recognize 'auto', 'hjr', and numeric modes; anything else
-      // from the driver is ignored, which this test also verifies.
-      test.setFakeParameters(
-        "iso=auto;iso-values=auto,ISO_HJR,ISO100,foo,ISObar,ISO150moz,ISO200,400,ISO800,1600",
-        function () {
-        run();
-      });
-    },
-    test: function testFakeIso(cam, cap) {
-      ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
-
-      // make sure we're not leaking any unexpected values formats
-      [ "ISO_HJR", "_HJR", "HJR", "ISO100", "ISO200", "ISO800" ].forEach(function(iso) {
-        ok(cap.isoModes.indexOf(iso) == -1, "ISO mode '" + iso + "' does not appear");
-      });
-
-      // make sure any weird values are dropped entirely
-      [ "foo", "ISObar", "bar", "ISO150moz", "150moz", "150" ].forEach(function(iso) {
-        ok(cap.isoModes.indexOf(iso) == -1, "Unknown ISO mode '" + iso + "' is ignored");
-      });
-
-      // make sure expected values are present
-      [ "auto", "hjr", "100", "200", "400", "800", "1600" ].forEach(function(iso) {
-        ok(cap.isoModes.indexOf(iso) != -1, "ISO mode '" + iso + "' is present");
-      });
-
-      // test setters/getters for individual ISO modes
-      cap.isoModes.forEach(function(iso, index) {
-        cam.iso = iso;
-        ok(cam.iso === iso,
-          "ISO[" + index + "] = " + iso + ", cam.iso = " + cam.iso);
-      });
-
-      next();
-    }
-  },
-  {
-    key: "fake-metering-areas",
-    prep: function setupFakeMeteringAreas(test) {
-      test.setFakeParameters("max-num-metering-areas=1", function () {
-        run();
-      });
-    },
-    test: function testFakeMeteringAreas(cam, cap) {
-      ok(cap.maxMeteringAreas == 1, "maxMeteringAreas = " + cap.maxMeteringAreas);
-      cam.setMeteringAreas([
-        {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
-      ]);
-      areas = cam.getMeteringAreas();
-      ok(areas.length == 1, "areas length = " + areas.length);
-      ok(areas[0].top == -500, "area[0] top = " + areas[0].top);
-      ok(areas[0].bottom == 500, "area[0] bottom = " + areas[0].bottom);
-      ok(areas[0].left == -500, "area[0] left = " + areas[0].left);
-      ok(areas[0].right == 500, "area[0] right = " + areas[0].right);
-      ok(areas[0].weight == 100, "area[0] weight = " + areas[0].weight);
-      cam.setMeteringAreas([
-        {top: -501, bottom: 502, left: -503, right: 504, weight: 105},
-        {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
-      ]);
-      areas = cam.getMeteringAreas();
-      ok(areas.length == 1, "areas length = " + areas.length);
-      ok(areas[0].top == -501, "area[0] top = " + areas[0].top);
-      ok(areas[0].bottom == 502, "area[0] bottom = " + areas[0].bottom);
-      ok(areas[0].left == -503, "area[0] left = " + areas[0].left);
-      ok(areas[0].right == 504, "area[0] right = " + areas[0].right);
-      ok(areas[0].weight == 105, "area[0] weight = " + areas[0].weight);
-
-      next();
-    },
-  },
-  {
-    key: "fake-focus-areas",
-    prep: function setupFakeFocusAreas(test) {
-      test.setFakeParameters("max-num-focus-areas=1", function () {
-        run();
-      });
-    },
-    test: function testFakeFocusAreas(cam, cap) {
-      ok(cap.maxFocusAreas == 1, "maxFocusAreas = " + cap.maxFocusAreas);
-      cam.setFocusAreas([
-        {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
-      ]);
-      areas = cam.getFocusAreas();
-      ok(areas.length == 1, "areas length = " + areas.length);
-      ok(areas[0].top == -500, "area[0] top = " + areas[0].top);
-      ok(areas[0].bottom == 500, "area[0] bottom = " + areas[0].bottom);
-      ok(areas[0].left == -500, "area[0] left = " + areas[0].left);
-      ok(areas[0].right == 500, "area[0] right = " + areas[0].right);
-      ok(areas[0].weight == 100, "area[0] weight = " + areas[0].weight);
-      cam.setFocusAreas([
-        {top: -501, bottom: 502, left: -503, right: 504, weight: 105},
-        {top: -500, bottom: 500, left: -500, right: 500, weight: 100}
-      ]);
-      areas = cam.getFocusAreas();
-      ok(areas.length == 1, "areas length = " + areas.length);
-      ok(areas[0].top == -501, "area[0] top = " + areas[0].top);
-      ok(areas[0].bottom == 502, "area[0] bottom = " + areas[0].bottom);
-      ok(areas[0].left == -503, "area[0] left = " + areas[0].left);
-      ok(areas[0].right == 504, "area[0] right = " + areas[0].right);
-      ok(areas[0].weight == 105, "area[0] weight = " + areas[0].weight);
-
-      next();
-    },
-  },
-  {
-    key: "fake-exposure-compensation",
-    prep: function setupFakeExposureCompensation(test) {
-      test.setFakeParameters("exposure-compensation=-1;max-exposure-compensation=6;min-exposure-compensation=-6;exposure-compensation-step=0.5", function () {
-        run();
-      });
-    },
-    test: function testFakeFocusAreas(cam, cap) {
-      ok(cap.exposureCompensationStep == 0.5,
-         "exposureCompensationStep = " + cap.exposureCompensationStep);
-      ok(cap.minExposureCompensation == -3.0,
-         "minExposureCompensation = " + cap.minExposureCompensation);
-      ok(cap.maxExposureCompensation == 3.0,
-         "maxExposureCompensation = " + cap.maxExposureCompensation);
-      ok(cam.exposureCompensation == -0.5,
-         "exposureCompensation = " + cam.exposureCompensation);
-
-      // Check normal values
-      cam.exposureCompensation = 0.0;
-      ok(cam.exposureCompensation == 0.0,
-         "exposureCompensation = " + cam.exposureCompensation);
-      cam.exposureCompensation = cap.minExposureCompensation;
-      ok(cam.exposureCompensation == cap.minExposureCompensation,
-         "exposureCompensation(min) = " + cam.exposureCompensation);
-      cam.exposureCompensation = cap.maxExposureCompensation;
-      ok(cam.exposureCompensation == cap.maxExposureCompensation,
-         "exposureCompensation(max) = " + cam.exposureCompensation);
-
-      // Rounding
-      cam.exposureCompensation = 1.24;
-      ok(cam.exposureCompensation == 1.0,
-         "exposureCompensation(1.24) = " + cam.exposureCompensation);
-      cam.exposureCompensation = 1.25;
-      ok(cam.exposureCompensation == 1.5,
-         "exposureCompensation(1.25) = " + cam.exposureCompensation);
-      cam.exposureCompensation = -1.24;
-      ok(cam.exposureCompensation == -1.0,
-         "exposureCompensation(-1.24) = " + cam.exposureCompensation);
-      cam.exposureCompensation = -1.25;
-      ok(cam.exposureCompensation == -1.5,
-         "exposureCompensation(-1.25) = " + cam.exposureCompensation);
-      // Check out-of-bounds values
-      cam.exposureCompensation = cap.minExposureCompensation - 1.0;
-      ok(cam.exposureCompensation == cap.minExposureCompensation,
-         "exposureCompensation(min - 1.0) = " + cam.exposureCompensation);
-      cam.exposureCompensation = cap.maxExposureCompensation + 1.0;
-      ok(cam.exposureCompensation == cap.maxExposureCompensation,
-         "exposureCompensation(max + 1.0) = " + cam.exposureCompensation);
-
-      // Check extreme values
-      cam.exposureCompensation = -1 * Math.pow(2, 32);
-      ok(cam.exposureCompensation == cap.minExposureCompensation,
-         "exposureCompensation(-2^32) = " + cam.exposureCompensation);
-      cam.exposureCompensation = Math.pow(2, 32);
-      ok(cam.exposureCompensation == cap.maxExposureCompensation,
-         "exposureCompensation(2^32) = " + cam.exposureCompensation);
-
-      next();
-    },
-  },
-  {
-    key: "bug-1054803",
-    prep: function setupFakePictureSizes(test) {
-      // The important part of this test is that 3264 * 1836 = 5,992,704 = 2448 * 2448,
-      // so we need to make sure that the size-matching algorithm picks the right size.
-      test.setFakeParameters("picture-size-values=3264x1836,2448x2448,1836x3264", function () {
-        run();
-      });
-    },
-    test: function testFakePictureSizes(cam, cap) {
-      // validate the capability attribute
-      ok(cap.pictureSizes.length == 3, "pictureSizes.length = " + cap.pictureSizes.length);
-      var found = 0;
-      [ { height: 3264, width: 1836 },
-        { height: 1836, width: 3264 },
-        { height: 2448, width: 2448 } ].forEach(function(size) {
-        found = 0;
-        cap.pictureSizes.forEach(function(capSize) {
-          if (capSize.height == size.height && capSize.width == size.width) {
-            ++found;
-          }
-        });
-        ok(found == 1, "found size " + size.toSource() + " in pictureSizes");
-      });
-
-      // test setters and getters
-      var sync = new Promise(function(resolve, reject) {
-        // Use setConfiguration() (which will fail on the profile)
-        // to signify that the CameraControl thread has run and our
-        // settings are applied. Yes--this is an ugly hack.
-        cam.setConfiguration({ mode: 'video',
-                               recorderProfile: 'weird-unsupported-profile'
-                             }).then(resolve, resolve);
-      });
-      var sizeGenerator = function() {
-        var sizes = [ { height: 3264, width: 1836 },
-                      { height: 1836, width: 3264 },
-                      { height: 2448, width: 2448 } ];
-        for (var i = 0; i < sizes.length; ++i) {
-          yield sizes[i];
-        }
-      }();
-
+    var sizeGenerator = Iterator(expSizes);
+    return new Promise(function(resolve, reject) {
       function nextSize() {
         try {
-          var size = sizeGenerator.next();
+          var size = sizeGenerator.next()[1];
+          var sync = suite.waitParameterPush();
           cam.setPictureSize(size);
           sync.then(function() {
             var got = cam.getPictureSize();
             ok(got.width == size.width && got.height == size.height,
               "Set size " + size.toSource() + ", got size " + got.toSource());
             nextSize();
-          }, onError);
+          }, reject);
         } catch(e) {
           if (e instanceof StopIteration) {
-            next();
+            resolve();
           } else {
-            throw e;
+            reject(e);
           }
         }
       }
 
       nextSize();
-    },
-  },
-  {
-    key: "bug-1052851",
-    prep: function setupFakeMetering(test) {
-      // We should reject duplicate values.
-      test.setFakeParameters(
-        "auto-exposure=frame-average;auto-exposure-values=spot,frame-average,center-weighted,spot,center-weighted",
-        function () {
-        run();
-      });
-    },
-    test: function testFakeMetering(cam, cap) {
-      ok(cap.meteringModes.length == 3, "Metering modes length = " + cap.meteringModes.length);
-
-      // make sure expected values are present
-      [ "spot", "frame-average", "center-weighted" ].forEach(function(mode) {
-        ok(cap.meteringModes.indexOf(mode) != -1, "Metering mode '" + mode + "' is present");
-      });
-
-      // test setters/getters for individual metering modes
-      cap.meteringModes.forEach(function(mode, index) {
-        cam.meteringMode = mode;
-        ok(cam.meteringMode === mode,
-          "Metering Mode[" + index + "] = " + mode + ", cam.meteringMode = " + cam.meteringMode);
-      });
-
-      next();
-    }
-  },
-];
-
-var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i) {
-    yield tests[i];
+    });
   }
-}();
 
-window.addEventListener('beforeunload', function() {
-  document.getElementById('viewfinder').mozSrcObject = null;
-  if (cameraObj) {
-    cameraObj.release();
-    cameraObj = null;
-  }
+  return suite.getCamera()
+    .then(verify, suite.rejectGetCamera);
 });
 
-CameraTest.begin("hardware", function(test) {
-  function onError(error) {
-    ok(false, "getCamera() failed with: " + error);
-    end();
+suite.test('bug-1052851', function() {
+  // We should reject duplicate values.
+  suite.hw.params['auto-exposure'] = 'frame-average';
+  suite.hw.params['auto-exposure-values'] = 'spot,frame-average,center-weighted,spot,center-weighted';
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+
+    ok(cap.meteringModes.length == 3, "Metering modes length = " + cap.meteringModes.length);
+
+    // make sure expected values are present
+    [ "spot", "frame-average", "center-weighted" ].forEach(function(mode) {
+      ok(cap.meteringModes.indexOf(mode) != -1, "Metering mode '" + mode + "' is present");
+    });
+
+    // test setters/getters for individual metering modes
+    cap.meteringModes.forEach(function(mode, index) {
+      cam.meteringMode = mode;
+      ok(cam.meteringMode === mode,
+        "Metering Mode[" + index + "] = " + mode + ", cam.meteringMode = " + cam.meteringMode);
+    });
   }
 
-  CameraTest.next = function() {
-    try {
-      var t = testGenerator.next();
-      info("test: " + t.key);
-      function onSuccess(d) {
-        cameraObj = d.camera;
-        document.getElementById('viewfinder').mozSrcObject = d.camera;
-        var onPreviewStateChange = function (evt) {
-          if (evt.newState === "started") {
-            cameraObj.removeEventListener('previewstatechange', onPreviewStateChange);
-            t.test(cameraObj, cameraObj.capabilities);
-          }
-        };
-        cameraObj.addEventListener('previewstatechange', onPreviewStateChange);
-      }
-      CameraTest.run = function() {
-        navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
-      };
-      t.prep(test);
-    } catch(e) {
-      if (e instanceof StopIteration) {
-        end();
-      } else {
-        throw e;
-      }
-    }
-  };
-  next();
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
 });
+
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

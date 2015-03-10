@@ -441,6 +441,8 @@ public:
     NS_DECL_NSITHREADPOOLLISTENER
 
     STSThreadPoolListener() {}
+
+protected:
     ~STSThreadPoolListener() {}
 };
 

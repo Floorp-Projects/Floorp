@@ -19,9 +19,11 @@
 #include "mozilla/dom/TypedArray.h"
 #include "jsfriendapi.h"
 #include "js/GCAPI.h"
-#include "nsPIDOMWindow.h"
+#include "nsISupports.h"
 
+class nsIGlobalObject;
 struct JSContext;
+struct JSStructuredCloneWriter;
 
 namespace mozilla {
 namespace dom {
@@ -36,15 +38,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozNDEFRecord)
 
 public:
+  MozNDEFRecord(nsISupports* aParent, TNF aTnf = TNF::Empty);
 
-  MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
-                const MozNDEFRecordOptions& aOptions);
-
-  ~MozNDEFRecord();
-
-  nsIDOMWindow* GetParentObject() const
+  nsISupports* GetParentObject() const
   {
-    return mWindow;
+    return mParent;
   }
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
@@ -54,33 +52,38 @@ public:
               const MozNDEFRecordOptions& aOptions,
               ErrorResult& aRv);
 
+  static already_AddRefed<MozNDEFRecord>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aURI,
+              ErrorResult& aRv);
+
   TNF Tnf() const
   {
     return mTnf;
   }
 
-  void GetType(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetType(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mType) {
       JS::ExposeObjectToActiveJS(mType);
     }
-    retval.set(mType);
+    aRetVal.set(mType);
   }
 
-  void GetId(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetId(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mId) {
       JS::ExposeObjectToActiveJS(mId);
     }
-    retval.set(mId);
+    aRetVal.set(mId);
   }
 
-  void GetPayload(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetPayload(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mPayload) {
       JS::ExposeObjectToActiveJS(mPayload);
     }
-    retval.set(mPayload);
+    aRetVal.set(mPayload);
   }
 
   uint32_t Size() const
@@ -88,14 +91,35 @@ public:
     return mSize;
   }
 
+  void GetAsURI(nsAString& aRetVal);
+
+  // Structured clone methods use these to clone MozNDEFRecord.
+  bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter) const;
+  bool ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
+
+protected:
+  ~MozNDEFRecord();
+
 private:
   MozNDEFRecord() = delete;
-  nsRefPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<nsISupports> mParent;
   void HoldData();
   void DropData();
+  void InitType(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aType);
+  void InitType(JSContext* aCx, const RTD rtd);
+  void InitType(JSContext* aCx, JSObject& aType, uint32_t aLen);
+  void InitId(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aId);
+  void InitId(JSContext* aCx, JSObject& aId, uint32_t aLen);
+  void InitPayload(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aPayload);
+  void InitPayload(JSContext* aCx, const nsAString& aUri);
+  void InitPayload(JSContext* aCx, JSObject& aPayload, uint32_t aLen);
+  void IncSize(uint32_t aCount);
+  void IncSizeForPayload(uint32_t aLen);
+  bool WriteUint8Array(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj, uint32_t aLen) const;
 
   static bool
   ValidateTNF(const MozNDEFRecordOptions& aOptions, ErrorResult& aRv);
+  static uint32_t GetURIIdentifier(const nsCString& aUri);
 
   TNF mTnf;
   JS::Heap<JSObject*> mType;

@@ -218,7 +218,11 @@ status_t RTSPSource::seekTo(int64_t seekTimeUs) {
     sp<AMessage> msg = new AMessage(kWhatPerformSeek, mReflector->id());
     msg->setInt32("generation", ++mSeekGeneration);
     msg->setInt64("timeUs", seekTimeUs);
-    msg->post(200000ll);
+    // The original code in Android posts this message for 200ms delay in order
+    // to avoid performing multiple seeks in a short period of time. This is not
+    // necessary for us because MediaDecoderStateMachine already circumvents
+    // that situation.
+    msg->post();
 
     return OK;
 }
