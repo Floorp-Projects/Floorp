@@ -88,14 +88,6 @@ public:
     obs->AddObserver(this, "file-watcher-update", false);
   }
 
-  ~FileWatcherUpdate()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->RemoveObserver(this, "file-watcher-update");
-  }
-
   NS_IMETHOD
   Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
   {
@@ -130,6 +122,15 @@ public:
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
 
     return NS_OK;
+  }
+
+protected:
+  ~FileWatcherUpdate()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    obs->RemoveObserver(this, "file-watcher-update");
   }
 
 private:
