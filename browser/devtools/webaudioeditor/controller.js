@@ -42,9 +42,21 @@ let WebAudioEditorController = {
    * Listen for events emitted by the current tab target.
    */
   initialize: Task.async(function* () {
+    // Create a queue to manage all the events from the
+    // front so they can be executed in order
+    this.queue = new Queue();
+
     telemetry.toolOpened("webaudioeditor");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
+    this._onStartContext = this._onStartContext.bind(this);
+
+    this._onCreateNode = this.queue.addHandler(this._onCreateNode.bind(this));
+    this._onConnectNode = this.queue.addHandler(this._onConnectNode.bind(this));
+    this._onConnectParam = this.queue.addHandler(this._onConnectParam.bind(this));
+    this._onDisconnectNode = this.queue.addHandler(this._onDisconnectNode.bind(this));
+    this._onChangeParam = this.queue.addHandler(this._onChangeParam.bind(this));
+    this._onDestroyNode = this.queue.addHandler(this._onDestroyNode.bind(this));
 
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
@@ -75,7 +87,7 @@ let WebAudioEditorController = {
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: function() {
+  destroy: Task.async(function*() {
     telemetry.toolClosed("webaudioeditor");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
@@ -87,7 +99,9 @@ let WebAudioEditorController = {
     gFront.off("change-param", this._onChangeParam);
     gFront.off("destroy-node", this._onDestroyNode);
     gDevTools.off("pref-changed", this._onThemeChange);
-  },
+    yield this.queue.clear();
+    this.queue = null;
+  }),
 
   /**
    * Called when page is reloaded to show the reload notice and waiting
@@ -100,23 +114,12 @@ let WebAudioEditorController = {
     PropertiesView.resetUI();
   },
 
-  // Since node events (create, disconnect, connect) are all async,
-  // we have to make sure to wait that the node has finished creating
-  // before performing an operation on it.
-  getNode: function* (nodeActor) {
+  /**
+   * Takes an AudioNodeActor and returns the corresponding AudioNodeModel.
+   */
+  getNode: function (nodeActor) {
     let id = nodeActor.actorID;
     let node = gAudioNodes.get(id);
-
-    if (!node) {
-      let { resolve, promise } = defer();
-      gAudioNodes.on("add", function createNodeListener (createdNode) {
-        if (createdNode.id === id) {
-          gAudioNodes.off("add", createNodeListener);
-          resolve(createdNode);
-        }
-      });
-      node = yield promise;
-    }
     return node;
   },
 
@@ -135,13 +138,16 @@ let WebAudioEditorController = {
   _onTabNavigated: Task.async(function* (event, {isFrameSwitching}) {
     switch (event) {
       case "will-navigate": {
+        yield this.queue.clear();
+        gAudioNodes.reset();
+
         // Make sure the backend is prepared to handle audio contexts.
         if (!isFrameSwitching) {
           yield gFront.setup({ reload: false });
         }
 
         // Clear out current UI.
-        this.reset();
+        yield this.reset();
 
         // When switching to an iframe, ensure displaying the reload button.
         // As the document has already been loaded without being hooked.
@@ -155,9 +161,6 @@ let WebAudioEditorController = {
           $("#reload-notice").hidden = true;
           $("#waiting-notice").hidden = false;
         }
-
-        // Clear out stored audio nodes
-        gAudioNodes.reset();
 
         window.emit(EVENTS.UI_RESET);
         break;
@@ -182,7 +185,7 @@ let WebAudioEditorController = {
   },
 
   /**
-   * Called when a new node is created. Creates an `AudioNodeView` instance
+   * Called when a new node is created. Creates an `AudioNodeModel` instance
    * for tracking throughout the editor.
    */
   _onCreateNode: Task.async(function* (nodeActor) {
@@ -200,34 +203,34 @@ let WebAudioEditorController = {
   /**
    * Called when a node is connected to another node.
    */
-  _onConnectNode: Task.async(function* ({ source: sourceActor, dest: destActor }) {
-    let source = yield WebAudioEditorController.getNode(sourceActor);
-    let dest = yield WebAudioEditorController.getNode(destActor);
+  _onConnectNode: function ({ source: sourceActor, dest: destActor }) {
+    let source = this.getNode(sourceActor);
+    let dest = this.getNode(destActor);
     source.connect(dest);
-  }),
+  },
 
   /**
    * Called when a node is conneceted to another node's AudioParam.
    */
-  _onConnectParam: Task.async(function* ({ source: sourceActor, dest: destActor, param }) {
-    let source = yield WebAudioEditorController.getNode(sourceActor);
-    let dest = yield WebAudioEditorController.getNode(destActor);
+  _onConnectParam: function ({ source: sourceActor, dest: destActor, param }) {
+    let source = this.getNode(sourceActor);
+    let dest = this.getNode(destActor);
     source.connect(dest, param);
-  }),
+  },
 
   /**
    * Called when a node is disconnected.
    */
-  _onDisconnectNode: Task.async(function* (nodeActor) {
-    let node = yield WebAudioEditorController.getNode(nodeActor);
+  _onDisconnectNode: function (nodeActor) {
+    let node = this.getNode(nodeActor);
     node.disconnect();
-  }),
+  },
 
   /**
    * Called when a node param is changed.
    */
-  _onChangeParam: Task.async(function* ({ actor, param, value }) {
-    let node = yield WebAudioEditorController.getNode(actor);
+  _onChangeParam: function ({ actor, param, value }) {
+    let node = this.getNode(actor);
     window.emit(EVENTS.CHANGE_PARAM, node, param, value);
-  })
+  }
 };
