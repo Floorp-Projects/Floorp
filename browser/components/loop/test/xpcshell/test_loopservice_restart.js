@@ -13,17 +13,17 @@ const FAKE_FXA_PROFILE = JSON.stringify({
 });
 const LOOP_FXA_TOKEN_PREF = "loop.fxa_oauth.tokendata";
 const LOOP_FXA_PROFILE_PREF = "loop.fxa_oauth.profile";
-const LOOP_URL_EXPIRY_PREF = "loop.urlsExpiryTimeSeconds";
+const LOOP_CREATED_ROOM_PREF = "loop.createdRoom";
 const LOOP_INITIAL_DELAY_PREF = "loop.initialDelay";
 
 /**
  * This file is to test restart+reauth.
  */
 
-add_task(function test_initialize_with_expired_urls_and_no_auth_token() {
+add_task(function test_initialize_with_no_guest_rooms_and_no_auth_token() {
   // Set time to be 2 seconds in the past.
   var nowSeconds = Date.now() / 1000;
-  Services.prefs.setIntPref(LOOP_URL_EXPIRY_PREF, nowSeconds - 2);
+  Services.prefs.setBoolPref(LOOP_CREATED_ROOM_PREF, false);
   Services.prefs.clearUserPref(LOOP_FXA_TOKEN_PREF);
 
   yield MozLoopService.initialize().then((msg) => {
@@ -34,8 +34,8 @@ add_task(function test_initialize_with_expired_urls_and_no_auth_token() {
   });
 });
 
-add_task(function test_initialize_with_urls_and_no_auth_token() {
-  Services.prefs.setIntPref(LOOP_URL_EXPIRY_PREF, Date.now() / 1000 + 10);
+add_task(function test_initialize_with_created_room_and_no_auth_token() {
+  Services.prefs.setBoolPref(LOOP_CREATED_ROOM_PREF, true);
   Services.prefs.clearUserPref(LOOP_FXA_TOKEN_PREF);
 
   loopServer.registerPathHandler("/registration", (request, response) => {
@@ -114,7 +114,7 @@ function run_test() {
     Services.prefs.clearUserPref(LOOP_INITIAL_DELAY_PREF);
     Services.prefs.clearUserPref(LOOP_FXA_TOKEN_PREF);
     Services.prefs.clearUserPref(LOOP_FXA_PROFILE_PREF);
-    Services.prefs.clearUserPref(LOOP_URL_EXPIRY_PREF);
+    Services.prefs.clearUserPref(LOOP_CREATED_ROOM_PREF);
   });
 
   run_next_test();
