@@ -1065,8 +1065,10 @@ SetUpSandboxEnvironment()
 void
 ContentChild::CleanUpSandboxEnvironment()
 {
-    // Sandbox environment is only currently set up with the more strict sandbox.
-    if (!Preferences::GetBool("security.sandbox.windows.content.moreStrict")) {
+    // Sandbox environment is only currently a low integrity temp, which only
+    // makes sense for sandbox pref level 1 (and will eventually not be needed
+    // at all, once all file access is via chrome/broker process).
+    if (Preferences::GetInt("security.sandbox.content.level") != 1) {
         return;
     }
 
@@ -1207,7 +1209,10 @@ ContentChild::RecvSetProcessSandbox()
     SetContentProcessSandbox();
 #elif defined(XP_WIN)
     mozilla::SandboxTarget::Instance()->StartSandbox();
-    if (Preferences::GetBool("security.sandbox.windows.content.moreStrict")) {
+    // Sandbox environment is only currently a low integrity temp, which only
+    // makes sense for sandbox pref level 1 (and will eventually not be needed
+    // at all, once all file access is via chrome/broker process).
+    if (Preferences::GetInt("security.sandbox.content.level") == 1) {
         SetUpSandboxEnvironment();
     }
 #elif defined(XP_MACOSX)

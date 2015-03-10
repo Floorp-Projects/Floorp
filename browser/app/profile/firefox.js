@@ -1202,9 +1202,14 @@ pref("security.sandbox.windows.log", false);
 pref("dom.ipc.plugins.sandbox-level.default", 0);
 
 #if defined(MOZ_CONTENT_SANDBOX)
-// This controls whether the Windows content process sandbox is using a more
-// strict sandboxing policy.  This will require a restart.
-pref("security.sandbox.windows.content.moreStrict", false);
+// This controls the strength of the Windows content process sandbox for testing
+// purposes. This will require a restart.
+// On windows these levels are:
+// 0 - sandbox with USER_NON_ADMIN access token level
+// 1 - a more strict sandbox, which causes problems in specific areas
+// 2 - a policy that we can reasonably call an effective sandbox
+// 3 - an equivalent basic policy to the Chromium renderer processes
+pref("security.sandbox.content.level", 0);
 
 #if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when Windows sandbox
@@ -1225,7 +1230,7 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 // This setting is read when the content process is started. On Mac the content
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
-pref("security.sandbox.macos.content.level", 0);
+pref("security.sandbox.content.level", 0);
 #endif
 
 // This pref governs whether we attempt to work around problems caused by
