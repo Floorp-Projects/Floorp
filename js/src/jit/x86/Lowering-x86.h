@@ -48,6 +48,8 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void visitBox(MBox *box);
     void visitUnbox(MUnbox *unbox);
     void visitReturn(MReturn *ret);
+    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
+    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
     void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
     void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins);
     void visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
