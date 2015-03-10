@@ -7304,14 +7304,14 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
   // We only want to inflate fonts for text that is in a place
   // with room to expand.  The question is what the best heuristic for
   // that is...
-  // For now, we're going to use NS_FRAME_IN_CONSTRAINED_HEIGHT, which
+  // For now, we're going to use NS_FRAME_IN_CONSTRAINED_BSIZE, which
   // indicates whether the frame is inside something with a constrained
-  // height (propagating down the tree), but the propagation stops when
-  // we hit overflow-y: scroll or auto.
+  // block-size (propagating down the tree), but the propagation stops when
+  // we hit overflow-y [or -x, for vertical mode]: scroll or auto.
   const nsStyleText* styleText = aFrame->StyleText();
 
   return styleText->mTextSizeAdjust != NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
-         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
+         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_BSIZE) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
          // MathML cells need special treatment. See bug 1002526 comment 56.
