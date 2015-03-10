@@ -39,6 +39,7 @@ class HTMLLIAccessible;
 class HyperTextAccessible;
 class ImageAccessible;
 class KeyBinding;
+class MathMLAccessible;
 class ProxyAccessible;
 class Relation;
 class RootAccessible;

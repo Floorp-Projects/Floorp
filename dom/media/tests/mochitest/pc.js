@@ -99,15 +99,6 @@ MediaElementChecker.prototype = {
   }
 };
 
-/**
- * Only calls info() if SimpleTest.info() is available
- */
-function safeInfo(message) {
-  if (typeof info === "function") {
-    info(message);
-  }
-}
-
 // Also remove mode 0 if it's offered
 // Note, we don't bother removing the fmtp lines, which makes a good test
 // for some SDP parsing issues.
@@ -1525,16 +1516,10 @@ PeerConnectionWrapper.prototype = {
         // validate stats
         ok(res.id == key, "Coherent stats id");
         var nowish = Date.now() + 1000;        // TODO: clock drift observed
-        if (twoMachines) {
-          nowish += 10000; // let's be very relaxed about clock sync
-        }
         var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
-        if (twoMachines) {
-          minimum -= 10000; // let's be very relaxed about clock sync
-        }
         if (isWinXP) {
           todo(false, "Can't reliably test rtcp timestamps on WinXP (Bug 979649)");
-        } else {
+        } else if (!twoMachines) {
           ok(res.timestamp >= minimum,
              "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
                  res.timestamp + " >= " + minimum + " (" +
@@ -1784,7 +1769,10 @@ function createHTML(options) {
 }
 
 function runNetworkTest(testFunction) {
-  return scriptsReady
-    .then(() => startNetworkAndTest())
-    .then(() => runTestWhenReady(testFunction));
+  return scriptsReady.then(() => {
+    return runTestWhenReady(options => {
+      startNetworkAndTest()
+        .then(() => testFunction(options));
+    });
+  });
 }

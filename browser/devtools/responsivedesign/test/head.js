@@ -212,3 +212,32 @@ function nextTick() {
   executeSoon(() => def.resolve())
   return def.promise;
 }
+
+/**
+ * Waits for the next load to complete in the current browser.
+ *
+ * @return promise
+ */
+function waitForDocLoadComplete(aBrowser=gBrowser) {
+  let deferred = promise.defer();
+  let progressListener = {
+    onStateChange: function (webProgress, req, flags, status) {
+      let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+                    Ci.nsIWebProgressListener.STATE_STOP;
+      info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
+
+      // When a load needs to be retargetted to a new process it is cancelled
+      // with NS_BINDING_ABORTED so ignore that case
+      if ((flags & docStop) == docStop && status != Cr.NS_BINDING_ABORTED) {
+        aBrowser.removeProgressListener(progressListener);
+        info("Browser loaded " + aBrowser.contentWindow.location);
+        deferred.resolve();
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                           Ci.nsISupportsWeakReference])
+  };
+  aBrowser.addProgressListener(progressListener);
+  info("Waiting for browser load");
+  return deferred.promise;
+}

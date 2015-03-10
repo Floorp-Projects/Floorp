@@ -26,6 +26,18 @@ CameraControlImpl::CameraControlImpl()
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   mCurrentConfiguration.mMode = ICameraControl::kUnspecifiedMode;
 
+  class Delegate : public nsRunnable
+  {
+  public:
+    NS_IMETHOD
+    Run()
+    {
+      char stackBaseGuess;
+      profiler_register_thread("CameraThread", &stackBaseGuess);
+      return NS_OK;
+    }
+  };
+
   // reuse the same camera thread to conserve resources
   nsCOMPtr<nsIThread> ct = do_QueryInterface(sCameraThread);
   if (ct) {
@@ -35,6 +47,7 @@ CameraControlImpl::CameraControlImpl()
     if (NS_FAILED(rv)) {
       MOZ_CRASH("Failed to create new Camera Thread");
     }
+    mCameraThread->Dispatch(new Delegate(), NS_DISPATCH_NORMAL);
     sCameraThread = mCameraThread;
   }
 

@@ -7,7 +7,7 @@ Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
 const gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
 function _(str) {
-  return str.replace(".", gDecimalSymbol, "g");
+  return str.replace(/\./g, gDecimalSymbol);
 }
 
 function testConvertByteUnits(aBytes, aValue, aUnit)

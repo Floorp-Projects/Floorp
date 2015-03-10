@@ -6,6 +6,6 @@
     "128": "ICONTOKEN"
   },
   "widgetPages": [
-    "/tests/dom/apps/tests/file_app.sjs?apptype=widget"
+    "/tests/dom/apps/tests/no_valid_widget_pages"
   ]
 }

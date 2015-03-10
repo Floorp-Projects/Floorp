@@ -504,7 +504,9 @@ let dataProviders = {
 
 #if defined(XP_LINUX) && defined (MOZ_SANDBOX)
   sandbox: function sandbox(done) {
-    const keys = ["hasSeccompBPF", "canSandboxContent", "canSandboxMedia"];
+    const keys = ["hasSeccompBPF", "hasSeccompTSync",
+                  "hasPrivilegedUserNamespaces", "hasUserNamespaces",
+                  "canSandboxContent", "canSandboxMedia"];
 
     let sysInfo = Cc["@mozilla.org/system-info;1"].
                   getService(Ci.nsIPropertyBag2);

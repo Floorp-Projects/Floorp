@@ -292,8 +292,7 @@ private:
   JSCallbackThenableRejecter(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
 
   static JSObject*
-  CreateFunction(JSContext* aCx, JSObject* aParent, Promise* aPromise,
-                int32_t aTask);
+  CreateFunction(JSContext* aCx, Promise* aPromise, int32_t aTask);
 
   static JSObject*
   CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTask);

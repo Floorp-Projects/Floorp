@@ -10,18 +10,17 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
+#include "gtest/gtest.h"
 
-class nsRunner : public nsIRunnable {
+class nsRunner MOZ_FINAL : public nsIRunnable {
+  ~nsRunner() {}
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() MOZ_OVERRIDE {
         nsCOMPtr<nsIThread> thread;
         nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
-        if (NS_FAILED(rv)) {
-            printf("failed to get current thread\n");
-            return rv;
-        }
+        EXPECT_TRUE(NS_SUCCEEDED(rv));
         printf("running %d on thread %p\n", mNum, (void *)thread.get());
 
         // if we don't do something slow, we'll never see the other
@@ -31,7 +30,7 @@ public:
         return rv;
     }
 
-    nsRunner(int num) : mNum(num) {
+    explicit nsRunner(int num) : mNum(num) {
     }
 
 protected:
@@ -40,45 +39,33 @@ protected:
 
 NS_IMPL_ISUPPORTS(nsRunner, nsIRunnable)
 
-nsresult
-TestThreads()
+TEST(Threads, Main)
 {
     nsresult rv;
 
     nsCOMPtr<nsIRunnable> event = new nsRunner(0);
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
+    EXPECT_TRUE(event);
 
     nsCOMPtr<nsIThread> runner;
     rv = NS_NewThread(getter_AddRefs(runner), event);
-    if (NS_FAILED(rv)) {
-        printf("failed to create thread\n");
-        return rv;
-    }
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     nsCOMPtr<nsIThread> thread;
     rv = NS_GetCurrentThread(getter_AddRefs(thread));
-    if (NS_FAILED(rv)) {
-        printf("failed to get current thread\n");
-        return rv;
-    }
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     rv = runner->Shutdown();     // wait for the runner to die before quitting
-    if (NS_FAILED(rv)) {
-        printf("join failed\n");        
-    }
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     PR_Sleep(PR_MillisecondsToInterval(100));       // hopefully the runner will quit here
-
-    return NS_OK;
 }
 
-class nsStressRunner : public nsIRunnable {
+class nsStressRunner MOZ_FINAL : public nsIRunnable {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() {
-        NS_ASSERTION(!mWasRun, "run twice!");
+    NS_IMETHOD Run() MOZ_OVERRIDE {
+        EXPECT_FALSE(mWasRun);
         mWasRun = true;
         PR_Sleep(1);
         if (!PR_AtomicDecrement(&gNum)) {
@@ -87,7 +74,7 @@ public:
         return NS_OK;
     }
 
-    nsStressRunner(int num) : mNum(num), mWasRun(false) {
+    explicit nsStressRunner(int num) : mNum(num), mWasRun(false) {
         PR_AtomicIncrement(&gNum);
     }
 
@@ -95,7 +82,7 @@ public:
 
 private:
     ~nsStressRunner() {
-        NS_ASSERTION(mWasRun, "never run!");
+        EXPECT_TRUE(mWasRun);
     }
 
 protected:
@@ -108,25 +95,23 @@ int32_t nsStressRunner::gNum = 0;
 
 NS_IMPL_ISUPPORTS(nsStressRunner, nsIRunnable)
 
-static int Stress(int loops, int threads)
+TEST(Threads, Stress)
 {
+    const int loops = 1000;
+    const int threads = 50;
 
     for (int i = 0; i < loops; i++) {
         printf("Loop %d of %d\n", i+1, loops);
 
         int k;
         nsIThread** array = new nsIThread*[threads];
-        NS_ASSERTION(array, "out of memory");
 
-        NS_ASSERTION(!nsStressRunner::GetGlobalCount(), "bad count of runnables");
-        
+        EXPECT_EQ(nsStressRunner::GetGlobalCount(), 0);
+
         for (k = 0; k < threads; k++) {
             nsCOMPtr<nsIThread> t;
             nsresult rv = NS_NewThread(getter_AddRefs(t), new nsStressRunner(k));
-            if (NS_FAILED(rv)) {
-                NS_ERROR("can't create thread");
-                return -1;
-            }
+            EXPECT_TRUE(NS_SUCCEEDED(rv));
             NS_ADDREF(array[k] = t);
         }
 
@@ -136,25 +121,25 @@ static int Stress(int loops, int threads)
         }
         delete [] array;
     }
-    return 0;
 }
 
 static void threadProc(void *arg)
 {
     // printf("   running thread %d\n", (int) arg);
     PR_Sleep(1);
-    PR_ASSERT(PR_JOINABLE_THREAD == PR_GetThreadState(PR_GetCurrentThread()));
+    EXPECT_EQ(PR_JOINABLE_THREAD, PR_GetThreadState(PR_GetCurrentThread()));
 }
 
-static int StressNSPR(int loops, int threads)
+TEST(Threads, StressNSPR)
 {
+    const int loops = 1000;
+    const int threads = 50;
 
     for (int i = 0; i < loops; i++) {
         printf("Loop %d of %d\n", i+1, loops);
 
-        int k;
+        intptr_t k;
         PRThread** array = new PRThread*[threads];
-        PR_ASSERT(array);
 
         for (k = 0; k < threads; k++) {
             array[k] = PR_CreateThread(PR_USER_THREAD,
@@ -163,61 +148,16 @@ static int StressNSPR(int loops, int threads)
                                        PR_GLOBAL_THREAD,
                                        PR_JOINABLE_THREAD,
                                        0);
-            PR_ASSERT(array[k]);
-        }                               
+            EXPECT_TRUE(array[k]);
+        }
 
         for (k = 0; k < threads; k++) {
-            PR_ASSERT(PR_JOINABLE_THREAD == PR_GetThreadState(array[k]));
-        }                               
+            EXPECT_EQ(PR_JOINABLE_THREAD, PR_GetThreadState(array[k]));
+        }
 
         for (k = threads-1; k >= 0; k--) {
             PR_JoinThread(array[k]);
         }
         delete [] array;
     }
-    return 0;
-}
-
-
-int
-main(int argc, char** argv)
-{
-    int retval = 0;
-    nsresult rv;
-    
-    rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv)) return -1;
-
-    if (argc > 1 && !strcmp(argv[1], "-stress")) {
-        int loops;
-        int threads;
-        if (argc != 4 || *argv[2] != '-' || *argv[3] != '-' ||
-            !(loops = atoi(argv[2]+1)) || !(threads = atoi(argv[3]+1))) {
-           printf("To use -stress you must pass loop count and thread count...\n"
-                  "   TestThreads -stress -1000 -50\n");
-        } else {
-           printf("Running stress test with %d loops of %d threads each\n",
-                  loops, threads);
-           retval = Stress(loops, threads);
-        }
-    } else if (argc > 1 && !strcmp(argv[1], "-stress-nspr")) {
-        int loops;
-        int threads;
-        if (argc != 4 || *argv[2] != '-' || *argv[3] != '-' ||
-            !(loops = atoi(argv[2]+1)) || !(threads = atoi(argv[3]+1))) {
-           printf("To use -stress-nspr you must pass loop count and thread count...\n"
-                  "   TestThreads -stress -1000 -50\n");
-        } else {
-           printf("Running stress test with %d loops of %d threads each\n",
-                  loops, threads);
-           retval = StressNSPR(loops, threads);
-        }
-    } else {
-        rv = TestThreads();
-        if (NS_FAILED(rv)) return -1;
-    }
-
-    rv = NS_ShutdownXPCOM(nullptr);
-    if (NS_FAILED(rv)) return -1;
-    return retval;
 }
