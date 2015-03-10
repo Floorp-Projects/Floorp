@@ -29,6 +29,22 @@
     scriptsAndScopes.forEach(function(item) {
       registerArray.push(navigator.serviceWorker.register(item[0], { scope: item[1] }));
     });
+
+    // Check register()'s step 4 which uses script's url with "./" as the scope if no scope is passed.
+    // The other tests already check step 5.
+    registerArray.push(navigator.serviceWorker.register("scope/scope_worker.js"));
+
+    // Check that SW cannot be registered for a scope "above" the script's location.
+    registerArray.push(new Promise(function(resolve, reject) {
+      navigator.serviceWorker.register("scope/scope_worker.js", { scope: "./" })
+        .then(function() {
+          ok(false, "registration scope has to be inside service worker script scope.");
+          reject();
+        }, function() {
+          ok(true, "registration scope has to be inside service worker script scope.");
+          resolve();
+        });
+    }));
     return Promise.all(registerArray);
   }
 
@@ -40,6 +56,11 @@
         return reg.unregister();
       }));
     });
+
+    unregisterArray.push(navigator.serviceWorker.getRegistration("scope/").then(function (reg) {
+      return reg.unregister();
+    }));
+
     return Promise.all(unregisterArray);
   }
 
@@ -67,6 +88,7 @@
       ok(getScope(p("sub/dir/foo")) === p("sub/dir/"), "Scope should match");
       ok(getScope(p("sub/dir/afoo")) === p("sub/dir/a"), "Scope should match");
       ok(getScope(p("star*wars")) === p("star*"), "Scope should match");
+      ok(getScope(p("scope/some_file.html")) === p("scope/"), "Scope should match");
       fail("index.html");
       fail("sua.html");
       fail("star/a.html");
