@@ -18,6 +18,7 @@ const PREF_UITOUR_ENABLED = "browser.uitour.enabled";
 const TEST_WAIT_RETRIES = 60;
 
 const TEST_PAGE_URL = getRootDirectory(gTestPath) + "uitour.html";
+const TEST_PAGE_URL_HTTPS = TEST_PAGE_URL.replace("chrome://mochitests/content/", "https://example.com/");
 
 /**
  * Find a browser, with an IFRAME as parent, who has aURL as the source attribute.
@@ -104,9 +105,14 @@ add_task(function* setupEnvironment() {
   // is enabled.
   Preferences.set(PREF_SELFSUPPORT_ENABLED, true);
   Preferences.set(PREF_UITOUR_ENABLED, true);
-  Preferences.set(PREF_SELFSUPPORT_URL, TEST_PAGE_URL);
+  Preferences.set(PREF_SELFSUPPORT_URL, TEST_PAGE_URL_HTTPS);
+
+  // Whitelist the HTTPS page to use UITour.
+  let pageURI = Services.io.newURI(TEST_PAGE_URL_HTTPS, null, null);
+  Services.perms.add(pageURI, "uitour", Services.perms.ALLOW_ACTION);
 
   registerCleanupFunction(() => {
+    Services.perms.remove("example.com", "uitour");
     Preferences.set(PREF_SELFSUPPORT_ENABLED, selfSupportEnabled);
     Preferences.set(PREF_UITOUR_ENABLED, uitourEnabled);
     Preferences.set(PREF_SELFSUPPORT_URL, selfSupportURL);
@@ -126,7 +132,7 @@ add_task(function* test_selfSupport() {
 
   // Wait for the SelfSupport page to load.
   info("Waiting for the SelfSupport local page to load.");
-  let selfSupportBrowser = yield promiseSelfSupportLoad(TEST_PAGE_URL);
+  let selfSupportBrowser = yield promiseSelfSupportLoad(TEST_PAGE_URL_HTTPS);
   Assert.ok(!!selfSupportBrowser, "SelfSupport browser must exist.");
 
   // Get a reference to the UITour API.
@@ -146,13 +152,34 @@ add_task(function* test_selfSupport() {
 
   // Wait until SelfSupport closes.
   info("Waiting for the SelfSupport to close.");
-  yield promiseSelfSupportClose(TEST_PAGE_URL);
+  yield promiseSelfSupportClose(TEST_PAGE_URL_HTTPS);
 
   // Find the SelfSupport browser, again. We don't expect to find it.
-  selfSupportBrowser = findSelfSupportBrowser(TEST_PAGE_URL);
+  selfSupportBrowser = findSelfSupportBrowser(TEST_PAGE_URL_HTTPS);
   Assert.ok(!selfSupportBrowser, "SelfSupport browser must not exist.");
 
   // We shouldn't need this, but let's keep it to make sure closing SelfSupport twice
   // doesn't create any problem.
   SelfSupportBackend.uninit();
 });
+
+/**
+ * Test that SelfSupportBackend only allows HTTPS.
+ */
+add_task(function* test_selfSupport_noHTTPS() {
+  Preferences.set(PREF_SELFSUPPORT_URL, TEST_PAGE_URL);
+
+  SelfSupportBackend.init();
+
+  // SelfSupportBackend waits for "sessionstore-windows-restored" to start loading. Send it.
+  info("Sending sessionstore-windows-restored");
+  Services.obs.notifyObservers(null, "sessionstore-windows-restored", null);
+
+  // Find the SelfSupport browser. We don't expect to find it since we are not using https.
+  let selfSupportBrowser = findSelfSupportBrowser(TEST_PAGE_URL);
+  Assert.ok(!selfSupportBrowser, "SelfSupport browser must not exist.");
+
+  // We shouldn't need this, but let's keep it to make sure closing SelfSupport twice
+  // doesn't create any problem.
+  SelfSupportBackend.uninit();
+})

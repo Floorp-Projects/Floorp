@@ -240,6 +240,10 @@ let SelfSupportBackendInternal = {
     // Fetch the Self Support URL from the preferences.
     let unformattedURL = Preferences.get(PREF_URL, null);
     let url = Services.urlFormatter.formatURL(unformattedURL);
+    if (!url.startsWith("https:")) {
+      this._log.error("_loadSelfSupport - Non HTTPS URL provided: " + url);
+      return;
+    }
 
     this._log.config("_loadSelfSupport - URL " + url);
 
