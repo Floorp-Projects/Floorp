@@ -10,6 +10,7 @@
 
 SoftwareVsyncSource::SoftwareVsyncSource()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mGlobalDisplay = new SoftwareDisplay();
 }
 
@@ -30,6 +31,7 @@ SoftwareDisplay::SoftwareDisplay()
   const double rate = 1000 / 60.0;
   mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
+  MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start software vsync thread");
 }
 
 void
@@ -43,8 +45,7 @@ SoftwareDisplay::EnableVsync()
   { // scope lock
     mozilla::MonitorAutoLock lock(mCurrentTaskMonitor);
     mVsyncEnabled = true;
-    MOZ_ASSERT(!mVsyncThread->IsRunning());
-    MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start software vsync thread");
+    MOZ_ASSERT(mVsyncThread->IsRunning());
     mCurrentVsyncTask = NewRunnableMethod(this,
         &SoftwareDisplay::NotifyVsync,
         mozilla::TimeStamp::Now());
@@ -69,7 +70,6 @@ SoftwareDisplay::DisableVsync()
       mCurrentVsyncTask = nullptr;
     }
   }
-  mVsyncThread->Stop();
 }
 
 bool
@@ -136,5 +136,6 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
 SoftwareDisplay::~SoftwareDisplay()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mVsyncThread->Stop();
   delete mVsyncThread;
 }

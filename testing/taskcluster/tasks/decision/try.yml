@@ -22,7 +22,7 @@ tasks:
       metadata:
         owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
-        name: "[tc] Initial decision task for try ({{comment}})"
+        name: "[tc] Initial decision task for try"
         description: |
           This is the single most important task as it decides how all other tasks
           get built.
