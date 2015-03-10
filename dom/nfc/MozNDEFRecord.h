@@ -40,8 +40,6 @@ public:
 public:
   MozNDEFRecord(nsISupports* aParent, TNF aTnf = TNF::Empty);
 
-  ~MozNDEFRecord();
-
   nsISupports* GetParentObject() const
   {
     return mParent;
@@ -98,6 +96,10 @@ public:
   // Structured clone methods use these to clone MozNDEFRecord.
   bool WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter) const;
   bool ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
+
+protected:
+  ~MozNDEFRecord();
+
 private:
   MozNDEFRecord() = delete;
   nsRefPtr<nsISupports> mParent;
