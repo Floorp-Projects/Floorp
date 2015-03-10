@@ -891,9 +891,10 @@ MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap i
     return IsNurseryAllocable(allocKind) && initialHeap != gc::TenuredHeap;
 }
 
-// Inline version of Nursery::allocateObject.
+// Inline version of Nursery::allocateObject. If the object has dynamic slots,
+// this fills in the slots_ pointer.
 void
-MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind allocKind,
+MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind allocKind,
                                 size_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail)
 {
     MOZ_ASSERT(IsNurseryAllocable(allocKind));
@@ -910,7 +911,6 @@ MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind a
     // No explicit check for nursery.isEnabled() is needed, as the comparison
     // with the nursery's end will always fail in such cases.
     const Nursery &nursery = GetJitContext()->runtime->gcNursery();
-    Register temp = slots;
     int thingSize = int(gc::Arena::thingSize(allocKind));
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
     loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
@@ -918,11 +918,13 @@ MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind a
     branchPtr(Assembler::Below, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
     storePtr(temp, AbsoluteAddress(nursery.addressOfPosition()));
 
-    if (nDynamicSlots)
-        computeEffectiveAddress(Address(result, thingSize), slots);
+    if (nDynamicSlots) {
+        computeEffectiveAddress(Address(result, thingSize), temp);
+        storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
+    }
 }
 
-// Inlined version of FreeList::allocate.
+// Inlined version of FreeList::allocate. This does not fill in slots_.
 void
 MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label *fail)
 {
@@ -988,7 +990,7 @@ MacroAssembler::callFreeStub(Register slots)
 
 // Inlined equivalent of gc::AllocateObject, without failure case handling.
 void
-MacroAssembler::allocateObject(Register result, Register slots, gc::AllocKind allocKind,
+MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                                uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail)
 {
     MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
@@ -996,42 +998,43 @@ MacroAssembler::allocateObject(Register result, Register slots, gc::AllocKind al
     checkAllocatorState(fail);
 
     if (shouldNurseryAllocate(allocKind, initialHeap))
-        return nurseryAllocate(result, slots, allocKind, nDynamicSlots, initialHeap, fail);
+        return nurseryAllocate(result, temp, allocKind, nDynamicSlots, initialHeap, fail);
 
     if (!nDynamicSlots)
-        return freeListAllocate(result, slots, allocKind, fail);
+        return freeListAllocate(result, temp, allocKind, fail);
 
-    callMallocStub(nDynamicSlots * sizeof(HeapValue), slots, fail);
+    callMallocStub(nDynamicSlots * sizeof(HeapValue), temp, fail);
 
     Label failAlloc;
     Label success;
 
-    push(slots);
-    freeListAllocate(result, slots, allocKind, &failAlloc);
-    pop(slots);
+    push(temp);
+    freeListAllocate(result, temp, allocKind, &failAlloc);
+
+    pop(temp);
+    storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
+
     jump(&success);
 
     bind(&failAlloc);
-    pop(slots);
-    callFreeStub(slots);
+    pop(temp);
+    callFreeStub(temp);
     jump(fail);
 
-    breakpoint();
+    bind(&success);
 }
 
 void
 MacroAssembler::newGCThing(Register result, Register temp, JSObject *templateObj,
                            gc::InitialHeap initialHeap, Label *fail)
 {
-    // This method does not initialize the object: if external slots get
-    // allocated into |temp|, there is no easy way for us to ensure the caller
-    // frees them. Instead just assert this case does not happen.
-    MOZ_ASSERT_IF(templateObj->isNative(), !templateObj->as<NativeObject>().numDynamicSlots());
-
     gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
     MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
-    allocateObject(result, temp, allocKind, 0, initialHeap, fail);
+    size_t ndynamic = 0;
+    if (templateObj->isNative())
+        ndynamic = templateObj->as<NativeObject>().numDynamicSlots();
+    allocateObject(result, temp, allocKind, ndynamic, initialHeap, fail);
 }
 
 void
@@ -1152,7 +1155,7 @@ FindStartOfUndefinedAndUninitializedSlots(NativeObject *templateObj, uint32_t ns
 }
 
 void
-MacroAssembler::initGCSlots(Register obj, Register slots, NativeObject *templateObj,
+MacroAssembler::initGCSlots(Register obj, Register temp, NativeObject *templateObj,
                             bool initFixedSlots)
 {
     // Slots of non-array objects are required to be initialized.
@@ -1189,10 +1192,10 @@ MacroAssembler::initGCSlots(Register obj, Register slots, NativeObject *template
 
     // Fill the rest of the fixed slots with undefined and uninitialized.
     if (initFixedSlots) {
-        fillSlotsWithUndefined(Address(obj, NativeObject::getFixedSlotOffset(startOfUndefined)), slots,
+        fillSlotsWithUndefined(Address(obj, NativeObject::getFixedSlotOffset(startOfUndefined)), temp,
                                startOfUndefined, Min(startOfUninitialized, nfixed));
         size_t offset = NativeObject::getFixedSlotOffset(startOfUninitialized);
-        fillSlotsWithUninitialized(Address(obj, offset), slots, startOfUninitialized, nfixed);
+        fillSlotsWithUninitialized(Address(obj, offset), temp, startOfUninitialized, nfixed);
     }
 
     if (ndynamic) {
@@ -1202,10 +1205,10 @@ MacroAssembler::initGCSlots(Register obj, Register slots, NativeObject *template
         loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
 
         // Initially fill all dynamic slots with undefined.
-        fillSlotsWithUndefined(Address(obj, 0), slots, 0, ndynamic);
+        fillSlotsWithUndefined(Address(obj, 0), temp, 0, ndynamic);
 
         // Fill uninitialized slots if necessary.
-        fillSlotsWithUninitialized(Address(obj, 0), slots, startOfUninitialized - nfixed,
+        fillSlotsWithUninitialized(Address(obj, 0), temp, startOfUninitialized - nfixed,
                                    nslots - startOfUninitialized);
 
         pop(obj);
@@ -1213,7 +1216,7 @@ MacroAssembler::initGCSlots(Register obj, Register slots, NativeObject *template
 }
 
 void
-MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
+MacroAssembler::initGCThing(Register obj, Register temp, JSObject *templateObj,
                             bool initFixedSlots)
 {
     // Fast initialization of an empty object returned by allocateObject().
@@ -1227,16 +1230,15 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
         NativeObject *ntemplate = &templateObj->as<NativeObject>();
         MOZ_ASSERT_IF(!ntemplate->denseElementsAreCopyOnWrite(), !ntemplate->hasDynamicElements());
 
-        if (ntemplate->hasDynamicSlots())
-            storePtr(slots, Address(obj, NativeObject::offsetOfSlots()));
-        else
+        // If the object has dynamic slots, the slots member has already been
+        // filled in.
+        if (!ntemplate->hasDynamicSlots())
             storePtr(ImmPtr(nullptr), Address(obj, NativeObject::offsetOfSlots()));
 
         if (ntemplate->denseElementsAreCopyOnWrite()) {
             storePtr(ImmPtr((const Value *) ntemplate->getDenseElements()),
                      Address(obj, NativeObject::offsetOfElements()));
         } else if (ntemplate->is<ArrayObject>()) {
-            Register temp = slots;
             int elementsOffset = NativeObject::offsetOfFixedElements();
 
             computeEffectiveAddress(Address(obj, elementsOffset), temp);
@@ -1257,7 +1259,7 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
         } else {
             storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
 
-            initGCSlots(obj, slots, ntemplate, initFixedSlots);
+            initGCSlots(obj, temp, ntemplate, initFixedSlots);
 
             if (ntemplate->hasPrivate()) {
                 uint32_t nfixed = ntemplate->numFixedSlots();

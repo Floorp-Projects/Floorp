@@ -2028,7 +2028,7 @@ js::NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobjArg, Native na
     RootedObject funobj(cx, funobjArg);
     if (funobj) {
         MOZ_ASSERT(funobj->is<JSFunction>());
-        MOZ_ASSERT(funobj->getParent() == parent);
+        funobj->assertParentIs(parent);
         MOZ_ASSERT_IF(native, funobj->isSingleton());
     } else {
         // Don't mark asm.js module functions as singleton since they are

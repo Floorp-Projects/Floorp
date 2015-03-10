@@ -14,6 +14,7 @@ using mozilla::Vector;
 struct mozilla::detail::VectorTesting
 {
   static void testReserved();
+  static void testConstRange();
 };
 
 void
@@ -75,8 +76,31 @@ mozilla::detail::VectorTesting::testReserved()
 #endif
 }
 
+void
+mozilla::detail::VectorTesting::testConstRange()
+{
+#ifdef DEBUG
+  Vector<int> vec;
+
+  for (int i = 0; i < 10; i++) {
+    MOZ_RELEASE_ASSERT(vec.append(i));
+  }
+
+  const auto &vecRef = vec;
+
+  Vector<int>::ConstRange range = vecRef.all();
+  for (int i = 0; i < 10; i++) {
+    MOZ_RELEASE_ASSERT(!range.empty());
+    MOZ_RELEASE_ASSERT(range.front() == i);
+    range.popFront();
+  }
+#endif
+}
+
+
 int
 main()
 {
   VectorTesting::testReserved();
+  VectorTesting::testConstRange();
 }

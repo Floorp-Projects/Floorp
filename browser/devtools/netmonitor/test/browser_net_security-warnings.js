@@ -12,25 +12,11 @@ const TEST_CASES = [
     desc: "no warnings",
     uri: "https://example.com" + CORS_SJS_PATH,
     warnCipher: false,
-    warnSSLv3: false,
-  },
-  {
-    desc: "sslv3 warning",
-    uri: "https://ssl3.example.com" + CORS_SJS_PATH,
-    warnCipher: false,
-    warnSSLv3: true,
   },
   {
     desc: "cipher warning",
     uri: "https://rc4.example.com" + CORS_SJS_PATH,
     warnCipher: true,
-    warnSSLv3: false,
-  },
-  {
-    desc: "cipher and sslv3 warning",
-    uri: "https://ssl3rc4.example.com" + CORS_SJS_PATH,
-    warnCipher: true,
-    warnSSLv3: true,
   },
 ];
 
@@ -40,16 +26,14 @@ add_task(function* () {
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
-  info("Enabling SSLv3 and RC4 for the test.");
+  info("Enabling RC4 for the test.");
   yield new promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
-      ["security.tls.version.min", 0],
-      ["security.tls.insecure_fallback_hosts", "rc4.example.com,ssl3rc4.example.com"]
+      ["security.tls.insecure_fallback_hosts", "rc4.example.com"]
     ]}, resolve);
   });
 
   let cipher = $("#security-warning-cipher");
-  let sslv3 = $("#security-warning-sslv3");
 
   for (let test of TEST_CASES) {
     info("Testing site with " + test.desc);
@@ -73,7 +57,6 @@ add_task(function* () {
     }
 
     is(cipher.hidden, !test.warnCipher, "Cipher suite warning is hidden.");
-    is(sslv3.hidden, !test.warnSSLv3, "SSLv3 warning is hidden.");
 
     RequestsMenu.clear();
 

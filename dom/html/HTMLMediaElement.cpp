@@ -693,9 +693,11 @@ void HTMLMediaElement::AbortExistingLoads()
 
   if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     NS_ASSERTION(!mDecoder && !mSrcStream, "How did someone setup a new stream/decoder already?");
+    // ChangeNetworkState() will call UpdateAudioChannelPlayingState()
+    // indirectly which depends on mPaused. So we need to update mPaused first.
+    mPaused = true;
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
-    mPaused = true;
 
     if (fireTimeUpdate) {
       // Since we destroyed the decoder above, the current playback position
