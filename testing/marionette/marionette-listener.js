@@ -63,6 +63,9 @@ let originalOnError;
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 //timer for readystate
 let readyStateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+// timer for navigation commands.
+let navTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+let onDOMContentLoaded;
 // Send move events about this often
 let EVENT_INTERVAL = 30; // milliseconds
 // For assigning unique ids to all touches
@@ -97,13 +100,14 @@ let modalHandler = function() {
  * If the actor returns an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  let msg = {value: winUtil.outerWindowID, href: content.location.href};
+  let msg = {value: winUtil.outerWindowID}
   // register will have the ID and a boolean describing if this is the main process or not
   let register = sendSyncMessage("Marionette:register", msg);
 
   if (register[0]) {
-    listenerId = register[0][0].id;
-    if (typeof listenerId != "undefined") {
+    let {id, remotenessChange} = register[0][0];
+    listenerId = id;
+    if (typeof id != "undefined") {
       // check if we're the main process
       if (register[0][1] == true) {
         addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
@@ -111,6 +115,9 @@ function registerSelf() {
       importedScripts = FileUtils.getDir('TmpD', [], false);
       importedScripts.append('marionetteContentScripts');
       startListeners();
+      if (remotenessChange) {
+        sendAsyncMessage("Marionette:listenersAttached", {listenerId: id});
+      }
     }
   }
 }
@@ -170,6 +177,8 @@ function startListeners() {
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:get", get);
+  addMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
+  addMessageListenerId("Marionette:cancelRequest", cancelRequest);
   addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
   addMessageListenerId("Marionette:getTitle", getTitle);
   addMessageListenerId("Marionette:getPageSource", getPageSource);
@@ -273,6 +282,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:get", get);
+  removeMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
+  removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
   removeMessageListenerId("Marionette:getTitle", getTitle);
   removeMessageListenerId("Marionette:getPageSource", getPageSource);
   removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
@@ -1404,6 +1415,52 @@ function multiAction(msg) {
   }
 }
 
+/*
+ * This implements the latter part of a get request (for the case we need to resume one
+ * when a remoteness update happens in the middle of a navigate request). This is most of
+ * of the work of a navigate request, but doesn't assume DOMContentLoaded is yet to fire.
+ */
+function pollForReadyState(msg, start, callback) {
+  let {pageTimeout, url, command_id} = msg.json;
+  start = start ? start : new Date().getTime();
+
+  if (!callback) {
+    callback = () => {};
+  }
+
+  let end = null;
+  function checkLoad() {
+    navTimer.cancel();
+    end = new Date().getTime();
+    let aboutErrorRegex = /about:.+(error)\?/;
+    let elapse = end - start;
+    if (pageTimeout == null || elapse <= pageTimeout) {
+      if (curFrame.document.readyState == "complete") {
+        callback();
+        sendOk(command_id);
+      } else if (curFrame.document.readyState == "interactive" &&
+                 aboutErrorRegex.exec(curFrame.document.baseURI) &&
+                 !curFrame.document.baseURI.startsWith(url)) {
+        // We have reached an error url without requesting it.
+        callback();
+        sendError("Error loading page", 13, null, command_id);
+      } else if (curFrame.document.readyState == "interactive" &&
+                 curFrame.document.baseURI.startsWith("about:")) {
+        callback();
+        sendOk(command_id);
+      } else {
+        navTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+    }
+    else {
+      callback();
+      sendError("Error loading page, timed out (checkLoad)", 21, null,
+                command_id);
+    }
+  }
+  checkLoad();
+}
+
 /**
  * Navigate to the given URL.  The operation will be performed on the
  * current browser context, and handles the case where we navigate
@@ -1411,67 +1468,56 @@ function multiAction(msg) {
  * (in chrome space).
  */
 function get(msg) {
-  let command_id = msg.json.command_id;
-
-  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let start = new Date().getTime();
-  let end = null;
-  function checkLoad() {
-    checkTimer.cancel();
-    end = new Date().getTime();
-    let aboutErrorRegex = /about:.+(error)\?/;
-    let elapse = end - start;
-    if (msg.json.pageTimeout == null || elapse <= msg.json.pageTimeout) {
-      if (curFrame.document.readyState == "complete") {
-        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-        sendOk(command_id);
-      } else if (curFrame.document.readyState == "interactive" &&
-                 aboutErrorRegex.exec(curFrame.document.baseURI) &&
-                 !curFrame.document.baseURI.startsWith(msg.json.url)) {
-        // We have reached an error url without requesting it.
-        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-        sendError("Error loading page", 13, null, command_id);
-      } else if (curFrame.document.readyState == "interactive" &&
-                 curFrame.document.baseURI.startsWith("about:")) {
-        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-        sendOk(command_id);
-      } else {
-        checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-    }
-    else {
-      removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-      sendError("Error loading page, timed out (checkLoad)", 21, null,
-                command_id);
-    }
-  }
+
   // Prevent DOMContentLoaded events from frames from invoking this
   // code, unless the event is coming from the frame associated with
   // the current window (i.e. someone has used switch_to_frame).
-  let onDOMContentLoaded = function onDOMContentLoaded(event) {
+  onDOMContentLoaded = function onDOMContentLoaded(event) {
     if (!event.originalTarget.defaultView.frameElement ||
         event.originalTarget.defaultView.frameElement == curFrame.frameElement) {
-      checkLoad();
+      pollForReadyState(msg, start, () => {
+        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+        onDOMContentLoaded = null;
+      });
     }
   };
 
   function timerFunc() {
     removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
     sendError("Error loading page, timed out (onDOMContentLoaded)", 21,
-              null, command_id);
+              null, msg.json.command_id);
   }
   if (msg.json.pageTimeout != null) {
-    checkTimer.initWithCallback(timerFunc, msg.json.pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    navTimer.initWithCallback(timerFunc, msg.json.pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
   }
   addEventListener("DOMContentLoaded", onDOMContentLoaded, false);
   curFrame.location = msg.json.url;
+}
+
+ /**
+ * Cancel the polling and remove the event listener associated with a current
+ * navigation request in case we're interupted by an onbeforeunload handler
+ * and navigation doesn't complete.
+ */
+function cancelRequest() {
+  navTimer.cancel();
+  if (onDOMContentLoaded) {
+    removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+  }
 }
 
 /**
  * Get URL of the top level browsing context.
  */
 function getCurrentUrl(msg) {
-  sendResponse({value: curFrame.location.href}, msg.json.command_id);
+  let url;
+  if (msg.json.isB2G) {
+    url = curFrame.location.href;
+  } else {
+    url = content.location.href;
+  }
+  sendResponse({value: url}, msg.json.command_id);
 }
 
 /**
