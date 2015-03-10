@@ -7180,6 +7180,13 @@
     "kind": "boolean",
     "description": "Stores 1 every time the URL is copied or shared."
   },
+  "LOOP_TWO_WAY_MEDIA_CONN_LENGTH": {
+    "expires_in_version": "43",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Connection length for bi-directionally connected media"
+  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",

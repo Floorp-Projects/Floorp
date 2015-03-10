@@ -59,12 +59,11 @@ function run_test() {
     response.setStatusLine(null, 200, "OK");
   });
 
-  let nowSeconds = Date.now() / 1000;
-  Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", nowSeconds + 60);
+  Services.prefs.setBoolPref("loop.createdRoom", true);
 
   do_register_cleanup(function() {
     Services.prefs.clearUserPref("loop.hawk-session-token");
-    Services.prefs.clearUserPref("loop.urlsExpiryTimeSeconds");
+    Services.prefs.clearUserPref("loop.createdRoom");
   });
 
   run_next_test();
