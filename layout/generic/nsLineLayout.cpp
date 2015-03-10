@@ -457,7 +457,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   nsIFrame* frame = aSpanReflowState->frame;
   psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame) ||
                  mSuppressLineWrap ||
-                 frame->StyleContext()->IsInlineDescendantOfRuby();
+                 frame->StyleContext()->ShouldSuppressLineBreak();
   psd->mWritingMode = aSpanReflowState->GetWritingMode();
 
   // Switch to new span
@@ -2896,7 +2896,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
 static nsIFrame*
 FindNearestRubyBaseAncestor(nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aFrame->StyleContext()->IsInlineDescendantOfRuby());
+  MOZ_ASSERT(aFrame->StyleContext()->ShouldSuppressLineBreak());
   while (aFrame && aFrame->GetType() != nsGkAtoms::rubyBaseFrame) {
     aFrame = aFrame->GetParent();
   }
@@ -3071,7 +3071,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
     ComputeFrameJustification(psd, computeState);
     if (mHasRuby && computeState.mFirstParticipant) {
       PerFrameData* firstFrame = computeState.mFirstParticipant;
-      if (firstFrame->mFrame->StyleContext()->IsInlineDescendantOfRuby()) {
+      if (firstFrame->mFrame->StyleContext()->ShouldSuppressLineBreak()) {
         MOZ_ASSERT(!firstFrame->mJustificationAssignment.mGapsAtStart);
         nsIFrame* rubyBase = FindNearestRubyBaseAncestor(firstFrame->mFrame);
         if (rubyBase && IsRubyAlignSpaceAround(rubyBase)) {
@@ -3080,7 +3080,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
         }
       }
       PerFrameData* lastFrame = computeState.mLastParticipant;
-      if (lastFrame->mFrame->StyleContext()->IsInlineDescendantOfRuby()) {
+      if (lastFrame->mFrame->StyleContext()->ShouldSuppressLineBreak()) {
         MOZ_ASSERT(!lastFrame->mJustificationAssignment.mGapsAtEnd);
         nsIFrame* rubyBase = FindNearestRubyBaseAncestor(lastFrame->mFrame);
         if (rubyBase && IsRubyAlignSpaceAround(rubyBase)) {

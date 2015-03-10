@@ -516,6 +516,36 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
   *dataSlot = aStruct;
 }
 
+static bool
+ShouldSuppressLineBreak(const nsStyleDisplay* aStyleDisplay,
+                        const nsStyleContext* aContainerContext,
+                        const nsStyleDisplay* aContainerDisplay)
+{
+  // The display change should only occur for "in-flow" children
+  if (aStyleDisplay->IsOutOfFlowStyle()) {
+    return false;
+  }
+  if (aContainerContext->ShouldSuppressLineBreak()) {
+    // Line break suppressing bit is propagated to any children of line
+    // participants, which include inline and inline ruby boxes.
+    if (aContainerDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE ||
+        aContainerDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY ||
+        aContainerDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER) {
+      return true;
+    }
+  }
+  // Any descendant of ruby level containers is non-breakable, but
+  // the level containers themselves are breakable. We have to check
+  // the container display type against all ruby display type here
+  // because any of the ruby boxes could be anonymous.
+  if (aContainerDisplay->IsRubyDisplayType() &&
+      aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
+      aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+    return true;
+  }
+  return false;
+}
+
 void
 nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
@@ -642,12 +672,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       }
     }
 
-    // The display change should only occur for "in-flow" children
-    if (!disp->IsOutOfFlowStyle() &&
-        ((containerDisp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-          containerContext->IsInlineDescendantOfRuby()) ||
-         containerDisp->IsRubyDisplayType())) {
-      mBits |= NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY;
+    if (::ShouldSuppressLineBreak(disp, containerContext, containerDisp)) {
+      mBits |= NS_STYLE_SUPPRESS_LINEBREAK;
       uint8_t displayVal = disp->mDisplay;
       nsRuleNode::EnsureInlineDisplay(displayVal);
       if (displayVal != disp->mDisplay) {
