@@ -60,12 +60,6 @@ public:
   static PCompositorChild*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
-  /**
-   * Initialize the CompositorChild and open the connection in the non-multi-process
-   * case.
-   */
-  bool OpenSameProcess(CompositorParent* aParent);
-
   static CompositorChild* Get();
 
   static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
@@ -174,9 +168,6 @@ private:
                                                         void* aLayerTransactionChild);
 
   nsRefPtr<ClientLayerManager> mLayerManager;
-  // When not multi-process, hold a reference to the CompositorParent to keep it
-  // alive. This reference should be null in multi-process.
-  nsRefPtr<CompositorParent> mCompositorParent;
 
   // The ViewID of the FrameMetrics is used as the key for this hash table.
   // While this should be safe to use since the ViewID is unique
