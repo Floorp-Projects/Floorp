@@ -90,12 +90,15 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   }
 
   if (dom::ContentChild* child = dom::ContentChild::GetSingleton()) {
-    ipc::FileDescriptor fd;
-    DebugOnly<bool> succeeded = child->SendOpenAnonymousTemporaryFile(&fd);
-    // The child process should already have been terminated if the
-    // IPC had failed.
-    MOZ_ASSERT(succeeded);
-    *aOutFileDesc = PR_ImportFile(PROsfd(fd.PlatformHandle()));
+    dom::FileDescOrError fd;
+    child->SendOpenAnonymousTemporaryFile(&fd);
+    if (fd.type() == dom::FileDescOrError::Tnsresult) {
+      nsresult rv = fd.get_nsresult();
+      MOZ_ASSERT(NS_FAILED(rv));
+      return rv;
+    }
+    *aOutFileDesc =
+      PR_ImportFile(PROsfd(fd.get_FileDescriptor().PlatformHandle()));
     return NS_OK;
   }
 
