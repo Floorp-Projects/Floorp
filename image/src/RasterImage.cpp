@@ -692,6 +692,10 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
                                      size,
                                      mapping.mStride,
                                      SurfaceFormat::B8G8R8A8);
+  if (!target) {
+    gfxWarning() << "RasterImage::CopyFrame failed in CreateDrawTargetForData";
+    return nullptr;
+  }
 
   nsIntRect intFrameRect = frameRef->GetRect();
   Rect rect(intFrameRect.x, intFrameRect.y,

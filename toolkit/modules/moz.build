@@ -36,6 +36,7 @@ EXTRA_JS_MODULES += [
     'PopupNotifications.jsm',
     'Preferences.jsm',
     'PrivateBrowsingUtils.jsm',
+    'ProfileAge.jsm',
     'Promise-backend.js',
     'Promise.jsm',
     'PromiseUtils.jsm',

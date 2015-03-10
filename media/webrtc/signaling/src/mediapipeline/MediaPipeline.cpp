@@ -1441,17 +1441,15 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
     nsRefPtr<layers::Image> image = image_container_->CreateImage(format);
     layers::PlanarYCbCrImage* yuvImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
     uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
-    const uint8_t lumaBpp = 8;
-    const uint8_t chromaBpp = 4;
 
     layers::PlanarYCbCrData yuvData;
     yuvData.mYChannel = frame;
     yuvData.mYSize = IntSize(width_, height_);
-    yuvData.mYStride = width_ * lumaBpp/ 8;
-    yuvData.mCbCrStride = width_ * chromaBpp / 8;
+    yuvData.mYStride = width_;
+    yuvData.mCbCrStride = (width_ + 1) >> 1;
     yuvData.mCbChannel = frame + height_ * yuvData.mYStride;
-    yuvData.mCrChannel = yuvData.mCbChannel + height_ * yuvData.mCbCrStride / 2;
-    yuvData.mCbCrSize = IntSize(width_/ 2, height_/ 2);
+    yuvData.mCrChannel = yuvData.mCbChannel + ((height_ + 1) >> 1) * yuvData.mCbCrStride;
+    yuvData.mCbCrSize = IntSize((width_ + 1) >> 1, (height_ + 1) >> 1);
     yuvData.mPicX = 0;
     yuvData.mPicY = 0;
     yuvData.mPicSize = IntSize(width_, height_);
