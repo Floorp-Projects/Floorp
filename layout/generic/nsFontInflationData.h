@@ -21,7 +21,7 @@ public:
   // Returns whether the effective width changed (which requires the
   // caller to mark its descendants dirty
   static bool
-    UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aReflowState);
+    UpdateFontInflationDataISizeFor(const nsHTMLReflowState& aReflowState);
 
   static void MarkFontInflationDataTextDirty(nsIFrame *aFrame);
 
@@ -32,8 +32,8 @@ public:
     return mInflationEnabled;
   }
 
-  nscoord EffectiveWidth() const {
-    return mNCAWidth;
+  nscoord EffectiveISize() const {
+    return mNCAISize;
   }
 
 private:
@@ -43,7 +43,7 @@ private:
   nsFontInflationData(const nsFontInflationData&) = delete;
   void operator=(const nsFontInflationData&) = delete;
 
-  void UpdateWidth(const nsHTMLReflowState &aReflowState);
+  void UpdateISize(const nsHTMLReflowState &aReflowState);
   enum SearchDirection { eFromStart, eFromEnd };
   static nsIFrame* FindEdgeInflatableFrameIn(nsIFrame *aFrame,
                                              SearchDirection aDirection);
@@ -52,7 +52,7 @@ private:
   void ScanText();
   // Scan text in the subtree rooted at aFrame.  Increment mTextAmount
   // by multiplying the number of characters found by the font size
-  // (yielding the width that would be occupied by the characters if
+  // (yielding the inline-size that would be occupied by the characters if
   // they were all em squares).  But stop scanning if mTextAmount
   // crosses mTextThreshold.
   void ScanTextIn(nsIFrame *aFrame);
@@ -66,7 +66,7 @@ private:
   }
 
   nsIFrame *mBFCFrame;
-  nscoord mNCAWidth;
+  nscoord mNCAISize;
   nscoord mTextAmount, mTextThreshold;
   bool mInflationEnabled; // for this BFC
   bool mTextDirty;
