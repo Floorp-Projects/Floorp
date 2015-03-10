@@ -364,7 +364,8 @@ LIRGeneratorX86Shared::lowerTruncateFToInt32(MTruncateToInt32 *ins)
 }
 
 void
-LIRGeneratorX86Shared::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins)
+LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins,
+                                                             bool useI386ByteRegisters)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
     MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
@@ -385,12 +386,11 @@ LIRGeneratorX86Shared::visitCompareExchangeTypedArrayElement(MCompareExchangeTyp
     //
     // oldval must be in a register.
     //
-    // newval will need to be in a register.  If the source is a byte
-    // array then the newval must be a register that has a byte size:
-    // ebx, ecx, or edx, since eax is taken for the output in this
-    // case.
+    // newval must be in a register.  If the source is a byte array
+    // then newval must be a register that has a byte size: on x86
+    // this must be ebx, ecx, or edx (eax is taken for the output).
     //
-    // Bug #1077036 describes some optimization opportunities.
+    // Bug #1077036 describes some further optimization opportunities.
 
     bool fixedOutput = false;
     LDefinition tempDef = LDefinition::BogusTemp();
@@ -400,13 +400,12 @@ LIRGeneratorX86Shared::visitCompareExchangeTypedArrayElement(MCompareExchangeTyp
         newval = useRegister(ins->newval());
     } else {
         fixedOutput = true;
-        if (ins->isByteArray())
+        if (useI386ByteRegisters && ins->isByteArray())
             newval = useFixed(ins->newval(), ebx);
         else
             newval = useRegister(ins->newval());
     }
 
-    // A register allocator limitation precludes 'useRegisterAtStart()' here.
     const LAllocation oldval = useRegister(ins->oldval());
 
     LCompareExchangeTypedArrayElement *lir =
@@ -419,7 +418,8 @@ LIRGeneratorX86Shared::visitCompareExchangeTypedArrayElement(MCompareExchangeTyp
 }
 
 void
-LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins)
+LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins,
+                                                         bool useI386ByteRegisters)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Uint8Clamped);
     MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
@@ -452,7 +452,7 @@ LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     //
     // Note the placement of L, cmpxchg will update eax with *mem if
     // *mem does not have the expected value, so reloading it at the
-    // top of the loop is redundant.
+    // top of the loop would be redundant.
     //
     // If the array is not a uint32 array then:
     //  - eax should be the output (one result of the cmpxchg)
@@ -488,12 +488,11 @@ LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
         } else {
             tempDef1 = temp();
         }
-    } else if (ins->isByteArray()) {
+    } else if (useI386ByteRegisters && ins->isByteArray()) {
         value = useFixed(ins->value(), ebx);
         if (bitOp)
             tempDef1 = tempFixed(ecx);
-    }
-    else {
+    } else {
         value = useRegister(ins->value());
         if (bitOp)
             tempDef1 = temp();
@@ -506,133 +505,6 @@ LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
     else
         define(lir, ins);
-}
-
-void
-LIRGeneratorX86Shared::lowerAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins,
-						     const LDefinition& addrTemp)
-{
-    MDefinition *ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
-
-    bool byteArray = false;
-    switch (ins->accessType()) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-        byteArray = true;
-        break;
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-      case Scalar::Uint32:
-        break;
-      default:
-        MOZ_CRASH("Unexpected array type");
-    }
-
-    // Register allocation:
-    //
-    // The output must be eax.
-    //
-    // oldval must be in a register (it'll eventually end up in eax so
-    // ideally it's there to begin with).
-    //
-    // newval will need to be in a register.  If the source is a byte
-    // array then the newval must be a register that has a byte size:
-    // ebx, ecx, or edx, since eax is taken for the output in this
-    // case.  We pick ebx but it would be more flexible to pick any of
-    // the three that wasn't being used.
-    //
-    // Bug #1077036 describes some optimization opportunities.
-
-    const LAllocation newval = byteArray ? useFixed(ins->newValue(), ebx) : useRegister(ins->newValue());
-    const LAllocation oldval = useRegister(ins->oldValue());
-
-    LAsmJSCompareExchangeHeap *lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
-
-    lir->setAddrTemp(addrTemp);
-    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-}
-
-void
-LIRGeneratorX86Shared::lowerAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins,
-						 const LDefinition& addrTemp)
-{
-    MDefinition *ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
-
-    bool byteArray = false;
-    switch (ins->accessType()) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-        byteArray = true;
-        break;
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-      case Scalar::Uint32:
-        break;
-      default:
-        MOZ_CRASH("Unexpected array type");
-    }
-
-    // Register allocation:
-    //
-    // For ADD and SUB we'll use XADD:
-    //
-    //    movl       value, output
-    //    lock xaddl output, mem
-    //
-    // For the 8-bit variants XADD needs a byte register for the
-    // output only, we can still set up with movl; just pin the output
-    // to eax (or ebx / ecx / edx).
-    //
-    // For AND/OR/XOR we need to use a CMPXCHG loop:
-    //
-    //    movl          *mem, eax
-    // L: mov           eax, temp
-    //    andl          value, temp
-    //    lock cmpxchg  temp, mem  ; reads eax also
-    //    jnz           L
-    //    ; result in eax
-    //
-    // Note the placement of L, cmpxchg will update eax with *mem if
-    // *mem does not have the expected value, so reloading it at the
-    // top of the loop is redundant.
-    //
-    // We want to fix eax as the output.  We also need a temp for
-    // the intermediate value.
-    //
-    // For the 8-bit variants the temp must have a byte register.
-    //
-    // There are optimization opportunities:
-    //  - when the result is unused, Bug #1077014.
-    //  - better register allocation and instruction selection, Bug #1077036.
-
-    bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
-    LDefinition tempDef = LDefinition::BogusTemp();
-    LAllocation value;
-
-    // Optimization opportunity: "value" need not be pinned to something that
-    // has a byte register unless the back-end insists on using a byte move
-    // for the setup or the payload computation, which really it need not do.
-
-    if (byteArray) {
-        value = useFixed(ins->value(), ebx);
-        if (bitOp)
-            tempDef = tempFixed(ecx);
-    } else {
-        value = useRegister(ins->value());
-        if (bitOp)
-            tempDef = temp();
-    }
-
-    LAsmJSAtomicBinopHeap *lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
-
-    lir->setAddrTemp(addrTemp);
-    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void

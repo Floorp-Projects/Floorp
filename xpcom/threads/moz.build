@@ -29,6 +29,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'BackgroundHangMonitor.h',
+    'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
     'SyncRunnable.h',
@@ -36,6 +37,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'BackgroundHangMonitor.cpp',
+    'HangAnnotations.cpp',
     'HangMonitor.cpp',
     'LazyIdleThread.cpp',
     'nsEnvironment.cpp',
