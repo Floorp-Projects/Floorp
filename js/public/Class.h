@@ -80,14 +80,26 @@ class AutoIdVector;
 class ObjectOpResult
 {
   private:
-    uint32_t code_;
+    /*
+     * code_ is either one of the special codes OkCode or Uninitialized, or
+     * an error code. For now the error codes are private to the JS engine;
+     * they're defined in js/src/js.msg.
+     *
+     * code_ is uintptr_t (rather than uint32_t) for the convenience of the
+     * JITs, which would otherwise have to deal with either padding or stack
+     * alignment on 64-bit platforms.
+     */
+    uintptr_t code_;
 
   public:
-    enum { OkCode = 0, Uninitialized = 0xffffffff };
+    enum SpecialCodes : uintptr_t {
+        OkCode = 0,
+        Uninitialized = uintptr_t(-1)
+    };
 
     ObjectOpResult() : code_(Uninitialized) {}
 
-    /* Return true if fail() was not called. */
+    /* Return true if succeed() was called. */
     bool ok() const {
         MOZ_ASSERT(code_ != Uninitialized);
         return code_ == OkCode;
@@ -129,7 +141,7 @@ class ObjectOpResult
 
     uint32_t failureCode() const {
         MOZ_ASSERT(!ok());
-        return code_;
+        return uint32_t(code_);
     }
 
     /*
