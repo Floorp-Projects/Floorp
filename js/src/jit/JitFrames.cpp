@@ -2898,12 +2898,18 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(void *exitFrame)
     ExitFrameLayout *frame = (ExitFrameLayout *) exitFrame;
     FrameType prevType = frame->prevType();
 
-    if (prevType == JitFrame_IonJS || prevType == JitFrame_BaselineJS ||
-        prevType == JitFrame_Unwound_IonJS)
-    {
+    if (prevType == JitFrame_IonJS || prevType == JitFrame_Unwound_IonJS) {
         returnAddressToFp_ = frame->returnAddress();
         fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t *>(frame);
         type_ = JitFrame_IonJS;
+        return;
+    }
+
+    if (prevType == JitFrame_BaselineJS) {
+        returnAddressToFp_ = frame->returnAddress();
+        fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t *>(frame);
+        type_ = JitFrame_BaselineJS;
+        fixBaselineDebugModeOSRReturnAddress();
         return;
     }
 
@@ -2998,6 +3004,16 @@ JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable *table, void *pc,
 }
 
 void
+JitProfilingFrameIterator::fixBaselineDebugModeOSRReturnAddress()
+{
+    MOZ_ASSERT(type_ == JitFrame_BaselineJS);
+    BaselineFrame *bl = (BaselineFrame *)(fp_ - BaselineFrame::FramePointerOffset -
+                                          BaselineFrame::Size());
+    if (BaselineDebugModeOSRInfo *info = bl->getDebugModeOSRInfo())
+        returnAddressToFp_ = info->resumeAddr;
+}
+
+void
 JitProfilingFrameIterator::operator++()
 {
     /*
@@ -3043,6 +3059,7 @@ JitProfilingFrameIterator::operator++()
         returnAddressToFp_ = frame->returnAddress();
         fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(frame);
         type_ = JitFrame_BaselineJS;
+        fixBaselineDebugModeOSRReturnAddress();
         return;
     }
 

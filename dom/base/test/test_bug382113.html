@@ -7,6 +7,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382113
   <title>Test for Bug 382113</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script class="testbody" type="application/javascript">
+
+    SimpleTest.waitForExplicitFinish();
+    var childGotOnload = false;
+    var objectGotOnload = false;
+
+    /** Test for Bug 100533 **/
+    function checkEvents() {
+      is(childGotOnload, true, "Child got load event");
+      is(objectGotOnload, true, "Object got load event");
+      SimpleTest.finish();
+    }
+  </script>
 </head>
 <body onload="checkEvents()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=382113">Mozilla Bug 382113</a>
@@ -16,22 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=382113
           onload="objectGotOnload = true;"></object>
 </div>
 <pre id="test">
-
-
-<script class="testbody" type="application/javascript">
-
-SimpleTest.waitForExplicitFinish();
-var childGotOnload = false;
-var objectGotOnload = false;
-
-/** Test for Bug 100533 **/
-function checkEvents() {
-  is(childGotOnload, true, "Child got load event");
-  is(objectGotOnload, true, "Object got load event");
-  SimpleTest.finish();
-}
-</script>
-
 </pre>
 </body>
 </html>

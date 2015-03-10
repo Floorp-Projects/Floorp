@@ -56,10 +56,10 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitSimdSelect(MSimdSelect *ins);
     void visitSimdSplatX4(MSimdSplatX4 *ins);
     void visitSimdValueX4(MSimdValueX4 *ins);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
-    void lowerAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins, const LDefinition& addrTemp);
-    void lowerAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins, const LDefinition& addrTemp);
+    void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins,
+                                               bool useI386ByteRegisters);
+    void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins,
+                                           bool useI386ByteRegisters);
 };
 
 } // namespace jit

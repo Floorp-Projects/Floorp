@@ -364,15 +364,9 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     nsRefPtr<BluetoothStatusChangedEvent> event =
       BluetoothStatusChangedEvent::Constructor(this, aData.name(), init);
     DispatchTrustedEvent(event);
-  } else if (aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
-    nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    rv = event->InitEvent(aData.name(), false, false);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    DispatchTrustedEvent(event);
+  } else if (aData.name().EqualsLiteral(PAIRING_ABORTED_ID) ||
+             aData.name().EqualsLiteral(REQUEST_MEDIA_PLAYSTATUS_ID)) {
+    DispatchEmptyEvent(aData.name());
   } else {
     BT_WARNING("Not handling adapter signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -857,30 +851,6 @@ BluetoothAdapter::HandleDeviceFound(const BluetoothValue& aValue)
 }
 
 void
-BluetoothAdapter::DispatchAttributeEvent(const nsTArray<nsString>& aTypes)
-{
-  NS_ENSURE_TRUE_VOID(aTypes.Length());
-
-  AutoJSAPI jsapi;
-  NS_ENSURE_TRUE_VOID(jsapi.Init(GetOwner()));
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> value(cx);
-
-  if (!ToJSValue(cx, aTypes, &value)) {
-    JS_ClearPendingException(cx);
-    return;
-  }
-
-  RootedDictionary<BluetoothAttributeEventInit> init(cx);
-  init.mAttrs = value;
-  nsRefPtr<BluetoothAttributeEvent> event =
-    BluetoothAttributeEvent::Constructor(this,
-                                         NS_LITERAL_STRING("attributechanged"),
-                                         init);
-  DispatchTrustedEvent(event);
-}
-
-void
 BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
 {
   MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
@@ -952,6 +922,30 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
 }
 
 void
+BluetoothAdapter::DispatchAttributeEvent(const nsTArray<nsString>& aTypes)
+{
+  NS_ENSURE_TRUE_VOID(aTypes.Length());
+
+  AutoJSAPI jsapi;
+  NS_ENSURE_TRUE_VOID(jsapi.Init(GetOwner()));
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> value(cx);
+
+  if (!ToJSValue(cx, aTypes, &value)) {
+    JS_ClearPendingException(cx);
+    return;
+  }
+
+  RootedDictionary<BluetoothAttributeEventInit> init(cx);
+  init.mAttrs = value;
+  nsRefPtr<BluetoothAttributeEvent> event =
+    BluetoothAttributeEvent::Constructor(this,
+                                         NS_LITERAL_STRING("attributechanged"),
+                                         init);
+  DispatchTrustedEvent(event);
+}
+
+void
 BluetoothAdapter::DispatchDeviceEvent(const nsAString& aType,
                                       const BluetoothDeviceEventInit& aInit)
 {
@@ -959,6 +953,19 @@ BluetoothAdapter::DispatchDeviceEvent(const nsAString& aType,
 
   nsRefPtr<BluetoothDeviceEvent> event =
     BluetoothDeviceEvent::Constructor(this, aType, aInit);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::DispatchEmptyEvent(const nsAString& aType)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = event->InitEvent(aType, false, false);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   DispatchTrustedEvent(event);
 }
 

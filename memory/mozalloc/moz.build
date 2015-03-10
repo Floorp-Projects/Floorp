@@ -38,11 +38,7 @@ UNIFIED_SOURCES += [
     'mozalloc_oom.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    Library('mozalloc')
-else:
-    GeckoSharedLibrary('mozalloc', linkage=None)
-    SDK_LIBRARY = True
+FINAL_LIBRARY = 'mozglue'
 
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES['_GNU_SOURCE'] = True
@@ -53,3 +49,8 @@ DISABLE_STL_WRAPPING = True
 
 if CONFIG['CLANG_CXX'] or CONFIG['_MSC_VER']:
     FAIL_ON_WARNINGS = True
+
+DEFINES['IMPL_MFBT'] = True
+
+if CONFIG['_MSC_VER']:
+    DIRS += ['staticruntime']

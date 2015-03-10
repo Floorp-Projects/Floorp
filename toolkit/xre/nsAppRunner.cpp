@@ -458,6 +458,8 @@ CheckArg(const char* aArg, bool aCheckOSInt = false, const char **aParam = nullp
       if (strimatch(aArg, arg)) {
         if (aRemArg)
           RemoveArg(curarg);
+        else
+          ++curarg;
         if (!aParam) {
           ar = ARG_FOUND;
           break;
@@ -1632,9 +1634,16 @@ RemoteCommandLine(const char* aDesktopStartupID)
   nsresult rv;
   ArgResult ar;
 
+  const char *profile = 0;
   nsAutoCString program(gAppData->remotingName);
   ToLowerCase(program);
   const char *username = getenv("LOGNAME");
+
+  ar = CheckArg("p", false, &profile, false);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -p requires a profile name\n");
+    return REMOTE_ARG_BAD;
+  }
 
   const char *temp = nullptr;
   ar = CheckArg("a", true, &temp);
@@ -1658,7 +1667,7 @@ RemoteCommandLine(const char* aDesktopStartupID)
  
   nsXPIDLCString response;
   bool success = false;
-  rv = client.SendCommandLine(program.get(), username, nullptr,
+  rv = client.SendCommandLine(program.get(), username, profile,
                               gArgc, gArgv, aDesktopStartupID,
                               getter_Copies(response), &success);
   // did the command fail?
