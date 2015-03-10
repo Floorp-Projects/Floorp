@@ -46,17 +46,35 @@ function f() {
         check();
         SIMD.float32x4.store(u8, 0, f4);
         check();
+    }
+}
 
+f();
+
+function testBailout(uglyDuckling) {
+    var f32 = new Float32Array(16);
+    for (var i = 0; i < 16; i++)
+        f32[i] = i + 1;
+
+    var i8  = new Int8Array(f32.buffer);
+
+    var f4 = SIMD.float32x4(42, 43, 44, 45);
+
+    for (var i = 0; i < 150; i++) {
         var caught = false;
         try {
             SIMD.float32x4.store(i8, (i < 149) ? 0 : (16 << 2) - (4 << 2) + 1, f4);
-            check();
         } catch (e) {
+            print(e);
+            assertEq(e instanceof RangeError, true);
             caught = true;
         }
         assertEq(i < 149 || caught, true);
     }
 }
 
-f();
+print('Testing range checks...');
+testBailout(-1);
+testBailout(-15);
+testBailout(12 * 4 + 1);
 
