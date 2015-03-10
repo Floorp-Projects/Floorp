@@ -1469,11 +1469,20 @@ struct nsStylePosition {
     return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
 
-  // This method is defined in nsStyleStructInlines.h.
-  /* Returns whether the element has the -moz-transform property
-   * or a related property, and supports CSS transforms. */
+  // These methods are defined in nsStyleStructInlines.h.
+
+  /**
+   * Returns true when the element has the transform property
+   * or a related property, and supports CSS transforms.
+   * aContextFrame is the frame for which this is the nsStylePosition.
+   */
   inline bool HasTransform(const nsIFrame* aContextFrame) const;
 
+  /**
+   * Returns true when the element is a containing block for its fixed-pos
+   * descendants.
+   * aContextFrame is the frame for which this is the nsStylePosition.
+   */
   inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
 
 private:
