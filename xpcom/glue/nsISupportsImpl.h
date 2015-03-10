@@ -49,8 +49,8 @@ struct HasDangerousPublicDestructor
 #  if MOZ_USING_LIBSTDCXX && MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
 #    define MOZ_HAVE_STD_IS_DESTRUCTIBLE
    // Some GCC versions have an ICE when using destructors in decltype().
-   // Works for me on GCC 4.8.2 on Fedora 20 x86-64.
-#  elif MOZ_GCC_VERSION_AT_LEAST(4, 8, 2)
+   // Works on GCC 4.8 at least.
+#  elif MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
 #    define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
 #  endif
 #endif
