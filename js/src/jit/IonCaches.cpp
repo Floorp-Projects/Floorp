@@ -1468,7 +1468,7 @@ PushObjectOpResult(MacroAssembler &masm)
 {
     static_assert(sizeof(ObjectOpResult) == sizeof(uintptr_t),
                   "ObjectOpResult size must match size reserved by masm.Push() here");
-    masm.Push(ImmWord(uintptr_t(ObjectOpResult::Uninitialized)));
+    masm.Push(ImmWord(ObjectOpResult::Uninitialized));
 }
 
 static bool
@@ -2498,7 +2498,8 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         // Test for failure.
-        EmitObjectOpResultCheck<IonOOLSetterOpExitFrameLayout>(masm, failure, strict, scratchReg,
+        EmitObjectOpResultCheck<IonOOLSetterOpExitFrameLayout>(masm, masm.exceptionLabel(),
+                                                               strict, scratchReg,
                                                                argJSContextReg, argObjReg,
                                                                argIdReg, argVpReg, argResultReg);
 
