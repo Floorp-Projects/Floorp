@@ -120,6 +120,7 @@ exports.getHighlighterUtils = function(toolbox) {
     if (isRemoteHighlightable()) {
       toolbox.walker.on("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.on("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.on("picker-node-canceled", onPickerNodeCanceled);
 
       yield toolbox.highlighter.pick();
       toolbox.emit("picker-started");
@@ -151,6 +152,7 @@ exports.getHighlighterUtils = function(toolbox) {
       yield toolbox.highlighter.cancelPick();
       toolbox.walker.off("picker-node-hovered", onPickerNodeHovered);
       toolbox.walker.off("picker-node-picked", onPickerNodePicked);
+      toolbox.walker.off("picker-node-canceled", onPickerNodeCanceled);
     } else {
       // If the target doesn't have the highlighter actor, use the walker's
       // cancelPick method instead
@@ -175,6 +177,13 @@ exports.getHighlighterUtils = function(toolbox) {
    */
   function onPickerNodePicked(data) {
     toolbox.selection.setNodeFront(data.node, "picker-node-picked");
+    stopPicker();
+  }
+
+  /**
+   * When the picker is canceled
+   */
+  function onPickerNodeCanceled() {
     stopPicker();
   }
 
