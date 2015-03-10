@@ -8,6 +8,7 @@
 #include "nsComponentManagerUtils.h"
 #include "prtime.h"
 #include "MLSFallback.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,7 +33,7 @@ WindowsLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *aPosition)
     return NS_ERROR_FAILURE;
   }
 
-  // TODO add telemetry here to track volume of MLS vs native geo responses
+  Telemetry::Accumulate(Telemetry::GEOLOCATION_WIN8_SOURCE_IS_MLS, true);
 
   return mCallback->Update(aPosition);
 }
@@ -182,6 +183,8 @@ LocationEvent::OnLocationChanged(REFIID aReportType,
     new nsGeoPosition(latitude, longitude, alt, herror, verror, 0.0, 0.0,
                       PR_Now());
   mCallback->Update(position);
+
+  Telemetry::Accumulate(Telemetry::GEOLOCATION_WIN8_SOURCE_IS_MLS, false);
 
   return S_OK;
 }
