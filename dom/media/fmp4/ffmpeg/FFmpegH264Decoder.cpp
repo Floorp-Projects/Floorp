@@ -36,6 +36,7 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mDisplayHeight(aConfig.display_height)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
+  mExtraData = aConfig.extra_data;
   mp4_demuxer::SPSData spsdata;
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(aConfig.extra_data, spsdata)) {
     mDisplayWidth = spsdata.display_width;
@@ -60,12 +61,6 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
-
-  if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
-    NS_WARNING("FFmpeg h264 decoder failed to convert sample to Annex B.");
-    mCallback->Error();
-    return DecodeResult::DECODE_ERROR;
-  }
 
   if (!aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE)) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate sample.");
