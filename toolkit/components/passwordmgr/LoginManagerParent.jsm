@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "UserAutoCompleteResult",
 XPCOMUtils.defineLazyModuleGetter(this, "AutoCompleteE10S",
                                   "resource://gre/modules/AutoCompleteE10S.jsm");
 
-this.EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
+this.EXPORTED_SYMBOLS = [ "LoginManagerParent", "PasswordsMetricsProvider" ];
 
 var gDebug;
 
@@ -50,6 +50,61 @@ function log(...pieces) {
   dump(message + "\n");
   Services.console.logStringMessage(message);
 }
+
+#ifndef ANDROID
+#ifdef MOZ_SERVICES_HEALTHREPORT
+XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
+                                  "resource://gre/modules/Metrics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
+this.PasswordsMetricsProvider = function() {
+  Metrics.Provider.call(this);
+}
+
+PasswordsMetricsProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.passwordmgr",
+
+  measurementTypes: [
+    PasswordsMeasurement1,
+  ],
+
+  pullOnly: true,
+
+  collectDailyData: function* () {
+    return this.storage.enqueueTransaction(this._recordDailyPasswordData.bind(this));
+  },
+
+  _recordDailyPasswordData: function() {
+    let m = this.getMeasurement(PasswordsMeasurement1.prototype.name,
+                                PasswordsMeasurement1.prototype.version);
+    let enabled = Services.prefs.getBoolPref("signon.rememberSignons");
+    yield m.setDailyLastNumeric("enabled", enabled ? 1 : 0);
+
+    let loginsCount = Services.logins.countLogins("", "", "");
+    yield m.setDailyLastNumeric("numSavedPasswords", loginsCount);
+
+  },
+});
+
+function PasswordsMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+PasswordsMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+  name: "passwordmgr",
+  version: 1,
+  fields: {
+    enabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    numSavedPasswords: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+  },
+});
+
+#endif
+#endif
 
 function prefChanged() {
   gDebug = Services.prefs.getBoolPref("signon.debug");
