@@ -33,17 +33,14 @@ extern PRLogModuleInfo* gMediaPromiseLog;
   PR_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
 
 class MediaTaskQueue;
-class MediaDecoderStateMachineScheduler;
 namespace detail {
 
 nsresult DispatchMediaPromiseRunnable(MediaTaskQueue* aQueue, nsIRunnable* aRunnable);
 nsresult DispatchMediaPromiseRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable);
-nsresult DispatchMediaPromiseRunnable(MediaDecoderStateMachineScheduler* aScheduler, nsIRunnable* aRunnable);
 
 #ifdef DEBUG
 void AssertOnThread(MediaTaskQueue* aQueue);
 void AssertOnThread(nsIEventTarget* aTarget);
-void AssertOnThread(MediaDecoderStateMachineScheduler* aScheduler);
 #endif
 
 } // namespace detail
