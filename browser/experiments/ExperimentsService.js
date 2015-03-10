@@ -56,7 +56,10 @@ ExperimentsService.prototype = {
     if (OS.Constants.Path.profileDir === undefined) {
       throw Error("Update timer fired before profile was initialized?");
     }
-    Experiments.instance().updateManifest();
+    let instance = Experiments.instance();
+    if (instance.isReady) {
+      instance.updateManifest();
+    }
   },
 
   _delayedInit: function () {

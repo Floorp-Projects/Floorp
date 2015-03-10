@@ -419,6 +419,14 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
 Experiments.Experiments.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsIObserver]),
 
+  /**
+   * `true` if the experiments manager is currently setup (has been fully initialized
+   * and not uninitialized yet).
+   */
+  get isReady() {
+    return !this._shutdown;
+  },
+
   init: function () {
     this._shutdown = false;
     configureLogging();
