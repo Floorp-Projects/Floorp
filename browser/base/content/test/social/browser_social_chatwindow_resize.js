@@ -45,7 +45,7 @@ function test() {
         finishcb();
       });
     },
-    "waitForProviderLoad: provider profile was not set");
+    "waitForProviderLoad: provider profile was not set", 100);
   });
 }
 
