@@ -2146,6 +2146,9 @@ EmitObjectOpResultCheck(MacroAssembler &masm, Label *failure, bool strict,
     //         goto failure;
     masm.loadJSContext(argJSContextReg);
     masm.computeEffectiveAddress(
+        Address(StackPointer, FrameLayout::offsetOfObject()),
+        argObjReg);
+    masm.computeEffectiveAddress(
         Address(StackPointer, FrameLayout::offsetOfId()),
         argIdReg);
     masm.move32(Imm32(strict), argStrictReg);
