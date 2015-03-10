@@ -89,6 +89,7 @@ enum OneByteOpcodeID {
     OP_MOV_OvEAX                    = 0xA3,
     OP_TEST_EAXIb                   = 0xA8,
     OP_TEST_EAXIv                   = 0xA9,
+    OP_MOV_EbIb                     = 0xB0,
     OP_MOV_EAXIv                    = 0xB8,
     OP_GROUP2_EvIb                  = 0xC1,
     OP_RET_Iz                       = 0xC2,
