@@ -48,6 +48,7 @@ toolkit.jar:
 *+ content/global/globalOverlay.js            (globalOverlay.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
    content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
+   content/global/process-content.js          (process-content.js)
    content/global/resetProfile.css            (resetProfile.css)
    content/global/resetProfile.js             (resetProfile.js)
    content/global/resetProfile.xul            (resetProfile.xul)
