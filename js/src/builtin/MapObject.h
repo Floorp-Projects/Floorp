@@ -98,12 +98,13 @@ class MapObject : public NativeObject {
     static bool has(JSContext* cx, unsigned argc, Value* vp);
     static MapObject* create(JSContext* cx);
 
-    static uint32_t size(JSContext* cx, HandleObject obj);
-    static bool get(JSContext* cx, HandleObject obj, HandleValue key, MutableHandleValue rval);
-    static bool has(JSContext* cx, HandleObject obj, HandleValue key, bool* rval);
-    static bool set(JSContext* cx, HandleObject obj, HandleValue key, HandleValue val);
-    static bool clear(JSContext* cx, HandleObject obj);
-    static bool iterator(JSContext* cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
+    static uint32_t size(JSContext *cx, HandleObject obj);
+    static bool get(JSContext *cx, HandleObject obj, HandleValue key, MutableHandleValue rval);
+    static bool has(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
+    static bool delete_(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
+    static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val);
+    static bool clear(JSContext *cx, HandleObject obj);
+    static bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
 
   private:
     static const JSPropertySpec properties[];

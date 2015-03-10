@@ -1469,7 +1469,23 @@ MapObject::set(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-MapObject::delete_impl(JSContext* cx, CallArgs args)
+MapObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
+{
+    ValueMap &map = extract(obj);
+    AutoHashableValueRooter k(cx);
+
+    if (!k.setValue(cx, key))
+        return false;
+
+    if (!map.remove(k, rval)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    return true;
+}
+
+bool
+MapObject::delete_impl(JSContext *cx, CallArgs args)
 {
     // MapObject::mark does not mark deleted entries. Incremental GC therefore
     // requires that no RelocatableValue objects pointing to heap values be
@@ -2160,7 +2176,15 @@ JS::MapHas(JSContext* cx, HandleObject obj, HandleValue key, bool* rval)
 }
 
 JS_PUBLIC_API(bool)
-JS::MapSet(JSContext* cx, HandleObject obj,
+JS::MapDelete(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, key);
+    return MapObject::delete_(cx, obj, key, rval);
+}
+
+JS_PUBLIC_API(bool)
+JS::MapSet(JSContext *cx, HandleObject obj,
            HandleValue key, HandleValue val)
 {
     CHECK_REQUEST(cx);
