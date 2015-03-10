@@ -41,7 +41,7 @@ class CompositorVsyncObserver;
 // this sample time, we extrapolate the last two touch events to the sample
 // time. The magic numbers defined as constants are taken from android
 // InputTransport.cpp.
-class GeckoTouchDispatcher
+class GeckoTouchDispatcher MOZ_FINAL
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoTouchDispatcher)
 
@@ -53,6 +53,9 @@ public:
   void DispatchTouchMoveEvents(TimeStamp aVsyncTime);
   void NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetCompositorVsyncObserver(layers::CompositorVsyncObserver* aObserver);
+
+protected:
+  ~GeckoTouchDispatcher() {}
 
 private:
   GeckoTouchDispatcher();

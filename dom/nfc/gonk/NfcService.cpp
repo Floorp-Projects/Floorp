@@ -161,17 +161,17 @@ public:
 
         if (recordStruct.mType.Length() > 0) {
           record.mType.Construct();
-          record.mType.Value().Init(Uint8Array::Create(cx, recordStruct.mType.Length(), recordStruct.mType.Elements()));
+          record.mType.Value().SetValue().Init(Uint8Array::Create(cx, recordStruct.mType.Length(), recordStruct.mType.Elements()));
         }
 
         if (recordStruct.mId.Length() > 0) {
           record.mId.Construct();
-          record.mId.Value().Init(Uint8Array::Create(cx, recordStruct.mId.Length(), recordStruct.mId.Elements()));
+          record.mId.Value().SetValue().Init(Uint8Array::Create(cx, recordStruct.mId.Length(), recordStruct.mId.Elements()));
         }
 
         if (recordStruct.mPayload.Length() > 0) {
           record.mPayload.Construct();
-          record.mPayload.Value().Init(Uint8Array::Create(cx, recordStruct.mPayload.Length(), recordStruct.mPayload.Elements()));
+          record.mPayload.Value().SetValue().Init(Uint8Array::Create(cx, recordStruct.mPayload.Length(), recordStruct.mPayload.Elements()));
         }
       }
     }

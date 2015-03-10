@@ -26,7 +26,6 @@ class AudioChannelManager MOZ_FINAL
 {
 public:
   AudioChannelManager();
-  virtual ~AudioChannelManager();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMEVENTLISTENER
@@ -61,6 +60,9 @@ public:
   bool GetVolumeControlChannel(nsAString& aChannel);
 
   IMPL_EVENT_HANDLER(headphoneschange)
+
+protected:
+  virtual ~AudioChannelManager();
 
 private:
   void NotifyVolumeControlChannelChanged();

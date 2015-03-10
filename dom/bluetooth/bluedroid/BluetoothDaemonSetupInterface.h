@@ -16,12 +16,13 @@ class BluetoothSetupResultHandler
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothSetupResultHandler)
 
-  virtual ~BluetoothSetupResultHandler();
-
   virtual void OnError(BluetoothStatus aStatus);
   virtual void RegisterModule();
   virtual void UnregisterModule();
   virtual void Configuration();
+
+protected:
+  virtual ~BluetoothSetupResultHandler();
 };
 
 END_BLUETOOTH_NAMESPACE
