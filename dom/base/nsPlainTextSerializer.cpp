@@ -29,6 +29,7 @@ using namespace mozilla::dom;
 
 #define PREF_STRUCTS "converter.html2txt.structs"
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
+#define PREF_ALWAYS_INCLUDE_RUBY "converter.html2txt.always_include_ruby"
 
 static const  int32_t kTabSize=4;
 static const  int32_t kIndentSizeHeaders = 2;  /* Indention of h1, if
@@ -92,6 +93,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mStartedOutput = false;
 
   mPreformattedBlockBoundary = false;
+  mWithRubyAnnotation = false;  // will be read from pref and flag later
 
   // initialize the tag stack to zero:
   // The stack only ever contains pointers to static atoms, so they don't
@@ -188,6 +190,13 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
     }
   }
 
+  // The pref is default inited to false in libpref, but we use true
+  // as fallback value because we don't want to affect behavior in
+  // other places which use this serializer currently.
+  mWithRubyAnnotation =
+    Preferences::GetBool(PREF_ALWAYS_INCLUDE_RUBY, true) ||
+    (mFlags & nsIDocumentEncoder::OutputRubyAnnotation);
+
   // XXX We should let the caller decide whether to do this or not
   mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
 
@@ -253,6 +262,19 @@ nsPlainTextSerializer::ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag)
     (aTag == nsGkAtoms::object) ||
     (aTag == nsGkAtoms::svg) ||
     (aTag == nsGkAtoms::video);
+}
+
+bool
+nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsIAtom* aTag)
+{
+  if (mWithRubyAnnotation) {
+    return false;
+  }
+
+  return
+    aTag == nsGkAtoms::rp ||
+    aTag == nsGkAtoms::rt ||
+    aTag == nsGkAtoms::rtc;
 }
 
 NS_IMETHODIMP 
@@ -437,6 +459,12 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
       Write(NS_LITERAL_STRING("\xFFFC"));
     }
     // Ignore child nodes.
+    mIgnoredChildNodeLevel++;
+    return NS_OK;
+  }
+  if (IsIgnorableRubyAnnotation(aTag)) {
+    // Ignorable ruby annotation shouldn't be replaced by a placeholder
+    // character, neither any of its descendants.
     mIgnoredChildNodeLevel++;
     return NS_OK;
   }
@@ -777,6 +805,10 @@ nsresult
 nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
 {
   if (ShouldReplaceContainerWithPlaceholder(mElement->NodeInfo()->NameAtom())) {
+    mIgnoredChildNodeLevel--;
+    return NS_OK;
+  }
+  if (IsIgnorableRubyAnnotation(aTag)) {
     mIgnoredChildNodeLevel--;
     return NS_OK;
   }

@@ -296,6 +296,8 @@ PendingDBLookup::LookupSpecInternal(const nsACString& aSpec)
   LOG(("Checking DB service for principal %s [this = %p]", mSpec.get(), this));
   nsCOMPtr<nsIUrlClassifierDBService> dbService =
     do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoCString tables;
   nsAutoCString allowlist;
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowlist);

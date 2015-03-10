@@ -9,7 +9,7 @@
 
 #include "base/process.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/HangMonitor.h"
+#include "mozilla/HangAnnotations.h"
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
@@ -287,6 +287,7 @@ protected:
     TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
+    bool mIsFlashPlugin;
 
 #ifdef MOZ_X11
     // Dup of plugin's X socket, used to scope its resources to this
@@ -295,7 +296,7 @@ protected:
 #endif
 
     bool
-    GetPluginDetails(nsACString& aPluginName, nsACString& aPluginVersion);
+    GetPluginDetails();
 
     friend class mozilla::dom::CrashReporterParent;
     friend class mozilla::plugins::PluginAsyncSurrogate;
@@ -389,12 +390,20 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
+    void OnEnteredCall() MOZ_OVERRIDE;
+    void OnExitedCall() MOZ_OVERRIDE;
+    void OnEnteredSyncSend() MOZ_OVERRIDE;
+    void OnExitedSyncSend() MOZ_OVERRIDE;
+
 private:
     virtual void
     EnteredCxxStack() MOZ_OVERRIDE;
 
     void
     ExitedCxxStack() MOZ_OVERRIDE;
+
+    mozilla::ipc::IProtocol* GetInvokingProtocol();
+    PluginInstanceParent* GetManagingInstance(mozilla::ipc::IProtocol* aProtocol);
 
     virtual void
     AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) MOZ_OVERRIDE;
@@ -461,6 +470,8 @@ private:
         kHangUIDontShow = (1u << 3)
     };
     Atomic<uint32_t> mHangAnnotationFlags;
+    mozilla::Mutex mHangAnnotatorMutex;
+    InfallibleTArray<mozilla::ipc::IProtocol*> mProtocolCallStack;
 #ifdef XP_WIN
     InfallibleTArray<float> mPluginCpuUsageOnHang;
     PluginHangUIParent *mHangUIParent;
@@ -539,7 +550,6 @@ private:
     NPError             mAsyncInitError;
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mOfflineObserver;
-    bool mIsFlashPlugin;
     bool mIsBlocklisted;
     static bool sInstantiated;
 };
