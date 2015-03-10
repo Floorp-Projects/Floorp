@@ -483,6 +483,10 @@ nsresult imgFrame::Optimize()
                                        mapping.mStride,
                                        optFormat);
 
+    if (!target) {
+      gfxWarning() << "imgFrame::Optimize failed in CreateDrawTargetForData";
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     Rect rect(0, 0, mSize.width, mSize.height);
     target->DrawSurface(mImageSurface, rect, rect);
     target->Flush();
@@ -882,6 +886,10 @@ imgFrame::Deoptimize()
                                          mSize,
                                          mapping.mStride,
                                          format);
+      if (!target) {
+        gfxWarning() << "imgFrame::Deoptimize failed in CreateDrawTargetForData";
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       Rect rect(0, 0, mSize.width, mSize.height);
       if (mSinglePixel)

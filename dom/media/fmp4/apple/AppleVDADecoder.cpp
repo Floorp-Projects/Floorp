@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 #include "VideoUtils.h"
+#include <algorithm>
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog();
@@ -35,10 +36,13 @@ AppleVDADecoder::AppleVDADecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                FlushableMediaTaskQueue* aVideoTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
-  : mConfig(aConfig)
-  , mTaskQueue(aVideoTaskQueue)
+  : mTaskQueue(aVideoTaskQueue)
   , mCallback(aCallback)
   , mImageContainer(aImageContainer)
+  , mPictureWidth(aConfig.image_width)
+  , mPictureHeight(aConfig.image_height)
+  , mDisplayWidth(aConfig.display_width)
+  , mDisplayHeight(aConfig.display_height)
   , mDecoder(nullptr)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
 {
@@ -46,26 +50,24 @@ AppleVDADecoder::AppleVDADecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
   // TODO: Verify aConfig.mime_type.
 
   // Retrieve video dimensions from H264 SPS NAL.
-  mPictureWidth = mConfig.image_width;
-  mPictureHeight = mConfig.image_height;
+  mPictureWidth = aConfig.image_width;
+  mExtraData = aConfig.extra_data;
   mMaxRefFrames = 4;
   mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(mConfig.extra_data, spsdata) &&
-      spsdata.pic_width && spsdata.pic_height) {
-    mPictureWidth = spsdata.pic_width;
-    mPictureHeight = spsdata.pic_height;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(mExtraData, spsdata)) {
     // max_num_ref_frames determines the size of the sliding window
     // we need to queue that many frames in order to guarantee proper
     // pts frames ordering. Use a minimum of 4 to ensure proper playback of
     // non compliant videos.
     mMaxRefFrames =
-      (spsdata.max_num_ref_frames + 1) > mMaxRefFrames ?
-        spsdata.max_num_ref_frames + 1 : mMaxRefFrames;
+      std::min(std::max(mMaxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
   }
 
-  LOG("Creating AppleVDADecoder for %dx%d h.264 video",
+  LOG("Creating AppleVDADecoder for %dx%d (%dx%d) h.264 video",
       mPictureWidth,
-      mPictureHeight
+      mPictureHeight,
+      mDisplayWidth,
+      mDisplayHeight
      );
 }
 
@@ -257,12 +259,12 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   nsRefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
   // Bounds.
   VideoInfo info;
-  info.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
+  info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
   info.mHasVideo = true;
   gfx::IntRect visible = gfx::IntRect(0,
                                       0,
-                                      mConfig.display_width,
-                                      mConfig.display_height);
+                                      mPictureWidth,
+                                      mPictureHeight);
 
   nsRefPtr<layers::Image> image =
     mImageContainer->CreateImage(ImageFormat::MAC_IOSURFACE);
@@ -410,8 +412,8 @@ AppleVDADecoder::InitializeSession()
 CFDictionaryRef
 AppleVDADecoder::CreateDecoderSpecification()
 {
-  const uint8_t* extradata = mConfig.extra_data->Elements();
-  int extrasize = mConfig.extra_data->Length();
+  const uint8_t* extradata = mExtraData->Elements();
+  int extrasize = mExtraData->Length();
 
   OSType format = 'avc1';
   AutoCFRelease<CFNumberRef> avc_width  =

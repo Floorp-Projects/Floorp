@@ -1198,6 +1198,10 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
                                        dataSurface->GetSize(),
                                        map.mStride,
                                        dataSurface->GetFormat());
+    if (!dt) {
+      gfxWarning() << "AsyncFaviconDataReady::OnComplete failed in CreateDrawTargetForData";
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     dt->FillRect(Rect(0, 0, size.width, size.height),
                  ColorPattern(Color(1.0f, 1.0f, 1.0f, 1.0f)));
     dt->DrawSurface(surface,

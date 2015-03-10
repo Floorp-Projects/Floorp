@@ -149,9 +149,10 @@ PlatformDecoderModule::CreatePDM()
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(FFmpegRuntimeLinker::CreateDecoderModule());
+    nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
     if (m) {
-      return m.forget();
+      nsRefPtr<PlatformDecoderModule> m2(new AVCCDecoderModule(m));
+      return m2.forget();
     }
   }
 #endif

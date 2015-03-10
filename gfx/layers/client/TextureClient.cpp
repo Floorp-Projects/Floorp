@@ -532,7 +532,17 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
   }
 
   RefPtr<DrawTarget> destinationTarget = aTarget->BorrowDrawTarget();
+  if (!destinationTarget) {
+      gfxWarning() << "TextureClient::CopyToTextureClient (dest) failed in BorrowDrawTarget";
+    return false;
+  }
+
   RefPtr<DrawTarget> sourceTarget = BorrowDrawTarget();
+  if (!sourceTarget) {
+    gfxWarning() << "TextureClient::CopyToTextureClient (src) failed in BorrowDrawTarget";
+    return false;
+  }
+
   RefPtr<gfx::SourceSurface> source = sourceTarget->Snapshot();
   destinationTarget->CopySurface(source,
                                  aRect ? *aRect : gfx::IntRect(gfx::IntPoint(0, 0), GetSize()),

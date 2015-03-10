@@ -181,12 +181,6 @@ TouchCaret::SetVisibility(bool aVisible)
 
   // Set touch caret expiration time.
   mVisible ? LaunchExpirationTimer() : CancelExpirationTimer();
-
-  // We must call SetMayHaveTouchCaret() in order to get APZC to wait until the
-  // event has been round-tripped and check whether it has been handled,
-  // otherwise B2G will end up panning the document when the user tries to drag
-  // touch caret.
-  presShell->SetMayHaveTouchCaret(mVisible);
 }
 
 nsRect

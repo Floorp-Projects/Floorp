@@ -261,7 +261,7 @@ protected:
     apzc->Destroy();
   }
 
-  void SetMayHaveTouchListeners()
+  void MakeApzcWaitForMainThread()
   {
     apzc->SetWaitForMainThread();
   }
@@ -765,7 +765,7 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
 
-  SetMayHaveTouchListeners();
+  MakeApzcWaitForMainThread();
   MakeApzcZoomable();
 
   int touchInputId = 0;
@@ -969,7 +969,7 @@ protected:
 
   void DoPanWithPreventDefaultTest()
   {
-    SetMayHaveTouchListeners();
+    MakeApzcWaitForMainThread();
 
     int time = 0;
     int touchStart = 50;
@@ -1248,7 +1248,7 @@ protected:
   }
 
   void DoFlingStopWithSlowListener(bool aPreventDefault) {
-    SetMayHaveTouchListeners();
+    MakeApzcWaitForMainThread();
 
     int time = 0;
     int touchStart = 50;
@@ -1573,7 +1573,7 @@ DoubleTapAndCheckStatus(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, 
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTap) {
-  SetMayHaveTouchListeners();
+  MakeApzcWaitForMainThread();
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
@@ -1593,7 +1593,7 @@ TEST_F(APZCGestureDetectorTester, DoubleTap) {
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
-  SetMayHaveTouchListeners();
+  MakeApzcWaitForMainThread();
   MakeApzcUnzoomable();
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(2);
@@ -1613,7 +1613,7 @@ TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
-  SetMayHaveTouchListeners();
+  MakeApzcWaitForMainThread();
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
@@ -1633,7 +1633,7 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
-  SetMayHaveTouchListeners();
+  MakeApzcWaitForMainThread();
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(0);
@@ -2668,8 +2668,6 @@ protected:
 };
 
 TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -2723,8 +2721,6 @@ TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
 }
 
 TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateEventRegionsLayerTree2();
 
   int time = 0;
@@ -2738,8 +2734,6 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
 }
 
 TEST_F(APZEventRegionsTester, Obscuration) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(0, root, mcc);
 
@@ -2758,8 +2752,6 @@ TEST_F(APZEventRegionsTester, Obscuration) {
 }
 
 TEST_F(APZEventRegionsTester, Bug1119497) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateBug1119497LayerTree();
 
   HitTestResult result;
@@ -2771,8 +2763,6 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
 }
 
 TEST_F(APZEventRegionsTester, Bug1117712) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateBug1117712LayerTree();
 
   TestAsyncPanZoomController* apzc2 = ApzcOf(layers[2]);
