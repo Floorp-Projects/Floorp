@@ -344,7 +344,8 @@ describe("loop.shared.views", function() {
       }, Backbone.Events);
       fakeSDK = {
         initPublisher: sandbox.stub().returns(fakePublisher),
-        initSession: sandbox.stub().returns(fakeSession)
+        initSession: sandbox.stub().returns(fakeSession),
+        on: sandbox.stub()
       };
       model = new sharedModels.ConversationModel(fakeSessionData, {
         sdk: fakeSDK
