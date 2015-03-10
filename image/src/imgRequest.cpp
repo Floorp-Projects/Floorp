@@ -18,7 +18,6 @@
 
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
-#include "nsIDocument.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIInputStream.h"
 #include "nsIMultiPartChannel.h"
@@ -96,7 +95,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
-                          nsISupports* aCX,
+                          void *aLoadId,
                           nsIPrincipal* aLoadingPrincipal,
                           int32_t aCORSMode,
                           ReferrerPolicy aReferrerPolicy)
@@ -133,13 +132,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mCacheEntry = aCacheEntry;
 
-  SetLoadId(aCX);
-
-  // Grab the inner window ID of the loading document, if possible.
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
-  if (doc) {
-    mInnerWindowId = doc->InnerWindowID();
-  }
+  SetLoadId(aLoadId);
 
   return NS_OK;
 }
