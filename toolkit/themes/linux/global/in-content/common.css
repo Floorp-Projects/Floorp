@@ -63,7 +63,6 @@ xul|*.checkbox-check[checked] {
 xul|radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
   -moz-box-align: center;
-  -moz-margin-start: 0;
 }
 
 xul|*.radio-check {
