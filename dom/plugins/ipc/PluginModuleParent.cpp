@@ -155,6 +155,10 @@ public:
     void Run() MOZ_OVERRIDE
     {
         mParent->DoInjection(mSnapshot);
+        // We don't need to hold this lock during DoInjection, but we do need
+        // to obtain it before returning from Run() to ensure that
+        // PostToMainThread has completed before we return.
+        mozilla::MutexAutoLock lock(mMutex);
     }
 
     void Cancel() MOZ_OVERRIDE
