@@ -129,7 +129,6 @@
         // that we can hide
         if (panel.hidePopup) {
           panel.hidePopup();
-          panel.hidden = true;
         }
         this.pageData = null;
         ]]></body>
