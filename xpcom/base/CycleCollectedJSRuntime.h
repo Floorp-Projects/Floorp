@@ -301,7 +301,6 @@ private:
 
   nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
 
-  nsTArray<nsISupports*> mDeferredSupports;
   typedef nsDataHashtable<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
     DeferredFinalizerTable;
   DeferredFinalizerTable mDeferredFinalizerTable;
