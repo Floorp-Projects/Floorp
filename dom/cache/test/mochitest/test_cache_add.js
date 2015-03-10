@@ -45,10 +45,8 @@ caches.open('adder').then(function(openCache) {
   resultList.every(function(result) {
     ok(!!result, 'Responses should now be in cache for each URL.');
   });
-  return caches.delete("adder");
-}).then(function() {
-  testDone();
+  workerTestDone();
 }).catch(function(err) {
   ok(false, 'Caught error: ' + err);
-  testDone();
+  workerTestDone();
 });
