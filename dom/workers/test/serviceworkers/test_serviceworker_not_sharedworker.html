@@ -1,0 +1,72 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1141274 - test that service workers and shared workers are separate</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var iframe;
+  const SCOPE = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/";
+  function runTest() {
+    navigator.serviceWorker.register("serviceworker_not_sharedworker.js",
+                                     {scope: SCOPE})
+      .then(function(registration) {
+        if (registration.installing) {
+          registration.installing.onstatechange = function(e) {
+            e.target.onstatechange = null;
+            setupSW(registration);
+          };
+        } else {
+          setupSW(registration);
+        }
+      });
+  }
+
+  var sw, worker;
+  function setupSW(registration) {
+    sw = registration.waiting || registration.active;
+    worker = new SharedWorker("serviceworker_not_sharedworker.js", SCOPE);
+    worker.port.start();
+    iframe = document.querySelector("iframe");
+    iframe.src = "message_receiver.html";
+    iframe.onload = function() {
+      window.onmessage = function(e) {
+        is(e.data.result, "serviceworker", "We should be talking to a service worker");
+        window.onmessage = null;
+        worker.port.onmessage = function(e) {
+          is(e.data.result, "sharedworker", "We should be talking to a shared worker");
+          registration.unregister().then(function(success) {
+            ok(success, "unregister should succeed");
+            SimpleTest.finish();
+          });
+        };
+        worker.port.postMessage({msg: "whoareyou"});
+      };
+      sw.postMessage({msg: "whoareyou"});
+    };
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>
