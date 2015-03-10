@@ -589,6 +589,46 @@ imgRequest::CacheChanged(nsIRequest* aNewRequest)
   return true;
 }
 
+nsresult
+imgRequest::LockImage()
+{
+  return mImage->LockImage();
+}
+
+nsresult
+imgRequest::UnlockImage()
+{
+  return mImage->UnlockImage();
+}
+
+nsresult
+imgRequest::RequestDecode()
+{
+  // If we've initialized our image, we can request a decode.
+  if (mImage) {
+    return mImage->RequestDecode();
+  }
+
+  // Otherwise, flag to do it when we get the image
+  mDecodeRequested = true;
+
+  return NS_OK;
+}
+
+nsresult
+imgRequest::StartDecoding()
+{
+  // If we've initialized our image, we can request a decode.
+  if (mImage) {
+    return mImage->StartDecoding();
+  }
+
+  // Otherwise, flag to do it when we get the image
+  mDecodeRequested = true;
+
+  return NS_OK;
+}
+
 /** nsIRequestObserver methods **/
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */

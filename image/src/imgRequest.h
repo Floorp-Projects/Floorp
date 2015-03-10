@@ -19,7 +19,6 @@
 #include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class imgCacheValidator;
@@ -88,8 +87,12 @@ public:
   // Called or dispatched by EvictFromCache for main thread only execution.
   void ContinueEvict();
 
-  // Request that we start decoding the image as soon as data becomes available.
-  void RequestDecode() { mDecodeRequested = true; }
+  // Methods that get forwarded to the Image, or deferred until it's
+  // instantiated.
+  nsresult LockImage();
+  nsresult UnlockImage();
+  nsresult StartDecoding();
+  nsresult RequestDecode();
 
   inline void SetInnerWindowID(uint64_t aInnerWindowId) {
     mInnerWindowId = aInnerWindowId;
@@ -261,7 +264,9 @@ private:
 
   nsresult mImageErrorCode;
 
-  mozilla::Atomic<bool> mDecodeRequested;
+  // Sometimes consumers want to do things before the image is ready. Let them,
+  // and apply the action when the image becomes available.
+  bool mDecodeRequested : 1;
 
   bool mIsMultiPartChannel : 1;
   bool mGotData : 1;
