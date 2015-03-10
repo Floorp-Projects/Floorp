@@ -441,7 +441,6 @@ protected:
    * reached (This is the case with gtk2 for instance).
    */
   void DestroyCompositor();
-  void DestroyLayerManager();
 
   nsIWidgetListener* mWidgetListener;
   nsIWidgetListener* mAttachedWidgetListener;
