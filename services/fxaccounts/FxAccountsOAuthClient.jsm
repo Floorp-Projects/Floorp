@@ -37,6 +37,9 @@ Cu.importGlobalProperties(["URL"]);
  *     Optional. A colon-separated list of scopes that the user has authorized
  *     @param {String} [options.parameters.action]
  *     Optional. If provided, should be either signup or signin.
+ *     @param {Boolean} [options.parameters.keys]
+ *     Optional. If true then relier-specific encryption keys will be
+ *     available in the second argument to onComplete.
  *   @param [authorizationEndpoint] {String}
  *   Optional authorization endpoint for the OAuth server
  * @constructor
@@ -60,16 +63,26 @@ this.FxAccountsOAuthClient = function(options) {
   params.append("scope", this.parameters.scope || "");
   params.append("action", this.parameters.action || "signin");
   params.append("webChannelId", this._webChannelId);
+  if (this.parameters.keys) {
+    params.append("keys", "true");
+  }
 
 };
 
 this.FxAccountsOAuthClient.prototype = {
   /**
    * Function that gets called once the OAuth flow is complete.
-   * The callback will receive null as it's argument if there is a state mismatch or an object with
-   * code and state properties otherwise.
+   * The callback will receive an object with code and state properties.
+   * If the keys parameter was specified and true, the callback will receive
+   * a second argument with kAr and kBr properties.
    */
   onComplete: null,
+  /**
+   * Function that gets called if there is an error during the OAuth flow,
+   * for example due to a state mismatch.
+   * The callback will receive an Error object as its argument.
+   */
+  onError: null,
   /**
    * Configuration object that stores all OAuth parameters.
    */
@@ -116,6 +129,7 @@ this.FxAccountsOAuthClient.prototype = {
    */
   tearDown: function() {
     this.onComplete = null;
+    this.onError = null;
     this._complete = true;
     this._channel.stopListening();
     this._channel = null;
@@ -160,21 +174,37 @@ this.FxAccountsOAuthClient.prototype = {
 
         switch (command) {
           case "oauth_complete":
-            // validate the state parameter and call onComplete
+            // validate the returned state and call onComplete or onError
             let result = null;
-            if (this.parameters.state === data.state) {
+            let err = null;
+
+            if (this.parameters.state !== data.state) {
+              err = new Error("OAuth flow failed. State doesn't match");
+            } else if (this.parameters.keys && !data.keys) {
+              err = new Error("OAuth flow failed. Keys were not returned");
+            } else {
               result = {
                 code: data.code,
                 state: data.state
               };
-              log.debug("OAuth flow completed.");
-            } else {
-              log.debug("OAuth flow failed. State doesn't match");
             }
 
-            if (this.onComplete) {
-              this.onComplete(result);
+            if (err) {
+              log.debug(err.message);
+              if (this.onError) {
+                this.onError(err);
+              }
+            } else {
+              log.debug("OAuth flow completed.");
+              if (this.onComplete) {
+                if (this.parameters.keys) {
+                  this.onComplete(result, data.keys);
+                } else {
+                  this.onComplete(result);
+                }
+              }
             }
+
             // onComplete will be called for this client only once
             // calling onComplete again will result in a failure of the OAuth flow
             this.tearDown();
