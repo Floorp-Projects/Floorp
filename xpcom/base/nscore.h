@@ -289,10 +289,6 @@ typedef MozRefCountType nsrefcnt;
 #define XPCOM_GLUE_AVOID_NSPR
 #endif
 
-#if defined(HAVE_THREAD_TLS_KEYWORD)
-#define NS_TLS __thread
-#endif
-
 /*
  * SEH exception macros.
  */

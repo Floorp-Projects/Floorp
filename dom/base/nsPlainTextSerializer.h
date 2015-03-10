@@ -113,6 +113,7 @@ private:
   bool PopBool(nsTArray<bool>& aStack);
 
   bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
+  bool IsIgnorableRubyAnnotation(nsIAtom* aTag);
 
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
   bool IsElementBlock(mozilla::dom::Element* aElement);
@@ -174,6 +175,9 @@ private:
   bool             mLineBreakDue;
 
   bool             mPreformattedBlockBoundary;
+
+  // Whether the output should include ruby annotations.
+  bool             mWithRubyAnnotation;
 
   nsString         mURL;
   int32_t          mHeaderStrategy;    /* Header strategy (pref)

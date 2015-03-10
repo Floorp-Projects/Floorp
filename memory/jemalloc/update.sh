@@ -21,6 +21,7 @@ patch -p1 < ../0004-Implement-stats.bookkeeping.patch
 patch -p1 < ../0005-Bug-1121314-Avoid-needing-the-arena-in-chunk_alloc_d.patch
 patch -p1 < ../0006-Make-opt.lg_dirty_mult-work-as-documented.patch
 patch -p1 < ../0007-Preserve-LastError-when-calling-TlsGetValue.patch
+patch -p1 < ../0008-Make-without-export-actually-work.patch
 
 cd ..
 hg addremove -q src

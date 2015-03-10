@@ -48,6 +48,11 @@ ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
 
   DebugOnly<bool> ok = bridge->Open(aTransport, handle, XRE_GetIOMessageLoop());
   MOZ_ASSERT(ok);
+
+  // Initialize the message manager (and load delayed scripts) now that we
+  // have established communications with the child.
+  bridge->mMessageManager->InitWithCallback(bridge);
+
   return bridge.get();
 }
 

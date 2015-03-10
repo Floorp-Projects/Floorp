@@ -35,7 +35,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
 };
 
-[scriptable, uuid(1158bd7e-a08b-4ff6-9417-6f99144cfccc)]
+[scriptable, uuid(e5ec69d7-eaa7-4de7-986b-455e17c7f71a)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -233,6 +233,12 @@ interface nsIDocumentEncoder : nsISupports
    * injected at preformatted block element boundaries.
    */
   const unsigned long OutputForPlainTextClipboardCopy = (1 << 25);
+
+  /**
+   * Include ruby annotations and ruby parentheses in the output.
+   * PlainText output only.
+   */
+  const unsigned long OutputRubyAnnotation = (1 << 26);
 
   /**
    * Initialize with a pointer to the document and the mime type.

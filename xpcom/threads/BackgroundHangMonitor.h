@@ -7,8 +7,9 @@
 #ifndef mozilla_BackgroundHangMonitor_h
 #define mozilla_BackgroundHangMonitor_h
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/HangAnnotations.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/RefPtr.h"
 
 #include <stdint.h>
 
@@ -227,6 +228,21 @@ public:
    * \see Prohibit()
    */
   static void Allow();
+
+  /**
+   * Register an annotator with BHR for the current thread.
+   * @param aAnnotator annotator to register
+   * @return true if the annotator was registered, otherwise false.
+   */
+  static bool RegisterAnnotator(HangMonitor::Annotator& aAnnotator);
+
+  /**
+   * Unregister an annotator that was previously registered via
+   * RegisterAnnotator.
+   * @param aAnnotator annotator to unregister
+   * @return true if there are still remaining annotators registered
+   */
+  static bool UnregisterAnnotator(HangMonitor::Annotator& aAnnotator);
 };
 
 } // namespace mozilla
