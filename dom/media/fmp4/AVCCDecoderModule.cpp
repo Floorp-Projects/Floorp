@@ -9,6 +9,7 @@
 #include "MediaTaskQueue.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/H264.h"
 
 namespace mozilla
 {
@@ -204,6 +205,14 @@ AVCCMediaDataDecoder::CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample)
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(extra_data, spsdata) &&
+      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+    mCurrentConfig.image_width = spsdata.pic_width;
+    mCurrentConfig.image_height = spsdata.pic_height;
+    mCurrentConfig.display_width = spsdata.display_width;
+    mCurrentConfig.display_height = spsdata.display_height;
   }
   mCurrentConfig.extra_data = extra_data;
 
