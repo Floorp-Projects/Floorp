@@ -19,6 +19,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 
 do_get_profile();
 
@@ -58,6 +60,42 @@ const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                               "setInputStream");
 
 let gLastRequestPath;
+
+let relatedTile1 = {
+  url: "http://turbotax.com",
+  type: "related",
+  lastVisitDate: 4,
+  related: [
+    "taxact.com",
+    "hrblock.com",
+    "1040.com",
+    "taxslayer.com"
+  ]
+};
+let relatedTile2 = {
+  url: "http://irs.gov",
+  type: "related",
+  lastVisitDate: 3,
+  related: [
+    "taxact.com",
+    "hrblock.com",
+    "freetaxusa.com",
+    "taxslayer.com"
+  ]
+};
+let relatedTile3 = {
+  url: "http://hrblock.com",
+  type: "related",
+  lastVisitDate: 2,
+  related: [
+    "taxact.com",
+    "freetaxusa.com",
+    "1040.com",
+    "taxslayer.com"
+  ]
+};
+let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Related_Site"};
+
 function getHttpHandler(path) {
   let code = 200;
   let body = JSON.stringify(kHttpHandlerData[path]);
@@ -161,6 +199,7 @@ function run_test() {
   server.registerPrefixHandler(kExamplePath, getHttpHandler(kExamplePath));
   server.registerPrefixHandler(kFailPath, getHttpHandler(kFailPath));
   server.start(kDefaultServerPort);
+  NewTabUtils.init();
 
   run_next_test();
 
@@ -176,40 +215,6 @@ function run_test() {
 }
 
 add_task(function test_relatedLinksMap() {
-  let relatedTile1 = {
-    url: "http://turbotax.com",
-    type: "related",
-    lastVisitDate: 4,
-    related: [
-      "taxact.com",
-      "hrblock.com",
-      "1040.com",
-      "taxslayer.com"
-    ]
-  };
-  let relatedTile2 = {
-    url: "http://irs.gov",
-    type: "related",
-    lastVisitDate: 3,
-    related: [
-      "taxact.com",
-      "hrblock.com",
-      "freetaxusa.com",
-      "taxslayer.com"
-    ]
-  };
-  let relatedTile3 = {
-    url: "http://hrblock.com",
-    type: "related",
-    lastVisitDate: 2,
-    related: [
-      "taxact.com",
-      "freetaxusa.com",
-      "1040.com",
-      "taxslayer.com"
-    ]
-  };
-  let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Related_Site"};
   let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
@@ -238,6 +243,51 @@ add_task(function test_relatedLinksMap() {
   })
 
   yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_topSitesWithRelatedLinks() {
+  let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = function(site) {
+    return topSites.indexOf(site) >= 0;
+  }
+
+  // We start off with no top sites with related links.
+  do_check_eq(DirectoryLinksProvider._topSitesWithRelatedLinks.size, 0);
+
+  let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  // Check we've populated related links as expected.
+  do_check_eq(DirectoryLinksProvider._relatedLinks.size, 5);
+
+  // When many sites change, we update _topSitesWithRelatedLinks as expected.
+  let expectedTopSitesWithRelatedLinks = ["hrblock.com", "1040.com", "freetaxusa.com"];
+  DirectoryLinksProvider._handleManyLinksChanged();
+  isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], expectedTopSitesWithRelatedLinks);
+
+  // Removing site6.com as a topsite has no impact on _topSitesWithRelatedLinks.
+  let popped = topSites.pop();
+  DirectoryLinksProvider._handleLinkChanged({url: "http://" + popped});
+  isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], expectedTopSitesWithRelatedLinks);
+
+  // Removing freetaxusa.com as a topsite will remove it from _topSitesWithRelatedLinks.
+  popped = topSites.pop();
+  expectedTopSitesWithRelatedLinks.pop();
+  DirectoryLinksProvider._handleLinkChanged({url: "http://" + popped});
+  isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], expectedTopSitesWithRelatedLinks);
+
+  // Re-adding freetaxusa.com as a topsite will add it to _topSitesWithRelatedLinks.
+  topSites.push(popped);
+  expectedTopSitesWithRelatedLinks.push(popped);
+  DirectoryLinksProvider._handleLinkChanged({url: "http://" + popped});
+  isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], expectedTopSitesWithRelatedLinks);
+
+  // Cleanup.
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
 });
 
 add_task(function test_reportSitesAction() {
