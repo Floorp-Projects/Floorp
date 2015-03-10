@@ -159,7 +159,6 @@ class FMRadioService MOZ_FINAL : public IFMRadioService
 
 public:
   static FMRadioService* Singleton();
-  virtual ~FMRadioService();
 
   NS_DECL_ISUPPORTS
 
@@ -201,6 +200,7 @@ public:
 
 protected:
   FMRadioService();
+  virtual ~FMRadioService();
 
 private:
   int32_t RoundFrequency(double aFrequencyInMHz);
