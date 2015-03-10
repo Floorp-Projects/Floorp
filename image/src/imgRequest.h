@@ -89,8 +89,6 @@ public:
 
   // Methods that get forwarded to the Image, or deferred until it's
   // instantiated.
-  nsresult LockImage();
-  nsresult UnlockImage();
   nsresult StartDecoding();
   nsresult RequestDecode();
 
