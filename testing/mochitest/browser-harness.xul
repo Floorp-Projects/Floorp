@@ -229,11 +229,6 @@
         fileNames = skipTests(fileNames, gConfig.startAt, gConfig.endAt);
       }
 
-      if (gConfig.totalChunks && gConfig.thisChunk) {
-        fileNames = chunkifyTests(fileNames, gConfig.totalChunks,
-                                  gConfig.thisChunk, gConfig.chunkByDir);
-      }
-
       createTester(fileNames.map(function (f) { return new browserTest(f); }));
     }
 
