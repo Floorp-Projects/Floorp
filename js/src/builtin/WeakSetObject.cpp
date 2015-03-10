@@ -123,10 +123,11 @@ WeakSetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
             if (isOriginalAdder) {
                 if (keyVal.isPrimitive()) {
-                    char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, NullPtr());
+                    UniquePtr<char[], JS::FreePolicy> bytes =
+                        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, NullPtr());
                     if (!bytes)
                         return false;
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
+                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
                     return false;
                 }
 
