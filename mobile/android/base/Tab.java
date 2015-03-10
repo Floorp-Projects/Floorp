@@ -614,7 +614,7 @@ public class Tab {
 
         setHasFeeds(false);
         setHasOpenSearch(false);
-        updateIdentityData(null);
+        mSiteIdentity.reset();
         setReaderEnabled(false);
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
@@ -632,7 +632,7 @@ public class Tab {
     void handleDocumentStart(boolean restoring, String url) {
         setLoadProgress(LOAD_PROGRESS_START);
         setState((!restoring && shouldShowProgress(url)) ? STATE_LOADING : STATE_SUCCESS);
-        updateIdentityData(null);
+        mSiteIdentity.reset();
         setReaderEnabled(false);
     }
 
