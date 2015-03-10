@@ -1174,20 +1174,9 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
   // When not using a proxy we'll see a connection reset error.
   // When using a proxy, we'll see an end of file error.
-  // In addition check for some error codes where it is reasonable
-  // to retry without TLS.
 
   // Don't allow STARTTLS connections to fall back on connection resets or
-  // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for connection
-  // resets, because connection resets have too many false positives,
-  // and we want to maximize how often we send TLS 1.0+ with extensions
-  // if at all reasonable. Unfortunately, it appears we have to allow
-  // fallback from TLS 1.2 and TLS 1.1 for connection resets due to bad
-  // servers and possibly bad intermediaries.
-  if (err == PR_CONNECT_RESET_ERROR &&
-      range.max <= SSL_LIBRARY_VERSION_TLS_1_0) {
-    return false;
-  }
+  // EOF.
   if ((err == PR_CONNECT_RESET_ERROR || err == PR_END_OF_FILE_ERROR)
       && socketInfo->GetForSTARTTLS()) {
     return false;
@@ -1212,10 +1201,6 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     case SSL_LIBRARY_VERSION_TLS_1_0:
       pre = Telemetry::SSL_TLS10_INTOLERANCE_REASON_PRE;
       post = Telemetry::SSL_TLS10_INTOLERANCE_REASON_POST;
-      break;
-    case SSL_LIBRARY_VERSION_3_0:
-      pre = Telemetry::SSL_SSL30_INTOLERANCE_REASON_PRE;
-      post = Telemetry::SSL_SSL30_INTOLERANCE_REASON_POST;
       break;
     default:
       MOZ_CRASH("impossible TLS version");

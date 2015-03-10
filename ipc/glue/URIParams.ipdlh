@@ -5,6 +5,8 @@
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
+include PBackgroundSharedTypes;
+
 namespace mozilla {
 namespace ipc {
 
@@ -69,6 +71,12 @@ struct NullPrincipalURIParams
   // Purposefully empty. Null principal URIs do not round-trip.
 };
 
+struct HostObjectURIParams
+{
+  SimpleURIParams simpleParams;
+  OptionalPrincipalInfo principal;
+};
+
 union URIParams
 {
   SimpleURIParams;
@@ -76,12 +84,27 @@ union URIParams
   JARURIParams;
   IconURIParams;
   NullPrincipalURIParams;
+  JSURIParams;
+  SimpleNestedURIParams;
+  HostObjectURIParams;
 };
 
 union OptionalURIParams
 {
   void_t;
   URIParams;
+};
+
+struct JSURIParams
+{
+  SimpleURIParams simpleParams;
+  OptionalURIParams baseURI;
+};
+
+struct SimpleNestedURIParams
+{
+  SimpleURIParams simpleParams;
+  URIParams innerURI;
 };
 
 } // namespace ipc

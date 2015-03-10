@@ -1063,3 +1063,299 @@ ROLE(SWITCH,
      ROLE_SYSTEM_CHECKBUTTON,
      IA2_ROLE_TOGGLE_BUTTON,
      eNameFromSubtreeRule)
+
+ROLE(MATHML_MATH,
+     "math",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     ROLE_SYSTEM_EQUATION,
+     ROLE_SYSTEM_EQUATION,
+     eNoNameRule)
+
+ROLE(MATHML_IDENTIFIER,
+     "mathml identifier",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_NUMBER,
+     "mathml number",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_OPERATOR,
+     "mathml operator",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_TEXT,
+     "mathml text",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_STRING_LITERAL,
+     "mathml string literal",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_GLYPH,
+     "mathml glyph",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNameFromSubtreeRule)
+
+ROLE(MATHML_ROW,
+     "mathml row",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_FRACTION,
+     "mathml fraction",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_SQUARE_ROOT,
+     "mathml square root",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_ROOT,
+     "mathml root",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_FENCED,
+     "mathml fenced",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_ENCLOSED,
+     "mathml enclosed",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STYLE,
+     "mathml style",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_SUB,
+     "mathml sub",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_SUP,
+     "mathml sup",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_SUB_SUP,
+     "mathml sub sup",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_UNDER,
+     "mathml under",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_OVER,
+     "mathml over",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_UNDER_OVER,
+     "mathml under over",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_MULTISCRIPTS,
+     "mathml multiscripts",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_TABLE,
+     "mathml table",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_LABELED_ROW,
+     "mathml labeled row",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_TABLE_ROW,
+     "mathml table row",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_CELL,
+     "mathml cell",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_ACTION,
+     "mathml action",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_ERROR,
+     "mathml error",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_SEMANTICS,
+     "mathml semantics",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_ANNOTATION,
+     "mathml annotation",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_XML_ANNOTATION,
+     "mathml xml annotation",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK,
+     "mathml stack",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_LONG_DIVISION,
+     "mathml long division",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK_GROUP,
+     "mathml stack group",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK_ROW,
+     "mathml stack row",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK_CARRIES,
+     "mathml stack carries",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK_CARRY,
+     "mathml stack carry",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)
+
+ROLE(MATHML_STACK_LINE,
+     "mathml stack line",
+     ATK_ROLE_UNKNOWN,
+     NSAccessibilityUnknownRole,
+     0,
+     IA2_ROLE_UNKNOWN,
+     eNoNameRule)

@@ -63,7 +63,11 @@ mozIApplication.prototype = {
   },
 
   hasWidgetPage: function(aPageURL) {
-    return this.widgetPages.indexOf(aPageURL) != -1;
+    let uri = Services.io.newURI(aPageURL, null, null);
+    let filepath = AppsUtils.getFilePath(uri.path);
+    let eliminatedUri = Services.io.newURI(uri.prePath + filepath, null, null);
+    let equalCriterion = aUri => aUri.equals(eliminatedUri);
+    return this.widgetPages.find(equalCriterion) !== undefined;
   },
 
   QueryInterface: function(aIID) {
@@ -199,6 +203,16 @@ this.AppsUtils = {
     aRequestChannel.asyncOpen(listener, null);
 
     return deferred.promise;
+  },
+
+  // Eliminate query and hash string.
+  getFilePath: function(aPagePath) {
+    let urlParser = Cc["@mozilla.org/network/url-parser;1?auth=no"]
+                    .getService(Ci.nsIURLParser);
+    let uriData = [aPagePath, aPagePath.length, {}, {}, {}, {}, {}, {}];
+    urlParser.parsePath.apply(urlParser, uriData);
+    let [{value: pathPos}, {value: pathLen}] = uriData.slice(2, 4);
+    return aPagePath.substr(pathPos, pathLen);
   },
 
   getAppByManifestURL: function getAppByManifestURL(aApps, aManifestURL) {

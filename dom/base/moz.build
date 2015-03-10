@@ -79,6 +79,7 @@ EXPORTS += [
     'nsGkAtomList.h',
     'nsGkAtoms.h',
     'nsHostObjectProtocolHandler.h',
+    'nsHostObjectURI.h',
     'nsIAttribute.h',
     'nsIContent.h',
     'nsIContentInlines.h',

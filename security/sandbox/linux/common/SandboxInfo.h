@@ -31,6 +31,12 @@ public:
     kEnabledForMedia   = 1 << 2,
     // Env var MOZ_SANDBOX_VERBOSE.
     kVerbose           = 1 << 3,
+    // Kernel can atomically set system call filtering on entire thread group.
+    kHasSeccompTSync   = 1 << 4,
+    // Can this process create user namespaces? (Man page user_namespaces(7).)
+    kHasUserNamespaces = 1 << 5,
+    // Could a more privileged process have user namespaces, even if we can't?
+    kHasPrivilegedUserNamespaces = 1 << 6,
   };
 
   bool Test(Flags aFlag) const { return (mFlags & aFlag) == aFlag; }

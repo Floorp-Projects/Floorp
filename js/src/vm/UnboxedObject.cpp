@@ -265,6 +265,8 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
 
     nativeGroup->setOriginalUnboxedGroup(group);
 
+    group->markStateChange(cx);
+
     return true;
 }
 

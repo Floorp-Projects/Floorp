@@ -649,7 +649,7 @@ public:
     // DataStore will run this callback when the revisionID is retrieved.
     JSFunction* func = js::NewFunctionWithReserved(aCx, JSCallback,
                                                    0 /* nargs */, 0 /* flags */,
-                                                   nullptr, nullptr);
+                                                   nullptr);
     if (!func) {
       return;
     }

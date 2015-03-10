@@ -360,6 +360,12 @@ nsSystemInfo::Init()
 
   SetPropertyAsBool(NS_LITERAL_STRING("hasSeccompBPF"),
                     sandInfo.Test(SandboxInfo::kHasSeccompBPF));
+  SetPropertyAsBool(NS_LITERAL_STRING("hasSeccompTSync"),
+                    sandInfo.Test(SandboxInfo::kHasSeccompTSync));
+  SetPropertyAsBool(NS_LITERAL_STRING("hasUserNamespaces"),
+                    sandInfo.Test(SandboxInfo::kHasUserNamespaces));
+  SetPropertyAsBool(NS_LITERAL_STRING("hasPrivilegedUserNamespaces"),
+                    sandInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
 
   if (sandInfo.Test(SandboxInfo::kEnabledForContent)) {
     SetPropertyAsBool(NS_LITERAL_STRING("canSandboxContent"),
