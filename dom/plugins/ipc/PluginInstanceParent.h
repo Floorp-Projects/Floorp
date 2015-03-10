@@ -68,7 +68,8 @@ public:
 
     virtual ~PluginInstanceParent();
 
-    bool Init();
+    bool InitMetadata(const nsACString& aMimeType,
+                      const nsACString& aSrcAttribute);
     NPError Destroy();
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -271,6 +272,24 @@ public:
         return mUseSurrogate;
     }
 
+    void
+    GetSrcAttribute(nsACString& aOutput) const
+    {
+        aOutput = mSrcAttribute;
+    }
+
+    /**
+     * This function tells us whether this plugin instance would have been
+     * whitelisted for Shumway if Shumway had been enabled. This is being used
+     * for the purpose of gathering telemetry on Flash hangs that could
+     * potentially be avoided by using Shumway instead.
+     */
+    bool
+    IsWhitelistedForShumway() const
+    {
+        return mIsWhitelistedForShumway;
+    }
+
     virtual bool
     AnswerPluginFocusChange(const bool& gotFocus) MOZ_OVERRIDE;
 
@@ -323,6 +342,8 @@ private:
     bool mUseSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
+    nsCString mSrcAttribute;
+    bool mIsWhitelistedForShumway;
     NPWindowType mWindowType;
     int16_t            mDrawingModel;
     nsAutoPtr<mozilla::layers::CompositionNotifySink> mNotifySink;

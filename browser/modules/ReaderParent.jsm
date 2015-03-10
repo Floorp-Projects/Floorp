@@ -163,7 +163,7 @@ let ReaderParent = {
 
   /**
    * Gets an article for a given URL. This method will download and parse a document
-   * if it does not find the article in the tab data or the cache.
+   * if it does not find the article in the browser data.
    *
    * @param url The article URL.
    * @param browser The browser where the article is currently loaded.
@@ -174,12 +174,6 @@ let ReaderParent = {
     // First, look for a saved article.
     let article = yield this._getSavedArticle(browser);
     if (article && article.url == url) {
-      return article;
-    }
-
-    // Next, try to find a parsed article in the cache.
-    article = yield ReaderMode.getArticleFromCache(url);
-    if (article) {
       return article;
     }
 
