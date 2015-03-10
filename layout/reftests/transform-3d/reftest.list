@@ -19,7 +19,7 @@ fuzzy-if(cocoaWidget,17,3) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-2c.html preserve3d-2-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
 == preserve3d-3a.html preserve3d-3-ref.html
-skip-if(B2G) == preserve3d-4a.html green-rect.html
+skip-if(B2G||Mulet) == preserve3d-4a.html green-rect.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
 fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA

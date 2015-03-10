@@ -12,92 +12,50 @@
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var config = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
-  }
-};
+var suite = new CameraTestSuite();
 
-function onError(e) {
-  ok(false, "Error " + e);
-}
+suite.test('bug-1022766', function() {
+  function triggerAutoFocus(p) {
+    return new Promise(function(resolve, reject) {
+      var firstCall = false;
+      var secondCall = false;
 
-var Camera = {
-  cameraObj: null,
-  _otherPictureSize: null,
-  get viewfinder() {
-    return document.getElementById('viewfinder');
-  },
-
-  firstCallFailed: false,
-  secondCallSucceeded: false,
-  callbackTriggered: false,
-  checkForDone: function test_checkForDone() {
-    if (Camera.firstCallFailed && Camera.secondCallSucceeded) {
-      ok(Camera.callbackTriggered, "Async callback triggered?");
-      Camera.cameraObj.release();
-      Camera.cameraObj = null;
-      CameraTest.end();
-    }
-  },
-
-  successOne: function test_successOne(focused) {
-    ok(false, "First call to autoFocus() succeeded unexpectedly");
-  },
-  failureOne: function test_failureOne(error) {
-    ok(error.name == "NS_ERROR_IN_PROGRESS", "First call to autoFocus() failed with: "
-      + error.name);
-    Camera.firstCallFailed = true;
-    Camera.checkForDone();
-  },
-  successTwo: function test_successTwo(focused) {
-    ok(true, "Second call to autoFocus() succeeded");
-    Camera.secondCallSucceeded = true;
-    Camera.checkForDone();
-  },
-  failureTwo: function test_failureTwo(error) {
-    ok(false, "Second call to autoFocus() failed unexpectedly with: " + error);
-  },
-  callback: function test_callback(e) {
-    Camera.cameraObj.removeEventListener('focus', Camera.callback);
-    Camera.callbackTriggered = true;
-  },
-
-  start: function test_start() {
-    function onSuccess(d) {
-      var camera = d.camera;
-      Camera.cameraObj = camera;
-      Camera.viewfinder.mozSrcObject = camera;
-      Camera.viewfinder.play();
+      function end() {
+        if (firstCall && secondCall) {
+          resolve();
+        }
+      }
 
       // It doesn't matter if the emulator supports focus or not;
       // this is just testing the sequencing.
-      camera.addEventListener('focus', Camera.callback);
-      camera.autoFocus().then(Camera.successOne, Camera.failureOne);
-      camera.autoFocus().then(Camera.successTwo, Camera.failureTwo);
-    };
+      suite.camera.autoFocus().then(function(p) {
+        ok(false, "First call to autoFocus() succeeded unexpectedly");
+        firstCall = true;
+        end();
+      }, function(e) {
+        ok(e.name === 'NS_ERROR_IN_PROGRESS', 'First call to autoFocus() failed with: ' + e);
+        firstCall = true;
+        end();
+      });
 
-    navigator.mozCameras.getCamera(whichCamera, config).then(onSuccess, onError);
+      suite.camera.autoFocus().then(function(p) {
+        ok(true, "Second call to autoFocus() succeeded");
+        secondCall = true;
+        end();
+      }, function(e) {
+        ok(false, "Second call to autoFocus() failed unexpectedly with: " + e);
+        secondCall = true;
+        end();
+      });
+    });
   }
-}
 
-window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
-  if (Camera.cameraObj) {
-    Camera.cameraObj.release();
-    Camera.cameraObj = null;
-  }
+  return suite.getCamera()
+    .then(triggerAutoFocus, suite.rejectGetCamera)
 });
 
-CameraTest.begin("hardware", function(test) {
-  test.set("auto-focus-process-failure", function() {
-    Camera.start();
-  })
-});
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

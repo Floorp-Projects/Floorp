@@ -1,4 +1,4 @@
-skip-if(B2G) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
+skip-if(B2G||Mulet) HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # button element
 include button/reftest.list

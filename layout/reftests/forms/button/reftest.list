@@ -6,10 +6,10 @@
 # The buttons in these tests have some fancy shading applied to their corners
 # on B2G, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(B2G||Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html
-fuzzy-if(B2G||Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html
-pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html
+fuzzy-if(B2G||Mulet||Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(B2G||Mulet||Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Mulet||Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 == vertical-centering.html vertical-centering-ref.html
 
@@ -20,7 +20,7 @@ pref(browser.display.focus_ring_width,1) fuzzy-if(B2G||Android,125,80) == percen
 
 # Looks like Android and B2G change the text color, but to something slightly
 # different from ColorGray
-fails-if(Android||B2G) == disabled-1.html disabled-1-ref.html
+fails-if(Android||B2G||Mulet) == disabled-1.html disabled-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == disabled-2.html disabled-2-ref.html
 
 != disabled-3.html disabled-3-notref.html

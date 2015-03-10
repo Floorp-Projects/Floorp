@@ -1,4 +1,4 @@
-skip-if(B2G) == 290018-1.html 290018-ref.html
+skip-if(B2G||Mulet) == 290018-1.html 290018-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 436261-1.html 436261-ref.html
 == 436261-2.html 436261-ref.html
 == 436261-3.html 436261-ref.html
@@ -6,5 +6,5 @@ skip-if(B2G) == 290018-1.html 290018-ref.html
 == 444723-2.html 444723-ref.html
 == 445415-1a.xhtml 445415-1-ref.xhtml
 == 445415-1b.xhtml 445415-1-ref.xhtml
-skip-if(B2G) == 445415-2a.xhtml 445415-2-ref.xhtml # bug 773482
-skip-if(B2G) == 445415-2b.xhtml 445415-2-ref.xhtml # bug 773482
+skip-if(B2G||Mulet) == 445415-2a.xhtml 445415-2-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == 445415-2b.xhtml 445415-2-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
