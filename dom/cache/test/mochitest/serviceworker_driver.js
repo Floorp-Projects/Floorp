@@ -28,8 +28,7 @@ function serviceWorkerTestExec(testFile) {
       document.body.appendChild(iframe);
     }
 
-    // FIXME: Remove the URL randomization code once bug 1141256 is fixed.
-    navigator.serviceWorker.register("worker_wrapper.js" + "?" + (Math.random()), {scope: "."})
+    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
       .then(function(registration) {
         if (registration.installing) {
           registration.installing.onstatechange = function(e) {
