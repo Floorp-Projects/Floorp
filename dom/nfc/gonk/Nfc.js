@@ -91,6 +91,14 @@ const NfcRequestType = {
   TRANSCEIVE: "transceive"
 };
 
+const CommandMsgTable = {};
+CommandMsgTable["NFC:ChangeRFState"] = NfcRequestType.CHANGE_RF_STATE;
+CommandMsgTable["NFC:ReadNDEF"] = NfcRequestType.READ_NDEF;
+CommandMsgTable["NFC:WriteNDEF"] = NfcRequestType.WRITE_NDEF;
+CommandMsgTable["NFC:MakeReadOnly"] = NfcRequestType.MAKE_READ_ONLY;
+CommandMsgTable["NFC:Format"] = NfcRequestType.FORMAT;
+CommandMsgTable["NFC:Transceive"] = NfcRequestType.TRANSCEIVE;
+
 // Should be consistent with NfcResponseType defined in NfcOptions.webidl.
 const NfcResponseType = {
   CHANGE_RF_STATE_RSP: "changeRFStateRsp",
@@ -690,31 +698,13 @@ Nfc.prototype = {
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
 
-    switch (message.name) {
-      case "NFC:ChangeRFState":
-        this.sendToNfcService(NfcRequestType.CHANGE_RF_STATE, message.data);
-        break;
-      case "NFC:ReadNDEF":
-        this.sendToNfcService(NfcRequestType.READ_NDEF, message.data);
-        break;
-      case "NFC:WriteNDEF":
-        this.sendToNfcService(NfcRequestType.WRITE_NDEF, message.data);
-        break;
-      case "NFC:MakeReadOnly":
-        this.sendToNfcService(NfcRequestType.MAKE_READ_ONLY, message.data);
-        break;
-      case "NFC:Format":
-        this.sendToNfcService(NfcRequestType.FORMAT, message.data);
-        break;
-      case "NFC:Transceive":
-        this.sendToNfcService(NfcRequestType.TRANSCEIVE, message.data);
-        break;
-      default:
-        debug("UnSupported : Message Name " + message.name);
-        return null;
+    let command = CommandMsgTable[message.name];
+    if (!command) {
+      debug("Unknown message: " + message.name);
+      return null;
     }
     this.targetsByRequestId[message.data.requestId] = message.target;
-
+    this.sendToNfcService(command, message.data);
     return null;
   },
 
