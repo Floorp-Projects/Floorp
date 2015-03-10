@@ -1,10 +1,10 @@
-skip-if(B2G&&browserIsRemote) == menuitem-key.xul menuitem-key-ref.xul
+skip-if((B2G&&browserIsRemote)||Mulet) == menuitem-key.xul menuitem-key-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android||B2G) skip-if(B2G&&browserIsRemote) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
-random-if(Android||B2G) fails-if(winWidget) skip-if(B2G&&browserIsRemote) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
-skip-if(B2G&&browserIsRemote) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
+random-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+random-if(Android||B2G) fails-if(winWidget) skip-if((B2G&&browserIsRemote)||Mulet) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658 # Initial mulet triage: parity with B2G/B2G Desktop
 # accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) skip-if(B2G&&browserIsRemote) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget) skip-if(B2G&&browserIsRemote) == tree-row-outline-1.xul tree-row-outline-1-ref.xul
-skip-if(B2G&&browserIsRemote) != tree-row-outline-1.xul tree-row-outline-1-notref.xul
-skip-if(B2G&&browserIsRemote) == text-small-caps-1.xul text-small-caps-1-ref.xul
+skip-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == accesskey.xul accesskey-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop

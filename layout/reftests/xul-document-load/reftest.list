@@ -1,23 +1,23 @@
-skip-if(B2G&&browserIsRemote) == test001.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test002.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test003.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test004.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test005.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test006.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test007.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test008.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test009.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test010.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test011.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test012.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test013.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test014.xul reference-green-window.xul
+skip-if((B2G&&browserIsRemote)||Mulet) == test001.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test002.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test003.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test004.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test005.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test006.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test007.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test008.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test009.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test010.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test011.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test012.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test013.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test014.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
 # Disabled due to compartments for now.
-#skip-if(B2G&&browserIsRemote) == test015.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test016.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test017.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test018.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test019.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test020.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test021.xul reference-green-window.xul
-skip-if(B2G&&browserIsRemote) == test022.xul reference-green-window.xul
+#skip-if((B2G&&browserIsRemote)||Mulet) == test015.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test016.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test017.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test018.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test019.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test020.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test021.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if((B2G&&browserIsRemote)||Mulet) == test022.xul reference-green-window.xul # Initial mulet triage: parity with B2G/B2G Desktop
