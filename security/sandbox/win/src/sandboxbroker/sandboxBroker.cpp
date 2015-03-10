@@ -69,38 +69,58 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
 
 #if defined(MOZ_CONTENT_SANDBOX)
 bool
-SandboxBroker::SetSecurityLevelForContentProcess(bool aMoreStrict)
+SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
 {
   if (!mPolicy) {
     return false;
   }
 
-  sandbox::ResultCode result;
-  bool ret;
-  if (aMoreStrict) {
-    result = mPolicy->SetJobLevel(sandbox::JOB_INTERACTIVE, 0);
-    ret = (sandbox::SBOX_ALL_OK == result);
+  sandbox::JobLevel jobLevel;
+  sandbox::TokenLevel accessTokenLevel;
+  sandbox::IntegrityLevel initialIntegrityLevel;
+  sandbox::IntegrityLevel delayedIntegrityLevel;
 
-    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_INTERACTIVE);
-    ret = ret && (sandbox::SBOX_ALL_OK == result);
-
-    // If the delayed integrity level is lowered then SetUpSandboxEnvironment and
-    // CleanUpSandboxEnvironment in ContentChild should be changed or removed.
-    result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
-    ret = ret && (sandbox::SBOX_ALL_OK == result);
-
-    result = mPolicy->SetAlternateDesktop(true);
-    ret = ret && (sandbox::SBOX_ALL_OK == result);
+  if (aSandboxLevel > 2) {
+    jobLevel = sandbox::JOB_LOCKDOWN;
+    accessTokenLevel = sandbox::USER_LOCKDOWN;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_UNTRUSTED;
+  } else if (aSandboxLevel == 2) {
+    jobLevel = sandbox::JOB_RESTRICTED;
+    accessTokenLevel = sandbox::USER_LIMITED;
+    // Ideally we would have an initialIntegrityLevel of LOW here, but this
+    // immediately causes a problem with the way PBackground is initialized.
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+  } else if (aSandboxLevel == 1) {
+    jobLevel = sandbox::JOB_INTERACTIVE;
+    accessTokenLevel = sandbox::USER_INTERACTIVE;
+    // INTEGRITY_LEVEL_LAST effectively means don't change from the integrity
+    // level of the broker process.
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
   } else {
-    result = mPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
-    ret = (sandbox::SBOX_ALL_OK == result);
+    jobLevel = sandbox::JOB_NONE;
+    accessTokenLevel = sandbox::USER_NON_ADMIN;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
+  }
 
-    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_NON_ADMIN);
-    ret = ret && (sandbox::SBOX_ALL_OK == result);
+  sandbox::ResultCode result = mPolicy->SetJobLevel(jobLevel,
+                                                    0 /* ui_exceptions */);
+  bool ret = (sandbox::SBOX_ALL_OK == result);
 
-    result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_MEDIUM);
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  accessTokenLevel);
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+  result = mPolicy->SetIntegrityLevel(initialIntegrityLevel);
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+  result = mPolicy->SetDelayedIntegrityLevel(delayedIntegrityLevel);
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+  if (aSandboxLevel > 0) {
+    result = mPolicy->SetAlternateDesktop(true);
     ret = ret && (sandbox::SBOX_ALL_OK == result);
   }
 
