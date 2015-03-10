@@ -10,8 +10,6 @@
 #include "ImageContainer.h"
 
 #include "mp4_demuxer/mp4_demuxer.h"
-#include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/H264.h"
 
 #include "FFmpegH264Decoder.h"
 
@@ -37,11 +35,6 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
   mExtraData = aConfig.extra_data;
-  mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aConfig.extra_data, spsdata)) {
-    mDisplayWidth = spsdata.display_width;
-    mDisplayHeight = spsdata.display_height;
-  }
 }
 
 nsresult
