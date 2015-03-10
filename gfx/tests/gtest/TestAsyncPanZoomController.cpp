@@ -2668,8 +2668,6 @@ protected:
 };
 
 TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -2723,8 +2721,6 @@ TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
 }
 
 TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateEventRegionsLayerTree2();
 
   int time = 0;
@@ -2738,8 +2734,6 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
 }
 
 TEST_F(APZEventRegionsTester, Obscuration) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(0, root, mcc);
 
@@ -2758,8 +2752,6 @@ TEST_F(APZEventRegionsTester, Obscuration) {
 }
 
 TEST_F(APZEventRegionsTester, Bug1119497) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateBug1119497LayerTree();
 
   HitTestResult result;
@@ -2771,8 +2763,6 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
 }
 
 TEST_F(APZEventRegionsTester, Bug1117712) {
-  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
-
   CreateBug1117712LayerTree();
 
   TestAsyncPanZoomController* apzc2 = ApzcOf(layers[2]);
