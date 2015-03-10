@@ -2790,8 +2790,13 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
       // This ruby text container is a span.
       (psd->mFirstFrame == psd->mLastFrame && psd->mFirstFrame &&
        !psd->mFirstFrame->mIsLinkedToBase)) {
-    nscoord reservedISize = RubyUtils::GetReservedISize(frame);
-    RubyUtils::SetReservedISize(frame, reservedISize + aDeltaISize);
+    // For ruby text frames, only increase frames
+    // which are not auto-hidden.
+    if (frameType != nsGkAtoms::rubyTextFrame ||
+        !static_cast<nsRubyTextFrame*>(frame)->IsAutoHidden()) {
+      nscoord reservedISize = RubyUtils::GetReservedISize(frame);
+      RubyUtils::SetReservedISize(frame, reservedISize + aDeltaISize);
+    }
   } else {
     // It is a normal ruby text container. Its children will expand
     // themselves properly. We only need to expand its own size here.
