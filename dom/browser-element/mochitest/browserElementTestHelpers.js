@@ -51,6 +51,7 @@ const browserElementTestHelpers = {
   enableProcessPriorityManager: function() {
     this._setPrefs(
       ['dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels', 2],
+      ['dom.ipc.processPriorityManager.FOREGROUND.LRUPoolLevels', 2],
       ['dom.ipc.processPriorityManager.testMode', true],
       ['dom.ipc.processPriorityManager.enabled', true]
     );
@@ -188,27 +189,36 @@ function expectPriorityChange(childID, expectedPriority) {
 }
 
 // Returns a promise which is resolved or rejected the next time the
-// process childID changes its priority.  We resolve if the LRU parameter
-// matches expectedLRU and we reject otherwise.
+// process childID changes its priority.  We resolve if the expectedPriority
+// matches the priority and the LRU parameter matches expectedLRU and we
+// reject otherwise.
 
-function expectPriorityWithLRUSet(childID, expectedLRU) {
+function expectPriorityWithLRUSet(childID, expectedPriority, expectedLRU) {
   return new Promise(function(resolve, reject) {
-
+    var observed = false;
     browserElementTestHelpers.addProcessPriorityObserver(
       'process-priority-with-LRU-set',
       function(subject, topic, data) {
+        if (observed) {
+          return;
+        }
 
         var [id, priority, lru] = data.split(":");
         if (id != childID) {
           return;
         }
 
+        // Make sure we run the is() calls in this observer only once,
+        // otherwise we'll expect /every/ priority/LRU change to match
+        // expectedPriority/expectedLRU.
+        observed = true;
+
         is(lru, expectedLRU,
            'Expected LRU ' + lru +
            ' of childID ' + childID +
            ' to change to ' + expectedLRU);
 
-        if (lru == expectedLRU) {
+        if ((priority == expectedPriority) && (lru == expectedLRU)) {
           resolve();
         } else {
           reject();
