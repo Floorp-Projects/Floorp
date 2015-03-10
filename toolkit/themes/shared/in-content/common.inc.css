@@ -692,19 +692,13 @@ xul|treecolpicker {
 }
 
 xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
-  list-style-image: url("chrome://global/skin/in-content/sorter.png");
-  width: 12px;
-  height: 8px;
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  width: 18px;
+  height: 18px;
 }
 
-xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection="descending"] {
+xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection="ascending"] {
   transform: scaleY(-1);
-}
-
-@media (min-resolution: 2dppx) {
-  xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
-    list-style-image: url("chrome://global/skin/in-content/sorter@2x.png");
-  }
 }
 
 /* This is the only way to increase the height of a tree row unfortunately */

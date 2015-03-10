@@ -180,10 +180,10 @@ fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == g-transform-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
-fuzzy-if(Android||B2G,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg
-fuzzy-if(Android||B2G,9,980) == gradient-live-01b.svg gradient-live-01-ref.svg
-fuzzy-if(Android||B2G,9,980) == gradient-live-01c.svg gradient-live-01-ref.svg
-fuzzy-if(Android||B2G,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) == gradient-live-01b.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) == gradient-live-01c.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 == gradient-transform-01.svg pass.svg
 == import-svg-01.html pass.svg
 == invalid-text-01.svg pass.svg
@@ -235,7 +235,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 skip-if(d2d) fuzzy-if(azureQuartz,1,99974) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
-fuzzy-if(Android&&AndroidVersion>=15,8,200) random-if(B2G&&browserIsRemote) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
+fuzzy-if(Android&&AndroidVersion>=15,8,200) random-if((B2G&&browserIsRemote)||Mulet) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
 == overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -318,8 +318,8 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
-skip-if(B2G) != text-language-00.xhtml text-language-00-ref.xhtml
-skip-if(B2G) random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
+skip-if(B2G||Mulet) != text-language-00.xhtml text-language-00-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts. # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
@@ -411,7 +411,7 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mas
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
-#skip-if(B2G||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
+#skip-if(B2G||Mulet||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg

@@ -831,6 +831,18 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledOnce(fakeSdkDriver.switchAcquiredWindow);
       sinon.assert.calledWithExactly(fakeSdkDriver.switchAcquiredWindow, 72);
     });
+
+    it("should end the screen sharing session when the listener receives an error", function() {
+      listener(new Error("foo"));
+
+      // The dispatcher was already called once in beforeEach().
+      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledWith(dispatcher.dispatch,
+        new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+      sinon.assert.notCalled(fakeSdkDriver.switchAcquiredWindow);
+    });
   });
 
   describe("#endScreenShare", function() {

@@ -663,9 +663,16 @@ Nfc.prototype = {
    * Process a message from the gMessageManager.
    */
   receiveMessage: function receiveMessage(message) {
-      if (["NFC:ChangeRFState",
-           "NFC:SendFile",
-           "NFC:QueryInfo"].indexOf(message.name) == -1) {
+    // Return early if we don't need the NFC Service.
+    switch (message.name) {
+      case "NFC:QueryInfo":
+        return {rfState: this.rfState};
+      default:
+        break;
+    }
+
+    if (["NFC:ChangeRFState",
+         "NFC:SendFile"].indexOf(message.name) == -1) {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
@@ -704,8 +711,6 @@ Nfc.prototype = {
         gSystemMessenger.broadcastMessage("nfc-manager-send-file",
                                           sysMsg);
         break;
-      case "NFC:QueryInfo":
-        return {rfState: this.rfState};
       default:
         debug("UnSupported : Message Name " + message.name);
         return null;

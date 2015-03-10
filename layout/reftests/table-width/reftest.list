@@ -35,7 +35,7 @@ fuzzy-if(B2G,9,1) == conflicting-widths-8.html conflicting-widths-8-ref.html # c
 == percent-truncation-1.html percent-truncation-1-ref.html
 == percent-truncation-2.html percent-truncation-2-ref.html
 == percent-truncation-3.html percent-truncation-3-ref.html
-skip-if(B2G) == balancing-1.html balancing-1-ref.html # bug 773482
+skip-if(B2G||Mulet) == balancing-1.html balancing-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == balancing-2.html balancing-2-ref.html
 == cellpadding.html cellpadding-ref.html
 == cellspacing.html cellspacing-ref.html

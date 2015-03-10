@@ -1,7 +1,7 @@
 == unit-rem-div-fontsize.html unit-rem-ref.html
 == unit-rem-div-width-inner.html unit-rem-ref.html
 == unit-rem-div-width-outer.html unit-rem-ref.html
-skip-if(B2G) == unit-rem-iframe.html unit-rem-ref-iframe.html # bug 773482
+skip-if(B2G||Mulet) == unit-rem-iframe.html unit-rem-ref-iframe.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == unit-rem-root-fontsize.html unit-rem-ref-root-fontsize.html
 == unit-rem-root-fontsize.html unit-rem-ref2-root-fontsize.html
 == unit-rem-root-width.html unit-rem-ref-root-width.html
@@ -12,4 +12,4 @@ skip-if(B2G) == unit-rem-iframe.html unit-rem-ref-iframe.html # bug 773482
 == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
 == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
 == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
-skip-if(B2G) skip-if(Android) != unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html
+skip-if(B2G||Mulet) skip-if(Android) != unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html # Initial mulet triage: parity with B2G/B2G Desktop

@@ -13,14 +13,18 @@ from __future__ import print_function
 import argparse
 import hashlib
 import os
+import shutil
 import sys
+import zipfile
 
 from mozbuild import util
 from mozpack.copier import Jarrer
 from mozpack.files import (
     File,
     FileFinder,
+    JarFinder,
 )
+from mozpack.mozjar import JarReader
 
 MAVEN_POM_TEMPLATE = r'''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -31,7 +35,19 @@ MAVEN_POM_TEMPLATE = r'''
   <artifactId>{artifactId}</artifactId>
   <version>{version}</version>
   <packaging>{packaging}</packaging>
+  <dependencies>
+    {dependencies}
+  </dependencies>
 </project>
+'''.lstrip()
+
+MAVEN_POM_DEPENDENCY_TEMPLATE = r'''
+  <dependency>
+     <groupId>{groupId}</groupId>
+     <artifactId>{artifactId}</artifactId>
+     <version>{version}</version>
+     <type>{packaging}</type>
+  </dependency>
 '''.lstrip()
 
 IVY_XML_TEMPLATE = r'''
@@ -42,9 +58,39 @@ IVY_XML_TEMPLATE = r'''
   <publications>
     <artifact name="{name}" type="{type}" ext="{ext}"/>
   </publications>
-  <dependencies/>
+  <dependencies>
+    {dependencies}
+  </dependencies>
 </ivy-module>
 '''.lstrip()
+
+IVY_XML_DEPENDENCY_TEMPLATE = r'''
+<dependency org="{organisation}" name="{name}" rev="{revision}" />
+'''.lstrip()
+
+def _zipdir(path, output_file):
+    zip = zipfile.ZipFile(output_file, "w")
+    for root, dirs, files in os.walk(path, topdown=True):
+        archive_root = root.replace(path, '')
+        for file in files:
+            zip.write(os.path.join(root, file), os.path.join(archive_root, file))
+
+def _generate_geckoview_classes_jar(distdir, base_path):
+    base_folder = FileFinder(base_path, ignore=['gecko-R.jar'])
+
+    # Unzip all jar files into $(DISTDIR)/geckoview_aar_classes.
+    geckoview_aar_classes_path = os.path.join(distdir, 'geckoview_aar_classes')
+    shutil.rmtree(geckoview_aar_classes_path, ignore_errors=True)
+    util.ensureParentDir(geckoview_aar_classes_path)
+
+    for p, f in base_folder.find('*.jar'):
+        with zipfile.ZipFile(f.path) as zf:
+            zf.extractall(geckoview_aar_classes_path)
+
+    # Rezip them into a single classes.jar file.
+    classes_jar_path =  os.path.join(distdir, 'classes.jar')
+    _zipdir(geckoview_aar_classes_path, classes_jar_path)
+    return File(classes_jar_path)
 
 def package_geckolibs_aar(topsrcdir, distdir, output_file):
     jarrer = Jarrer(optimize=False)
@@ -71,12 +117,40 @@ def package_geckolibs_aar(topsrcdir, distdir, output_file):
     jarrer.copy(output_file)
     return 0
 
+def package_geckoview_aar(topsrcdir, distdir, output_file):
+    jarrer = Jarrer(optimize=False)
+    fennec_path = os.path.join(distdir, 'fennec')
+    assets = FileFinder(os.path.join(fennec_path, 'assets'), ignore=['*.so'])
+    for p, f in assets.find('omni.ja'):
+        jarrer.add(os.path.join('assets', p), f)
+
+    # The folder that contains Fennec's JAR files and resources.
+    base_path = os.path.join(distdir, '..', 'mobile', 'android', 'base')
+
+    # The resource set is packaged during Fennec's build.
+    resjar = JarReader(os.path.join(base_path, 'geckoview_resources.zip'))
+    for p, f in JarFinder(p, resjar).find('*'):
+        jarrer.add(os.path.join('res', p), f)
+
+    # Package the contents of all Fennec JAR files into classes.jar.
+    classes_jar_file = _generate_geckoview_classes_jar(distdir, base_path)
+    jarrer.add('classes.jar', classes_jar_file)
+
+    # Add R.txt.
+    jarrer.add('R.txt', File(os.path.join(base_path, 'R.txt')))
+
+    # Finally add AndroidManifest.xml.
+    srcdir = os.path.join(topsrcdir, 'mobile', 'android', 'geckoview_library', 'geckoview')
+    jarrer.add('AndroidManifest.xml', File(os.path.join(srcdir, 'AndroidManifest.xml')))
+
+    jarrer.copy(output_file)
+    return 0
 
 def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument(dest='dir',
                         metavar='DIR',
-                        help='Path to write geckolibs Android ARchive and metadata to.')
+                        help='Path to write Android ARchives and metadata to.')
     parser.add_argument('--verbose', '-v', default=False, action='store_true',
                         help='be verbose')
     parser.add_argument('--revision',
@@ -87,33 +161,82 @@ def main(args):
                         help='Distribution directory (usually $OBJDIR/dist).')
     args = parser.parse_args(args)
 
+    # An Ivy 'publication' date must be given in the form yyyyMMddHHmmss, and Mozilla buildids are in this format.
+    if len(args.revision) != 14:
+        raise ValueError('Revision must be in yyyyMMddHHmmss format: %s' % args.revision)
+
     paths_to_hash = []
 
-    aar = os.path.join(args.dir, 'geckolibs-{revision}.aar').format(revision=args.revision)
-    paths_to_hash.append(aar)
-    package_geckolibs_aar(args.topsrcdir, args.distdir, aar)
+    groupId='org.mozilla'
+    packaging_type='aar'
+    gecklibs_aar = os.path.join(args.dir, 'geckolibs-{revision}.aar').format(revision=args.revision)
+    paths_to_hash.append(gecklibs_aar)
+    geckoview_aar = os.path.join(args.dir, 'geckoview-{revision}.aar').format(revision=args.revision)
+    paths_to_hash.append(geckoview_aar)
 
-    pom = os.path.join(args.dir, 'geckolibs-{revision}.pom').format(revision=args.revision)
-    paths_to_hash.append(pom)
-    with open(pom, 'wt') as f:
-        f.write(MAVEN_POM_TEMPLATE.format(
-            groupId='org.mozilla',
+    package_geckolibs_aar(args.topsrcdir, args.distdir, gecklibs_aar)
+    package_geckoview_aar(args.topsrcdir, args.distdir, geckoview_aar)
+
+    geckolibs_pom_path = os.path.join(args.dir, 'geckolibs-{revision}.pom').format(revision=args.revision)
+    paths_to_hash.append(geckolibs_pom_path)
+    geckolibs_pom = MAVEN_POM_TEMPLATE.format(
+            groupId=groupId,
             artifactId='geckolibs',
             version=args.revision,
-            packaging='aar',
-        ))
+            packaging=packaging_type,
+            dependencies=''
+        )
 
-    ivy = os.path.join(args.dir, 'ivy-geckolibs-{revision}.xml').format(revision=args.revision)
-    paths_to_hash.append(ivy)
-    with open(ivy, 'wt') as f:
+    with open(geckolibs_pom_path, 'wt') as f:
+        f.write(geckolibs_pom)
+
+    geckoview_pom_path = os.path.join(args.dir, 'geckoview-{revision}.pom').format(revision=args.revision)
+    paths_to_hash.append(geckoview_pom_path)
+    geckoview_pom = MAVEN_POM_TEMPLATE.format(
+        groupId=groupId,
+        artifactId='geckoview',
+        version=args.revision,
+        packaging=packaging_type,
+        dependencies=MAVEN_POM_DEPENDENCY_TEMPLATE.format(
+            groupId=groupId,
+            artifactId='geckolibs',
+            version=args.revision,
+            packaging=packaging_type
+        )
+    )
+
+    with open(geckoview_pom_path, 'wt') as f:
+        f.write(geckoview_pom)
+
+    geckolibs_ivy_path = os.path.join(args.dir, 'ivy-geckolibs-{revision}.xml').format(revision=args.revision)
+    paths_to_hash.append(geckolibs_ivy_path)
+    with open(geckolibs_ivy_path, 'wt') as f:
         f.write(IVY_XML_TEMPLATE.format(
-            organisation='org.mozilla',
+            organisation=groupId,
             module='geckolibs',
             revision=args.revision,
             publication=args.revision, # A white lie.
             name='geckolibs',
-            type='aar',
-            ext='aar',
+            type=packaging_type,
+            ext=packaging_type,
+            dependencies=''
+        ))
+
+    geckoview_ivy_path = os.path.join(args.dir, 'ivy-geckoview-{revision}.xml').format(revision=args.revision)
+    paths_to_hash.append(geckoview_ivy_path)
+    with open(geckoview_ivy_path, 'wt') as f:
+        f.write(IVY_XML_TEMPLATE.format(
+            organisation=groupId,
+            module='geckoview',
+            revision=args.revision,
+            publication=args.revision, # A white lie.
+            name='geckoview',
+            type=packaging_type,
+            ext=packaging_type,
+            dependencies=IVY_XML_DEPENDENCY_TEMPLATE.format(
+                organisation=groupId,
+                name='geckolibs',
+                revision=args.revision)
         ))
 
     for p in paths_to_hash:

@@ -16,6 +16,8 @@ add_task(function*() {
 
   reload(target);
 
+  yield loadFrameScripts();
+
   let [actors] = yield Promise.all([
     getN(gFront, "create-node", 15),
     waitForGraphRendered(panelWin, 15, 0)
@@ -28,10 +30,12 @@ add_task(function*() {
     "DynamicsCompressorNode", "OscillatorNode"
   ];
 
+  let defaults = yield Promise.all(types.map(type => nodeDefaultValues(type)));
+
   for (let i = 0; i < types.length; i++) {
     click(panelWin, findGraphNode(panelWin, nodeIds[i]));
     yield waitForInspectorRender(panelWin, EVENTS);
-    checkVariableView(gVars, 0, NODE_DEFAULT_VALUES[types[i]], types[i]);
+    checkVariableView(gVars, 0, defaults[i], types[i]);
   }
 
   yield teardown(target);

@@ -23,10 +23,12 @@ public:
   }
 
   static BluetoothHidManager* Get();
-  virtual ~BluetoothHidManager();
 
   // HID-specific functions
   void HandleInputPropertyChanged(const BluetoothSignal& aSignal);
+
+protected:
+  virtual ~BluetoothHidManager();
 
 private:
   BluetoothHidManager();

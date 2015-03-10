@@ -20,6 +20,9 @@ public:
 
   nsVolumeStat(const nsAString& aPath);
 
+protected:
+  ~nsVolumeStat() {}
+
 private:
   struct statfs mStat;
 };

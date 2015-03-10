@@ -48,7 +48,6 @@ class nsWindow : public nsBaseWidget
 {
 public:
     nsWindow();
-    virtual ~nsWindow();
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -151,6 +150,8 @@ protected:
     // Only accessed on the compositor thread, except during
     // destruction.
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
+
+    virtual ~nsWindow();
 
     void BringToTop();
 
