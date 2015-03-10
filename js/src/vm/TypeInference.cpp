@@ -419,6 +419,23 @@ TypeSet::isSubset(const TypeSet *other) const
     return true;
 }
 
+bool
+TypeSet::objectsIntersect(const TypeSet *other) const
+{
+    if (unknownObject() || other->unknownObject())
+        return true;
+
+    for (unsigned i = 0; i < getObjectCount(); i++) {
+        ObjectKey *key = getObject(i);
+        if (!key)
+            continue;
+        if (other->hasType(ObjectType(key)))
+            return true;
+    }
+
+    return false;
+}
+
 template <class TypeListT>
 bool
 TypeSet::enumerateTypes(TypeListT *list) const
