@@ -3915,15 +3915,9 @@ namespace cyclecollector {
 void
 HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  CollectorData* data = sCollectorData.get();
-
-  // We should have started the cycle collector by now.
-  MOZ_ASSERT(data);
-  MOZ_ASSERT(data->mCollector);
-  // And we should have a runtime.
-  MOZ_ASSERT(data->mRuntime);
-
-  data->mRuntime->AddJSHolder(aHolder, aTracer);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->AddJSHolder(aHolder, aTracer);
 }
 
 void
@@ -3941,15 +3935,9 @@ HoldJSObjectsImpl(nsISupports* aHolder)
 void
 DropJSObjectsImpl(void* aHolder)
 {
-  CollectorData* data = sCollectorData.get();
-
-  // We should have started the cycle collector by now, and not completely
-  // shut down.
-  MOZ_ASSERT(data);
-  // And we should have a runtime.
-  MOZ_ASSERT(data->mRuntime);
-
-  data->mRuntime->RemoveJSHolder(aHolder);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->RemoveJSHolder(aHolder);
 }
 
 void
@@ -3969,30 +3957,18 @@ DropJSObjectsImpl(nsISupports* aHolder)
 bool
 IsJSHolder(void* aHolder)
 {
-  CollectorData* data = sCollectorData.get();
-
-  // We should have started the cycle collector by now, and not completely
-  // shut down.
-  MOZ_ASSERT(data);
-  // And we should have a runtime.
-  MOZ_ASSERT(data->mRuntime);
-
-  return data->mRuntime->IsJSHolder(aHolder);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  return rt->IsJSHolder(aHolder);
 }
 #endif
 
 void
 DeferredFinalize(nsISupports* aSupports)
 {
-  CollectorData* data = sCollectorData.get();
-
-  // We should have started the cycle collector by now, and not completely
-  // shut down.
-  MOZ_ASSERT(data);
-  // And we should have a runtime.
-  MOZ_ASSERT(data->mRuntime);
-
-  data->mRuntime->DeferredFinalize(aSupports);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->DeferredFinalize(aSupports);
 }
 
 void
@@ -4000,15 +3976,9 @@ DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                  DeferredFinalizeFunction aFunc,
                  void* aThing)
 {
-  CollectorData* data = sCollectorData.get();
-
-  // We should have started the cycle collector by now, and not completely
-  // shut down.
-  MOZ_ASSERT(data);
-  // And we should have a runtime.
-  MOZ_ASSERT(data->mRuntime);
-
-  data->mRuntime->DeferredFinalize(aAppendFunc, aFunc, aThing);
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
+  rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
 }
 
 } // namespace cyclecollector
@@ -4138,13 +4108,10 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
 void
 nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
 {
-  CollectorData* data = sCollectorData.get();
-
-  if (!data || !data->mRuntime) {
-    return;
+  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
+  if (rt) {
+    rt->DispatchDeferredDeletion(aContinuation);
   }
-
-  data->mRuntime->DispatchDeferredDeletion(aContinuation);
 }
 
 bool
