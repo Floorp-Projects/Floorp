@@ -1219,11 +1219,6 @@ nsHttpChannel::ProcessSSLInformation()
         NS_SUCCEEDED(securityInfo->GetSecurityState(&state)) &&
         (state & nsIWebProgressListener::STATE_IS_BROKEN)) {
         // Send weak crypto warnings to the web console
-        if (state & nsIWebProgressListener::STATE_USES_SSL_3) {
-            nsString consoleErrorTag = NS_LITERAL_STRING("WeakProtocolVersionWarning");
-            nsString consoleErrorCategory = NS_LITERAL_STRING("SSL");
-            AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
-        }
         if (state & nsIWebProgressListener::STATE_USES_WEAK_CRYPTO) {
             nsString consoleErrorTag = NS_LITERAL_STRING("WeakCipherSuiteWarning");
             nsString consoleErrorCategory = NS_LITERAL_STRING("SSL");

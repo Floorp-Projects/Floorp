@@ -106,11 +106,11 @@ function base64EncodeString(aString) {
  * file, compatible with the old bookmarks system.
  */
 function escapeHtmlEntities(aText) {
-  return (aText || "").replace("&", "&amp;", "g")
-                      .replace("<", "&lt;", "g")
-                      .replace(">", "&gt;", "g")
-                      .replace("\"", "&quot;", "g")
-                      .replace("'", "&#39;", "g");
+  return (aText || "").replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#39;");
 }
 
 /**
@@ -118,7 +118,7 @@ function escapeHtmlEntities(aText) {
  * compatible with the old bookmarks system.
  */
 function escapeUrl(aText) {
-  return (aText || "").replace("\"", "%22", "g");
+  return (aText || "").replace(/"/g, "%22");
 }
 
 function notifyObservers(aTopic, aInitialImport) {

@@ -426,6 +426,10 @@ class JSObject : public js::gc::Cell
 
     /* Access the parent link of an object. */
     JSObject *getParent() const;
+    /* A way to assert something about the parent of an object */
+    MOZ_ALWAYS_INLINE void assertParentIs(JSObject *parent) const {
+        MOZ_ASSERT(getParent() == parent);
+    }
     static bool setParent(JSContext *cx, js::HandleObject obj, js::HandleObject newParent);
 
     /*

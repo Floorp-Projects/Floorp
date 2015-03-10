@@ -515,7 +515,7 @@ let NetworkHelper = {
    *          If state == broken:
    *            - errorMessage: full error message from nsITransportSecurityInfo.
    *          If state == secure:
-   *            - protocolVersion: one of SSLv3, TLSv1, TLSv1.1, TLSv1.2.
+   *            - protocolVersion: one of TLSv1, TLSv1.1, TLSv1.2.
    *            - cipherSuite: the cipher suite used in this connection.
    *            - cert: information about certificate used in this connection.
    *                    See parseCertificateInfo for the contents.
@@ -689,13 +689,11 @@ let NetworkHelper = {
    * @param Number version
    *        One of nsISSLStatus version constants.
    * @return string
-   *         One of SSLv3, TLSv1, TLSv1.1, TLSv1.2 if @param version is valid,
+   *         One of TLSv1, TLSv1.1, TLSv1.2 if @param version is valid,
    *         Unknown otherwise.
    */
   formatSecurityProtocol: function NH_formatSecurityProtocol(version) {
     switch (version) {
-      case Ci.nsISSLStatus.SSL_VERSION_3:
-        return "SSLv3";
       case Ci.nsISSLStatus.TLS_VERSION_1:
         return "TLSv1";
       case Ci.nsISSLStatus.TLS_VERSION_1_1:
@@ -717,9 +715,8 @@ let NetworkHelper = {
    *        nsITransportSecurityInfo.securityState.
    *
    * @return Array[String]
-   *         List of weakness reasons. A subset of { cipher, sslv3 } where
+   *         List of weakness reasons. A subset of { cipher } where
    *         * cipher: The cipher suite is consireded to be weak (RC4).
-   *         * sslv3: The protocol, SSLv3, is weak.
    */
   getReasonsForWeakness: function NH_getReasonsForWeakness(state) {
     const wpl = Ci.nsIWebProgressListener;
@@ -730,17 +727,13 @@ let NetworkHelper = {
     let reasons = [];
 
     if (state & wpl.STATE_IS_BROKEN) {
-      let isSSLV3 = state & wpl.STATE_USES_SSL_3;
       let isCipher = state & wpl.STATE_USES_WEAK_CRYPTO;
-      if (isSSLV3) {
-        reasons.push("sslv3");
-      }
 
       if (isCipher) {
         reasons.push("cipher");
       }
 
-      if (!isCipher && !isSSLV3) {
+      if (!isCipher) {
         DevToolsUtils.reportException("NetworkHelper.getReasonsForWeakness",
           "STATE_IS_BROKEN without a known reason. Full state was: " + state);
       }

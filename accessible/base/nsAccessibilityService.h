@@ -57,7 +57,7 @@ struct MarkupMapInfo {
   nsIAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
-  MarkupAttrInfo attrs[2];
+  MarkupAttrInfo attrs[4];
 };
 
 } // namespace a11y
