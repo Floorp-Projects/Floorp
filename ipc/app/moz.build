@@ -15,13 +15,16 @@ else:
     }
     if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         kwargs['msvcrt'] = 'static'
+        if not CONFIG['GNU_CC']:
+            USE_LIBS += [
+                'mozalloc_staticruntime',
+            ]
     GeckoProgram(CONFIG['MOZ_CHILD_PROCESS_NAME'], **kwargs)
 
     SOURCES += [
         'MozillaRuntimeMain.cpp',
     ]
     USE_LIBS += [
-        'mozalloc',
         'nspr',
         'xul',
     ]
@@ -51,7 +54,6 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'sandbox_staticruntime_s',
     ]
     DELAYLOAD_DLLS += [
-        'mozalloc.dll',
         'nss3.dll',
         'xul.dll'
     ]

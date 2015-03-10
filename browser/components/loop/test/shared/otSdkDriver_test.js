@@ -12,7 +12,7 @@ describe("loop.OTSdkDriver", function () {
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   var sandbox;
-  var dispatcher, driver, publisher, sdk, session, sessionData;
+  var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
   var publisherConfig, fakeEvent;
 
@@ -64,9 +64,20 @@ describe("loop.OTSdkDriver", function () {
       }
     };
 
+    mozLoop = {
+      telemetryAddKeyedValue: sinon.stub(),
+      TWO_WAY_MEDIA_CONN_LENGTH: {
+        SHORTER_THAN_10S: "SHORTER_THAN_10S",
+        BETWEEN_10S_AND_30S: "BETWEEN_10S_AND_30S",
+        BETWEEN_30S_AND_5M: "BETWEEN_30S_AND_5M",
+        MORE_THAN_5M: "MORE_THAN_5M"
+      }
+    };
+
     driver = new loop.OTSdkDriver({
       dispatcher: dispatcher,
-      sdk: sdk
+      sdk: sdk,
+      mozLoop: mozLoop
     });
   });
 
@@ -85,6 +96,12 @@ describe("loop.OTSdkDriver", function () {
       expect(function() {
         new loop.OTSdkDriver({dispatcher: dispatcher});
       }).to.Throw(/sdk/);
+    });
+
+    it("should initialize the connectionStartTime to 'uninitialized'", function() {
+      var driver = new loop.OTSdkDriver({sdk: sdk, dispatcher: dispatcher, mozLoop: mozLoop});
+
+      expect(driver.connectionStartTime).to.eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
     });
   });
 
@@ -293,7 +310,7 @@ describe("loop.OTSdkDriver", function () {
     });
   });
 
-  describe("#disconnectionSession", function() {
+  describe("#disconnectSession", function() {
     it("should disconnect the session", function() {
       driver.session = session;
 
@@ -308,6 +325,94 @@ describe("loop.OTSdkDriver", function () {
       driver.disconnectSession();
 
       sinon.assert.calledOnce(publisher.destroy);
+    });
+
+    it("should call _noteConnectionLengthIfNeeded with connection duration", function() {
+      driver.session = session;
+      var startTime = 1;
+      var endTime = 3;
+      driver.connectionStartTime = startTime;
+      sandbox.stub(performance, "now").returns(endTime);
+      sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
+
+      driver.disconnectSession();
+
+      sinon.assert.calledWith(driver._noteConnectionLengthIfNeeded, startTime,
+                              endTime);
+    });
+
+    it("should reset the connectionStartTime", function() {
+      driver.session = session;
+      var startTime = 1;
+      driver.connectionStartTime = startTime;
+      sandbox.stub(performance, "now");
+      sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
+
+      driver.disconnectSession();
+
+      expect(driver.connectionStartTime).to.eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
+    });
+  });
+
+  describe("#_noteConnectionLengthIfNeeded", function() {
+    var startTimeMS;
+    beforeEach(function() {
+      startTimeMS = 1;
+      driver.connectionStartTime = startTimeMS;
+    });
+
+
+    it("should set connectionStartTime to CONNECTION_START_TIME_ALREADY_NOTED", function() {
+      var endTimeMS = 3;
+      driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
+
+      expect(driver.connectionStartTime).to.eql(driver.CONNECTION_START_TIME_ALREADY_NOTED);
+    });
+
+    it("should call mozLoop.noteConnectionLength with SHORTER_THAN_10S for calls less than 10s", function() {
+      var endTimeMS = 9000;
+
+      driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+        mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S);
+    });
+
+    it("should call mozLoop.noteConnectionLength with BETWEEN_10S_AND_30S for 15s calls",
+      function() {
+        var endTimeMS = 15000;
+
+        driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
+
+        sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+        sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+          mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S);
+      });
+
+    it("should call mozLoop.noteConnectionLength with BETWEEN_30S_AND_5M for 60s calls",
+      function() {
+        var endTimeMS = 60 * 1000;
+
+        driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
+
+        sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+        sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+          mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M);
+      });
+
+    it("should call mozLoop.noteConnectionLength with MORE_THAN_5M for 10m calls", function() {
+      var endTimeMS = 10 * 60 * 1000;
+
+      driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+        mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
     });
   });
 
@@ -388,6 +493,23 @@ describe("loop.OTSdkDriver", function () {
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("peerHungup", false));
       });
+
+
+      it("should call _noteConnectionLengthIfNeeded with connection duration", function() {
+        driver.session = session;
+        var startTime = 1;
+        var endTime = 3;
+        driver.connectionStartTime = startTime;
+        sandbox.stub(performance, "now").returns(endTime);
+        sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
+
+        session.trigger("connectionDestroyed", {
+          reason: "clientDisconnected"
+        });
+
+        sinon.assert.calledWith(driver._noteConnectionLengthIfNeeded, startTime,
+          endTime);
+      });
     });
 
     describe("sessionDisconnected", function() {
@@ -416,6 +538,23 @@ describe("loop.OTSdkDriver", function () {
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("reason", FAILURE_DETAILS.EXPIRED_OR_INVALID));
         });
+
+      it("should call _noteConnectionLengthIfNeeded with connection duration", function() {
+        driver.session = session;
+        var startTime = 1;
+        var endTime = 3;
+        driver.connectionStartTime = startTime;
+        sandbox.stub(performance, "now").returns(endTime);
+        sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
+
+        session.trigger("sessionDisconnected", {
+          reason: "networkDisconnected"
+        });
+
+        sinon.assert.calledWith(driver._noteConnectionLengthIfNeeded, startTime,
+          endTime);
+      });
+
     });
 
     describe("streamCreated (publisher/local)", function() {
@@ -479,7 +618,7 @@ describe("loop.OTSdkDriver", function () {
           fakeStream, fakeScreenElement, publisherConfig);
       });
 
-      it("should dispach a mediaConnected action if both streams are up", function() {
+      it("should dispatch a mediaConnected action if both streams are up", function() {
         driver._publishedLocalStream = true;
 
         session.trigger("streamCreated", {stream: fakeStream});
@@ -489,6 +628,17 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "mediaConnected"));
       });
+
+      it("should store the start time when both streams are up", function() {
+        driver._publishedLocalStream = true;
+        var startTime = 1;
+        sandbox.stub(performance, "now").returns(startTime);
+
+        session.trigger("streamCreated", {stream: fakeStream});
+
+        expect(driver.connectionStartTime).to.eql(startTime);
+      });
+
 
       it("should not dispatch a mediaConnected action for screen sharing streams",
         function() {

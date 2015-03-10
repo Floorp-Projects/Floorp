@@ -2172,12 +2172,8 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   // depend upon font metrics. Updating this information requires
   // rebuilding the rule tree from the top, avoiding the reuse of cached
   // data even when no style rules have changed.
-
   if (UsesExChUnits()) {
-    // xxx - dbaron said this should work but get ex/ch related reftest failures
-    // PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
-    PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, eRestyle_ForceDescendants);
-    return;
+    PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
   }
 
   // Iterate over the frame tree looking for frames associated with the

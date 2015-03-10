@@ -35,6 +35,12 @@
 
 #include "jsobjinlines.h"
 
+#if defined(ANDROID) || defined(XP_MACOSX) || defined(__DragonFly__) || \
+    defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+# include <stdlib.h>
+# define HAVE_ARC4RANDOM
+#endif
+
 using namespace js;
 
 using mozilla::Abs;
@@ -739,11 +745,10 @@ random_generateSeed()
 
     error = rand_s(&seed.u32[1]);
     MOZ_ASSERT(error == 0, "rand_s() error?!");
+#elif defined(HAVE_ARC4RANDOM)
+    seed.u32[0] = arc4random();
+    seed.u32[1] = arc4random();
 #elif defined(XP_UNIX)
-    /*
-     * In the unlikely event we can't read /dev/urandom, there's not much we can
-     * do, so just mix in the fd error code and the current time.
-     */
     int fd = open("/dev/urandom", O_RDONLY);
     MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom?!");
     if (fd >= 0) {
@@ -752,7 +757,6 @@ random_generateSeed()
         mozilla::unused << nread;
         close(fd);
     }
-    seed.u32[0] ^= fd;
 #else
 # error "Platform needs to implement random_generateSeed()"
 #endif
