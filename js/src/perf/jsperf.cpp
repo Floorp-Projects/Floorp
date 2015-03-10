@@ -210,10 +210,11 @@ static PerfMeasurement*
 GetPM(JSContext* cx, JS::HandleValue value, const char* fname)
 {
     if (!value.isObject()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
         if (!bytes)
             return nullptr;
-        JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, 0, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
         return nullptr;
     }
     RootedObject obj(cx, &value.toObject());
