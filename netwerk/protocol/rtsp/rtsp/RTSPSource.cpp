@@ -218,7 +218,11 @@ status_t RTSPSource::seekTo(int64_t seekTimeUs) {
     sp<AMessage> msg = new AMessage(kWhatPerformSeek, mReflector->id());
     msg->setInt32("generation", ++mSeekGeneration);
     msg->setInt64("timeUs", seekTimeUs);
-    msg->post(200000ll);
+    // The original code in Android posts this message for 200ms delay in order
+    // to avoid performing multiple seeks in a short period of time. This is not
+    // necessary for us because MediaDecoderStateMachine already circumvents
+    // that situation.
+    msg->post();
 
     return OK;
 }
@@ -425,6 +429,10 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
 
         case RtspConnectionHandler::kWhatAccessUnitComplete:
         {
+            if (!isValidState()) {
+                LOGI("We're disconnected, dropping access unit.");
+                break;
+            }
             size_t trackIndex;
             CHECK(msg->findSize("trackIndex", &trackIndex));
             CHECK_LT(trackIndex, mTracks.size());
@@ -481,6 +489,10 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
 
         case RtspConnectionHandler::kWhatEOS:
         {
+            if (!isValidState()) {
+                LOGI("We're disconnected, dropping end-of-stream message.");
+                break;
+            }
             size_t trackIndex;
             CHECK(msg->findSize("trackIndex", &trackIndex));
             CHECK_LT(trackIndex, mTracks.size());
@@ -501,6 +513,10 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
 
         case RtspConnectionHandler::kWhatSeekDiscontinuity:
         {
+            if (!isValidState()) {
+                LOGI("We're disconnected, dropping seek discontinuity message.");
+                break;
+            }
             size_t trackIndex;
             CHECK(msg->findSize("trackIndex", &trackIndex));
             CHECK_LT(trackIndex, mTracks.size());
@@ -521,6 +537,11 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
 
         case RtspConnectionHandler::kWhatNormalPlayTimeMapping:
         {
+            if (!isValidState()) {
+                LOGI("We're disconnected, dropping normal play time mapping "
+                     "message.");
+                break;
+            }
             size_t trackIndex;
             CHECK(msg->findSize("trackIndex", &trackIndex));
             CHECK_LT(trackIndex, mTracks.size());
@@ -770,6 +791,15 @@ void RTSPSource::onTrackEndOfStream(size_t trackIndex)
 
     mListener->OnMediaDataAvailable(trackIndex, data, data.Length(), 0, meta.get());
 }
+
+inline bool RTSPSource::isValidState()
+{
+    if (mState == DISCONNECTED || mTracks.size() == 0) {
+        return false;
+    }
+    return true;
+}
+
 
 
 bool RTSPSource::isLiveStream() {

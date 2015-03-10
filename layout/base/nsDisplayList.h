@@ -345,7 +345,11 @@ public:
   }
   bool IsBuildingLayerEventRegions()
   {
-    return (gfxPrefs::LayoutEventRegionsEnabled() && mMode == PAINTING);
+    if (mMode == PAINTING) {
+      return (gfxPrefs::LayoutEventRegionsEnabled() ||
+              gfxPrefs::AsyncPanZoomEnabled());
+    }
+    return false;
   }
   bool IsInsidePointerEventsNoneDoc()
   {

@@ -444,10 +444,6 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
     mFront = mBack;
     mBack = newBack;
 
-    // Fence before copying.
-    if (mFront) {
-        mFront->Surf()->ProducerRelease();
-    }
     if (mBack) {
         mBack->Surf()->ProducerAcquire();
     }
@@ -468,6 +464,14 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
         //srcPixel = ReadPixel(src);
         //destPixel = ReadPixel(dest);
         //printf_stderr("After: src: 0x%08x, dest: 0x%08x\n", srcPixel, destPixel);
+    }
+
+    // XXX: We would prefer to fence earlier on platforms that don't need
+    // the full ProducerAcquire/ProducerRelease semantics, so that the fence
+    // doesn't include the copy operation. Unfortunately, the current API
+    // doesn't expose a good way to do that.
+    if (mFront) {
+        mFront->Surf()->ProducerRelease();
     }
 
     return true;

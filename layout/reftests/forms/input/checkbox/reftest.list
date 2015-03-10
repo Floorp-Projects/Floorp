@@ -1,5 +1,5 @@
 == label-dynamic.html label-dynamic-ref.html
-skip-if(B2G) fails-if(Android) == radio-stretched.html radio-stretched-ref.html # test for bug 464589
+skip-if(B2G||Mulet) fails-if(Android) == radio-stretched.html radio-stretched-ref.html # test for bug 464589 # Initial mulet triage: parity with B2G/B2G Desktop
 != checked.html checked-notref.html
 != checked-native.html checked-native-notref.html
 != checked.html about:blank

@@ -221,6 +221,11 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
                                      dataSurface->GetSize(),
                                      map.mStride,
                                      SurfaceFormat::B8G8R8A8);
+  if (!dt) {
+    gfxWarning() << "imgTools::EncodeImage failed in CreateDrawTargetForData";
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   dt->DrawSurface(frame,
                   Rect(0, 0, aScaledWidth, aScaledHeight),
                   Rect(0, 0, frameWidth, frameHeight),
@@ -293,6 +298,10 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
                                      dataSurface->GetSize(),
                                      map.mStride,
                                      SurfaceFormat::B8G8R8A8);
+  if (!dt) {
+    gfxWarning() << "imgTools::EncodeCroppedImage failed in CreateDrawTargetForData";
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   dt->CopySurface(frame,
                   IntRect(aOffsetX, aOffsetY, aWidth, aHeight),
                   IntPoint(0, 0));

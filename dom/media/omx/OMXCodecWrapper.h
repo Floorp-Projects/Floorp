@@ -278,7 +278,6 @@ private:
  */
 class OMXVideoEncoder MOZ_FINAL : public OMXCodecWrapper
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OMXVideoEncoder)
 public:
   // Types of output blob format.
   enum BlobFormat {

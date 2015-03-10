@@ -1593,6 +1593,13 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
     }
     default:
       BT_WARNING("Got an unhandled status of BondStateChangedCallback!");
+      // Dispatch a reply to unblock the waiting status of pairing.
+      if (!sBondingRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(sBondingRunnableArray[0],
+                               BluetoothValue(true),
+                               NS_LITERAL_STRING("Internal failure"));
+        sBondingRunnableArray.RemoveElementAt(0);
+      }
       break;
   }
 }

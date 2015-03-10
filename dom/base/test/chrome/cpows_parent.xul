@@ -209,6 +209,16 @@
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
       // See bug 1072980.
       if (test_state == "remote") {
+        // This doesn't work because we intercept toString specially
+        // and don't cache the function pointer.
+        // See bug 1140636.
+        todo_is(savedElement.toString, savedElement.toString, "toString identity works");
+
+        // This does work because we create a CPOW for isEqualNode that stays
+        // alive as long as we have a reference to the first CPOW (so as long
+        // as it's detectable).
+        is(savedElement.isEqualNode, savedElement.isEqualNode, "webidl function identity works");
+
         let walker = Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
                                .createInstance(Components.interfaces.inIDeepTreeWalker);
         const SHOW_ELEMENT = Components.interfaces.nsIDOMNodeFilter.SHOW_ELEMENT;

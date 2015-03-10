@@ -17,7 +17,7 @@
 == placeholder-4.html placeholder-overridden-ref.html
 == placeholder-5.html placeholder-visible-ref.html
 fuzzy-if(winWidget,160,6) == placeholder-6.html placeholder-overflow-ref.html
-skip-if(B2G) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html
+skip-if(B2G||Mulet) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 # needs-focus == placeholder-7.html placeholder-focus-ref.html
 # needs-focus == placeholder-8.html placeholder-focus-ref.html
 # needs-focus == placeholder-9.html placeholder-focus-ref.html
@@ -27,7 +27,7 @@ needs-focus == placeholder-10.html placeholder-visible-ref.html
 == placeholder-13.html placeholder-visible-ref.html
 == placeholder-14.html placeholder-visible-ref.html
 == placeholder-18.html placeholder-overridden-ref.html
-random-if(winWidget) skip-if(B2G&&browserIsRemote) == placeholder-19.xul  placeholder-overridden-ref.xul # bug 974780
+random-if(winWidget) skip-if((B2G&&browserIsRemote)||Mulet) == placeholder-19.xul  placeholder-overridden-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 # needs-focus == placeholder-20.html placeholder-focus-ref.html
 needs-focus == placeholder-21.html placeholder-blank-ref.html
 needs-focus == placeholder-22.html placeholder-blank-ref.html

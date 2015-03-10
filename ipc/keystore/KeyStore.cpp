@@ -137,15 +137,15 @@ status_t BnKeystoreService::onTransact(uint32_t code, const Parcel& data, Parcel
     case SIGN: {
       CHECK_INTERFACE(IKeystoreService, data, reply);
       String16 name = data.readString16();
-      size_t signDataSize = data.readInt32();
+      ssize_t signDataSize = data.readInt32();
       const uint8_t *signData = nullptr;
-      if (signDataSize >= 0 && signDataSize <= data.dataAvail()) {
+      if (signDataSize >= 0 && (size_t)signDataSize <= data.dataAvail()) {
         signData = (const uint8_t *)data.readInplace(signDataSize);
       }
 
       uint8_t *signResult = nullptr;
       size_t signResultSize;
-      int32_t ret = sign(name, signData, signDataSize, &signResult,
+      int32_t ret = sign(name, signData, (size_t)signDataSize, &signResult,
                          &signResultSize);
 
       reply->writeNoException();

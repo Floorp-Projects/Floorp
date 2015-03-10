@@ -17,38 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=965420
 
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var initialConfig = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
-  }
-};
-
-const PREF_FACEDETECTION_ENABLED = "camera.control.face_detection.enabled";
-
-var cameraObj;
-var oldPref;
-
-// Shorthand functions
-function end() {
-  function reallyEnd() {
-    CameraTest.end();
-  }
-  if (oldPref) {
-    SpecialPowers.pushPrefEnv(
-      {'set': [[PREF_FACEDETECTION_ENABLED, oldPref]]}, reallyEnd);
-  } else {
-    SpecialPowers.pushPrefEnv(
-      {'clear': [[PREF_FACEDETECTION_ENABLED]]}, reallyEnd);
-  }
-}
-function next() {
-  CameraTest.next();
-}
-
 function compareFaces(aFaces, expected)
 {
   ok(aFaces, "have detected faces object");
@@ -122,11 +90,31 @@ function compareFace(aFace, expected)
   return "ok";
 }
 
-var tests = [
-  {
-    key: "face-detection-detected-one-face",
-    func: function testFaceDetectionFoundOneFace(camera) {
-      var expected = {
+var suite = new CameraTestSuite();
+
+suite.test('face-detection', function() {
+  function detectFace(msg, expected) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(evt) {
+        try {
+          suite.camera.removeEventListener('facesdetected', onEvent);
+          ok(compareFaces(evt.faces, expected),
+            "facedetected event received " + msg + " correctly");
+          resolve();
+        } catch(e) {
+          reject(e);
+        }
+      }
+      suite.camera.addEventListener('facesdetected', onEvent);
+    });
+
+    suite.hw.fireFacesDetected(expected);
+    return sync;
+  }
+
+  function detectOneFace(p) {
+    return detectFace('one-face',
+      {
         faces: [ {
           id:       1,
           score:    2,
@@ -149,24 +137,13 @@ var tests = [
             y:      12
           }
         } ]
-      };
+      }
+    );
+  }
 
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
-        camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
-        next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
-      camera.startFaceDetection();
-    }
-  },
-  {
-    key: "face-detection-detected-two-faces",
-    func: function testFaceDetectionFoundTwoFace(camera) {
-      var expected = {
+  function detectTwoFaces(p) {
+    return detectFace('two-faces',
+      {
         faces: [ {
           id:       1,
           score:    2,
@@ -211,24 +188,13 @@ var tests = [
             y:      24
           }
         } ]
-      };
+      }
+    );
+  }
 
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
-        camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
-        next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
-      camera.startFaceDetection();
-    }
-  },
-  {
-    key: "face-detection-detected-one-face-no-features",
-    func: function (camera) {
-      var expected = {
+  function detectOneFaceNoFeatures() {
+    return detectFace('one-face-no-features',
+      {
         faces: [ {
           id:       1,
           score:    100,
@@ -242,93 +208,27 @@ var tests = [
           rightEye: null,
           mouth:    null
         } ]
-      };
+      }
+    );
+  }
 
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
-        camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
-        next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
-      camera.startFaceDetection();
-    }
-  },
-  {
-    key: "face-detection-no-faces-detected",
-    func: function (camera) {
-      var expected = {
+  function detectNoFaces() {
+    return detectFace('no-faces',
+      {
         faces: []
-      };
-
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
-        camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
-        next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
-      camera.startFaceDetection();
-    }
-  },
-];
-
-var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
-    yield tests[i];
+      }
+    );
   }
-}();
 
-window.addEventListener('beforeunload', function() {
-  document.getElementById('viewfinder').mozSrcObject = null;
-  if (cameraObj) {
-    cameraObj.release();
-    cameraObj = null;
-  }
+  return suite.getCamera()
+    .then(detectOneFace, suite.rejectGetCamera)
+    .then(detectTwoFaces)
+    .then(detectOneFaceNoFeatures)
+    .then(detectNoFaces);
 });
 
-// Must call CameraTest.begin() before any other async methods.
-CameraTest.begin("hardware", function(test) {
-  // If the pref doesn't exist, this get will fail; catch it and continue.
-  try {
-    oldPref = SpecialPowers.getBoolPref(PREF_FACEDETECTION_ENABLED);
-  } catch(e) { }
-
-  SpecialPowers.pushPrefEnv({'set': [[PREF_FACEDETECTION_ENABLED, true]]}, function() {
-    var enabled;
-    try {
-      enabled = SpecialPowers.getBoolPref(PREF_FACEDETECTION_ENABLED);
-    } catch(e) { }
-    ok(enabled, PREF_FACEDETECTION_ENABLED + " is " + enabled);
-
-    function onSuccess(d) {
-      cameraObj = d.camera;
-      document.getElementById('viewfinder').mozSrcObject = cameraObj;
-      CameraTest.next = function() {
-        try {
-          var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, cameraObj));
-        } catch(e) {
-          if (e instanceof StopIteration) {
-            end();
-          } else {
-            throw e;
-          }
-        }
-      };
-      next();
-    }
-    function onError(error) {
-      ok(false, "getCamera() failed with: " + error);
-      end();
-    }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
-  })
-});
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>
