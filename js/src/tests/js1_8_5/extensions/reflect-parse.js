@@ -93,7 +93,7 @@ function genFunExpr(id, args, body) Pattern({ type: "FunctionExpression",
                                               params: args,
                                               body: body,
                                               generator: true })
-function arrowExpr(args, body) Pattern({ type: "ArrowExpression",
+function arrowExpr(args, body) Pattern({ type: "ArrowFunctionExpression",
                                          params: args,
                                          body: body })
 
