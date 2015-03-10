@@ -442,6 +442,38 @@ public:
   }
 };
 
+namespace {
+nsresult
+GetRequiredScopeStringPrefix(const nsACString& aScriptSpec, nsACString& aPrefix)
+{
+  nsCOMPtr<nsIURI> scriptURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptSpec,
+                 nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = scriptURI->GetPrePath(aPrefix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIURL> scriptURL(do_QueryInterface(scriptURI));
+  if (NS_WARN_IF(!scriptURL)) {
+    return rv;
+  }
+
+  nsAutoCString dir;
+  rv = scriptURL->GetDirectory(dir);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aPrefix.Append(dir);
+  return NS_OK;
+}
+} // anonymous namespace
+
 class ServiceWorkerRegisterJob MOZ_FINAL : public ServiceWorkerJob,
                                            public nsIStreamLoaderObserver
 {
@@ -563,6 +595,20 @@ public:
     NS_WARNING("Byte wise check is disabled, just using new one");
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
+    // FIXME: Bug 1130101 - Read max scope from Service-Worker-Allowed header.
+    nsAutoCString allowedPrefix;
+    rv = GetRequiredScopeStringPrefix(mRegistration->mScriptSpec, allowedPrefix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Fail(NS_ERROR_DOM_SECURITY_ERR);
+      return rv;
+    }
+
+    if (!StringBeginsWith(mRegistration->mScope, allowedPrefix)) {
+      NS_WARNING("By default a service worker's scope is restricted to at or below it's script's location.");
+      Fail(NS_ERROR_DOM_SECURITY_ERR);
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     // We have to create a ServiceWorker here simply to ensure there are no
     // errors. Ideally we should just pass this worker on to ContinueInstall.
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
@@ -592,7 +638,7 @@ public:
     if (NS_WARN_IF(!ok)) {
       swm->mSetOfScopesBeingUpdated.Remove(mRegistration->mScope);
       Fail(NS_ERROR_DOM_ABORT_ERR);
-      return rv;
+      return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -813,8 +859,8 @@ ContinueInstallTask::ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmed
 // automatically reject the Promise.
 NS_IMETHODIMP
 ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
-                               const nsAString& aScope,
-                               const nsAString& aScriptURL,
+                               nsIURI* aScopeURI,
+                               nsIURI* aScriptURI,
                                nsISupports** aPromise)
 {
   AssertIsOnMainThread();
@@ -884,41 +930,29 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
     }
   }
 
-  nsCOMPtr<nsIURI> scriptURI;
-  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, documentURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Data URLs are not allowed.
   nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
 
-  rv = documentPrincipal->CheckMayLoad(scriptURI, true /* report */,
+  rv = documentPrincipal->CheckMayLoad(aScriptURI, true /* report */,
                                        false /* allowIfInheritsPrincipal */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, documentURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
+  rv = documentPrincipal->CheckMayLoad(aScopeURI, true /* report */,
                                        false /* allowIfInheritsPrinciple */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   nsCString cleanedScope;
-  rv = scopeURI->GetSpecIgnoringRef(cleanedScope);
+  rv = aScopeURI->GetSpecIgnoringRef(cleanedScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
 
   nsAutoCString spec;
-  rv = scriptURI->GetSpec(spec);
+  rv = aScriptURI->GetSpec(spec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
