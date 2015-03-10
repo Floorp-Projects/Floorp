@@ -14,8 +14,8 @@ interface nsIURI;
 
 %{C++
 #define NS_SHISTORY_INTERNAL_CID \
-{ 0x9c47c121, 0x1c6e, 0x4d8f, \
-  { 0xb9, 0x04, 0x3a, 0xc9, 0x68, 0x11, 0x6e, 0x88 } }
+{ 0x3dfb2f54, 0x378d, 0x4d3c, \
+  { 0xa9, 0xf9, 0x95, 0xdd, 0x26, 0x73, 0x24, 0x8c } }
 
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 
@@ -24,7 +24,7 @@ interface nsIURI;
 
 [ref] native nsDocshellIDArray(nsTArray<uint64_t>);
 
-[scriptable, uuid(f9348014-0239-11e2-b029-3d38e719eb2d)]
+[scriptable, uuid(3dfb2f54-378d-4d3c-a9f9-95dd2673248c)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -42,9 +42,9 @@ interface nsISHistoryInternal: nsISupports
    readonly attribute nsISHTransaction rootTransaction;
 
   /**
-   * The toplevel docshell object to which this SHistory object belongs to.
+   * Sets the toplevel docshell object to which this SHistory object belongs to.
    */
-   attribute nsIDocShell rootDocShell;
+   void setRootDocShell(in nsIDocShell rootDocShell);
 
   /** 
    * Update the index maintained by sessionHistory
