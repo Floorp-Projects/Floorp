@@ -26,10 +26,15 @@ function checkData(response, data_head, cb) {
 }
 
 self.onmessage = function onmessage(event) {
+  var jar = event.data;
+
+  function makeJarURL(entry) {
+    return "jar:" + jar + "!/" + entry;
+  }
 
   function test_mapped_sync() {
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', 'jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_1.txt', false);
+    xhr.open('GET', makeJarURL('data_1.txt'), false);
     xhr.responseType = 'arraybuffer';
     xhr.send();
     if (xhr.status) {
@@ -42,7 +47,7 @@ self.onmessage = function onmessage(event) {
 
   function test_mapped_async() {
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', 'jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_1.txt');
+    xhr.open('GET', makeJarURL('data_1.txt'));
     xhr.responseType = 'arraybuffer';
     xhr.onreadystatechange = function() {
       if (xhr.readyState !== xhr.DONE) {
@@ -62,7 +67,7 @@ self.onmessage = function onmessage(event) {
   // handled by memory allocation instead of memory mapping.
   function test_non_mapped() {
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.open('GET', 'jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_2.txt');
+    xhr.open('GET', makeJarURL('data_2.txt'));
     xhr.responseType = 'arraybuffer';
     xhr.onreadystatechange = function() {
       if (xhr.readyState !== xhr.DONE) {

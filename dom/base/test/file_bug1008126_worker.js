@@ -3,9 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var gJar1 = "jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_1.txt";
-var gJar2 = "jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_2.txt";
-var gJar3 = "jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_big.txt";
+var gEntry1 = "data_1.txt";
+var gEntry2 = "data_2.txt";
+var gEntry3 = "data_big.txt";
 var gPaddingChar = ".";
 var gPaddingSize = 10000;
 var gPadding = "";
@@ -37,6 +37,11 @@ function checkData(xhr, data, mapped, cb) {
 }
 
 self.onmessage = function onmessage(event) {
+  var jar = event.data;
+
+  function makeJarURL(entry) {
+    return "jar:" + jar + "!/" + entry;
+  }
 
   var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
 
@@ -71,7 +76,7 @@ self.onmessage = function onmessage(event) {
       }
     };
     xhr.onload = runTests;
-    xhr.open("GET", gJar3, true);
+    xhr.open("GET", makeJarURL(gEntry3), true);
     xhr.responseType = "moz-chunked-arraybuffer";
     xhr.send();
   }
@@ -104,7 +109,7 @@ self.onmessage = function onmessage(event) {
       loadendCount++;
       checkData(xhr, gData2, false, function() {} );
     };
-    xhr.open("GET", gJar2, false);
+    xhr.open("GET", makeJarURL(gEntry2), false);
     xhr.responseType = "arraybuffer";
     xhr.send();
     checkEventCount(runTests);
@@ -112,7 +117,7 @@ self.onmessage = function onmessage(event) {
 
   function test_sync_xhr_data1() {
     ok(true, "Test sync XHR with data1");
-    xhr.open("GET", gJar1, false);
+    xhr.open("GET", makeJarURL(gEntry1), false);
     xhr.responseType = "arraybuffer";
     xhr.send();
     checkData(xhr, gData1, true, runTests);
@@ -120,7 +125,7 @@ self.onmessage = function onmessage(event) {
 
   function test_sync_xhr_data2() {
     ok(true, "Test sync XHR with data2");
-    xhr.open("GET", gJar2, false);
+    xhr.open("GET", makeJarURL(gEntry2), false);
     xhr.responseType = "arraybuffer";
     xhr.send();
     checkData(xhr, gData2, false, runTests);
@@ -131,7 +136,7 @@ self.onmessage = function onmessage(event) {
     xhr.onload = function() {
       checkData(xhr, gData1, true, runTests);
     };
-    xhr.open("GET", gJar1, true);
+    xhr.open("GET", makeJarURL(gEntry1), true);
     xhr.responseType = "arraybuffer";
     xhr.send();
   }
@@ -141,7 +146,7 @@ self.onmessage = function onmessage(event) {
     xhr.onload = function() {
       checkData(xhr, gData2, false, runTests);
     };
-    xhr.open("GET", gJar2, true);
+    xhr.open("GET", makeJarURL(gEntry2), true);
     xhr.responseType = "arraybuffer";
     xhr.send();
   }
