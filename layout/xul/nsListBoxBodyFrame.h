@@ -54,20 +54,13 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) MOZ_OVERRIDE;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            nsIScrollbarMediator::ScrollSnapMode snapMode
-                              = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                             nsIScrollbarMediator::ScrollSnapMode snapMode
-                               = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            nsIScrollbarMediator::ScrollSnapMode snapMode
-                              = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
                           int32_t aOldPos,
                           int32_t aNewPos) MOZ_OVERRIDE;
-  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE {}
   virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE;
   virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE {}
