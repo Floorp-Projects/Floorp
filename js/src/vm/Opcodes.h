@@ -768,8 +768,15 @@
      *   nuses: (argc+2)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
-    \
-    macro(JSOP_UNUSED83,  83, "unused83",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes newly created object onto the stack with provided [[Prototype]].
+     *
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: proto => obj
+     */ \
+    macro(JSOP_OBJWITHPROTO,  83, "objwithproto",   NULL,         1,  1,  1,  JOF_BYTE) \
     \
     /*
      * Fast get op for function arguments and local variables.
