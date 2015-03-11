@@ -2167,6 +2167,7 @@ struct CaptureWindowStateData {
   bool *mScreenShare;
   bool *mWindowShare;
   bool *mAppShare;
+  bool *mBrowserShare;
 };
 
 static void
@@ -2197,6 +2198,9 @@ CaptureWindowStateCallback(MediaManager *aThis,
       if (listener->CapturingApplication()) {
         *data->mAppShare = true;
       }
+      if (listener->CapturingBrowser()) {
+        *data->mBrowserShare = true;
+      }
     }
   }
 }
@@ -2205,7 +2209,8 @@ CaptureWindowStateCallback(MediaManager *aThis,
 NS_IMETHODIMP
 MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
                                       bool* aAudio, bool *aScreenShare,
-                                      bool* aWindowShare, bool *aAppShare)
+                                      bool* aWindowShare, bool *aAppShare,
+                                      bool *aBrowserShare)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   struct CaptureWindowStateData data;
@@ -2214,22 +2219,24 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
   data.mScreenShare = aScreenShare;
   data.mWindowShare = aWindowShare;
   data.mAppShare = aAppShare;
+  data.mBrowserShare = aBrowserShare;
 
   *aVideo = false;
   *aAudio = false;
   *aScreenShare = false;
   *aWindowShare = false;
   *aAppShare = false;
+  *aBrowserShare = false;
 
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
   if (piWin) {
     IterateWindowListeners(piWin, CaptureWindowStateCallback, &data);
   }
 #ifdef DEBUG
-  LOG(("%s: window %lld capturing %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
+  LOG(("%s: window %lld capturing %s %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
        *aVideo ? "video" : "", *aAudio ? "audio" : "",
        *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : "",
-       *aAppShare ? "appshare" : ""));
+       *aAppShare ? "appshare" : "", *aBrowserShare ? "browsershare" : ""));
 #endif
   return NS_OK;
 }
