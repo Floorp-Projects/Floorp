@@ -26,6 +26,8 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::UniquePtr;
+
 WeakMapBase::WeakMapBase(JSObject *memOf, JSCompartment *c)
   : memberOf(memOf),
     compartment(c),
