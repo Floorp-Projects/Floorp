@@ -1159,6 +1159,10 @@
           list.firstChild.remove();
         textbox._selectedButton = null;
 
+        // Avoid setting the selection based on mouse events before
+        // the 'popupshown' event has fired.
+        this._ignoreMouseEvents = true;
+
         let Preferences =
           Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
         let pref = Preferences.get("browser.search.hiddenOneOffs");
@@ -1250,6 +1254,10 @@
         }
       ]]></handler>
 
+      <handler event="popupshown"><![CDATA[
+        this._ignoreMouseEvents = false;
+      ]]></handler>
+
       <handler event="mousedown"><![CDATA[
         // Required to receive click events from the buttons on Linux.
         event.preventDefault();
@@ -1258,6 +1266,12 @@
       <handler event="mouseover"><![CDATA[
         let target = event.originalTarget;
         if (target.localName != "button")
+          return;
+
+        // We ignore mouse events between the popupshowing and popupshown
+        // events to avoid selecting the button that happens to be under the
+        // mouse when the panel opens.
+        if (this._ignoreMouseEvents)
           return;
 
         if ((target.classList.contains("searchbar-engine-one-off-item") &&
