@@ -106,14 +106,6 @@
 #endif
 #define NS_FROZENCALL __cdecl
 
-/*
-  These are needed to mark static members in exported classes, due to
-  gcc bug XXX insert bug# here.
- */
-
-#define NS_EXPORT_STATIC_MEMBER_(type) type
-#define NS_IMPORT_STATIC_MEMBER_(type) type
-
 #else
 
 #define NS_IMPORT NS_EXTERNAL_VIS
@@ -126,8 +118,6 @@
 #define NS_CALLBACK_(_type, _name) _type (* _name)
 #define NS_STDCALL
 #define NS_FROZENCALL
-#define NS_EXPORT_STATIC_MEMBER_(type) NS_EXTERNAL_VIS_(type)
-#define NS_IMPORT_STATIC_MEMBER_(type) NS_EXTERNAL_VIS_(type)
 
 #endif
 
