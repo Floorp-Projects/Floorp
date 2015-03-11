@@ -53,7 +53,7 @@ function check_telemetry() {
                     .snapshot();
   do_check_eq(histogram.counts[ 0], 0);
   do_check_eq(histogram.counts[ 2], 7); // SEC_ERROR_UNKNOWN_ISSUER
-  do_check_eq(histogram.counts[ 3], 0); // SEC_ERROR_CA_CERT_INVALID
+  do_check_eq(histogram.counts[ 3], 1); // SEC_ERROR_CA_CERT_INVALID
   do_check_eq(histogram.counts[ 4], 0); // SEC_ERROR_UNTRUSTED_ISSUER
   do_check_eq(histogram.counts[ 5], 1); // SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE
   do_check_eq(histogram.counts[ 6], 0); // SEC_ERROR_UNTRUSTED_CERT
@@ -75,7 +75,7 @@ function check_telemetry() {
   do_check_eq(keySizeHistogram.counts[0], 0);
   do_check_eq(keySizeHistogram.counts[1], 0); // 0 successful verifications of 2048-bit keys
   do_check_eq(keySizeHistogram.counts[2], 4); // 4 successful verifications of 1024-bit keys
-  do_check_eq(keySizeHistogram.counts[3], 47); // 47 verification failures
+  do_check_eq(keySizeHistogram.counts[3], 49); // 49 verification failures
 
   run_next_test();
 }
@@ -193,6 +193,12 @@ function add_simple_tests() {
     clearSessionCache();
     run_next_test();
   });
+
+  // Due to compatibility issues, we allow overrides for certificates issued by
+  // certificates that are not valid CAs.
+  add_cert_override_test("end-entity-issued-by-non-CA.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(SEC_ERROR_CA_CERT_INVALID));
 
   add_cert_override_test("inadequate-key-size-ee.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
