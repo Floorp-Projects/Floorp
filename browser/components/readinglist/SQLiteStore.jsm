@@ -126,11 +126,16 @@ this.SQLiteStore.prototype = {
   /**
    * Call this when you're done with the store.  Don't use it afterward.
    */
-  destroy: Task.async(function* () {
-    let conn = yield this._connectionPromise;
-    yield conn.close();
-    this._connectionPromise = Promise.reject("Store destroyed");
-  }),
+  destroy() {
+    if (!this._destroyPromise) {
+      this._destroyPromise = Task.spawn(function* () {
+        let conn = yield this._connectionPromise;
+        yield conn.close();
+        this._connectionPromise = Promise.reject("Store destroyed");
+      }.bind(this));
+    }
+    return this._destroyPromise;
+  },
 
   /**
    * Creates the database connection if it hasn't been created already.
