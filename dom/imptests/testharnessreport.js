@@ -303,7 +303,7 @@ var W3CTest = {
     add_result_callback(W3CTest.result.bind(W3CTest));
     add_completion_callback(W3CTest.finish.bind(W3CTest));
     setup({
-      "output": !SimpleTest.harnessParameters.closeWhenDone,
+      "output": false,
       "explicit_timeout": true
     });
   } catch (e) {
