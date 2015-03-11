@@ -2442,6 +2442,342 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
 #endif
 }
 
+static void
+Replace(const std::string& toReplace,
+        const std::string& with,
+        std::string* in)
+{
+  size_t pos = in->find(toReplace);
+  ASSERT_NE(std::string::npos, pos);
+  in->replace(pos, toReplace.size(), with);
+}
+
+static void
+GetCodec(JsepSession& session,
+         size_t pairIndex,
+         bool sending,
+         size_t codecIndex,
+         const JsepCodecDescription** codecOut)
+{
+  *codecOut = nullptr;
+  ASSERT_LT(pairIndex, session.GetNegotiatedTrackPairs().size());
+  JsepTrackPair pair(session.GetNegotiatedTrackPairs().front());
+  RefPtr<JsepTrack> track(sending ? pair.mSending : pair.mReceiving);
+  ASSERT_TRUE(track);
+  ASSERT_TRUE(track->GetNegotiatedDetails());
+  ASSERT_LT(codecIndex, track->GetNegotiatedDetails()->GetCodecCount());
+  ASSERT_EQ(NS_OK,
+            track->GetNegotiatedDetails()->GetCodec(codecIndex, codecOut));
+}
+
+static void
+ForceH264(JsepSession& session, uint32_t profileLevelId)
+{
+  for (JsepCodecDescription* codec : session.Codecs()) {
+    if (codec->mName == "H264") {
+      JsepVideoCodecDescription* h264 =
+          static_cast<JsepVideoCodecDescription*>(codec);
+      h264->mProfileLevelId = profileLevelId;
+    } else {
+      codec->mEnabled = false;
+    }
+  }
+}
+
+TEST_F(JsepSessionTest, TestH264Negotiation)
+{
+  ForceH264(mSessionOff, 0x42e00b);
+  ForceH264(mSessionAns, 0x42e00d);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  const JsepCodecDescription* offererSendCodec;
+  GetCodec(mSessionOff, 0, true, 0, &offererSendCodec);
+  ASSERT_TRUE(offererSendCodec);
+  ASSERT_EQ("H264", offererSendCodec->mName);
+  const JsepVideoCodecDescription* offererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00d, offererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* offererRecvCodec;
+  GetCodec(mSessionOff, 0, false, 0, &offererRecvCodec);
+  ASSERT_EQ("H264", offererRecvCodec->mName);
+  const JsepVideoCodecDescription* offererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
+
+  const JsepCodecDescription* answererSendCodec;
+  GetCodec(mSessionAns, 0, true, 0, &answererSendCodec);
+  ASSERT_TRUE(answererSendCodec);
+  ASSERT_EQ("H264", answererSendCodec->mName);
+  const JsepVideoCodecDescription* answererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* answererRecvCodec;
+  GetCodec(mSessionAns, 0, false, 0, &answererRecvCodec);
+  ASSERT_EQ("H264", answererRecvCodec->mName);
+  const JsepVideoCodecDescription* answererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00d, answererVideoRecvCodec->mProfileLevelId);
+}
+
+TEST_F(JsepSessionTest, TestH264NegotiationFails)
+{
+  ForceH264(mSessionOff, 0x42000b);
+  ForceH264(mSessionAns, 0x42e00d);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  ASSERT_EQ(0U, mSessionOff.GetNegotiatedTrackPairs().size());
+  ASSERT_EQ(0U, mSessionAns.GetNegotiatedTrackPairs().size());
+}
+
+TEST_F(JsepSessionTest, TestH264NegotiationOffererDefault)
+{
+  ForceH264(mSessionOff, 0x42000d);
+  ForceH264(mSessionAns, 0x42000d);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  Replace("profile-level-id=42000d",
+          "some-unknown-param=0",
+          &offer);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  const JsepCodecDescription* answererSendCodec;
+  GetCodec(mSessionAns, 0, true, 0, &answererSendCodec);
+  ASSERT_TRUE(answererSendCodec);
+  ASSERT_EQ("H264", answererSendCodec->mName);
+  const JsepVideoCodecDescription* answererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+  ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
+}
+
+TEST_F(JsepSessionTest, TestH264NegotiationOffererNoFmtp)
+{
+  ForceH264(mSessionOff, 0x42000d);
+  ForceH264(mSessionAns, 0x42001e);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  Replace("a=fmtp", "a=oops", &offer);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  const JsepCodecDescription* answererSendCodec;
+  GetCodec(mSessionAns, 0, true, 0, &answererSendCodec);
+  ASSERT_TRUE(answererSendCodec);
+  ASSERT_EQ("H264", answererSendCodec->mName);
+  const JsepVideoCodecDescription* answererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+  ASSERT_EQ((uint32_t)0x420010, answererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* answererRecvCodec;
+  GetCodec(mSessionAns, 0, false, 0, &answererRecvCodec);
+  ASSERT_EQ("H264", answererRecvCodec->mName);
+  const JsepVideoCodecDescription* answererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+  ASSERT_EQ((uint32_t)0x420010, answererVideoRecvCodec->mProfileLevelId);
+}
+
+TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithLowLevel)
+{
+  ForceH264(mSessionOff, 0x42e00b);
+  ForceH264(mSessionAns, 0x42e00d);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  Replace("level-asymmetry-allowed=1",
+          "level-asymmetry-allowed=0",
+          &offer);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  // Offerer doesn't know about the shenanigans we've pulled here, so will
+  // behave normally, and we test the normal behavior elsewhere.
+
+  const JsepCodecDescription* answererSendCodec;
+  GetCodec(mSessionAns, 0, true, 0, &answererSendCodec);
+  ASSERT_TRUE(answererSendCodec);
+  ASSERT_EQ("H264", answererSendCodec->mName);
+  const JsepVideoCodecDescription* answererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* answererRecvCodec;
+  GetCodec(mSessionAns, 0, false, 0, &answererRecvCodec);
+  ASSERT_EQ("H264", answererRecvCodec->mName);
+  const JsepVideoCodecDescription* answererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, answererVideoRecvCodec->mProfileLevelId);
+}
+
+TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithHighLevel)
+{
+  ForceH264(mSessionOff, 0x42e00d);
+  ForceH264(mSessionAns, 0x42e00b);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+
+  Replace("level-asymmetry-allowed=1",
+          "level-asymmetry-allowed=0",
+          &offer);
+
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  // Offerer doesn't know about the shenanigans we've pulled here, so will
+  // behave normally, and we test the normal behavior elsewhere.
+
+  const JsepCodecDescription* answererSendCodec;
+  GetCodec(mSessionAns, 0, true, 0, &answererSendCodec);
+  ASSERT_TRUE(answererSendCodec);
+  ASSERT_EQ("H264", answererSendCodec->mName);
+  const JsepVideoCodecDescription* answererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, answererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* answererRecvCodec;
+  GetCodec(mSessionAns, 0, false, 0, &answererRecvCodec);
+  ASSERT_EQ("H264", answererRecvCodec->mName);
+  const JsepVideoCodecDescription* answererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(answererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, answererVideoRecvCodec->mProfileLevelId);
+}
+
+TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByAnswererWithLowLevel)
+{
+  ForceH264(mSessionOff, 0x42e00d);
+  ForceH264(mSessionAns, 0x42e00b);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  Replace("level-asymmetry-allowed=1",
+          "level-asymmetry-allowed=0",
+          &answer);
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  const JsepCodecDescription* offererSendCodec;
+  GetCodec(mSessionOff, 0, true, 0, &offererSendCodec);
+  ASSERT_TRUE(offererSendCodec);
+  ASSERT_EQ("H264", offererSendCodec->mName);
+  const JsepVideoCodecDescription* offererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, offererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* offererRecvCodec;
+  GetCodec(mSessionOff, 0, false, 0, &offererRecvCodec);
+  ASSERT_EQ("H264", offererRecvCodec->mName);
+  const JsepVideoCodecDescription* offererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
+
+  // Answerer doesn't know we've pulled these shenanigans, it should act as if
+  // it did not set level-asymmetry-required, and we already check that
+  // elsewhere
+}
+
+TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByAnswererWithHighLevel)
+{
+  ForceH264(mSessionOff, 0x42e00b);
+  ForceH264(mSessionAns, 0x42e00d);
+
+  AddTracks(mSessionOff, "video");
+  AddTracks(mSessionAns, "video");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer, CHECK_SUCCESS);
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer(CreateAnswer());
+
+  Replace("level-asymmetry-allowed=1",
+          "level-asymmetry-allowed=0",
+          &answer);
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+
+  const JsepCodecDescription* offererSendCodec;
+  GetCodec(mSessionOff, 0, true, 0, &offererSendCodec);
+  ASSERT_TRUE(offererSendCodec);
+  ASSERT_EQ("H264", offererSendCodec->mName);
+  const JsepVideoCodecDescription* offererVideoSendCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererSendCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, offererVideoSendCodec->mProfileLevelId);
+
+  const JsepCodecDescription* offererRecvCodec;
+  GetCodec(mSessionOff, 0, false, 0, &offererRecvCodec);
+  ASSERT_EQ("H264", offererRecvCodec->mName);
+  const JsepVideoCodecDescription* offererVideoRecvCodec(
+      static_cast<const JsepVideoCodecDescription*>(offererRecvCodec));
+  ASSERT_EQ((uint32_t)0x42e00b, offererVideoRecvCodec->mProfileLevelId);
+
+  // Answerer doesn't know we've pulled these shenanigans, it should act as if
+  // it did not set level-asymmetry-required, and we already check that
+  // elsewhere
+}
+
 TEST_P(JsepSessionTest, TestRejectMline)
 {
   AddTracks(mSessionOff);
@@ -2688,6 +3024,48 @@ TEST_F(JsepSessionTest, TestUniquePayloadTypes)
   ASSERT_NE(0U,
       answerPairs[2].mReceiving->GetNegotiatedDetails()->
       GetUniquePayloadTypes().size());
+}
+
+TEST(H264ProfileLevelIdTest, TestLevelComparisons)
+{
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x421D0B), // 1b
+            JsepVideoCodecDescription::GetSaneH264Level(0x420D0B)); // 1.1
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x420D0A), // 1.0
+            JsepVideoCodecDescription::GetSaneH264Level(0x421D0B)); // 1b
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x420D0A), // 1.0
+            JsepVideoCodecDescription::GetSaneH264Level(0x420D0B)); // 1.1
+
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x640009), // 1b
+            JsepVideoCodecDescription::GetSaneH264Level(0x64000B)); // 1.1
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x64000A), // 1.0
+            JsepVideoCodecDescription::GetSaneH264Level(0x640009)); // 1b
+  ASSERT_LT(JsepVideoCodecDescription::GetSaneH264Level(0x64000A), // 1.0
+            JsepVideoCodecDescription::GetSaneH264Level(0x64000B)); // 1.1
+}
+
+TEST(H264ProfileLevelIdTest, TestLevelSetting)
+{
+  uint32_t profileLevelId = 0x420D0A;
+  JsepVideoCodecDescription::SetSaneH264Level(
+      JsepVideoCodecDescription::GetSaneH264Level(0x42100B),
+      &profileLevelId);
+  ASSERT_EQ((uint32_t)0x421D0B, profileLevelId);
+
+  JsepVideoCodecDescription::SetSaneH264Level(
+      JsepVideoCodecDescription::GetSaneH264Level(0x42000A),
+      &profileLevelId);
+  ASSERT_EQ((uint32_t)0x420D0A, profileLevelId);
+
+  profileLevelId = 0x6E100A;
+  JsepVideoCodecDescription::SetSaneH264Level(
+      JsepVideoCodecDescription::GetSaneH264Level(0x640009),
+      &profileLevelId);
+  ASSERT_EQ((uint32_t)0x6E1009, profileLevelId);
+
+  JsepVideoCodecDescription::SetSaneH264Level(
+      JsepVideoCodecDescription::GetSaneH264Level(0x64000B),
+      &profileLevelId);
+  ASSERT_EQ((uint32_t)0x6E100B, profileLevelId);
 }
 
 } // namespace mozilla
