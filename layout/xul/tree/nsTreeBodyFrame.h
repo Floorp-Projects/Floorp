@@ -133,20 +133,13 @@ public:
   virtual bool PseudoMatches(nsCSSSelector* aSelector) MOZ_OVERRIDE;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            nsIScrollbarMediator::ScrollSnapMode aSnap
-                              = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                             nsIScrollbarMediator::ScrollSnapMode aSnap
-                               = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            nsIScrollbarMediator::ScrollSnapMode aSnap
-                              = nsIScrollbarMediator::DISABLE_SNAP) MOZ_OVERRIDE;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
                           nscoord aOldPos,
                           nscoord aNewPos) MOZ_OVERRIDE;
-  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE {}
   virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); }
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
     ScrollParts parts = GetScrollParts();
