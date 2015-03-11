@@ -44,26 +44,35 @@ using namespace dom;
 
 static const char* logTag = "PeerConnectionMedia";
 
-nsresult LocalSourceStreamInfo::ReplaceTrack(const std::string& oldTrackId,
-                                             DOMMediaStream* aNewStream,
-                                             const std::string& newTrackId)
+nsresult
+PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
+                                  const std::string& aOldTrackId,
+                                  DOMMediaStream* aNewStream,
+                                  const std::string& aNewStreamId,
+                                  const std::string& aNewTrackId)
 {
-  RefPtr<MediaPipeline> pipeline = mPipelines[oldTrackId];
+  RefPtr<LocalSourceStreamInfo> oldInfo(GetLocalStreamById(aOldStreamId));
 
-  if (!pipeline || !mTracks.count(oldTrackId)) {
-    CSFLogError(logTag, "Failed to find track id %s", oldTrackId.c_str());
+  if (!oldInfo) {
+    CSFLogError(logTag, "Failed to find stream id %s", aOldStreamId.c_str());
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv =
-    static_cast<MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(
-        aNewStream, newTrackId);
+  nsresult rv = AddTrack(aNewStream, aNewStreamId, aNewTrackId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mTracks.erase(oldTrackId);
-  mTracks.insert(newTrackId);
+  RefPtr<LocalSourceStreamInfo> newInfo(GetLocalStreamById(aNewStreamId));
 
-  return NS_OK;
+  if (!newInfo) {
+    CSFLogError(logTag, "Failed to add track id %s", aNewTrackId.c_str());
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = newInfo->TakePipelineFrom(oldInfo, aOldTrackId, aNewTrackId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RemoveLocalTrack(aOldStreamId, aOldTrackId);
 }
 
 static void
@@ -977,6 +986,37 @@ PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
   }
 }
 
+nsresult
+LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
+                                        const std::string& oldTrackId,
+                                        const std::string& newTrackId)
+{
+  if (mPipelines.count(newTrackId)) {
+    CSFLogError(logTag, "%s: Pipeline already exists for %s/%s",
+                __FUNCTION__, mId.c_str(), newTrackId.c_str());
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<MediaPipeline> pipeline(info->ForgetPipelineByTrackId_m(oldTrackId));
+
+  if (!pipeline) {
+    // Replacetrack can potentially happen in the middle of offer/answer, before
+    // the pipeline has been created.
+    CSFLogInfo(logTag, "%s: Replacing track before the pipeline has been "
+                       "created, nothing to do.", __FUNCTION__);
+    return NS_OK;
+  }
+
+  nsresult rv =
+    static_cast<MediaPipelineTransmit*>(pipeline.get())->ReplaceTrack(
+        mMediaStream, newTrackId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPipelines[newTrackId] = pipeline;
+
+  return NS_OK;
+}
+
 #ifdef MOZILLA_INTERNAL_API
 /**
  * Tells you if any local streams is isolated to a specific peer identity.
@@ -1147,6 +1187,27 @@ RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(
   if (mMediaStream) {
     if (mPipelines.count(trackId)) {
       return mPipelines[trackId];
+    }
+  }
+
+  return nullptr;
+}
+
+TemporaryRef<MediaPipeline>
+LocalSourceStreamInfo::ForgetPipelineByTrackId_m(const std::string& trackId)
+{
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+
+  // Refuse to hand out references if we're tearing down.
+  // (Since teardown involves a dispatch to and from STS before MediaPipelines
+  // are released, it is safe to start other dispatches to and from STS with a
+  // RefPtr<MediaPipeline>, since that reference won't be the last one
+  // standing)
+  if (mMediaStream) {
+    if (mPipelines.count(trackId)) {
+      RefPtr<MediaPipeline> pipeline(mPipelines[trackId]);
+      mPipelines.erase(trackId);
+      return pipeline.forget();
     }
   }
 
