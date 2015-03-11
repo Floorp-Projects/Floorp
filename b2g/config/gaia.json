@@ -1,9 +1,9 @@
 {
     "git": {
-        "git_revision": "99bc420ee8edb75f1c5fae06e799b427242cf0e2", 
+        "git_revision": "3c66d9546040ede50915fa9c123d6b967ffd1a9d", 
         "remote": "https://git.mozilla.org/releases/gaia.git", 
         "branch": ""
     }, 
-    "revision": "737bd08819f6e849b8f770063d8bd17d926a3fef", 
+    "revision": "11ae1781ffa3cd78a964443b65e3ab09a0b38cfc", 
     "repo_path": "integration/gaia-central"
 }
