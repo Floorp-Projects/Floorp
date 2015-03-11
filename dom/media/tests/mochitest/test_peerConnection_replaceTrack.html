@@ -19,6 +19,8 @@
   // Test basically just verifies that success callback is called at this point
 
   var test;
+  var newtrackId;
+
   runNetworkTest(function () {
     test = new PeerConnectionTest();
     test.setMediaConstraints([{video: true}], [{video: true}]);
@@ -29,6 +31,26 @@
       function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
         var stream = test.pcLocal._pc.getLocalStreams()[0];
         var track = stream.getVideoTracks()[0];
+        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
+        ok(sender, "track has a sender");
+        var newtrack;
+        return navigator.mediaDevices.getUserMedia({video:true, fake: true})
+          .then(newStream => {
+            newtrack = newStream.getVideoTracks()[0];
+            newtrackId = newtrack.id;
+            return sender.replaceTrack(newtrack);
+          })
+          .then(() => {
+            is(sender.track, newtrack, "sender.track has been replaced");
+          });
+      }
+    ]);
+    // Do it again to make sure it still works.
+    test.chain.append([
+      function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
+        var stream = test.pcLocal._pc.getLocalStreams()[0];
+        var track = stream.getVideoTracks()[0];
+        is(track.id, newtrackId, "track has been replaced in stream");
         var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
         ok(sender, "track has a sender");
         var newtrack;
