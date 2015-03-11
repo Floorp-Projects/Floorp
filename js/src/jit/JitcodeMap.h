@@ -207,7 +207,7 @@ class JitcodeGlobalEntry
             return startsBelowPointer(ptr) && endsAbovePointer(ptr);
         }
 
-        void markJitcode(JSTracer *trc);
+        bool markJitcodeIfUnmarked(JSTracer *trc);
         bool isJitcodeMarkedFromAnyThread();
         bool isJitcodeAboutToBeFinalized();
     };
@@ -358,7 +358,7 @@ class JitcodeGlobalEntry
 
         mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *ptr);
 
-        void mark(JSTracer *trc);
+        bool markIfUnmarked(JSTracer *trc);
         void sweep();
         bool isMarkedFromAnyThread();
     };
@@ -414,7 +414,7 @@ class JitcodeGlobalEntry
         void youngestFrameLocationAtAddr(JSRuntime *rt, void *ptr,
                                          JSScript **script, jsbytecode **pc) const;
 
-        void mark(JSTracer *trc);
+        bool markIfUnmarked(JSTracer *trc);
         void sweep();
         bool isMarkedFromAnyThread();
     };
@@ -815,14 +815,14 @@ class JitcodeGlobalEntry
         return baseEntry().jitcode()->zone();
     }
 
-    void mark(JSTracer *trc) {
-        baseEntry().markJitcode(trc);
+    bool markIfUnmarked(JSTracer *trc) {
+        bool markedAny = baseEntry().markJitcodeIfUnmarked(trc);
         switch (kind()) {
           case Ion:
-            ionEntry().mark(trc);
+            markedAny |= ionEntry().markIfUnmarked(trc);
             break;
           case Baseline:
-            baselineEntry().mark(trc);
+            markedAny |= baselineEntry().markIfUnmarked(trc);
             break;
           case IonCache:
           case Dummy:
@@ -830,6 +830,7 @@ class JitcodeGlobalEntry
           default:
             MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
         }
+        return markedAny;
     }
 
     void sweep() {
@@ -952,7 +953,7 @@ class JitcodeGlobalTable
     void removeEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
     void releaseEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
 
-    void mark(JSTracer *trc);
+    bool markIteratively(JSTracer *trc);
     void sweep(JSRuntime *rt);
 
   private:

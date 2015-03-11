@@ -3023,9 +3023,9 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
     return eRestyleResult_Continue;
   }
 
-  if (oldContext->IsInlineDescendantOfRuby() !=
-        aNewContext->IsInlineDescendantOfRuby()) {
-    LOG_RESTYLE_CONTINUE("NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY differes"
+  if (oldContext->ShouldSuppressLineBreak() !=
+        aNewContext->ShouldSuppressLineBreak()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_SUPPRESS_LINEBREAK differes"
                          "between old and new style contexts");
     return eRestyleResult_Continue;
   }
