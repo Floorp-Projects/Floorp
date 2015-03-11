@@ -872,13 +872,10 @@ class GCRuntime
     bool gcIfNeededPerAllocation(JSContext* cx);
     template <typename T>
     static void checkIncrementalZoneState(ExclusiveContext* cx, T* t);
-    template <AllowGC allowGC>
     static void* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
                                              size_t thingSize);
-    template <AllowGC allowGC>
     static void* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind,
                                               size_t thingSize);
-    static void* tryRefillFreeListFromMainThread(JSContext* cx, AllocKind thingKind);
     static void* refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind);
 
     /*
