@@ -289,13 +289,8 @@ MarionetteServerConnection.prototype = {
     }
     else {
       this.curBrowser.executeWhenReady(() => {
-        if (this.curBrowser.curFrameId) {
-          this.messageManager.broadcastAsyncMessage(
-            "Marionette:" + name + this.curBrowser.curFrameId, values);
-        }
-        else {
-          this.sendError("Unfortunately can not send call to listener as it does not exist", 500, null, commandId);
-        }
+        this.messageManager.broadcastAsyncMessage(
+          "Marionette:" + name + this.curBrowser.curFrameId, values);
       });
     }
     return success;
