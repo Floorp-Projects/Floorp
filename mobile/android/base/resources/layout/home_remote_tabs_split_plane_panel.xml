@@ -30,6 +30,11 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"/>
 
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#D7D9DB" />
+
             <org.mozilla.gecko.home.HomeListView
                 android:id="@+id/tabs_list"
                 style="@style/Widget.RemoteTabsListView"
