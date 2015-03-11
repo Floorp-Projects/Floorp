@@ -711,10 +711,8 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
         baseReflowState.mLineLayout->LineContainerFrame(),
         baseReflowState.mLineLayout->GetLine());
       if (breakPriority != gfxBreakPriority::eNoBreak) {
-        int32_t offset;
-        gfxBreakPriority lastBreakPriority;
-        baseReflowState.mLineLayout->
-          GetLastOptionalBreakPosition(&offset, &lastBreakPriority);
+        gfxBreakPriority lastBreakPriority =
+          baseReflowState.mLineLayout->LastOptionalBreakPriority();
         if (breakPriority >= lastBreakPriority) {
           // Either we have been overflow, or we are forced
           // to break here, do break before.

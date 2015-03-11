@@ -8291,9 +8291,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   gfxFloat availWidth = aAvailableWidth;
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
-  int32_t unusedOffset;
-  gfxBreakPriority breakPriority;
-  aLineLayout.GetLastOptionalBreakPosition(&unusedOffset, &breakPriority);
+  gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
   if (StyleContext()->ShouldSuppressLineBreak()) {
     suppressBreak = gfxTextRun::eSuppressAllBreaks;
