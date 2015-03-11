@@ -2,22 +2,25 @@ var test = `
 
 // The prototype of a class is a non-writable, non-configurable, non-enumerable data property.
 class a { constructor() { } }
-var protoDesc = Object.getOwnPropertyDescriptor(a, "prototype");
-assertEq(protoDesc.writable, false);
-assertEq(protoDesc.configurable, false);
-assertEq(protoDesc.enumerable, false);
+let b = class { constructor() { } };
+for (let test of [a,b]) {
+    var protoDesc = Object.getOwnPropertyDescriptor(test, "prototype");
+    assertEq(protoDesc.writable, false);
+    assertEq(protoDesc.configurable, false);
+    assertEq(protoDesc.enumerable, false);
 
-var prototype = protoDesc.value;
-assertEq(typeof prototype, "object");
-assertEq(Object.getPrototypeOf(prototype), Object.prototype);
-assertEq(Object.isExtensible(prototype), true);
+    var prototype = protoDesc.value;
+    assertEq(typeof prototype, "object");
+    assertEq(Object.getPrototypeOf(prototype), Object.prototype);
+    assertEq(Object.isExtensible(prototype), true);
 
-var desiredPrototype = {};
-Object.defineProperty(desiredPrototype, "constructor", { writable: true,
-                                                         configurable: true,
-                                                         enumerable: false,
-                                                         value: a });
-assertDeepEq(prototype, desiredPrototype);
+    var desiredPrototype = {};
+    Object.defineProperty(desiredPrototype, "constructor", { writable: true,
+                                                            configurable: true,
+                                                            enumerable: false,
+                                                            value: test });
+    assertDeepEq(prototype, desiredPrototype);
+}
 
 try {
     eval(\`class a {
@@ -50,6 +53,25 @@ assertThrowsInstanceOf(() => eval(\`
                                     static set ["prototype"](x) { }
                                   }
                                   \`), TypeError);
+
+assertThrowsInstanceOf(() => eval(\`(
+                                  class a {
+                                    constructor() { };
+                                    static ["prototype"]() { }
+                                  }
+                                  )\`), TypeError);
+assertThrowsInstanceOf(() => eval(\`(
+                                  class a {
+                                    constructor() { };
+                                    static get ["prototype"]() { }
+                                  }
+                                  )\`), TypeError);
+assertThrowsInstanceOf(() => eval(\`(
+                                  class a {
+                                    constructor() { };
+                                    static set ["prototype"](x) { }
+                                  }
+                                  )\`), TypeError);
 */
 }
 `;

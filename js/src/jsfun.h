@@ -578,7 +578,8 @@ CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction fun)
 extern JSFunction *
 CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
                     gc::AllocKind kind = JSFunction::FinalizeKind,
-                    NewObjectKind newKindArg = GenericObject);
+                    NewObjectKind newKindArg = GenericObject,
+                    HandleObject proto = NullPtr());
 
 extern bool
 FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *bodyStart,
