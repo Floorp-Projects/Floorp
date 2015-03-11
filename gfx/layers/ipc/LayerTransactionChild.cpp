@@ -105,6 +105,13 @@ LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
         TransactionCompleteted(op.transactionId());
         break;
       }
+      case AsyncParentMessageData::TOpReplyRemoveTexture: {
+        const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
+
+        AsyncTransactionTrackersHolder::TransactionCompleteted(op.holderId(),
+                                                               op.transactionId());
+        break;
+      }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
         return false;

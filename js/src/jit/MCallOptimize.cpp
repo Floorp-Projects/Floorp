@@ -3181,8 +3181,13 @@ IonBuilder::prepareForSimdLoadStore(CallInfo &callInfo, Scalar::Type simdType, M
     MInstruction *length;
     addTypedArrayLengthAndData(array, SkipBoundsCheck, index, &length, elements);
 
-    MInstruction *check = MBoundsCheck::New(alloc(), indexForBoundsCheck, length);
-    current->add(check);
+    // It can be that the index is out of bounds, while the added index for the
+    // bounds check is in bounds, so we actually need two bounds checks here.
+    MInstruction *positiveCheck = MBoundsCheck::New(alloc(), *index, length);
+    current->add(positiveCheck);
+
+    MInstruction *fullCheck = MBoundsCheck::New(alloc(), indexForBoundsCheck, length);
+    current->add(fullCheck);
     return true;
 }
 
