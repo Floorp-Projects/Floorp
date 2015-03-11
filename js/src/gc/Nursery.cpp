@@ -478,7 +478,8 @@ js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
     if (t)
         return t;
     zone->arenas.checkEmptyFreeList(thingKind);
-    return zone->arenas.allocateFromArena(zone, thingKind);
+    AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
+    return zone->arenas.allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
 }
 
 void
