@@ -864,6 +864,10 @@
   cursor: col-resize;
 }
 
+.graph-widget-canvas[input=adjusting-view-area] {
+  cursor: grabbing;
+}
+
 .graph-widget-canvas[input=hovering-selection-contents] {
   cursor: grab;
 }
