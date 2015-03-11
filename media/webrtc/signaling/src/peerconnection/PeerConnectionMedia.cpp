@@ -354,6 +354,10 @@ nsresult PeerConnectionMedia::UpdateMediaPipelines(
     }
   }
 
+  for (auto& stream : mRemoteSourceStreams) {
+    stream->StartReceiving();
+  }
+
   return NS_OK;
 }
 
@@ -1111,33 +1115,24 @@ RemoteSourceStreamInfo::SyncPipeline(
 }
 
 void
-RemoteSourceStreamInfo::TrackQueued(const std::string& trackId)
+RemoteSourceStreamInfo::StartReceiving()
 {
-  // When tracks start being queued we know the pipelines have been created.
-  mPipelinesCreated = true;
-
-  MOZ_ASSERT(mTracksToQueue.count(trackId) > 0);
-  mTracksToQueue.erase(trackId);
-
-  CSFLogDebug(logTag, "Queued adding of track id %d to MediaStream %p. "
-                      "%zu more tracks to queue.",
-                      GetNumericTrackId(trackId),
-                      GetMediaStream()->GetStream(),
-                      mTracksToQueue.size());
-
-  // If all tracks have been queued for this stream, finish adding them.
-  if (mTracksToQueue.empty()) {
-    SourceMediaStream* source = GetMediaStream()->GetStream()->AsSourceStream();
-    source->FinishAddTracks();
-    source->SetPullEnabled(true);
-    // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
-    // theory per the API, we can't add more tracks before that
-    // time. However, the impl actually allows it, and it avoids a whole
-    // bunch of locking that would be required (and potential blocking)
-    // if we used smaller values and updated them on each NotifyPull.
-    source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-    CSFLogDebug(logTag, "Finished adding tracks to MediaStream %p", source);
+  if (mReceiving || mPipelines.empty()) {
+    return;
   }
+
+  mReceiving = true;
+
+  SourceMediaStream* source = GetMediaStream()->GetStream()->AsSourceStream();
+  source->FinishAddTracks();
+  source->SetPullEnabled(true);
+  // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
+  // theory per the API, we can't add more tracks before that
+  // time. However, the impl actually allows it, and it avoids a whole
+  // bunch of locking that would be required (and potential blocking)
+  // if we used smaller values and updated them on each NotifyPull.
+  source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
+  CSFLogDebug(logTag, "Finished adding tracks to MediaStream %p", source);
 }
 
 RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(

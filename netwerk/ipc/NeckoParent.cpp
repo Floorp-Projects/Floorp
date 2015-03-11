@@ -40,6 +40,7 @@
 #include "nsPrincipal.h"
 #include "nsIOService.h"
 #include "mozilla/net/OfflineObserver.h"
+#include "nsISpeculativeConnect.h"
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabContext;
@@ -665,6 +666,17 @@ bool
 NeckoParent::DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* actor)
 {
   delete actor;
+  return true;
+}
+
+bool
+NeckoParent::RecvSpeculativeConnect(const URIParams &aURI)
+{
+  nsCOMPtr<nsISpeculativeConnect> speculator(gIOService);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (uri && speculator) {
+    speculator->SpeculativeConnect(uri, nullptr);
+  }
   return true;
 }
 
