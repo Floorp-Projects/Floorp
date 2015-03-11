@@ -152,11 +152,13 @@ public:
   bool HasTextDecorationLines() const
     { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
 
-  // Whether this style context or any of its inline-level ancestors
-  // is directly contained by a ruby box? It is used to inlinize
-  // block-level descendants and suppress line breaks inside ruby.
-  bool IsInlineDescendantOfRuby() const
-    { return !!(mBits & NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY); }
+  // Whether any line break inside should be suppressed? If this returns
+  // true, the line should not be broken inside, which means inlines act
+  // as if nowrap is set, <br> is suppressed, and blocks are inlinized.
+  // This bit is propogated to all children of line partitipants. It is
+  // currenlty used by ruby to make its content frames unbreakable.
+  bool ShouldSuppressLineBreak() const
+    { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true

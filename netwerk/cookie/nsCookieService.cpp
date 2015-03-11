@@ -696,7 +696,7 @@ nsCookieService::GetSingleton()
 /* static */ void
 nsCookieService::AppClearDataObserverInit()
 {
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   nsCOMPtr<nsIObserver> obs = new AppClearDataObserver();
   observerService->AddObserver(obs, TOPIC_WEB_APP_CLEAR_DATA,
                                /* holdsWeak= */ false);

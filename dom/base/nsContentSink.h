@@ -164,9 +164,10 @@ protected:
   void PrefetchHref(const nsAString &aHref, nsINode *aSource,
                     bool aExplicit);
 
-  // aHref can either be the usual URI format or of the form "//www.hostname.com"
-  // without a scheme.
+  // For both PrefetchDNS() and Preconnect() aHref can either be the usual
+  // URI format or of the form "//www.hostname.com" without a scheme.
   void PrefetchDNS(const nsAString &aHref);
+  void Preconnect(const nsAString &aHref);
 
   // Gets the cache key (used to identify items in a cache) of the channel.
   nsresult GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey);

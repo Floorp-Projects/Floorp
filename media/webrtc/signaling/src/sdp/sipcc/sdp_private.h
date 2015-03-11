@@ -46,7 +46,7 @@ extern const  sdp_srtp_crypto_suite_list sdp_srtp_crypto_suite_array[];
 
 /* sdp_access.c */
 extern sdp_mca_t *sdp_find_media_level(sdp_t *sdp_p, uint16_t level);
-extern sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, uint16_t level, uint16_t inst_num);
+extern sdp_bw_data_t* sdp_find_bw_line (sdp_t *sdp_ptr, uint16_t level, uint16_t inst_num);
 
 /* sdp_attr.c */
 extern sdp_result_e
@@ -245,9 +245,6 @@ extern sdp_attr_t *sdp_find_attr(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
                                  sdp_attr_e attr_type, uint16_t inst_num);
 extern sdp_attr_t *sdp_find_capability(sdp_t *sdp_p, uint16_t level, uint8_t cap_num);
 
-/* sdp_config.c */
-extern tinybool sdp_verify_conf_ptr(sdp_conf_options_t *conf_p);
-
 /* sdp_main.c */
 extern const char *sdp_get_attr_name(sdp_attr_e attr_type);
 extern const char *sdp_get_media_name(sdp_media_e media_type);
@@ -272,9 +269,6 @@ extern const char *sdp_get_silencesupp_siduse_name(sdp_silencesupp_siduse_e
 extern const char *sdp_get_group_attr_name(sdp_group_attr_e group_attr);
 extern const char *sdp_get_src_filter_mode_name(sdp_src_filter_mode_e type);
 extern const char *sdp_get_rtcp_unicast_mode_name(sdp_rtcp_unicast_mode_e type);
-
-extern tinybool sdp_verify_sdp_ptr(sdp_t *sdp_p);
-
 
 /* sdp_tokens.c */
 extern sdp_result_e sdp_parse_version(sdp_t *sdp_p, uint16_t token,

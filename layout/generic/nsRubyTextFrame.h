@@ -44,6 +44,11 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
+  bool IsAutoHidden() const
+  {
+    return GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE;
+  }
+
 protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);

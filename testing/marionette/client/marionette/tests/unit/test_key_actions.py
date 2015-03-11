@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette.marionette_test import (MarionetteTestCase,
-                                        skip_if_b2g,
-                                        skip_if_e10s)
+from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
 
@@ -70,7 +68,6 @@ class TestKeyActions(MarionetteTestCase):
         self.assertEqual(self.key_reporter_value, "")
 
     @skip_if_b2g
-    @skip_if_e10s
     def test_open_in_new_window_shortcut(self):
         el = self.marionette.find_element('id', 'updatediv')
         start_win = self.marionette.current_chrome_window_handle
@@ -80,7 +77,7 @@ class TestKeyActions(MarionetteTestCase):
                         .key_up(Keys.SHIFT)
                         .perform())
         self.wait_for_condition(
-            lambda mn: len(self.marionette.chrome_window_handles) == 2)
+            lambda mn: len(self.marionette.window_handles) == 2)
         chrome_window_handles = self.marionette.chrome_window_handles
         chrome_window_handles.remove(start_win)
         [new_win] = chrome_window_handles
