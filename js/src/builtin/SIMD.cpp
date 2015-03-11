@@ -749,9 +749,9 @@ Swizzle(JSContext *cx, unsigned argc, Value *vp)
 
     uint32_t lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        if (!args[i + 1].isInt32())
-            return ErrorBadArgs(cx);
-        int32_t lane = args[i + 1].toInt32();
+        int32_t lane = -1;
+        if (!ToInt32(cx, args[i + 1], &lane))
+            return false;
         if (lane < 0 || uint32_t(lane) >= V::lanes)
             return ErrorBadArgs(cx);
         lanes[i] = uint32_t(lane);
@@ -778,9 +778,9 @@ Shuffle(JSContext *cx, unsigned argc, Value *vp)
 
     uint32_t lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        if (!args[i + 2].isInt32())
-            return ErrorBadArgs(cx);
-        int32_t lane = args[i + 2].toInt32();
+        int32_t lane = -1;
+        if (!ToInt32(cx, args[i + 2], &lane))
+            return false;
         if (lane < 0 || uint32_t(lane) >= (2 * V::lanes))
             return ErrorBadArgs(cx);
         lanes[i] = uint32_t(lane);
