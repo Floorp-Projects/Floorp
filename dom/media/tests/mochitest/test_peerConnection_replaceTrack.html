@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -16,8 +16,6 @@
     return sender.track == this;
   }
 
-  // Test basically just verifies that success callback is called at this point
-
   runNetworkTest(function () {
     test = new PeerConnectionTest();
     test.setMediaConstraints([{video: true}], [{video: true}]);
@@ -26,16 +24,18 @@
     test.chain.append(flowtest);
 
     var replacetest = [ function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
-      var stream = test.pcLocal._pc.getLocalStreams()[0];
-      var track = stream.getVideoTracks()[0];
-      var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
+      var oldstream = test.pcLocal._pc.getLocalStreams()[0];
+      var oldtrack = oldstream.getVideoTracks()[0];
+      var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, oldtrack);
       ok(sender, "track has a sender");
       var newtrack;
-      return navigator.mediaDevices.getUserMedia({video:true, fake: true})
-        .then(newStream => {
-          newtrack = newStream.getVideoTracks()[0];
-          isnot(newtrack, track, "replacing with a different track");
-          isnot(newStream, stream, "from a different stream");
+      var audiotrack;
+      return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
+        .then(newstream => {
+          newtrack = newstream.getVideoTracks()[0];
+          audiotrack = newstream.getAudioTracks()[0];
+          isnot(newtrack, oldtrack, "replacing with a different track");
+          isnot(newstream, oldstream, "from a different stream");
           return sender.replaceTrack(newtrack);
         })
         .then(() => {
@@ -43,22 +43,56 @@
           var stream = test.pcLocal._pc.getLocalStreams()[0];
           var track = stream.getVideoTracks()[0];
           is(track, newtrack, "track has been replaced in stream");
+          return sender.replaceTrack(audiotrack)
+            .then(() => ok(false, "replacing with different kind should fail"),
+                  e => is(e.name, "IncompatibleMediaStreamTrackError",
+                          "replacing with different kind should fail"));
         });
     } ];
-    // Do it twice to make sure it still works.
+    // Do it twice to make sure it still works (does audio twice too, but hey)
     test.chain.append(replacetest);
     test.chain.append(flowtest);
     test.chain.append(replacetest);
     test.chain.append(flowtest);
     test.chain.append([
-      function PC_LOCAL_INVALID_REPLACE_VIDEOTRACK(test) {
+      function PC_LOCAL_REPLACE_VIDEOTRACK_WITHSAME(test) {
+        var oldstream = test.pcLocal._pc.getLocalStreams()[0];
+        var oldtrack = oldstream.getVideoTracks()[0];
+        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, oldtrack);
+        return sender.replaceTrack(oldtrack) // same track
+          .then(() => ok(true, "replacing with itself should succeed"));
+      }
+    ]);
+    test.chain.append(flowtest);
+    test.chain.append([
+      function PC_LOCAL_INVALID_ADD_VIDEOTRACKS(test) {
         var stream = test.pcLocal._pc.getLocalStreams()[0];
         var track = stream.getVideoTracks()[0];
-        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
-        return sender.replaceTrack(track) // same track
-          .then(() => ok(false, "replacing with itself should fail"),
-                e => is(e.name, "InvalidParameter",
-                        "replacing with itself should fail"));
+        try {
+          test.pcLocal._pc.addTrack(track, stream);
+          ok(false, "addTrack existing track should fail");
+        } catch (e) {
+          is(e.name, "InvalidParameterError",
+             "addTrack existing track should fail");
+        }
+        try {
+          test.pcLocal._pc.addTrack(track, stream);
+          ok(false, "addTrack existing track should fail");
+        } catch (e) {
+          is(e.name, "InvalidParameterError",
+             "addTrack existing track should fail");
+        }
+        return navigator.mediaDevices.getUserMedia({video:true, fake: true})
+          .then(differentStream => {
+            var track = differentStream.getVideoTracks()[0];
+            try {
+              test.pcLocal._pc.addTrack(track, stream);
+              ok(false, "addTrack w/wrong stream should fail");
+            } catch (e) {
+              is(e.name, "InvalidParameterError",
+                 "addTrack w/wrong stream should fail");
+            }
+          });
       }
     ]);
     test.run();

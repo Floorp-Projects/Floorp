@@ -2089,12 +2089,38 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
                                  MediaStreamTrack& aWithTrack) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  JSErrorResult jrv;
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return NS_ERROR_UNEXPECTED;
   }
+  JSErrorResult jrv;
 
+#ifdef MOZILLA_INTERNAL_API
+  if (&aThisTrack == &aWithTrack) {
+    pco->OnReplaceTrackSuccess(jrv);
+    if (jrv.Failed()) {
+      CSFLogError(logTag, "Error firing replaceTrack success callback");
+      return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+  }
+
+  nsString thisKind;
+  aThisTrack.GetKind(thisKind);
+  nsString withKind;
+  aWithTrack.GetKind(withKind);
+
+  if (thisKind != withKind) {
+    pco->OnReplaceTrackError(kIncompatibleMediaStreamTrack,
+                             ObString(mJsepSession->GetLastError().c_str()),
+                             jrv);
+    if (jrv.Failed()) {
+      CSFLogError(logTag, "Error firing replaceTrack success callback");
+      return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+  }
+#endif
   std::string origTrackId = PeerConnectionImpl::GetTrackId(aThisTrack);
   std::string newTrackId = PeerConnectionImpl::GetTrackId(aWithTrack);
 
@@ -2107,11 +2133,14 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
                                            origTrackId,
                                            newStreamId,
                                            newTrackId);
-
   if (NS_FAILED(rv)) {
     pco->OnReplaceTrackError(kInvalidMediastreamTrack,
                              ObString(mJsepSession->GetLastError().c_str()),
                              jrv);
+    if (jrv.Failed()) {
+      CSFLogError(logTag, "Error firing replaceTrack error callback");
+      return NS_ERROR_UNEXPECTED;
+    }
     return NS_OK;
   }
 
@@ -2127,13 +2156,15 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
     pco->OnReplaceTrackError(kInvalidMediastreamTrack,
                              ObString("Failed to replace track"),
                              jrv);
+    if (jrv.Failed()) {
+      CSFLogError(logTag, "Error firing replaceTrack error callback");
+      return NS_ERROR_UNEXPECTED;
+    }
     return NS_OK;
   }
-
   pco->OnReplaceTrackSuccess(jrv);
-
   if (jrv.Failed()) {
-    CSFLogError(logTag, "Error firing replaceTrack callback");
+    CSFLogError(logTag, "Error firing replaceTrack success callback");
     return NS_ERROR_UNEXPECTED;
   }
 
