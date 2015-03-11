@@ -50,7 +50,7 @@ this.webrtcUI = {
   showGlobalIndicator: false,
   showCameraIndicator: false,
   showMicrophoneIndicator: false,
-  showScreenSharingIndicator: "", // either "Application", "Screen" or "Window"
+  showScreenSharingIndicator: "", // either "Application", "Screen", "Window" or "Browser"
 
   _streams: [],
   // The boolean parameters indicate which streams should be included in the result.
@@ -475,13 +475,15 @@ function getGlobalIndicator() {
       let type = this.getAttribute("type");
       if (type == "Camera" || type == "Microphone")
         type = "Devices";
-      else if (type == "Window" || type == "Application")
+      else if (type == "Window" || type == "Application" || type == "Browser")
         type = "Screen";
       webrtcUI.showSharingDoorhanger(aEvent.target.stream, type);
     },
 
     _popupShowing: function(aEvent) {
       let type = this.getAttribute("type");
+      // This can be removed once strings are added for type 'Browser' in bug 1142066.
+      let typeForL10n = type;
       let activeStreams;
       if (type == "Camera") {
         activeStreams = webrtcUI.getActiveStreams(true, false, false);
@@ -492,6 +494,7 @@ function getGlobalIndicator() {
       else if (type == "Screen") {
         activeStreams = webrtcUI.getActiveStreams(false, false, true);
         type = webrtcUI.showScreenSharingIndicator;
+        typeForL10n = type == "Browser" ? "Window" : type;
       }
 
       let bundle =
@@ -501,7 +504,7 @@ function getGlobalIndicator() {
         let stream = activeStreams[0];
 
         let menuitem = this.ownerDocument.createElement("menuitem");
-        let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
+        let labelId = "webrtcIndicator.sharing" + typeForL10n + "With.menuitem";
         let label = stream.browser.contentTitle || stream.uri;
         menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
         menuitem.setAttribute("disabled", "true");
@@ -520,7 +523,7 @@ function getGlobalIndicator() {
 
       // We show a different menu when there are several active streams.
       let menuitem = this.ownerDocument.createElement("menuitem");
-      let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
+      let labelId = "webrtcIndicator.sharing" + typeForL10n + "WithNTabs.menuitem";
       let count = activeStreams.length;
       let label = PluralForm.get(count, bundle.GetStringFromName(labelId)).replace("#1", count);
       menuitem.setAttribute("label", label);
@@ -790,8 +793,9 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
   }
 
   let screenSharingNotif; // Used by action callbacks.
+  let isBrowserSharing = aState.screen == "Browser";
   options = {
-    hideNotNow: true,
+    hideNotNow: !isBrowserSharing,
     dismissed: true,
     eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "shown") {
@@ -815,8 +819,13 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
       mm.sendAsyncMessage("webrtc:StopSharing", "screen:" + windowId);
     }
   }];
+
+  // Ending browser-sharing from the gUM doorhanger is not supported at the moment.
+  // See bug 1142091.
+  if (isBrowserSharing)
+    mainAction = secondaryActions = null;
   // If we are sharing both a window and the screen, we show 'Screen'.
-  let stringId = "getUserMedia.sharing" + aState.screen;
+  let stringId = "getUserMedia.sharing" + (isBrowserSharing ? "Window" : aState.screen);
   screenSharingNotif =
     chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",
                                       stringBundle.getString(stringId + ".message"),
