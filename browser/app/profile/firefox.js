@@ -1461,6 +1461,8 @@ pref("devtools.profiler.ui.show-platform-data", false);
 pref("devtools.profiler.ui.show-idle-blocks", true);
 
 // The default Performance UI settings
+pref("devtools.performance.memory.sample-probability", "0.05");
+pref("devtools.performance.memory.max-log-length", 2147483647); // Math.pow(2,31) - 1
 pref("devtools.performance.timeline.hidden-markers", "[]");
 pref("devtools.performance.ui.invert-call-tree", true);
 pref("devtools.performance.ui.invert-flame-graph", false);

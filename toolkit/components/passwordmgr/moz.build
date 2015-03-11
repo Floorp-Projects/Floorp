@@ -31,6 +31,10 @@ EXTRA_PP_COMPONENTS += [
     'passwordmgr.manifest',
 ]
 
+EXTRA_PP_JS_MODULES += [
+    'LoginManagerParent.jsm',
+]
+
 EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
     'LoginHelper.jsm',
