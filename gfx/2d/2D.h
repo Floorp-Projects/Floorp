@@ -1166,8 +1166,6 @@ public:
   // This is a little hacky at the moment, but we want to have this data. Bug 1068613.
   static void SetLogForwarder(LogForwarder* aLogFwd);
 
-  static uint32_t GetMaxSurfaceSize(BackendType aType);
-
   static LogForwarder* GetLogForwarder() { return mLogForwarder; }
 
 private:
