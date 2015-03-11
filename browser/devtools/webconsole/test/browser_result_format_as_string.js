@@ -2,13 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
-
 // Make sure that JS eval result are properly formatted as strings.
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-result-format-as-string.html";
@@ -21,6 +14,9 @@ let test = asyncTest(function* () {
   hud.jsterm.clearOutput(true);
 
   let msg = yield execute(hud, "document.querySelector('p')");
+  let domWidget = [...msg._messageObject.widgets][0];
+  // Wait for async requests linking DOM node to inspector to complete
+  yield domWidget._linkedToInspector;
 
   is(hud.outputNode.textContent.indexOf("bug772506_content"), -1,
      "no content element found");
