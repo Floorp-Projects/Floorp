@@ -1640,8 +1640,8 @@ nsContextMenu.prototype = {
     SocialShare.sharePage(null, { url: this.mediaURL, source: this.mediaURL }, this.target);
   },
 
-  shareSelect: function CM_shareSelect(selection) {
-    SocialShare.sharePage(null, { url: this.browser.currentURI.spec, text: selection }, this.target);
+  shareSelect: function CM_shareSelect() {
+    SocialShare.sharePage(null, { url: this.browser.currentURI.spec, text: this.textSelected }, this.target);
   },
 
   savePageAs: function CM_savePageAs() {

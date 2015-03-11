@@ -1024,7 +1024,7 @@ let PageMetadataMessenger = {
       }
 
       case "PageMetadata:GetMicrodata": {
-        let target = message.objects;
+        let target = message.objects.target;
         let result = PageMetadata.getMicrodata(content.document, target);
         sendAsyncMessage("PageMetadata:MicrodataResult", result);
         break;
