@@ -5360,7 +5360,7 @@ EmitFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top
 }
 
 static MOZ_NEVER_INLINE bool
-EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool needsProto = false)
+EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     FunctionBox *funbox = pn->pn_funbox;
     RootedFunction fun(cx, funbox->function());
@@ -5459,13 +5459,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool needsPr
         MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
         if (fun->isArrow() && Emit1(cx, bce, JSOP_THIS) < 0)
             return false;
-        if (needsProto) {
-            MOZ_ASSERT(pn->getOp() == JSOP_LAMBDA);
-            pn->setOp(JSOP_FUNWITHPROTO);
-        }
         return EmitIndex32(cx, pn->getOp(), index, bce);
-    } else {
-        MOZ_ASSERT(!needsProto);
     }
 
     /*
@@ -6948,7 +6942,7 @@ EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     ClassNames *names = classNode.names();
 
-    ParseNode *heritageExpression = classNode.heritage();
+    MOZ_ASSERT(!classNode.heritage(), "For now, no heritage expressions");
     LexicalScopeNode *innerBlock = classNode.scope();
 
     ParseNode *classMethods = innerBlock->pn_expr;
@@ -6973,27 +6967,11 @@ EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EnterBlockScope(cx, bce, &stmtInfo, innerBlock->pn_objbox, JSOP_UNINITIALIZED))
         return false;
 
-    if (heritageExpression) {
-        if (!EmitTree(cx, bce, heritageExpression))
-            return false;
-        if (Emit1(cx, bce, JSOP_CLASSHERITAGE) < 0)
-            return false;
-    }
-
-    if (!EmitFunc(cx, bce, constructor, !!heritageExpression))
+    if (!EmitFunc(cx, bce, constructor))
         return false;
 
-    if (heritageExpression) {
-        // JSOP_CLASSHERITAGE leaves both prototypes on the stack. After
-        // creating the constructor, trickly it to the bottom to make the object.
-        if (Emit1(cx, bce, JSOP_SWAP) < 0)
-            return false;
-        if (Emit1(cx, bce, JSOP_OBJWITHPROTO) < 0)
-            return false;
-    } else {
-        if (!EmitNewInit(cx, bce, JSProto_Object))
-            return false;
-    }
+    if (!EmitNewInit(cx, bce, JSProto_Object))
+        return false;
 
     if (Emit1(cx, bce, JSOP_DUP2) < 0)
         return false;
