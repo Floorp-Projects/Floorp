@@ -25,6 +25,9 @@
 #include "mozilla/layers/TextureClient.h"
 #include "CameraPreferences.h"
 #include "mozilla/RefPtr.h"
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+#include "GonkBufferQueueProducer.h"
+#endif
 #include "GonkCameraControl.h"
 #include "GonkNativeWindow.h"
 #include "CameraCommon.h"
@@ -187,6 +190,7 @@ GonkCameraHardware::Init()
   sp<IGraphicBufferProducer> producer;
   sp<IGonkGraphicBufferConsumer> consumer;
   GonkBufferQueue::createBufferQueue(&producer, &consumer);
+  static_cast<GonkBufferQueueProducer*>(producer.get())->setSynchronousMode(false);
   mNativeWindow = new GonkNativeWindow(consumer, GonkCameraHardware::MIN_UNDEQUEUED_BUFFERS);
   mCamera->setPreviewTarget(producer);
 #elif ANDROID_VERSION >= 19

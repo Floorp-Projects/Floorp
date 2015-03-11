@@ -29,6 +29,7 @@ if CONFIG['ANDROID_VERSION'] >= '21':
     EXPORTS += [
         'GonkBufferQueueLL/GonkBufferQueueDefs.h',
         'GonkBufferQueueLL/GonkBufferQueueLL.h',
+        'GonkBufferQueueLL/GonkBufferQueueProducer.h',
         'GonkBufferQueueLL/GonkBufferSlot.h',
         'GonkConsumerBaseLL.h',
         'GonkNativeWindowClientLL.h',
