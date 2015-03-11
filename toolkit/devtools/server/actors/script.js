@@ -2584,7 +2584,7 @@ SourceActor.prototype = {
    */
   _invertSourceMap: function ({ code, mappings }) {
     const generator = new SourceMapGenerator({ file: this.url });
-    return DevToolsUtils.yieldingEach(mappings, m => {
+    return DevToolsUtils.yieldingEach(mappings._array, m => {
       let mapping = {
         generated: {
           line: m.generatedLine,
@@ -5698,7 +5698,8 @@ ThreadSources.prototype = {
         } = map.generatedPositionFor({
           source: originalSourceActor.url,
           line: originalLine,
-          column: originalColumn == null ? Infinity : originalColumn
+          column: originalColumn == null ? 0 : originalColumn,
+          bias: SourceMapConsumer.LEAST_UPPER_BOUND
         });
 
         return new GeneratedLocation(
