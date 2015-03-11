@@ -181,39 +181,22 @@ nsBaseWidget::Shutdown()
   mShutdownObserver = nullptr;
 }
 
-static void DeferredDestroyCompositor(nsRefPtr<CompositorParent> aCompositorParent,
-                                      nsRefPtr<CompositorChild> aCompositorChild)
-{
-    // Bug 848949 needs to be fixed before
-    // we can close the channel properly
-    //aCompositorChild->Close();
-}
-
 void nsBaseWidget::DestroyCompositor()
 {
   if (mCompositorChild) {
-    nsRefPtr<CompositorChild> compositorChild = mCompositorChild.forget();
-    nsRefPtr<CompositorParent> compositorParent = mCompositorParent.forget();
-
-    compositorChild->SendWillStop();
-    // New LayerManager, CompositorParent and CompositorChild might be created
-    // as a result of internal GetLayerManager() call.
-    compositorChild->Destroy();
-
-    // The call just made to SendWillStop can result in IPC from the
-    // CompositorParent to the CompositorChild (e.g. caused by the destruction
-    // of shared memory). We need to ensure this gets processed by the
-    // CompositorChild before it gets destroyed. It suffices to ensure that
-    // events already in the MessageLoop get processed before the
-    // CompositorChild is destroyed, so we add a task to the MessageLoop to
-    // handle compositor desctruction.
-
-    // The DefferedDestroyCompositor task takes ownership of compositorParent and
-    // will release them when it runs.
-    MessageLoop::current()->PostTask(FROM_HERE,
-               NewRunnableFunction(DeferredDestroyCompositor, compositorParent,
-                                   compositorChild));
+    mCompositorChild->Destroy();
+    mCompositorChild = nullptr;
+    mCompositorParent = nullptr;
   }
+}
+
+void nsBaseWidget::DestroyLayerManager()
+{
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+    mLayerManager = nullptr;
+  }
+  DestroyCompositor();
 }
 
 //-------------------------------------------------------------------------
@@ -228,11 +211,6 @@ nsBaseWidget::~nsBaseWidget()
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
-  if (mLayerManager) {
-    mLayerManager->Destroy();
-    mLayerManager = nullptr;
-  }
-
   if (mShutdownObserver) {
     // If the shutdown observer is currently processing observers,
     // then UnregisterShutdownObserver won't stop our Observer
@@ -242,7 +220,7 @@ nsBaseWidget::~nsBaseWidget()
     nsContentUtils::UnregisterShutdownObserver(mShutdownObserver);
   }
 
-  DestroyCompositor();
+  DestroyLayerManager();
 
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
@@ -1081,8 +1059,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
-  MOZ_ASSERT(!mCompositorParent,
-    "Should have properly cleaned up the previous CompositorParent beforehand");
+  MOZ_ASSERT(!mCompositorParent && !mCompositorChild,
+    "Should have properly cleaned up the previous PCompositor pair beforehand");
+
+  if (mCompositorChild) {
+    mCompositorChild->Destroy();
+  }
 
   // Recreating this is tricky, as we may still have an old and we need
   // to make sure it's properly destroyed by calling DestroyCompositor!
@@ -1095,11 +1077,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
-  MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
   nsRefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
-  MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
-  mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
+  mCompositorChild->OpenSameProcess(mCompositorParent);
 
   if (gfxPrefs::AsyncPanZoomEnabled() &&
       (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child)) {
@@ -1128,26 +1108,20 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
       backendHints, 0, &textureFactoryIdentifier, &success);
   }
 
-  if (success) {
-    ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-    if (!lf) {
-      lm = nullptr;
-      mCompositorChild = nullptr;
-      return;
-    }
-    lf->SetShadowManager(shadowManager);
-    lf->IdentifyTextureHost(textureFactoryIdentifier);
-    ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
-    WindowUsesOMTC();
+  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
 
-    mLayerManager = lm.forget();
+  if (!success || !lf) {
+    NS_WARNING("Failed to create an OMT compositor.");
+    DestroyCompositor();
     return;
   }
 
-  NS_WARNING("Failed to create an OMT compositor.");
-  DestroyCompositor();
-  // Compositor child had the only reference to LayerManager and will have
-  // deallocated it when being freed.
+  lf->SetShadowManager(shadowManager);
+  lf->IdentifyTextureHost(textureFactoryIdentifier);
+  ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+  WindowUsesOMTC();
+
+  mLayerManager = lm.forget();
 }
 
 bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
