@@ -132,6 +132,18 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock 
 }
 
 void
+LIRGeneratorX64::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins)
+{
+    lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ false);
+}
+
+void
+LIRGeneratorX64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins)
+{
+    lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ false);
+}
+
+void
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
@@ -200,13 +212,58 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 void
 LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
 {
-    lowerAsmJSCompareExchangeHeap(ins, LDefinition::BogusTemp());
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    const LAllocation oldval = useRegister(ins->oldValue());
+    const LAllocation newval = useRegister(ins->newValue());
+
+    LAsmJSCompareExchangeHeap *lir =
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
+
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
 LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 {
-    lowerAsmJSAtomicBinopHeap(ins, LDefinition::BogusTemp());
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    // Register allocation:
+    //
+    // For ADD and SUB we'll use XADD (with word and byte ops as appropriate):
+    //
+    //    movl       value, output
+    //    lock xaddl output, mem
+    //
+    // For AND/OR/XOR we need to use a CMPXCHG loop:
+    //
+    //    movl          *mem, eax
+    // L: mov           eax, temp
+    //    andl          value, temp
+    //    lock cmpxchg  temp, mem  ; reads eax also
+    //    jnz           L
+    //    ; result in eax
+    //
+    // Note the placement of L, cmpxchg will update eax with *mem if
+    // *mem does not have the expected value, so reloading it at the
+    // top of the loop would be redundant.
+    //
+    // We want to fix eax as the output.  We also need a temp for
+    // the intermediate value.
+    //
+    // There are optimization opportunities:
+    //  - when the result is unused, Bug #1077014.
+
+    bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
+    LAllocation value = useRegister(ins->value());
+    LDefinition tempDef = bitOp ? temp() : LDefinition::BogusTemp();
+
+    LAsmJSAtomicBinopHeap *lir =
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
+
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
