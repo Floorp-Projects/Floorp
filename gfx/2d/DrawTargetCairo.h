@@ -170,11 +170,6 @@ public:
 
   static cairo_surface_t *GetDummySurface();
 
-  // Cairo hardcodes this as its maximum surface size.
-  static size_t GetMaxSurfaceSize() {
-    return 32767;
-  }
-
 private: // methods
   // Init cairo surface without doing a cairo_surface_reference() call.
   bool InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat = nullptr);
