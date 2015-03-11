@@ -29,6 +29,11 @@ let SystemAppProxy = {
     this._pendingListeners = [];
   },
 
+  // Get the system app frame
+  getFrame: function () {
+    return this._frame;
+  },
+
   // To call when it is ready to receive events
   setIsReady: function () {
     if (this._isReady) {
