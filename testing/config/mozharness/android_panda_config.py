@@ -77,7 +77,6 @@ config = {
                 "--console-level=INFO",
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
-                "--run-only-tests=android.json",
                 "--symbols-path=%(symbols_path)s",
                 "--quiet",
                 "--log-raw=%(raw_log_file)s"
