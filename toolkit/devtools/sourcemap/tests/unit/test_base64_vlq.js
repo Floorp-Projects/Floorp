@@ -19,10 +19,9 @@ define("test/source-map/test-base64-vlq", ["require", "exports", "module"], func
   exports['test normal encoding and decoding'] = function (assert, util) {
     var result = {};
     for (var i = -255; i < 256; i++) {
-      var str = base64VLQ.encode(i);
-      base64VLQ.decode(str, 0, result);
+      base64VLQ.decode(base64VLQ.encode(i), result);
       assert.equal(result.value, i);
-      assert.equal(result.rest, str.length);
+      assert.equal(result.rest, "");
     }
   };
 
