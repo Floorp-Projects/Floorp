@@ -292,6 +292,8 @@ if test -n "$gonkdir" ; then
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         MOZ_AUDIO_OFFLOAD=1
         MOZ_OMX_DECODER=1
+        MOZ_OMX_ENCODER=1
+        AC_DEFINE(MOZ_OMX_ENCODER)
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_FMP4=
@@ -5082,11 +5084,6 @@ if test -n "$MOZ_WEBRTC"; then
         MOZ_WEBRTC=
         ;;
     esac
-fi
-
-dnl Temporary until webrtc works on gonk-L
-if test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 21; then
-    MOZ_WEBRTC=
 fi
 
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
