@@ -540,3 +540,19 @@ let Printing = {
 }
 Printing.init();
 
+function SwitchDocumentDirection(aWindow) {
+ // document.dir can also be "auto", in which case it won't change
+  if (aWindow.document.dir == "ltr" || aWindow.document.dir == "") {
+    aWindow.document.dir = "rtl";
+  } else if (aWindow.document.dir == "rtl") {
+    aWindow.document.dir = "ltr";
+  }
+  for (let run = 0; run < aWindow.frames.length; run++) {
+    SwitchDocumentDirection(aWindow.frames[run]);
+  }
+}
+
+addMessageListener("SwitchDocumentDirection", () => {
+  SwitchDocumentDirection(content.window);
+});
+
