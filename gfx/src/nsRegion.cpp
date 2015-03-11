@@ -372,7 +372,7 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
 
 typedef void (*visit_fn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
 
-static void VisitNextEdgeBetweenRect(visit_fn visit, void *closure, VisitSide side,
+static bool VisitNextEdgeBetweenRect(visit_fn visit, void *closure, VisitSide side,
 				     pixman_box32_t *&r1, pixman_box32_t *&r2, const int y, int &x1)
 {
   // check for overlap
@@ -388,12 +388,17 @@ static void VisitNextEdgeBetweenRect(visit_fn visit, void *closure, VisitSide si
       x1 = r2->x2;
       r2++;
     }
+    return true;
   } else {
     MOZ_ASSERT(r1->x2 < r2->x2);
     // we handle the corners by just extending the top and bottom edges
     visit(closure, side, x1, y, r1->x2+1, y);
     r1++;
+    // we assign x1 because we can assume that x1 <= r2->x1 - 1
+    // However the caller may know better and if so, may update
+    // x1 to r1->x1
     x1 = r2->x1 - 1;
+    return false;
   }
 }
 
@@ -437,19 +442,22 @@ VisitInbetween(visit_fn visit, void *closure, pixman_box32_t *r1,
   const int y = r1->y2;
   int x1;
 
-  /* Find the left-most edge */
-  if (r1->x1 < r2->x1) {
-    x1 = r1->x1 - 1;
-  } else {
-    x1 = r2->x1 - 1;
-  }
-
+  bool overlap = false;
   while (r1 != r1_end && r2 != r2_end) {
+    if (!overlap) {
+      /* Find the left-most edge */
+      if (r1->x1 < r2->x1) {
+	x1 = r1->x1 - 1;
+      } else {
+	x1 = r2->x1 - 1;
+      }
+    }
+
     MOZ_ASSERT((x1 >= (r1->x1 - 1)) || (x1 >= (r2->x1 - 1)));
     if (r1->x1 < r2->x1) {
-      VisitNextEdgeBetweenRect(visit, closure, VisitSide::BOTTOM, r1, r2, y, x1);
+      overlap = VisitNextEdgeBetweenRect(visit, closure, VisitSide::BOTTOM, r1, r2, y, x1);
     } else {
-      VisitNextEdgeBetweenRect(visit, closure, VisitSide::TOP, r2, r1, y, x1);
+      overlap = VisitNextEdgeBetweenRect(visit, closure, VisitSide::TOP, r2, r1, y, x1);
     }
   }
 
