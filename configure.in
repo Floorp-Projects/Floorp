@@ -69,7 +69,6 @@ GTK2_VERSION=2.18.0
 GTK3_VERSION=3.4.0
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
-GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
@@ -4768,7 +4767,7 @@ then
 fi
 
 dnl ========================================================
-dnl = GnomeVFS, GIO and GConf support module
+dnl = GIO and GConf support module
 dnl ========================================================
 
 if test "$MOZ_X11"
@@ -4780,31 +4779,6 @@ then
         MOZ_ENABLE_GIO=1
         MOZ_ENABLE_GCONF=1
     fi
-
-    dnl ========================================================
-    dnl = GnomeVFS support module
-    dnl ========================================================
-    MOZ_ARG_ENABLE_BOOL(gnomevfs,
-    [  --enable-gnomevfs       Enable GnomeVFS support (default: disabled)],
-        MOZ_ENABLE_GNOMEVFS=force,
-        MOZ_ENABLE_GNOMEVFS=)
-
-    if test "$MOZ_ENABLE_GNOMEVFS"
-    then
-        PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
-            MOZ_GNOMEVFS_LIBS=`echo $MOZ_GNOMEVFS_LIBS | sed 's/-llinc\>//'`
-            MOZ_ENABLE_GNOMEVFS=1
-            AC_DEFINE(MOZ_ENABLE_GNOMEVFS)
-        ],[
-            if test "$MOZ_ENABLE_GNOMEVFS" = "force"
-            then
-                AC_MSG_ERROR([* * * Could not find gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION])
-            fi
-            MOZ_ENABLE_GNOMEVFS=
-        ])
-    fi
-
-    AC_SUBST(MOZ_ENABLE_GNOMEVFS)
 
     dnl ========================================================
     dnl = GIO support module
@@ -6265,19 +6239,6 @@ MOZ_ARG_ENABLE_STRING(extensions,
     fi
 done],
     MOZ_EXTENSIONS="$MOZ_EXTENSIONS_DEFAULT")
-
-if test -z "$MOZ_ENABLE_GNOMEVFS" -a `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
-    # Suppress warning on non-X11 platforms
-    if test -n "$MOZ_X11"; then
-        AC_MSG_WARN([Removing gnomevfs from MOZ_EXTENSIONS due to no --enable-gnomevfs.])
-    fi
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
-fi
-
-dnl Do not build gnomevfs with libxul based apps
-if test -n "$LIBXUL_SDK_DIR" -a `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
-fi
 
 if test -z "$MOZ_ENABLE_GIO" -a `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
     # Suppress warning on non-X11 platforms
@@ -9092,9 +9053,11 @@ esac
 
 if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -o -n "$MOZ_REPLACE_MALLOC"; then
   ac_configure_args="--build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_ --disable-valgrind"
+  # We're using memalign for _aligned_malloc in memory/build/mozmemory_wrap.c
+  # on Windows, so just export memalign on all platforms.
+  ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
   if test -n "$MOZ_REPLACE_MALLOC"; then
-    # When using replace_malloc, we always want memalign and valloc exported from jemalloc.
-    ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
+    # When using replace_malloc, we always want valloc exported from jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_valloc=yes"
   fi
   if test -n "$MOZ_JEMALLOC3"; then

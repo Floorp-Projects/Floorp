@@ -937,6 +937,7 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
         MOZ_ASSERT(tex.get());
         compositable->RemoveTextureHost(tex);
 
+        MOZ_ASSERT(ImageBridgeParent::GetInstance(GetChildProcessId()));
         if (ImageBridgeParent::GetInstance(GetChildProcessId())) {
           // send FenceHandle if present via ImageBridge.
           ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
@@ -1024,6 +1025,14 @@ void
 LayerTransactionParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
   mozilla::unused << SendParentAsyncMessages(aMessage);
+}
+
+void
+LayerTransactionParent::ReplyRemoveTexture(const OpReplyRemoveTexture& aReply)
+{
+  InfallibleTArray<AsyncParentMessageData> messages;
+  messages.AppendElement(aReply);
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 } // namespace layers

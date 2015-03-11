@@ -386,7 +386,6 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   // Add the new TexClient.
   MOZ_ALWAYS_TRUE( AddTextureClient(newTex) );
 
-#ifdef MOZ_WIDGET_GONK
   // Remove the old TexClient.
   if (mFrontTex) {
     // remove old buffer from CompositableHost
@@ -399,7 +398,6 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     mFrontTex = nullptr;
   }
-#endif
 
   // Use the new TexClient.
   mFrontTex = newTex;
