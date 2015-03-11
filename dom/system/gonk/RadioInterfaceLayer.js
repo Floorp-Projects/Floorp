@@ -47,6 +47,9 @@ let RILQUIRKS_RADIO_OFF_WO_CARD =
 let RILQUIRKS_HAVE_IPV6 =
   libcutils.property_get("ro.moz.ril.ipv6", "false") == "true";
 
+let RILQUIRKS_SIGNAL_EXTRA_INT32 =
+  libcutils.property_get("ro.moz.ril.signal_extra_int", "false") == "true";
+
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 const RADIOINTERFACE_CID =
@@ -1512,7 +1515,8 @@ WorkerMessenger.prototype = {
         sendStkProfileDownload:
           libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true",
         dataRegistrationOnDemand: RILQUIRKS_DATA_REGISTRATION_ON_DEMAND,
-        subscriptionControl: RILQUIRKS_SUBSCRIPTION_CONTROL
+        subscriptionControl: RILQUIRKS_SUBSCRIPTION_CONTROL,
+        signalExtraInt: RILQUIRKS_SIGNAL_EXTRA_INT32
       }
     };
 
