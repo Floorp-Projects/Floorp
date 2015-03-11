@@ -92,6 +92,8 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         js_free(traceList_);
     }
 
+    void detachFromCompartment();
+
     const PropertyVector &properties() const {
         return properties_;
     }
