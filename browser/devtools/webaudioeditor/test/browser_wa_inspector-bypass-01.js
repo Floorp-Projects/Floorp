@@ -32,7 +32,7 @@ add_task(function*() {
   is($bypass.disabled, false, "Bypass button is not disabled for normal nodes");
 
   command($bypass);
-  yield gAudioNodes.once("bypass");
+  yield once(gAudioNodes, "bypass");
 
   is((yield actors[1].isBypassed()), true, "AudioNodeActor is bypassed.")
   is($bypass.checked, false, "Button is 'off' when clicked");
@@ -41,7 +41,7 @@ add_task(function*() {
     "AudioNode has 'bypassed' class.");
 
   command($bypass);
-  yield gAudioNodes.once("bypass");
+  yield once(gAudioNodes, "bypass");
 
   is((yield actors[1].isBypassed()), false, "AudioNodeActor is no longer bypassed.")
   is($bypass.checked, true, "Button is back on when clicked");
