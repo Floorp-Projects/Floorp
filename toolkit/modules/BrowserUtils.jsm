@@ -247,4 +247,75 @@ this.BrowserUtils = {
     let values = rel.split(/[ \t\r\n\f]/);
     return values.indexOf('noreferrer') != -1;
   },
+
+  /**
+   * Returns true if |mimeType| is text-based, or false otherwise.
+   *
+   * @param mimeType
+   *        The MIME type to check.
+   */
+  mimeTypeIsTextBased: function(mimeType) {
+    return mimeType.startsWith("text/") ||
+           mimeType.endsWith("+xml") ||
+           mimeType == "application/x-javascript" ||
+           mimeType == "application/javascript" ||
+           mimeType == "application/json" ||
+           mimeType == "application/xml" ||
+           mimeType == "mozilla.application/cached-xul";
+  },
+
+  /**
+   * Return true if we can/should FAYT for this node + window (could be CPOW):
+   *
+   * @param elt
+   *        The element that is focused
+   * @param win
+   *        The window that is focused
+   *
+   */
+  shouldFastFind: function(elt, win) {
+    if (elt) {
+      if (elt instanceof win.HTMLInputElement && elt.mozIsTextField(false))
+        return false;
+
+      if (elt.isContentEditable)
+        return false;
+
+      if (elt instanceof win.HTMLTextAreaElement ||
+          elt instanceof win.HTMLSelectElement ||
+          elt instanceof win.HTMLObjectElement ||
+          elt instanceof win.HTMLEmbedElement)
+        return false;
+    }
+
+    if (win && !this.mimeTypeIsTextBased(win.document.contentType))
+      return false;
+
+    // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
+    let loc = win.location;
+    if (loc.href == "about:blank")
+      return false;
+
+    // disable FAYT in documents that ask for it to be disabled.
+    if ((loc.protocol == "about:" || loc.protocol == "chrome:") &&
+        (win && win.document.documentElement &&
+         win.document.documentElement.getAttribute("disablefastfind") == "true"))
+      return false;
+
+    if (win) {
+      try {
+        let editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIWebNavigation)
+          .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIEditingSession);
+        if (editingSession.windowIsEditable(win))
+          return false;
+      }
+      catch (e) {
+        Cu.reportError(e);
+        // If someone built with composer disabled, we can't get an editing session.
+      }
+    }
+    return true;
+  },
 };
