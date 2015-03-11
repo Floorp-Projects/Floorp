@@ -1899,3 +1899,30 @@ Example
         "foobar-value"
       ]
     }
+
+org.mozilla.passwordmgr.passwordmgr
+-----------------------------------
+
+Daily measurement reporting information about the Password Manager
+
+Version 1
+^^^^^^^^^
+
+Property:
+
+numSavedPasswords
+    number of passwords saved in the Password Manager
+
+enabled
+    Whether or not the user has disabled the Password Manager in prefernces
+
+Example
+^^^^^^^
+
+::
+
+    "org.mozilla.passwordmgr.passwordmgr": {
+      "_v": 1,
+      "numSavedPasswords": 5,
+      "enabled": 0,
+    }

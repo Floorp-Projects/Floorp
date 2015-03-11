@@ -12,6 +12,7 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
 
 <window id="webide" onclose="return UI.canCloseProject();"
@@ -26,6 +27,7 @@
         persist="screenX screenY width height sizemode">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/javascript" src="project-panel.js"></script>
   <script type="application/javascript" src="webide.js"></script>
 
   <commandset id="mainCommandSet">
@@ -150,7 +152,7 @@
 
     <!-- App panel -->
     <panel id="project-panel" type="arrow" position="bottomcenter topleft" consumeoutsideclicks="true" animate="false">
-      <vbox flex="1">
+      <vbox flex="1" id="project-panel-box">
         <toolbarbutton class="panel-item project-panel-item-newapp" command="cmd_newApp"/>
         <toolbarbutton class="panel-item project-panel-item-openpackaged" command="cmd_importPackagedApp"/>
         <toolbarbutton class="panel-item project-panel-item-openhosted" command="cmd_importHostedApp"/>
@@ -191,18 +193,26 @@
   </popupset>
 
   <notificationbox flex="1" id="notificationbox">
-    <deck flex="1" id="deck" selectedIndex="-1">
-      <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
-      <iframe id="deck-panel-projecteditor" flex="1"/>
-      <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
-      <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
-      <iframe id="deck-panel-permissionstable" flex="1" lazysrc="permissionstable.xhtml"/>
-      <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
-      <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
-      <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
-      <iframe id="deck-panel-devicesettings" flex="1" lazysrc="devicesettings.xhtml"/>
-      <iframe id="deck-panel-logs" flex="1" src="logs.xhtml"/>
-    </deck>
+    <hbox flex="1">
+      <vbox id="project-listing-panel" class="project-listing" flex="1">
+        <div id="project-listing-wrapper">
+          <iframe id="project-listing-panel-details" flex="1" src="project-listing.xhtml"/>
+        </div>
+      </vbox>
+      <splitter class="devtools-side-splitter" id="project-listing-splitter"/>
+      <deck flex="1" id="deck" selectedIndex="-1">
+        <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
+        <iframe id="deck-panel-projecteditor" flex="1"/>
+        <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
+        <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
+        <iframe id="deck-panel-permissionstable" flex="1" lazysrc="permissionstable.xhtml"/>
+        <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
+        <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
+        <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
+        <iframe id="deck-panel-devicesettings" flex="1" lazysrc="devicesettings.xhtml"/>
+        <iframe id="deck-panel-logs" flex="1" src="logs.xhtml"/>
+      </deck>
+    </hbox>
     <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
     <!-- toolbox iframe will be inserted here -->
   </notificationbox>

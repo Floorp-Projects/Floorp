@@ -18,7 +18,7 @@ sinclude $(topsrcdir)/config/rules.mk
 
 # This can switch to just zipping the files when native jetpacks land
 $(TESTADDONS)/%.xpi: FORCE $(call mkdir_deps,$(CURDIR)/$(TESTADDONS)) $(ADDONSRC)/%
-	$(PYTHON) $(srcdir)/source/bin/cfx xpi --pkgdir=$(lastword $^) --output-file=$@
+	$(PYTHON) $(srcdir)/source/bin/cfx xpi --no-strip-xpi --pkgdir=$(lastword $^) --output-file=$@
 
 #libs:: $(ADDONS)
 
