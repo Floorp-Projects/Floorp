@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>This test will fail because .mid-z is not in the same layer as .low-z</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+  margin: 10px;
+}
+
+.relative {
+  position: relative;
+}
+
+.fixed {
+  position: fixed;
+  top: 140px;
+  left: 140px;
+}
+
+.low-z {
+  z-index: 1;
+}
+
+.mid-z {
+  z-index: 2;
+}
+
+.high-z {
+  z-index: 3;
+}
+
+.opaque-background {
+  background-color: white;
+}
+
+body {
+  height: 4000px;
+}
+
+</style>
+
+<div class="content relative low-z" reftest-assigned-layer="page-background"></div>
+
+<div class="fixed opaque-background content mid-z" reftest-assigned-layer="page-background"></div>
+
+<div class="content relative low-z" reftest-assigned-layer="page-background"></div>
