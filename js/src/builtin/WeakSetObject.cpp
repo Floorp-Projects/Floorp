@@ -21,6 +21,8 @@
 
 using namespace js;
 
+using mozilla::UniquePtr;
+
 const Class WeakSetObject::class_ = {
     "WeakSet",
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet) |
