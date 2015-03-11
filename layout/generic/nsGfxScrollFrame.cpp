@@ -1126,24 +1126,21 @@ GetOnePixelRangeAroundPoint(nsPoint aPoint, bool aIsHorizontal)
 }
 
 void
-ScrollFrameHelper::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                                nsIScrollbarMediator::ScrollSnapMode aSnap)
+ScrollFrameHelper::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
   ScrollByUnit(aScrollbar, nsIScrollableFrame::SMOOTH, aDirection,
-               nsIScrollableFrame::PAGES, aSnap);
+               nsIScrollableFrame::PAGES);
 }
 
 void
-ScrollFrameHelper::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                                 nsIScrollbarMediator::ScrollSnapMode aSnap)
+ScrollFrameHelper::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
   ScrollByUnit(aScrollbar, nsIScrollableFrame::INSTANT, aDirection,
-               nsIScrollableFrame::WHOLE, aSnap);
+               nsIScrollableFrame::WHOLE);
 }
 
 void
-ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                                nsIScrollbarMediator::ScrollSnapMode aSnap)
+ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
   bool isHorizontal = aScrollbar->IsHorizontal();
   nsIntPoint delta;
@@ -1160,8 +1157,7 @@ ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection
   }
   nsIntPoint overflow;
   ScrollBy(delta, nsIScrollableFrame::LINES, nsIScrollableFrame::SMOOTH,
-           &overflow, nsGkAtoms::other, nsIScrollableFrame::NOT_MOMENTUM,
-           aSnap);
+           &overflow, nsGkAtoms::other);
 }
 
 void
@@ -1197,23 +1193,10 @@ ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
 }
 
 void
-ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar)
-{
-  // Scrollbar scrolling does not result in fling gestures, clear any
-  // accumulated velocity
-  mVelocityQueue.Reset();
-
-  // Perform scroll snapping, if needed.  Scrollbar movement uses the same
-  // smooth scrolling animation as keyboard scrolling.
-  ScrollSnap(mDestination, nsIScrollableFrame::SMOOTH);
-}
-
-void
 ScrollFrameHelper::ScrollByUnit(nsScrollbarFrame* aScrollbar,
                                 nsIScrollableFrame::ScrollMode aMode,
                                 int32_t aDirection,
-                                nsIScrollableFrame::ScrollUnit aUnit,
-                                nsIScrollbarMediator::ScrollSnapMode aSnap)
+                                nsIScrollableFrame::ScrollUnit aUnit)
 {
   MOZ_ASSERT(aScrollbar != nullptr);
   bool isHorizontal = aScrollbar->IsHorizontal();
@@ -1224,8 +1207,7 @@ ScrollFrameHelper::ScrollByUnit(nsScrollbarFrame* aScrollbar,
     delta.y = aDirection;
   }
   nsIntPoint overflow;
-  ScrollBy(delta, aUnit, aMode, &overflow, nsGkAtoms::other,
-           nsIScrollableFrame::NOT_MOMENTUM, aSnap);
+  ScrollBy(delta, aUnit, aMode, &overflow, nsGkAtoms::other);
 }
 
 nsresult
@@ -2097,7 +2079,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
                                           nsIScrollableFrame::ScrollMode aMode,
                                           nsIAtom *aOrigin,
                                           const nsRect* aRange,
-                                          nsIScrollbarMediator::ScrollSnapMode aSnap)
+                                          nsIScrollableFrame::ScrollSnapMode aSnap)
 {
 
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
@@ -3366,7 +3348,7 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
                             nsIntPoint* aOverflow,
                             nsIAtom *aOrigin,
                             nsIScrollableFrame::ScrollMomentum aMomentum,
-                            nsIScrollbarMediator::ScrollSnapMode aSnap)
+                            nsIScrollableFrame::ScrollSnapMode aSnap)
 {
   // When a smooth scroll is being processed on a frame, mouse wheel and trackpad
   // momentum scroll event updates must notcancel the SMOOTH or SMOOTH_MSD
@@ -3498,7 +3480,7 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
 }
 
 void
-ScrollFrameHelper::ScrollSnap(nsIScrollableFrame::ScrollMode aMode)
+ScrollFrameHelper::ScrollSnap()
 {
   float flingSensitivity = gfxPrefs::ScrollSnapPredictionSensitivity();
   int maxVelocity = gfxPrefs::ScrollSnapPredictionMaxVelocity();
@@ -3511,7 +3493,7 @@ ScrollFrameHelper::ScrollSnap(nsIScrollableFrame::ScrollMode aMode)
   predictedOffset.Clamp(maxOffset);
   nsPoint pos = GetScrollPosition();
   nsPoint destinationPos = pos + predictedOffset;
-  ScrollSnap(destinationPos, aMode);
+  ScrollSnap(destinationPos);
 }
 
 void
@@ -3521,8 +3503,7 @@ ScrollFrameHelper::FlingSnap(const mozilla::CSSPoint& aDestination)
 }
 
 void
-ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination,
-                              nsIScrollableFrame::ScrollMode aMode)
+ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination)
 {
   nsRect scrollRange = GetScrollRangeForClamping();
   nsPoint pos = GetScrollPosition();
@@ -3530,7 +3511,7 @@ ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination,
   if (GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS,
                                                  pos,
                                                  snapDestination)) {
-    ScrollTo(snapDestination, aMode);
+    ScrollTo(snapDestination, nsIScrollableFrame::SMOOTH_MSD);
   }
 }
 

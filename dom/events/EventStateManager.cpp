@@ -2430,7 +2430,7 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     actualDevPixelScrollAmount.y = 0;
   }
 
-  nsIScrollbarMediator::ScrollSnapMode snapMode = nsIScrollbarMediator::DISABLE_SNAP;
+  nsIScrollableFrame::ScrollSnapMode snapMode = nsIScrollableFrame::DISABLE_SNAP;
   nsIAtom* origin = nullptr;
   switch (aEvent->deltaMode) {
     case nsIDOMWheelEvent::DOM_DELTA_LINE:
