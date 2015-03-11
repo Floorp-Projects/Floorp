@@ -15,7 +15,6 @@ function f() {
     var i8  = new Int8Array(f32.buffer);
     var u8  = new Uint8Array(f32.buffer);
 
-    var r;
     for (var i = 0; i < 150; i++) {
         assertEqX4(SIMD.float32x4.load(f64, 0), [1,2,3,4]);
         assertEqX4(SIMD.float32x4.load(f32, 1), [2,3,4,5]);
@@ -32,17 +31,32 @@ function f() {
         assertEqX4(SIMD.float32x4.load(u16, (16 << 1) - (4 << 1)), [13,14,15,16]);
         assertEqX4(SIMD.float32x4.load(i8,  (16 << 2) - (4 << 2)), [13,14,15,16]);
         assertEqX4(SIMD.float32x4.load(u8,  (16 << 2) - (4 << 2)), [13,14,15,16]);
-
-        var caught = false;
-        try {
-            SIMD.float32x4.load(i8, (i < 149) ? 0 : (16 << 2) - (4 << 2) + 1);
-        } catch (e) {
-            caught = true;
-        }
-        assertEq(i < 149 || caught, true);
     }
-    return r
 }
 
 f();
 
+function testBailout(uglyDuckling) {
+    var f32 = new Float32Array(16);
+    for (var i = 0; i < 16; i++)
+        f32[i] = i + 1;
+
+    var i8  = new Int8Array(f32.buffer);
+
+    for (var i = 0; i < 150; i++) {
+        var caught = false;
+        try {
+            SIMD.float32x4.load(i8, (i < 149) ? 0 : uglyDuckling);
+        } catch (e) {
+            print(e);
+            assertEq(e instanceof RangeError, true);
+            caught = true;
+        }
+        assertEq(i < 149 || caught, true);
+    }
+}
+
+print('Testing range checks...');
+testBailout(-1);
+testBailout(-15);
+testBailout(12 * 4 + 1);

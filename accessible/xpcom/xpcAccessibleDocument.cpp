@@ -195,9 +195,17 @@ xpcAccessibleDocument::GetAccessible(Accessible* aAccessible)
   return xpcAcc;
 }
 
+static PLDHashOperator
+ShutdownAndRemove(const Accessible* aKey, nsRefPtr<xpcAccessibleGeneric>& aValue,
+                  void* aUnused)
+{
+  aValue->Shutdown();
+  return PL_DHASH_REMOVE;
+}
+
 void
 xpcAccessibleDocument::Shutdown()
 {
-  mCache.Clear();
+  mCache.Enumerate(ShutdownAndRemove, nullptr);
   xpcAccessibleGeneric::Shutdown();
 }

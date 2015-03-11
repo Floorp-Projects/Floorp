@@ -480,8 +480,23 @@
      *   Stack: callee, this, args => rval
      */ \
     macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
-    macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Writes the [[Prototype]] objects for both a class and its .prototype to
+     * the stack, given the result of a heritage expression.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: heritage => objProto, funcProto
+     */ \
+    macro(JSOP_CLASSHERITAGE,  51, "classheritage",   NULL,         1,  1,  2,  JOF_BYTE) \
+    /*
+     * Pushes a clone of a function with a given [[Prototype]] onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint32_t funcIndex
+     *   Stack: proto => obj
+     */ \
+    macro(JSOP_FUNWITHPROTO,   52, "funwithproto",    NULL,         5,  1,  1,  JOF_OBJECT) \
     \
     /*
      * Pops the top of stack value, pushes property of it onto the stack.
@@ -753,8 +768,15 @@
      *   nuses: (argc+2)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
-    \
-    macro(JSOP_UNUSED83,  83, "unused83",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes newly created object onto the stack with provided [[Prototype]].
+     *
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: proto => obj
+     */ \
+    macro(JSOP_OBJWITHPROTO,  83, "objwithproto",   NULL,         1,  1,  1,  JOF_BYTE) \
     \
     /*
      * Fast get op for function arguments and local variables.

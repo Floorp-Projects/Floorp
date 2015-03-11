@@ -2,7 +2,8 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <title>Tests for the effect of setting a CSS animation's AnimationPlayer.startTime</title>
+    <title>Tests for the effect of setting a CSS animation's
+           AnimationPlayer.startTime</title>
     <style>
 
 .animated-div {
@@ -39,7 +40,8 @@
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1108055
 
 
-const CSS_ANIM_EVENTS = ['animationstart', 'animationiteration', 'animationend'];
+const CSS_ANIM_EVENTS =
+  ['animationstart', 'animationiteration', 'animationend'];
 const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
 const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
@@ -64,9 +66,6 @@ function startTimeForStartOfActiveInterval(timeline) {
 function startTimeForFiftyPercentThroughActiveInterval(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5;
 }
-function startTimeForNinetyPercentThroughActiveInterval(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.9;
-}
 function startTimeForEndOfActiveInterval(timeline) {
   return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS;
 }
@@ -82,7 +81,6 @@ const UNANIMATED_POSITION = 10;
 const INITIAL_POSITION = 100;
 const TEN_PCT_POSITION = 110;
 const FIFTY_PCT_POSITION = 150;
-const NINETY_PCT_POSITION = 190;
 const END_POSITION = 200;
 
 /**
@@ -275,17 +273,6 @@ function checkStateAtFiftyPctOfActiveInterval(player)
     'animation at the midpoint of the active interval');
 }
 
-function checkStateAtNinetyPctOfActiveInterval(player)
-{
-  // We don't test player.startTime since our caller just set it.
-
-  var div = player.source.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_between_inclusive(marginLeft, NINETY_PCT_POSITION, END_POSITION,
-    'the computed value of margin-left should be close to the value at the ' +
-    'end of the animation');
-}
-
 // Called when startTime is set to the time the active interval ends.
 function checkStateAtActiveIntervalEndTime(player)
 {
@@ -303,7 +290,8 @@ function checkStateAtActiveIntervalEndTime(player)
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, UNANIMATED_POSITION,
     'the computed value of margin-left should be unaffected ' +
-    'by the animation at the end of the active duration');
+    'by the animation at the end of the active duration when the ' +
+    'animation-fill-mode is none');
 }
 
 
@@ -340,7 +328,8 @@ test(function(t)
     'Check setting of startTime actually works');
 
   checkStateOnSettingStartTimeToAnimationCreationTime(player);
-}, 'Examine newly created Animation');
+}, 'Sanity test to check round-tripping assigning to new animation\'s ' +
+   'startTime');
 
 
 async_test(function(t) {
@@ -359,11 +348,9 @@ async_test(function(t) {
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalStartTime(player);
 
-    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForFiftyPercentThroughActiveInterval(player.timeline);
     checkStateAtFiftyPctOfActiveInterval(player);
-
-    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
-    checkStateAtNinetyPctOfActiveInterval(player);
 
     player.startTime = startTimeForEndOfActiveInterval(player.timeline);
     return eventWatcher.waitForEvent('animationend');
@@ -389,27 +376,39 @@ async_test(function(t) {
 
   player.startTime = startTimeForEndOfActiveInterval(player.timeline);
 
+  var previousTimelineTime = player.timeline.currentTime;
+
   // Skipping over the active interval will dispatch an 'animationstart' then
   // an 'animationend' event. We need to wait for these events before we start
   // testing going backwards since EventWatcher will fail the test if it gets
   // an event that we haven't told it about.
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(t.step_func(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(t.step_func(function() {
+    assert_true(document.timeline.currentTime - previousTimelineTime <
+                  ANIM_DUR_MS,
+                'Sanity check that seeking worked rather than the events ' +
+                'firing after normal playback through the very long ' +
+                'animation duration');
+
     // Now we can start the tests for skipping backwards, but first we check
     // that after the events we're still in the same end time state:
     checkStateAtActiveIntervalEndTime(player);
 
-    player.startTime = startTimeForNinetyPercentThroughActiveInterval(player.timeline);
+    player.startTime =
+      startTimeForFiftyPercentThroughActiveInterval(player.timeline);
 
-    // Despite going backwards from after the end of the animation to just
-    // before the end of the animation, we now expect an animationstart event
-    // because we went from outside to inside the active interval.
-    return eventWatcher.waitForEvent('animationstart');
-  })).then(t.step_func(function() {
-    checkStateAtNinetyPctOfActiveInterval(player);
-
-    player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
+    // Despite going backwards from after the end of the animation (to being
+    // in the active interval), we now expect an 'animationstart' event
+    // because the animation should go from being inactive to active.
+    //
+    // Calling checkStateAtFiftyPctOfActiveInterval will check computed style,
+    // causing computed style to be updated and the 'animationstart' event to
+    // be dispatched synchronously. We need to call waitForEvent first
+    // otherwise eventWatcher will assert that the event was unexpected.
+    var promise = eventWatcher.waitForEvent('animationstart');
     checkStateAtFiftyPctOfActiveInterval(player);
-
+    return promise;
+  })).then(t.step_func(function() {
     player.startTime = startTimeForStartOfActiveInterval(player.timeline);
     checkStateAtActiveIntervalStartTime(player);
 
@@ -519,7 +518,8 @@ async_test(function(t) {
   div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(function() {
     player.startTime = startTimeForBeforePhase(player.timeline);
     player.startTime = startTimeForAfterPhase(player.timeline);
 
@@ -538,7 +538,8 @@ async_test(function(t) {
   div.style.animation = ANIM_PROPERTY_VAL;
   var player = div.getAnimationPlayers()[0];
 
-  eventWatcher.waitForEvents(['animationstart', 'animationend']).then(function() {
+  eventWatcher.waitForEvents(['animationstart',
+                              'animationend']).then(function() {
     player.startTime = startTimeForActivePhase(player.timeline);
     player.startTime = startTimeForAfterPhase(player.timeline);
 
@@ -558,12 +559,17 @@ async_test(function(t) {
 
   var player = div.getAnimationPlayers()[0];
 
+  var storedCurrentTime;
+
   player.ready.then(t.step_func(function() {
+    storedCurrentTime = player.currentTime;
     player.startTime = null;
     return player.ready;
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
+    assert_equals(player.currentTime, storedCurrentTime,
+      'Test that hold time is correct');
     t.done();
   });
 }, 'Setting startTime to null');
@@ -582,6 +588,8 @@ async_test(function(t) {
       'AnimationPlayer.startTime not null on ready Promise resolve');
 
     player.pause();
+    // After bug 1109390 we will need to wait here for the ready promise again
+
     assert_equals(player.startTime, null,
       'AnimationPlayer.startTime is null after paused');
     assert_equals(player.playState, 'paused',

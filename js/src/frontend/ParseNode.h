@@ -1360,9 +1360,9 @@ struct ClassNames : public BinaryNode {
     ClassNames(ParseNode *outerBinding, ParseNode *innerBinding, const TokenPos &pos)
       : BinaryNode(PNK_CLASSNAMES, JSOP_NOP, pos, outerBinding, innerBinding)
     {
-        MOZ_ASSERT(outerBinding->isKind(PNK_NAME));
+        MOZ_ASSERT_IF(outerBinding, outerBinding->isKind(PNK_NAME));
         MOZ_ASSERT(innerBinding->isKind(PNK_NAME));
-        MOZ_ASSERT(innerBinding->pn_atom == outerBinding->pn_atom);
+        MOZ_ASSERT_IF(outerBinding, innerBinding->pn_atom == outerBinding->pn_atom);
     }
 
     static bool test(const ParseNode &node) {
@@ -1388,11 +1388,12 @@ struct ClassNames : public BinaryNode {
 };
 
 struct ClassNode : public TernaryNode {
-    ClassNode(ParseNode *names, ParseNode *heritage, ParseNode *methodBlock)
-      : TernaryNode(PNK_CLASS, JSOP_NOP, names, heritage, methodBlock)
+    ClassNode(ParseNode *names, ParseNode *heritage, ParseNode *methodsOrBlock)
+      : TernaryNode(PNK_CLASS, JSOP_NOP, names, heritage, methodsOrBlock)
     {
-        MOZ_ASSERT(names->is<ClassNames>());
-        MOZ_ASSERT(methodBlock->is<LexicalScopeNode>());
+        MOZ_ASSERT_IF(names, names->is<ClassNames>());
+        MOZ_ASSERT(methodsOrBlock->is<LexicalScopeNode>() ||
+                   methodsOrBlock->isKind(PNK_CLASSMETHODLIST));
     }
 
     static bool test(const ParseNode &node) {
@@ -1402,13 +1403,23 @@ struct ClassNode : public TernaryNode {
     }
 
     ClassNames *names() const {
-        return &pn_kid1->as<ClassNames>();
+        return pn_kid1 ? &pn_kid1->as<ClassNames>() : nullptr;
     }
     ParseNode *heritage() const {
         return pn_kid2;
     }
-    LexicalScopeNode *scope() const {
-        return &pn_kid3->as<LexicalScopeNode>();
+    ParseNode *methodList() const {
+        if (pn_kid3->isKind(PNK_CLASSMETHODLIST))
+            return pn_kid3;
+
+        MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
+        ParseNode *list = pn_kid3->pn_expr;
+        MOZ_ASSERT(list->isKind(PNK_CLASSMETHODLIST));
+        return list;
+    }
+    ObjectBox *scopeObject() const {
+        MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
+        return pn_kid3->pn_objbox;
     }
 };
 
