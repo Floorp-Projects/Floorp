@@ -588,6 +588,23 @@ ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
   return promise.forget();
 }
 
+// Notification API extension.
+already_AddRefed<Promise>
+ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
+                                                      const nsAString& aTitle,
+                                                      const NotificationOptions& aOptions)
+{
+  MOZ_ASSERT(false);
+  return nullptr;
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions)
+{
+  MOZ_ASSERT(false);
+  return nullptr;
+}
+
 already_AddRefed<PushManager>
 ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
 {
@@ -991,5 +1008,23 @@ WorkerListener::UpdateFound()
     }
   }
 }
+
+// Notification API extension.
+already_AddRefed<Promise>
+ServiceWorkerRegistrationWorkerThread::ShowNotification(JSContext* aCx,
+                                                        const nsAString& aTitle,
+                                                        const NotificationOptions& aOptions)
+{
+  MOZ_ASSERT(false);
+  return nullptr;
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOptions& aOptions)
+{
+  MOZ_ASSERT(false);
+  return nullptr;
+}
+
 } // dom namespace
 } // mozilla namespace
