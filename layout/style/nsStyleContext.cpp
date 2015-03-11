@@ -636,7 +636,9 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     if (!disp->IsOutOfFlowStyle() &&
         ((containerDisp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
           containerContext->IsInlineDescendantOfRuby()) ||
-         containerDisp->IsRubyDisplayType())) {
+         containerDisp->IsRubyDisplayType() ||
+         disp->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT ||
+         disp->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE)) {
       mBits |= NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY;
       uint8_t displayVal = disp->mDisplay;
       nsRuleNode::EnsureInlineDisplay(displayVal);
