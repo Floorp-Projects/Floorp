@@ -459,6 +459,21 @@ SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey,
 SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey, 
 							const char *nickname);
 
+/*
+ * Using __PK11_SetCertificateNickname is *DANGEROUS*.
+ *
+ * The API will update the NSS database, but it *will NOT* update the in-memory data.
+ * As a result, after calling this API, there will be INCONSISTENCY between
+ * in-memory data and the database.
+ *
+ * Use of the API should be limited to short-lived tools, which will exit immediately
+ * after using this API.
+ *
+ * If you ignore this warning, your process is TAINTED and will most likely misbehave.
+ */
+SECStatus __PK11_SetCertificateNickname(CERTCertificate *cert,
+                                      const char *nickname);
+
 /* size to hold key in bytes */
 unsigned int PK11_GetKeyLength(PK11SymKey *key);
 /* size of actual secret parts of key in bits */

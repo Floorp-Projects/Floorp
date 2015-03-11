@@ -6,13 +6,9 @@
 
 #include "tls_parser.h"
 
-// Process DTLS Records
-#define CHECK_LENGTH(expected)                \
-  do {                                        \
-    if (remaining() < expected) return false; \
-  } while (0)
+namespace nss_test {
 
-bool TlsParser::Read(unsigned char* val) {
+bool TlsParser::Read(uint8_t* val) {
   if (remaining() < 1) {
     return false;
   }
@@ -21,37 +17,55 @@ bool TlsParser::Read(unsigned char* val) {
   return true;
 }
 
-bool TlsParser::Read(unsigned char* val, size_t len) {
+bool TlsParser::Read(uint32_t* val, size_t size) {
+  if (size > sizeof(uint32_t)) {
+    return false;
+  }
+
+  uint32_t v = 0;
+  for (size_t i = 0; i < size; ++i) {
+    uint8_t tmp;
+    if (!Read(&tmp)) {
+      return false;
+    }
+
+    v = (v << 8) | tmp;
+  }
+
+  *val = v;
+  return true;
+}
+
+bool TlsParser::Read(DataBuffer* val, size_t len) {
   if (remaining() < len) {
     return false;
   }
 
-  if (val) {
-    memcpy(val, ptr(), len);
-  }
+  val->Assign(ptr(), len);
   consume(len);
-
   return true;
 }
 
-bool TlsRecordParser::NextRecord(uint8_t* ct,
-                                 std::auto_ptr<DataBuffer>* buffer) {
-  if (!remaining()) return false;
+bool TlsParser::ReadVariable(DataBuffer* val, size_t len_size) {
+  uint32_t len;
+  if (!Read(&len, len_size)) {
+    return false;
+  }
+  return Read(val, len);
+}
 
-  CHECK_LENGTH(5U);
-  const uint8_t* ctp = reinterpret_cast<const uint8_t*>(ptr());
-  consume(3);  // ct + version
-
-  const uint16_t* tmp = reinterpret_cast<const uint16_t*>(ptr());
-  size_t length = ntohs(*tmp);
-  consume(2);
-
-  CHECK_LENGTH(length);
-  DataBuffer* db = new DataBuffer(ptr(), length);
-  consume(length);
-
-  *ct = *ctp;
-  buffer->reset(db);
-
+bool TlsParser::Skip(size_t len) {
+  if (len > remaining()) { return false; }
+  consume(len);
   return true;
 }
+
+bool TlsParser::SkipVariable(size_t len_size) {
+  uint32_t len;
+  if (!Read(&len, len_size)) {
+    return false;
+  }
+  return Skip(len);
+}
+
+} // namespace nss_test
