@@ -25,6 +25,10 @@ ShouldNurseryAllocateObject(const Nursery &nursery, InitialHeap heap)
     return nursery.isEnabled() && heap != TenuredHeap;
 }
 
+template <typename T, AllowGC allowGC>
+T *
+TryNewTenuredThing(ExclusiveContext *cx, AllocKind kind, size_t thingSize);
+
 /*
  * Attempt to allocate a new GC thing out of the nursery. If there is not enough
  * room in the nursery or there is an OOM, this method will return nullptr.
@@ -185,17 +189,13 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
         Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
     }
 
-    JSObject *obj = reinterpret_cast<JSObject *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
-    if (!obj)
-        obj = reinterpret_cast<JSObject *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
+    JSObject *obj = TryNewTenuredThing<JSObject, allowGC>(cx, kind, thingSize);
 
     if (obj)
         obj->setInitialSlotsMaybeNonNative(slots);
     else
         js_free(slots);
 
-    CheckIncrementalZoneState(cx, obj);
-    TraceTenuredAlloc(obj, kind);
     return obj;
 }
 template JSObject *js::Allocate<JSObject, NoGC>(ExclusiveContext *cx, gc::AllocKind kind,
@@ -220,13 +220,7 @@ js::Allocate(ExclusiveContext *cx)
     if (!CheckAllocatorState<allowGC>(cx, kind))
         return nullptr;
 
-    T *t = static_cast<T *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
-    if (!t)
-        t = static_cast<T *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
-
-    CheckIncrementalZoneState(cx, t);
-    gc::TraceTenuredAlloc(t, kind);
-    return t;
+    return TryNewTenuredThing<T, allowGC>(cx, kind, thingSize);
 }
 
 #define FOR_ALL_NON_OBJECT_GC_LAYOUTS(macro) \
@@ -247,3 +241,16 @@ js::Allocate(ExclusiveContext *cx)
     template type *js::Allocate<type, CanGC>(ExclusiveContext *cx);
 FOR_ALL_NON_OBJECT_GC_LAYOUTS(DECL_ALLOCATOR_INSTANCES)
 #undef DECL_ALLOCATOR_INSTANCES
+
+template <typename T, AllowGC allowGC>
+T *
+TryNewTenuredThing(ExclusiveContext *cx, AllocKind kind, size_t thingSize)
+{
+    T *t = reinterpret_cast<T *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
+    if (!t)
+        t = reinterpret_cast<T *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
+
+    CheckIncrementalZoneState(cx, t);
+    TraceTenuredAlloc(t, kind);
+    return t;
+}
