@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 
 class nsIEventTarget;
-class nsIFile;
 
 namespace mozilla {
 namespace dom {

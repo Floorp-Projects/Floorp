@@ -21,10 +21,6 @@ namespace mozilla {
 
 class ErrorResult;
 
-namespace ipc {
-  class IProtocol;
-}
-
 namespace dom {
 
 class OwningRequestOrUSVString;
@@ -39,10 +35,8 @@ namespace cache {
 
 class CacheChild;
 class PCacheRequest;
-class PCacheRequestOrVoid;
 class PCacheResponse;
 class PCacheResponseOrVoid;
-class PCacheStreamControlChild;
 
 class Cache MOZ_FINAL : public PromiseNativeHandler
                       , public nsWrapperCache
