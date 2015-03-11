@@ -621,7 +621,7 @@ struct String
 extern JS_FRIEND_DATA(const js::Class* const) ObjectClassPtr;
 
 inline const js::Class*
-GetObjectClass(JSObject* obj)
+GetObjectClass(const JSObject* obj)
 {
     return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
 }
