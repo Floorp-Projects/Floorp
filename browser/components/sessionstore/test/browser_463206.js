@@ -2,22 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  /** Test for Bug 463206 **/
+"use strict";
 
-  waitForExplicitFinish();
+const TEST_URL = "http://mochi.test:8888/browser/" +
+                 "browser/components/sessionstore/test/browser_463206_sample.html";
 
-  let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser_463206_sample.html";
+add_task(function* () {
+  // Add a new tab.
+  let tab = gBrowser.addTab(TEST_URL);
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  var frameCount = 0;
-  let tab = gBrowser.addTab(testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    // wait for all frames to load completely
-    if (frameCount++ < 5)
-      return;
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
+  // "Type in" some random values.
+  yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
     function typeText(aTextField, aValue) {
       aTextField.value = aValue;
 
@@ -26,33 +22,36 @@ function test() {
       aTextField.dispatchEvent(event);
     }
 
-    let doc = tab.linkedBrowser.contentDocument;
-    typeText(doc.getElementById("out1"), Date.now());
-    typeText(doc.getElementsByName("1|#out2")[0], Math.random());
-    typeText(doc.defaultView.frames[0].frames[1].document.getElementById("in1"), new Date());
+    typeText(content.document.getElementById("out1"), Date.now());
+    typeText(content.document.getElementsByName("1|#out2")[0], Math.random());
+    typeText(content.frames[0].frames[1].document.getElementById("in1"), new Date());
+  });
 
-    let tab2 = gBrowser.duplicateTab(tab);
-    promiseTabRestored(tab2).then(() => {
-      let doc = tab2.linkedBrowser.contentDocument;
-      let win = tab2.linkedBrowser.contentWindow;
-      isnot(doc.getElementById("out1").value,
-            win.frames[1].document.getElementById("out1").value,
-            "text isn't reused for frames");
-      isnot(doc.getElementsByName("1|#out2")[0].value, "",
-            "text containing | and # is correctly restored");
-      is(win.frames[1].document.getElementById("out2").value, "",
-            "id prefixes can't be faked");
-      // Disabled for now, Bug 588077
-      // isnot(win.frames[0].frames[1].document.getElementById("in1").value, "",
-      //       "id prefixes aren't mixed up");
-      is(win.frames[1].frames[0].document.getElementById("in1").value, "",
-            "id prefixes aren't mixed up");
+  // Duplicate the tab.
+  let tab2 = gBrowser.duplicateTab(tab);
+  yield promiseTabRestored(tab2);
 
-      // clean up
-      gBrowser.removeTab(tab2);
-      gBrowser.removeTab(tab);
+  // Query a few values from the top and its child frames.
+  let query = ContentTask.spawn(tab2.linkedBrowser, null, function* () {
+    return [
+      content.document.getElementById("out1").value,
+      content.frames[1].document.getElementById("out1").value,
+      content.document.getElementsByName("1|#out2")[0].value,
+      content.frames[1].document.getElementById("out2").value,
+      content.frames[0].frames[1].document.getElementById("in1").value,
+      content.frames[1].frames[0].document.getElementById("in1").value
+    ];
+  });
 
-      finish();
-    });
-  }, true);
-}
+  let [v1, v2, v3, v4, v5, v6] = yield query;
+  isnot(v1, v2, "text isn't reused for frames");
+  isnot(v3, "", "text containing | and # is correctly restored");
+  is(v4, "", "id prefixes can't be faked");
+  // Disabled for now, Bug 588077
+  //is(v5, "", "id prefixes aren't mixed up");
+  is(v6, "", "id prefixes aren't mixed up");
+
+  // Cleanup.
+  gBrowser.removeTab(tab2);
+  gBrowser.removeTab(tab);
+});
