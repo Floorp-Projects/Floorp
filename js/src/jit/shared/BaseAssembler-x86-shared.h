@@ -288,12 +288,6 @@ public:
         m_formatter.oneByteOp(OP_ADD_EvGv, offset, base, src);
     }
 
-    void addl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("addl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_ADD_EvGv, offset, base, index, scale, src);
-    }
-
     void addl_ir(int32_t imm, RegisterID dst)
     {
         spew("addl       $%d, %s", imm, GPReg32Name(dst));
@@ -401,138 +395,18 @@ public:
         }
     }
 
-    void addb_im(int32_t imm, int32_t offset, RegisterID base) {
-        spew("addb       $%d, " MEM_ob, int8_t(imm), ADDR_ob(offset, base));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_ADD);
-        m_formatter.immediate8(imm);
-    }
-
-    void addb_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("addb       $%d, " MEM_obs, int8_t(imm), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_ADD);
-        m_formatter.immediate8(imm);
-    }
-
-    void addb_rm(RegisterID src, int32_t offset, RegisterID base) {
-        spew("addb       %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.oneByteOp8(OP_ADD_EbGb, offset, base, src);
-    }
-
-    void addb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("addb       %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp8(OP_ADD_EbGb, offset, base, index, scale, src);
-    }
-
-    void subb_im(int32_t imm, int32_t offset, RegisterID base) {
-        spew("subb       $%d, " MEM_ob, int8_t(imm), ADDR_ob(offset, base));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_SUB);
-        m_formatter.immediate8(imm);
-    }
-
-    void subb_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("subb       $%d, " MEM_obs, int8_t(imm), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_SUB);
-        m_formatter.immediate8(imm);
-    }
-
-    void subb_rm(RegisterID src, int32_t offset, RegisterID base) {
-        spew("subb       %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.oneByteOp8(OP_SUB_EbGb, offset, base, src);
-    }
-
-    void subb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("subb       %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp8(OP_SUB_EbGb, offset, base, index, scale, src);
-    }
-
-    void andb_im(int32_t imm, int32_t offset, RegisterID base) {
-        spew("andb       $%d, " MEM_ob, int8_t(imm), ADDR_ob(offset, base));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_AND);
-        m_formatter.immediate8(imm);
-    }
-
-    void andb_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("andb       $%d, " MEM_obs, int8_t(imm), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_AND);
-        m_formatter.immediate8(imm);
-    }
-
-    void andb_rm(RegisterID src, int32_t offset, RegisterID base) {
-        spew("andb       %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.oneByteOp8(OP_AND_EbGb, offset, base, src);
-    }
-
-    void andb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("andb       %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp8(OP_AND_EbGb, offset, base, index, scale, src);
-    }
-
-    void orb_im(int32_t imm, int32_t offset, RegisterID base) {
-        spew("orb       $%d, " MEM_ob, int8_t(imm), ADDR_ob(offset, base));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_OR);
-        m_formatter.immediate8(imm);
-    }
-
-    void orb_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("orb        $%d, " MEM_obs, int8_t(imm), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_OR);
-        m_formatter.immediate8(imm);
-    }
-
-    void orb_rm(RegisterID src, int32_t offset, RegisterID base) {
-        spew("orb       %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.oneByteOp8(OP_OR_EbGb, offset, base, src);
-    }
-
-    void orb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("orb        %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp8(OP_OR_EbGb, offset, base, index, scale, src);
-    }
-
-    void xorb_im(int32_t imm, int32_t offset, RegisterID base) {
-        spew("xorb       $%d, " MEM_ob, int8_t(imm), ADDR_ob(offset, base));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_XOR);
-        m_formatter.immediate8(imm);
-    }
-
-    void xorb_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("xorb       $%d, " MEM_obs, int8_t(imm), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale, GROUP1_OP_XOR);
-        m_formatter.immediate8(imm);
-    }
-
-    void xorb_rm(RegisterID src, int32_t offset, RegisterID base) {
-        spew("xorb       %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.oneByteOp8(OP_XOR_EbGb, offset, base, src);
-    }
-
-    void xorb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("xorb       %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp8(OP_XOR_EbGb, offset, base, index, scale, src);
-    }
-
     void lock_xaddb_rm(RegisterID srcdest, int32_t offset, RegisterID base)
     {
-        spew("lock xaddb %s, " MEM_ob, GPReg8Name(srcdest), ADDR_ob(offset, base));
+        spew("lock xaddl %s, " MEM_ob, GPReg8Name(srcdest), ADDR_ob(offset, base));
         m_formatter.oneByteOp(PRE_LOCK);
-        m_formatter.twoByteOp8(OP2_XADD_EbGb, offset, base, srcdest);
+        m_formatter.twoByteOp(OP2_XADD_EbGb, offset, base, srcdest);
     }
 
     void lock_xaddb_rm(RegisterID srcdest, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("lock xaddb %s, " MEM_obs, GPReg8Name(srcdest), ADDR_obs(offset, base, index, scale));
+        spew("lock xaddl %s, " MEM_obs, GPReg8Name(srcdest), ADDR_obs(offset, base, index, scale));
         m_formatter.oneByteOp(PRE_LOCK);
-        m_formatter.twoByteOp8(OP2_XADD_EbGb, offset, base, index, scale, srcdest);
+        m_formatter.twoByteOp(OP2_XADD_EbGb, offset, base, index, scale, srcdest);
     }
 
     void lock_xaddl_rm(RegisterID srcdest, int32_t offset, RegisterID base)
@@ -691,12 +565,6 @@ public:
     {
         spew("andl       %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_AND_EvGv, offset, base, src);
-    }
-
-    void andl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("andl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_AND_EvGv, offset, base, index, scale, src);
     }
 
     void andl_ir(int32_t imm, RegisterID dst)
@@ -859,12 +727,6 @@ public:
         m_formatter.oneByteOp(OP_OR_EvGv, offset, base, src);
     }
 
-    void orl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("orl        %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_OR_EvGv, offset, base, index, scale, src);
-    }
-
     void orl_ir(int32_t imm, RegisterID dst)
     {
         spew("orl        $0x%x, %s", imm, GPReg32Name(dst));
@@ -955,12 +817,6 @@ public:
     {
         spew("subl       %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, src);
-    }
-
-    void subl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("subl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_SUB_EvGv, offset, base, index, scale, src);
     }
 
     void subl_ir(int32_t imm, RegisterID dst)
@@ -1059,12 +915,6 @@ public:
     {
         spew("xorl       %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
         m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, src);
-    }
-
-    void xorl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
-    {
-        spew("xorl       %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.oneByteOp(OP_XOR_EvGv, offset, base, index, scale, src);
     }
 
     void xorl_im(int32_t imm, int32_t offset, RegisterID base)
@@ -1286,41 +1136,41 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, offset, base, GROUP5_OP_DEC);
     }
 
-    // Note that CMPXCHG performs comparison against REG = %al/%ax/%eax/%rax.
+    // Note that CMPXCHG performs comparison against REG = %al/%ax/%eax.
     // If %REG == [%base+offset], then %src -> [%base+offset].
     // Otherwise, [%base+offset] -> %REG.
     // For the 8-bit operations src must also be an 8-bit register.
 
-    void cmpxchgb(RegisterID src, int32_t offset, RegisterID base)
+    void cmpxchg8(RegisterID src, int32_t offset, RegisterID base)
     {
-        spew("cmpxchgb   %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
-        m_formatter.twoByteOp8(OP2_CMPXCHG_GvEb, offset, base, src);
+        spew("cmpxchg8   %s, " MEM_ob, GPRegName(src), ADDR_ob(offset, base));
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEb, offset, base, src);
     }
-    void cmpxchgb(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpxchg8(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("cmpxchgb   %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
-        m_formatter.twoByteOp8(OP2_CMPXCHG_GvEb, offset, base, index, scale, src);
+        spew("cmpxchg8   %s, " MEM_obs, GPRegName(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEb, offset, base, index, scale, src);
     }
-    void cmpxchgw(RegisterID src, int32_t offset, RegisterID base)
+    void cmpxchg16(RegisterID src, int32_t offset, RegisterID base)
     {
-        spew("cmpxchgw   %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        spew("cmpxchg16  %s, " MEM_ob, GPRegName(src), ADDR_ob(offset, base));
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, offset, base, src);
     }
-    void cmpxchgw(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpxchg16(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("cmpxchgw   %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        spew("cmpxchg16  %s, " MEM_obs, GPRegName(src), ADDR_obs(offset, base, index, scale));
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, offset, base, index, scale, src);
     }
-    void cmpxchgl(RegisterID src, int32_t offset, RegisterID base)
+    void cmpxchg32(RegisterID src, int32_t offset, RegisterID base)
     {
-        spew("cmpxchgl   %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
+        spew("cmpxchg32  %s, " MEM_ob, GPRegName(src), ADDR_ob(offset, base));
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, offset, base, src);
     }
-    void cmpxchgl(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    void cmpxchg32(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("cmpxchgl   %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        spew("cmpxchg32  %s, " MEM_obs, GPRegName(src), ADDR_obs(offset, base, index, scale));
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, offset, base, index, scale, src);
     }
 
@@ -1905,7 +1755,7 @@ public:
     void movb_ir(int32_t imm, RegisterID reg)
     {
         spew("movb       $0x%x, %s", imm, GPReg8Name(reg));
-        m_formatter.oneByteOp8(OP_MOV_EbIb, reg);
+        m_formatter.oneByteOp(OP_MOV_EbGv, reg);
         m_formatter.immediate8(imm);
     }
 
@@ -4850,13 +4700,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             m_buffer.putByteUnchecked(opcode);
         }
 
-        void oneByteOp8(OneByteOpcodeID opcode, RegisterID r)
-        {
-            m_buffer.ensureSpace(MaxInstructionSize);
-            emitRexIf(byteRegRequiresRex(r), 0, 0, r);
-            m_buffer.putByteUnchecked(opcode + (r & 7));
-        }
-
         void oneByteOp8(OneByteOpcodeID opcode, RegisterID rm, GroupOpcodeID groupOp)
         {
             m_buffer.ensureSpace(MaxInstructionSize);
@@ -4915,26 +4758,6 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(rm, reg);
-        }
-
-        void twoByteOp8(TwoByteOpcodeID opcode, int32_t offset, RegisterID base, RegisterID reg)
-        {
-            m_buffer.ensureSpace(MaxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg)|regRequiresRex(base), reg, 0, base);
-            m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
-            m_buffer.putByteUnchecked(opcode);
-            memoryModRM(offset, base, reg);
-        }
-
-        void twoByteOp8(TwoByteOpcodeID opcode, int32_t offset, RegisterID base, RegisterID index,
-                        int scale, RegisterID reg)
-        {
-            m_buffer.ensureSpace(MaxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg)|regRequiresRex(base)|regRequiresRex(index),
-                      reg, index, base);
-            m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
-            m_buffer.putByteUnchecked(opcode);
-            memoryModRM(offset, base, index, scale, reg);
         }
 
         // Like twoByteOp8 but doesn't add a REX prefix if the destination reg
@@ -5124,8 +4947,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         //
         // NB: WebKit's use of emitRexIf() is limited such that the
         // reqRequiresRex() checks are not needed. SpiderMonkey extends
-        // oneByteOp8 and twoByteOp8 functionality such that r, x, and b
-        // can all be used.
+        // oneByteOp8 functionality such that r, x, and b can all be used.
         void emitRexIf(bool condition, int r, int x, int b)
         {
             if (condition ||
