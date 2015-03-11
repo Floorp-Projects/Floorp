@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://browser/locale/devtools/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/project-listing.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/project-listing.js"></script>
+  </head>
+  <body>
+    <div id="project-panel">
+      <div id="project-panel-box">
+        <button class="panel-item project-panel-item-newapp" id="new-app">&projectMenu_newApp_label;</button>
+        <button class="panel-item project-panel-item-openpackaged" id="packaged-app">&projectMenu_importPackagedApp_label;</button>
+        <button class="panel-item project-panel-item-openhosted" id="hosted-app">&projectMenu_importHostedApp_label;</button>
+        <label class="panel-header">&projectPanel_myProjects;</label>
+        <div id="project-panel-projects"></div>
+        <label class="panel-header" id="panel-header-runtimeapps" hidden="true">&projectPanel_runtimeApps;</label>
+        <div id="project-panel-runtimeapps"/>
+        <label class="panel-header" id="panel-header-tabs" hidden="true">&projectPanel_tabs;</label>
+        <div id="project-panel-tabs"/>
+      </div>
+    </div>
+  </body>
+</html>

@@ -151,6 +151,44 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   max-width: 400px;
 }
 
+#project-listing-panel {
+  display: none;
+  position: relative;
+  max-width: 250px;
+  overflow: hidden;
+}
+
+#project-listing-wrapper {
+  height: 100%;
+  width: 100%;
+  min-width: 100px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+
+#project-listing-panel-details {
+  height: inherit;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+
+/* TODO: remove once Bug 1079347 is complete */
+.project-listing, #project-listing-splitter {
+  display: none;
+}
+
+#project-listing-splitter[sidebar-displayed], #project-listing-panel[sidebar-displayed],
+#project-listing-panel[sidebar-displayed] .project-listing {
+  display: block;
+}
+
 .panel-item {
   padding: 3px 12px;
   margin: 0;
@@ -280,14 +318,6 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 }
 
 .devtools-horizontal-splitter {
-  -moz-appearance: none;
-  background-image: none;
-  background-color: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(118, 121, 125, .5);
-  min-height: 3px;
-  height: 3px;
-  margin-top: -3px;
   position: relative;
   border-bottom: 1px solid #aaa;
 }

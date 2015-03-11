@@ -175,6 +175,71 @@ function run_test() {
   });
 }
 
+add_task(function test_relatedLinksMap() {
+  let relatedTile1 = {
+    url: "http://turbotax.com",
+    type: "related",
+    lastVisitDate: 4,
+    related: [
+      "taxact.com",
+      "hrblock.com",
+      "1040.com",
+      "taxslayer.com"
+    ]
+  };
+  let relatedTile2 = {
+    url: "http://irs.gov",
+    type: "related",
+    lastVisitDate: 3,
+    related: [
+      "taxact.com",
+      "hrblock.com",
+      "freetaxusa.com",
+      "taxslayer.com"
+    ]
+  };
+  let relatedTile3 = {
+    url: "http://hrblock.com",
+    type: "related",
+    lastVisitDate: 2,
+    related: [
+      "taxact.com",
+      "freetaxusa.com",
+      "1040.com",
+      "taxslayer.com"
+    ]
+  };
+  let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Related_Site"};
+  let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  // Ensure the related tiles were not considered directory tiles.
+  do_check_eq(links.length, 1);
+  let expected_data = [{url: "http://someothersite.com", title: "Not_A_Related_Site", frecency: DIRECTORY_FRECENCY, lastVisitDate: 1}];
+  isIdentical(links, expected_data);
+
+  // Check for correctly saved related tiles data.
+  expected_data = {
+    "taxact.com": [relatedTile1, relatedTile2, relatedTile3],
+    "hrblock.com": [relatedTile1, relatedTile2],
+    "1040.com": [relatedTile1, relatedTile3],
+    "taxslayer.com": [relatedTile1, relatedTile2, relatedTile3],
+    "freetaxusa.com": [relatedTile2, relatedTile3],
+  };
+
+  DirectoryLinksProvider._relatedLinks.forEach((relatedLinks, site) => {
+    let relatedLinksItr = relatedLinks.values();
+    for (let link of expected_data[site]) {
+      isIdentical(relatedLinksItr.next().value, link);
+    }
+  })
+
+  yield promiseCleanDirectoryLinksProvider();
+});
+
 add_task(function test_reportSitesAction() {
   yield DirectoryLinksProvider.init();
   let deferred, expectedPath, expectedPost;
