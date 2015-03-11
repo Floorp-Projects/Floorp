@@ -6949,11 +6949,8 @@ EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ClassNames *names = classNode.names();
 
     ParseNode *heritageExpression = classNode.heritage();
-    LexicalScopeNode *innerBlock = classNode.scope();
 
-    ParseNode *classMethods = innerBlock->pn_expr;
-    MOZ_ASSERT(classMethods->isKind(PNK_CLASSMETHODLIST));
-
+    ParseNode *classMethods = classNode.methodList();
     ParseNode *constructor = nullptr;
     for (ParseNode *mn = classMethods->pn_head; mn; mn = mn->pn_next) {
         ClassMethod &method = mn->as<ClassMethod>();
@@ -6970,8 +6967,10 @@ EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     bool savedStrictness = bce->sc->setLocalStrictMode(true);
 
     StmtInfoBCE stmtInfo(cx);
-    if (!EnterBlockScope(cx, bce, &stmtInfo, innerBlock->pn_objbox, JSOP_UNINITIALIZED))
-        return false;
+    if (names) {
+        if (!EnterBlockScope(cx, bce, &stmtInfo, classNode.scopeObject(), JSOP_UNINITIALIZED))
+            return false;
+    }
 
     if (heritageExpression) {
         if (!EmitTree(cx, bce, heritageExpression))
@@ -7009,20 +7008,28 @@ EmitClass(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
-    // That DEFCONST is never gonna be used, but use it here for logical consistency.
-    ParseNode *innerName = names->innerBinding();
-    if (!EmitLexicalInitialization(cx, bce, innerName, JSOP_DEFCONST))
-        return false;
+    bool shouldPopResult = false;
+    if (names) {
+        // That DEFCONST is never gonna be used, but use it here for logical consistency.
+        ParseNode *innerName = names->innerBinding();
+        if (!EmitLexicalInitialization(cx, bce, innerName, JSOP_DEFCONST))
+            return false;
 
-    if (!LeaveNestedScope(cx, bce, &stmtInfo))
-        return false;
+        if (!LeaveNestedScope(cx, bce, &stmtInfo))
+            return false;
 
-    ParseNode *outerName = names->outerBinding();
-    if (!EmitLexicalInitialization(cx, bce, outerName, JSOP_DEFVAR))
-        return false;
+        ParseNode *outerName = names->outerBinding();
+        if (outerName) {
+            if (!EmitLexicalInitialization(cx, bce, outerName, JSOP_DEFVAR))
+                return false;
+            shouldPopResult = true;
+        }
+    }
 
-    if (Emit1(cx, bce, JSOP_POP) < 0)
-        return false;
+    if (shouldPopResult) {
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
+    }
 
     MOZ_ALWAYS_TRUE(bce->sc->setLocalStrictMode(savedStrictness));
 
