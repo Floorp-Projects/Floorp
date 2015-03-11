@@ -1,15 +1,3 @@
-if (typeof ok !== "function") {
-  function ok(a, msg) {
-    postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-  }
-}
-
-if (typeof is !== "function") {
-  function is(a, b, msg) {
-    postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-  }
-}
-
 var path = "/tests/dom/base/test/";
 
 function isOpaqueResponse(response) {
@@ -1261,17 +1249,9 @@ function testRedirects() {
 }
 
 function runTest() {
-  var done = function() {
-    if (typeof SimpleTest === "object") {
-      SimpleTest.finish();
-    } else {
-      postMessage({ type: 'finish' });
-    }
-  }
-
   testNoCorsCtor();
 
-  Promise.resolve()
+  return Promise.resolve()
     .then(testModeSameOrigin)
     .then(testModeNoCors)
     .then(testModeCors)
@@ -1279,11 +1259,4 @@ function runTest() {
     .then(testCrossOriginCredentials)
     .then(testRedirects)
     // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some test failed " + e);
-      done();
-    });
 }
-
-onmessage = runTest;
