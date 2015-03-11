@@ -980,9 +980,11 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   ParentLayerPoint translation = userScroll - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(asyncZoom, -translation);
 
-  SetShadowTransform(aLayer, oldTransform * treeTransform);
-  NS_ASSERTION(!aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation(),
-               "overwriting animated transform!");
+  // Apply the tree transform on top of GetLocalTransform() here (rather than
+  // GetTransform()) in case the OMTA code in SampleAnimations already set a
+  // shadow transform; in that case we want to apply ours on top of that one
+  // rather than clobber it.
+  SetShadowTransform(aLayer, aLayer->GetLocalTransform() * treeTransform);
 
   // Make sure that overscroll and under-zoom are represented in the old
   // transform so that fixed position content moves and scales accordingly.
