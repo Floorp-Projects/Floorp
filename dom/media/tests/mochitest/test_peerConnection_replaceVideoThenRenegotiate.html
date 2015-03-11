@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1017888",
+    title: "Renegotiation: replaceTrack followed by adding a second video stream"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video:true}], [{video:true}]);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_REPLACE_VIDEO_TRACK_THEN_ADD_SECOND_STREAM(test) {
+          var oldstream = test.pcLocal._pc.getLocalStreams()[0];
+          var oldtrack = oldstream.getVideoTracks()[0];
+          var sender = test.pcLocal._pc.getSenders()[0];
+          return navigator.mediaDevices.getUserMedia({video:true, fake:true})
+            .then(newstream => {
+              var newtrack = newstream.getVideoTracks()[0];
+              return test.pcLocal.senderReplaceTrack(0, newtrack);
+            })
+            .then(() => {
+              test.setMediaConstraints([{video: true}, {video: true}],
+                                       [{video: true}]);
+              return test.pcLocal.getAllUserMedia([{video: true}]);
+            });
+        },
+      ]
+    );
+
+    // TODO(bug 1093835):
+    // figure out how to verify if media flows through the new stream
+    // figure out how to verify that media stopped flowing from old stream
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
