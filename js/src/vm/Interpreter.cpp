@@ -1650,7 +1650,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
 CASE(JSOP_UNUSED83)
 CASE(JSOP_UNUSED92)
@@ -3526,6 +3525,39 @@ CASE(JSOP_ARRAYPUSH)
     REGS.sp -= 2;
 }
 END_CASE(JSOP_ARRAYPUSH)
+
+CASE(JSOP_CLASSHERITAGE)
+{
+    RootedValue &val = rootValue0;
+    val = REGS.sp[-1];
+
+    RootedValue &objProto = rootValue1;
+    RootedObject &funcProto = rootObject0;
+    if (val.isNull()) {
+        objProto.setNull();
+        if (!GetBuiltinPrototype(cx, JSProto_Function, &funcProto))
+            goto error;
+    } else {
+        if (!val.isObject() || !val.toObject().isConstructor()) {
+            ReportIsNotFunction(cx, val, 0, CONSTRUCT);
+            goto error;
+        }
+
+        funcProto = &val.toObject();
+
+        if (!GetProperty(cx, funcProto, funcProto, cx->names().prototype, &objProto))
+            goto error;
+
+        if (!objProto.isObjectOrNull()) {
+            ReportValueError(cx, JSMSG_PROTO_NOT_OBJORNULL, -1, objProto, NullPtr());
+            goto error;
+        }
+    }
+
+    REGS.sp[-1] = objProto;
+    PUSH_OBJECT(*funcProto);
+}
+END_CASE(JSOP_CLASSHERITAGE)
 
 DEFAULT()
 {
