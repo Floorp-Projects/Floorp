@@ -154,6 +154,38 @@ NfcConnector::GetSocketAddr(const sockaddr_any& aAddr,
 }
 
 //
+// NfcListenSocket
+//
+
+NfcListenSocket::NfcListenSocket(NfcSocketListener* aListener)
+  : mListener(aListener)
+{ }
+
+void
+NfcListenSocket::OnConnectSuccess()
+{
+  if (mListener) {
+    mListener->OnConnectSuccess(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+void
+NfcListenSocket::OnConnectError()
+{
+  if (mListener) {
+    mListener->OnConnectError(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+void
+NfcListenSocket::OnDisconnect()
+{
+  if (mListener) {
+    mListener->OnDisconnect(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+//
 // NfcConsumer
 //
 
