@@ -992,8 +992,8 @@ MarkThisAndArguments(JSTracer *trc, const JitFrameIterator &frame)
 {
     // Mark |this| and any extra actual arguments for an Ion frame. Marking of
     // formal arguments is taken care of by the frame's safepoint/snapshot,
-    // except when the script's lazy arguments object aliases those formals,
-    // in which case we mark them as well.
+    // except when the script might have lazy arguments, in which case we mark
+    // them as well.
 
     JitFrameLayout *layout = frame.jsFrame();
 
@@ -1001,7 +1001,7 @@ MarkThisAndArguments(JSTracer *trc, const JitFrameIterator &frame)
     size_t nformals = 0;
     if (CalleeTokenIsFunction(layout->calleeToken())) {
         JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
-        nformals = fun->nonLazyScript()->argumentsAliasesFormals() ? 0 : fun->nargs();
+        nformals = fun->nonLazyScript()->argumentsHasVarBinding() ? 0 : fun->nargs();
     }
 
     Value *argv = layout->argv();
