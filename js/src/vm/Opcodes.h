@@ -480,7 +480,15 @@
      *   Stack: callee, this, args => rval
      */ \
     macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
-    macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Writes the [[Prototype]] objects for both a class and its .prototype to
+     * the stack, given the result of a heritage expression.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: heritage => objProto, funcProto
+     */ \
+    macro(JSOP_CLASSHERITAGE,  51, "classheritage",   NULL,         1,  1,  2,  JOF_BYTE) \
     macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
     /*
