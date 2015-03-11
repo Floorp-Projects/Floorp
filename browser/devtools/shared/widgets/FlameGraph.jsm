@@ -196,7 +196,9 @@ FlameGraph.prototype = {
     this._window.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
-    ownerWindow.removeEventListener("resize", this._onResize);
+    if (ownerWindow) {
+      ownerWindow.removeEventListener("resize", this._onResize);
+    }
 
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
