@@ -7488,7 +7488,6 @@ class MElements
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition *store) const;
 
     ALLOW_CLONE(MElements)
 };
@@ -7676,7 +7675,6 @@ class MInitializedLength
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition *store) const;
 
     void computeRange(TempAllocator &alloc) MOZ_OVERRIDE;
 
@@ -8180,7 +8178,6 @@ class MLoadElement
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::Element);
     }
-    bool mightAlias(const MDefinition *store) const;
 
     ALLOW_CLONE(MLoadElement)
 };

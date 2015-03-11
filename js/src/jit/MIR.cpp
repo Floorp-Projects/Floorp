@@ -4108,57 +4108,6 @@ MLoadElement::foldsTo(TempAllocator &alloc)
     return foldsToStoredValue(alloc, store->value());
 }
 
-static inline const MDefinition *
-GetStoreObject(const MDefinition *store)
-{
-    switch (store->op()) {
-      case MDefinition::Op_StoreElement:
-        return store->toStoreElement()->elements()->toElements()->input();
-
-      case MDefinition::Op_StoreElementHole:
-        return store->toStoreElementHole()->object();
-
-      default:
-        return nullptr;
-    }
-}
-
-static inline const MElements *
-MaybeUnwrapElements(const MDefinition *elements)
-{
-    if (elements->isConvertElementsToDoubles())
-        return elements->toConvertElementsToDoubles()->elements()->toElements();
-
-    return elements->toElements();
-}
-
-bool
-MElements::mightAlias(const MDefinition *store) const
-{
-    if (!input()->resultTypeSet())
-        return true;
-
-    const MDefinition *storeObj = GetStoreObject(store);
-    if (!storeObj)
-        return true;
-    if (!storeObj->resultTypeSet())
-        return true;
-
-    return input()->resultTypeSet()->objectsIntersect(storeObj->resultTypeSet());
-}
-
-bool
-MLoadElement::mightAlias(const MDefinition *store) const
-{
-    return MaybeUnwrapElements(elements())->mightAlias(store);
-}
-
-bool
-MInitializedLength::mightAlias(const MDefinition *store) const
-{
-    return MaybeUnwrapElements(elements())->mightAlias(store);
-}
-
 bool
 MGuardReceiverPolymorphic::congruentTo(const MDefinition *ins) const
 {
