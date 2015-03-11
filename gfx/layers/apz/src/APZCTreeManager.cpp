@@ -843,8 +843,8 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                          scrollMode,
                          ScrollWheelInput::SCROLLDELTA_LINE,
                          origin,
-                         aEvent.lineOrPageDeltaX,
-                         aEvent.lineOrPageDeltaY);
+                         aEvent.deltaX,
+                         aEvent.deltaY);
 
   nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
   aEvent.refPoint.x = input.mOrigin.x;
@@ -856,7 +856,8 @@ bool
 APZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE;
+         aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+         !gfxPrefs::MouseWheelHasScrollDeltaOverride();
 }
 
 nsEventStatus
