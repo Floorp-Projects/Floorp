@@ -205,12 +205,15 @@
                        oncommand="close();"/>
     </content>
 
-    <implementation implements="nsIDOMEventListener, nsIEditActionListener">
+    <implementation implements="nsIMessageListener, nsIEditActionListener">
+      <!-- Please keep in sync with toolkit/content/browser-content.js -->
       <field name="FIND_NORMAL">0</field>
       <field name="FIND_TYPEAHEAD">1</field>
       <field name="FIND_LINKS">2</field>
 
-      <field name="_findMode">0</field>
+      <field name="__findMode">0</field>
+      <property name="_findMode" onget="return this.__findMode;"
+                onset="this.__findMode = val; this._updateBrowserWithState(); return val;"/>
 
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
@@ -262,15 +265,11 @@
           return this._browser;
         ]]></getter>
         <setter><![CDATA[
-          // A shortcut for the service.
-          let els = Components.classes["@mozilla.org/eventlistenerservice;1"].
-            getService(Components.interfaces.nsIEventListenerService);
-
           if (this._browser) {
-            els.removeSystemEventListener(this._browser, "keypress", this,
-                                          false);
-            els.removeSystemEventListener(this._browser, "mouseup", this,
-                                          false);
+            if (this._browser.messageManager) {
+              this._browser.messageManager.removeMessageListener("Findbar:Keypress", this);
+              this._browser.messageManager.removeMessageListener("Findbar:Mouseup", this);
+            }
             let finder = this._browser.finder;
             if (finder)
               finder.removeResultListener(this);
@@ -278,8 +277,10 @@
 
           this._browser = val;
           if (this._browser) {
-            els.addSystemEventListener(this._browser, "keypress", this, false);
-            els.addSystemEventListener(this._browser, "mouseup", this, false);
+            // Need to do this in case FAYT
+            this._updateBrowserWithState();
+            this._browser.messageManager.addMessageListener("Findbar:Keypress", this);
+            this._browser.messageManager.addMessageListener("Findbar:Mouseup", this);
             this._browser.finder.addResultListener(this);
 
             this._findField.value = this._browser._lastSearchString;
@@ -310,7 +311,8 @@
 
           switch (aPrefName) {
             case "accessibility.typeaheadfind":
-              this._self._useTypeAheadFind = prefsvc.getBoolPref(aPrefName);
+              this._self._findAsYouType = prefsvc.getBoolPref(aPrefName);
+              this._self._updateBrowserWithState();
               break;
             case "accessibility.typeaheadfind.linksonly":
               this._self._typeAheadLinksOnly = prefsvc.getBoolPref(aPrefName);
@@ -353,7 +355,7 @@
         prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
                             this._observer, false);
 
-        this._useTypeAheadFind =
+        this._findAsYouType =
           prefsvc.getBoolPref("accessibility.typeaheadfind");
         this._typeAheadLinksOnly =
           prefsvc.getBoolPref("accessibility.typeaheadfind.linksonly");
@@ -708,86 +710,6 @@
         ]]></body>
       </method>
 
-      <!--
-        - Returns true if |aMimeType| is text-based, or false otherwise.
-        -
-        - @param aMimeType
-        -        The MIME type to check.
-        -
-        - if adding types to this function, please see the similar function
-        - in browser/base/content/browser.js
-        -->
-      <method name="_mimeTypeIsTextBased">
-        <parameter name="aMimeType"/>
-        <body><![CDATA[
-          return /^text\/|\+xml$/.test(aMimeType) ||
-                 aMimeType == "application/x-javascript" ||
-                 aMimeType == "application/javascript" ||
-                 aMimeType == "application/json" ||
-                 aMimeType == "application/xml";
-        ]]></body>
-      </method>
-
-      <!--
-        - Returns whether FAYT can be used for the given event in
-        - the current content state.
-        -->
-      <method name="_shouldFastFind">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey ||
-              aEvent.defaultPrevented)
-            return false;
-
-          let {BrowserUtils} = Components.utils.import("resource://gre/modules/BrowserUtils.jsm", {});
-          let [elt, win] = BrowserUtils.getFocusSync(document);
-
-          if (elt) {
-            if (elt instanceof HTMLInputElement && elt.mozIsTextField(false))
-              return false;
-
-            if (elt.isContentEditable)
-              return false;
-
-            if (elt instanceof HTMLTextAreaElement ||
-                elt instanceof HTMLSelectElement ||
-                elt instanceof HTMLObjectElement ||
-                elt instanceof HTMLEmbedElement)
-              return false;
-          }
-
-          if (win && !this._mimeTypeIsTextBased(win.document.contentType))
-              return false;
-
-          // disable FAYT in about:blank to prevent FAYT opening unexpectedly.
-          let url = this.browser.currentURI;
-          if (url.spec == "about:blank")
-            return false;
-
-          // disable FAYT in documents that ask for it to be disabled.
-          if ((url.schemeIs("about") || url.schemeIs("chrome")) &&
-              (win.document.documentElement &&
-               win.document.documentElement.getAttribute("disablefastfind") == "true"))
-            return false;
-
-          if (win) {
-            try {
-              let editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                   .getInterface(Components.interfaces.nsIWebNavigation)
-                                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                   .getInterface(Components.interfaces.nsIEditingSession);
-              if (editingSession.windowIsEditable(win))
-                return false;
-            }
-            catch (e) {
-              // If someone built with composer disabled, we can't get an editing session.
-            }
-         }
-
-          return true;
-        ]]></body>
-      </method>
-
       <method name="_shouldBeCaseSensitive">
         <parameter name="aString"/>
         <body><![CDATA[
@@ -800,32 +722,33 @@
         ]]></body>
       </method>
 
+      <!-- We get a fake event object through an IPC message which contains the
+           data we need to make a decision. We then return |true| if and only if
+           the page gets to deal with the event itself. Everywhere we return
+           false, the message sender will take care of calling event.preventDefault
+           on the real event. -->
       <method name="_onBrowserKeypress">
-        <parameter name="aEvent"/>
+        <parameter name="aFakeEvent"/>
         <body><![CDATA[
-          const TAF_LINKS_KEY = "'";
-          const TAF_TEXT_KEY = "/";
-
-          if (!this._shouldFastFind(aEvent))
-            return;
+          const FAYT_LINKS_KEY = "'";
+          const FAYT_TEXT_KEY = "/";
 
           if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
-            if (!aEvent.charCode)
-              return;
+            if (!aFakeEvent.charCode)
+              return true;
 
             this._findField.select();
             this._findField.focus();
-            this._dispatchKeypressEvent(this._findField.inputField, aEvent);
-            aEvent.preventDefault();
-            return;
+            this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
+            return false;
           }
 
-          let key = aEvent.charCode ? String.fromCharCode(aEvent.charCode) : null;
-          let manualstartFAYT = (key == TAF_LINKS_KEY || key == TAF_TEXT_KEY);
-          let autostartFAYT = !manualstartFAYT && this._useTypeAheadFind &&
+          let key = aFakeEvent.charCode ? String.fromCharCode(aFakeEvent.charCode) : null;
+          let manualstartFAYT = (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY);
+          let autostartFAYT = !manualstartFAYT && this._findAsYouType &&
                               key && key != " ";
           if (manualstartFAYT || autostartFAYT) {
-            let mode = (key == TAF_LINKS_KEY ||
+            let mode = (key == FAYT_LINKS_KEY ||
                         (autostartFAYT && this._typeAheadLinksOnly)) ?
               this.FIND_LINKS : this.FIND_TYPEAHEAD;
 
@@ -839,28 +762,41 @@
             this._findField.focus();
 
             if (autostartFAYT)
-              this._dispatchKeypressEvent(this._findField.inputField, aEvent);
+              this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
             else
               this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
 
-            aEvent.preventDefault();
+            return false;
           }
         ]]></body>
       </method>
 
-      <!-- See nsIDOMEventListener -->
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
+      <!-- See nsIMessageListener -->
+      <method name="receiveMessage">
+        <parameter name="aMessage"/>
         <body><![CDATA[
-          switch (aEvent.type) {
-            case "mouseup":
+          if (aMessage.target != this._browser) {
+            return;
+          }
+          switch (aMessage.name) {
+            case "Findbar:Mouseup":
               if (!this.hidden && this._findMode != this.FIND_NORMAL)
                 this.close();
+              break;
 
-              break;
-            case "keypress":
-              this._onBrowserKeypress(aEvent);
-              break;
+            case "Findbar:Keypress":
+              return this._onBrowserKeypress(aMessage.data);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_updateBrowserWithState">
+        <body><![CDATA[
+          if (this._browser && this._browser.messageManager) {
+            this._browser.messageManager.sendAsyncMessage("Findbar:UpdateState", {
+              findMode: this._findMode,
+              findAsYouType: this._findAsYouType,
+            });
           }
         ]]></body>
       </method>
