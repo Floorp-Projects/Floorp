@@ -163,26 +163,26 @@ public:
                                           const int32_t& aY) MOZ_OVERRIDE;
 
   virtual bool RecvReplaceText(const uint64_t& aID,
-                               const nsString& aText);
+                               const nsString& aText) MOZ_OVERRIDE;
 
   virtual bool RecvInsertText(const uint64_t& aID,
                               const nsString& aText,
-                              const int32_t& aPosition);
+                              const int32_t& aPosition) MOZ_OVERRIDE;
 
   virtual bool RecvCopyText(const uint64_t& aID,
                             const int32_t& aStartPos,
-                            const int32_t& aEndPos);
+                            const int32_t& aEndPos) MOZ_OVERRIDE;
 
   virtual bool RecvCutText(const uint64_t& aID,
                            const int32_t& aStartPos,
-                           const int32_t& aEndPos);
+                           const int32_t& aEndPos) MOZ_OVERRIDE;
 
   virtual bool RecvDeleteText(const uint64_t& aID,
                               const int32_t& aStartPos,
-                              const int32_t& aEndPos);
+                              const int32_t& aEndPos) MOZ_OVERRIDE;
 
   virtual bool RecvPasteText(const uint64_t& aID,
-                             const int32_t& aPosition);
+                             const int32_t& aPosition) MOZ_OVERRIDE;
 
 private:
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,

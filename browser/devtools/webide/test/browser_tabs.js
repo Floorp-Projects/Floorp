@@ -50,7 +50,7 @@ function connectToLocal(win) {
 function selectTabProject(win) {
   return Task.spawn(function() {
     yield win.AppManager.listTabs();
-    win.Cmds.showProjectPanel();
+    win.projectList.update();
     yield nextTick();
     let tabsNode = win.document.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];

@@ -242,13 +242,12 @@ NS_IMPL_ISUPPORTS(AppCacheClearDataObserver, nsIObserver)
 void
 nsApplicationCacheService::AppClearDataObserverInit()
 {
-    nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
-        nsRefPtr<AppCacheClearDataObserver> obs
-            = new AppCacheClearDataObserver();
-        observerService->AddObserver(obs, TOPIC_WEB_APP_CLEAR_DATA,
-                                     /*holdsWeak=*/ false);
-    }
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    nsRefPtr<AppCacheClearDataObserver> obs
+      = new AppCacheClearDataObserver();
+    observerService->AddObserver(obs, TOPIC_WEB_APP_CLEAR_DATA,
+				 /*holdsWeak=*/ false);
+  }
 }
 
