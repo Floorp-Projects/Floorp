@@ -95,9 +95,22 @@ static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
         } \
     } while (0)
 
+namespace js {
+namespace oom {
+static inline bool ShouldFailWithOOM()
+{
+    if (++OOM_counter > OOM_maxAllocations) {
+        JS_OOM_CALL_BP_FUNC();
+        return true;
+    }
+    return false;
+}
+}
+}
 # else
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #  define JS_OOM_POSSIBLY_FAIL_BOOL() do {} while(0)
+namespace js { namespace oom { static inline bool ShouldFailWithOOM() { return false; } } }
 # endif /* DEBUG || JS_OOM_BREAKPOINT */
 
 static inline void* js_malloc(size_t bytes)
