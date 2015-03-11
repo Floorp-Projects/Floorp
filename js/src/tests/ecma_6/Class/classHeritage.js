@@ -4,6 +4,9 @@ var test = `
 assertThrowsInstanceOf(() => eval(\`class a extends Math.sin {
                                         constructor() { }
                                     }\`), TypeError);
+assertThrowsInstanceOf(() => eval(\`(class a extends Math.sin {
+                                        constructor() { }
+                                    })\`), TypeError);
 
 // Unless it's null, in which case it works like a normal class, except that
 // the prototype object does not inherit from Object.prototype.
@@ -13,14 +16,19 @@ class basic {
 class nullExtends extends null {
     constructor() { }
 }
-assertEq(Object.getPrototypeOf(basic), Function.prototype);
-assertEq(Object.getPrototypeOf(nullExtends), Function.prototype);
-assertEq(Object.getPrototypeOf(basic.prototype), Object.prototype);
-assertEq(Object.getPrototypeOf(nullExtends.prototype), null);
+var nullExtendsExpr = class extends null { constructor() { } };
 
-var baseMethodCalled = false;
-var staticMethodCalled = false;
-var overrideCalled = "";
+assertEq(Object.getPrototypeOf(basic), Function.prototype);
+assertEq(Object.getPrototypeOf(basic.prototype), Object.prototype);
+
+for (let extension of [nullExtends, nullExtendsExpr]) {
+    assertEq(Object.getPrototypeOf(extension), Function.prototype);
+    assertEq(Object.getPrototypeOf(extension.prototype), null);
+}
+
+var baseMethodCalled;
+var staticMethodCalled;
+var overrideCalled;
 class base {
     constructor() { };
     method() { baseMethodCalled = true; }
@@ -31,22 +39,32 @@ class derived extends base {
     constructor() { };
     override() { overrideCalled = "derived"; }
 }
+var derivedExpr = class extends base {
+    constructor() { };
+    override() { overrideCalled = "derived"; }
+};
 
 // Make sure we get the right object layouts.
-assertEq(Object.getPrototypeOf(derived), base);
-assertEq(Object.getPrototypeOf(derived.prototype), base.prototype);
+for (let extension of [derived, derivedExpr]) {
+    baseMethodCalled = false;
+    staticMethodCalled = false;
+    overrideCalled = "";
+    // Make sure we get the right object layouts.
+    assertEq(Object.getPrototypeOf(extension), base);
+    assertEq(Object.getPrototypeOf(extension.prototype), base.prototype);
 
-// We do inherit the methods, right?
-(new derived()).method();
-assertEq(baseMethodCalled, true);
+    // We do inherit the methods, right?
+    (new extension()).method();
+    assertEq(baseMethodCalled, true);
 
-// But we can still override them?
-(new derived()).override();
-assertEq(overrideCalled, "derived");
+    // But we can still override them?
+    (new extension()).override();
+    assertEq(overrideCalled, "derived");
 
-// What about the statics?
-derived.staticMethod();
-assertEq(staticMethodCalled, true);
+    // What about the statics?
+    extension.staticMethod();
+    assertEq(staticMethodCalled, true);
+}
 
 // Gotta extend an object, or null.
 function nope() {
@@ -54,7 +72,13 @@ function nope() {
         constructor() { }
     }
 }
+function nopeExpr() {
+    (class extends "Bar" {
+        constructor() { }
+     });
+}
 assertThrowsInstanceOf(nope, TypeError);
+assertThrowsInstanceOf(nopeExpr, TypeError);
 
 // The .prototype of the extension must be an object, or null.
 nope.prototype = "not really, no";
@@ -63,7 +87,13 @@ function stillNo() {
         constructor() { }
     }
 }
+function stillNoExpr() {
+    (class extends nope {
+        constructor() { }
+     });
+}
 assertThrowsInstanceOf(stillNo, TypeError);
+assertThrowsInstanceOf(stillNoExpr, TypeError);
 
 `;
 
