@@ -857,7 +857,7 @@ class GCRuntime
     Chunk *pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
     ArenaHeader *allocateArena(Chunk *chunk, Zone *zone, AllocKind kind, const AutoLockGC &lock);
-    inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
+    void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
     // Allocator internals
     bool gcIfNeededPerAllocation(JSContext *cx);
