@@ -177,11 +177,25 @@ MarkerDetails.prototype = {
     labelName.setAttribute("value", L10N.getStr(property));
     parent.appendChild(labelName);
 
+    let wasAsyncParent = false;
     while (frameIndex > 0) {
       let frame = frames[frameIndex];
       let url = frame.source;
       let displayName = frame.functionDisplayName;
       let line = frame.line;
+
+      // If the previous frame had an async parent, then the async
+      // cause is in this frame and should be displayed.
+      if (wasAsyncParent) {
+        let asyncBox = this._document.createElement("hbox");
+        let asyncLabel = this._document.createElement("label");
+        asyncLabel.className = "devtools-monospace";
+        asyncLabel.setAttribute("value", L10N.getFormatStr("timeline.markerDetail.asyncStack",
+                                                           frame.asyncCause));
+        asyncBox.appendChild(asyncLabel);
+        parent.appendChild(asyncBox);
+        wasAsyncParent = false;
+      }
 
       let hbox = this._document.createElement("hbox");
 
@@ -219,7 +233,12 @@ MarkerDetails.prototype = {
 
       parent.appendChild(hbox);
 
-      frameIndex = frame.parent;
+      if (frame.asyncParent) {
+        frameIndex = frame.asyncParent;
+        wasAsyncParent = true;
+      } else {
+        frameIndex = frame.parent;
+      }
     }
   },
 
