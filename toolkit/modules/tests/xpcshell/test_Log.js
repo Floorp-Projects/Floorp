@@ -6,6 +6,7 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
+Cu.import("resource://gre/modules/Promise.jsm")
 Cu.import("resource://gre/modules/Log.jsm");
 
 let testFormatter = {
@@ -573,6 +574,7 @@ add_task(function format_errors() {
 
   // Test that JS-generated Errors are recognized and formatted.
   try {
+    yield Promise.resolve();  // Scrambles the stack
     eval("javascript syntax error");
   }
   catch (e) {
@@ -581,5 +583,10 @@ add_task(function format_errors() {
     // Make sure we identified it as an Error and formatted the error location as
     // lineNumber:columnNumber.
     do_check_true(str.contains(":1:11)"));
+    // Make sure that we use human-readable stack traces
+    // Check that the error doesn't contain any reference to "Promise.jsm" or "Task.jsm"
+    do_check_false(str.contains("Promise.jsm"));
+    do_check_false(str.contains("Task.jsm"));
+    do_check_true(str.contains("format_errors"));
   }
 });
