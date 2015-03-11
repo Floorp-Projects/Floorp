@@ -57,8 +57,11 @@ function updateIndicatorState() {
   // Screen sharing button tooltip.
   let screenShareButton = document.getElementById("screenShareButton");
   if (webrtcUI.showScreenSharingIndicator) {
-    let stringId = "webrtcIndicator.sharing" +
-                   webrtcUI.showScreenSharingIndicator + ".tooltip";
+    // This can be removed once strings are added for type 'Browser' in bug 1142066.
+    let typeForL10n = webrtcUI.showScreenSharingIndicator;
+    if (typeForL10n == "Browser")
+      typeForL10n = "Window";
+    let stringId = "webrtcIndicator.sharing" + typeForL10n + ".tooltip";
     screenShareButton.setAttribute("tooltiptext",
                                     gStringBundle.GetStringFromName(stringId));
   }
