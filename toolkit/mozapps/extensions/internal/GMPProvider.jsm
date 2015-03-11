@@ -52,7 +52,7 @@ const GMP_PLUGINS = [
   {
     id:              "gmp-gmpopenh264",
     name:            "openH264_name",
-    description:     "openH264_description",
+    description:     "openH264_description2",
     // The following licenseURL is part of an awful hack to include the OpenH264
     // license without having bug 624602 fixed yet, and intentionally ignores
     // localisation.
