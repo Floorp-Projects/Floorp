@@ -35,12 +35,6 @@ MakeSlotArray(ExclusiveContext *cx, size_t count)
     return UniqueSlots(slots);
 }
 
-static inline bool
-ShouldNurseryAllocateObject(const Nursery &nursery, InitialHeap heap)
-{
-    return nursery.isEnabled() && heap != TenuredHeap;
-}
-
 template <typename T, AllowGC allowGC>
 T *
 TryNewTenuredThing(ExclusiveContext *cx, AllocKind kind, size_t thingSize);
@@ -194,7 +188,7 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
     if (!CheckAllocatorState<allowGC>(ncx, kind))
         return nullptr;
 
-    if (ShouldNurseryAllocateObject(ncx->nursery(), heap)) {
+    if (ncx->nursery().isEnabled() && heap != TenuredHeap) {
         JSObject *obj = TryNewNurseryObject<allowGC>(ncx, thingSize, nDynamicSlots, clasp);
         if (obj)
             return obj;
