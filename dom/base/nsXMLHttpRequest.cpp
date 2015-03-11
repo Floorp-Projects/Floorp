@@ -2044,11 +2044,15 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
           }
           nsCOMPtr<nsIFile> jarFile;
           jarChannel->GetJarFile(getter_AddRefs(jarFile));
-          rv = mArrayBufferBuilder.mapToFileInPackage(file, jarFile);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
+          if (!jarFile) {
             mIsMappedArrayBuffer = false;
           } else {
-            channel->SetContentType(NS_LITERAL_CSTRING("application/mem-mapped"));
+            rv = mArrayBufferBuilder.mapToFileInPackage(file, jarFile);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              mIsMappedArrayBuffer = false;
+            } else {
+              channel->SetContentType(NS_LITERAL_CSTRING("application/mem-mapped"));
+            }
           }
         }
       }

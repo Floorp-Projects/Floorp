@@ -9,10 +9,12 @@
  */
 
 importScripts("resource://gre/modules/workers/require.js",
-	          "resource://gre/modules/reader/JSDOMParser.js",
-	          "resource://gre/modules/reader/Readability.js");
+              "resource://gre/modules/reader/JSDOMParser.js",
+              "resource://gre/modules/reader/Readability.js");
 
 let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
+
+const DEBUG = false;
 
 let worker = new PromiseWorker.AbstractWorker();
 worker.dispatch = function(method, args = []) {
@@ -25,7 +27,9 @@ worker.close = function() {
   self.close();
 };
 worker.log = function(...args) {
-  dump("ReaderWorker: " + args.join(" ") + "\n");
+  if (DEBUG) {
+    dump("ReaderWorker: " + args.join(" ") + "\n");
+  }
 };
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
