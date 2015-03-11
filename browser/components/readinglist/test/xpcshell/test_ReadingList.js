@@ -21,7 +21,9 @@ add_task(function* prepare() {
   gList = ReadingList;
   Assert.ok(gList);
   gDBFile.append(gList._store.pathRelativeToProfileDir);
-  do_register_cleanup(() => {
+  do_register_cleanup(function* () {
+    // Wait for the list's store to close its connection to the database.
+    yield gList.destroy();
     if (gDBFile.exists()) {
       gDBFile.remove(true);
     }
