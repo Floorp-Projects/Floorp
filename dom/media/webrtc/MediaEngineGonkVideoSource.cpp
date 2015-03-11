@@ -245,9 +245,13 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
     }
   }
 
+  // XXX some devices support recording camera frame only in metadata mode.
+  // But GonkCameraSource requests non-metadata recording mode.
+#if ANDROID_VERSION < 21
   if (NS_FAILED(InitDirectMediaBuffer())) {
     return NS_ERROR_FAILURE;
   }
+#endif
 
   return NS_OK;
 }
@@ -476,8 +480,10 @@ void
 MediaEngineGonkVideoSource::StopImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraSource->stop();
-  mCameraSource = nullptr;
+  if (mCameraSource.get()) {
+    mCameraSource->stop();
+    mCameraSource = nullptr;
+  }
 
   hal::UnregisterScreenConfigurationObserver(this);
   mCameraControl->Stop();
