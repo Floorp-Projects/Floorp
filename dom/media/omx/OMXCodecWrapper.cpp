@@ -16,7 +16,6 @@
 #include <stagefright/MediaErrors.h>
 
 #include "AudioChannelFormat.h"
-#include "GrallocImages.h"
 #include <mozilla/Monitor.h>
 #include "mozilla/layers/GrallocTextureClient.h"
 
