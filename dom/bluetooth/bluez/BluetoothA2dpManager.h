@@ -31,6 +31,7 @@ public:
   };
 
   static BluetoothA2dpManager* Get();
+  virtual ~BluetoothA2dpManager();
 
   // A2DP-specific functions
   void HandleSinkPropertyChanged(const BluetoothSignal& aSignal);
@@ -53,9 +54,6 @@ public:
   uint32_t GetPosition();
   uint64_t GetMediaNumber();
   void GetTitle(nsAString& aTitle);
-
-protected:
-  virtual ~BluetoothA2dpManager();
 
 private:
   BluetoothA2dpManager();

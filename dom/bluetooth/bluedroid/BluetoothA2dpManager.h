@@ -35,6 +35,7 @@ public:
   static BluetoothA2dpManager* Get();
   static void InitA2dpInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitA2dpInterface(BluetoothProfileResultHandler* aRes);
+  virtual ~BluetoothA2dpManager();
 
   void OnConnectError();
   void OnDisconnectError();
@@ -63,9 +64,6 @@ public:
   uint64_t GetTotalMediaNumber();
   void GetTitle(nsAString& aTitle);
   void GetArtist(nsAString& aArtist);
-
-protected:
-  virtual ~BluetoothA2dpManager();
 
 private:
   BluetoothA2dpManager();

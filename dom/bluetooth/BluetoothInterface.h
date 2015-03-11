@@ -21,6 +21,8 @@ class BluetoothSocketResultHandler
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothSocketResultHandler)
 
+  virtual ~BluetoothSocketResultHandler() { }
+
   virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
@@ -31,9 +33,6 @@ public:
                        int aConnectionState) { }
   virtual void Accept(int aSockFd, const nsAString& aBdAddress,
                       int aConnectionState) { }
-
-protected:
-  virtual ~BluetoothSocketResultHandler() { }
 };
 
 class BluetoothSocketInterface
@@ -68,6 +67,8 @@ protected:
 class BluetoothHandsfreeNotificationHandler
 {
 public:
+  virtual ~BluetoothHandsfreeNotificationHandler();
+
   virtual void
   ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
                               const nsAString& aBdAddr)
@@ -150,14 +151,14 @@ public:
 protected:
   BluetoothHandsfreeNotificationHandler()
   { }
-
-  virtual ~BluetoothHandsfreeNotificationHandler();
 };
 
 class BluetoothHandsfreeResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothHandsfreeResultHandler)
+
+  virtual ~BluetoothHandsfreeResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -187,9 +188,6 @@ public:
   virtual void PhoneStateChange() { }
 
   virtual void ConfigureWbs() { }
-
-protected:
-  virtual ~BluetoothHandsfreeResultHandler() { }
 };
 
 class BluetoothHandsfreeInterface
@@ -279,6 +277,8 @@ protected:
 class BluetoothA2dpNotificationHandler
 {
 public:
+  virtual ~BluetoothA2dpNotificationHandler();
+
   virtual void
   ConnectionStateNotification(BluetoothA2dpConnectionState aState,
                               const nsAString& aBdAddr)
@@ -298,14 +298,14 @@ public:
 protected:
   BluetoothA2dpNotificationHandler()
   { }
-
-  virtual ~BluetoothA2dpNotificationHandler();
 };
 
 class BluetoothA2dpResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothA2dpResultHandler)
+
+  virtual ~BluetoothA2dpResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -316,9 +316,6 @@ public:
   virtual void Cleanup() { }
   virtual void Connect() { }
   virtual void Disconnect() { }
-
-protected:
-  virtual ~BluetoothA2dpResultHandler() { }
 };
 
 class BluetoothA2dpInterface
@@ -345,6 +342,8 @@ protected:
 class BluetoothAvrcpNotificationHandler
 {
 public:
+  virtual ~BluetoothAvrcpNotificationHandler();
+
   virtual void
   GetPlayStatusNotification()
   { }
@@ -401,14 +400,14 @@ public:
 protected:
   BluetoothAvrcpNotificationHandler()
   { }
-
-  virtual ~BluetoothAvrcpNotificationHandler();
 };
 
 class BluetoothAvrcpResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothAvrcpResultHandler)
+
+  virtual ~BluetoothAvrcpResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -434,9 +433,6 @@ public:
   virtual void RegisterNotificationRsp() { }
 
   virtual void SetVolume() { }
-
-protected:
-  virtual ~BluetoothAvrcpResultHandler() { }
 };
 
 class BluetoothAvrcpInterface
@@ -495,6 +491,8 @@ protected:
 class BluetoothNotificationHandler
 {
 public:
+  virtual ~BluetoothNotificationHandler();
+
   virtual void AdapterStateChangedNotification(bool aState) { }
   virtual void AdapterPropertiesNotification(
     BluetoothStatus aStatus, int aNumProperties,
@@ -535,14 +533,14 @@ public:
 protected:
   BluetoothNotificationHandler()
   { }
-
-  virtual ~BluetoothNotificationHandler();
 };
 
 class BluetoothResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothResultHandler)
+
+  virtual ~BluetoothResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -583,9 +581,6 @@ public:
   virtual void LeTestMode() { }
 
   virtual void ReadEnergyInfo() { }
-
-protected:
-  virtual ~BluetoothResultHandler() { }
 };
 
 class BluetoothInterface

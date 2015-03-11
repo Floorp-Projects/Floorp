@@ -33,12 +33,11 @@ class BluetoothProfileResultHandler
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothProfileResultHandler);
 
+  virtual ~BluetoothProfileResultHandler() { }
+
   virtual void OnError(nsresult aResult) { }
   virtual void Init() { }
   virtual void Deinit() { }
-
-protected:
-  virtual ~BluetoothProfileResultHandler() { }
 };
 
 class BluetoothProfileManagerBase : public nsIObserver

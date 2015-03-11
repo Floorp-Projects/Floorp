@@ -86,6 +86,7 @@ public:
   }
 
   static BluetoothHfpManager* Get();
+  ~BluetoothHfpManager();
 
   // The following functions are inherited from BluetoothSocketObserver
   virtual void ReceiveSocketData(
@@ -129,9 +130,6 @@ public:
   void IgnoreWaitingCall();
   void ToggleCalls();
 #endif
-
-protected:
-  ~BluetoothHfpManager();
 
 private:
   void ParseAtCommand(const nsACString& aAtCommand, const int aStart,
