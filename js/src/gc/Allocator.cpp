@@ -6,6 +6,8 @@
 
 #include "gc/Allocator.h"
 
+#include "mozilla/UniquePtr.h"
+
 #include "jscntxt.h"
 
 #include "gc/GCTrace.h"
@@ -18,6 +20,20 @@
 
 using namespace js;
 using namespace gc;
+
+typedef mozilla::UniquePtr<HeapSlot, JS::FreePolicy> UniqueSlots;
+
+static inline UniqueSlots
+MakeSlotArray(ExclusiveContext *cx, size_t count)
+{
+    HeapSlot *slots = nullptr;
+    if (count) {
+        slots = cx->zone()->pod_malloc<HeapSlot>(count);
+        if (slots)
+            Debug_SetSlotRangeToCrashOnTouch(slots, count);
+    }
+    return UniqueSlots(slots);
+}
 
 static inline bool
 ShouldNurseryAllocateObject(const Nursery &nursery, InitialHeap heap)
@@ -177,22 +193,16 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
             return nullptr;
     }
 
-    HeapSlot *slots = nullptr;
-    if (nDynamicSlots) {
-        slots = cx->zone()->pod_malloc<HeapSlot>(nDynamicSlots);
-        if (MOZ_UNLIKELY(!slots))
-            return nullptr;
-        Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
-    }
+    UniqueSlots slots = MakeSlotArray(cx, nDynamicSlots);
+    if (nDynamicSlots && !slots)
+        return nullptr;
 
     JSObject *obj = reinterpret_cast<JSObject *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
     if (!obj)
         obj = reinterpret_cast<JSObject *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     if (obj)
-        obj->setInitialSlotsMaybeNonNative(slots);
-    else
-        js_free(slots);
+        obj->setInitialSlotsMaybeNonNative(slots.release());
 
     CheckIncrementalZoneState(cx, obj);
     TraceTenuredAlloc(obj, kind);
