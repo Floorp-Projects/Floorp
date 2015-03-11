@@ -20,8 +20,8 @@ namespace dom {
 namespace cache {
 
 
-const int32_t DBSchema::kMaxWipeSchemaVersion = 2;
-const int32_t DBSchema::kLatestSchemaVersion = 2;
+const int32_t DBSchema::kMaxWipeSchemaVersion = 3;
+const int32_t DBSchema::kLatestSchemaVersion = 3;
 const int32_t DBSchema::kMaxEntriesPerStatement = 255;
 
 using mozilla::void_t;
@@ -41,6 +41,9 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
     "PRAGMA journal_mode = TRUNCATE; "
 #endif
     "PRAGMA foreign_keys = ON; "
+    // Enable auto-vaccum but in incremental mode in order to avoid doing a lot
+    // of work at the end of each transaction.
+    "PRAGMA auto_vacuum = INCREMENTAL; "
 
     // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
     // the work necessary to convert UTF-16 nsString values for us.  We don't
@@ -56,6 +59,12 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (schemaVersion == kLatestSchemaVersion) {
+    // We already have the correct schema, so just do an incremental vaccum and
+    // get started.
+    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA incremental_vacuum;"));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
     return rv;
   }
 
