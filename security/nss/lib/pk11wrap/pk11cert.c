@@ -2682,3 +2682,25 @@ PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg)
     nssCryptokiObjectArray_Destroy(instances);
     return slotList;
 }
+
+/*
+ * Using __PK11_SetCertificateNickname is *DANGEROUS*.
+ *
+ * The API will update the NSS database, but it *will NOT* update the in-memory data.
+ * As a result, after calling this API, there will be INCONSISTENCY between
+ * in-memory data and the database.
+ *
+ * Use of the API should be limited to short-lived tools, which will exit immediately
+ * after using this API.
+ *
+ * If you ignore this warning, your process is TAINTED and will most likely misbehave.
+ */
+SECStatus
+__PK11_SetCertificateNickname(CERTCertificate *cert, const char *nickname)
+{
+    /* Can't set nickname of temp cert. */
+    if (!cert->slot || cert->pkcs11ID == CK_INVALID_HANDLE) {
+        return SEC_ERROR_INVALID_ARGS;
+    }
+    return PK11_SetObjectNickname(cert->slot, cert->pkcs11ID, nickname);
+}
