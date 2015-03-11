@@ -1,4 +1,4 @@
-// A class creates a mutable lexical outer binding.
+// A class statement creates a mutable lexical outer binding.
 
 var test = `
 class Foo { constructor() { } }
