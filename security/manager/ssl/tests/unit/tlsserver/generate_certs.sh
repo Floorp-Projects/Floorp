@@ -334,6 +334,8 @@ make_V1 v1Cert 'CN=V1 Cert' testCA
 export_cert v1Cert v1Cert.der
 make_EE eeIssuedByV1Cert 'CN=EE Issued by V1 Cert' v1Cert "localhost,*.example.com"
 
+make_EE eeIssuedByNonCA 'CN=EE Issued by non-CA' localhostAndExampleCom "localhost,*.example.com"
+
 # Make a valid EE using testINT to test OneCRL revocation of testINT
 make_EE eeIssuedByIntermediate 'CN=EE issued by intermediate' testINT "localhost"
 export_cert eeIssuedByIntermediate test-int-ee.der
