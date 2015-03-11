@@ -437,17 +437,21 @@ nssTrustDomain_RemoveTokenCertsFromCache (
     dtor.numCerts = 0;
     dtor.arrSize = arrSize;
     PZ_Lock(td->cache->lock);
-    nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, (void *)&dtor);
+    nssHash_Iterate(td->cache->issuerAndSN, remove_token_certs, &dtor);
     for (i=0; i<dtor.numCerts; i++) {
 	if (dtor.certs[i]->object.numInstances == 0) {
 	    nssTrustDomain_RemoveCertFromCacheLOCKED(td, dtor.certs[i]);
 	    dtor.certs[i] = NULL;  /* skip this cert in the second for loop */
+	} else {
+	    /* make sure it doesn't disappear on us before we finish */
+	    nssCertificate_AddRef(dtor.certs[i]);
 	}
     }
     PZ_Unlock(td->cache->lock);
     for (i=0; i<dtor.numCerts; i++) {
 	if (dtor.certs[i]) {
 	    STAN_ForceCERTCertificateUpdate(dtor.certs[i]);
+	    nssCertificate_Destroy(dtor.certs[i]);
 	}
     }
     nss_ZFreeIf(dtor.certs);
