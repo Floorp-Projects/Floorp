@@ -1178,9 +1178,6 @@ function testClasses() {
     function setClassMethods(class_, methods) {
         class_.template.body = methods;
     }
-    function setClassHeritage(class_, heritage) {
-        class_.template.heritage = heritage;
-    }
 
     let simpleConstructor = simpleMethod("constructor", "method", false);
     let emptyFooClass = classStmt(ident("Foo"), null, [simpleConstructor]);
@@ -1320,51 +1317,6 @@ function testClasses() {
     // Can't make a lexical binding inside a block.
     assertError("if (1) class Foo { constructor() { } }", SyntaxError);
 
-    /* Heritage Expressions */
-    // It's illegal to have things that look like "multiple inheritance":
-    // non-parenthesized comma expressions.
-    assertError("class Foo extends null, undefined { constructor() { } }", SyntaxError);
-
-    // Again check for strict-mode in heritage expressions
-    assertError("class Foo extends (delete x) { constructor() { } }", SyntaxError);
-
-    // You must specify an inheritance if you say "extends"
-    assertError("class Foo extends { constructor() { } }", SyntaxError);
-
-    // "extends" is still a valid name for a method
-    setClassMethods(stmt, [simpleConstructor, simpleMethod("extends", "method", false)]);
-    assertStmt("class Foo { constructor() { }; extends() { } }", stmt);
-
-    // Immediate expression
-    setClassMethods(stmt, [simpleConstructor]);
-    setClassHeritage(stmt, lit(null));
-    assertStmt("class Foo extends null { constructor() { } }", stmt);
-
-    // Sequence expresson
-    setClassHeritage(stmt, seqExpr([ident("undefined"), ident("undefined")]));
-    assertStmt("class Foo extends (undefined, undefined) { constructor() { } }", stmt);
-
-    // Function expression
-    let emptyFunction = funExpr(null, [], blockStmt([]));
-    setClassHeritage(stmt, emptyFunction);
-    assertStmt("class Foo extends function(){ } { constructor() { } }", stmt);
-
-    // New expression
-    setClassHeritage(stmt, newExpr(emptyFunction, []));
-    assertStmt("class Foo extends new function(){ }() { constructor() { } }", stmt);
-
-    // Call expression
-    setClassHeritage(stmt, callExpr(emptyFunction, []));
-    assertStmt("class Foo extends function(){ }() { constructor() { } }", stmt);
-
-    // Dot expression
-    setClassHeritage(stmt, dotExpr(objExpr([]), ident("foo")));
-    assertStmt("class Foo extends {}.foo { constructor() { } }", stmt);
-
-    // Member expression
-    setClassHeritage(stmt, memExpr(objExpr([]), ident("foo")));
-    assertStmt("class Foo extends {}[foo] { constructor() { } }", stmt);
-
     /* EOF */
     // Clipped classes should throw a syntax error
     assertError("class Foo {", SyntaxError);
@@ -1381,7 +1333,6 @@ function testClasses() {
     assertError("class Foo { static *y", SyntaxError);
     assertError("class Foo { static get", SyntaxError);
     assertError("class Foo { static get y", SyntaxError);
-    assertError("class Foo extends", SyntaxError);
 
 }
 

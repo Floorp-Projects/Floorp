@@ -2076,9 +2076,7 @@ js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction 
 
 JSFunction *
 js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
-                        gc::AllocKind allocKind,
-                        NewObjectKind newKindArg /* = GenericObject */,
-                        HandleObject proto)
+                        gc::AllocKind allocKind, NewObjectKind newKindArg /* = GenericObject */)
 {
     MOZ_ASSERT(parent);
     MOZ_ASSERT(!fun->isBoundFunction());
@@ -2089,8 +2087,8 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         return nullptr;
 
     NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
-    RootedObject cloneProto(cx, proto);
-    if (!cloneProto && fun->isStarGenerator()) {
+    RootedObject cloneProto(cx);
+    if (fun->isStarGenerator()) {
         cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
