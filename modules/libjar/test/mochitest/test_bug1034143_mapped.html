@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1034143
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 945152</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1034143">Mozilla Bug 1034143</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+// Ensure that XMLHttpRequest's memory-mapping code can handle a case
+// where the nsIJARChannel's jarFile property is null, but which is
+// otherwise eligible for bug 945152's memory-mapping optimization.
+
+function runTest() {
+  const jarURL = "jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_1.txt";
+  let xhr = new XMLHttpRequest({ mozAnon: true, mozSystem: true });
+  xhr.open("GET", jarURL);
+  xhr.onerror = function onerror(e) {
+    ok(false, "JAR XHR failed: " + e.status);
+    SimpleTest.finish();
+  };
+  xhr.onload = function onload(e) {
+    ok(xhr.status == 200, "Status is 200");
+    let ct = xhr.getResponseHeader("Content-Type");
+    ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
+    SimpleTest.finish();
+  };
+  xhr.responseType = 'arraybuffer';
+  xhr.send();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.mapped_arraybuffer.enabled", true]]}, function() {
+    SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], runTest);
+  });
+});
+</script>
+</pre>
+</body>
+</html>

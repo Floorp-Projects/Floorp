@@ -65,7 +65,7 @@ nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                   const nsRect&           aDirtyRect,
                                   const nsDisplayListSet& aLists)
 {
-  if (GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE) {
+  if (IsAutoHidden()) {
     return;
   }
 
@@ -87,7 +87,7 @@ nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
   nsRubyTextFrameSuper::Reflow(aPresContext, aDesiredSize,
                                aReflowState, aStatus);
 
-  if (GetStateBits() & NS_RUBY_TEXT_FRAME_AUTOHIDE) {
+  if (IsAutoHidden()) {
     // Reset the ISize. The BSize is not changed so that it won't
     // affect vertical positioning in unexpected way.
     WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();

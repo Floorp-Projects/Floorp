@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=945152
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 945152</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=945152">Mozilla Bug 945152</a>
@@ -16,7 +16,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=945152
 
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script type="application/javascript;version=1.7">
+function translateChrome(uriStr) {
+  const { Cc, Ci } = SpecialPowers;
+  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+  let uri = ios.newURI(uriStr, null, ios.newURI(document.baseURI, null, null));
+  return chromeReg.convertChromeURL(uri).spec;
+}
 
 function runTest() {
   var worker = new Worker("file_bug945152_worker.js");
@@ -31,11 +38,11 @@ function runTest() {
 
   worker.onerror = function(event) {
     is(event.target, worker);
-    ok(false, "Worker had an error: " + event.data);
+    ok(false, "Worker had an error: " + event.filename + ":" + event.lineno + ":" + event.colno + ": " + event.message);
     SimpleTest.finish();
   };
 
-  worker.postMessage(true);
+  worker.postMessage(translateChrome("file_bug945152.jar"));
 }
 
 SimpleTest.waitForExplicitFinish();
