@@ -1181,12 +1181,7 @@ gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat
     return target.forget();
   }
 
-#ifdef XP_WIN
-  // On Windows, the fallback backend (Cairo) should use its image backend.
-  return Factory::CreateDrawTarget(mFallbackCanvasBackend, aSize, aFormat);
-#else
   return CreateDrawTargetForBackend(mFallbackCanvasBackend, aSize, aFormat);
-#endif
 }
 
 TemporaryRef<DrawTarget>
