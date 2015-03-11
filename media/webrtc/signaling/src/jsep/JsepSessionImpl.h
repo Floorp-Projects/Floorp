@@ -79,12 +79,10 @@ public:
     return mCodecs;
   }
 
-  virtual nsresult
-  ReplaceTrack(size_t trackIndex, const RefPtr<JsepTrack>& track) MOZ_OVERRIDE
-  {
-    mLastError.clear();
-    MOZ_CRASH(); // Stub
-  }
+  virtual nsresult ReplaceTrack(const std::string& oldStreamId,
+                                const std::string& oldTrackId,
+                                const std::string& newStreamId,
+                                const std::string& newTrackId) MOZ_OVERRIDE;
 
   virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const MOZ_OVERRIDE;
 

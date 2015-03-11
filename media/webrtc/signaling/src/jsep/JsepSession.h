@@ -93,8 +93,10 @@ public:
   virtual nsresult AddTrack(const RefPtr<JsepTrack>& track) = 0;
   virtual nsresult RemoveTrack(const std::string& streamId,
                                const std::string& trackId) = 0;
-  virtual nsresult ReplaceTrack(size_t track_index,
-                                const RefPtr<JsepTrack>& track) = 0;
+  virtual nsresult ReplaceTrack(const std::string& oldStreamId,
+                                const std::string& oldTrackId,
+                                const std::string& newStreamId,
+                                const std::string& newTrackId) = 0;
 
   virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const = 0;
 

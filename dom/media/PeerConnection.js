@@ -862,7 +862,7 @@ RTCPeerConnection.prototype = {
       this._onReplaceTrackWithTrack = withTrack;
       this._onReplaceTrackSuccess = resolve;
       this._onReplaceTrackFailure = reject;
-      this._impl.replaceTrack(sender.track, withTrack, sender._stream);
+      this._impl.replaceTrack(sender.track, withTrack);
     });
   },
 
