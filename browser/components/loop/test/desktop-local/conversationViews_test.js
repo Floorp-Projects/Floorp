@@ -283,6 +283,7 @@ describe("loop.conversationViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.CallFailedView, {
           dispatcher: dispatcher,
+          store: store,
           contact: options.contact
         }));
     }
@@ -293,10 +294,6 @@ describe("loop.conversationViews", function () {
         mozLoop: navigator.mozLoop,
         sdkDriver: {}
       });
-      loop.store.StoreMixin.register({
-        conversationStore: store
-      });
-
       fakeAudio = {
         play: sinon.spy(),
         pause: sinon.spy(),
@@ -585,6 +582,7 @@ describe("loop.conversationViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.OutgoingConversationView, {
           dispatcher: dispatcher,
+          store: store
         }));
     }
 
@@ -594,10 +592,6 @@ describe("loop.conversationViews", function () {
         mozLoop: fakeMozLoop,
         sdkDriver: {}
       });
-      loop.store.StoreMixin.register({
-        conversationStore: store
-      });
-
       feedbackStore = new loop.store.FeedbackStore(dispatcher, {
         feedbackClient: {}
       });

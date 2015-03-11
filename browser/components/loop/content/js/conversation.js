@@ -27,11 +27,7 @@ loop.conversation = (function(mozL10n) {
    * in progress, and hence, which view to display.
    */
   var AppControllerView = React.createClass({displayName: "AppControllerView",
-    mixins: [
-      Backbone.Events,
-      loop.store.StoreMixin("conversationAppStore"),
-      sharedMixins.WindowCloseMixin
-    ],
+    mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
 
     propTypes: {
       // XXX Old types required for incoming call view.
@@ -41,12 +37,26 @@ loop.conversation = (function(mozL10n) {
       sdk: React.PropTypes.object.isRequired,
 
       // XXX New types for flux style
+      conversationAppStore: React.PropTypes.instanceOf(
+        loop.store.ConversationAppStore).isRequired,
+      conversationStore: React.PropTypes.instanceOf(loop.store.ConversationStore)
+                              .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
 
     getInitialState: function() {
-      return this.getStoreState();
+      return this.props.conversationAppStore.getStoreState();
+    },
+
+    componentWillMount: function() {
+      this.listenTo(this.props.conversationAppStore, "change", function() {
+        this.setState(this.props.conversationAppStore.getStoreState());
+      }, this);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.conversationAppStore);
     },
 
     render: function() {
@@ -57,11 +67,12 @@ loop.conversation = (function(mozL10n) {
             conversation: this.props.conversation, 
             sdk: this.props.sdk, 
             isDesktop: true, 
-            conversationAppStore: this.getStore()}
+            conversationAppStore: this.props.conversationAppStore}
           ));
         }
         case "outgoing": {
           return (React.createElement(OutgoingConversationView, {
+            store: this.props.conversationStore, 
             dispatcher: this.props.dispatcher}
           ));
         }
@@ -150,11 +161,7 @@ loop.conversation = (function(mozL10n) {
       feedbackClient: feedbackClient
     });
 
-    loop.store.StoreMixin.register({
-      conversationAppStore: conversationAppStore,
-      conversationStore: conversationStore,
-      feedbackStore: feedbackStore,
-    });
+    loop.store.StoreMixin.register({feedbackStore: feedbackStore});
 
     // XXX Old class creation for the incoming conversation view, whilst
     // we transition across (bug 1072323).
@@ -184,7 +191,9 @@ loop.conversation = (function(mozL10n) {
     });
 
     React.render(React.createElement(AppControllerView, {
+      conversationAppStore: conversationAppStore, 
       roomStore: roomStore, 
+      conversationStore: conversationStore, 
       client: client, 
       conversation: conversation, 
       dispatcher: dispatcher, 

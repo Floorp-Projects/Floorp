@@ -720,13 +720,14 @@ loop.conversationViews = (function(mozL10n) {
   var CallFailedView = React.createClass({displayName: "CallFailedView",
     mixins: [
       Backbone.Events,
-      loop.store.StoreMixin("conversationStore"),
       sharedMixins.AudioMixin,
       sharedMixins.WindowCloseMixin
     ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      store: React.PropTypes.instanceOf(
+        loop.store.ConversationStore).isRequired,
       contact: React.PropTypes.object.isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
@@ -741,18 +742,18 @@ loop.conversationViews = (function(mozL10n) {
 
     componentDidMount: function() {
       this.play("failure");
-      this.listenTo(this.getStore(), "change:emailLink",
+      this.listenTo(this.props.store, "change:emailLink",
                     this._onEmailLinkReceived);
-      this.listenTo(this.getStore(), "error:emailLink",
+      this.listenTo(this.props.store, "error:emailLink",
                     this._onEmailLinkError);
     },
 
     componentWillUnmount: function() {
-      this.stopListening(this.getStore());
+      this.stopListening(this.props.store);
     },
 
     _onEmailLinkReceived: function() {
-      var emailLink = this.getStoreState().emailLink;
+      var emailLink = this.props.store.getStoreState("emailLink");
       var contactEmail = _getPreferredEmail(this.props.contact).value;
       sharedUtils.composeCallUrlEmail(emailLink, contactEmail);
       this.closeWindow();
@@ -774,7 +775,7 @@ loop.conversationViews = (function(mozL10n) {
 
     _getTitleMessage: function() {
       var callStateReason =
-        this.getStoreState().callStateReason;
+        this.props.store.getStoreState("callStateReason");
 
       if (callStateReason === WEBSOCKET_REASONS.REJECT || callStateReason === WEBSOCKET_REASONS.BUSY ||
           callStateReason === REST_ERRNOS.USER_UNAVAILABLE) {
@@ -927,16 +928,29 @@ loop.conversationViews = (function(mozL10n) {
   var OutgoingConversationView = React.createClass({displayName: "OutgoingConversationView",
     mixins: [
       sharedMixins.AudioMixin,
-      loop.store.StoreMixin("conversationStore"),
       Backbone.Events
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      store: React.PropTypes.instanceOf(
+        loop.store.ConversationStore).isRequired
     },
 
     getInitialState: function() {
-      return this.getStoreState();
+      return this.props.store.getStoreState();
+    },
+
+    componentWillMount: function() {
+      this.listenTo(this.props.store, "change", function() {
+        this.setState(this.props.store.getStoreState());
+      }, this);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.store, "change", function() {
+        this.setState(this.props.store.getStoreState());
+      }, this);
     },
 
     _closeWindow: function() {
@@ -973,6 +987,7 @@ loop.conversationViews = (function(mozL10n) {
         case CALL_STATES.TERMINATED: {
           return (React.createElement(CallFailedView, {
             dispatcher: this.props.dispatcher, 
+            store: this.props.store, 
             contact: this.state.contact}
           ));
         }
