@@ -219,7 +219,12 @@ this.ReaderMode = {
                      createInstance(Ci.nsIDOMSerializer);
     let serializedDoc = yield Promise.resolve(serializer.serializeToString(doc));
 
-    let article = yield ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
+    let article = null;
+    try {
+      article = yield ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
+    } catch (e) {
+      Cu.reportError("Error in ReaderWorker: " + e);
+    }
 
     if (!article) {
       this.log("Worker did not return an article");
