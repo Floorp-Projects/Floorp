@@ -164,6 +164,7 @@ EXPORTS.mozilla.net += [
     'ChannelDiverterParent.h',
     'Dashboard.h',
     'DashboardTypes.h',
+    'MemoryDownloader.h',
     'OfflineObserver.h',
     'ReferrerPolicy.h',
 ]
@@ -182,6 +183,7 @@ UNIFIED_SOURCES += [
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',
     'LoadInfo.cpp',
+    'MemoryDownloader.cpp',
     'NetworkActivityMonitor.cpp',
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsAsyncStreamCopier.cpp',
