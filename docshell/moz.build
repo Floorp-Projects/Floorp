@@ -11,5 +11,23 @@ DIRS += [
     'resources/content',
 ]
 
-TEST_DIRS += ['test']
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/unit/xpcshell.ini',
+    'test/unit_ipc/xpcshell.ini',
+]
 
+MOCHITEST_MANIFESTS += [
+    'test/chrome/mochitest.ini',
+    'test/iframesandbox/mochitest.ini',
+    'test/mochitest.ini',
+    'test/navigation/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'test/chrome/chrome.ini',
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+    'test/navigation/browser.ini',
+]

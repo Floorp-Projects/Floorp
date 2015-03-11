@@ -17,7 +17,11 @@
 // mozalloc.cpp is part of the same library as mozmemory, thus MOZ_MEMORY_IMPL
 // is needed.
 #define MOZ_MEMORY_IMPL
-#include "mozmemory.h"
+#include "mozmemory_wrap.h"
+
+#if defined(XP_MACOSX)
+#include <malloc/malloc.h> // for malloc_size
+#endif
 
 // See mozmemory_wrap.h for more details. This file is part of libmozglue, so
 // it needs to use _impl suffixes. However, with libmozglue growing, this is
