@@ -37,6 +37,7 @@ struct RemoteObject
     uint64_t serializedId;
     bool isCallable;
     bool isConstructor;
+    bool isDOMObject;
     nsCString objectTag;
 };
 

@@ -7,12 +7,24 @@
  * @param t  The testharness.js Test object. If provided, this will be used
  *           to register a cleanup callback to remove the div when the test
  *           finishes.
+ *
+ * @param attrs  A dictionary object with attribute names and values to set on
+ *               the div.
  */
-function addDiv(t) {
+function addDiv(t, attrs) {
   var div = document.createElement('div');
+  if (attrs) {
+    for (var attrName in attrs) {
+      div.setAttribute(attrName, attrs[attrName]);
+    }
+  }
   document.body.appendChild(div);
   if (t && typeof t.add_cleanup === 'function') {
-    t.add_cleanup(function() { div.remove(); });
+    t.add_cleanup(function() {
+      if (div.parentNode) {
+        div.parentNode.removeChild(div);
+      }
+    });
   }
   return div;
 }
@@ -34,3 +46,19 @@ function waitForFrame() {
 function waitForAllPlayers(players) {
   return Promise.all(players.map(function(player) { return player.ready; }));
 }
+
+/**
+ * Returns a Promise that is resolved after the next two animation frames have
+ * occured (that is, after two consecutive requestAnimationFrame callbacks
+ * have been called).
+ */
+function waitForTwoAnimationFrames() {
+   return new Promise(function(resolve, reject) {
+     window.requestAnimationFrame(function() {
+       window.requestAnimationFrame(function() {
+         resolve();
+       });
+     });
+   });
+}
+

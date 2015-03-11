@@ -500,14 +500,15 @@ JitRuntime::Mark(JSTracer *trc)
     }
 }
 
-/* static */ void
-JitRuntime::MarkJitcodeGlobalTable(JSTracer *trc)
+/* static */ bool
+JitRuntime::MarkJitcodeGlobalTableIteratively(JSTracer *trc)
 {
     if (trc->runtime()->hasJitRuntime() &&
         trc->runtime()->jitRuntime()->hasJitcodeGlobalTable())
     {
-        trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->mark(trc);
+        return trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->markIteratively(trc);
     }
+    return false;
 }
 
 /* static */ void
