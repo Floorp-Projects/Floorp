@@ -1650,7 +1650,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED83)
 CASE(JSOP_UNUSED92)
 CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
@@ -3575,6 +3574,19 @@ CASE(JSOP_FUNWITHPROTO)
     REGS.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_FUNWITHPROTO)
+
+CASE(JSOP_OBJWITHPROTO)
+{
+    RootedObject &proto = rootObject0;
+    proto = REGS.sp[-1].toObjectOrNull();
+
+    JSObject *obj = NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global());
+    if (!obj)
+        goto error;
+
+    REGS.sp[-1].setObject(*obj);
+}
+END_CASE(JSOP_OBJWITHPROTO)
 
 DEFAULT()
 {
