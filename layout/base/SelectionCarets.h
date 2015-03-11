@@ -258,8 +258,8 @@ private:
 
   DragMode mDragMode;
 
-  // True if AsyncPanZoom is enabled
-  bool mAsyncPanZoomEnabled;
+  // True if async-pan-zoom should be used for selection carets.
+  bool mUseAsyncPanZoom;
   // True if AsyncPanZoom is started
   bool mInAsyncPanZoomGesture;
 
