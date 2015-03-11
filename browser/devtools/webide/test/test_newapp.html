@@ -21,7 +21,7 @@
         Task.spawn(function* () {
             let win = yield openWebIDE();
             let tmpDir = FileUtils.getDir("TmpD", []);
-            yield win.Cmds.newApp({
+            yield win.projectList.newApp({
               index: 0,
               name: "webideTmpApp",
               folder: tmpDir

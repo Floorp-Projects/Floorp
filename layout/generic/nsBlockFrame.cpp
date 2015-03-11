@@ -3825,14 +3825,10 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   }
   if (needsBackup) {
     // We need to try backing up to before a text run
-    int32_t offset;
-    gfxBreakPriority breakPriority;
-    nsIFrame* breakFrame =
-      aLineLayout.GetLastOptionalBreakPosition(&offset, &breakPriority);
     // XXX It's possible, in fact not unusual, for the break opportunity to already
     // be the end of the line. We should detect that and optimize to not
     // re-do the line.
-    if (breakFrame) {
+    if (aLineLayout.HasOptionalBreakPosition()) {
       // We can back up!
       lineReflowStatus = LINE_REFLOW_REDO_NO_PULL;
     }

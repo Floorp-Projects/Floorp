@@ -27,17 +27,17 @@
           is(win.AppProjects.store.object.projects.length, 0, "IDB is empty");
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
-          yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield win.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ")");
-          yield win.Cmds.importHostedApp(hostedAppManifest);
+          yield win.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importPackagedApp(" + packagedAppLocation + ") again");
-          yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield win.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
 
           let project = win.AppManager.selectedProject;
@@ -45,7 +45,7 @@
           yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ") again");
-          yield win.Cmds.importHostedApp(hostedAppManifest);
+          yield win.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
           project = win.AppManager.selectedProject;
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");

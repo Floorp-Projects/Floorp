@@ -56,8 +56,8 @@ class imgIContainer;
 // See nsStyleContext::AssertStructsNotUsedElsewhere
 // (This bit is currently only used in #ifdef DEBUG code.)
 #define NS_STYLE_IS_GOING_AWAY             0x040000000
-// See nsStyleContext::IsInlineDescendantOfRuby
-#define NS_STYLE_IS_INLINE_DESCENDANT_OF_RUBY 0x080000000
+// See nsStyleContext::ShouldSuppressLineBreak
+#define NS_STYLE_SUPPRESS_LINEBREAK        0x080000000
 // See nsStyleContext::GetPseudoEnum
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        32
 

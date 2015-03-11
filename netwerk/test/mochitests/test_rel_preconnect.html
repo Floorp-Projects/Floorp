@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for link rel=preconnect</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"  href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
+var srv;
+
+function TestServer(nextTest) {
+    this.listener= Cc["@mozilla.org/network/server-socket;1"]
+                   .createInstance(Ci.nsIServerSocket);
+    this.listener.init(-1, true, -1);
+    this.listener.asyncListen(SpecialPowers.wrapCallbackObject(this));
+    this.nextTest = nextTest;
+}
+
+TestServer.prototype = {
+    QueryInterface: function(iid) {
+      iid = SpecialPowers.wrap(iid);
+        if (iid.equals(Ci.nsIServerSocketListener) ||
+            iid.equals(Ci.nsISupports))
+            return this;
+        throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+    onSocketAccepted: function(socket, trans) {
+        try { socket.close(); } catch(e) {}
+        try { trans.close(); } catch(e) {}
+        ok(true, "received connect");
+        setTimeout(srv.nextTest, 0);
+    },
+    onStopListening: function(socket) {}
+};
+
+var originalLimit = SpecialPowers.getIntPref("network.http.speculative-parallel-limit");
+
+function testElement()
+{
+  // test the link rel=preconnect element in the head
+  srv = new TestServer(testHeader);
+  SpecialPowers.setIntPref("network.http.speculative-parallel-limit", 1);
+  var link = document.createElement("link");
+  link.rel = "preconnect";
+  link.href = "//localhost:" +  srv.listener.port;
+  document.head.appendChild(link);
+}
+
+function testHeader()
+{
+  // test the http link response header
+  srv.listener.close();
+  srv = new TestServer(testDone);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", 'rel_preconnect.sjs', false);
+  xhr.setRequestHeader("X-Link", "//localhost:" + srv.listener.port);
+  xhr.send();
+  is(xhr.status, 200, 'xhr cool');
+}
+
+function testDone()
+{
+  SpecialPowers.setIntPref("network.http.speculative-parallel-limit",
+                            originalLimit);
+  srv.listener.close();
+  SimpleTest.finish();
+}
+
+</script>
+</head>
+<body onload="testElement();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

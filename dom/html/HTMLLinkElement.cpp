@@ -21,6 +21,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsINode.h"
+#include "nsISpeculativeConnect.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
@@ -145,6 +146,10 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Link must be inert in ShadowRoot.
   if (aDocument && !GetContainingShadow()) {
     aDocument->RegisterPendingLinkUpdate(this);
+  }
+
+  if (IsInComposedDoc()) {
+    UpdatePreconnect();
   }
 
   void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
@@ -292,6 +297,30 @@ HTMLLinkElement::UpdateImport()
   }
 }
 
+void
+HTMLLinkElement::UpdatePreconnect()
+{
+  // rel type should be preconnect
+  nsAutoString rel;
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
+    return;
+  }
+
+  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel, NodePrincipal());
+  if (!(linkTypes & ePRECONNECT)) {
+    return;
+  }
+
+  nsCOMPtr<nsISpeculativeConnect>
+    speculator(do_QueryInterface(nsContentUtils::GetIOService()));
+  if (speculator) {
+    nsCOMPtr<nsIURI> uri = GetHrefURI();
+    if (uri) {
+      speculator->SpeculativeConnect(uri, nullptr);
+    }
+  }
+}
+
 nsresult
 HTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                          nsIAtom* aPrefix, const nsAString& aValue,
@@ -326,11 +355,16 @@ HTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         dropSheet = !(linkTypes & nsStyleLinkElement::eSTYLESHEET);
       } else if (linkTypes & eHTMLIMPORT) {
         UpdateImport();
+      } else if ((linkTypes & ePRECONNECT) && IsInComposedDoc()) {
+        UpdatePreconnect();
       }
     }
 
     if (aName == nsGkAtoms::href) {
       UpdateImport();
+      if (IsInComposedDoc()) {
+        UpdatePreconnect();
+      }
     }
     
     UpdateStyleSheetInternal(nullptr, nullptr,

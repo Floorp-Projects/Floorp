@@ -43,6 +43,7 @@ public:
   void LinkRemoved();
 
   void UpdateImport();
+  void UpdatePreconnect();
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

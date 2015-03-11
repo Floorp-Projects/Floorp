@@ -148,7 +148,7 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
                          PeerConnectionMedia *aParent,
                          const std::string& aId)
     : SourceStreamInfo(aMediaStream, aParent, aId),
-      mPipelinesCreated(false)
+      mReceiving(false)
   {
   }
 
@@ -163,11 +163,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   virtual void AddTrack(const std::string& track) MOZ_OVERRIDE
   {
     mTrackIdMap.push_back(track);
-    MOZ_ASSERT(!mPipelinesCreated || mTracksToQueue.empty(),
-               "Track added while waiting for existing tracks to be queued.");
-    if (!mPipelinesCreated) {
-      mTracksToQueue.insert(track);
-    }
     SourceStreamInfo::AddTrack(track);
   }
 
@@ -192,16 +187,16 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
     return NS_OK;
   }
 
+  void StartReceiving();
+
   /**
    * Returns true if a |MediaPipeline| should be queueing its track instead of
    * adding it to the |SourceMediaStream| directly.
    */
-  bool QueueTracks() const
+  bool ShouldQueueTracks() const
   {
-    return !mPipelinesCreated || !mTracksToQueue.empty();
+    return !mReceiving;
   }
-
-  void TrackQueued(const std::string& trackId);
 
  private:
   // For remote streams, the MediaStreamGraph API forces us to select a
@@ -213,13 +208,9 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   // and its dependencies can go away.
   std::vector<std::string> mTrackIdMap;
 
-  // When a remote stream gets created we need to add its initial set of tracks
-  // atomically. Here we track which tracks we have created Pipelines for and
-  // that will be queued later on.
-  std::set<std::string> mTracksToQueue;
-
-  // True if we have finished creating the initial set of pipelines
-  bool mPipelinesCreated;
+  // True iff SetPullEnabled(true) has been called on the DOMMediaStream. This
+  // happens when offer/answer concludes.
+  bool mReceiving;
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {

@@ -42,6 +42,7 @@ GonkBufferQueueProducer::GonkBufferQueueProducer(const sp<GonkBufferQueueCore>& 
     mCore(core),
     mSlots(core->mSlots),
     mConsumerName(),
+    mSynchronousMode(true),
     mStickyTransform(0) {}
 
 GonkBufferQueueProducer::~GonkBufferQueueProducer() {}
@@ -501,6 +502,22 @@ status_t GonkBufferQueueProducer::attachBuffer(int* outSlot,
     return returnFlags;
 }
 
+status_t GonkBufferQueueProducer::setSynchronousMode(bool enabled) {
+    ALOGV("setSynchronousMode: enabled=%d", enabled);
+    Mutex::Autolock lock(mCore->mMutex);
+
+    if (mCore->mIsAbandoned) {
+        ALOGE("setSynchronousMode: BufferQueue has been abandoned!");
+        return NO_INIT;
+    }
+
+    if (mSynchronousMode != enabled) {
+        mSynchronousMode = enabled;
+        mCore->mDequeueCondition.broadcast();
+    }
+    return OK;
+}
+
 status_t GonkBufferQueueProducer::queueBuffer(int slot,
         const QueueBufferInput &input, QueueBufferOutput *output) {
     ATRACE_CALL();
@@ -619,7 +636,7 @@ status_t GonkBufferQueueProducer::queueBuffer(int slot,
             // When the queue is not empty, we need to look at the front buffer
             // state to see if we need to replace it
             GonkBufferQueueCore::Fifo::iterator front(mCore->mQueue.begin());
-            if (front->mIsDroppable) {
+            if (front->mIsDroppable || !mSynchronousMode) {
                 // If the front queued buffer is still being tracked, we first
                 // mark it as freed
                 if (mCore->stillTracking(front)) {
@@ -630,6 +647,7 @@ status_t GonkBufferQueueProducer::queueBuffer(int slot,
                 }
                 // Overwrite the droppable buffer with the incoming one
                 *front = item;
+                listener = mCore->mConsumerListener;
             } else {
                 mCore->mQueue.push_back(item);
                 listener = mCore->mConsumerListener;

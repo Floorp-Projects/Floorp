@@ -160,6 +160,7 @@ protected:
                                           const uint32_t& flags,
                                           const nsCString& aNetworkInterface) MOZ_OVERRIDE;
   virtual bool DeallocPDNSRequestParent(PDNSRequestParent*) MOZ_OVERRIDE;
+  virtual bool RecvSpeculativeConnect(const URIParams& aURI) MOZ_OVERRIDE;
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags) MOZ_OVERRIDE;
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,
