@@ -46,8 +46,10 @@ private:
 
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsINfcGonkEventListener> mListener;
+  nsRefPtr<mozilla::ipc::NfcListenSocket> mListenSocket;
   nsRefPtr<mozilla::ipc::NfcConsumer> mConsumer;
   nsAutoPtr<NfcMessageHandler> mHandler;
+  nsCString mListenSocketName;
 };
 
 } // namespace mozilla

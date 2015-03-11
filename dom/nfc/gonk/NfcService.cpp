@@ -4,11 +4,13 @@
 
 #include "NfcService.h"
 #include <binder/Parcel.h>
+#include <cutils/properties.h>
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/NfcOptionsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
@@ -295,21 +297,41 @@ NfcService::FactoryCreate()
 NS_IMETHODIMP
 NfcService::Start(nsINfcGonkEventListener* aListener)
 {
+  static const char BASE_SOCKET_NAME[] = "nfcd";
+
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
   MOZ_ASSERT(!mThread);
+  MOZ_ASSERT(!mListenSocket);
+
+  // If we could not cleanup properly before and an old
+  // instance of the daemon is still running, we kill it
+  // here.
+  unused << NS_WARN_IF(property_set("ctl.stop", "nfcd") < 0);
+
+  mListener = aListener;
+  mHandler = new NfcMessageHandler();
+  mConsumer = new NfcConsumer(this);
+
+  mListenSocketName = BASE_SOCKET_NAME;
+
+  mListenSocket = new NfcListenSocket(this);
+
+  bool success = mListenSocket->Listen(new NfcConnector(), mConsumer);
+  if (!success) {
+    mConsumer = nullptr;
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = NS_NewNamedThread("NfcThread", getter_AddRefs(mThread));
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't create Nfc worker thread.");
-    Shutdown();
+    mListenSocket->Close();
+    mListenSocket = nullptr;
+    mConsumer->Shutdown();
+    mConsumer = nullptr;
     return NS_ERROR_FAILURE;
   }
-
-  mListener = aListener;
-  mHandler = new NfcMessageHandler();
-
-  mConsumer = new NfcConsumer(this);
 
   return NS_OK;
 }
@@ -324,7 +346,11 @@ NfcService::Shutdown()
     mThread = nullptr;
   }
 
+  mListenSocket->Close();
+  mListenSocket = nullptr;
+
   mConsumer->Shutdown();
+  mConsumer = nullptr;
 
   return NS_OK;
 }
@@ -375,12 +401,28 @@ void
 NfcService::OnConnectSuccess(enum SocketType aSocketType)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aSocketType) {
+    case LISTEN_SOCKET: {
+        nsCString value("nfcd:-a ");
+        value.Append(mListenSocketName);
+        if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
+          OnConnectError(STREAM_SOCKET);
+        }
+      }
+      break;
+    case STREAM_SOCKET:
+      /* nothing to do */
+      break;
+  }
 }
 
 void
 NfcService::OnConnectError(enum SocketType aSocketType)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  Shutdown();
 }
 
 void

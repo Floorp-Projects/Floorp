@@ -75,15 +75,7 @@ NfcConnector::Create()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  int fd = -1;
-
-#if defined(MOZ_WIDGET_GONK)
-  fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-#else
-  // If we can't hit a local loopback, fail later in connect.
-  fd = socket(AF_INET, SOCK_STREAM, 0);
-#endif
-
+  int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
   if (fd < 0) {
     NS_WARNING("Could not open nfc socket!");
     return -1;
@@ -101,34 +93,23 @@ NfcConnector::CreateAddr(bool aIsServer,
                          sockaddr_any& aAddr,
                          const char* aAddress)
 {
-  // We never open nfc socket as server.
-  MOZ_ASSERT(!aIsServer);
-  uint32_t af;
-#if defined(MOZ_WIDGET_GONK)
-  af = AF_LOCAL;
-#else
-  af = AF_INET;
-#endif
-  switch (af) {
-  case AF_LOCAL:
-    aAddr.un.sun_family = af;
-    if(strlen(aAddress) > sizeof(aAddr.un.sun_path)) {
-      NS_WARNING("Address too long for socket struct!");
-      return false;
-    }
-    strcpy((char*)&aAddr.un.sun_path, aAddress);
-    aAddrSize = strlen(aAddress) + offsetof(struct sockaddr_un, sun_path) + 1;
-    break;
-  case AF_INET:
-    aAddr.in.sin_family = af;
-    aAddr.in.sin_port = htons(NFC_TEST_PORT);
-    aAddr.in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    aAddrSize = sizeof(sockaddr_in);
-    break;
-  default:
-    NS_WARNING("Socket type not handled by connector!");
+  static const size_t sNameOffset = 1;
+
+  nsDependentCString socketName("nfcd");
+
+  size_t namesiz = socketName.Length() + 1; /* include trailing '\0' */
+
+  if ((sNameOffset + namesiz) > sizeof(aAddr.un.sun_path)) {
+    NS_WARNING("Address too long for socket struct!");
     return false;
   }
+
+  memset(aAddr.un.sun_path, '\0', sNameOffset); // abstract socket
+  memcpy(aAddr.un.sun_path + sNameOffset, socketName.get(), namesiz);
+  aAddr.un.sun_family = AF_UNIX;
+
+  aAddrSize = offsetof(struct sockaddr_un, sun_path) + sNameOffset + namesiz;
+
   return true;
 }
 
@@ -194,8 +175,6 @@ NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
   , mShutdown(false)
 {
   mAddress = NFC_SOCKET_NAME;
-
-  Connect(new NfcConnector(), mAddress.get());
 }
 
 void
@@ -247,8 +226,6 @@ NfcConsumer::OnConnectError()
   if (mListener) {
     mListener->OnConnectError(NfcSocketListener::STREAM_SOCKET);
   }
-
-  Close();
 }
 
 void
@@ -258,9 +235,6 @@ NfcConsumer::OnDisconnect()
 
   if (mListener) {
     mListener->OnDisconnect(NfcSocketListener::STREAM_SOCKET);
-  }
-  if (!mShutdown) {
-    Connect(new NfcConnector(), mAddress.get(), GetSuggestedConnectDelayMs());
   }
 }
 
