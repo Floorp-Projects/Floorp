@@ -1408,8 +1408,18 @@ struct ClassNode : public TernaryNode {
     ParseNode *heritage() const {
         return pn_kid2;
     }
-    LexicalScopeNode *scope() const {
-        return &pn_kid3->as<LexicalScopeNode>();
+    ParseNode *methodList() const {
+        if (pn_kid3->isKind(PNK_CLASSMETHODLIST))
+            return pn_kid3;
+
+        MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
+        ParseNode *list = pn_kid3->pn_expr;
+        MOZ_ASSERT(list->isKind(PNK_CLASSMETHODLIST));
+        return list;
+    }
+    ObjectBox *scopeObject() const {
+        MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
+        return pn_kid3->pn_objbox;
     }
 };
 
