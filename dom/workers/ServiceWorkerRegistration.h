@@ -12,6 +12,9 @@
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
+// Support for Notification API extension.
+#include "mozilla/dom/NotificationBinding.h"
+
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -111,6 +114,15 @@ public:
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // Partial interface from Notification API.
+  already_AddRefed<Promise>
+  ShowNotification(JSContext* aCx,
+                   const nsAString& aTitle,
+                   const NotificationOptions& aOptions);
+
+  already_AddRefed<Promise>
+  GetNotifications(const GetNotificationOptions& aOptions);
+
   already_AddRefed<workers::ServiceWorker>
   GetInstalling() override;
 
@@ -189,6 +201,15 @@ public:
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  // Partial interface from Notification API.
+  already_AddRefed<Promise>
+  ShowNotification(JSContext* aCx,
+                   const nsAString& aTitle,
+                   const NotificationOptions& aOptions);
+
+  already_AddRefed<Promise>
+  GetNotifications(const GetNotificationOptions& aOptions);
 
   already_AddRefed<workers::ServiceWorker>
   GetInstalling() override;

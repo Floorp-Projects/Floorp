@@ -1414,10 +1414,7 @@ Notification::Get(const GlobalObject& aGlobal,
   }
   nsCOMPtr<nsINotificationStorageCallback> callback =
     new NotificationStorageCallback(aGlobal, window, promise);
-  nsString tag = aFilter.mTag.WasPassed() ?
-                 aFilter.mTag.Value() :
-                 EmptyString();
-  aRv = notificationStorage->Get(origin, tag, callback);
+  aRv = notificationStorage->Get(origin, aFilter.mTag, callback);
   if (aRv.Failed()) {
     return nullptr;
   }

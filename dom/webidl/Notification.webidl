@@ -68,7 +68,7 @@ dictionary NotificationOptions {
 };
 
 dictionary GetNotificationOptions {
-  DOMString tag;
+  DOMString tag = "";
 };
 
 dictionary NotificationBehavior {
@@ -93,3 +93,7 @@ enum NotificationDirection {
   "rtl"
 };
 
+partial interface ServiceWorkerRegistration {
+  Promise<void> showNotification(DOMString title, optional NotificationOptions options);
+  Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
+};
