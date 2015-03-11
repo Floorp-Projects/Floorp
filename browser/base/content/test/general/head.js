@@ -409,7 +409,8 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser
 }
 
 /**
- * Waits for the next load to complete in the current browser.
+ * Waits for the next load to complete in any browser or the given browser.
+ * If a <tabbrowser> is given it waits for a load in any of its browsers.
  *
  * @return promise
  */
@@ -426,7 +427,9 @@ function waitForDocLoadComplete(aBrowser=gBrowser) {
         if ((flags & docStop) == docStop && status != Cr.NS_BINDING_ABORTED) {
           aBrowser.removeProgressListener(this);
           waitForDocLoadComplete.listeners.delete(this);
-          info("Browser loaded " + aBrowser.contentWindow.location);
+
+          let chan = req.QueryInterface(Ci.nsIChannel);
+          info("Browser loaded " + chan.originalURI.spec);
           resolve();
         }
       },
