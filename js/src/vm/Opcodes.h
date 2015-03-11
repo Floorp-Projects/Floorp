@@ -489,7 +489,14 @@
      *   Stack: heritage => objProto, funcProto
      */ \
     macro(JSOP_CLASSHERITAGE,  51, "classheritage",   NULL,         1,  1,  2,  JOF_BYTE) \
-    macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes a clone of a function with a given [[Prototype]] onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint32_t funcIndex
+     *   Stack: proto => obj
+     */ \
+    macro(JSOP_FUNWITHPROTO,   52, "funwithproto",    NULL,         5,  1,  1,  JOF_OBJECT) \
     \
     /*
      * Pops the top of stack value, pushes property of it onto the stack.

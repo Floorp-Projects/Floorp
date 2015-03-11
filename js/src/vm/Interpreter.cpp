@@ -1650,7 +1650,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED52)
 CASE(JSOP_UNUSED83)
 CASE(JSOP_UNUSED92)
 CASE(JSOP_UNUSED103)
@@ -3558,6 +3557,24 @@ CASE(JSOP_CLASSHERITAGE)
     PUSH_OBJECT(*funcProto);
 }
 END_CASE(JSOP_CLASSHERITAGE)
+
+CASE(JSOP_FUNWITHPROTO)
+{
+    RootedObject &proto = rootObject1;
+    proto = &REGS.sp[-1].toObject();
+
+    /* Load the specified function object literal. */
+    RootedFunction &fun = rootFunction0;
+    fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
+
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->scopeChain(),
+                                                      proto, GenericObject);
+    if (!obj)
+        goto error;
+
+    REGS.sp[-1].setObject(*obj);
+}
+END_CASE(JSOP_FUNWITHPROTO)
 
 DEFAULT()
 {
