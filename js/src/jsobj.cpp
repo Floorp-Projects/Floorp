@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
+#include "mozilla/UniquePtr.h"
 
 #include <string.h>
 
@@ -71,6 +72,7 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 JS_FRIEND_API(JSObject *)
 JS_ObjectToInnerObject(JSContext *cx, HandleObject obj)
