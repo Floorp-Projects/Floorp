@@ -174,6 +174,16 @@ public:
     virtual void allocateBuffers(bool async, uint32_t width, uint32_t height,
             uint32_t format, uint32_t usage);
 
+    // setSynchronousMode sets whether dequeueBuffer is synchronous or
+    // asynchronous. In synchronous mode, dequeueBuffer blocks until
+    // a buffer is available, the currently bound buffer can be dequeued and
+    // queued buffers will be acquired in order.  In asynchronous mode,
+    // a queued buffer may be replaced by a subsequently queued buffer.
+    //
+    // The default mode is synchronous.
+    // This should be called only during initialization.
+    virtual status_t setSynchronousMode(bool enabled);
+
 private:
     // This is required by the IBinder::DeathRecipient interface
     virtual void binderDied(const wp<IBinder>& who);
@@ -195,6 +205,9 @@ private:
     // It's updated during connect and dequeueBuffer (which should catch
     // most updates).
     String8 mConsumerName;
+
+    // mSynchronousMode whether we're in synchronous mode or not
+    bool mSynchronousMode;
 
     uint32_t mStickyTransform;
 
