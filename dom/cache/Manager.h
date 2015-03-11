@@ -16,7 +16,6 @@
 #include "nsTArray.h"
 
 class nsIInputStream;
-class nsIOutputStream;
 class nsIThread;
 
 namespace mozilla {
@@ -29,7 +28,6 @@ class ManagerId;
 class PCacheQueryParams;
 class PCacheRequest;
 class PCacheRequestOrVoid;
-class PCacheResponse;
 struct SavedRequest;
 struct SavedResponse;
 class StreamList;
