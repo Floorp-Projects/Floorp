@@ -63,10 +63,12 @@
     }
   );
 
+  var mockSDK = _.extend({}, Backbone.Events);
+
   var dispatcher = new loop.Dispatcher();
   var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
     mozLoop: navigator.mozLoop,
-    sdkDriver: {}
+    sdkDriver: mockSDK
   });
   var roomStore = new loop.store.RoomStore(dispatcher, {
     mozLoop: navigator.mozLoop
@@ -77,10 +79,13 @@
   var conversationStore = new loop.store.ConversationStore(dispatcher, {
     client: {},
     mozLoop: navigator.mozLoop,
-    sdkDriver: {}
+    sdkDriver: mockSDK
   });
 
-  loop.store.StoreMixin.register({feedbackStore: feedbackStore});
+  loop.store.StoreMixin.register({
+    conversationStore: conversationStore,
+    feedbackStore: feedbackStore
+  });
 
   // Local mocks
 
@@ -96,8 +101,6 @@
   var mockClient = {
     requestCallUrlInfo: noop
   };
-
-  var mockSDK = {};
 
   var mockConversationModel = new loop.shared.models.ConversationModel({
     callerId: "Mrs Jones",
