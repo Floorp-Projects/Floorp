@@ -139,6 +139,8 @@ describe("loop.conversation", function() {
           conversation: conversation,
           roomStore: roomStore,
           sdk: {},
+          conversationStore: conversationStore,
+          conversationAppStore: conversationAppStore,
           dispatcher: dispatcher,
           mozLoop: navigator.mozLoop
         }));
@@ -173,11 +175,6 @@ describe("loop.conversation", function() {
       conversationAppStore = new loop.store.ConversationAppStore({
         dispatcher: dispatcher,
         mozLoop: navigator.mozLoop
-      });
-
-      loop.store.StoreMixin.register({
-        conversationAppStore: conversationAppStore,
-        conversationStore: conversationStore
       });
     });
 
