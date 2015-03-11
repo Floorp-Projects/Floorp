@@ -101,6 +101,8 @@ public:
     return mChildProcessId;
   }
 
+  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) MOZ_OVERRIDE;
+
 protected:
   virtual bool RecvShutdown() MOZ_OVERRIDE;
 
