@@ -206,8 +206,13 @@ var LoginManagerParent = {
     }
 
     var logins = Services.logins.findLogins({}, formOrigin, actionOrigin, null);
-    target.sendAsyncMessage("RemoteLogins:loginsFound",
-                            { requestId: requestId, logins: logins });
+    // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
+    // doesn't support structured cloning.
+    var jsLogins = JSON.parse(JSON.stringify(logins));
+    target.sendAsyncMessage("RemoteLogins:loginsFound", {
+      requestId: requestId,
+      logins: jsLogins,
+    });
 
     const PWMGR_FORM_ACTION_EFFECT =  Services.telemetry.getHistogramById("PWMGR_FORM_ACTION_EFFECT");
     if (logins.length == 0) {
@@ -261,9 +266,13 @@ var LoginManagerParent = {
       AutoCompleteE10S.showPopupWithResults(target.ownerDocument.defaultView, rect, result);
     }
 
-    target.messageManager.sendAsyncMessage("RemoteLogins:loginsAutoCompleted",
-                                           { requestId: requestId,
-                                             logins: matchingLogins });
+    // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
+    // doesn't support structured cloning.
+    var jsLogins = JSON.parse(JSON.stringify(matchingLogins));
+    target.messageManager.sendAsyncMessage("RemoteLogins:loginsAutoCompleted", {
+      requestId: requestId,
+      logins: jsLogins,
+    });
   },
 
   onFormSubmit: function(hostname, formSubmitURL,
