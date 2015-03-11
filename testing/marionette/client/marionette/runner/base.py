@@ -539,7 +539,7 @@ class BaseMarionetteTestRunner(object):
         self.result_callbacks = result_callbacks if result_callbacks is not None else []
         self._adb_host = adb_host
         self._adb_port = adb_port
-        self.prefs = prefs
+        self.prefs = prefs or {}
 
         def gather_debug(test, status):
             rv = {}
