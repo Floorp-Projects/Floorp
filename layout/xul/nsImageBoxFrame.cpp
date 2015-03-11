@@ -192,11 +192,9 @@ nsImageBoxFrame::Init(nsIContent*       aContent,
                       nsIFrame*         aPrevInFlow)
 {
   if (!mListener) {
-    nsImageBoxListener *listener = new nsImageBoxListener();
-    NS_ADDREF(listener);
+    nsRefPtr<nsImageBoxListener> listener = new nsImageBoxListener();
     listener->SetFrame(this);
-    listener->QueryInterface(NS_GET_IID(imgINotificationObserver), getter_AddRefs(mListener));
-    NS_RELEASE(listener);
+    mListener = listener.forget();
   }
 
   mSuppressStyleCheck = true;
