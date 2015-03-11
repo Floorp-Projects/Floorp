@@ -10,7 +10,7 @@ let gSanitizeDialog = Object.freeze({
     for (let element of customWidthElements) {
       element.style.width = element.getAttribute(isInSubdialog ? "subdialogWidth" : "dialogWidth");
     }
-    onClearHistoryChanged();
+    this.onClearHistoryChanged();
   },
 
   onClearHistoryChanged: function () {
