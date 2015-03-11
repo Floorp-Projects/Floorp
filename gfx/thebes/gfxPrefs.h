@@ -342,6 +342,10 @@ private:
 
   // This and code dependent on it should be removed once containerless scrolling looks stable.
   DECL_GFX_PREF(Once, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
+
+  // This affects whether events will be routed through APZ or not.
+  DECL_GFX_PREF(Once, "mousewheel.system_scroll_override_on_root_content.enabled",
+                                                               MouseWheelHasScrollDeltaOverride, bool, false);
 public:
   // Manage the singleton:
   static gfxPrefs& GetSingleton()
