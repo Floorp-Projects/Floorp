@@ -214,13 +214,15 @@ GMPWrapper.prototype = {
                                       this._plugin.id); },
 
   get isActive() { return !this.userDisabled; },
-  get appDisabled() { return false; },
-
-  get userDisabled() {
+  get appDisabled() {
     if (this._plugin.isEME && !GMPPrefs.get(KEY_EME_ENABLED, true)) {
       // If "media.eme.enabled" is false, all EME plugins are disabled.
       return true;
     }
+   return false;
+  },
+
+  get userDisabled() {
     return !GMPPrefs.get(KEY_PLUGIN_ENABLED, true, this._plugin.id);
   },
   set userDisabled(aVal) { GMPPrefs.set(KEY_PLUGIN_ENABLED, aVal === false,
