@@ -3743,9 +3743,9 @@ gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel)
     // calculate reduced size, roughly mimicing behavior of font-size: smaller
     float cssSize = size * aAppUnitsPerDevPixel / AppUnitsPerCSSPixel();
     if (cssSize < NS_FONT_SUB_SUPER_SMALL_SIZE) {
-        cssSize *= NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL;
-    } else if (cssSize >= NS_FONT_SUB_SUPER_SMALL_SIZE) {
-        cssSize *= NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
+        size *= NS_FONT_SUB_SUPER_SIZE_RATIO_SMALL;
+    } else if (cssSize >= NS_FONT_SUB_SUPER_LARGE_SIZE) {
+        size *= NS_FONT_SUB_SUPER_SIZE_RATIO_LARGE;
     } else {
         gfxFloat t = (cssSize - NS_FONT_SUB_SUPER_SMALL_SIZE) /
                          (NS_FONT_SUB_SUPER_LARGE_SIZE -

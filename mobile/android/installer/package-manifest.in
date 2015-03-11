@@ -595,12 +595,6 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/crashreporter-override.ini
 #endif
 
-; [Extensions]
-;
-#ifdef MOZ_ENABLE_GNOMEVFS
-bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
-#endif
-
 [mobile]
 @BINPATH@/chrome/icons/
 @BINPATH@/chrome/chrome@JAREXT@
