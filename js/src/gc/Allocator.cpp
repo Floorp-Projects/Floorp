@@ -54,13 +54,6 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots, const
 }
 
 static inline bool
-PossiblyFail()
-{
-    JS_OOM_POSSIBLY_FAIL_BOOL();
-    return true;
-}
-
-static inline bool
 GCIfNeeded(ExclusiveContext *cx)
 {
     if (cx->isJSContext()) {
@@ -121,7 +114,7 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
         JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
 
     // For testing out of memory conditions
-    if (!PossiblyFail()) {
+    if (js::oom::ShouldFailWithOOM()) {
         ReportOutOfMemory(ncx);
         return false;
     }
