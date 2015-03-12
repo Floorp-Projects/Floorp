@@ -29,12 +29,14 @@ public:
   }
 
   static BluetoothHfpManager* Get();
-  virtual ~BluetoothHfpManager() { }
   static void InitHfpInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitHfpInterface(BluetoothProfileResultHandler* aRes);
 
   bool ConnectSco();
   bool DisconnectSco();
+
+protected:
+  virtual ~BluetoothHfpManager() { }
 
 private:
   BluetoothHfpManager() { }
