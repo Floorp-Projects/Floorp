@@ -721,8 +721,9 @@ html, .fx-embedded, #main,
 
   .standalone .remote_wrapper {
     position: relative;
-    width: 100%;
+    width: calc(100% - 10px);
     height: 100%;
+    margin-left: 10px;
   }
 
   .standalone {
@@ -918,7 +919,7 @@ html, .fx-embedded, #main,
   /* `top` is chosen to vertically position the area near the center
      of the media element. */
   top: calc(50% - 140px);
-  left: 25%;
+  left: calc(25% + 62.5px + 10px);
   z-index: 1000;
   /* `width` here is specified by the design spec. */
   width: 250px;
@@ -988,7 +989,7 @@ html, .fx-embedded, #main,
 
 .standalone .room-conversation .video_wrapper.remote_wrapper {
   background-color: #4e4e4e;
-  width: 75%;
+  width: calc(75% - 10px); /* Take the left margin into account. */
 }
 
 .standalone .room-conversation .conversation-toolbar {
