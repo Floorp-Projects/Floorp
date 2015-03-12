@@ -17,7 +17,7 @@ loop.conversation = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
 
   var IncomingConversationView = loop.conversationViews.IncomingConversationView;
-  var OutgoingConversationView = loop.conversationViews.OutgoingConversationView;
+  var CallControllerView = loop.conversationViews.CallControllerView;
   var CallIdentifierView = loop.conversationViews.CallIdentifierView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
   var GenericFailureView = loop.conversationViews.GenericFailureView;
@@ -61,7 +61,7 @@ loop.conversation = (function(mozL10n) {
           />);
         }
         case "outgoing": {
-          return (<OutgoingConversationView
+          return (<CallControllerView
             dispatcher={this.props.dispatcher}
           />);
         }
