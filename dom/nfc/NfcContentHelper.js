@@ -162,14 +162,15 @@ NfcContentHelper.prototype = {
     });
   },
 
-  writeNDEF: function writeNDEF(records, sessionToken, callback) {
+  writeNDEF: function writeNDEF(records, isP2P, sessionToken, callback) {
     let requestId = callback.getCallbackId();
     this._requestMap[requestId] = callback;
 
     cpmm.sendAsyncMessage("NFC:WriteNDEF", {
       requestId: requestId,
       sessionToken: sessionToken,
-      records: records
+      records: records,
+      isP2P: isP2P
     });
   },
 
