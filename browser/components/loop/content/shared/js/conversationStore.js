@@ -425,6 +425,12 @@ loop.store = loop.store || {};
      * as shutting down the call cleanly and adding any relevant telemetry data.
      */
     windowUnload: function() {
+      if (!this.getStoreState("outgoing") &&
+          this.getStoreState("callState") === CALL_STATES.ALERTING &&
+          this._websocket) {
+        this._websocket.decline();
+      }
+
       this._endSession();
     },
 
