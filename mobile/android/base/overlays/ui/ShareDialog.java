@@ -58,8 +58,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
     private static final String LOGTAG = "GeckoShareDialog";
 
-    /** Flag that we should only show the devices for send tab in this dialog. **/
-    public static final String INTENT_EXTRA_DEVICES_ONLY = "org.mozilla.gecko.intent.extra.DEVICES_ONLY";
+    /** Flag to indicate that we should always show the device list; specific to this release channel. **/
+    public static final String INTENT_EXTRA_DEVICES_ONLY =
+            AppConstants.ANDROID_PACKAGE_NAME + ".intent.extra.DEVICES_ONLY";
 
     /** The maximum number of devices we'll show in the dialog when in State.DEFAULT. **/
     private static final int MAXIMUM_INLINE_DEVICES = 2;
