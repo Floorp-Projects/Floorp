@@ -3038,8 +3038,10 @@ RangeAnalysis::truncate()
     for (size_t i = 0; i < bitops.length(); i++) {
         MBinaryBitwiseInstruction *ins = bitops[i];
         MDefinition *folded = ins->foldUnnecessaryBitop();
-        if (folded != ins)
-            ins->replaceAllUsesWith(folded);
+        if (folded != ins) {
+            ins->replaceAllLiveUsesWith(folded);
+            ins->setRecoveredOnBailout();
+        }
     }
 
     return true;
