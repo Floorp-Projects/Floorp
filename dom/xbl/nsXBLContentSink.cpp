@@ -38,13 +38,12 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsXBLContentSink* it = new nsXBLContentSink();
-
-  nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
+  nsRefPtr<nsXBLContentSink> it = new nsXBLContentSink();
   nsresult rv = it->Init(aDoc, aURI, aContainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(it, aResult);
+  it.forget(aResult);
+  return NS_OK;
 }
 
 nsXBLContentSink::nsXBLContentSink()

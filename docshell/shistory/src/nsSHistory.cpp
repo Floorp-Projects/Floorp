@@ -1801,13 +1801,10 @@ nsSHistory::SetRootDocShell(nsIDocShell * aDocShell)
 NS_IMETHODIMP
 nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 {
-  nsresult status = NS_OK;
-
   NS_ENSURE_ARG_POINTER(aEnumerator);
-  nsSHEnumerator * iterator = new nsSHEnumerator(this);
-  if (iterator && NS_FAILED(status = CallQueryInterface(iterator, aEnumerator)))
-    delete iterator;
-  return status;
+  nsRefPtr<nsSHEnumerator> iterator = new nsSHEnumerator(this);
+  iterator.forget(aEnumerator);
+  return NS_OK;
 }
 
 

@@ -43,14 +43,12 @@ using namespace mozilla::dom;
 #define INDENT_STRING "  "
 #define INDENT_STRING_LENGTH 2
 
-nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
+nsresult
+NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 {
-  nsXMLContentSerializer* it = new nsXMLContentSerializer();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return CallQueryInterface(it, aSerializer);
+  nsRefPtr<nsXMLContentSerializer> it = new nsXMLContentSerializer();
+  it.forget(aSerializer);
+  return NS_OK;
 }
 
 nsXMLContentSerializer::nsXMLContentSerializer()
