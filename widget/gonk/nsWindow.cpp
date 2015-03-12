@@ -22,6 +22,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -94,6 +95,13 @@ public:
     {}
 
     NS_IMETHOD Run() {
+        // When the screen is off prevent priority changes.
+        if (mIsOn) {
+          ProcessPriorityManager::Unfreeze();
+        } else {
+          ProcessPriorityManager::Freeze();
+        }
+
         for (uint32_t i = 0; i < sTopWindows.Length(); i++) {
             nsWindow *win = sTopWindows[i];
 

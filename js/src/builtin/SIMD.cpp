@@ -290,8 +290,7 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
     // Create type constructor itself and initialize its reserved slots.
 
     Rooted<SimdTypeDescr*> typeDescr(cx);
-    typeDescr = NewObjectWithProto<SimdTypeDescr>(cx, funcProto, GlobalObject::upcast(global),
-                                                  SingletonObject);
+    typeDescr = NewObjectWithProto<SimdTypeDescr>(cx, funcProto, SingletonObject);
     if (!typeDescr)
         return nullptr;
 
@@ -312,7 +311,7 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
     if (!objProto)
         return nullptr;
     Rooted<TypedProto*> proto(cx);
-    proto = NewObjectWithProto<TypedProto>(cx, objProto, NullPtr(), SingletonObject);
+    proto = NewObjectWithProto<TypedProto>(cx, objProto, SingletonObject);
     if (!proto)
         return nullptr;
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));

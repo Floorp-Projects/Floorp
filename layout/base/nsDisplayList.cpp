@@ -2084,7 +2084,7 @@ nsDisplayItem::MaxActiveLayers()
 int32_t
 nsDisplayItem::ZIndex() const
 {
-  if (!mFrame->IsPositioned() && !mFrame->IsFlexOrGridItem())
+  if (!mFrame->IsAbsPosContaininingBlock() && !mFrame->IsFlexOrGridItem())
     return 0;
 
   const nsStylePosition* position = mFrame->StylePosition();

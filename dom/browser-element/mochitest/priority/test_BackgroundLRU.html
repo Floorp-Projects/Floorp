@@ -46,19 +46,22 @@ function runTest() {
     document.body.appendChild(iframe2);
 
     // At this point, we should have iframe1 in background already.
-    // We wait until another one is set to background, too.
-    // Once there are two in background, the first one (LRU order)
-    // should have 'backgroundLRU' equals 1
-    var p = expectPriorityWithBackgroundLRUSet(childID, '1');
+    // We wait until another process goes into the background, too.
+    // Once there are two in background, the first one should have its LRU
+    // adjustment value increased to 1.
+    var p = expectPriorityWithLRUSet(childID, 'BACKGROUND', '1');
     iframe2.setVisible(false);
 
     return p;
 
   }).then(function() {
-    // Don't call removeChild immediately after calling setVisible.
-    // setVisible on remote browser is async method, so we should wait
-    // until it sends to the child process.
+    // When iframe2 is removed iframe1's LRU value should be decreased again.
+    var p = expectPriorityWithLRUSet(childID, 'BACKGROUND', '0');
+
     document.body.removeChild(iframe2);
+
+    return p;
+  }).then(function() {
     SimpleTest.finish();
   });
 

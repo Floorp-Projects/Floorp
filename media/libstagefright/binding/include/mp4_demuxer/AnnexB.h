@@ -28,11 +28,20 @@ public:
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<ByteBuffer> ConvertExtraDataToAnnexB(
     const ByteBuffer* aExtraData);
+  // Extract SPS and PPS NALs from aSample, aSample must be in AVCC format.
+  // If aSample already contains an extradata with an SPS, it will be returned
+  // otherwise the SPS/PPS NALs are searched in-band.
   static already_AddRefed<ByteBuffer> ExtractExtraData(
     const MP4Sample* aSample);
   static bool HasSPS(const MP4Sample* aSample);
   static bool HasSPS(const ByteBuffer* aExtraData);
+  // Returns true if format is AVCC and sample has valid extradata.
   static bool IsAVCC(const MP4Sample* aSample);
+  // Returns true if format is AnnexB.
+  static bool IsAnnexB(const MP4Sample* aSample);
+  // Return true if both extradata are equal.
+  static bool CompareExtraData(const ByteBuffer* aExtraData1,
+                               const ByteBuffer* aExtraData2);
 
 private:
   // AVCC box parser helper.
