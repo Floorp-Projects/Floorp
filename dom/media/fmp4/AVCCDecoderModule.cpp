@@ -35,7 +35,6 @@ public:
   virtual bool IsDormantNeeded() MOZ_OVERRIDE;
   virtual void AllocateMediaResources() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseDecoder() MOZ_OVERRIDE;
   virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
 
 private:
@@ -169,12 +168,6 @@ AVCCMediaDataDecoder::ReleaseMediaResources()
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
-}
-
-void
-AVCCMediaDataDecoder::ReleaseDecoder()
-{
-  ReleaseMediaResources();
 }
 
 nsresult
