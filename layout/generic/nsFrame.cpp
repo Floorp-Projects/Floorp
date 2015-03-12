@@ -2357,7 +2357,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child)
     || (child->GetStateBits() & NS_FRAME_HAS_VR_CONTENT);
 
-  bool isPositioned = disp->IsPositioned(child);
+  bool isPositioned = disp->IsAbsPosContainingBlock(child);
   bool isStackingContext =
     (isPositioned && (disp->mPosition == NS_STYLE_POSITION_STICKY ||
                       pos->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
@@ -8802,7 +8802,7 @@ nsIFrame::IsPseudoStackingContextFromStyle() {
   // If you change this, also change the computation of pseudoStackingContext
   // in BuildDisplayListForChild()
   return disp->mOpacity != 1.0f ||
-         disp->IsPositioned(this) ||
+         disp->IsAbsPosContainingBlock(this) ||
          disp->IsFloating(this) ||
          (StylePosition()->mWillChangeBitField &
           NS_STYLE_WILL_CHANGE_STACKING_CONTEXT);
