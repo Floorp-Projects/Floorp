@@ -196,7 +196,7 @@ class Graph(object):
         default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
     @CommandArgument('--mozharness-repository',
-        default='https://github.com/lightsofapollo/build-mozharness',
+        default='https://hg.mozilla.org/build/mozharness',
         help='URL for custom mozharness repo')
     @CommandArgument('--head-repository',
         default=os.environ.get('GECKO_HEAD_REPOSITORY'),
