@@ -140,7 +140,7 @@ loop.conversationViews = (function(mozL10n) {
   // Matches strings of the form "<nonspaces>@<nonspaces>" or "+<digits>"
   var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
 
-  var IncomingCallView = React.createClass({
+  var AcceptCallView = React.createClass({
     mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
 
     propTypes: {
@@ -397,7 +397,7 @@ loop.conversationViews = (function(mozL10n) {
           document.title = mozL10n.get("incoming_call_title2");
 
           return (
-            <IncomingCallView
+            <AcceptCallView
               model={this.props.conversation}
               video={this.props.conversation.hasVideoStream("incoming")}
             />
@@ -924,7 +924,7 @@ loop.conversationViews = (function(mozL10n) {
    * Master View Controller for outgoing calls. This manages
    * the different views that need displaying.
    */
-  var OutgoingConversationView = React.createClass({
+  var CallControllerView = React.createClass({
     mixins: [
       sharedMixins.AudioMixin,
       loop.store.StoreMixin("conversationStore"),
@@ -1011,10 +1011,10 @@ loop.conversationViews = (function(mozL10n) {
     CallFailedView: CallFailedView,
     _getContactDisplayName: _getContactDisplayName,
     GenericFailureView: GenericFailureView,
-    IncomingCallView: IncomingCallView,
+    AcceptCallView: AcceptCallView,
     IncomingConversationView: IncomingConversationView,
     OngoingConversationView: OngoingConversationView,
-    OutgoingConversationView: OutgoingConversationView
+    CallControllerView: CallControllerView
   };
 
 })(document.mozL10n || navigator.mozL10n);

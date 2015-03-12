@@ -186,13 +186,13 @@ describe("loop.conversation", function() {
       document.title = oldTitle;
     });
 
-    it("should display the OutgoingConversationView for outgoing calls", function() {
+    it("should display the CallControllerView for outgoing calls", function() {
       conversationAppStore.setStoreState({windowType: "outgoing"});
 
       ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
-        loop.conversationViews.OutgoingConversationView);
+        loop.conversationViews.CallControllerView);
     });
 
     it("should display the IncomingConversationView for incoming calls", function() {
