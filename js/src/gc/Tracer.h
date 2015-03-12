@@ -187,7 +187,7 @@ class GCMarker : public JSTracer
     }
     uint32_t markColor() const { return color; }
 
-    void delayMarkingArena(gc::ArenaHeader *aheader);
+    inline void delayMarkingArena(gc::ArenaHeader *aheader);
     void delayMarkingChildren(const void *thing);
     void markDelayedChildren(gc::ArenaHeader *aheader);
     bool markDelayedChildren(SliceBudget &budget);
