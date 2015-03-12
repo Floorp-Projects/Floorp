@@ -799,8 +799,10 @@ NewExportedFunction(JSContext *cx, const AsmJSModule::ExportedFunction &func,
 {
     RootedPropertyName name(cx, func.name());
     unsigned numArgs = func.isChangeHeap() ? 1 : func.numArgs();
-    JSFunction *fun = NewFunction(cx, NullPtr(), CallAsmJS, numArgs, JSFunction::ASMJS_CTOR,
-                                  cx->global(), name, JSFunction::ExtendedFinalizeKind);
+    JSFunction *fun =
+        NewNativeConstructor(cx, CallAsmJS, numArgs, name,
+                             JSFunction::ExtendedFinalizeKind, GenericObject,
+                             JSFunction::ASMJS_CTOR);
     if (!fun)
         return nullptr;
 
@@ -821,9 +823,9 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (!src)
         return false;
 
-    RootedFunction fun(cx, NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
-                                       cx->global(), name, JSFunction::FinalizeKind,
-                                       TenuredObject));
+    RootedFunction fun(cx, NewScriptedFunction(cx, 0, JSFunction::INTERPRETED,
+                                               cx->global(), name, JSFunction::FinalizeKind,
+                                               TenuredObject));
     if (!fun)
         return false;
 
@@ -1092,9 +1094,10 @@ js::NewAsmJSModuleFunction(ExclusiveContext *cx, JSFunction *origFun, HandleObje
 
     JSFunction::Flags flags = origFun->isLambda() ? JSFunction::ASMJS_LAMBDA_CTOR
                                                   : JSFunction::ASMJS_CTOR;
-    JSFunction *moduleFun = NewFunction(cx, NullPtr(), LinkAsmJS, origFun->nargs(),
-                                        flags, NullPtr(), name,
-                                        JSFunction::ExtendedFinalizeKind, TenuredObject);
+    JSFunction *moduleFun =
+        NewNativeConstructor(cx, LinkAsmJS, origFun->nargs(), name,
+                             JSFunction::ExtendedFinalizeKind, TenuredObject,
+                             flags);
     if (!moduleFun)
         return nullptr;
 

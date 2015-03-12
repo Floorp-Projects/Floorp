@@ -137,10 +137,7 @@ class VisualStudioBackend(CommonBackend):
         reldir = getattr(obj, 'relativedir', None)
 
         s = self._paths_to_sources.setdefault(reldir, set())
-        if obj.have_unified_mapping:
-            s.update(unified_file for unified_file, _ in obj.unified_source_mapping)
-        else:
-            s.update(obj.files)
+        s.update(obj.files)
 
     def consume_finished(self):
         out_dir = self._out_dir

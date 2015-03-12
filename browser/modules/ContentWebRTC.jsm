@@ -189,9 +189,9 @@ function updateIndicators() {
   }
 
   for (let contentWindow of contentWindows) {
-    let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
-    MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                microphone, screen, window, app);
+    let camera = {}, microphone = {}, screen = {}, window = {}, app = {}, browser = {};
+    MediaManagerService.mediaCaptureWindowState(contentWindow, camera, microphone,
+                                                screen, window, app, browser);
     let tabState = {camera: camera.value, microphone: microphone.value};
     if (camera.value)
       state.showCameraIndicator = true;
@@ -210,6 +210,11 @@ function updateIndicators() {
       if (!state.showScreenSharingIndicator)
         state.showScreenSharingIndicator = "Application";
       tabState.screen = "Application";
+    }
+    else if (browser.value) {
+      if (!state.showScreenSharingIndicator)
+        state.showScreenSharingIndicator = "Browser";
+      tabState.screen = "Browser";
     }
 
     tabState.windowId = getInnerWindowIDForWindow(contentWindow);

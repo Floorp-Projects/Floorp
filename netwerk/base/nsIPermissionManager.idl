@@ -37,7 +37,7 @@ interface nsIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(620d9b61-8997-4d13-aa64-ec03341dd75b)]
+[scriptable, uuid(93a156f8-bcc8-4568-a214-389b073332dd)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -255,6 +255,12 @@ interface nsIPermissionManager : nsISupports
                         in boolean exactHost,
                         in uint64_t sessionExpireTime,
                         in uint64_t persistentExpireTime);
+
+  /**
+   * Remove all current permission settings and get permission settings from
+   * chrome process.
+   */
+  void refreshPermission();
 };
 
 %{ C++

@@ -1097,11 +1097,11 @@ WebGLContext::AssertCachedState()
     }
 
     // Draw state
-    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DITHER) == mDitherEnabled);
     MOZ_ASSERT_IF(IsWebGL2(),
                   gl->fIsEnabled(LOCAL_GL_RASTERIZER_DISCARD) == mRasterizerDiscardEnabled);
-
+    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
+    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_STENCIL_TEST) == mStencilTestEnabled);
 
     realGLboolean colorWriteMask[4] = {0, 0, 0, 0};
     gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorWriteMask);

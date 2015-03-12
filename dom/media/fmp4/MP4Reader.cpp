@@ -158,7 +158,7 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mIsEncrypted(false)
   , mIndexReady(false)
   , mDemuxerMonitor("MP4 Demuxer")
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
 #endif
 {
@@ -295,18 +295,13 @@ private:
 #endif
 
 void MP4Reader::RequestCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
   if (mVideo.mDecoder) {
     mVideo.mDecoder->AllocateMediaResources();
   }
-#endif
 }
 
 bool MP4Reader::IsWaitingOnCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
   return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
-#endif
-  return false;
 }
 
 bool MP4Reader::IsWaitingOnCDMResource() {
@@ -582,6 +577,26 @@ MP4Reader::GetNextKeyframeTime()
   return mVideo.mTrackDemuxer->GetNextKeyframeTime();
 }
 
+void
+MP4Reader::DisableHardwareAcceleration()
+{
+  if (HasVideo() && !mIsEncrypted && mSharedDecoderManager) {
+    mPlatform->DisableHardwareAcceleration();
+
+    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+    if (!mSharedDecoderManager->Recreate(mPlatform, video, mLayersBackendType, mDecoder->GetImageContainer())) {
+      MonitorAutoLock mon(mVideo.mMonitor);
+      mVideo.mError = true;
+      if (mVideo.HasPromise()) {
+        mVideo.RejectPromise(DECODE_ERROR, __func__);
+      }
+    } else {
+      MonitorAutoLock lock(mVideo.mMonitor);
+      ScheduleUpdate(kVideo);
+    }
+  }
+}
+
 bool
 MP4Reader::ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
 {
@@ -624,7 +639,9 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
 
   MonitorAutoLock lock(mVideo.mMonitor);
   nsRefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
-  if (eos) {
+  if (mVideo.mError) {
+    mVideo.mPromise.Reject(DECODE_ERROR, __func__);
+  } else if (eos) {
     mVideo.mPromise.Reject(END_OF_STREAM, __func__);
   } else {
     ScheduleUpdate(kVideo);
@@ -1059,9 +1076,9 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 
 bool MP4Reader::IsDormantNeeded()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#if defined(MP4_READER_DORMANT)
   return
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
         mDormantEnabled &&
 #endif
         mVideo.mDecoder &&
@@ -1072,7 +1089,6 @@ bool MP4Reader::IsDormantNeeded()
 
 void MP4Reader::ReleaseMediaResources()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
@@ -1082,16 +1098,13 @@ void MP4Reader::ReleaseMediaResources()
   if (mVideo.mDecoder) {
     mVideo.mDecoder->ReleaseMediaResources();
   }
-#endif
 }
 
 void MP4Reader::NotifyResourcesStatusChanged()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
   if (mDecoder) {
     mDecoder->NotifyWaitingForResourcesStatusChanged();
   }
-#endif
 }
 
 void
@@ -1108,7 +1121,7 @@ MP4Reader::SetIdle()
 void
 MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#if !defined(MOZ_WIDGET_ANDROID)
   mSharedDecoderManager = aManager;
 #endif
 }

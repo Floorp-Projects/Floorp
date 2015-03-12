@@ -54,6 +54,9 @@ function handleRequest(request, response) {
   var failOnce = "failOnce" in query;
   var alreadyFailed = Number(getState("alreadyFailed"));
 
+  var setAppNameSuffix = query.setAppNameSuffix || "";
+  var testNameChange = "testNameChange" in query;
+
   if (allowCancel && getPackage && !alreadyDeferred) {
     // Only do this for the actual package delivery.
     response.processAsync();
@@ -71,6 +74,18 @@ function handleRequest(request, response) {
   }
 
   response.setHeader("Access-Control-Allow-Origin", "*", false);
+
+  if (setAppNameSuffix) {
+    setState("appNameSuffix", setAppNameSuffix);
+    response.setHeader("Content-type", "text/html", false);
+    response.write("OK");
+    return;
+  }
+
+  if (testNameChange) {
+    var appNameSuffix = String(getState("appNameSuffix")) || "";
+    appName += appNameSuffix;
+  }
 
   // If this is a version update, update state, prepare the manifest,
   // the application package and return.

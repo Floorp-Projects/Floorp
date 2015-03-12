@@ -248,6 +248,17 @@ add_task(function* create_bookmark_frecency() {
   Assert.ok(frecencyForUrl(bm.url) > 0, "Check frecency has been updated")
 });
 
+add_task(function* create_bookmark_without_type() {
+  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                url: "http://example.com/",
+                                                title: "a bookmark" });
+  checkBookmarkObject(bm);
+  Assert.equal(bm.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.equal(bm.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+  Assert.equal(bm.url.href, "http://example.com/");
+  Assert.equal(bm.title, "a bookmark");
+});
+
 function run_test() {
   run_next_test();
 }

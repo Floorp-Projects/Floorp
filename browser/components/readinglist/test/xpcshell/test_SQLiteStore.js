@@ -23,7 +23,11 @@ add_task(function* prepare() {
     }
   }
   removeDB();
-  do_register_cleanup(removeDB);
+  do_register_cleanup(function* () {
+    // Wait for the store to close its connection to the database.
+    yield gStore.destroy();
+    removeDB();
+  });
 
   gStore = new SQLiteStore(dbFile.path);
 

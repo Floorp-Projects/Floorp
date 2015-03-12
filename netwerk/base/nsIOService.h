@@ -77,10 +77,6 @@ public:
     bool IsOffline() { return mOffline; }
     bool IsLinkUp();
 
-    bool IsComingOnline() const {
-      return mOffline && mSettingOffline && !mSetOfflineValue;
-    }
-
     // Should only be called from NeckoChild. Use SetAppOffline instead.
     void SetAppOfflineInternal(uint32_t appId, int32_t status);
 

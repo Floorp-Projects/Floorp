@@ -515,20 +515,22 @@ nsBulletFrame::GetListItemText(nsAString& aResult)
 #define MIN_BULLET_SIZE 1
 
 void
-nsBulletFrame::AppendSpacingToPadding(nsFontMetrics* aFontMetrics)
+nsBulletFrame::AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
+                                      LogicalMargin* aPadding)
 {
-  mPadding.IEnd(GetWritingMode()) += aFontMetrics->EmHeight() / 2;
+  aPadding->IEnd(GetWritingMode()) += aFontMetrics->EmHeight() / 2;
 }
 
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                               nsRenderingContext *aRenderingContext,
                               nsHTMLReflowMetrics& aMetrics,
-                              float aFontSizeInflation)
+                              float aFontSizeInflation,
+                              LogicalMargin* aPadding)
 {
   // Reset our padding.  If we need it, we'll set it below.
   WritingMode wm = GetWritingMode();
-  mPadding.SizeTo(wm, 0, 0, 0, 0);
+  aPadding->SizeTo(wm, 0, 0, 0, 0);
   LogicalSize finalSize(wm);
 
   const nsStyleList* myList = StyleList();
@@ -550,7 +552,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                                    mIntrinsicSize.BSize(wm));
       aMetrics.SetSize(wm, finalSize);
 
-      AppendSpacingToPadding(fm);
+      AppendSpacingToPadding(fm, aPadding);
 
       AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 
@@ -581,10 +583,10 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       ascent = fm->MaxAscent();
       bulletSize = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
-      mPadding.BEnd(wm) = NSToCoordRound(float(ascent) / 8.0f);
+      aPadding->BEnd(wm) = NSToCoordRound(float(ascent) / 8.0f);
       finalSize.ISize(wm) = finalSize.BSize(wm) = bulletSize;
-      aMetrics.SetBlockStartAscent(bulletSize + mPadding.BEnd(wm));
-      AppendSpacingToPadding(fm);
+      aMetrics.SetBlockStartAscent(bulletSize + aPadding->BEnd(wm));
+      AppendSpacingToPadding(fm, aPadding);
       break;
     }
 
@@ -594,12 +596,12 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       bulletSize = std::max(
           nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
           NSToCoordRound(0.75f * ascent));
-      mPadding.BEnd(wm) = NSToCoordRound(0.125f * ascent);
+      aPadding->BEnd(wm) = NSToCoordRound(0.125f * ascent);
       finalSize.ISize(wm) = finalSize.BSize(wm) = bulletSize;
       if (!wm.IsVertical()) {
-        aMetrics.SetBlockStartAscent(bulletSize + mPadding.BEnd(wm));
+        aMetrics.SetBlockStartAscent(bulletSize + aPadding->BEnd(wm));
       }
-      AppendSpacingToPadding(fm);
+      AppendSpacingToPadding(fm, aPadding);
       break;
 
     default:
@@ -628,7 +630,8 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   SetFontSizeInflation(inflation);
 
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation);
+  GetDesiredSize(aPresContext, aReflowState.rendContext,
+                 aMetrics, inflation, &mPadding);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
@@ -662,7 +665,9 @@ nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   WritingMode wm = GetWritingMode();
   nsHTMLReflowMetrics metrics(wm);
   DISPLAY_MIN_WIDTH(this, metrics.ISize(wm));
-  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
+  LogicalMargin padding(wm);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);
+  metrics.ISize(wm) += padding.IStartEnd(wm);
   return metrics.ISize(wm);
 }
 
@@ -672,7 +677,9 @@ nsBulletFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   WritingMode wm = GetWritingMode();
   nsHTMLReflowMetrics metrics(wm);
   DISPLAY_PREF_WIDTH(this, metrics.ISize(wm));
-  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
+  LogicalMargin padding(wm);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);
+  metrics.ISize(wm) += padding.IStartEnd(wm);
   return metrics.ISize(wm);
 }
 

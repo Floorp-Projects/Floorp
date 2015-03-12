@@ -203,10 +203,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitArrayPush(MArrayPush *ins);
     void visitArrayConcat(MArrayConcat *ins);
     void visitArrayJoin(MArrayJoin *ins);
-    void visitLoadTypedArrayElement(MLoadTypedArrayElement *ins);
+    void visitLoadUnboxedScalar(MLoadUnboxedScalar *ins);
     void visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins);
     void visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins);
-    void visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
+    void visitStoreUnboxedScalar(MStoreUnboxedScalar *ins);
     void visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins);
     void visitClampToUint8(MClampToUint8 *ins);
     void visitLoadFixedSlot(MLoadFixedSlot *ins);

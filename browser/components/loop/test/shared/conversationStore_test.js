@@ -8,6 +8,7 @@ describe("loop.store.ConversationStore", function () {
 
   var CALL_STATES = loop.store.CALL_STATES;
   var WS_STATES = loop.store.WS_STATES;
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sharedActions = loop.shared.actions;
@@ -43,7 +44,8 @@ describe("loop.store.ConversationStore", function () {
       addConversationContext: sandbox.stub(),
       calls: {
         setCallInProgress: sandbox.stub(),
-        clearCallInProgress: sandbox.stub()
+        clearCallInProgress: sandbox.stub(),
+        blockDirectCaller: sandbox.stub()
       },
       rooms: {
         create: sandbox.stub()
@@ -299,6 +301,79 @@ describe("loop.store.ConversationStore", function () {
         .eql(sharedUtils.CALL_TYPES.AUDIO_VIDEO);
     });
 
+    describe("incoming calls", function() {
+      beforeEach(function() {
+        store.setStoreState({outgoing: false});
+      });
+
+      it("should initialize the websocket", function() {
+        sandbox.stub(loop, "CallConnectionWebSocket").returns({
+          promiseConnect: function() { return connectPromise; },
+          on: sinon.spy()
+        });
+
+        store.connectCall(
+          new sharedActions.ConnectCall({sessionData: fakeSessionData}));
+
+        sinon.assert.calledOnce(loop.CallConnectionWebSocket);
+        sinon.assert.calledWithExactly(loop.CallConnectionWebSocket, {
+          url: "fakeURL",
+          callId: "142536",
+          websocketToken: "543216"
+        });
+      });
+
+      it("should connect the websocket to the server", function() {
+        store.connectCall(
+          new sharedActions.ConnectCall({sessionData: fakeSessionData}));
+
+        sinon.assert.calledOnce(store._websocket.promiseConnect);
+      });
+
+      describe("WebSocket connection result", function() {
+        beforeEach(function() {
+          store.connectCall(
+            new sharedActions.ConnectCall({sessionData: fakeSessionData}));
+
+          sandbox.stub(dispatcher, "dispatch");
+        });
+
+        it("should dispatch a connection progress action on success", function(done) {
+          resolveConnectPromise(WS_STATES.INIT);
+
+          connectPromise.then(function() {
+            checkFailures(done, function() {
+              sinon.assert.calledOnce(dispatcher.dispatch);
+              // Can't use instanceof here, as that matches any action
+              sinon.assert.calledWithMatch(dispatcher.dispatch,
+                sinon.match.hasOwn("name", "connectionProgress"));
+              sinon.assert.calledWithMatch(dispatcher.dispatch,
+                sinon.match.hasOwn("wsState", WS_STATES.INIT));
+            });
+          }, function() {
+            done(new Error("Promise should have been resolve, not rejected"));
+          });
+        });
+
+        it("should dispatch a connection failure action on failure", function(done) {
+          rejectConnectPromise();
+
+          connectPromise.then(function() {
+            done(new Error("Promise should have been rejected, not resolved"));
+          }, function() {
+            checkFailures(done, function() {
+              sinon.assert.calledOnce(dispatcher.dispatch);
+              // Can't use instanceof here, as that matches any action
+              sinon.assert.calledWithMatch(dispatcher.dispatch,
+                sinon.match.hasOwn("name", "connectionFailure"));
+              sinon.assert.calledWithMatch(dispatcher.dispatch,
+                sinon.match.hasOwn("reason", "websocket-setup"));
+             });
+          });
+        });
+      });
+    });
+
     describe("outgoing calls", function() {
       it("should request the outgoing call data", function() {
         dispatcher.dispatch(
@@ -419,6 +494,73 @@ describe("loop.store.ConversationStore", function () {
             sinon.match.hasOwn("reason", "setup"));
         });
       });
+    });
+  });
+
+  describe("#acceptCall", function() {
+    beforeEach(function() {
+      store._websocket = {
+        accept: sinon.stub()
+      };
+    });
+
+    it("should save the call type", function() {
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      expect(store.getStoreState("callType")).eql(CALL_TYPES.AUDIO_ONLY);
+      expect(store.getStoreState("videoMuted")).eql(true);
+    });
+
+    it("should call accept on the websocket", function() {
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      sinon.assert.calledOnce(store._websocket.accept);
+    });
+  });
+
+  describe("#declineCall", function() {
+    var fakeWebsocket;
+
+    beforeEach(function() {
+      fakeWebsocket = store._websocket = {
+        decline: sinon.stub(),
+        close: sinon.stub()
+      };
+
+      store.setStoreState({windowId: 42});
+    });
+
+    it("should block the caller if necessary", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: true}));
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.blockDirectCaller);
+    });
+
+    it("should call decline on the websocket", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeWebsocket.decline);
+    });
+
+    it("should close the websocket", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeWebsocket.close);
+    });
+
+    it("should clear the call in progress for the backend", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(fakeMozLoop.calls.clearCallInProgress, 42);
+    });
+
+    it("should set the call state to CLOSE", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
     });
   });
 
@@ -632,7 +774,9 @@ describe("loop.store.ConversationStore", function () {
       sinon.assert.calledOnce(sdkDriver.disconnectSession);
     });
 
-    it("should send a cancel message to the websocket if it is open", function() {
+    it("should send a cancel message to the websocket if it is open for outgoing calls", function() {
+      store.setStoreState({outgoing: true});
+
       store.cancelCall(new sharedActions.CancelCall());
 
       sinon.assert.calledOnce(wsCancelSpy);
@@ -771,10 +915,45 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#windowUnload", function() {
-    it("should disconnect from the servers via the sdk", function() {
+    var fakeWebsocket;
+
+    beforeEach(function() {
+      fakeWebsocket = store._websocket = {
+        close: sinon.stub(),
+        decline: sinon.stub()
+      };
+
+      store.setStoreState({windowId: 42});
+    });
+
+    it("should decline the connection on the websocket for incoming calls if the state is alerting", function() {
+      store.setStoreState({
+        callState: CALL_STATES.ALERTING,
+        outgoing: false
+      });
+
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeWebsocket.decline);
+    });
+
+    it("should disconnect the sdk session", function() {
       store.windowUnload();
 
       sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
+    it("should close the websocket", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeWebsocket.close);
+    });
+
+    it("should clear the call in progress for the backend", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(fakeMozLoop.calls.clearCallInProgress, 42);
     });
   });
 
@@ -787,10 +966,14 @@ describe("loop.store.ConversationStore", function () {
         sandbox.stub(dispatcher, "dispatch");
       });
 
-      it("should dispatch a connection failure action on 'terminate'", function() {
+      it("should dispatch a connection failure action on 'terminate' for outgoing calls", function() {
+        store.setStoreState({
+          outgoing: true
+        });
+
         store._websocket.trigger("progress", {
           state: WS_STATES.TERMINATED,
-          reason: WEBSOCKET_REASONS.REJECT
+          reason: WEBSOCKET_REASONS.REJECT,
         });
 
         sinon.assert.calledOnce(dispatcher.dispatch);
@@ -799,6 +982,56 @@ describe("loop.store.ConversationStore", function () {
           sinon.match.hasOwn("name", "connectionFailure"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("reason", WEBSOCKET_REASONS.REJECT));
+      });
+
+      it("should dispatch a connection failure action on 'terminate' for incoming calls if the previous state was not 'alerting' or 'init'", function() {
+        store.setStoreState({
+          outgoing: false
+        });
+
+        store._websocket.trigger("progress", {
+          state: WS_STATES.TERMINATED,
+          reason: WEBSOCKET_REASONS.CANCEL
+        }, WS_STATES.CONNECTING);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        // Can't use instanceof here, as that matches any action
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionFailure({
+            reason: WEBSOCKET_REASONS.CANCEL
+          }));
+      });
+
+      it("should dispatch a cancel call action on 'terminate' for incoming calls if the previous state was 'init'", function() {
+        store.setStoreState({
+          outgoing: false
+        });
+
+        store._websocket.trigger("progress", {
+          state: WS_STATES.TERMINATED,
+          reason: WEBSOCKET_REASONS.CANCEL
+        }, WS_STATES.INIT);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        // Can't use instanceof here, as that matches any action
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.CancelCall({}));
+      });
+
+      it("should dispatch a cancel call action on 'terminate' for incoming calls if the previous state was 'alerting'", function() {
+        store.setStoreState({
+          outgoing: false
+        });
+
+        store._websocket.trigger("progress", {
+          state: WS_STATES.TERMINATED,
+          reason: WEBSOCKET_REASONS.CANCEL
+        }, WS_STATES.ALERTING);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        // Can't use instanceof here, as that matches any action
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.CancelCall({}));
       });
 
       it("should dispatch a connection progress action on 'alerting'", function() {

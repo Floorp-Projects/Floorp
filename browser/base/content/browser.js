@@ -2949,7 +2949,10 @@ function BrowserFullScreen()
 }
 
 function mirrorShow(popup) {
-  let services = CastingApps.getServicesForMirroring();
+  let services = [];
+  if (Services.prefs.getBoolPref("browser.casting.enabled")) {
+    services = CastingApps.getServicesForMirroring();
+  }
   popup.ownerDocument.getElementById("menu_mirrorTabCmd").hidden = !services.length;
 }
 
@@ -2959,8 +2962,11 @@ function mirrorMenuItemClicked(event) {
 }
 
 function populateMirrorTabMenu(popup) {
-  let videoEl = this.target;
   popup.innerHTML = null;
+  if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
+    return;
+  }
+  let videoEl = this.target;
   let doc = popup.ownerDocument;
   let services = CastingApps.getServicesForMirroring();
   services.forEach(service => {

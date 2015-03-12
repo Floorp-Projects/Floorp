@@ -37,6 +37,11 @@ public:
   bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE;
   bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
 
+  virtual void DisableHardwareAcceleration() MOZ_OVERRIDE
+  {
+    sDXVAEnabled = false;
+  }
+
   // Accessors that report whether we have the required MFTs available
   // on the system to play various codecs. Windows Vista doesn't have the
   // H.264/AAC decoders if the "Platform Update Supplement for Windows Vista"

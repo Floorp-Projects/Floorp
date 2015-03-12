@@ -1548,8 +1548,8 @@ js::InitArrayBufferClass(JSContext *cx, HandleObject obj)
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
-    JSObject *getter = NewFunction(cx, js::NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
-                                   JSFunction::NATIVE_FUN, global, js::NullPtr());
+    JSObject *getter =
+        NewNativeFunction(cx, ArrayBufferObject::byteLengthGetter, 0, js::NullPtr());
     if (!getter)
         return nullptr;
 

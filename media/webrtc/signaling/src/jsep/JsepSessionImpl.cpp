@@ -233,6 +233,33 @@ GetTracks(const std::vector<T>& wrappedTracks)
   return result;
 }
 
+nsresult
+JsepSessionImpl::ReplaceTrack(const std::string& oldStreamId,
+                              const std::string& oldTrackId,
+                              const std::string& newStreamId,
+                              const std::string& newTrackId)
+{
+  auto it = FindTrackByIds(mLocalTracks, oldStreamId, oldTrackId);
+
+  if (it == mLocalTracks.end()) {
+    JSEP_SET_ERROR("Track " << oldStreamId << "/" << oldTrackId
+                   << " was never added.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (FindTrackByIds(mLocalTracks, newStreamId, newTrackId) !=
+      mLocalTracks.end()) {
+    JSEP_SET_ERROR("Track " << newStreamId << "/" << newTrackId
+                   << " was already added.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  it->mTrack->SetStreamId(newStreamId);
+  it->mTrack->SetTrackId(newTrackId);
+
+  return NS_OK;
+}
+
 std::vector<RefPtr<JsepTrack>>
 JsepSessionImpl::GetLocalTracks() const
 {

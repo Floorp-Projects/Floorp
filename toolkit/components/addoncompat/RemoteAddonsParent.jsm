@@ -248,9 +248,19 @@ let AboutProtocolParent = {
 
     let uri = BrowserUtils.makeURI(msg.data.uri);
     let contractID = msg.data.contractID;
-    let module = Cc[contractID].getService(Ci.nsIAboutModule);
+    let loadingPrincipal = msg.data.loadingPrincipal;
+    let securityFlags = msg.data.securityFlags;
+    let contentPolicyType = msg.data.contentPolicyType;
     try {
-      let channel = module.newChannel(uri, null);
+      let channel = NetUtil.newChannel2(uri,
+                                        null,
+                                        null,
+                                        null,  // aLoadingNode
+                                        loadingPrincipal,
+                                        null,  // aTriggeringPrincipal
+                                        securityFlags,
+                                        contentPolicyType);
+
       // We're not allowed to set channel.notificationCallbacks to a
       // CPOW, since the setter for notificationCallbacks is in C++,
       // which can't tolerate CPOWs. Instead we just use a JS object

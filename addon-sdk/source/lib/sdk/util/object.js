@@ -78,7 +78,7 @@ function safeMerge(source) {
 exports.safeMerge = safeMerge;
 
 /*
- * Returns a copy of the object without blacklisted properties
+ * Returns a copy of the object without omitted properties
  */
 function omit(source, ...values) {
   let copy = {};

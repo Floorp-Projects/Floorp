@@ -434,8 +434,7 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
                                 gc::AllocKind kind)
 {
     RootedAtom name(cx, nameArg);
-    RootedObject self(cx, this);
-    return NewFunction(cx, NullPtr(), ctor, length, JSFunction::NATIVE_CTOR, self, name, kind);
+    return NewNativeConstructor(cx, ctor, length, name, kind);
 }
 
 static NativeObject *
@@ -443,7 +442,7 @@ CreateBlankProto(JSContext *cx, const Class *clasp, HandleObject proto, HandleOb
 {
     MOZ_ASSERT(clasp != &JSFunction::class_);
 
-    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, proto, global,
+    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, proto,
                                                                     SingletonObject));
     if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
@@ -525,8 +524,7 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global)
     if (debuggers)
         return debuggers;
 
-    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, NullPtr(),
-                                                      global);
+    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, NullPtr());
     if (!obj)
         return nullptr;
     debuggers = cx->new_<DebuggerVector>();
@@ -597,8 +595,9 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     if (cx->global()->maybeGetIntrinsicValue(shId, funVal.address()))
         return true;
 
-    JSFunction *fun = NewFunction(cx, NullPtr(), nullptr, nargs, JSFunction::INTERPRETED_LAZY,
-                                  holder, name, JSFunction::ExtendedFinalizeKind, SingletonObject);
+    JSFunction *fun =
+        NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
+                            holder, name, JSFunction::ExtendedFinalizeKind, SingletonObject);
     if (!fun)
         return false;
     fun->setIsSelfHostedBuiltin();

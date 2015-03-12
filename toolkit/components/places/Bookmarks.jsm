@@ -140,7 +140,7 @@ let Bookmarks = Object.freeze({
     // dateAdded may be imposed by the caller.
     let time = (info && info.dateAdded) || new Date();
     let insertInfo = validateBookmarkObject(info,
-      { type: { required: true }
+      { type: { defaultValue: this.TYPE_BOOKMARK }
       , index: { defaultValue: this.DEFAULT_INDEX }
       , url: { requiredIf: b => b.type == this.TYPE_BOOKMARK
              , validIf: b => b.type == this.TYPE_BOOKMARK }
@@ -1229,7 +1229,7 @@ function validateBookmarkObject(input, behavior={}) {
       throw new Error(`Invalid value for property '${prop}': ${input[prop]}`);
     }
     if (behavior[prop].hasOwnProperty("defaultValue") && input[prop] === undefined) {
-      normalizedInput[prop] = behavior[prop].defaultValue;
+      input[prop] = behavior[prop].defaultValue;
     }
   }
 

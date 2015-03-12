@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Both divs should be part of opaque layers in the final paint.</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.opaque-background {
+  background-color: white;
+}
+
+.reftest-wait .opaque-background {
+  /* make the layer start out transparent */
+  background-color: transparent;
+}
+
+body {
+  height: 4000px;
+}
+
+</style>
+
+<div class="content reftest-opaque-layer"></div>
+
+<div class="fixed opaque-background content reftest-opaque-layer"></div>
+
+<script>
+
+function doTest() {
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
+

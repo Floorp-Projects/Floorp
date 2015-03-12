@@ -1,0 +1,8 @@
+{
+  "name": "remote",
+  "title": "remote",
+  "id": "remote@jetpack",
+  "description": "Run remote tests",
+  "version": "1.0.0",
+  "main": "main.js"
+}

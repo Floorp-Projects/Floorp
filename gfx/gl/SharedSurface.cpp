@@ -343,6 +343,10 @@ SurfaceFactory::NewShSurfHandle(const gfx::IntSize& size)
     if (!surf)
         return nullptr;
 
+    // Before next use, wait until SharedSurface's buffer
+    // is no longer being used.
+    surf->WaitForBufferOwnership();
+
     return new ShSurfHandle(this, Move(surf));
 }
 

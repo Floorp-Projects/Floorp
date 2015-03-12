@@ -32,6 +32,7 @@
 #include "VideoUtils.h"
 #include "ImageLayers.h"
 #include "VideoSegment.h"
+#include "MediaStreamTrack.h"
 #endif
 
 class nsIPrincipal;
@@ -104,6 +105,9 @@ public:
   void DetachTransport_s();
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
+#ifdef MOZILLA_INTERNAL_API
+  nsRefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
+#endif
 protected:
   nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
@@ -126,12 +130,9 @@ public:
                         const std::string& aId)
      : SourceStreamInfo(aMediaStream, aParent, aId) {}
 
-  // XXX NOTE: does not change mMediaStream, even if it replaces the last track
-  // in a LocalSourceStreamInfo.  Revise when we have support for multiple tracks
-  // of a type.
-  nsresult ReplaceTrack(const std::string& oldTrackId,
-                        DOMMediaStream* aNewStream,
-                        const std::string& aNewTrack);
+  nsresult TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
+                            const std::string& oldTrackId,
+                            const std::string& newTrackId);
 
 #ifdef MOZILLA_INTERNAL_API
   void UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
@@ -139,6 +140,10 @@ public:
 #endif
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalSourceStreamInfo)
+
+private:
+  TemporaryRef<MediaPipeline> ForgetPipelineByTrackId_m(
+      const std::string& trackId);
 };
 
 class RemoteSourceStreamInfo : public SourceStreamInfo {
@@ -289,6 +294,12 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Add a remote stream.
   nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo);
+
+  nsresult ReplaceTrack(const std::string& oldStreamId,
+                        const std::string& oldTrackId,
+                        DOMMediaStream* aNewStream,
+                        const std::string& newStreamId,
+                        const std::string& aNewTrack);
 
 #ifdef MOZILLA_INTERNAL_API
   // In cases where the peer isn't yet identified, we disable the pipeline (not

@@ -52,7 +52,7 @@ let pageContract = contract(merge({
     is: ['function', 'undefined']
   },
   include: {
-    is: ['string', 'array', 'undefined']
+    is: ['string', 'array', 'regexp', 'undefined']
   },
   contentScriptWhen: {
     is: ['string', 'undefined']

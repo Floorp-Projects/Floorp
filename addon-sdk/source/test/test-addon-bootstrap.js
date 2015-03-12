@@ -4,8 +4,7 @@
 "use strict";
 
 const { Cu, Cc, Ci } = require("chrome");
-
-const { evaluate } = require("sdk/loader/sandbox");
+const { create, evaluate } = require("./fixtures/bootstrap/utils");
 
 const ROOT = require.resolve("sdk/base64").replace("/sdk/base64.js", "");
 
@@ -22,51 +21,77 @@ const BOOTSTRAP_REASONS = {
   ADDON_DOWNGRADE : 8
 };
 
-exports["test minimal bootstrap.js"] = function(assert) {
-  let aId = "test-min-boot@jetpack";
+exports["test install/startup/shutdown/uninstall all return a promise"] = function(assert) {
   let uri = require.resolve("./fixtures/addon/bootstrap.js");
-
-  let principal = Cc["@mozilla.org/systemprincipal;1"].
-                  createInstance(Ci.nsIPrincipal);
-
-  let bootstrapScope = new Cu.Sandbox(principal, {
-    sandboxName: uri,
-    wantGlobalProperties: ["indexedDB"],
-    addonId: aId,
-    metadata: { addonID: aId, URI: uri }
+  let id = "test-min-boot@jetpack";
+  let bootstrapScope = create({
+    id: id,
+    uri: uri
   });
 
-  try {
-    // Copy the reason values from the global object into the bootstrap scope.
-    for (let name in BOOTSTRAP_REASONS)
-      bootstrapScope[name] = BOOTSTRAP_REASONS[name];
+  // As we don't want our caller to control the JS version used for the
+  // bootstrap file, we run loadSubScript within the context of the
+  // sandbox with the latest JS version set explicitly.
+  bootstrapScope.ROOT = ROOT;
 
-    // As we don't want our caller to control the JS version used for the
-    // bootstrap file, we run loadSubScript within the context of the
-    // sandbox with the latest JS version set explicitly.
-    bootstrapScope.ROOT = ROOT;
+  evaluate({
+    uri: uri,
+    scope: bootstrapScope
+  });
 
-    assert.equal(typeof bootstrapScope.install, "undefined", "install DNE");
-    assert.equal(typeof bootstrapScope.startup, "undefined", "startup DNE");
-    assert.equal(typeof bootstrapScope.shutdown, "undefined", "shutdown DNE");
-    assert.equal(typeof bootstrapScope.uninstall, "undefined", "uninstall DNE");
+  let addon = {
+    id: id,
+    version: "0.0.1",
+    resourceURI: {
+      spec: uri.replace("bootstrap.js", "")
+    }
+  };
 
-    evaluate(bootstrapScope,
-      `${"Components"}.classes['@mozilla.org/moz/jssubscript-loader;1']
-                      .createInstance(${"Components"}.interfaces.mozIJSSubScriptLoader)
-                      .loadSubScript("${uri}");`, "ECMAv5");
+  let install = bootstrapScope.install(addon, BOOTSTRAP_REASONS.ADDON_INSTALL);
+  yield install.then(() => assert.pass("install returns a promise"));
 
-    assert.equal(typeof bootstrapScope.install, "function", "install exists");
-    assert.equal(typeof bootstrapScope.startup, "function", "startup exists");
-    assert.equal(typeof bootstrapScope.shutdown, "function", "shutdown exists");
-    assert.equal(typeof bootstrapScope.uninstall, "function", "uninstall exists");
+  let startup = bootstrapScope.startup(addon, BOOTSTRAP_REASONS.ADDON_INSTALL);
+  yield startup.then(() => assert.pass("startup returns a promise"));
 
-    bootstrapScope.shutdown(null, BOOTSTRAP_REASONS.ADDON_DISABLE);
-  }
-  catch(e) {
-    console.exception(e)
-    assert.fail(e)
-  }
+  let shutdown = bootstrapScope.shutdown(addon, BOOTSTRAP_REASONS.ADDON_DISABLE);
+  yield shutdown.then(() => assert.pass("shutdown returns a promise"));
+
+  // calling shutdown multiple times is fine
+  shutdown = bootstrapScope.shutdown(addon, BOOTSTRAP_REASONS.ADDON_DISABLE);
+  yield shutdown.then(() => assert.pass("shutdown returns working promise on multiple calls"));
+
+  let uninstall = bootstrapScope.uninstall(addon, BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+  yield uninstall.then(() => assert.pass("uninstall returns a promise"));
+}
+
+exports["test minimal bootstrap.js"] = function*(assert) {
+  let uri = require.resolve("./fixtures/addon/bootstrap.js");
+  let bootstrapScope = create({
+    id: "test-min-boot@jetpack",
+    uri: uri
+  });
+
+  // As we don't want our caller to control the JS version used for the
+  // bootstrap file, we run loadSubScript within the context of the
+  // sandbox with the latest JS version set explicitly.
+  bootstrapScope.ROOT = ROOT;
+
+  assert.equal(typeof bootstrapScope.install, "undefined", "install DNE");
+  assert.equal(typeof bootstrapScope.startup, "undefined", "startup DNE");
+  assert.equal(typeof bootstrapScope.shutdown, "undefined", "shutdown DNE");
+  assert.equal(typeof bootstrapScope.uninstall, "undefined", "uninstall DNE");
+
+  evaluate({
+    uri: uri,
+    scope: bootstrapScope
+  });
+
+  assert.equal(typeof bootstrapScope.install, "function", "install exists");
+  assert.equal(typeof bootstrapScope.startup, "function", "startup exists");
+  assert.equal(typeof bootstrapScope.shutdown, "function", "shutdown exists");
+  assert.equal(typeof bootstrapScope.uninstall, "function", "uninstall exists");
+
+  bootstrapScope.shutdown(null, BOOTSTRAP_REASONS.ADDON_DISABLE);
 }
 
 require("sdk/test").run(exports);

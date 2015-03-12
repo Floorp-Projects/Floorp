@@ -1,3 +1,7 @@
+var c = null
+var request = "http://example.com/hmm?q=foobar";
+var response = new Response("This is some Response!");
+
 ok(!!caches, 'caches object should be available on global');
 caches.open('snafu').then(function(openCache) {
   ok(openCache instanceof Cache, 'cache object should be resolved from caches.open');
@@ -26,7 +30,9 @@ caches.open('snafu').then(function(openCache) {
 }).then(function(snafu) {
   var req = './cachekey';
   var res = new Response("Hello world");
-  return snafu.put('ftp://invalid', res).catch(function (err) {
+  return snafu.put('ftp://invalid', res).then(function() {
+    ok(false, 'This should fail');
+  }).catch(function (err) {
     is(err.name, 'TypeError', 'put() should throw TypeError for invalid scheme');
     return snafu.put(req, res);
   }).then(function(v) {
@@ -56,5 +62,66 @@ caches.open('snafu').then(function(openCache) {
     is(v, "Hello world", "Response body should match original");
   });
 }).then(function() {
-  workerTestDone();
+  // FIXME(nsm): Can't use a Request object for now since the operations
+  // consume it's 'body'. See
+  // https://github.com/slightlyoff/ServiceWorker/issues/510.
+  return caches.open("foobar");
+}).then(function(openCache) {
+  c = openCache;
+  return c.put(request, response);
+}).then(function(putResponse) {
+  is(putResponse, undefined, 'The promise should resolve to undefined');
+  return c.keys(request);
+}).then(function(keys) {
+  ok(keys, 'Valid keys object expected');
+  is(keys.length, 1, 'Only one key is expected');
+  return c.keys();
+}).then(function(keys) {
+  ok(keys, 'Valid keys object expected');
+  is(keys.length, 1, 'Only one key is expected');
+  return c.matchAll(request);
+}).then(function(matchAllResponses) {
+  ok(matchAllResponses, 'matchAll should succeed');
+  is(matchAllResponses.length, 1, 'Only one match is expected');
+  return c.match(request);
+}).then(function(matchResponse) {
+  ok(matchResponse, 'match should succeed');
+  return caches.match(request);
+}).then(function(storageMatchResponse) {
+  ok(storageMatchResponse, 'storage match should succeed');
+  return caches.match(request, {cacheName:"foobar"});
+}).then(function(storageMatchResponse) {
+  ok(storageMatchResponse, 'storage match should succeed');
+  var request2 = new Request("http://example.com/hmm?q=snafu");
+  return c.match(request2, {ignoreSearch:true});
+}).then(function(match2Response) {
+  ok(match2Response, 'match should succeed');
+  return c.delete(request);
+}).then(function(deleteResult) {
+  ok(deleteResult, 'delete should succeed');
+  return c.keys();
+}).then(function(keys) {
+  ok(keys, 'Valid keys object expected');
+  is(keys.length, 0, 'Zero keys is expected');
+  return c.matchAll(request);
+}).then(function(matchAll2Responses) {
+  ok(matchAll2Responses, 'matchAll should succeed');
+  is(matchAll2Responses.length, 0, 'Zero matches is expected');
+  return caches.has("foobar");
+}).then(function(hasResult) {
+  ok(hasResult, 'has should succeed');
+  return caches.keys();
+}).then(function(keys) {
+  ok(keys, 'Valid keys object expected');
+  is(keys.length, 2, 'Two keys are expected');
+  is(keys.indexOf("snafu"), 0, 'snafu should be the first key');
+  is(keys.indexOf("foobar"), 1, 'foobar should be the second key');
+  return caches.delete("foobar");
+}).then(function(deleteResult) {
+  ok(deleteResult, 'delete should succeed');
+  return caches.has("foobar");
+}).then(function(hasMissingCache) {
+  ok(!hasMissingCache, 'has should have a result');
+}).then(function() {
+  testDone();
 })

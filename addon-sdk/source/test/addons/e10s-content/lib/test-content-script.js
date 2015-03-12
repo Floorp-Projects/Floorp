@@ -70,7 +70,7 @@ function createWorker(assert, xrayWindow, contentScript, done) {
   let worker = Worker({
     window: xrayWindow,
     contentScript: [
-      'new ' + function () {
+      'let assert, done; new ' + function () {
         assert = function assert(v, msg) {
           self.port.emit("assert", {assertion:v, msg:msg});
         }

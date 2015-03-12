@@ -107,11 +107,11 @@
                          data-view="js-flamegraph" />
           <toolbarbutton id="select-memory-calltree-view"
                          class="devtools-toolbarbutton devtools-button"
-                         label="&profilerUI.toolbar.memory-calltree;"
+                         label="&profilerUI.toolbar.memory-calltree1;"
                          data-view="memory-calltree" />
           <toolbarbutton id="select-memory-flamegraph-view"
                          class="devtools-toolbarbutton devtools-button"
-                         label="&profilerUI.toolbar.memory-flamegraph;"
+                         label="&profilerUI.toolbar.memory-flamegraph1;"
                          data-view="memory-flamegraph" />
         </hbox>
         <spacer flex="1"></spacer>

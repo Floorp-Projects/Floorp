@@ -12,9 +12,9 @@ const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.
 
 this.EXPORTED_SYMBOLS = [
   "GraphCursor",
-  "GraphSelection",
-  "GraphSelectionDragger",
-  "GraphSelectionResizer",
+  "GraphArea",
+  "GraphAreaDragger",
+  "GraphAreaResizer",
   "AbstractCanvasGraph",
   "LineGraphWidget",
   "BarGraphWidget",
@@ -101,17 +101,17 @@ this.GraphCursor = function() {
   this.y = null;
 };
 
-this.GraphSelection = function() {
+this.GraphArea = function() {
   this.start = null;
   this.end = null;
 };
 
-this.GraphSelectionDragger = function() {
+this.GraphAreaDragger = function(anchor = new GraphArea()) {
   this.origin = null;
-  this.anchor = new GraphSelection();
+  this.anchor = anchor;
 };
 
-this.GraphSelectionResizer = function() {
+this.GraphAreaResizer = function() {
   this.margin = null;
 };
 
@@ -178,9 +178,9 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     this._ctx.mozImageSmoothingEnabled = false;
 
     this._cursor = new GraphCursor();
-    this._selection = new GraphSelection();
-    this._selectionDragger = new GraphSelectionDragger();
-    this._selectionResizer = new GraphSelectionResizer();
+    this._selection = new GraphArea();
+    this._selectionDragger = new GraphAreaDragger();
+    this._selectionResizer = new GraphAreaResizer();
 
     this._onAnimationFrame = this._onAnimationFrame.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
@@ -239,7 +239,9 @@ AbstractCanvasGraph.prototype = {
     this._window.removeEventListener("mouseout", this._onMouseOut);
 
     let ownerWindow = this._parent.ownerDocument.defaultView;
-    ownerWindow.removeEventListener("resize", this._onResize);
+    if (ownerWindow) {
+      ownerWindow.removeEventListener("resize", this._onResize);
+    }
 
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
