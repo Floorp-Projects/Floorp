@@ -609,6 +609,11 @@ void
 GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 {
   int charge;
+  static bool previousCharging = false;
+  static double previousLevel = 0.0, remainingTime = 0.0;
+  static struct timespec lastLevelChange;
+  struct timespec now;
+  double dtime, dlevel;
 
   if (GetCurrentBatteryCharge(&charge)) {
     aBatteryInfo->level() = (double)charge / 100.0;
@@ -624,11 +629,50 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
     aBatteryInfo->charging() = true;
   }
 
-  if (!aBatteryInfo->charging() || (aBatteryInfo->level() < 1.0)) {
+  if (aBatteryInfo->charging() != previousCharging){
     aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
-  } else {
-    aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
+    memset(&lastLevelChange, 0, sizeof(struct timespec));
   }
+
+  if (aBatteryInfo->charging()) {
+    if (aBatteryInfo->level() == 1.0) {
+      aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
+    } else if (aBatteryInfo->level() != previousLevel){
+      if (lastLevelChange.tv_sec != 0) {
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        dtime = now.tv_sec - lastLevelChange.tv_sec;
+        dlevel = aBatteryInfo->level() - previousLevel;
+
+        if (dlevel <= 0.0) {
+          aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
+        } else {
+          remainingTime = (double) round(dtime / dlevel * (1.0 - aBatteryInfo->level()));
+          aBatteryInfo->remainingTime() = remainingTime;
+        }
+
+        lastLevelChange = now;
+      } else { // lastLevelChange.tv_sec == 0
+        clock_gettime(CLOCK_MONOTONIC, &lastLevelChange);
+        aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
+      }
+
+    } else {
+      clock_gettime(CLOCK_MONOTONIC, &now);
+      dtime = now.tv_sec - lastLevelChange.tv_sec;
+      if (dtime < remainingTime) {
+        aBatteryInfo->remainingTime() = round(remainingTime - dtime);
+      } else {
+        aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
+      }
+
+    }
+
+  } else {
+    aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
+  }
+
+  previousCharging = aBatteryInfo->charging();
+  previousLevel = aBatteryInfo->level();
 }
 
 namespace {
