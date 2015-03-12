@@ -48,6 +48,8 @@ public:
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE { return nullptr; }
 
+  virtual bool IsValid() MOZ_OVERRIDE;
+
 private:
 
   // Blocks the calling thread until the copy operation started in SetData()
