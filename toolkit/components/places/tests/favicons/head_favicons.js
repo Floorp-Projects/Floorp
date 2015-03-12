@@ -95,3 +95,11 @@ function checkFaviconMissingForPage(aPageURI, aCallback) {
       aCallback();
     });
 }
+
+function promiseFaviconMissingForPage(aPageURI) {
+  return new Promise(resolve => checkFaviconMissingForPage(aPageURI, resolve));
+}
+
+function promiseFaviconChanged(aExpectedPageURI, aExpectedFaviconURI) {
+  return new Promise(resolve => waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI, resolve));
+}
