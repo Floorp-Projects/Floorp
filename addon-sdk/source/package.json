@@ -22,15 +22,15 @@
   "main": "./lib/index.js",
   "loader": "lib/sdk/loader/cuddlefish.js",
   "devDependencies": {
-    "async": "0.2.10",
-    "chai": "1.9.2",
-    "glob": "4.0.6",
-    "jpm": "0.0.23",
-    "lodash": "2.4.1",
-    "mocha": "1.21.5",
-    "promise": "6.0.1",
-    "rimraf": "2.2.8",
-    "unzip": "0.1.9",
+    "async": "0.9.0",
+    "chai": "2.1.1",
+    "glob": "4.4.2",
+    "jpm": "0.0.29",
+    "lodash": "3.3.1",
+    "mocha": "2.1.0",
+    "promise": "6.1.0",
+    "rimraf": "2.3.1",
+    "unzip": "0.1.11",
     "xmldom": "0.1.19"
   }
 }

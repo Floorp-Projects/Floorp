@@ -163,7 +163,13 @@ exports.testSimplePrefs = function(assert) {
   assert.strictEqual(simple.prefs.test3, "1", "test3 is '1'");
   assert.strictEqual(simple.prefs.test4, "red", "test4 is 'red'");
 
-  branch.deleteBranch('');
+  // Only delete the test preferences to avoid unsetting any test harness
+  // preferences.
+  for (let setting of parent.children) {
+    let name = setting.getAttribute('pref-name');
+    branch.deleteBranch("." + name);
+  }
+
   assert.strictEqual(simple.prefs.test, undefined, "test is undefined");
   assert.strictEqual(simple.prefs.test2, undefined, "test2 is undefined");
   assert.strictEqual(simple.prefs.test3, undefined, "test3 is undefined");

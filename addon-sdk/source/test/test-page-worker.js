@@ -281,7 +281,7 @@ exports.testLoadContentPageRelativePath = function(assert, done) {
   const { merge } = require("sdk/util/object");
 
   const options = merge({}, require('@loader/options'),
-      { prefixURI: require('./fixtures').url() });
+      { id: "testloader", prefixURI: require('./fixtures').url() });
 
   let loader = Loader(module, null, options);
 
@@ -513,6 +513,29 @@ exports.testWindowStopDontBreak = function (assert, done) {
   page.port.emit("ping");
 };
 
+/**  
+ * bug 1138545 - the docs claim you can pass in a bare regexp.
+ */
+exports.testRegexArgument = function (assert, done) {
+  let url = 'data:text/html;charset=utf-8,testWindowStopDontBreak';
+
+  let page = new Page({
+    contentURL: url,
+    contentScriptWhen: 'ready',
+    contentScript: Isolate(() => {
+     self.port.emit("pong", document.location.href); 
+    }),
+    include: /^data\:text\/html;.*/
+  });    
+
+  assert.pass("We can pass in a RegExp into page-worker's include option.");
+
+  page.port.on("pong", (href) => {
+    assert.equal(href, url, "we get back the same url from the content script.");
+    page.destroy();
+    done();
+  });
+};
 
 function isDestroyed(page) {
   try {
