@@ -141,11 +141,28 @@ protected:
   virtual ~BluetoothHfpManager();
 
 private:
-  class GetVolumeTask;
-  class CloseScoTask;
+  class AtResponseResultHandler;
+  class CindResponseResultHandler;
+  class ConnectAudioResultHandler;
+  class ConnectResultHandler;
+  class CopsResponseResultHandler;
+  class ClccResponseResultHandler;
+  class CleanupInitResultHandler;
+  class CleanupResultHandler;
   class CloseScoRunnable;
-  class RespondToBLDNTask;
+  class CloseScoTask;
+  class DeinitResultHandlerRunnable;
+  class DeviceStatusNotificationResultHandler;
+  class DisconnectAudioResultHandler;
+  class DisconnectResultHandler;
+  class FormattedAtResponseResultHandler;
+  class GetVolumeTask;
+  class InitResultHandlerRunnable;
   class MainThreadTask;
+  class OnErrorProfileResultHandlerRunnable;
+  class PhoneStateChangeResultHandler;
+  class RespondToBLDNTask;
+  class VolumeControlResultHandler;
 
   friend class BluetoothHfpManagerObserver;
   friend class GetVolumeTask;
