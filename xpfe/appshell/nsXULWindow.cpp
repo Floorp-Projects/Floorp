@@ -1392,10 +1392,6 @@ void nsXULWindow::SyncAttributesToWidget()
     mWindow->SetNonClientMargins(margins);
   }
 
-  // "accelerated" attribute
-  bool isAccelerated = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"));
-  mWindow->SetLayersAcceleration(isAccelerated);
-
   // "windowtype" attribute
   windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, attr);
   if (!attr.IsEmpty()) {
