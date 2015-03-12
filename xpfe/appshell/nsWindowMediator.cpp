@@ -195,11 +195,9 @@ nsWindowMediator::GetEnumerator(const char16_t* inType, nsISimpleEnumerator** ou
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
 
-  nsAppShellWindowEnumerator *enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
-  if (enumerator)
-    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator);
-
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
+  enumerator.forget(outEnumerator);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -209,11 +207,9 @@ nsWindowMediator::GetXULWindowEnumerator(const char16_t* inType, nsISimpleEnumer
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
 
-  nsAppShellWindowEnumerator *enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
-  if (enumerator)
-    return enumerator->QueryInterface(NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator);
-
-  return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
+  enumerator.forget(outEnumerator);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

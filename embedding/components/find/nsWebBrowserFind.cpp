@@ -409,8 +409,8 @@ nsresult nsWebBrowserFind::GetRootNode(nsIDOMDocument* aDomDoc,
     rv = htmlDoc->GetBody(getter_AddRefs(bodyElement));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(bodyElement);
-    return bodyElement->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                       (void **)aNode);
+    bodyElement.forget(aNode);
+    return NS_OK;
   }
 
   // For non-HTML documents, the content root node will be the doc element.
@@ -418,7 +418,8 @@ nsresult nsWebBrowserFind::GetRootNode(nsIDOMDocument* aDomDoc,
   rv = aDomDoc->GetDocumentElement(getter_AddRefs(docElement));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_ARG_POINTER(docElement);
-  return docElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aNode);
+  docElement.forget(aNode);
+  return NS_OK;
 }
 
 nsresult nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,

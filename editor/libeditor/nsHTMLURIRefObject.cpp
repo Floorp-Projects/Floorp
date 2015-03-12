@@ -254,7 +254,7 @@ nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
     *aResult = 0;
     return rv;
   }
-  return refObject->QueryInterface(NS_GET_IID(nsIURIRefObject),
-                                   (void**)aResult);
+  refObject.forget(aResult);
+  return NS_OK;
 }
 
