@@ -4,7 +4,7 @@
 var hits = 0;
 var t = {};
 var p = new Proxy(t, {
-    defineProperty(t, id, desc) { hits++; }
+    defineProperty(t, id, desc) { hits++; return true; }
 });
 p.x = 1;
 assertEq(hits, 1);

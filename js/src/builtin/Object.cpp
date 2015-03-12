@@ -661,12 +661,12 @@ js::obj_create(JSContext *cx, unsigned argc, Value *vp)
 
     if (!args[0].isObjectOrNull()) {
         RootedValue v(cx, args[0]);
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             bytes, "not an object or null");
-        js_free(bytes);
+                             bytes.get(), "not an object or null");
         return false;
     }
 

@@ -153,11 +153,6 @@ function testInit() {
         fileNames = skipTests(fileNames, config.startAt, config.endAt);
       }
 
-      if (config.totalChunks && config.thisChunk) {
-        fileNames = chunkifyTests(fileNames, config.totalChunks,
-                                  config.thisChunk, config.chunkByDir);
-      }
-
       // Override the SDK modules if necessary
       try {
         let sdklibs = Services.prefs.getCharPref("extensions.sdk.path");

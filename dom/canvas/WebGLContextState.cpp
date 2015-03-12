@@ -628,12 +628,14 @@ realGLboolean*
 WebGLContext::GetStateTrackingSlot(GLenum cap)
 {
     switch (cap) {
-        case LOCAL_GL_SCISSOR_TEST:
-            return &mScissorTestEnabled;
         case LOCAL_GL_DITHER:
             return &mDitherEnabled;
         case LOCAL_GL_RASTERIZER_DISCARD:
             return &mRasterizerDiscardEnabled;
+        case LOCAL_GL_SCISSOR_TEST:
+            return &mScissorTestEnabled;
+        case LOCAL_GL_STENCIL_TEST:
+            return &mStencilTestEnabled;
     }
 
     return nullptr;
