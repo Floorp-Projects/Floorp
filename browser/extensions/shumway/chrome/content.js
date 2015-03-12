@@ -19,17 +19,15 @@ Components.utils.import('chrome://shumway/content/ShumwayCom.jsm');
 
 var externalInterfaceWrapper = {
   callback: function (call) {
-    if (!shumwayComAdapter.onExternalCallback) {
+    if (!shumwayComAdapterHooks.onExternalCallback) {
       return undefined;
     }
-    return shumwayComAdapter.onExternalCallback(
+    return shumwayComAdapterHooks.onExternalCallback(
       Components.utils.cloneInto(JSON.parse(call), content));
   }
 };
 
-// The object allows resending of external interface, clipboard and other
-// control messages between unprivileged content and ShumwayStreamConverter.
-var shumwayComAdapter;
+var shumwayComAdapterHooks = {};
 
 function sendMessage(action, data, sync) {
   var detail = {action: action, data: data, sync: sync};
@@ -53,18 +51,18 @@ addMessageListener('Shumway:init', function (message) {
     externalInterface: externalInterfaceWrapper
   });
 
-  shumwayComAdapter = ShumwayCom.createAdapter(content, {
+  ShumwayCom.createAdapter(content.wrappedJSObject, {
     sendMessage: sendMessage,
     enableDebug: enableDebug,
     getEnvironment: function () { return environment; }
-  });
+  }, shumwayComAdapterHooks);
 
   content.wrappedJSObject.runViewer();
 });
 
 addMessageListener('Shumway:loadFile', function (message) {
-  if (!shumwayComAdapter.onLoadFileCallback) {
+  if (!shumwayComAdapterHooks.onLoadFileCallback) {
     return;
   }
-  shumwayComAdapter.onLoadFileCallback(Components.utils.cloneInto(message.data, content));
+  shumwayComAdapterHooks.onLoadFileCallback(Components.utils.cloneInto(message.data, content));
 });
