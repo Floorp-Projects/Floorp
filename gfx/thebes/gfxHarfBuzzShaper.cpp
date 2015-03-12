@@ -1247,6 +1247,13 @@ gfxHarfBuzzShaper::LoadHmtxTable()
 bool
 gfxHarfBuzzShaper::InitializeVertical()
 {
+    // We only try this once. If we don't have a mHmtxTable after that,
+    // this font can't handle vertical shaping, so return false.
+    if (mVerticalInitialized) {
+        return mHmtxTable != nullptr;
+    }
+    mVerticalInitialized = true;
+
     if (!mHmtxTable) {
         if (!LoadHmtxTable()) {
             return false;
