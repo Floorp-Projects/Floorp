@@ -12,95 +12,42 @@
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var config = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 352,
-    height: 288
-  }
-};
+var suite = new CameraTestSuite();
 
-function onError(e) {
-  ok(false, "Error " + e);
-}
+suite.test('bug-1099390', function() {
+  function release(p) {
+    return new Promise(function(resolve, reject) {
+      var gotCloseEvent = false;
+      var gotReleasePromise = false;
 
-var Camera = {
-  _cameraObj: null,
-
-  get viewfinder() {
-    return document.getElementById('viewfinder');
-  },
-
-  release: function release() {
-    viewfinder.mozSrcObject = null;
-    if (Camera._cameraObj) {
-      Camera._cameraObj.release();
-      Camera._cameraObj = null;
-    }
-  },
-
-  test: function test(cam) {
-    var gotCloseEvent = false;
-    var gotReleasePromise = false;
-
-    function gotAll() {
-      var all = gotCloseEvent && gotReleasePromise;
-      if (all) {
-        info("Got all expected notifications");
-      }
-      return all;
-    };
-
-    var onClosed = function(e) {
-      cam.removeEventListener('close', onClosed);
-      ok(!gotCloseEvent, "gotCloseEvent was " + gotCloseEvent);
-      ok(e.reason === "HardwareReleased", "'close' event reason is: " + e.reason);
-      gotCloseEvent = true;
-      if (gotAll()) {
-        SimpleTest.finish();
-      }
-    };
-
-    cam.addEventListener('close', onClosed);
-
-    var onResolve = function() {
-      ok(!gotReleasePromise, "gotReleasePromise was " + gotReleasePromise);
-      gotReleasePromise = true;
-      if (gotAll()) {
-        SimpleTest.finish();
-      }
-    };
-
-    cam.release().then(onResolve, onError);
-  }, // test()
-
-  start: function start() {
-    function onSuccess(d) {
-      Camera._cameraObj = d.camera;
-      var cam = d.camera;
-
-      var onPreviewStateChange = function(e) {
-        if (e.newState === 'started') {
-          cam.removeEventListener('previewstatechange', onPreviewStateChange);
-          Camera.test(cam);
+      var onClosed = function(e) {
+        suite.camera.removeEventListener('close', onClosed);
+        ok(!gotCloseEvent, "gotCloseEvent was " + gotCloseEvent);
+        ok(e.reason === "HardwareReleased", "'close' event reason is: " + e.reason);
+        gotCloseEvent = true;
+        if (gotReleasePromise) {
+          resolve();
         }
-      }; // onPreviewStateChange
-      cam.addEventListener('previewstatechange', onPreviewStateChange);
-    }; // onSuccess()
+      };
 
-    navigator.mozCameras.getCamera(whichCamera, config).then(onSuccess, onError);
-  }, // start()
-}
+      suite.camera.addEventListener('close', onClosed);
 
-SimpleTest.waitForExplicitFinish();
+      suite.camera.release().then(function(p) {
+        ok(true, "released camera");
+        gotReleasePromise = true;
+        if (gotCloseEvent) {
+          resolve();
+        }
+      }).catch(reject);
+    });
+  }
 
-window.addEventListener('beforeunload', function() {
-  Camera.release();
+  return suite.getCamera()
+    .then(release, suite.rejectGetCamera);
 });
 
-Camera.start();
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

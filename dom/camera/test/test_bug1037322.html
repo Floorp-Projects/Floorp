@@ -12,76 +12,56 @@
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var config = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 320,
-    height: 240
-  }
-};
+var suite = new CameraTestSuite();
 
-function onError(e) {
-  ok(false, "Error: " + JSON.stringify(e));
-}
+suite.test('bug-1037322', function() {
+  var cameraManager = navigator.mozCameras;
+  var whichCamera = cameraManager.getListOfCameras()[0];
 
-var Camera = {
-  cameraObj: null,
-
-  get viewfinder() {
-    return document.getElementById('viewfinder');
-  },
-
-  start: function test_start() {
-    function setConfig_onSuccess(cfg) {
-      // Check our specific configuration
-      ok(cfg.mode === config.mode, "Configured mode = " + cfg.mode);
-      ok(cfg.previewSize.width === config.previewSize.width &&
-         cfg.previewSize.height === config.previewSize.height,
-         "Configured preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
-      ok(cfg.recorderProfile === config.recorderProfile,
-         "Configured recorder profile = '" + cfg.recorderProfile + "'");
-
-      SimpleTest.finish();
+  var postConfig = {
+    mode: 'picture',
+    recorderProfile: 'low',
+    previewSize: {
+      width: 320,
+      height: 240
     }
+  };
 
-    function getCamera_onSuccess(d) {
-      var camera = d.camera;
-      var cfg = d.configuration;
-      Camera.cameraObj = camera;
-      Camera.viewfinder.mozSrcObject = camera;
-      Camera.viewfinder.play();
+  function resolveGetCamera(p) {
+    suite.camera = p.camera;
 
-      // Check the default configuration
-      ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
-      ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
-         "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
-      ok(cfg.recorderProfile === "default",
-         "Initial recorder profile = '" + cfg.recorderProfile + "'");
-
-      // Apply our specific configuration
-      camera.setConfiguration(config).then(setConfig_onSuccess, onError);
-    }
-
-    var cfg = {
-      mode: 'unspecified',
-    };
-    navigator.mozCameras.getCamera(whichCamera, cfg).then(getCamera_onSuccess, onError);
+    // Check the default configuration
+    var cfg = p.configuration;
+    ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
+    ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
+       "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
+    ok(cfg.recorderProfile === "default",
+       "Initial recorder profile = '" + cfg.recorderProfile + "'");
   }
-}
 
-SimpleTest.waitForExplicitFinish();
-
-window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
-  if (Camera.cameraObj) {
-    Camera.cameraObj.release();
-    Camera.cameraObj = null;
+  function configure(p) {
+    // Apply our specific configuration
+    return suite.camera.setConfiguration(postConfig);
   }
+
+  function resolveConfigure(cfg) {
+    // Check our specific configuration
+    ok(cfg.mode === postConfig.mode, "Configured mode = " + cfg.mode);
+    ok(cfg.previewSize.width === postConfig.previewSize.width &&
+       cfg.previewSize.height === postConfig.previewSize.height,
+       "Configured preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
+    ok(cfg.recorderProfile === postConfig.recorderProfile,
+       "Configured recorder profile = '" + cfg.recorderProfile + "'");
+  }
+
+  return cameraManager.getCamera(whichCamera, {mode: 'unspecified'})
+    .then(resolveGetCamera, suite.rejectGetCamera)
+    .then(configure)
+    .then(resolveConfigure, suite.rejectConfigure);
 });
 
-Camera.start();
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

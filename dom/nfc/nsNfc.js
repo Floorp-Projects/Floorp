@@ -182,7 +182,7 @@ MozNFCTagImpl.prototype = {
     }
 
     let callback = new NfcCallback(this._window);
-    this._nfcContentHelper.writeNDEF(records, this.session, callback);
+    this._nfcContentHelper.writeNDEF(records, false, this.session, callback);
     return callback.promise;
   },
 
@@ -281,7 +281,7 @@ MozNFCPeerImpl.prototype = {
 
     // Just forward sendNDEF to writeNDEF
     let callback = new NfcCallback(this._window);
-    this._nfcContentHelper.writeNDEF(records, this.session, callback);
+    this._nfcContentHelper.writeNDEF(records, true, this.session, callback);
     return callback.promise;
   },
 

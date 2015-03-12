@@ -68,12 +68,18 @@ function CameraTestSuite() {
   this.logError = this._logError.bind(this);
   this.expectedError = this._expectedError.bind(this);
   this.expectedRejectGetCamera = this._expectedRejectGetCamera.bind(this);
+  this.expectedRejectConfigure = this._expectedRejectConfigure.bind(this);
   this.expectedRejectAutoFocus = this._expectedRejectAutoFocus.bind(this);
   this.expectedRejectTakePicture = this._expectedRejectTakePicture.bind(this);
+  this.expectedRejectStartRecording = this._expectedRejectStartRecording.bind(this);
+  this.expectedRejectStopRecording = this._expectedRejectStopRecording.bind(this);
   this.rejectGetCamera = this._rejectGetCamera.bind(this);
+  this.rejectConfigure = this._rejectConfigure.bind(this);
   this.rejectRelease = this._rejectRelease.bind(this);
   this.rejectAutoFocus = this._rejectAutoFocus.bind(this);
   this.rejectTakePicture = this._rejectTakePicture.bind(this);
+  this.rejectStartRecording = this._rejectStartRecording.bind(this);
+  this.rejectStopRecording = this._rejectStopRecording.bind(this);
   this.rejectPreviewStarted = this._rejectPreviewStarted.bind(this);
 
   var self = this;
@@ -95,20 +101,35 @@ CameraTestSuite.prototype = {
   camera: null,
   hw: null,
   _lowMemSet: false,
+  _reloading: false,
 
   /* Returns a promise which is resolved when the test suite is ready
      to be executing individual test cases. One may provide the expected
      hardware type here if desired; the default is to use the JS test
      hardware. Use '' for the native emulated camera hardware. */
   _setup: function(hwType) {
+    /* Depending on how we run the mochitest, we may not have the necessary
+       permissions yet. If we do need to request them, then we have to reload
+       the window to ensure the reconfiguration propogated properly. */
+    if (!SpecialPowers.hasPermission("camera", document)) {
+      info("requesting camera permission");
+      this._reloading = true;
+      SpecialPowers.addPermission("camera", true, document);
+      window.location.reload();
+      return Promise.reject();
+    }
+
+    info("has camera permission");
     if (!isDefined(hwType)) {
       hwType = 'hardware';
     }
 
     this._hwType = hwType;
     return new Promise(function(resolve, reject) {
-      SpecialPowers.pushPrefEnv({'set': [['camera.control.test.enabled', hwType]]}, function() {
-        resolve();
+      SpecialPowers.pushPrefEnv({'set': [['camera.control.test.permission', true]]}, function() {
+        SpecialPowers.pushPrefEnv({'set': [['camera.control.test.enabled', hwType]]}, function() {
+          resolve();
+        });
       });
     });
   },
@@ -158,6 +179,10 @@ CameraTestSuite.prototype = {
 
   /* Execute all test cases (after setup is called). */
   _run: function() {
+    if (this._reloading) {
+      return;
+    }
+
     var test = this._tests.shift();
     var self = this;
     if (test) {
@@ -348,6 +373,10 @@ CameraTestSuite.prototype = {
     return this.logError('get camera failed', e);
   },
 
+  _rejectConfigure: function(e) {
+    return this.logError('set configuration failed', e);
+  },
+
   _rejectRelease: function(e) {
     return this.logError('release camera failed', e);
   },
@@ -358,6 +387,14 @@ CameraTestSuite.prototype = {
 
   _rejectTakePicture: function(e) {
     return this.logError('take picture failed', e);
+  },
+
+  _rejectStartRecording: function(e) {
+    return this.logError('start recording failed', e);
+  },
+
+  _rejectStopRecording: function(e) {
+    return this.logError('stop recording failed', e);
   },
 
   _rejectPreviewStarted: function(e) {
@@ -384,12 +421,24 @@ CameraTestSuite.prototype = {
     return this.expectedError('expected get camera to fail');
   },
 
+  _expectedRejectConfigure: function(p) {
+    return this.expectedError('expected set configuration to fail');
+  },
+
   _expectedRejectAutoFocus: function(p) {
     return this.expectedError('expected auto focus to fail');
   },
 
   _expectedRejectTakePicture: function(p) {
     return this.expectedError('expected take picture to fail');
+  },
+
+  _expectedRejectStartRecording: function(p) {
+    return this.expectedError('expected start recording to fail');
+  },
+
+  _expectedRejectStopRecording: function(p) {
+    return this.expectedError('expected stop recording to fail');
   },
 };
 
