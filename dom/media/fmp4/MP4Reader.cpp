@@ -295,18 +295,13 @@ private:
 #endif
 
 void MP4Reader::RequestCodecResource() {
-#if !defined(MOZ_WIDGET_ANDROID)
   if (mVideo.mDecoder) {
     mVideo.mDecoder->AllocateMediaResources();
   }
-#endif
 }
 
 bool MP4Reader::IsWaitingOnCodecResource() {
-#if !defined(MOZ_WIDGET_ANDROID)
   return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
-#endif
-  return false;
 }
 
 bool MP4Reader::IsWaitingOnCDMResource() {
@@ -1072,7 +1067,6 @@ bool MP4Reader::IsDormantNeeded()
 
 void MP4Reader::ReleaseMediaResources()
 {
-#if !defined(MOZ_WIDGET_ANDROID)
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
@@ -1082,16 +1076,13 @@ void MP4Reader::ReleaseMediaResources()
   if (mVideo.mDecoder) {
     mVideo.mDecoder->ReleaseMediaResources();
   }
-#endif
 }
 
 void MP4Reader::NotifyResourcesStatusChanged()
 {
-#if !defined(MOZ_WIDGET_ANDROID)
   if (mDecoder) {
     mDecoder->NotifyWaitingForResourcesStatusChanged();
   }
-#endif
 }
 
 void
