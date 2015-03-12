@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "MurmurHash3.h"
 #include "nsPrintfCString.h"
+#include "nsTArray.h"
 #include <string>
 #include <vector>
 #include "WebGLContext.h"
@@ -220,14 +221,14 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         const std::vector<sh::Varying>& vertList = *ShGetVaryings(prev->mHandle);
         const std::vector<sh::Varying>& fragList = *ShGetVaryings(mHandle);
 
-        std::vector<ShVariableInfo> staticUseVaryingList;
+        nsTArray<ShVariableInfo> staticUseVaryingList;
 
         for (auto itrFrag = fragList.begin(); itrFrag != fragList.end(); ++itrFrag) {
             static const char prefix[] = "gl_";
             if (StartsWith(itrFrag->name, prefix)) {
                 if (itrFrag->staticUse) {
-                    staticUseVaryingList.push_back({itrFrag->type,
-                                                    (int)itrFrag->elementCount()});
+                    staticUseVaryingList.AppendElement({itrFrag->type,
+                                                        (int)itrFrag->elementCount()});
                 }
 
                 continue;
@@ -262,14 +263,14 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
             }
 
             if (staticVertUse && itrFrag->staticUse) {
-                staticUseVaryingList.push_back({itrFrag->type,
-                                                (int)itrFrag->elementCount()});
+                staticUseVaryingList.AppendElement({itrFrag->type,
+                                                    (int)itrFrag->elementCount()});
             }
         }
 
         if (!ShCheckVariablesWithinPackingLimits(mMaxVaryingVectors,
-                                                 staticUseVaryingList.data(),
-                                                 staticUseVaryingList.size()))
+                                                 staticUseVaryingList.Elements(),
+                                                 staticUseVaryingList.Length()))
         {
             *out_log = "Statically used varyings do not fit within packing limits. (see"
                        " GLSL ES Specification 1.0.17, p111)";
