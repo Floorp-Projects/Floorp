@@ -72,23 +72,28 @@ Bootstrap.prototype = {
     }
   },
   install(addon, reason) {
+    return new Promise(resolve => resolve());
   },
   uninstall(addon, reason) {
-    const {id} = addon;
+    return new Promise(resolve => {
+      const {id} = addon;
 
-    prefs.reset(`extensions.${id}.sdk.domain`);
-    prefs.reset(`extensions.${id}.sdk.version`);
-    prefs.reset(`extensions.${id}.sdk.rootURI`);
-    prefs.reset(`extensions.${id}.sdk.baseURI`);
-    prefs.reset(`extensions.${id}.sdk.load.reason`);
+      prefs.reset(`extensions.${id}.sdk.domain`);
+      prefs.reset(`extensions.${id}.sdk.version`);
+      prefs.reset(`extensions.${id}.sdk.rootURI`);
+      prefs.reset(`extensions.${id}.sdk.baseURI`);
+      prefs.reset(`extensions.${id}.sdk.load.reason`);
 
+      resolve();
+    });
   },
   startup(addon, reasonCode) {
-    const { id, version, resourceURI: {spec: addonURI} } = addon;
+    const { id, version, resourceURI: { spec: addonURI } } = addon;
     const rootURI = this.mountURI || addonURI;
     const reason = REASON[reasonCode];
+    const self = this;
 
-    spawn(function*() {
+    return spawn(function*() {
       const metadata = JSON.parse(yield readURI(`${rootURI}package.json`));
       const domain = readDomain(id);
       const baseURI = `resource://${domain}/`;
@@ -122,7 +127,7 @@ Bootstrap.prototype = {
         },
         noQuit: prefs.get(`extensions.${id}.sdk.test.no-quit`, false)
       });
-      this.loader = loader;
+      self.loader = loader;
 
       const module = Module("package.json", `${baseURI}package.json`);
       const require = Require(loader, module);
@@ -137,24 +142,30 @@ Bootstrap.prototype = {
     });
   },
   shutdown(addon, code) {
-    const { loader, domain } = this;
-
     this.unmount();
-    this.unload(REASON[code]);
+    return this.unload(REASON[code]);
   },
   unload(reason) {
-    const {loader} = this;
-    if (loader) {
-      this.loader = null;
-      unload(loader, reason);
-      setTimeout(() => {
-        for (let uri of Object.keys(loader.sandboxes)) {
-          Cu.nukeSandbox(loader.sandboxes[uri]);
-          delete loader.sandboxes[uri];
-          delete loader.modules[uri];
-        }
-      }, 1000);
-    }
+    return new Promise(resolve => {
+      const { loader } = this;
+      if (loader) {
+        this.loader = null;
+        unload(loader, reason);
+
+        setTimeout(() => {
+          for (let uri of Object.keys(loader.sandboxes)) {
+            Cu.nukeSandbox(loader.sandboxes[uri]);
+            delete loader.sandboxes[uri];
+            delete loader.modules[uri];
+          }
+
+          resolve();
+        }, 1000);
+      }
+      else {
+        resolve();
+      }
+    });
   }
 };
 exports.Bootstrap = Bootstrap;

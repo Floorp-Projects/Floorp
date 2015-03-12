@@ -46,6 +46,10 @@ function on(target, type, listener) {
 }
 exports.on = on;
 
+
+let onceWeakMap = new WeakMap();
+
+
 /**
  * Registers an event `listener` that is called only the next time an event
  * of the specified `type` is emitted on the given event `target`.
@@ -57,10 +61,13 @@ exports.on = on;
  *    The listener function that processes the event.
  */
 function once(target, type, listener) {
-  on(target, type, function observer(...args) {
+  let replacement = function observer(...args) {
     off(target, type, observer);
+    onceWeakMap.delete(listener);
     listener.apply(target, args);
-  });
+  };
+  onceWeakMap.set(listener, replacement);
+  on(target, type, replacement);
 }
 exports.once = once;
 
@@ -124,6 +131,11 @@ exports.emit = emit;
 function off(target, type, listener) {
   let length = arguments.length;
   if (length === 3) {
+    if (onceWeakMap.has(listener)) {
+      listener = onceWeakMap.get(listener);
+      onceWeakMap.delete(listener);
+    }
+
     let listeners = observers(target, type);
     let index = listeners.indexOf(listener);
     if (~index)

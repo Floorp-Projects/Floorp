@@ -21,8 +21,8 @@ const { deprecateUsage } = require('../util/deprecate');
 const { getURL } = require('../url/utils');
 const { viewFor } = require('../view/core');
 const { observer } = require('./observer');
-
-require('../../framescript/FrameScriptManager.jsm').enableTabEvents();
+const { remoteRequire, frames } = require('../remote/parent');
+remoteRequire('sdk/content/tab-events');
 
 // Array of the inner instances of all the wrapped tabs.
 const TABS = [];
@@ -60,7 +60,7 @@ const TabTrait = Trait.compose(EventEmitter, {
     this.on(EVENTS.close.name, this.destroy.bind(this));
 
     this._onContentEvent = this._onContentEvent.bind(this);
-    this._window.messageManager.addMessageListener('sdk/tab/event', this._onContentEvent);
+    frames.port.on('sdk/tab/event', this._onContentEvent);
 
     // bug 1024632 - first tab inNewWindow gets events from the synthetic 
     // about:blank document. ignore them unless that is the actual target url.
@@ -84,7 +84,7 @@ const TabTrait = Trait.compose(EventEmitter, {
   destroy: function destroy() {
     this._removeAllListeners();
     if (this._tab) {
-      this._window.messageManager.removeMessageListener('sdk/tab/event', this._onContentEvent);
+      frames.port.off('sdk/tab/event', this._onContentEvent);
       this._tab = null;
       TABS.splice(TABS.indexOf(this), 1);
     }
@@ -94,8 +94,8 @@ const TabTrait = Trait.compose(EventEmitter, {
    * internal message listener emits public events (ready, load and pageshow)
    * forwarded from content frame script tab-event.js
    */
-  _onContentEvent: function({ target, data }) {
-    if (target !== this._browser)
+  _onContentEvent: function(frame, event, persisted) {
+    if (frame.frameElement !== this._browser)
       return;
 
     // bug 1024632 - skip initial events from synthetic about:blank document
@@ -105,7 +105,7 @@ const TabTrait = Trait.compose(EventEmitter, {
     // first time we don't skip blank events, disable further skipping
     this._skipBlankEvents = false;
 
-    this._emit(data.type, this._public, data.persisted);
+    this._emit(event, this._public, persisted);
   },
 
   /**

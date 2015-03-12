@@ -9,6 +9,8 @@ const { WorkerChild } = require("./worker-child");
 const { getInnerId } = require("../window/utils");
 const { Ci } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
+const system = require('../system/events');
+const { process } = require('../remote/child');
 
 // These functions are roughly copied from sdk/selection which doesn't work
 // in the content process
@@ -133,7 +135,7 @@ CONTEXTS.PageContext = Class({
     if (!popupNode.ownerDocument.defaultView.getSelection().isCollapsed)
       return false;
 
-    // If the clicked node or any of its ancestors is one of the blacklisted
+    // If the clicked node or any of its ancestors is one of the blocked
     // NON_PAGE_CONTEXT_ELTS then this context does not match
     while (!(popupNode instanceof Ci.nsIDOMDocument)) {
       if (NON_PAGE_CONTEXT_ELTS.some(function(type) popupNode instanceof type))
@@ -285,7 +287,7 @@ function getItemWorkerForWindow(item, window) {
 
   worker = ContextWorker({
     id: item.id,
-    window: id,
+    window,
     manager: item.manager,
     contentScript: item.contentScript,
     contentScriptFile: item.contentScriptFile,
@@ -312,12 +314,14 @@ let RemoteItem = Class({
     this.manager = manager;
 
     this.workerMap = new Map();
+    keepAlive.set(this.id, this);
   },
 
   destroy: function() {
     for (let worker of this.workerMap.values()) {
       worker.destroy();
     }
+    keepAlive.delete(this.id);
   },
 
   activate: function(popupNode, data) {
@@ -333,15 +337,19 @@ let RemoteItem = Class({
 
   // Fills addonInfo with state data to send through to the main process
   getContextState: function(popupNode, addonInfo) {
-    if (!(self.id in addonInfo))
-      addonInfo[self.id] = {};
+    if (!(self.id in addonInfo)) {
+      addonInfo[self.id] = {
+        processID: process.id,
+        items: {}
+      };
+    }
 
     let worker = getItemWorkerForWindow(this, popupNode.ownerDocument.defaultView);
     let contextStates = {};
     for (let context of this.contexts)
       contextStates[context.id] = context.getState(popupNode);
 
-    addonInfo[self.id][this.id] = {
+    addonInfo[self.id].items[this.id] = {
       // It isn't ideal to create a PageContext for every item but there isn't
       // a good shared place to do it.
       pageContext: (new CONTEXTS.PageContext()).getState(popupNode),
@@ -352,3 +360,49 @@ let RemoteItem = Class({
   }
 });
 exports.RemoteItem = RemoteItem;
+
+// Holds remote items for this frame.
+let keepAlive = new Map();
+
+// Called to create remote proxies for items. If they already exist we destroy
+// and recreate. This can happen if the item changes in some way or in odd
+// timing cases where the frame script is create around the same time as the
+// item is created in the main process
+process.port.on('sdk/contextmenu/createitems', (process, items) => {
+  for (let itemoptions of items) {
+    let oldItem = keepAlive.get(itemoptions.id);
+    if (oldItem) {
+      oldItem.destroy();
+    }
+
+    let item = new RemoteItem(itemoptions, this);
+  }
+});
+
+process.port.on('sdk/contextmenu/destroyitems', (process, items) => {
+  for (let id of items) {
+    let item = keepAlive.get(id);
+    item.destroy();
+  }
+});
+
+let lastPopupNode = null;
+
+system.on('content-contextmenu', ({ subject }) => {
+  let { event: { target: popupNode }, addonInfo } = subject.wrappedJSObject;
+  lastPopupNode = popupNode;
+
+  for (let item of keepAlive.values()) {
+    item.getContextState(popupNode, addonInfo);
+  }
+}, true);
+
+process.port.on('sdk/contextmenu/activateitems', (process, items, data) => {
+  for (let id of items) {
+    let item = keepAlive.get(id);
+    if (!item)
+      continue;
+
+    item.activate(lastPopupNode, data);
+  }
+});
