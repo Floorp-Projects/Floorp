@@ -147,7 +147,7 @@ ShaderValidator::Create(GLenum shaderType, ShShaderSpec spec,
     if (!handle)
         return nullptr;
 
-    return new ShaderValidator(handle, compileOptions);
+    return new ShaderValidator(handle, compileOptions, resources.MaxVaryingVectors);
 }
 
 ShaderValidator::~ShaderValidator()
@@ -220,12 +220,21 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         const std::vector<sh::Varying>& vertList = *ShGetVaryings(prev->mHandle);
         const std::vector<sh::Varying>& fragList = *ShGetVaryings(mHandle);
 
+        std::vector<ShVariableInfo> staticUseVaryingList;
+
         for (auto itrFrag = fragList.begin(); itrFrag != fragList.end(); ++itrFrag) {
             static const char prefix[] = "gl_";
-            if (StartsWith(itrFrag->name, prefix))
+            if (StartsWith(itrFrag->name, prefix)) {
+                if (itrFrag->staticUse) {
+                    staticUseVaryingList.push_back({itrFrag->type,
+                                                    (int)itrFrag->elementCount()});
+                }
+
                 continue;
+            }
 
             bool definedInVertShader = false;
+            bool staticVertUse = false;
 
             for (auto itrVert = vertList.begin(); itrVert != vertList.end(); ++itrVert) {
                 if (itrVert->name != itrFrag->name)
@@ -240,6 +249,7 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                 }
 
                 definedInVertShader = true;
+                staticVertUse = itrVert->staticUse;
                 break;
             }
 
@@ -250,6 +260,17 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                 *out_log = error;
                 return false;
             }
+
+            staticUseVaryingList.push_back({itrFrag->type, (int)itrFrag->elementCount()});
+        }
+
+        if (!ShCheckVariablesWithinPackingLimits(mMaxVaryingVectors,
+                                                 staticUseVaryingList.data(),
+                                                 staticUseVaryingList.size()))
+        {
+            *out_log = "Statically used varyings do not fit within packing limits. (see"
+                       " GLSL ES Specification 1.0.17, p111)";
+            return false;
         }
     }
 
