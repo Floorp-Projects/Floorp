@@ -832,17 +832,27 @@ RTCPeerConnection.prototype = {
                                        "InvalidParameterError");
     }
     this._checkClosed();
+    this._senders.forEach(sender => {
+      if (sender.track == track) {
+        throw new this._win.DOMException("already added.",
+                                         "InvalidParameterError");
+      }
+    });
     this._impl.addTrack(track, stream);
     let sender = this._win.RTCRtpSender._create(this._win,
                                                 new RTCRtpSender(this, track,
                                                                  stream));
-    this._senders.push({ sender: sender, stream: stream });
+    this._senders.push(sender);
     return sender;
   },
 
   removeTrack: function(sender) {
     this._checkClosed();
-    this._impl.removeTrack(sender.track);
+    var i = this._senders.indexOf(sender);
+    if (i >= 0) {
+      this._senders.splice(i, 1);
+      this._impl.removeTrack(sender.track); // fires negotiation needed
+    }
   },
 
   _replaceTrack: function(sender, withTrack) {
@@ -862,7 +872,7 @@ RTCPeerConnection.prototype = {
       this._onReplaceTrackWithTrack = withTrack;
       this._onReplaceTrackSuccess = resolve;
       this._onReplaceTrackFailure = reject;
-      this._impl.replaceTrack(sender.track, withTrack, sender._stream);
+      this._impl.replaceTrack(sender.track, withTrack);
     });
   },
 
@@ -888,33 +898,11 @@ RTCPeerConnection.prototype = {
   },
 
   getSenders: function() {
-    this._checkClosed();
-    let streams = this._impl.getLocalStreams();
-    let senders = [];
-    // prune senders in case any streams have disappeared down below
-    for (let i = this._senders.length - 1; i >= 0; i--) {
-      if (streams.indexOf(this._senders[i].stream) != -1) {
-        senders.push(this._senders[i].sender);
-      } else {
-        this._senders.splice(i,1);
-      }
-    }
-    return senders;
+    return this._senders;
   },
 
   getReceivers: function() {
-    this._checkClosed();
-    let streams = this._impl.getRemoteStreams();
-    let receivers = [];
-    // prune receivers in case any streams have disappeared down below
-    for (let i = this._receivers.length - 1; i >= 0; i--) {
-      if (streams.indexOf(this._receivers[i].stream) != -1) {
-        receivers.push(this._receivers[i].receiver);
-      } else {
-        this._receivers.splice(i,1);
-      }
-    }
-    return receivers;
+    return this._receivers;
   },
 
   get localDescription() {
@@ -1061,7 +1049,7 @@ PeerConnectionObserver.prototype = {
       "",
       "InternalError",
       "InvalidCandidateError",
-      "InvalidParameter",
+      "InvalidParameterError",
       "InvalidStateError",
       "InvalidSessionDescriptionError",
       "IncompatibleSessionDescriptionError",

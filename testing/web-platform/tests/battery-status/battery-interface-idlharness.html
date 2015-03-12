@@ -41,7 +41,7 @@ var idl_array = new IdlArray();
 var idls;
 [].forEach.call(document.querySelectorAll('script[type=text\\/plain]'), function(node) {
   // replace 'EventHandler' and 'unrestricted double' unrecognized by idlharness.js
-  idls = node.textContent.replace('EventHandler', 'Function?', 'g').replace('unrestricted double', 'double', 'g');
+  idls = node.textContent.replace(/EventHandler/g, 'Function?').replace(/unrestricted double/g, 'double');
   idl_array[(node.className === 'untested') ? 'add_untested_idls' : 'add_idls'](idls);
 });
 idl_array.add_objects({Navigator: ['navigator'], BatteryManager: ['navigator.getBattery()']});

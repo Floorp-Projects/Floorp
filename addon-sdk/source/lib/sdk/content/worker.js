@@ -8,26 +8,21 @@ module.metadata = {
 };
 
 const { emit } = require('../event/core');
-const { omit } = require('../util/object');
+const { omit, merge } = require('../util/object');
 const { Class } = require('../core/heritage');
 const { method } = require('../lang/functional');
 const { getInnerId } = require('../window/utils');
 const { EventTarget } = require('../event/target');
-const { when, ensure } = require('../system/unload');
-const { getTabForWindow } = require('../tabs/helpers');
-const { getTabForContentWindow, getBrowserForTab } = require('../tabs/utils');
 const { isPrivate } = require('../private-browsing/utils');
-const { getFrameElement } = require('../window/utils');
-const { attach, detach, destroy } = require('./utils');
+const { getTabForBrowser, getTabForContentWindow, getBrowserForTab } = require('../tabs/utils');
+const { attach, connect, detach, destroy } = require('./utils');
+const { ensure } = require('../system/unload');
 const { on: observe } = require('../system/events');
 const { uuid } = require('../util/uuid');
-const { Ci, Cc } = require('chrome');
-
-const ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-  getService(Ci.nsIMessageBroadcaster);
-
-// null-out cycles in .modules to make @loader/options JSONable
-const ADDON = omit(require('@loader/options'), ['modules', 'globals']);
+const { Ci } = require('chrome');
+const { modelFor: tabFor } = require('sdk/model/core');
+const { remoteRequire, processes, frames } = require('../remote/parent');
+remoteRequire('sdk/content/worker-child');
 
 const workers = new WeakMap();
 let modelFor = (worker) => workers.get(worker);
@@ -35,151 +30,158 @@ let modelFor = (worker) => workers.get(worker);
 const ERR_DESTROYED = "Couldn't find the worker to receive this message. " +
   "The script may not be initialized yet, or may already have been unloaded.";
 
-const ERR_FROZEN = "The page is currently hidden and can no longer be used " +
-                   "until it is visible again.";
-
 // a handle for communication between content script and addon code
 const Worker = Class({
   implements: [EventTarget],
+
   initialize(options = {}) {
+    ensure(this, 'detach');
 
     let model = {
-      inited: false,
-      earlyEvents: [],        // fired before worker was inited
-      frozen: true,           // document is in BFcache, let it go
+      attached: false,
+      destroyed: false,
+      earlyEvents: [],        // fired before worker was attached
+      frozen: true,           // document is not yet active
       options,
     };
     workers.set(this, model);
 
-    ensure(this, 'destroy');
     this.on('detach', this.detach);
     EventTarget.prototype.initialize.call(this, options);
 
     this.receive = this.receive.bind(this);
 
-    model.observe = ({ subject }) => {
-      let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (model.window && getInnerId(model.window) === id)
-        this.detach();
-    }
-
-    observe('inner-window-destroyed', model.observe);
-
     this.port = EventTarget();
     this.port.emit = this.send.bind(this, 'event');
     this.postMessage = this.send.bind(this, 'message');
 
-    if ('window' in options)
-      attach(this, options.window);
+    if ('window' in options) {
+      let window = options.window;
+      delete options.window;
+      attach(this, window);
+    }
   },
+
   // messages
-  receive({ data: { id, args }}) {
+  receive(process, id, args) {
     let model = modelFor(this);
-    if (id !== model.id || !model.childWorker)
+    if (id !== model.id || !model.attached)
       return;
+    if (model.destroyed && args[0] != 'detach')
+      return;
+
     if (args[0] === 'event')
       emit(this.port, ...args.slice(1))
     else
       emit(this, ...args);
   },
+
   send(...args) {
     let model = modelFor(this);
-    if (!model.inited) {
+    if (model.destroyed && args[0] !== 'detach')
+      throw new Error(ERR_DESTROYED);
+
+    if (!model.attached) {
       model.earlyEvents.push(args);
       return;
     }
-    if (!model.childWorker && args[0] !== 'detach')
-      throw new Error(ERR_DESTROYED);
-    if (model.frozen && args[0] !== 'detach')
-      throw new Error(ERR_FROZEN);
-    try {
-      model.manager.sendAsyncMessage('sdk/worker/message', { id: model.id, args });
-    } catch (e) {
-      //
-    }
+
+    processes.port.emit('sdk/worker/message', model.id, args);
   },
+
   // properties
   get url() {
-    let { window } = modelFor(this);
-    return window && window.document.location.href;
+    let { url } = modelFor(this);
+    return url;
   },
+
   get contentURL() {
-    let { window } = modelFor(this);
-    return window && window.document.URL;
+    return this.url;
   },
+
   get tab() {
-    let { window } = modelFor(this);
-    return window && getTabForWindow(window);
+    require('sdk/tabs');
+    let { frame } = modelFor(this);
+    if (!frame)
+      return null;
+    let rawTab = getTabForBrowser(frame.frameElement);
+    return rawTab && tabFor(rawTab);
   },
+
   toString: () => '[object Worker]',
-  // methods
-  attach: method(attach),
+
   detach: method(detach),
   destroy: method(destroy),
 })
 exports.Worker = Worker;
 
 attach.define(Worker, function(worker, window) {
+  // This method of attaching should be deprecated
   let model = modelFor(worker);
+  if (model.attached)
+    detach(worker);
 
   model.window = window;
-  model.options.window = getInnerId(window);
-  model.options.currentReadyState = window.document.readyState;
-  model.id = model.options.id = String(uuid());
+  let frame = null;
+  let tab = getTabForContentWindow(window.top);
+  if (tab)
+    frame = frames.getFrameForBrowser(getBrowserForTab(tab));
 
-  let tab = getTabForContentWindow(window);
-  if (tab) {
-    model.manager = getBrowserForTab(tab).messageManager;
-  } else {
-    model.manager = getFrameElement(window.top).frameLoader.messageManager;
-  }
-
-  model.manager.addMessageListener('sdk/worker/event', worker.receive);
-  model.manager.addMessageListener('sdk/worker/attach', attach);
-
-  model.manager.sendAsyncMessage('sdk/worker/create', {
-    options: model.options,
-    addon: ADDON
+  merge(model.options, {
+    id: String(uuid()),
+    window: getInnerId(window),
+    url: String(window.location)
   });
 
-  function attach({ data }) {
-    if (data.id !== model.id)
-      return;
-    model.manager.removeMessageListener('sdk/worker/attach', attach);
-    model.childWorker = true;
+  processes.port.emit('sdk/worker/create', model.options);
 
-    worker.on('pageshow', () => model.frozen = false);
-    worker.on('pagehide', () => model.frozen = true);
-
-    model.inited = true;
-    model.frozen = false;
-
-    model.earlyEvents.forEach(args => worker.send(...args));
-    emit(worker, 'attach', window);
-  }
+  connect(worker, frame, model.options);
 })
+
+connect.define(Worker, function(worker, frame, { id, url }) {
+  let model = modelFor(worker);
+  if (model.attached)
+    detach(worker);
+
+  model.id = id;
+  model.frame = frame;
+  model.url = url;
+
+  // Messages from content -> chrome come through the process message manager
+  // since that lives longer than the frame message manager
+  processes.port.on('sdk/worker/event', worker.receive);
+
+  model.attached = true;
+  model.destroyed = false;
+  model.frozen = false;
+
+  model.earlyEvents.forEach(args => worker.send(...args));
+  model.earlyEvents = [];
+  emit(worker, 'attach', model.window);
+});
 
 // unload and release the child worker, release window reference
-detach.define(Worker, function(worker, reason) {
+detach.define(Worker, function(worker) {
   let model = modelFor(worker);
-  worker.send('detach', reason);
-  if (!model.childWorker)
+  if (!model.attached)
     return;
 
-  model.childWorker = null;
-  model.earlyEvents = [];
+  processes.port.off('sdk/worker/event', worker.receive);
+  model.attached = false;
+  model.destroyed = true;
   model.window = null;
   emit(worker, 'detach');
-  model.manager.removeMessageListener('sdk/worker/event', this.receive);
-})
+});
 
 isPrivate.define(Worker, ({ tab }) => isPrivate(tab));
 
-// unlod worker, release references
+// Something in the parent side has destroyed the worker, tell the child to
+// detach, the child will respond when it has detached
 destroy.define(Worker, function(worker, reason) {
-  detach(worker, reason);
-  modelFor(worker).inited = true;
-})
+  let model = modelFor(worker);
+  model.destroyed = true;
+  if (!model.attached)
+    return;
 
-// unload Loaders used for creating WorkerChild instances in each process
-when(() => ppmm.broadcastAsyncMessage('sdk/loader/unload', { data: ADDON }));
+  worker.send('detach', reason);
+});

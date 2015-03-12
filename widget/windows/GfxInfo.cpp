@@ -851,6 +851,8 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
       return DRIVER_OS_WINDOWS_8;
     case kWindows8_1:
       return DRIVER_OS_WINDOWS_8_1;
+    case kWindows10:
+      return DRIVER_OS_WINDOWS_10;
     case kWindowsUnknown:
     default:
       return DRIVER_OS_UNKNOWN;
@@ -1084,6 +1086,12 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(AMDRadeonHD5800),
       nsIGfxInfo::FEATURE_DXVA, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions);
+
+    /* Bug 1139503: DXVA crashes with ATI cards on windows 10. */
+    APPEND_TO_DRIVER_BLOCKLIST2(DRIVER_OS_WINDOWS_10,
+      (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_DXVA, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      DRIVER_EQUAL, V(15,200,1006,0));
   }
   return *mDriverInfo;
 }

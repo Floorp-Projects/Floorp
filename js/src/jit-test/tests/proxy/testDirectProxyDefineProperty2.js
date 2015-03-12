@@ -14,6 +14,7 @@ var handler = {
         assertEq(desc1.writable, true);
         assertEq(desc1.enumerable, false);
         assertEq(desc1.configurable, true);
+        return true;
     }
 };
 var desc = {

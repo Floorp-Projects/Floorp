@@ -25,10 +25,22 @@
           android:title="@string/bookmark"
           android:showAsAction="ifRoom"/>
 
+    <item android:id="@+id/reading_list"
+          android:icon="@drawable/ic_menu_reader_add"
+          android:title="@string/overlay_share_reading_list_btn_label"
+          android:showAsAction="ifRoom"/>
+
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
           android:title="@string/share"
           android:showAsAction="ifRoom"/>
+
+    <!-- We only show the quick share items so no need for an icon or title.
+
+         The visibility is changed dynamically for v14+ - hide for previous versions. -->
+    <item android:id="@+id/quickshare"
+          android:visibility="gone"
+          android:showAsAction="collapseActionView"/>
 
     <item android:id="@+id/new_tab"
           android:icon="@drawable/ic_menu_new_tab"

@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
+#include "mozilla/UniquePtr.h"
 
 #include <string.h>
 
@@ -71,6 +72,7 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 JS_FRIEND_API(JSObject *)
 JS_ObjectToInnerObject(JSContext *cx, HandleObject obj)
@@ -94,10 +96,11 @@ js::NonNullObject(JSContext *cx, const Value &v)
 {
     if (v.isPrimitive()) {
         RootedValue value(cx, v);
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
         if (!bytes)
             return nullptr;
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
         return nullptr;
     }
     return &v.toObject();
@@ -154,12 +157,12 @@ PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
     attrs = uint8_t(desc.attributes());
     MOZ_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.hasGetterOrSetterObject()) {
-        hasGet_ = true;
-        get_ = desc.hasGetterObject() && desc.getterObject()
+        hasGet_ = desc.hasGetterObject();
+        get_ = hasGet_ && desc.getterObject()
                ? ObjectValue(*desc.getterObject())
                : UndefinedValue();
-        hasSet_ = true;
-        set_ = desc.hasSetterObject() && desc.setterObject()
+        hasSet_ = desc.hasSetterObject();
+        set_ = hasSet_ && desc.setterObject()
                ? ObjectValue(*desc.setterObject())
                : UndefinedValue();
         hasValue_ = false;
@@ -249,12 +252,12 @@ js::GetFirstArgumentAsObject(JSContext *cx, const CallArgs &args, const char *me
 
     HandleValue v = args[0];
     if (!v.isObject()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             bytes, "not an object");
-        js_free(bytes);
+                             bytes.get(), "not an object");
         return false;
     }
 
@@ -285,21 +288,18 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
 
     /* 8.10.5 step 1 */
     if (v.isPrimitive()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
         return false;
     }
     RootedObject desc(cx, &v.toObject());
 
     isUndefined_ = false;
 
-    /*
-     * Start with the proper defaults.  XXX shouldn't be necessary when we get
-     * rid of PropDesc::attributes()
-     */
-    attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+    attrs = 0;
 
     bool found = false;
     RootedId id(cx);
@@ -320,8 +320,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         return false;
     if (found) {
         hasConfigurable_ = true;
-        if (ToBoolean(v))
-            attrs &= ~JSPROP_PERMANENT;
+        if (!ToBoolean(v))
+            attrs |= JSPROP_PERMANENT;
     }
 
     /* 8.10.5 step 5 */
@@ -339,8 +339,8 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         return false;
     if (found) {
         hasWritable_ = true;
-        if (ToBoolean(v))
-            attrs &= ~JSPROP_READONLY;
+        if (!ToBoolean(v))
+            attrs |= JSPROP_READONLY;
     }
 
     /* 8.10.7 step 7 */
@@ -351,7 +351,6 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         hasGet_ = true;
         get_ = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
-        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkGetter(cx))
             return false;
     }
@@ -364,7 +363,6 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         hasSet_ = true;
         set_ = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
-        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkSetter(cx))
             return false;
     }
@@ -471,14 +469,21 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             MOZ_ASSERT(!obj->getOps()->defineProperty);
             RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, desc.attributes(),
-                                        result);
+            unsigned attrs = desc.attributes();
+            if (!desc.hasConfigurable())
+                attrs |= JSPROP_PERMANENT;
+            if (!desc.hasWritable())
+                attrs |= JSPROP_READONLY;
+            return NativeDefineProperty(cx, obj, id, v, nullptr, nullptr, attrs, result);
         }
 
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
+        unsigned attrs = desc.attributes();
+        if (!desc.hasConfigurable())
+            attrs |= JSPROP_PERMANENT;
         return NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
-                                    desc.getter(), desc.setter(), desc.attributes(), result);
+                                    desc.getter(), desc.setter(), attrs, result);
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
@@ -683,18 +688,22 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         getter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
         setter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
     } else if (desc.isDataDescriptor()) {
-        unsigned unchanged = 0;
+        unsigned unchanged = 0, descAttrs = desc.attributes();
         if (!desc.hasConfigurable())
             unchanged |= JSPROP_PERMANENT;
         if (!desc.hasEnumerable())
             unchanged |= JSPROP_ENUMERATE;
         /* Watch out for accessor -> data transformations here. */
-        if (!desc.hasWritable() && shapeDataDescriptor)
-            unchanged |= JSPROP_READONLY;
+        if (!desc.hasWritable()) {
+            if (shapeDataDescriptor)
+                unchanged |= JSPROP_READONLY;
+            else
+                descAttrs |= JSPROP_READONLY;
+        }
 
         if (desc.hasValue())
             v = desc.value();
-        attrs = (desc.attributes() & ~unchanged) | (shapeAttributes & unchanged);
+        attrs = (descAttrs & ~unchanged) | (shapeAttributes & unchanged);
         getter = nullptr;
         setter = nullptr;
     } else {
@@ -1600,8 +1609,7 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, HandleObj
         res = CreateThisForFunctionWithGroup(cx, group, newKind);
     } else {
         gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
-        res = NewObjectWithProto<PlainObject>(cx, proto, cx->global(),
-                                              allocKind, newKind);
+        res = NewObjectWithProto<PlainObject>(cx, proto, allocKind, newKind);
     }
 
     if (res) {
@@ -1803,8 +1811,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
         RootedObject proto(cx, group->proto().toObject());
         obj->assertParentIs(cx->global());
         clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto,
-                                              NullPtr(), kind,
-                                              newKind);
+                                              kind, newKind);
     }
 
     // Allocate the same number of slots.
@@ -2467,12 +2474,9 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 
     /*
      * Create the prototype object.  (GlobalObject::createBlankPrototype isn't
-     * used because it parents the prototype object to the global and because
-     * it uses WithProto::Given.  FIXME: Undo dependencies on this parentage
-     * [which already needs to happen for bug 638316], figure out nicer
-     * semantics for null-protoProto, and use createBlankPrototype.)
+     * used because it won't let us use protoProto as the proto.
      */
-    RootedNativeObject proto(cx, NewNativeObjectWithClassProto(cx, clasp, protoProto, obj, SingletonObject));
+    RootedNativeObject proto(cx, NewNativeObjectWithClassProto(cx, clasp, protoProto, SingletonObject));
     if (!proto)
         return nullptr;
 
@@ -2500,14 +2504,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 
         ctor = proto;
     } else {
-        /*
-         * Create the constructor, not using GlobalObject::createConstructor
-         * because the constructor currently must have |obj| as its parent.
-         * (FIXME: remove this dependency on the exact identity of the parent,
-         * perhaps as part of bug 638316.)
-         */
-        RootedFunction fun(cx, NewFunction(cx, js::NullPtr(), constructor, nargs,
-                                           JSFunction::NATIVE_CTOR, obj, atom, ctorKind));
+        RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom, ctorKind));
         if (!fun)
             goto bad;
 
@@ -3216,10 +3213,27 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
     if (desc.hasGetterOrSetterObject()) {
         MOZ_ASSERT(desc.isShared());
         doGet = false;
-        if (desc.hasGetterObject())
+
+        // The result of GetOwnPropertyDescriptor() must be either undefined or
+        // a complete property descriptor (per ES6 draft rev 32 (2015 Feb 2)
+        // 6.1.7.3, Invariants of the Essential Internal Methods).
+        //
+        // It is an unfortunate fact that in SM, properties can exist that have
+        // JSPROP_GETTER or JSPROP_SETTER but not both. In these cases, rather
+        // than return true with desc incomplete, we fill out the missing
+        // getter or setter with a null, following CompletePropertyDescriptor.
+        if (desc.hasGetterObject()) {
             desc.setGetterObject(shape->getterObject());
-        if (desc.hasSetterObject())
+        } else {
+            desc.setGetterObject(nullptr);
+            desc.attributesRef() |= JSPROP_GETTER;
+        }
+        if (desc.hasSetterObject()) {
             desc.setSetterObject(shape->setterObject());
+        } else {
+            desc.setSetterObject(nullptr);
+            desc.attributesRef() |= JSPROP_SETTER;
+        }
     } else {
         // This is either a straight-up data property or (rarely) a
         // property with a JSGetterOp/JSSetterOp. The latter must be

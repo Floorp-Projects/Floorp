@@ -260,6 +260,8 @@ public:
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const { return false; }
 
+  virtual void DisableHardwareAcceleration() {}
+
 protected:
   virtual ~MediaDecoderReader();
 

@@ -1814,12 +1814,8 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
     }
 
     // If we are doing a name lookup, this is a ReferenceError.
-    if (nameLookup) {
-        JSAutoByteString printable;
-        if (ValueToPrintable(cx, IdToValue(id), &printable))
-            ReportIsNotDefined(cx, printable.ptr());
-        return false;
-    }
+    if (nameLookup)
+        return ReportIsNotDefined(cx, id);
 
     // Give a strict warning if foo.bar is evaluated by a script for an object
     // foo with no property named 'bar'.
@@ -1875,17 +1871,36 @@ GetNonexistentProperty(JSContext *cx, NativeObject *obj, jsid id, JSObject *rece
 
 static inline bool
 GeneralizedGetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject receiver,
-                       MutableHandleValue vp)
+                       IsNameLookup nameLookup, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
+    if (nameLookup) {
+        // When nameLookup is true, GetProperty implements ES6 rev 34 (2015 Feb
+        // 20) 8.1.1.2.6 GetBindingValue, with step 3 (the call to HasProperty)
+        // and step 6 (the call to Get) fused so that only a single lookup is
+        // needed.
+        //
+        // If we get here, we've reached a non-native object. Fall back on the
+        // algorithm as specified, with two separate lookups. (Note that we
+        // throw ReferenceErrors regardless of strictness, technically a bug.)
+
+        bool found;
+        if (!HasProperty(cx, obj, id, &found))
+            return false;
+        if (!found)
+            return ReportIsNotDefined(cx, id);
+    }
+
     return GetProperty(cx, obj, receiver, id, vp);
 }
 
 static inline bool
 GeneralizedGetProperty(JSContext *cx, JSObject *obj, jsid id, JSObject *receiver,
-                       FakeMutableHandle<Value> vp)
+                       IsNameLookup nameLookup, FakeMutableHandle<Value> vp)
 {
     JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
+    if (nameLookup)
+        return false;
     return GetPropertyNoGC(cx, obj, receiver, id, vp.address());
 }
 
@@ -1939,8 +1954,8 @@ NativeGetPropertyInline(JSContext *cx,
         // plumbing of JSObject::getGeneric; the top of the loop is where
         // we're going to end up anyway. But if pobj is non-native,
         // that optimization would be incorrect.
-        if (!proto->isNative())
-            return GeneralizedGetProperty(cx, proto, id, receiver, vp);
+        if (proto->getOps()->getProperty)
+            return GeneralizedGetProperty(cx, proto, id, receiver, nameLookup, vp);
 
         pobj = &proto->as<NativeObject>();
     }
@@ -1963,8 +1978,8 @@ js::NativeGetPropertyNoGC(JSContext *cx, NativeObject *obj, JSObject *receiver, 
 bool
 js::GetPropertyForNameLookup(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    if (GetPropertyOp op = obj->getOps()->getProperty)
-        return op(cx, obj, obj, id, vp);
+    if (obj->getOps()->getProperty)
+        return GeneralizedGetProperty(cx, obj, id, obj, NameLookup, vp);
     return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), obj, id, NameLookup, vp);
 }
 

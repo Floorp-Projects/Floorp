@@ -646,33 +646,100 @@ var gMetadataTests = [
 // Test files for Encrypted Media Extensions
 var gEMETests = [
   {
-    name:"gizmo-frag-cencinit.mp4",
-    fragments: [ "gizmo-frag-cencinit.mp4", "gizmo-frag-cenc1.m4s", "gizmo-frag-cenc2.m4s" ],
+    name:"bipbop-cenc-videoinit.mp4",
     type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    fragments:[ "bipbop-cenc-videoinit.mp4",
+                "bipbop-cenc-video1.m4s",
+                "bipbop-cenc-video2.m4s",
+              ],
     keys: {
       // "keyid" : "key"
       "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    duration:2.00,
+    duration:1.60,
   },
   {
-    name:"gizmo-frag-cencinit.mp4",
-    fragments: [ "gizmo-frag-cencinit.mp4", "gizmo-frag-cenc1.m4s", "gizmo-frag-cenc2.m4s" ],
+    name:"bipbop-cenc-videoinit.mp4",
     type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    fragments:[ "bipbop-cenc-videoinit.mp4",
+                "bipbop-cenc-video1.m4s",
+                "bipbop-cenc-video2.m4s",
+              ],
     keys: {
       // "keyid" : "key"
       "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    duration:2.00,
     crossOrigin:true,
+    duration:1.60,
+  },
+  {
+    name:"bipbop-cenc-videoinit.mp4",
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/mp4; codecs=\"mp4a.40.2\"",
+        fragments:[ "bipbop-cenc-audioinit.mp4",
+                    "bipbop-cenc-audio1.m4s",
+                    "bipbop-cenc-audio2.m4s",
+                    "bipbop-cenc-audio3.m4s",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/mp4; codecs=\"avc1.64000d\"",
+        fragments:[ "bipbop-cenc-videoinit.mp4",
+                    "bipbop-cenc-video1.m4s",
+                    "bipbop-cenc-video2.m4s",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
+      "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
+    },
+    sessionType:"temporary",
+    duration:1.60,
+  },
+  {
+    name:"bipbop-cenc-videoinit.mp4",
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/mp4; codecs=\"mp4a.40.2\"",
+        fragments:[ "bipbop-cenc-audioinit.mp4",
+                    "bipbop-cenc-audio1.m4s",
+                    "bipbop-cenc-audio2.m4s",
+                    "bipbop-cenc-audio3.m4s",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/mp4; codecs=\"avc1.64000d\"",
+        fragments:[ "bipbop-cenc-videoinit.mp4",
+                    "bipbop-cenc-video1.m4s",
+                    "bipbop-cenc-video2.m4s",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
+      "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
+    },
+    sessionType:"temporary",
+    crossOrigin:true,
+    duration:1.60,
   },
 ];
 
-var gEMENonFragmentedTests = [
+var gEMENonMSEFailTests = [
   {
     name:"short-cenc.mp4",
     type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
@@ -729,6 +796,10 @@ function getMajorMimeType(mimetype) {
 // Force releasing decoder to avoid timeout in waiting for decoding resource.
 function removeNodeAndSource(n) {
   n.remove();
+  // Clearing mozSrcObject and/or src will actually set them to some default
+  // URI that will fail to load, so make sure we don't produce a spurious
+  // bailing error.
+  n.onerror = null;
   // reset |mozSrcObject| first since it takes precedence over |src|.
   n.mozSrcObject = null;
   n.src = "";

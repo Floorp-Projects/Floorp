@@ -606,8 +606,11 @@ PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report
 void
 CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
-extern void
-ReportIsNotDefined(JSContext *cx, const char *name);
+extern bool
+ReportIsNotDefined(JSContext *cx, HandlePropertyName name);
+
+extern bool
+ReportIsNotDefined(JSContext *cx, HandleId id);
 
 /*
  * Report an attempt to access the property of a null or undefined value (v).

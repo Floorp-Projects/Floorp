@@ -1,0 +1,9 @@
+{
+  "name": "e10s-remote",
+  "title": "e10s-remote",
+  "id": "remote@jetpack",
+  "description": "Run remote tests",
+  "version": "1.0.0",
+  "main": "main.js",
+  "e10s": true
+}

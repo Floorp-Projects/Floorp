@@ -459,6 +459,31 @@ when doing an invalidation test. Causing a repaint in your
 MozReftestInvalidate handler (for example, by changing the body's background
 colour) will accurately test whether the element is painted.
 
+Opaque Layer Tests: class="reftest-opaque-layer"
+================================================
+
+If an element should be assigned to a PaintedLayer that's opaque, set the class
+"reftest-opaque-layer" on it. This checks whether the layer is opaque during
+the last paint of the test, and it works whether your test is an invalidation
+test or not. In order to pass the test, the element has to have a primary
+frame, and that frame's display items must all be assigned to a single painted
+layer and no other layers, so it can't be used on elements that create stacking
+contexts (active or inactive).
+
+Layerization Tests: reftest-assigned-layer="layer-name"
+=======================================================
+
+If two elements should be assigned to the same PaintedLayer, choose any string
+value as the layer name and set the attribute reftest-assigned-layer="yourname"
+on both elements. Reftest will check whether all elements with the same
+reftest-assigned-layer value share the same layer. It will also test whether
+elements with different reftest-assigned-layer values are assigned to different
+layers.
+The same restrictions as with class="reftest-opaque-layer" apply: All elements
+must have a primary frame, and that frame's display items must all be assigned
+to the same PaintedLayer and no other layers. If these requirements are not
+met, the test will fail.
+
 Snapshot The Whole Window: class="reftest-snapshot-all"
 =======================================================
 

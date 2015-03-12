@@ -1579,13 +1579,17 @@ HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript i
 
     MOZ_ASSERT(!outerScript->ionScript()->invalidated());
 
-    // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
-    // the flag on innerScript as opposed to outerScript, and maybe invalidating both
-    // inner and outer scripts, instead of just the outer one.
-    if (!outerScript->failedBoundsCheck())
-        outerScript->setFailedBoundsCheck();
+    if (!innerScript->failedBoundsCheck())
+        innerScript->setFailedBoundsCheck();
+
     JitSpew(JitSpew_BaselineBailouts, "Invalidating due to bounds check failure");
-    return Invalidate(cx, outerScript);
+    if (!Invalidate(cx, outerScript))
+        return false;
+
+    if (innerScript->hasIonScript() && !Invalidate(cx, innerScript))
+        return false;
+
+    return true;
 }
 
 static bool

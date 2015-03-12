@@ -615,6 +615,22 @@ MDefinition::optimizeOutAllUses(TempAllocator &alloc)
     this->uses_.clear();
 }
 
+void
+MDefinition::replaceAllLiveUsesWith(MDefinition *dom)
+{
+    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ) {
+        MUse *use = *i++;
+        MNode *consumer = use->consumer();
+        if (consumer->isResumePoint())
+            continue;
+        if (consumer->isDefinition() && consumer->toDefinition()->isRecoveredOnBailout())
+            continue;
+
+        // Update the operand to use the dominating definition.
+        use->replaceProducer(dom);
+    }
+}
+
 bool
 MDefinition::emptyResultTypeSet() const
 {
@@ -1027,10 +1043,10 @@ MConstantElements::printOpcode(FILE *fp) const
 }
 
 void
-MLoadTypedArrayElement::printOpcode(FILE *fp) const
+MLoadUnboxedScalar::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
-    fprintf(fp, " %s", ScalarTypeDescr::typeName(arrayType()));
+    fprintf(fp, " %s", ScalarTypeDescr::typeName(indexType()));
 }
 
 void
@@ -2031,7 +2047,7 @@ NeedNegativeZeroCheck(MDefinition *def)
           case MDefinition::Op_StoreElementHole:
           case MDefinition::Op_LoadElement:
           case MDefinition::Op_LoadElementHole:
-          case MDefinition::Op_LoadTypedArrayElement:
+          case MDefinition::Op_LoadUnboxedScalar:
           case MDefinition::Op_LoadTypedArrayElementHole:
           case MDefinition::Op_CharCodeAt:
           case MDefinition::Op_Mod:

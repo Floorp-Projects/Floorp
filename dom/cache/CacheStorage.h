@@ -25,7 +25,6 @@ namespace mozilla {
 class ErrorResult;
 
 namespace ipc {
-  class IProtocol;
   class PrincipalInfo;
 }
 
@@ -42,7 +41,6 @@ namespace cache {
 class CacheChild;
 class CacheStorageChild;
 class Feature;
-class PCacheRequest;
 class PCacheResponseOrVoid;
 
 class CacheStorage MOZ_FINAL : public nsIIPCBackgroundChildCreateCallback

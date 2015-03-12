@@ -52,6 +52,7 @@ using mozilla::CeilingLog2;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsNaN;
+using mozilla::UniquePtr;
 
 using JS::AutoCheckCannotGC;
 using JS::ToUint32;
@@ -3546,19 +3547,18 @@ js::ArrayInfo(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < args.length(); i++) {
         RootedValue arg(cx, args[i]);
 
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NullPtr());
+        UniquePtr<char[], JS::FreePolicy> bytes =
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, NullPtr());
         if (!bytes)
             return false;
         if (arg.isPrimitive() ||
             !(obj = arg.toObjectOrNull())->is<ArrayObject>()) {
-            fprintf(stderr, "%s: not array\n", bytes);
-            js_free(bytes);
+            fprintf(stderr, "%s: not array\n", bytes.get());
             continue;
         }
-        fprintf(stderr, "%s: (len %u", bytes, obj->as<ArrayObject>().length());
+        fprintf(stderr, "%s: (len %u", bytes.get(), obj->as<ArrayObject>().length());
         fprintf(stderr, ", capacity %u", obj->as<ArrayObject>().getDenseCapacity());
         fputs(")\n", stderr);
-        js_free(bytes);
     }
 
     args.rval().setUndefined();
