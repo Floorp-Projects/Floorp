@@ -46,7 +46,8 @@ MultipartFileImpl::GetInternalStream(nsIInputStream** aStream)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return CallQueryInterface(stream, aStream);
+  stream.forget(aStream);
+  return NS_OK;
 }
 
 already_AddRefed<FileImpl>

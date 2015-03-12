@@ -50,7 +50,8 @@ nsDeviceProtocolHandler::NewURI(const nsACString &spec,
   nsresult rv = uri->SetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(uri, result);
+  uri.forget(result);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -66,7 +67,8 @@ nsDeviceProtocolHandler::NewChannel2(nsIURI* aURI,
   rv = channel->SetLoadInfo(aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(channel, aResult);
+  channel.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
