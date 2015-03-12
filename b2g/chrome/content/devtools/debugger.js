@@ -59,7 +59,11 @@ let RemoteDebugger = {
       this._handleAllowResult = detail => {
         this._handleAllowResult = null;
         this._promptingForAllow = null;
-        if (detail.value) {
+        // Newer Gaia supplies |authResult|, which is one of the
+        // AuthenticationResult values.
+        if (detail.authResult) {
+          resolve(detail.authResult);
+        } else if (detail.value) {
           resolve(DebuggerServer.AuthenticationResult.ALLOW);
         } else {
           resolve(DebuggerServer.AuthenticationResult.DENY);
