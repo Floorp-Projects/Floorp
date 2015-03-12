@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(f84b1ae4-2f78-4bad-b36a-6a8516ee6e40)]
+[scriptable, builtinclass, uuid(68ba7610-e33d-47ce-8fa2-af07af2422bc)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -288,6 +288,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    * and false otherwise.  Defaults to true.
    */
   [infallible] attribute boolean allowContentRetargeting;
+
+  /**
+   * True if new child docshells should allow content retargeting.
+   * Setting allowContentRetargeting also overwrites this value.
+   */
+  [infallible] attribute boolean allowContentRetargetingOnChildren;
 
   /**
    * Get an enumerator over this docShell and its children.
