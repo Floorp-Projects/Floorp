@@ -8,6 +8,7 @@
 #define mozilla_storage_mozStorageAsyncStatementJSHelper_h_
 
 #include "nsIXPCScriptable.h"
+#include "nsIXPConnect.h"
 
 class AsyncStatement;
 
@@ -27,6 +28,24 @@ public:
 
 private:
   nsresult getParams(AsyncStatement *, JSContext *, JSObject *, JS::Value *);
+};
+
+/**
+ * Wrapper used to clean up the references JS helpers hold to the statement.
+ * For cycle-avoidance reasons they do not hold reference-counted references,
+ * so it is important we do this.
+ */
+class AsyncStatementParamsHolder MOZ_FINAL : public nsIXPConnectJSObjectHolder
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
+
+  explicit AsyncStatementParamsHolder(nsIXPConnectJSObjectHolder* aHolder);
+
+private:
+  virtual ~AsyncStatementParamsHolder();
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mHolder;
 };
 
 } // namespace storage
