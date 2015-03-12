@@ -31,11 +31,6 @@
   AddRef()
 
 
-extern "C++" {
-// ...because some one is accidentally including this file inside
-// an |extern "C"|
-
-
 // Making this a |inline| |template| allows |aExpr| to be evaluated only once,
 // yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
 template<class T>
@@ -46,8 +41,6 @@ ns_if_addref(T aExpr)
     aExpr->AddRef();
   }
 }
-
-} /* extern "C++" */
 
 /**
  * Macro for adding a reference to an interface that checks for nullptr.
