@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(6eaf87a1-b252-4c4e-a2fc-318120680335)]
+[scriptable, uuid(aa7a399f-7178-4006-9e37-d3959afed2ee)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1274,6 +1274,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * Is the window is in a modal state? [See enterModalState()]
    */
   [noscript] boolean isInModalState();
+
+  /**
+   * Request set internal desktopMode flag change.
+   */
+  void setDesktopModeViewport(in boolean aDesktopModeViewport);
 
   /**
    * Suspend/resume timeouts on this window and its descendant windows.
