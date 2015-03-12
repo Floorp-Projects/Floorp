@@ -32,6 +32,7 @@
 #include "VideoUtils.h"
 #include "ImageLayers.h"
 #include "VideoSegment.h"
+#include "MediaStreamTrack.h"
 #endif
 
 class nsIPrincipal;
@@ -104,6 +105,9 @@ public:
   void DetachTransport_s();
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
+#ifdef MOZILLA_INTERNAL_API
+  nsRefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
+#endif
 protected:
   nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
