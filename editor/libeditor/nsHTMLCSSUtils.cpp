@@ -1171,7 +1171,6 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         nsAutoString valueStringLower;
         ToLowerCase(valueString, valueStringLower);
         aIsSet = !valueStringLower.EqualsLiteral("monospace") &&
-                 !valueStringLower.EqualsLiteral("sans-serif") &&
                  !valueStringLower.EqualsLiteral("serif");
       }
       return NS_OK;
