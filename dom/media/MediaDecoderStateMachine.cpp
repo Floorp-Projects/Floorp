@@ -244,6 +244,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCancelingSeek(false),
   mCurrentTimeBeforeSeek(0),
   mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
+  mCorruptFrames(30),
+  mDisabledHardwareAcceleration(false),
   mDecodingFrozenAtStateDecoding(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false)
@@ -3006,6 +3008,18 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
     if (aData->mImage && !aData->mImage->IsValid()) {
       MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
       frameStats.NotifyCorruptFrame();
+      // If more than 10% of the last 30 frames have been corrupted, then try disabling
+      // hardware acceleration. We use 10 as the corrupt value because RollingMean<>
+      // only supports integer types.
+      mCorruptFrames.insert(10);
+      if (!mDisabledHardwareAcceleration &&
+          frameStats.GetPresentedFrames() > 30 &&
+          mCorruptFrames.mean() >= 1 /* 10% */) {
+        DecodeTaskQueue()->Dispatch(NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration));
+        mDisabledHardwareAcceleration = true;
+      }
+    } else {
+      mCorruptFrames.insert(0);
     }
     container->SetCurrentFrame(ThebesIntSize(aData->mDisplay), aData->mImage,
                                aTarget);
