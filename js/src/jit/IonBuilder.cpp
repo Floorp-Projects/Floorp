@@ -821,7 +821,10 @@ IonBuilder::build()
     // register/stack pressure.
     MCheckOverRecursed *check = MCheckOverRecursed::New(alloc());
     current->add(check);
-    check->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
+    MResumePoint *entryRpCopy = MResumePoint::Copy(alloc(), current->entryResumePoint());
+    if (!entryRpCopy)
+        return false;
+    check->setResumePoint(entryRpCopy);
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -851,8 +854,13 @@ IonBuilder::build()
     // effectful operations).
     for (uint32_t i = 0; i < info().endArgSlot(); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
-        if (ins->type() == MIRType_Value)
-            ins->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
+        if (ins->type() != MIRType_Value)
+            continue;
+
+        MResumePoint *entryRpCopy = MResumePoint::Copy(alloc(), current->entryResumePoint());
+        if (!entryRpCopy)
+            return false;
+        ins->setResumePoint(entryRpCopy);
     }
 
     // lazyArguments should never be accessed in |argsObjAliasesFormals| scripts.
@@ -6798,7 +6806,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     // Link the same MResumePoint from the MStart to each MOsrValue.
     // This causes logic in ShouldSpecializeInput() to not replace Uses with
     // Unboxes in the MResumePiont, so that the MStart always sees Values.
-    osrBlock->linkOsrValues(start);
+    if (!osrBlock->linkOsrValues(start))
+        return nullptr;
 
     // Clone types of the other predecessor of the pre-header to the osr block,
     // such as pre-header phi's won't discard specialized type of the
