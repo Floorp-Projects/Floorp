@@ -261,7 +261,10 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                 return false;
             }
 
-            staticUseVaryingList.push_back({itrFrag->type, (int)itrFrag->elementCount()});
+            if (staticVertUse && itrFrag->staticUse) {
+                staticUseVaryingList.push_back({itrFrag->type,
+                                                (int)itrFrag->elementCount()});
+            }
         }
 
         if (!ShCheckVariablesWithinPackingLimits(mMaxVaryingVectors,
