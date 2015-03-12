@@ -76,37 +76,6 @@ loop.Client = (function($) {
     },
 
     /**
-     * Block call URL based on the token identifier
-     *
-     * @param {string} token Conversation identifier used to block the URL
-     * @param {mozLoop.LOOP_SESSION_TYPE} sessionType The type of session which
-     *                                                the url belongs to.
-     * @param {function} cb Callback function used for handling an error
-     *                      response. XXX The incoming call panel does not
-     *                      exist after the block button is clicked therefore
-     *                      it does not make sense to display an error.
-     **/
-    deleteCallUrl: function(token, sessionType, cb) {
-      function deleteRequestCallback(error, responseText) {
-        if (error) {
-          this._failureHandler(cb, error);
-          return;
-        }
-
-        try {
-          cb(null);
-        } catch (err) {
-          console.log("Error deleting call info", err);
-          cb(err);
-        }
-      }
-
-      this.mozLoop.hawkRequest(sessionType,
-                               "/call-url/" + token, "DELETE", null,
-                               deleteRequestCallback.bind(this));
-    },
-
-    /**
      * Sets up an outgoing call, getting the relevant data from the server.
      *
      * Callback parameters:

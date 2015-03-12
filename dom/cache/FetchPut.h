@@ -22,17 +22,10 @@ class nsIRunnable;
 class nsIThread;
 
 namespace mozilla {
-
-class ErrorResult;
-
 namespace dom {
 
-class OwningRequestOrScalarValueString;
-class Promise;
 class Request;
-class RequestOrScalarValueString;
 class Response;
-template<typename T> class Sequence;
 
 namespace cache {
 

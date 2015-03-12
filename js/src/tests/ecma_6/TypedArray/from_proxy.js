@@ -18,7 +18,7 @@ for (var constructor of constructors) {
         var h = {
             defineProperty: function (t, id) {
                 log.push("define", id);
-                return undefined;
+                return true;
             },
             has: function (t, id) {
                 log.push("has", id);
@@ -31,6 +31,7 @@ for (var constructor of constructors) {
             set: function (t, id, v) {
                 log.push("set", id);
                 t[id] = v;
+                return true;
             }
         };
         return new Proxy(Object(target), h);

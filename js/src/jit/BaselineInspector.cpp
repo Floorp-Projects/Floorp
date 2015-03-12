@@ -569,11 +569,14 @@ BaselineInspector::templateCallObject()
     return &res->as<CallObject>();
 }
 
-static Shape *GlobalShapeForGetPropFunction(ICStub *stub)
+static Shape *
+GlobalShapeForGetPropFunction(ICStub *stub)
 {
-    if (stub->isGetProp_CallNativePrototype()) {
-        ICGetProp_CallNativePrototype *nstub =
-            stub->toGetProp_CallNativePrototype();
+    if (stub->isGetProp_CallNative()) {
+        ICGetProp_CallNative *nstub = stub->toGetProp_CallNative();
+        if (nstub->isOwnGetter())
+            return nullptr;
+
         const ReceiverGuard &guard = nstub->receiverGuard();
         if (Shape *shape = guard.shape()) {
             if (shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL)
@@ -597,16 +600,16 @@ AddReceiver(BaselineInspector::ShapeVector &nativeShapes,
 static bool
 AddReceiverForGetPropFunction(BaselineInspector::ShapeVector &nativeShapes,
                               BaselineInspector::ObjectGroupVector &unboxedGroups,
-                              ICStub *stub)
+                              ICGetPropCallGetter *stub)
 {
-    if (stub->isGetProp_CallNative())
+    if (stub->isOwnGetter())
         return true;
 
     ReceiverGuard::Token token;
     if (stub->isGetProp_CallScripted())
         token = stub->toGetProp_CallScripted()->receiverGuard().token();
     else
-        token = stub->toGetProp_CallNativePrototype()->receiverGuard().token();
+        token = stub->toGetProp_CallNative()->receiverGuard().token();
 
     return AddReceiver(nativeShapes, unboxedGroups, token);
 }
@@ -628,12 +631,11 @@ BaselineInspector::commonGetPropFunction(jsbytecode *pc, JSObject **holder, Shap
     const ICEntry &entry = icEntryFromPC(pc);
 
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
-        if (stub->isGetProp_CallScripted()  ||
-            stub->isGetProp_CallNative()    ||
-            stub->isGetProp_CallNativePrototype())
+        if (stub->isGetProp_CallScripted() ||
+            stub->isGetProp_CallNative())
         {
             ICGetPropCallGetter *nstub = static_cast<ICGetPropCallGetter *>(stub);
-            bool isOwn = stub->isGetProp_CallNative();
+            bool isOwn = nstub->isOwnGetter();
             if (!AddReceiverForGetPropFunction(nativeShapes, unboxedGroups, nstub))
                 return false;
 

@@ -5,6 +5,8 @@
 
 const { on, once, off, emit, count } = require('sdk/event/core');
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
+const { defer } = require("sdk/core/promise");
+const { gc } = require("sdk/test/memory");
 
 exports['test add a listener'] = function(assert) {
   let events = [ { name: 'event#1' }, 'event#2' ];
@@ -247,7 +249,7 @@ exports['test listen to all events'] = function(assert) {
   on(target, '*', (type, ...message) => {
     actual.push([type].concat(message));
   });
- 
+
   emit(target, 'foo', 'hello');
   assert.equal(actual[0], 'hello',
     'non-wildcard listeners still work');
@@ -257,6 +259,87 @@ exports['test listen to all events'] = function(assert) {
   emit(target, 'bar', 'goodbye');
   assert.deepEqual(actual[2], ['bar', 'goodbye'],
     'wildcard listener called for unbound event name');
+};
+
+exports['test once'] = function(assert, done) {
+  let target = {};
+  let called = false;
+  let { resolve, promise } = defer();
+
+  once(target, 'foo', function(value) {
+    assert.ok(!called, "listener called only once");
+    assert.equal(value, "bar", "correct argument was passed");
+  });
+  once(target, 'done', resolve);
+
+  emit(target, 'foo', 'bar');
+  emit(target, 'foo', 'baz');
+  emit(target, 'done', "");
+
+  yield promise;
+};
+
+exports['test once with gc'] = function*(assert) {
+  let target = {};
+  let called = false;
+  let { resolve, promise } = defer();
+
+  once(target, 'foo', function(value) {
+    assert.ok(!called, "listener called only once");
+    assert.equal(value, "bar", "correct argument was passed");
+  });
+  once(target, 'done', resolve);
+
+  yield gc();
+
+  emit(target, 'foo', 'bar');
+  emit(target, 'foo', 'baz');
+  emit(target, 'done', "");
+
+  yield promise;
+};
+
+exports["test removing once"] = function(assert, done) {
+  let target = {};
+
+  function test() {
+    assert.fail("listener was called");
+  }
+
+  once(target, "foo", test);
+  once(target, "done", done);
+
+  off(target, "foo", test);
+
+  assert.pass("emit foo");
+  emit(target, "foo", "bar");
+
+  assert.pass("emit done");
+  emit(target, "done", "");
+};
+
+exports["test removing once with gc"] = function*(assert) {
+  let target = {};
+  let { resolve, promise } = defer();
+
+  function test() {
+    assert.fail("listener was called");
+  }
+
+  once(target, "foo", test);
+  once(target, "done", resolve);
+
+  yield gc();
+
+  off(target, "foo", test);
+
+  assert.pass("emit foo");
+  emit(target, "foo", "bar");
+
+  assert.pass("emit done");
+  emit(target, "done", "");
+
+  yield promise;
 };
 
 require('sdk/test').run(exports);

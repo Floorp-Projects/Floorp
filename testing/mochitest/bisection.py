@@ -31,53 +31,8 @@ class Bisect(object):
         self.expectedError = expectedError
         self.result = result
 
-    def get_test_chunk(self, options, tests):
-        "This method is used to return the chunk of test that is to be run"
-        if not options.totalChunks or not options.thisChunk:
-            return tests
-
-        # The logic here is same as chunkifyTests.js, we need this for
-        # bisecting tests.
-        if options.chunkByDir:
-            tests_by_dir = {}
-            test_dirs = []
-            for test in tests:
-                directory = test.split("/")
-                directory = directory[
-                    0:min(
-                        options.chunkByDir,
-                        len(directory) -
-                        1)]
-                directory = "/".join(directory)
-
-                if directory not in tests_by_dir:
-                    tests_by_dir[directory] = [test]
-                    test_dirs.append(directory)
-                else:
-                    tests_by_dir[directory].append(test)
-
-            tests_per_chunk = float(len(test_dirs)) / options.totalChunks
-            start = int(round((options.thisChunk - 1) * tests_per_chunk))
-            end = int(round((options.thisChunk) * tests_per_chunk))
-            test_dirs = test_dirs[start:end]
-            return_tests = []
-            for directory in test_dirs:
-                return_tests += tests_by_dir[directory]
-
-        else:
-            tests_per_chunk = float(len(tests)) / options.totalChunks
-            start = int(round((options.thisChunk - 1) * tests_per_chunk))
-            end = int(round(options.thisChunk * tests_per_chunk))
-            return_tests = tests[start:end]
-
-        options.totalChunks = None
-        options.thisChunk = None
-        options.chunkByDir = None
-        return return_tests
-
     def get_tests_for_bisection(self, options, tests):
         "Make a list of tests for bisection from a given list of tests"
-        tests = self.get_test_chunk(options, tests)
         bisectlist = []
         for test in tests:
             bisectlist.append(test)

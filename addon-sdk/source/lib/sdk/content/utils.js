@@ -45,6 +45,9 @@ exports.getAttachEventType = getAttachEventType;
 let attach = method('worker-attach');
 exports.attach = attach;
 
+let connect = method('worker-connect');
+exports.connect = connect;
+
 let detach = method('worker-detach');
 exports.detach = detach;
 

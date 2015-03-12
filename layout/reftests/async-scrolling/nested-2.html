@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll>
+<body>
+  <!-- Test that nested active scrolling elements work -->
+  <div style="width:400px; height:500px; overflow:hidden; border:2px solid black"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+    <div style="width:300px; height:100px; overflow:hidden; border:2px solid blue; margin-top: 100px"
+         reftest-displayport-x="0" reftest-displayport-y="0"
+         reftest-displayport-w="800" reftest-displayport-h="2000"
+         reftest-async-scroll-x="0" reftest-async-scroll-y="0">
+      <div style="height:200px; background:purple"></div>
+    </div>
+    <div class="filler" style="height: 1000px"></div>
+  </div>
+</html>

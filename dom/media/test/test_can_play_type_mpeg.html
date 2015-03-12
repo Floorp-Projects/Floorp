@@ -123,11 +123,15 @@ function IsLinuxGStreamer() {
          getPref("media.gstreamer.enabled");
 }
 
+function IsJellyBeanOrLater() {
+  return androidVersion >= 16;
+}
+
 // Check whether we should expect the new MP4Reader-based support to work.
 function IsMP4ReaderAvailable() {
   var prefs = getPref("media.fragmented-mp4.enabled") &&
               getPref("media.fragmented-mp4.exposed");
-  return prefs && (IsWindowsVistaOrLater() || IsMacOSSnowLeopardOrLater());
+  return prefs && (IsWindowsVistaOrLater() || IsMacOSSnowLeopardOrLater() || IsJellyBeanOrLater());
 }
 
 var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||

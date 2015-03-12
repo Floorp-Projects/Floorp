@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that creating three foreground processes causes the LRU value of the
+oldest one to be increased by one.  Also test that the LRU value is decreased
+again when the younger processes go into the background.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+function runTest() {
+  var iframe1 = document.createElement('iframe');
+  iframe1.setAttribute('mozbrowser', true);
+  iframe1.src = 'file_MultipleFrames.html';
+
+  var iframe2 = null;
+  var childID = null;
+
+  // Wait for the first process to be created.
+  Promise.all([
+    expectProcessCreated('FOREGROUND').then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe1, 'openwindow')
+  ]).then(function() {
+    // Then wait for the second one.
+    var p = expectProcessCreated('FOREGROUND');
+
+    iframe2 = document.createElement('iframe');
+    iframe2.setAttribute('mozbrowser', true);
+    iframe2.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+    iframe2.src = browserElementTestHelpers.emptyPage1;
+
+    document.body.appendChild(iframe2);
+
+    return p;
+  }).then(function() {
+    // Then wait for the third one and for the first one's LRU value to be
+    // increased by one.
+    var p = Promise.all([
+      expectProcessCreated('FOREGROUND'),
+      expectPriorityWithLRUSet(childID, 'FOREGROUND', 1)
+    ]);
+
+    document.body.appendChild(iframe2);
+
+    return p;
+  }).then(function() {
+    // Now hide the second and third processes, this will send them into the
+    // background and make the first process LRU value to be decreased.
+    var p = expectPriorityWithLRUSet(childID, 'FOREGROUND', 0)
+
+    iframe2.setVisible(false);
+
+    return p;
+  }).then(function() {
+    SimpleTest.finish();
+  });
+
+  document.body.appendChild(iframe1);
+}
+
+addEventListener('testready', runTest);
+
+</script>
+</body>
+</html>

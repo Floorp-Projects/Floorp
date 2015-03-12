@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ['Screenshot'];
 let Screenshot = {
   get: function screenshot_get() {
     let systemAppFrame = SystemAppProxy.getFrame();
-    let window = systemAppFrame.contentWindow;
+    let window = systemAppFrame.ownerDocument.defaultView;
     let document = window.document;
 
     var canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');

@@ -19,7 +19,7 @@ These resources should provide some help:
 
 Please read these two guides if you wish to contribute some patches to the addon-sdk:
 
-* [Contribute Guide](https://github.com/mozilla/addon-sdk/wiki/Contribute)
+* [Contribute Guide](https://github.com/mozilla/addon-sdk/blob/master/CONTRIBUTING.md)
 * [Style Guide](https://github.com/mozilla/addon-sdk/wiki/Coding-style-guide)
 
 ## Issues

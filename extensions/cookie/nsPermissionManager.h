@@ -312,6 +312,12 @@ private:
   nsresult
   RemoveAllModifiedSince(int64_t aModificationTime);
 
+  /**
+   * Retrieve permissions from chrome process.
+   */
+  nsresult
+  FetchPermissions();
+
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIIDNService>      mIDNService;
 

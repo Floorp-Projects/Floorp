@@ -57,6 +57,12 @@ UnboxedLayout::setNewScript(TypeNewScript *newScript, bool writeBarrier /* = tru
     newScript_ = newScript;
 }
 
+void
+UnboxedLayout::detachFromCompartment()
+{
+    remove();
+}
+
 /////////////////////////////////////////////////////////////////////
 // UnboxedPlainObject
 /////////////////////////////////////////////////////////////////////

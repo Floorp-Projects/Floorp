@@ -19,10 +19,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class CacheDBConnection;
-class CacheStreamControlParent;
 struct SavedResponse;
-struct StreamHolder;
 
 class CacheParent MOZ_FINAL : public PCacheParent
                             , public Manager::Listener

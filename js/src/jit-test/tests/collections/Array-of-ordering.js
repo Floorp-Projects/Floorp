@@ -8,9 +8,11 @@ var dstdata = [];
 var dst = new Proxy(dstdata, {
     defineProperty: function (t, name, desc) {
         log.push(["def", name, desc.value]);
+        return true;
     },
     set: function (t, name, value) {
         log.push(["set", name, value]);
+        return true;
     }
 });
 

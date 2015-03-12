@@ -388,11 +388,11 @@ ICStub::trace(JSTracer *trc)
       case ICStub::GetProp_CallDOMProxyNative:
       case ICStub::GetProp_CallDOMProxyWithGenerationNative: {
         ICGetPropCallDOMProxyNativeStub *propStub;
-        if (kind() ==  ICStub::GetProp_CallDOMProxyNative)
+        if (kind() == ICStub::GetProp_CallDOMProxyNative)
             propStub = toGetProp_CallDOMProxyNative();
         else
             propStub = toGetProp_CallDOMProxyWithGenerationNative();
-        MarkShape(trc, &propStub->shape(), "baseline-getproplistbasenative-stub-shape");
+        propStub->receiverGuard().trace(trc);
         if (propStub->expandoShape()) {
             MarkShape(trc, &propStub->expandoShape(),
                       "baseline-getproplistbasenative-stub-expandoshape");
@@ -418,17 +418,10 @@ ICStub::trace(JSTracer *trc)
       }
       case ICStub::GetProp_CallNative: {
         ICGetProp_CallNative *callStub = toGetProp_CallNative();
+        callStub->receiverGuard().trace(trc);
         MarkObject(trc, &callStub->holder(), "baseline-getpropcallnative-stub-holder");
         MarkShape(trc, &callStub->holderShape(), "baseline-getpropcallnative-stub-holdershape");
         MarkObject(trc, &callStub->getter(), "baseline-getpropcallnative-stub-getter");
-        break;
-      }
-      case ICStub::GetProp_CallNativePrototype: {
-        ICGetProp_CallNativePrototype *callStub = toGetProp_CallNativePrototype();
-        callStub->receiverGuard().trace(trc);
-        MarkObject(trc, &callStub->holder(), "baseline-getpropcallnativeproto-stub-holder");
-        MarkShape(trc, &callStub->holderShape(), "baseline-getpropcallnativeproto-stub-holdershape");
-        MarkObject(trc, &callStub->getter(), "baseline-getpropcallnativeproto-stub-getter");
         break;
       }
       case ICStub::SetProp_Native: {
@@ -5768,36 +5761,38 @@ ICIn_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 // given holder in place with a new shape and getter.  fallbackStub can be
 // either an ICGetProp_Fallback or an ICGetName_Fallback.
 //
-// When kind == ICStub::GetProp_CallNative, callers should pass a null receiver,
-// since in that case receiver and holder are the same thing.
+// If 'getter' is an own property, holder == receiver must be true.
 static bool
-UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
+UpdateExistingGetPropCallStubs(ICFallbackStub *fallbackStub,
                                ICStub::Kind kind,
                                HandleNativeObject holder,
                                HandleObject receiver,
                                HandleFunction getter)
 {
     MOZ_ASSERT(kind == ICStub::GetProp_CallScripted ||
-               kind == ICStub::GetProp_CallNative ||
-               kind == ICStub::GetProp_CallNativePrototype);
+               kind == ICStub::GetProp_CallNative);
     MOZ_ASSERT(fallbackStub->isGetName_Fallback() ||
                fallbackStub->isGetProp_Fallback());
+    MOZ_ASSERT(holder);
+    MOZ_ASSERT(receiver);
+
+    bool isOwnGetter = (holder == receiver);
     bool foundMatchingStub = false;
-    ReceiverGuard::Token receiverGuard = receiver ? ReceiverGuard::objectToken(receiver) : 0;
+    ReceiverGuard::Token receiverGuard = ReceiverGuard::objectToken(receiver);
     for (ICStubConstIterator iter = fallbackStub->beginChainConst(); !iter.atEnd(); iter++) {
         if (iter->kind() == kind) {
             ICGetPropCallGetter *getPropStub = static_cast<ICGetPropCallGetter *>(*iter);
-            if (getPropStub->holder() == holder) {
+            if (getPropStub->holder() == holder && getPropStub->isOwnGetter() == isOwnGetter) {
+                // If this is an own getter, update the receiver guard as well,
+                // since that's the shape we'll be guarding on. Furthermore,
+                // isOwnGetter() relies on holderShape_ and receiverGuard_ being
+                // the same shape.
+                if (isOwnGetter)
+                    getPropStub->receiverGuard().update(receiverGuard);
+
                 // We want to update the holder shape to match the new one no
                 // matter what, even if the receiver shape is different.
-                ReceiverGuard::Token cachedReceiverGuard;
-                if (kind == ICStub::GetProp_CallNative) {
-                    cachedReceiverGuard = 0;
-                } else {
-                    ICGetPropCallPrototypeGetter *stubWithReceiver =
-                        static_cast<ICGetPropCallPrototypeGetter*>(getPropStub);
-                    cachedReceiverGuard = stubWithReceiver->receiverGuard().token();
-                }
+
                 // We would like to assert that either
                 // getPropStub->holderShape() != holder->lastProperty() or
                 // receiverShape != cachedReceiverShape, but that assertion can
@@ -5812,7 +5807,7 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                 // Make sure to update the getter, since a shape change might
                 // have changed which getter we want to use.
                 getPropStub->getter() = getter;
-                if (receiverGuard == cachedReceiverGuard)
+                if (receiverGuard == getPropStub->receiverGuard().token())
                     foundMatchingStub = true;
             }
         }
@@ -5926,31 +5921,20 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     {
         ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
-        ICStub *newStub;
-        if (current == global) {
-            JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
-            if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
-                                               global, JS::NullPtr(), getter)) {
-                return true;
-            }
-            ICGetProp_CallNative::Compiler compiler(cx, monitorStub, current,
-                                                    getter, script->pcToOffset(pc),
-                                                    /* outerClass = */ nullptr,
-                                                    /* inputDefinitelyObject = */ true);
-            newStub = compiler.getStub(compiler.getStubSpace(script));
-        } else {
-            JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName prototype/NativeGetter) stub");
-            if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativePrototype,
-                                               current, global, getter)) {
-                return true;
-            }
-            ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, global, current,
-                                                             getter, script->pcToOffset(pc),
-                                                             /* outerClass = */ nullptr,
-                                                             /* inputDefinitelyObject = */ true);
-            newStub = compiler.getStub(compiler.getStubSpace(script));
-        }
 
+        JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
+        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative, current, global,
+                                           getter))
+        {
+            *attached = true;
+            return true;
+        }
+        ICGetProp_CallNative::Compiler compiler(cx, monitorStub, global, current,
+                                                getter, script->pcToOffset(pc),
+                                                /* outerClass = */ nullptr,
+                                                /* inputDefinitelyObject = */ true);
+
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
 
@@ -6567,12 +6551,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             return true;
 #endif
 
-        // Don't handle scripted own property getters
-        if (obj == holder)
-            return true;
-
         RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
-        MOZ_ASSERT(obj != holder);
         MOZ_ASSERT(callee->hasScript());
 
         if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallScripted,
@@ -6582,7 +6561,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         }
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetProp(NativeObj/ScriptedGetter %s:%" PRIuSIZE ") stub",
-                    callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
+                callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
 
         ICGetProp_CallScripted::Compiler compiler(cx, monitorStub, obj, holder, callee,
                                                   script->pcToOffset(pc));
@@ -6680,25 +6659,16 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         ICGetPropCallDOMProxyNativeCompiler compiler(cx, kind, monitorStub, proxy, holder, callee,
                                                      script->pcToOffset(pc));
         newStub = compiler.getStub(compiler.getStubSpace(script));
-    } else if (obj == holder) {
-        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
-                                           obj.as<NativeObject>(), JS::NullPtr(), callee)) {
-            *attached = true;
-            return true;
-        }
-
-        ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, callee,
-                                                script->pcToOffset(pc), outerClass);
-        newStub = compiler.getStub(compiler.getStubSpace(script));
     } else {
-        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativePrototype,
-                                           holder.as<NativeObject>(), obj, callee)) {
+        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
+                                           holder.as<NativeObject>(), obj, callee))
+        {
             *attached = true;
             return true;
         }
 
-        ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, obj, holder, callee,
-                                                         script->pcToOffset(pc), outerClass);
+        ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, holder, callee,
+                                                script->pcToOffset(pc), outerClass);
         newStub = compiler.getStub(compiler.getStubSpace(script));
     }
     if (!newStub)
@@ -7420,11 +7390,13 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
     GuardNativeOrUnboxedReceiver(masm, receiver_, objReg, scratch,
                                  ICGetProp_CallScripted::offsetOfReceiverGuard(), &failure);
 
-    Register holderReg = regs.takeAny();
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfHolder()), holderReg);
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfHolderShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
-    regs.add(holderReg);
+    if (receiver_ != holder_) {
+        Register holderReg = regs.takeAny();
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfHolder()), holderReg);
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallScripted::offsetOfHolderShape()), scratch);
+        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
+        regs.add(holderReg);
+    }
 
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, scratch);
@@ -7497,62 +7469,6 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
     Label failure;
 
     GeneralRegisterSet regs(availableGeneralRegs(0));
-    Register obj = InvalidReg;
-
-    MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
-    if (inputDefinitelyObject_) {
-        obj = R0.scratchReg();
-    } else {
-        regs.take(R0);
-        masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-        obj = masm.extractObject(R0, ExtractTemp0);
-        if (outerClass_) {
-            ValueOperand val = regs.takeAnyValue();
-            Register tmp = regs.takeAny();
-            masm.branchTestObjClass(Assembler::NotEqual, obj, tmp, outerClass_, &failure);
-            masm.loadPtr(Address(obj, ProxyDataOffset + offsetof(ProxyDataLayout, values)), tmp);
-            masm.loadValue(Address(tmp, offsetof(ProxyValueArray, privateSlot)), val);
-            obj = masm.extractObject(val, ExtractTemp0);
-            regs.add(val);
-            regs.add(tmp);
-        }
-    }
-    regs.takeUnchecked(obj);
-
-    Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
-
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfHolderShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, &failure);
-
-    enterStubFrame(masm, scratch);
-
-    masm.Push(obj);
-
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfGetter()), scratch);
-    masm.Push(scratch);
-
-    regs.add(scratch);
-    if (!inputDefinitelyObject_)
-        regs.add(R0);
-
-    if (!callVM(DoCallNativeGetterInfo, masm))
-        return false;
-    leaveStubFrame(masm);
-
-    EmitEnterTypeMonitorIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-
-    return true;
-}
-
-bool
-ICGetProp_CallNativePrototype::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-
-    GeneralRegisterSet regs(availableGeneralRegs(0));
     Register objReg = InvalidReg;
 
     MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
@@ -7580,20 +7496,22 @@ ICGetProp_CallNativePrototype::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Shape guard.
     GuardNativeOrUnboxedReceiver(masm, receiver_, objReg, scratch,
-                                 ICGetProp_CallNativePrototype::offsetOfReceiverGuard(), &failure);
+                                 ICGetProp_CallNative::offsetOfReceiverGuard(), &failure);
 
-    Register holderReg = regs.takeAny();
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNativePrototype::offsetOfHolder()), holderReg);
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNativePrototype::offsetOfHolderShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
-    regs.add(holderReg);
+    if (receiver_ != holder_ ) {
+        Register holderReg = regs.takeAny();
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfHolder()), holderReg);
+        masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfHolderShape()), scratch);
+        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
+        regs.add(holderReg);
+    }
 
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, scratch);
 
     // Load callee function.
     Register callee = regs.takeAny();
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNativePrototype::offsetOfGetter()), callee);
+    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallNative::offsetOfGetter()), callee);
 
     // Push args for vm call.
     masm.push(objReg);
@@ -7633,7 +7551,10 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler &masm,
     Register objReg = masm.extractObject(R0, ExtractTemp0);
 
     // Shape guard.
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_CallDOMProxyNative::offsetOfShape()), scratch);
+    static const size_t receiverShapeOffset =
+        ICGetProp_CallDOMProxyNative::offsetOfReceiverGuard() +
+        ReceiverGuard::offsetOfShape();
+    masm.loadPtr(Address(BaselineStubReg, receiverShapeOffset), scratch);
     masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
 
     // Guard that our expando object hasn't started shadowing this property.
@@ -11917,9 +11838,11 @@ ICGetPropNativeDoesNotExistCompiler::ICGetPropNativeDoesNotExistCompiler(
 }
 
 ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *firstMonitorStub,
-                                         JSObject *holder, Shape *holderShape, JSFunction *getter,
+                                         ReceiverGuard::Token receiverGuard, JSObject *holder,
+                                         Shape *holderShape, JSFunction *getter,
                                          uint32_t pcOffset)
   : ICMonitoredStub(kind, stubCode, firstMonitorStub),
+    receiverGuard_(receiverGuard),
     holder_(holder),
     holderShape_(holderShape),
     getter_(getter),
@@ -11927,21 +11850,8 @@ ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode *stubCode, ICStub *f
 {
     MOZ_ASSERT(kind == ICStub::GetProp_CallScripted  ||
                kind == ICStub::GetProp_CallNative    ||
-               kind == ICStub::GetProp_CallNativePrototype ||
                kind == ICStub::GetProp_CallDOMProxyNative ||
                kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
-}
-
-ICGetPropCallPrototypeGetter::ICGetPropCallPrototypeGetter(Kind kind, JitCode *stubCode,
-                                                           ICStub *firstMonitorStub,
-                                                           ReceiverGuard::Token receiverGuard,
-                                                           JSObject *holder,
-                                                           Shape *holderShape,
-                                                           JSFunction *getter, uint32_t pcOffset)
-  : ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape, getter, pcOffset),
-    receiverGuard_(receiverGuard)
-{
-    MOZ_ASSERT(kind == ICStub::GetProp_CallScripted || kind == ICStub::GetProp_CallNativePrototype);
 }
 
 ICInstanceOf_Function::ICInstanceOf_Function(JitCode *stubCode, Shape *shape,
@@ -11963,20 +11873,12 @@ ICGetProp_CallScripted::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
 }
 
 /* static */ ICGetProp_CallNative *
-ICGetProp_CallNative::Clone( ICStubSpace *space, ICStub *firstMonitorStub,
+ICGetProp_CallNative::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
                             ICGetProp_CallNative &other)
 {
-    return New<ICGetProp_CallNative>(space, other.jitCode(), firstMonitorStub, other.holder_,
+    return New<ICGetProp_CallNative>(space, other.jitCode(), firstMonitorStub,
+                                     other.receiverGuard().token(), other.holder_,
                                      other.holderShape_, other.getter_, other.pcOffset_);
-}
-
-/* static */ ICGetProp_CallNativePrototype *
-ICGetProp_CallNativePrototype::Clone(ICStubSpace *space, ICStub *firstMonitorStub,
-                                     ICGetProp_CallNativePrototype &other)
-{
-    return New<ICGetProp_CallNativePrototype>(space, other.jitCode(), firstMonitorStub,
-                                              other.receiverGuard().token(), other.holder_,
-                                              other.holderShape_, other.getter_, other.pcOffset_);
 }
 
 ICSetProp_Native::ICSetProp_Native(JitCode *stubCode, ObjectGroup *group, Shape *shape,
@@ -12180,9 +12082,8 @@ ICGetPropCallDOMProxyNativeStub::ICGetPropCallDOMProxyNativeStub(Kind kind, JitC
                                                                  Shape *holderShape,
                                                                  JSFunction *getter,
                                                                  uint32_t pcOffset)
-: ICGetPropCallGetter(kind, stubCode, firstMonitorStub, holder, holderShape,
-                      getter, pcOffset),
-    shape_(shape),
+: ICGetPropCallGetter(kind, stubCode, firstMonitorStub, ReceiverGuard::shapeToken(shape),
+                      holder, holderShape, getter, pcOffset),
     expandoShape_(expandoShape)
 { }
 
@@ -12210,7 +12111,7 @@ ICGetProp_CallDOMProxyNative::Clone(ICStubSpace *space, ICStub *firstMonitorStub
                                     ICGetProp_CallDOMProxyNative &other)
 {
     return New<ICGetProp_CallDOMProxyNative>(space, other.jitCode(), firstMonitorStub,
-                                             other.shape_, other.expandoShape_,
+                                             other.receiverGuard_.shape(), other.expandoShape_,
                                              other.holder_, other.holderShape_, other.getter_,
                                              other.pcOffset_);
 }
@@ -12221,7 +12122,7 @@ ICGetProp_CallDOMProxyWithGenerationNative::Clone(ICStubSpace *space,
                                                   ICGetProp_CallDOMProxyWithGenerationNative &other)
 {
     return New<ICGetProp_CallDOMProxyWithGenerationNative>(space, other.jitCode(), firstMonitorStub,
-                                                           other.shape_,
+                                                           other.receiverGuard_.shape(),
                                                            other.expandoAndGeneration_,
                                                            other.generation_,
                                                            other.expandoShape_, other.holder_,

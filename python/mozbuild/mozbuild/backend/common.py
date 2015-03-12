@@ -62,7 +62,7 @@ class XPIDLManager(object):
         }
 
         if not allow_existing and entry['basename'] in self.idls:
-            raise Exception('IDL already registered: %' % entry['basename'])
+            raise Exception('IDL already registered: %s' % entry['basename'])
 
         self.idls[entry['basename']] = entry
         t = self.modules.setdefault(entry['module'], (install_target, set()))

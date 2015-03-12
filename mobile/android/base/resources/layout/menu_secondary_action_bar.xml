@@ -11,7 +11,4 @@
       class="org.mozilla.gecko.menu.GeckoMenu$DefaultActionItemBar"
       android:layout_width="@dimen/menu_item_row_width"
       android:layout_height="@dimen/browser_toolbar_height"
-      android:orientation="horizontal"
-      android:divider="@drawable/divider_vertical"
-      android:showDividers="middle"
-      android:dividerPadding="0dip"/>
+      android:orientation="horizontal"/>

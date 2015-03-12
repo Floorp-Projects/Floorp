@@ -408,6 +408,9 @@ package-tests: \
   stage-jittest \
   stage-web-platform-tests \
   $(NULL)
+ifdef MOZ_WEBRTC
+package-tests: stage-steeplechase
+endif
 else
 # This staging area has been built for us by universal/flight.mk
 PKG_STAGE = $(DIST)/universal/test-stage
@@ -431,10 +434,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 package-tests: stage-b2g
-endif
-
-ifdef MOZ_WEBRTC
-package-tests: stage-steeplechase
 endif
 
 make-stage-dir:

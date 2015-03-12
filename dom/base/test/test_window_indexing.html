@@ -43,6 +43,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(y.contentWindow, window[1], "Second frame should have correct window");
 
   // set() hook test
+  throws(TypeError, function () {
+    "use strict";
+    window[1] = "FAIL strict";
+  });
+
+  // set() hook test
   window[1] = "FAIL";
   is(window[1].name, "y", "Second frame is still y");
   y.parentNode.removeChild(y);
@@ -50,14 +56,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "We should not have a value here");
 
   // defineProperty() hook test
+  function throws(errorCtor, f) {
+    try {
+      f();
+    } catch (exc) {
+      if (!(exc instanceof errorCtor))
+        throw exc;
+      return;
+    }
+    throw new Error("expected " + errCtor.name + ", no exception thrown: " + f);
+  }
+
   x.parentNode.appendChild(y);
-  Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
-				       writable: true })
+  throws(TypeError, function () {
+    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+                                         writable: true });
+  });
   y.parentNode.removeChild(y);
   ok(!("1" in window), "We no longer have two subframes, again");
   is(window[1], undefined, "We should not have a value here either");
 
   // More set() hook test
+  throws(TypeError, function () {
+    "use strict";
+    window[1] = "FAIL3 strict";
+  });
   window[1] = "FAIL3";
   ok(!("1" in window), "We shouldn't allow indexed expandos");
   is(window[1], undefined, "We should not have a value for an indexed expando");
@@ -76,8 +99,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   is(window[1], undefined, "And now we should be back to no [1] property");
 
   // And more defineProperty()
-  Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
-				       writable: true })
+  throws(TypeError, function () {
+    Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
+                                         writable: true });
+  });
   ok(!("1" in window), "Defining indexed properties really just shouldn't work");
   is(window[1], undefined, "Defining past end of list should not work");
 

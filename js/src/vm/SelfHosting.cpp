@@ -173,7 +173,7 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
         } else if (val.isString()) {
             errorArgs[i - 1].encodeLatin1(cx, val.toString());
         } else {
-            errorArgs[i - 1].initBytes(DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr()));
+            errorArgs[i - 1].initBytes(DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr()).release());
         }
         if (!errorArgs[i - 1])
             return false;

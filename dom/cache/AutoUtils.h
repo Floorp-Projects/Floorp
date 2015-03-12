@@ -25,9 +25,6 @@ class PBackgroundParent;
 namespace dom {
 
 class InternalRequest;
-class OwningRequestOrUSVString;
-class RequestOrUSVString;
-template<typename T> class Optional;
 
 namespace cache {
 

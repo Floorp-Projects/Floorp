@@ -16,8 +16,7 @@ loop.conversation = (function(mozL10n) {
   var sharedModels = loop.shared.models;
   var sharedActions = loop.shared.actions;
 
-  var IncomingConversationView = loop.conversationViews.IncomingConversationView;
-  var OutgoingConversationView = loop.conversationViews.OutgoingConversationView;
+  var CallControllerView = loop.conversationViews.CallControllerView;
   var CallIdentifierView = loop.conversationViews.CallIdentifierView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
   var GenericFailureView = loop.conversationViews.GenericFailureView;
@@ -27,53 +26,30 @@ loop.conversation = (function(mozL10n) {
    * in progress, and hence, which view to display.
    */
   var AppControllerView = React.createClass({displayName: "AppControllerView",
-    mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
+    mixins: [
+      Backbone.Events,
+      loop.store.StoreMixin("conversationAppStore"),
+      sharedMixins.WindowCloseMixin
+    ],
 
     propTypes: {
-      // XXX Old types required for incoming call view.
-      client: React.PropTypes.instanceOf(loop.Client).isRequired,
-      conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
-                         .isRequired,
-      sdk: React.PropTypes.object.isRequired,
-
-      // XXX New types for flux style
-      conversationAppStore: React.PropTypes.instanceOf(
-        loop.store.ConversationAppStore).isRequired,
-      conversationStore: React.PropTypes.instanceOf(loop.store.ConversationStore)
-                              .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore),
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
-      return this.props.conversationAppStore.getStoreState();
-    },
-
-    componentWillMount: function() {
-      this.listenTo(this.props.conversationAppStore, "change", function() {
-        this.setState(this.props.conversationAppStore.getStoreState());
-      }, this);
-    },
-
-    componentWillUnmount: function() {
-      this.stopListening(this.props.conversationAppStore);
+      return this.getStoreState();
     },
 
     render: function() {
       switch(this.state.windowType) {
-        case "incoming": {
-          return (React.createElement(IncomingConversationView, {
-            client: this.props.client, 
-            conversation: this.props.conversation, 
-            sdk: this.props.sdk, 
-            isDesktop: true, 
-            conversationAppStore: this.props.conversationAppStore}
-          ));
-        }
+        // CallControllerView is used for both.
+        case "incoming":
         case "outgoing": {
-          return (React.createElement(OutgoingConversationView, {
-            store: this.props.conversationStore, 
-            dispatcher: this.props.dispatcher}
+          return (React.createElement(CallControllerView, {
+            dispatcher: this.props.dispatcher, 
+            mozLoop: this.props.mozLoop}
           ));
         }
         case "room": {
@@ -161,13 +137,10 @@ loop.conversation = (function(mozL10n) {
       feedbackClient: feedbackClient
     });
 
-    loop.store.StoreMixin.register({feedbackStore: feedbackStore});
-
-    // XXX Old class creation for the incoming conversation view, whilst
-    // we transition across (bug 1072323).
-    var conversation = new sharedModels.ConversationModel({}, {
-      sdk: window.OT,
-      mozLoop: navigator.mozLoop
+    loop.store.StoreMixin.register({
+      conversationAppStore: conversationAppStore,
+      conversationStore: conversationStore,
+      feedbackStore: feedbackStore,
     });
 
     // Obtain the windowId and pass it through
@@ -179,25 +152,14 @@ loop.conversation = (function(mozL10n) {
       windowId = hash[1];
     }
 
-    conversation.set({windowId: windowId});
-
     window.addEventListener("unload", function(event) {
-      // Handle direct close of dialog box via [x] control.
-      // XXX Move to the conversation models, when we transition
-      // incoming calls to flux (bug 1088672).
-      navigator.mozLoop.calls.clearCallInProgress(windowId);
-
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
     React.render(React.createElement(AppControllerView, {
-      conversationAppStore: conversationAppStore, 
       roomStore: roomStore, 
-      conversationStore: conversationStore, 
-      client: client, 
-      conversation: conversation, 
       dispatcher: dispatcher, 
-      sdk: window.OT}
+      mozLoop: navigator.mozLoop}
     ), document.querySelector('#main'));
 
     dispatcher.dispatch(new sharedActions.GetWindowData({

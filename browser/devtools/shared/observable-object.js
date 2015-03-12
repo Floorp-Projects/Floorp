@@ -91,6 +91,7 @@ Handler.prototype = {
     let [wrapped, path] = this.unwrap(target, key, value);
     target[key] = value;
     this._emitter.emit("set", path, value);
+    return true;
   },
   getOwnPropertyDescriptor: function(target, key) {
     let desc = Object.getOwnPropertyDescriptor(target, key);
@@ -125,5 +126,6 @@ Handler.prototype = {
       }
       Object.defineProperty(target, key, desc);
     }
+    return true;
   }
 };
