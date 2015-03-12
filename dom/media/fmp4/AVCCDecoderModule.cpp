@@ -42,6 +42,7 @@ private:
   // will set mError accordingly.
   nsresult CreateDecoder();
   nsresult CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample);
+  nsresult CheckForSPSChange(mp4_demuxer::MP4Sample* aSample);
 
   nsRefPtr<PlatformDecoderModule> mPDM;
   mp4_demuxer::VideoDecoderConfig mCurrentConfig;
@@ -90,18 +91,21 @@ AVCCMediaDataDecoder::Input(mp4_demuxer::MP4Sample* aSample)
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
     return NS_ERROR_FAILURE;
   }
+  nsresult rv;
   if (!mDecoder) {
     // It is not possible to create an AVCC H264 decoder without SPS.
     // As such, creation will fail if the extra_data just extracted doesn't
     // contain a SPS.
-    nsresult rv = CreateDecoderAndInit(aSample);
+    rv = CreateDecoderAndInit(aSample);
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required SPS to create the decoder.
       // Ignore for the time being, the MP4Sample will be dropped.
       return NS_OK;
     }
-    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = CheckForSPSChange(aSample);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aSample->extra_data = mCurrentConfig.extra_data;
 
@@ -209,6 +213,23 @@ AVCCMediaDataDecoder::CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample)
   nsresult rv = CreateDecoder();
   NS_ENSURE_SUCCESS(rv, rv);
   return Init();
+}
+
+nsresult
+AVCCMediaDataDecoder::CheckForSPSChange(mp4_demuxer::MP4Sample* aSample)
+{
+  nsRefPtr<mp4_demuxer::ByteBuffer> extra_data =
+    mp4_demuxer::AnnexB::ExtractExtraData(aSample);
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data) ||
+      mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                            mCurrentConfig.extra_data)) {
+    return NS_OK;
+  }
+  // The SPS has changed, signal to flush the current decoder and create a
+  // new one.
+  mDecoder->Flush();
+  mDecoder->Shutdown();
+  return CreateDecoderAndInit(aSample);
 }
 
 // AVCCDecoderModule
