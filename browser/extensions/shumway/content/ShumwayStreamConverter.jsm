@@ -32,7 +32,6 @@ const SEAMONKEY_ID = '{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}';
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/NetUtil.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, 'PrivateBrowsingUtils',
   'resource://gre/modules/PrivateBrowsingUtils.jsm');
@@ -417,25 +416,7 @@ ShumwayStreamConverterBase.prototype = {
       }
     }
 
-    var allowScriptAccess = false;
-    switch (objectParams.allowscriptaccess || 'sameDomain') {
-    case 'always':
-      allowScriptAccess = true;
-      break;
-    case 'never':
-      allowScriptAccess = false;
-      break;
-    default:
-      if (!pageUrl)
-        break;
-      try {
-        // checking if page is in same domain (? same protocol and port)
-        allowScriptAccess =
-          Services.io.newURI('/', null, Services.io.newURI(pageUrl, null, null)).spec ==
-          Services.io.newURI('/', null, Services.io.newURI(url, null, null)).spec;
-      } catch (ex) {}
-      break;
-    }
+    var allowScriptAccess = isScriptAllowed(objectParams.allowscriptaccess, url, pageUrl);
 
     var startupInfo = {};
     startupInfo.window = window;
@@ -482,7 +463,17 @@ ShumwayStreamConverterBase.prototype = {
 
     // Create a new channel that loads the viewer as a chrome resource.
     var viewerUrl = 'chrome://shumway/content/viewer.wrapper.html';
-    var channel = Services.io.newChannel(viewerUrl, null, null);
+    // TODO use only newChannel2 after FF37 is released.
+    var channel = Services.io.newChannel2 ?
+                  Services.io.newChannel2(viewerUrl,
+                                          null,
+                                          null,
+                                          null, // aLoadingNode
+                                          Services.scriptSecurityManager.getSystemPrincipal(),
+                                          null, // aTriggeringPrincipal
+                                          Ci.nsILoadInfo.SEC_NORMAL,
+                                          Ci.nsIContentPolicy.TYPE_OTHER) :
+                  Services.io.newChannel(viewerUrl, null, null);
 
     var converter = this;
     var listener = this.listener;
@@ -547,6 +538,32 @@ ShumwayStreamConverterBase.prototype = {
     // Do nothing.
   }
 };
+
+function isScriptAllowed(allowScriptAccessParameter, url, pageUrl) {
+  if (!allowScriptAccessParameter) {
+    allowScriptAccessParameter = 'sameDomain';
+  }
+  var allowScriptAccess = false;
+  switch (allowScriptAccessParameter.toLowerCase()) { // ignoring case here
+    case 'always':
+      allowScriptAccess = true;
+      break;
+    case 'never':
+      allowScriptAccess = false;
+      break;
+    default: // 'samedomain'
+      if (!pageUrl)
+        break;
+      try {
+        // checking if page is in same domain (? same protocol and port)
+        allowScriptAccess =
+          Services.io.newURI('/', null, Services.io.newURI(pageUrl, null, null)).spec ==
+          Services.io.newURI('/', null, Services.io.newURI(url, null, null)).spec;
+      } catch (ex) {}
+      break;
+  }
+  return allowScriptAccess;
+}
 
 // properties required for XPCOM registration:
 function copyProperties(obj, template) {

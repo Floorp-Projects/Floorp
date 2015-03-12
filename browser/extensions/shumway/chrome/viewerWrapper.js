@@ -36,18 +36,19 @@ function runViewer() {
 
     var childWindow = viewer.contentWindow.wrappedJSObject;
 
-    var shumwayComAdapter = ShumwayCom.createAdapter(childWindow, {
+    var shumwayComAdapterHooks = {};
+    ShumwayCom.createAdapter(childWindow, {
       sendMessage: sendMessage,
       enableDebug: enableDebug,
       getEnvironment: getEnvironment,
-    });
+    }, shumwayComAdapterHooks);
 
     shumwayActions.onExternalCallback = function (call) {
-      return shumwayComAdapter.onExternalCallback(Components.utils.cloneInto(call, childWindow));
+      return shumwayComAdapterHooks.onExternalCallback(Components.utils.cloneInto(call, childWindow));
     };
 
     shumwayActions.onLoadFileCallback = function (args) {
-      shumwayComAdapter.onLoadFileCallback(Components.utils.cloneInto(args, childWindow));
+      shumwayComAdapterHooks.onLoadFileCallback(Components.utils.cloneInto(args, childWindow));
     };
 
     childWindow.runViewer();
