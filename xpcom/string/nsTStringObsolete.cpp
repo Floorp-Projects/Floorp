@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
+#include "nsTArray.h"
 
 /**
  * nsTString::Find
@@ -487,77 +487,95 @@ nsTString_CharT::ReplaceSubstring(const self_type& aTarget,
                                   const self_type& aNewValue,
                                   const fallible_t&)
 {
-  uint32_t t = aTarget.Length();
-  if (t == 0)
+  if (aTarget.Length() == 0)
     return true;
 
-  int32_t gap = FindSubstring(mData, mLength, aTarget.Data(), t, false);
-  if (gap == kNotFound)
+  // Remember all of the non-matching parts.
+  nsAutoTArray<Segment, 16> nonMatching;
+  uint32_t i = 0;
+  uint32_t newLength = 0;
+  while (true)
+  {
+    int32_t r = FindSubstring(mData + i, mLength - i, static_cast<const char_type*>(aTarget.Data()), aTarget.Length(), false);
+    int32_t until = (r == kNotFound) ? mLength - i : r;
+    nonMatching.AppendElement(Segment(i, until));
+    newLength += until;
+    if (r == kNotFound) {
+      break;
+    }
+
+    newLength += aNewValue.Length();
+    i += r + aTarget.Length();
+    if (i >= mLength) {
+      // Add an auxiliary entry at the end of the list to help as an edge case
+      // for the algorithms below.
+      nonMatching.AppendElement(Segment(mLength, 0));
+      break;
+    }
+  }
+
+  // If there's only one non-matching segment, then the target string was not
+  // found, and there's nothing to do.
+  if (nonMatching.Length() == 1) {
+    MOZ_ASSERT(nonMatching[0].mBegin == 0 && nonMatching[0].mLength == mLength,
+               "We should have the correct non-matching segment.");
     return true;
+  }
 
-  // Build up a list of gaps between matches.
-  nsAutoTArray<uint32_t, 16> gaps;
-  int32_t pos = 0;
-  do {
-    gaps.AppendElement(gap);
-    pos += gap + t;
-    gap = FindSubstring(mData + pos, mLength - pos, aTarget.Data(), t, false);
-  } while (gap != kNotFound);
-
-  uint32_t n = aNewValue.Length();
-  uint32_t l = mLength + (n - t) * gaps.Length();
+  // Make sure that we can mutate our buffer.
+  // Note that we always allocate at least an mLength sized buffer, because the
+  // rest of the algorithm relies on having access to all of the original
+  // string.  In other words, we over-allocate in the shrinking case.
   char_type* oldData;
   uint32_t oldFlags;
-  if (!MutatePrep(XPCOM_MAX(mLength, l), &oldData, &oldFlags))
+  if (!MutatePrep(XPCOM_MAX(mLength, newLength), &oldData, &oldFlags))
     return false;
-
-  // The rest of the string includes the null terminator.
-  gaps.AppendElement(Length() + 1 - pos);
-  // Save the old end of the string.
-  const char_type* src = mData + mLength + 1;
-  mLength = l;
-  if (!oldData && t < n) {
-    // We are growing the string in-place. Work back from the end.
-    char_type* dest = mData + l + 1;
-    for (size_t i = gaps.Length() - 1; i > 0; i--) {
-      if (gaps[i] > 0) {
-        src -= gaps[i];
-        dest -= gaps[i];
-        char_traits::move(dest, src, gaps[i]);
-      }
-      src -= t;
-      dest -= n;
-      char_traits::copy(dest, aNewValue.Data(), n);
-    }
-    return true;
-  }
-
-  src = mData;
   if (oldData) {
-    // We are copying to a new buffer, so explicitly copy the first gap.
-    src = oldData;
-    if (gaps[0] > 0)
-      char_traits::copy(mData, src, gaps[0]);
+    // Copy all of the old data to the new buffer.
+    char_traits::copy(mData, oldData, mLength);
+    ::ReleaseData(oldData, oldFlags);
   }
 
-  char_type* dest = mData + gaps[0];
-  src += gaps[0];
-  for (size_t i = 1; i < gaps.Length(); i++) {
-    char_traits::copy(dest, aNewValue.Data(), n);
-    dest += n;
-    src += t;
-    if (gaps[i] > 0) {
-      char_traits::move(dest, src, gaps[i]);
-      dest += gaps[i];
-      src += gaps[i];
+  if (aTarget.Length() >= aNewValue.Length()) {
+    // In the shrinking case, start filling the buffer from the beginning.
+    const uint32_t delta = (aTarget.Length() - aNewValue.Length());
+    for (i = 1; i < nonMatching.Length(); ++i) {
+      // When we move the i'th non-matching segment into position, we need to
+      // account for the characters deleted by the previous |i| replacements by
+      // subtracting |i * delta|.
+      const char_type* sourceSegmentPtr = mData + nonMatching[i].mBegin;
+      char_type* destinationSegmentPtr = mData + nonMatching[i].mBegin - i * delta;
+      // Write the i'th replacement immediately before the new i'th non-matching
+      // segment.
+      char_traits::copy(destinationSegmentPtr - aNewValue.Length(),
+                        aNewValue.Data(), aNewValue.Length());
+      char_traits::move(destinationSegmentPtr, sourceSegmentPtr,
+                        nonMatching[i].mLength);
+    }
+  } else {
+    // In the growing case, start filling the buffer from the end.
+    const uint32_t delta = (aNewValue.Length() - aTarget.Length());
+    for (i = nonMatching.Length() - 1; i > 0; --i) {
+      // When we move the i'th non-matching segment into position, we need to
+      // account for the characters added by the previous |i| replacements by
+      // adding |i * delta|.
+      const char_type* sourceSegmentPtr = mData + nonMatching[i].mBegin;
+      char_type* destinationSegmentPtr = mData + nonMatching[i].mBegin + i * delta;
+      char_traits::move(destinationSegmentPtr, sourceSegmentPtr,
+                        nonMatching[i].mLength);
+      // Write the i'th replacement immediately before the new i'th non-matching
+      // segment.
+      char_traits::copy(destinationSegmentPtr - aNewValue.Length(),
+                        aNewValue.Data(), aNewValue.Length());
     }
   }
 
-  if (oldData)
-    ::ReleaseData(oldData, oldFlags);
+  // Adjust the length and make sure the string is null terminated.
+  mLength = newLength;
+  mData[mLength] = char_type(0);
+
   return true;
 }
-
 
 /**
  * nsTString::Trim
