@@ -3209,10 +3209,9 @@ Widgets.ObjectRenderers.add({
 
     let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
     if (isAttached) {
-      let onReady = promise.defer();
-      this.toolbox.inspector.once("inspector-updated", onReady.resolve);
+      let onReady = this.toolbox.inspector.once("inspector-updated");
       yield this.toolbox.selection.setNodeFront(this._nodeFront, "console");
-      yield onReady.promise;
+      yield onReady;
     } else {
       throw null;
     }
