@@ -146,7 +146,17 @@
             var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                    .getService();
 
-            var channel = ios.newChannel("http://example.com", null, null);
+            var systemPrincipal =  SpecialPowers.Services.scriptSecurityManager
+                                                .getSystemPrincipal();
+
+            var channel = ios.newChannel2("http://example.com",
+                                          null,
+                                          null,
+                                          null,      // aLoadingNode
+                                          systemPrincipal,
+                                          null,      // aTriggeringPrincipal
+                                          Ci.nsILoadInfo.SEC_NORMAL,
+                                          Ci.nsIContentPolicy.TYPE_OTHER);
             pps.asyncResolve(channel, 0, resolveCallback);
 	}
 
