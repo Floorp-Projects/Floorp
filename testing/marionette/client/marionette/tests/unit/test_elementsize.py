@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
+from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+
 
 class TestElementSize(MarionetteTestCase):
     def testShouldReturnTheSizeOfALink(self):
@@ -13,12 +14,15 @@ class TestElementSize(MarionetteTestCase):
         self.assertTrue(size['width'] > 0)
         self.assertTrue(size['height'] > 0)
 
+
+@skip_if_b2g
 class TestElementSizeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
         self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test2.xul', 'foo', 'chrome,centerscreen');")
+        self.marionette.execute_script(
+            "window.open('chrome://marionette/content/test2.xul', 'foo', 'chrome,centerscreen');")
         self.marionette.switch_to_window('foo')
         self.assertNotEqual(self.win, self.marionette.current_window_handle)
 
@@ -37,4 +41,3 @@ class TestElementSizeChrome(MarionetteTestCase):
         size = shrinko.rect
         self.assertTrue(size['width'] > 0)
         self.assertTrue(size['height'] > 0)
-
