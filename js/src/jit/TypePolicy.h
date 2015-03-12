@@ -439,7 +439,7 @@ class InstanceOfPolicy MOZ_FINAL : public TypePolicy
 class StoreTypedArrayHolePolicy;
 class StoreTypedArrayElementStaticPolicy;
 
-class StoreTypedArrayPolicy : public TypePolicy
+class StoreUnboxedScalarPolicy : public TypePolicy
 {
   private:
     static bool adjustValueInput(TempAllocator &alloc, MInstruction *ins, Scalar::Type arrayType,
@@ -453,14 +453,14 @@ class StoreTypedArrayPolicy : public TypePolicy
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class StoreTypedArrayHolePolicy MOZ_FINAL : public StoreTypedArrayPolicy
+class StoreTypedArrayHolePolicy MOZ_FINAL : public StoreUnboxedScalarPolicy
 {
   public:
     EMPTY_DATA_;
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class StoreTypedArrayElementStaticPolicy MOZ_FINAL : public StoreTypedArrayPolicy
+class StoreTypedArrayElementStaticPolicy MOZ_FINAL : public StoreUnboxedScalarPolicy
 {
   public:
     EMPTY_DATA_;
