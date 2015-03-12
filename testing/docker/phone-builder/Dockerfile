@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/builder:0.2.6
+FROM          quay.io/mozilla/builder:0.5.0
 MAINTAINER    Wander Lairson Costa <wcosta@mozilla.com>
 
 # Add utilities and configuration
