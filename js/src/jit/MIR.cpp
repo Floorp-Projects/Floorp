@@ -1027,10 +1027,10 @@ MConstantElements::printOpcode(FILE *fp) const
 }
 
 void
-MLoadTypedArrayElement::printOpcode(FILE *fp) const
+MLoadUnboxedScalar::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
-    fprintf(fp, " %s", ScalarTypeDescr::typeName(arrayType()));
+    fprintf(fp, " %s", ScalarTypeDescr::typeName(indexType()));
 }
 
 void
@@ -2031,7 +2031,7 @@ NeedNegativeZeroCheck(MDefinition *def)
           case MDefinition::Op_StoreElementHole:
           case MDefinition::Op_LoadElement:
           case MDefinition::Op_LoadElementHole:
-          case MDefinition::Op_LoadTypedArrayElement:
+          case MDefinition::Op_LoadUnboxedScalar:
           case MDefinition::Op_LoadTypedArrayElementHole:
           case MDefinition::Op_CharCodeAt:
           case MDefinition::Op_Mod:
