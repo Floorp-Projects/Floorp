@@ -31,7 +31,7 @@ GetUserMediaLog()
 #include "AndroidBridge.h"
 #endif
 
-#ifdef MOZ_B2G_CAMERA
+#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
 #include "ICameraControl.h"
 #include "MediaEngineGonkVideoSource.h"
 #endif
@@ -62,7 +62,9 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID, &mHasTabVideoSource);
   }
 #else
+#ifdef MOZ_WIDGET_GONK
   AsyncLatencyLogger::Get()->AddRef();
+#endif
 #endif
   // XXX
   gFarendObserver = new AudioOutputObserver();
@@ -78,7 +80,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
-#ifdef MOZ_B2G_CAMERA
+#if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   if (aMediaSource != dom::MediaSourceEnum::Camera) {
     // only supports camera sources
     return;

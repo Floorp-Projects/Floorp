@@ -45,7 +45,6 @@ add_test(function test_readAppIni() {
   run_next_test();
 });
 
-
 add_test(function test_get_about_memory() {
   let memLog = LogCapture.readAboutMemory();
 

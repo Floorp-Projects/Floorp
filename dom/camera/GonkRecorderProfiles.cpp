@@ -15,11 +15,13 @@
  */
 
 #include "GonkRecorderProfiles.h"
-#include <media/MediaProfiles.h>
 #include "nsMimeTypes.h"
-#include "GonkRecorder.h"
 #include "CameraControlImpl.h"
 #include "CameraCommon.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include "GonkRecorder.h"
+#endif
 
 using namespace mozilla;
 using namespace android;
@@ -374,10 +376,11 @@ GonkRecorderProfile::GetAll(uint32_t aCameraId,
 
   aProfiles.Clear();
   profiles->EnumerateRead(Enumerate, static_cast<void*>(&aProfiles));
-  
+
   return NS_OK;
 }
 
+#ifdef MOZ_WIDGET_GONK
 nsresult
 GonkRecorderProfile::ConfigureRecorder(GonkRecorder& aRecorder)
 {
@@ -425,3 +428,4 @@ GonkRecorderProfile::ConfigureRecorder(android::GonkRecorder& aRecorder,
 
   return profile->ConfigureRecorder(aRecorder);
 }
+#endif

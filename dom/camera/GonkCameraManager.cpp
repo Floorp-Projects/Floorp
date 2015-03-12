@@ -15,13 +15,16 @@
  */
 
 #include "ICameraControl.h"
-
-#include <camera/Camera.h>
-
 #include "CameraCommon.h"
 #include "GonkCameraControl.h"
 #include "CameraPreferences.h"
 #include "TestGonkCameraControl.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include <camera/Camera.h>
+#else
+#include "FallbackCameraPlatform.h"
+#endif
 
 using namespace mozilla;
 
