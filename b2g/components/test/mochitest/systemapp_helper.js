@@ -113,6 +113,9 @@ let steps = [
       SystemAppProxy.setIsReady();
       assert.ok(true, "Frame declared as loaded");
 
+      let gotFrame = SystemAppProxy.getFrame();
+      assert.equal(gotFrame, frame, "getFrame returns the frame we passed");
+
       // Once pending events are received,
       // we will run checkEventDispatching from `listener` function
     });

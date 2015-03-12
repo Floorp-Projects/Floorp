@@ -240,6 +240,14 @@ let LogShake = {
       Cu.reportError("Unable to get about:memory dump: " + ex);
     }
 
+    try {
+      LogCapture.getScreenshot().then(screenshot => {
+        logArrays["logshake-screenshot.png"] = screenshot;
+      });
+    } catch (ex) {
+      Cu.reportError("Unable to get screenshot dump: " + ex);
+    }
+
     for (let loc in this.LOGS_WITH_PARSERS) {
       let logArray;
       try {

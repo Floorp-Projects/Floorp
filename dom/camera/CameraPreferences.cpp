@@ -31,6 +31,8 @@ uint32_t CameraPreferences::sPrefCameraControlLowMemoryThresholdMB = 0;
 
 bool CameraPreferences::sPrefCameraParametersIsLowMemory = false;
 
+bool CameraPreferences::sPrefCameraParametersPermission = false;
+
 #ifdef MOZ_WIDGET_GONK
 StaticRefPtr<CameraPreferences> CameraPreferences::sObserver;
 
@@ -112,6 +114,11 @@ CameraPreferences::Pref CameraPreferences::sPrefs[] = {
     "camera.control.test.hardware",
     kPrefValueIsCString,
     { &sPrefHardwareTest }
+  },
+  {
+    "camera.control.test.permission",
+    kPrefValueIsBoolean,
+    { &sPrefCameraParametersPermission }
   },
 #ifdef MOZ_B2G
   {
