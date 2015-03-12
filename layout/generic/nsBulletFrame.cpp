@@ -663,6 +663,7 @@ nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   nsHTMLReflowMetrics metrics(wm);
   DISPLAY_MIN_WIDTH(this, metrics.ISize(wm));
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
+  metrics.ISize(wm) += mPadding.IStartEnd(wm);
   return metrics.ISize(wm);
 }
 
@@ -673,6 +674,7 @@ nsBulletFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   nsHTMLReflowMetrics metrics(wm);
   DISPLAY_PREF_WIDTH(this, metrics.ISize(wm));
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
+  metrics.ISize(wm) += mPadding.IStartEnd(wm);
   return metrics.ISize(wm);
 }
 
