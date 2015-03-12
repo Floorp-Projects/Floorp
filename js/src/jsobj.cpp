@@ -2469,12 +2469,9 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 
     /*
      * Create the prototype object.  (GlobalObject::createBlankPrototype isn't
-     * used because it parents the prototype object to the global and because
-     * it uses WithProto::Given.  FIXME: Undo dependencies on this parentage
-     * [which already needs to happen for bug 638316], figure out nicer
-     * semantics for null-protoProto, and use createBlankPrototype.)
+     * used because it won't let us use protoProto as the proto.
      */
-    RootedNativeObject proto(cx, NewNativeObjectWithClassProto(cx, clasp, protoProto, obj, SingletonObject));
+    RootedNativeObject proto(cx, NewNativeObjectWithClassProto(cx, clasp, protoProto, SingletonObject));
     if (!proto)
         return nullptr;
 
