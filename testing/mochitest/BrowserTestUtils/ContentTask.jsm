@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [
   "ContentTask"
 ];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const Cu = Components.utils;
 Cu.import("resource://gre/modules/Promise.jsm");
 
 /**
@@ -50,12 +50,13 @@ this.ContentTask = {
    * @rejects An error message if execution fails.
    */
   spawn: function ContentTask_spawn(browser, arg, task) {
-    if(!gScriptLoadedSet.has(browser.permanentKey)) {
+    if(!gScriptLoadedSet.has(browser)) {
       let mm = browser.messageManager;
+      mm.addMessageListener("content-task:complete", ContentMessageListener);
       mm.loadFrameScript(
         "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js", true);
 
-      gScriptLoadedSet.add(browser.permanentKey);
+      gScriptLoadedSet.add(browser);
     }
 
     let deferred = {};
@@ -92,5 +93,3 @@ let ContentMessageListener = {
     }
   },
 };
-Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager)
-  .addMessageListener("content-task:complete", ContentMessageListener);
