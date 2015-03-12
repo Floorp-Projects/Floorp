@@ -74,7 +74,15 @@ let PerformanceIO = {
   loadRecordingFromFile: function(file) {
     let deferred = promise.defer();
 
-    let channel = NetUtil.newChannel(file);
+    let channel = NetUtil.newChannel2(file,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
+
     channel.contentType = "text/plain";
 
     NetUtil.asyncFetch(channel, (inputStream, status) => {
