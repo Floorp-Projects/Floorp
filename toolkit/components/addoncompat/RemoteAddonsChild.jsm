@@ -203,11 +203,14 @@ let ContentPolicyChild = {
 
 // This is a shim channel whose only purpose is to return some string
 // data from an about: protocol handler.
-function AboutProtocolChannel(uri, contractID)
+function AboutProtocolChannel(uri, contractID, loadInfo)
 {
   this.URI = uri;
   this.originalURI = uri;
   this._contractID = contractID;
+  this._loadingPrincipal = loadInfo.loadingPrincipal;
+  this._securityFlags = loadInfo.securityFlags;
+  this._contentPolicyType = loadInfo.contentPolicyType;
 }
 
 AboutProtocolChannel.prototype = {
@@ -227,7 +230,10 @@ AboutProtocolChannel.prototype = {
                .getService(Ci.nsISyncMessageSender);
     let rval = cpmm.sendRpcMessage("Addons:AboutProtocol:OpenChannel", {
       uri: this.URI.spec,
-      contractID: this._contractID
+      contractID: this._contractID,
+      loadingPrincipal: this._loadingPrincipal,
+      securityFlags: this._securityFlags,
+      contentPolicyType: this._contentPolicyType
     }, {
       notificationCallbacks: this.notificationCallbacks,
       loadGroupNotificationCallbacks: this.loadGroup ? this.loadGroup.notificationCallbacks : null,
@@ -327,8 +333,8 @@ AboutProtocolInstance.prototype = {
   // available to CPOWs. Consequently, we return a shim channel that,
   // when opened, asks the parent to open the channel and read out all
   // the data.
-  newChannel: function(uri) {
-    return new AboutProtocolChannel(uri, this._contractID);
+  newChannel: function(uri, loadInfo) {
+    return new AboutProtocolChannel(uri, this._contractID, loadInfo);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory, Ci.nsIAboutModule])
