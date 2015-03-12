@@ -153,7 +153,7 @@ loop.shared.views = (function(_, l10n) {
             {isActive ? null : <span className="chevron"/>}
           </button>
           <ul ref="menu" className={dropdownMenuClasses}>
-            <li onClick={this._handleShareTabs} className="disabled">
+            <li onClick={this._handleShareTabs}>
               {l10n.get("share_tabs_button_title")}
             </li>
             <li onClick={this._handleShareWindows}>
