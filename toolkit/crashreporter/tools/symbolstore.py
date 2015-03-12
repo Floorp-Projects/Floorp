@@ -29,6 +29,7 @@ import shutil
 import textwrap
 import fnmatch
 import subprocess
+import ctypes
 import urlparse
 import multiprocessing
 import collections
@@ -705,6 +706,7 @@ class Dumper_Win32(Dumper):
 
         result = file
 
+        ctypes.windll.kernel32.SetErrorMode(ctypes.c_uint(1))
         (path, filename) = os.path.split(file)
         if os.path.isdir(path):
             lc_filename = filename.lower()

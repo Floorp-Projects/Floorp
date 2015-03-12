@@ -3570,6 +3570,11 @@ Tab.prototype = {
    * Reloads the tab with the desktop mode setting.
    */
   reloadWithMode: function (aDesktopMode) {
+    // notify desktopmode for PIDOMWindow
+    let win = this.browser.contentWindow;
+    let dwi = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    dwi.setDesktopModeViewport(aDesktopMode);
+
     // Set desktop mode for tab and send change to Java
     if (this.desktopMode != aDesktopMode) {
       this.desktopMode = aDesktopMode;
@@ -6323,6 +6328,19 @@ var ViewportHandler = {
    * Returns the ViewportMetadata object.
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
+    let tab = BrowserApp.getTabForWindow(aWindow);
+    if (tab.desktopMode) {
+      return new ViewportMetadata({
+        minZoom: kViewportMinScale,
+        maxZoom: kViewportMaxScale,
+        width: kDefaultCSSViewportWidth,
+        height: kDefaultCSSViewportHeight,
+        allowZoom: true,
+        allowDoubleTapZoom: true,
+        isSpecified: false
+      });
+    }
+
     let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // viewport details found here

@@ -2625,17 +2625,15 @@ ForwardToNative(JSContext *cx, JSNative native, const JS::CallArgs &args);
  *
  * SetPropertyIgnoringNamedGetter is exposed to make it easier to override
  * set() in this way.  It carries out all the steps of BaseProxyHandler::set()
- * except the initial getOwnPropertyDescriptor()/getPropertyDescriptor() calls.
- * The caller must supply those results as the 'desc' and 'descIsOwn'
- * parameters.
+ * except the initial getOwnPropertyDescriptor() call.  The caller must supply
+ * that descriptor as the 'ownDesc' parameter.
  *
- * Implemented in jsproxy.cpp.
+ * Implemented in proxy/BaseProxyHandler.cpp.
  */
 JS_FRIEND_API(bool)
-SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
-                               JS::HandleObject proxy, JS::HandleObject receiver,
-                               JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                               bool descIsOwn, JS::MutableHandleValue vp,
+SetPropertyIgnoringNamedGetter(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                               JS::MutableHandleValue vp, JS::HandleObject receiver,
+                               JS::MutableHandle<JSPropertyDescriptor> ownDesc,
                                JS::ObjectOpResult &result);
 
 JS_FRIEND_API(void)

@@ -19,7 +19,7 @@
 #include "mozilla/PublicSSL.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/TimeStamp.h"
+#include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 
@@ -43,6 +43,7 @@ PRThread                 *gSocketThread           = nullptr;
 #define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 #define SERVE_MULTIPLE_EVENTS_PREF "network.sts.serve_multiple_events_per_poll_iteration"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
+#define TELEMETRY_PREF "toolkit.telemetry.enabled"
 
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
@@ -73,6 +74,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mServeMultipleEventsPerPollIter(true)
     , mServingPendingQueue(false)
     , mMaxTimePerPollIter(100)
+    , mTelemetryEnabledPref(false)
     , mProbedMaxCount(false)
 {
 #if defined(PR_LOGGING)
@@ -386,11 +388,13 @@ nsSocketTransportService::PollTimeout()
 }
 
 int32_t
-nsSocketTransportService::Poll(bool wait, uint32_t *interval)
+nsSocketTransportService::Poll(bool wait, uint32_t *interval,
+                               TimeDuration *pollDuration)
 {
     PRPollDesc *pollList;
     uint32_t pollCount;
     PRIntervalTime pollTimeout;
+    *pollDuration = 0;
 
     if (mPollList[0].fd) {
         mPollList[0].out_flags = 0;
@@ -413,11 +417,20 @@ nsSocketTransportService::Poll(bool wait, uint32_t *interval)
 
     PRIntervalTime ts = PR_IntervalNow();
 
+    TimeStamp pollStart;
+    if (mTelemetryEnabledPref) {
+        pollStart = TimeStamp::NowLoRes();
+    }
+
     SOCKET_LOG(("    timeout = %i milliseconds\n",
          PR_IntervalToMilliseconds(pollTimeout)));
     int32_t rv = PR_Poll(pollList, pollCount, pollTimeout);
 
     PRIntervalTime passedInterval = PR_IntervalNow() - ts;
+
+    if (mTelemetryEnabledPref && !pollStart.IsNull()) {
+        *pollDuration = TimeStamp::NowLoRes() - pollStart;
+    }
 
     SOCKET_LOG(("    ...returned after %i milliseconds\n",
          PR_IntervalToMilliseconds(passedInterval))); 
@@ -489,6 +502,7 @@ nsSocketTransportService::Init()
         tmpPrefService->AddObserver(KEEPALIVE_PROBE_COUNT_PREF, this, false);
         tmpPrefService->AddObserver(SERVE_MULTIPLE_EVENTS_PREF, this, false);
         tmpPrefService->AddObserver(MAX_TIME_BETWEEN_TWO_POLLS, this, false);
+        tmpPrefService->AddObserver(TELEMETRY_PREF, this, false);
     }
     UpdatePrefs();
 
@@ -736,14 +750,57 @@ nsSocketTransportService::Run()
     // make sure the pseudo random number generator is seeded on this thread
     srand(static_cast<unsigned>(PR_Now()));
 
+    // For the calculation of the duration of the last cycle (i.e. the last for-loop
+    // iteration before shutdown).
+    TimeStamp startOfCycleForLastCycleCalc;
+    int numberOfPendingEventsLastCycle;
+
+    // For measuring of the poll iteration duration without time spent blocked
+    // in poll().
+    TimeStamp pollCycleStart;
+    // Time blocked in poll().
+    TimeDuration singlePollDuration;
+
+    // For calculating the time needed for a new element to run.
+    TimeStamp startOfIteration;
+    TimeStamp startOfNextIteration;
+    int numberOfPendingEvents;
+
+    // If there is too many pending events queued, we will run some poll()
+    // between them and the following variable is cumulative time spent
+    // blocking in poll().
+    TimeDuration pollDuration;
+
     for (;;) {
         bool pendingEvents = false;
         thread->HasPendingEvents(&pendingEvents);
 
+        numberOfPendingEvents = 0;
+        numberOfPendingEventsLastCycle = 0;
+        if (mTelemetryEnabledPref) {
+            startOfCycleForLastCycleCalc = TimeStamp::NowLoRes();
+            startOfNextIteration = TimeStamp::NowLoRes();
+        }
+        pollDuration = 0;
+
         do {
+            if (mTelemetryEnabledPref) {
+                pollCycleStart = TimeStamp::NowLoRes();
+            }
+
             // If there are pending events for this thread then
             // DoPollIteration() should service the network without blocking.
-            DoPollIteration(!pendingEvents);
+            DoPollIteration(!pendingEvents, &singlePollDuration);
+
+            if (mTelemetryEnabledPref && !pollCycleStart.IsNull()) {
+                Telemetry::Accumulate(Telemetry::STS_POLL_BLOCK_TIME,
+                                      singlePollDuration.ToMilliseconds());
+                Telemetry::AccumulateTimeDelta(
+                    Telemetry::STS_POLL_CYCLE,
+                    pollCycleStart + singlePollDuration,
+                    TimeStamp::NowLoRes());
+                pollDuration += singlePollDuration;
+            }
 
             // If nothing was pending before the poll, it might be now
             if (!pendingEvents) {
@@ -762,16 +819,42 @@ nsSocketTransportService::Run()
                         } else {
                             mServingPendingQueue = true;
                         }
+
+                        if (mTelemetryEnabledPref) {
+                            startOfIteration = startOfNextIteration;
+                            // Everything that comes after this point will
+                            // be served in the next iteration. If no even
+                            // arrives, startOfNextIteration will be reset at the
+                            // beginning of each for-loop.
+                            startOfNextIteration = TimeStamp::NowLoRes();
+                        }
                     }
                     TimeStamp eventQueueStart = TimeStamp::NowLoRes();
                     do {
                         NS_ProcessNextEvent(thread);
+                        numberOfPendingEvents++;
                         pendingEvents = false;
                         thread->HasPendingEvents(&pendingEvents);
                     } while (pendingEvents && mServingPendingQueue &&
                              ((TimeStamp::NowLoRes() -
                                eventQueueStart).ToMilliseconds() <
                               mMaxTimePerPollIter));
+
+                    if (mTelemetryEnabledPref && !mServingPendingQueue &&
+                        !startOfIteration.IsNull()) {
+                        Telemetry::AccumulateTimeDelta(
+                            Telemetry::STS_POLL_AND_EVENTS_CYCLE,
+                            startOfIteration + pollDuration,
+                            TimeStamp::NowLoRes());
+
+                        Telemetry::Accumulate(
+                            Telemetry::STS_NUMBER_OF_PENDING_EVENTS,
+                            numberOfPendingEvents);
+
+                        numberOfPendingEventsLastCycle += numberOfPendingEvents;
+                        numberOfPendingEvents = 0;
+                        pollDuration = 0;
+                    }
                 } else {
                     NS_ProcessNextEvent(thread);
                     pendingEvents = false;
@@ -784,8 +867,19 @@ nsSocketTransportService::Run()
         // now that our event queue is empty, check to see if we should exit
         {
             MutexAutoLock lock(mLock);
-            if (mShuttingDown)
+            if (mShuttingDown) {
+                if (mTelemetryEnabledPref &&
+                    !startOfCycleForLastCycleCalc.IsNull()) {
+                    Telemetry::Accumulate(
+                        Telemetry::STS_NUMBER_OF_PENDING_EVENTS_IN_THE_LAST_CYCLE,
+                        numberOfPendingEventsLastCycle);
+                    Telemetry::AccumulateTimeDelta(
+                        Telemetry::STS_POLL_AND_EVENT_THE_LAST_CYCLE,
+                        startOfCycleForLastCycleCalc,
+                        TimeStamp::NowLoRes());
+                }
                 break;
+            }
             if (mGoingOffline) {
                 mGoingOffline = false;
                 goingOffline = true;
@@ -842,7 +936,7 @@ nsSocketTransportService::Reset(bool aGuardLocals)
 }
 
 nsresult
-nsSocketTransportService::DoPollIteration(bool wait)
+nsSocketTransportService::DoPollIteration(bool wait, TimeDuration *pollDuration)
 {
     SOCKET_LOG(("STS poll iter [%d]\n", wait));
 
@@ -903,7 +997,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
     // Measures seconds spent while blocked on PR_Poll
     uint32_t pollInterval;
 
-    int32_t n = Poll(wait, &pollInterval);
+    int32_t n = Poll(wait, &pollInterval, pollDuration);
     if (n < 0) {
         SOCKET_LOG(("  PR_Poll error [%d] os error [%d]\n", PR_GetError(),
                     PR_GetOSError()));
@@ -912,12 +1006,14 @@ nsSocketTransportService::DoPollIteration(bool wait)
         //
         // service "active" sockets...
         //
+        uint32_t numberOfOnSocketReadyCalls = 0;
         for (i=0; i<int32_t(mActiveCount); ++i) {
             PRPollDesc &desc = mPollList[i+1];
             SocketContext &s = mActiveList[i];
             if (n > 0 && desc.out_flags != 0) {
                 s.mElapsedTime = 0;
                 s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
+                numberOfOnSocketReadyCalls++;
             }
             // check for timeout errors unless disabled...
             else if (s.mHandler->mPollTimeout != UINT16_MAX) {
@@ -936,8 +1032,14 @@ nsSocketTransportService::DoPollIteration(bool wait)
                 if (s.mElapsedTime >= s.mHandler->mPollTimeout) {
                     s.mElapsedTime = 0;
                     s.mHandler->OnSocketReady(desc.fd, -1);
+                    numberOfOnSocketReadyCalls++;
                 }
             }
+        }
+        if (mTelemetryEnabledPref) {
+            Telemetry::Accumulate(
+                Telemetry::STS_NUMBER_OF_ONSOCKETREADY_CALLS,
+                numberOfOnSocketReadyCalls);
         }
 
         //
@@ -1033,6 +1135,13 @@ nsSocketTransportService::UpdatePrefs()
                                         &maxTimePref);
         if (NS_SUCCEEDED(rv) && maxTimePref >= 0) {
             mMaxTimePerPollIter = maxTimePref;
+        }
+
+        bool telemetryPref = false;
+        rv = tmpPrefService->GetBoolPref(TELEMETRY_PREF,
+                                         &telemetryPref);
+        if (NS_SUCCEEDED(rv)) {
+            mTelemetryEnabledPref = telemetryPref;
         }
     }
     

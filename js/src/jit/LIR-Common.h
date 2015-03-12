@@ -4884,20 +4884,19 @@ class LArrayJoin : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
-// Load a typed value from a typed array's elements vector.
-class LLoadTypedArrayElement : public LInstructionHelper<1, 2, 1>
+class LLoadUnboxedScalar : public LInstructionHelper<1, 2, 1>
 {
   public:
-    LIR_HEADER(LoadTypedArrayElement)
+    LIR_HEADER(LoadUnboxedScalar)
 
-    LLoadTypedArrayElement(const LAllocation &elements, const LAllocation &index,
-                           const LDefinition &temp) {
+    LLoadUnboxedScalar(const LAllocation &elements, const LAllocation &index,
+                       const LDefinition &temp) {
         setOperand(0, elements);
         setOperand(1, index);
         setTemp(0, temp);
     }
-    const MLoadTypedArrayElement *mir() const {
-        return mir_->toLoadTypedArrayElement();
+    const MLoadUnboxedScalar *mir() const {
+        return mir_->toLoadUnboxedScalar();
     }
     const LAllocation *elements() {
         return getOperand(0);
@@ -4945,20 +4944,20 @@ class LLoadTypedArrayElementStatic : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LStoreTypedArrayElement : public LInstructionHelper<0, 3, 0>
+class LStoreUnboxedScalar : public LInstructionHelper<0, 3, 0>
 {
   public:
-    LIR_HEADER(StoreTypedArrayElement)
+    LIR_HEADER(StoreUnboxedScalar)
 
-    LStoreTypedArrayElement(const LAllocation &elements, const LAllocation &index,
-                            const LAllocation &value) {
+    LStoreUnboxedScalar(const LAllocation &elements, const LAllocation &index,
+                        const LAllocation &value) {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
     }
 
-    const MStoreTypedArrayElement *mir() const {
-        return mir_->toStoreTypedArrayElement();
+    const MStoreUnboxedScalar *mir() const {
+        return mir_->toStoreUnboxedScalar();
     }
     const LAllocation *elements() {
         return getOperand(0);

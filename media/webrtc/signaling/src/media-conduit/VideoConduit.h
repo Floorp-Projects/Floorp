@@ -99,6 +99,11 @@ public:
   virtual MediaConduitErrorCode StopReceiving() MOZ_OVERRIDE;
   virtual MediaConduitErrorCode StartReceiving() MOZ_OVERRIDE;
 
+  /**
+   * Function to configure sending codec mode for different content
+   */
+  virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) MOZ_OVERRIDE;
+
    /**
    * Function to configure send codec for the video session
    * @param sendSessionConfig: CodecConfiguration
@@ -354,6 +359,7 @@ private:
   nsAutoPtr<VideoCodecStatistics> mVideoCodecStat;
 
   nsAutoPtr<LoadManager> mLoadManager;
+  webrtc::VideoCodecMode mCodecMode;
 };
 
 } // end namespace
