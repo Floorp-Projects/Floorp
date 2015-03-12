@@ -586,6 +586,7 @@ describe("loop.conversationViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.CallControllerView, {
           dispatcher: dispatcher,
+          mozLoop: fakeMozLoop
         }));
     }
 
@@ -1224,7 +1225,8 @@ describe("loop.conversationViews", function () {
   describe("AcceptCallView", function() {
     var view;
 
-    function mountTestComponent(props) {
+    function mountTestComponent(extraProps) {
+      var props = _.extend({dispatcher: dispatcher, mozLoop: fakeMozLoop}, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.AcceptCallView, props));
     }
@@ -1233,12 +1235,31 @@ describe("loop.conversationViews", function () {
       view = null;
     });
 
+    it("should start alerting on display", function() {
+      view = mountTestComponent({
+        callType: CALL_TYPES.AUDIO_VIDEO,
+        callerId: "fake@invalid.com"
+      });
+
+      sinon.assert.calledOnce(fakeMozLoop.startAlerting);
+    });
+
+    it("should stop alerting when removed from the display", function() {
+      view = mountTestComponent({
+        callType: CALL_TYPES.AUDIO_VIDEO,
+        callerId: "fake@invalid.com"
+      });
+
+      view.componentWillUnmount();
+
+      sinon.assert.calledOnce(fakeMozLoop.stopAlerting);
+    });
+
     describe("default answer mode", function() {
       it("should display video as primary answer mode", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var primaryBtn = view.getDOMNode()
@@ -1250,8 +1271,7 @@ describe("loop.conversationViews", function () {
       it("should display audio as primary answer mode", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_ONLY,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var primaryBtn = view.getDOMNode()
@@ -1263,8 +1283,7 @@ describe("loop.conversationViews", function () {
       it("should accept call with video", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var primaryBtn = view.getDOMNode()
@@ -1282,8 +1301,7 @@ describe("loop.conversationViews", function () {
       it("should accept call with audio", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_ONLY,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var primaryBtn = view.getDOMNode()
@@ -1302,8 +1320,7 @@ describe("loop.conversationViews", function () {
         function() {
           view = mountTestComponent({
             callType: CALL_TYPES.AUDIO_ONLY,
-            callerId: "fake@invalid.com",
-            dispatcher: dispatcher
+            callerId: "fake@invalid.com"
           });
 
           var secondaryBtn = view.getDOMNode()
@@ -1322,8 +1339,7 @@ describe("loop.conversationViews", function () {
         function() {
           view = mountTestComponent({
             callType: CALL_TYPES.AUDIO_VIDEO,
-            callerId: "fake@invalid.com",
-            dispatcher: dispatcher
+            callerId: "fake@invalid.com"
           });
 
           var secondaryBtn = view.getDOMNode()
@@ -1343,8 +1359,7 @@ describe("loop.conversationViews", function () {
       it("should dispatch a DeclineCall action", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var buttonDecline = view.getDOMNode().querySelector(".btn-decline");
@@ -1361,8 +1376,7 @@ describe("loop.conversationViews", function () {
       it("should dispatch a DeclineCall action with blockCaller true", function() {
         view = mountTestComponent({
           callType: CALL_TYPES.AUDIO_VIDEO,
-          callerId: "fake@invalid.com",
-          dispatcher: dispatcher
+          callerId: "fake@invalid.com"
         });
 
         var buttonBlock = view.getDOMNode().querySelector(".btn-block");

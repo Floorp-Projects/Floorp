@@ -147,6 +147,7 @@ loop.conversationViews = (function(mozL10n) {
       callType: React.PropTypes.string.isRequired,
       callerId: React.PropTypes.string.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired,
       // Only for use by the ui-showcase
       showMenu: React.PropTypes.bool
     },
@@ -155,6 +156,14 @@ loop.conversationViews = (function(mozL10n) {
       return {
         showMenu: false,
       };
+    },
+
+    componentDidMount: function() {
+      this.props.mozLoop.startAlerting();
+    },
+
+    componentWillUnmount: function() {
+      this.props.mozLoop.stopAlerting();
     },
 
     clickHandler: function(e) {
@@ -939,7 +948,8 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
@@ -989,7 +999,8 @@ loop.conversationViews = (function(mozL10n) {
         return (React.createElement(AcceptCallView, {
           callType: this.state.callType, 
           callerId: this.state.callerId, 
-          dispatcher: this.props.dispatcher}
+          dispatcher: this.props.dispatcher, 
+          mozLoop: this.props.mozLoop}
         ));
       }
 
