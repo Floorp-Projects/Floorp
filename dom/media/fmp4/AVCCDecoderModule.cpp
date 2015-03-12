@@ -43,6 +43,7 @@ private:
   nsresult CreateDecoder();
   nsresult CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample);
   nsresult CheckForSPSChange(mp4_demuxer::MP4Sample* aSample);
+  void UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraData);
 
   nsRefPtr<PlatformDecoderModule> mPDM;
   mp4_demuxer::VideoDecoderConfig mCurrentConfig;
@@ -176,6 +177,8 @@ AVCCMediaDataDecoder::CreateDecoder()
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
   }
+  UpdateConfigFromExtraData(mCurrentConfig.extra_data);
+
   mDecoder = mPDM->CreateVideoDecoder(mCurrentConfig,
                                       mLayersBackend,
                                       mImageContainer,
@@ -196,15 +199,7 @@ AVCCMediaDataDecoder::CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample)
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(extra_data, spsdata) &&
-      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
-    mCurrentConfig.image_width = spsdata.pic_width;
-    mCurrentConfig.image_height = spsdata.pic_height;
-    mCurrentConfig.display_width = spsdata.display_width;
-    mCurrentConfig.display_height = spsdata.display_height;
-  }
-  mCurrentConfig.extra_data = extra_data;
+  UpdateConfigFromExtraData(extra_data);
 
   nsresult rv = CreateDecoder();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -226,6 +221,20 @@ AVCCMediaDataDecoder::CheckForSPSChange(mp4_demuxer::MP4Sample* aSample)
   mDecoder->Flush();
   ReleaseMediaResources();
   return CreateDecoderAndInit(aSample);
+}
+
+void
+AVCCMediaDataDecoder::UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraData)
+{
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
+      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+    mCurrentConfig.image_width = spsdata.pic_width;
+    mCurrentConfig.image_height = spsdata.pic_height;
+    mCurrentConfig.display_width = spsdata.display_width;
+    mCurrentConfig.display_height = spsdata.display_height;
+  }
+  mCurrentConfig.extra_data = aExtraData;
 }
 
 // AVCCDecoderModule
