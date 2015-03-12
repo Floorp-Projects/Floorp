@@ -136,7 +136,7 @@ loop.store.StoreMixin = (function() {
         }, this);
       },
       componentWillUnmount: function() {
-        this.getStore().off("change");
+        this.getStore().off("change", null, this);
       }
     };
   }
