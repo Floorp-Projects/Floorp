@@ -3095,6 +3095,10 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
   if (container) {
+    if (aData->mImage && !aData->mImage->IsValid()) {
+      MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+      frameStats.NotifyCorruptFrame();
+    }
     container->SetCurrentFrame(ThebesIntSize(aData->mDisplay), aData->mImage,
                                aTarget);
     MOZ_ASSERT(container->GetFrameDelay() >= 0 || IsRealTime());
