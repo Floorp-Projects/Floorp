@@ -36,31 +36,16 @@ LIRGeneratorShared::use(MDefinition *mir, LUse policy)
 }
 
 template <size_t X> void
-LIRGeneratorShared::define(LVariadicInstruction<1, X> *lir, MDefinition *mir, const LDefinition &def)
+LIRGeneratorShared::define(details::LInstructionFixedDefsTempsHelper<1, X> *lir, MDefinition *mir,
+                           LDefinition::Policy policy)
 {
-    // Call instructions should use defineReturn.
-    MOZ_ASSERT(!lir->isCall());
-
-    uint32_t vreg = getVirtualRegister();
-
-    // Assign the definition and a virtual register. Then, propagate this
-    // virtual register to the MIR, so we can map MIR to LIR during lowering.
-    lir->setDef(0, def);
-    lir->getDef(0)->setVirtualRegister(vreg);
-    lir->setMir(mir);
-    mir->setVirtualRegister(vreg);
-    add(lir);
+    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+    define(lir, mir, LDefinition(type, policy));
 }
 
 template <size_t X> void
-LIRGeneratorShared::define(LVariadicInstruction<1, X> *lir, MDefinition *mir, LDefinition::Policy policy)
-{
-    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-    define(lir, mir, LDefinition(type, policy));
-}
-
-template <size_t X, size_t Y> void
-LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
+LIRGeneratorShared::define(details::LInstructionFixedDefsTempsHelper<1, X> *lir, MDefinition *mir,
+                           const LDefinition &def)
 {
     // Call instructions should use defineReturn.
     MOZ_ASSERT(!lir->isCall());
@@ -74,13 +59,6 @@ LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, c
     lir->setMir(mir);
     mir->setVirtualRegister(vreg);
     add(lir);
-}
-
-template <size_t X, size_t Y> void
-LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, LDefinition::Policy policy)
-{
-    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-    define(lir, mir, LDefinition(type, policy));
 }
 
 template <size_t X, size_t Y> void
