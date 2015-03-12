@@ -163,29 +163,6 @@ nsresult TextEditorTest::TestTextProperties()
   bool any = false;
   bool all = false;
   bool first=false;
-  bool mixed=false;
-  nsString fontFace;
-
-  // test for bug 1141017
-  printf("set the whole first text node to serif\n");
-  result = htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                         NS_LITERAL_STRING("face"),
-                                         NS_LITERAL_STRING("serif"));
-  TEST_RESULT(result);
-  result = htmlEditor->GetFontFaceState(&mixed, fontFace);
-  TEST_RESULT(result);
-  NS_ASSERTION(mixed==false,"mixed should be false");
-  NS_ASSERTION(fontFace.IsEmpty(),"font face should be empty");
-
-  printf("set the whole first text node to sans-serif\n");
-  result = htmlEditor->SetInlineProperty(nsGkAtoms::font,
-                                         NS_LITERAL_STRING("face"),
-                                         NS_LITERAL_STRING("sans-serif"));
-  TEST_RESULT(result);
-  result = htmlEditor->GetFontFaceState(&mixed, fontFace);
-  TEST_RESULT(result);
-  NS_ASSERTION(mixed==false,"mixed should be false");
-  NS_ASSERTION(fontFace.IsEmpty(),"font face should be empty");
 
   // test for bug 1140105
   printf("set the whole first text node to cursive\n");
