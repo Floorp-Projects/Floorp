@@ -388,8 +388,9 @@
 
       <field name="_permanentKey">({})</field>
 
-      <property name="permanentKey" readonly="true"
-                onget="return this._permanentKey;"/>
+      <property name="permanentKey"
+                onget="return this._permanentKey;"
+                onset="this._permanentKey = val;"/>
 
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
