@@ -45,13 +45,6 @@
 <!ENTITY chooseToken.title  "Choose Token Dialog">
 <!ENTITY chooseToken.message1 "Please choose a token.">
 
-<!ENTITY escrowWarn.title "Encryption Key Copy">
-<!ENTITY escrowWarn.message1 "Important: This certificate authority has asked to make a backup of your encryption private key.">
-<!ENTITY escrowWarn.benefit1 "The benefit is that if you lose access to your encryption private key, you can request a copy from this certificate authority.">
-<!ENTITY escrowWarn.message2 "However, your encryption private key will be stored by the certificate authority, and could be used to read your encrypted email or documents without your permission.">
-<!ENTITY examineCert.label "View Certificate">
-<!ENTITY examineCert.accesskey "V">
-
 <!-- Strings for the CreateCertInfo dialog  -->
 <!ENTITY createCertInfo.title "Generating A Private Key">
 <!ENTITY createCertInfo.msg1 "Key Generation in progress… This may take a few minutes….">
