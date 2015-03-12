@@ -68,6 +68,15 @@ protected:
   virtual ~BluetoothA2dpManager();
 
 private:
+  class CleanupA2dpResultHandler;
+  class CleanupA2dpResultHandlerRunnable;
+  class CleanupAvrcpResultHandler;
+  class ConnectResultHandler;
+  class DisconnectResultHandler;
+  class InitA2dpResultHandler;
+  class InitAvrcpResultHandler;
+  class OnErrorProfileResultHandlerRunnable;
+
   BluetoothA2dpManager();
   void ResetA2dp();
   void ResetAvrcp();
