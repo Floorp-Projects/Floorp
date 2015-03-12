@@ -378,4 +378,12 @@ AnnexB::IsAnnexB(const MP4Sample* aSample)
   return header == 0x00000001 || (header >> 8) == 0x000001;
 }
 
+bool
+AnnexB::CompareExtraData(const ByteBuffer* aExtraData1,
+                         const ByteBuffer* aExtraData2)
+{
+  // Very crude comparison.
+  return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;
+}
+
 } // namespace mp4_demuxer

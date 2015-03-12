@@ -39,6 +39,9 @@ public:
   static bool IsAVCC(const MP4Sample* aSample);
   // Returns true if format is AnnexB.
   static bool IsAnnexB(const MP4Sample* aSample);
+  // Return true if both extradata are equal.
+  static bool CompareExtraData(const ByteBuffer* aExtraData1,
+                               const ByteBuffer* aExtraData2);
 
 private:
   // AVCC box parser helper.
