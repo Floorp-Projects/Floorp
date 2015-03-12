@@ -11,6 +11,8 @@
     SimpleTest.waitForExplicitFinish();
 
     var Cc = SpecialPowers.Cc;
+    var Ci = SpecialPowers.Ci;
+    var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
 
     testNum = 1;
 
@@ -35,7 +37,14 @@
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-        var channel = ios.newChannel("http://example.com", null, null);
+        var channel = ios.newChannel2("http://example.com",
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      systemPrincipal,
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
         pps.asyncResolve(channel, 0, resolveCallback);
     }
 
