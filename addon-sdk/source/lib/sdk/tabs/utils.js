@@ -294,7 +294,9 @@ function getTabForBrowser(browser) {
         return tab;
     }
   }
-  return null;
+
+  let tabbrowser = browser.getTabBrowser && browser.getTabBrowser()
+  return !!tabbrowser && tabbrowser.getTabForBrowser(browser);
 }
 exports.getTabForBrowser = getTabForBrowser;
 

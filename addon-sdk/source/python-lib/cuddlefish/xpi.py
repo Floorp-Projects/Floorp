@@ -87,8 +87,7 @@ def build_xpi(template_root_dir, manifest, xpi_path,
     # of all packages sections directories
     for packageName in harness_options['packages']:
       base_arcpath = ZIPSEP.join(['resources', packageName])
-      # Eventually strip sdk files. We need to do that in addition to the
-      # whilelist as the whitelist is only used for `cfx xpi`:
+      # Eventually strip sdk files.
       if not bundle_sdk and packageName == 'addon-sdk':
           continue
       # Always write the top directory, even if it contains no files, since

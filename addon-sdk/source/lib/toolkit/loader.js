@@ -527,8 +527,8 @@ function isNodeModule (name) {
 // to allow overlays. Used by `resolveURI`, returns an array
 function sortPaths (paths) {
   return keys(paths).
-    sort(function(a, b) { return b.length - a.length }).
-    map(function(path) { return [ path, paths[path] ] });
+    sort((a, b) => (b.length - a.length)).
+    map((path) => [ path, paths[path] ]);
 }
 
 const resolveURI = iced(function resolveURI(id, mapping) {
@@ -538,7 +538,7 @@ const resolveURI = iced(function resolveURI(id, mapping) {
   if (isAbsoluteURI(id)) return normalizeExt(id);
 
   while (index < count) {
-    let [ path, uri ] = mapping[index ++];
+    let [ path, uri ] = mapping[index++];
     if (id.indexOf(path) === 0)
       return normalizeExt(id.replace(path, uri));
   }
@@ -552,12 +552,13 @@ Loader.resolveURI = resolveURI;
 // with it during link time.
 const Require = iced(function Require(loader, requirer) {
   let {
-    modules, mapping, resolve: loaderResolve, load, manifest, rootURI, isNative, requireMap
+    modules, mapping, resolve: loaderResolve, load,
+    manifest, rootURI, isNative, requireMap
   } = loader;
 
   function require(id) {
     if (!id) // Throw if `id` is not passed.
-      throw Error('you must provide a module name when calling require() from '
+      throw Error('You must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
     let { uri, requirement } = getRequirements(id);
@@ -592,6 +593,7 @@ const Require = iced(function Require(loader, requirer) {
         uri = uri + '.js';
       }
     }
+
     // If not yet cached, load and cache it.
     // We also freeze module to prevent it from further changes
     // at runtime.
@@ -623,16 +625,35 @@ const Require = iced(function Require(loader, requirer) {
       throw Error('you must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
-    let requirement;
-    let uri;
+    let requirement, uri;
 
     // TODO should get native Firefox modules before doing node-style lookups
     // to save on loading time
     if (isNative) {
       // If a requireMap is available from `generateMap`, use that to
       // immediately resolve the node-style mapping.
+      // TODO: write more tests for this use case
       if (requireMap && requireMap[requirer.id])
         requirement = requireMap[requirer.id][id];
+
+      let { overrides } = manifest.jetpack;
+      for (let key in overrides) {
+        // ignore any overrides using relative keys
+        if (/^[\.\/]/.test(key)) {
+          continue;
+        }
+
+        // If the override is for x -> y,
+        // then using require("x/lib/z") to get reqire("y/lib/z")
+        // should also work
+        if (id == key || (id.substr(0, key.length + 1) == (key + "/"))) {
+          id = overrides[key] + id.substr(key.length);
+          id = id.replace(/^[\.\/]+/, "./");
+          if (id.substr(0, 2) == "./") {
+            id = "" + id.substr(2);
+          }
+        }
+      }
 
       // For native modules, we want to check if it's a module specified
       // in 'modules', like `chrome`, or `@loader` -- if it exists,
@@ -660,7 +681,8 @@ const Require = iced(function Require(loader, requirer) {
       if (!requirement) {
         requirement = isRelative(id) ? Loader.resolve(id, requirer.id) : id;
       }
-    } else {
+    }
+    else {
       // Resolve `id` to its requirer if it's relative.
       requirement = requirer ? loaderResolve(id, requirer.id) : id;
     }
@@ -668,9 +690,11 @@ const Require = iced(function Require(loader, requirer) {
     // Resolves `uri` of module using loaders resolve function.
     uri = uri || resolveURI(requirement, mapping);
 
-    if (!uri) // Throw if `uri` can not be resolved.
+    // Throw if `uri` can not be resolved.
+    if (!uri) {
       throw Error('Module: Can not resolve "' + id + '" module required by ' +
                   requirer.id + ' located at ' + requirer.uri, requirer.uri);
+    }
 
     return { uri: uri, requirement: requirement };
   }
@@ -763,6 +787,19 @@ function Loader(options) {
       Loader.resolve,
     sharedGlobalBlacklist: ["sdk/indexed-db"]
   }, options);
+
+  // Create overrides defaults, none at the moment
+  if (typeof manifest != "object" || !manifest) {
+    manifest = {};
+  }
+  if (typeof manifest.jetpack != "object" || !manifest.jetpack) {
+    manifest.jetpack = {
+      overrides: {}
+    };
+  }
+  if (typeof manifest.jetpack.overrides != "object" || !manifest.jetpack.overrides) {
+    manifest.jetpack.overrides = {};
+  }
 
   // We create an identity object that will be dispatched on an unload
   // event as subject. This way unload listeners will be able to assert

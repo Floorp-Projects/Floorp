@@ -80,13 +80,13 @@ const select = (target, tab=getActiveTab()) =>
   });
 exports.select = select;
 
-const attributeBlacklist = new Set(["data-component-path"]);
+const attributeBlocklist = new Set(["data-component-path"]);
 const attributeRenameTable = Object.assign(Object.create(null), {
   class: "className"
 });
 const readAttributes = node =>
   object(...map(({name, value}) => [attributeRenameTable[name] || name, value],
-                filter(({name}) => !attributeBlacklist.has(name),
+                filter(({name}) => !attributeBlocklist.has(name),
                        node.attributes)));
 exports.readAttributes = readAttributes;
 

@@ -63,8 +63,7 @@ describe("loop.store.ConversationAppStore", function () {
       dispatcher.dispatch(new sharedActions.GetWindowData(fakeGetWindowData));
 
       expect(store.getStoreState()).eql({
-        windowType: "incoming",
-        windowData: fakeWindowData
+        windowType: "incoming"
       });
     });
 

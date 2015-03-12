@@ -44,7 +44,7 @@ function checkError (assert, name, e) {
       'Error message has the invalid module name in the message');
   }
   else {
-    assert.equal(msg.indexOf('Error: you must provide a module name when calling require() from '), 0);
+    assert.equal(msg.indexOf('Error: You must provide a module name when calling require() from '), 0);
     assert.ok(msg.indexOf("test-require") !== -1, msg);
   }
 

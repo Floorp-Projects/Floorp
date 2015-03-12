@@ -1,8 +1,8 @@
 ##  Overview
 
-- Changes should follow the [design guidelines], as well as [coding style guide] for Jetpack
+- Changes should follow the [design guidelines], as well as the [coding style guide]
 - All changes must be accompanied by tests
-- In order to land, changes must have review from a core Jetpack developer
+- In order to land, changes must have been reviewed by one of the Jetpack reviewers
 - Changes should have additional API review when needed
 - Changes should have additional review from a Mozilla platform domain-expert when needed
 
@@ -10,25 +10,25 @@ If you have questions, ask in [#jetpack on IRC][jetpack irc channel] or on the [
 
 ## How to Make Code Contributions
 
-If you have code that you'd like to contribute the Jetpack project, follow these steps:
+If you'd like to contribute the Jetpack project, follow these steps:
 
-1. Look for your issue in the [bugs already filed][open bugs]
-2. If no bug exists, [submit one][submit bug]
-3. Make your changes, per the Overview
-4. Write a test ([intro][test intro], [API][test API])
-5. Submit pull request with changes and a title in a form of `Bug XXX - description`
-6. Make sure that [Travis CI](https://travis-ci.org/mozilla/addon-sdk/branches) tests are passing for your branch.
-7. Copy the pull request link from GitHub and paste it in as an attachment to the bug
-8. Each pull request should idealy contain only one commit, so squash the commits if necessary.
-9. Flag the attachment for code review from one of the Jetpack reviewers listed below.
-   This step is optional, but could speed things up.
-10. Address any nits (ie style changes), or other issues mentioned in the review.
+1. Look for your issue in the list of [bugs already filed][open bugs]. If you want to contribute, but don't already know what you want to do, we keep a list of [good first bugs].
+2. If no bug exists, [submit one][submit bug].
+3. Get the code: get a [GitHub][GitHub] account, fork the [Add-on SDK repo][Add-on SDK repo], and clone it to your machine.
+4. Make your changes. Changes should follow the [design guidelines] as well as the [coding style guide].
+5. Write tests: [unit testing introduction][test intro], [unit testing API][test API].
+6. Submit a pull request with the changes and a title in the form of `Bug XXX - description`.
+7. Make sure that [Travis CI](https://travis-ci.org/mozilla/addon-sdk/branches) tests are passing for your branch.
+8. Copy the pull request link from GitHub and paste it in as an attachment to the bug.
+9. Each pull request should ideally contain only one commit, so squash the commits if necessary.
+10. Flag the attachment for code review from one of the Jetpack reviewers listed below. This step is optional, but could speed things up.
+11. Address any issues mentioned in the review.
 
 Finally, once review is approved, a team member will do the merging
 
 ## Good First Bugs
 
-There is a list of [good first bugs here](https://bugzilla.mozilla.org/buglist.cgi?list_id=7345714&columnlist=bug_severity%2Cpriority%2Cassigned_to%2Cbug_status%2Ctarget_milestone%2Cresolution%2Cshort_desc%2Cchangeddate&query_based_on=jetpack-good-1st-bugs&status_whiteboard_type=allwordssubstr&query_format=advanced&status_whiteboard=[good%20first%20bug]&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&product=Add-on%20SDK&known_name=jetpack-good-1st-bugs).
+There is a list of [good first bugs here][good first bugs].
 
 ## Reviewers
 
@@ -36,7 +36,6 @@ All changes must be reviewed by someone on the Jetpack review crew:
 
 - [@mossop]
 - [@gozala]
-- [@wbamberg]
 - [@ZER0]
 - [@erikvold]
 - [@jsantell]
@@ -52,13 +51,15 @@ For API and developer ergonomics review, ask [@gozala].
 [Jetpack mailing list]:http://groups.google.com/group/mozilla-labs-jetpack
 [open bugs]:https://bugzilla.mozilla.org/buglist.cgi?quicksearch=product%3ASDK
 [submit bug]:https://bugzilla.mozilla.org/enter_bug.cgi?product=Add-on%20SDK&component=general
-[test intro]:https://jetpack.mozillalabs.com/sdk/latest/docs/#guide/implementing-reusable-module
-[test API]:https://jetpack.mozillalabs.com/sdk/latest/docs/#module/api-utils/unit-test
+[test intro]:https://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Unit_testing
+[test API]:https://developer.mozilla.org/en-US/Add-ons/SDK/Low-Level_APIs/test_assert
 [coding style guide]:https://github.com/mozilla/addon-sdk/wiki/Coding-style-guide
+[Add-on SDK repo]:https://github.com/mozilla/addon-sdk
+[GitHub]:https://github.com/
+[good first bugs]:https://bugzilla.mozilla.org/buglist.cgi?list_id=7345714&columnlist=bug_severity%2Cpriority%2Cassigned_to%2Cbug_status%2Ctarget_milestone%2Cresolution%2Cshort_desc%2Cchangeddate&query_based_on=jetpack-good-1st-bugs&status_whiteboard_type=allwordssubstr&query_format=advanced&status_whiteboard=[good%20first%20bug]&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&product=Add-on%20SDK&known_name=jetpack-good-1st-bugs
 
 [@mossop]:https://github.com/mossop/
 [@gozala]:https://github.com/Gozala/
-[@wbamberg]:https://github.com/wbamberg/
 [@ZER0]:https://github.com/ZER0/
 [@erikvold]:https://github.com/erikvold/
 [@jsantell]:https://github.com/jsantell
