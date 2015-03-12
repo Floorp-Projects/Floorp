@@ -209,7 +209,7 @@ BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
     // arguments through a lazy arguments object.
     if (IsArgumentSlotDefinition(reg0->def()) || IsArgumentSlotDefinition(reg1->def())) {
         JSScript *script = graph.mir().entryBlock()->info().script();
-        if (script && script->argumentsAliasesFormals()) {
+        if (script && script->argumentsHasVarBinding()) {
             if (*reg0->def()->output() != *reg1->def()->output())
                 return true;
         }

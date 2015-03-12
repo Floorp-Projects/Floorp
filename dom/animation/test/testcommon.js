@@ -62,3 +62,14 @@ function waitForTwoAnimationFrames() {
    });
 }
 
+/**
+ * Flush the computed style for the given element. This is useful, for example,
+ * when we are testing a transition and need the initial value of a property
+ * to be computed so that when we synchronouslyet set it to a different value
+ * we actually get a transition instead of that being the initial value.
+ */
+function flushComputedStyle(elem) {
+  var cs = window.getComputedStyle(elem);
+  cs.marginLeft;
+}
+

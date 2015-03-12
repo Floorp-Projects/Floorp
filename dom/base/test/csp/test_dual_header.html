@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1036399 - Multiple CSP policies should be combined towards an intersection</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We have two tests where each tests serves a page using two CSP policies:
+ *   a) * default-src 'self'
+ *      * default-src 'self' 'unsafe-inline'
+ *
+ *   b) * default-src 'self' 'unsafe-inline'
+ *      * default-src 'self' 'unsafe-inline'
+ *
+ * We make sure the inline script is *blocked* for test (a) but *allowed* for test (b).
+ * Multiple CSPs should be combined towards an intersection and it shouldn't be possible
+ * to open up (loosen) a CSP policy.
+ */
+
+const TESTS = [
+  { query: "tight", result: "blocked" },
+  { query: "loose", result: "allowed" }
+];
+var testCounter = -1;
+
+function ckeckResult() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', ckeckResult, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, curTest.result, "should be 'blocked'!");
+  }
+  catch (e) {
+    ok(false, "error: could not access content in div container!");
+  }
+  loadNextTest();
+}
+
+function loadNextTest() {
+  testCounter++;
+  if (testCounter >= TESTS.length) {
+    SimpleTest.finish();
+    return;
+  }
+  curTest = TESTS[testCounter];
+  var src = "file_dual_header_testserver.sjs?" + curTest.query;
+  document.getElementById("testframe").addEventListener("load", ckeckResult, false);
+  document.getElementById("testframe").src = src;
+}
+
+SimpleTest.waitForExplicitFinish();
+loadNextTest();
+
+</script>
+</body>
+</html>

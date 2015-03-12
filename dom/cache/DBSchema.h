@@ -25,7 +25,6 @@ class PCacheQueryParams;
 class PCacheRequest;
 class PCacheRequestOrVoid;
 class PCacheResponse;
-class PCacheResponseOrVoid;
 struct SavedRequest;
 struct SavedResponse;
 

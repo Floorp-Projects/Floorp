@@ -48,6 +48,7 @@ const Branch = function(branchName) {
     },
     set(target, name, value, receiver) {
       set(`${branchName}${name}`, value);
+      return true;
     },
     has(target, name) {
       return this.hasOwn(target, name);
