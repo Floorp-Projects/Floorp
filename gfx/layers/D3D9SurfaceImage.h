@@ -66,6 +66,7 @@ private:
   RefPtr<TextureClient> mTextureClient;
   HANDLE mShareHandle;
   D3DSURFACE_DESC mDesc;
+  bool mValid;
 };
 
 } // namepace layers
