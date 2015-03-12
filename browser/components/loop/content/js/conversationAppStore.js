@@ -69,12 +69,7 @@ loop.store.ConversationAppStore = (function() {
         return;
       }
 
-      // XXX windowData is a hack for the IncomingConversationView until
-      // we rework it for the flux model in bug 1088672.
-      this.setStoreState({
-        windowType: windowData.type,
-        windowData: windowData
-      });
+      this.setStoreState({windowType: windowData.type});
 
       this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
         windowId: actionData.windowId}, windowData)));
