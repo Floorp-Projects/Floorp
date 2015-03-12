@@ -1771,7 +1771,7 @@ irregexp::ExecuteCode(JSContext *cx, jit::JitCode *codeBlock, const CharT *chars
 
     {
         JS::AutoSuppressGCAnalysis nogc;
-        CALL_GENERATED_REGEXP(function, &data);
+        CALL_GENERATED_1(function, &data);
     }
 
     return (RegExpRunStatus) data.result;

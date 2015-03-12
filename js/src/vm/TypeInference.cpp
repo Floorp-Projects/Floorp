@@ -3361,7 +3361,7 @@ CommonPrefix(Shape *first, Shape *second)
 }
 
 void
-PreliminaryObjectArrayWithTemplate::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool force)
+PreliminaryObjectArrayWithTemplate::maybeAnalyze(ExclusiveContext *cx, ObjectGroup *group, bool force)
 {
     // Don't perform the analyses until sufficient preliminary objects have
     // been allocated.
