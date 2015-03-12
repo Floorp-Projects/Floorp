@@ -17,16 +17,9 @@
 var EXPORTED_SYMBOLS = ['SpecialStorageUtils'];
 
 Components.utils.import('resource://gre/modules/Services.jsm');
-Components.utils.import('resource://gre/modules/Services.jsm');
 
 var SpecialStorageUtils = {
   createWrappedSpecialStorage: function (sandbox, swfUrl, privateBrowsing) {
-    function genPropDesc(value) {
-      return {
-        enumerable: true, configurable: true, writable: true, value: value
-      };
-    }
-
     // Creating internal localStorage object based on url and privateBrowsing setting.
     var uri = Services.io.newURI(swfUrl, null, null);
     var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
@@ -39,19 +32,17 @@ var SpecialStorageUtils = {
     // We will return object created in the sandbox/content, with some exposed
     // properties/methods, so we can send data between wrapped object and
     // and sandbox/content.
-    var wrapper = Components.utils.createObjectIn(sandbox);
-    Object.defineProperties(wrapper, {
-      getItem: genPropDesc(function (key) {
+    var wrapper = Components.utils.cloneInto({
+      getItem: function (key) {
         return storage.getItem(key);
-      }),
-      setItem: genPropDesc(function (key, value) {
+      },
+      setItem: function (key, value) {
         storage.setItem(key, value);
-      }),
-      removeItem: genPropDesc(function (key) {
+      },
+      removeItem: function (key) {
         storage.removeItem(key);
-      })
-    });
-    Components.utils.makeObjectPropsNormal(wrapper);
+      }
+    }, sandbox, {cloneFunctions:true});
     return wrapper;
   }
 };

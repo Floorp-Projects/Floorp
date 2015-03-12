@@ -96,36 +96,32 @@ var SpecialInflateUtils = {
   },
 
   createWrappedSpecialInflate: function (sandbox) {
-    function genPropDesc(value) {
-      return {
-        enumerable: true, configurable: true, writable: true, value: value
-      };
-    }
-
     var wrapped = new SpecialInflate();
+    var wrapperOnData;
     wrapped.onData = function(data) {
-      if (wrapper.onData) {
-        wrapper.onData.call(wrapper, Components.utils.cloneInto(data, sandbox));
+      if (wrapperOnData) {
+        wrapperOnData(Components.utils.cloneInto(data, sandbox));
       }
     };
+
 
     // We will return object created in the sandbox/content, with some exposed
     // properties/methods, so we can send data between wrapped object and
     // and sandbox/content.
-    var wrapper = Components.utils.createObjectIn(sandbox);
-    Object.defineProperties(wrapper, {
-      onData: genPropDesc(null),
+    var wrapper = Components.utils.cloneInto({
+      setDataCallback: function (callback) {
+        wrapperOnData = callback;
+      },
 
-      push: genPropDesc(function (data) {
+      push: function (data) {
         // Uint8Array is expected in the data parameter.
         // SpecialInflate.push() fails with other argument types.
         return wrapped.push(data);
-      }),
-      close: genPropDesc(function () {
+      },
+      close: function () {
         return wrapped.close();
-      })
-    });
-    Components.utils.makeObjectPropsNormal(wrapper);
+      }
+    }, sandbox, {cloneFunctions:true});
     return wrapper;
   }
 };
