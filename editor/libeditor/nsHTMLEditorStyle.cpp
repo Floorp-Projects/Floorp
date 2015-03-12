@@ -1146,9 +1146,6 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
 
       if (mHTMLCSSUtils->IsCSSEditableProperty(collapsedNode, aProperty, aAttribute)) {
-        if (aValue) {
-          tOutString.Assign(*aValue);
-        }
         mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
           collapsedNode, aProperty, aAttribute, isSet, tOutString,
           nsHTMLCSSUtils::eComputed);
