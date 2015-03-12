@@ -883,7 +883,6 @@ protected:
   bool mAllowDNSPrefetch;
   bool mAllowWindowControl;
   bool mAllowContentRetargeting;
-  bool mAllowContentRetargetingOnChildren;
   bool mCreatingDocument; // (should be) debugging only
   bool mUseErrorPages;
   bool mObserveErrorPages;
