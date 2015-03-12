@@ -144,14 +144,16 @@ loop.conversationViews = (function(mozL10n) {
     mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
 
     propTypes: {
-      model: React.PropTypes.object.isRequired,
-      video: React.PropTypes.bool.isRequired
+      callType: React.PropTypes.string.isRequired,
+      callerId: React.PropTypes.string.isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // Only for use by the ui-showcase
+      showMenu: React.PropTypes.bool
     },
 
     getDefaultProps: function() {
       return {
         showMenu: false,
-        video: true
       };
     },
 
@@ -221,9 +223,8 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         React.createElement("div", {className: "call-window"}, 
-          React.createElement(CallIdentifierView, {video: this.props.video, 
-            peerIdentifier: this.props.model.getCallIdentifier(), 
-            urlCreationDate: this.props.model.get("urlCreationDate"), 
+          React.createElement(CallIdentifierView, {video: this.props.callType === CALL_TYPES.AUDIO_VIDEO, 
+            peerIdentifier: this.props.callerId, 
             showIcons: true}), 
 
           React.createElement("div", {className: "btn-group call-action-group"}, 
@@ -964,6 +965,33 @@ loop.conversationViews = (function(mozL10n) {
       );
     },
 
+    _renderViewFromCallType: function() {
+      // For outgoing calls we can display the pending conversation view
+      // for any state that render() doesn't manage.
+      if (this.state.outgoing) {
+        return (React.createElement(PendingConversationView, {
+          dispatcher: this.props.dispatcher, 
+          callState: this.state.callState, 
+          contact: this.state.contact, 
+          enableCancelButton: this._isCancellable()}
+        ));
+      }
+
+      // For incoming calls that are in accepting state, display the
+      // accept call view.
+      if (this.state.callState === CALL_STATES.ALERTING) {
+        return (React.createElement(AcceptCallView, {
+          callType: this.state.callType, 
+          callerId: this.state.callerId, 
+          dispatcher: this.props.dispatcher}
+        ));
+      }
+
+      // Otherwise we're still gathering or connecting, so
+      // don't display anything.
+      return null;
+    },
+
     render: function() {
       switch (this.state.callState) {
         case CALL_STATES.CLOSE: {
@@ -993,12 +1021,7 @@ loop.conversationViews = (function(mozL10n) {
           return null;
         }
         default: {
-          return (React.createElement(PendingConversationView, {
-            dispatcher: this.props.dispatcher, 
-            callState: this.state.callState, 
-            contact: this.state.contact, 
-            enableCancelButton: this._isCancellable()}
-          ));
+          return this._renderViewFromCallType();
         }
       }
     },

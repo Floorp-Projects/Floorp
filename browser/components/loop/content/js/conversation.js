@@ -34,13 +34,6 @@ loop.conversation = (function(mozL10n) {
     ],
 
     propTypes: {
-      // XXX Old types required for incoming call view.
-      client: React.PropTypes.instanceOf(loop.Client).isRequired,
-      conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
-                         .isRequired,
-      sdk: React.PropTypes.object.isRequired,
-
-      // XXX New types for flux style
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
@@ -51,15 +44,8 @@ loop.conversation = (function(mozL10n) {
 
     render: function() {
       switch(this.state.windowType) {
-        case "incoming": {
-          return (React.createElement(IncomingConversationView, {
-            client: this.props.client, 
-            conversation: this.props.conversation, 
-            sdk: this.props.sdk, 
-            isDesktop: true, 
-            conversationAppStore: this.getStore()}
-          ));
-        }
+        // CallControllerView is used for both.
+        case "incoming":
         case "outgoing": {
           return (React.createElement(CallControllerView, {
             dispatcher: this.props.dispatcher}
@@ -156,13 +142,6 @@ loop.conversation = (function(mozL10n) {
       feedbackStore: feedbackStore,
     });
 
-    // XXX Old class creation for the incoming conversation view, whilst
-    // we transition across (bug 1072323).
-    var conversation = new sharedModels.ConversationModel({}, {
-      sdk: window.OT,
-      mozLoop: navigator.mozLoop
-    });
-
     // Obtain the windowId and pass it through
     var locationHash = loop.shared.utils.locationData().hash;
     var windowId;
@@ -171,8 +150,6 @@ loop.conversation = (function(mozL10n) {
     if (hash) {
       windowId = hash[1];
     }
-
-    conversation.set({windowId: windowId});
 
     window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
@@ -185,10 +162,7 @@ loop.conversation = (function(mozL10n) {
 
     React.render(React.createElement(AppControllerView, {
       roomStore: roomStore, 
-      client: client, 
-      conversation: conversation, 
-      dispatcher: dispatcher, 
-      sdk: window.OT}
+      dispatcher: dispatcher}
     ), document.querySelector('#main'));
 
     dispatcher.dispatch(new sharedActions.GetWindowData({
