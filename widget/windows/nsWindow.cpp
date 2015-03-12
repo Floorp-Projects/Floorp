@@ -688,7 +688,10 @@ NS_METHOD nsWindow::Destroy()
    * On windows the LayerManagerOGL destructor wants the widget to be around for
    * cleanup. It also would like to have the HWND intact, so we nullptr it here.
    */
-  DestroyLayerManager();
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
+  mLayerManager = nullptr;
 
   /* We should clear our cached resources now and not wait for the GC to
    * delete the nsWindow. */
@@ -3335,7 +3338,8 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
       {
         MOZ_ASSERT(!mLayerManager->IsInTransaction());
 
-        DestroyLayerManager();
+        mLayerManager->Destroy();
+        mLayerManager = nullptr;
       }
     }
   }
@@ -3353,10 +3357,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
     CreateCompositor();
   }
-
-  // If we don't have a layer manager at this point we shouldn't have a
-  // PCompositor actor pair either.
-  MOZ_ASSERT(mLayerManager || (!mCompositorParent && !mCompositorChild));
 
   if (!mLayerManager ||
       (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
@@ -6689,7 +6689,8 @@ void
 nsWindow::AllowD3D9Callback(nsWindow *aWindow)
 {
   if (aWindow->mLayerManager && !aWindow->ShouldUseOffMainThreadCompositing()) {
-    aWindow->DestroyLayerManager();
+    aWindow->mLayerManager->Destroy();
+    aWindow->mLayerManager = nullptr;
   }
 }
 
@@ -6697,7 +6698,8 @@ void
 nsWindow::AllowD3D9WithReinitializeCallback(nsWindow *aWindow)
 {
   if (aWindow->mLayerManager && !aWindow->ShouldUseOffMainThreadCompositing()) {
-    aWindow->DestroyLayerManager();
+    aWindow->mLayerManager->Destroy();
+    aWindow->mLayerManager = nullptr;
     (void) aWindow->GetLayerManager();
   }
 }
