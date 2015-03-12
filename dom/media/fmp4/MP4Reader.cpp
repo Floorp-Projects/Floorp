@@ -157,7 +157,7 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mIsEncrypted(false)
   , mIndexReady(false)
   , mDemuxerMonitor("MP4 Demuxer")
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
 #endif
 {
@@ -294,7 +294,7 @@ private:
 #endif
 
 void MP4Reader::RequestCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (mVideo.mDecoder) {
     mVideo.mDecoder->AllocateMediaResources();
   }
@@ -302,7 +302,7 @@ void MP4Reader::RequestCodecResource() {
 }
 
 bool MP4Reader::IsWaitingOnCodecResource() {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#if !defined(MOZ_WIDGET_ANDROID)
   return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
 #endif
   return false;
@@ -1052,9 +1052,9 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 
 bool MP4Reader::IsDormantNeeded()
 {
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN)
+#if defined(MP4_READER_DORMANT)
   return
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
         mDormantEnabled &&
 #endif
         mVideo.mDecoder &&

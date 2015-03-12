@@ -26,6 +26,18 @@ typedef std::deque<mp4_demuxer::MP4Sample*> MP4SampleQueue;
 
 class MP4Stream;
 
+#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
+#define MP4_READER_DORMANT
+#else
+#undef MP4_READER_DORMANT
+#endif
+
+#if defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
+#define MP4_READER_DORMANT_HEURISTIC
+#else
+#undef MP4_READER_DORMANT_HEURISTIC
+#endif
+
 class MP4Reader MOZ_FINAL : public MediaDecoderReader
 {
   typedef mp4_demuxer::TrackType TrackType;
@@ -270,7 +282,7 @@ private:
   Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
 #endif
 };
