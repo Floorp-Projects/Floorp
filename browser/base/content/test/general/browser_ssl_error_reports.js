@@ -4,17 +4,10 @@ let enabledPref = false;
 let automaticPref = false;
 let urlPref = "security.ssl.errorReporting.url";
 let enforcement_level = 1;
-
-function loadFrameScript() {
-  let mm = Cc["@mozilla.org/globalmessagemanager;1"]
-           .getService(Ci.nsIMessageListenerManager);
-  const ROOT = getRootDirectory(gTestPath);
-  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
-}
+let ROOT = getRootDirectory(gTestPath);
 
 add_task(function*(){
   waitForExplicitFinish();
-  loadFrameScript();
   SimpleTest.requestCompleteLog();
   yield testSendReportDisabled();
   yield testSendReportManual(badChainURL, "succeed");
@@ -41,7 +34,7 @@ function createNetworkErrorMessagePromise(aBrowser) {
       onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
         let doc = aBrowser.contentDocument;
 
-        if (doc.getElementById("reportCertificateError")) {
+        if (doc && doc.getElementById("reportCertificateError")) {
           // Wait until the documentURI changes (from about:blank) this should
           // be the error page URI.
           let documentURI = doc.documentURI;
@@ -74,11 +67,12 @@ function createNetworkErrorMessagePromise(aBrowser) {
 }
 
 // check we can set the 'automatically send' pref
-let testSetAutomatic = Task.async(function*() {
+let testSetAutomatic = function*() {
   setup();
   let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 
   gBrowser.selectedTab = tab;
 
@@ -88,13 +82,15 @@ let testSetAutomatic = Task.async(function*() {
 
   //  ensure that setting automatic when unset works
   let prefEnabled = new Promise(function(resolve, reject){
-    mm.addMessageListener("ssler-test:AutoPrefUpdated", function() {
+    let prefUpdateListener = function() {
+      mm.removeMessageListener("ssler-test:AutoPrefUpdated", prefUpdateListener);
       if (Services.prefs.getBoolPref("security.ssl.errorReporting.automatic")) {
         resolve();
       } else {
         reject();
       }
-    });
+    };
+    mm.addMessageListener("ssler-test:AutoPrefUpdated", prefUpdateListener);
   });
 
   mm.sendAsyncMessage("ssler-test:SetAutoPref",{value:true});
@@ -103,13 +99,15 @@ let testSetAutomatic = Task.async(function*() {
 
   // ensure un-setting automatic, when set, works
   let prefDisabled = new Promise(function(resolve, reject){
-    mm.addMessageListener("ssler-test:AutoPrefUpdated", function () {
+    let prefUpdateListener = function () {
+      mm.removeMessageListener("ssler-test:AutoPrefUpdated", prefUpdateListener);
       if (!Services.prefs.getBoolPref("security.ssl.errorReporting.automatic")) {
         resolve();
       } else {
         reject();
       }
-    });
+    };
+    mm.addMessageListener("ssler-test:AutoPrefUpdated", prefUpdateListener);
   });
 
   mm.sendAsyncMessage("ssler-test:SetAutoPref",{value:false});
@@ -118,10 +116,10 @@ let testSetAutomatic = Task.async(function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-});
+};
 
 // test that manual report sending (with button clicks) works
-let testSendReportManual = Task.async(function*(testURL, suffix) {
+let testSendReportManual = function*(testURL, suffix) {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
   Services.prefs.setCharPref("security.ssl.errorReporting.url",
@@ -130,6 +128,7 @@ let testSendReportManual = Task.async(function*(testURL, suffix) {
   let tab = gBrowser.addTab(testURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 
   gBrowser.selectedTab = tab;
 
@@ -141,49 +140,47 @@ let testSendReportManual = Task.async(function*(testURL, suffix) {
                       "ensure the correct error message came from about:neterror");
   });
 
-  // Check the report starts on click
   let btn = browser.contentDocument.getElementById("reportCertificateError");
-
-  // check the content script sends the message to report
-  let reportWillStart = new Promise(function(resolve, reject){
-    mm.addMessageListener("Browser:SendSSLErrorReport", function() {
-      resolve();
-    });
-  });
-
-  let deferredReportActivity = Promise.defer()
   let deferredReportSucceeds = Promise.defer();
 
   // ensure we see the correct statuses in the correct order...
-  mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
-    switch(message.data.reportStatus) {
-      case "activity":
-        deferredReportActivity.resolve(message.data.reportStatus);
-        break;
-      case "complete":
-        deferredReportSucceeds.resolve(message.data.reportStatus);
-        break;
-      case "error":
-        deferredReportSucceeds.reject();
-        deferredReportActivity.reject();
-        break;
-    }
-  });
+  let statusListener = function() {
+    let active = false;
+    return function(message) {
+      switch(message.data.reportStatus) {
+        case "activity":
+          if (!active) {
+            active = true;
+          }
+          break;
+        case "complete":
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
+          if (active) {
+            deferredReportSucceeds.resolve(message.data.reportStatus);
+          } else {
+            deferredReportSucceeds.reject('activity should be seen before success');
+          }
+          break;
+        case "error":
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
+          deferredReportSucceeds.reject();
+          break;
+      }
+    };
+  }();
+  mm.addMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
 
   // ... once the button is clicked, that is
   mm.sendAsyncMessage("ssler-test:SendBtnClick",{});
 
-  yield reportWillStart;
-
-  yield deferredReportActivity.promise;
   yield deferredReportSucceeds.promise;
 
   gBrowser.removeTab(tab);
   cleanup();
-});
+};
 
 // test that automatic sending works
-let testSendReportAuto = Task.async(function*() {
+let testSendReportAuto = function*() {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
   Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", true);
@@ -192,90 +189,85 @@ let testSendReportAuto = Task.async(function*() {
   let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 
   gBrowser.selectedTab = tab;
 
-  let reportWillStart = Promise.defer();
-  mm.addMessageListener("Browser:SendSSLErrorReport", function() {
-    reportWillStart.resolve();
-  });
-
-  let deferredReportActivity = Promise.defer();
-  let deferredReportSucceeds = Promise.defer();
-
-  mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
-    switch(message.data.reportStatus) {
-      case "activity":
-        deferredReportActivity.resolve(message.data.reportStatus);
-        break;
-      case "complete":
-        deferredReportSucceeds.resolve(message.data.reportStatus);
-        break;
-      case "error":
-        deferredReportSucceeds.reject();
-        deferredReportActivity.reject();
-        break;
-    }
-  });
 
   // Ensure the error page loads
   let netError = createNetworkErrorMessagePromise(browser);
   yield netError;
 
-  // Ensure the reporting steps all occur with no interaction
-  yield reportWillStart;
-  yield deferredReportActivity.promise;
+  let reportWillStart = Promise.defer();
+  let startListener = function() {
+    mm.removeMessageListener("Browser:SendSSLErrorReport", startListener);
+    reportWillStart.resolve();
+  };
+  mm.addMessageListener("Browser:SendSSLErrorReport", startListener);
+
+  let deferredReportSucceeds = Promise.defer();
+
+  let statusListener = function(message) {
+    switch(message.data.reportStatus) {
+      case "complete":
+        mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
+        deferredReportSucceeds.resolve(message.data.reportStatus);
+        break;
+      case "error":
+        mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
+        deferredReportSucceeds.reject();
+        break;
+    }
+  };
+
+  mm.addMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
+
+  // Ensure the report is sent with no interaction
   yield deferredReportSucceeds.promise;
 
   gBrowser.removeTab(tab);
   cleanup();
-});
+};
 
 // test that an error is shown if there's a problem with the report server
-let testSendReportError = Task.async(function*() {
+let testSendReportError = function*() {
   setup();
+  // set up prefs so error send is automatic and an error will occur
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
   Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", true);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?error");
 
+  // load the test URL so error page is seen
   let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
-  let mm = browser.messageManager;
-
   gBrowser.selectedTab = tab;
+  let mm = browser.messageManager;
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 
-  // check the report send starts....
-  let reportWillStart = new Promise(function(resolve, reject){
-    mm.addMessageListener("Browser:SendSSLErrorReport", function() {
-      resolve();
-    });
-  });
-
-  let netError = createNetworkErrorMessagePromise(browser);
-  yield netError;
-  yield reportWillStart;
-
-  // and that errors are seen
   let reportErrors = new Promise(function(resolve, reject) {
-    mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
+    let statusListener = function(message) {
       switch(message.data.reportStatus) {
         case "complete":
           reject(message.data.reportStatus);
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
           break;
         case "error":
           resolve(message.data.reportStatus);
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
           break;
       }
-    });
+    };
+    mm.addMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
   });
 
+  // check that errors are sent
   yield reportErrors;
 
   gBrowser.removeTab(tab);
   cleanup();
-});
+};
 
-let testSendReportDisabled = Task.async(function*() {
+let testSendReportDisabled = function*() {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", false);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://offdomain.com");
@@ -283,6 +275,7 @@ let testSendReportDisabled = Task.async(function*() {
   let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 
   gBrowser.selectedTab = tab;
 
@@ -291,16 +284,19 @@ let testSendReportDisabled = Task.async(function*() {
   yield netError;
 
   let reportErrors = new Promise(function(resolve, reject) {
-    mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
+    let statusListener = function(message) {
       switch(message.data.reportStatus) {
         case "complete":
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
           reject(message.data.reportStatus);
           break;
         case "error":
+          mm.removeMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
           resolve(message.data.reportStatus);
           break;
       }
-    });
+    };
+    mm.addMessageListener("ssler-test:SSLErrorReportStatus", statusListener);
   });
 
   // click the button
@@ -311,7 +307,7 @@ let testSendReportDisabled = Task.async(function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-});
+};
 
 function setup() {
   // ensure the relevant prefs are set
