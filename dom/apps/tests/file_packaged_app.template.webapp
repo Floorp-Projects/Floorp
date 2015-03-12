@@ -1,5 +1,6 @@
 {
   "name" : "NAMETOKEN",
+  "short_name" : "NAMETOKEN",
   "version" : "VERSIONTOKEN",
   "size" : PACKAGESIZETOKEN,
   "package_path": "PACKAGEPATHTOKEN",
