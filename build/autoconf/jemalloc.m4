@@ -10,6 +10,9 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
   if test -z "$MOZ_SYSTEM_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC4" -o -n "$MOZ_REPLACE_MALLOC"; then
     ac_configure_args="--build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_ --disable-valgrind"
+    if test -n "$MOZ_DEBUG"; then
+      ac_configure_args="$ac_configure_args --enable-debug"
+    fi
     # We're using memalign for _aligned_malloc in memory/build/mozmemory_wrap.c
     # on Windows, so just export memalign on all platforms.
     ac_configure_args="$ac_configure_args ac_cv_func_memalign=yes"
