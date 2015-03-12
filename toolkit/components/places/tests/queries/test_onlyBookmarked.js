@@ -22,7 +22,6 @@ var testData = [
     uri: "http://bookmarked.com/",
     parentFolder: PlacesUtils.toolbarFolderId,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-    title: "",
     isInQuery: true },
 
   // Add a bookmark that should not be in the results
@@ -30,7 +29,6 @@ var testData = [
     uri: "http://bookmarked-elsewhere.com/",
     parentFolder: PlacesUtils.bookmarksMenuFolderId,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-    title: "",
     isInQuery: false },
 
   // Add an un-bookmarked visit
@@ -86,7 +84,6 @@ add_task(function test_onlyBookmarked()
       uri: "http://bookmarked2.com/",
       parentFolder: PlacesUtils.toolbarFolderId,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-      title: "",
       isInQuery: true },
 
     //Add a bookmark that should not show up
@@ -94,7 +91,6 @@ add_task(function test_onlyBookmarked()
       uri: "http://bookmarked-elsewhere2.com/",
       parentFolder: PlacesUtils.bookmarksMenuFolderId,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
-      title: "",
       isInQuery: false }
   ];
   
