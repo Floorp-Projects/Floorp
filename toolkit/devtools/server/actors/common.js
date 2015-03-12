@@ -356,6 +356,19 @@ OriginalLocation.prototype = {
 
   get generatedColumn() {
     throw new Error("Shouldn't access generatedColumn from an Originallocation");
+  },
+
+  equals: function (other) {
+    return this.originalSourceActor.url == other.originalSourceActor.url &&
+           this.originalLine === other.originalLine;
+  },
+
+  toJSON: function () {
+    return {
+      source: this.originalSourceActor.form(),
+      line: this.originalLine,
+      column: this.originalColumn
+    };
   }
 };
 

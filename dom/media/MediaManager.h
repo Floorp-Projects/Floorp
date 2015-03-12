@@ -145,6 +145,12 @@ public:
     return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
            mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Application;
   }
+  bool CapturingBrowser()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    return mVideoSource && !mStopped && mVideoSource->IsAvailable() &&
+           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Browser;
+  }
 
   void SetStopped()
   {
