@@ -16,8 +16,6 @@ class mozIStorageStatement;
 namespace mozilla {
 namespace storage {
 
-class Statement;
-
 class StatementParams MOZ_FINAL : public mozIStorageStatementParams
                                 , public nsIXPCScriptable
 {
@@ -35,7 +33,8 @@ protected:
   mozIStorageStatement *mStatement;
   uint32_t mParamCount;
 
-  friend class Statement;
+  friend class StatementParamsHolder;
+  friend class StatementRowHolder;
 };
 
 } // namespace storage
