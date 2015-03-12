@@ -5,7 +5,7 @@
 import urllib
 
 from marionette_driver import By, errors
-from marionette import MarionetteTestCase
+from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
 
 
 def inline(doc):
@@ -99,6 +99,7 @@ let prefs = Components.classes["@mozilla.org/preferences-service;1"]
         self.assertIs(result, None)
 
 
+@skip_if_b2g
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
         super(TestExecuteChrome, self).setUp()
