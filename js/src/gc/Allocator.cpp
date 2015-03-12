@@ -188,6 +188,10 @@ JSObject *
 GCRuntime::tryNewTenuredObject(ExclusiveContext *cx, AllocKind kind, size_t thingSize,
                                size_t nDynamicSlots)
 {
+    // The analysis is not aware that the HeapSlots in |slots| here are
+    // disconnected because they are uninitialized.
+    AutoSuppressGCAnalysis suppress(cx);
+
     UniqueSlots slots = MakeSlotArray(cx, nDynamicSlots);
     if (nDynamicSlots && !slots)
         return nullptr;
