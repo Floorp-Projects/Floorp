@@ -106,8 +106,25 @@ SPSProfiler::enable(bool enabled)
      * stack.
      */
     if (rt->jitActivation) {
-        void *lastProfilingFrame = GetTopProfilingJitFrame(rt->jitTop);
-        rt->jitActivation->setLastProfilingFrame(lastProfilingFrame);
+        // Walk through all activations, and set their lastProfilingFrame appropriately.
+        if (enabled) {
+            void *lastProfilingFrame = GetTopProfilingJitFrame(rt->jitTop);
+            jit::JitActivation *jitActivation = rt->jitActivation;
+            while (jitActivation) {
+                jitActivation->setLastProfilingFrame(lastProfilingFrame);
+                jitActivation->setLastProfilingCallSite(nullptr);
+
+                lastProfilingFrame = GetTopProfilingJitFrame(jitActivation->prevJitTop());
+                jitActivation = jitActivation->prevJitActivation();
+            }
+        } else {
+            jit::JitActivation *jitActivation = rt->jitActivation;
+            while (jitActivation) {
+                jitActivation->setLastProfilingFrame(nullptr);
+                jitActivation->setLastProfilingCallSite(nullptr);
+                jitActivation = jitActivation->prevJitActivation();
+            }
+        }
     }
 }
 
@@ -358,7 +375,9 @@ SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime *rt, bool hasSPSFrame
     : profiler(&rt->spsProfiler)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!hasSPSFrame || !profiler->enabled()) {
+    if (!hasSPSFrame || !profiler->enabled() ||
+        profiler->size() >= profiler->maxSize())
+    {
         profiler = nullptr;
         return;
     }

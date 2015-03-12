@@ -752,16 +752,10 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
             ? nsViewVisibility_kShow : nsViewVisibility_kHide);
   }
 
-  // See if the frame is being relatively positioned or absolutely
-  // positioned
-  bool isPositioned = aFrame->IsPositioned();
-
   int32_t zIndex = 0;
   bool    autoZIndex = false;
 
-  if (!isPositioned) {
-    autoZIndex = true;
-  } else {
+  if (aFrame->IsAbsPosContaininingBlock()) {
     // Make sure z-index is correct
     const nsStylePosition* position = aStyleContext->StylePosition();
 
@@ -770,6 +764,8 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
     } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
       autoZIndex = true;
     }
+  } else {
+    autoZIndex = true;
   }
 
   vm->SetViewZIndex(aView, autoZIndex, zIndex);

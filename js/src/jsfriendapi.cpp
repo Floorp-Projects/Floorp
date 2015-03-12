@@ -434,9 +434,9 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
             return nullptr;
     }
 
-    JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, NullPtr(), atom,
-                       JSFunction::ExtendedFinalizeKind);
+    return (flags & JSFUN_CONSTRUCTOR) ?
+        NewNativeConstructor(cx, native, nargs, atom, JSFunction::ExtendedFinalizeKind) :
+        NewNativeFunction(cx, native, nargs, atom, JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSFunction *)
@@ -448,9 +448,9 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, 
     CHECK_REQUEST(cx);
 
     RootedAtom atom(cx, JSID_TO_ATOM(id));
-    JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, NullPtr(), atom,
-                       JSFunction::ExtendedFinalizeKind);
+    return (flags & JSFUN_CONSTRUCTOR) ?
+        NewNativeConstructor(cx, native, nargs, atom, JSFunction::ExtendedFinalizeKind) :
+        NewNativeFunction(cx, native, nargs, atom, JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(const Value &)

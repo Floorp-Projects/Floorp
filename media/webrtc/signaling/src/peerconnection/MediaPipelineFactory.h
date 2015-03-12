@@ -67,6 +67,9 @@ private:
                                   RefPtr<TransportFlow>* aRtcpOut,
                                   nsAutoPtr<MediaPipelineFilter>* aFilterOut);
 
+  nsresult ConfigureVideoCodecMode(const JsepTrack& aTrack,
+                                   VideoSessionConduit& aConduit);
+
 private:
   // Not owned, and assumed to exist as long as the factory.
   // The factory is a transient object, so this is fairly easy.

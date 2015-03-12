@@ -27,6 +27,18 @@ typedef std::deque<MediaSample*> MediaSampleQueue;
 
 class MP4Stream;
 
+#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
+#define MP4_READER_DORMANT
+#else
+#undef MP4_READER_DORMANT
+#endif
+
+#if defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
+#define MP4_READER_DORMANT_HEURISTIC
+#else
+#undef MP4_READER_DORMANT_HEURISTIC
+#endif
+
 class MP4Reader MOZ_FINAL : public MediaDecoderReader
 {
   typedef mp4_demuxer::TrackType TrackType;
@@ -83,6 +95,8 @@ public:
   virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
 
   virtual bool VideoIsHardwareAccelerated() const MOZ_OVERRIDE;
+
+  virtual void DisableHardwareAcceleration() MOZ_OVERRIDE;
 
 private:
 
@@ -275,7 +289,7 @@ private:
   Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
-#if defined(XP_WIN)
+#if defined(MP4_READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
 #endif
 };

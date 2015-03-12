@@ -494,14 +494,6 @@ static_assert(sizeof(JSFunction) == sizeof(js::shadow::Function),
 extern JSString *
 fun_toStringHelper(JSContext *cx, js::HandleObject obj, unsigned indent);
 
-inline JSFunction::Flags
-JSAPIToJSFunctionFlags(unsigned flags)
-{
-    return (flags & JSFUN_CONSTRUCTOR)
-           ? JSFunction::NATIVE_CTOR
-           : JSFunction::NATIVE_FUN;
-}
-
 namespace js {
 
 extern bool
@@ -510,15 +502,29 @@ Function(JSContext *cx, unsigned argc, Value *vp);
 extern bool
 Generator(JSContext *cx, unsigned argc, Value *vp);
 
+// Allocate a new function backed by a JSNative.
 extern JSFunction *
-NewFunction(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
-            JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
-            gc::AllocKind allocKind = JSFunction::FinalizeKind,
-            NewObjectKind newKind = GenericObject);
+NewNativeFunction(ExclusiveContext *cx, JSNative native, unsigned nargs, HandleAtom atom,
+                  gc::AllocKind allocKind = JSFunction::FinalizeKind,
+                  NewObjectKind newKind = GenericObject);
+
+// Allocate a new constructor backed by a JSNative.
+extern JSFunction *
+NewNativeConstructor(ExclusiveContext *cx, JSNative native, unsigned nargs, HandleAtom atom,
+                     gc::AllocKind allocKind = JSFunction::FinalizeKind,
+                     NewObjectKind newKind = GenericObject,
+                     JSFunction::Flags flags = JSFunction::NATIVE_CTOR);
+
+// Allocate a new scripted function.
+extern JSFunction *
+NewScriptedFunction(ExclusiveContext *cx, unsigned nargs,
+                    JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+                    gc::AllocKind allocKind = JSFunction::FinalizeKind,
+                    NewObjectKind newKind = GenericObject);
 
 // If proto is nullptr, Function.prototype is used instead.
 extern JSFunction *
-NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+NewFunctionWithProto(ExclusiveContext *cx, JSNative native, unsigned nargs,
                      JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
                      HandleObject proto, gc::AllocKind allocKind = JSFunction::FinalizeKind,
                      NewObjectKind newKind = GenericObject);

@@ -33,8 +33,7 @@ class CustomProxyHandler : public DirectProxyHandler {
         Rooted<JSPropertyDescriptor> desc(cx);
         if (!DirectProxyHandler::getPropertyDescriptor(cx, proxy, id, &desc))
             return false;
-        return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc,
-                                              desc.object() == proxy, vp, result);
+        return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &desc, result);
     }
 
   private:
