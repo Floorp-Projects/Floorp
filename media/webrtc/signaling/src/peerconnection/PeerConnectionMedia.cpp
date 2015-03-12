@@ -35,6 +35,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "MediaStreamTrack.h"
+#include "VideoStreamTrack.h"
 #endif
 
 
@@ -1110,6 +1112,26 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
   }
   return false;
 }
+
+#ifdef MOZILLA_INTERNAL_API
+nsRefPtr<mozilla::dom::VideoStreamTrack>
+SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
+{
+  nsTArray<nsRefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+
+  mMediaStream->GetVideoTracks(videoTracks);
+
+  for (size_t i = 0; i < videoTracks.Length(); ++i) {
+    nsString aTrackId;
+    videoTracks[i]->GetId(aTrackId);
+    if (aTrackId.EqualsIgnoreCase(trackId.c_str())) {
+      return videoTracks[i];
+    }
+  }
+
+  return nullptr;
+}
+#endif
 
 nsresult
 SourceStreamInfo::StorePipeline(

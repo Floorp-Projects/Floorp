@@ -15,6 +15,8 @@
 
 #include "ImageContainer.h"
 
+#include "webrtc/common_types.h"
+
 #include <vector>
 
 namespace mozilla {
@@ -298,6 +300,7 @@ public:
                                                VideoType video_type,
                                                uint64_t capture_time) = 0;
 
+  virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
   /**
    * Function to configure send codec for the video session
    * @param sendSessionConfig: CodecConfiguration
