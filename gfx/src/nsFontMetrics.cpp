@@ -216,8 +216,8 @@ static gfxFloat ComputeMaxDescent(const gfxFont::Metrics& aMetrics,
 {
     gfxFloat offset = floor(-aFontGroup->GetUnderlineOffset() + 0.5);
     gfxFloat size = NS_round(aMetrics.underlineSize);
-    gfxFloat minDescent = floor(offset + size + 0.5);
-    return std::max(minDescent, aMetrics.maxDescent);
+    gfxFloat minDescent = offset + size;
+    return floor(std::max(minDescent, aMetrics.maxDescent) + 0.5);
 }
 
 static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
