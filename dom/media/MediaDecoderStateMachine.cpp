@@ -1514,12 +1514,12 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
         // Keep latest seek target
       } else if (mSeekTarget.IsValid()) {
         mQueuedSeekTarget = mSeekTarget;
+      } else if (mCurrentSeekTarget.IsValid()) {
+        mQueuedSeekTarget = mCurrentSeekTarget;
       } else {
         mQueuedSeekTarget = SeekTarget(mCurrentFrameTime,
                                        SeekTarget::Accurate,
                                        MediaDecoderEventVisibility::Suppressed);
-      } else if (mCurrentSeekTarget.IsValid()) {
-        mQueuedSeekTarget = mCurrentSeekTarget;
       }
     } else {
       mQueuedSeekTarget = SeekTarget(mCurrentFrameTime,
