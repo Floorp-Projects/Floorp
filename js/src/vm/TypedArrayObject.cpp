@@ -233,7 +233,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         return NewFunctionWithProto(cx, class_constructor, 3,
-                                    JSFunction::NATIVE_CTOR, global,
+                                    JSFunction::NATIVE_CTOR, NullPtr(),
                                     ClassName(key, cx),
                                     ctorProto, JSFunction::FinalizeKind,
                                     SingletonObject);
