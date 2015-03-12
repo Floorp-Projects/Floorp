@@ -221,6 +221,8 @@ loop.store = loop.store || {};
       this.dispatcher.register(this, [
         "connectionFailure",
         "connectionProgress",
+        "acceptCall",
+        "declineCall",
         "connectCall",
         "hangupCall",
         "remotePeerDisconnected",
@@ -253,6 +255,50 @@ loop.store = loop.store || {};
       } else {
         this._setupIncomingCall();
       }
+    },
+
+    /**
+     * Accepts an incoming call.
+     *
+     * @param {sharedActions.AcceptCall} actionData
+     */
+    acceptCall: function(actionData) {
+      if (this.getStoreState("outgoing")) {
+        console.error("Received AcceptCall action in outgoing call state");
+        return;
+      }
+
+      this.setStoreState({
+        callType: actionData.callType,
+        videoMuted: actionData.callType === CALL_TYPES.AUDIO_ONLY
+      });
+
+      // Accepting the call on the websocket will bring us into the connecting
+      // state.
+      this._websocket.accept();
+    },
+
+    /**
+     * Declines an incoming call.
+     *
+     * @param {sharedActions.DeclineCall} actionData
+     */
+    declineCall: function(actionData) {
+      if (actionData.blockCaller) {
+        this.mozLoop.calls.blockDirectCaller(this.getStoreState("callerId"),
+          function(err) {
+            // XXX The conversation window will be closed when this cb is triggered
+            // figure out if there is a better way to report the error to the user
+            // (bug 1103150).
+            console.log(err.fileName + ":" + err.lineNumber + ": " + err.message);
+          });
+      }
+
+      this._websocket.decline();
+
+      // Now we've declined, end the session and close the window.
+      this._endSession();
+      this.setStoreState({callState: CALL_STATES.CLOSE});
     },
 
     /**
