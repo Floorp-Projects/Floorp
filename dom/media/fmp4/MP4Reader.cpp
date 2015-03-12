@@ -575,6 +575,26 @@ MP4Reader::GetNextKeyframeTime()
   return mDemuxer->GetNextKeyframeTime();
 }
 
+void
+MP4Reader::DisableHardwareAcceleration()
+{
+  if (HasVideo() && !mIsEncrypted && mSharedDecoderManager) {
+    mPlatform->DisableHardwareAcceleration();
+
+    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+    if (!mSharedDecoderManager->Recreate(mPlatform, video, mLayersBackendType, mDecoder->GetImageContainer())) {
+      MonitorAutoLock mon(mVideo.mMonitor);
+      mVideo.mError = true;
+      if (mVideo.HasPromise()) {
+        mVideo.RejectPromise(DECODE_ERROR, __func__);
+      }
+    } else {
+      MonitorAutoLock lock(mVideo.mMonitor);
+      ScheduleUpdate(kVideo);
+    }
+  }
+}
+
 bool
 MP4Reader::ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
 {
@@ -617,7 +637,9 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
 
   MonitorAutoLock lock(mVideo.mMonitor);
   nsRefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
-  if (eos) {
+  if (mVideo.mError) {
+    mVideo.mPromise.Reject(DECODE_ERROR, __func__);
+  } else if (eos) {
     mVideo.mPromise.Reject(END_OF_STREAM, __func__);
   } else {
     ScheduleUpdate(kVideo);
