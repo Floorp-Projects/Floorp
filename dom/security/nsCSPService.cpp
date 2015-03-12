@@ -148,11 +148,13 @@ CSPService::ShouldLoad(uint32_t aContentType,
 
   // Cache the app status for this origin.
   uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  nsAutoCString contentOrigin;
-  aContentLocation->GetPrePath(contentOrigin);
-  if (aRequestPrincipal && !mAppStatusCache.Get(contentOrigin, &status)) {
-    aRequestPrincipal->GetAppStatus(&status);
-    mAppStatusCache.Put(contentOrigin, status);
+  nsAutoCString sourceOrigin;
+  if (aRequestPrincipal && aRequestOrigin) {
+    aRequestOrigin->GetPrePath(sourceOrigin);
+    if (!mAppStatusCache.Get(sourceOrigin, &status)) {
+      aRequestPrincipal->GetAppStatus(&status);
+      mAppStatusCache.Put(sourceOrigin, status);
+    }
   }
 
   if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
@@ -170,8 +172,8 @@ CSPService::ShouldLoad(uint32_t aContentType,
         {
           // Whitelist the theme resources.
           auto themeOrigin = Preferences::GetCString("b2g.theme.origin");
-          nsAutoCString sourceOrigin;
-          aRequestOrigin->GetPrePath(sourceOrigin);
+          nsAutoCString contentOrigin;
+          aContentLocation->GetPrePath(contentOrigin);
 
           if (!(sourceOrigin.Equals(contentOrigin) ||
                 (themeOrigin && themeOrigin.Equals(contentOrigin)))) {

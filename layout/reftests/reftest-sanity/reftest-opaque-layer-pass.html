@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Both divs should be part of opaque layers.</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.opaque-background {
+  background-color: white;
+}
+
+body {
+  height: 4000px;
+}
+
+</style>
+
+<div class="content reftest-opaque-layer"></div>
+
+<div class="fixed opaque-background content reftest-opaque-layer"></div>

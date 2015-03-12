@@ -52,7 +52,7 @@ Interpose(JSContext *cx, HandleObject target, const nsIID *iid, HandleId id,
 
     {
         JSAutoCompartment ac(cx, &descriptorVal.toObject());
-        if (!JS::ParsePropertyDescriptorObject(cx, target, descriptorVal, descriptor))
+        if (!JS::ObjectToCompletePropertyDescriptor(cx, target, descriptorVal, descriptor))
             return false;
     }
 

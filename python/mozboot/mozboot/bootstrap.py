@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import platform
 import sys
+import os.path
 
 from mozboot.centos import CentOSBootstrapper
 from mozboot.debian import DebianBootstrapper
@@ -16,6 +17,7 @@ from mozboot.gentoo import GentooBootstrapper
 from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.ubuntu import UbuntuBootstrapper
+from mozboot.archlinux import ArchlinuxBootstrapper
 
 APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
@@ -71,6 +73,9 @@ class Bootstrapper(object):
                 cls = UbuntuBootstrapper
             elif distro in ('Elementary OS', 'Elementary', '"elementary OS"'):
                 cls = UbuntuBootstrapper
+            elif os.path.exists('/etc/arch-release'):
+                # Even on archlinux, platform.linux_distribution() returns ['','','']
+                cls = ArchlinuxBootstrapper
             else:
                 raise NotImplementedError('Bootstrap support for this Linux '
                                           'distro not yet available.')

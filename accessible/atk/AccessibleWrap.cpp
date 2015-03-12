@@ -711,6 +711,9 @@ getRoleCB(AtkObject *aAtkObj)
     aAtkObj->role = ATK_ROLE_PANEL;
   else if (aAtkObj->role == ATK_ROLE_STATIC && !IsAtkVersionAtLeast(2, 16))
     aAtkObj->role = ATK_ROLE_TEXT;
+  else if ((aAtkObj->role == ATK_ROLE_MATH_FRACTION ||
+            aAtkObj->role == ATK_ROLE_MATH_ROOT) && !IsAtkVersionAtLeast(2, 16))
+    aAtkObj->role = ATK_ROLE_UNKNOWN;
 
   return aAtkObj->role;
 }

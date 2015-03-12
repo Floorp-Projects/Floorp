@@ -262,9 +262,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitArrayPushT(LArrayPushT *lir);
     void visitArrayConcat(LArrayConcat *lir);
     void visitArrayJoin(LArrayJoin *lir);
-    void visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
+    void visitLoadUnboxedScalar(LLoadUnboxedScalar *lir);
     void visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
-    void visitStoreTypedArrayElement(LStoreTypedArrayElement *lir);
+    void visitStoreUnboxedScalar(LStoreUnboxedScalar *lir);
     void visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir);
     void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement *lir);
     void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop *lir);

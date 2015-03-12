@@ -35,6 +35,7 @@
 #include "platform.h"
 #include "TableTicker.h"
 #include "UnwinderThread2.h"  /* uwt__register_thread_for_profiling */
+#include "mozilla/TimeStamp.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
@@ -202,6 +203,8 @@ class SamplerThread : public Thread {
 
   // Implement Thread::Run().
   virtual void Run() {
+    TimeDuration lastSleepOverhead = 0;
+    TimeStamp sampleStart = TimeStamp::Now();
     while (SamplerRegistry::sampler->IsActive()) {
       SamplerRegistry::sampler->DeleteExpiredMarkers();
       if (!SamplerRegistry::sampler->IsPaused()) {
@@ -231,7 +234,14 @@ class SamplerThread : public Thread {
           isFirstProfiledThread = false;
         }
       }
-      OS::SleepMicro(intervalMicro_);
+
+      TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(intervalMicro_);
+      TimeStamp beforeSleep = TimeStamp::Now();
+      TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
+      double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
+      OS::SleepMicro(sleepTime);
+      sampleStart = TimeStamp::Now();
+      lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
     }
   }
 

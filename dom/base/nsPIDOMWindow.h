@@ -96,6 +96,17 @@ public:
   }
 
   // Outer windows only.
+  void SetDesktopModeViewport(bool aDesktopModeViewport)
+  {
+    MOZ_ASSERT(IsOuterWindow());
+    mDesktopModeViewport = aDesktopModeViewport;
+  }
+  bool IsDesktopModeViewport() const
+  {
+    MOZ_ASSERT(IsOuterWindow());
+    return mDesktopModeViewport;
+  }
+
   virtual void SetIsBackground(bool aIsBackground)
   {
     MOZ_ASSERT(IsOuterWindow());
@@ -782,6 +793,9 @@ protected:
 
   bool                   mAudioMuted;
   float                  mAudioVolume;
+
+  // current desktop mode flag.
+  bool                   mDesktopModeViewport;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow* MOZ_NON_OWNING_REF mInnerWindow;

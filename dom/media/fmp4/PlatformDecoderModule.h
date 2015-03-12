@@ -135,6 +135,8 @@ public:
   // Indicates if the video decoder requires AVCC format.
   virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig);
 
+  virtual void DisableHardwareAcceleration() {}
+
 protected:
   PlatformDecoderModule() {}
   virtual ~PlatformDecoderModule() {}
@@ -244,7 +246,6 @@ public:
   };
   virtual void AllocateMediaResources() {}
   virtual void ReleaseMediaResources() {}
-  virtual void ReleaseDecoder() {}
   virtual bool IsHardwareAccelerated() const { return false; }
 };
 

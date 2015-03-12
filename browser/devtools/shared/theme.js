@@ -9,7 +9,7 @@
  * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  */
 
-const { Cu } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 loader.lazyRequireGetter(this, "Services");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
@@ -25,7 +25,15 @@ const cachedThemes = {};
  * Returns a string of the file found at URI
  */
 function readURI (uri) {
-  let stream = NetUtil.newChannel(uri, "UTF-8", null).open();
+  let stream = NetUtil.newChannel2(uri,
+                                   "UTF-8",
+                                   null,
+                                   null,      // aLoadingNode
+                                   Services.scriptSecurityManager.getSystemPrincipal(),
+                                   null,      // aTriggeringPrincipal
+                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsIContentPolicy.TYPE_OTHER).open();
+
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, { charset: "UTF-8" });
   stream.close();

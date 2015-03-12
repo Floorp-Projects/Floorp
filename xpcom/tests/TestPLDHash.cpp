@@ -191,6 +191,7 @@ static bool test_pldhash_grow_to_max_capacity()
 
   // Check that New() sets |t->ops|.
   if (!t->IsInitialized()) {
+    PL_DHashTableDestroy(t);
     return false;
   }
 

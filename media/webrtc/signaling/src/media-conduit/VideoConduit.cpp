@@ -81,7 +81,8 @@ WebrtcVideoConduit::WebrtcVideoConduit():
   mVideoLatencyAvg(0),
   mMinBitrate(200),
   mStartBitrate(300),
-  mMaxBitrate(2000)
+  mMaxBitrate(2000),
+  mCodecMode(webrtc::kRealtimeVideo)
 {
 }
 
@@ -538,7 +539,13 @@ WebrtcVideoConduit::SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTr
   mReceiverTransport = aTransport;
   return kMediaConduitNoError;
 }
-
+MediaConduitErrorCode
+WebrtcVideoConduit::ConfigureCodecMode(webrtc::VideoCodecMode mode)
+{
+  CSFLogDebug(logTag,  "%s ", __FUNCTION__);
+  mCodecMode = mode;
+  return kMediaConduitNoError;
+}
 /**
  * Note: Setting the send-codec on the Video Engine will restart the encoder,
  * sets up new SSRC and reset RTP_RTCP module with the new codec setting.
@@ -590,7 +597,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 #endif
     video_codec.qpMax = 56;
     video_codec.numberOfSimulcastStreams = 1;
-    video_codec.mode = webrtc::kRealtimeVideo;
+    video_codec.mode = mCodecMode;
 
     codecFound = true;
   } else {

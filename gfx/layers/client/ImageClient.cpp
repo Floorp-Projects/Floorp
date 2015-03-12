@@ -147,6 +147,13 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     return false;
   }
 
+  // Don't try to update to an invalid image. We return true because the caller
+  // would attempt to recreate the ImageClient otherwise, and that isn't going
+  // to help.
+  if (!image->IsValid()) {
+    return true;
+  }
+
   if (mLastPaintedImageSerial == image->GetSerial()) {
     return true;
   }
