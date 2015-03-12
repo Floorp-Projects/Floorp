@@ -175,12 +175,6 @@ WMFMediaDataDecoder::ReleaseMediaResources()
 #endif
 }
 
-void
-WMFMediaDataDecoder::ReleaseDecoder()
-{
-  ReleaseMediaResources();
-}
-
 bool
 WMFMediaDataDecoder::IsHardwareAccelerated() const {
   return mMFTManager && mMFTManager->IsHardwareAccelerated();

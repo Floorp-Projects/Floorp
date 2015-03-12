@@ -69,7 +69,6 @@ public:
   virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
   virtual bool IsDormantNeeded() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseDecoder() MOZ_OVERRIDE;
   virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
 
   friend class SharedDecoderManager;

@@ -34,7 +34,6 @@ public:
   virtual bool IsDormantNeeded() MOZ_OVERRIDE;
   virtual void AllocateMediaResources() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseDecoder() MOZ_OVERRIDE;
 
 private:
   // Will create the required MediaDataDecoder if we have a AVC SPS.
@@ -167,12 +166,6 @@ AVCCMediaDataDecoder::ReleaseMediaResources()
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
-}
-
-void
-AVCCMediaDataDecoder::ReleaseDecoder()
-{
-  ReleaseMediaResources();
 }
 
 nsresult
