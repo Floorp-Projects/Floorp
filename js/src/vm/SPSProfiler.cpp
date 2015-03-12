@@ -358,7 +358,9 @@ SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame
     : profiler(&rt->spsProfiler)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!hasSPSFrame || !profiler->enabled()) {
+    if (!hasSPSFrame || !profiler->enabled() ||
+        profiler->size() >= profiler->maxSize())
+    {
         profiler = nullptr;
         return;
     }
