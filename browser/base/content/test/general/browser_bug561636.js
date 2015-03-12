@@ -14,13 +14,6 @@ function checkPopupHide()
      "[Test " + testId + "] The invalid form popup should not be shown");
 }
 
-function checkPopupMessage(doc)
-{
-  is(gInvalidFormPopup.firstChild.textContent,
-     doc.getElementById('i').validationMessage,
-     "[Test " + testId + "] The panel should show the message from validationMessage");
-}
-
 let gObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
@@ -29,9 +22,17 @@ let gObserver = {
   }
 };
 
+var testId = 0;
+
+function incrementTest()
+{
+  testId++;
+  info("Starting next part of test");
+}
+
 function getDocHeader()
 {
-  return "data:text/html,<html><head><meta charset='utf-8'></head><body>" + getEmptyFrame();
+  return "<html><head><meta charset='utf-8'></head><body>" + getEmptyFrame();
 }
  
 function getDocFooter()
@@ -45,460 +46,327 @@ function getEmptyFrame()
          "name='t' srcdoc=\"<html><head><meta charset='utf-8'></head><body>form target</body></html>\"></iframe>";
 }
 
-var testId = -1;
-
-function nextTest()
+function* openNewTab(uri, background)
 {
-  testId++;
-  if (testId >= tests.length) {
-    finish();
-    return;
+  let tab = gBrowser.addTab();
+  let browser = gBrowser.getBrowserForTab(tab);
+  if (!background) {
+    gBrowser.selectedTab = tab;
   }
-  executeSoon(tests[testId]);
+  yield promiseTabLoadEvent(tab, "data:text/html," + escape(uri));
+  return browser;
 }
 
-function test()
+function* clickChildElement(browser)
 {
-  waitForExplicitFinish();
-  waitForFocus(nextTest);
+  yield ContentTask.spawn(browser, {}, function* () {
+    content.document.getElementById('s').click();
+  });
 }
 
-var tests = [
+function* blurChildElement(browser)
+{
+  yield ContentTask.spawn(browser, {}, function* () {
+    content.document.getElementById('i').blur();
+  });
+}
+
+function* checkChildFocus(browser, message)
+{
+  let [activeElement, validMsg] =
+    yield ContentTask.spawn(browser, message, function* (msg) {
+      var focused = content.document.activeElement == content.document.getElementById('i');
+
+      var validMsg = true;
+      if (msg) {
+        validMsg = (msg == content.document.getElementById('i').validationMessage);
+      }
+
+      return [focused, validMsg];
+  });
+
+  is(activeElement, true, "Test " + testId + " First invalid element should be focused");
+  is(validMsg, true, "Test " + testId + " The panel should show the message from validationMessage");
+}
 
 /**
  * In this test, we check that no popup appears if the form is valid.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    let doc = gBrowser.contentDocument;
+  yield clickChildElement(browser);
 
-    doc.getElementById('s').click();
-
+  yield new Promise((resolve, reject) => {
+    // XXXndeakin This isn't really going to work when the content is another process
     executeSoon(function() {
       checkPopupHide();
-
-      // Clean-up
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
+      resolve();
     });
-  }, true);
+  });
 
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that, when an invalid form is submitted,
  * the invalid element is focused and a popup appears.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input required id='i'><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
-
-    // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab);
-    nextTest();
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that, when an invalid form is submitted,
  * the first invalid element is focused and a popup appears.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input><input id='i' required><input required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
-
-    // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab);
-    nextTest();
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that, we hide the popup by interacting with the
  * invalid element if the element becomes valid.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
+  let popupHiddenPromise = promiseWaitForEvent(gInvalidFormPopup, "popuphidden");
+  EventUtils.synthesizeKey("a", {});
+  yield popupHiddenPromise;
 
-    EventUtils.synthesizeKey("a", {});
-
-    executeSoon(function () {
-      checkPopupHide();
-
-      // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
-    });
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that, we don't hide the popup by interacting with the
  * invalid element if the element is still invalid.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input type='email' id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
-
+  yield new Promise((resolve, reject) => {
     EventUtils.synthesizeKey("a", {});
-
-    executeSoon(function () {
-      checkPopupShow();
-
-      // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
-    });
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
+      checkPopupShow();
+      resolve();
+    })
+  });
 
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that we can hide the popup by blurring the invalid
  * element.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
+  let popupHiddenPromise = promiseWaitForEvent(gInvalidFormPopup, "popuphidden");
+  yield blurChildElement(browser);
+  yield popupHiddenPromise;
 
-    doc.getElementById('i').blur();
-
-    executeSoon(function () {
-      checkPopupHide();
-
-      // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
-    });
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that we can hide the popup by pressing TAB.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
+  let popupHiddenPromise = promiseWaitForEvent(gInvalidFormPopup, "popuphidden");
+  EventUtils.synthesizeKey("VK_TAB", {});
+  yield popupHiddenPromise;
 
-    EventUtils.synthesizeKey("VK_TAB", {});
-
-    executeSoon(function () {
-      checkPopupHide();
-
-      // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
-    });
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that the popup will hide if we move to another tab.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser1 = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser1);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser1, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
-    checkPopupMessage(doc);
+  let popupHiddenPromise = promiseWaitForEvent(gInvalidFormPopup, "popuphidden");
 
-    // Create a new tab and move to it.
-    gBrowser.selectedTab  = gBrowser.addTab("about:blank", {skipAnimation: true});
+  let browser2 = yield openNewTab("data:text/html,<html></html>");
+  yield popupHiddenPromise;
 
-    executeSoon(function() {
-      checkPopupHide();
-
-      // Clean-up and next test.
-      gBrowser.removeTab(gBrowser.selectedTab);
-      gBrowser.removeTab(gBrowser.selectedTab);
-      nextTest();
-    });
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeTab(gBrowser.getTabForBrowser(browser1));
+  gBrowser.removeTab(gBrowser.getTabForBrowser(browser2));
+});
 
 /**
  * In this test, we check that nothing happen if the invalid form is
  * submitted in a background tab.
  */
-
-function()
+add_task(function* ()
 {
   // Observers don't propagate currently across processes. We may add support for this in the
   // future via the addon compat layer.
-  if (gBrowser.isRemoteBrowser) {
-    nextTest();
+  if (gMultiProcessBrowser) {
     return;
   }
 
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri, true);
+  isnot(gBrowser.selectedBrowser, browser, "This tab should have been loaded in background");
 
-  gObserver.notifyInvalidSubmit = function() {
-    executeSoon(function() {
-      checkPopupHide();
-
-      // Clean-up
-      Services.obs.removeObserver(gObserver, "invalidformsubmit");
-      gObserver.notifyInvalidSubmit = function () {};
-      gBrowser.removeTab(tab);
-
-      nextTest();
-    });
-  };
-
-  Services.obs.addObserver(gObserver, "invalidformsubmit", false);
-
-  tab.linkedBrowser.addEventListener("load", function(e) {
-    // Ignore load events from the iframe.
-    if (tab.linkedBrowser.contentDocument == e.target) {
-      let browser = e.currentTarget;
-      browser.removeEventListener("load", arguments.callee, true);
-
-      isnot(gBrowser.selectedBrowser, browser,
-            "This tab should have been loaded in background");
+  let notifierPromise = new Promise((resolve, reject) => {
+    gObserver.notifyInvalidSubmit = function() {
       executeSoon(function() {
-        browser.contentDocument.getElementById('s').click();
-      });
-    }
-  }, true);
+        checkPopupHide();
 
-  tab.linkedBrowser.loadURI(uri);
-},
+        // Clean-up
+        Services.obs.removeObserver(gObserver, "invalidformsubmit");
+        gObserver.notifyInvalidSubmit = function () {};
+        resolve();
+      });
+    };
+
+    Services.obs.addObserver(gObserver, "invalidformsubmit", false);
+
+    executeSoon(function () {
+      browser.contentDocument.getElementById('s').click();
+    });
+  });
+
+  yield notifierPromise;
+
+  gBrowser.removeTab(gBrowser.getTabForBrowser(browser));
+});
 
 /**
  * In this test, we check that the author defined error message is shown.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input x-moz-errormessage='foo' required id='i'><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    is(doc.activeElement, doc.getElementById('i'),
-       "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
+  is(gInvalidFormPopup.firstChild.textContent, "foo",
+     "The panel should show the author defined error message");
 
-    is(gInvalidFormPopup.firstChild.textContent, "foo",
-       "The panel should show the author defined error message");
-
-    // Clean-up and next test.
-    gBrowser.removeTab(gBrowser.selectedTab);
-    nextTest();
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
-    });
-  }, true);
-
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
+  gBrowser.removeCurrentTab();
+});
 
 /**
  * In this test, we check that the message is correctly updated when it changes.
  */
-function()
+add_task(function* ()
 {
+  incrementTest();
   let uri = getDocHeader() + "<form target='t' action='data:text/html,'><input type='email' required id='i'><input id='s' type='submit'></form>" + getDocFooter();
-  let tab = gBrowser.addTab();
+  let browser = yield openNewTab(uri);
 
-  gInvalidFormPopup.addEventListener("popupshown", function() {
-    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+  let popupShownPromise = promiseWaitForEvent(gInvalidFormPopup, "popupshown");
+  yield clickChildElement(browser);
+  yield popupShownPromise;
 
-    let doc = gBrowser.contentDocument;
-    let input = doc.getElementById('i');
-    is(doc.activeElement, input, "First invalid element should be focused");
+  checkPopupShow();
+  yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-    checkPopupShow();
+  let inputPromise = promiseWaitForEvent(gBrowser.contentDocument.getElementById('i'), "input");
+  EventUtils.synthesizeKey('f', {});
+  yield inputPromise;
 
-    is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
-       "The panel should show the current validation message");
-
-    input.addEventListener('input', function() {
-      input.removeEventListener('input', arguments.callee, false);
-
-      executeSoon(function() {
-        // Now, the element suffers from another error, the message should have
-        // been updated.
-        is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
-           "The panel should show the current validation message");
-
-        // Clean-up and next test.
-        gBrowser.removeTab(gBrowser.selectedTab);
-        nextTest();
-      });
-    }, false);
-
-    EventUtils.synthesizeKey('f', {});
-  }, false);
-
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  // Now, the element suffers from another error, the message should have
+  // been updated.
+  yield new Promise((resolve, reject) => {
+    // XXXndeakin This isn't really going to work when the content is another process
     executeSoon(function() {
-      gBrowser.contentDocument.getElementById('s').click();
+      checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
+      resolve();
     });
-  }, true);
+  });
 
-  gBrowser.selectedTab = tab;
-  gBrowser.selectedBrowser.loadURI(uri);
-},
-
-];
+  gBrowser.removeCurrentTab();
+});
