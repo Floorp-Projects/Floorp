@@ -760,6 +760,7 @@ public class ActivityChooserModel extends DataSetObservable {
              */
             final PackageManager packageManager = mContext.getPackageManager();
             final String channelToRemoveLabel = mContext.getResources().getString(R.string.overlay_share_label);
+            final String shareDialogClassName = ShareDialog.class.getCanonicalName();
 
             for (int i = 0; i < resolveInfoCount; i++) {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
@@ -773,7 +774,7 @@ public class ActivityChooserModel extends DataSetObservable {
                  * Note: we check both the class name and the label to ensure we only change the
                  * label of the current channel.
                  */
-                if (ShareDialog.class.getCanonicalName().equals(resolveInfo.activityInfo.name) &&
+                if (shareDialogClassName.equals(resolveInfo.activityInfo.name) &&
                         channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
                     // Don't add the menu item if there are no devices to share to.
                     if (getOtherSyncedClientCount() <= 0) {
