@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
 #include <stddef.h>                     // for size_t
 #include "ClientLayerManager.h"         // for ClientLayerManager
 #include "base/message_loop.h"          // for MessageLoop
@@ -36,19 +37,50 @@ Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 
 CompositorChild::CompositorChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
-  , mCanSend(true)
+  , mCanSend(false)
 {
 }
 
 CompositorChild::~CompositorChild()
 {
+  if (mCanSend) {
+    gfxCriticalError() << "CompositorChild was not deinitialized";
+  }
+}
+
+static void DeferredDestroyCompositor(nsRefPtr<CompositorParent> aCompositorParent,
+                                      nsRefPtr<CompositorChild> aCompositorChild)
+{
+    // Bug 848949 needs to be fixed before
+    // we can close the channel properly
+    //aCompositorChild->Close();
 }
 
 void
 CompositorChild::Destroy()
 {
-  mLayerManager->Destroy();
-  mLayerManager = nullptr;
+  if (!mCanSend) {
+    NS_WARNING("Trying to deinitialize a CompositorChild twice");
+    return;
+  }
+
+  SendWillStop();
+  // The call just made to SendWillStop can result in IPC from the
+  // CompositorParent to the CompositorChild (e.g. caused by the destruction
+  // of shared memory). We need to ensure this gets processed by the
+  // CompositorChild before it gets destroyed. It suffices to ensure that
+  // events already in the MessageLoop get processed before the
+  // CompositorChild is destroyed, so we add a task to the MessageLoop to
+  // handle compositor desctruction.
+
+  // From now on the only message we can send is Stop.
+  mCanSend = false;
+
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+    mLayerManager = nullptr;
+  }
+
   // start from the end of the array because Destroy() can cause the
   // LayerTransactionChild to be removed from the array.
   for (int i = ManagedPLayerTransactionChild().Length() - 1; i >= 0; --i) {
@@ -56,8 +88,14 @@ CompositorChild::Destroy()
       static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[i]);
     layers->Destroy();
   }
-  MOZ_ASSERT(!mCanSend);
+
   SendStop();
+
+  // The DeferredDestroyCompositor task takes ownership of compositorParent and
+  // will release them when it runs.
+  nsRefPtr<CompositorChild> selfRef = this;
+  MessageLoop::current()->PostTask(FROM_HERE,
+             NewRunnableFunction(DeferredDestroyCompositor, mCompositorParent, selfRef));
 }
 
 bool
@@ -90,6 +128,8 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
     return nullptr;
   }
 
+  child->mCanSend = true;
+
   // We release this ref in ActorDestroy().
   sCompositor = child.forget().take();
 
@@ -99,6 +139,18 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
   gfxPlatform::GetPlatform()->SetTileSize(width, height);
 
   return sCompositor;
+}
+
+bool
+CompositorChild::OpenSameProcess(CompositorParent* aParent)
+{
+  MOZ_ASSERT(aParent);
+
+  mCompositorParent = aParent;
+  mCanSend =  Open(mCompositorParent->GetIPCChannel(),
+                   CompositorParent::CompositorLoop(),
+                   ipc::ChildSide);
+  return mCanSend;
 }
 
 /*static*/ CompositorChild*
@@ -188,11 +240,14 @@ CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
   // cleanup, because that will cause it to be deleted while it's
   // still being used.  So defer the deletion to after it's not in
   // use.
-  sCompositor = nullptr;
+  if (mCanSend) {
+    Destroy();
+  }
 
-  MessageLoop::current()->PostTask(
-    FROM_HERE,
-    NewRunnableMethod(this, &CompositorChild::Release));
+  if (sCompositor) {
+    sCompositor->Release();
+    sCompositor = nullptr;
+  }
 }
 
 void
@@ -327,8 +382,6 @@ bool
 CompositorChild::SendWillStop()
 {
   MOZ_ASSERT(mCanSend);
-  // From now on the only two messages we can send are WillStop and Stop.
-  mCanSend = false;
   return PCompositorChild::SendWillStop();
 }
 

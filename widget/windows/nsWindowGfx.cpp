@@ -189,8 +189,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-    mLayerManager = nullptr;
-    DestroyCompositor();
+    DestroyLayerManager();
     return false;
   }
 
@@ -529,8 +528,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           layerManagerD3D9->SetClippingRegion(region);
           result = listener->PaintWindow(this, region);
           if (layerManagerD3D9->DeviceWasRemoved()) {
-            mLayerManager->Destroy();
-            mLayerManager = nullptr;
+            DestroyLayerManager();
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
             gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
