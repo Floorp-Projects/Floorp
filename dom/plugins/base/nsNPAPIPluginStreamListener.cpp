@@ -134,21 +134,21 @@ NS_IMPL_ISUPPORTS(nsNPAPIPluginStreamListener,
 nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, 
                                                          void* notifyData,
                                                          const char* aURL)
-: mStreamBuffer(nullptr),
-mNotifyURL(aURL ? PL_strdup(aURL) : nullptr),
-mInst(inst),
-mStreamBufferSize(0),
-mStreamBufferByteCount(0),
-mStreamType(NP_NORMAL),
-mStreamStarted(false),
-mStreamCleanedUp(false),
-mCallNotify(notifyData ? true : false),
-mIsSuspended(false),
-mIsPluginInitJSStream(mInst->mInPluginInitCall &&
-                      aURL && strncmp(aURL, "javascript:",
-                                      sizeof("javascript:") - 1) == 0),
-mRedirectDenied(false),
-mResponseHeaderBuf(nullptr)
+  : mStreamBuffer(nullptr)
+  , mNotifyURL(aURL ? PL_strdup(aURL) : nullptr)
+  , mInst(inst)
+  , mStreamBufferSize(0)
+  , mStreamBufferByteCount(0)
+  , mStreamType(NP_NORMAL)
+  , mStreamState(eStreamStopped)
+  , mStreamCleanedUp(false)
+  , mCallNotify(notifyData ? true : false)
+  , mIsSuspended(false)
+  , mIsPluginInitJSStream(mInst->mInPluginInitCall &&
+                          aURL && strncmp(aURL, "javascript:",
+                                          sizeof("javascript:") - 1) == 0)
+  , mRedirectDenied(false)
+  , mResponseHeaderBuf(nullptr)
 {
   mNPStreamWrapper = new nsNPAPIStreamWrapper(nullptr, this);
   mNPStreamWrapper->mNPStream.notifyData = notifyData;
@@ -208,7 +208,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
 
   // Seekable streams have an extra addref when they are created which must
   // be matched here.
-  if (NP_SEEK == mStreamType && mStreamStarted)
+  if (NP_SEEK == mStreamType && mStreamState == eStreamTypeSet)
     NS_RELEASE_THIS();
 
   if (mStreamListenerPeer) {
@@ -230,7 +230,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
   NPP npp;
   mInst->GetNPP(&npp);
 
-  if (mStreamStarted && pluginFunctions->destroystream) {
+  if (mStreamState >= eNewStreamCalled && pluginFunctions->destroystream) {
     NPPAutoPusher nppPusher(npp);
 
     NPError error;
@@ -245,7 +245,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
       rv = NS_OK;
   }
   
-  mStreamStarted = false;
+  mStreamState = eStreamStopped;
   
   // fire notification back to plugin, just like before
   CallURLNotify(reason);
@@ -367,7 +367,7 @@ nsNPAPIPluginStreamListener::SetStreamType(uint16_t aType, bool aNeedsResume)
     default:
       return false;
   }
-  mStreamStarted = true;
+  mStreamState = eStreamTypeSet;
   if (aNeedsResume) {
     if (mStreamListenerPeer) {
       mStreamListenerPeer->OnStreamTypeSet(mStreamType);
@@ -591,7 +591,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
                         "return(towrite)=%d, url=%s\n",
                         this, npp, numtowrite, mNPStreamWrapper->mNPStream.url));
         
-        if (!mStreamStarted) {
+        if (mStreamState == eStreamStopped) {
           // The plugin called NPN_DestroyStream() from within
           // NPP_WriteReady(), kill the stream.
           
@@ -643,7 +643,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
                       this, npp, streamPosition, numtowrite,
                       ptrStreamBuffer, writeCount, mNPStreamWrapper->mNPStream.url));
       
-      if (!mStreamStarted) {
+      if (mStreamState == eStreamStopped) {
         // The plugin called NPN_DestroyStream() from within
         // NPP_Write(), kill the stream.
         return NS_BINDING_ABORTED;
@@ -814,7 +814,7 @@ nsNPAPIPluginStreamListener::Notify(nsITimer *aTimer)
   }
   
   if (mStreamBufferByteCount != oldStreamBufferByteCount &&
-      ((mStreamStarted && mStreamBufferByteCount < 1024) ||
+      ((mStreamState == eStreamTypeSet && mStreamBufferByteCount < 1024) ||
        mStreamBufferByteCount == 0)) {
         // The plugin read some data and we've got less than 1024 bytes in
         // our buffer (or its empty and the stream is already
