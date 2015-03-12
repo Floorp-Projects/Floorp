@@ -59,7 +59,10 @@ StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
 static bool sInShutdown = false;
 }
 
-class mozilla::dom::bluetooth::SendFileBatch {
+BEGIN_BLUETOOTH_NAMESPACE
+
+class BluetoothOppManager::SendFileBatch MOZ_FINAL
+{
 public:
   SendFileBatch(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob)
     : mDeviceAddress(aDeviceAddress)
@@ -80,7 +83,7 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
   // if state of any volume was changed
   if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
     HandleVolumeStateChanged(aSubject);
-    return NS_OK; 
+    return NS_OK;
   }
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
@@ -92,7 +95,7 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
-class SendSocketDataTask : public nsRunnable
+class BluetoothOppManager::SendSocketDataTask MOZ_FINAL : public nsRunnable
 {
 public:
   SendSocketDataTask(uint8_t* aStream, uint32_t aSize)
@@ -116,7 +119,7 @@ private:
   uint32_t mSize;
 };
 
-class ReadFileTask : public nsRunnable
+class BluetoothOppManager::ReadFileTask MOZ_FINAL : public nsRunnable
 {
 public:
   ReadFileTask(nsIInputStream* aInputStream,
@@ -161,7 +164,7 @@ private:
   uint32_t mAvailablePacketSize;
 };
 
-class CloseSocketTask : public Task
+class BluetoothOppManager::CloseSocketTask MOZ_FINAL : public Task
 {
 public:
   CloseSocketTask(BluetoothSocket* aSocket) : mSocket(aSocket)
@@ -1605,3 +1608,5 @@ BluetoothOppManager::Reset()
 {
   MOZ_ASSERT(false);
 }
+
+END_BLUETOOTH_NAMESPACE
