@@ -8,6 +8,7 @@ describe("loop.store.ConversationStore", function () {
 
   var CALL_STATES = loop.store.CALL_STATES;
   var WS_STATES = loop.store.WS_STATES;
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sharedActions = loop.shared.actions;
@@ -43,7 +44,8 @@ describe("loop.store.ConversationStore", function () {
       addConversationContext: sandbox.stub(),
       calls: {
         setCallInProgress: sandbox.stub(),
-        clearCallInProgress: sandbox.stub()
+        clearCallInProgress: sandbox.stub(),
+        blockDirectCaller: sandbox.stub()
       },
       rooms: {
         create: sandbox.stub()
@@ -492,6 +494,73 @@ describe("loop.store.ConversationStore", function () {
             sinon.match.hasOwn("reason", "setup"));
         });
       });
+    });
+  });
+
+  describe("#acceptCall", function() {
+    beforeEach(function() {
+      store._websocket = {
+        accept: sinon.stub()
+      };
+    });
+
+    it("should save the call type", function() {
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      expect(store.getStoreState("callType")).eql(CALL_TYPES.AUDIO_ONLY);
+      expect(store.getStoreState("videoMuted")).eql(true);
+    });
+
+    it("should call accept on the websocket", function() {
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      sinon.assert.calledOnce(store._websocket.accept);
+    });
+  });
+
+  describe("#declineCall", function() {
+    var fakeWebsocket;
+
+    beforeEach(function() {
+      fakeWebsocket = store._websocket = {
+        decline: sinon.stub(),
+        close: sinon.stub()
+      };
+
+      store.setStoreState({windowId: 42});
+    });
+
+    it("should block the caller if necessary", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: true}));
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.blockDirectCaller);
+    });
+
+    it("should call decline on the websocket", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeWebsocket.decline);
+    });
+
+    it("should close the websocket", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeWebsocket.close);
+    });
+
+    it("should clear the call in progress for the backend", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(fakeMozLoop.calls.clearCallInProgress, 42);
+    });
+
+    it("should set the call state to CLOSE", function() {
+      store.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+
+      expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
     });
   });
 

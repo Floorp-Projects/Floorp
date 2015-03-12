@@ -12,6 +12,7 @@ describe("loop.conversationViews", function () {
   var fakeMozLoop, fakeWindow;
 
   var CALL_STATES = loop.store.CALL_STATES;
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
@@ -1221,37 +1222,25 @@ describe("loop.conversationViews", function () {
   });
 
   describe("AcceptCallView", function() {
-    var view, model, fakeAudio;
+    var view;
 
-    beforeEach(function() {
-      var Model = Backbone.Model.extend({
-        getCallIdentifier: function() {return "fakeId";}
-      });
-      model = new Model();
-      sandbox.spy(model, "trigger");
-      sandbox.stub(model, "set");
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.conversationViews.AcceptCallView, props));
+    }
 
-      fakeAudio = {
-        play: sinon.spy(),
-        pause: sinon.spy(),
-        removeAttribute: sinon.spy()
-      };
-      sandbox.stub(window, "Audio").returns(fakeAudio);
-
-      view = TestUtils.renderIntoDocument(
-        React.createElement(loop.conversationViews.AcceptCallView, {
-          model: model,
-          video: true
-        }));
+    afterEach(function() {
+      view = null;
     });
 
     describe("default answer mode", function() {
       it("should display video as primary answer mode", function() {
-        view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.AcceptCallView, {
-            model: model,
-            video: true
-          }));
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_VIDEO,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var primaryBtn = view.getDOMNode()
                                   .querySelector('.fx-embedded-btn-icon-video');
 
@@ -1259,11 +1248,12 @@ describe("loop.conversationViews", function () {
       });
 
       it("should display audio as primary answer mode", function() {
-        view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.AcceptCallView, {
-            model: model,
-            video: false
-          }));
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_ONLY,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var primaryBtn = view.getDOMNode()
                                   .querySelector('.fx-embedded-btn-icon-audio');
 
@@ -1271,116 +1261,117 @@ describe("loop.conversationViews", function () {
       });
 
       it("should accept call with video", function() {
-        view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.AcceptCallView, {
-            model: model,
-            video: true
-          }));
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_VIDEO,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var primaryBtn = view.getDOMNode()
                                   .querySelector('.fx-embedded-btn-icon-video');
 
         React.addons.TestUtils.Simulate.click(primaryBtn);
 
-        sinon.assert.calledOnce(model.set);
-        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio-video");
-        sinon.assert.calledOnce(model.trigger);
-        sinon.assert.calledWithExactly(model.trigger, "accept");
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.AcceptCall({
+            callType: CALL_TYPES.AUDIO_VIDEO
+          }));
       });
 
       it("should accept call with audio", function() {
-        view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.AcceptCallView, {
-            model: model,
-            video: false
-          }));
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_ONLY,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var primaryBtn = view.getDOMNode()
                                   .querySelector('.fx-embedded-btn-icon-audio');
 
         React.addons.TestUtils.Simulate.click(primaryBtn);
 
-        sinon.assert.calledOnce(model.set);
-        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio");
-        sinon.assert.calledOnce(model.trigger);
-        sinon.assert.calledWithExactly(model.trigger, "accept");
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.AcceptCall({
+            callType: CALL_TYPES.AUDIO_ONLY
+          }));
       });
 
       it("should accept call with video when clicking on secondary btn",
-         function() {
-          view = TestUtils.renderIntoDocument(
-            React.createElement(loop.conversationViews.AcceptCallView, {
-              model: model,
-              video: false
-            }));
+        function() {
+          view = mountTestComponent({
+            callType: CALL_TYPES.AUDIO_ONLY,
+            callerId: "fake@invalid.com",
+            dispatcher: dispatcher
+          });
+
           var secondaryBtn = view.getDOMNode()
           .querySelector('.fx-embedded-btn-video-small');
 
           React.addons.TestUtils.Simulate.click(secondaryBtn);
 
-          sinon.assert.calledOnce(model.set);
-          sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio-video");
-          sinon.assert.calledOnce(model.trigger);
-          sinon.assert.calledWithExactly(model.trigger, "accept");
-         });
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.AcceptCall({
+              callType: CALL_TYPES.AUDIO_VIDEO
+            }));
+        });
 
       it("should accept call with audio when clicking on secondary btn",
-         function() {
-          view = TestUtils.renderIntoDocument(
-            React.createElement(loop.conversationViews.AcceptCallView, {
-              model: model,
-              video: true
-            }));
+        function() {
+          view = mountTestComponent({
+            callType: CALL_TYPES.AUDIO_VIDEO,
+            callerId: "fake@invalid.com",
+            dispatcher: dispatcher
+          });
+
           var secondaryBtn = view.getDOMNode()
           .querySelector('.fx-embedded-btn-audio-small');
 
           React.addons.TestUtils.Simulate.click(secondaryBtn);
 
-          sinon.assert.calledOnce(model.set);
-          sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio");
-          sinon.assert.calledOnce(model.trigger);
-          sinon.assert.calledWithExactly(model.trigger, "accept");
-         });
-    });
-
-    describe("click event on .btn-accept", function() {
-      it("should trigger an 'accept' conversation model event", function () {
-        var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
-        model.trigger.withArgs("accept");
-        TestUtils.Simulate.click(buttonAccept);
-
-        /* Setting a model property triggers 2 events */
-        sinon.assert.calledOnce(model.trigger.withArgs("accept"));
-      });
-
-      it("should set selectedCallType to audio-video", function () {
-        var buttonAccept = view.getDOMNode().querySelector(".btn-accept");
-
-        TestUtils.Simulate.click(buttonAccept);
-
-        sinon.assert.calledOnce(model.set);
-        sinon.assert.calledWithExactly(model.set, "selectedCallType",
-          "audio-video");
-      });
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.AcceptCall({
+              callType: CALL_TYPES.AUDIO_ONLY
+            }));
+        });
     });
 
     describe("click event on .btn-decline", function() {
-      it("should trigger an 'decline' conversation model event", function() {
+      it("should dispatch a DeclineCall action", function() {
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_VIDEO,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var buttonDecline = view.getDOMNode().querySelector(".btn-decline");
 
         TestUtils.Simulate.click(buttonDecline);
 
-        sinon.assert.calledOnce(model.trigger);
-        sinon.assert.calledWith(model.trigger, "decline");
-        });
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DeclineCall({blockCaller: false}));
+      });
     });
 
     describe("click event on .btn-block", function() {
-      it("should trigger a 'block' conversation model event", function() {
+      it("should dispatch a DeclineCall action with blockCaller true", function() {
+        view = mountTestComponent({
+          callType: CALL_TYPES.AUDIO_VIDEO,
+          callerId: "fake@invalid.com",
+          dispatcher: dispatcher
+        });
+
         var buttonBlock = view.getDOMNode().querySelector(".btn-block");
 
         TestUtils.Simulate.click(buttonBlock);
 
-        sinon.assert.calledOnce(model.trigger);
-        sinon.assert.calledWith(model.trigger, "declineAndBlock");
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DeclineCall({blockCaller: true}));
       });
     });
   });

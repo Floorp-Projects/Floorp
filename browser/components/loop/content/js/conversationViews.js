@@ -141,7 +141,7 @@ loop.conversationViews = (function(mozL10n) {
   var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
 
   var AcceptCallView = React.createClass({displayName: "AcceptCallView",
-    mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
+    mixins: [sharedMixins.DropdownMenuMixin],
 
     propTypes: {
       callType: React.PropTypes.string.isRequired,
@@ -166,17 +166,23 @@ loop.conversationViews = (function(mozL10n) {
 
     _handleAccept: function(callType) {
       return function() {
-        this.props.model.set("selectedCallType", callType);
-        this.props.model.trigger("accept");
+        this.props.dispatcher.dispatch(new sharedActions.AcceptCall({
+          callType: callType
+        }));
       }.bind(this);
     },
 
     _handleDecline: function() {
-      this.props.model.trigger("decline");
+      this.props.dispatcher.dispatch(new sharedActions.DeclineCall({
+        blockCaller: false
+      }));
     },
 
     _handleDeclineBlock: function(e) {
-      this.props.model.trigger("declineAndBlock");
+      this.props.dispatcher.dispatch(new sharedActions.DeclineCall({
+        blockCaller: true
+      }));
+
       /* Prevent event propagation
        * stop the click from reaching parent element */
       return false;
@@ -189,12 +195,12 @@ loop.conversationViews = (function(mozL10n) {
      **/
     _answerModeProps: function() {
       var videoButton = {
-        handler: this._handleAccept("audio-video"),
+        handler: this._handleAccept(CALL_TYPES.AUDIO_VIDEO),
         className: "fx-embedded-btn-icon-video",
         tooltip: "incoming_call_accept_audio_video_tooltip"
       };
       var audioButton = {
-        handler: this._handleAccept("audio"),
+        handler: this._handleAccept(CALL_TYPES.AUDIO_ONLY),
         className: "fx-embedded-btn-audio-small",
         tooltip: "incoming_call_accept_audio_only_tooltip"
       };
@@ -203,7 +209,7 @@ loop.conversationViews = (function(mozL10n) {
       props.secondary = audioButton;
 
       // When video is not enabled on this call, we swap the buttons around.
-      if (!this.props.video) {
+      if (this.props.callType === CALL_TYPES.AUDIO_ONLY) {
         audioButton.className = "fx-embedded-btn-icon-audio";
         videoButton.className = "fx-embedded-btn-video-small";
         props.primary = audioButton;
