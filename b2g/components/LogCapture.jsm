@@ -13,6 +13,7 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshot", "resource://gre/modules/Screenshot.jsm");
 
 this.EXPORTED_SYMBOLS = ["LogCapture"];
 
@@ -184,6 +185,26 @@ let LogCapture = {
     dumper.dumpMemoryReportsToNamedFile(file, function() {
       deferred.resolve(file);
     }, null, false);
+
+    return deferred.promise;
+  },
+
+  /**
+   * Dumping screenshot, returning a Promise. Will be resolved with the content
+   * as an ArrayBuffer.
+   */
+  getScreenshot: function() {
+    this.ensureLoaded();
+    let deferred = Promise.defer();
+
+    let fr = Cc["@mozilla.org/files/filereader;1"]
+                .createInstance(Ci.nsIDOMFileReader);
+
+    fr.onload = function(evt) {
+      deferred.resolve(new Uint8Array(evt.target.result));
+    };
+
+    fr.readAsArrayBuffer(Screenshot.get());
 
     return deferred.promise;
   }

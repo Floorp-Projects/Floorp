@@ -31,6 +31,10 @@ using namespace android;
 using namespace mozilla;
 using namespace mozilla::dom;
 
+#ifndef MOZ_WIDGET_GONK
+NS_IMPL_ISUPPORTS_INHERITED0(TestGonkCameraHardware, GonkCameraHardware);
+#endif
+
 static void
 CopyFaceFeature(int32_t (&aDst)[2], bool aExists, const DOMPoint* aSrc)
 {
@@ -633,6 +637,7 @@ TestGonkCameraHardware::PullParameters(GonkCameraParameters& aParams)
   return NS_OK;
 }
 
+#ifdef MOZ_WIDGET_GONK
 int
 TestGonkCameraHardware::PushParameters(const CameraParameters& aParams)
 {
@@ -658,6 +663,7 @@ TestGonkCameraHardware::PullParameters(CameraParameters& aParams)
   String8 s(NS_LossyConvertUTF16toASCII(as).get());
   aParams.unflatten(s);
 }
+#endif
 
 int
 TestGonkCameraHardware::StartRecording()
