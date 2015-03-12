@@ -151,10 +151,7 @@ AVCCMediaDataDecoder::IsWaitingMediaResources()
 bool
 AVCCMediaDataDecoder::IsDormantNeeded()
 {
-  if (mDecoder) {
-    return mDecoder->IsDormantNeeded();
-  }
-  return MediaDataDecoder::IsDormantNeeded();
+  return true;
 }
 
 void
