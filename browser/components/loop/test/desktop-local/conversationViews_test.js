@@ -96,6 +96,7 @@ describe("loop.conversationViews", function () {
     fakeWindow = {
       navigator: { mozLoop: fakeMozLoop },
       close: sinon.stub(),
+      document: {},
       addEventListener: function() {},
       removeEventListener: function() {}
     };
@@ -170,28 +171,6 @@ describe("loop.conversationViews", function () {
       expect(TestUtils.findRenderedDOMComponentWithClass(
         view, "fx-embedded-tiny-video-icon").props.className).to.contain("muted");
     });
-  });
-
-  describe("ConversationDetailView", function() {
-    function mountTestComponent(props) {
-      return TestUtils.renderIntoDocument(
-        React.createElement(loop.conversationViews.ConversationDetailView, props));
-    }
-
-    it("should set the document title to the calledId", function() {
-      mountTestComponent({contact: contact});
-
-      expect(document.title).eql("mrsmith");
-    });
-
-    it("should fallback to the email if the contact name is not defined",
-      function() {
-        delete contact.name;
-
-        mountTestComponent({contact: contact});
-
-        expect(document.title).eql("fakeEmail");
-      });
   });
 
   describe("PendingConversationView", function() {
@@ -605,6 +584,37 @@ describe("loop.conversationViews", function () {
       });
     });
 
+    it("should set the document title to the callerId", function() {
+      store.setStoreState({
+        contact: contact
+      });
+
+      mountTestComponent();
+
+      expect(fakeWindow.document.title).eql("mrsmith");
+    });
+
+    it("should fallback to the contact email if the contact name is not defined", function() {
+      delete contact.name;
+      store.setStoreState({
+        contact: contact
+      });
+
+      mountTestComponent({contact: contact});
+
+      expect(fakeWindow.document.title).eql("fakeEmail");
+    });
+
+    it("should fallback to the caller id if no contact is defined", function() {
+      store.setStoreState({
+        callerId: "fakeId"
+      });
+
+      mountTestComponent({contact: contact});
+
+      expect(fakeWindow.document.title).eql("fakeId");
+    });
+
     it("should render the CallFailedView when the call state is 'terminated'",
       function() {
         store.setStoreState({
@@ -662,6 +672,14 @@ describe("loop.conversationViews", function () {
 
         TestUtils.findRenderedComponentWithType(view,
           loop.shared.views.FeedbackView);
+    });
+
+    it("should set the document title to conversation_has_ended when displaying the feedback view", function() {
+      store.setStoreState({callState: CALL_STATES.FINISHED});
+
+      mountTestComponent();
+
+      expect(fakeWindow.document.title).eql("conversation_has_ended");
     });
 
     it("should play the terminated sound when the call state is 'finished'",

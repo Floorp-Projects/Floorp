@@ -124,8 +124,6 @@ loop.conversationViews = (function(mozL10n) {
     render: function() {
       var contactName = _getContactDisplayName(this.props.contact);
 
-      document.title = contactName;
-
       return (
         <div className="call-window">
           <CallIdentifierView
@@ -966,6 +964,7 @@ loop.conversationViews = (function(mozL10n) {
   var CallControllerView = React.createClass({
     mixins: [
       sharedMixins.AudioMixin,
+      sharedMixins.DocumentTitleMixin,
       loop.store.StoreMixin("conversationStore"),
       Backbone.Events
     ],
@@ -995,7 +994,7 @@ loop.conversationViews = (function(mozL10n) {
      * Used to setup and render the feedback view.
      */
     _renderFeedbackView: function() {
-      document.title = mozL10n.get("conversation_has_ended");
+      this.setTitle(mozL10n.get("conversation_has_ended"));
 
       return (
         <sharedViews.FeedbackView
@@ -1033,6 +1032,14 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     render: function() {
+      // Set the default title to the contact name or the callerId, note
+      // that views may override this, e.g. the feedback view.
+      if (this.state.contact) {
+        this.setTitle(_getContactDisplayName(this.state.contact));
+      } else {
+        this.setTitle(this.state.callerId || "");
+      }
+
       switch (this.state.callState) {
         case CALL_STATES.CLOSE: {
           this._closeWindow();
