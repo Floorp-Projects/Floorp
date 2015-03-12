@@ -16,6 +16,7 @@ import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
+import org.mozilla.gecko.toolbar.PageActionLayout;
 
 import android.view.View;
 import android.widget.EditText;
@@ -31,6 +32,10 @@ import com.jayway.android.robotium.solo.Solo;
 public class ToolbarComponent extends BaseComponent {
 
     private static final String URL_HTTP_PREFIX = "http://";
+
+    // We are waiting up to 30 seconds instead of the default waiting time
+    // because reader mode parsing can take quite some time on slower devices
+    private static final int READER_MODE_WAIT_MS = 30000;
 
     public ToolbarComponent(final UITestContext testContext) {
         super(testContext);
@@ -113,6 +118,25 @@ public class ToolbarComponent extends BaseComponent {
         DeviceHelper.assertIsTablet();
         return (ImageButton) getToolbarView().findViewById(R.id.reload);
     }
+
+    private PageActionLayout getPageActionLayout() {
+        return (PageActionLayout) getToolbarView().findViewById(R.id.page_action_layout);
+    }
+
+    private ImageButton getReaderModeButton() {
+        final PageActionLayout pageActionLayout = getPageActionLayout();
+        final int count = pageActionLayout.getChildCount();
+
+        for (int i = 0; i < count; i++) {
+            final View view = pageActionLayout.getChildAt(i);
+            if (StringHelper.CONTENT_DESCRIPTION_READER_MODE_BUTTON.equals(view.getContentDescription())) {
+                return (ImageButton) view;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Returns the View for the edit cancel button in the browser toolbar.
      */
@@ -224,6 +248,13 @@ public class ToolbarComponent extends BaseComponent {
         return pressButton(reloadButton, "reload");
     }
 
+    public ToolbarComponent pressReaderModeButton() {
+        final ImageButton readerModeButton = waitForReaderModeButton();
+        pressButton(readerModeButton, "reader mode");
+
+        return this;
+    }
+
     private ToolbarComponent pressButton(final View view, final String buttonName) {
         fAssertNotNull("The " + buttonName + " button View is not null", view);
         fAssertTrue("The " + buttonName + " button is enabled", view.isEnabled());
@@ -257,6 +288,19 @@ public class ToolbarComponent extends BaseComponent {
                 return !isEditing();
             }
         });
+    }
+
+    private ImageButton waitForReaderModeButton() {
+        final ImageButton[] readerModeButton = new ImageButton[1];
+
+        WaitHelper.waitFor("the Reader mode button to be visible", new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return (readerModeButton[0] = getReaderModeButton()) != null;
+            }
+        }, READER_MODE_WAIT_MS);
+
+        return readerModeButton[0];
     }
 
     private boolean isUrlEditTextSelected() {
