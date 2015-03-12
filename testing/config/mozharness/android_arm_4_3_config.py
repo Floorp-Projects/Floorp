@@ -27,7 +27,7 @@ config = {
                 "--certificate-path=%(certs_path)s", "--symbols-path=%(symbols_path)s",
                 "--quiet", "--log-raw=%(raw_log_file)s",
                 "--total-chunks=2",
-                "--manifest=tests/dom/canvas/test/_webgl-conformance.ini",
+                "--test-manifest=gl.json",
             ],
         },
         "robocop": {
