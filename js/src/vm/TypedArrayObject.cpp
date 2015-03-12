@@ -232,13 +232,11 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!ctorProto)
             return nullptr;
 
-        RootedObject ctorObj(cx, NewObjectWithGivenProto(cx, &JSFunction::class_,
-                                                         ctorProto, global, SingletonObject));
-        if (!ctorObj)
-            return nullptr;
-
-        return NewFunction(cx, ctorObj, class_constructor, 3, JSFunction::NATIVE_CTOR, global,
-                           ClassName(key, cx), JSFunction::FinalizeKind);
+        return NewFunctionWithProto(cx, NullPtr(), class_constructor, 3,
+                                    JSFunction::NATIVE_CTOR, global,
+                                    ClassName(key, cx),
+                                    ctorProto, JSFunction::FinalizeKind,
+                                    SingletonObject);
     }
 
     static bool
