@@ -252,8 +252,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         RootedFunction fun(cx);
-        fun = NewFunction(cx, ArrayBufferObject::createTypedArrayFromBuffer<NativeType>,
-                          0, JSFunction::NATIVE_FUN, cx->global(), NullPtr());
+        fun = NewNativeFunction(cx, ArrayBufferObject::createTypedArrayFromBuffer<NativeType>,
+                                0, NullPtr());
         if (!fun)
             return false;
 
@@ -1946,8 +1946,8 @@ DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleNativeObje
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
 
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    JSObject *getter = NewFunction(cx, DataViewObject::getter<ValueGetter>, 0,
-                                   JSFunction::NATIVE_FUN, global, NullPtr());
+    JSObject *getter =
+        NewNativeFunction(cx, DataViewObject::getter<ValueGetter>, 0, NullPtr());
     if (!getter)
         return false;
 
@@ -1991,8 +1991,8 @@ DataViewObject::initClass(JSContext *cx)
      * |new DataView(new otherWindow.ArrayBuffer())|, and install it in the
      * global for use by the DataViewObject constructor.
      */
-    RootedFunction fun(cx, NewFunction(cx, ArrayBufferObject::createDataViewForThis,
-                                       0, JSFunction::NATIVE_FUN, global, NullPtr()));
+    RootedFunction fun(cx, NewNativeFunction(cx, ArrayBufferObject::createDataViewForThis,
+                                             0, NullPtr()));
     if (!fun)
         return false;
 
