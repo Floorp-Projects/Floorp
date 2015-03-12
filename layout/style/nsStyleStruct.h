@@ -1474,6 +1474,8 @@ struct nsStylePosition {
    * or a related property, and supports CSS transforms. */
   inline bool HasTransform(const nsIFrame* aContextFrame) const;
 
+  inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
+
 private:
   static bool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);
   static bool HeightCoordDependsOnContainer(const nsStyleCoord &aCoord)
@@ -2227,7 +2229,7 @@ struct nsStyleDisplay {
   inline bool IsOriginalDisplayInlineOutside(const nsIFrame* aContextFrame) const;
   inline uint8_t GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
-  inline bool IsPositioned(const nsIFrame* aContextFrame) const;
+  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
   inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
   inline bool IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const;
 };
