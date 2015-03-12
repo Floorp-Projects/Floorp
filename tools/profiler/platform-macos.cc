@@ -183,7 +183,6 @@ class SamplerThread : public Thread {
   }
 
   static void AddActiveSampler(Sampler* sampler) {
-    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
     SamplerRegistry::AddActiveSampler(sampler);
     if (instance_ == NULL) {
       instance_ = new SamplerThread(sampler->interval());
@@ -192,7 +191,6 @@ class SamplerThread : public Thread {
   }
 
   static void RemoveActiveSampler(Sampler* sampler) {
-    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
     instance_->Join();
     //XXX: unlike v8 we need to remove the active sampler after doing the Join
     // because we drop the sampler immediately
