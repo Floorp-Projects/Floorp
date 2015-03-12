@@ -511,14 +511,14 @@ extern bool
 Generator(JSContext *cx, unsigned argc, Value *vp);
 
 extern JSFunction *
-NewFunction(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+NewFunction(ExclusiveContext *cx, JSNative native, unsigned nargs,
             JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
             gc::AllocKind allocKind = JSFunction::FinalizeKind,
             NewObjectKind newKind = GenericObject);
 
 // If proto is nullptr, Function.prototype is used instead.
 extern JSFunction *
-NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+NewFunctionWithProto(ExclusiveContext *cx, JSNative native, unsigned nargs,
                      JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
                      HandleObject proto, gc::AllocKind allocKind = JSFunction::FinalizeKind,
                      NewObjectKind newKind = GenericObject);

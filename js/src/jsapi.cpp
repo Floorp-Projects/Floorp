@@ -2176,7 +2176,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
         RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : nullptr);
         if (getter && !(attrs & JSPROP_GETTER)) {
             RootedObject global(cx, (JSObject*) &obj->global());
-            JSFunction *getobj = NewFunction(cx, NullPtr(), (Native) getter, 0,
+            JSFunction *getobj = NewFunction(cx, (Native) getter, 0,
                                              zeroFlags, global, atom);
             if (!getobj)
                 return false;
@@ -2191,7 +2191,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
             // Root just the getter, since the setter is not yet a JSObject.
             AutoRooterGetterSetter getRoot(cx, JSPROP_GETTER, &getter, nullptr);
             RootedObject global(cx, (JSObject*) &obj->global());
-            JSFunction *setobj = NewFunction(cx, NullPtr(), (Native) setter, 1,
+            JSFunction *setobj = NewFunction(cx, (Native) setter, 1,
                                              zeroFlags, global, atom);
             if (!setobj)
                 return false;
@@ -3158,7 +3158,7 @@ JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
     }
 
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, NullPtr(), atom);
+    return NewFunction(cx, native, nargs, funFlags, NullPtr(), atom);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -3173,7 +3173,7 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
 
     RootedAtom name(cx, JSID_TO_ATOM(id));
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, NullPtr(), name);
+    return NewFunction(cx, native, nargs, funFlags, NullPtr(), name);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4016,7 +4016,7 @@ CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &options,
             return false;
     }
 
-    fun.set(NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, enclosingDynamicScope,
+    fun.set(NewFunction(cx, nullptr, 0, JSFunction::INTERPRETED, enclosingDynamicScope,
                         funAtom, JSFunction::FinalizeKind, TenuredObject));
     if (!fun)
         return false;
