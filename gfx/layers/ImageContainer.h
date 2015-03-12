@@ -173,6 +173,8 @@ public:
     return nullptr;
   }
 
+  virtual bool IsValid() { return true; }
+
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
     mImplData(aImplData),
