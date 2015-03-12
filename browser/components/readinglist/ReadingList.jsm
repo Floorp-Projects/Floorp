@@ -194,6 +194,8 @@ ReadingListImpl.prototype = {
     this._invalidateIterators();
     let item = this._itemFromObject(obj);
     this._callListeners("onItemAdded", item);
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+    mm.broadcastAsyncMessage("Reader:Added", item);
     return item;
   }),
 
@@ -234,7 +236,21 @@ ReadingListImpl.prototype = {
     item.list = null;
     this._itemsByURL.delete(item.url);
     this._invalidateIterators();
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+    mm.broadcastAsyncMessage("Reader:Removed", item);
     this._callListeners("onItemDeleted", item);
+  }),
+
+  /**
+   * Find any item that matches a given URL - either the item's URL, or its
+   * resolved URL.
+   *
+   * @param {String/nsIURI} uri - URI to match against. This will be normalized.
+   */
+  getItemForURL: Task.async(function* (uri) {
+    let url = this._normalizeURI(uri).spec;
+    let [item] = yield this.iterator({url: url}, {resolvedURL: url}).items(1);
+    return item;
   }),
 
   /**
@@ -287,6 +303,22 @@ ReadingListImpl.prototype = {
 
   // A Set containing listener objects.
   _listeners: null,
+
+  /**
+   * Normalize a URI, stripping away extraneous parts we don't want to store
+   * or compare against.
+   *
+   * @param {nsIURI/String} uri - URI to normalize.
+   * @returns {nsIURI} Cloned and normalized version of the input URI.
+   */
+  _normalizeURI(uri) {
+    if (typeof uri == "string") {
+      uri = Services.io.newURI(uri, "", null);
+    }
+    uri = uri.cloneIgnoringRef();
+    uri.userPass = "";
+    return uri;
+  },
 
   /**
    * Returns the ReadingListItem represented by the given simple object.  If
@@ -349,6 +381,8 @@ ReadingListImpl.prototype = {
   },
 };
 
+let _unserializable = () => {}; // See comments in the ReadingListItem ctor.
+
 /**
  * An item in a reading list.
  *
@@ -359,6 +393,18 @@ ReadingListImpl.prototype = {
  */
 function ReadingListItem(props={}) {
   this._properties = {};
+
+  // |this._unserializable| works around a problem when sending one of these
+  // items via a message manager. If |this.list| is set, the item can't be
+  // transferred directly, so .toJSON is implicitly called and the object
+  // returned via that is sent. However, once the item is deleted and |this.list|
+  // is null, the item *can* be directly serialized - so the message handler
+  // sees the "raw" object - ie, it sees "_properties" etc.
+  // We work around this problem by *always* having an unserializable property
+  // on the object - this way the implicit .toJSON call is always made, even
+  // when |this.list| is null.
+  this._unserializable = _unserializable;
+
   this.setProperties(props, false);
 }
 
@@ -830,7 +876,7 @@ function hash(str) {
   hasher.updateFromStream(stream, -1);
   let binaryStr = hasher.finish(false);
   let hexStr =
-    [("0" + binaryStr.charCodeAt(i).toString(16)).slice(-2) for (i in hash)].
+    [("0" + binaryStr.charCodeAt(i).toString(16)).slice(-2) for (i in binaryStr)].
     join("");
   return hexStr;
 }
