@@ -543,10 +543,10 @@ void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
   if (!NS_SUCCEEDED(res))
     return;
 
-  MediaPipelineFilter::Result filter_result = MediaPipelineFilter::PASS;
-  if (filter_) {
-    filter_result = filter_->FilterRTCP(inner_data, out_len);
-    if (filter_result == MediaPipelineFilter::FAIL) {
+  // We do not filter RTCP for send pipelines, since the webrtc.org code for
+  // senders already has logic to ignore RRs that do not apply.
+  if (filter_ && direction_ == RECEIVE) {
+    if (!filter_->FilterSenderReport(inner_data, out_len)) {
       MOZ_MTLOG(ML_NOTICE, "Dropping rtcp packet");
       return;
     }
