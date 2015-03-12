@@ -782,7 +782,7 @@ CreateFunctionConstructor(JSContext *cx, JSProtoKey key)
 
     RootedObject functionCtor(cx,
       NewFunctionWithProto(cx, Function, 1, JSFunction::NATIVE_CTOR,
-                           global, HandlePropertyName(cx->names().Function),
+                           NullPtr(), HandlePropertyName(cx->names().Function),
                            functionProto, JSFunction::FinalizeKind, SingletonObject));
     if (!functionCtor)
         return nullptr;
@@ -871,7 +871,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     // confused.
     RootedFunction throwTypeError(cx,
       NewFunctionWithProto(cx, ThrowTypeError, 0, JSFunction::NATIVE_FUN,
-                           self, NullPtr(), functionProto, JSFunction::FinalizeKind,
+                           NullPtr(), NullPtr(), functionProto, JSFunction::FinalizeKind,
                            SingletonObject));
     if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
         return nullptr;
