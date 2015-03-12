@@ -29,6 +29,8 @@ var testtag_notificationbox_buttons = [
   }
 ];
 
+var NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 function testtag_notificationbox_buttonpressed(event)
 {
 }
@@ -132,6 +134,43 @@ var tests =
                                     null, 0);
 
       testtag_notification_eventCallback("removed", ntf, "removeNotification()");
+      return ntf;
+    }
+  },
+  {
+    test: function(nb, ntf) {
+      // Create a popup to be used by a menu-button.
+      var doc = nb.ownerDocument;
+      var menuPopup = doc.createElementNS(NSXUL, "menupopup");
+      var menuItem = menuPopup.appendChild(doc.createElementNS(NSXUL, "menuitem"));
+      menuItem.setAttribute("label", "Menu Item");
+      // Append a notification with a button of type 'menu-button'.
+      ntf = nb.appendNotification(
+        "Notification", "note", "happy.png",
+        nb.PRIORITY_WARNING_LOW,
+        [{
+          label: "Button",
+          type: "menu-button",
+          popup: menuPopup
+        }]
+      );
+
+      return ntf;
+    },
+    result: function(nb, ntf) {
+      testtag_notificationbox_State(nb, "append", ntf, 1);
+      testtag_notification_State(nb, ntf, "append", "Notification", "note",
+                                 "happy.png", nb.PRIORITY_WARNING_LOW);
+      var button = ntf.querySelector(".notification-button");
+      SimpleTest.ise(button.type, "menu-button", "Button type should be set");
+      var menuPopup = button.getElementsByTagNameNS(NSXUL, "menupopup");
+      SimpleTest.ise(menuPopup.length, 1, "There should be a menu attached");
+      var menuItem = menuPopup[0].firstChild;
+      SimpleTest.ise(menuItem.localName, "menuitem", "There should be a menu item");
+      SimpleTest.ise(menuItem.getAttribute("label"), "Menu Item", "Label should match");
+      // Clean up.
+      nb.removeNotification(ntf);
+
       return [1, null];
     }
   },
