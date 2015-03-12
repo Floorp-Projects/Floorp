@@ -22,25 +22,24 @@
 #include <errno.h>
 #include <libgen.h>
 #include "base/basictypes.h"
-#include "camera/CameraParameters.h"
+#include "Layers.h"
+#ifdef MOZ_WIDGET_GONK
+#include <media/mediaplayer.h>
+#include <media/MediaProfiles.h>
+#include "GrallocImages.h"
+#endif
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsThread.h"
-#include <media/MediaProfiles.h>
 #include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsAlgorithm.h"
-#include <media/mediaplayer.h>
 #include "nsPrintfCString.h"
-#include "nsIObserverService.h"
-#include "nsIVolume.h"
-#include "nsIVolumeService.h"
 #include "AutoRwLock.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkRecorderProfiles.h"
-#include "GrallocImages.h"
 #include "CameraCommon.h"
 #include "GonkCameraParameters.h"
 #include "DeviceStorageFileDescriptor.h"
@@ -71,7 +70,9 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mAutoFlashModeOverridden(false)
   , mSeparateVideoAndPreviewSizesSupported(false)
   , mDeferConfigUpdate(0)
+#ifdef MOZ_WIDGET_GONK
   , mRecorder(nullptr)
+#endif
   , mRecorderMonitor("GonkCameraControl::mRecorder.Monitor")
   , mVideoFile(nullptr)
   , mReentrantMonitor("GonkCameraControl::OnTakePicture.Monitor")
@@ -1165,7 +1166,9 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
   ReentrantMonitorAutoEnter mon(mRecorderMonitor);
 
   NS_ENSURE_TRUE(!mCurrentConfiguration.mRecorderProfile.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
+#ifdef MOZ_WIDGET_GONK
   NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
+#endif
 
   /**
    * Get the base path from device storage and append the app-specified
@@ -1212,6 +1215,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
     return rv;
   }
 
+#ifdef MOZ_WIDGET_GONK
   if (mRecorder->start() != OK) {
     DOM_CAMERA_LOGE("mRecorder->start() failed\n");
     // important: we MUST destroy the recorder if start() fails!
@@ -1222,6 +1226,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
     }
     return NS_ERROR_FAILURE;
   }
+#endif
 
   OnRecorderStateChange(CameraControlListener::kRecorderStarted);
   return NS_OK;
@@ -1255,6 +1260,7 @@ nsGonkCameraControl::StopRecordingImpl()
 
   ReentrantMonitorAutoEnter mon(mRecorderMonitor);
 
+#ifdef MOZ_WIDGET_GONK
   // nothing to do if we have no mRecorder
   if (!mRecorder) {
     return NS_OK;
@@ -1277,6 +1283,9 @@ nsGonkCameraControl::StopRecordingImpl()
 
   // notify DeviceStorage that the new video file is closed and ready
   return NS_DispatchToMainThread(new RecordingComplete(mVideoFile));
+#else
+  return NS_OK;
+#endif
 }
 
 nsresult
@@ -1697,6 +1706,7 @@ nsGonkCameraControl::SetVideoConfiguration(const Configuration& aConfig)
   return NS_OK;
 }
 
+#ifdef MOZ_WIDGET_GONK
 class GonkRecorderListener : public IMediaRecorderClient
 {
 public:
@@ -1843,6 +1853,7 @@ nsGonkCameraControl::OnRecorderEvent(int msg, int ext1, int ext2)
   // All unhandled cases wind up here
   DOM_CAMERA_LOGW("recorder-event : unhandled: msg=%d, ext1=%d, ext2=%d\n", msg, ext1, ext2);
 }
+#endif
 
 nsresult
 nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
@@ -1851,6 +1862,7 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
 {
   RETURN_IF_NO_CAMERA_HW();
 
+#ifdef MOZ_WIDGET_GONK
   // choosing a size big enough to hold the params
   const size_t SIZE = 256;
   char buffer[SIZE];
@@ -1911,6 +1923,7 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
   // recording API needs file descriptor of output file
   CHECK_SETARG_RETURN(mRecorder->setOutputFile(aFd, 0, 0), NS_ERROR_FAILURE);
   CHECK_SETARG_RETURN(mRecorder->prepare(), NS_ERROR_FAILURE);
+#endif
 
   return NS_OK;
 }
@@ -2046,6 +2059,7 @@ nsGonkCameraControl::OnRateLimitPreview(bool aLimit)
 void
 nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 {
+#ifdef MOZ_WIDGET_GONK
   nsRefPtr<Image> frame = mImageContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
 
   GrallocImage* videoImage = static_cast<GrallocImage*>(frame.get());
@@ -2058,6 +2072,7 @@ nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 
   OnNewPreviewFrame(frame, mCurrentConfiguration.mPreviewSize.width,
                     mCurrentConfiguration.mPreviewSize.height);
+#endif
 }
 
 void

@@ -5,7 +5,12 @@
 #ifndef DOM_CAMERA_GONK_RECORDER_PROFILES_H
 #define DOM_CAMERA_GONK_RECORDER_PROFILES_H
 
+#ifdef MOZ_WIDGET_GONK
 #include <media/MediaProfiles.h>
+#else
+#include "FallbackCameraPlatform.h"
+#endif
+
 #include "ICameraControl.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -109,6 +114,7 @@ public:
   static nsresult GetAll(uint32_t aCameraId,
                          nsTArray<nsRefPtr<ICameraControl::RecorderProfile>>& aProfiles);
 
+#ifdef MOZ_WIDGET_GONK
   // Configures the specified recorder using the specified profile.
   //
   // Return values:
@@ -118,6 +124,7 @@ public:
   static nsresult ConfigureRecorder(android::GonkRecorder& aRecorder,
                                     uint32_t aCameraId,
                                     const nsAString& aProfileName);
+#endif
 
 protected:
   GonkRecorderProfile(uint32_t aCameraId,
@@ -129,7 +136,9 @@ protected:
   bool GetMimeType(android::output_format aContainer, nsAString& aMimeType);
   bool IsValid() const { return mIsValid; };
 
+#ifdef MOZ_WIDGET_GONK
   nsresult ConfigureRecorder(android::GonkRecorder& aRecorder);
+#endif
   static already_AddRefed<GonkRecorderProfile> CreateProfile(uint32_t aCameraId,
                                                              int aQuality);
   static ProfileHashtable* GetProfileHashtable(uint32_t aCameraId);

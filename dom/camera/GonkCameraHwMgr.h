@@ -17,18 +17,21 @@
 #ifndef DOM_CAMERA_GONKCAMERAHWMGR_H
 #define DOM_CAMERA_GONKCAMERAHWMGR_H
 
+#include "GonkCameraControl.h"
+#include "CameraCommon.h"
+#include "GonkCameraParameters.h"
+#include "mozilla/ReentrantMonitor.h"
+
+#ifdef MOZ_WIDGET_GONK
 #include <binder/IMemory.h>
 #include <camera/Camera.h>
 #include <camera/CameraParameters.h>
 #include <utils/threads.h>
-
-#include "GonkCameraControl.h"
-#include "CameraCommon.h"
-
 #include "GonkCameraListener.h"
 #include "GonkNativeWindow.h"
-#include "GonkCameraParameters.h"
-#include "mozilla/ReentrantMonitor.h"
+#else
+#include "FallbackCameraPlatform.h"
+#endif
 
 namespace mozilla {
   class nsGonkCameraControl;
@@ -37,9 +40,18 @@ namespace mozilla {
 
 namespace android {
 
-class GonkCameraHardware : public GonkNativeWindowNewFrameCallback
-                         , public CameraListener
+class GonkCameraHardware
+#ifdef MOZ_WIDGET_GONK
+  : public GonkNativeWindowNewFrameCallback
+  , public CameraListener
+#else
+  : public nsISupports
+#endif
 {
+#ifndef MOZ_WIDGET_GONK
+  NS_DECL_ISUPPORTS
+#endif
+
 protected:
   GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId, const sp<Camera>& aCamera);
   virtual ~GonkCameraHardware();
@@ -57,6 +69,7 @@ public:
 
   virtual void OnRateLimitPreview(bool aLimit);
 
+#ifdef MOZ_WIDGET_GONK
   // derived from GonkNativeWindowNewFrameCallback
   virtual void OnNewFrame() MOZ_OVERRIDE;
 
@@ -64,6 +77,7 @@ public:
   virtual void notify(int32_t aMsgType, int32_t ext1, int32_t ext2);
   virtual void postData(int32_t aMsgType, const sp<IMemory>& aDataPtr, camera_frame_metadata_t* metadata);
   virtual void postDataTimestamp(nsecs_t aTimestamp, int32_t aMsgType, const sp<IMemory>& aDataPtr);
+#endif
 
   /**
    * The physical orientation of the camera sensor: 0, 90, 180, or 270.
@@ -103,13 +117,15 @@ public:
   virtual int      StartPreview();
   virtual void     StopPreview();
   virtual int      PushParameters(const mozilla::GonkCameraParameters& aParams);
-  virtual int      PushParameters(const CameraParameters& aParams);
   virtual nsresult PullParameters(mozilla::GonkCameraParameters& aParams);
+#ifdef MOZ_WIDGET_GONK
+  virtual int      PushParameters(const CameraParameters& aParams);
   virtual void     PullParameters(CameraParameters& aParams);
-  virtual int      StartRecording();
-  virtual int      StopRecording();
   virtual int      SetListener(const sp<GonkCameraListener>& aListener);
   virtual void     ReleaseRecordingFrame(const sp<IMemory>& aFrame);
+#endif
+  virtual int      StartRecording();
+  virtual int      StopRecording();
   virtual int      StoreMetaDataInBuffers(bool aEnabled);
 
 protected:
@@ -118,8 +134,10 @@ protected:
   uint32_t                      mNumFrames;
   sp<Camera>                    mCamera;
   mozilla::nsGonkCameraControl* mTarget;
+#ifdef MOZ_WIDGET_GONK
   sp<GonkNativeWindow>          mNativeWindow;
   sp<GonkCameraListener>        mListener;
+#endif
   int                           mRawSensorOrientation;
   int                           mSensorOrientation;
 
