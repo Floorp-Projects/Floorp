@@ -251,8 +251,7 @@ class JS_PUBLIC_API(AutoGCRooter)
         IDARRAY =      -6, /* js::AutoIdArray */
         DESCVECTOR =   -7, /* js::AutoPropDescVector */
         VALVECTOR =   -10, /* js::AutoValueVector */
-        IDVECTOR =    -11, /* js::AutoIdVector */
-        IDVALVECTOR = -12, /* js::AutoIdValueVector */
+        IDVECTOR =    -13, /* js::AutoIdVector */
         OBJVECTOR =   -14, /* js::AutoObjectVector */
         STRINGVECTOR =-15, /* js::AutoStringVector */
         SCRIPTVECTOR =-16, /* js::AutoScriptVector */

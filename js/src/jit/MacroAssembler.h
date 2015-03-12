@@ -30,7 +30,6 @@
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
-#include "vm/UnboxedObject.h"
 
 #ifdef IS_LITTLE_ENDIAN
 #define IMM32_16ADJ(X) X << 16
@@ -830,20 +829,18 @@ class MacroAssembler : public MacroAssemblerSpecific
                                     const Value &v);
     void fillSlotsWithUndefined(Address addr, Register temp, uint32_t start, uint32_t end);
     void fillSlotsWithUninitialized(Address addr, Register temp, uint32_t start, uint32_t end);
-    void initGCSlots(Register obj, Register temp, NativeObject *templateObj, bool initContents);
+    void initGCSlots(Register obj, Register temp, NativeObject *templateObj, bool initFixedSlots);
 
   public:
     void callMallocStub(size_t nbytes, Register result, Label *fail);
     void callFreeStub(Register slots);
     void createGCObject(Register result, Register temp, JSObject *templateObj,
-                        gc::InitialHeap initialHeap, Label *fail, bool initContents = true);
+                        gc::InitialHeap initialHeap, Label *fail, bool initFixedSlots = true);
 
     void newGCThing(Register result, Register temp, JSObject *templateObj,
                      gc::InitialHeap initialHeap, Label *fail);
     void initGCThing(Register obj, Register temp, JSObject *templateObj,
-                     bool initContents = true);
-
-    void initUnboxedObjectContents(Register object, UnboxedPlainObject *templateObject);
+                     bool initFixedSlots = true);
 
     void newGCString(Register result, Register temp, Label *fail);
     void newGCFatInlineString(Register result, Register temp, Label *fail);
