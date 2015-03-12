@@ -434,8 +434,7 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
                                 gc::AllocKind kind)
 {
     RootedAtom name(cx, nameArg);
-    RootedObject self(cx, this);
-    return NewFunction(cx, ctor, length, JSFunction::NATIVE_CTOR, self, name, kind);
+    return NewNativeConstructor(cx, ctor, length, name, kind);
 }
 
 static NativeObject *
@@ -597,8 +596,9 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     if (cx->global()->maybeGetIntrinsicValue(shId, funVal.address()))
         return true;
 
-    JSFunction *fun = NewFunction(cx, nullptr, nargs, JSFunction::INTERPRETED_LAZY,
-                                  holder, name, JSFunction::ExtendedFinalizeKind, SingletonObject);
+    JSFunction *fun =
+        NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
+                            holder, name, JSFunction::ExtendedFinalizeKind, SingletonObject);
     if (!fun)
         return false;
     fun->setIsSelfHostedBuiltin();
