@@ -915,10 +915,45 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#windowUnload", function() {
-    it("should disconnect from the servers via the sdk", function() {
+    var fakeWebsocket;
+
+    beforeEach(function() {
+      fakeWebsocket = store._websocket = {
+        close: sinon.stub(),
+        decline: sinon.stub()
+      };
+
+      store.setStoreState({windowId: 42});
+    });
+
+    it("should decline the connection on the websocket for incoming calls if the state is alerting", function() {
+      store.setStoreState({
+        callState: CALL_STATES.ALERTING,
+        outgoing: false
+      });
+
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeWebsocket.decline);
+    });
+
+    it("should disconnect the sdk session", function() {
       store.windowUnload();
 
       sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
+    it("should close the websocket", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeWebsocket.close);
+    });
+
+    it("should clear the call in progress for the backend", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(fakeMozLoop.calls.clearCallInProgress, 42);
     });
   });
 

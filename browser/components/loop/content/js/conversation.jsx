@@ -35,7 +35,8 @@ loop.conversation = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore),
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
@@ -49,6 +50,7 @@ loop.conversation = (function(mozL10n) {
         case "outgoing": {
           return (<CallControllerView
             dispatcher={this.props.dispatcher}
+            mozLoop={this.props.mozLoop}
           />);
         }
         case "room": {
@@ -152,17 +154,13 @@ loop.conversation = (function(mozL10n) {
     }
 
     window.addEventListener("unload", function(event) {
-      // Handle direct close of dialog box via [x] control.
-      // XXX Move to the conversation models, when we transition
-      // incoming calls to flux (bug 1088672).
-      navigator.mozLoop.calls.clearCallInProgress(windowId);
-
       dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
     React.render(<AppControllerView
       roomStore={roomStore}
       dispatcher={dispatcher}
+      mozLoop={navigator.mozLoop}
     />, document.querySelector('#main'));
 
     dispatcher.dispatch(new sharedActions.GetWindowData({
