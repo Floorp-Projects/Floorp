@@ -198,15 +198,21 @@ JS::ObjectOpResult::failGetterOnly()
 }
 
 JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantDelete()
+{
+    return fail(JSMSG_CANT_DELETE);
+}
+
+JS_PUBLIC_API(bool)
 JS::ObjectOpResult::failCantSetInterposed()
 {
     return fail(JSMSG_CANT_SET_INTERPOSED);
 }
 
 JS_PUBLIC_API(bool)
-JS::ObjectOpResult::failCantDelete()
+JS::ObjectOpResult::failCantDefineWindowElement()
 {
-    return fail(JSMSG_CANT_DELETE);
+    return fail(JSMSG_CANT_DEFINE_WINDOW_ELEMENT);
 }
 
 JS_PUBLIC_API(bool)

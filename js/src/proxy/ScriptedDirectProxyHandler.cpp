@@ -592,9 +592,9 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // FIXME - bug 1132522: Step 12 is not implemented yet.
-    // if (!ToBoolean(trapResult))
-    //     return result.fail(JSMSG_PROXY_DEFINE_RETURNED_FALSE);
+    // step 12
+    if (!ToBoolean(trapResult))
+        return result.fail(JSMSG_PROXY_DEFINE_RETURNED_FALSE);
 
     // step 13-14
     Rooted<PropertyDescriptor> targetDesc(cx);
@@ -925,33 +925,29 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
     return true;
 }
 
-// ES6 (22 May, 2014) 9.5.9 Proxy.[[SetP]](P, V, Receiver)
+// ES6 draft rev 32 (2015 Feb 2) 9.5.9 Proxy.[[Set]](P, V, Receiver)
 bool
 ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
                                 HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
 {
-    // step 2
+    // step 2-3 (Steps 1 and 4 are irrelevant assertions.)
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-
-    // step 3
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    // step 4
+    // step 5-7
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-
-    // step 5-6
     RootedValue trap(cx);
     if (!GetProperty(cx, handler, handler, cx->names().set, &trap))
         return false;
 
-    // step 7
+    // step 8
     if (trap.isUndefined())
         return DirectProxyHandler::set(cx, proxy, receiver, id, vp, result);
 
-    // step 8,10
+    // step 9-10
     RootedValue value(cx);
     if (!IdToStringOrSymbol(cx, id, &value))
         return false;
@@ -965,42 +961,36 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // FIXME - bug 1132522: Step 9 is not implemented yet.
-    // if (!ToBoolean(trapResult))
-    //     return result.fail(JSMSG_PROXY_SET_RETURNED_FALSE);
-    bool success = ToBoolean(trapResult);
+    // step 11
+    if (!ToBoolean(trapResult))
+        return result.fail(JSMSG_PROXY_SET_RETURNED_FALSE);
 
-    if (success) {
-        // step 12-13
-        Rooted<PropertyDescriptor> desc(cx);
-        if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
-            return false;
+    // step 12-13
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, target, id, &desc))
+        return false;
 
-        // step 14
-        if (desc.object()) {
-            if (IsDataDescriptor(desc) && desc.isPermanent() && desc.isReadonly()) {
-                bool same;
-                if (!SameValue(cx, vp, desc.value(), &same))
-                    return false;
-                if (!same) {
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_NW_NC);
-                    return false;
-                }
-            }
-
-            if (IsAccessorDescriptor(desc) && desc.isPermanent() && !desc.hasSetterObject()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_WO_SETTER);
+    // step 14
+    if (desc.object()) {
+        if (IsDataDescriptor(desc) && desc.isPermanent() && desc.isReadonly()) {
+            bool same;
+            if (!SameValue(cx, vp, desc.value(), &same))
+                return false;
+            if (!same) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_NW_NC);
                 return false;
             }
         }
+
+        if (IsAccessorDescriptor(desc) && desc.isPermanent() && !desc.hasSetterObject()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_WO_SETTER);
+            return false;
+        }
     }
 
-    // step 11, 15
-    // XXX FIXME - This use of vp is wrong. Bug 1132522 can clean it up.
-    vp.setBoolean(success);
+    // step 15
     return result.succeed();
 }
-
 
 // ES6 (22 May, 2014) 9.5.13 Proxy.[[Call]]
 bool

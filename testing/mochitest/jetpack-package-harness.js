@@ -134,11 +134,6 @@ function testInit() {
         fileNames = skipTests(fileNames, config.startAt, config.endAt);
       }
 
-      if (config.totalChunks && config.thisChunk) {
-        fileNames = chunkifyTests(fileNames, config.totalChunks,
-                                  config.thisChunk, config.chunkByDir);
-      }
-
       // The SDK assumes it is being run from resource URIs
       let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
       let realPath = chromeReg.convertChromeURL(Services.io.newURI(TEST_PACKAGE, null, null));

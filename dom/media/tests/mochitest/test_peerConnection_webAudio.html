@@ -1,0 +1,117 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1081819",
+  title: "WebAudio on both input and output side of peerconnection"
+});
+
+// This tests WebAudio as input to a PeerConnection and a PeerConnection as
+// input to WebAudio. This is done by piping a 700Hz oscillator through an
+// analyser on the input side, the PeerConnection, and an analyser on the
+// output side. We then sanity check the audio by comparing the frequency domain
+// data from both analysers.
+
+runNetworkTest(function() {
+  var test = new PeerConnectionTest();
+
+  var audioContext = new AudioContext();
+  var inputAnalyser;
+  var outputAnalyser;
+
+  test.setMediaConstraints([{audio: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function PC_LOCAL_WEBAUDIO_SOURCE(test) {
+      var oscillator = audioContext.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 700;
+      oscillator.start();
+      inputAnalyser = audioContext.createAnalyser();
+      var dest = audioContext.createMediaStreamDestination();
+
+      oscillator.connect(inputAnalyser);
+      inputAnalyser.connect(dest);
+      test.pcLocal.attachMedia(dest.stream, 'audio', 'local');
+
+      return Promise.resolve();
+    }
+  ]);
+  test.chain.insertBefore("PC_REMOTE_SETUP_ADDSTREAM_HANDLER", [
+    function PC_REMOTE_REPLACE_ATTACHMEDIA(test) {
+      var realAttachMedia = test.pcRemote.attachMedia.bind(test.pcRemote);
+      test.pcRemote.attachMedia = function(stream, type, side) {
+        var source = audioContext.createMediaStreamSource(stream);
+        outputAnalyser = audioContext.createAnalyser();
+        var dest = audioContext.createMediaStreamDestination();
+
+        source.connect(outputAnalyser);
+        outputAnalyser.connect(dest);
+        realAttachMedia(dest.stream, type, side);
+      };
+      return Promise.resolve();
+  }]);
+  test.chain.append([
+    function WAIT_FOR_CLEAN_AUDIO(test) {
+      // We've seen completely silent output with e10s, suggesting that the
+      // machine is overloaded. Here we wait for the media element on the
+      // output side to progress a bit after all previous steps finish to
+      // ensure we have healthy data to check.
+      var wait = function(elem, startTime, resolve) {
+        elem.ontimeupdate = function(ev) {
+          info("Waiting... current: " + elem.currentTime + ", start: " + startTime);
+          if (elem.currentTime - startTime < 0.5) {
+            return;
+          }
+          elem.ontimeupdate = null;
+          resolve();
+        }
+      };
+      return Promise.all(test.pcRemote.mediaCheckers.map(function(checker) {
+        var elem = checker.element;
+        var startTime = elem.currentTime;
+        return new Promise((y, n) => wait(elem, startTime, y));
+      }));
+    },
+    function CHECK_AUDIO_FLOW(test) {
+      // This is for sanity check only. We'll deem that the streams are working
+      // if the global maxima in the frequency domain for both the input and
+      // the output are within 10 (out of 1024) steps of each other.
+
+      var inputData = new Uint8Array(inputAnalyser.frequencyBinCount);
+      inputAnalyser.getByteFrequencyData(inputData);
+      var outputData = new Uint8Array(outputAnalyser.frequencyBinCount);
+      outputAnalyser.getByteFrequencyData(outputData);
+      is(inputData.length, outputData.length, "Equally sized datasets");
+
+      var maxWithIndex = function(a, b, i) {
+        if (b >= a.value) {
+          return { value: b, index: i };
+        } else {
+          return a;
+        }
+      };
+      var initialValue = { value: -1, index: -1 };
+      var inputMax = inputData.reduce(maxWithIndex, initialValue);
+      var outputMax = outputData.reduce(maxWithIndex, initialValue);
+
+      // Mild paranoia
+      isnot(inputMax, 0, "Input should have data");
+      isnot(outputMax, 0, "Output should have data");
+
+      ok(Math.abs(inputMax.index - outputMax.index) < 10,
+         "Input maxima " + inputMax.value + " at index " + inputMax.index +
+         " should be within 10 steps of Output maxima " + outputMax.value +
+         " at index " + outputMax.index);
+      return Promise.resolve();
+    }]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>

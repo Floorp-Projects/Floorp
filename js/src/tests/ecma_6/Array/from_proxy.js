@@ -7,7 +7,7 @@ function LoggingProxy(target) {
     var h = {
         defineProperty: function (t, id) {
             log.push("define", id);
-            return undefined;
+            return true;
         },
         has: function (t, id) {
             log.push("has", id);
@@ -20,6 +20,7 @@ function LoggingProxy(target) {
         set: function (t, id, v) {
             log.push("set", id);
             t[id] = v;
+            return true;
         }
     };
     return new Proxy(target || [], h);

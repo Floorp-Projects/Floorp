@@ -1971,11 +1971,13 @@ public:
         mVsyncThread = new base::Thread("WindowsVsyncThread");
         const double rate = 1000 / 60.0;
         mSoftwareVsyncRate = TimeDuration::FromMilliseconds(rate);
+        MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start Windows vsync thread");
       }
 
       virtual void EnableVsync() MOZ_OVERRIDE
       {
         MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(mVsyncThread->IsRunning());
         { // scope lock
           MonitorAutoLock lock(mVsyncEnabledLock);
           if (mVsyncEnabled) {
@@ -1984,7 +1986,6 @@ public:
           mVsyncEnabled = true;
         }
 
-        MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start Windows vsync thread");
         CancelableTask* vsyncStart = NewRunnableMethod(this,
             &D3DVsyncDisplay::VBlankLoop);
         mVsyncThread->message_loop()->PostTask(FROM_HERE, vsyncStart);
@@ -1993,15 +1994,12 @@ public:
       virtual void DisableVsync() MOZ_OVERRIDE
       {
         MOZ_ASSERT(NS_IsMainThread());
-        { // scope lock
-          MonitorAutoLock lock(mVsyncEnabledLock);
-          if (!mVsyncEnabled) {
-            return;
-          }
-          mVsyncEnabled = false;
+        MOZ_ASSERT(mVsyncThread->IsRunning());
+        MonitorAutoLock lock(mVsyncEnabledLock);
+        if (!mVsyncEnabled) {
+          return;
         }
-
-        mVsyncThread->Stop();
+        mVsyncEnabled = false;
       }
 
       virtual bool IsVsyncEnabled() MOZ_OVERRIDE
@@ -2079,6 +2077,7 @@ public:
       {
         MOZ_ASSERT(NS_IsMainThread());
         DisableVsync();
+        mVsyncThread->Stop();
         delete mVsyncThread;
       }
 

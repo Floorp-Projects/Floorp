@@ -25,17 +25,13 @@ class OwningRequestOrUSVString;
 class Request;
 class RequestOrUSVString;
 class Response;
-template<typename T> class Optional;
 
 namespace cache {
 
 class PCacheQueryParams;
-class PCacheReadStream;
 class PCacheReadStreamOrVoid;
 class PCacheRequest;
-class PCacheRequestOrVoid;
 class PCacheResponse;
-class PCacheStreamControlChild;
 
 class TypeUtils
 {

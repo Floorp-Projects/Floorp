@@ -20,11 +20,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-struct StreamHolder
-{
-  nsCOMPtr<nsIOutputStream> mValue;
-};
-
 struct SavedRequest
 {
   SavedRequest() : mHasBodyId(false) { mValue.body() = void_t(); }
