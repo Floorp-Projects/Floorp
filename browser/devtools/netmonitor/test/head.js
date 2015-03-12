@@ -139,7 +139,6 @@ function initNetMonitor(aUrl, aWindow) {
     let tab = yield addTab(aUrl);
     info("Net tab added successfully: " + aUrl);
 
-    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
     let target = TargetFactory.forTab(tab);
 
     yield target.makeRemote();
@@ -151,6 +150,7 @@ function initNetMonitor(aUrl, aWindow) {
     let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
     info("Netork monitor pane shown successfully.");
 
+    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
     let monitor = toolbox.getCurrentPanel();
     return [tab, debuggee, monitor];
   });
