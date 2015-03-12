@@ -777,19 +777,16 @@ ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 static JSObject *
 CreateFunctionConstructor(JSContext *cx, JSProtoKey key)
 {
-    Rooted<GlobalObject*> self(cx, cx->global());
-    RootedObject functionProto(cx, &self->getPrototype(JSProto_Function).toObject());
+    Rooted<GlobalObject*> global(cx, cx->global());
+    RootedObject functionProto(cx, &global->getPrototype(JSProto_Function).toObject());
 
-    RootedObject ctor(cx, NewObjectWithGivenProto(cx, &JSFunction::class_, functionProto,
-                                                  self, SingletonObject));
-    if (!ctor)
-        return nullptr;
-    RootedObject functionCtor(cx, NewFunction(cx, ctor, Function, 1, JSFunction::NATIVE_CTOR, self,
-                                              HandlePropertyName(cx->names().Function)));
+    RootedObject functionCtor(cx,
+      NewFunctionWithProto(cx, NullPtr(), Function, 1, JSFunction::NATIVE_CTOR,
+                           global, HandlePropertyName(cx->names().Function),
+                           functionProto, JSFunction::FinalizeKind, SingletonObject));
     if (!functionCtor)
         return nullptr;
 
-    MOZ_ASSERT(ctor == functionCtor);
     return functionCtor;
 
 }
@@ -800,26 +797,19 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     Rooted<GlobalObject*> self(cx, cx->global());
 
     RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
-    JSObject *functionProto_ = NewObjectWithGivenProto(cx, &JSFunction::class_,
-                                                       objectProto, self, SingletonObject);
-    if (!functionProto_)
-        return nullptr;
-
-    RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
-
     /*
      * Bizarrely, |Function.prototype| must be an interpreted function, so
      * give it the guts to be one.
      */
-    {
-        JSObject *proto = NewFunction(cx, functionProto, nullptr, 0, JSFunction::INTERPRETED,
-                                      self, js::NullPtr());
-        if (!proto)
-            return nullptr;
+    JSObject *functionProto_ =
+        NewFunctionWithProto(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
+                             self, NullPtr(), objectProto, JSFunction::FinalizeKind,
+                             SingletonObject);
+    if (!functionProto_)
+        return nullptr;
 
-        MOZ_ASSERT(proto == functionProto);
-        functionProto->setIsFunctionPrototype();
-    }
+    RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
+    functionProto->setIsFunctionPrototype();
 
     const char *rawSource = "() {\n}";
     size_t sourceLen = strlen(rawSource);
@@ -874,13 +864,15 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     // spec also uses this for "arguments" and "caller" on various functions,
     // but we're experimenting with implementing them using accessors on
     // |Function.prototype| right now.)
-    RootedObject tte(cx, NewObjectWithGivenProto(cx, &JSFunction::class_, functionProto, self,
-                                                 SingletonObject));
-    if (!tte)
-        return nullptr;
-
-    RootedFunction throwTypeError(cx, NewFunction(cx, tte, ThrowTypeError, 0,
-                                                  JSFunction::NATIVE_FUN, self, js::NullPtr()));
+    //
+    // Note that we can't use NewFunction here, even though we want the normal
+    // Function.prototype for our proto, because we're still in the middle of
+    // creating that as far as the world is concerned, so things will get all
+    // confused.
+    RootedFunction throwTypeError(cx,
+      NewFunctionWithProto(cx, NullPtr(), ThrowTypeError, 0, JSFunction::NATIVE_FUN,
+                           self, NullPtr(), functionProto, JSFunction::FinalizeKind,
+                           SingletonObject));
     if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
         return nullptr;
 
