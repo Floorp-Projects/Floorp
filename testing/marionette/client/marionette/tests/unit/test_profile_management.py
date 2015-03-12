@@ -56,8 +56,3 @@ class TestLog(MarionetteTestCase):
         # A "hard" restart is still possible (i.e., our instance is still able
         # to kill the browser).
         self.marionette.restart()
-
-        # The "hard" restart blows away the pref we set.
-        self.assertRaisesRegexp(JavascriptException, "Error getting pref",
-                                self.marionette.execute_script,
-                                "return SpecialPowers.getBoolPref('marionette.test.restart');")
