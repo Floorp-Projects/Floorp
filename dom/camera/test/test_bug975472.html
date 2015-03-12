@@ -12,237 +12,170 @@
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
-const Cr = Components.results;
+var suite = new CameraTestSuite();
 
-var whichCamera = navigator.mozCameras.getListOfCameras()[0];
-var config = {
-  mode: 'picture',
-  recorderProfile: 'high',
-  previewSize: {
-    width: 320,
-    height: 240
-  }
-};
-var options = {
-  rotation: 0,
-  position: {
-    latitude: 43.645687,
-    longitude: -79.393661
-  },
-  dateTime: Date.now()
-};
-
-function onError(e) {
-  ok(false, "Error " + e);
-}
-function next() {
-  Camera.nextTest();
+function cameraRelease(p) {
+  return suite.camera.release();
 }
 
-// The array of tests
-var tests = [
-  {
-    key: "release-after-release",
-    func: function testAutoFocus(camera) {
-      function onSuccess(success) {
-        ok(true, "release() succeeded");
-        next();
-      }
-      function onError(error) {
-        ok(false, "release() failed with: " + error);
-      }
-      camera.release().then(onSuccess, onError);
-    }
-  },
-  {
-    key: "set-picture-size-after-release",
-    func: function testSetPictureSize(camera) {
-      try {
-        camera.setPictureSize({ width: 0, height: 0 });
-      } catch(e) {
-        ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
-          "setPictureSize() failed with: " + e.name);
-        next();
-      }
-    }
-  },
-  {
-    key: "set-thumbnail-size-after-release",
-    func: function testSetThumbnailSize(camera) {
-      try {
-        camera.setThumbnailSize({ width: 0, height: 0 });
-      } catch(e) {
-        ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
-          "setThumbnailSize() failed with: " + e.name);
-        next();
-      }
-    }
-  },
-  {
-    key: "get-sensor-angle-after-release",
-    func: function testGetSensorAngle(camera) {
-      ok(camera.sensorAngle == 0, "camera.sensorAngle = " + camera.sensorAngle);
-      next();
-    }
-  },
-  {
-    key: "resume-preview-after-release",
-    func: function testResumePreview(camera) {
-      try {
-        camera.resumePreview();
-      } catch(e) {
-        ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
-          "resumePreview() failed with: " + e.name);
-        next();
-      }
-    }
-  },
-  {
-    key: "auto-focus-after-release",
-    func: function testAutoFocus(camera) {
-      function onSuccess(success) {
-        ok(false, "autoFocus() succeeded incorrectly");
-      }
-      function onError(error) {
-        ok(error.name === "NS_ERROR_NOT_AVAILABLE",
-          "autoFocus() failed with: " + error.name);
-        next();
-      }
-      camera.autoFocus().then(onSuccess, onError);
-    }
-  },
-  {
-    key: "take-picture-after-release",
-    func: function testTakePicture(camera) {
-      function onSuccess(picture) {
-        ok(false, "takePicture() succeeded incorrectly");
-      }
-      function onError(error) {
-        ok(error.name === "NS_ERROR_NOT_AVAILABLE",
-          "takePicture() failed with: " + error.name);
-        next();
-      }
-      camera.takePicture(null).then(onSuccess, onError);
-    }
-  },
-  {
-    key: "start-recording-after-release",
-    func: function testStartRecording(camera) {
-      function onSuccess(picture) {
-        ok(false, "startRecording() process succeeded incorrectly");
-      }
-      function onError(error) {
-        ok(error.name === "NS_ERROR_NOT_AVAILABLE",
-          "startRecording() failed with: " + error.name);
-        next();
-      }
-      var recordingOptions = {
-        profile: 'high',
-        rotation: 0
-      };
-      camera.startRecording(recordingOptions,
-                            navigator.getDeviceStorage('videos'),
-                            'bug975472.mp4').then(onSuccess, onError);
-    }
-  },
-  {
-    key: "stop-recording-after-release",
-    func: function testStopRecording(camera) {
-      try {
-        camera.stopRecording();
-      } catch(e) {
-        ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
-          "stopRecording() failed with: " + e.name);
-        next();
-      }
-    }
-  },
-  {
-    key: "set-configuration-after-release",
-    func: function testSetConfiguration(camera) {
-      function onSuccess(picture) {
-        ok(false, "setConfiguration() process succeeded incorrectly");
-      }
-      function onError(error) {
-        ok(error.name === "NS_ERROR_NOT_AVAILABLE",
-          "setConfiguration() failed with: " + error.name);
-        next();
-      }
-      camera.setConfiguration(config).then(onSuccess, onError);
-    }
-  },
-];
-
-var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
-    yield tests[i];
-  }
-}();
-
-var Camera = {
-  cameraObj: null,
-  _otherPictureSize: null,
-  get viewfinder() {
-    return document.getElementById('viewfinder');
-  },
-  onCameraReady: function () {
-    Camera.nextTest = function() {
-      try {
-        var t = testGenerator.next();
-        info("test: " + t.key);
-        t.func(Camera.cameraObj);
-      } catch(e) {
-        if (e instanceof StopIteration) {
-          SimpleTest.finish();
-        } else {
-          throw e;
-        }
-      }
-    };
-    // Release the camera hardware, and call all of the asynchronous methods
-    // to make sure they properly handle being in this state.
-    Camera.cameraObj.release();
-    next();
-  },
-  release: function release() {
-    cameraObj = null;
-  },
-  start: function run_test() {
-    function onSuccess(d) {
-      var camera = d.camera;
-      Camera.cameraObj = camera;
-      var onPreviewStateChange = function(e) {
-        if (e.newState === 'started') {
-          info("viewfinder is ready and playing");
-          Camera.cameraObj.removeEventListener('previewstatechange', onPreviewStateChange);
-          Camera.onCameraReady();
-        }
-      };
-      camera.addEventListener('previewstatechange', onPreviewStateChange);
-      Camera.viewfinder.mozSrcObject = camera;
-      Camera.viewfinder.play();
-      ok(camera.capabilities.pictureSizes.length > 0,
-        "capabilities.pictureSizes.length = " +
-        camera.capabilities.pictureSizes.length);
-      Camera._otherPictureSize = camera.capabilities.pictureSizes.slice(-1)[0];
-      camera.setPictureSize(camera.capabilities.pictureSizes[0]);
-      options.pictureSize = Camera._otherPictureSize;
-      options.fileFormat = camera.capabilities.fileFormats[0];
-      info("getCamera callback, setting pictureSize = " + options.pictureSize.toSource());
-    };
-    navigator.mozCameras.getCamera(whichCamera, config).then(onSuccess, onError);
-  }
-}
-
-SimpleTest.waitForExplicitFinish();
-
-window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
-  Camera.cameraObj.release();
-  Camera.cameraObj = null;
+suite.test('release-after-release', function() {
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(cameraRelease, suite.rejectRelease)
+    .catch(suite.rejectRelease);
 });
 
-Camera.start();
+suite.test('set-picture-size-after-release', function() {
+  function setPictureSize(p) {
+    try {
+      suite.camera.setPictureSize({ width: 0, height: 0 });
+      ok(false, "SetPictureSize() should have failed");
+    } catch(e) {
+      ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
+        "setPictureSize() failed with: " + e.name);
+    }
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(setPictureSize, suite.rejectRelease);
+});
+
+suite.test('set-thumbnail-size-after-release', function() {
+  function setThumbnailSize(p) {
+    try {
+      suite.camera.setThumbnailSize({ width: 0, height: 0 });
+      ok(false, "SetThumbnailSize() should have failed");
+    } catch(e) {
+      ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
+        "setThumbnailSize() failed with: " + e.name);
+    }
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(setThumbnailSize, suite.rejectRelease);
+});
+
+suite.test('get-sensor-angle-after-release', function() {
+  function getSensorAngle(p) {
+    ok(suite.camera.sensorAngle == 0, "camera.sensorAngle = " + suite.camera.sensorAngle);
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(getSensorAngle, suite.rejectRelease);
+});
+
+suite.test('resume-preview-after-release', function() {
+  function resumePreview(p) {
+    try {
+      suite.camera.resumePreview();
+      ok(false, "resumePreview() should have failed");
+    } catch(e) {
+      ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
+        "resumePreview() failed with: " + e.name);
+    }
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(resumePreview, suite.rejectRelease);
+});
+
+suite.test('auto-focus-after-release', function() {
+  function autoFocus(p) {
+    return suite.camera.autoFocus();
+  }
+
+  function rejectAutoFocus(error) {
+    ok(error.name === "NS_ERROR_NOT_AVAILABLE",
+      "autoFocus() failed with: " + error.name);
+    return Promise.resolve();
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(autoFocus, suite.rejectRelease)
+    .then(suite.expectedRejectAutoFocus, rejectAutoFocus);
+});
+
+suite.test('take-picture-after-release', function() {
+  function takePicture(p) {
+    return suite.camera.takePicture(null);
+  }
+
+  function rejectTakePicture(error) {
+    ok(error.name === "NS_ERROR_NOT_AVAILABLE",
+      "takePicture() failed with: " + error.name);
+    return Promise.resolve();
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(takePicture, suite.rejectRelease)
+    .then(suite.expectedRejectTakePicture, rejectTakePicture);
+});
+
+suite.test('start-recording-after-release', function() {
+  function startRecording(p) {
+    return suite.camera.startRecording(
+      {
+        profile: 'high',
+        rotation: 0
+      },
+      navigator.getDeviceStorage('videos'),
+      'bug975472.mp4'
+    );
+  }
+
+  function rejectStartRecording(error) {
+    ok(error.name === "NS_ERROR_NOT_AVAILABLE",
+      "takePicture() failed with: " + error.name);
+    return Promise.resolve();
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(startRecording, suite.rejectRelease)
+    .then(suite.expectedRejectStartRecording, rejectStartRecording);
+});
+
+suite.test('stop-recording-after-release', function() {
+  function stopRecording(p) {
+    try {
+      suite.camera.stopRecording();
+      ok(false, "stopRecording() should have failed");
+    } catch(e) {
+      ok(e.result === SpecialPowers.Cr.NS_ERROR_NOT_AVAILABLE,
+        "stopRecording() failed with: " + e.name);
+    }
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(stopRecording, suite.rejectRelease);
+});
+
+suite.test('set-configuration-after-release', function() {
+  function configure(p) {
+    return suite.camera.setConfiguration(null);
+  }
+
+  function rejectConfigure(error) {
+    ok(error.name === "NS_ERROR_NOT_AVAILABLE",
+      "takePicture() failed with: " + error.name);
+    return Promise.resolve();
+  }
+
+  return suite.getCamera()
+    .then(cameraRelease, suite.rejectGetCamera)
+    .then(configure, suite.rejectRelease)
+    .then(suite.expectedRejectConfigure, rejectConfigure);
+});
+
+suite.setup()
+  .then(suite.run);
 
 </script>
 </body>

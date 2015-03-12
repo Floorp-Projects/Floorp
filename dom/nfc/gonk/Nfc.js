@@ -91,6 +91,14 @@ const NfcRequestType = {
   TRANSCEIVE: "transceive"
 };
 
+const CommandMsgTable = {};
+CommandMsgTable["NFC:ChangeRFState"] = NfcRequestType.CHANGE_RF_STATE;
+CommandMsgTable["NFC:ReadNDEF"] = NfcRequestType.READ_NDEF;
+CommandMsgTable["NFC:WriteNDEF"] = NfcRequestType.WRITE_NDEF;
+CommandMsgTable["NFC:MakeReadOnly"] = NfcRequestType.MAKE_READ_ONLY;
+CommandMsgTable["NFC:Format"] = NfcRequestType.FORMAT;
+CommandMsgTable["NFC:Transceive"] = NfcRequestType.TRANSCEIVE;
+
 // Should be consistent with NfcResponseType defined in NfcOptions.webidl.
 const NfcResponseType = {
   CHANGE_RF_STATE_RSP: "changeRFStateRsp",
@@ -398,6 +406,20 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:CallDefaultLostHandler":
           this.callDefaultLostHandler(message.data);
           return null;
+        case "NFC:SendFile":
+          // Chrome process is the arbitrator / mediator between
+          // system app (content process) that issued nfc 'sendFile' operation
+          // and system app that handles the system message :
+          // 'nfc-manager-send-file'. System app subsequently handover's
+          // the data to alternate carrier's (BT / WiFi) 'sendFile' interface.
+
+          // Notify system app to initiate BT send file operation
+          let sysMsg = new NfcSendFileSysMsg(message.data.requestId,
+                                             message.data.sessionToken,
+                                             message.data.blob);
+          gSystemMessenger.broadcastMessage("nfc-manager-send-file",
+                                            sysMsg);
+          return null;
         default:
           return this.nfc.receiveMessage(message);
       }
@@ -671,52 +693,18 @@ Nfc.prototype = {
         break;
     }
 
-    if (["NFC:ChangeRFState",
-         "NFC:SendFile"].indexOf(message.name) == -1) {
+    if (message.name != "NFC:ChangeRFState") {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
 
-    switch (message.name) {
-      case "NFC:ChangeRFState":
-        this.sendToNfcService(NfcRequestType.CHANGE_RF_STATE, message.data);
-        break;
-      case "NFC:ReadNDEF":
-        this.sendToNfcService(NfcRequestType.READ_NDEF, message.data);
-        break;
-      case "NFC:WriteNDEF":
-        message.data.isP2P = SessionHelper.isP2PSession(message.data.sessionId);
-        this.sendToNfcService(NfcRequestType.WRITE_NDEF, message.data);
-        break;
-      case "NFC:MakeReadOnly":
-        this.sendToNfcService(NfcRequestType.MAKE_READ_ONLY, message.data);
-        break;
-      case "NFC:Format":
-        this.sendToNfcService(NfcRequestType.FORMAT, message.data);
-        break;
-      case "NFC:Transceive":
-        this.sendToNfcService(NfcRequestType.TRANSCEIVE, message.data);
-        break;
-      case "NFC:SendFile":
-        // Chrome process is the arbitrator / mediator between
-        // system app (content process) that issued nfc 'sendFile' operation
-        // and system app that handles the system message :
-        // 'nfc-manager-send-file'. System app subsequently handover's
-        // the data to alternate carrier's (BT / WiFi) 'sendFile' interface.
-
-        // Notify system app to initiate BT send file operation
-        let sysMsg = new NfcSendFileSysMsg(message.data.requestId,
-                                           message.data.sessionToken,
-                                           message.data.blob);
-        gSystemMessenger.broadcastMessage("nfc-manager-send-file",
-                                          sysMsg);
-        break;
-      default:
-        debug("UnSupported : Message Name " + message.name);
-        return null;
+    let command = CommandMsgTable[message.name];
+    if (!command) {
+      debug("Unknown message: " + message.name);
+      return null;
     }
     this.targetsByRequestId[message.data.requestId] = message.target;
-
+    this.sendToNfcService(command, message.data);
     return null;
   },
 

@@ -119,7 +119,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(39e1b25b-5063-449e-b9e8-5514cdca9c3a)]
+[scriptable, uuid(9cf841c9-0347-4564-99e5-18c0f74eca4d)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -142,6 +142,8 @@ interface nsINfcContentHelper : nsISupports
    * @param records
    *        NDEF records to be written
    *
+   * @param isP2P
+   *        If this write is for P2P.
    * @param sessionToken
    *        Current token
    *
@@ -149,6 +151,7 @@ interface nsINfcContentHelper : nsISupports
    *        Called when request is finished
    */
   void writeNDEF(in nsIVariant records,
+                 in boolean isP2P,
                  in DOMString sessionToken,
                  in nsINfcRequestCallback callback);
 
