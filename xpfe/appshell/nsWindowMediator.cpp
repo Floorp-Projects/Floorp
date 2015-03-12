@@ -221,15 +221,14 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_STATE(mReady);
 
-  nsAppShellWindowEnumerator *enumerator;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator;
   if (aFrontToBack)
     enumerator = new nsASDOMWindowFrontToBackEnumerator(aWindowType, *this);
   else
     enumerator = new nsASDOMWindowBackToFrontEnumerator(aWindowType, *this);
-  if (enumerator)
-    return CallQueryInterface(enumerator, _retval);
 
-  return NS_ERROR_OUT_OF_MEMORY;
+  enumerator.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -241,15 +240,14 @@ nsWindowMediator::GetZOrderXULWindowEnumerator(
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_STATE(mReady);
 
-  nsAppShellWindowEnumerator *enumerator;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator;
   if (aFrontToBack)
     enumerator = new nsASXULWindowFrontToBackEnumerator(aWindowType, *this);
   else
     enumerator = new nsASXULWindowBackToFrontEnumerator(aWindowType, *this);
-  if (enumerator)
-    return CallQueryInterface(enumerator, _retval);
 
-  return NS_ERROR_OUT_OF_MEMORY;
+  enumerator.forget(_retval);
+  return NS_OK;
 }
 
 int32_t

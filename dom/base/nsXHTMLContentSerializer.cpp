@@ -40,14 +40,12 @@ static const int32_t kLongLineLen = 128;
 
 #define kXMLNS "xmlns"
 
-nsresult NS_NewXHTMLContentSerializer(nsIContentSerializer** aSerializer)
+nsresult
+NS_NewXHTMLContentSerializer(nsIContentSerializer** aSerializer)
 {
-  nsXHTMLContentSerializer* it = new nsXHTMLContentSerializer();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return CallQueryInterface(it, aSerializer);
+  nsRefPtr<nsXHTMLContentSerializer> it = new nsXHTMLContentSerializer();
+  it.forget(aSerializer);
+  return NS_OK;
 }
 
 nsXHTMLContentSerializer::nsXHTMLContentSerializer()

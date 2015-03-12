@@ -40,14 +40,12 @@
 
 using namespace mozilla::dom;
 
-nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
+nsresult
+NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
 {
-  nsHTMLContentSerializer* it = new nsHTMLContentSerializer();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return CallQueryInterface(it, aSerializer);
+  nsRefPtr<nsHTMLContentSerializer> it = new nsHTMLContentSerializer();
+  it.forget(aSerializer);
+  return NS_OK;
 }
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
