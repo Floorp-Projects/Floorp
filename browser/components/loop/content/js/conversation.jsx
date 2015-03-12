@@ -16,7 +16,6 @@ loop.conversation = (function(mozL10n) {
   var sharedModels = loop.shared.models;
   var sharedActions = loop.shared.actions;
 
-  var IncomingConversationView = loop.conversationViews.IncomingConversationView;
   var CallControllerView = loop.conversationViews.CallControllerView;
   var CallIdentifierView = loop.conversationViews.CallIdentifierView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
