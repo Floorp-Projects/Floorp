@@ -738,6 +738,11 @@ class MDefinition : public MNode
     // be observed, and thus they should not flow in any computation.
     void optimizeOutAllUses(TempAllocator &alloc);
 
+    // Replace the current instruction by a dominating instruction |dom| in all
+    // instruction, but keep the current instruction for resume point and
+    // instruction which are recovered on bailouts.
+    void replaceAllLiveUsesWith(MDefinition *dom);
+
     // Mark this instruction as having replaced all uses of ins, as during GVN,
     // returning false if the replacement should not be performed. For use when
     // GVN eliminates instructions which are not equivalent to one another.
