@@ -568,6 +568,8 @@ inline bool
 IsInternalFunctionObject(JSObject *funobj)
 {
     JSFunction *fun = &funobj->as<JSFunction>();
+    MOZ_ASSERT_IF(fun->isLambda(),
+                  fun->isInterpreted() || fun->isAsmJSNative());
     return fun->isLambda() && !funobj->getParent();
 }
 
