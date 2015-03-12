@@ -149,6 +149,7 @@ struct JSCompartment
     bool                         isSystem;
     bool                         isSelfHosting;
     bool                         marked;
+    bool                         warnedAboutNoSuchMethod;
 
     // A null add-on ID means that the compartment is not associated with an
     // add-on.
