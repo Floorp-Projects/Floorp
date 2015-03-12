@@ -2510,7 +2510,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
          * (FIXME: remove this dependency on the exact identity of the parent,
          * perhaps as part of bug 638316.)
          */
-        RootedFunction fun(cx, NewFunction(cx, js::NullPtr(), constructor, nargs,
+        RootedFunction fun(cx, NewFunction(cx, constructor, nargs,
                                            JSFunction::NATIVE_CTOR, obj, atom, ctorKind));
         if (!fun)
             goto bad;

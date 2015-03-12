@@ -5840,7 +5840,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         Rooted<jsid> id(cx);
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
-            getobj = NewFunction(cx, js::NullPtr(), DebuggerArguments_getArg, 0,
+            getobj = NewFunction(cx, DebuggerArguments_getArg, 0,
                                  JSFunction::NATIVE_FUN, global, js::NullPtr(),
                                  JSFunction::ExtendedFinalizeKind);
             if (!getobj)
