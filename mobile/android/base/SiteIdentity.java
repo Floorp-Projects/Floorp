@@ -122,13 +122,17 @@ public class SiteIdentity {
         reset();
     }
 
-    public void reset() {
+    public void resetIdentity() {
         mSecurityMode = SecurityMode.UNKNOWN;
         mHost = null;
         mOwner = null;
         mSupplemental = null;
         mVerifier = null;
         mEncrypted = null;
+    }
+
+    public void reset() {
+        resetIdentity();
         mMixedMode = MixedMode.UNKNOWN;
         mTrackingMode = TrackingMode.UNKNOWN;
     }
@@ -157,7 +161,7 @@ public class SiteIdentity {
             try {
                 mSecurityMode = SecurityMode.fromString(mode.getString("identity"));
             } catch (Exception e) {
-                reset();
+                resetIdentity();
                 return;
             }
 
@@ -168,12 +172,10 @@ public class SiteIdentity {
                 mVerifier = identityData.getString("verifier");
                 mEncrypted = identityData.getString("encrypted");
             } catch (Exception e) {
-                reset();
+                resetIdentity();
             }
         } catch (Exception e) {
             reset();
-            mMixedMode = MixedMode.UNKNOWN;
-            mTrackingMode = TrackingMode.UNKNOWN;
         }
     }
 
