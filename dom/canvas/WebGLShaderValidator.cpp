@@ -224,12 +224,13 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         nsTArray<ShVariableInfo> staticUseVaryingList;
 
         for (auto itrFrag = fragList.begin(); itrFrag != fragList.end(); ++itrFrag) {
+            const ShVariableInfo varInfo = { itrFrag->type,
+                                             (int)itrFrag->elementCount() };
+
             static const char prefix[] = "gl_";
             if (StartsWith(itrFrag->name, prefix)) {
-                if (itrFrag->staticUse) {
-                    staticUseVaryingList.AppendElement({itrFrag->type,
-                                                        (int)itrFrag->elementCount()});
-                }
+                if (itrFrag->staticUse)
+                    staticUseVaryingList.AppendElement(varInfo);
 
                 continue;
             }
@@ -262,10 +263,8 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                 return false;
             }
 
-            if (staticVertUse && itrFrag->staticUse) {
-                staticUseVaryingList.AppendElement({itrFrag->type,
-                                                    (int)itrFrag->elementCount()});
-            }
+            if (staticVertUse && itrFrag->staticUse)
+                staticUseVaryingList.AppendElement(varInfo);
         }
 
         if (!ShCheckVariablesWithinPackingLimits(mMaxVaryingVectors,
