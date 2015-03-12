@@ -13,8 +13,10 @@ task:
     maxRunTime: 14400
 
     command:
-      - with_workspace
-      - build-phone.sh
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
+        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
 
   extra:
     # Rather then enforcing particular conventions we require that all build
