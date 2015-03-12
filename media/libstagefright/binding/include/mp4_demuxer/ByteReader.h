@@ -16,7 +16,7 @@ class ByteReader
 public:
   ByteReader() : mPtr(nullptr), mRemaining(0) {}
   explicit ByteReader(const mozilla::Vector<uint8_t>& aData)
-    : mPtr(&aData[0]), mRemaining(aData.length()), mLength(aData.length())
+    : mPtr(aData.begin()), mRemaining(aData.length()), mLength(aData.length())
   {
   }
   ByteReader(const uint8_t* aData, size_t aSize)
@@ -25,11 +25,11 @@ public:
   }
   template<size_t S>
   ByteReader(const nsAutoTArray<uint8_t, S>& aData)
-    : mPtr(&aData[0]), mRemaining(aData.Length()), mLength(aData.Length())
+    : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }
   explicit ByteReader(const nsTArray<uint8_t>& aData)
-    : mPtr(&aData[0]), mRemaining(aData.Length()), mLength(aData.Length())
+    : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }
 
