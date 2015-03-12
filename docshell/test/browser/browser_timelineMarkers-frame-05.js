@@ -21,6 +21,21 @@ function testConsoleTimeEnd() {
   content.console.timeEnd("cats");
 }
 
+function makePromise() {
+  let resolver;
+  new Promise(function(resolve, reject) {
+    testConsoleTime();
+    resolver = resolve;
+  }).then(function(val) {
+    testConsoleTimeEnd();
+  });
+  return resolver;
+}
+
+function resolvePromise(resolver) {
+  resolver(23);
+}
+
 let TESTS = [{
   desc: "Stack trace on sync reflow",
   searchFor: "Reflow",
@@ -62,6 +77,24 @@ let TESTS = [{
        "testConsoleTime is on the stack");
     ok(markers[0].endStack.functionDisplayName == "testConsoleTimeEnd",
        "testConsoleTimeEnd is on the stack");
+  }
+}, {
+  desc: "Async stack trace on Promise",
+  searchFor: "ConsoleTime",
+  setup: function(docShell) {
+    let resolver = makePromise();
+    resolvePromise(resolver);
+  },
+  check: function(markers) {
+    markers = markers.filter(m => m.name == "ConsoleTime");
+    ok(markers.length > 0, "Promise marker includes stack");
+
+    let frame = markers[0].endStack;
+    ok(frame.parent.asyncParent !== null, "Parent frame has async parent");
+    is(frame.parent.asyncParent.asyncCause, "Promise",
+       "Async parent has correct cause");
+    is(frame.parent.asyncParent.functionDisplayName, "makePromise",
+       "Async parent has correct function name");
   }
 }];
 

@@ -105,6 +105,9 @@ addMessageListener("MixedContent:ReenableProtection", function() {
 });
 
 addMessageListener("SecondScreen:tab-mirror", function(message) {
+  if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
+    return;
+  }
   let app = SimpleServiceDiscovery.findAppForService(message.data.service);
   if (app) {
     let width = content.innerWidth;

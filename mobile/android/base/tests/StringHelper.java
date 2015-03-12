@@ -113,6 +113,7 @@ public class StringHelper {
     public static final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
     public static final String ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
     public static final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
+    public static final String ROBOCOP_READER_MODE_BASIC_ARTICLE = "/robocop/reader_mode_pages/basic_article.html";
 
     private static final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
 
@@ -269,4 +270,7 @@ public class StringHelper {
     public static final String POPUP_MESSAGE = "prevented this site from opening";
     public static final String POPUP_ALLOW = "Show";
     public static final String POPUP_DENY = "Don't show";
+
+    // Strings used as content description, e.g. for ImageButtons
+    public static final String CONTENT_DESCRIPTION_READER_MODE_BUTTON = "Enter Reader View";
 }
