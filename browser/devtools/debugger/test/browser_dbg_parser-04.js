@@ -23,6 +23,8 @@ function test() {
     "</head>"
   ].join("\n");
   let parser = new Parser();
+  // Don't pollute the logs with exceptions that we are going to check anyhow.
+  parser.logExceptions = false;
   let parsed = parser.get(source);
 
   ok(parsed,
