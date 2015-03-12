@@ -737,15 +737,29 @@
 
   window.addEventListener("DOMContentLoaded", function() {
     try {
-      React.render(React.createElement(App, null), document.body);
+      React.renderComponent(React.createElement(App, null), document.getElementById("main"));
     } catch(err) {
-      console.log(err);
+      console.error(err);
+      uncaughtError = err;
     }
 
     _renderComponentsInIframes();
 
     // Put the title back, in case views changed it.
     document.title = "Loop UI Components Showcase";
+
+    // This simulates the mocha layout for errors which means we can run
+    // this alongside our other unit tests but use the same harness.
+    if (uncaughtError) {
+      $("#results").append("<div class='failures'><em>1</em></div>");
+      $("#results").append("<li class='test fail'>" +
+        "<h2>Errors rendering UI-Showcase</h2>" +
+        "<pre class='error'>" + uncaughtError + "\n" + uncaughtError.stack + "</pre>" +
+        "</li>");
+    } else {
+      $("#results").append("<div class='failures'><em>0</em></div>");
+    }
+    $("#results").append("<p id='complete'>Complete.</p>");
   });
 
 })();

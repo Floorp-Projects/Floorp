@@ -15,7 +15,15 @@
     <link rel="stylesheet" type="text/css" href="ui-showcase.css">
  </head>
   <body>
+    <script>
+      var uncaughtError;
+      window.addEventListener("error", function(error) {
+        uncaughtError = error;
+      });
+    </script>
+
     <div id="main"></div>
+    <div id="results"></div>
     <script src="fake-mozLoop.js"></script>
     <script src="fake-l10n.js"></script>
     <script>
