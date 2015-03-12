@@ -54,6 +54,7 @@ describe("loop.conversation", function() {
     fakeWindow = {
       navigator: { mozLoop: navigator.mozLoop },
       close: sinon.stub(),
+      document: {},
       addEventListener: function() {},
       removeEventListener: function() {}
     };
