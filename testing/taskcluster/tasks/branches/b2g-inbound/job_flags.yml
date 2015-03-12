@@ -18,3 +18,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_eng.yml
+
+  gaia-ui-test-sanity:
+        task: tasks/tests/flame_kk_gaia_ui_test_sanity.yml
