@@ -4424,7 +4424,7 @@ SVGTextFrame::ResolvePositions(nsIContent* aContent,
 
     // Get x, y, dx, dy.
     SVGUserUnitList x, y, dx, dy;
-    element->GetAnimatedLengthListValues(&x, &y, &dx, &dy, nullptr);
+    element->GetAnimatedLengthListValues(&x, &y, &dx, &dy);
 
     // Get rotate.
     const SVGNumberList* rotate = nullptr;
