@@ -353,7 +353,7 @@ PerformanceFront.prototype = {
    */
   _pullAllocationSites: Task.async(function *() {
     let memoryData = yield this._request("memory", "getAllocations");
-    let isStillAttached = yield this._request("memory", "getState") == "attached";
+    let isStillAttached = (yield this._request("memory", "getState")) === "attached";
 
     this.emit("allocations", {
       sites: memoryData.allocations,
