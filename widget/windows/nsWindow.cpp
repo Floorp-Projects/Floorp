@@ -692,6 +692,7 @@ NS_METHOD nsWindow::Destroy()
     mLayerManager->Destroy();
   }
   mLayerManager = nullptr;
+  DestroyCompositor();
 
   /* We should clear our cached resources now and not wait for the GC to
    * delete the nsWindow. */
@@ -3357,6 +3358,10 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
     CreateCompositor();
   }
+
+  // If we don't have a layer manager at this point we shouldn't have a
+  // PCompositor actor pair either.
+  MOZ_ASSERT(mLayerManager || (!mCompositorParent && !mCompositorChild));
 
   if (!mLayerManager ||
       (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
