@@ -33,6 +33,9 @@ Cu.import('resource://gre/modules/PresentationDeviceInfoManager.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshot",
+                                  "resource://gre/modules/Screenshot.jsm");
+
 Cu.import('resource://gre/modules/Webapps.jsm');
 DOMApplicationRegistry.allAppsLaunchable = true;
 
@@ -827,30 +830,9 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
       return;
 
     try {
-      var canvas = document.createElementNS('http://www.w3.org/1999/xhtml',
-                                            'canvas');
-      var docRect = document.body.getBoundingClientRect();
-      var width = docRect.width;
-      var height = docRect.height;
-
-      // Convert width and height from CSS pixels (potentially fractional)
-      // to device pixels (integer).
-      var scale = window.devicePixelRatio;
-      canvas.setAttribute('width', Math.round(width * scale));
-      canvas.setAttribute('height', Math.round(height * scale));
-
-      var context = canvas.getContext('2d');
-      var flags =
-        context.DRAWWINDOW_DRAW_CARET |
-        context.DRAWWINDOW_DRAW_VIEW |
-        context.DRAWWINDOW_USE_WIDGET_LAYERS;
-      context.scale(scale, scale);
-      context.drawWindow(window, 0, 0, width, height,
-                         'rgb(255,255,255)', flags);
-
       shell.sendChromeEvent({
         type: 'take-screenshot-success',
-        file: canvas.mozGetAsFile('screenshot', 'image/png')
+        file: Screenshot.get()
       });
     } catch (e) {
       dump('exception while creating screenshot: ' + e + '\n');
