@@ -26,6 +26,7 @@ var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, logi
 var mozproxy, proxiedHost = "http://mochi.test:8888";
 var proxyChannel;
 var testNum = 1;
+var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
 
 function initLogins(pi) {
   observerService = Cc["@mozilla.org/observer-service;1"].
@@ -163,8 +164,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
                                          null,
                                          null,
                                          null,      // aLoadingNode
-                                         SpecialPowers.Services.
-                                         scriptSecurityManager.getSystemPrincipal(),
+                                         systemPrincipal,
                                          null,      // aTriggeringPrincipal
                                          Ci.nsILoadInfo.SEC_NORMAL,
                                          Ci.nsIContentPolicy.TYPE_OTHER);
@@ -179,7 +179,14 @@ function startup() {
 
   var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-  var channel = ios.newChannel("http://example.com", null, null);
+  var channel = ios.newChannel2("http://example.com",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                systemPrincipal,
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }
 

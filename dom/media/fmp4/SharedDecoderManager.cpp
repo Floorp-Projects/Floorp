@@ -93,6 +93,22 @@ SharedDecoderManager::CreateVideoDecoder(
   return proxy.forget();
 }
 
+bool
+SharedDecoderManager::Recreate(PlatformDecoderModule* aPDM,
+                               const mp4_demuxer::VideoDecoderConfig& aConfig,
+                               layers::LayersBackend aLayersBackend,
+                               layers::ImageContainer* aImageContainer)
+{
+  mDecoder->Flush();
+  mDecoder->Shutdown();
+  mDecoder = aPDM->CreateVideoDecoder(aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
+  if (!mDecoder) {
+    return false;
+  }
+  nsresult rv = mDecoder->Init();
+  return rv == NS_OK;
+}
+
 void
 SharedDecoderManager::Select(SharedDecoderProxy* aProxy)
 {
@@ -229,14 +245,6 @@ SharedDecoderProxy::ReleaseMediaResources()
 {
   if (mManager->mActiveProxy == this) {
     mManager->ReleaseMediaResources();
-  }
-}
-
-void
-SharedDecoderProxy::ReleaseDecoder()
-{
-  if (mManager->mActiveProxy == this) {
-    mManager->mDecoder->ReleaseMediaResources();
   }
 }
 

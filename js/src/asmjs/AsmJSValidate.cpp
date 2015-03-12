@@ -7527,7 +7527,8 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
         return false;
 
     // This flows into FunctionBox, so must be tenured.
-    RootedFunction fun(m.cx(), NewFunction(m.cx(), NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
+    RootedFunction fun(m.cx(),
+                       NewScriptedFunction(m.cx(), 0, JSFunction::INTERPRETED,
                                            m.cx()->global(), name, JSFunction::FinalizeKind,
                                            TenuredObject));
     if (!fun)

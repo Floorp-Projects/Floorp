@@ -568,6 +568,8 @@ inline bool
 IsInternalFunctionObject(JSObject *funobj)
 {
     JSFunction *fun = &funobj->as<JSFunction>();
+    MOZ_ASSERT_IF(fun->isLambda(),
+                  fun->isInterpreted() || fun->isAsmJSNative());
     return fun->isLambda() && !funobj->getParent();
 }
 
@@ -682,19 +684,19 @@ NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject p
 
 template<typename T>
 inline T *
-NewObjectWithProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
+NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, allocKind, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
 template<typename T>
 inline T *
-NewObjectWithProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
+NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, parent, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 

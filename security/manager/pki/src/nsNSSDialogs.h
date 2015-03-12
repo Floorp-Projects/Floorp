@@ -12,7 +12,6 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertPickDialogs.h"
 #include "nsITokenDialogs.h"
-#include "nsIDOMCryptoDialogs.h"
 #include "nsIGenKeypairInfoDlg.h"
 
 #include "nsCOMPtr.h"
@@ -28,7 +27,6 @@ class nsNSSDialogs
   public nsIClientAuthDialogs,
   public nsICertPickDialogs,
   public nsITokenDialogs,
-  public nsIDOMCryptoDialogs,
   public nsIGeneratingKeypairInfoDialogs
 {
 public:
@@ -38,7 +36,6 @@ public:
   NS_DECL_NSICLIENTAUTHDIALOGS
   NS_DECL_NSICERTPICKDIALOGS
   NS_DECL_NSITOKENDIALOGS
-  NS_DECL_NSIDOMCRYPTODIALOGS
   NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS
   nsNSSDialogs();
 

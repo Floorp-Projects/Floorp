@@ -2902,7 +2902,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   inline bool IsInlineOutside() const;
   inline uint8_t GetDisplay() const;
   inline bool IsFloating() const;
-  inline bool IsPositioned() const;
+  inline bool IsAbsPosContaininingBlock() const;
   inline bool IsRelativelyPositioned() const;
   inline bool IsAbsolutelyPositioned() const;
 

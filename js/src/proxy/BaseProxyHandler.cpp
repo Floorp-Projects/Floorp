@@ -86,12 +86,23 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc))
         return false;
 
+    // The rest is factored out into a separate function with a weird name.
+    // This algorithm continues just below.
+    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &ownDesc, result);
+}
+
+bool
+js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
+                                   MutableHandleValue vp, HandleObject receiver,
+                                   MutableHandle<PropertyDescriptor> ownDesc,
+                                   ObjectOpResult &result)
+{
     // Step 4.
     if (!ownDesc.object()) {
         // The spec calls this variable "parent", but that word has weird
         // connotations in SpiderMonkey, so let's go with "proto".
         RootedObject proto(cx);
-        if (!GetPrototype(cx, proxy, &proto))
+        if (!GetPrototype(cx, obj, &proto))
             return false;
         if (proto)
             return SetProperty(cx, proto, receiver, id, vp, result);
@@ -147,52 +158,6 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!InvokeGetterOrSetter(cx, receiver, setterValue, 1, vp.address(), vp))
         return false;
     return result.succeed();
-}
-
-bool
-js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
-                                   HandleObject proxy, HandleObject receiver,
-                                   HandleId id, MutableHandle<PropertyDescriptor> desc,
-                                   bool descIsOwn, MutableHandleValue vp, ObjectOpResult &result)
-{
-    /* The control-flow here differs from ::get() because of the fall-through case below. */
-    MOZ_ASSERT_IF(descIsOwn, desc.object());
-    if (desc.object()) {
-        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
-
-        // Check for read-only properties.
-        if (desc.isReadonly())
-            return result.fail(descIsOwn ? JSMSG_READ_ONLY : JSMSG_CANT_REDEFINE_PROP);
-
-        if (desc.hasSetterObject() || desc.setter()) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), vp, result))
-                return false;
-            if (!result)
-                return true;
-            if (!proxy->is<ProxyObject>() ||
-                proxy->as<ProxyObject>().handler() != handler ||
-                desc.isShared())
-            {
-                return result.succeed();
-            }
-        }
-        desc.value().set(vp.get());
-
-        if (descIsOwn) {
-            MOZ_ASSERT(desc.object() == proxy);
-            return handler->defineProperty(cx, proxy, id, desc, result);
-        }
-        return DefineProperty(cx, receiver, id, desc.value(), desc.getter(), desc.setter(),
-                              desc.attributes(), result);
-    }
-    desc.object().set(receiver);
-    desc.value().set(vp.get());
-    desc.setAttributes(JSPROP_ENUMERATE);
-    desc.setGetter(nullptr);
-    desc.setSetter(nullptr); // Pick up the class getter/setter.
-    return DefineProperty(cx, receiver, id, desc.value(), nullptr, nullptr, JSPROP_ENUMERATE,
-                          result);
 }
 
 bool

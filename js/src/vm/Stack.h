@@ -1338,6 +1338,9 @@ class JitActivation : public Activation
     uint8_t *prevJitTop() const {
         return prevJitTop_;
     }
+    JitActivation *prevJitActivation() const {
+        return prevJitActivation_;
+    }
     static size_t offsetOfPrevJitTop() {
         return offsetof(JitActivation, prevJitTop_);
     }

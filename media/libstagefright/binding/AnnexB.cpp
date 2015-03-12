@@ -217,11 +217,9 @@ AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
   if (IsAVCC(aSample)) {
     return ConvertSampleTo4BytesAVCC(aSample);
   }
-
-  uint32_t header = mozilla::BigEndian::readUint32(aSample->data);
-  if (header != 0x00000001 && (header >> 8) != 0x000001) {
+  if (!IsAnnexB(aSample)) {
     // Not AnnexB, can't convert.
-    return true;
+    return false;
   }
 
   mozilla::Vector<uint8_t> nalu;
@@ -236,7 +234,13 @@ already_AddRefed<ByteBuffer>
 AnnexB::ExtractExtraData(const MP4Sample* aSample)
 {
   nsRefPtr<ByteBuffer> extradata = new ByteBuffer;
-  if (!IsAVCC(aSample)) {
+  if (IsAVCC(aSample) && HasSPS(aSample->extra_data)) {
+    // We already have an explicit extradata, re-use it.
+    extradata = aSample->extra_data;
+    return extradata.forget();
+  }
+
+  if (IsAnnexB(aSample)) {
     return extradata.forget();
   }
   // SPS content
@@ -248,7 +252,14 @@ AnnexB::ExtractExtraData(const MP4Sample* aSample)
   ByteWriter ppsw(pps);
   int numPps = 0;
 
-  int nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+  int nalLenSize;
+  if (IsAVCC(aSample)) {
+    nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+  } else {
+    // We do not have an extradata, assume it's AnnexB converted to AVCC via
+    // ConvertSampleToAVCC.
+    nalLenSize = 4;
+  }
   ByteReader reader(aSample->data, aSample->size);
 
   // Find SPS and PPS NALUs in AVCC data
@@ -357,5 +368,22 @@ AnnexB::IsAVCC(const MP4Sample* aSample)
     aSample->extra_data->Length() >= 7 && (*aSample->extra_data)[0] == 1;
 }
 
+bool
+AnnexB::IsAnnexB(const MP4Sample* aSample)
+{
+  if (aSample->size < 4) {
+    return false;
+  }
+  uint32_t header = mozilla::BigEndian::readUint32(aSample->data);
+  return header == 0x00000001 || (header >> 8) == 0x000001;
+}
+
+bool
+AnnexB::CompareExtraData(const ByteBuffer* aExtraData1,
+                         const ByteBuffer* aExtraData2)
+{
+  // Very crude comparison.
+  return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;
+}
 
 } // namespace mp4_demuxer

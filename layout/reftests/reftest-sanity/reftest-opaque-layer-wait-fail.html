@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>The fixed layer can't be opaque in the final paint, so this test must fail.</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 140px;
+}
+
+.reftest-wait .reftest-opaque-layer {
+  /* make the layer opaque until the final paint */
+  background-color: white;
+}
+
+body {
+  height: 4000px;
+}
+
+</style>
+
+<div class="content reftest-opaque-layer"></div>
+
+<div class="fixed content reftest-opaque-layer"></div>
+
+<script>
+
+function doTest() {
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

@@ -2122,7 +2122,7 @@ IonBuilder::inlineUnsafeSetTypedObjectArrayElement(CallInfo &callInfo,
     MDefinition *id = callInfo.getArg(base + 1);
     MDefinition *elem = callInfo.getArg(base + 2);
 
-    if (!jsop_setelem_typed_object(arrayType, SetElem_Unsafe, true, obj, id, elem))
+    if (!jsop_setelem_typed_object(arrayType, SetElem_Unsafe, obj, id, elem))
         return false;
 
     return true;
@@ -2688,9 +2688,9 @@ IonBuilder::inlineAtomicsLoad(CallInfo &callInfo)
     MDefinition *index;
     atomicsCheckBounds(callInfo, &elements, &index);
 
-    MLoadTypedArrayElement *load =
-        MLoadTypedArrayElement::New(alloc(), elements, index, arrayType,
-                                    DoesRequireMemoryBarrier);
+    MLoadUnboxedScalar *load =
+        MLoadUnboxedScalar::New(alloc(), elements, index, arrayType,
+                                DoesRequireMemoryBarrier);
     load->setResultType(getInlineReturnType());
     current->add(load);
     current->push(load);
@@ -2725,9 +2725,9 @@ IonBuilder::inlineAtomicsStore(CallInfo &callInfo)
         toWrite = MTruncateToInt32::New(alloc(), value);
         current->add(toWrite->toInstruction());
     }
-    MStoreTypedArrayElement *store =
-        MStoreTypedArrayElement::New(alloc(), elements, index, toWrite, arrayType,
-                                     DoesRequireMemoryBarrier);
+    MStoreUnboxedScalar *store =
+        MStoreUnboxedScalar::New(alloc(), elements, index, toWrite, arrayType,
+                                 DoesRequireMemoryBarrier);
     current->add(store);
     current->push(value);
 
@@ -3206,7 +3206,7 @@ IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::T
     if (!prepareForSimdLoadStore(callInfo, simdType, &elements, &index, &arrayType))
         return InliningStatus_NotInlined;
 
-    MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(alloc(), elements, index, arrayType);
+    MLoadUnboxedScalar *load = MLoadUnboxedScalar::New(alloc(), elements, index, arrayType);
     load->setResultType(SimdTypeDescrToMIRType(type));
     load->setReadType(simdType);
 
@@ -3229,8 +3229,8 @@ IonBuilder::inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::
         return InliningStatus_NotInlined;
 
     MDefinition *valueToWrite = callInfo.getArg(2);
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(alloc(), elements, index,
-                                                                  valueToWrite, arrayType);
+    MStoreUnboxedScalar *store = MStoreUnboxedScalar::New(alloc(), elements, index,
+                                                          valueToWrite, arrayType);
     store->setWriteType(simdType);
 
     current->add(store);

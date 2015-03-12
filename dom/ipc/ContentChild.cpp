@@ -531,6 +531,14 @@ InitOnContentProcessCreated()
         return;
     }
     PostForkPreload();
+
+    nsCOMPtr<nsIPermissionManager> permManager =
+        services::GetPermissionManager();
+    MOZ_ASSERT(permManager, "Unable to get permission manager");
+    nsresult rv = permManager->RefreshPermission();
+    if (NS_FAILED(rv)) {
+        MOZ_ASSERT(false, "Failed updating permission in child process");
+    }
 #endif
 
     nsCOMPtr<nsISystemMessageCache> smc =

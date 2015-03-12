@@ -518,7 +518,6 @@ class IonBuilder
     bool storeScalarTypedObjectValue(MDefinition *typedObj,
                                      const LinearSum &byteOffset,
                                      ScalarTypeDescr::Type type,
-                                     bool racy,
                                      MDefinition *value);
     bool checkTypedObjectIndexInBounds(int32_t elemSize,
                                        MDefinition *obj,
@@ -667,7 +666,7 @@ class IonBuilder
                             SetElemSafety safety,
                             MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_setelem_typed_object(ScalarTypeDescr::Type arrayType,
-                                   SetElemSafety safety, bool racy,
+                                   SetElemSafety safety,
                                    MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_length();
     bool jsop_length_fastPath();

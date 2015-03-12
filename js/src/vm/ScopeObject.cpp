@@ -2503,11 +2503,11 @@ JS_FRIEND_API(JSObject *)
 js::GetObjectEnvironmentObjectForFunction(JSFunction *fun)
 {
     if (!fun->isInterpreted())
-        return fun->getParent();
+        return &fun->global();
 
     JSObject *env = fun->environment();
     if (!env || !env->is<DynamicWithObject>())
-        return fun->getParent();
+        return &fun->global();
 
     return &env->as<DynamicWithObject>().object();
 }
