@@ -16,6 +16,7 @@
 #include "nsError.h"
 #include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
+#include "Variant.h"
 
 class mozIStorageCompletionCallback;
 class mozIStorageBaseStatement;
@@ -67,6 +68,16 @@ void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
  *         failed.  The caller is responsible for addref'ing if non-null.
  */
 nsIVariant *convertJSValToVariant(JSContext *aCtx, JS::Value aValue);
+
+/**
+ * Convert a provided nsIVariant implementation to our own thread-safe
+ * refcounting implementation, if needed.
+ *
+ * @param aValue
+ *        The original nsIVariant to be converted.
+ * @return a thread-safe refcounting nsIVariant implementation.
+ */
+Variant_base *convertVariantToStorageVariant(nsIVariant *aVariant);
 
 /**
  * Obtains an event that will notify a completion callback about completion.

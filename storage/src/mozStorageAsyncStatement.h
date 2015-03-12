@@ -68,13 +68,6 @@ private:
   ~AsyncStatement();
 
   /**
-   * Clean up the references JS helpers hold to us.  For cycle-avoidance reasons
-   * they do not hold reference-counted references to us, so it is important
-   * we do this.
-   */
-  void cleanupJSHelpers();
-
-  /**
    * @return a pointer to the BindingParams object to use with our Bind*
    *         method.
    */
@@ -95,7 +88,7 @@ private:
   /**
    * Caches the JS 'params' helper for this statement.
    */
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
+  nsMainThreadPtrHandle<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
 
   /**
    * Have we been explicitly finalized by the user?
