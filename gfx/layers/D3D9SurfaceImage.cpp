@@ -17,6 +17,7 @@ namespace layers {
 D3D9SurfaceImage::D3D9SurfaceImage()
   : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
   , mSize(0, 0)
+  , mValid(false)
 {}
 
 D3D9SurfaceImage::~D3D9SurfaceImage()
@@ -153,6 +154,13 @@ D3D9SurfaceImage::SetData(const Data& aData)
   return S_OK;
 }
 
+bool
+D3D9SurfaceImage::IsValid()
+{
+  EnsureSynchronized();
+  return mValid;
+}
+
 void
 D3D9SurfaceImage::EnsureSynchronized()
 {
@@ -162,20 +170,19 @@ D3D9SurfaceImage::EnsureSynchronized()
     return;
   }
   int iterations = 0;
-  while (iterations < 10 && S_FALSE == query->GetData(nullptr, 0, D3DGETDATA_FLUSH)) {
-    Sleep(1);
-    iterations++;
+  while (iterations < 10) {
+    HRESULT hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
+    if (hr == S_FALSE) {
+      Sleep(1);
+      iterations++;
+      continue;
+    }
+    if (hr == S_OK) {
+      mValid = true;
+    }
+    break;
   }
   mQuery = nullptr;
-}
-
-HANDLE
-D3D9SurfaceImage::GetShareHandle()
-{
-  // Ensure the image has completed its synchronization,
-  // and safe to used by the caller on another device.
-  EnsureSynchronized();
-  return mShareHandle;
 }
 
 const D3DSURFACE_DESC&
