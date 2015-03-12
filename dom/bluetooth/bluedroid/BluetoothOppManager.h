@@ -29,11 +29,15 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSocket;
 class ObexHeaderSet;
-class SendFileBatch;
 
 class BluetoothOppManager : public BluetoothSocketObserver
                           , public BluetoothProfileManagerBase
 {
+  class CloseSocketTask;
+  class ReadFileTask;
+  class SendFileBatch;
+  class SendSocketDataTask;
+
 public:
   BT_DECL_PROFILE_MGR_BASE
   virtual void GetName(nsACString& aName)

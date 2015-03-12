@@ -2447,6 +2447,55 @@
     "extended_statistics_ok": true,
     "description": "How many speculative connections are made needlessly"
   },
+  "STS_POLL_AND_EVENTS_CYCLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "The duraion of a socketThread cycle, including polls and pending events. (ms)"
+  },
+  "STS_NUMBER_OF_PENDING_EVENTS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 100,
+    "description": "Number of pending events per SocketThread cycle."
+  },
+  "STS_POLL_CYCLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "The duration of poll. (ms)"
+  },
+  "STS_POLL_AND_EVENT_THE_LAST_CYCLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "The duraion of the socketThread cycle during shutdown, including polls and pending events. (ms)"
+  },
+  "STS_NUMBER_OF_PENDING_EVENTS_IN_THE_LAST_CYCLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 100,
+    "description": "Number of pending events per SocketThread cycle during shutdown."
+  },
+  "STS_NUMBER_OF_ONSOCKETREADY_CALLS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 100,
+    "description": "Number of OnSocketReady calls during a single poll."
+  },
+  "STS_POLL_BLOCK_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spend blocked on poll (ms)."
+  },
   "URL_PATH_ENDS_IN_EXCLAMATION": {
     "expires_in_version": "never",
     "kind": "boolean",

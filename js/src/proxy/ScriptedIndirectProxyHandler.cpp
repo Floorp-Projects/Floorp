@@ -176,9 +176,9 @@ ScriptedIndirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject 
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().getPropertyDescriptor, &fval) &&
            Trap1(cx, handler, fval, id, &value) &&
-           ((value.get().isUndefined() && IndicatePropertyNotFound(desc)) ||
+           ((value.isUndefined() && IndicatePropertyNotFound(desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().getPropertyDescriptor, value) &&
-             ParsePropertyDescriptorObject(cx, proxy, value, desc)));
+             ObjectToCompletePropertyDescriptor(cx, proxy, value, desc)));
 }
 
 bool
@@ -189,9 +189,9 @@ ScriptedIndirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObje
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().getOwnPropertyDescriptor, &fval) &&
            Trap1(cx, handler, fval, id, &value) &&
-           ((value.get().isUndefined() && IndicatePropertyNotFound(desc)) ||
+           ((value.isUndefined() && IndicatePropertyNotFound(desc)) ||
             (ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().getPropertyDescriptor, value) &&
-             ParsePropertyDescriptorObject(cx, proxy, value, desc)));
+             ObjectToCompletePropertyDescriptor(cx, proxy, value, desc)));
 }
 
 bool
@@ -332,6 +332,12 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
     // Find an own or inherited property. The code here is strange for maximum
     // backward compatibility with earlier code written before ES6 and before
     // SetPropertyIgnoringNamedGetter.
+    //
+    // As of March 2015, testing/specialpowers/content/specialpowersAPI.js
+    // depends on the call to getPropertyDescriptor below, because it does
+    // support inherited setters but makes no attempt to provide a meaningful
+    // prototype chain.
+
     Rooted<PropertyDescriptor> desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
         return false;
@@ -341,8 +347,43 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
             return false;
     }
 
-    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, vp,
-                                          result);
+    MOZ_ASSERT_IF(descIsOwn, desc.object());
+    if (desc.object()) {
+        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
+        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
+
+        // Check for read-only properties.
+        if (desc.isReadonly())
+            return result.fail(descIsOwn ? JSMSG_READ_ONLY : JSMSG_CANT_REDEFINE_PROP);
+
+        if (desc.hasSetterObject() || desc.setter()) {
+            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), vp, result))
+                return false;
+            if (!result)
+                return true;
+            if (!proxy->is<ProxyObject>() ||
+                proxy->as<ProxyObject>().handler() != this ||
+                desc.isShared())
+            {
+                return result.succeed();
+            }
+        }
+        desc.value().set(vp.get());
+
+        if (descIsOwn) {
+            MOZ_ASSERT(desc.object() == proxy);
+            return this->defineProperty(cx, proxy, id, &desc, result);
+        }
+        return DefineProperty(cx, receiver, id, desc.value(), desc.getter(), desc.setter(),
+                              desc.attributes(), result);
+    }
+    desc.object().set(receiver);
+    desc.value().set(vp.get());
+    desc.setAttributes(JSPROP_ENUMERATE);
+    desc.setGetter(nullptr);
+    desc.setSetter(nullptr); // Pick up the class getter/setter.
+    return DefineProperty(cx, receiver, id, desc.value(), nullptr, nullptr, JSPROP_ENUMERATE,
+                          result);
 }
 
 bool

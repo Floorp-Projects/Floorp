@@ -15,7 +15,6 @@ XPIDL_SOURCES += [
     'nsICertPickDialogs.idl',
     'nsIClientAuthDialogs.idl',
     'nsIDataSignatureVerifier.idl',
-    'nsIDOMCryptoDialogs.idl',
     'nsIGenKeypairInfoDlg.idl',
     'nsIKeygenThread.idl',
     'nsIKeyModule.idl',

@@ -166,7 +166,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // In an OSR block, set all MOsrValues to use the MResumePoint attached to
     // the MStart.
-    void linkOsrValues(MStart *start);
+    bool linkOsrValues(MStart *start);
 
     // Sets the instruction associated with various slot types. The
     // instruction must lie at the top of the stack.

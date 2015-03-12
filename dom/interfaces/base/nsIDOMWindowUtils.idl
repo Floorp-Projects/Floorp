@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(6eaf87a1-b252-4c4e-a2fc-318120680335)]
+[scriptable, uuid(b39cb73f-ff99-4744-9780-2c26f830c6f7)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1276,6 +1276,11 @@ interface nsIDOMWindowUtils : nsISupports {
   [noscript] boolean isInModalState();
 
   /**
+   * Request set internal desktopMode flag change.
+   */
+  void setDesktopModeViewport(in boolean aDesktopModeViewport);
+
+  /**
    * Suspend/resume timeouts on this window and its descendant windows.
    */
   void suspendTimeouts();
@@ -1441,6 +1446,23 @@ interface nsIDOMWindowUtils : nsISupports {
    * clears the painted flags if they have.
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
+
+  /**
+   * Check whether all display items of the primary frame of aElement have been
+   * assigned to the same single PaintedLayer in the last paint. If that is the
+   * case, returns whether that PaintedLayer is opaque; if it's not the case, an
+   * exception is thrown.
+   */
+  boolean isPartOfOpaqueLayer(in nsIDOMElement aElement);
+
+  /**
+   * Count the number of different PaintedLayers that the supplied elements have
+   * been assigned to in the last paint. Throws an exception if any of the
+   * elements doesn't have a primary frame, or if that frame's display items are
+   * assigned to any other layers than just a single PaintedLayer per element.
+   */
+  unsigned long numberOfAssignedPaintedLayers([array, size_is(count)] in nsIDOMElement aElements,
+                                              in uint32_t count);
 
   /**
    * Get internal id of the stored blob, file or file handle.

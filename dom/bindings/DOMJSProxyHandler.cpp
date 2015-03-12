@@ -239,7 +239,6 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
                             &desc)) {
     return false;
   }
-  bool descIsOwn = desc.object() != nullptr;
   if (!desc.object()) {
     // Don't just use getPropertyDescriptor, unlike BaseProxyHandler::set,
     // because that would call getOwnPropertyDescriptor on ourselves.  Instead,
@@ -253,8 +252,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<JSObject*> r
     }
   }
 
-  return js::SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id,
-                                            &desc, descIsOwn, vp, result);
+  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &desc, result);
 }
 
 bool

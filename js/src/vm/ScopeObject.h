@@ -1034,11 +1034,14 @@ JSObject::is<js::StaticBlockObject>() const
 inline JSObject *
 JSObject::enclosingScope()
 {
-    return is<js::ScopeObject>()
-           ? &as<js::ScopeObject>().enclosingScope()
-           : is<js::DebugScopeObject>()
-           ? &as<js::DebugScopeObject>().enclosingScope()
-           : getParent();
+    if (is<js::ScopeObject>())
+        return &as<js::ScopeObject>().enclosingScope();
+
+    if (is<js::DebugScopeObject>())
+        return &as<js::DebugScopeObject>().enclosingScope();
+
+    MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
+    return getParent();
 }
 
 namespace js {

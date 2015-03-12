@@ -219,6 +219,10 @@ extern "C" {
  * labels which describe another widget, see ATK_ROLE_LABEL. For text views, see
  * ATK_ROLE_TEXT. For generic containers, see ATK_ROLE_PANEL. For objects whose
  * role is not known by the implementor, see ATK_ROLE_UNKNOWN. @Since: ATK-2.16.
+ *@ATK_ROLE_MATH_FRACTION: An object that represents a mathematical fraction.
+ * @Since: ATK-2.16.
+ *@ATK_ROLE_MATH_ROOT: An object that represents a mathematical expression
+ * displayed with a radical. @Since: ATK-2.16.
  *@ATK_ROLE_LAST_DEFINED: not a valid role, used for finding end of the enumeration
  *
  * Describes the role of an object
@@ -347,6 +351,8 @@ typedef enum
   ATK_ROLE_DESCRIPTION_TERM,
   ATK_ROLE_DESCRIPTION_VALUE,
   ATK_ROLE_STATIC,
+  ATK_ROLE_MATH_FRACTION,
+  ATK_ROLE_MATH_ROOT,
   ATK_ROLE_LAST_DEFINED
 } AtkRole;
 

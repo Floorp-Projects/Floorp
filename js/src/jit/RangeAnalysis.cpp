@@ -1678,7 +1678,7 @@ GetTypedArrayRange(TempAllocator &alloc, Scalar::Type type)
 }
 
 void
-MLoadTypedArrayElement::computeRange(TempAllocator &alloc)
+MLoadUnboxedScalar::computeRange(TempAllocator &alloc)
 {
     // We have an Int32 type and if this is a UInt32 load it may produce a value
     // outside of our range, but we have a bailout to handle those cases.
@@ -2642,7 +2642,7 @@ MToDouble::operandTruncateKind(size_t index) const
 }
 
 MDefinition::TruncateKind
-MStoreTypedArrayElement::operandTruncateKind(size_t index) const
+MStoreUnboxedScalar::operandTruncateKind(size_t index) const
 {
     // An integer store truncates the stored value.
     return index == 2 && isIntegerWrite() ? Truncate : NoTruncate;
@@ -3038,8 +3038,10 @@ RangeAnalysis::truncate()
     for (size_t i = 0; i < bitops.length(); i++) {
         MBinaryBitwiseInstruction *ins = bitops[i];
         MDefinition *folded = ins->foldUnnecessaryBitop();
-        if (folded != ins)
-            ins->replaceAllUsesWith(folded);
+        if (folded != ins) {
+            ins->replaceAllLiveUsesWith(folded);
+            ins->setRecoveredOnBailout();
+        }
     }
 
     return true;

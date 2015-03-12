@@ -35,7 +35,6 @@ public:
   virtual bool IsDormantNeeded() MOZ_OVERRIDE;
   virtual void AllocateMediaResources() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseDecoder() MOZ_OVERRIDE;
   virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
 
 private:
@@ -44,6 +43,8 @@ private:
   // will set mError accordingly.
   nsresult CreateDecoder();
   nsresult CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample);
+  nsresult CheckForSPSChange(mp4_demuxer::MP4Sample* aSample);
+  void UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraData);
 
   nsRefPtr<PlatformDecoderModule> mPDM;
   mp4_demuxer::VideoDecoderConfig mCurrentConfig;
@@ -92,18 +93,21 @@ AVCCMediaDataDecoder::Input(mp4_demuxer::MP4Sample* aSample)
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
     return NS_ERROR_FAILURE;
   }
+  nsresult rv;
   if (!mDecoder) {
     // It is not possible to create an AVCC H264 decoder without SPS.
     // As such, creation will fail if the extra_data just extracted doesn't
     // contain a SPS.
-    nsresult rv = CreateDecoderAndInit(aSample);
+    rv = CreateDecoderAndInit(aSample);
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required SPS to create the decoder.
       // Ignore for the time being, the MP4Sample will be dropped.
       return NS_OK;
     }
-    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = CheckForSPSChange(aSample);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aSample->extra_data = mCurrentConfig.extra_data;
 
@@ -149,33 +153,21 @@ AVCCMediaDataDecoder::IsWaitingMediaResources()
 bool
 AVCCMediaDataDecoder::IsDormantNeeded()
 {
-  if (mDecoder) {
-    return mDecoder->IsDormantNeeded();
-  }
-  return MediaDataDecoder::IsDormantNeeded();
+  return true;
 }
 
 void
 AVCCMediaDataDecoder::AllocateMediaResources()
 {
-  if (mDecoder) {
-    mDecoder->AllocateMediaResources();
-  }
+  // Nothing to do, decoder will be allocated on the fly when required.
 }
 
 void
 AVCCMediaDataDecoder::ReleaseMediaResources()
 {
   if (mDecoder) {
-    mDecoder->ReleaseMediaResources();
-  }
-}
-
-void
-AVCCMediaDataDecoder::ReleaseDecoder()
-{
-  if (mDecoder) {
-    mDecoder->ReleaseDecoder();
+    mDecoder->Shutdown();
+    mDecoder = nullptr;
   }
 }
 
@@ -186,6 +178,8 @@ AVCCMediaDataDecoder::CreateDecoder()
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
   }
+  UpdateConfigFromExtraData(mCurrentConfig.extra_data);
+
   mDecoder = mPDM->CreateVideoDecoder(mCurrentConfig,
                                       mLayersBackend,
                                       mImageContainer,
@@ -206,15 +200,7 @@ AVCCMediaDataDecoder::CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample)
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(extra_data, spsdata) &&
-      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
-    mCurrentConfig.image_width = spsdata.pic_width;
-    mCurrentConfig.image_height = spsdata.pic_height;
-    mCurrentConfig.display_width = spsdata.display_width;
-    mCurrentConfig.display_height = spsdata.display_height;
-  }
-  mCurrentConfig.extra_data = extra_data;
+  UpdateConfigFromExtraData(extra_data);
 
   nsresult rv = CreateDecoder();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -228,6 +214,37 @@ AVCCMediaDataDecoder::IsHardwareAccelerated() const
     return mDecoder->IsHardwareAccelerated();
   }
   return MediaDataDecoder::IsHardwareAccelerated();
+}
+
+nsresult
+AVCCMediaDataDecoder::CheckForSPSChange(mp4_demuxer::MP4Sample* aSample)
+{
+  nsRefPtr<mp4_demuxer::ByteBuffer> extra_data =
+    mp4_demuxer::AnnexB::ExtractExtraData(aSample);
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data) ||
+      mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                            mCurrentConfig.extra_data)) {
+    return NS_OK;
+  }
+  // The SPS has changed, signal to flush the current decoder and create a
+  // new one.
+  mDecoder->Flush();
+  ReleaseMediaResources();
+  return CreateDecoderAndInit(aSample);
+}
+
+void
+AVCCMediaDataDecoder::UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraData)
+{
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
+      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+    mCurrentConfig.image_width = spsdata.pic_width;
+    mCurrentConfig.image_height = spsdata.pic_height;
+    mCurrentConfig.display_width = spsdata.display_width;
+    mCurrentConfig.display_height = spsdata.display_height;
+  }
+  mCurrentConfig.extra_data = aExtraData;
 }
 
 // AVCCDecoderModule
