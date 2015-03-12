@@ -232,14 +232,6 @@ SharedDecoderProxy::ReleaseMediaResources()
   }
 }
 
-void
-SharedDecoderProxy::ReleaseDecoder()
-{
-  if (mManager->mActiveProxy == this) {
-    mManager->mDecoder->ReleaseMediaResources();
-  }
-}
-
 bool
 SharedDecoderProxy::IsHardwareAccelerated() const
 {
