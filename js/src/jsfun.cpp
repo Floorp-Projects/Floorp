@@ -1698,17 +1698,17 @@ js::fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
         return nullptr;
 
     //  Step 4.
-    JSFunction::Flags flags = target->isConstructor() ? JSFunction::NATIVE_CTOR
-                                                      : JSFunction::NATIVE_FUN;
-    RootedFunction fun(cx, NewFunction(cx, CallOrConstructBoundFunction, length,
-                                       flags, cx->global(), nameAtom));
+    RootedFunction fun(cx, target->isConstructor() ?
+      NewNativeConstructor(cx, CallOrConstructBoundFunction, length, nameAtom) :
+      NewNativeFunction(cx, CallOrConstructBoundFunction, length, nameAtom));
     if (!fun)
         return nullptr;
 
     if (!fun->initBoundFunction(cx, target, thisArg, boundArgs, argslen))
         return nullptr;
 
-    // Steps 9-10. Set length again, because NewFunction sometimes truncates.
+    // Steps 9-10. Set length again, because NewNativeFunction/NewNativeConstructor
+    // sometimes truncates.
     if (length != fun->nargs()) {
         RootedValue lengthVal(cx, NumberValue(length));
         if (!DefineProperty(cx, fun, cx->names().length, lengthVal, nullptr, nullptr,
@@ -1997,12 +1997,32 @@ JSFunction::isBuiltinFunctionConstructor()
 }
 
 JSFunction *
-js::NewFunction(ExclusiveContext *cx, Native native, unsigned nargs,
-                JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
-                gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
-                NewObjectKind newKind /* = GenericObject */)
+js::NewNativeFunction(ExclusiveContext *cx, Native native, unsigned nargs, HandleAtom atom,
+                      gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                      NewObjectKind newKind /* = GenericObject */)
 {
-    return NewFunctionWithProto(cx, native, nargs, flags, parent, atom, NullPtr(),
+    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN,
+                                NullPtr(), atom, NullPtr(), allocKind, newKind);
+}
+
+JSFunction *
+js::NewNativeConstructor(ExclusiveContext *cx, Native native, unsigned nargs, HandleAtom atom,
+                         gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                         NewObjectKind newKind /* = GenericObject */,
+                         JSFunction::Flags flags /* = JSFunction::NATIVE_CTOR */)
+{
+    MOZ_ASSERT(flags & JSFunction::NATIVE_CTOR);
+    return NewFunctionWithProto(cx, native, nargs, flags, NullPtr(), atom,
+                                NullPtr(), allocKind, newKind);
+}
+
+JSFunction *
+js::NewScriptedFunction(ExclusiveContext *cx, unsigned nargs,
+                        JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+                        gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                        NewObjectKind newKind /* = GenericObject */)
+{
+    return NewFunctionWithProto(cx, nullptr, nargs, flags, parent, atom, NullPtr(),
                                 allocKind, newKind);
 }
 
@@ -2016,6 +2036,7 @@ js::NewFunctionWithProto(ExclusiveContext *cx, Native native,
     MOZ_ASSERT(allocKind == JSFunction::FinalizeKind || allocKind == JSFunction::ExtendedFinalizeKind);
     MOZ_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
     MOZ_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
+    MOZ_ASSERT_IF(native, !parent);
 
     RootedObject funobj(cx);
     // Don't mark asm.js module functions as singleton since they are
@@ -2191,18 +2212,20 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         MOZ_ASSERT(sop != JS_StrictPropertyStub);
     }
 
-    JSFunction::Flags funFlags;
-    if (!native)
-        funFlags = JSFunction::INTERPRETED_LAZY;
-    else
-        funFlags = JSAPIToJSFunctionFlags(flags);
-
     RootedAtom atom(cx, IdToFunctionName(cx, id));
     if (!atom)
         return nullptr;
 
-    RootedFunction fun(cx, NewFunction(cx, native, nargs, funFlags, obj, atom,
-                                       allocKind, newKind));
+    RootedFunction fun(cx);
+    if (!native)
+        fun = NewScriptedFunction(cx, nargs,
+                                  JSFunction::INTERPRETED_LAZY, obj,
+                                  atom, allocKind, newKind);
+    else if (flags & JSFUN_CONSTRUCTOR)
+        fun = NewNativeConstructor(cx, native, nargs, atom, allocKind, newKind);
+    else
+        fun = NewNativeFunction(cx, native, nargs, atom, allocKind, newKind);
+
     if (!fun)
         return nullptr;
 
