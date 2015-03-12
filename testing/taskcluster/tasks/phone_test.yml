@@ -1,0 +1,42 @@
+# This task is the base for most tests in gecko.
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+  tags:
+    createdForUser: {{owner}}
+  workerType: b2gtest
+  provisionerId: aws-provisioner
+  schedulerId: task-graph-scheduler
+
+  scopes:
+    - 'docker-worker:image:{{#docker_image}}tester-device{{/docker_image}}'
+    - 'queue:create-task:aws-provisioner/testdroid-device'
+    - 'docker-worker:cache:tc-vcs'
+
+  payload:
+    image: '{{#docker_image}}tester-device{{/docker_image}}'
+    maxRunTime: 3600
+    cache:
+      tc-vcs: '/home/worker/.tc-vcs'
+    env:
+      GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
+      GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
+      GAIA_REF: '{{{gaia_ref}}}'
+      GAIA_REV: '{{{gaia_rev}}}'
+      MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
+      MOZHARNESS_REV: '{{mozharness_rev}}'
+
+    # All builds share a common artifact directory for ease of uploading.
+    artifacts:
+      'private/logs':
+        type: directory
+        path: '/home/worker/upload/logs/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster

@@ -29,4 +29,7 @@ task:
     locations:
       img: 'private/build/flame-kk.zip'
 
+      GAIA_OPTIMIZE: '1'
+      B2G_SYSTEM_APPS: '1'
+      B2G_UPDATER: '1'
 
