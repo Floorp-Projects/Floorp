@@ -18,7 +18,7 @@
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
   // 1.2. Conversation Window
-  var IncomingCallView = loop.conversationViews.IncomingCallView;
+  var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
   var CallFailedView = loop.conversationViews.CallFailedView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
@@ -43,6 +43,7 @@
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
 
   // Local helpers
   function returnTrue() {
@@ -289,27 +290,34 @@
             </Example>
           </Section>
 
-          <Section name="IncomingCallView">
+          <Section name="AcceptCallView">
             <Example summary="Default / incoming video call" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
-                <IncomingCallView model={mockConversationModel}
-                                  video={true} />
+                <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
+                                callerId="Mr Smith"
+                                dispatcher={dispatcher}
+                                mozLoop={mockMozLoopRooms} />
               </div>
             </Example>
 
             <Example summary="Default / incoming audio only call" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
-                <IncomingCallView model={mockConversationModel}
-                                  video={false} />
+                <AcceptCallView callType={CALL_TYPES.AUDIO_ONLY}
+                                callerId="Mr Smith"
+                                dispatcher={dispatcher}
+                                mozLoop={mockMozLoopRooms} />
               </div>
             </Example>
           </Section>
 
-          <Section name="IncomingCallView-ActiveState">
+          <Section name="AcceptCallView-ActiveState">
             <Example summary="Default" dashed="true" style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded" >
-                <IncomingCallView  model={mockConversationModel}
-                                   showMenu={true} />
+                <AcceptCallView callType={CALL_TYPES.AUDIO_VIDEO}
+                                callerId="Mr Smith"
+                                dispatcher={dispatcher}
+                                mozLoop={mockMozLoopRooms}
+                                showMenu={true} />
               </div>
             </Example>
           </Section>
@@ -396,16 +404,27 @@
           </Section>
 
           <Section name="CallFailedView">
-            <Example summary="Call Failed" dashed="true"
+            <Example summary="Call Failed - Incoming" dashed="true"
                      style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
-                <CallFailedView dispatcher={dispatcher} store={conversationStore} />
+                <CallFailedView dispatcher={dispatcher}
+                                outgoing={false}
+                                store={conversationStore} />
+              </div>
+            </Example>
+            <Example summary="Call Failed - Outgoing" dashed="true"
+                     style={{width: "300px", height: "272px"}}>
+              <div className="fx-embedded">
+                <CallFailedView dispatcher={dispatcher}
+                                outgoing={true}
+                                store={conversationStore} />
               </div>
             </Example>
             <Example summary="Call Failed — with call URL error" dashed="true"
                      style={{width: "300px", height: "272px"}}>
               <div className="fx-embedded">
                 <CallFailedView dispatcher={dispatcher} emailLinkError={true}
+                                outgoing={true}
                                 store={conversationStore} />
               </div>
             </Example>
@@ -737,15 +756,29 @@
 
   window.addEventListener("DOMContentLoaded", function() {
     try {
-      React.render(<App />, document.body);
+      React.renderComponent(<App />, document.getElementById("main"));
     } catch(err) {
-      console.log(err);
+      console.error(err);
+      uncaughtError = err;
     }
 
     _renderComponentsInIframes();
 
     // Put the title back, in case views changed it.
     document.title = "Loop UI Components Showcase";
+
+    // This simulates the mocha layout for errors which means we can run
+    // this alongside our other unit tests but use the same harness.
+    if (uncaughtError) {
+      $("#results").append("<div class='failures'><em>1</em></div>");
+      $("#results").append("<li class='test fail'>" +
+        "<h2>Errors rendering UI-Showcase</h2>" +
+        "<pre class='error'>" + uncaughtError + "\n" + uncaughtError.stack + "</pre>" +
+        "</li>");
+    } else {
+      $("#results").append("<div class='failures'><em>0</em></div>");
+    }
+    $("#results").append("<p id='complete'>Complete.</p>");
   });
 
 })();

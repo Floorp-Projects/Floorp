@@ -15,6 +15,7 @@ exports.inSafeMode = runtime.inSafeMode;
 exports.OS = runtime.OS;
 exports.processType = runtime.processType;
 exports.widgetToolkit = runtime.widgetToolkit;
+exports.processID = runtime.processID;
 
 // Attempt to access `XPCOMABI` may throw exception, in which case exported
 // `XPCOMABI` will be set to `null`.
