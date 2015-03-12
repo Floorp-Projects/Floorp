@@ -73,6 +73,35 @@ function Log(token, msg) {
   info(TimeStamp(token) + " " + msg);
 }
 
+function TimeRangesToString(trs)
+{
+  var l = trs.length;
+  if (l === 0) { return "-"; }
+  var s = "";
+  var i = 0;
+  for (;;) {
+    s += trs.start(i) + "-" + trs.end(i);
+    if (++i === l) { return s; }
+    s += ",";
+  }
+}
+
+function SourceBufferToString(sb)
+{
+  return ("SourceBuffer{"
+    + "AppendMode=" + (sb.AppendMode || "-")
+    + ", updating=" + (sb.updating ? "true" : "false")
+    + ", buffered=" + TimeRangesToString(sb.buffered)
+    + ", audioTracks=" + (sb.audioTracks ? sb.audioTracks.length : "-")
+    + ", videoTracks=" + (sb.videoTracks ? sb.videoTracks.length : "-")
+    + "}");
+}
+
+function SourceBufferListToString(sbl)
+{
+  return "SourceBufferList[" + sbl.map(SourceBufferToString).join(", ") + "]";
+}
+
 function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
   return function(ev) {
     var msgStr = ArrayBufferToString(ev.message);
@@ -186,6 +215,118 @@ function PlayFragmented(test, elem, token)
   });
 }
 
+function AppendTrack(test, ms, track, token)
+{
+  return new Promise(function(resolve, reject) {
+    var sb;
+    var curFragment = 0;
+    var resolved = false;
+    var fragmentFile;
+
+    function addNextFragment() {
+      if (curFragment >= track.fragments.length) {
+        Log(token, track.name + ": end of track");
+        resolve();
+        resolved = true;
+        return;
+      }
+
+      fragmentFile = MaybeCrossOriginURI(test, track.fragments[curFragment++]);
+
+      var req = new XMLHttpRequest();
+      req.open("GET", fragmentFile);
+      req.responseType = "arraybuffer";
+
+      req.addEventListener("load", function() {
+        Log(token, track.name + ": fetch of " + fragmentFile + " complete, appending");
+        sb.appendBuffer(new Uint8Array(req.response));
+      });
+
+      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
+      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
+
+      Log(token, track.name + ": addNextFragment() fetching next fragment " + fragmentFile);
+      req.send(null);
+    }
+
+    Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
+    sb = ms.addSourceBuffer(track.type);
+    sb.addEventListener("updateend", function() {
+      if (ms.readyState == "ended") {
+        /* We can get another updateevent as a result of calling ms.endOfStream() if
+           the highest end time of our source buffers is different from that of the
+           media source duration. Due to bug 1065207 this can happen because of
+           inaccuracies in the frame duration calculations. Check if we are already
+           "ended" and ignore the update event */
+        Log(token, track.name + ": updateend when readyState already 'ended'");
+        if (!resolved) {
+          // Needed if decoder knows this was the last fragment and ended by itself.
+          Log(token, track.name + ": but promise not resolved yet -> end of track");
+          resolve();
+          resolved = true;
+        }
+        return;
+      }
+      Log(token, track.name + ": updateend for " + fragmentFile + ", " + SourceBufferToString(sb));
+      addNextFragment();
+    });
+
+    addNextFragment();
+  });
+}
+
+function PlayMultiTrack(test, elem, token)
+{
+  if (!test.tracks) {
+    ok(false, token + " test does not have a tracks list");
+    return Promise.reject();
+  }
+
+  var ms = new MediaSource();
+  elem.src = URL.createObjectURL(ms);
+
+  return new Promise(function (resolve, reject) {
+    var firstOpen = true;
+    ms.addEventListener("sourceopen", function () {
+      if (!firstOpen) {
+        Log(token, "sourceopen again?");
+        return;
+      }
+
+      firstOpen = false;
+      Log(token, "sourceopen");
+      return Promise.all(test.tracks.map(function(track) {
+        return AppendTrack(test, ms, track, token);
+      })).then(function(){
+        Log(token, "end of stream");
+        ms.endOfStream();
+        resolve();
+      });
+    })
+  });
+}
+
+// Returns a promise that is resolved when the media element is ready to have
+// its play() function called; when it's loaded MSE fragments, or once the load
+// has started for non-MSE video.
+function LoadTest(test, elem, token)
+{
+  if (test.fragments) {
+    // A |fragments| array indicates that this is an MSE test case with one track.
+    return PlayFragmented(test, elem, token);
+  }
+
+  if (test.tracks) {
+    // A |tracks| array indicates that this is an MSE test case with multiple tracks.
+    return PlayMultiTrack(test, elem, token);
+  }
+
+  // This file isn't fragmented; won't set the media source normally because
+  // EME doesn't support non-MSE source.
+  ok(false, token + " test does not have a fragments or tracks list");
+  return Promise.reject();
+}
+
 function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
@@ -208,12 +349,23 @@ function SetupEME(test, token, params)
     ? params.onSetKeysFail
     : bail(token + " Failed to set MediaKeys on <video> element");
 
+  var firstEncrypted = true;
+
   v.addEventListener("encrypted", function(ev) {
-    Log(token, "got encrypted event");
+    if (!firstEncrypted) {
+      // TODO: Better way to handle 'encrypted'?
+      //       Maybe wait for metadataloaded and all expected 'encrypted's?
+      Log(token, "got encrypted event again, initDataType=" + ev.initDataType);
+      return;
+    }
+    firstEncrypted = false;
+
+    Log(token, "got encrypted event, initDataType=" + ev.initDataType);
     var options = [
       {
         initDataType: ev.initDataType,
         videoType: test.type,
+        audioType: test.type,
       }
     ];
 
