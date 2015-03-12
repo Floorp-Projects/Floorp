@@ -889,6 +889,30 @@ class ABIArg
     AnyRegister reg() const { return kind_ == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
 };
 
+// Get the set of registers which should be saved by a block of code which
+// clobbers all registers besides |unused|, but does not clobber floating point
+// registers.
+inline GeneralRegisterSet
+SavedNonVolatileRegisters(GeneralRegisterSet unused)
+{
+    GeneralRegisterSet result;
+
+    for (GeneralRegisterIterator iter(GeneralRegisterSet::NonVolatile()); iter.more(); iter++) {
+        Register reg = *iter;
+        if (!unused.has(reg))
+            result.add(reg);
+    }
+
+    // ARM and MIPS require an additional register to be saved, if calls can be made.
+#if defined(JS_CODEGEN_ARM)
+    result.add(Register::FromCode(Registers::lr));
+#elif defined(JS_CODEGEN_MIPS)
+    result.add(Register::FromCode(Registers::ra));
+#endif
+
+    return result;
+}
+
 } // namespace jit
 } // namespace js
 
