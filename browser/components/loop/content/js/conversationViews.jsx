@@ -124,8 +124,6 @@ loop.conversationViews = (function(mozL10n) {
     render: function() {
       var contactName = _getContactDisplayName(this.props.contact);
 
-      document.title = contactName;
-
       return (
         <div className="call-window">
           <CallIdentifierView
@@ -140,19 +138,30 @@ loop.conversationViews = (function(mozL10n) {
   // Matches strings of the form "<nonspaces>@<nonspaces>" or "+<digits>"
   var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
 
-  var IncomingCallView = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
+  var AcceptCallView = React.createClass({
+    mixins: [sharedMixins.DropdownMenuMixin],
 
     propTypes: {
-      model: React.PropTypes.object.isRequired,
-      video: React.PropTypes.bool.isRequired
+      callType: React.PropTypes.string.isRequired,
+      callerId: React.PropTypes.string.isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired,
+      // Only for use by the ui-showcase
+      showMenu: React.PropTypes.bool
     },
 
     getDefaultProps: function() {
       return {
         showMenu: false,
-        video: true
       };
+    },
+
+    componentDidMount: function() {
+      this.props.mozLoop.startAlerting();
+    },
+
+    componentWillUnmount: function() {
+      this.props.mozLoop.stopAlerting();
     },
 
     clickHandler: function(e) {
@@ -164,17 +173,23 @@ loop.conversationViews = (function(mozL10n) {
 
     _handleAccept: function(callType) {
       return function() {
-        this.props.model.set("selectedCallType", callType);
-        this.props.model.trigger("accept");
+        this.props.dispatcher.dispatch(new sharedActions.AcceptCall({
+          callType: callType
+        }));
       }.bind(this);
     },
 
     _handleDecline: function() {
-      this.props.model.trigger("decline");
+      this.props.dispatcher.dispatch(new sharedActions.DeclineCall({
+        blockCaller: false
+      }));
     },
 
     _handleDeclineBlock: function(e) {
-      this.props.model.trigger("declineAndBlock");
+      this.props.dispatcher.dispatch(new sharedActions.DeclineCall({
+        blockCaller: true
+      }));
+
       /* Prevent event propagation
        * stop the click from reaching parent element */
       return false;
@@ -187,12 +202,12 @@ loop.conversationViews = (function(mozL10n) {
      **/
     _answerModeProps: function() {
       var videoButton = {
-        handler: this._handleAccept("audio-video"),
+        handler: this._handleAccept(CALL_TYPES.AUDIO_VIDEO),
         className: "fx-embedded-btn-icon-video",
         tooltip: "incoming_call_accept_audio_video_tooltip"
       };
       var audioButton = {
-        handler: this._handleAccept("audio"),
+        handler: this._handleAccept(CALL_TYPES.AUDIO_ONLY),
         className: "fx-embedded-btn-audio-small",
         tooltip: "incoming_call_accept_audio_only_tooltip"
       };
@@ -201,7 +216,7 @@ loop.conversationViews = (function(mozL10n) {
       props.secondary = audioButton;
 
       // When video is not enabled on this call, we swap the buttons around.
-      if (!this.props.video) {
+      if (this.props.callType === CALL_TYPES.AUDIO_ONLY) {
         audioButton.className = "fx-embedded-btn-icon-audio";
         videoButton.className = "fx-embedded-btn-video-small";
         props.primary = audioButton;
@@ -221,9 +236,8 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         <div className="call-window">
-          <CallIdentifierView video={this.props.video}
-            peerIdentifier={this.props.model.getCallIdentifier()}
-            urlCreationDate={this.props.model.get("urlCreationDate")}
+          <CallIdentifierView video={this.props.callType === CALL_TYPES.AUDIO_VIDEO}
+            peerIdentifier={this.props.callerId}
             showIcons={true} />
 
           <div className="btn-group call-action-group">
@@ -300,9 +314,6 @@ loop.conversationViews = (function(mozL10n) {
 
   /**
    * Something went wrong view. Displayed when there's a big problem.
-   *
-   * XXX Based on CallFailedView, but built specially until we flux-ify the
-   * incoming call views (bug 1088672).
    */
   var GenericFailureView = React.createClass({
     mixins: [sharedMixins.AudioMixin],
@@ -331,327 +342,6 @@ loop.conversationViews = (function(mozL10n) {
         </div>
       );
     }
-  });
-
-  /**
-   * This view manages the incoming conversation views - from
-   * call initiation through to the actual conversation and call end.
-   *
-   * At the moment, it does more than that, these parts need refactoring out.
-   */
-  var IncomingConversationView = React.createClass({
-    mixins: [sharedMixins.AudioMixin, sharedMixins.WindowCloseMixin],
-
-    propTypes: {
-      client: React.PropTypes.instanceOf(loop.Client).isRequired,
-      conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
-                         .isRequired,
-      sdk: React.PropTypes.object.isRequired,
-      isDesktop: React.PropTypes.bool,
-      conversationAppStore: React.PropTypes.instanceOf(
-        loop.store.ConversationAppStore).isRequired
-    },
-
-    getDefaultProps: function() {
-      return {
-        isDesktop: false
-      };
-    },
-
-    getInitialState: function() {
-      return {
-        callFailed: false, // XXX this should be removed when bug 1047410 lands.
-        callStatus: "start"
-      };
-    },
-
-    componentDidMount: function() {
-      this.props.conversation.on("accept", this.accept, this);
-      this.props.conversation.on("decline", this.decline, this);
-      this.props.conversation.on("declineAndBlock", this.declineAndBlock, this);
-      this.props.conversation.on("call:accepted", this.accepted, this);
-      this.props.conversation.on("change:publishedStream", this._checkConnected, this);
-      this.props.conversation.on("change:subscribedStream", this._checkConnected, this);
-      this.props.conversation.on("session:ended", this.endCall, this);
-      this.props.conversation.on("session:peer-hungup", this._onPeerHungup, this);
-      this.props.conversation.on("session:network-disconnected", this._onNetworkDisconnected, this);
-      this.props.conversation.on("session:connection-error", this._notifyError, this);
-
-      this.setupIncomingCall();
-    },
-
-    componentDidUnmount: function() {
-      this.props.conversation.off(null, null, this);
-    },
-
-    render: function() {
-      switch (this.state.callStatus) {
-        case "start": {
-          document.title = mozL10n.get("incoming_call_title2");
-
-          // XXX Don't render anything initially, though this should probably
-          // be some sort of pending view, whilst we connect the websocket.
-          return null;
-        }
-        case "incoming": {
-          document.title = mozL10n.get("incoming_call_title2");
-
-          return (
-            <IncomingCallView
-              model={this.props.conversation}
-              video={this.props.conversation.hasVideoStream("incoming")}
-            />
-          );
-        }
-        case "connected": {
-          document.title = this.props.conversation.getCallIdentifier();
-
-          var callType = this.props.conversation.get("selectedCallType");
-
-          return (
-            <sharedViews.ConversationView
-              isDesktop={this.props.isDesktop}
-              initiate={true}
-              sdk={this.props.sdk}
-              model={this.props.conversation}
-              video={{enabled: callType !== "audio"}}
-            />
-          );
-        }
-        case "end": {
-          // XXX To be handled with the "failed" view state when bug 1047410 lands
-          if (this.state.callFailed) {
-            return <GenericFailureView
-              cancelCall={this.closeWindow.bind(this)}
-            />;
-          }
-
-          document.title = mozL10n.get("conversation_has_ended");
-
-          this.play("terminated");
-
-          return (
-            <sharedViews.FeedbackView
-              onAfterFeedbackReceived={this.closeWindow.bind(this)}
-            />
-          );
-        }
-        case "close": {
-          this.closeWindow();
-          return (<div/>);
-        }
-      }
-    },
-
-    /**
-     * Notify the user that the connection was not possible
-     * @param {{code: number, message: string}} error
-     */
-    _notifyError: function(error) {
-      // XXX Not the ideal response, but bug 1047410 will be replacing
-      // this by better "call failed" UI.
-      console.error(error);
-      this.setState({callFailed: true, callStatus: "end"});
-    },
-
-    /**
-     * Peer hung up. Notifies the user and ends the call.
-     *
-     * Event properties:
-     * - {String} connectionId: OT session id
-     */
-    _onPeerHungup: function() {
-      this.setState({callFailed: false, callStatus: "end"});
-    },
-
-    /**
-     * Network disconnected. Notifies the user and ends the call.
-     */
-    _onNetworkDisconnected: function() {
-      // XXX Not the ideal response, but bug 1047410 will be replacing
-      // this by better "call failed" UI.
-      this.setState({callFailed: true, callStatus: "end"});
-    },
-
-    /**
-     * Incoming call route.
-     */
-    setupIncomingCall: function() {
-      navigator.mozLoop.startAlerting();
-
-      // XXX This is a hack until we rework for the flux model in bug 1088672.
-      var callData = this.props.conversationAppStore.getStoreState().windowData;
-
-      this.props.conversation.setIncomingSessionData(callData);
-      this._setupWebSocket();
-    },
-
-    /**
-     * Starts the actual conversation
-     */
-    accepted: function() {
-      this.setState({callStatus: "connected"});
-    },
-
-    /**
-     * Moves the call to the end state
-     */
-    endCall: function() {
-      navigator.mozLoop.calls.clearCallInProgress(
-        this.props.conversation.get("windowId"));
-      this.setState({callStatus: "end"});
-    },
-
-    /**
-     * Used to set up the web socket connection and navigate to the
-     * call view if appropriate.
-     */
-    _setupWebSocket: function() {
-      this._websocket = new loop.CallConnectionWebSocket({
-        url: this.props.conversation.get("progressURL"),
-        websocketToken: this.props.conversation.get("websocketToken"),
-        callId: this.props.conversation.get("callId"),
-      });
-      this._websocket.promiseConnect().then(function(progressStatus) {
-        this.setState({
-          callStatus: progressStatus === "terminated" ? "close" : "incoming"
-        });
-      }.bind(this), function() {
-        this._handleSessionError();
-        return;
-      }.bind(this));
-
-      this._websocket.on("progress", this._handleWebSocketProgress, this);
-    },
-
-    /**
-     * Checks if the streams have been connected, and notifies the
-     * websocket that the media is now connected.
-     */
-    _checkConnected: function() {
-      // Check we've had both local and remote streams connected before
-      // sending the media up message.
-      if (this.props.conversation.streamsConnected()) {
-        this._websocket.mediaUp();
-      }
-    },
-
-    /**
-     * Used to receive websocket progress and to determine how to handle
-     * it if appropraite.
-     * If we add more cases here, then we should refactor this function.
-     *
-     * @param {Object} progressData The progress data from the websocket.
-     * @param {String} previousState The previous state from the websocket.
-     */
-    _handleWebSocketProgress: function(progressData, previousState) {
-      // We only care about the terminated state at the moment.
-      if (progressData.state !== "terminated")
-        return;
-
-      // XXX This would be nicer in the _abortIncomingCall function, but we need to stop
-      // it here for now due to server-side issues that are being fixed in bug 1088351.
-      // This is before the abort call to ensure that it happens before the window is
-      // closed.
-      navigator.mozLoop.stopAlerting();
-
-      // If we hit any of the termination reasons, and the user hasn't accepted
-      // then it seems reasonable to close the window/abort the incoming call.
-      //
-      // If the user has accepted the call, and something's happened, display
-      // the call failed view.
-      //
-      // https://wiki.mozilla.org/Loop/Architecture/MVP#Termination_Reasons
-      if (previousState === "init" || previousState === "alerting") {
-        this._abortIncomingCall();
-      } else {
-        this.setState({callFailed: true, callStatus: "end"});
-      }
-
-    },
-
-    /**
-     * Silently aborts an incoming call - stops the alerting, and
-     * closes the websocket.
-     */
-    _abortIncomingCall: function() {
-      this._websocket.close();
-      // Having a timeout here lets the logging for the websocket complete and be
-      // displayed on the console if both are on.
-      setTimeout(this.closeWindow, 0);
-    },
-
-    /**
-     * Accepts an incoming call.
-     */
-    accept: function() {
-      navigator.mozLoop.stopAlerting();
-      this._websocket.accept();
-      this.props.conversation.accepted();
-    },
-
-    /**
-     * Declines a call and handles closing of the window.
-     */
-    _declineCall: function() {
-      this._websocket.decline();
-      navigator.mozLoop.calls.clearCallInProgress(
-        this.props.conversation.get("windowId"));
-      this._websocket.close();
-      // Having a timeout here lets the logging for the websocket complete and be
-      // displayed on the console if both are on.
-      setTimeout(this.closeWindow, 0);
-    },
-
-    /**
-     * Declines an incoming call.
-     */
-    decline: function() {
-      navigator.mozLoop.stopAlerting();
-      this._declineCall();
-    },
-
-    /**
-     * Decline and block an incoming call
-     * @note:
-     * - loopToken is the callUrl identifier. It gets set in the panel
-     *   after a callUrl is received
-     */
-    declineAndBlock: function() {
-      navigator.mozLoop.stopAlerting();
-      var token = this.props.conversation.get("callToken");
-      var callerId = this.props.conversation.get("callerId");
-
-      // If this is a direct call, we'll need to block the caller directly.
-      if (callerId && EMAIL_OR_PHONE_RE.test(callerId)) {
-        navigator.mozLoop.calls.blockDirectCaller(callerId, function(err) {
-          // XXX The conversation window will be closed when this cb is triggered
-          // figure out if there is a better way to report the error to the user
-          // (bug 1103150).
-          console.log(err.fileName + ":" + err.lineNumber + ": " + err.message);
-        });
-      } else {
-        this.props.client.deleteCallUrl(token,
-          this.props.conversation.get("sessionType"),
-          function(error) {
-            // XXX The conversation window will be closed when this cb is triggered
-            // figure out if there is a better way to report the error to the user
-            // (bug 1048909).
-            console.log(error);
-          });
-      }
-
-      this._declineCall();
-    },
-
-    /**
-     * Handles a error starting the session
-     */
-    _handleSessionError: function() {
-      // XXX Not the ideal response, but bug 1047410 will be replacing
-      // this by better "call failed" UI.
-      console.error("Failed initiating the call session.");
-    },
   });
 
   /**
@@ -730,6 +420,7 @@ loop.conversationViews = (function(mozL10n) {
       contact: React.PropTypes.object.isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
+      outgoing: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
@@ -811,13 +502,35 @@ loop.conversationViews = (function(mozL10n) {
       }));
     },
 
+    _renderMessage: function() {
+      if (this.props.outgoing) {
+        return  (<p className="btn-label">{mozL10n.get("generic_failure_with_reason2")}</p>);
+      }
+
+      return null;
+    },
+
     render: function() {
+      var cx = React.addons.classSet;
+
+      var retryClasses = cx({
+        btn: true,
+        "btn-info": true,
+        "btn-retry": true,
+        hide: !this.props.outgoing
+      });
+      var emailClasses = cx({
+        btn: true,
+        "btn-info": true,
+        "btn-email": true,
+        hide: !this.props.outgoing
+      });
+
       return (
         <div className="call-window">
           <h2>{ this._getTitleMessage() }</h2>
 
-          <p className="btn-label">{mozL10n.get("generic_failure_with_reason2")}</p>
-
+          {this._renderMessage()}
           {this._renderError()}
 
           <div className="btn-group call-action-group">
@@ -825,11 +538,11 @@ loop.conversationViews = (function(mozL10n) {
                     onClick={this.cancelCall}>
               {mozL10n.get("cancel_button")}
             </button>
-            <button className="btn btn-info btn-retry"
+            <button className={retryClasses}
                     onClick={this.retryCall}>
               {mozL10n.get("retry_call_button")}
             </button>
-            <button className="btn btn-info btn-email"
+            <button className={emailClasses}
                     onClick={this.emailLink}
                     disabled={this.state.emailLinkButtonDisabled}>
               {mozL10n.get("share_button2")}
@@ -924,15 +637,17 @@ loop.conversationViews = (function(mozL10n) {
    * Master View Controller for outgoing calls. This manages
    * the different views that need displaying.
    */
-  var OutgoingConversationView = React.createClass({
+  var CallControllerView = React.createClass({
     mixins: [
       sharedMixins.AudioMixin,
+      sharedMixins.DocumentTitleMixin,
       loop.store.StoreMixin("conversationStore"),
       Backbone.Events
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
@@ -955,7 +670,7 @@ loop.conversationViews = (function(mozL10n) {
      * Used to setup and render the feedback view.
      */
     _renderFeedbackView: function() {
-      document.title = mozL10n.get("conversation_has_ended");
+      this.setTitle(mozL10n.get("conversation_has_ended"));
 
       return (
         <sharedViews.FeedbackView
@@ -964,7 +679,43 @@ loop.conversationViews = (function(mozL10n) {
       );
     },
 
+    _renderViewFromCallType: function() {
+      // For outgoing calls we can display the pending conversation view
+      // for any state that render() doesn't manage.
+      if (this.state.outgoing) {
+        return (<PendingConversationView
+          dispatcher={this.props.dispatcher}
+          callState={this.state.callState}
+          contact={this.state.contact}
+          enableCancelButton={this._isCancellable()}
+        />);
+      }
+
+      // For incoming calls that are in accepting state, display the
+      // accept call view.
+      if (this.state.callState === CALL_STATES.ALERTING) {
+        return (<AcceptCallView
+          callType={this.state.callType}
+          callerId={this.state.callerId}
+          dispatcher={this.props.dispatcher}
+          mozLoop={this.props.mozLoop}
+        />);
+      }
+
+      // Otherwise we're still gathering or connecting, so
+      // don't display anything.
+      return null;
+    },
+
     render: function() {
+      // Set the default title to the contact name or the callerId, note
+      // that views may override this, e.g. the feedback view.
+      if (this.state.contact) {
+        this.setTitle(_getContactDisplayName(this.state.contact));
+      } else {
+        this.setTitle(this.state.callerId || "");
+      }
+
       switch (this.state.callState) {
         case CALL_STATES.CLOSE: {
           this._closeWindow();
@@ -974,6 +725,7 @@ loop.conversationViews = (function(mozL10n) {
           return (<CallFailedView
             dispatcher={this.props.dispatcher}
             contact={this.state.contact}
+            outgoing={this.state.outgoing}
           />);
         }
         case CALL_STATES.ONGOING: {
@@ -993,12 +745,7 @@ loop.conversationViews = (function(mozL10n) {
           return null;
         }
         default: {
-          return (<PendingConversationView
-            dispatcher={this.props.dispatcher}
-            callState={this.state.callState}
-            contact={this.state.contact}
-            enableCancelButton={this._isCancellable()}
-          />);
+          return this._renderViewFromCallType();
         }
       }
     },
@@ -1011,10 +758,9 @@ loop.conversationViews = (function(mozL10n) {
     CallFailedView: CallFailedView,
     _getContactDisplayName: _getContactDisplayName,
     GenericFailureView: GenericFailureView,
-    IncomingCallView: IncomingCallView,
-    IncomingConversationView: IncomingConversationView,
+    AcceptCallView: AcceptCallView,
     OngoingConversationView: OngoingConversationView,
-    OutgoingConversationView: OutgoingConversationView
+    CallControllerView: CallControllerView
   };
 
 })(document.mozL10n || navigator.mozL10n);

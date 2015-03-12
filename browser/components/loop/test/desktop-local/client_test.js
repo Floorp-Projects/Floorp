@@ -52,42 +52,6 @@ describe("loop.Client", function() {
   });
 
   describe("loop.Client", function() {
-    describe("#deleteCallUrl", function() {
-      it("should make a delete call to /call-url/{fakeToken}", function() {
-        client.deleteCallUrl(fakeToken, mozLoop.LOOP_SESSION_TYPE.GUEST, callback);
-
-        sinon.assert.calledOnce(hawkRequestStub);
-        sinon.assert.calledWith(hawkRequestStub,
-                                mozLoop.LOOP_SESSION_TYPE.GUEST,
-                                "/call-url/" + fakeToken, "DELETE");
-      });
-
-      it("should call the callback with null when the request succeeds",
-         function() {
-
-           // Sets up the hawkRequest stub to trigger the callback with no error
-           // and the url.
-           hawkRequestStub.callsArgWith(4, null);
-
-           client.deleteCallUrl(fakeToken, mozLoop.LOOP_SESSION_TYPE.FXA, callback);
-
-           sinon.assert.calledWithExactly(callback, null);
-         });
-
-      it("should send an error when the request fails", function() {
-        // Sets up the hawkRequest stub to trigger the callback with
-        // an error
-        hawkRequestStub.callsArgWith(4, fakeErrorRes);
-
-        client.deleteCallUrl(fakeToken, mozLoop.LOOP_SESSION_TYPE.FXA, callback);
-
-        sinon.assert.calledOnce(callback);
-        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-          return err.code == 400 && "invalid token" == err.message;
-        }));
-      });
-    });
-
     describe("#setupOutgoingCall", function() {
       var calleeIds, callType;
 

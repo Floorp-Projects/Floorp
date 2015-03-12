@@ -134,6 +134,119 @@ exports['test native Loader with mappings'] = function (assert, done) {
   }).then(null, (reason) => console.error(reason));
 };
 
+exports['test native Loader overrides'] = function*(assert) {
+  const expectedKeys = Object.keys(require("sdk/io/fs")).join(", ");
+  const manifest = yield getJSON('/fixtures/native-overrides-test/package.json');
+  const rootURI = root + '/fixtures/native-overrides-test/';
+
+  let loader = Loader({
+    paths: makePaths(rootURI),
+    rootURI: rootURI,
+    manifest: manifest,
+    metadata: manifest,
+    isNative: true
+  });
+
+  let program = main(loader);
+  let fooKeys = Object.keys(program.foo).join(", ");
+  let barKeys = Object.keys(program.foo).join(", ");
+  let fsKeys = Object.keys(program.fs).join(", ");
+  let overloadKeys = Object.keys(program.overload.fs).join(", ");
+  let overloadLibKeys = Object.keys(program.overloadLib.fs).join(", ");
+
+  assert.equal(fooKeys, expectedKeys, "foo exports sdk/io/fs");
+  assert.equal(barKeys, expectedKeys, "bar exports sdk/io/fs");
+  assert.equal(fsKeys, expectedKeys, "sdk/io/fs exports sdk/io/fs");
+  assert.equal(overloadKeys, expectedKeys, "overload exports foo which exports sdk/io/fs");
+  assert.equal(overloadLibKeys, expectedKeys, "overload/lib/foo exports foo/lib/foo");
+  assert.equal(program.internal, "test", "internal exports ./lib/internal");
+  assert.equal(program.extra, true, "fs-extra was exported properly");
+
+  assert.equal(program.Tabs, "no tabs exist", "sdk/tabs exports ./lib/tabs from the add-on");
+  assert.equal(program.CoolTabs, "no tabs exist", "sdk/tabs exports ./lib/tabs from the node_modules");
+  assert.equal(program.CoolTabsLib, "a cool tabs implementation", "./lib/tabs true relative path from the node_modules");
+
+  assert.equal(program.ignore, "do not ignore this export", "../ignore override was ignored.");
+
+  unload(loader);
+};
+
+exports['test invalid native Loader overrides cause no errors'] = function*(assert) {
+  const manifest = yield getJSON('/fixtures/native-overrides-test/package.json');
+  const rootURI = root + '/fixtures/native-overrides-test/';
+  const EXPECTED = JSON.stringify({});
+
+  let makeLoader = (rootURI, manifest) => Loader({
+    paths: makePaths(rootURI),
+    rootURI: rootURI,
+    manifest: manifest,
+    metadata: manifest,
+    isNative: true
+  });
+
+  manifest.jetpack.overrides = "string";
+  let loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a string caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack.overrides = true;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a boolean caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack.overrides = 5;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a number caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack.overrides = null;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to null caused no errors making the loader");
+  unload(loader);
+};
+
+exports['test invalid native Loader jetpack key cause no errors'] = function*(assert) {
+  const manifest = yield getJSON('/fixtures/native-overrides-test/package.json');
+  const rootURI = root + '/fixtures/native-overrides-test/';
+  const EXPECTED = JSON.stringify({});
+
+  let makeLoader = (rootURI, manifest) => Loader({
+    paths: makePaths(rootURI),
+    rootURI: rootURI,
+    manifest: manifest,
+    metadata: manifest,
+    isNative: true
+  });
+
+  manifest.jetpack = "string";
+  let loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a string caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack = true;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a boolean caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack = 5;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to a number caused no errors making the loader");
+  unload(loader);
+
+  manifest.jetpack = null;
+  loader = makeLoader(rootURI, manifest);
+  assert.equal(JSON.stringify(loader.manifest.jetpack.overrides), EXPECTED,
+               "setting jetpack.overrides to null caused no errors making the loader");
+  unload(loader);
+};
+
 exports['test native Loader without mappings'] = function (assert, done) {
   getJSON('/fixtures/native-addon-test/package.json').then(manifest => {
     let rootURI = root + '/fixtures/native-addon-test/';

@@ -42,7 +42,8 @@ protected:
   bool WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                             nsIAtom* aEventType,
                             nsXBLPrototypeHandler* aHandler,
-                            bool aExecute);
+                            bool aExecute,
+                            bool* aOutReservedForChrome = nullptr);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
   // it if aExecute = true.
@@ -50,13 +51,17 @@ protected:
                               nsXBLPrototypeHandler* aHandler,
                               uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState,
-                              bool aExecute);
+                              bool aExecute,
+                              bool* aOutReservedForChrome = nullptr);
 
   // HandleEvent function for the capturing phase.
   void HandleEventOnCapture(nsIDOMKeyEvent* aEvent);
 
-  // Check if any handler would handle the given event.
-  bool HasHandlerForEvent(nsIDOMKeyEvent* aEvent);
+  // Check if any handler would handle the given event. Optionally returns
+  // whether the command handler for the event is marked with the "reserved"
+  // attribute.
+  bool HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
+                          bool* aOutReservedForChrome = nullptr);
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document

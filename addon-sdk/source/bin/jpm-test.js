@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var BLACKLIST = [];
 var readParam = require("./node-scripts/utils").readParam;
 var path = require("path");
 var Mocha = require("mocha");

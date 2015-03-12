@@ -139,5 +139,7 @@ navigator.mozLoop = {
     },
     on: function() {}
   },
-  fxAEnabled: true
+  fxAEnabled: true,
+  startAlerting: function() {},
+  stopAlerting: function() {}
 };

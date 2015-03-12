@@ -17,7 +17,7 @@ const PATH = '/test-contentScriptWhen.html';
 
 function createLoader () {
   let options = merge({}, require('@loader/options'),
-                      { prefixURI: require('./fixtures').url() });
+                      { id: "testloader", prefixURI: require('./fixtures').url() });
   return Loader(module, null, options);
 }
 exports.createLoader = createLoader;

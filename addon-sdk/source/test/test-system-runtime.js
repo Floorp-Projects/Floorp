@@ -12,6 +12,8 @@ exports["test system runtime"] = function(assert) {
                "runtime.OS is string");
   assert.equal(typeof(runtime.processType), "number",
                "runtime.processType is a number");
+  assert.equal(typeof(runtime.processID), "number",
+               "runtime.processID is a number");
   assert.equal(typeof(runtime.widgetToolkit), "string",
                "runtime.widgetToolkit is string");
   const XPCOMABI = runtime.XPCOMABI;

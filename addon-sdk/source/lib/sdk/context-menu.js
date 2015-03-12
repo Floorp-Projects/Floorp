@@ -19,7 +19,6 @@ const { validateOptions, getTypeOf } = require("./deprecated/api-utils");
 const { URL, isValidURI } = require("./url");
 const { WindowTracker, browserWindowIterator } = require("./deprecated/window-utils");
 const { isBrowser, getInnerId } = require("./window/utils");
-const { Ci, Cc, Cu } = require("chrome");
 const { MatchPattern } = require("./util/match-pattern");
 const { EventTarget } = require("./event/target");
 const { emit } = require('./event/core');
@@ -27,11 +26,8 @@ const { when } = require('./system/unload');
 const { contract: loaderContract } = require('./content/loader');
 const { omit } = require('./util/object');
 const self = require('./self')
-
-// null-out cycles in .modules to make @loader/options JSONable
-const ADDON = omit(require('@loader/options'), ['modules', 'globals']);
-
-require('../framescript/FrameScriptManager.jsm').enableCMEvents();
+const { remoteRequire, processes } = require('./remote/parent');
+remoteRequire('sdk/content/context-menu');
 
 // All user items we add have this class.
 const ITEM_CLASS = "addon-context-menu-item";
@@ -67,6 +63,10 @@ const OVERFLOW_POPUP_CLASS = "addon-content-menu-overflow-popup";
 // Holds private properties for API objects
 let internal = ns();
 
+// A little hacky but this is the last process ID that last opened the context
+// menu
+let lastContextProcessId = null;
+
 function uuid() {
   return require('./util/uuid').uuid().toString();
 }
@@ -79,9 +79,6 @@ function getScheme(spec) {
     return null;
   }
 }
-
-let MessageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                     getService(Ci.nsIMessageBroadcaster);
 
 let Context = Class({
   initialize: function() {
@@ -340,21 +337,17 @@ function isItemVisible(item, addonInfo, usePageWorker) {
 // Called when an item is clicked to send out click events to the content
 // scripts
 function itemActivated(item, clickedNode) {
-  let data = {
-    items: [internal(item).id],
-    data: item.data,
-  }
+  let items = [internal(item).id];
+  let data = item.data;
 
   while (item.parentMenu) {
     item = item.parentMenu;
-    data.items.push(internal(item).id);
+    items.push(internal(item).id);
   }
 
-  let menuData = clickedNode.ownerDocument.defaultView.gContextMenuContentData;
-  let messageManager = menuData.browser.messageManager;
-  messageManager.sendAsyncMessage('sdk/contextmenu/activateitems', data, {
-    popupNode: menuData.popupNode
-  });
+  let process = processes.getById(lastContextProcessId);
+  if (process)
+    process.port.emit('sdk/contextmenu/activateitems', items, data);
 }
 
 function serializeItem(item) {
@@ -416,9 +409,7 @@ let BaseItem = Class({
       return;
 
     // Tell all existing frames that this item has been destroyed
-    MessageManager.broadcastAsyncMessage("sdk/contextmenu/destroyitems", {
-      items: [internal(this).id]
-    });
+    processes.port.emit("sdk/contextmenu/destroyitems", [internal(this).id]);
 
     if (this.parentMenu)
       this.parentMenu.removeItem(this);
@@ -454,7 +445,7 @@ let BaseItem = Class({
   },
 });
 
-function workerMessageReceived({ data: { id, args } }) {
+function workerMessageReceived(process, id, args) {
   if (internal(this).id != id)
     return;
 
@@ -471,14 +462,14 @@ let LabelledItem = Class({
     EventTarget.prototype.initialize.call(this, options);
 
     internal(this).messageListener = workerMessageReceived.bind(this);
-    MessageManager.addMessageListener('sdk/worker/event', internal(this).messageListener);
+    processes.port.on('sdk/worker/event', internal(this).messageListener);
   },
 
   destroy: function destroy() {
     if (internal(this).destroyed)
       return;
 
-    MessageManager.removeMessageListener('sdk/worker/event', internal(this).messageListener);
+    processes.port.off('sdk/worker/event', internal(this).messageListener);
 
     BaseItem.prototype.destroy.call(this);
   },
@@ -674,27 +665,20 @@ function getContainerItems(container) {
 
 // Notify all frames of these new or changed items
 function sendItems(items) {
-  MessageManager.broadcastAsyncMessage("sdk/contextmenu/createitems", {
-    items,
-    addon: ADDON,
-  });
+  processes.port.emit("sdk/contextmenu/createitems", items);
 }
 
-// Called when a new frame is created and wants to get the current list of items
-function remoteItemRequest({ target: { messageManager } }) {
+// Called when a new process is created and needs to get the current list of items
+function remoteItemRequest(process) {
   let items = getContainerItems(contentContextMenu);
   if (items.length == 0)
     return;
 
-  messageManager.sendAsyncMessage("sdk/contextmenu/createitems", {
-    items,
-    addon: ADDON,
-  });
+  process.port.emit("sdk/contextmenu/createitems", items);
 }
-MessageManager.addMessageListener('sdk/contextmenu/requestitems', remoteItemRequest);
+processes.forEvery(remoteItemRequest);
 
 when(function() {
-  MessageManager.removeMessageListener('sdk/contextmenu/requestitems', remoteItemRequest);
   contentContextMenu.destroy();
 });
 
@@ -1011,12 +995,13 @@ let MenuWrapper = Class({
 
       let mainWindow = event.target.ownerDocument.defaultView;
       this.contextMenuContentData = mainWindow.gContextMenuContentData
-      let addonInfo = this.contextMenuContentData.addonInfo[self.id];
-      if (!addonInfo) {
+      if (!(self.id in this.contextMenuContentData.addonInfo)) {
         console.warn("No context menu state data was provided.");
         return;
       }
-      this.setVisibility(this.items, addonInfo, true);
+      let addonInfo = this.contextMenuContentData.addonInfo[self.id];
+      lastContextProcessId = addonInfo.processID;
+      this.setVisibility(this.items, addonInfo.items, true);
     }
     catch (e) {
       console.exception(e);

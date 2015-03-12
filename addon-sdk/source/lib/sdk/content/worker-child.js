@@ -5,12 +5,15 @@
 
 const { merge } = require('../util/object');
 const { Class } = require('../core/heritage');
+const { emit } = require('../event/core');
 const { EventTarget } = require('../event/target');
 const { getInnerId, getByInnerId } = require('../window/utils');
 const { instanceOf, isObject } = require('../lang/type');
-const { on: observe } = require('../system/events');
+const system = require('../system/events');
+const { when } = require('../system/unload');
 const { WorkerSandbox } = require('./sandbox');
 const { Ci } = require('chrome');
+const { process, frames } = require('../remote/child');
 
 const EVENTS = {
   'chrome-page-shown': 'pageshow',
@@ -20,10 +23,17 @@ const EVENTS = {
   'inner-window-destroyed': 'detach',
 }
 
+// The parent Worker must have been created (or an async message sent to spawn
+// its creation) before creating the WorkerChild or messages from the content
+// script to the parent will get lost.
 const WorkerChild = Class({
   implements: [EventTarget],
+
   initialize(options) {
     merge(this, options);
+    keepAlive.set(this.id, this);
+
+    this.windowId = getInnerId(this.window);
 
     this.port = EventTarget();
     this.port.on('*', this.send.bind(this, 'event'));
@@ -32,57 +42,77 @@ const WorkerChild = Class({
     this.observe = this.observe.bind(this);
 
     for (let topic in EVENTS)
-      observe(topic, this.observe);
+      system.on(topic, this.observe);
 
     this.receive = this.receive.bind(this);
-    this.manager.addMessageListener('sdk/worker/message', this.receive);
+    process.port.on('sdk/worker/message', this.receive);
 
-    let window = getByInnerId(this.window);
-    this.sandbox = WorkerSandbox(this, window);
+    this.sandbox = WorkerSandbox(this, this.window);
 
-    if (options.currentReadyState != "complete" &&
-        window.document.readyState == "complete") {
-      // If we attempted to attach the worker before the document was loaded but
-      // it has now completed loading then the parent should reasonably expect
-      // to see a pageshow event.
-      this.sandbox.emitSync("pageshow");
-      this.send("pageshow");
-    }
+    this.frozen = false;
+    this.frozenMessages = [];
+    this.on('pageshow', () => {
+      this.frozen = false;
+      this.frozenMessages.forEach(args => this.receive(null, this.id, args));
+      this.frozenMessages = [];
+    });
+    this.on('pagehide', () => {
+      this.frozen = true;
+    });
   },
+
   // messages
-  receive({ data: { id, args }}) {
+  receive(process, id, args) {
     if (id !== this.id)
       return;
-    this.sandbox.emit(...args);
+
+    if (this.frozen)
+      this.frozenMessages.push(args);
+    else
+      this.sandbox.emit(...args);
+
     if (args[0] === 'detach')
       this.destroy(args[1]);
   },
+
   send(...args) {
     args = JSON.parse(JSON.stringify(args, exceptions));
-    if (this.manager.content)
-      this.manager.sendAsyncMessage('sdk/worker/event', { id: this.id, args });
+    process.port.emit('sdk/worker/event', this.id, args);
   },
+
   // notifications
   observe({ type, subject }) {
     if (!this.sandbox)
       return;
-    if (subject.defaultView && getInnerId(subject.defaultView) === this.window) {
+
+    if (subject.defaultView && getInnerId(subject.defaultView) === this.windowId) {
       this.sandbox.emitSync(EVENTS[type]);
-      this.send(EVENTS[type]);
+      emit(this, EVENTS[type]);
     }
+
     if (type === 'inner-window-destroyed' &&
-        subject.QueryInterface(Ci.nsISupportsPRUint64).data === this.window) {
+        subject.QueryInterface(Ci.nsISupportsPRUint64).data === this.windowId) {
       this.destroy();
     }
   },
+
+  get frame() {
+    return frames.getFrameForWindow(this.window.top);
+  },
+
   // detach/destroy: unload and release the sandbox
   destroy(reason) {
     if (!this.sandbox)
       return;
-    if (this.manager.content)
-      this.manager.removeMessageListener('sdk/worker/message', this.receive);
+
+    for (let topic in EVENTS)
+      system.off(topic, this.observe);
+    process.port.off('sdk/worker/message', this.receive);
+
     this.sandbox.destroy(reason);
     this.sandbox = null;
+    keepAlive.delete(this.id);
+
     this.send('detach');
   }
 })
@@ -96,3 +126,19 @@ function exceptions(key, value) {
   let { message, fileName, lineNumber, stack, name } = value;
   return { _errorType, message, fileName, lineNumber, stack, name };
 }
+
+// workers for windows in this tab
+let keepAlive = new Map();
+
+process.port.on('sdk/worker/create', (process, options) => {
+  options.window = getByInnerId(options.window);
+  if (!options.window)
+    return;
+
+  let worker = new WorkerChild(options);
+});
+
+when(reason => {
+  for (let worker of keepAlive.values())
+    worker.destroy(reason);
+});

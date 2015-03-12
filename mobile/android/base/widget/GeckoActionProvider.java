@@ -9,13 +9,13 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemActionView;
+import org.mozilla.gecko.menu.QuickShareBarActionView;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.drawable.Drawable;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GeckoActionProvider {
-    private static final int MAX_HISTORY_SIZE = 2;
+    private static final int MAX_HISTORY_SIZE_DEFAULT = 2;
 
     /**
      * A listener to know when a target was selected.
@@ -84,16 +84,28 @@ public class GeckoActionProvider {
         mContext = context;
     }
 
+    /**
+     * Creates the action view using the default history size.
+     */
     public View onCreateActionView() {
+        return onCreateActionView(MAX_HISTORY_SIZE_DEFAULT, false);
+    }
+
+    public View onCreateActionView(final int maxHistorySize, final boolean isForQuickShareBar) {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-        MenuItemActionView view = new MenuItemActionView(mContext, null);
+        final MenuItemActionView view;
+        if (isForQuickShareBar) {
+            view = new QuickShareBarActionView(mContext, null);
+        } else {
+            view = new MenuItemActionView(mContext, null);
+        }
         view.addActionButtonClickListener(mCallbacks);
 
         final PackageManager packageManager = mContext.getPackageManager();
         int historySize = dataModel.getDistinctActivityCountInHistory();
-        if (historySize > MAX_HISTORY_SIZE) {
-            historySize = MAX_HISTORY_SIZE;
+        if (historySize > maxHistorySize) {
+            historySize = maxHistorySize;
         }
 
         // Historical data is dependent on past selection of activities.
@@ -110,10 +122,6 @@ public class GeckoActionProvider {
         }
 
         return view;
-    }
-
-    public View getView() {
-        return onCreateActionView();
     }
 
     public boolean hasSubMenu() {
