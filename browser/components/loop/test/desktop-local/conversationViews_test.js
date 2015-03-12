@@ -578,12 +578,12 @@ describe("loop.conversationViews", function () {
     });
   });
 
-  describe("OutgoingConversationView", function() {
+  describe("CallControllerView", function() {
     var store, feedbackStore;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
-        React.createElement(loop.conversationViews.OutgoingConversationView, {
+        React.createElement(loop.conversationViews.CallControllerView, {
           dispatcher: dispatcher,
         }));
     }
@@ -756,7 +756,7 @@ describe("loop.conversationViews", function () {
           windowData: fakeSessionData
         });
 
-        stubComponent(loop.conversationViews, "IncomingCallView");
+        stubComponent(loop.conversationViews, "AcceptCallView");
         stubComponent(sharedView, "ConversationView");
       });
 
@@ -1206,7 +1206,7 @@ describe("loop.conversationViews", function () {
     });
   });
 
-  describe("IncomingCallView", function() {
+  describe("AcceptCallView", function() {
     var view, model, fakeAudio;
 
     beforeEach(function() {
@@ -1225,7 +1225,7 @@ describe("loop.conversationViews", function () {
       sandbox.stub(window, "Audio").returns(fakeAudio);
 
       view = TestUtils.renderIntoDocument(
-        React.createElement(loop.conversationViews.IncomingCallView, {
+        React.createElement(loop.conversationViews.AcceptCallView, {
           model: model,
           video: true
         }));
@@ -1234,7 +1234,7 @@ describe("loop.conversationViews", function () {
     describe("default answer mode", function() {
       it("should display video as primary answer mode", function() {
         view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.IncomingCallView, {
+          React.createElement(loop.conversationViews.AcceptCallView, {
             model: model,
             video: true
           }));
@@ -1246,7 +1246,7 @@ describe("loop.conversationViews", function () {
 
       it("should display audio as primary answer mode", function() {
         view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.IncomingCallView, {
+          React.createElement(loop.conversationViews.AcceptCallView, {
             model: model,
             video: false
           }));
@@ -1258,7 +1258,7 @@ describe("loop.conversationViews", function () {
 
       it("should accept call with video", function() {
         view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.IncomingCallView, {
+          React.createElement(loop.conversationViews.AcceptCallView, {
             model: model,
             video: true
           }));
@@ -1275,7 +1275,7 @@ describe("loop.conversationViews", function () {
 
       it("should accept call with audio", function() {
         view = TestUtils.renderIntoDocument(
-          React.createElement(loop.conversationViews.IncomingCallView, {
+          React.createElement(loop.conversationViews.AcceptCallView, {
             model: model,
             video: false
           }));
@@ -1293,7 +1293,7 @@ describe("loop.conversationViews", function () {
       it("should accept call with video when clicking on secondary btn",
          function() {
           view = TestUtils.renderIntoDocument(
-            React.createElement(loop.conversationViews.IncomingCallView, {
+            React.createElement(loop.conversationViews.AcceptCallView, {
               model: model,
               video: false
             }));
@@ -1311,7 +1311,7 @@ describe("loop.conversationViews", function () {
       it("should accept call with audio when clicking on secondary btn",
          function() {
           view = TestUtils.renderIntoDocument(
-            React.createElement(loop.conversationViews.IncomingCallView, {
+            React.createElement(loop.conversationViews.AcceptCallView, {
               model: model,
               video: true
             }));
