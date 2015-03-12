@@ -21,7 +21,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode, AudioNode,
                                    mThreshold,
                                    mKnee,
                                    mRatio,
-                                   mReduction,
                                    mAttack,
                                    mRelease)
 
@@ -173,9 +172,7 @@ private:
           node = static_cast<DynamicsCompressorNode*>(mStream->Engine()->Node());
         }
         if (node) {
-          AudioParam* reduction = node->Reduction();
-          reduction->CancelAllEvents();
-          reduction->SetValue(mReduction);
+          node->SetReduction(mReduction);
         }
         return NS_OK;
       }
@@ -207,7 +204,7 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   , mThreshold(new AudioParam(this, SendThresholdToStream, -24.f))
   , mKnee(new AudioParam(this, SendKneeToStream, 30.f))
   , mRatio(new AudioParam(this, SendRatioToStream, 12.f))
-  , mReduction(new AudioParam(this, Callback, 0.f))
+  , mReduction(0)
   , mAttack(new AudioParam(this, SendAttackToStream, 0.003f))
   , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f))
 {

@@ -40,11 +40,6 @@ public:
     return mRatio;
   }
 
-  AudioParam* Reduction() const
-  {
-    return mReduction;
-  }
-
   AudioParam* Attack() const
   {
     return mAttack;
@@ -56,6 +51,11 @@ public:
     return mRelease;
   }
 
+  float Reduction() const
+  {
+    return mReduction;
+  }
+
   virtual const char* NodeType() const MOZ_OVERRIDE
   {
     return "DynamicsCompressorNode";
@@ -63,6 +63,12 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
+  void SetReduction(float aReduction)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mReduction = aReduction;
+  }
 
 protected:
   virtual ~DynamicsCompressorNode();
@@ -78,7 +84,7 @@ private:
   nsRefPtr<AudioParam> mThreshold;
   nsRefPtr<AudioParam> mKnee;
   nsRefPtr<AudioParam> mRatio;
-  nsRefPtr<AudioParam> mReduction;
+  float mReduction;
   nsRefPtr<AudioParam> mAttack;
   nsRefPtr<AudioParam> mRelease;
 };
