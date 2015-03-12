@@ -145,6 +145,13 @@ class LIRGeneratorShared : public MDefinitionVisitor
 
     inline void defineReturn(LInstruction *lir, MDefinition *mir);
 
+    template <size_t X>
+    inline void define(LVariadicInstruction<1, X> *lir, MDefinition *mir, const LDefinition &def);
+
+    template <size_t X>
+    inline void define(LVariadicInstruction<1, X> *lir, MDefinition *mir,
+                       LDefinition::Policy policy = LDefinition::REGISTER);
+
     template <size_t Ops, size_t Temps>
     inline void define(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir,
                         const LDefinition &def);

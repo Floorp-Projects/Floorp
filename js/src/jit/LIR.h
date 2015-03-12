@@ -13,6 +13,7 @@
 #include "mozilla/Array.h"
 
 #include "jit/Bailouts.h"
+#include "jit/FixedList.h"
 #include "jit/InlineList.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/LOpcodes.h"
@@ -1056,6 +1057,65 @@ class LInstructionHelper : public LInstruction
         MOZ_ASSERT(numOperands() == 1);
         return getOperand(0);
     }
+    const LDefinition *output() {
+        MOZ_ASSERT(numDefs() == 1);
+        return getDef(0);
+    }
+};
+
+template<size_t Defs, size_t Temps>
+class LVariadicInstruction : public LInstruction
+{
+    mozilla::Array<LDefinition, Defs> defs_;
+    FixedList<LAllocation> operands_;
+    mozilla::Array<LDefinition, Temps> temps_;
+
+  public:
+    bool init(TempAllocator &alloc, size_t length) {
+        return operands_.init(alloc, length);
+    }
+
+    size_t numDefs() const MOZ_FINAL MOZ_OVERRIDE {
+        return Defs;
+    }
+    LDefinition *getDef(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &defs_[index];
+    }
+    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
+        return operands_.length();
+    }
+    LAllocation *getOperand(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &operands_[index];
+    }
+    size_t numTemps() const MOZ_FINAL MOZ_OVERRIDE {
+        return Temps;
+    }
+    LDefinition *getTemp(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        return &temps_[index];
+    }
+
+    void setDef(size_t index, const LDefinition &def) MOZ_FINAL MOZ_OVERRIDE {
+        defs_[index] = def;
+    }
+    void setOperand(size_t index, const LAllocation &a) MOZ_FINAL MOZ_OVERRIDE {
+        operands_[index] = a;
+    }
+    void setTemp(size_t index, const LDefinition &a) MOZ_FINAL MOZ_OVERRIDE {
+        temps_[index] = a;
+    }
+
+    size_t numSuccessors() const MOZ_OVERRIDE {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const MOZ_OVERRIDE {
+        MOZ_ASSERT(false);
+        return nullptr;
+    }
+    void setSuccessor(size_t i, MBasicBlock *successor) MOZ_OVERRIDE {
+        MOZ_ASSERT(false);
+    }
+
+    // Default accessors, assuming a single input and output, respectively.
     const LDefinition *output() {
         MOZ_ASSERT(numDefs() == 1);
         return getDef(0);
