@@ -113,11 +113,13 @@ public:
 protected:
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
 
-  void AppendSpacingToPadding(nsFontMetrics* aFontMetrics);
+  void AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
+                              mozilla::LogicalMargin* aPadding);
   void GetDesiredSize(nsPresContext* aPresContext,
                       nsRenderingContext *aRenderingContext,
                       nsHTMLReflowMetrics& aMetrics,
-                      float aFontSizeInflation);
+                      float aFontSizeInflation,
+                      mozilla::LogicalMargin* aPadding);
 
   void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
   nsIDocument* GetOurCurrentDoc() const;
