@@ -616,17 +616,30 @@ describe("loop.conversationViews", function () {
           loop.conversationViews.CallFailedView);
     });
 
-    it("should render the PendingConversationView when the call state is 'gather'",
+    it("should render the PendingConversationView for outgoing calls when the call state is 'gather'",
       function() {
         store.setStoreState({
           callState: CALL_STATES.GATHER,
-          contact: contact
+          contact: contact,
+          outgoing: true
         });
 
         view = mountTestComponent();
 
         TestUtils.findRenderedComponentWithType(view,
           loop.conversationViews.PendingConversationView);
+    });
+
+    it("should render the AcceptCallView for incoming calls when the call state is 'alerting'", function() {
+      store.setStoreState({
+        callState: CALL_STATES.ALERTING,
+        outgoing: false
+      });
+
+      view = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(view,
+        loop.conversationViews.AcceptCallView);
     });
 
     it("should render the OngoingConversationView when the call state is 'ongoing'",
@@ -669,7 +682,8 @@ describe("loop.conversationViews", function () {
       function() {
         store.setStoreState({
           callState: CALL_STATES.GATHER,
-          contact: contact
+          contact: contact,
+          outgoing: true
         });
 
         view = mountTestComponent();
