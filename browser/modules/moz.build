@@ -11,6 +11,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'AboutHome.jsm',
     'BrowserUITelemetry.jsm',
     'CastingApps.jsm',
     'Chat.jsm',
@@ -29,14 +30,17 @@ EXTRA_JS_MODULES += [
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
     'PanelFrame.jsm',
+    'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
+    'RecentWindow.jsm',
     'RemotePrompt.jsm',
     'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',
     'WebappManager.jsm',
+    'webrtcUI.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -50,13 +54,6 @@ if CONFIG['NIGHTLY_BUILD']:
     EXTRA_JS_MODULES += [
         'SignInToWebsite.jsm',
     ]
-
-EXTRA_PP_JS_MODULES += [
-    'AboutHome.jsm',
-    'PluginContent.jsm',
-    'RecentWindow.jsm',
-    'webrtcUI.jsm',
-]
 
 EXTRA_PP_COMPONENTS += [
     'browsermodules.manifest',

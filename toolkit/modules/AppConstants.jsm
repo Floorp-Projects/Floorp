@@ -84,6 +84,30 @@ let AppConstants = Object.freeze({
   false,
 #endif
 
+  platform:
+#ifdef MOZ_WIDGET_GTK
+  "linux",
+#elif MOZ_WIDGET_QT
+  "linux",
+#elif XP_WIN
+  "win",
+#elif XP_MACOSX
+  "macosx",
+#elif MOZ_WIDGET_ANDROID
+  "android",
+#elif MOZ_WIDGET_GONK
+  "gonk",
+#else
+  "other",
+#endif
+
+  MOZ_CRASHREPORTER:
+#ifdef MOZ_CRASHREPORTER
+  true,
+#else
+  false,
+#endif
+
   MOZ_APP_VERSION: "@MOZ_APP_VERSION@",
 
   ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",

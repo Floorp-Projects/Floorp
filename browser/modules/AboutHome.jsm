@@ -13,6 +13,8 @@ this.EXPORTED_SYMBOLS = [ "AboutHomeUtils", "AboutHome" ];
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
@@ -50,10 +52,10 @@ this.AboutHomeUtils = {
       return !Services.prefs.getBoolPref("browser.EULA.override");
     } catch (e) { }
 
-#ifndef MOZILLA_OFFICIAL
-    // Non-official builds shouldn't show the notification.
-    return false;
-#endif
+    if (!AppConstants.MOZILLA_OFFICIAL) {
+      // Non-official builds shouldn't show the notification.
+      return false;
+    }
 
     // Look to see if the user has seen the current version or not.
     var currentVersion = Services.prefs.getIntPref("browser.rights.version");
@@ -193,9 +195,10 @@ let AboutHome = {
           }
 
           let engine = Services.search.currentEngine;
-#ifdef MOZ_SERVICES_HEALTHREPORT
-          window.BrowserSearch.recordSearchInHealthReport(engine, "abouthome", data.selection);
-#endif
+          if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+            window.BrowserSearch.recordSearchInHealthReport(engine, "abouthome", data.selection);
+          }
+
           // Trigger a search through nsISearchEngine.getSubmission()
           let submission = engine.getSubmission(data.searchTerms, null, "homepage");
           let where = data.useNewTab ? "tab" : "current";
