@@ -489,8 +489,6 @@ function getGlobalIndicator() {
 
     _popupShowing: function(aEvent) {
       let type = this.getAttribute("type");
-      // This can be removed once strings are added for type 'Browser' in bug 1142066.
-      let typeForL10n = type;
       let activeStreams;
       if (type == "Camera") {
         activeStreams = webrtcUI.getActiveStreams(true, false, false);
@@ -501,7 +499,6 @@ function getGlobalIndicator() {
       else if (type == "Screen") {
         activeStreams = webrtcUI.getActiveStreams(false, false, true);
         type = webrtcUI.showScreenSharingIndicator;
-        typeForL10n = type == "Browser" ? "Window" : type;
       }
 
       let bundle =
@@ -511,7 +508,7 @@ function getGlobalIndicator() {
         let stream = activeStreams[0];
 
         let menuitem = this.ownerDocument.createElement("menuitem");
-        let labelId = "webrtcIndicator.sharing" + typeForL10n + "With.menuitem";
+        let labelId = "webrtcIndicator.sharing" + type + "With.menuitem";
         let label = stream.browser.contentTitle || stream.uri;
         menuitem.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
         menuitem.setAttribute("disabled", "true");
@@ -530,7 +527,7 @@ function getGlobalIndicator() {
 
       // We show a different menu when there are several active streams.
       let menuitem = this.ownerDocument.createElement("menuitem");
-      let labelId = "webrtcIndicator.sharing" + typeForL10n + "WithNTabs.menuitem";
+      let labelId = "webrtcIndicator.sharing" + type + "WithNTabs.menuitem";
       let count = activeStreams.length;
       let label = PluralForm.get(count, bundle.GetStringFromName(labelId)).replace("#1", count);
       menuitem.setAttribute("label", label);
@@ -832,7 +829,7 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
   if (isBrowserSharing)
     mainAction = secondaryActions = null;
   // If we are sharing both a window and the screen, we show 'Screen'.
-  let stringId = "getUserMedia.sharing" + (isBrowserSharing ? "Window" : aState.screen);
+  let stringId = "getUserMedia.sharing" + aState.screen;
   screenSharingNotif =
     chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",
                                       stringBundle.getString(stringId + ".message"),
