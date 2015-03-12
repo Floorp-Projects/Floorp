@@ -1806,8 +1806,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind 
         RootedObject proto(cx, group->proto().toObject());
         obj->assertParentIs(cx->global());
         clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto,
-                                              NullPtr(), kind,
-                                              newKind);
+                                              kind, newKind);
     }
 
     // Allocate the same number of slots.
