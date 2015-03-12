@@ -116,10 +116,16 @@ MediaEngineCameraVideoSource::FitnessDistance(double n,
 MediaEngineCameraVideoSource::GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
                                                  const MediaTrackConstraintSet &aConstraints)
 {
+  // Treat width|height|frameRate == 0 on capability as "can do any".
+  // This allows for orthogonal capabilities that are not in discrete steps.
+
   uint64_t distance =
-    uint64_t(FitnessDistance(int32_t(aCandidate.width), aConstraints.mWidth)) +
-    uint64_t(FitnessDistance(int32_t(aCandidate.height), aConstraints.mHeight)) +
-    uint64_t(FitnessDistance(double(aCandidate.maxFPS), aConstraints.mFrameRate));
+    uint64_t(aCandidate.width? FitnessDistance(int32_t(aCandidate.width),
+                                               aConstraints.mWidth) : 0) +
+    uint64_t(aCandidate.height? FitnessDistance(int32_t(aCandidate.height),
+                                                aConstraints.mHeight) : 0) +
+    uint64_t(aCandidate.maxFPS? FitnessDistance(double(aCandidate.maxFPS),
+                                                aConstraints.mFrameRate) : 0);
   return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
 }
 

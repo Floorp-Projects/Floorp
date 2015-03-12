@@ -162,27 +162,43 @@ MediaEngineWebRTCVideoSource::NumCapabilities()
   if (num > 0) {
     return num;
   }
-  // Mac doesn't support capabilities.
-  //
-  // Hardcode generic desktop capabilities modeled on OSX camera.
-  // Note: Values are empirically picked to be OSX friendly, as on OSX, values
-  // other than these cause the source to not produce.
 
-  if (mHardcodedCapabilities.IsEmpty()) {
-    for (int i = 0; i < 9; i++) {
+  switch (mMediaSource) {
+    case dom::MediaSourceEnum::Camera:
+#ifdef XP_MACOSX
+      // Mac doesn't support capabilities.
+      //
+      // Hardcode generic desktop capabilities modeled on OSX camera.
+      // Note: Values are empirically picked to be OSX friendly, as on OSX,
+      // values other than these cause the source to not produce.
+
+      if (mHardcodedCapabilities.IsEmpty()) {
+        for (int i = 0; i < 9; i++) {
+          webrtc::CaptureCapability c;
+          c.width = 1920 - i*128;
+          c.height = 1080 - i*72;
+          c.maxFPS = 30;
+          mHardcodedCapabilities.AppendElement(c);
+        }
+        for (int i = 0; i < 16; i++) {
+          webrtc::CaptureCapability c;
+          c.width = 640 - i*40;
+          c.height = 480 - i*30;
+          c.maxFPS = 30;
+          mHardcodedCapabilities.AppendElement(c);
+        }
+      }
+      break;
+#endif
+    default:
+      // The default for devices that don't return discrete capabilities: treat
+      // them as supporting all capabilities orthogonally. E.g. screensharing.
       webrtc::CaptureCapability c;
-      c.width = 1920 - i*128;
-      c.height = 1080 - i*72;
-      c.maxFPS = 30;
+      c.width = 0; // 0 = accept any value
+      c.height = 0;
+      c.maxFPS = 0;
       mHardcodedCapabilities.AppendElement(c);
-    }
-    for (int i = 0; i < 16; i++) {
-      webrtc::CaptureCapability c;
-      c.width = 640 - i*40;
-      c.height = 480 - i*30;
-      c.maxFPS = 30;
-      mHardcodedCapabilities.AppendElement(c);
-    }
+      break;
   }
   return mHardcodedCapabilities.Length();
 }
