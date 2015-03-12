@@ -180,6 +180,17 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 static bool
 NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
+    if (JSScript *script = cx->currentScript()) {
+        const char *filename = script->filename();
+        cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedNoSuchMethod);
+    }
+
+    if (!cx->compartment()->warnedAboutNoSuchMethod) {
+        if (!JS_ReportWarning(cx, "__noSuchMethod__ is deprecated"))
+            return false;
+        cx->compartment()->warnedAboutNoSuchMethod = true;
+    }
+
     InvokeArgs args(cx);
     if (!args.init(2))
         return false;
@@ -198,12 +209,6 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     args[1].setObject(*argsobj);
     bool ok = Invoke(cx, args);
     vp[0] = args.rval();
-
-    if (JSScript *script = cx->currentScript()) {
-        const char *filename = script->filename();
-        cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedNoSuchMethod);
-    }
-
     return ok;
 }
 
