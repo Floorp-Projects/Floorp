@@ -63,7 +63,7 @@ ValueToIdPure(const Value &v, jsid *id)
 
 template <AllowGC allowGC>
 inline bool
-ValueToId(ExclusiveContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
+ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
           typename MaybeRooted<jsid, allowGC>::MutableHandleType idp)
 {
     int32_t i;
