@@ -667,6 +667,8 @@
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
             event.initEvent("select", true, true);
+            event.fromTab = this.getRelatedElement(panel);
+            event.toTab = this.getRelatedElement(this._selectedPanel);
             this.dispatchEvent(event);
           }
           return val;
