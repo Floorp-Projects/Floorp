@@ -24,7 +24,9 @@ const RecordingModel = function (options={}) {
   this._configuration = {
     withTicks: options.withTicks || false,
     withMemory: options.withMemory || false,
-    withAllocations: options.withAllocations || false
+    withAllocations: options.withAllocations || false,
+    allocationsSampleProbability: options.allocationsSampleProbability || 0,
+    allocationsMaxLogLength: options.allocationsMaxLogLength || 0
   };
 };
 
@@ -80,18 +82,15 @@ RecordingModel.prototype = {
 
   /**
    * Starts recording with the PerformanceFront.
-   *
-   * @param object options
-   *        @see PerformanceFront.prototype.startRecording
    */
-  startRecording: Task.async(function *(options = {}) {
+  startRecording: Task.async(function *() {
     // Times must come from the actor in order to be self-consistent.
     // However, we also want to update the view with the elapsed time
     // even when the actor is not generating data. To do this we get
     // the local time and use it to compute a reasonable elapsed time.
     this._localStartTime = this._performance.now();
 
-    let info = yield this._front.startRecording(options);
+    let info = yield this._front.startRecording(this.getConfiguration());
     this._profilerStartTime = info.profilerStartTime;
     this._timelineStartTime = info.timelineStartTime;
     this._memoryStartTime = info.memoryStartTime;
