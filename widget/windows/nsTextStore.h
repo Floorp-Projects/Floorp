@@ -596,6 +596,7 @@ protected:
     void Clear()
     {
       mText.Truncate();
+      mLastCompositionString.Truncate();
       mInitialized = false;
     }
 
@@ -604,6 +605,9 @@ protected:
     void Init(const nsAString& aText)
     {
       mText = aText;
+      if (mComposition.IsComposing()) {
+        mLastCompositionString = mComposition.mString;
+      }
       mMinTextModifiedOffset = NOT_MODIFIED;
       mInitialized = true;
     }
@@ -643,6 +647,9 @@ protected:
 
   private:
     nsString mText;
+    // mLastCompositionString stores the composition string when the document
+    // is locked. This is necessary to compute mMinTextModifiedOffset.
+    nsString mLastCompositionString;
     nsTextStore::Composition& mComposition;
     nsTextStore::Selection& mSelection;
 
@@ -784,6 +791,7 @@ protected:
   static bool sCreateNativeCaretForATOK;
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
+  static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar;
 };
 
 #endif /*NSTEXTSTORE_H_*/
