@@ -4797,7 +4797,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     Register tempReg = ToRegister(lir->temp());
 
     OutOfLineCode *ool = oolCallVM(NewGCObjectInfo, lir,
-                                   (ArgList(), Imm32(allocKind), Imm32(initialHeap),
+                                   (ArgList(), Imm32(int32_t(allocKind)), Imm32(initialHeap),
                                     Imm32(ndynamic), ImmPtr(clasp)),
                                    StoreRegisterTo(objReg));
 
@@ -6143,32 +6143,37 @@ JitRuntime::generateLazyLinkStub(JSContext *cx)
 {
     MacroAssembler masm(cx);
 #ifdef JS_USE_LINK_REGISTER
-    masm.push(lr);
+    masm.pushReturnAddress();
 #endif
 
-    Label call;
     GeneralRegisterSet regs = GeneralRegisterSet::Volatile();
     Register temp0 = regs.takeAny();
 
-    masm.callWithExitFrame(&call);
-#ifdef JS_USE_LINK_REGISTER
-    // sigh, this should probably attempt to bypass the push lr that starts off the block
-    // but oh well.
-    masm.pop(lr);
-#endif
-    masm.jump(ReturnReg);
+    // The caller did not push an exit frame on the stack, it pushed a
+    // JitFrameLayout.  We modify the descriptor to be a valid exit frame and
+    // restore it once the lazy link is complete.
+    Address descriptor(StackPointer, CommonFrameLayout::offsetOfDescriptor());
+    size_t convertToExitFrame = JitFrameLayout::Size() - ExitFrameLayout::Size();
+    masm.addPtr(Imm32(convertToExitFrame << FRAMESIZE_SHIFT), descriptor);
 
-    masm.bind(&call);
-#ifdef JS_USE_LINK_REGISTER
-        masm.push(lr);
-#endif
-    masm.enterExitFrame();
+    masm.enterFakeExitFrame(LazyLinkExitFrameLayout::Token());
+    masm.PushStubCode();
+
     masm.setupUnalignedABICall(1, temp0);
     masm.loadJSContext(temp0);
     masm.passABIArg(temp0);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, LazyLinkTopActivation));
-    masm.leaveExitFrame();
-    masm.retn(Imm32(sizeof(ExitFrameLayout)));
+
+    masm.leaveExitFrame(/* stub code */ sizeof(JitCode*));
+
+    masm.addPtr(Imm32(- (convertToExitFrame << FRAMESIZE_SHIFT)), descriptor);
+
+#ifdef JS_USE_LINK_REGISTER
+    // Restore the return address such that the emitPrologue function of the
+    // CodeGenerator can push it back on the stack with pushReturnAddress.
+    masm.pop(lr);
+#endif
+    masm.jump(ReturnReg);
 
     Linker linker(masm);
     AutoFlushICache afc("LazyLinkStub");

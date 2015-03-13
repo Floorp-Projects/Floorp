@@ -18,8 +18,8 @@
 using namespace js;
 using namespace js::gc;
 
-JS_STATIC_ASSERT(AllocKinds == FINALIZE_LIMIT);
-JS_STATIC_ASSERT(LastObjectAllocKind == FINALIZE_OBJECT_LAST);
+JS_STATIC_ASSERT(AllocKinds == unsigned(AllocKind::LIMIT));
+JS_STATIC_ASSERT(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
 
 static FILE *gcTraceFile = nullptr;
 
@@ -99,8 +99,8 @@ js::gc::InitTrace(GCRuntime &gc)
     TraceEvent(TraceEventInit, 0, TraceFormatVersion);
 
     /* Trace information about thing sizes. */
-    for (unsigned kind = 0; kind < FINALIZE_LIMIT; ++kind)
-        TraceEvent(TraceEventThingSize, Arena::thingSize((AllocKind)kind));
+    for (ALL_ALLOC_KINDS(kind))
+        TraceEvent(TraceEventThingSize, Arena::thingSize(kind));
 
     return true;
 }
@@ -229,7 +229,7 @@ js::gc::TraceTenuredFinalize(Cell *thing)
 {
     if (!gcTraceFile)
         return;
-    if (thing->tenuredGetAllocKind() == FINALIZE_OBJECT_GROUP)
+    if (thing->tenuredGetAllocKind() == AllocKind::OBJECT_GROUP)
         tracedGroups.remove(static_cast<const ObjectGroup *>(thing));
     TraceEvent(TraceEventTenuredFinalize, uint64_t(thing));
 }

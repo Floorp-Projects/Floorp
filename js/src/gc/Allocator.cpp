@@ -108,10 +108,10 @@ CheckAllocatorState(ExclusiveContext *cx, AllocKind kind)
     JSRuntime *rt = ncx->runtime();
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
     MOZ_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
-                  kind == FINALIZE_STRING ||
-                  kind == FINALIZE_FAT_INLINE_STRING ||
-                  kind == FINALIZE_SYMBOL ||
-                  kind == FINALIZE_JITCODE);
+                  kind == AllocKind::STRING ||
+                  kind == AllocKind::FAT_INLINE_STRING ||
+                  kind == AllocKind::SYMBOL ||
+                  kind == AllocKind::JITCODE);
     MOZ_ASSERT(!rt->isHeapBusy());
     MOZ_ASSERT(rt->gc.isAllocAllowed());
 #endif
@@ -156,7 +156,7 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
              const Class *clasp)
 {
     static_assert(mozilla::IsConvertible<T *, JSObject *>::value, "must be JSObject derived");
-    MOZ_ASSERT(kind >= FINALIZE_OBJECT0 && kind <= FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(kind <= AllocKind::OBJECT_LAST);
     size_t thingSize = Arena::thingSize(kind);
 
     MOZ_ASSERT(thingSize == Arena::thingSize(kind));

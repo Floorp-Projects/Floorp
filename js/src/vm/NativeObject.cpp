@@ -26,54 +26,6 @@ using JS::GenericNaN;
 using mozilla::DebugOnly;
 using mozilla::RoundUpPow2;
 
-PropDesc::PropDesc()
-{
-    setUndefined();
-}
-
-void
-PropDesc::setUndefined()
-{
-    value_ = UndefinedValue();
-    get_ = UndefinedValue();
-    set_ = UndefinedValue();
-    attrs = 0;
-    hasGet_ = false;
-    hasSet_ = false;
-    hasValue_ = false;
-    hasWritable_ = false;
-    hasEnumerable_ = false;
-    hasConfigurable_ = false;
-
-    isUndefined_ = true;
-}
-
-bool
-PropDesc::checkGetter(JSContext *cx)
-{
-    if (hasGet_) {
-        if (!IsCallable(get_) && !get_.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_getter_str);
-            return false;
-        }
-    }
-    return true;
-}
-
-bool
-PropDesc::checkSetter(JSContext *cx)
-{
-    if (hasSet_) {
-        if (!IsCallable(set_) && !set_.isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
-                                 js_setter_str);
-            return false;
-        }
-    }
-    return true;
-}
-
 static const ObjectElements emptyElementsHeader(0, 0);
 
 /* Objects with no elements share one empty set of elements. */
@@ -286,14 +238,6 @@ js::NativeObject::dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class 
     uint32_t slots = mozilla::RoundUpPow2(span);
     MOZ_ASSERT(slots >= span);
     return slots;
-}
-
-void
-PropDesc::trace(JSTracer *trc)
-{
-    gc::MarkValueRoot(trc, &value_, "PropDesc value");
-    gc::MarkValueRoot(trc, &get_, "PropDesc get");
-    gc::MarkValueRoot(trc, &set_, "PropDesc set");
 }
 
 inline bool

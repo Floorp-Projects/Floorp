@@ -288,10 +288,10 @@ nsControllerCommandGroup::IsCommandInGroup(const char *aCommand, const char *aGr
 NS_IMETHODIMP
 nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator **_retval)
 {
-  nsGroupsEnumerator *groupsEnum = new nsGroupsEnumerator(mGroupsHash);
-  if (!groupsEnum) return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<nsGroupsEnumerator> groupsEnum = new nsGroupsEnumerator(mGroupsHash);
 
-  return groupsEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)_retval);
+  groupsEnum.forget(_retval);
+  return NS_OK;
 }
 
 /* nsISimpleEnumerator getEnumeratorForGroup (in DOMString aGroup); */
@@ -301,10 +301,10 @@ nsControllerCommandGroup::GetEnumeratorForGroup(const char *aGroup, nsISimpleEnu
   nsDependentCString groupKey(aGroup);
   nsTArray<nsCString> *commandList = mGroupsHash.Get(groupKey); // may be null
 
-  nsNamedGroupEnumerator *theGroupEnum = new nsNamedGroupEnumerator(commandList);
-  if (!theGroupEnum) return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<nsNamedGroupEnumerator> theGroupEnum = new nsNamedGroupEnumerator(commandList);
 
-  return theGroupEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)_retval);
+  theGroupEnum.forget(_retval);
+  return NS_OK;
 }
 
 #if 0

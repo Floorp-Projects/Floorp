@@ -1160,6 +1160,8 @@ DWORD nsTextStore::sClientId  = 0;
 bool nsTextStore::sCreateNativeCaretForATOK = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
+bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
+bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret = false;
 
 #define TIP_NAME_BEGINS_WITH_ATOK \
   (NS_LITERAL_STRING("ATOK "))
@@ -1169,6 +1171,17 @@ bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 #define TIP_NAME_EASY_CHANGJEI \
   (NS_LITERAL_STRING( \
      "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"))
+#define TIP_NAME_GOOGLE_JA_INPUT_JA \
+  (NS_LITERAL_STRING("Google \x65E5\x672C\x8A9E\x5165\x529B"))
+#define TIP_NAME_GOOGLE_JA_INPUT_EN \
+  (NS_LITERAL_STRING("Google Japanese Input"))
+
+static bool
+IsGoogleJapaneseInput(const nsAString& aTIPName)
+{
+  return aTIPName.Equals(TIP_NAME_GOOGLE_JA_INPUT_JA) ||
+         aTIPName.Equals(TIP_NAME_GOOGLE_JA_INPUT_EN);
+}
 
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
@@ -3163,25 +3176,65 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
     return TS_E_INVALIDPOS;
   }
 
-  // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
-  // ITfContextView::GetTextExt() properly.  Prehaps, it's due to a bug of TSF.
-  // TSF (at least on Win 8.1) doesn't return TS_E_NOLAYOUT to the caller
-  // even if we return it.  It's converted to just E_FAIL.
-  // TODO: On Win 9, we need to check this hack is still necessary.
+  // NOTE: TSF (at least on Win 8.1) doesn't return TS_E_NOLAYOUT to the
+  // caller even if we return it.  It's converted to just E_FAIL.
+  // However, this is fixed on Win 10.
+
   const nsString& activeTIPKeyboardDescription =
     TSFStaticSink::GetInstance()->GetActiveTIPKeyboardDescription();
-  if (((sDoNotReturnNoLayoutErrorToFreeChangJie &&
-       activeTIPKeyboardDescription.Equals(TIP_NAME_FREE_CHANG_JIE_2010)) ||
-      (sDoNotReturnNoLayoutErrorToEasyChangjei &&
-       activeTIPKeyboardDescription.Equals(TIP_NAME_EASY_CHANGJEI))) &&
-      mComposition.IsComposing() &&
-      mLockedContent.IsLayoutChangedAfter(acpEnd) &&
-      mComposition.mStart < acpEnd) {
-    acpEnd = mComposition.mStart;
-    acpStart = std::min(acpStart, acpEnd);
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets for TIP "
-            "acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+  if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
+      mLockedContent.IsLayoutChangedAfter(acpEnd)) {
+    const Selection& currentSel = CurrentSelection();
+    if (!IsWin10OrLater()) {
+      // Google Japanese Input doesn't handle ITfContextView::GetTextExt()
+      // properly due to the same bug of TSF mentioned above.  Google Japanese
+      // Input calls this twice for the first character of changing range of
+      // composition string and the caret which is typically at the end of
+      // composition string.  The formar is used for showing candidate window.
+      // This is typically shown at wrong position.  We should avoid only this
+      // case. This is not necessary on Windows 10.
+      if (!mLockedContent.IsLayoutChangedAfter(acpStart) &&
+          acpStart < acpEnd &&
+          sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
+          IsGoogleJapaneseInput(activeTIPKeyboardDescription)) {
+        acpEnd = acpStart;
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets of "
+                "the first character of changing range of the composition "
+                "string for TIP acpStart=%d, acpEnd=%d",
+                this, acpStart, acpEnd));
+      }
+      // Google Japanese Input sometimes uses caret position for deciding its
+      // candidate window position. In such case, we should return the previous
+      // offset of selected clause. However, it's difficult to get where is
+      // selected clause for now.  Instead, we should use the first character
+      // which is modified. This is useful in most cases.
+      else if (acpStart == acpEnd &&
+               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd &&
+               sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
+               IsGoogleJapaneseInput(activeTIPKeyboardDescription)) {
+        acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets of "
+                "the caret of the composition string for TIP acpStart=%d, "
+                "acpEnd=%d", this, acpStart, acpEnd));
+      }
+    }
+    // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
+    // ITfContextView::GetTextExt() properly.  Prehaps, it's due to the bug of
+    // TSF.  We need to check if this is necessary on Windows 10 before
+    // disabling this on Windows 10.
+    else if ((sDoNotReturnNoLayoutErrorToFreeChangJie &&
+              activeTIPKeyboardDescription.Equals(
+                                             TIP_NAME_FREE_CHANG_JIE_2010)) ||
+             (sDoNotReturnNoLayoutErrorToEasyChangjei &&
+              activeTIPKeyboardDescription.Equals(TIP_NAME_EASY_CHANGJEI))) {
+      acpEnd = mComposition.mStart;
+      acpStart = std::min(acpStart, acpEnd);
+      PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+             ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets for "
+              "TIP acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+    }
   }
 
   if (mLockedContent.IsLayoutChangedAfter(acpEnd)) {
@@ -4708,6 +4761,14 @@ nsTextStore::Initialize()
   sDoNotReturnNoLayoutErrorToEasyChangjei =
     Preferences::GetBool(
       "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
+  sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar =
+    Preferences::GetBool(
+      "intl.tsf.hack.google_ja_input."
+        "do_not_return_no_layout_error_at_first_char", true);
+  sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret =
+    Preferences::GetBool(
+      "intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret",
+      true);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sThreadMgr=0x%p, "
@@ -4715,12 +4776,16 @@ nsTextStore::Initialize()
      "sCategoryMgr=0x%p, sDisabledDocumentMgr=0x%p, sDisabledContext=%p, "
      "sCreateNativeCaretForATOK=%s, "
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
-     "sDoNotReturnNoLayoutErrorToEasyChangjei=%s",
+     "sDoNotReturnNoLayoutErrorToEasyChangjei=%s, "
+     "sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar=%s, ",
+     "sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret=%s",
      sThreadMgr.get(), sClientId, sDisplayAttrMgr.get(),
      sCategoryMgr.get(), sDisabledDocumentMgr.get(), sDisabledContext.get(),
      GetBoolName(sCreateNativeCaretForATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
-     GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei)));
+     GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei),
+     GetBoolName(sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar),
+     GetBoolName(sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret)));
 }
 
 // static
@@ -4878,11 +4943,7 @@ nsTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
     GetSubstring(static_cast<uint32_t>(aStart),
                  static_cast<uint32_t>(aLength));
   if (aReplaceString != replacedString) {
-    uint32_t firstDifferentOffset =
-      static_cast<uint32_t>(aStart) + FirstDifferentCharOffset(aReplaceString,
-                                                               replacedString);
-    mMinTextModifiedOffset =
-      std::min(mMinTextModifiedOffset, firstDifferentOffset);
+    uint32_t firstDifferentOffset = mMinTextModifiedOffset;
     if (mComposition.IsComposing()) {
       // Emulate text insertion during compositions, because during a
       // composition, editor expects the whole composition string to
@@ -4894,7 +4955,22 @@ nsTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
       mComposition.mString.Replace(
         static_cast<uint32_t>(aStart - mComposition.mStart),
         static_cast<uint32_t>(aLength), aReplaceString);
+      // TIP may set composition string twice or more times during a document
+      // lock.  Therefore, we should compute the first difference offset with
+      // mLastCompositionString.
+      if (mComposition.mString != mLastCompositionString) {
+        firstDifferentOffset =
+          mComposition.mStart +
+            FirstDifferentCharOffset(mComposition.mString,
+                                     mLastCompositionString);
+      }
+    } else {
+      firstDifferentOffset =
+        static_cast<uint32_t>(aStart) +
+          FirstDifferentCharOffset(aReplaceString, replacedString);
     }
+    mMinTextModifiedOffset =
+      std::min(mMinTextModifiedOffset, firstDifferentOffset);
     mText.Replace(static_cast<uint32_t>(aStart),
                   static_cast<uint32_t>(aLength), aReplaceString);
   }

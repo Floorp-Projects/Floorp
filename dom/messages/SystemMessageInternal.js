@@ -250,22 +250,12 @@ SystemMessageInternal.prototype = {
                                            aExtra);
       debug("Returned status of sending message: " + result);
 
-      // Don't need to open the pages and queue the system message
-      // which was not allowed to be sent.
       if (result === MSG_SENT_FAILURE_PERM_DENIED) {
         return;
       }
 
       // For each page we must receive a confirm.
       ++pendingPromise.counter;
-
-      let page = this._findPage(aType, aPageURL, manifestURL);
-      if (page) {
-        // Queue this message in the corresponding pages.
-        this._queueMessage(page, aMessage, messageID);
-
-        this._openAppPage(page, aMessage, aExtra, result);
-      }
 
     }, this);
 
@@ -308,18 +298,6 @@ SystemMessageInternal.prototype = {
                                              aPage.manifestURL,
                                              aExtra);
         debug("Returned status of sending message: " + result);
-
-
-        // Don't need to open the pages and queue the system message
-        // which was not allowed to be sent.
-        if (result === MSG_SENT_FAILURE_PERM_DENIED) {
-          return;
-        }
-
-        // Queue this message in the corresponding pages.
-        this._queueMessage(aPage, aMessage, messageID);
-
-        this._openAppPage(aPage, aMessage, aExtra, result);
       };
 
       if ('function' !== typeof shouldDispatchFunc) {
@@ -738,15 +716,32 @@ SystemMessageInternal.prototype = {
       return MSG_SENT_FAILURE_PERM_DENIED;
     }
 
+    // Queue this message in the corresponding pages.
+    let page = this._findPage(aType, aPageURL, aManifestURL);
+    if (!page) {
+      debug("Message " + aType + " is not registered for " +
+            aPageURL + " @ " + aManifestURL);
+      // FIXME bug 1140275 should only send message to page registered in manifest
+      // return MSG_SENT_FAILURE_PERM_DENIED;
+    }
+    if (page)
+      this._queueMessage(page, aMessage, aMessageID);
+
     let appPageIsRunning = false;
     let pageKey = this._createKeyForPage({ type: aType,
                                            manifestURL: aManifestURL,
                                            pageURL: aPageURL });
 
+    let cache = this._findCacheForApp(aManifestURL);
     let targets = this._listeners[aManifestURL];
     if (targets) {
       for (let index = 0; index < targets.length; ++index) {
         let target = targets[index];
+        let manager = target.target;
+
+        // Ensure hasPendingMessage cache is refreshed before we open app
+        manager.sendAsyncMessage("SystemMessageCache:RefreshCache", cache);
+
         // We only need to send the system message to the targets (processes)
         // which contain the window page that matches the manifest/page URL of
         // the destination of system message.
@@ -765,7 +760,6 @@ SystemMessageInternal.prototype = {
         // Multiple windows can share the same target (process), the content
         // window needs to check if the manifest/page URL is matched. Only
         // *one* window should handle the system message.
-        let manager = target.target;
         manager.sendAsyncMessage("SystemMessageManager:Message",
                                  { type: aType,
                                    msg: aMessage,
@@ -775,6 +769,7 @@ SystemMessageInternal.prototype = {
       }
     }
 
+    let result = MSG_SENT_SUCCESS;
     if (!appPageIsRunning) {
       // The app page isn't running and relies on the 'open-app' chrome event to
       // wake it up. We still need to acquire a CPU wake lock for that page and
@@ -782,12 +777,12 @@ SystemMessageInternal.prototype = {
       // or a "SystemMessageManager:HandleMessageDone" message when the page
       // finishes handling the system message with other pending messages. At
       // that point, we'll release the lock we acquired.
+      result = MSG_SENT_FAILURE_APP_NOT_RUNNING;
       this._acquireCpuWakeLock(pageKey);
-      return MSG_SENT_FAILURE_APP_NOT_RUNNING;
-    } else {
-      return MSG_SENT_SUCCESS;
     }
-
+    if (page)
+      this._openAppPage(page, aMessage, aExtra, result);
+    return result;
   },
 
   _resolvePendingPromises: function(aMessageID) {

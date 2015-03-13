@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -251,8 +251,9 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
       if (NS_SUCCEEDED(rv)){
         rv = encoder->InitFromData(rgbData, 0, width, height, 3 * width /* RGB * # pixels in a row */, 
                                    imgIEncoder::INPUT_FORMAT_RGB, EmptyString());
-        if (NS_SUCCEEDED(rv))
-          encoder->QueryInterface(NS_GET_IID(nsIInputStream), (void **) aInputStream);
+        if (NS_SUCCEEDED(rv)) {
+          encoder.forget(aInputStream);
+        }
       }
     }
     delete [] rgbData;

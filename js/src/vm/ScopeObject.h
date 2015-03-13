@@ -339,7 +339,7 @@ class DeclEnvObject : public ScopeObject
 
   public:
     static const uint32_t RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
     static const Class class_;
 
@@ -361,7 +361,7 @@ class StaticEvalObject : public ScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
     static const Class class_;
 
@@ -435,7 +435,7 @@ class StaticWithObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
     static const Class class_;
 
@@ -451,7 +451,7 @@ class DynamicWithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 4;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
 
     static const Class class_;
 
@@ -504,7 +504,7 @@ class BlockObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
 
     static const Class class_;
 
@@ -690,7 +690,7 @@ class UninitializedLexicalObject : public ScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = 1;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+    static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
     static const Class class_;
 

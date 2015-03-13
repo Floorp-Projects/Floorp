@@ -132,9 +132,9 @@ AddonWrapper<Base>::set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObjec
 
     if (desc.setter()) {
         MOZ_ASSERT(desc.hasSetterObject());
-        MOZ_ASSERT(!desc.isReadonly());
         JS::AutoValueVector args(cx);
-        args.append(vp);
+        if (!args.append(vp))
+            return false;
         RootedValue fval(cx, ObjectValue(*desc.setterObject()));
         if (!JS_CallFunctionValue(cx, receiver, fval, args, vp))
             return false;

@@ -17,11 +17,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsOAuthClient",
 
 const HTTP_PATH = "http://example.com";
 const HTTP_ENDPOINT = "/browser/browser/base/content/test/general/browser_fxa_oauth.html";
+const HTTP_ENDPOINT_WITH_KEYS = "/browser/browser/base/content/test/general/browser_fxa_oauth_with_keys.html";
 
 let gTests = [
   {
     desc: "FxA OAuth - should open a new tab, complete OAuth flow",
-    run: function* () {
+    run: function () {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
         let properUrl = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
@@ -68,6 +69,169 @@ let gTests = [
           Assert.ok(tabOpened);
           Assert.equal(tokenData.code, "code1");
           Assert.equal(tokenData.state, "state");
+          resolve();
+        };
+
+        client.onError = reject;
+
+        client.launchWebFlow();
+      });
+    }
+  },
+  {
+    desc: "FxA OAuth - should receive an error when there's a state mismatch",
+    run: function () {
+      return new Promise(function(resolve, reject) {
+        let tabOpened = false;
+
+        waitForTab(function (tab) {
+          Assert.ok("Tab successfully opened");
+
+          // It should have passed in the expected non-matching state value.
+          let queryString = gBrowser.currentURI.spec.split('?')[1];
+          Assert.ok(queryString.indexOf('state=different-state') >= 0);
+
+          tabOpened = true;
+        });
+
+        let client = new FxAccountsOAuthClient({
+          parameters: {
+            state: "different-state",
+            client_id: "client_id",
+            oauth_uri: HTTP_PATH,
+            content_uri: HTTP_PATH,
+          },
+          authorizationEndpoint: HTTP_ENDPOINT
+        });
+
+        client.onComplete = reject;
+
+        client.onError = function(err) {
+          Assert.ok(tabOpened);
+          Assert.equal(err.message, "OAuth flow failed. State doesn't match");
+          resolve();
+        };
+
+        client.launchWebFlow();
+      });
+    }
+  },
+  {
+    desc: "FxA OAuth - should be able to request keys during OAuth flow",
+    run: function () {
+      return new Promise(function(resolve, reject) {
+        let tabOpened = false;
+
+        waitForTab(function (tab) {
+          Assert.ok("Tab successfully opened");
+
+          // It should have asked for keys.
+          let queryString = gBrowser.currentURI.spec.split('?')[1];
+          Assert.ok(queryString.indexOf('keys=true') >= 0);
+
+          tabOpened = true;
+        });
+
+        let client = new FxAccountsOAuthClient({
+          parameters: {
+            state: "state",
+            client_id: "client_id",
+            oauth_uri: HTTP_PATH,
+            content_uri: HTTP_PATH,
+            keys: true,
+          },
+          authorizationEndpoint: HTTP_ENDPOINT_WITH_KEYS
+        });
+
+        client.onComplete = function(tokenData, keys) {
+          Assert.ok(tabOpened);
+          Assert.equal(tokenData.code, "code1");
+          Assert.equal(tokenData.state, "state");
+          Assert.equal(keys.kAr, "kAr");
+          Assert.equal(keys.kBr, "kBr");
+          resolve();
+        };
+
+        client.onError = reject;
+
+        client.launchWebFlow();
+      });
+    }
+  },
+  {
+    desc: "FxA OAuth - should not receive keys if not explicitly requested",
+    run: function () {
+      return new Promise(function(resolve, reject) {
+        let tabOpened = false;
+
+        waitForTab(function (tab) {
+          Assert.ok("Tab successfully opened");
+
+          // It should not have asked for keys.
+          let queryString = gBrowser.currentURI.spec.split('?')[1];
+          Assert.ok(queryString.indexOf('keys=true') == -1);
+
+          tabOpened = true;
+        });
+
+        let client = new FxAccountsOAuthClient({
+          parameters: {
+            state: "state",
+            client_id: "client_id",
+            oauth_uri: HTTP_PATH,
+            content_uri: HTTP_PATH
+          },
+          // This endpoint will cause the completion message to contain keys.
+          authorizationEndpoint: HTTP_ENDPOINT_WITH_KEYS
+        });
+
+        client.onComplete = function(tokenData, keys) {
+          Assert.ok(tabOpened);
+          Assert.equal(tokenData.code, "code1");
+          Assert.equal(tokenData.state, "state");
+          Assert.strictEqual(keys, undefined);
+          resolve();
+        };
+
+        client.onError = reject;
+
+        client.launchWebFlow();
+      });
+    }
+  },
+  {
+    desc: "FxA OAuth - should receive an error if keys could not be obtained",
+    run: function () {
+      return new Promise(function(resolve, reject) {
+        let tabOpened = false;
+
+        waitForTab(function (tab) {
+          Assert.ok("Tab successfully opened");
+
+          // It should have asked for keys.
+          let queryString = gBrowser.currentURI.spec.split('?')[1];
+          Assert.ok(queryString.indexOf('keys=true') >= 0);
+
+          tabOpened = true;
+        });
+
+        let client = new FxAccountsOAuthClient({
+          parameters: {
+            state: "state",
+            client_id: "client_id",
+            oauth_uri: HTTP_PATH,
+            content_uri: HTTP_PATH,
+            keys: true,
+          },
+          // This endpoint will cause the completion message not to contain keys.
+          authorizationEndpoint: HTTP_ENDPOINT
+        });
+
+        client.onComplete = reject;
+
+        client.onError = function(err) {
+          Assert.ok(tabOpened);
+          Assert.equal(err.message, "OAuth flow failed. Keys were not returned");
           resolve();
         };
 
