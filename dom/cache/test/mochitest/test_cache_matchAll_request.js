@@ -30,64 +30,71 @@ fetch(new Request(request1)).then(function(r) {
   return response3.text();
 }).then(function(text) {
   response3Text = text;
-  return caches.open(name);
-}).then(function(cache) {
-  c = cache;
-  return c.add(request1);
+  return testRequest(request1, request2, request3);
 }).then(function() {
-  return c.add(request3);
-}).then(function() {
-  return c.matchAll(request1);
-}).then(function(r) {
-  is(r.length, 1, "Should only find 1 item");
-  return checkResponse(r[0], response1, response1Text);
-}).then(function() {
-  return c.matchAll(request3);
-}).then(function(r) {
-  is(r.length, 1, "Should only find 1 item");
-  return checkResponse(r[0], response3, response3Text);
-}).then(function() {
-  return c.matchAll();
-}).then(function(r) {
-  is(r.length, 2, "Should find 2 items");
-  return Promise.all([
-    checkResponse(r[0], response1, response1Text),
-    checkResponse(r[1], response3, response3Text)
-  ]);
-}).then(function() {
-  return c.matchAll({cacheName: name + "mambojambo"});
-}).catch(function(err) {
-  is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
-}).then(function() {
-  return caches.delete(name);
-}).then(function(success) {
-  ok(success, "We should be able to delete the cache successfully");
-  // Make sure that the cache is still usable after deletion.
-  return c.matchAll(request1);
-}).then(function(r) {
-  is(r.length, 1, "Should only find 1 item");
-  return checkResponse(r[0], response1, response1Text);
-}).then(function() {
-  return c.matchAll(request3);
-}).then(function(r) {
-  is(r.length, 1, "Should only find 1 item");
-  return checkResponse(r[0], response3, response3Text);
-}).then(function() {
-  return c.matchAll();
-}).then(function(r) {
-  is(r.length, 2, "Should find 2 items");
-  return Promise.all([
-    checkResponse(r[0], response1, response1Text),
-    checkResponse(r[1], response3, response3Text)
-  ]);
-}).then(function() {
-  // Now, drop the cache, reopen and verify that we can't find the request any more.
-  c = null;
-  return caches.open(name);
-}).then(function(cache) {
-  return cache.matchAll();
-}).catch(function(err) {
-  is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  return testRequest(request1.url, request2.url, request3.url);
 }).then(function() {
   testDone();
 });
+
+// The request arguments can either be a URL string, or a Request object.
+function testRequest(request1, request2, request3) {
+  return caches.open(name).then(function(cache) {
+    c = cache;
+    return c.add(request1);
+  }).then(function() {
+    return c.add(request3);
+  }).then(function() {
+    return c.matchAll(request1);
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response1, response1Text);
+  }).then(function() {
+    return c.matchAll(request3);
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response3, response3Text);
+  }).then(function() {
+    return c.matchAll();
+  }).then(function(r) {
+    is(r.length, 2, "Should find 2 items");
+    return Promise.all([
+      checkResponse(r[0], response1, response1Text),
+      checkResponse(r[1], response3, response3Text)
+    ]);
+  }).then(function() {
+    return c.matchAll({cacheName: name + "mambojambo"});
+  }).catch(function(err) {
+    is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+  }).then(function() {
+    return caches.delete(name);
+  }).then(function(success) {
+    ok(success, "We should be able to delete the cache successfully");
+    // Make sure that the cache is still usable after deletion.
+    return c.matchAll(request1);
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response1, response1Text);
+  }).then(function() {
+    return c.matchAll(request3);
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response3, response3Text);
+  }).then(function() {
+    return c.matchAll();
+  }).then(function(r) {
+    is(r.length, 2, "Should find 2 items");
+    return Promise.all([
+      checkResponse(r[0], response1, response1Text),
+      checkResponse(r[1], response3, response3Text)
+    ]);
+  }).then(function() {
+    // Now, drop the cache, reopen and verify that we can't find the request any more.
+    c = null;
+    return caches.open(name);
+  }).then(function(cache) {
+    return cache.matchAll();
+  }).catch(function(err) {
+    is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  });
+}
