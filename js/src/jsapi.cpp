@@ -4015,8 +4015,9 @@ CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &options,
             return false;
     }
 
-    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED, enclosingDynamicScope,
-                                funAtom, JSFunction::FinalizeKind, TenuredObject));
+    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED, funAtom,
+                                JSFunction::FinalizeKind, TenuredObject,
+                                enclosingDynamicScope));
     if (!fun)
         return false;
 
