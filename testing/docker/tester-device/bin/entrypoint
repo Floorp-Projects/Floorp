@@ -23,11 +23,11 @@ echo "Retrieved device.  Session: $SESSION_ID"
 
 curl -o /home/worker/data/device.json -s -H "Accept: application/json" http://$CLOUD_HOST/device/properties
 
-buildbot_step 'Gaia clone' tc-vcs checkout /home/worker/gaia/source $GAIA_BASE_REPOSITORY $GAIA_HEAD_REPOSITORY $GAIA_REV $GAIA_REF
+buildbot_step 'Clone gaia' tc-vcs checkout /home/worker/gaia/source $GAIA_BASE_REPOSITORY $GAIA_HEAD_REPOSITORY $GAIA_REV $GAIA_REF
 
 cd gaia/source/tests/python/gaia-ui-tests/
 python setup.py develop
-pip install py
+pip install -Ur gaiatest/tests/requirements.txt
 cd /home/worker/
 
 buildbot_step 'Running tests' eval $@
