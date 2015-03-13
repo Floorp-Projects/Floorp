@@ -3040,8 +3040,8 @@ CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4 *ins)
         masm.bitwiseXorX4(in, out);
         return;
       case MSimdUnaryArith::abs:
-      case MSimdUnaryArith::reciprocal:
-      case MSimdUnaryArith::reciprocalSqrt:
+      case MSimdUnaryArith::reciprocalApproximation:
+      case MSimdUnaryArith::reciprocalSqrtApproximation:
       case MSimdUnaryArith::sqrt:
         break;
     }
@@ -3078,11 +3078,11 @@ CodeGeneratorX86Shared::visitSimdUnaryArithFx4(LSimdUnaryArithFx4 *ins)
         masm.loadConstantFloat32x4(allOnes, out);
         masm.bitwiseXorX4(in, out);
         return;
-      case MSimdUnaryArith::reciprocal:
-        masm.packedReciprocalFloat32x4(in, out);
+      case MSimdUnaryArith::reciprocalApproximation:
+        masm.packedRcpApproximationFloat32x4(in, out);
         return;
-      case MSimdUnaryArith::reciprocalSqrt:
-        masm.packedReciprocalSqrtFloat32x4(in, out);
+      case MSimdUnaryArith::reciprocalSqrtApproximation:
+        masm.packedRcpSqrtApproximationFloat32x4(in, out);
         return;
       case MSimdUnaryArith::sqrt:
         masm.packedSqrtFloat32x4(in, out);
