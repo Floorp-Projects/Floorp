@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for parsing of integer attributes with leading zero</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var td = document.createElement("td");
+var li = document.createElement("li");
+// Array of tests: "values" are the values to set, "tdreflection" is the
+// corresponding td.rowspan value, "lireflection" is the corresponding li.value
+// value.
+var testData = [
+  {
+    values: [
+      "2",
+      "02",
+      "002",
+     "00002",
+    ],
+    tdreflection: 2,
+    lireflection: 2,
+  },
+  {
+    values: [
+      "-2",
+      "-02",
+      "-002",
+      "-00002",
+    ],
+    tdreflection: 1,
+    lireflection: -2,
+  },
+  {
+    values: [
+      "-0",
+      "-00",
+      "0",
+      "00",
+    ],
+    tdreflection: 0,
+    lireflection: 0,
+  },
+];
+
+for (var data of testData) {
+  for (var value of data.values) {
+    td.setAttribute("rowspan", value);
+    li.setAttribute("value", value);
+    test(function() {
+      assert_equals(td.rowSpan, data.tdreflection);
+    }, `<td> reflection for ${value}`);
+    test(function() {
+      assert_equals(td.getAttribute("rowspan"), value);
+    }, `<td> setAttribute roundtripping for ${value}`);
+    test(function() {
+      assert_equals(li.value, data.lireflection);
+    }, `<li> reflection for ${value}`);
+    test(function() {
+      assert_equals(li.getAttribute("value"), value);
+    }, `<li> setAttribute roundtripping for ${value}`);
+  }
+}
+</script>

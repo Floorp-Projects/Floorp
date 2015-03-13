@@ -390,7 +390,7 @@ HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
         // quirks mode does not honor the special html 4 value of 0
         if (val > MAX_COLSPAN || val < 0 ||
             (0 == val && InNavQuirksMode(OwnerDoc()))) {
-          aResult.SetTo(1);
+          aResult.SetTo(1, &aValue);
         }
       }
       return res;
@@ -401,7 +401,7 @@ HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
         int32_t val = aResult.GetIntegerValue();
         // quirks mode does not honor the special html 4 value of 0
         if (val < 0 || (0 == val && InNavQuirksMode(OwnerDoc()))) {
-          aResult.SetTo(1);
+          aResult.SetTo(1, &aValue);
         }
       }
       return res;

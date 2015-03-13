@@ -114,8 +114,8 @@ struct ConstArray {
 };
 
 struct ObjectArray {
-    js::HeapPtrNativeObject *vector;  // Array of indexed objects.
-    uint32_t        length;           // Count of indexed objects.
+    js::HeapPtrObject *vector;  // Array of indexed objects.
+    uint32_t        length;     // Count of indexed objects.
 };
 
 struct TryNoteArray {
@@ -1551,7 +1551,7 @@ class JSScript : public js::gc::TenuredCell
         return getAtom(GET_UINT32_INDEX(pc))->asPropertyName();
     }
 
-    js::NativeObject *getObject(size_t index) {
+    JSObject *getObject(size_t index) {
         js::ObjectArray *arr = objects();
         MOZ_ASSERT(index < arr->length);
         return arr->vector[index];
@@ -1562,7 +1562,7 @@ class JSScript : public js::gc::TenuredCell
         return savedCallerFun() ? 1 : 0;
     }
 
-    js::NativeObject *getObject(jsbytecode *pc) {
+    JSObject *getObject(jsbytecode *pc) {
         MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getObject(GET_UINT32_INDEX(pc));
     }
