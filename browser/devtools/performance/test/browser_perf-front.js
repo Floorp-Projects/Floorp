@@ -10,16 +10,22 @@ let WAIT_TIME = 1000;
 function spawnTest () {
   let { target, front } = yield initBackend(SIMPLE_URL);
 
-  let count = 0;
-  let counter = () => count++;
-
   let {
     profilerStartTime,
     timelineStartTime,
     memoryStartTime
   } = yield front.startRecording({
-    withAllocations: true
+    withAllocations: true,
+    allocationsSampleProbability: +Services.prefs.getCharPref(MEMORY_SAMPLE_PROB_PREF),
+    allocationsMaxLogLength: Services.prefs.getIntPref(MEMORY_MAX_LOG_LEN_PREF)
   });
+
+  let allocationsCount = 0;
+  let allocationsCounter = () => allocationsCount++;
+
+  // Record allocation events to ensure it's called more than once
+  // so we know it's polling
+  front.on("allocations", allocationsCounter);
 
   ok(typeof profilerStartTime === "number",
     "The front.startRecording() emits a profiler start time.");
@@ -28,13 +34,9 @@ function spawnTest () {
   ok(typeof memoryStartTime === "number",
     "The front.startRecording() emits a memory start time.");
 
-  // Record allocation events to ensure it's called more than once
-  // so we know it's polling
-  front.on("allocations", counter);
-
   yield Promise.all([
     busyWait(WAIT_TIME),
-    waitUntil(() => count > 1)
+    waitUntil(() => allocationsCount > 1)
   ]);
 
   let {
@@ -45,7 +47,7 @@ function spawnTest () {
     withAllocations: true
   });
 
-  front.off("allocations", counter);
+  front.off("allocations", allocationsCounter);
 
   ok(typeof profilerEndTime === "number",
     "The front.stopRecording() emits a profiler end time.");
@@ -62,7 +64,7 @@ function spawnTest () {
     "The memoryEndTime is after memoryStartTime.");
 
   is((yield front._request("memory", "getState")), "detached",
-    "memory actor is detached when stopping recording with allocations");
+    "Memory actor is detached when stopping recording with allocations.");
 
   yield removeTab(target.tab);
   finish();

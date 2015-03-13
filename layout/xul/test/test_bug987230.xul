@@ -68,6 +68,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
     let x = aOffsetX + win.mozInnerScreenX + rect.left;
     let y = aOffsetY + win.mozInnerScreenY + rect.top;
 
+    info("Sending mousedown+up for offsets: " + aOffsetX + ", " + aOffsetY +
+         "; innerscreen: " + win.mozInnerScreenX + ", " + win.mozInnerScreenY +
+         "; rect: " + rect.left + ", " + rect.top + ".");
+    info("Resulting x, y, scale: " + x + ", " + y + ", " + scale);
+    info("Final params: " + (x * scale) + ", " + (y * scale));
     utils.sendNativeMouseEvent(x * scale, y * scale, mouseDown, 0, null);
     utils.sendNativeMouseEvent(x * scale, y * scale, mouseUp, 0, null);
   }
@@ -85,6 +90,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
       let outsideOfFrameX = (window.mozInnerScreenX + frameRect.width + 100) * scale;
       let outsideOfFrameY = Math.max(0, window.mozInnerScreenY - 100) * scale;
 
+      info("Mousemove: " + outsideOfFrameX + ", " + outsideOfFrameY +
+           " (from innerscreen " + window.mozInnerScreenX + ", " + window.mozInnerScreenY +
+           " and rect width " + frameRect.width + " and scale " + scale + ")");
       utils.sendNativeMouseEvent(outsideOfFrameX, outsideOfFrameY, mouseMove, 0, null);
       SimpleTest.finish();
     }

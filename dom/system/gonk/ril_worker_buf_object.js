@@ -80,6 +80,10 @@
       requestType = options.rilRequestType;
 
       options.rilRequestError = error;
+      if (error !== ERROR_SUCCESS) {
+        options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[error] ||
+                           GECKO_ERROR_UNSPECIFIED_ERROR;
+      }
       if (DEBUG) {
         this.context.debug("Solicited response for request type " + requestType +
                            ", token " + token + ", error " + error);
