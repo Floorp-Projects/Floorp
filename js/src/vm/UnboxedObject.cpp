@@ -6,6 +6,9 @@
 
 #include "vm/UnboxedObject.h"
 
+#include "jit/JitCommon.h"
+#include "jit/Linker.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/Shape-inl.h"
@@ -38,6 +41,9 @@ UnboxedLayout::trace(JSTracer *trc)
 
     if (replacementNewGroup_)
         MarkObjectGroup(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");
+
+    if (constructorCode_)
+        MarkJitCode(trc, &constructorCode_, "unboxed_layout_constructorCode");
 }
 
 size_t
@@ -57,6 +63,190 @@ UnboxedLayout::setNewScript(TypeNewScript *newScript, bool writeBarrier /* = tru
     newScript_ = newScript;
 }
 
+// Constructor code returns a 0x1 value to indicate the constructor code should
+// be cleared.
+static const uintptr_t CLEAR_CONSTRUCTOR_CODE_TOKEN = 0x1;
+
+/* static */ bool
+UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
+{
+    using namespace jit;
+
+    UnboxedLayout &layout = group->unboxedLayout();
+    MOZ_ASSERT(!layout.constructorCode());
+
+    UnboxedPlainObject *templateObject = UnboxedPlainObject::create(cx, group, TenuredObject);
+    if (!templateObject)
+        return false;
+
+    JitContext jitContext(cx, nullptr);
+
+    MacroAssembler masm;
+
+    Register propertiesReg, newKindReg;
+#ifdef JS_CODEGEN_X86
+    propertiesReg = eax;
+    newKindReg = ecx;
+    masm.loadPtr(Address(StackPointer, sizeof(void*)), propertiesReg);
+    masm.loadPtr(Address(StackPointer, 2 * sizeof(void*)), newKindReg);
+#else
+    propertiesReg = IntArgReg0;
+    newKindReg = IntArgReg1;
+#endif
+
+    MOZ_ASSERT(propertiesReg.volatile_());
+    MOZ_ASSERT(newKindReg.volatile_());
+
+    GeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(propertiesReg);
+    regs.take(newKindReg);
+    Register object = regs.takeAny(), scratch1 = regs.takeAny(), scratch2 = regs.takeAny();
+
+    GeneralRegisterSet savedNonVolatileRegisters = SavedNonVolatileRegisters(regs);
+    for (GeneralRegisterForwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
+        masm.Push(*iter);
+
+    Label failure, tenuredObject, allocated;
+    masm.branch32(Assembler::NotEqual, newKindReg, Imm32(GenericObject), &tenuredObject);
+    masm.branchTest32(Assembler::NonZero, AbsoluteAddress(group->addressOfFlags()),
+                      Imm32(OBJECT_FLAG_PRE_TENURE), &tenuredObject);
+
+    // Allocate an object in the nursery
+    masm.createGCObject(object, scratch1, templateObject, gc::DefaultHeap, &failure,
+                        /* initFixedSlots = */ false);
+
+    masm.jump(&allocated);
+    masm.bind(&tenuredObject);
+
+    // Allocate an object in the tenured heap.
+    masm.createGCObject(object, scratch1, templateObject, gc::TenuredHeap, &failure,
+                        /* initFixedSlots = */ false);
+
+    // If any of the properties being stored are in the nursery, add a store
+    // buffer entry for the new object.
+    Label postBarrier;
+    for (size_t i = 0; i < layout.properties().length(); i++) {
+        const UnboxedLayout::Property &property = layout.properties()[i];
+        if (property.type == JSVAL_TYPE_OBJECT) {
+            Address valueAddress(propertiesReg, i * sizeof(IdValuePair) + offsetof(IdValuePair, value));
+            Label notObject;
+            masm.branchTestObject(Assembler::NotEqual, valueAddress, &notObject);
+            Register valueObject = masm.extractObject(valueAddress, scratch1);
+            masm.branchPtrInNurseryRange(Assembler::Equal, valueObject, scratch2, &postBarrier);
+            masm.bind(&notObject);
+        }
+    }
+
+    masm.jump(&allocated);
+    masm.bind(&postBarrier);
+
+    masm.mov(ImmPtr(cx->runtime()), scratch1);
+    masm.setupUnalignedABICall(2, scratch2);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(object);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
+
+    masm.bind(&allocated);
+
+    ValueOperand valueOperand;
+#ifdef JS_NUNBOX32
+    valueOperand = ValueOperand(scratch1, scratch2);
+#else
+    valueOperand = ValueOperand(scratch1);
+#endif
+
+    Label failureStoreOther, failureStoreObject;
+
+    for (size_t i = 0; i < layout.properties().length(); i++) {
+        const UnboxedLayout::Property &property = layout.properties()[i];
+        Address valueAddress(propertiesReg, i * sizeof(IdValuePair) + offsetof(IdValuePair, value));
+        Address targetAddress(object, UnboxedPlainObject::offsetOfData() + property.offset);
+
+        masm.loadValue(valueAddress, valueOperand);
+
+        if (property.type == JSVAL_TYPE_OBJECT) {
+            HeapTypeSet *types = group->maybeGetProperty(IdToTypeId(NameToId(property.name)));
+
+            Label notObject;
+            masm.branchTestObject(Assembler::NotEqual, valueOperand,
+                                  types->mightBeMIRType(MIRType_Null) ? &notObject : &failureStoreObject);
+
+            Register payloadReg = masm.extractObject(valueOperand, scratch1);
+
+            if (!types->hasType(TypeSet::AnyObjectType()))
+                masm.guardObjectType(payloadReg, types, scratch2, &failureStoreObject);
+
+            masm.storeUnboxedProperty(targetAddress, JSVAL_TYPE_OBJECT,
+                                      TypedOrValueRegister(MIRType_Object,
+                                                           AnyRegister(payloadReg)), nullptr);
+
+            if (notObject.used()) {
+                Label done;
+                masm.jump(&done);
+                masm.bind(&notObject);
+                masm.branchTestNull(Assembler::NotEqual, valueOperand, &failureStoreOther);
+                masm.storeUnboxedProperty(targetAddress, JSVAL_TYPE_OBJECT, NullValue(), nullptr);
+                masm.bind(&done);
+            }
+        } else {
+            masm.storeUnboxedProperty(targetAddress, property.type,
+                                      ConstantOrRegister(valueOperand), &failureStoreOther);
+        }
+    }
+
+    Label done;
+    masm.bind(&done);
+
+    if (object != ReturnReg)
+        masm.movePtr(object, ReturnReg);
+
+    // Restore non-volatile registers which were saved on entry.
+    for (GeneralRegisterBackwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
+        masm.Pop(*iter);
+
+    masm.ret();
+
+    masm.bind(&failureStoreOther);
+
+    // There was a failure while storing a value which cannot be stored at all
+    // in the unboxed object. Initialize the object so it is safe for GC and
+    // return null.
+    masm.initUnboxedObjectContents(object, templateObject);
+
+    masm.bind(&failure);
+
+    masm.movePtr(ImmWord(0), object);
+    masm.jump(&done);
+
+    masm.bind(&failureStoreObject);
+
+    // There was a failure while storing a value to an object slot of the
+    // unboxed object. If the value is storable, the failure occurred due to
+    // incomplete type information in the object, so return a token to trigger
+    // regeneration of the jitcode after a new object is created in the VM.
+    {
+        Label isObject;
+        masm.branchTestObject(Assembler::Equal, valueOperand, &isObject);
+        masm.branchTestNull(Assembler::NotEqual, valueOperand, &failureStoreOther);
+        masm.bind(&isObject);
+    }
+
+    // Initialize the object so it is safe for GC.
+    masm.initUnboxedObjectContents(object, templateObject);
+
+    masm.movePtr(ImmWord(CLEAR_CONSTRUCTOR_CODE_TOKEN), object);
+    masm.jump(&done);
+
+    Linker linker(masm);
+    AutoFlushICache afc("RegExp");
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
+    if (!code)
+        return false;
+
+    layout.setConstructorCode(code);
+    return true;
+}
+
 void
 UnboxedLayout::detachFromCompartment()
 {
@@ -68,7 +258,8 @@ UnboxedLayout::detachFromCompartment()
 /////////////////////////////////////////////////////////////////////
 
 bool
-UnboxedPlainObject::setValue(JSContext *cx, const UnboxedLayout::Property &property, const Value &v)
+UnboxedPlainObject::setValue(ExclusiveContext *cx, const UnboxedLayout::Property &property,
+                             const Value &v)
 {
     uint8_t *p = &data_[property.offset];
 
@@ -114,7 +305,7 @@ UnboxedPlainObject::setValue(JSContext *cx, const UnboxedLayout::Property &prope
             // object is converted to its native representation.
             JSObject *obj = v.toObjectOrNull();
             if (IsInsideNursery(v.toObjectOrNull()) && !IsInsideNursery(this))
-                cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(this);
+                cx->asJSContext()->runtime()->gc.storeBuffer.putWholeCellFromMainThread(this);
 
             *reinterpret_cast<PreBarrieredObject*>(p) = obj;
             return true;
@@ -307,7 +498,7 @@ UnboxedPlainObject::convertToNative(JSContext *cx, JSObject *obj)
 
 /* static */
 UnboxedPlainObject *
-UnboxedPlainObject::create(JSContext *cx, HandleObjectGroup group, NewObjectKind newKind)
+UnboxedPlainObject::create(ExclusiveContext *cx, HandleObjectGroup group, NewObjectKind newKind)
 {
     MOZ_ASSERT(group->clasp() == &class_);
     gc::AllocKind allocKind = group->unboxedLayout().getAllocKind();
@@ -341,6 +532,52 @@ UnboxedPlainObject::create(JSContext *cx, HandleObjectGroup group, NewObjectKind
     }
 
     return res;
+}
+
+/* static */ JSObject *
+UnboxedPlainObject::createWithProperties(ExclusiveContext *cx, HandleObjectGroup group,
+                                         NewObjectKind newKind, IdValuePair *properties)
+{
+    MOZ_ASSERT(newKind == GenericObject || newKind == TenuredObject);
+
+    UnboxedLayout &layout = group->unboxedLayout();
+
+    if (layout.constructorCode()) {
+        MOZ_ASSERT(cx->isJSContext());
+
+        typedef JSObject *(*ConstructorCodeSignature)(IdValuePair *, NewObjectKind);
+        ConstructorCodeSignature function =
+            reinterpret_cast<ConstructorCodeSignature>(layout.constructorCode()->raw());
+
+        JSObject *obj;
+        {
+            JS::AutoSuppressGCAnalysis nogc;
+            obj = reinterpret_cast<JSObject *>(CALL_GENERATED_2(function, properties, newKind));
+        }
+        if (obj > reinterpret_cast<JSObject *>(CLEAR_CONSTRUCTOR_CODE_TOKEN))
+            return obj;
+
+        if (obj == reinterpret_cast<JSObject *>(CLEAR_CONSTRUCTOR_CODE_TOKEN))
+            layout.setConstructorCode(nullptr);
+    }
+
+    UnboxedPlainObject *obj = UnboxedPlainObject::create(cx, group, newKind);
+    if (!obj)
+        return nullptr;
+
+    for (size_t i = 0; i < layout.properties().length(); i++) {
+        if (!obj->setValue(cx, layout.properties()[i], properties[i].value))
+            return NewPlainObjectWithProperties(cx, properties, layout.properties().length(), newKind);
+    }
+
+#ifndef JS_CODEGEN_NONE
+    if (cx->isJSContext() && !layout.constructorCode()) {
+        if (!UnboxedLayout::makeConstructorCode(cx->asJSContext(), group))
+            return nullptr;
+    }
+#endif
+
+    return obj;
 }
 
 /* static */ bool
@@ -547,10 +784,13 @@ PropertiesAreSuperset(const UnboxedLayout::PropertyVector &properties, UnboxedLa
 }
 
 bool
-js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
+js::TryConvertToUnboxedLayout(ExclusiveContext *cx, Shape *templateShape,
                               ObjectGroup *group, PreliminaryObjectArray *objects)
 {
-    if (!cx->runtime()->options().unboxedObjects())
+    if (!templateShape->runtimeFromAnyThread()->options().unboxedObjects())
+        return true;
+
+    if (templateShape->runtimeFromAnyThread()->isSelfHostingGlobal(cx->global()))
         return true;
 
     if (templateShape->slotSpan() == 0)
@@ -727,7 +967,7 @@ js::TryConvertToUnboxedLayout(JSContext *cx, Shape *templateShape,
                                                   templateShape->getObjectMetadata(),
                                                   templateShape->getObjectFlags());
     if (!newShape) {
-        cx->clearPendingException();
+        cx->recoverFromOutOfMemory();
         return false;
     }
 

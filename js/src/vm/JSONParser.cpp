@@ -577,55 +577,12 @@ JSONParser<CharT>::advanceAfterProperty()
     return token(Error);
 }
 
-JSObject *
-JSONParserBase::createFinishedObject(PropertyVector &properties)
-{
-    /*
-     * Look for an existing cached group and shape for objects with this set of
-     * properties.
-     */
-    {
-        JSObject *obj = ObjectGroup::newPlainObject(cx, properties.begin(),
-                                                    properties.length());
-        if (obj)
-            return obj;
-    }
-
-    /*
-     * Make a new object sized for the given number of properties and fill its
-     * shape in manually.
-     */
-    gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
-    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind));
-    if (!obj)
-        return nullptr;
-
-    RootedId propid(cx);
-    RootedValue value(cx);
-
-    for (size_t i = 0; i < properties.length(); i++) {
-        propid = properties[i].id;
-        value = properties[i].value;
-        if (!NativeDefineProperty(cx, obj, propid, value, nullptr, nullptr, JSPROP_ENUMERATE))
-            return nullptr;
-    }
-
-    /*
-     * Try to assign a new group to the object with type information for its
-     * properties, and update the initializer object group cache with this
-     * object's final shape.
-     */
-    ObjectGroup::fixPlainObjectGroup(cx, obj);
-
-    return obj;
-}
-
 inline bool
 JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
 {
     MOZ_ASSERT(&properties == &stack.back().properties());
 
-    JSObject *obj = createFinishedObject(properties);
+    JSObject *obj = ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), GenericObject);
     if (!obj)
         return false;
 
