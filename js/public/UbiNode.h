@@ -206,6 +206,11 @@ class Base {
     // nullptr is returned.
     virtual JSCompartment *compartment() const { return nullptr; }
 
+    // If this node references a JSObject in the live heap, or represents a
+    // previously existing JSObject from some deserialized heap snapshot, return
+    // the object's [[Class]]'s name. Otherwise, return nullptr.
+    virtual const char *jsObjectClassName() const { return nullptr; }
+
   private:
     Base(const Base &rhs) = delete;
     Base &operator=(const Base &rhs) = delete;
@@ -330,6 +335,7 @@ class Node {
     const char16_t *typeName()      const { return base()->typeName(); }
     JS::Zone *zone()                const { return base()->zone(); }
     JSCompartment *compartment()    const { return base()->compartment(); }
+    const char *jsObjectClassName() const { return base()->jsObjectClassName(); }
 
     size_t size(mozilla::MallocSizeOf mallocSizeof) const {
         return base()->size(mallocSizeof);
@@ -550,6 +556,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
     JSCompartment *compartment() const MOZ_OVERRIDE;
 
+  protected:
     explicit TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
 
   public:
@@ -558,11 +565,26 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     }
 };
 
+// For JS_TraceChildren-based types that have both a 'compartment' method and a
+// JSObject's [[Class]] name.
+template<typename Referent>
+class TracerConcreteWithCompartmentAndClassName : public TracerConcreteWithCompartment<Referent> {
+    typedef TracerConcreteWithCompartment<Referent> TracerBase;
+    const char *jsObjectClassName() const MOZ_OVERRIDE;
+
+    explicit TracerConcreteWithCompartmentAndClassName(Referent *ptr) : TracerBase(ptr) { }
+
+  public:
+    static void construct(void *storage, Referent *ptr) {
+        new (storage) TracerConcreteWithCompartmentAndClassName(ptr);
+    }
+};
+
 // Define specializations for some commonly-used public JSAPI types.
-template<> struct Concrete<JSObject> : TracerConcreteWithCompartment<JSObject> { };
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
+template<> struct Concrete<JSObject> : TracerConcreteWithCompartmentAndClassName<JSObject> { };
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
