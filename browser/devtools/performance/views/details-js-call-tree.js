@@ -103,9 +103,6 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     container.innerHTML = "";
     root.attachTo(container);
 
-    // Profiler data does not contain memory allocations information.
-    root.toggleAllocations(false);
-
     // When platform data isn't shown, hide the cateogry labels, since they're
     // only available for C++ frames.
     let contentOnly = !PerformanceController.getOption("show-platform-data");
