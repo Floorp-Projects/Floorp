@@ -234,6 +234,8 @@ class SimplePackager(object):
         self._chrome_queue = CallDeque()
         # Queue for formatter.add() calls.
         self._file_queue = CallDeque()
+        # All paths containing addons.
+        self._addons = set()
         # All manifest paths imported.
         self._manifests = set()
         # All manifest paths included from some other manifest.
@@ -251,6 +253,8 @@ class SimplePackager(object):
             self._queue.append(self.formatter.add_interfaces, path, file)
         else:
             self._file_queue.append(self.formatter.add, path, file)
+            if mozpack.path.basename(path) == 'install.rdf':
+                self._addons.add(mozpack.path.dirname(path))
 
     def _add_manifest_file(self, path, file):
         '''
@@ -278,22 +282,33 @@ class SimplePackager(object):
                                  '"manifest" entries')
                 self._included_manifests.add(e.path)
 
-    def get_bases(self):
+    def get_bases(self, addons=True):
         '''
         Return all paths under which root manifests have been found. Root
         manifests are manifests that are included in no other manifest.
+        `addons` indicates whether to include addon bases as well.
         '''
-        return set(mozpack.path.dirname(m)
-                   for m in self._manifests - self._included_manifests)
+        all_bases = set(mozpack.path.dirname(m)
+                        for m in self._manifests - self._included_manifests)
+        if not addons:
+            all_bases -= self._addons
+        return all_bases
 
     def close(self):
         '''
         Push all instructions to the formatter.
         '''
         self._closed = True
+        broken_addons = sorted(m for m in self._included_manifests
+                               if mozpack.path.dirname(m) in self._addons)
+        if broken_addons:
+            errors.fatal(
+                'Addon base manifest (%s) is included in some other manifest' %
+                ', '.join(broken_addons)
+            )
         for base in self.get_bases():
             if base:
-                self.formatter.add_base(base)
+                self.formatter.add_base(base, base in self._addons)
         self._chrome_queue.execute()
         self._queue.execute()
         self._file_queue.execute()
