@@ -20,6 +20,14 @@ builds:
     types:
       opt:
         task: tasks/builds/mulet_linux.yml
+  emulator-l:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_l_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_l_debug.yml
   emulator-kk:
     platfoms:
       - b2g
