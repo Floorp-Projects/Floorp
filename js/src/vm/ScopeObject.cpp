@@ -2450,7 +2450,7 @@ static JSObject *
 GetDebugScopeForNonScopeObject(const ScopeIter &si)
 {
     JSObject &enclosing = si.enclosingScope();
-    MOZ_ASSERT(!enclosing.is<ScopeObject>());
+    MOZ_ASSERT(IsValidTerminatingScope(&enclosing));
 #ifdef DEBUG
     JSObject *o = &enclosing;
     while ((o = o->enclosingScope()))
