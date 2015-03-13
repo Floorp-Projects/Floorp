@@ -85,11 +85,103 @@ following accessor properties from its prototype:
     at a time. This accessor can be both fetched and stored to. Its default
     value is `5000`.
 
-<code id='allocationsLogOverflowed'>allocationsLogOverflowed</a>
+<code id='allocationsLogOverflowed'>allocationsLogOverflowed</code>
 :   Returns `true` if there have been more than
     [`maxAllocationsLogLength`][#max-alloc-log] allocations since the last time
     [`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
     lost. Returns `false` otherwise.
+
+Debugger.Memory Handler Functions
+---------------------------------
+
+Similar to [`Debugger`'s handler functions][debugger], `Debugger.Memory`
+inherits accessor properties that store handler functions for SpiderMonkey to
+call when given events occur in debuggee code.
+
+Unlike `Debugger`'s hooks, `Debugger.Memory`'s handlers' return values are not
+significant, and are ignored. The handler functions receive the
+`Debugger.Memory`'s owning `Debugger` instance as their `this` value. The owning
+`Debugger`'s `uncaughtExceptionHandler` is still fired for errors thrown in
+`Debugger.Memory` hooks.
+
+On a new `Debugger.Memory` instance, each of these properties is initially
+`undefined`. Any value assigned to a debugging handler must be either a function
+or `undefined`; otherwise a `TypeError` is thrown.
+
+Handler functions run in the same thread in which the event occurred.
+They run in the compartment to which they belong, not in a debuggee
+compartment.
+
+<code>onGarbageCollection(<i>statistics</i>)</code>
+:   A garbage collection cycle spanning one or more debuggees has just been
+    completed.
+
+    The *statistics* parameter is an object containing information about the GC
+    cycle. It has the following properties:
+
+    `collections`
+    :   The `collections` property's value is an array. Because SpiderMonkey's
+        collector is incremental, a full collection cycle may consist of
+        multiple discrete collection slices with the JS mutator running
+        interleaved. For each collection slice that occurred, there is an entry
+        in the `collections` array with the following form:
+
+        <pre class='language-js'><code>
+        {
+          "startTimestamp": <i>timestamp</i>,
+          "endTimestamp": <i>timestamp</i>,
+        }
+        </code></pre>
+
+        Here the *timestamp* values are [timestamps][] of the GC slice's start
+        and end events.
+
+    `reason`
+    :   A very short string describing th reason why the collection was
+        triggered. Known values include the following:
+
+        * "API"
+        * "EAGER_ALLOC_TRIGGER"
+        * "DESTROY_RUNTIME"
+        * "DESTROY_CONTEXT"
+        * "LAST_DITCH"
+        * "TOO_MUCH_MALLOC"
+        * "ALLOC_TRIGGER"
+        * "DEBUG_GC"
+        * "COMPARTMENT_REVIVED"
+        * "RESET"
+        * "OUT_OF_NURSERY"
+        * "EVICT_NURSERY"
+        * "FULL_STORE_BUFFER"
+        * "SHARED_MEMORY_LIMIT"
+        * "PERIODIC_FULL_GC"
+        * "INCREMENTAL_TOO_SLOW"
+        * "DOM_WINDOW_UTILS"
+        * "COMPONENT_UTILS"
+        * "MEM_PRESSURE"
+        * "CC_WAITING"
+        * "CC_FORCED"
+        * "LOAD_END"
+        * "POST_COMPARTMENT"
+        * "PAGE_HIDE"
+        * "NSJSCONTEXT_DESTROY"
+        * "SET_NEW_DOCUMENT"
+        * "SET_DOC_SHELL"
+        * "DOM_UTILS"
+        * "DOM_IPC"
+        * "DOM_WORKER"
+        * "INTER_SLICE_GC"
+        * "REFRESH_FRAME"
+        * "FULL_GC_TIMER"
+        * "SHUTDOWN_CC"
+        * "FINISH_LARGE_EVALUATE"
+        * "USER_INACTIVE"
+
+    `nonincrementalReason`
+    :   If SpiderMonkey's collector determined it could not incrementally
+        collect garbage, and had to do a full GC all at once, this is a short
+        string describing the reason it determined the full GC was necessary.
+        Otherwise, `null` is returned.
 
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------
@@ -110,11 +202,10 @@ Function Properties of the `Debugger.Memory.prototype` Object
     }
     </code></pre>
 
-    Here <i>timestamp</i> is the timestamp of the event in units of
-    microseconds since the epoch and <i>allocationSite</i> is an
-    allocation site (as a [captured stack][saved-frame]).
-    <i>allocationSite</i> is `null` for objects allocated with no
-    JavaScript frames on the stack.
+    Here <i>timestamp</i> is the [timestamp][timestamps] of the allocation event and
+    <i>allocationSite</i> is an allocation site (as a
+    [captured stack][saved-frame]).  <i>allocationSite</i> is `null` for objects
+    allocated with no JavaScript frames on the stack.
 
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.
