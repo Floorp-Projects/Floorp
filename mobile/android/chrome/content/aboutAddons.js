@@ -526,6 +526,19 @@ var Addons = {
     let element = this._getElementForAddon(aAddon.id);
     if (!element) {
       element = this._createItemForAddon(aAddon);
+
+      // Themes aren't considered active on install, so set existing as disabled, and new one enabled.
+      if (aAddon.type == "theme") {
+        let item = list.firstElementChild;
+        while (item) {
+          if (item.addon && (item.addon.type == "theme")) {
+            item.setAttribute("isDisabled", true);
+          }
+          item = item.nextSibling;
+        }
+        element.setAttribute("isDisabled", false);
+      }
+
       list.insertBefore(element, list.firstElementChild);
     }
   },

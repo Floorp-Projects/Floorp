@@ -160,6 +160,12 @@ public:
     : Base(Forward<AArg>(aA), Forward<BArg>(aB))
   {}
 
+  Pair(Pair&& aOther)
+    : Base(Move(aOther.first()), Move(aOther.second()))
+  { }
+
+  Pair(const Pair& aOther) = default;
+
   /** The A instance. */
   using Base::first;
   /** The B instance. */
@@ -167,9 +173,6 @@ public:
 
   /** Swap this pair with another pair. */
   void swap(Pair& aOther) { Base::swap(aOther); }
-
-private:
-  Pair(const Pair&) = delete;
 };
 
 template<typename A, class B>
@@ -177,6 +180,26 @@ void
 Swap(Pair<A, B>& aX, Pair<A, B>& aY)
 {
   aX.swap(aY);
+}
+
+/**
+ * MakePair allows you to construct a Pair instance using type inference. A call
+ * like this:
+ *
+ *   MakePair(Foo(), Bar())
+ *
+ * will return a Pair<Foo, Bar>.
+ */
+template<typename A, typename B>
+Pair<typename RemoveCV<typename RemoveReference<A>::Type>::Type,
+     typename RemoveCV<typename RemoveReference<B>::Type>::Type>
+MakePair(A&& aA, B&& aB)
+{
+  return
+    Pair<typename RemoveCV<typename RemoveReference<A>::Type>::Type,
+         typename RemoveCV<typename RemoveReference<B>::Type>::Type>(
+             Forward<A>(aA),
+             Forward<B>(aB));
 }
 
 } // namespace mozilla

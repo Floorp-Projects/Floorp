@@ -1501,10 +1501,10 @@ void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
             case LOCAL_GL_NOTEQUAL:
             case LOCAL_GL_ALWAYS:
             case LOCAL_GL_NEVER:
-                paramValueInvalid = false;
+                break;
 
             default:
-                paramValueInvalid = true;
+                pnameAndParamAreIncompatible = true;
             }
             break;
 
