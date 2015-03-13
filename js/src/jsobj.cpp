@@ -1094,10 +1094,10 @@ static inline gc::AllocKind
 NewObjectGCKind(const js::Class *clasp)
 {
     if (clasp == &ArrayObject::class_)
-        return gc::FINALIZE_OBJECT8;
+        return gc::AllocKind::OBJECT8;
     if (clasp == &JSFunction::class_)
-        return gc::FINALIZE_OBJECT2;
-    return gc::FINALIZE_OBJECT4;
+        return gc::AllocKind::OBJECT2;
+    return gc::AllocKind::OBJECT4;
 }
 
 static inline JSObject *
@@ -1407,7 +1407,7 @@ js::NewObjectWithGroupCommon(ExclusiveContext *cx, HandleObjectGroup group, Hand
 {
     MOZ_ASSERT(parent);
 
-    MOZ_ASSERT(allocKind <= gc::FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(allocKind <= gc::AllocKind::OBJECT_LAST);
     if (CanBeFinalizedInBackground(allocKind, group->clasp()))
         allocKind = GetBackgroundAllocKind(allocKind);
 
@@ -1482,7 +1482,7 @@ CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group,
     if (TypeNewScript *newScript = group->newScript()) {
         if (newScript->analyzed()) {
             // The definite properties analysis has been performed for this
-            // group, so get the shape and finalize kind to use from the
+            // group, so get the shape and alloc kind to use from the
             // TypeNewScript's template.
             RootedPlainObject templateObject(cx, newScript->templateObject());
             MOZ_ASSERT(templateObject->group() == group);

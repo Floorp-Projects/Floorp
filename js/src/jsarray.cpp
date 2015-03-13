@@ -3223,11 +3223,11 @@ CreateArrayPrototype(JSContext *cx, JSProtoKey key)
     proto->assertParentIs(cx->global());
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_, TaggedProto(proto),
                                                       cx->global(), metadata,
-                                                      gc::FINALIZE_OBJECT0));
+                                                      gc::AllocKind::OBJECT0));
     if (!shape)
         return nullptr;
 
-    RootedArrayObject arrayProto(cx, ArrayObject::createArray(cx, gc::FINALIZE_OBJECT4,
+    RootedArrayObject arrayProto(cx, ArrayObject::createArray(cx, gc::AllocKind::OBJECT4,
                                                               gc::TenuredHeap, shape, group, 0));
     if (!arrayProto ||
         !JSObject::setSingleton(cx, arrayProto) ||
@@ -3352,7 +3352,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
      */
     RootedShape shape(cxArg, EmptyShape::getInitialShape(cxArg, &ArrayObject::class_,
                                                          TaggedProto(proto), cxArg->global(),
-                                                         metadata, gc::FINALIZE_OBJECT0));
+                                                         metadata, gc::AllocKind::OBJECT0));
     if (!shape)
         return nullptr;
 
