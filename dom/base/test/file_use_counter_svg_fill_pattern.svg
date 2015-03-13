@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="8cm" height="4cm" viewBox="0 0 800 400" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+  <desc>Borrowed from http://www.w3.org/TR/SVG/pservers.html</desc>
+  <!-- Outline the drawing area in blue -->
+  <rect fill="none" stroke="blue" 
+        x="1" y="1" width="798" height="398"/>
+
+  <!-- The ellipse is filled using a triangle pattern paint server
+       and stroked with black -->
+  <ellipse fill="url(http://example.com/browser/dom/base/test/file_use_counter_svg_fill_pattern_definition.svg#TrianglePattern)" stroke="black" stroke-width="5"  
+           cx="400" cy="200" rx="350" ry="150" />
+</svg>
