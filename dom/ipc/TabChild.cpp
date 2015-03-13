@@ -2650,6 +2650,32 @@ TabChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
   return true;
 }
 
+class UnloadScriptEvent : public nsRunnable
+{
+public:
+  UnloadScriptEvent(TabChild* aTabChild, TabChildGlobal* aTabChildGlobal)
+    : mTabChild(aTabChild), mTabChildGlobal(aTabChildGlobal)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMEvent(getter_AddRefs(event), mTabChildGlobal, nullptr, nullptr);
+    if (event) {
+      event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
+      event->SetTrusted(true);
+
+      bool dummy;
+      mTabChildGlobal->DispatchEvent(event, &dummy);
+    }
+
+    return NS_OK;
+  }
+
+  nsRefPtr<TabChild> mTabChild;
+  TabChildGlobal* mTabChildGlobal;
+};
+
 bool
 TabChild::RecvDestroy()
 {
@@ -2657,10 +2683,10 @@ TabChild::RecvDestroy()
   mDestroyed = true;
 
   if (mTabChildGlobal) {
-    // Message handlers are called from the event loop, so it better be safe to
-    // run script.
-    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-    mTabChildGlobal->DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
+    // Let the frame scripts know the child is being closed
+    nsContentUtils::AddScriptRunner(
+      new UnloadScriptEvent(this, mTabChildGlobal)
+    );
   }
 
   nsCOMPtr<nsIObserverService> observerService =
