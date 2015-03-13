@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ReadingList", "resource:///modules/readinglist/ReadingList.jsm");
 
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
@@ -43,7 +42,7 @@ let ReaderParent = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Reader:AddToList":
-        ReadingList.addItem(message.data.article);
+        // XXX: To implement.
         break;
 
       case "Reader:ArticleGet":
@@ -60,18 +59,11 @@ let ReaderParent = {
         break;
       }
       case "Reader:ListStatusRequest":
-        ReadingList.count(message.data).then(count => {
-          let mm = message.target.messageManager
-          mm.sendAsyncMessage("Reader:ListStatusData",
-                              { inReadingList: !!count, url: message.data.url });
-        });
+        // XXX: To implement.
         break;
 
       case "Reader:RemoveFromList":
-        // We need to get the "real" item to delete it.
-        ReadingList.getItemForURL(message.data.url).then(item => {
-          ReadingList.deleteItem(item)
-        });
+        // XXX: To implement.
         break;
 
       case "Reader:Share":
