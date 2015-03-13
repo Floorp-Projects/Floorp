@@ -386,6 +386,20 @@ MouseEvent::ClientY()
                                 mClientPoint).y;
 }
 
+int32_t
+MouseEvent::OffsetX()
+{
+  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->refPoint,
+                                mClientPoint).x;
+}
+
+int32_t
+MouseEvent::OffsetY()
+{
+  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->refPoint,
+                                mClientPoint).y;
+}
+
 bool
 MouseEvent::AltKey()
 {
