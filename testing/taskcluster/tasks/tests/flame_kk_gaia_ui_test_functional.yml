@@ -3,10 +3,9 @@ $inherits:
   from: 'tasks/phone_test.yml'
 task:
   metadata:
-    name: '[TC] Gaia Python Integration Sanity Tests'
-    description: Gaia Python Integration Sanity Tests run
+    name: '[TC] Gaia Python Functional Integration Tests'
+    description: Gaia Python Functional Integration Tests run {{chunk}}
   workerType: testdroid-device
-  retries: 0
 
   payload:
     env:
@@ -17,6 +16,8 @@ task:
     command:
       - >
         gaiatest
+        --total-chunks={{total_chunks}}
+        --this-chunk={{chunk}}
         --testvars=/home/worker/data/gaia_testvars.json
         --testvars=/home/worker/data/device.json
         --adb-host=$PROXY_HOST
@@ -27,7 +28,7 @@ task:
         --timeout=10000
         --log-html=/home/worker/upload/logs/index.html
         --restart
-        --type=b2g+sanity-dsds
+        --type=b2g-dsds
         --log-mach=-
         --log-raw=/home/worker/upload/logs/raw.log
         gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
@@ -41,5 +42,5 @@ task:
     treeherder:
       groupName: Gaia Python Integration Tests
       groupSymbol: tc-Gip
-      symbol: 's'
+      symbol: 'f{{chunk}}'
       productName: b2g

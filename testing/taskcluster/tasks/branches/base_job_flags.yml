@@ -32,6 +32,7 @@ flags:
     - gaia-ui-test-oop
     - gaia-ui-test-accessibility
     - gaia-ui-test-functional
+    - gaia-ui-test-functional-dsds
     - gaia-ui-test-unit
     - jetpack
     - jittests
