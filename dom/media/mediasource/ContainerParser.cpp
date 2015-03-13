@@ -293,7 +293,7 @@ public:
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
-      mParser = new mp4_demuxer::MoofParser(mStream, 0, &mMonitor);
+      mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false, &mMonitor);
       mInitData = new LargeDataBuffer();
     } else if (!mStream || !mParser) {
       return false;
