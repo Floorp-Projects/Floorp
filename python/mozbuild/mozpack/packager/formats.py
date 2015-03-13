@@ -39,10 +39,12 @@ formats:
       elements are packaged in an omnijar file for each base directory.
 
 The base interface provides the following methods:
-    - add_base(path)
-        Register a base directory for an application or GRE. Base directories
-        usually contain a root manifest (manifests not included in any other
-        manifest) named chrome.manifest.
+    - add_base(path [, addon])
+        Register a base directory for an application or GRE, or an addon.
+        Base directories usually contain a root manifest (manifests not
+        included in any other manifest) named chrome.manifest.
+        The optional boolean addon argument tells whether the base directory
+        is that of an addon.
     - add(path, content)
         Add the given content (BaseFile instance) at the given virtual path
     - add_interfaces(path, content)
@@ -69,13 +71,16 @@ class FlatFormatter(object):
         assert isinstance(copier, FileRegistry)
         self.copier = copier
         self._bases = ['']
+        self._addons = []
         self._frozen_bases = False
 
-    def add_base(self, base):
+    def add_base(self, base, addon=False):
         # Only allow to add a base directory before calls to _get_base()
         assert not self._frozen_bases
         if not base in self._bases:
             self._bases.append(base)
+        if addon and base not in self._addons:
+            self._addons.append(base)
 
     def _get_base(self, path):
         '''
@@ -199,28 +204,31 @@ class JarFormatter(FlatFormatter):
             contains(mozpack.path.relpath(path, chrome))
 
 
-class OmniJarFormatter(FlatFormatter):
+class OmniJarFormatter(JarFormatter):
     '''
     Formatter for the omnijar package format.
     '''
     def __init__(self, copier, omnijar_name, compress=True, optimize=True,
                  non_resources=[]):
-        FlatFormatter.__init__(self, copier)
+        JarFormatter.__init__(self, copier, compress, optimize)
         self.omnijars = {}
         self._omnijar_name = omnijar_name
-        self._compress = compress
-        self._optimize = optimize
         self._non_resources = non_resources
 
-    def _get_omnijar(self, path, create=True):
+    def _get_formatter(self, path, is_resource=None):
         '''
-        Return the omnijar corresponding to the given path, its base directory
-        and the path translated to be under the omnijar..
+        Return the (sub)formatter corresponding to the given path, its base
+        directory and the path relative to that base.
         '''
         base = self._get_base(path)
+        use_omnijar = base not in self._addons
+        if use_omnijar:
+            if is_resource is None:
+                is_resource = self.is_resource(path, base)
+            use_omnijar = is_resource
+        if not use_omnijar:
+            return super(OmniJarFormatter, self), '', path
         if not base in self.omnijars:
-            if not create:
-                return None, '', path
             omnijar = Jarrer(self._compress, self._optimize)
             self.omnijars[base] = FlatFormatter(omnijar)
             self.copier.add(mozpack.path.join(base, self._omnijar_name),
@@ -228,23 +236,21 @@ class OmniJarFormatter(FlatFormatter):
         return self.omnijars[base], base, mozpack.path.relpath(path, base)
 
     def add(self, path, content):
-        if self.is_resource(path):
-            formatter, base, path = self._get_omnijar(path)
-        else:
-            formatter = self
-        FlatFormatter.add(formatter, path, content)
+        formatter, base, path = self._get_formatter(path)
+        formatter.add(path, content)
 
     def add_manifest(self, entry):
         if isinstance(entry, ManifestBinaryComponent):
-            formatter, base = self, ''
+            formatter, base = super(OmniJarFormatter, self), ''
         else:
-            formatter, base, path = self._get_omnijar(entry.base)
+            formatter, base, path = self._get_formatter(entry.base,
+                                                        is_resource=True)
         entry = entry.move(mozpack.path.relpath(entry.base, base))
-        FlatFormatter.add_manifest(formatter, entry)
+        formatter.add_manifest(entry)
 
     def add_interfaces(self, path, content):
-        formatter, base, path = self._get_omnijar(path)
-        FlatFormatter.add_interfaces(formatter, path, content)
+        formatter, base, path = self._get_formatter(path)
+        formatter.add_interfaces(path, content)
 
     def contains(self, path):
         assert '*' not in path
@@ -255,12 +261,13 @@ class OmniJarFormatter(FlatFormatter):
                 return True
         return False
 
-    def is_resource(self, path):
+    def is_resource(self, path, base=None):
         '''
         Return whether the given path corresponds to a resource to be put in an
         omnijar archive.
         '''
-        base = self._get_base(path)
+        if base is None:
+            base = self._get_base(path)
         path = mozpack.path.relpath(path, base)
         if any(mozpack.path.match(path, p.replace('*', '**'))
                for p in self._non_resources):
@@ -269,7 +276,7 @@ class OmniJarFormatter(FlatFormatter):
         if path[0] == 'chrome':
             return len(path) == 1 or path[1] != 'icons'
         if path[0] == 'components':
-            return path[-1].endswith('.js')
+            return path[-1].endswith(('.js', '.xpt'))
         if path[0] == 'res':
             return len(path) == 1 or \
                 (path[1] != 'cursors' and path[1] != 'MainMenu.nib')
