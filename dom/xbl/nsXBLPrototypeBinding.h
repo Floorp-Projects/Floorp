@@ -89,11 +89,11 @@ public:
     }
   }
 
-  const nsCString& ClassName() const {
-    return mImplementation ? mImplementation->mClassName : EmptyCString();
+  const nsString& ClassName() const {
+    return mImplementation ? mImplementation->mClassName : EmptyString();
   }
 
-  nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
+  nsresult InitClass(const nsString& aClassName, JSContext* aContext,
                      JS::Handle<JSObject*> aScriptObject,
                      JS::MutableHandle<JSObject*> aClassObject,
                      bool* aNew);

@@ -2754,6 +2754,17 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name,
 }
 
 JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext *cx, HandleObject obj, const char16_t *name,
+                              MutableHandle<JSPropertyDescriptor> desc)
+{
+    JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
                              MutableHandle<JSPropertyDescriptor> desc)
 {
