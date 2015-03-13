@@ -4173,9 +4173,6 @@ JSObject::getParent() const
     if (Shape *shape = maybeShape())
         return shape->getObjectParent();
 
-    // Avoid the parent-link checking in JSObject::global. Unboxed plain
-    // objects keep their compartment's global alive through their layout, and
-    // don't need a read barrier here.
     MOZ_ASSERT(is<UnboxedPlainObject>());
-    return compartment()->unsafeUnbarrieredMaybeGlobal();
+    return &global();
 }
