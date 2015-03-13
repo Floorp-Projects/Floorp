@@ -5143,6 +5143,11 @@ static bool
 CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, PropertyName *calleeName,
                   RetType retType, MDefinition **def, Type *type)
 {
+    if (!f.canCall()) {
+        return f.fail(callNode, "call expressions may not be nested inside heap expressions "
+                                "when the module contains a change-heap function");
+    }
+
     FunctionCompiler::Call call(f, callNode, retType);
 
     if (!CheckCallArgs(f, callNode, CheckIsVarType, &call))
@@ -5188,6 +5193,11 @@ CheckFuncPtrTableAgainstExisting(ModuleCompiler &m, ParseNode *usepn,
 static bool
 CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type)
 {
+    if (!f.canCall()) {
+        return f.fail(callNode, "function-pointer call expressions may not be nested inside heap "
+                                "expressions when the module contains a change-heap function");
+    }
+
     ParseNode *callee = CallCallee(callNode);
     ParseNode *tableNode = ElemBase(callee);
     ParseNode *indexExpr = ElemIndex(callee);
@@ -5247,6 +5257,11 @@ static bool
 CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetType retType,
              MDefinition **def, Type *type)
 {
+    if (!f.canCall()) {
+        return f.fail(callNode, "FFI call expressions may not be nested inside heap "
+                                "expressions when the module contains a change-heap function");
+    }
+
     PropertyName *calleeName = CallCallee(callNode)->name();
 
     if (retType == RetType::Float)
@@ -6112,11 +6127,6 @@ static bool
 CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
-
-    if (!f.canCall()) {
-        return f.fail(call, "call expressions may not be nested inside heap expressions when "
-                            "the module contains a change-heap function");
-    }
 
     if (IsNumericLiteral(f.m(), call)) {
         AsmJSNumLit literal = ExtractNumericLiteral(f.m(), call);
@@ -7529,7 +7539,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     // This flows into FunctionBox, so must be tenured.
     RootedFunction fun(m.cx(),
                        NewScriptedFunction(m.cx(), 0, JSFunction::INTERPRETED,
-                                           m.cx()->global(), name, JSFunction::FinalizeKind,
+                                           name, JSFunction::FinalizeKind,
                                            TenuredObject));
     if (!fun)
         return false;

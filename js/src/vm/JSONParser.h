@@ -173,8 +173,6 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     friend void AutoGCRooter::trace(JSTracer *trc);
     void trace(JSTracer *trc);
 
-    JSObject *createFinishedObject(PropertyVector &properties);
-
     JSONParserBase(const JSONParserBase &other) = delete;
     void operator=(const JSONParserBase &other) = delete;
 };

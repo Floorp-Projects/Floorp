@@ -691,7 +691,15 @@ struct IonScriptCounts
         for (size_t i = 0; i < numBlocks_; i++)
             blocks_[i].destroy();
         js_free(blocks_);
-        js_delete(previous_);
+        // The list can be long in some corner cases (bug 1140084), so
+        // unroll the recursion.
+        IonScriptCounts *victims = previous_;
+        while (victims) {
+            IonScriptCounts *victim = victims;
+            victims = victim->previous_;
+            victim->previous_ = nullptr;
+            js_delete(victim);
+        }
     }
 
     bool init(size_t numBlocks) {

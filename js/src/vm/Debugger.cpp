@@ -762,7 +762,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
      * DebuggerEnv should only wrap a debug scope chain obtained (transitively)
      * from GetDebugScopeFor(Frame|Function).
      */
-    MOZ_ASSERT(!env->is<ScopeObject>());
+    MOZ_ASSERT(IsValidTerminatingScope(env));
 
     NativeObject *envobj;
     DependentAddPtr<ObjectWeakMap> p(cx, environments, env);
@@ -6019,8 +6019,9 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
      * static level will suffice.
      *
      * Pass in a StaticEvalObject *not* linked to env for evalStaticScope, as
-     * ScopeIter should stop at any non-ScopeObject boundaries, and we are
-     * putting a DebugScopeProxy on the scope chain.
+     * ScopeIter should stop at any non-ScopeObject or non-syntactic With
+     * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
+     * the scope chain.
      */
     Rooted<StaticEvalObject *> staticScope(cx, StaticEvalObject::create(cx, js::NullPtr()));
     if (!staticScope)
@@ -6158,8 +6159,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
 
     /* If evalWithBindings, create the inner environment. */
     if (evalWithBindings) {
-        /* TODO - This should probably be a Call object, like ES5 strict eval. */
-        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), env));
+        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), NullPtr()));
         if (!nenv)
             return false;
         RootedId id(cx);
@@ -6172,7 +6172,22 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
                 return false;
             }
         }
-        env = nenv;
+
+        AutoObjectVector scopeChain(cx);
+        if (!scopeChain.append(nenv))
+            return false;
+
+        RootedObject dynamicScope(cx);
+        // We ignore the static scope here.  See comments about static
+        // scopes in EvaluateInEnv.
+        RootedObject unusedStaticScope(cx);
+        if (!CreateScopeObjectsForScopeChain(cx, scopeChain, env, &dynamicScope,
+                                             &unusedStaticScope))
+        {
+            return false;
+        }
+
+        env = dynamicScope;
     }
 
     /* Run the code and produce the completion value. */
@@ -7234,7 +7249,7 @@ DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname,
         return false;                                                         \
     Rooted<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));           \
     MOZ_ASSERT(env);                                                          \
-    MOZ_ASSERT(!env->is<ScopeObject>())
+    MOZ_ASSERT(IsValidTerminatingScope(env));
  
  #define THIS_DEBUGENV_OWNER(cx, argc, vp, fnname, args, envobj, env, dbg)    \
      THIS_DEBUGENV(cx, argc, vp, fnname, args, envobj, env);                  \

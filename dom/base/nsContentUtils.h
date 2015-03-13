@@ -366,6 +366,8 @@ public:
   enum ParseHTMLIntegerResultFlags {
     eParseHTMLInteger_NoFlags               = 0,
     eParseHTMLInteger_IsPercent             = 1 << 0,
+    // eParseHTMLInteger_NonStandard is set if the string representation of the
+    // integer was not the canonical one (e.g. had extra leading '+' or '0').
     eParseHTMLInteger_NonStandard           = 1 << 1,
     eParseHTMLInteger_DidNotConsumeAllInput = 1 << 2,
     // Set if one or more error flags were set.

@@ -618,23 +618,28 @@ nsEditor::DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers)
 }
 
 
-
 NS_IMETHODIMP
-nsEditor::GetSelection(nsISelection **aSelection)
+nsEditor::GetSelection(nsISelection** aSelection)
+{
+  return GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
+}
+
+nsresult
+nsEditor::GetSelection(int16_t aSelectionType, nsISelection** aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;
   nsCOMPtr<nsISelectionController> selcon;
   GetSelectionController(getter_AddRefs(selcon));
   NS_ENSURE_TRUE(selcon, NS_ERROR_NOT_INITIALIZED);
-  return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
+  return selcon->GetSelection(aSelectionType, aSelection);  // does an addref
 }
 
 Selection*
-nsEditor::GetSelection()
+nsEditor::GetSelection(int16_t aSelectionType)
 {
   nsCOMPtr<nsISelection> sel;
-  nsresult res = GetSelection(getter_AddRefs(sel));
+  nsresult res = GetSelection(aSelectionType, getter_AddRefs(sel));
   NS_ENSURE_SUCCESS(res, nullptr);
 
   return static_cast<Selection*>(sel.get());
@@ -2686,6 +2691,14 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
   return NS_OK;
 }
 
+struct SavedRange {
+  nsRefPtr<Selection> mSelection;
+  nsCOMPtr<nsINode> mStartNode;
+  nsCOMPtr<nsINode> mEndNode;
+  int32_t mStartOffset;
+  int32_t mEndOffset;
+};
+
 nsresult
 nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
                         nsINode* aNodeToJoin,
@@ -2695,25 +2708,6 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
   MOZ_ASSERT(aNodeToJoin);
   MOZ_ASSERT(aParent);
 
-  nsRefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-
-  // remember some selection points
-  nsCOMPtr<nsINode> selStartNode;
-  int32_t selStartOffset;
-  nsresult result = GetStartNodeAndOffset(selection, getter_AddRefs(selStartNode), &selStartOffset);
-  if (NS_FAILED(result)) {
-    selStartNode = nullptr;
-  }
-
-  nsCOMPtr<nsINode> selEndNode;
-  int32_t selEndOffset;
-  result = GetEndNodeAndOffset(selection, getter_AddRefs(selEndNode), &selEndOffset);
-  // Joe or Kin should comment here on why the following line is not a copy/paste error
-  if (NS_FAILED(result)) {
-    selStartNode = nullptr;
-  }
-
   uint32_t firstNodeLength = aNodeToJoin->Length();
 
   int32_t joinOffset;
@@ -2721,24 +2715,53 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
   int32_t keepOffset;
   nsINode* parent = GetNodeLocation(aNodeToKeep, &keepOffset);
 
-  // if selection endpoint is between the nodes, remember it as being
-  // in the one that is going away instead.  This simplifies later selection
-  // adjustment logic at end of this method.
-  if (selStartNode) {
-    if (selStartNode == parent &&
-        joinOffset < selStartOffset && selStartOffset <= keepOffset) {
-      selStartNode = aNodeToJoin;
-      selStartOffset = firstNodeLength;
+  // Remember all selection points.
+  nsAutoTArray<SavedRange, 10> savedRanges;
+  for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
+    SelectionType type(1 << i);
+    SavedRange range;
+    range.mSelection = GetSelection(type);
+    if (type == nsISelectionController::SELECTION_NORMAL) {
+      NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
+    } else if (!range.mSelection) {
+      // For non-normal selections, skip over the non-existing ones.
+      continue;
     }
-    if (selEndNode == parent &&
-        joinOffset < selEndOffset && selEndOffset <= keepOffset) {
-      selEndNode = aNodeToJoin;
-      selEndOffset = firstNodeLength;
+
+    for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
+      nsRefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      if (!r->IsPositioned()) {
+        continue;
+      }
+      range.mStartNode = r->GetStartParent();
+      range.mStartOffset = r->StartOffset();
+      range.mEndNode = r->GetEndParent();
+      range.mEndOffset = r->EndOffset();
+
+      // If selection endpoint is between the nodes, remember it as being
+      // in the one that is going away instead.  This simplifies later selection
+      // adjustment logic at end of this method.
+      if (range.mStartNode) {
+        if (range.mStartNode == parent &&
+            joinOffset < range.mStartOffset &&
+            range.mStartOffset <= keepOffset) {
+          range.mStartNode = aNodeToJoin;
+          range.mStartOffset = firstNodeLength;
+        }
+        if (range.mEndNode == parent &&
+            joinOffset < range.mEndOffset &&
+            range.mEndOffset <= keepOffset) {
+          range.mEndNode = aNodeToJoin;
+          range.mEndOffset = firstNodeLength;
+        }
+      }
+
+      savedRanges.AppendElement(range);
     }
   }
 
-  // ok, ready to do join now.
-  // if it's a text node, just shuffle around some text
+  // OK, ready to do join now.
+  // If it's a text node, just shuffle around some text.
   nsCOMPtr<nsIDOMCharacterData> keepNodeAsText( do_QueryInterface(aNodeToKeep) );
   nsCOMPtr<nsIDOMCharacterData> joinNodeAsText( do_QueryInterface(aNodeToJoin) );
   if (keepNodeAsText && joinNodeAsText) {
@@ -2749,15 +2772,15 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     leftText += rightText;
     keepNodeAsText->SetData(leftText);
   } else {
-    // otherwise it's an interior node, so shuffle around the children
+    // Otherwise it's an interior node, so shuffle around the children.
     nsCOMPtr<nsINodeList> childNodes = aNodeToJoin->ChildNodes();
     MOZ_ASSERT(childNodes);
 
-    // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
-    // GetFirstChild returns nullptr firstNode if aNodeToKeep has no children, that's ok.
+    // Remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
+    // GetFirstChild returns nullptr firstNode if aNodeToKeep has no children, that's OK.
     nsCOMPtr<nsIContent> firstNode = aNodeToKeep->GetFirstChild();
 
-    // have to go through the list backwards to keep deletes from interfering with iteration
+    // Have to go through the list backwards to keep deletes from interfering with iteration.
     for (uint32_t i = childNodes->Length(); i > 0; --i) {
       nsCOMPtr<nsIContent> childNode = childNodes->Item(i - 1);
       if (childNode) {
@@ -2770,41 +2793,60 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     }
   }
 
-  // delete the extra node
+  // Delete the extra node.
   ErrorResult err;
   aParent->RemoveChild(*aNodeToJoin, err);
 
-  if (GetShouldTxnSetSelection()) {
-    // editor wants us to set selection at join point
+  bool shouldSetSelection = GetShouldTxnSetSelection();
+
+  nsRefPtr<Selection> previousSelection;
+  for (size_t i = 0; i < savedRanges.Length(); ++i) {
+    // And adjust the selection if needed.
+    SavedRange& range = savedRanges[i];
+
+    // If we have not seen the selection yet, clear all of its ranges.
+    if (range.mSelection != previousSelection) {
+      nsresult rv = range.mSelection->RemoveAllRanges();
+      NS_ENSURE_SUCCESS(rv, rv);
+      previousSelection = range.mSelection;
+    }
+
+    if (shouldSetSelection &&
+        range.mSelection->Type() ==
+          nsISelectionController::SELECTION_NORMAL) {
+      // If the editor should adjust the selection, don't bother restoring
+      // the ranges for the normal selection here.
+      continue;
+    }
+
+    // Check to see if we joined nodes where selection starts.
+    if (range.mStartNode == aNodeToJoin) {
+      range.mStartNode = aNodeToKeep;
+    } else if (range.mStartNode == aNodeToKeep) {
+      range.mStartOffset += firstNodeLength;
+    }
+
+    // Check to see if we joined nodes where selection ends.
+    if (range.mEndNode == aNodeToJoin) {
+      range.mEndNode = aNodeToKeep;
+    } else if (range.mEndNode == aNodeToKeep) {
+      range.mEndOffset += firstNodeLength;
+    }
+
+    nsRefPtr<nsRange> newRange;
+    nsresult rv = nsRange::CreateRange(range.mStartNode, range.mStartOffset,
+                                       range.mEndNode, range.mEndOffset,
+                                       getter_AddRefs(newRange));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = range.mSelection->AddRange(newRange);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (shouldSetSelection) {
+    // Editor wants us to set selection at join point.
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     selection->Collapse(aNodeToKeep, AssertedCast<int32_t>(firstNodeLength));
-  } else if (selStartNode) {
-    // and adjust the selection if needed
-    // HACK: this is overly simplified - multi-range selections need more work than this
-    bool bNeedToAdjust = false;
-
-    // check to see if we joined nodes where selection starts
-    if (selStartNode == aNodeToJoin) {
-      bNeedToAdjust = true;
-      selStartNode = aNodeToKeep;
-    } else if (selStartNode == aNodeToKeep) {
-      bNeedToAdjust = true;
-      selStartOffset += firstNodeLength;
-    }
-
-    // check to see if we joined nodes where selection ends
-    if (selEndNode == aNodeToJoin) {
-      bNeedToAdjust = true;
-      selEndNode = aNodeToKeep;
-    } else if (selEndNode == aNodeToKeep) {
-      bNeedToAdjust = true;
-      selEndOffset += firstNodeLength;
-    }
-
-    // adjust selection if needed
-    if (bNeedToAdjust) {
-      selection->Collapse(selStartNode, selStartOffset);
-      selection->Extend(selEndNode, selEndOffset);
-    }
   }
 
   return err.ErrorCode();
