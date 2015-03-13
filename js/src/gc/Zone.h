@@ -151,6 +151,8 @@ struct Zone : public JS::shadow::Zone,
 
     bool canCollect();
 
+    void notifyObservingDebuggers();
+
     enum GCState {
         NoGC,
         Mark,
@@ -163,6 +165,8 @@ struct Zone : public JS::shadow::Zone,
         MOZ_ASSERT(runtimeFromMainThread()->isHeapBusy());
         MOZ_ASSERT_IF(state != NoGC, canCollect());
         gcState_ = state;
+        if (state == Finished)
+            notifyObservingDebuggers();
     }
 
     bool isCollecting() const {
