@@ -73,7 +73,7 @@ def fill_formatter(formatter, contents):
             formatter.add(k, v)
 
 
-def get_contents(registry):
+def get_contents(registry, read_all=False):
     result = {}
     for k, v in registry:
         if k.endswith('.xpt'):
@@ -82,7 +82,7 @@ def get_contents(registry):
             result[k] = read_interfaces(tmpfile)
         elif isinstance(v, FileRegistry):
             result[k] = get_contents(v)
-        elif isinstance(v, ManifestFile):
+        elif isinstance(v, ManifestFile) or read_all:
             result[k] = v.open().read().splitlines()
         else:
             result[k] = v
