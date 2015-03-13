@@ -1031,19 +1031,6 @@ JSObject::is<js::StaticBlockObject>() const
     return is<js::BlockObject>() && !getProto();
 }
 
-inline JSObject *
-JSObject::enclosingScope()
-{
-    if (is<js::ScopeObject>())
-        return &as<js::ScopeObject>().enclosingScope();
-
-    if (is<js::DebugScopeObject>())
-        return &as<js::DebugScopeObject>().enclosingScope();
-
-    MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
-    return getParent();
-}
-
 namespace js {
 
 inline bool
