@@ -498,17 +498,6 @@ let SessionHelper = {
 };
 
 function Nfc() {
-  debug("Starting Nfc Service");
-
-  let nfcService = Cc["@mozilla.org/nfc/service;1"].getService(Ci.nsINfcService);
-  if (!nfcService) {
-    debug("No nfc service component available!");
-    return;
-  }
-
-  nfcService.start(this);
-  this.nfcService = nfcService;
-
   gMessageManager.init(this);
 
   this.targetsByRequestId = {};
@@ -528,6 +517,39 @@ Nfc.prototype = {
   nfcService: null,
 
   targetsByRequestId: null,
+
+  // temporary variables while NFC initialization is pending
+  pendingNfcService: null,
+  pendingMessageQueue: [],
+
+  /**
+   * Start NFC service
+   */
+  startNfcService: function startNfcService() {
+    debug("Starting Nfc Service");
+
+    let nfcService =
+      Cc["@mozilla.org/nfc/service;1"].getService(Ci.nsINfcService);
+    if (!nfcService) {
+      debug("No nfc service component available!");
+      return false;
+    }
+
+    nfcService.start(this);
+    this.pendingNfcService = nfcService;
+
+    return true;
+  },
+
+  /**
+   * Shutdown NFC service
+   */
+  shutdownNfcService : function shutdownNfcService() {
+    debug("Shutting down Nfc Service");
+
+    this.nfcService.shutdown();
+    this.nfcService = null;
+  },
 
   /**
    * Send arbitrary message to Nfc service.
@@ -573,25 +595,21 @@ Nfc.prototype = {
   },
 
   /**
-   * Send Error response to content. This is used only
-   * in case of discovering an error in message received from
-   * content process.
+   * Send Error response to content process.
    *
    * @param message
    *        An nsIMessageListener's message parameter.
+   * @param errorMsg
+   *        A string with an error message.
    */
-  sendNfcErrorResponse: function sendNfcErrorResponse(message, errorCode) {
+  sendNfcErrorResponse: function sendNfcErrorResponse(message, errorMsg) {
     if (!message.target) {
       return;
     }
 
     let nfcMsgType = message.name + "Response";
-    message.data.errorMsg = this.getErrorMessage(errorCode);
+    message.data.errorMsg = errorMsg;
     message.target.sendAsyncMessage(nfcMsgType, message.data);
-  },
-
-  getErrorMessage: function getErrorMessage(errorCode) {
-    return NFC.NFC_ERROR_MSG[errorCode];
   },
 
   /**
@@ -604,7 +622,14 @@ Nfc.prototype = {
     message.type = message.rspType || message.ntfType;
     switch (message.type) {
       case NfcNotificationType.INITIALIZED:
-        // Do nothing.
+        this.nfcService = this.pendingNfcService;
+        // Send messages that have been queued up during initialization
+        // TODO: Bug 1141007: send error responses if the message
+        // indicates an error during initialization.
+        while (this.pendingMessageQueue.length) {
+          this.receiveMessage(this.pendingMessageQueue.shift());
+        }
+        this.pendingNfcService = null;
         break;
       case NfcNotificationType.TECH_DISCOVERED:
         // Update the upper layers with a session token (alias)
@@ -648,6 +673,9 @@ Nfc.prototype = {
           this.rfState = message.rfState;
           gMessageManager.onRFStateChanged(this.rfState);
         }
+        if (this.rfState == NFC.NFC_RF_STATE_IDLE) {
+          this.shutdownNfcService();
+        }
         break;
       case NfcResponseType.READ_NDEF_RSP: // Fall through.
       case NfcResponseType.WRITE_NDEF_RSP:
@@ -685,7 +713,8 @@ Nfc.prototype = {
    * Process a message from the gMessageManager.
    */
   receiveMessage: function receiveMessage(message) {
-    // Return early if we don't need the NFC Service.
+    // Return early if we don't need the NFC Service. We won't start
+    // the NFC daemon here.
     switch (message.name) {
       case "NFC:QueryInfo":
         return {rfState: this.rfState};
@@ -693,6 +722,24 @@ Nfc.prototype = {
         break;
     }
 
+    // Start NFC Service if necessary. Messages are held in a
+    // queue while initialization is being performed.
+    if (!this.nfcService) {
+      if ((message.name == "NFC:ChangeRFState") &&
+          (message.data.rfState != "idle") &&
+          !this.pendingNfcService) {
+        this.startNfcService(); // error handled in next branch
+      }
+      if (this.pendingNfcService) {
+        this.pendingMessageQueue.push(message);
+      } else {
+        this.sendNfcErrorResponse(message, "NotInitialize");
+      }
+      return;
+    }
+
+    // NFC Service is running and we have a message for it. This
+    // is the case during normal operation.
     if (message.name != "NFC:ChangeRFState") {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
@@ -738,8 +785,14 @@ Nfc.prototype = {
   },
 
   shutdown: function shutdown() {
-    this.nfcService.shutdown();
-    this.nfcService = null;
+    // We shutdown before initialization has been completed. The
+    // pending messages will receive an error response.
+    while (this.pendingMessageQueue.length) {
+      this.sendNfcErrorResponse(this.pendingMessageQueue.shift(), "NotInitialize");
+    }
+    if (this.nfcService) {
+      this.shutdownNfcService();
+    }
   }
 };
 
