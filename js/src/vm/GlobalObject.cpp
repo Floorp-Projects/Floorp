@@ -597,7 +597,7 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
 
     JSFunction *fun =
         NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
-                            cx->global(), name, JSFunction::ExtendedFinalizeKind, SingletonObject);
+                            name, JSFunction::ExtendedFinalizeKind, SingletonObject);
     if (!fun)
         return false;
     fun->setIsSelfHostedBuiltin();
