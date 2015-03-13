@@ -380,7 +380,7 @@
 #ifdef MOZ_ANDROID_SHARE_OVERLAY
         <!-- Share overlay activity
 
-             Setting launchMode="singleTop" ensure onNewIntent is called when the Activity is
+             Setting launchMode="singleTop" ensures onNewIntent is called when the Activity is
              reused. Ideally we create a new instance but Android L breaks this (bug 1137928). -->
         <activity android:name="org.mozilla.gecko.overlays.ui.ShareDialog"
                   android:label="@string/overlay_share_label"

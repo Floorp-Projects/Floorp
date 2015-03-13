@@ -777,7 +777,7 @@ public class ActivityChooserModel extends DataSetObservable {
                 if (shareDialogClassName.equals(resolveInfo.activityInfo.name) &&
                         channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
                     // Don't add the menu item if there are no devices to share to.
-                    if (getOtherSyncedClientCount() <= 0) {
+                    if (!hasOtherSyncClients()) {
                         continue;
                     }
 
@@ -1300,11 +1300,11 @@ public class ActivityChooserModel extends DataSetObservable {
     }
 
     /**
-     * Mozilla: Get the count of other synced clients.
+     * Mozilla: Return whether or not there are other synced clients.
      */
-    private int getOtherSyncedClientCount() {
+    private boolean hasOtherSyncClients() {
         final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(mContext);
-        return db.clientsCount();
+        return db.clientsCount() > 0;
     }
 
     /**
