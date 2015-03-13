@@ -1,4 +1,5 @@
 var request = new Request("//mochi.test:8888/?" + context);
+var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response;
 var c;
 var responseText;
@@ -22,15 +23,15 @@ fetch(new Request(request)).then(function(r) {
   return response.text();
 }).then(function(text) {
   responseText = text;
-  return testRequest(request);
+  return testRequest(request, unknownRequest);
 }).then(function() {
-  return testRequest(request.url);
+  return testRequest(request.url, unknownRequest.url);
 }).then(function() {
   testDone();
 });
 
 // The request argument can either be a URL string, or a Request object.
-function testRequest(request) {
+function testRequest(request, unknownRequest) {
   return caches.open(name).then(function(cache) {
     c = cache;
     return c.add(request);
@@ -51,6 +52,15 @@ function testRequest(request) {
   }).catch(function(err) {
     is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
   }).then(function() {
+    return c.match(unknownRequest);
+  }).then(function(r) {
+    is(typeof r, "undefined", "Searching for an unknown request should not succeed");
+    return caches.match(unknownRequest);
+  }).then(function(r) {
+    is(typeof r, "undefined", "Searching for an unknown request should not succeed");
+    return caches.match(unknownRequest, {cacheName: name});
+  }).then(function(r) {
+    is(typeof r, "undefined", "Searching for an unknown request should not succeed");
     return caches.delete(name);
   }).then(function(success) {
     ok(success, "We should be able to delete the cache successfully");
