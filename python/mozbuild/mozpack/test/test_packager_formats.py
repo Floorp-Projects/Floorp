@@ -23,15 +23,18 @@ from mozpack.chrome.manifest import (
 from mozpack.test.test_files import (
     MockDest,
     foo_xpt,
+    foo2_xpt,
     bar_xpt,
     read_interfaces,
 )
 
 
 CONTENTS = {
-    'bases': [
-        'app',
-    ],
+    'bases': {
+        # base_path: is_addon?
+        'app': False,
+        'addon0': True,
+    },
     'manifests': [
         ManifestContent('chrome/f', 'oo', 'oo/'),
         ManifestContent('chrome/f', 'bar', 'oo/bar/'),
@@ -39,6 +42,7 @@ CONTENTS = {
         ManifestBinaryComponent('components', 'foo.so'),
         ManifestContent('app/chrome', 'content', 'foo/'),
         ManifestComponent('app/components', '{foo-id}', 'foo.js'),
+        ManifestContent('addon0/chrome', 'content', 'foo/bar/'),
     ],
     'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
     'chrome/f/oo/baz': GeneratedFile('foobaz'),
@@ -49,6 +53,9 @@ CONTENTS = {
     'foo': GeneratedFile('foo'),
     'app/chrome/foo/foo': GeneratedFile('appfoo'),
     'app/components/foo.js': GeneratedFile('foo.js'),
+    'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+    'addon0/components/foo.xpt': foo2_xpt,
+    'addon0/components/bar.xpt': bar_xpt,
 }
 
 
@@ -58,8 +65,8 @@ class MockDest(MockDest):
 
 
 def fill_formatter(formatter, contents):
-    for base in contents['bases']:
-        formatter.add_base(base)
+    for base, is_addon in contents['bases'].items():
+        formatter.add_base(base, is_addon)
 
     for manifest in contents['manifests']:
         formatter.add_manifest(manifest)
@@ -97,11 +104,14 @@ class TestFormatters(unittest.TestCase):
         formatter.add_base('')
         formatter.add_base('browser')
         formatter.add_base('webapprt')
+        formatter.add_base('addon0', addon=True)
         self.assertEqual(formatter._get_base('platform.ini'), '')
         self.assertEqual(formatter._get_base('browser/application.ini'),
                          'browser')
         self.assertEqual(formatter._get_base('webapprt/webapprt.ini'),
                          'webapprt')
+        self.assertEqual(formatter._get_base('addon0/install.rdf'),
+                         'addon0')
 
     def test_flat_formatter(self):
         registry = FileRegistry()
@@ -147,6 +157,21 @@ class TestFormatters(unittest.TestCase):
                 'component {foo-id} foo.js',
             ],
             'app/components/foo.js': CONTENTS['app/components/foo.js'],
+            'addon0/chrome.manifest': [
+                'manifest chrome/chrome.manifest',
+                'manifest components/components.manifest',
+            ],
+            'addon0/chrome/chrome.manifest': [
+                'content content foo/bar/',
+            ],
+            'addon0/chrome/foo/bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
+            'addon0/components/components.manifest': [
+                'interfaces interfaces.xpt',
+            ],
+            'addon0/components/interfaces.xpt': {
+                'foo': read_interfaces(foo2_xpt.open())['foo'],
+                'bar': read_interfaces(bar_xpt.open())['bar'],
+            },
         }
 
         self.assertEqual(get_contents(registry), RESULT)
@@ -199,6 +224,23 @@ class TestFormatters(unittest.TestCase):
                 'component {foo-id} foo.js',
             ],
             'app/components/foo.js': CONTENTS['app/components/foo.js'],
+            'addon0/chrome.manifest': [
+                'manifest chrome/chrome.manifest',
+                'manifest components/components.manifest',
+            ],
+            'addon0/chrome/chrome.manifest': [
+                'content content jar:foo.jar!/bar/',
+            ],
+            'addon0/chrome/foo.jar': {
+                'bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
+            },
+            'addon0/components/components.manifest': [
+                'interfaces interfaces.xpt',
+            ],
+            'addon0/components/interfaces.xpt': {
+                'foo': read_interfaces(foo2_xpt.open())['foo'],
+                'bar': read_interfaces(bar_xpt.open())['bar'],
+            },
         }
 
         self.assertEqual(get_contents(registry), RESULT)
@@ -255,6 +297,23 @@ class TestFormatters(unittest.TestCase):
                     'component {foo-id} foo.js',
                 ],
                 'components/foo.js': CONTENTS['app/components/foo.js'],
+            },
+            'addon0/chrome.manifest': [
+                'manifest chrome/chrome.manifest',
+                'manifest components/components.manifest',
+            ],
+            'addon0/chrome/chrome.manifest': [
+                'content content jar:foo.jar!/bar/',
+            ],
+            'addon0/chrome/foo.jar': {
+                'bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
+            },
+            'addon0/components/components.manifest': [
+                'interfaces interfaces.xpt',
+            ],
+            'addon0/components/interfaces.xpt': {
+                'foo': read_interfaces(foo2_xpt.open())['foo'],
+                'bar': read_interfaces(bar_xpt.open())['bar'],
             },
         }
         self.assertEqual(get_contents(registry), RESULT)
