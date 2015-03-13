@@ -70,6 +70,10 @@ Icc::Icc(nsPIDOMWindow* aWindow, long aClientId, nsIIccInfo* aIccInfo)
   }
 }
 
+Icc::~Icc()
+{
+}
+
 void
 Icc::Shutdown()
 {
