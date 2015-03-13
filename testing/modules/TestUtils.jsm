@@ -32,20 +32,34 @@ this.TestUtils = {
    *
    * @param {string} topic
    *        The topic to observe.
-   * @param {*} subject
-   *        A value to check the notification subject against. Only a
-   *        notification with a matching subject will cause the promise to
-   *        resolve.
+   * @param {function} checkFn [optional]
+   *        Called with (subject, data) as arguments, should return true if the
+   *        notification is the expected one, or false if it should be ignored
+   *        and listening should continue. If not specified, the first
+   *        notification for the specified topic resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next notification, since this is probably a bug in the test.
+   *
    * @return {Promise}
-   *         Resolves with the data provided when the topic has been observed.
+   * @resolves The array [subject, data] from the observed notification.
    */
-  topicObserved(topic, subject=null) {
-    return new Promise(resolve => {
-      Services.obs.addObserver(function observer(observedSubject, topic, data) {
-        if (subject !== null && subject !== observedSubject) { return; }
-
-        Services.obs.removeObserver(observer, topic);
-        resolve(data);
+  topicObserved(topic, checkFn) {
+    return new Promise((resolve, reject) => {
+      Services.obs.addObserver(function observer(subject, topic, data) {
+        try {
+          try {
+            if (checkFn && !checkFn(subject, data)) {
+              return;
+            }
+          } finally {
+            Services.obs.removeObserver(observer, topic);
+          }
+          resolve([subject, data]);
+        } catch (ex) {
+          reject(ex);
+        }
       }, topic, false);
     });
   },
