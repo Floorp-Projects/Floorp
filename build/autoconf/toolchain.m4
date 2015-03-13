@@ -34,12 +34,6 @@ EOF
 if test "$compiler" != "$cxxcompiler"; then
     AC_MSG_ERROR([Your C and C++ compilers are different.  You need to use the same compiler.])
 fi
-if test "$CC_VERSION" != "$CXX_VERSION"; then
-    # This may not be strictly necessary, but if we want to drop it, we
-    # should make sure any version checks below apply to both the C and
-    # C++ compiler versions.
-    AC_MSG_ERROR([Your C and C++ compiler versions are different.  You need to use the same compiler version.])
-fi
 CC_VERSION=`echo "$CC_VERSION" | sed 's/ //g'`
 CXX_VERSION=`echo "$CXX_VERSION" | sed 's/ //g'`
 if test "$compiler" = "gcc"; then
@@ -243,12 +237,6 @@ EOF
     rm conftest.C
     if test "$host_compiler" != "$host_cxxcompiler"; then
         AC_MSG_ERROR([Your C and C++ host compilers are different.  You need to use the same compiler.])
-    fi
-    if test "$HOST_CC_VERSION" != "$HOST_CXX_VERSION"; then
-        # This may not be strictly necessary, but if we want to drop it,
-        # we should make sure any version checks below apply to both the
-        # C and C++ compiler versions.
-        AC_MSG_ERROR([Your C and C++ host compiler versions are different.  You need to use the same compiler version.])
     fi
     if test -n "$host_compiler"; then
         if test "$host_compiler" = "GCC" ; then
