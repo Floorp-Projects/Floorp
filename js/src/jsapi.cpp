@@ -3197,6 +3197,7 @@ JS::GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, HandleId id
 
 static bool
 CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
+                                HandleObject dynamicTerminatingScope,
                                 MutableHandleObject dynamicScopeObj,
                                 MutableHandleObject staticScopeObj)
 {
@@ -3212,7 +3213,7 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
     Rooted<StaticWithObject*> staticWith(cx);
     RootedObject staticEnclosingScope(cx);
     Rooted<DynamicWithObject*> dynamicWith(cx);
-    RootedObject dynamicEnclosingScope(cx, cx->global());
+    RootedObject dynamicEnclosingScope(cx, dynamicTerminatingScope);
     for (size_t i = scopeChain.length(); i > 0; ) {
         staticWith = StaticWithObject::create(cx);
         if (!staticWith)
@@ -3230,6 +3231,15 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
     dynamicScopeObj.set(dynamicEnclosingScope);
     staticScopeObj.set(staticEnclosingScope);
     return true;
+}
+
+static bool
+CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
+                                MutableHandleObject dynamicScopeObj,
+                                MutableHandleObject staticScopeObj)
+{
+    return CreateScopeObjectsForScopeChain(cx, scopeChain, cx->global(),
+                                           dynamicScopeObj, staticScopeObj);
 }
 
 static bool
