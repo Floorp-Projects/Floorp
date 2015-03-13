@@ -7,232 +7,80 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107378
   <meta charset="utf-8">
   <title>Test for Bug 1107378</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="property_database.js"></script>
+  <script type="application/javascript;version=1.7" src="unprefixing_service_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107378">Mozilla Bug 1107378</a>
 <div id="display">
-  <div id="content">
-  </div>
+  <iframe id="testIframe"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
 "use strict";
+SimpleTest.waitForExplicitFinish();
 
-/** Test for the CSS Unprefixing Service (Bug 1107378) **/
+/**
+ * This test checks that unprefixing is enabled for whitelisted domains, and
+ * that it's disabled for non-whitelisted domains.
+ *
+ * We do this using an iframe, in which we load a test file at a test domain,
+ * and we have the iframe report back to us (using postMessage) about
+ * whether unprefixing is working.
+ *
+ * High-level overview of the process here:
+ *  - First, we tweak prefs to enable unprefixing & enable the test-only
+ *    entries in our unprefixing whitelist.
+ *  - The rest of this test is driven by the "startNextTest()" method.
+ *    This method pops a hostname to test and loads a URL from that host
+ *    in the iframe.
+ *  - We then listen for test-results from the iframe, using the postMessage
+ *    handler in unprefixing_service_utils.js.
+ *  - When the iframe indicates that it's done, we call "startNextTest()"
+ *    again to pop the next host & load *that* in the iframe.
+ *  - When nothing remains to be popped, we're done.
+ */
 
-function getComputedStyleWrapper(elem, prop)
+const IFRAME_TESTFILE = "unprefixing_service_iframe.html";
+
+// This function gets invoked when our iframe finishes a given round of testing.
+function startNextTest()
 {
-  return window.getComputedStyle(elem, null).getPropertyValue(prop);
-}
-
-const gTestcases = [
-  { decl:  "-webkit-box-flex:5",
-    targetPropName: "flex-grow",
-    targetPropVal:  "5" },
-
-  /* If author happens to specify modern flexbox style after prefixed style,
-     make sure the modern stuff is preserved. */
-  { decl:  "-webkit-box-flex:4;flex-grow:6",
-    targetPropName: "flex-grow",
-    targetPropVal:  "6" },
-
-  /* Tests for handling !important: */
-  { decl:  "-webkit-box-flex:3!important;",
-    targetPropName: "flex-grow",
-    targetPropVal:  "3" },
-  { decl:  "-webkit-box-flex:2!important;flex-grow:1",
-    targetPropName: "flex-grow",
-    targetPropVal:  "2" },
-
-  { decl:  "-webkit-box-flex:1!important bogusText;",
-    targetPropName: "flex-grow"
-    /* invalid syntax --> no target prop-val. */
-  },
-
-  // Make sure we handle weird capitalization in property & value, too:
-  { decl: "-WEBKIT-BoX-aLign: baSELine",
-    targetPropName: "align-items",
-    targetPropVal:  "baseline" },
-
-  { decl: "display:-webkit-box",
-    targetPropName: "display",
-    targetPropVal:  "flex" },
-
-  { decl: "display:-webkit-box; display:-moz-box;",
-    targetPropName: "display",
-    targetPropVal:  "flex" },
-
-  { decl: "display:-webkit-foobar; display:-moz-box;",
-    targetPropName: "display",
-    targetPropVal:  "-moz-box" },
-
-  // -webkit-box-align: baseline | center | end      | start      | stretch
-  // ...maps to:
-  // align-items:       baseline | center | flex-end | flex-start | stretch
-  { decl: "-webkit-box-align: baseline",
-    targetPropName: "align-items",
-    targetPropVal:  "baseline" },
-  { decl: "-webkit-box-align: center",
-    targetPropName: "align-items",
-    targetPropVal:  "center" },
-  { decl: "-webkit-box-align: end",
-    targetPropName: "align-items",
-    targetPropVal:  "flex-end" },
-  { decl: "-webkit-box-align: start",
-    targetPropName: "align-items",
-    targetPropVal:  "flex-start" },
-  { decl: "-webkit-box-align: stretch",
-    targetPropName: "align-items",
-    targetPropVal:  "stretch" },
-
-  // -webkit-box-direction is not supported, because it's unused & would be
-  // complicated to support. See note in CSSUnprefixingService.js for more.
-
-  // -webkit-box-ordinal-group: <number> maps directly to "order".
-  { decl:  "-webkit-box-ordinal-group: 2",
-    targetPropName: "order",
-    targetPropVal:  "2" },
-  { decl:  "-webkit-box-ordinal-group: 6000",
-    targetPropName: "order",
-    targetPropVal:  "6000" },
-
-  // -webkit-box-orient: horizontal | inline-axis | vertical | block-axis
-  // ...maps to:
-  // flex-direction:     row        | row         | column   | column
-  { decl: "-webkit-box-orient: horizontal",
-    targetPropName: "flex-direction",
-    targetPropVal:  "row" },
-  { decl: "-webkit-box-orient: inline-axis",
-    targetPropName: "flex-direction",
-    targetPropVal:  "row" },
-  { decl: "-webkit-box-orient: vertical",
-    targetPropName: "flex-direction",
-    targetPropVal:  "column" },
-  { decl: "-webkit-box-orient: block-axis",
-    targetPropName: "flex-direction",
-    targetPropVal:  "column" },
-
-  // -webkit-box-pack: start     | center | end      | justify
-  // ... maps to:
-  // justify-content: flex-start | center | flex-end | space-between
-  { decl: "-webkit-box-pack: start",
-    targetPropName: "justify-content",
-    targetPropVal:  "flex-start" },
-  { decl: "-webkit-box-pack: center",
-    targetPropName: "justify-content",
-    targetPropVal:  "center" },
-  { decl: "-webkit-box-pack: end",
-    targetPropName: "justify-content",
-    targetPropVal:  "flex-end" },
-  { decl: "-webkit-box-pack: justify",
-    targetPropName: "justify-content",
-    targetPropVal:  "space-between" },
-
-  // -webkit-transform: <transform> maps directly to "transform"
-  { decl: "-webkit-transform: matrix(1, 2, 3, 4, 5, 6)",
-    targetPropName: "transform",
-    targetPropVal:  "matrix(1, 2, 3, 4, 5, 6)" },
-
-  // -webkit-transition: <property> maps directly to "transition"
-  { decl: "-webkit-transition: width 1s linear 2s",
-    targetPropName: "transition",
-    targetPropVal:  "width 1s linear 2s" },
-
-  // -webkit-transition **with** -webkit-prefixed property in value.
-  { decl: "-webkit-transition: -webkit-transform 1s linear 2s",
-    targetPropName: "transition",
-    targetPropVal:  "transform 1s linear 2s" },
-  // (Re-test to check that it sets the "transition-property" subproperty.)
-  { decl: "-webkit-transition: -webkit-transform 1s linear 2s",
-    targetPropName: "transition-property",
-    targetPropVal:  "transform" },
-
-  // Same as previous test, except with "-webkit-transform" in the
-  // middle of the value instead of at the beginning (still valid):
-  { decl: "-webkit-transition: 1s -webkit-transform linear 2s",
-    targetPropName: "transition",
-    targetPropVal:  "transform 1s linear 2s" },
-  { decl: "-webkit-transition: 1s -webkit-transform linear 2s",
-    targetPropName: "transition-property",
-    targetPropVal:  "transform" },
-];
-
-// The main test function.
-// aFlexboxTestcase is an entry from the list in flexbox_layout_testcases.js
-function runOneTest(aTestcase)
-{
-  let elem = document.getElementById("content");
-
-  let expectedValueInDOMStyle;
-  let expectedValueInComputedStyle;
-  if (typeof(aTestcase.targetPropVal) == 'undefined') {
-    expectedValueInDOMStyle = '';
-    expectedValueInComputedStyle = // initial computed style:
-      getComputedStyleWrapper(elem, aTestcase.targetPropName);
-  } else {
-    expectedValueInDOMStyle = aTestcase.targetPropVal;
-    expectedValueInComputedStyle = aTestcase.targetPropVal;
+  // Test the next whitelisted host, if any remain.
+  if (gWhitelistedHosts.length > 0) {
+    let host = gWhitelistedHosts.pop();
+    info("Verifying that CSS Unprefixing Service is active, " +
+         "at whitelisted test-host '" + host + "'");
+    testHost(host, true);
+    return;
   }
 
-  elem.setAttribute("style", aTestcase.decl);
-
-  // Check specified style for fixup:
-  is(elem.style[aTestcase.targetPropName], expectedValueInDOMStyle,
-     "Checking if unprefixing service produced expected result " +
-     "in elem.style['" + aTestcase.targetPropName + "'] " +
-     "when given decl '" + aTestcase.decl + "'");
-
-  // Check computed style for fixup:
-  // (only for longhand properties; shorthands aren't in computed style)
-  if (gCSSProperties[aTestcase.targetPropName].type == CSS_TYPE_LONGHAND) {
-    let computedValue = getComputedStyleWrapper(elem, aTestcase.targetPropName);
-    is(computedValue, expectedValueInComputedStyle,
-       "Checking if unprefixing service produced expected result " +
-       "in computed value of property '" +  aTestcase.targetPropName + "' " +
-       "when given decl '" + aTestcase.decl + "'");
+  // Test the next not-whitelisted host, if any remain.
+  if (gNotWhitelistedHosts.length > 0) {
+    let host = gNotWhitelistedHosts.pop();
+    info("Verifying that CSS Unprefixing Service is inactive, " +
+         "at non-whitelisted test-host '" + host + "'");
+    testHost(host, false);
+    return;
   }
 
-  elem.setAttribute("style", "");
-}
-
-function testWithUnprefixingDisabled()
-{
-  // Sanity-check that -webkit-prefixed properties are rejected, when
-  // pref is disabled:
-  let elem = document.getElementById("content");
-  let initialFlexGrow = getComputedStyleWrapper(elem, "flex-grow");
-  elem.setAttribute("style", "-webkit-box-flex:5");
-  is(getComputedStyleWrapper(elem, "flex-grow"), initialFlexGrow,
-     "-webkit-box-flex shouldn't affect 'flex-grow' " +
-     "when unprefixing pref is disabled");
-
-  let initialDisplay = getComputedStyleWrapper(elem, "display");
-  elem.setAttribute("style", "display:-webkit-box");
-  is(getComputedStyleWrapper(elem, "display"), initialDisplay,
-     "-webkit-box-flex shouldn't affect 'display' " +
-     "when unprefixing pref is disabled");
-}
-
-function testWithUnprefixingEnabled()
-{
-  gTestcases.forEach(runOneTest);
+  // Both arrays empty --> we're done.
   SimpleTest.finish();
 }
 
-SimpleTest.waitForExplicitFinish();
+function begin()
+{
+  // Before we start loading things in iframes, set up postMessage handler.
+  registerPostMessageListener(startNextTest);
 
-// First, test with unprefixing disabled (by default for now):
-testWithUnprefixingDisabled();
+  // Turn on prefs & start the first test!
+  SpecialPowers.pushPrefEnv(
+    { set: [[PREF_UNPREFIXING_SERVICE, true],
+            [PREF_INCLUDE_TEST_DOMAINS, true]]},
+    startNextTest);
+}
 
-// ...and then test with it enabled.
-// XXXdholbert in bug 1132743, we'll be restricting unprefixing to only happen
-// on a "fixlist" of domains. We'll need to run this test from a predetermined
-// fake mochitest-domain, and include that domain in the "fixlist".
-SpecialPowers.pushPrefEnv(
-  { set: [["layout.css.unprefixing-service.enabled", true]] },
-  testWithUnprefixingEnabled);
+begin();
 
 </script>
 </pre>
