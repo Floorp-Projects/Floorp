@@ -531,6 +531,12 @@ let DirectoryLinksProvider = {
   _updateRelatedTile: function() {
     let sortedLinks = NewTabUtils.getProviderLinks(this);
 
+    if (!sortedLinks) {
+      // If NewTabUtils.links.resetCache() is called before getting here,
+      // sortedLinks may be undefined.
+      return;
+    }
+
     // Delete the current related tile, if one exists.
     let initialLength = sortedLinks.length;
     this.maxNumLinks = initialLength;
