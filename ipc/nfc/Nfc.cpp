@@ -22,18 +22,11 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 using namespace mozilla::ipc;
 
 namespace {
-
-static const char NFC_SOCKET_NAME[] = "/dev/socket/nfcd";
-
-// Network port to connect to for adb forwarded sockets when doing
-// desktop development.
-static const uint32_t NFC_TEST_PORT = 6400;
 
 class SendNfcSocketDataTask MOZ_FINAL : public nsRunnable
 {
@@ -62,37 +55,21 @@ private:
   nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
-class NfcConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
-{
-public:
-  NfcConnector()
-  { }
+} // anonymous namespace
 
-  int Create() MOZ_OVERRIDE;
-  bool CreateAddr(bool aIsServer,
-                  socklen_t& aAddrSize,
-                  sockaddr_any& aAddr,
-                  const char* aAddress) MOZ_OVERRIDE;
-  bool SetUp(int aFd) MOZ_OVERRIDE;
-  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
-  void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) MOZ_OVERRIDE;
-};
+namespace mozilla {
+namespace ipc {
+
+//
+// NfcConnector
+//
 
 int
 NfcConnector::Create()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  int fd = -1;
-
-#if defined(MOZ_WIDGET_GONK)
-  fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-#else
-  // If we can't hit a local loopback, fail later in connect.
-  fd = socket(AF_INET, SOCK_STREAM, 0);
-#endif
-
+  int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
   if (fd < 0) {
     NS_WARNING("Could not open nfc socket!");
     return -1;
@@ -110,34 +87,23 @@ NfcConnector::CreateAddr(bool aIsServer,
                          sockaddr_any& aAddr,
                          const char* aAddress)
 {
-  // We never open nfc socket as server.
-  MOZ_ASSERT(!aIsServer);
-  uint32_t af;
-#if defined(MOZ_WIDGET_GONK)
-  af = AF_LOCAL;
-#else
-  af = AF_INET;
-#endif
-  switch (af) {
-  case AF_LOCAL:
-    aAddr.un.sun_family = af;
-    if(strlen(aAddress) > sizeof(aAddr.un.sun_path)) {
-      NS_WARNING("Address too long for socket struct!");
-      return false;
-    }
-    strcpy((char*)&aAddr.un.sun_path, aAddress);
-    aAddrSize = strlen(aAddress) + offsetof(struct sockaddr_un, sun_path) + 1;
-    break;
-  case AF_INET:
-    aAddr.in.sin_family = af;
-    aAddr.in.sin_port = htons(NFC_TEST_PORT);
-    aAddr.in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    aAddrSize = sizeof(sockaddr_in);
-    break;
-  default:
-    NS_WARNING("Socket type not handled by connector!");
+  static const size_t sNameOffset = 1;
+
+  nsDependentCString socketName("nfcd");
+
+  size_t namesiz = socketName.Length() + 1; /* include trailing '\0' */
+
+  if ((sNameOffset + namesiz) > sizeof(aAddr.un.sun_path)) {
+    NS_WARNING("Address too long for socket struct!");
     return false;
   }
+
+  memset(aAddr.un.sun_path, '\0', sNameOffset); // abstract socket
+  memcpy(aAddr.un.sun_path + sNameOffset, socketName.get(), namesiz);
+  aAddr.un.sun_family = AF_UNIX;
+
+  aAddrSize = offsetof(struct sockaddr_un, sun_path) + sNameOffset + namesiz;
+
   return true;
 }
 
@@ -162,26 +128,51 @@ NfcConnector::GetSocketAddr(const sockaddr_any& aAddr,
   MOZ_CRASH("This should never be called!");
 }
 
-} // anonymous namespace
+//
+// NfcListenSocket
+//
 
-namespace mozilla {
-namespace ipc {
+NfcListenSocket::NfcListenSocket(NfcSocketListener* aListener)
+  : mListener(aListener)
+{ }
+
+void
+NfcListenSocket::OnConnectSuccess()
+{
+  if (mListener) {
+    mListener->OnConnectSuccess(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+void
+NfcListenSocket::OnConnectError()
+{
+  if (mListener) {
+    mListener->OnConnectError(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+void
+NfcListenSocket::OnDisconnect()
+{
+  if (mListener) {
+    mListener->OnDisconnect(NfcSocketListener::LISTEN_SOCKET);
+  }
+}
+
+//
+// NfcConsumer
+//
 
 NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
   : mListener(aListener)
-  , mShutdown(false)
-{
-  mAddress = NFC_SOCKET_NAME;
-
-  Connect(new NfcConnector(), mAddress.get());
-}
+{ }
 
 void
 NfcConsumer::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mShutdown = true;
   Close();
 }
 
@@ -209,23 +200,31 @@ NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
 void
 NfcConsumer::OnConnectSuccess()
 {
-  // Nothing to do here.
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
+
+  if (mListener) {
+    mListener->OnConnectSuccess(NfcSocketListener::STREAM_SOCKET);
+  }
+  // Nothing to do here.
 }
 
 void
 NfcConsumer::OnConnectError()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-  Close();
+
+  if (mListener) {
+    mListener->OnConnectError(NfcSocketListener::STREAM_SOCKET);
+  }
 }
 
 void
 NfcConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-  if (!mShutdown) {
-    Connect(new NfcConnector(), mAddress.get(), GetSuggestedConnectDelayMs());
+
+  if (mListener) {
+    mListener->OnDisconnect(NfcSocketListener::STREAM_SOCKET);
   }
 }
 
