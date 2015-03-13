@@ -278,7 +278,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
   }
 
   for (uint32_t i = 0; i < runnables.Length(); ++i) {
-    runnables[i].mTarget->Dispatch(runnables[i].mRunnable);
+    runnables[i].mTarget->Dispatch(runnables[i].mRunnable, 0);
   }
 }
 
@@ -2476,21 +2476,21 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
 
 void
 SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
-    MediaTaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable)
+    nsIEventTarget* aSignalThread, nsIRunnable* aSignalRunnable)
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);
   if (!data) {
-    aSignalQueue->Dispatch(aSignalRunnable);
+    aSignalThread->Dispatch(aSignalRunnable, 0);
     return;
   }
 
   if (data->mHaveEnough) {
     if (data->mDispatchWhenNotEnough.IsEmpty()) {
-      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalQueue, aSignalRunnable);
+      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
     }
   } else {
-    aSignalQueue->Dispatch(aSignalRunnable);
+    aSignalThread->Dispatch(aSignalRunnable, 0);
   }
 }
 
