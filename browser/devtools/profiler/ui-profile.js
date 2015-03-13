@@ -509,7 +509,6 @@ let ProfileView = {
 
     let contentOnly = !Prefs.showPlatformData;
     callTreeRoot.toggleCategories(!contentOnly);
-    callTreeRoot.toggleAllocations(false);
 
     this._callTreeRootByPanel.set(panel, callTreeRoot);
   },

@@ -280,15 +280,12 @@ body {
 /*======= Controls toolbar =======*/
 
 .toolbar {
-  font-family: "Clear Sans",sans-serif;
-  transition-property: visibility, opacity;
-  transition-duration: 0.7s;
-  visibility: visible;
-  opacity: 1.0;
+  font-family: sans-serif;
+  transition-property: bottom;
+  transition-duration: 0.3s;
   position: fixed;
   width: 100%;
-  bottom: 0px;
-  left: 0px;
+  left: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -296,11 +293,8 @@ body {
   border-top: 1px solid #D7D9DB;
 }
 
-.toolbar-hidden {
-  transition-property: visibility, opacity;
-  transition-duration: 0.7s;
-  visibility: hidden;
-  opacity: 0.0;
+.toolbar[visible] {
+  bottom: 0;
 }
 
 .toolbar > * {
@@ -590,11 +584,19 @@ body {
   .button {
     height: 56px;
   }
+
+  .toolbar {
+    bottom: -57px;
+  }
 }
 
 @media screen and (orientation: landscape) {
   .button {
     height: 40px;
+  }
+
+  .toolbar {
+    bottom: -41px;
   }
 }
 
