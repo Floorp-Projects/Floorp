@@ -178,4 +178,15 @@ public class MozResponse {
   public int backoffInSeconds() throws NumberFormatException {
     return this.getIntegerHeader("x-backoff");
   }
+
+  public void logResponseBody(final String logTag) {
+    if (!Logger.LOG_PERSONAL_INFORMATION) {
+      return;
+    }
+    try {
+      Logger.pii(logTag, "Response body: " + body());
+    } catch (Throwable e) {
+      Logger.debug(logTag, "No response body.");
+    }
+  }
 }
