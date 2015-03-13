@@ -389,11 +389,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     static const Class jsclass;
 
+    static bool getHookImpl(JSContext *cx, CallArgs &args, Debugger &dbg, Hook which);
+    static bool setHookImpl(JSContext *cx, CallArgs &args, Debugger &dbg, Hook which);
+
     static Debugger *fromThisValue(JSContext *cx, const CallArgs &ca, const char *fnname);
     static bool getEnabled(JSContext *cx, unsigned argc, Value *vp);
     static bool setEnabled(JSContext *cx, unsigned argc, Value *vp);
-    static bool getHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
-    static bool setHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
     static bool getOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
     static bool setOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
     static bool getOnExceptionUnwind(JSContext *cx, unsigned argc, Value *vp);
