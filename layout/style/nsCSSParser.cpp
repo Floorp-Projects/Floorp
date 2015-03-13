@@ -6639,12 +6639,11 @@ bool
 CSSParserImpl::ShouldUseUnprefixingService()
 {
   if (!sUnprefixingServiceEnabled) {
-    // Unprefixing is globally disabled.
     return false;
   }
 
-  // Unprefixing enabled; see if our principal is whitelisted for unprefixing.
-  return mSheetPrincipal && mSheetPrincipal->IsOnCSSUnprefixingWhitelist();
+  // XXXdholbert Bug 1132743: Check if stylesheet URI is on fixlist here.
+  return true;
 }
 
 bool
