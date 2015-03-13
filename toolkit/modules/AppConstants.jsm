@@ -108,6 +108,13 @@ let AppConstants = Object.freeze({
   false,
 #endif
 
+  E10S_TESTING_ONLY:
+#ifdef E10S_TESTING_ONLY
+  true,
+#else
+  false,
+#endif
+
   MOZ_APP_VERSION: "@MOZ_APP_VERSION@",
 
   ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",
