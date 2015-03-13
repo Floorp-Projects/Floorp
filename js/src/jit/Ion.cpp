@@ -444,15 +444,12 @@ jit::LazyLinkTopActivation(JSContext *cx)
 
     // First frame should be an exit frame.
     JitFrameIterator it(iter);
-    MOZ_ASSERT(it.type() == JitFrame_Exit);
-
-    // Second frame is the Ion frame.
-    ++it;
-    MOZ_ASSERT(it.type() == JitFrame_IonJS);
+    LazyLinkExitFrameLayout *ll = it.exitFrame()->as<LazyLinkExitFrameLayout>();
+    JSScript *calleeScript = ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
 
     // Get the pending builder from the Ion frame.
-    IonBuilder *builder = it.script()->ionScript()->pendingBuilder();
-    it.script()->setPendingIonBuilder(cx, nullptr);
+    IonBuilder *builder = calleeScript->ionScript()->pendingBuilder();
+    calleeScript->setPendingIonBuilder(cx, nullptr);
 
     AutoEnterAnalysis enterTypes(cx);
     RootedScript script(cx, builder->script());
