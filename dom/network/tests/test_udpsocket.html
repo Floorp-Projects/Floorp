@@ -146,15 +146,9 @@ function testSendBigArray(socket) {
       ok(is_same_buffer(msg.data, BIG_TYPED_ARRAY.subarray(byteBegin, byteReceived)), 'expected same buffer data [' + byteBegin+ '-' + byteReceived + ']');
       if (byteReceived >= BIG_TYPED_ARRAY.length) {
         socket.removeEventListener('message', recv_callback);
-        clearTimeout(timeout);
         resolve(socket);
       }
     });
-
-    let timeout = setTimeout(function() {
-      ok(false, 'timeout for sending big array');
-      resolve(socket);
-    }, 5000);
   });
 }
 
@@ -173,15 +167,9 @@ function testSendBigBlob(socket) {
       ok(is_same_buffer(msg.data, BIG_TYPED_ARRAY.subarray(byteBegin, byteReceived)), 'expected same buffer data [' + byteBegin+ '-' + byteReceived + ']');
       if (byteReceived >= BIG_TYPED_ARRAY.length) {
         socket.removeEventListener('message', recv_callback);
-        clearTimeout(timeout);
         resolve(socket);
       }
     });
-
-    let timeout = setTimeout(function() {
-      ok(false, 'timeout for sending big blob');
-      resolve(socket);
-    }, 5000);
   });
 }
 
