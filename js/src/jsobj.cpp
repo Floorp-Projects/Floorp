@@ -1437,7 +1437,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
 }
 
 static bool
-NewObjectWithGroupIsCachable(JSContext *cx, HandleObjectGroup group, HandleObject parent,
+NewObjectWithGroupIsCachable(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent,
                              NewObjectKind newKind)
 {
     return group->proto().isObject() &&
@@ -1445,7 +1445,8 @@ NewObjectWithGroupIsCachable(JSContext *cx, HandleObjectGroup group, HandleObjec
            newKind == GenericObject &&
            group->clasp()->isNative() &&
            (!group->newScript() || group->newScript()->analyzed()) &&
-           !cx->compartment()->hasObjectMetadataCallback();
+           !cx->compartment()->hasObjectMetadataCallback() &&
+           cx->isJSContext();
 }
 
 /*
@@ -1453,7 +1454,7 @@ NewObjectWithGroupIsCachable(JSContext *cx, HandleObjectGroup group, HandleObjec
  * avoid losing creation site information for objects made by scripted 'new'.
  */
 JSObject *
-js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObject parent,
+js::NewObjectWithGroupCommon(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent,
                              gc::AllocKind allocKind, NewObjectKind newKind)
 {
     MOZ_ASSERT(parent);
@@ -1464,10 +1465,10 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObjec
 
     bool isCachable = NewObjectWithGroupIsCachable(cx, group, parent, newKind);
     if (isCachable) {
-        NewObjectCache &cache = cx->runtime()->newObjectCache;
+        NewObjectCache &cache = cx->asJSContext()->runtime()->newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         if (cache.lookupGroup(group, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry,
+            JSObject *obj = cache.newObjectFromHit(cx->asJSContext(), entry,
                                                    GetInitialHeap(newKind, group->clasp()));
             if (obj)
                 return obj;
@@ -1479,7 +1480,7 @@ js::NewObjectWithGroupCommon(JSContext *cx, HandleObjectGroup group, HandleObjec
         return nullptr;
 
     if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
-        NewObjectCache &cache = cx->runtime()->newObjectCache;
+        NewObjectCache &cache = cx->asJSContext()->runtime()->newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         cache.lookupGroup(group, allocKind, &entry);
         cache.fillGroup(entry, group, allocKind, &obj->as<NativeObject>());
@@ -1784,90 +1785,162 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto)
     return clone;
 }
 
-NativeObject *
-js::DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind newKind)
+static bool
+GetScriptArrayObjectElements(JSContext *cx, HandleArrayObject obj, AutoValueVector &values)
+{
+    MOZ_ASSERT(!obj->isSingleton());
+
+    if (obj->nonProxyIsExtensible()) {
+        MOZ_ASSERT(obj->slotSpan() == 0);
+
+        if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), obj->getDenseInitializedLength()))
+            return false;
+
+        for (size_t i = 0; i < obj->getDenseInitializedLength(); i++)
+            values[i].set(obj->getDenseElement(i));
+    } else {
+        // Call site objects are frozen before they escape to script, which
+        // converts their dense elements into data properties.
+
+        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
+            Shape &shape = r.front();
+            if (shape.propid() == NameToId(cx->names().length))
+                continue;
+            MOZ_ASSERT(shape.isDataDescriptor());
+
+            // The 'raw' property is added before freezing call site objects.
+            // After an XDR or deep clone the script object will no longer be
+            // frozen, and the two objects will be connected again the first
+            // time the JSOP_CALLSITEOBJ executes.
+            if (shape.propid() == NameToId(cx->names().raw))
+                continue;
+
+            uint32_t index = JSID_TO_INT(shape.propid());
+            while (index >= values.length()) {
+                if (!values.append(MagicValue(JS_ELEMENTS_HOLE)))
+                    return false;
+            }
+
+            values[index].set(obj->getSlot(shape.slot()));
+        }
+    }
+
+    return true;
+}
+
+static bool
+GetScriptPlainObjectProperties(JSContext *cx, HandleObject obj, AutoIdValueVector &properties)
+{
+    if (obj->is<PlainObject>()) {
+        PlainObject *nobj = &obj->as<PlainObject>();
+
+        if (!properties.appendN(IdValuePair(), nobj->slotSpan()))
+            return false;
+
+        for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
+            Shape &shape = r.front();
+            MOZ_ASSERT(shape.isDataDescriptor());
+            uint32_t slot = shape.slot();
+            properties[slot].get().id = shape.propid();
+            properties[slot].get().value = nobj->getSlot(slot);
+        }
+
+        for (size_t i = 0; i < nobj->getDenseInitializedLength(); i++) {
+            Value v = nobj->getDenseElement(i);
+            if (!v.isMagic(JS_ELEMENTS_HOLE) && !properties.append(IdValuePair(INT_TO_JSID(i), v)))
+                return false;
+        }
+
+        return true;
+    }
+
+    if (obj->is<UnboxedPlainObject>()) {
+        UnboxedPlainObject *nobj = &obj->as<UnboxedPlainObject>();
+
+        const UnboxedLayout &layout = nobj->layout();
+        if (!properties.appendN(IdValuePair(), layout.properties().length()))
+            return false;
+
+        for (size_t i = 0; i < layout.properties().length(); i++) {
+            const UnboxedLayout::Property &property = layout.properties()[i];
+            properties[i].get().id = NameToId(property.name);
+            properties[i].get().value = nobj->getValue(property);
+        }
+
+        return true;
+    }
+
+    MOZ_CRASH("Bad object kind");
+}
+
+static bool
+DeepCloneValue(JSContext *cx, Value *vp, NewObjectKind newKind)
+{
+    if (vp->isObject()) {
+        RootedObject obj(cx, &vp->toObject());
+        obj = DeepCloneObjectLiteral(cx, obj, newKind);
+        if (!obj)
+            return false;
+        vp->setObject(*obj);
+    }
+    return true;
+}
+
+JSObject *
+js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind)
 {
     /* NB: Keep this in sync with XDRObjectLiteral. */
     MOZ_ASSERT_IF(obj->isSingleton(),
                   JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates());
-    MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
-
-    // Result of the clone function.
-    RootedNativeObject clone(cx);
-
-    // Temporary element/slot which would be stored in the cloned object.
-    RootedValue v(cx);
-    RootedNativeObject deepObj(cx);
+    MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() || obj->is<ArrayObject>());
+    MOZ_ASSERT(cx->isInsideCurrentCompartment(obj));
+    MOZ_ASSERT(newKind != SingletonObject);
 
     if (obj->is<ArrayObject>()) {
-        clone = NewDenseUnallocatedArray(cx, obj->as<ArrayObject>().length(), NullPtr(), newKind);
-    } else {
-        // Object literals are tenured by default as holded by the JSScript.
-        MOZ_ASSERT(obj->isTenured());
-        AllocKind kind = obj->asTenured().getAllocKind();
-        RootedObjectGroup group(cx, obj->getGroup(cx));
-        if (!group)
+        HandleArrayObject aobj = obj.as<ArrayObject>();
+
+        AutoValueVector values(cx);
+        if (!GetScriptArrayObjectElements(cx, aobj, values))
             return nullptr;
-        RootedObject proto(cx, group->proto().toObject());
-        obj->assertParentIs(cx->global());
-        clone = NewNativeObjectWithGivenProto(cx, &PlainObject::class_, proto,
-                                              kind, newKind);
+
+        // Deep clone any elements.
+        uint32_t initialized = aobj->getDenseInitializedLength();
+        for (uint32_t i = 0; i < initialized; ++i) {
+            if (!DeepCloneValue(cx, values[i].address(), newKind))
+                return nullptr;
+        }
+
+        RootedArrayObject clone(cx, NewDenseUnallocatedArray(cx, aobj->length(),
+                                                             NullPtr(), newKind));
+        if (!clone || !clone->ensureElements(cx, values.length()))
+            return nullptr;
+
+        clone->setDenseInitializedLength(values.length());
+        clone->initDenseElements(0, values.begin(), values.length());
+
+        if (aobj->denseElementsAreCopyOnWrite()) {
+            if (!ObjectElements::MakeElementsCopyOnWrite(cx, clone))
+                return nullptr;
+        } else {
+            ObjectGroup::fixArrayGroup(cx, &clone->as<ArrayObject>());
+        }
+
+        return clone;
     }
 
-    // Allocate the same number of slots.
-    if (!clone || !clone->ensureElements(cx, obj->getDenseCapacity()))
+    AutoIdValueVector properties(cx);
+    if (!GetScriptPlainObjectProperties(cx, obj, properties))
         return nullptr;
 
-    // Recursive copy of dense element.
-    uint32_t initialized = obj->getDenseInitializedLength();
-    for (uint32_t i = 0; i < initialized; ++i) {
-        v = obj->getDenseElement(i);
-        if (v.isObject()) {
-            deepObj = &v.toObject().as<NativeObject>();
-            deepObj = js::DeepCloneObjectLiteral(cx, deepObj, newKind);
-            if (!deepObj) {
-                JS_ReportOutOfMemory(cx);
-                return nullptr;
-            }
-            v.setObject(*deepObj);
-        }
-        clone->setDenseInitializedLength(i + 1);
-        clone->initDenseElement(i, v);
-    }
-
-    MOZ_ASSERT(obj->compartment() == clone->compartment());
-    MOZ_ASSERT(!obj->hasPrivate());
-    RootedShape shape(cx, obj->lastProperty());
-    size_t span = shape->slotSpan();
-    if (!clone->setLastProperty(cx, shape))
-        return nullptr;
-    for (size_t i = 0; i < span; i++) {
-        v = obj->getSlot(i);
-        if (v.isObject()) {
-            deepObj = &v.toObject().as<NativeObject>();
-            deepObj = js::DeepCloneObjectLiteral(cx, deepObj, newKind);
-            if (!deepObj)
-                return nullptr;
-            v.setObject(*deepObj);
-        }
-        clone->setSlot(i, v);
-    }
-
-    if (obj->isSingleton()) {
-        if (!JSObject::setSingleton(cx, clone))
-            return nullptr;
-    } else if (obj->is<ArrayObject>()) {
-        ObjectGroup::fixArrayGroup(cx, &clone->as<ArrayObject>());
-    } else {
-        ObjectGroup::fixPlainObjectGroup(cx, &clone->as<PlainObject>());
-    }
-
-    if (obj->is<ArrayObject>() && obj->denseElementsAreCopyOnWrite()) {
-        if (!ObjectElements::MakeElementsCopyOnWrite(cx, clone))
+    for (size_t i = 0; i < properties.length(); i++) {
+        if (!DeepCloneValue(cx, &properties[i].get().value, newKind))
             return nullptr;
     }
 
-    return clone;
+    if (obj->isSingleton())
+        newKind = SingletonObject;
+
+    return ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), newKind);
 }
 
 static bool
@@ -1924,7 +1997,7 @@ JS_InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
 
 template<XDRMode mode>
 bool
-js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
+js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
 {
     /* NB: Keep this in sync with DeepCloneObjectLiteral. */
 
@@ -1936,231 +2009,139 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
     uint32_t isArray = 0;
     {
         if (mode == XDR_ENCODE) {
-            MOZ_ASSERT(obj->is<PlainObject>() || obj->is<ArrayObject>());
-            isArray = obj->getClass() == &ArrayObject::class_ ? 1 : 0;
+            MOZ_ASSERT(obj->is<PlainObject>() ||
+                       obj->is<UnboxedPlainObject>() ||
+                       obj->is<ArrayObject>());
+            isArray = obj->is<ArrayObject>() ? 1 : 0;
         }
 
         if (!xdr->codeUint32(&isArray))
             return false;
     }
 
+    RootedValue tmpValue(cx), tmpIdValue(cx);
+    RootedId tmpId(cx);
+
     if (isArray) {
         uint32_t length;
+        RootedArrayObject aobj(cx);
 
-        if (mode == XDR_ENCODE)
-            length = obj->as<ArrayObject>().length();
+        if (mode == XDR_ENCODE) {
+            aobj = &obj->as<ArrayObject>();
+            length = aobj->length();
+        }
 
         if (!xdr->codeUint32(&length))
             return false;
 
-        if (mode == XDR_DECODE)
-            obj.set(NewDenseUnallocatedArray(cx, length, NullPtr(), js::MaybeSingletonObject));
+        if (mode == XDR_DECODE) {
+            obj.set(NewDenseUnallocatedArray(cx, length, NullPtr(), TenuredObject));
+            if (!obj)
+                return false;
+            aobj = &obj->as<ArrayObject>();
+        }
 
-    } else {
-        // Code the alloc kind of the object.
-        AllocKind kind;
+        AutoValueVector values(cx);
+        if (mode == XDR_ENCODE && !GetScriptArrayObjectElements(cx, aobj, values))
+            return nullptr;
+
+        uint32_t initialized;
         {
-            if (mode == XDR_ENCODE) {
-                MOZ_ASSERT(obj->is<PlainObject>());
-                MOZ_ASSERT(obj->isTenured());
-                kind = obj->asTenured().getAllocKind();
-            }
-
-            if (!xdr->codeEnum32(&kind))
+            if (mode == XDR_ENCODE)
+                initialized = values.length();
+            if (!xdr->codeUint32(&initialized))
                 return false;
-
             if (mode == XDR_DECODE) {
-                obj.set(NewBuiltinClassInstance<PlainObject>(cx, kind, MaybeSingletonObject));
-                if (!obj)
-                    return false;
+                if (initialized) {
+                    if (!aobj->ensureElements(cx, initialized))
+                        return false;
+                }
             }
         }
-    }
 
-    {
-        uint32_t capacity;
-        if (mode == XDR_ENCODE)
-            capacity = obj->getDenseCapacity();
-        if (!xdr->codeUint32(&capacity))
-            return false;
-        if (mode == XDR_DECODE) {
-            if (!obj->ensureElements(cx, capacity)) {
-                JS_ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-    }
-
-    uint32_t initialized;
-    {
-        if (mode == XDR_ENCODE)
-            initialized = obj->getDenseInitializedLength();
-        if (!xdr->codeUint32(&initialized))
-            return false;
-        if (mode == XDR_DECODE) {
-            if (initialized)
-                obj->setDenseInitializedLength(initialized);
-        }
-    }
-
-    RootedValue tmpValue(cx);
-
-    // Recursively copy dense elements.
-    {
+        // Recursively copy dense elements.
         for (unsigned i = 0; i < initialized; i++) {
             if (mode == XDR_ENCODE)
-                tmpValue = obj->getDenseElement(i);
-
-            if (!xdr->codeConstValue(&tmpValue))
-                return false;
-
-            if (mode == XDR_DECODE)
-                obj->initDenseElement(i, tmpValue);
-        }
-    }
-
-    MOZ_ASSERT(!obj->hasPrivate());
-    RootedShape shape(cx, obj->lastProperty());
-
-    // Code the number of slots in the vector.
-    unsigned nslot = 0;
-
-    // Code ids of the object in order. As opposed to DeepCloneObjectLiteral we
-    // cannot just re-use the shape of the original bytecode value and we have
-    // to write down the shape as well as the corresponding values.  Ideally we
-    // would have a mechanism to serialize the shape too.
-    js::AutoIdVector ids(cx);
-    {
-        if (mode == XDR_ENCODE && !shape->isEmptyShape()) {
-            nslot = shape->slotSpan();
-            if (!ids.reserve(nslot))
-                return false;
-
-            for (unsigned i = 0; i < nslot; i++)
-                ids.infallibleAppend(JSID_VOID);
-
-            for (Shape::Range<NoGC> it(shape); !it.empty(); it.popFront()) {
-                // If we have reached the native property of the array class, we
-                // exit as the remaining would only be reserved slots.
-                if (!it.front().hasSlot()) {
-                    MOZ_ASSERT(isArray);
-                    break;
-                }
-
-                MOZ_ASSERT(it.front().hasDefaultGetter());
-                ids[it.front().slot()].set(it.front().propid());
-            }
-        }
-
-        if (!xdr->codeUint32(&nslot))
-            return false;
-
-        RootedAtom atom(cx);
-        RootedId id(cx);
-        uint32_t idType = 0;
-        for (unsigned i = 0; i < nslot; i++) {
-            if (mode == XDR_ENCODE) {
-                id = ids[i];
-                if (JSID_IS_INT(id))
-                    idType = JSID_TYPE_INT;
-                else if (JSID_IS_ATOM(id))
-                    idType = JSID_TYPE_STRING;
-                else
-                    MOZ_CRASH("Symbol property is not yet supported by XDR.");
-
-                tmpValue = obj->getSlot(i);
-            }
-
-            if (!xdr->codeUint32(&idType))
-                return false;
-
-            if (idType == JSID_TYPE_STRING) {
-                if (mode == XDR_ENCODE)
-                    atom = JSID_TO_ATOM(id);
-                if (!XDRAtom(xdr, &atom))
-                    return false;
-                if (mode == XDR_DECODE)
-                    id = AtomToId(atom);
-            } else {
-                MOZ_ASSERT(idType == JSID_TYPE_INT);
-                uint32_t indexVal;
-                if (mode == XDR_ENCODE)
-                    indexVal = uint32_t(JSID_TO_INT(id));
-                if (!xdr->codeUint32(&indexVal))
-                    return false;
-                if (mode == XDR_DECODE)
-                    id = INT_TO_JSID(int32_t(indexVal));
-            }
+                tmpValue = values[i];
 
             if (!xdr->codeConstValue(&tmpValue))
                 return false;
 
             if (mode == XDR_DECODE) {
-                if (!NativeDefineProperty(cx, obj, id, tmpValue, nullptr, nullptr,
-                                          JSPROP_ENUMERATE))
-                {
-                    return false;
-                }
+                aobj->setDenseInitializedLength(i + 1);
+                aobj->initDenseElement(i, tmpValue);
             }
         }
 
-        MOZ_ASSERT_IF(mode == XDR_DECODE, !obj->inDictionaryMode());
+        uint32_t copyOnWrite;
+        if (mode == XDR_ENCODE)
+            copyOnWrite = aobj->denseElementsAreCopyOnWrite();
+        if (!xdr->codeUint32(&copyOnWrite))
+            return false;
+
+        if (mode == XDR_DECODE) {
+            if (copyOnWrite) {
+                if (!ObjectElements::MakeElementsCopyOnWrite(cx, aobj))
+                    return false;
+            } else {
+                ObjectGroup::fixArrayGroup(cx, aobj);
+            }
+        }
+
+        return true;
     }
 
-    // Fix up types, distinguishing singleton-typed objects.
-    uint32_t isSingletonTyped;
+    // Code the properties in the object.
+    AutoIdValueVector properties(cx);
+    if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(cx, obj, properties))
+        return false;
+
+    uint32_t nproperties = properties.length();
+    if (!xdr->codeUint32(&nproperties))
+        return false;
+
+    if (mode == XDR_DECODE && !properties.appendN(IdValuePair(), nproperties))
+        return false;
+
+    for (size_t i = 0; i < nproperties; i++) {
+        if (mode == XDR_ENCODE) {
+            tmpIdValue = IdToValue(properties[i].get().id);
+            tmpValue = properties[i].get().value;
+        }
+
+        if (!xdr->codeConstValue(&tmpIdValue) || !xdr->codeConstValue(&tmpValue))
+            return false;
+
+        if (mode == XDR_DECODE) {
+            if (!ValueToId<CanGC>(cx, tmpIdValue, &tmpId))
+                return false;
+            properties[i].get().id = tmpId;
+            properties[i].get().value = tmpValue;
+        }
+    }
+
+    // Code whether the object is a singleton.
+    uint32_t isSingleton;
     if (mode == XDR_ENCODE)
-        isSingletonTyped = obj->isSingleton() ? 1 : 0;
-    if (!xdr->codeUint32(&isSingletonTyped))
+        isSingleton = obj->isSingleton() ? 1 : 0;
+    if (!xdr->codeUint32(&isSingleton))
         return false;
 
     if (mode == XDR_DECODE) {
-        if (isSingletonTyped) {
-            if (!JSObject::setSingleton(cx, obj))
-                return false;
-        } else if (isArray) {
-            ObjectGroup::fixArrayGroup(cx, &obj->as<ArrayObject>());
-        } else {
-            ObjectGroup::fixPlainObjectGroup(cx, &obj->as<PlainObject>());
-        }
-    }
-
-    {
-        uint32_t frozen;
-        bool extensible;
-        if (mode == XDR_ENCODE) {
-            if (!IsExtensible(cx, obj, &extensible))
-                return false;
-            frozen = extensible ? 0 : 1;
-        }
-        if (!xdr->codeUint32(&frozen))
+        NewObjectKind newKind = isSingleton ? SingletonObject : TenuredObject;
+        obj.set(ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), newKind));
+        if (!obj)
             return false;
-        if (mode == XDR_DECODE && frozen == 1) {
-            if (!FreezeObject(cx, obj))
-                return false;
-        }
-    }
-
-    if (isArray) {
-        uint32_t copyOnWrite;
-        if (mode == XDR_ENCODE)
-            copyOnWrite = obj->denseElementsAreCopyOnWrite();
-        if (!xdr->codeUint32(&copyOnWrite))
-            return false;
-        if (mode == XDR_DECODE && copyOnWrite) {
-            if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
-                return false;
-        }
     }
 
     return true;
 }
 
 template bool
-js::XDRObjectLiteral(XDRState<XDR_ENCODE> *xdr, MutableHandleNativeObject obj);
+js::XDRObjectLiteral(XDRState<XDR_ENCODE> *xdr, MutableHandleObject obj);
 
 template bool
-js::XDRObjectLiteral(XDRState<XDR_DECODE> *xdr, MutableHandleNativeObject obj);
+js::XDRObjectLiteral(XDRState<XDR_DECODE> *xdr, MutableHandleObject obj);
 
 JSObject *
 js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
@@ -4192,9 +4173,6 @@ JSObject::getParent() const
     if (Shape *shape = maybeShape())
         return shape->getObjectParent();
 
-    // Avoid the parent-link checking in JSObject::global. Unboxed plain
-    // objects keep their compartment's global alive through their layout, and
-    // don't need a read barrier here.
     MOZ_ASSERT(is<UnboxedPlainObject>());
-    return compartment()->unsafeUnbarrieredMaybeGlobal();
+    return &global();
 }

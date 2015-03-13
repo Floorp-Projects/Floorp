@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=938023
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
-<a href="serve_file.sjs?contentType=application/octet-stream&size=102400&rate=10240" download="test.bin" id="download1">Large Download</a>
+<a href="serve_file.sjs?contentType=application/octet-stream&size=102400&rate=1024" download="test.bin" id="download1">Large Download</a>
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
 
@@ -61,6 +61,9 @@ function checkResumeSucceeded(download) {
 function downloadChange(evt) {
   var download = evt.download;
 
+  info("got download event, state: " + download.state +
+       " current bytes: " + download.currentBytes +
+       " pausing?: " + pausing + " resuming?: " + resuming);
   if (download.state == "downloading" && !pausing) {
     pausing = true;
     download.pause();
