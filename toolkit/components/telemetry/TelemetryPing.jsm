@@ -345,16 +345,10 @@ let Impl = {
     }
 
     if (aOptions.addEnvironment) {
-      return TelemetryEnvironment.getEnvironmentData().then(environment => {
-        pingData.environment = environment;
-        return pingData;
-      },
-      error => {
-        this._log.error("assemblePing - Rejection", error);
-      });
+      pingData.environment = TelemetryEnvironment.currentEnvironment;
     }
 
-    return Promise.resolve(pingData);
+    return pingData;
   },
 
   popPayloads: function popPayloads() {
@@ -397,18 +391,15 @@ let Impl = {
     this._log.trace("send - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => {
-          // Once ping is assembled, send it along with the persisted ping in the backlog.
-          let p = [
-            // Persist the ping if sending it fails.
-            this.doPing(pingData, false)
-                .catch(() => TelemetryFile.savePing(pingData, true)),
-            this.sendPersistedPings(),
-          ];
-          return Promise.all(p);
-        },
-        error => this._log.error("send - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    // Once ping is assembled, send it along with the persisted ping in the backlog.
+    let p = [
+      // Persist the ping if sending it fails.
+      this.doPing(pingData, false)
+        .catch(() => TelemetryFile.savePing(pingData, true)),
+      this.sendPersistedPings(),
+    ];
+    return Promise.all(p);
   },
 
   /**
@@ -440,9 +431,8 @@ let Impl = {
     this._log.trace("savePendingPings - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => TelemetryFile.savePendingPings(pingData),
-              error => this._log.error("savePendingPings - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    return TelemetryFile.savePendingPings(pingData);
   },
 
   /**
@@ -465,9 +455,8 @@ let Impl = {
     this._log.trace("savePing - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => TelemetryFile.savePing(pingData, aOptions.overwrite),
-              error => this._log.error("savePing - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    return TelemetryFile.savePing(pingData, aOptions.overwrite);
   },
 
   /**
@@ -492,16 +481,14 @@ let Impl = {
   testSavePingToFile: function testSavePingToFile(aType, aPayload, aOptions) {
     this._log.trace("testSavePingToFile - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => {
-            if (aOptions.filePath) {
-              return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
-                                  .then(() => { return pingData.id; });
-            } else {
-              return TelemetryFile.savePing(pingData, aOptions.overwrite)
-                                  .then(() => { return pingData.id; });
-            }
-        }, error => this._log.error("testSavePing - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    if (aOptions.filePath) {
+      return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
+        .then(() => { return pingData.id; });
+    } else {
+      return TelemetryFile.savePing(pingData, aOptions.overwrite)
+        .then(() => { return pingData.id; });
+    }
   },
 
   finishPingRequest: function finishPingRequest(success, startTime, ping, isPersisted) {
@@ -709,8 +696,6 @@ let Impl = {
       try {
         this._initialized = true;
 
-        yield TelemetryEnvironment.init();
-
         yield TelemetryFile.loadSavedPings();
         // If we have any TelemetryPings lying around, we'll be aggressive
         // and try to send them all off ASAP.
@@ -764,8 +749,7 @@ let Impl = {
         this._initialized = false;
         this._initStarted = false;
       };
-      return this._shutdownBarrier.wait().then(
-               () => TelemetryEnvironment.shutdown().then(reset, reset));
+      this._shutdownBarrier.wait().then(reset, reset);
     };
 
     // We can be in one the following states here:

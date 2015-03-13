@@ -1170,12 +1170,12 @@ let Impl = {
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
         this._rescheduleDailyTimer();
         TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
-                                                    () => this._onEnvironmentChange());
+                                                    (reason, data) => this._onEnvironmentChange(reason, data));
 #endif
 
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
-        this._delayedInitTaskDeferred.reject();
+        this._delayedInitTaskDeferred.reject(e);
       } finally {
         this._delayedInitTask = null;
         this._delayedInitTaskDeferred = null;
@@ -1643,8 +1643,8 @@ let Impl = {
     }
   }),
 
-  _onEnvironmentChange: function() {
-    this._log.trace("_onEnvironmentChange");
+  _onEnvironmentChange: function(reason, data) {
+    this._log.trace("_onEnvironmentChange", reason);
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
 
     let options = {
