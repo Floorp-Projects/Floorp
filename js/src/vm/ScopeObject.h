@@ -1091,6 +1091,12 @@ ScopeIter::enclosingScope() const
     return *scope_;
 }
 
+extern bool
+CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
+                                HandleObject dynamicTerminatingScope,
+                                MutableHandleObject dynamicScopeObj,
+                                MutableHandleObject staticScopeObj);
+
 #ifdef DEBUG
 bool
 AnalyzeEntrainedVariables(JSContext *cx, HandleScript script);
