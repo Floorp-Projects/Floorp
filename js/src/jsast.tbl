@@ -29,7 +29,7 @@ ASTDEF(AST_NEW_EXPR,              "NewExpression",                  "newExpressi
 ASTDEF(AST_CALL_EXPR,             "CallExpression",                 "callExpression")
 ASTDEF(AST_MEMBER_EXPR,           "MemberExpression",               "memberExpression")
 ASTDEF(AST_FUNC_EXPR,             "FunctionExpression",             "functionExpression")
-ASTDEF(AST_ARROW_EXPR,            "ArrowExpression",                "arrowExpression")
+ASTDEF(AST_ARROW_EXPR,            "ArrowFunctionExpression",        "arrowFunctionExpression")
 ASTDEF(AST_ARRAY_EXPR,            "ArrayExpression",                "arrayExpression")
 ASTDEF(AST_SPREAD_EXPR,           "SpreadExpression",               "spreadExpression")
 ASTDEF(AST_OBJECT_EXPR,           "ObjectExpression",               "objectExpression")

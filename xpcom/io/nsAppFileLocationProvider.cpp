@@ -228,7 +228,8 @@ nsAppFileLocationProvider::GetFile(const char* aProp, bool* aPersistent,
   }
 
   if (localFile && NS_SUCCEEDED(rv)) {
-    return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aResult);
+    localFile.forget(aResult);
+    return NS_OK;
   }
 
   return rv;

@@ -2403,8 +2403,8 @@ nsLayoutUtils::TransformPoint(nsIFrame* aFromFrame, nsIFrame* aToFrame,
     // coordinate space.
     return NONINVERTIBLE_TRANSFORM;
   }
-  aPoint.x = toDevPixels.x / devPixelsPerAppUnitToFrame;
-  aPoint.y = toDevPixels.y / devPixelsPerAppUnitToFrame;
+  aPoint.x = NSToCoordRound(toDevPixels.x / devPixelsPerAppUnitToFrame);
+  aPoint.y = NSToCoordRound(toDevPixels.y / devPixelsPerAppUnitToFrame);
   return TRANSFORM_SUCCEEDED;
 }
 

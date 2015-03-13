@@ -361,7 +361,7 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     if (!JS_GetPropertyDescriptorById(cx, hallpass, id, &desc)) {
         return false; // Error
     }
-    if (!desc.object() || !desc.isEnumerable())
+    if (!desc.object() || !desc.enumerable())
         return false;
 
     if (!desc.value().isString()) {

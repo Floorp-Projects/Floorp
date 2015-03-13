@@ -366,10 +366,11 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
 
         JSAutoByteString bytes;
         if (AtomToPrintableString(cx, dn, &bytes)) {
+            bool isConst = desc.hasWritable() && !desc.writable();
             JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                                          GetErrorMessage,
                                                          nullptr, JSMSG_REDECLARED_VAR,
-                                                         desc.isReadonly() ? "const" : "var",
+                                                         isConst ? "const" : "var",
                                                          bytes.ptr()));
         }
         return false;

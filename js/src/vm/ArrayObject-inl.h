@@ -91,7 +91,7 @@ ArrayObject::createArray(ExclusiveContext *cx, gc::InitialHeap heap,
     // Use the smallest allocation kind for the array, as it can't have any
     // fixed slots (see the assert in createArrayInternal) and will not be using
     // its fixed elements.
-    gc::AllocKind kind = gc::FINALIZE_OBJECT0_BACKGROUND;
+    gc::AllocKind kind = gc::AllocKind::OBJECT0_BACKGROUND;
 
     ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, group);
     if (!obj)
@@ -113,7 +113,7 @@ ArrayObject::createCopyOnWriteArray(ExclusiveContext *cx, gc::InitialHeap heap,
     // Use the smallest allocation kind for the array, as it can't have any
     // fixed slots (see the assert in createArrayInternal) and will not be using
     // its fixed elements.
-    gc::AllocKind kind = gc::FINALIZE_OBJECT0_BACKGROUND;
+    gc::AllocKind kind = gc::AllocKind::OBJECT0_BACKGROUND;
 
     RootedObjectGroup group(cx, sharedElementsOwner->group());
     ArrayObject *obj = createArrayInternal(cx, kind, heap, shape, group);

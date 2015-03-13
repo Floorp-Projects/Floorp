@@ -6246,8 +6246,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
         return;
       }
 
-      // Check if non-configurable
-      if (desc.isPermanent()) {
+      if (!desc.configurable()) {
         rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return;
       }

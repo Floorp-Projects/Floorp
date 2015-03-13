@@ -743,7 +743,7 @@ var Scratchpad = {
             continue;
           }
           if ((decl.init.type == "FunctionExpression"
-               || decl.init.type == "ArrowExpression")
+               || decl.init.type == "ArrowFunctionExpression")
               && this._containsCursor(decl.loc, aCursorPos)) {
             return decl;
           }

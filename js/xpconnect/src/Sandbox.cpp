@@ -440,7 +440,7 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
     // readonly. We have to use JS_CopyPropertyFrom since it ignores the
     // readonly attribute (as it calls JSObject::defineProperty). See bug
     // 1019181.
-    if (pd.object() && pd.isPermanent()) {
+    if (pd.object() && !pd.configurable()) {
         if (!JS_SetPropertyById(cx, proto, id, vp))
             return false;
     } else {

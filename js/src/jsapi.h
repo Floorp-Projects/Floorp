@@ -2534,24 +2534,56 @@ class PropertyDescriptorOperations
 {
     const JSPropertyDescriptor * desc() const { return static_cast<const Outer*>(this)->extract(); }
 
-  public:
-    bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
-    bool isReadonly() const { return desc()->attrs & JSPROP_READONLY; }
-    bool isPermanent() const { return desc()->attrs & JSPROP_PERMANENT; }
-    bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
-    bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
-    bool hasGetterOrSetterObject() const { return desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER); }
-    bool hasGetterOrSetter() const { return desc()->getter || desc()->setter; }
-    bool isShared() const { return desc()->attrs & JSPROP_SHARED; }
-    bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
-    bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
+    bool has(unsigned bit) const {
+        MOZ_ASSERT(bit != 0);
+        MOZ_ASSERT((bit & (bit - 1)) == 0);  // only a single bit
+        return (desc()->attrs & bit) != 0;
+    }
 
+    bool hasAny(unsigned bits) const {
+        return (desc()->attrs & bits) != 0;
+    }
+
+  public:
     // Descriptors with JSGetterOp/JSSetterOp are considered data
     // descriptors. It's complicated.
-    bool isAccessorDescriptor() const { return hasGetterOrSetterObject(); }
-    bool isDataDescriptor() const { return !isAccessorDescriptor(); }
+    bool isAccessorDescriptor() const { return hasAny(JSPROP_GETTER | JSPROP_SETTER); }
+    bool isGenericDescriptor() const {
+        return (desc()->attrs &
+                (JSPROP_GETTER | JSPROP_SETTER | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE)) ==
+               (JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
+    }
+    bool isDataDescriptor() const { return !isAccessorDescriptor() && !isGenericDescriptor(); }
 
-    bool isWritable() const { MOZ_ASSERT(isDataDescriptor()); return !isReadonly(); }
+    bool hasConfigurable() const { return !has(JSPROP_IGNORE_PERMANENT); }
+    bool configurable() const { MOZ_ASSERT(hasConfigurable()); return !has(JSPROP_PERMANENT); }
+
+    bool hasEnumerable() const { return !has(JSPROP_IGNORE_ENUMERATE); }
+    bool enumerable() const { MOZ_ASSERT(hasEnumerable()); return has(JSPROP_ENUMERATE); }
+
+    bool hasValue() const { return !isAccessorDescriptor() && !has(JSPROP_IGNORE_VALUE); }
+    JS::HandleValue value() const {
+        return JS::HandleValue::fromMarkedLocation(&desc()->value);
+    }
+
+    bool hasWritable() const { return !isAccessorDescriptor() && !has(JSPROP_IGNORE_READONLY); }
+    bool writable() const { MOZ_ASSERT(hasWritable()); return !has(JSPROP_READONLY); }
+
+    bool hasGetterObject() const { return has(JSPROP_GETTER); }
+    JS::HandleObject getterObject() const {
+        MOZ_ASSERT(hasGetterObject());
+        return JS::HandleObject::fromMarkedLocation(
+                reinterpret_cast<JSObject *const *>(&desc()->getter));
+    }
+    bool hasSetterObject() const { return has(JSPROP_SETTER); }
+    JS::HandleObject setterObject() const {
+        MOZ_ASSERT(hasSetterObject());
+        return JS::HandleObject::fromMarkedLocation(
+                reinterpret_cast<JSObject *const *>(&desc()->setter));
+    }
+
+    bool hasGetterOrSetter() const { return desc()->getter || desc()->setter; }
+    bool isShared() const { return has(JSPROP_SHARED); }
 
     JS::HandleObject object() const {
         return JS::HandleObject::fromMarkedLocation(&desc()->obj);
@@ -2559,19 +2591,6 @@ class PropertyDescriptorOperations
     unsigned attributes() const { return desc()->attrs; }
     JSGetterOp getter() const { return desc()->getter; }
     JSSetterOp setter() const { return desc()->setter; }
-    JS::HandleObject getterObject() const {
-        MOZ_ASSERT(hasGetterObject());
-        return JS::HandleObject::fromMarkedLocation(
-                reinterpret_cast<JSObject *const *>(&desc()->getter));
-    }
-    JS::HandleObject setterObject() const {
-        MOZ_ASSERT(hasSetterObject());
-        return JS::HandleObject::fromMarkedLocation(
-                reinterpret_cast<JSObject *const *>(&desc()->setter));
-    }
-    JS::HandleValue value() const {
-        return JS::HandleValue::fromMarkedLocation(&desc()->value);
-    }
 };
 
 template <typename Outer>
@@ -2580,7 +2599,6 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     JSPropertyDescriptor * desc() { return static_cast<Outer*>(this)->extractMutable(); }
 
   public:
-
     void clear() {
         object().set(nullptr);
         setAttributes(0);
@@ -2597,6 +2615,20 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         value().set(other.value);
     }
 
+    void setDataDescriptor(HandleValue v, unsigned attrs) {
+        MOZ_ASSERT((attrs & ~(JSPROP_ENUMERATE |
+                              JSPROP_PERMANENT |
+                              JSPROP_READONLY |
+                              JSPROP_IGNORE_ENUMERATE |
+                              JSPROP_IGNORE_PERMANENT |
+                              JSPROP_IGNORE_READONLY)) == 0);
+        object().set(nullptr);
+        setAttributes(attrs);
+        setGetter(nullptr);
+        setSetter(nullptr);
+        value().set(v);
+    }
+
     JS::MutableHandleObject object() {
         return JS::MutableHandleObject::fromMarkedLocation(&desc()->obj);
     }
@@ -2605,6 +2637,11 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     JSSetterOp &setter() { return desc()->setter; }
     JS::MutableHandleValue value() {
         return JS::MutableHandleValue::fromMarkedLocation(&desc()->value);
+    }
+    void setValue(JS::HandleValue v) {
+        MOZ_ASSERT(!(desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        attributesRef() &= ~JSPROP_IGNORE_VALUE;
+        value().set(v);
     }
 
     void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }

@@ -55,6 +55,9 @@ private:
     // Sends the network event.
     nsresult SendEvent(const char *aEventID);
 
+    // Checks if there's a network "link"
+    void checkLink(void);
+
     // Deals with incoming NETLINK messages.
     void OnNetlinkMessage(int NetlinkSocket);
 

@@ -23,6 +23,7 @@
 }
 
 #version {
+  font-weight: bold;
   margin-top: 10px;
   -moz-margin-start: 0;
   -moz-user-select: text;
@@ -32,7 +33,6 @@
 
 #distribution,
 #distributionId {
-  font-weight: bold;
   display: none;
   margin-top: 0;
   margin-bottom: 0;

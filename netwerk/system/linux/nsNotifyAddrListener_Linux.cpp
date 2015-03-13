@@ -8,6 +8,10 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <errno.h>
+#ifndef MOZ_WIDGET_GONK
+#include <ifaddrs.h>
+#include <net/if.h>
+#endif
 
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
@@ -96,6 +100,51 @@ nsNotifyAddrListener::GetLinkType(uint32_t *aLinkType)
   return NS_OK;
 }
 
+//
+// Check if there's a network interface available to do networking on.
+//
+void nsNotifyAddrListener::checkLink(void)
+{
+#ifdef MOZ_WIDGET_GONK
+    // b2g instead has NetworkManager.js which handles UP/DOWN
+#else
+    struct ifaddrs *list;
+    struct ifaddrs *ifa;
+    bool link = false;
+    bool prevLinkUp = mLinkUp;
+
+    if(getifaddrs(&list))
+        return;
+
+    // Walk through the linked list, maintaining head pointer so we can free
+    // list later
+
+    for (ifa = list; ifa != NULL; ifa = ifa->ifa_next) {
+        int family;
+        if (ifa->ifa_addr == NULL)
+            continue;
+
+        family = ifa->ifa_addr->sa_family;
+
+        if ((family == AF_INET || family == AF_INET6) &&
+            (ifa->ifa_flags & IFF_UP) &&
+            !(ifa->ifa_flags & IFF_LOOPBACK)) {
+            // An interface that is UP and not loopback
+            link = true;
+            break;
+        }
+    }
+    mLinkUp = link;
+    freeifaddrs(list);
+
+    if (prevLinkUp != mLinkUp) {
+        // UP/DOWN status changed, send appropriate UP/DOWN event
+        SendEvent(mLinkUp ?
+                  NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
+    }
+#endif
+}
+
 void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
 {
     struct  nlmsghdr *nlh;
@@ -148,6 +197,10 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
 
     if (networkChange && mAllowChangedEvent) {
         SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+    }
+
+    if (networkChange) {
+        checkLink();
     }
 }
 

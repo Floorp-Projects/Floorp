@@ -38,11 +38,11 @@ IterateCompartmentsArenasCells(JSRuntime *rt, Zone *zone, void *data,
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         (*compartmentCallback)(rt, data, comp);
 
-    for (size_t thingKind = 0; thingKind != FINALIZE_LIMIT; thingKind++) {
-        JSGCTraceKind traceKind = MapAllocToTraceKind(AllocKind(thingKind));
-        size_t thingSize = Arena::thingSize(AllocKind(thingKind));
+    for (ALL_ALLOC_KINDS(thingKind)) {
+        JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
+        size_t thingSize = Arena::thingSize(thingKind);
 
-        for (ArenaIter aiter(zone, AllocKind(thingKind)); !aiter.done(); aiter.next()) {
+        for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
             ArenaHeader *aheader = aiter.get();
             (*arenaCallback)(rt, data, aheader->getArena(), traceKind, thingSize);
             for (ArenaCellIterUnderGC iter(aheader); !iter.done(); iter.next())
@@ -98,14 +98,14 @@ js::IterateScripts(JSRuntime *rt, JSCompartment *compartment,
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {
-        for (ZoneCellIterUnderGC i(compartment->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIterUnderGC i(compartment->zone(), gc::AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (script->compartment() == compartment)
                 scriptCallback(rt, data, script);
         }
     } else {
         for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-            for (ZoneCellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next())
+            for (ZoneCellIterUnderGC i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next())
                 scriptCallback(rt, data, i.get<JSScript>());
         }
     }
@@ -117,8 +117,8 @@ js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
     zone->runtimeFromMainThread()->gc.evictNursery();
     AutoPrepareForTracing prep(zone->runtimeFromMainThread(), SkipAtoms);
 
-    for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {
-        for (ZoneCellIterUnderGC i(zone, AllocKind(finalizeKind)); !i.done(); i.next()) {
+    for (OBJECT_ALLOC_KINDS(thingKind)) {
+        for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();
             if (obj->asTenured().isMarked(GRAY))
                 cellCallback(data, JS::GCCellPtr(obj));

@@ -236,10 +236,19 @@
 
      /**
       * Set the file's access permission bits.
-      * Not implemented for Windows (bug 1022816).
       */
      File.prototype.setPermissions = function setPermissions(options = {}) {
-         // do nothing
+       if (!("winAttributes" in options)) {
+         return;
+       }
+       let oldAttributes = WinFile.GetFileAttributes(this._path);
+       if (oldAttributes == Const.INVALID_FILE_ATTRIBUTES) {
+         throw new File.Error("setPermissions", ctypes.winLastError, this._path);
+       }
+       let newAttributes = toFileAttributes(options.winAttributes, oldAttributes);
+       throw_on_zero("setPermissions",
+                     WinFile.SetFileAttributes(this._path, newAttributes),
+                     this._path);
      };
 
      /**
@@ -904,9 +913,14 @@
 
        let value = ctypes.UInt64.join(stat.nFileSizeHigh, stat.nFileSizeLow);
        let size = Type.uint64_t.importFromC(value);
+       let winAttributes = {
+         readOnly: !!(stat.dwFileAttributes & Const.FILE_ATTRIBUTE_READONLY),
+         system: !!(stat.dwFileAttributes & Const.FILE_ATTRIBUTE_SYSTEM),
+         hidden: !!(stat.dwFileAttributes & Const.FILE_ATTRIBUTE_HIDDEN),
+       };
 
        SysAll.AbstractInfo.call(this, path, isDir, isSymLink, size,
-         winBirthDate, lastAccessDate, lastWriteDate);
+         winBirthDate, lastAccessDate, lastWriteDate, winAttributes);
      };
      File.Info.prototype = Object.create(SysAll.AbstractInfo.prototype);
 
@@ -963,10 +977,19 @@
 
      /**
       * Set the file's access permission bits.
-      * Not implemented for Windows (bug 1022816).
       */
      File.setPermissions = function setPermissions(path, options = {}) {
-         // do nothing
+       if (!("winAttributes" in options)) {
+         return;
+       }
+       let oldAttributes = WinFile.GetFileAttributes(path);
+       if (oldAttributes == Const.INVALID_FILE_ATTRIBUTES) {
+         throw new File.Error("setPermissions", ctypes.winLastError, path);
+       }
+       let newAttributes = toFileAttributes(options.winAttributes, oldAttributes);
+       throw_on_zero("setPermissions",
+                     WinFile.SetFileAttributes(path, newAttributes),
+                     path);
      };
 
      /**
@@ -1173,6 +1196,34 @@
          throw new File.Error(operation, ctypes.winLastError, path);
        }
        return result;
+     }
+
+     /**
+      * Helper used by both versions of setPermissions
+      */
+     function toFileAttributes(winAttributes, oldDwAttrs) {
+       if ("readOnly" in winAttributes) {
+         if (winAttributes.readOnly) {
+           oldDwAttrs |= Const.FILE_ATTRIBUTE_READONLY;
+         } else {
+           oldDwAttrs &= ~Const.FILE_ATTRIBUTE_READONLY;
+         }
+       }
+       if ("system" in winAttributes) {
+         if (winAttributes.system) {
+           oldDwAttrs |= Const.FILE_ATTRIBUTE_SYSTEM;
+         } else {
+           oldDwAttrs &= ~Const.FILE_ATTRIBUTE_SYSTEM;
+         }
+       }
+       if ("hidden" in winAttributes) {
+         if (winAttributes.hidden) {
+           oldDwAttrs |= Const.FILE_ATTRIBUTE_HIDDEN;
+         } else {
+           oldDwAttrs &= ~Const.FILE_ATTRIBUTE_HIDDEN;
+         }
+       }
+       return oldDwAttrs;
      }
 
      File.Win = exports.OS.Win.File;

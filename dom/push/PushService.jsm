@@ -33,6 +33,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
+                                   "@mozilla.org/power/powermanagerservice;1",
+                                   "nsIPowerManagerService");
+
 var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
 
 this.EXPORTED_SYMBOLS = ["PushService"];
@@ -873,8 +877,18 @@ this.PushService = {
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
     this._ws.protocol = "push-notification";
-    this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
-    this._currentState = STATE_WAITING_FOR_WS_START;
+
+    try {
+      // Grab a wakelock before we open the socket to ensure we don't go to sleep
+      // before connection the is opened.
+      this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
+      this._acquireWakeLock();
+      this._currentState = STATE_WAITING_FOR_WS_START;
+    } catch(e) {
+      debug("Error opening websocket. asyncOpen failed!");
+      this._shutdownWS();
+      this._reconnectAfterBackoff();
+    }
   },
 
   _startListeningIfChannelsPresent: function() {
@@ -994,6 +1008,38 @@ this.PushService = {
 
       // Websocket is shut down. Backoff interval expired, try to connect.
       this._beginWSSetup();
+    }
+  },
+
+  _acquireWakeLock: function() {
+    if (!this._socketWakeLock) {
+      debug("Acquiring Socket Wakelock");
+      this._socketWakeLock = gPowerManagerService.newWakeLock("cpu");
+    }
+    if (!this._socketWakeLockTimer) {
+      debug("Creating Socket WakeLock Timer");
+      this._socketWakeLockTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+
+    debug("Setting Socket WakeLock Timer");
+    this._socketWakeLockTimer
+      .initWithCallback(this._releaseWakeLock.bind(this),
+                        // Allow the same time for socket setup as we do for
+                        // requests after the setup. Fudge it a bit since
+                        // timers can be a little off and we don't want to go
+                        // to sleep just as the socket connected.
+                        this._requestTimeout + 1000,
+                        Ci.nsITimer.ONE_SHOT);
+  },
+
+  _releaseWakeLock: function() {
+    debug("Releasing Socket WakeLock");
+    if (this._socketWakeLockTimer) {
+      this._socketWakeLockTimer.cancel();
+    }
+    if (this._socketWakeLock) {
+      this._socketWakeLock.unlock();
+      this._socketWakeLock = null;
     }
   },
 
@@ -1512,6 +1558,8 @@ this.PushService = {
   // begin Push protocol handshake
   _wsOnStart: function(context) {
     debug("wsOnStart()");
+    this._releaseWakeLock();
+
     if (this._currentState != STATE_WAITING_FOR_WS_START) {
       debug("NOT in STATE_WAITING_FOR_WS_START. Current state " +
             this._currentState + ". Skipping");
@@ -1568,6 +1616,7 @@ this.PushService = {
    */
   _wsOnStop: function(context, statusCode) {
     debug("wsOnStop()");
+    this._releaseWakeLock();
 
     if (statusCode != Cr.NS_OK &&
         !(statusCode == Cr.NS_BASE_STREAM_CLOSED && this._willBeWokenUpByUDP)) {

@@ -464,7 +464,7 @@ class JSString : public js::gc::TenuredCell
         js::gc::MarkStringUnbarriered(trc, &d.s.u3.base, "base");
     }
 
-    /* Only called by the GC for strings with the FINALIZE_STRING kind. */
+    /* Only called by the GC for strings with the AllocKind::STRING kind. */
 
     inline void finalize(js::FreeOp *fop);
 
@@ -876,7 +876,7 @@ class JSFatInlineString : public JSInlineString
     template<typename CharT>
     static bool lengthFits(size_t length);
 
-    /* Only called by the GC for strings with the FINALIZE_FAT_INLINE_STRING kind. */
+    /* Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING kind. */
 
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };
@@ -910,7 +910,7 @@ class JSExternalString : public JSFlatString
         return rawTwoByteChars();
     }
 
-    /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
+    /* Only called by the GC for strings with the AllocKind::EXTERNAL_STRING kind. */
 
     inline void finalize(js::FreeOp *fop);
 };

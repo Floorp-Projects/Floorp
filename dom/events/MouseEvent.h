@@ -45,6 +45,8 @@ public:
   int32_t ScreenY();
   int32_t ClientX();
   int32_t ClientY();
+  int32_t OffsetX();
+  int32_t OffsetY();
   bool CtrlKey();
   bool ShiftKey();
   bool AltKey();

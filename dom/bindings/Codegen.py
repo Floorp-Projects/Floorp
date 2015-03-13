@@ -3206,8 +3206,9 @@ def AssertInheritanceChain(descriptor):
         desc = descriptor.getDescriptor(iface.identifier.name)
         asserts += (
             "MOZ_ASSERT(static_cast<%s*>(aObject) == \n"
-            "           reinterpret_cast<%s*>(aObject));\n" %
-            (desc.nativeType, desc.nativeType))
+            "           reinterpret_cast<%s*>(aObject),\n"
+            "           \"Multiple inheritance for %s is broken.\");\n" %
+            (desc.nativeType, desc.nativeType, desc.nativeType))
         iface = iface.parent
     asserts += "MOZ_ASSERT(ToSupportsIsCorrect(aObject));\n"
     return asserts

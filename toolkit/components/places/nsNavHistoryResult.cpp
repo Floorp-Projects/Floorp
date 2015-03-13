@@ -4323,8 +4323,9 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
     *aRoot = nullptr;
     return NS_ERROR_FAILURE;
   }
-  return mRootNode->QueryInterface(NS_GET_IID(nsINavHistoryContainerResultNode),
-                                   reinterpret_cast<void**>(aRoot));
+  nsRefPtr<nsNavHistoryContainerResultNode> node(mRootNode);
+  node.forget(aRoot);
+  return NS_OK;
 }
 
 

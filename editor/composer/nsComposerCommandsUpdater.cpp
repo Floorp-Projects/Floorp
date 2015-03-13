@@ -385,9 +385,7 @@ nsComposerCommandsUpdater::Notify(nsITimer *timer)
 nsresult
 NS_NewComposerCommandsUpdater(nsISelectionListener** aInstancePtrResult)
 {
-  nsComposerCommandsUpdater* newThang = new nsComposerCommandsUpdater;
-  NS_ENSURE_TRUE(newThang, NS_ERROR_OUT_OF_MEMORY);
-
-  return newThang->QueryInterface(NS_GET_IID(nsISelectionListener),
-                                  (void **)aInstancePtrResult);
+  nsRefPtr<nsComposerCommandsUpdater> newThang = new nsComposerCommandsUpdater;
+  newThang.forget(aInstancePtrResult);
+  return NS_OK;
 }

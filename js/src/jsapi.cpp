@@ -2725,11 +2725,10 @@ JS::ObjectToCompletePropertyDescriptor(JSContext *cx,
                                        HandleValue descObj,
                                        MutableHandle<JSPropertyDescriptor> desc)
 {
-    Rooted<PropDesc> d(cx);
-    if (!d.initialize(cx, descObj))
+    if (!ToPropertyDescriptor(cx, descObj, true, desc))
         return false;
-    d.complete();
-    d.populatePropertyDescriptor(obj, desc);
+    CompletePropertyDescriptor(desc);
+    desc.object().set(obj);
     return true;
 }
 

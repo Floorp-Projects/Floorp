@@ -869,41 +869,46 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 }
 
 bool
+Debugger::unwrapDebuggeeObject(JSContext *cx, MutableHandleObject obj)
+{
+    if (obj->getClass() != &DebuggerObject_class) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                             "Debugger", "Debugger.Object", obj->getClass()->name);
+        return false;
+    }
+    NativeObject *ndobj = &obj->as<NativeObject>();
+
+    Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
+    if (owner.isUndefined() || &owner.toObject() != object) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             owner.isUndefined()
+                             ? JSMSG_DEBUG_OBJECT_PROTO
+                             : JSMSG_DEBUG_OBJECT_WRONG_OWNER);
+        return false;
+    }
+
+    obj.set(static_cast<JSObject*>(ndobj->getPrivate()));
+    return true;
+}
+
+bool
 Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 {
     assertSameCompartment(cx, object.get(), vp);
     if (vp.isObject()) {
-        JSObject *dobj = &vp.toObject();
-        if (dobj->getClass() != &DebuggerObject_class) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                                 "Debugger", "Debugger.Object", dobj->getClass()->name);
+        RootedObject dobj(cx, &vp.toObject());
+        if (!unwrapDebuggeeObject(cx, &dobj))
             return false;
-        }
-        NativeObject *ndobj = &dobj->as<NativeObject>();
-
-        Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
-        if (owner.isUndefined() || &owner.toObject() != object) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 owner.isUndefined()
-                                 ? JSMSG_DEBUG_OBJECT_PROTO
-                                 : JSMSG_DEBUG_OBJECT_WRONG_OWNER);
-            return false;
-        }
-
-        vp.setObject(*static_cast<JSObject*>(ndobj->getPrivate()));
+        vp.setObject(*dobj);
     }
     return true;
 }
 
-/*
- * Convert Debugger.Objects in desc to debuggee values.
- * Reject non-callable getters and setters.
- */
 static bool
-CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
+CheckArgCompartment(JSContext *cx, JSObject *obj, JSObject *arg,
                     const char *methodname, const char *propname)
 {
-    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
+    if (arg->compartment() != obj->compartment()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
                              methodname, propname);
         return false;
@@ -911,42 +916,47 @@ CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
     return true;
 }
 
-bool
-Debugger::unwrapPropDescInto(JSContext *cx, HandleObject obj, Handle<PropDesc> wrapped,
-                             MutableHandle<PropDesc> unwrapped)
+static bool
+CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
+                    const char *methodname, const char *propname)
 {
-    MOZ_ASSERT(!wrapped.isUndefined());
+    if (v.isObject())
+        return CheckArgCompartment(cx, obj, &v.toObject(), methodname, propname);
+    return true;
+}
 
-    unwrapped.set(wrapped);
-
-    if (unwrapped.hasValue()) {
-        RootedValue value(cx, unwrapped.value());
+bool
+Debugger::unwrapPropertyDescriptor(JSContext *cx, HandleObject obj,
+                                   MutableHandle<PropertyDescriptor> desc)
+{
+    if (desc.hasValue()) {
+        RootedValue value(cx, desc.value());
         if (!unwrapDebuggeeValue(cx, &value) ||
             !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
         {
             return false;
         }
-        unwrapped.setValue(value);
+        desc.setValue(value);
     }
 
-    if (unwrapped.hasGet()) {
-        RootedValue get(cx, unwrapped.getterValue());
-        if (!unwrapDebuggeeValue(cx, &get) ||
+    if (desc.hasGetterObject()) {
+        RootedObject get(cx, desc.getterObject());
+        if (!unwrapDebuggeeObject(cx, &get) ||
             !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
         {
             return false;
         }
-        unwrapped.setGetter(get);
+        desc.setGetterObject(get);
     }
 
-    if (unwrapped.hasSet()) {
-        RootedValue set(cx, unwrapped.setterValue());
-        if (!unwrapDebuggeeValue(cx, &set) ||
+    if (desc.hasSetterObject()) {
+        RootedObject set(cx, desc.setterObject());
+        if (!unwrapDebuggeeObject(cx, &set) ||
             !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
         {
             return false;
         }
-        unwrapped.setSetter(set);
+        desc.setSetterObject(set);
     }
 
     return true;
@@ -1920,7 +1930,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext *cx, Zone *zone,
                     return false;
             }
         } else {
-            for (gc::ZoneCellIter iter(zone, gc::FINALIZE_SCRIPT); !iter.done(); iter.next()) {
+            for (gc::ZoneCellIter iter(zone, gc::AllocKind::SCRIPT); !iter.done(); iter.next()) {
                 JSScript *script = iter.get<JSScript>();
                 if (obs.shouldRecompileOrInvalidate(script) &&
                     !gc::IsScriptAboutToBeFinalized(&script))
@@ -6678,7 +6688,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    return NewPropertyDescriptorObject(cx, desc, args.rval());
+    return FromPropertyDescriptor(cx, desc, args.rval());
 }
 
 static bool
@@ -6731,13 +6741,13 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &id))
         return false;
 
-    Rooted<PropDesc> desc(cx);
-    if (!desc.initialize(cx, args[1], false))
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!ToPropertyDescriptor(cx, args[1], false, &desc))
         return false;
 
-    if (!dbg->unwrapPropDescInto(cx, obj, desc, &desc))
+    if (!dbg->unwrapPropertyDescriptor(cx, obj, &desc))
         return false;
-    if (!desc.checkGetter(cx) || !desc.checkSetter(cx))
+    if (!CheckPropertyDescriptorAccessors(cx, desc))
         return false;
 
     {
@@ -6768,15 +6778,15 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     AutoIdVector ids(cx);
-    AutoPropDescVector descs(cx);
+    AutoPropertyDescriptorVector descs(cx);
     if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
         return false;
     size_t n = ids.length();
 
     for (size_t i = 0; i < n; i++) {
-        if (!dbg->unwrapPropDescInto(cx, obj, descs[i], descs[i]))
+        if (!dbg->unwrapPropertyDescriptor(cx, obj, descs[i]))
             return false;
-        if (!descs[i].checkGetter(cx) || !descs[i].checkSetter(cx))
+        if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
             return false;
     }
 

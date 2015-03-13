@@ -1124,7 +1124,8 @@ int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND-PAIR(%s): Ensure that check timer is running for new pair %s.",pair->remote->stream->pctx->label, pair->codeword, pair->as_string);
 
     if(pair->remote->stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE ||
-       !pair->remote->stream->pctx->checks_started){
+       (pair->remote->stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN &&
+        !pair->remote->stream->pctx->checks_started)){
       if(nr_ice_media_stream_start_checks(pair->remote->stream->pctx, pair->remote->stream)) {
         r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): Could not restart checks for new pair %s.",pair->remote->stream->pctx->label, pair->codeword, pair->as_string);
         ABORT(R_INTERNAL);
