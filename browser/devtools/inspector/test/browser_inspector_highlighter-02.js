@@ -21,7 +21,7 @@ add_task(function*() {
   let highlightedNode = yield getHighlitNode(toolbox);
   is(highlightedNode, getNode("#simple-div"),
     "The highlighter's outline corresponds to the simple div");
-  yield isNodeCorrectlyHighlighted(getNode("#simple-div"), toolbox,
+  yield isNodeCorrectlyHighlighted("#simple-div", toolbox,
     "non-zoomed");
 
   info("Selecting the rotated DIV");
@@ -29,7 +29,7 @@ add_task(function*() {
 
   isVisible = yield isHighlighting(toolbox);
   ok(isVisible, "The highlighter is shown");
-  yield isNodeCorrectlyHighlighted(getNode("#rotated-div"), toolbox,
+  yield isNodeCorrectlyHighlighted("#rotated-div", toolbox,
     "rotated");
 
   info("Selecting the zero width height DIV");
@@ -37,6 +37,6 @@ add_task(function*() {
 
   isVisible = yield isHighlighting(toolbox);
   ok(isVisible, "The highlighter is shown");
-  yield isNodeCorrectlyHighlighted(getNode("#widthHeightZero-div"), toolbox,
+  yield isNodeCorrectlyHighlighted("#widthHeightZero-div", toolbox,
     "zero width height");
 });

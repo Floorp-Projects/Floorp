@@ -41,9 +41,8 @@ const TEST_DATA = [
     options: {},
     checkHighlighter: function*(toolbox) {
       for (let region of ["margin", "border", "padding", "content"]) {
-        let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-          "box-model-" + region, "points");
-        ok(points, "Region " + region + " has set coordinates");
+        let {d} = yield getHighlighterRegionPath(region, toolbox.highlighter);
+        ok(d, "Region " + region + " has set coordinates");
       }
     }
   },
@@ -71,42 +70,34 @@ const TEST_DATA = [
     desc: "One region only can be shown (1)",
     options: {showOnly: "content"},
     checkHighlighter: function*(toolbox) {
-      let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-margin", "points");
-      ok(!points, "margin region is hidden");
+      let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+      ok(!d, "margin region is hidden");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-border", "points");
-      ok(!points, "border region is hidden");
+      ({d}) = yield getHighlighterRegionPath("border", toolbox.highlighter);
+      ok(!d, "border region is hidden");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-padding", "points");
-      ok(!points, "padding region is hidden");
+      ({d}) = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      ok(!d, "padding region is hidden");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-content", "points");
-      ok(points, "content region is shown");
+      ({d}) = yield getHighlighterRegionPath("content", toolbox.highlighter);
+      ok(d, "content region is shown");
     }
   },
   {
     desc: "One region only can be shown (2)",
     options: {showOnly: "margin"},
     checkHighlighter: function*(toolbox) {
-      let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-margin", "points");
-      ok(points, "margin region is shown");
+      let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+      ok(d, "margin region is shown");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-border", "points");
-      ok(!points, "border region is hidden");
+      ({d}) = yield getHighlighterRegionPath("border", toolbox.highlighter);
+      ok(!d, "border region is hidden");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-padding", "points");
-      ok(!points, "padding region is hidden");
+      ({d}) = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      ok(!d, "padding region is hidden");
 
-      points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-content", "points");
-      ok(!points, "content region is hidden");
+      ({d}) = yield getHighlighterRegionPath("content", toolbox.highlighter);
+      ok(!d, "content region is hidden");
     }
   },
   {
@@ -122,9 +113,8 @@ const TEST_DATA = [
       let leftX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
         "box-model-guide-left", "x1");
 
-      let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-padding", "points");
-      points = points.split(" ").map(xy => xy.split(","));
+      let {points} = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      points = points[0];
 
       is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
       is(Math.floor(rightX1), points[1][0], "Right guide's x1 is correct");
@@ -145,10 +135,9 @@ const TEST_DATA = [
       let leftX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
         "box-model-guide-left", "x1");
 
-      let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-margin", "points");
+      let {points} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+      points = points[0];
 
-      points = points.split(" ").map(xy => xy.split(","));
       is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
       is(Math.floor(rightX1), points[1][0], "Right guide's x1 is correct");
       is(Math.floor(bottomY1), points[2][1], "Bottom guide's y1 is correct");
