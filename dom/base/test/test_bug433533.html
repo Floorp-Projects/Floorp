@@ -44,11 +44,13 @@ is(td.getAttribute("colspan"), "100", "Colspan attribute didn't store the origin
 // Note, if colspan is negative, it is set to 1, because of backwards compatibility.
 // @see nsHTMLTableCellElement::ParseAttribute
 td.setAttribute("colspan", "-100k");
-is(td.getAttribute("colspan"), "1", "Colspan attribute didn't store the original value");
+is(td.getAttribute("colspan"), "-100k", "Colspan attribute didn't store the original value");
 td.setAttribute("colspan", " -100 ");
-is(td.getAttribute("colspan"), "1", "Colspan attribute didn't store the original value");
+is(td.getAttribute("colspan"), " -100 ", "Colspan attribute didn't store the original value");
+is(td.colSpan, 1, "Colspan reflection should be correct for ' -100 '");
 td.setAttribute("colspan", "-100");
-is(td.getAttribute("colspan"), "1", "Colspan attribute didn't store the original value");
+is(td.getAttribute("colspan"), "-100", "Colspan attribute didn't store the original value");
+is(td.colSpan, 1, "Colspan reflection should be correct for '-100'");
 
 
 td.setAttribute("colspan", "foobar");

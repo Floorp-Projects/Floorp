@@ -89,19 +89,7 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpS
             temp1.name(),
             temp2.name());
 
-    // Determine the non-volatile registers which might be modified by jitcode.
-    for (GeneralRegisterIterator iter(GeneralRegisterSet::NonVolatile()); iter.more(); iter++) {
-        Register reg = *iter;
-        if (!regs.has(reg))
-            savedNonVolatileRegisters.add(reg);
-    }
-
-#if defined(JS_CODEGEN_ARM)
-    // ARM additionally requires that the link register be saved.
-    savedNonVolatileRegisters.add(Register::FromCode(Registers::lr));
-#elif defined(JS_CODEGEN_MIPS)
-    savedNonVolatileRegisters.add(Register::FromCode(Registers::ra));
-#endif
+    savedNonVolatileRegisters = SavedNonVolatileRegisters(regs);
 
     masm.jump(&entry_label_);
     masm.bind(&start_label_);
