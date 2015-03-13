@@ -532,11 +532,11 @@ struct Not {
     static inline T apply(T x) { return ~x; }
 };
 template<typename T>
-struct Rec {
+struct RecApprox {
     static inline T apply(T x) { return 1 / x; }
 };
 template<typename T>
-struct RecSqrt {
+struct RecSqrtApprox {
     static inline T apply(T x) { return sqrt(1 / x); }
 };
 template<typename T>
