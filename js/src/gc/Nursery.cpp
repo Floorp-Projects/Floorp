@@ -419,7 +419,7 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 
         /* Use minimal size object if we are just going to copy the pointer. */
         if (!nursery.isInside(aobj->getElementsHeader()))
-            return FINALIZE_OBJECT0_BACKGROUND;
+            return AllocKind::OBJECT0_BACKGROUND;
 
         size_t nelements = aobj->getDenseCapacity();
         return GetBackgroundAllocKind(GetGCArrayKind(nelements));
@@ -459,7 +459,7 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 
     // Outline typed objects use the minimum allocation kind.
     if (obj->is<OutlineTypedObject>())
-        return FINALIZE_OBJECT0;
+        return AllocKind::OBJECT0;
 
     // All nursery allocatable non-native objects are handled above.
     MOZ_ASSERT(obj->isNative());

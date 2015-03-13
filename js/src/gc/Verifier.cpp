@@ -501,10 +501,10 @@ js::gc::GCRuntime::endVerifyPostBarriers()
     /* Walk the heap to find any edges not the the |edges| set. */
     trc->setTraceCallback(PostVerifierVisitEdge);
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        for (size_t kind = 0; kind < FINALIZE_LIMIT; ++kind) {
-            for (ZoneCellIterUnderGC cells(zone, AllocKind(kind)); !cells.done(); cells.next()) {
+        for (ALL_ALLOC_KINDS(kind)) {
+            for (ZoneCellIterUnderGC cells(zone, kind); !cells.done(); cells.next()) {
                 Cell *src = cells.getCell();
-                JS_TraceChildren(trc, src, MapAllocToTraceKind(AllocKind(kind)));
+                JS_TraceChildren(trc, src, MapAllocToTraceKind(kind));
             }
         }
     }

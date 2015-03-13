@@ -1930,7 +1930,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext *cx, Zone *zone,
                     return false;
             }
         } else {
-            for (gc::ZoneCellIter iter(zone, gc::FINALIZE_SCRIPT); !iter.done(); iter.next()) {
+            for (gc::ZoneCellIter iter(zone, gc::AllocKind::SCRIPT); !iter.done(); iter.next()) {
                 JSScript *script = iter.get<JSScript>();
                 if (obs.shouldRecompileOrInvalidate(script) &&
                     !gc::IsScriptAboutToBeFinalized(&script))

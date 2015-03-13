@@ -178,7 +178,7 @@ class XDRState {
     {
         uint32_t tmp;
         if (mode == XDR_ENCODE)
-            tmp = *val;
+            tmp = uint32_t(*val);
         if (!codeUint32(&tmp))
             return false;
         if (mode == XDR_DECODE)
