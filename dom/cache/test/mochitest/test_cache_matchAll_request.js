@@ -1,6 +1,7 @@
 var request1 = new Request("//mochi.test:8888/?1&" + context);
 var request2 = new Request("//mochi.test:8888/?2&" + context);
 var request3 = new Request("//mochi.test:8888/?3&" + context);
+var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response1, response3;
 var c;
 var response1Text, response3Text;
@@ -30,15 +31,16 @@ fetch(new Request(request1)).then(function(r) {
   return response3.text();
 }).then(function(text) {
   response3Text = text;
-  return testRequest(request1, request2, request3);
+  return testRequest(request1, request2, request3, unknownRequest);
 }).then(function() {
-  return testRequest(request1.url, request2.url, request3.url);
+  return testRequest(request1.url, request2.url, request3.url,
+                     unknownRequest.url);
 }).then(function() {
   testDone();
 });
 
 // The request arguments can either be a URL string, or a Request object.
-function testRequest(request1, request2, request3) {
+function testRequest(request1, request2, request3, unknownRequest) {
   return caches.open(name).then(function(cache) {
     c = cache;
     return c.add(request1);
@@ -67,6 +69,12 @@ function testRequest(request1, request2, request3) {
   }).catch(function(err) {
     is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
   }).then(function() {
+    return c.matchAll(unknownRequest);
+  }).then(function(r) {
+    is(r.length, 0, "Searching for an unknown request should not succeed");
+    return c.matchAll(unknownRequest, {cacheName: name});
+  }).then(function(r) {
+    is(r.length, 0, "Searching for an unknown request should not succeed");
     return caches.delete(name);
   }).then(function(success) {
     ok(success, "We should be able to delete the cache successfully");
