@@ -322,29 +322,51 @@ PerformanceFront.prototype = {
   }),
 
   /**
-   * Starts recording allocations in the memory actor, if necessary.
+   * Starts polling for allocations from the memory actor, if necessary.
    */
   _startMemory: Task.async(function *(options) {
     if (!options.withAllocations) {
       return 0;
     }
-    yield this._request("memory", "attach");
-    let memoryStartTime = yield this._request("memory", "startRecordingAllocations", {
-      probability: options.allocationsSampleProbability,
-      maxLogLength: options.allocationsMaxLogLength
-    });
+    let memoryStartTime = yield this._startRecordingAllocations(options);
     yield this._pullAllocationSites();
     return memoryStartTime;
   }),
 
   /**
-   * Stops recording allocations in the memory actor, if necessary.
+   * Stops polling for allocations from the memory actor, if necessary.
    */
   _stopMemory: Task.async(function *(options) {
     if (!options.withAllocations) {
       return 0;
     }
+    // Since `_pullAllocationSites` is usually running inside a timeout, and
+    // it's performing asynchronous requests to the server, a recording may
+    // be stopped before that method finishes executing. Therefore, we need to
+    // wait for the last request to `getAllocations` to finish before actually
+    // stopping recording allocations.
+    yield this._lastPullAllocationSitesFinished;
     clearTimeout(this._sitesPullTimeout);
+
+    return yield this._stopRecordingAllocations();
+  }),
+
+  /**
+   * Starts recording allocations in the memory actor.
+   */
+  _startRecordingAllocations: Task.async(function*(options) {
+    yield this._request("memory", "attach");
+    let memoryStartTime = yield this._request("memory", "startRecordingAllocations", {
+      probability: options.allocationsSampleProbability,
+      maxLogLength: options.allocationsMaxLogLength
+    });
+    return memoryStartTime;
+  }),
+
+  /**
+   * Stops recording allocations in the memory actor.
+   */
+  _stopRecordingAllocations: Task.async(function*() {
     let memoryEndTime = yield this._request("memory", "stopRecordingAllocations");
     yield this._request("memory", "detach");
     return memoryEndTime;
@@ -355,13 +377,16 @@ PerformanceFront.prototype = {
    * them to consumers.
    */
   _pullAllocationSites: Task.async(function *() {
+    let deferred = promise.defer();
+    this._lastPullAllocationSitesFinished = deferred.promise;
+
     let isDetached = (yield this._request("memory", "getState")) !== "attached";
     if (isDetached) {
+      deferred.resolve();
       return;
     }
 
     let memoryData = yield this._request("memory", "getAllocations");
-
     this.emit("allocations", {
       sites: memoryData.allocations,
       timestamps: memoryData.allocationsTimestamps,
@@ -371,6 +396,8 @@ PerformanceFront.prototype = {
 
     let delay = DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT;
     this._sitesPullTimeout = setTimeout(this._pullAllocationSites, delay);
+
+    deferred.resolve();
   }),
 
   /**
