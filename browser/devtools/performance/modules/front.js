@@ -329,7 +329,10 @@ PerformanceFront.prototype = {
       return 0;
     }
     yield this._request("memory", "attach");
-    let memoryStartTime = yield this._request("memory", "startRecordingAllocations", options);
+    let memoryStartTime = yield this._request("memory", "startRecordingAllocations", {
+      probability: options.allocationsSampleProbability,
+      maxLogLength: options.allocationsMaxLogLength
+    });
     yield this._pullAllocationSites();
     return memoryStartTime;
   }),
