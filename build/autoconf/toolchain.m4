@@ -223,14 +223,37 @@ if test -n "$CROSS_COMPILE"; then
     dnl When cross compile, we have no variable telling us what the host compiler is. Figure it out.
     cat > conftest.C <<EOF
 #if defined(__clang__)
-CLANG
+COMPILER CLANG __clang_major__.__clang_minor__.__clang_patchlevel__
 #elif defined(__GNUC__)
-GCC
+COMPILER GCC __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
 #endif
 EOF
-    host_compiler=`$HOST_CXX -E conftest.C | egrep '(CLANG|GCC)'`
+read dummy host_compiler HOST_CC_VERSION <<EOF
+$($HOST_CC -E conftest.C 2>/dev/null | grep COMPILER)
+EOF
+read dummy host_cxxcompiler HOST_CXX_VERSION <<EOF
+$($HOST_CXX -E conftest.C 2>/dev/null | grep COMPILER)
+EOF
     rm conftest.C
+    if test "$host_compiler" != "$host_cxxcompiler"; then
+        AC_MSG_ERROR([Your C and C++ host compilers are different.  You need to use the same compiler.])
+    fi
     if test -n "$host_compiler"; then
+        if test "$host_compiler" = "GCC" ; then
+            changequote(<<,>>)
+            HOST_GCC_VERSION_FULL="$HOST_CXX_VERSION"
+            HOST_GCC_VERSION=`echo "$HOST_GCC_VERSION_FULL" | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/<<$>>1/;'`
+
+            HOST_GCC_MAJOR_VERSION=`echo ${HOST_GCC_VERSION} | $AWK -F\. '{ print <<$>>1 }'`
+            HOST_GCC_MINOR_VERSION=`echo ${HOST_GCC_VERSION} | $AWK -F\. '{ print <<$>>2 }'`
+            changequote([,])
+
+            if test "$HOST_GCC_MAJOR_VERSION" -eq 4 -a "$HOST_GCC_MINOR_VERSION" -lt 6 ||
+               test "$HOST_GCC_MAJOR_VERSION" -lt 4; then
+                AC_MSG_ERROR([Only GCC 4.6 or newer supported for host compiler])
+            fi
+        fi
+
         HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++0x"
 
         _SAVE_CXXFLAGS="$CXXFLAGS"
