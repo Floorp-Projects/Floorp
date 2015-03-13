@@ -57,6 +57,9 @@ const ALLOWED_IMAGE_SCHEMES = new Set(["https", "data"]);
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
 
+// The frecency of a related link
+const RELATED_FRECENCY = Infinity;
+
 // Divide frecency by this amount for pings
 const PING_SCORE_DIVISOR = 10000;
 
@@ -472,18 +475,29 @@ let DirectoryLinksProvider = {
         this._topSitesWithRelatedLinks.add(site);
       }
     });
+    this._updateRelatedTile();
   },
 
+  /**
+   * Updates _topSitesWithRelatedLinks based on the link that was changed.
+   *
+   * @return true if _topSitesWithRelatedLinks was modified, false otherwise.
+   */
   _handleLinkChanged: function(aLink) {
     let changedLinkSite = NewTabUtils.extractSite(aLink.url);
-    if (!NewTabUtils.isTopPlacesSite(changedLinkSite)) {
+    let linkStored = this._topSitesWithRelatedLinks.has(changedLinkSite);
+
+    if (!NewTabUtils.isTopPlacesSite(changedLinkSite) && linkStored) {
       this._topSitesWithRelatedLinks.delete(changedLinkSite);
-      return;
+      return true;
     }
 
-    if (this._relatedLinks.has(changedLinkSite)) {
+    if (this._relatedLinks.has(changedLinkSite) &&
+        NewTabUtils.isTopPlacesSite(changedLinkSite) && !linkStored) {
       this._topSitesWithRelatedLinks.add(changedLinkSite);
+      return true;
     }
+    return false;
   },
 
   _populatePlacesLinks: function () {
@@ -495,7 +509,9 @@ let DirectoryLinksProvider = {
   onLinkChanged: function (aProvider, aLink) {
     // Make sure NewTabUtils.links handles the notification first.
     setTimeout(() => {
-      this._handleLinkChanged(aLink);
+      if (this._handleLinkChanged(aLink)) {
+        this._updateRelatedTile();
+      }
     }, 0);
   },
 
@@ -505,6 +521,63 @@ let DirectoryLinksProvider = {
       this._handleManyLinksChanged();
     }, 0);
   },
+
+  /**
+   * Chooses and returns a related tile based on a user's top sites
+   * that we have an available related tile for.
+   *
+   * @return the chosen related tile, or undefined if there isn't one
+   */
+  _updateRelatedTile: function() {
+    let sortedLinks = NewTabUtils.getProviderLinks(this);
+
+    // Delete the current related tile, if one exists.
+    let initialLength = sortedLinks.length;
+    this.maxNumLinks = initialLength;
+    if (initialLength) {
+      let mostFrecentLink = sortedLinks[0];
+      if ("related" == mostFrecentLink.type) {
+        this._callObservers("onLinkChanged", {
+          url: mostFrecentLink.url,
+          frecency: 0,
+          lastVisitDate: mostFrecentLink.lastVisitDate,
+          type: "related",
+        }, 0, true);
+      }
+    }
+
+    if (this._topSitesWithRelatedLinks.size == 0) {
+      // There are no potential related links we can show.
+      return;
+    }
+
+    // Create a flat list of all possible links we can show as related.
+    // Note that many top sites may map to the same related links, but we only
+    // want to count each related link once (based on url), thus possibleLinks is a map
+    // from url to relatedLink. Thus, each link has an equal chance of being chosen at
+    // random from flattenedLinks if it appears only once.
+    let possibleLinks = new Map();
+    this._topSitesWithRelatedLinks.forEach(topSiteWithRelatedLink => {
+      let relatedLinksMap = this._relatedLinks.get(topSiteWithRelatedLink);
+      relatedLinksMap.forEach((relatedLink, url) => {
+        possibleLinks.set(url, relatedLink);
+      })
+    });
+    let flattenedLinks = [...possibleLinks.values()];
+
+    // Choose our related link at random
+    let relatedIndex = Math.floor(Math.random() * flattenedLinks.length);
+    let chosenRelatedLink = flattenedLinks[relatedIndex];
+
+    // Show the new directory tile.
+    this._callObservers("onLinkChanged", {
+      url: chosenRelatedLink.url,
+      frecency: RELATED_FRECENCY,
+      lastVisitDate: chosenRelatedLink.lastVisitDate,
+      type: "related",
+    });
+    return chosenRelatedLink;
+   },
 
   /**
    * Return the object to its pre-init state

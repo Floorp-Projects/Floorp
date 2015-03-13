@@ -12,6 +12,41 @@ function run_test() {
   run_next_test();
 }
 
+add_task(function notifyLinkDelete() {
+  let expectedLinks = makeLinks(0, 3, 1);
+
+  let provider = new TestProvider(done => done(expectedLinks));
+  provider.maxNumLinks = expectedLinks.length;
+
+  NewTabUtils.initWithoutProviders();
+  NewTabUtils.links.addProvider(provider);
+  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+
+  do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
+
+  // Remove a link.
+  let removedLink = expectedLinks[2];
+  provider.notifyLinkChanged(removedLink, 2, true);
+  let links = NewTabUtils.links._providers.get(provider);
+
+  // Check that sortedLinks is correctly updated.
+  do_check_links(NewTabUtils.links.getLinks(), expectedLinks.slice(0, 2));
+
+  // Check that linkMap is accurately updated.
+  do_check_eq(links.linkMap.size, 2);
+  do_check_true(links.linkMap.get(expectedLinks[0].url));
+  do_check_true(links.linkMap.get(expectedLinks[1].url));
+  do_check_false(links.linkMap.get(removedLink.url));
+
+  // Check that siteMap is correctly updated.
+  do_check_eq(links.siteMap.size, 2);
+  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[0].url)));
+  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[1].url)));
+  do_check_false(links.siteMap.has(NewTabUtils.extractSite(removedLink.url)));
+
+  NewTabUtils.links.removeProvider(provider);
+});
+
 add_task(function populatePromise() {
   let count = 0;
   let expectedLinks = makeLinks(0, 10, 2);
@@ -267,16 +302,19 @@ TestProvider.prototype = {
   addObserver: function (observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged: function (link) {
-    this._notifyObservers("onLinkChanged", link);
+  notifyLinkChanged: function (link, index=-1, deleted=false) {
+    this._notifyObservers("onLinkChanged", link, index, deleted);
   },
   notifyManyLinksChanged: function () {
     this._notifyObservers("onManyLinksChanged");
   },
-  _notifyObservers: function (observerMethodName, arg) {
+  _notifyObservers: function () {
+    let observerMethodName = arguments[0];
+    let args = Array.prototype.slice.call(arguments, 1);
+    args.unshift(this);
     for (let obs of this._observers) {
       if (obs[observerMethodName])
-        obs[observerMethodName](this, arg);
+        obs[observerMethodName].apply(NewTabUtils.links, args);
     }
   },
 };
