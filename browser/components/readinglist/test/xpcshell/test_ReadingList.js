@@ -697,7 +697,7 @@ function hash(str) {
   hasher.updateFromStream(stream, -1);
   let binaryStr = hasher.finish(false);
   let hexStr =
-    [("0" + binaryStr.charCodeAt(i).toString(16)).slice(-2) for (i in hash)].
+    [("0" + binaryStr.charCodeAt(i).toString(16)).slice(-2) for (i in binaryStr)].
     join("");
   return hexStr;
 }

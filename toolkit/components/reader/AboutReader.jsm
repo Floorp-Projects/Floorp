@@ -45,8 +45,6 @@ let AboutReader = function(mm, win) {
   this._toolbarElementRef = Cu.getWeakReference(doc.getElementById("reader-toolbar"));
   this._messageElementRef = Cu.getWeakReference(doc.getElementById("reader-message"));
 
-  this._toolbarEnabled = false;
-
   this._scrollOffset = win.pageYOffset;
 
   doc.getElementById("container").addEventListener("click", this, false);
@@ -256,7 +254,8 @@ AboutReader.prototype = {
 
           // Display the toolbar when all its initial component states are known
           if (isInitialStateChange) {
-            this._setToolbarVisibility(true);
+            // Hacks! Delay showing the toolbar to avoid position: fixed; jankiness. See bug 975533.
+            this._win.setTimeout(() => this._setToolbarVisibility(true), 500);
           }
         }
       }
@@ -524,24 +523,22 @@ AboutReader.prototype = {
   },
 
   _getToolbarVisibility: function Reader_getToolbarVisibility() {
-    return !this._toolbarElement.classList.contains("toolbar-hidden");
+    return this._toolbarElement.hasAttribute("visible");
   },
 
   _setToolbarVisibility: function Reader_setToolbarVisibility(visible) {
     let dropdown = this._doc.getElementById("style-dropdown");
     dropdown.classList.remove("open");
 
-    if (!this._toolbarEnabled)
+    if (this._getToolbarVisibility() === visible) {
       return;
+    }
 
-    // Don't allow visible toolbar until banner state is known
-    if (this._isReadingListItem == -1)
-      return;
-
-    if (this._getToolbarVisibility() === visible)
-      return;
-
-    this._toolbarElement.classList.toggle("toolbar-hidden");
+    if (visible) {
+      this._toolbarElement.setAttribute("visible", true);
+    } else {
+      this._toolbarElement.removeAttribute("visible");
+    }
     this._setSystemUIVisibility(visible);
 
     if (!visible) {
@@ -710,9 +707,6 @@ AboutReader.prototype = {
     this._contentElement.style.display = "block";
     this._updateImageMargins();
     this._requestReadingListStatus();
-
-    this._toolbarEnabled = true;
-    this._setToolbarVisibility(true);
 
     this._requestFavicon();
   },
