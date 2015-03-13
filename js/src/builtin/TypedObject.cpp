@@ -1487,7 +1487,8 @@ OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
 
     NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
     OutlineTypedObject *obj = NewObjectWithGroup<OutlineTypedObject>(cx, group, cx->global(),
-                                                                     gc::FINALIZE_OBJECT0, newKind);
+                                                                     gc::AllocKind::OBJECT0,
+                                                                     newKind);
     if (!obj)
         return nullptr;
 

@@ -240,10 +240,10 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     }
 
     AllocKind kind = TenuredCell::fromPointer(cell)->getAllocKind();
-    MOZ_ASSERT(kind == FINALIZE_SHAPE ||
-               kind == FINALIZE_ACCESSOR_SHAPE ||
-               kind <= FINALIZE_OBJECT_LAST);
-    if (kind == FINALIZE_SHAPE || kind == FINALIZE_ACCESSOR_SHAPE) {
+    MOZ_ASSERT(kind == AllocKind::SHAPE ||
+               kind == AllocKind::ACCESSOR_SHAPE ||
+               kind <= AllocKind::OBJECT_LAST);
+    if (kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE) {
         // listp points to the parent field of the next shape.
         Shape *next = reinterpret_cast<Shape *>(uintptr_t(listp) -
                                                 offsetof(Shape, parent));

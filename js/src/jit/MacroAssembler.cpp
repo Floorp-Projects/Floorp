@@ -993,7 +993,7 @@ void
 MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                                uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail)
 {
-    MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(allocKind <= gc::AllocKind::OBJECT_LAST);
 
     checkAllocatorState(fail);
 
@@ -1029,7 +1029,7 @@ MacroAssembler::newGCThing(Register result, Register temp, JSObject *templateObj
                            gc::InitialHeap initialHeap, Label *fail)
 {
     gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
-    MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(allocKind <= gc::AllocKind::OBJECT_LAST);
 
     size_t ndynamic = 0;
     if (templateObj->isNative())
@@ -1042,7 +1042,7 @@ MacroAssembler::createGCObject(Register obj, Register temp, JSObject *templateOb
                                gc::InitialHeap initialHeap, Label *fail, bool initContents)
 {
     gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
-    MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(allocKind <= gc::AllocKind::OBJECT_LAST);
 
     uint32_t nDynamicSlots = 0;
     if (templateObj->isNative()) {
@@ -1052,7 +1052,7 @@ MacroAssembler::createGCObject(Register obj, Register temp, JSObject *templateOb
         // elements header. The template object, which owns the original
         // elements, might have another allocation kind.
         if (templateObj->as<NativeObject>().denseElementsAreCopyOnWrite())
-            allocKind = gc::FINALIZE_OBJECT0_BACKGROUND;
+            allocKind = gc::AllocKind::OBJECT0_BACKGROUND;
     }
 
     allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
@@ -1073,13 +1073,13 @@ MacroAssembler::allocateNonObject(Register result, Register temp, gc::AllocKind 
 void
 MacroAssembler::newGCString(Register result, Register temp, Label *fail)
 {
-    allocateNonObject(result, temp, js::gc::FINALIZE_STRING, fail);
+    allocateNonObject(result, temp, js::gc::AllocKind::STRING, fail);
 }
 
 void
 MacroAssembler::newGCFatInlineString(Register result, Register temp, Label *fail)
 {
-    allocateNonObject(result, temp, js::gc::FINALIZE_FAT_INLINE_STRING, fail);
+    allocateNonObject(result, temp, js::gc::AllocKind::FAT_INLINE_STRING, fail);
 }
 
 void

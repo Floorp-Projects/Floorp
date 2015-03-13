@@ -755,7 +755,7 @@ GuessObjectGCKind(size_t numSlots)
 {
     if (numSlots)
         return gc::GetGCObjectKind(numSlots);
-    return gc::FINALIZE_OBJECT4;
+    return gc::AllocKind::OBJECT4;
 }
 
 static inline gc::AllocKind
@@ -763,7 +763,7 @@ GuessArrayGCKind(size_t numSlots)
 {
     if (numSlots)
         return gc::GetGCArrayKind(numSlots);
-    return gc::FINALIZE_OBJECT8;
+    return gc::AllocKind::OBJECT8;
 }
 
 inline bool

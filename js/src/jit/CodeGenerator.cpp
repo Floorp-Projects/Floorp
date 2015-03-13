@@ -4797,7 +4797,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     Register tempReg = ToRegister(lir->temp());
 
     OutOfLineCode *ool = oolCallVM(NewGCObjectInfo, lir,
-                                   (ArgList(), Imm32(allocKind), Imm32(initialHeap),
+                                   (ArgList(), Imm32(int32_t(allocKind)), Imm32(initialHeap),
                                     Imm32(ndynamic), ImmPtr(clasp)),
                                    StoreRegisterTo(objReg));
 
