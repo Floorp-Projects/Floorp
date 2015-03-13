@@ -427,8 +427,9 @@ protected:
   static const uint32_t CHECK_TRACKS = 1 << 2;
   static const uint32_t ALL_CHECKS = CHECK_SUCCESS | CHECK_TRACKS;
 
-  void OfferAnswer(uint32_t checkFlags = ALL_CHECKS) {
-    std::string offer = CreateOffer();
+  void OfferAnswer(uint32_t checkFlags = ALL_CHECKS,
+                   const Maybe<JsepOfferOptions> options = Nothing()) {
+    std::string offer = CreateOffer(options);
     SetLocalOffer(offer, checkFlags);
     SetRemoteOffer(offer, checkFlags);
 
@@ -2011,6 +2012,56 @@ TEST_F(JsepSessionTest, OfferAnswerSendOnlyLines)
             outputSdp->GetMediaSection(2).GetMediaType());
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
             outputSdp->GetMediaSection(2).GetAttributeList().GetDirection());
+}
+
+TEST_F(JsepSessionTest, OfferToReceiveAudioNotUsed)
+{
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some<size_t>(1);
+
+  OfferAnswer(CHECK_SUCCESS, Some(options));
+
+  SipccSdpParser parser;
+  UniquePtr<Sdp> offer(parser.Parse(mSessionOff.GetLocalDescription()));
+  ASSERT_TRUE(offer.get());
+  ASSERT_EQ(1U, offer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kAudio,
+            offer->GetMediaSection(0).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
+            offer->GetMediaSection(0).GetAttributeList().GetDirection());
+
+  UniquePtr<Sdp> answer(parser.Parse(mSessionAns.GetLocalDescription()));
+  ASSERT_TRUE(answer.get());
+  ASSERT_EQ(1U, answer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kAudio,
+            answer->GetMediaSection(0).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kInactive,
+            answer->GetMediaSection(0).GetAttributeList().GetDirection());
+}
+
+TEST_F(JsepSessionTest, OfferToReceiveVideoNotUsed)
+{
+  JsepOfferOptions options;
+  options.mOfferToReceiveVideo = Some<size_t>(1);
+
+  OfferAnswer(CHECK_SUCCESS, Some(options));
+
+  SipccSdpParser parser;
+  UniquePtr<Sdp> offer(parser.Parse(mSessionOff.GetLocalDescription()));
+  ASSERT_TRUE(offer.get());
+  ASSERT_EQ(1U, offer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kVideo,
+            offer->GetMediaSection(0).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
+            offer->GetMediaSection(0).GetAttributeList().GetDirection());
+
+  UniquePtr<Sdp> answer(parser.Parse(mSessionAns.GetLocalDescription()));
+  ASSERT_TRUE(answer.get());
+  ASSERT_EQ(1U, answer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kVideo,
+            answer->GetMediaSection(0).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kInactive,
+            answer->GetMediaSection(0).GetAttributeList().GetDirection());
 }
 
 TEST_F(JsepSessionTest, CreateOfferNoDatachannelDefault)

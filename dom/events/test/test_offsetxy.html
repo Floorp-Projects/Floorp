@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM MouseEvent offsetX/Y</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="d" style="position:absolute; top:100px; left:100px; width:100px; border:5px dotted black; height:100px"></div>
+<div id="d2" style="position:absolute; top:100px; left:100px; width:100px; border:5px dotted black; height:100px; transform:translateX(100px)"></div>
+<div id="d3" style="display:none; position:absolute; top:100px; left:100px; width:100px; border:5px dotted black; height:100px"></div>
+<div id="d4" style="transform:scale(0); position:absolute; top:100px; left:100px; width:100px; border:5px dotted black; height:100px"></div>
+
+<pre id="test">
+<script type="application/javascript">
+
+var offsetX = -1, offsetY = -1;
+var ev = new MouseEvent("click", {clientX:110, clientY:110});
+d.addEventListener("click", function (event) {
+  is(ev, event, "Event objects must match");
+  offsetX = event.offsetX;
+  offsetY = event.offsetY;
+});
+d.dispatchEvent(ev);
+is(offsetX, 5);
+is(offsetY, 5);
+is(ev.offsetX, ev.pageX);
+is(ev.offsetY, ev.pageY);
+
+var ev2 = new MouseEvent("click", {clientX:220, clientY:130});
+d2.addEventListener("click", function (event) {
+  is(ev2, event, "Event objects must match");
+  offsetX = event.offsetX;
+  offsetY = event.offsetY;
+});
+d2.dispatchEvent(ev2);
+is(offsetX, 15);
+is(offsetY, 25);
+is(ev2.offsetX, ev2.pageX);
+is(ev2.offsetY, ev2.pageY);
+
+var ev3 = new MouseEvent("click", {clientX:110, clientY:110});
+d3.addEventListener("click", function (event) {
+  is(ev3, event, "Event objects must match");
+  offsetX = event.offsetX;
+  offsetY = event.offsetY;
+});
+d3.dispatchEvent(ev3);
+is(offsetX, 0);
+is(offsetY, 0);
+is(ev3.offsetX, ev3.pageX);
+is(ev3.offsetY, ev3.pageY);
+
+var ev4 = new MouseEvent("click", {clientX:110, clientY:110});
+d4.addEventListener("click", function (event) {
+  is(ev4, event, "Event objects must match");
+  offsetX = event.offsetX;
+  offsetY = event.offsetY;
+});
+d4.dispatchEvent(ev4);
+is(offsetX, 0);
+is(offsetY, 0);
+is(ev4.offsetX, ev4.pageX);
+is(ev4.offsetY, ev4.pageY);
+
+</script>
+</pre>
+</body>
+</html>

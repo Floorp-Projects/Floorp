@@ -444,15 +444,12 @@ jit::LazyLinkTopActivation(JSContext *cx)
 
     // First frame should be an exit frame.
     JitFrameIterator it(iter);
-    MOZ_ASSERT(it.type() == JitFrame_Exit);
-
-    // Second frame is the Ion frame.
-    ++it;
-    MOZ_ASSERT(it.type() == JitFrame_IonJS);
+    LazyLinkExitFrameLayout *ll = it.exitFrame()->as<LazyLinkExitFrameLayout>();
+    JSScript *calleeScript = ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
 
     // Get the pending builder from the Ion frame.
-    IonBuilder *builder = it.script()->ionScript()->pendingBuilder();
-    it.script()->setPendingIonBuilder(cx, nullptr);
+    IonBuilder *builder = calleeScript->ionScript()->pendingBuilder();
+    calleeScript->setPendingIonBuilder(cx, nullptr);
 
     AutoEnterAnalysis enterTypes(cx);
     RootedScript script(cx, builder->script());
@@ -494,7 +491,7 @@ JitRuntime::Mark(JSTracer *trc)
 {
     MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
     Zone *zone = trc->runtime()->atomsCompartment()->zone();
-    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::AllocKind::JITCODE); !i.done(); i.next()) {
         JitCode *code = i.get<JitCode>();
         MarkJitCodeRoot(trc, &code, "wrapper");
     }
@@ -1136,7 +1133,7 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
     if (!rt->hasJitRuntime())
         return;
 
-    for (gc::ZoneCellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ionScript()->toggleBarriers(needs);

@@ -69,26 +69,24 @@ this.BrowserTestUtils = {
    *         Resolves with the new window once it is loaded.
    */
   openNewBrowserWindow(options) {
-    return new Promise(resolve => {
-      let argString = Cc["@mozilla.org/supports-string;1"].
-                      createInstance(Ci.nsISupportsString);
-      argString.data = "";
-      let features = "chrome,dialog=no,all";
+    let argString = Cc["@mozilla.org/supports-string;1"].
+                    createInstance(Ci.nsISupportsString);
+    argString.data = "";
+    let features = "chrome,dialog=no,all";
 
-      if (options && options.private || false) {
-        features += ",private";
-      }
+    if (options && options.private || false) {
+      features += ",private";
+    }
 
-      let win = Services.ww.openWindow(
-        null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
-        features, argString);
+    let win = Services.ww.openWindow(
+      null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
+      features, argString);
 
-      // Wait for browser-delayed-startup-finished notification, it indicates
-      // that the window has loaded completely and is ready to be used for
-      // testing.
-      TestUtils.topicObserved("browser-delayed-startup-finished", win).then(
-        () => resolve(win));
-    });
+    // Wait for browser-delayed-startup-finished notification, it indicates
+    // that the window has loaded completely and is ready to be used for
+    // testing.
+    return TestUtils.topicObserved("browser-delayed-startup-finished",
+                                   subject => subject == win).then(() => win);
   },
 
   /**

@@ -1150,7 +1150,7 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
     if (obj->isTenured()) {
         MOZ_ASSERT(obj->isAligned());
         gc::AllocKind kind = obj->asTenured().getAllocKind();
-        MOZ_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+        MOZ_ASSERT(kind <= js::gc::AllocKind::OBJECT_LAST);
         MOZ_ASSERT(obj->asTenured().zone() == cx->zone());
     }
 }
@@ -1182,13 +1182,13 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
 
     gc::AllocKind kind = str->getAllocKind();
     if (str->isFatInline())
-        MOZ_ASSERT(kind == gc::FINALIZE_FAT_INLINE_STRING);
+        MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING);
     else if (str->isExternal())
-        MOZ_ASSERT(kind == gc::FINALIZE_EXTERNAL_STRING);
+        MOZ_ASSERT(kind == gc::AllocKind::EXTERNAL_STRING);
     else if (str->isAtom() || str->isFlat())
-        MOZ_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_FAT_INLINE_STRING);
+        MOZ_ASSERT(kind == gc::AllocKind::STRING || kind == gc::AllocKind::FAT_INLINE_STRING);
     else
-        MOZ_ASSERT(kind == gc::FINALIZE_STRING);
+        MOZ_ASSERT(kind == gc::AllocKind::STRING);
 }
 
 void
@@ -1207,7 +1207,7 @@ AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym)
         AssertValidStringPtr(cx, desc);
     }
 
-    MOZ_ASSERT(sym->getAllocKind() == gc::FINALIZE_SYMBOL);
+    MOZ_ASSERT(sym->getAllocKind() == gc::AllocKind::SYMBOL);
 }
 
 void

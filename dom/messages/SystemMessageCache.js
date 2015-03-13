@@ -25,7 +25,6 @@ function SystemMessageCache() {
 
   this._pagesCache = [];
 
-  dump("SystemMessageCache: init");
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   kMessages.forEach(function(aMessage) {
     cpmm.addMessageListener(aMessage, this);

@@ -96,7 +96,8 @@ CanCreateUserNamespace()
     return cached[0] > '0';
   }
 
-  pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER);
+  pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER,
+                      nullptr, nullptr, nullptr, nullptr);
   if (pid == 0) {
     // In the child.  Do as little as possible.
     _exit(0);

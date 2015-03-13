@@ -593,6 +593,9 @@ function doTest(aTest)
         is(gEvent[name], null, description + ": mismatch with fixed value (" + name + ")");
       } else if (aTest.todoMismatch.indexOf(name) >= 0) {
         todo_is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
+      } else if (name == "offsetX" || name == "offsetY") {
+        // do nothing; these are defined to return different values during event dispatch
+        // vs not during event dispatch
       } else {
         is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
       }

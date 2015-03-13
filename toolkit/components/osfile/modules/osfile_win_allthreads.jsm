@@ -210,7 +210,8 @@ exports.Error = OSError;
  */
 let AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size,
                                          winBirthDate,
-                                         lastAccessDate, lastWriteDate) {
+                                         lastAccessDate, lastWriteDate,
+                                         winAttributes) {
   this._path = path;
   this._isDir = isDir;
   this._isSymLink = isSymLink;
@@ -218,6 +219,7 @@ let AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size,
   this._winBirthDate = winBirthDate;
   this._lastAccessDate = lastAccessDate;
   this._lastModificationDate = lastWriteDate;
+  this._winAttributes = winAttributes;
 };
 
 AbstractInfo.prototype = {
@@ -285,6 +287,15 @@ AbstractInfo.prototype = {
    */
   get lastModificationDate() {
     return this._lastModificationDate;
+  },
+  /**
+   * The Object with following boolean properties of this file.
+   * {readOnly, system, hidden}
+   *
+   * @type {object}
+   */
+  get winAttributes() {
+    return this._winAttributes;
   }
 };
 exports.AbstractInfo = AbstractInfo;

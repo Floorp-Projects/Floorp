@@ -24,7 +24,6 @@
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
 #include "vm/JSONParser.h"
-#include "vm/PropDesc.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -52,12 +51,6 @@ MarkBindingsRoot(JSTracer *trc, Bindings *bindings, const char *name)
 
 void
 MarkPropertyDescriptorRoot(JSTracer *trc, JSPropertyDescriptor *pd, const char *name)
-{
-    pd->trace(trc);
-}
-
-void
-MarkPropDescRoot(JSTracer *trc, PropDesc *pd, const char *name)
 {
     pd->trace(trc);
 }
@@ -116,7 +109,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer *trc)
     MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
-    MarkExactStackRootList<PropDesc, MarkPropDescRoot>(trc, context, "PropDesc");
 }
 
 static void
@@ -149,8 +141,8 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case DESCVECTOR: {
-        AutoPropDescVector::VectorImpl &descriptors =
-            static_cast<AutoPropDescVector *>(this)->vector;
+        AutoPropertyDescriptorVector::VectorImpl &descriptors =
+            static_cast<AutoPropertyDescriptorVector *>(this)->vector;
         for (size_t i = 0, len = descriptors.length(); i < len; i++)
             descriptors[i].trace(trc);
         return;
@@ -494,7 +486,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 
         /* Do not discard scripts with counts while profiling. */
         if (rt->profilingScripts && !isHeapMinorCollecting()) {
-            for (ZoneCellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->hasScriptCounts()) {
                     MarkScriptRoot(trc, &script, "profilingScripts");
