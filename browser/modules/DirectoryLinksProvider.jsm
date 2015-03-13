@@ -15,6 +15,7 @@ const XMLHttpRequest =
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -88,6 +89,11 @@ let DirectoryLinksProvider = {
    * A mapping from site to a list of related link objects
    */
   _relatedLinks: new Map(),
+
+  /**
+   * A set of top sites that we can provide related links for
+   */
+  _topSitesWithRelatedLinks: new Set(),
 
   get _observedPrefs() Object.freeze({
     enhanced: PREF_NEWTAB_ENHANCED,
@@ -432,7 +438,10 @@ let DirectoryLinksProvider = {
     }).catch(ex => {
       Cu.reportError(ex);
       return [];
-    }).then(aCallback);
+    }).then(links => {
+      aCallback(links);
+      this._populatePlacesLinks();
+    });
   },
 
   init: function DirectoryLinksProvider_init() {
@@ -441,6 +450,9 @@ let DirectoryLinksProvider = {
     // setup directory file path and last download timestamp
     this._directoryFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
     this._lastDownloadMS = 0;
+
+    NewTabUtils.placesProvider.addObserver(this);
+
     return Task.spawn(function() {
       // get the last modified time of the links file if it exists
       let doesFileExists = yield OS.File.exists(this._directoryFilePath);
@@ -451,6 +463,47 @@ let DirectoryLinksProvider = {
       // fetch directory on startup without force
       yield this._fetchAndCacheLinksIfNecessary();
     }.bind(this));
+  },
+
+  _handleManyLinksChanged: function() {
+    this._topSitesWithRelatedLinks.clear();
+    this._relatedLinks.forEach((relatedLinks, site) => {
+      if (NewTabUtils.isTopPlacesSite(site)) {
+        this._topSitesWithRelatedLinks.add(site);
+      }
+    });
+  },
+
+  _handleLinkChanged: function(aLink) {
+    let changedLinkSite = NewTabUtils.extractSite(aLink.url);
+    if (!NewTabUtils.isTopPlacesSite(changedLinkSite)) {
+      this._topSitesWithRelatedLinks.delete(changedLinkSite);
+      return;
+    }
+
+    if (this._relatedLinks.has(changedLinkSite)) {
+      this._topSitesWithRelatedLinks.add(changedLinkSite);
+    }
+  },
+
+  _populatePlacesLinks: function () {
+    NewTabUtils.links.populateProviderCache(NewTabUtils.placesProvider, () => {
+      this._handleManyLinksChanged();
+    });
+  },
+
+  onLinkChanged: function (aProvider, aLink) {
+    // Make sure NewTabUtils.links handles the notification first.
+    setTimeout(() => {
+      this._handleLinkChanged(aLink);
+    }, 0);
+  },
+
+  onManyLinksChanged: function () {
+    // Make sure NewTabUtils.links handles the notification first.
+    setTimeout(() => {
+      this._handleManyLinksChanged();
+    }, 0);
   },
 
   /**
