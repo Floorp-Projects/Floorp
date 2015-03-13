@@ -540,6 +540,7 @@ public class AndroidFxAccount {
 
     try {
       StateLabel stateLabel = StateLabel.valueOf(stateLabelString);
+      Logger.debug(LOG_TAG, "Account is in state " + stateLabel);
       return StateFactory.fromJSONObject(stateLabel, new ExtendedJSONObject(stateString));
     } catch (Exception e) {
       throw new IllegalStateException("could not get state", e);
