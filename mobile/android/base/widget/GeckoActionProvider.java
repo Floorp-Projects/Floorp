@@ -149,10 +149,8 @@ public class GeckoActionProvider {
             // Pin internal actions to the top. Note:
             // the order here does not affect quick share.
             final int order;
-            if (i < MAX_HISTORY_SIZE) {
-                order = i | Menu.CATEGORY_CONTAINER;
-            } else if (shareDialogClassName.equals(activity.activityInfo.name) &&
-                       sendTabLabel.equals(activityLabel)) {
+            if (shareDialogClassName.equals(activity.activityInfo.name) &&
+                    sendTabLabel.equals(activityLabel)) {
                 order = i;
             } else {
                 order = i | Menu.CATEGORY_SECONDARY;
