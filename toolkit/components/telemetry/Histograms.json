@@ -7399,6 +7399,25 @@
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
+  "VIDEO_MSE_JOIN_LATENCY_MS" : {
+    "expires_in_version": "45",
+    "description": "Time in MS between MSE video load and playback",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50
+  },
+  "VIDEO_MSE_PLAY_TIME_MS" : {
+    "expires_in_version": "45",
+    "description": "Total time spent playing MSE video",
+    "kind": "exponential",
+    "high": "7200000",
+    "n_buckets": 100
+  },
+  "VIDEO_MSE_BUFFERING_COUNT" : {
+    "expires_in_version": "45",
+    "description": "Count of times that MSE video was buffering",
+    "kind": "count"
+  },
   "VIDEO_MSE_UNLOAD_STATE": {
     "expires_in_version": "45",
     "kind": "enumerated",

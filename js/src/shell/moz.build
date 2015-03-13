@@ -12,7 +12,6 @@ if CONFIG['JS_SHELL_NAME']:
 
 UNIFIED_SOURCES += [
     'js.cpp',
-    'jsheaptools.cpp',
     'jsoptparse.cpp',
     'OSObject.cpp'
 ]

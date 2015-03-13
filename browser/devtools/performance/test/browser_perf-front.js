@@ -10,6 +10,9 @@ let WAIT_TIME = 1000;
 function spawnTest () {
   let { target, front } = yield initBackend(SIMPLE_URL);
 
+  let count = 0;
+  let counter = () => count++;
+
   let {
     profilerStartTime,
     timelineStartTime,
@@ -25,7 +28,14 @@ function spawnTest () {
   ok(typeof memoryStartTime === "number",
     "The front.startRecording() emits a memory start time.");
 
-  yield busyWait(WAIT_TIME);
+  // Record allocation events to ensure it's called more than once
+  // so we know it's polling
+  front.on("allocations", counter);
+
+  yield Promise.all([
+    busyWait(WAIT_TIME),
+    waitUntil(() => count > 1)
+  ]);
 
   let {
     profilerEndTime,
@@ -34,6 +44,8 @@ function spawnTest () {
   } = yield front.stopRecording({
     withAllocations: true
   });
+
+  front.off("allocations", counter);
 
   ok(typeof profilerEndTime === "number",
     "The front.stopRecording() emits a profiler end time.");
@@ -48,6 +60,9 @@ function spawnTest () {
     "The timelineEndTime is after timelineStartTime.");
   ok(memoryEndTime > memoryStartTime,
     "The memoryEndTime is after memoryStartTime.");
+
+  is((yield front._request("memory", "getState")), "detached",
+    "memory actor is detached when stopping recording with allocations");
 
   yield removeTab(target.tab);
   finish();
