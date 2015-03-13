@@ -754,16 +754,6 @@ public:
   }
 };
 
-struct MOZ_STACK_CLASS RemoveQuotaInfo
-{
-  RemoveQuotaInfo(PersistenceType aPersistenceType, const nsACString& aPattern)
-  : persistenceType(aPersistenceType), pattern(aPattern)
-  { }
-
-  PersistenceType persistenceType;
-  nsCString pattern;
-};
-
 struct MOZ_STACK_CLASS InactiveOriginsInfo
 {
   InactiveOriginsInfo(OriginCollection& aPersistentCollection,
@@ -3536,7 +3526,6 @@ QuotaManager::CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
   // Add origins that have live persistent storages.
   mDefaultLiveStorageTable.EnumerateRead(AddLiveStorageOrigins,
                                          &defaultOriginCollection);
-
 
   // Enumerate inactive origins. This must be protected by the mutex.
   nsTArray<OriginInfo*> inactiveOrigins;
