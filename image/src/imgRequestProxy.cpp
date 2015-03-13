@@ -496,8 +496,9 @@ NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer **aImage)
   nsCOMPtr<imgIContainer> imageToReturn;
   if (image)
     imageToReturn = do_QueryInterface(image);
-  if (!imageToReturn && GetOwner())
-    imageToReturn = GetOwner()->mImage;
+  if (!imageToReturn && GetOwner()) {
+    imageToReturn = GetOwner()->GetImage();
+  }
 
   if (!imageToReturn)
     return NS_ERROR_FAILURE;
