@@ -13,7 +13,6 @@ const PREF_NEWTAB_COLUMNS = "browser.newtabpage.columns";
  */
 function runTests() {
   registerCleanupFunction(_ => Services.prefs.clearUserPref(PREF_NEWTAB_COLUMNS));
-  yield addNewTabPageTab();
 
   // drag a new site onto the very first cell
   yield setLinks("0,1,2,3,4,5,6,7,8");
