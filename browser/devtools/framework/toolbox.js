@@ -10,6 +10,9 @@ const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
+const OS_HISTOGRAM = "DEVTOOLS_OS_ENUMERATED_PER_USER";
+const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
+const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
 let {Cc, Ci, Cu} = require("chrome");
 let {Promise: promise} = require("resource://gre/modules/Promise.jsm");
@@ -48,6 +51,19 @@ loader.lazyGetter(this, "toolboxStrings", () => {
 loader.lazyGetter(this, "Selection", () => require("devtools/framework/selection").Selection);
 loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/inspector").InspectorFront);
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/toolkit/DevToolsUtils");
+
+XPCOMUtils.defineLazyGetter(this, "screenManager", () => {
+  return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
+});
+
+XPCOMUtils.defineLazyGetter(this, "oscpu", () => {
+  return Cc["@mozilla.org/network/protocol;1?name=http"]
+           .getService(Ci.nsIHttpProtocolHandler).oscpu;
+});
+
+XPCOMUtils.defineLazyGetter(this, "is64Bit", () => {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).is64Bit;
+});
 
 // White-list buttons that can be toggled to prevent adding prefs for
 // addons that have manually inserted toolbarbuttons into DOM.
@@ -334,7 +350,7 @@ Toolbox.prototype = {
 
         let buttonsPromise = this._buildButtons();
 
-        this._telemetry.toolOpened("toolbox");
+        this._pingTelemetry();
 
         this.selectTool(this._defaultToolId).then(panel => {
 
@@ -359,13 +375,23 @@ Toolbox.prototype = {
       // Load the toolbox-level actor fronts and utilities now
       this._target.makeRemote().then(() => {
         iframe.setAttribute("src", this._URL);
-        iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"))
+        iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"));
         let domHelper = new DOMHelpers(iframe.contentWindow);
         domHelper.onceDOMReady(domReady);
       });
 
       return deferred.promise;
     }).then(null, console.error.bind(console));
+  },
+
+  _pingTelemetry: function() {
+    this._telemetry.toolOpened("toolbox");
+
+    this._telemetry.logOncePerBrowserVersion(OS_HISTOGRAM,
+                                             this._getOsCpu());
+    this._telemetry.logOncePerBrowserVersion(OS_IS_64_BITS, is64Bit ? 1 : 0);
+    this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
+                                             this._getScreenDimensions());
   },
 
   /**
@@ -1573,6 +1599,41 @@ Toolbox.prototype = {
    */
   getNotificationBox: function() {
     return this.doc.getElementById("toolbox-notificationbox");
+  },
+
+  _getScreenDimensions: function() {
+    let width = {};
+    let height = {};
+
+    screenManager.primaryScreen.GetRect({}, {}, width, height);
+    let dims = width.value + "x" + height.value;
+
+    if (width.value < 800 || height.value < 600) return 0;
+    if (dims === "800x600")   return 1;
+    if (dims === "1024x768")  return 2;
+    if (dims === "1280x800")  return 3;
+    if (dims === "1280x1024") return 4;
+    if (dims === "1366x768")  return 5;
+    if (dims === "1440x900")  return 6;
+    if (dims === "1920x1080") return 7;
+    if (dims === "2560×1440") return 8;
+    if (dims === "2560×1600") return 9;
+    if (dims === "2880x1800") return 10;
+    if (width.value > 2880 || height.value > 1800) return 12;
+
+    return 11; // Other dimension such as a VM.
+  },
+
+  _getOsCpu: function() {
+    if (oscpu.contains("NT 5.1") || oscpu.contains("NT 5.2")) return 0;
+    if (oscpu.contains("NT 6.0")) return 1;
+    if (oscpu.contains("NT 6.1")) return 2;
+    if (oscpu.contains("NT 6.2")) return 3;
+    if (oscpu.contains("NT 6.3")) return 4;
+    if (oscpu.contains("OS X"))   return 5;
+    if (oscpu.contains("Linux"))  return 6;
+
+    return 12; // Other OS.
   },
 
   /**
