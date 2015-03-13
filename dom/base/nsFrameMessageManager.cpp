@@ -301,8 +301,7 @@ SameProcessCpowHolder::ToObject(JSContext* aCx,
 
 NS_IMETHODIMP
 nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
-                                          nsIMessageListener* aListener,
-                                          bool aListenWhenClosed)
+                                          nsIMessageListener* aListener)
 {
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
     mListeners.Get(aMessage);
@@ -321,7 +320,6 @@ nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
   nsMessageListenerInfo* entry = listeners->AppendElement();
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
   entry->mStrongListener = aListener;
-  entry->mListenWhenClosed = aListenWhenClosed;
   return NS_OK;
 }
 
@@ -409,7 +407,6 @@ nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
 
   nsMessageListenerInfo* entry = listeners->AppendElement();
   entry->mWeakListener = weak;
-  entry->mListenWhenClosed = false;
   return NS_OK;
 }
 
@@ -987,20 +984,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       nsIPrincipal* aPrincipal,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {
-  return ReceiveMessage(aTarget, mClosed, aMessage, aIsSync,
-                        aCloneData, aCpows, aPrincipal, aJSONRetVal);
-}
-
-nsresult
-nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
-                                      bool aTargetClosed,
-                                      const nsAString& aMessage,
-                                      bool aIsSync,
-                                      const StructuredCloneData* aCloneData,
-                                      mozilla::jsipc::CpowHolder* aCpows,
-                                      nsIPrincipal* aPrincipal,
-                                      InfallibleTArray<nsString>* aJSONRetVal)
-{
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
     mListeners.Get(aMessage);
   if (listeners) {
@@ -1019,10 +1002,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           listeners->RemoveElement(listener);
           continue;
         }
-      }
-
-      if (!listener.mListenWhenClosed && aTargetClosed) {
-        continue;
       }
 
       nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
@@ -1175,7 +1154,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
     }
   }
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
-  return mParentManager ? mParentManager->ReceiveMessage(aTarget, aTargetClosed, aMessage,
+  return mParentManager ? mParentManager->ReceiveMessage(aTarget, aMessage,
                                                          aIsSync, aCloneData,
                                                          aCpows, aPrincipal,
                                                          aJSONRetVal) : NS_OK;
@@ -1256,26 +1235,8 @@ nsFrameMessageManager::RemoveFromParent()
 }
 
 void
-nsFrameMessageManager::Close()
-{
-  if (!mClosed) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->NotifyObservers(NS_ISUPPORTS_CAST(nsIContentFrameMessageManager*, this),
-                            "message-manager-close", nullptr);
-    }
-  }
-  mClosed = true;
-  mCallback = nullptr;
-  mOwnedCallback = nullptr;
-}
-
-void
 nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
 {
-  // Notify message-manager-close if we haven't already.
-  Close();
-
   if (!mDisconnected) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -1288,6 +1249,8 @@ nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
   }
   mDisconnected = true;
   mParentManager = nullptr;
+  mCallback = nullptr;
+  mOwnedCallback = nullptr;
   if (!mHandlingMessage) {
     mListeners.Clear();
   }
