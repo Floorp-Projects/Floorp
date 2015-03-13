@@ -201,13 +201,6 @@ nsSystemPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return NS_OK;
 }
 
-bool
-nsSystemPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  // chrome stylesheets should not be fed to the CSS Unprefixing Service.
-  return false;
-}
-
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
 //////////////////////////////////////////

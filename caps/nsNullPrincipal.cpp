@@ -318,12 +318,6 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return mURI->GetPath(aBaseDomain);
 }
 
-bool
-nsNullPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  return false;
-}
-
 /**
  * nsISerializable implementation
  */

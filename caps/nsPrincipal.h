@@ -66,7 +66,6 @@ public:
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) MOZ_OVERRIDE;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) MOZ_OVERRIDE;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) MOZ_OVERRIDE;
-  virtual bool IsOnCSSUnprefixingWhitelist() MOZ_OVERRIDE;
 #ifdef DEBUG
   virtual void dumpImpl() MOZ_OVERRIDE;
 #endif
@@ -103,11 +102,6 @@ public:
    */
   static nsresult GetOriginForURI(nsIURI* aURI, char **aOrigin);
 
-  /**
-   * Called at startup to setup static data, e.g. about:config pref-observers.
-   */
-  static void InitializeStatics();
-
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
   uint32_t mAppId;
@@ -116,7 +110,6 @@ public:
   bool mCodebaseImmutable;
   bool mDomainImmutable;
   bool mInitialized;
-  mozilla::Maybe<bool> mIsOnCSSUnprefixingWhitelist; // Lazily-computed
 
 protected:
   virtual ~nsPrincipal();
@@ -156,7 +149,6 @@ public:
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) MOZ_OVERRIDE;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) MOZ_OVERRIDE;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) MOZ_OVERRIDE;
-  virtual bool IsOnCSSUnprefixingWhitelist() MOZ_OVERRIDE;
 #ifdef DEBUG
   virtual void dumpImpl() MOZ_OVERRIDE;
 #endif
