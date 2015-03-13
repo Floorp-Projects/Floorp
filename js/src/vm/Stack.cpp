@@ -1108,12 +1108,6 @@ FrameIter::matchCallee(JSContext *cx, HandleFunction fun) const
         return false;
     }
 
-    // Only some lambdas are optimized in a way which cannot be recovered without
-    // invalidating the frame. Thus, if one of the function is not a lambda we can just
-    // compare it against the calleeTemplate.
-    if (!fun->isLambda() || !currentCallee->isLambda())
-        return currentCallee == fun;
-
     // Use the same condition as |js::CloneFunctionObject|, to know if we should
     // expect both functions to have the same JSScript. If so, and if they are
     // different, then they cannot be equal.
