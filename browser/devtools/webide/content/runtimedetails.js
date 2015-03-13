@@ -125,7 +125,7 @@ function CheckLockState() {
       }, e => console.error(e));
     } catch(e) {
       // Exception. pref actor is only accessible if forbird-certified-apps is false
-      devtoolsCheckResult.textContent = sYes;
+      devtoolsCheckResult.textContent = sNo;
       flipCertPerfAction.removeAttribute("hidden");
     }
 
