@@ -62,6 +62,18 @@ this.ReaderMode = {
   },
 
   /**
+   * Decides whether or not a document is reader-able without parsing the whole thing.
+   * XXX: In the future, this should be smarter (bug 1143844).
+   *
+   * @param doc A document to parse.
+   * @return boolean Whether or not we should show the reader mode button.
+   */
+  isProbablyReaderable: function(doc) {
+    let uri = Services.io.newURI(doc.documentURI, null, null);
+    return this._shouldCheckUri(uri);
+  },
+
+  /**
    * Gets an article from a loaded browser's document. This method will not attempt
    * to parse certain URIs (e.g. about: URIs).
    *
