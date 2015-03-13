@@ -12844,6 +12844,35 @@ nsIDocument::CreateHTMLElement(nsIAtom* aTag)
   return element.forget();
 }
 
+nsresult
+nsIDocument::GetId(nsAString& aId)
+{
+  if (mId.IsEmpty()) {
+    nsresult rv;
+    nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsID id;
+    rv = uuidgen->GenerateUUIDInPlace(&id);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
+    char buffer[NSID_LENGTH];
+    id.ToProvidedString(buffer);
+    NS_ConvertASCIItoUTF16 uuid(buffer);
+
+    // Remove {} and the null terminator
+    mId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
+  }
+
+  aId = mId;
+  return NS_OK;
+}
+
 bool
 MarkDocumentTreeToBeInSyncOperation(nsIDocument* aDoc, void* aData)
 {
