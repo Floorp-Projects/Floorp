@@ -26,14 +26,15 @@ add_task(function*() {
 
   let highlighter = yield front.getHighlighterByType("CssTransformHighlighter");
 
-  let node = getNode("#test-node");
   let nodeFront = yield getNodeFront("#test-node", inspector);
 
   info("Displaying the transform highlighter on test node");
   yield highlighter.show(nodeFront);
 
-  let {data} = yield executeInContent("Test:GetAllAdjustedQuads", null, {node});
-  let expected = data.border;
+  let {data} = yield executeInContent("Test:GetAllAdjustedQuads", {
+    selector: "#test-node"
+  });
+  let [expected] = data.border;
 
   let points = yield getHighlighterNodeAttribute(highlighter,
     "css-transform-transformed", "points");
