@@ -22,42 +22,49 @@ fetch(new Request(request)).then(function(r) {
   return response.text();
 }).then(function(text) {
   responseText = text;
-  return caches.open(name);
-}).then(function(cache) {
-  c = cache;
-  return c.add(request);
+  return testRequest(request);
 }).then(function() {
-  return c.match(request);
-}).then(function(r) {
-  return checkResponse(r);
-}).then(function() {
-  return caches.match(request);
-}).then(function(r) {
-  return checkResponse(r);
-}).then(function() {
-  return caches.match(request, {cacheName: name});
-}).then(function(r) {
-  return checkResponse(r);
-}).then(function() {
-  return caches.match(request, {cacheName: name + "mambojambo"});
-}).catch(function(err) {
-  is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
-}).then(function() {
-  return caches.delete(name);
-}).then(function(success) {
-  ok(success, "We should be able to delete the cache successfully");
-  // Make sure that the cache is still usable after deletion.
-  return c.match(request);
-}).then(function(r) {
-  return checkResponse(r);
-}).then(function() {
-  // Now, drop the cache, reopen and verify that we can't find the request any more.
-  c = null;
-  return caches.open(name);
-}).then(function(cache) {
-  return cache.match(request);
-}).catch(function(err) {
-  is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  return testRequest(request.url);
 }).then(function() {
   testDone();
 });
+
+// The request argument can either be a URL string, or a Request object.
+function testRequest(request) {
+  return caches.open(name).then(function(cache) {
+    c = cache;
+    return c.add(request);
+  }).then(function() {
+    return c.match(request);
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    return caches.match(request);
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    return caches.match(request, {cacheName: name});
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    return caches.match(request, {cacheName: name + "mambojambo"});
+  }).catch(function(err) {
+    is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+  }).then(function() {
+    return caches.delete(name);
+  }).then(function(success) {
+    ok(success, "We should be able to delete the cache successfully");
+    // Make sure that the cache is still usable after deletion.
+    return c.match(request);
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    // Now, drop the cache, reopen and verify that we can't find the request any more.
+    c = null;
+    return caches.open(name);
+  }).then(function(cache) {
+    return cache.match(request);
+  }).catch(function(err) {
+    is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  });
+}
