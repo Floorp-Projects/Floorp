@@ -10,7 +10,7 @@
 
 let gNow = getExpirablePRTime();
 
-add_task(function test_expire_orphans()
+add_task(function* test_expire_orphans()
 {
   // Add visits to 2 pages and force a orphan expiration. Visits should survive.
   yield PlacesTestUtils.addVisits({
@@ -22,10 +22,12 @@ add_task(function test_expire_orphans()
     visitDate: gNow++
   });
   // Create a orphan place.
-  let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                NetUtil.newURI("http://page3.mozilla.org/"),
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX, "");
-  PlacesUtils.bookmarks.removeItem(id);
+  let bm = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://page3.mozilla.org/",
+    title: ""
+  });
+  yield PlacesUtils.bookmarks.remove(bm);
 
   // Expire now.
   yield promiseForceExpirationStep(0);
@@ -39,7 +41,7 @@ add_task(function test_expire_orphans()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_expire_orphans_optionalarg()
+add_task(function* test_expire_orphans_optionalarg()
 {
   // Add visits to 2 pages and force a orphan expiration. Visits should survive.
   yield PlacesTestUtils.addVisits({
@@ -51,10 +53,12 @@ add_task(function test_expire_orphans_optionalarg()
     visitDate: gNow++
   });
   // Create a orphan place.
-  let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                NetUtil.newURI("http://page3.mozilla.org/"),
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX, "");
-  PlacesUtils.bookmarks.removeItem(id);
+  let bm = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://page3.mozilla.org/",
+    title: ""
+  });
+  yield PlacesUtils.bookmarks.remove(bm);
 
   // Expire now.
   yield promiseForceExpirationStep();
