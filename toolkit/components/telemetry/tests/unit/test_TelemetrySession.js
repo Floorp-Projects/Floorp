@@ -1064,7 +1064,7 @@ add_task(function* test_savedSessionData() {
 
   // We expect one new subsession when starting TelemetrySession and one after triggering
   // an environment change.
-  const expectedSubsessions = sessionState.profileSubsessionCounter + 2;
+  const expectedSubsessions = sessionState.profileSubsessionCounter + 3;
   const expectedUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
   fakeGenerateUUID(generateUUID, () => expectedUUID);
 
@@ -1076,6 +1076,8 @@ add_task(function* test_savedSessionData() {
   // Start TelemetrySession so that it loads the session data file.
   yield TelemetrySession.reset();
   // Watch a test preference, trigger and environment change and wait for it to propagate.
+
+  // _watchPreferences triggers a subsession notification
   TelemetryEnvironment._watchPreferences(prefsToWatch);
   let changePromise = new Promise(resolve =>
     TelemetryEnvironment.registerChangeListener("test_fake_change", resolve));
