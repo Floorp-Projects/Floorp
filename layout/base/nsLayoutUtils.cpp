@@ -2504,7 +2504,15 @@ nsLayoutUtils::TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
       gfx::Rect(aRect.x * devPixelsPerAppUnitFromFrame,
                 aRect.y * devPixelsPerAppUnitFromFrame,
                 aRect.width * devPixelsPerAppUnitFromFrame,
-                aRect.height * devPixelsPerAppUnitFromFrame)));
+                aRect.height * devPixelsPerAppUnitFromFrame),
+      Rect(-std::numeric_limits<Float>::max() * 0.5f,
+           -std::numeric_limits<Float>::max() * 0.5f,
+           std::numeric_limits<Float>::max(),
+           std::numeric_limits<Float>::max())),
+    Rect(-std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame * 0.5f,
+         -std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame * 0.5f,
+         std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame,
+         std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame));
   aRect.x = toDevPixels.x / devPixelsPerAppUnitToFrame;
   aRect.y = toDevPixels.y / devPixelsPerAppUnitToFrame;
   aRect.width = toDevPixels.width / devPixelsPerAppUnitToFrame;
