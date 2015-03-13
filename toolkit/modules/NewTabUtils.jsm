@@ -12,6 +12,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
@@ -715,17 +716,12 @@ let Links = {
   maxNumLinks: LINKS_GET_LINKS_LIMIT,
 
   /**
-   * The link providers.
-   */
-  _providers: new Set(),
-
-  /**
    * A mapping from each provider to an object { sortedLinks, siteMap, linkMap }.
    * sortedLinks is the cached, sorted array of links for the provider.
    * siteMap is a mapping from base domains to URL count associated with the domain.
    * linkMap is a Map from link URLs to link objects.
    */
-  _providerLinks: new Map(),
+  _providers: new Map(),
 
   /**
    * The properties of link objects used to sort them.
@@ -746,7 +742,7 @@ let Links = {
    * @param aProvider The link provider.
    */
   addProvider: function Links_addProvider(aProvider) {
-    this._providers.add(aProvider);
+    this._providers.set(aProvider, null);
     aProvider.addObserver(this);
   },
 
@@ -757,7 +753,6 @@ let Links = {
   removeProvider: function Links_removeProvider(aProvider) {
     if (!this._providers.delete(aProvider))
       throw new Error("Unknown provider");
-    this._providerLinks.delete(aProvider);
   },
 
   /**
@@ -790,7 +785,7 @@ let Links = {
     }
 
     let numProvidersRemaining = this._providers.size;
-    for (let provider of this._providers) {
+    for (let [provider, links] of this._providers) {
       this._populateProviderCache(provider, () => {
         if (--numProvidersRemaining == 0)
           executeCallbacks();
@@ -840,7 +835,9 @@ let Links = {
    * Resets the links cache.
    */
   resetCache: function Links_resetCache() {
-    this._providerLinks.clear();
+    for (let provider of this._providers.keys()) {
+      this._providers.set(provider, null);
+    }
   },
 
   /**
@@ -878,6 +875,14 @@ let Links = {
     }
   },
 
+  populateProviderCache: function(provider, callback) {
+    if (!this._providers.has(provider)) {
+      throw new Error("Can only populate provider cache for existing provider.");
+    }
+
+    return this._populateProviderCache(provider, callback, false);
+  },
+
   /**
    * Calls getLinks on the given provider and populates our cache for it.
    * @param aProvider The provider whose cache will be populated.
@@ -885,28 +890,42 @@ let Links = {
    * @param aForce When true, populates the provider's cache even when it's
    *               already filled.
    */
-  _populateProviderCache: function Links_populateProviderCache(aProvider, aCallback, aForce) {
-    if (this._providerLinks.has(aProvider) && !aForce) {
-      aCallback();
-    } else {
-      aProvider.getLinks(links => {
-        // Filter out null and undefined links so we don't have to deal with
-        // them in getLinks when merging links from providers.
-        links = links.filter((link) => !!link);
-        this._providerLinks.set(aProvider, {
-          sortedLinks: links,
-          siteMap: links.reduce((map, link) => {
+  _populateProviderCache: function (aProvider, aCallback, aForce) {
+    let cache = this._providers.get(aProvider);
+    let createCache = !cache;
+    if (createCache) {
+      cache = {
+        // Start with a resolved promise.
+        populatePromise: new Promise(resolve => resolve()),
+      };
+      this._providers.set(aProvider, cache);
+    }
+    // Chain the populatePromise so that calls are effectively queued.
+    cache.populatePromise = cache.populatePromise.then(() => {
+      return new Promise(resolve => {
+        if (!createCache && !aForce) {
+          aCallback();
+          resolve();
+          return;
+        }
+        aProvider.getLinks(links => {
+          // Filter out null and undefined links so we don't have to deal with
+          // them in getLinks when merging links from providers.
+          links = links.filter((link) => !!link);
+          cache.sortedLinks = links;
+          cache.siteMap = links.reduce((map, link) => {
             this._incrementSiteMap(map, link);
             return map;
-          }, new Map()),
-          linkMap: links.reduce((map, link) => {
+          }, new Map());
+          cache.linkMap = links.reduce((map, link) => {
             map.set(link.url, link);
             return map;
-          }, new Map()),
+          }, new Map());
+          aCallback();
+          resolve();
         });
-        aCallback();
       });
-    }
+    });
   },
 
   /**
@@ -916,8 +935,10 @@ let Links = {
   _getMergedProviderLinks: function Links__getMergedProviderLinks() {
     // Build a list containing a copy of each provider's sortedLinks list.
     let linkLists = [];
-    for (let links of this._providerLinks.values()) {
-      linkLists.push(links.sortedLinks.slice());
+    for (let links of this._providers.values()) {
+      if (links) {
+        linkLists.push(links.sortedLinks.slice());
+      }
     }
 
     function getNextLink() {
@@ -951,7 +972,7 @@ let Links = {
     if (!("url" in aLink))
       throw new Error("Changed links must have a url property");
 
-    let links = this._providerLinks.get(aProvider);
+    let links = this._providers.get(aProvider);
     if (!links)
       // This is not an error, it just means that between the time the provider
       // was added and the future time we call getLinks on it, it notified us of
@@ -1210,7 +1231,7 @@ this.NewTabUtils = {
   },
 
   isTopSiteGivenProvider: function(aSite, aProvider) {
-    return Links._providerLinks.get(aProvider).siteMap.has(aSite);
+    return Links._providers.get(aProvider).siteMap.has(aSite);
   },
 
   isTopPlacesSite: function(aSite) {
@@ -1248,5 +1269,6 @@ this.NewTabUtils = {
   linkChecker: LinkChecker,
   pinnedLinks: PinnedLinks,
   blockedLinks: BlockedLinks,
-  gridPrefs: GridPrefs
+  gridPrefs: GridPrefs,
+  placesProvider: PlacesProvider
 };
