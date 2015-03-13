@@ -10,6 +10,7 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const {DevToolsUtils} = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
+const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
