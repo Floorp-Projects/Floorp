@@ -2846,6 +2846,10 @@ extern JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, const char *name,
                             JS::MutableHandle<JSPropertyDescriptor> desc);
 
+extern JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext *cx, JS::HandleObject obj, const char16_t *name,
+                              JS::MutableHandle<JSPropertyDescriptor> desc);
+
 /*
  * Like JS_GetOwnPropertyDescriptorById but will return a property on
  * an object on the prototype chain (returned in desc->obj). If desc->obj is null,

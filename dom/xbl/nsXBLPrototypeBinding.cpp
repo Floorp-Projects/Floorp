@@ -452,7 +452,7 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
 }
 
 nsresult
-nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
+nsXBLPrototypeBinding::InitClass(const nsString& aClassName,
                                  JSContext * aContext,
                                  JS::Handle<JSObject*> aScriptObject,
                                  JS::MutableHandle<JSObject*> aClassObject,
@@ -1131,7 +1131,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   else {
     // Write out an empty classname. This indicates that the binding does not
     // define an implementation.
-    rv = aStream->WriteWStringZ(EmptyString().get());
+    rv = aStream->WriteUtf8Z(EmptyString().get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
