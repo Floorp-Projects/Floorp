@@ -114,6 +114,10 @@ MediaEngineTabVideoSource::GetUUID(nsAString_internal& aUuid)
   aUuid.AssignLiteral(MOZ_UTF16("uuid"));
 }
 
+#define DEFAULT_TABSHARE_VIDEO_MAX_WIDTH 4096
+#define DEFAULT_TABSHARE_VIDEO_MAX_HEIGHT 4096
+#define DEFAULT_TABSHARE_VIDEO_FRAMERATE 30
+
 nsresult
 MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs)
@@ -129,11 +133,11 @@ MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrain
   FlattenedConstraints c(aConstraints);
 
   mBufWidthMax = c.mWidth.Clamp(c.mWidth.mIdeal.WasPassed() ?
-                                c.mWidth.mIdeal.Value() : aPrefs.GetWidth(false));
+    c.mWidth.mIdeal.Value() : DEFAULT_TABSHARE_VIDEO_MAX_WIDTH);
   mBufHeightMax = c.mHeight.Clamp(c.mHeight.mIdeal.WasPassed() ?
-                                  c.mHeight.mIdeal.Value() : aPrefs.GetHeight(false));
+    c.mHeight.mIdeal.Value() : DEFAULT_TABSHARE_VIDEO_MAX_HEIGHT);
   double frameRate = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.WasPassed() ?
-                                     c.mFrameRate.mIdeal.Value() : aPrefs.mFPS);
+    c.mFrameRate.mIdeal.Value() : DEFAULT_TABSHARE_VIDEO_FRAMERATE);
   mTimePerFrame = std::max(10, int(1000.0 / (frameRate > 0? frameRate : 1)));
   return NS_OK;
 }
@@ -198,12 +202,15 @@ MediaEngineTabVideoSource::Draw() {
   IntSize size;
   // maintain source aspect ratio
   if (mBufWidthMax/innerWidth < mBufHeightMax/innerHeight) {
+    // mBufWidthMax is quite large by default, so use innerWidth if less.
+    int32_t width = std::min(innerWidth, mBufWidthMax);
     // adjust width to be divisible by 4 to work around bug 1125393
-    int32_t width = mBufWidthMax - (mBufWidthMax % 4);
+    width = width - (width % 4);
     size = IntSize(width, (width * ((float) innerHeight/innerWidth)));
   } else {
-    int32_t tmpWidth = (mBufHeightMax * ((float) innerWidth/innerHeight));
-    int32_t width =  tmpWidth - (tmpWidth % 4);
+    int32_t width = std::min(innerHeight, mBufHeightMax) *
+                     ((float) innerWidth/innerHeight);
+    width =  width - (width % 4);
     size = IntSize(width, (width * ((float) innerHeight/innerWidth)));
   }
 
