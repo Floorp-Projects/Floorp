@@ -1179,6 +1179,8 @@ reading_list_service_java_files = [
     'reading/ReadingListStorage.java',
     'reading/ReadingListStorageResponse.java',
     'reading/ReadingListSyncAdapter.java',
+    'reading/ReadingListSynchronizer.java',
+    'reading/ReadingListSynchronizerDelegate.java',
     'reading/ReadingListSyncService.java',
     'reading/ReadingListWipeDelegate.java',
     'reading/ServerReadingListRecord.java',
