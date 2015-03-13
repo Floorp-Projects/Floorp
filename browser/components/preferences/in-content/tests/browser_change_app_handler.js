@@ -3,6 +3,8 @@ let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.n
 
 Services.prefs.setBoolPref("browser.preferences.inContent", true);
 
+SimpleTest.requestCompleteLog();
+
 function setupFakeHandler() {
   let info = gMimeSvc.getFromTypeAndExtension("text/plain", "foo.txt");
   ok(info.possibleLocalHandlers.length, "Should have at least one known handler");
