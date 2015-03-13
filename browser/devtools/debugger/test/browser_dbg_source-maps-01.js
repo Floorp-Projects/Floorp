@@ -79,15 +79,15 @@ function testSetBreakpointBlankLine() {
   let sourceForm = getSourceForm(gSources, COFFEE_URL);
 
   let source = gDebugger.gThreadClient.source(sourceForm);
-  source.setBreakpoint({ line: 3 }, aResponse => {
+  source.setBreakpoint({ line: 7 }, aResponse => {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a coffee source file on a blank line.");
     ok(aResponse.actualLocation,
       "Because 3 is empty, we should have an actualLocation.");
     is(aResponse.actualLocation.source.url, COFFEE_URL,
       "actualLocation.actor should be source mapped to the coffee file.");
-    is(aResponse.actualLocation.line, 2,
-      "actualLocation.line should be source mapped back to 2.");
+    is(aResponse.actualLocation.line, 8,
+      "actualLocation.line should be source mapped back to 8.");
 
     deferred.resolve();
   });
@@ -147,7 +147,7 @@ function testStepping() {
       is(aPacket.frame.environment.bindings.variables.start.value, 0,
          "'start' is 0.");
       is(aPacket.frame.environment.bindings.variables.stop.value, 5,
-         "'stop' hasn't been assigned to yet.");
+         "'stop' is 5.");
       is(aPacket.frame.environment.bindings.variables.pivot.value.type, "undefined",
          "'pivot' hasn't been assigned to yet.");
 
