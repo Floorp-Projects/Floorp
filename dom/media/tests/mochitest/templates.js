@@ -106,36 +106,32 @@ function waitForAnIceCandidate(pc) {
   });
 }
 
-function checkTrackStats(pc, audio, outbound) {
-  var stream = outbound ? pc._pc.getLocalStreams()[0] : pc._pc.getRemoteStreams()[0];
-  if (!stream) {
-    return Promise.resolve();
-  }
-  var track = audio ? stream.getAudioTracks()[0] : stream.getVideoTracks()[0];
-  if (!track) {
-    return Promise.resolve();
-  }
+function checkTrackStats(pc, rtpSenderOrReceiver, outbound) {
+  var track = rtpSenderOrReceiver.track;
+  var audio = (track.kind == "audio");
   var msg = pc + " stats " + (outbound ? "outbound " : "inbound ") +
-      (audio ? "audio" : "video") + " rtp ";
+      (audio ? "audio" : "video") + " rtp track id " + track.id;
   return pc.getStats(track).then(stats => {
     ok(pc.hasStat(stats, {
       type: outbound ? "outboundrtp" : "inboundrtp",
       isRemote: false,
       mediaType: audio ? "audio" : "video"
-    }), msg + "1");
+    }), msg + " - found expected stats");
     ok(!pc.hasStat(stats, {
       type: outbound ? "inboundrtp" : "outboundrtp",
       isRemote: false
-    }), msg + "2");
+    }), msg + " - did not find extra stats with wrong direction");
     ok(!pc.hasStat(stats, {
       mediaType: audio ? "video" : "audio"
-    }), msg + "3");
+    }), msg + " - did not find extra stats with wrong media type");
   });
 }
 
-// checks all stats combinations inbound/outbound, audio/video
-var checkAllTrackStats = pc =>
-    Promise.all([0, 1, 2, 3].map(i => checkTrackStats(pc, i & 1, i & 2)));
+var checkAllTrackStats = pc => {
+  return Promise.all([].concat(
+    pc._pc.getSenders().map(sender => checkTrackStats(pc, sender, true)),
+    pc._pc.getReceivers().map(receiver => checkTrackStats(pc, receiver, false))));
+}
 
 // Commands run once at the beginning of each test, even when performing a
 // renegotiation test.
@@ -246,14 +242,14 @@ var commandsPeerConnectionOfferAnswer = [
   function PC_LOCAL_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
     if (test.steeplechase) {
       send_message({"type": "local_expected_tracks",
-                    "expected_tracks": test.pcLocal.expectedLocalTrackTypesById});
+                    "expected_tracks": test.pcLocal.expectedLocalTrackInfoById});
     }
   },
 
   function PC_REMOTE_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
     if (test.steeplechase) {
       send_message({"type": "remote_expected_tracks",
-                    "expected_tracks": test.pcRemote.expectedLocalTrackTypesById});
+                    "expected_tracks": test.pcRemote.expectedLocalTrackInfoById});
     }
   },
 
@@ -261,36 +257,26 @@ var commandsPeerConnectionOfferAnswer = [
     if (test.steeplechase) {
       return test.getSignalingMessage("remote_expected_tracks").then(
           message => {
-            test.pcLocal.expectedRemoteTrackTypesById = message.expected_tracks;
+            test.pcLocal.expectedRemoteTrackInfoById = message.expected_tracks;
           });
-    } else {
-      // Deep copy, as similar to steeplechase as possible
-      test.pcLocal.expectedRemoteTrackTypesById =
-        JSON.parse(JSON.stringify((test.pcRemote.expectedLocalTrackTypesById)));
     }
 
-    // Remove what we've already observed
-    Object.keys(test.pcLocal.observedRemoteTrackTypesById).forEach(id => {
-      delete test.pcLocal.expectedRemoteTrackTypesById[id];
-    });
+    // Deep copy, as similar to steeplechase as possible
+    test.pcLocal.expectedRemoteTrackInfoById =
+      JSON.parse(JSON.stringify(test.pcRemote.expectedLocalTrackInfoById));
   },
 
   function PC_REMOTE_GET_EXPECTED_REMOTE_TRACKS(test) {
     if (test.steeplechase) {
       return test.getSignalingMessage("local_expected_tracks").then(
           message => {
-            test.pcRemote.expectedRemoteTrackTypesById = message.expected_tracks;
+            test.pcRemote.expectedRemoteTrackInfoById = message.expected_tracks;
           });
-    } else {
-      // Deep copy, as similar to steeplechase as possible
-      test.pcRemote.expectedRemoteTrackTypesById =
-        JSON.parse(JSON.stringify((test.pcLocal.expectedLocalTrackTypesById)));
     }
 
-    // Remove what we've already observed
-    Object.keys(test.pcRemote.observedRemoteTrackTypesById).forEach(id => {
-      delete test.pcRemote.expectedRemoteTrackTypesById[id];
-    });
+    // Deep copy, as similar to steeplechase as possible
+    test.pcRemote.expectedRemoteTrackInfoById =
+      JSON.parse(JSON.stringify(test.pcLocal.expectedLocalTrackInfoById));
   },
 
   function PC_LOCAL_CREATE_OFFER(test) {
