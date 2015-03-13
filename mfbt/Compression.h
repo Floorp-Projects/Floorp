@@ -9,8 +9,8 @@
 #ifndef mozilla_Compression_h_
 #define mozilla_Compression_h_
 
-#include "mozilla/Types.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Types.h"
 
 namespace mozilla {
 namespace Compression {
