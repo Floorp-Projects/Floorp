@@ -81,6 +81,13 @@ void Tracked::SetBirthPlace(const Location& from_here) {
   tracked_births_->RecordBirth();
 }
 
+Location Tracked::GetBirthPlace() const {
+  if (tracked_births_) {
+    return tracked_births_->location();
+  }
+  return Location();
+}
+
 void Tracked::ResetBirthTime() {
   tracked_birth_time_ = Time::Now();
 }

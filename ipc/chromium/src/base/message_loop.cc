@@ -407,6 +407,15 @@ void MessageLoop::ReloadWorkQueue() {
 }
 
 bool MessageLoop::DeletePendingTasks() {
+#ifdef DEBUG
+  if (!work_queue_.empty()) {
+    Task* task = work_queue_.front().task;
+    tracked_objects::Location loc = task->GetBirthPlace();
+    printf("Unexpected task! %s:%s:%d\n",
+	   loc.function_name(), loc.file_name(), loc.line_number());
+  }
+#endif
+
   MOZ_ASSERT(work_queue_.empty());
   bool did_work = !deferred_non_nestable_work_queue_.empty();
   while (!deferred_non_nestable_work_queue_.empty()) {
