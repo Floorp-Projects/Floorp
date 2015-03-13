@@ -171,6 +171,16 @@ class TestSimplePackager(unittest.TestCase):
         with errors.context('manifest', 7):
             packager.add('foo/qux.xpt', qux_xpt)
 
+        file = GeneratedFileWithPath(os.path.join(curdir, 'addon',
+                                                  'chrome.manifest'),
+                                     'resource hoge hoge/')
+        with errors.context('manifest', 8):
+            packager.add('addon/chrome.manifest', file)
+
+        install_rdf = GeneratedFile('<RDF></RDF>')
+        with errors.context('manifest', 9):
+            packager.add('addon/install.rdf', install_rdf)
+
         self.assertEqual(formatter.log, [])
 
         with errors.context('dummy', 1):
@@ -179,7 +189,8 @@ class TestSimplePackager(unittest.TestCase):
         # The formatter is expected to reorder the manifest entries so that
         # chrome entries appear before the others.
         self.assertEqual(formatter.log, [
-            (('dummy', 1), 'add_base', 'qux'),
+            (('dummy', 1), 'add_base', 'qux', False),
+            (('dummy', 1), 'add_base', 'addon', True),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 2),
              'add_manifest', ManifestContent('foo', 'bar', 'bar/')),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 1),
@@ -190,11 +201,15 @@ class TestSimplePackager(unittest.TestCase):
              'add_manifest', ManifestResource('qux', 'qux', 'qux/')),
             (('manifest', 4), 'add_interfaces', 'foo/bar.xpt', bar_xpt),
             (('manifest', 7), 'add_interfaces', 'foo/qux.xpt', qux_xpt),
+            ((os.path.join(curdir, 'addon', 'chrome.manifest'), 1),
+             'add_manifest', ManifestResource('addon', 'hoge', 'hoge/')),
             (('manifest', 5), 'add', 'foo/bar/foo.html', foo_html),
             (('manifest', 5), 'add', 'foo/bar/bar.html', bar_html),
+            (('manifest', 9), 'add', 'addon/install.rdf', install_rdf),
         ])
 
-        self.assertEqual(packager.get_bases(), set(['', 'qux']))
+        self.assertEqual(packager.get_bases(), set(['', 'addon', 'qux']))
+        self.assertEqual(packager.get_bases(addons=False), set(['', 'qux']))
 
 
 class TestSimpleManifestSink(unittest.TestCase):
