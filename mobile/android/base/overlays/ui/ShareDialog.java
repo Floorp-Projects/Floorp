@@ -116,7 +116,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
         sendTabList.setSyncClients(clientrecords);
 
-        if (state == State.DEVICES_ONLY || clientrecords.length <= MAXIMUM_INLINE_DEVICES) {
+        if (state == State.DEVICES_ONLY ||
+                clientrecords == null ||
+                clientrecords.length <= MAXIMUM_INLINE_DEVICES) {
             // Show the list of devices in-line.
             sendTabList.switchState(SendTabList.State.LIST);
             return;
@@ -209,8 +211,8 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
         final Intent intent = getIntent();
 
-        state = (intent.getBooleanExtra(INTENT_EXTRA_DEVICES_ONLY, false) ?
-                State.DEVICES_ONLY : State.DEFAULT);
+        state = intent.getBooleanExtra(INTENT_EXTRA_DEVICES_ONLY, false) ?
+                State.DEVICES_ONLY : State.DEFAULT;
 
         // If the Activity is being reused, we need to reset the state. Ideally, we create a
         // new instance for each call, but Android L breaks this (bug 1137928).
