@@ -24,7 +24,9 @@ function spawnTest () {
   } = yield front.startRecording({
     withTicks: true,
     withMemory: true,
-    withAllocations: true
+    withAllocations: true,
+    allocationsSampleProbability: +Services.prefs.getCharPref(MEMORY_SAMPLE_PROB_PREF),
+    allocationsMaxLogLength: Services.prefs.getIntPref(MEMORY_MAX_LOG_LEN_PREF)
   });
 
   ok(typeof profilerStartTime === "number",
