@@ -214,12 +214,14 @@ addMessageListener("Test:ElementFromPoint", function(msg) {
 
 /**
  * Get all box-model regions' adjusted boxquads for the given element
- * @param {Object} msg The msg.objects part should be the element
+ * @param {Object} msg The msg.data part should contain the node selector.
  * @return {Object} An object with each property being a box-model region, each
- * of them being an object with the p1/p2/p3/p4 properties
+ * of them being an array of objects with the p1/p2/p3/p4 properties.
  */
 addMessageListener("Test:GetAllAdjustedQuads", function(msg) {
-  let {node} = msg.objects;
+  let {selector} = msg.data;
+  let node = superQuerySelector(selector);
+
   let regions = {};
 
   let helper = new LayoutHelpers(content);
@@ -245,7 +247,11 @@ addMessageListener("Test:GetAllAdjustedQuads", function(msg) {
  */
 addMessageListener("Test:SynthesizeMouse", function(msg) {
   let {node} = msg.objects;
-  let {x, y, center, options} = msg.data;
+  let {x, y, center, options, selector} = msg.data;
+
+  if (!node && selector) {
+    node = superQuerySelector(selector);
+  }
 
   if (center) {
     EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
@@ -272,5 +278,31 @@ addMessageListener("Test:HasPseudoClassLock", function(msg) {
   let {pseudo} = msg.data
   sendAsyncMessage("Test:HasPseudoClassLock", DOMUtils.hasPseudoClassLock(node, pseudo));
 });
+
+/**
+ * Like document.querySelector but can go into iframes too.
+ * ".container iframe || .sub-container div" will first try to find the node
+ * matched by ".container iframe" in the root document, then try to get the
+ * content document inside it, and then try to match ".sub-container div" inside
+ * this document.
+ * Any selector coming before the || separator *MUST* match a frame node.
+ * @param {String} superSelector.
+ * @return {DOMNode} The node, or null if not found.
+ */
+function superQuerySelector(superSelector, root=content.document) {
+  let frameIndex = superSelector.indexOf("||");
+  if (frameIndex === -1) {
+    return root.querySelector(superSelector);
+  } else {
+    let rootSelector = superSelector.substring(0, frameIndex).trim();
+    let childSelector = superSelector.substring(frameIndex+2).trim();
+    root = root.querySelector(rootSelector);
+    if (!root || !root.contentWindow) {
+      return null;
+    }
+
+    return superQuerySelector(childSelector, root.contentWindow.document);
+  }
+}
 
 let dumpn = msg => dump(msg + "\n");
