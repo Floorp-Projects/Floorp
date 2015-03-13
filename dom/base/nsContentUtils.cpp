@@ -1023,7 +1023,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
     result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
   }
 
-  if (negate) {
+  if (value.isValid() && negate) {
     value = -value;
     // Checking the special case of -0.
     if (value == 0) {
@@ -1031,7 +1031,8 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
     }
   }
 
-  if (leadingZeros > 1 || (leadingZeros == 1 && !(value == 0))) {
+  if (value.isValid() &&
+      (leadingZeros > 1 || (leadingZeros == 1 && !(value == 0)))) {
     result |= eParseHTMLInteger_NonStandard;
   }
 
@@ -1040,7 +1041,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
   }
 
   *aResult = (ParseHTMLIntegerResultFlags)result;
-  return value.value();
+  return value.isValid() ? value.value() : 0;
 }
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
