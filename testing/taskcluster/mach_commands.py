@@ -208,7 +208,7 @@ class Graph(object):
         default=os.environ.get('GECKO_HEAD_REV'),
         help='Commit revision to use from head repository')
     @CommandArgument('--mozharness-rev',
-        default='emulator-perf',
+        default='default',
         help='Commit revision to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
