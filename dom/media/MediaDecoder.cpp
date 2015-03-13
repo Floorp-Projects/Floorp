@@ -191,12 +191,12 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   if (mIsDormant) {
     DECODER_LOG("UpdateDormantState() entering DORMANT state");
     // enter dormant state
-    RefPtr<nsRunnable> event =
+    nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethodWithArg<bool>(
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         true);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event);
+    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
 
     if (IsEnded()) {
       mWasEndedWhenEnteredDormant = true;
@@ -207,12 +207,12 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
     DECODER_LOG("UpdateDormantState() leaving DORMANT state");
     // exit dormant state
     // trigger to state machine.
-    RefPtr<nsRunnable> event =
+    nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethodWithArg<bool>(
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         false);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event);
+    mDecoderStateMachine->GetStateMachineThread()->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 }
 
@@ -750,8 +750,7 @@ nsresult MediaDecoder::ScheduleStateMachineThread()
   if (mShuttingDown)
     return NS_OK;
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mDecoderStateMachine->ScheduleStateMachine();
-  return NS_OK;
+  return mDecoderStateMachine->ScheduleStateMachine();
 }
 
 nsresult MediaDecoder::Play()
@@ -764,7 +763,8 @@ nsresult MediaDecoder::Play()
   if (mPausedForPlaybackRateNull) {
     return NS_OK;
   }
-  ScheduleStateMachineThread();
+  nsresult res = ScheduleStateMachineThread();
+  NS_ENSURE_SUCCESS(res,res);
   if (IsEnded()) {
     return Seek(0, SeekTarget::PrevSyncPoint);
   } else if (mPlayState == PLAY_STATE_LOADING || mPlayState == PLAY_STATE_SEEKING) {
@@ -1317,7 +1317,7 @@ void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
         mDecoderStateMachine->Play();
         break;
       case PLAY_STATE_SEEKING:
-        mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->TaskQueue(),
+        mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->GetStateMachineThread(),
                                           mDecoderStateMachine.get(), __func__,
                                           &MediaDecoderStateMachine::Seek, mRequestedSeekTarget)
           ->RefableThen(NS_GetCurrentThread(), __func__, this,
