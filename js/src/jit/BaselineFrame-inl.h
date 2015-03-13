@@ -16,6 +16,8 @@
 
 #include "jsscriptinlines.h"
 
+#include "vm/ScopeObject-inl.h"
+
 namespace js {
 namespace jit {
 

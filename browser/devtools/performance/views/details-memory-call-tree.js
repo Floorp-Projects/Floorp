@@ -89,6 +89,13 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
       autoExpandDepth: options.inverted ? 0 : undefined,
+      // Some cells like the time duration and cost percentage don't make sense
+      // for a memory allocations call tree.
+      visibleCells: {
+        allocations: true,
+        selfAllocations: true,
+        function: true
+      }
     });
 
     // Bind events.

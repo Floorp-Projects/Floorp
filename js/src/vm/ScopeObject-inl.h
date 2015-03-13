@@ -9,6 +9,8 @@
 
 #include "vm/ScopeObject.h"
 
+#include "jsobjinlines.h"
+
 #include "vm/TypeInference-inl.h"
 
 namespace js {
@@ -173,5 +175,22 @@ StaticScopeIter<allowGC>::fun() const
 }
 
 }  /* namespace js */
+
+inline JSObject *
+JSObject::enclosingScope()
+{
+    if (is<js::ScopeObject>())
+        return &as<js::ScopeObject>().enclosingScope();
+
+    if (is<js::DebugScopeObject>())
+        return &as<js::DebugScopeObject>().enclosingScope();
+
+    if (is<js::GlobalObject>())
+        return nullptr;
+
+    MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
+    assertParentIs(&global());
+    return &global();
+}
 
 #endif /* vm_ScopeObject_inl_h */

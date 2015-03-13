@@ -31,6 +31,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -985,19 +986,29 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
   }
 
   bool foundValue = false;
-  int32_t value = 0;
-  int32_t pValue = 0; // Previous value, used to check integer overflow
+  CheckedInt32 value = 0;
+
+  // Check for leading zeros first.
+  uint64_t leadingZeros = 0;
+  while (iter != end) {
+    if (*iter != char16_t('0')) {
+      break;
+    }
+
+    ++leadingZeros;
+    foundValue = true;
+    ++iter;
+  }
+
   while (iter != end) {
     if (*iter >= char16_t('0') && *iter <= char16_t('9')) {
       value = (value * 10) + (*iter - char16_t('0'));
       ++iter;
-      // Checking for integer overflow.
-      if (pValue > value) {
+      if (!value.isValid()) {
         result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorOverflow;
         break;
       } else {
         foundValue = true;
-        pValue = value;
       }
     } else if (*iter == char16_t('%')) {
       ++iter;
@@ -1012,12 +1023,17 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
     result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
   }
 
-  if (negate) {
+  if (value.isValid() && negate) {
     value = -value;
     // Checking the special case of -0.
-    if (!value) {
+    if (value == 0) {
       result |= eParseHTMLInteger_NonStandard;
     }
+  }
+
+  if (value.isValid() &&
+      (leadingZeros > 1 || (leadingZeros == 1 && !(value == 0)))) {
+    result |= eParseHTMLInteger_NonStandard;
   }
 
   if (iter != end) {
@@ -1025,7 +1041,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
   }
 
   *aResult = (ParseHTMLIntegerResultFlags)result;
-  return value;
+  return value.isValid() ? value.value() : 0;
 }
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
