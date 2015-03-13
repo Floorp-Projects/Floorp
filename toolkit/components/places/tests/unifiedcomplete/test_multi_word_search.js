@@ -23,8 +23,8 @@ add_task(function* test_match_beginning() {
     { uri: uri3, title: "f(o)o b<a>r" },
     { uri: uri4, title: "f(o)o b<a>r" }
   ]);
-  addBookmark({ uri: uri3, title: "f(o)o b<a>r" });
-  addBookmark({ uri: uri4, title: "b(a)r b<a>z" });
+  yield addBookmark({ uri: uri3, title: "f(o)o b<a>r" });
+  yield addBookmark({ uri: uri4, title: "b(a)r b<a>z" });
 
   do_print("Match 2 terms all in url");
   yield check_autocomplete({
