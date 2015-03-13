@@ -37,14 +37,14 @@ add_task(function* test_special_searches() {
     { uri: uri6, title: "foo.bar" },
     { uri: uri11, title: "title", transition: TRANSITION_TYPED }
   ]);
-  addBookmark( { uri: uri5, title: "title" } );
-  addBookmark( { uri: uri6, title: "foo.bar" } );
-  addBookmark( { uri: uri7, title: "title" } );
-  addBookmark( { uri: uri8, title: "foo.bar" } );
-  addBookmark( { uri: uri9, title: "title", tags: [ "foo.bar" ] } );
-  addBookmark( { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] } );
-  addBookmark( { uri: uri11, title: "title", tags: [ "foo.bar" ] } );
-  addBookmark( { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } );
+  yield addBookmark( { uri: uri5, title: "title" } );
+  yield addBookmark( { uri: uri6, title: "foo.bar" } );
+  yield addBookmark( { uri: uri7, title: "title" } );
+  yield addBookmark( { uri: uri8, title: "foo.bar" } );
+  yield addBookmark( { uri: uri9, title: "title", tags: [ "foo.bar" ] } );
+  yield addBookmark( { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] } );
+  yield addBookmark( { uri: uri11, title: "title", tags: [ "foo.bar" ] } );
+  yield addBookmark( { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } );
 
   // Test restricting searches
   do_print("History restrict");
