@@ -34,9 +34,7 @@
 using namespace mozilla;
 
 static bool gIsWhitelistingTestDomains = false;
-// XXXdholbert Add to InitializeStatics():
 static bool gCodeBasePrincipalSupport = false;
-static bool gIsObservingCodeBasePrincipalSupport = false;
 
 static bool URIIsImmutable(nsIURI* aURI)
 {
@@ -76,15 +74,6 @@ nsBasePrincipal::Release()
 
 nsBasePrincipal::nsBasePrincipal()
 {
-  if (!gIsObservingCodeBasePrincipalSupport) {
-    nsresult rv =
-      Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
-                                   "signed.applets.codebase_principal_support",
-                                   false);
-    gIsObservingCodeBasePrincipalSupport = NS_SUCCEEDED(rv);
-    NS_WARN_IF_FALSE(gIsObservingCodeBasePrincipalSupport,
-                     "Installing gCodeBasePrincipalSupport failed!");
-  }
 }
 
 nsBasePrincipal::~nsBasePrincipal(void)
@@ -137,6 +126,10 @@ nsPrincipal::InitializeStatics()
   Preferences::AddBoolVarCache(
     &gIsWhitelistingTestDomains,
     "layout.css.unprefixing-service.include-test-domains");
+
+  Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
+                               "signed.applets.codebase_principal_support",
+                               false);
 }
 
 nsPrincipal::nsPrincipal()
