@@ -10,6 +10,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -358,6 +359,8 @@ Debugger::Debugger(JSContext *cx, NativeObject *dbg)
     uncaughtExceptionHook(nullptr),
     enabled(true),
     allowUnobservedAsmJS(false),
+    debuggeeWasCollected(false),
+    inOnGCHook(false),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
     allocationsLogLength(0),
@@ -868,6 +871,67 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     return true;
 }
 
+JSObject *
+Debugger::translateGCStatistics(JSContext *cx, const gcstats::Statistics &stats)
+{
+    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!obj)
+        return nullptr;
+
+    const char *nonincrementalReason = stats.nonincrementalReason();
+    RootedValue nonincrementalReasonValue(cx, NullValue());
+    if (nonincrementalReason) {
+        JSAtom *atomized = Atomize(cx, nonincrementalReason, strlen(nonincrementalReason));
+        if (!atomized)
+            return nullptr;
+        nonincrementalReasonValue.setString(atomized);
+    }
+
+    if (!DefineProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReasonValue))
+        return nullptr;
+
+    RootedArrayObject slicesArray(cx, NewDenseEmptyArray(cx));
+    if (!slicesArray)
+        return nullptr;
+
+    size_t idx = 0;
+    for (auto range = stats.sliceRange(); !range.empty(); range.popFront()) {
+        if (idx == 0) {
+            // There is only one GC reason for the whole cycle, but for legacy
+            // reasons, this data is stored and replicated on each slice.
+            const char *reason = gcstats::ExplainReason(range.front().reason);
+            JSAtom *atomized = Atomize(cx, reason, strlen(reason));
+            if (!atomized)
+                return nullptr;
+            RootedValue reasonVal(cx, StringValue(atomized));
+            if (!DefineProperty(cx, obj, cx->names().reason, reasonVal))
+                return nullptr;
+        }
+
+        RootedPlainObject collectionObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        if (!collectionObj)
+            return nullptr;
+
+        RootedValue start(cx, NumberValue(range.front().start));
+        RootedValue end(cx, NumberValue(range.front().end));
+        if (!DefineProperty(cx, collectionObj, cx->names().startTimestamp, start) ||
+            !DefineProperty(cx, collectionObj, cx->names().endTimestamp, end))
+        {
+            return nullptr;
+        }
+
+        RootedValue collectionVal(cx, ObjectValue(*collectionObj));
+        if (!DefineElement(cx, slicesArray, idx++, collectionVal))
+            return nullptr;
+    }
+
+    RootedValue slicesValue(cx, ObjectValue(*slicesArray));
+    if (!DefineProperty(cx, obj, cx->names().collections, slicesValue))
+        return nullptr;
+
+    return obj.get();
+}
+
 bool
 Debugger::unwrapDebuggeeObject(JSContext *cx, MutableHandleObject obj)
 {
@@ -1253,6 +1317,39 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
     RootedValue scriptObject(cx, ObjectValue(*dsobj));
     RootedValue rv(cx);
     if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, scriptObject.address(), &rv))
+        handleUncaughtException(ac, true);
+}
+
+void
+Debugger::fireOnGarbageCollectionHook(JSRuntime *rt, const gcstats::Statistics &stats)
+{
+    if (inOnGCHook)
+        return;
+
+    AutoOnGCHookReentrancyGuard guard(*this);
+
+    MOZ_ASSERT(debuggeeWasCollected);
+    debuggeeWasCollected = false;
+
+    JSContext *cx = DefaultJSContext(rt);
+    MOZ_ASSERT(cx);
+
+    RootedObject hook(cx, getHook(OnGarbageCollection));
+    MOZ_ASSERT(hook);
+    MOZ_ASSERT(hook->isCallable());
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, object);
+
+    JSObject *statsObj = translateGCStatistics(cx, stats);
+    if (!statsObj) {
+        handleUncaughtException(ac, false);
+        return;
+    }
+
+    RootedValue statsVal(cx, ObjectValue(*statsObj));
+    RootedValue rv(cx);
+    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, statsVal.address(), &rv))
         handleUncaughtException(ac, true);
 }
 
