@@ -473,30 +473,30 @@ class ByJSType {
     }
 };
 
-// An assorter that categorizes nodes that are JSObjects by their class, and
-// places all other nodes in an 'other' category. The template arguments must be
-// assorter types; each JSObject class gets an EachClass assorter, and the
-// 'other' category gets an EachOther assorter.
+// An assorter that categorizes nodes that are JSObjects by their class name,
+// and places all other nodes in an 'other' category. The template arguments
+// must be assorter types; each JSObject class gets an EachClass assorter, and
+// the 'other' category gets an EachOther assorter.
 template<typename EachClass = Tally,
          typename EachOther = Tally>
 class ByObjectClass {
     size_t total_;
 
-    // A hash policy that compares js::Classes by name.
+    // A hash policy that compares C strings.
     struct HashPolicy {
-        typedef const js::Class *Lookup;
-        static js::HashNumber hash(Lookup l) { return mozilla::HashString(l->name); }
-        static bool match(const js::Class *key, Lookup lookup) {
-            return strcmp(key->name, lookup->name) == 0;
+        typedef const char *Lookup;
+        static js::HashNumber hash(Lookup l) { return mozilla::HashString(l); }
+        static bool match(const char *key, Lookup lookup) {
+            return strcmp(key, lookup) == 0;
         }
     };
 
-    // A table mapping classes to their counts. Note that this table treats
-    // js::Class instances with the same name as equal keys. If you have several
+    // A table mapping class names to their counts. Note that we treat js::Class
+    // instances with the same name as equal keys. If you have several
     // js::Classes with equal names (and we do; as of this writing there were
-    // six named "Object"), you will get several different Classes being counted
-    // in the same table entry.
-    typedef HashMap<const js::Class *, EachClass, HashPolicy, SystemAllocPolicy> Table;
+    // six named "Object"), you will get several different js::Classes being
+    // counted in the same table entry.
+    typedef HashMap<const char *, EachClass, HashPolicy, SystemAllocPolicy> Table;
     typedef typename Table::Entry Entry;
     Table table;
     EachOther other;
@@ -531,13 +531,14 @@ class ByObjectClass {
 
     bool count(Census &census, const Node &node) {
         total_++;
-        if (!node.is<JSObject>())
+        const char *className = node.jsObjectClassName();
+
+        if (!className)
             return other.count(census, node);
 
-        const js::Class *key = node.as<JSObject>()->getClass();
-        typename Table::AddPtr p = table.lookupForAdd(key);
+        typename Table::AddPtr p = table.lookupForAdd(className);
         if (!p) {
-            if (!table.add(p, key, EachClass(census)))
+            if (!table.add(p, className, EachClass(census)))
                 return false;
             if (!p->value().init(census))
                 return false;
@@ -571,7 +572,7 @@ class ByObjectClass {
             if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const char *name = entry.key()->name;
+            const char *name = entry.key();
             MOZ_ASSERT(name);
             JSAtom *atom = Atomize(census.cx, name, strlen(name));
             if (!atom)
