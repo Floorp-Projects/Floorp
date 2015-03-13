@@ -3028,6 +3028,10 @@ pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 // ITfContextView::GetTextExt() if the specified range is the first character
 // of selected clause of composition string.
 pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_first_char", true);
+// Whether use previous character rect for the result of
+// ITfContextView::GetTextExt() if the specified range is the caret of
+// composition string.
+pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret", true);
 #endif
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
