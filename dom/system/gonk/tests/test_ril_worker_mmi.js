@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
@@ -66,7 +66,6 @@ add_test(function test_sendMMI_short_code() {
 
   let postedMessage = workerhelper.postedMessage;
   equal(ussdOptions.ussd, "**");
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
   ok(context.RIL._ussdSession);
 
@@ -90,7 +89,6 @@ add_test(function test_sendMMI_change_PIN() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 
   run_next_test();
@@ -141,7 +139,6 @@ add_test(function test_sendMMI_change_PIN2() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 
   run_next_test();
@@ -192,7 +189,6 @@ add_test(function test_sendMMI_unblock_PIN() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 
   run_next_test();
@@ -243,7 +239,6 @@ add_test(function test_sendMMI_unblock_PIN2() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 
   run_next_test();
@@ -295,7 +290,6 @@ add_test(function test_sendMMI_get_IMEI() {
   let postedMessage = workerhelper.postedMessage;
 
   notEqual(mmiOptions.mmi, null);
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 
   run_next_test();
@@ -311,6 +305,7 @@ add_test(function test_sendMMI_get_IMEI_error() {
     mmiOptions = options;
     context.RIL[REQUEST_SEND_USSD](0, {
       rilRequestError: ERROR_RADIO_NOT_AVAILABLE,
+      errorMsg: GECKO_ERROR_RADIO_NOT_AVAILABLE
     });
   };
 
@@ -437,7 +432,6 @@ add_test(function test_sendMMI_USSD() {
   let postedMessage = workerhelper.postedMessage;
 
   equal(ussdOptions.ussd, "**123#");
-  equal (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
   ok(context.RIL._ussdSession);
 
@@ -453,7 +447,8 @@ add_test(function test_sendMMI_USSD_error() {
   context.RIL.sendUSSD = function fakeSendUSSD(options){
     ussdOptions = options;
     context.RIL[REQUEST_SEND_USSD](0, {
-      rilRequestError: ERROR_GENERIC_FAILURE
+      rilRequestError: ERROR_GENERIC_FAILURE,
+      errorMsg: GECKO_ERROR_GENERIC_FAILURE
     });
   };
 
@@ -463,7 +458,7 @@ add_test(function test_sendMMI_USSD_error() {
   let postedMessage = workerhelper.postedMessage;
 
   equal(ussdOptions.ussd, "**123#");
-  equal (postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
+  equal(postedMessage.errorMsg, GECKO_ERROR_GENERIC_FAILURE);
   ok(!postedMessage.success);
   ok(!context.RIL._ussdSession);
 
@@ -486,7 +481,6 @@ function setCallWaitingSuccess(mmi) {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
 }
 
@@ -539,7 +533,6 @@ add_test(function test_sendMMI_call_waiting_interrogation() {
 
   let postedMessage = workerhelper.postedMessage;
 
-  equal(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
   ok(postedMessage.success);
   equal(postedMessage.length, 2);
   ok(postedMessage.enabled);
