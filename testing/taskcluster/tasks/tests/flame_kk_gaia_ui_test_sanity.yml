@@ -15,13 +15,7 @@ task:
       testdroidProxy: true
     maxRunTime: 7200
     command:
-      - >
-        tc-vcs checkout /home/worker/gaia/source $GAIA_BASE_REPOSITORY $GAIA_HEAD_REPOSITORY $GAIA_REV $GAIA_REF &&
-        cd gaia/source/tests/python/gaia-ui-tests/ &&
-        python setup.py develop &&
-        pip install py &&
-        cd /home/worker/ &&
-        gaiatest --testvars=/home/worker/data/gaia_testvars.json --testvars=/home/worker/data/device.json --adb-host=$PROXY_HOST --adb-port=$ADB_PORT --address=$PROXY_HOST:$MARIONETTE_PORT --device $SERIAL_ID --xml-output=/home/worker/upload/logs/xml_output.xml --timeout=10000 --log-html=/home/worker/upload/logs/index.html --restart --type=b2g+sanity-dsds --log-mach=-  --log-raw=/home/worker/upload/logs/raw.log gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
+      - gaiatest --testvars=/home/worker/data/gaia_testvars.json --testvars=/home/worker/data/device.json --adb-host=$PROXY_HOST --adb-port=$ADB_PORT --address=$PROXY_HOST:$MARIONETTE_PORT --device $SERIAL_ID --xml-output=/home/worker/upload/logs/xml_output.xml --timeout=10000 --log-html=/home/worker/upload/logs/index.html --restart --type=b2g+sanity-dsds --log-mach=-  --log-raw=/home/worker/upload/logs/raw.log gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
     artifacts:
       'private/device.json':
         type: file
