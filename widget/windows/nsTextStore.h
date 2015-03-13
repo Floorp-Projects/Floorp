@@ -641,6 +641,11 @@ protected:
     {
       return mInitialized && (mMinTextModifiedOffset != NOT_MODIFIED);
     }
+    // Returns minimum offset of modified text range.
+    uint32_t MinOffsetOfLayoutChanged() const
+    {
+      return mInitialized ? mMinTextModifiedOffset : NOT_MODIFIED;
+    }
 
     nsTextStore::Composition& Composition() { return mComposition; }
     nsTextStore::Selection& Selection() { return mSelection; }
@@ -792,6 +797,7 @@ protected:
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
   static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar;
+  static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret;
 };
 
 #endif /*NSTEXTSTORE_H_*/
