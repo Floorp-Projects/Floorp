@@ -36,8 +36,11 @@ Structure::
           autoDownload: <bool>, // true on failure
         },
         userPrefs: {
-          // Two possible behaviours: values of the whitelisted prefs, or for some prefs we
-          // only record they are present with value being set to null.
+          // Only prefs which are changed from the default value are listed
+          // in this block
+          "pref.name.value": value // some prefs send the value
+          "pref.name.url": "<user-set>" // For some privacy-sensitive prefs
+            // only the fact that the value has been changed is recorded
         },
       },
       profile: { // This section is not available on Android.
@@ -179,3 +182,8 @@ Structure::
         persona: <string>, // id of the current persona, null on GONK
       },
     }
+
+Some parts of the environment must be fetched asynchronously at startup. If a session is very short or terminates early, the following items may be missing from the environment:
+
+- profile
+- addons
