@@ -29,7 +29,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
-      Moof moof(box, mTrex, mMdhd, mEdts, mSinf);
+      Moof moof(box, mTrex, mMdhd, mEdts, mSinf, mIsAudio);
 
       if (!mMoofs.IsEmpty()) {
         // Stitch time ranges together in the case of a (hopefully small) time
@@ -214,13 +214,13 @@ MoofParser::ParseEncrypted(Box& aBox)
   }
 }
 
-Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
+Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio)
   : mRange(aBox.Range())
   , mMaxRoundingError(0)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
-      ParseTraf(box, aTrex, aMdhd, aEdts, aSinf);
+      ParseTraf(box, aTrex, aMdhd, aEdts, aSinf, aIsAudio);
     }
   }
   ProcessCenc();
@@ -291,7 +291,7 @@ Moof::ProcessCenc()
 }
 
 void
-Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
+Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio)
 {
   Tfhd tfhd(aTrex);
   Tfdt tfdt;
@@ -314,7 +314,7 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
   // Now search for TRUN box.
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trun")) {
-      ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
+      ParseTrun(box, tfhd, tfdt, aMdhd, aEdts, aIsAudio);
       if (IsValid()) {
         break;
       }
@@ -345,7 +345,7 @@ public:
 };
 
 void
-Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
+Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts, bool aIsAudio)
 {
   if (!aTfhd.IsValid() || !aTfdt.IsValid() ||
       !aMdhd.IsValid() || !aEdts.IsValid()) {
@@ -416,7 +416,9 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
     decodeTime += sampleDuration;
 
-    sample.mSync = !(sampleFlags & 0x1010000);
+    // Sometimes audio streams don't properly mark their samples as keyframes,
+    // because every audio sample is a keyframe.
+    sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
 
     mIndex.AppendElement(sample);
 
