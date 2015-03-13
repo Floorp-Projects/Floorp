@@ -3,14 +3,13 @@ $inherits:
   from: 'tasks/phone_test.yml'
 task:
   metadata:
-    name: '[TC] Gaia Python Integration Sanity Tests'
-    description: Gaia Python Integration Sanity Tests run
+    name: '[TC] Gaia Python Integration Unit Tests'
+    description: Gaia Python Integration Tests run
   workerType: testdroid-device
-  retries: 0
 
   payload:
     env:
-      DEVICE_CAPABILITIES: '{"type":"flame","memory":"319","sims": "1","build":"{{{img_url}}}"}'
+      DEVICE_CAPABILITIES: '{"type":"flame","memory":"319","sims": "0","build":"{{{img_url}}}"}'
     features:
       testdroidProxy: true
     maxRunTime: 7200
@@ -27,10 +26,10 @@ task:
         --timeout=10000
         --log-html=/home/worker/upload/logs/index.html
         --restart
-        --type=b2g+sanity-dsds
+        --type=b2g
         --log-mach=-
         --log-raw=/home/worker/upload/logs/raw.log
-        gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
+        gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/unit/manifest.ini
     artifacts:
       'private/device.json':
         type: file
@@ -41,5 +40,5 @@ task:
     treeherder:
       groupName: Gaia Python Integration Tests
       groupSymbol: tc-Gip
-      symbol: 's'
+      symbol: 'u'
       productName: b2g
