@@ -910,6 +910,17 @@ nsXULAppInfo::GetAccessibilityIsUIA(bool* aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetIs64Bit(bool* aResult)
+{
+#ifdef HAVE_64BIT_BUILD
+  *aResult = true;
+#else
+  *aResult = false;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::EnsureContentProcess()
 {
   if (XRE_GetProcessType() != GeckoProcessType_Default)
