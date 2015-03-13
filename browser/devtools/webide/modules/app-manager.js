@@ -433,6 +433,7 @@ let AppManager = exports.AppManager = {
     // Fx <37 exposes chrome tab actors on RootActor
     // Fx >=37 exposes a dedicated actor via attachProcess request
     return this.connection.client &&
+           this.connection.client.mainRoot &&
            this.connection.client.mainRoot.traits.allowChromeProcess ||
            (this._listTabsResponse &&
             this._listTabsResponse.consoleActor);

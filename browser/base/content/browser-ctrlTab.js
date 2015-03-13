@@ -571,8 +571,13 @@ var ctrlTab = {
  * All Tabs menu
  */
 var allTabs = {
-  get toolbarButton() document.getElementById("alltabs-button"),
-  get canOpen() isElementVisible(this.toolbarButton),
+  get toolbarButton() {
+    return document.getElementById("alltabs-button");
+  },
+
+  get canOpen() {
+    return isElementVisible(this.toolbarButton);
+  },
 
   open: function allTabs_open() {
     if (this.canOpen) {

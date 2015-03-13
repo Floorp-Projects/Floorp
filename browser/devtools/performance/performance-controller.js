@@ -261,16 +261,16 @@ let PerformanceController = {
    * when the front has started to record.
    */
   startRecording: Task.async(function *() {
-    let withMemory = this.getOption("enable-memory");
-    let withTicks = this.getOption("enable-framerate");
-    let withAllocations = this.getOption("enable-memory");
-    let probability = this.getPref("memory-sample-probability");
-    let maxLogLength = this.getPref("memory-max-log-length");
-
-    let recording = this._createRecording({ withMemory, withTicks, withAllocations, probability, maxLogLength });
+    let recording = this._createRecording({
+      withMemory: this.getOption("enable-memory"),
+      withTicks: this.getOption("enable-framerate"),
+      withAllocations: this.getOption("enable-memory"),
+      allocationsSampleProbability: this.getPref("memory-sample-probability"),
+      allocationsMaxLogLength: this.getPref("memory-max-log-length")
+    });
 
     this.emit(EVENTS.RECORDING_WILL_START, recording);
-    yield recording.startRecording({ withMemory, withTicks, withAllocations, probability, maxLogLength });
+    yield recording.startRecording();
     this.emit(EVENTS.RECORDING_STARTED, recording);
 
     this.setCurrentRecording(recording);
@@ -342,12 +342,10 @@ let PerformanceController = {
    *         The newly created recording model.
    */
   _createRecording: function (options={}) {
-    let { withMemory, withTicks, withAllocations } = options;
-    let front = gFront;
-
-    let recording = new RecordingModel(
-      { front, performance, withMemory, withTicks, withAllocations });
-
+    let recording = new RecordingModel(Heritage.extend(options, {
+      front: gFront,
+      performance: window.performance
+    }));
     this._recordings.push(recording);
     return recording;
   },

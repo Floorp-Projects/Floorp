@@ -23,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(fb861ca6-426f-4edf-844e-bbabec9bbc1a)]
+[scriptable, uuid(5754b56e-f392-426d-aec0-3ba7c49aff32)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -108,6 +108,11 @@ interface nsIXULRuntime : nsISupports
    * DO NOT USE! This is temporary and will be removed.
    */
   readonly attribute boolean accessibilityIsUIA;
+
+  /**
+   * Indicates whether the current Firefox build is 64-bit.
+   */
+  readonly attribute boolean is64Bit;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.
