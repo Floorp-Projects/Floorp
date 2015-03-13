@@ -18,6 +18,7 @@
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc
 #include "nsIPhonetic.h"                // for NS_DECL_NSIPHONETIC, etc
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsISelectionController.h"     // for nsISelectionController constants
 #include "nsISupportsImpl.h"            // for nsEditor::Release, etc
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
@@ -421,6 +422,8 @@ protected:
    */
   void EnsureComposition(mozilla::WidgetGUIEvent* aEvent);
 
+  nsresult GetSelection(int16_t aSelectionType, nsISelection** aSelection);
+
 public:
 
   /** All editor operations which alter the doc should be prefaced
@@ -618,7 +621,8 @@ public:
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
-  mozilla::dom::Selection* GetSelection();
+  mozilla::dom::Selection* GetSelection(int16_t aSelectionType =
+      nsISelectionController::SELECTION_NORMAL);
 
   // Helpers to add a node to the selection. 
   // Used by table cell selection methods

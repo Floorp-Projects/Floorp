@@ -1031,20 +1031,15 @@ JSObject::is<js::StaticBlockObject>() const
     return is<js::BlockObject>() && !getProto();
 }
 
-inline JSObject *
-JSObject::enclosingScope()
-{
-    if (is<js::ScopeObject>())
-        return &as<js::ScopeObject>().enclosingScope();
-
-    if (is<js::DebugScopeObject>())
-        return &as<js::DebugScopeObject>().enclosingScope();
-
-    MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
-    return getParent();
-}
-
 namespace js {
+
+inline bool
+IsValidTerminatingScope(JSObject* scope)
+{
+    return !scope->is<ScopeObject>() ||
+           (scope->is<DynamicWithObject>() &&
+            !scope->as<DynamicWithObject>().isSyntactic());
+}
 
 inline const Value &
 ScopeObject::aliasedVar(ScopeCoordinate sc)
@@ -1087,9 +1082,15 @@ ScopeIter::enclosingScope() const
     // chain; every scope chain must start with zero or more ScopeObjects and
     // terminate with one or more non-ScopeObjects (viz., GlobalObject).
     MOZ_ASSERT(done());
-    MOZ_ASSERT(!scope_->is<ScopeObject>());
+    MOZ_ASSERT(IsValidTerminatingScope(scope_));
     return *scope_;
 }
+
+extern bool
+CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
+                                HandleObject dynamicTerminatingScope,
+                                MutableHandleObject dynamicScopeObj,
+                                MutableHandleObject staticScopeObj);
 
 #ifdef DEBUG
 bool

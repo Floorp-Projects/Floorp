@@ -1942,7 +1942,7 @@ CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
     emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
 }
 
-typedef NativeObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleNativeObject, NewObjectKind);
+typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
 static const VMFunction DeepCloneObjectLiteralInfo =
     FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
 
@@ -4383,9 +4383,9 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     OutOfLineNewObject *ool = new(alloc()) OutOfLineNewObject(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObject);
+    bool initContents = ShouldInitFixedSlots(lir, templateObject);
     masm.createGCObject(objReg, tempReg, templateObject, lir->mir()->initialHeap(), ool->entry(),
-                        initFixedSlots);
+                        initContents);
 
     masm.bind(ool->rejoin());
 }
@@ -4560,9 +4560,9 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
                                     Imm32(gc::DefaultHeap)),
                                    StoreRegisterTo(objReg));
 
-    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObj);
+    bool initContents = ShouldInitFixedSlots(lir, templateObj);
     masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry(),
-                        initFixedSlots);
+                        initContents);
 
     masm.bind(ool->rejoin());
 }
@@ -4588,9 +4588,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
                                    StoreRegisterTo(objReg));
 
     // Inline call object creation, using the OOL path only for tricky cases.
-    bool initFixedSlots = ShouldInitFixedSlots(lir, templateObj);
+    bool initContents = ShouldInitFixedSlots(lir, templateObj);
     masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, ool->entry(),
-                        initFixedSlots);
+                        initContents);
 
     masm.bind(ool->rejoin());
 }
@@ -4807,9 +4807,9 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     // Initialize based on the templateObject.
     masm.bind(ool->rejoin());
 
-    bool initFixedSlots = !templateObject->is<PlainObject>() ||
+    bool initContents = !templateObject->is<PlainObject>() ||
                           ShouldInitFixedSlots(lir, &templateObject->as<PlainObject>());
-    masm.initGCThing(objReg, tempReg, templateObject, initFixedSlots);
+    masm.initGCThing(objReg, tempReg, templateObject, initContents);
 }
 
 typedef JSObject *(*NewIonArgumentsObjectFn)(JSContext *cx, JitFrameLayout *frame, HandleObject);

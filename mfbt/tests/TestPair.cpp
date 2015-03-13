@@ -5,7 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Pair.h"
+#include "mozilla/TypeTraits.h"
 
+using mozilla::IsSame;
+using mozilla::MakePair;
 using mozilla::Pair;
 
 // Sizes aren't part of the guaranteed Pair interface, but we want to verify our
@@ -59,5 +62,18 @@ struct OtherEmpty : EmptyClass { explicit OtherEmpty(int aI) : EmptyClass(aI) {}
 int
 main()
 {
+  A a(0);
+  B b(0);
+  const A constA(0);
+  const B constB(0);
+
+  // Check that MakePair generates Pair objects of the correct types.
+  static_assert(IsSame<decltype(MakePair(A(0), B(0))), Pair<A, B>>::value,
+                "MakePair should strip rvalue references");
+  static_assert(IsSame<decltype(MakePair(a, b)), Pair<A, B>>::value,
+                "MakePair should strip lvalue references");
+  static_assert(IsSame<decltype(MakePair(constA, constB)), Pair<A, B>>::value,
+                "MakePair should strip CV-qualifiers");
+
   return 0;
 }

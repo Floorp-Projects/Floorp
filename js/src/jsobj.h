@@ -1117,36 +1117,6 @@ extern const char js_lookupSetter_str[];
 
 namespace js {
 
-/*
- * The NewObjectKind allows an allocation site to specify the type properties
- * and lifetime requirements that must be fixed at allocation time.
- */
-enum NewObjectKind {
-    /* This is the default. Most objects are generic. */
-    GenericObject,
-
-    /*
-     * Singleton objects are treated specially by the type system. This flag
-     * ensures that the new object is automatically set up correctly as a
-     * singleton and is allocated in the correct heap.
-     */
-    SingletonObject,
-
-    /*
-     * Objects which may be marked as a singleton after allocation must still
-     * be allocated on the correct heap, but are not automatically setup as a
-     * singleton after allocation.
-     */
-    MaybeSingletonObject,
-
-    /*
-     * Objects which will not benefit from being allocated in the nursery
-     * (e.g. because they are known to have a long lifetime) may be allocated
-     * with this kind to place them immediately into the tenured generation.
-     */
-    TenuredObject
-};
-
 inline gc::InitialHeap
 GetInitialHeap(NewObjectKind newKind, const Class *clasp)
 {
@@ -1174,8 +1144,8 @@ CreateThis(JSContext *cx, const js::Class *clasp, js::HandleObject callee);
 extern JSObject *
 CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto);
 
-extern NativeObject *
-DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind newKind = GenericObject);
+extern JSObject *
+DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKind = GenericObject);
 
 extern bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
@@ -1271,7 +1241,7 @@ ToObjectFromStack(JSContext *cx, HandleValue vp)
 
 template<XDRMode mode>
 bool
-XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj);
+XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj);
 
 extern JSObject *
 CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj);
