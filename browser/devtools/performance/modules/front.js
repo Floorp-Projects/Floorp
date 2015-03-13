@@ -322,7 +322,7 @@ PerformanceFront.prototype = {
   }),
 
   /**
-   * Starts the timeline actor, if necessary.
+   * Starts recording allocations in the memory actor, if necessary.
    */
   _startMemory: Task.async(function *(options) {
     if (!options.withAllocations) {
@@ -338,7 +338,7 @@ PerformanceFront.prototype = {
   }),
 
   /**
-   * Stops the timeline actor, if necessary.
+   * Stops recording allocations in the memory actor, if necessary.
    */
   _stopMemory: Task.async(function *(options) {
     if (!options.withAllocations) {
