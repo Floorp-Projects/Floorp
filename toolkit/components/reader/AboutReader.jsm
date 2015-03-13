@@ -17,13 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/U
 
 const READINGLIST_COMMAND_ID = "readingListSidebar";
 
-function dump(s) {
-  Services.console.logStringMessage("AboutReader: " + s);
-}
-
 let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
-let AboutReader = function(mm, win) {
+let AboutReader = function(mm, win, articlePromise) {
   let doc = win.document;
 
   this._mm = mm;
@@ -36,6 +32,10 @@ let AboutReader = function(mm, win) {
   this._winRef = Cu.getWeakReference(win);
 
   this._article = null;
+
+  if (articlePromise) {
+    this._articlePromise = articlePromise;
+  }
 
   this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
   this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
@@ -558,7 +558,13 @@ AboutReader.prototype = {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
-    let article = yield this._getArticle(url);
+    let article;
+    if (this._articlePromise) {
+      article = yield this._articlePromise;
+    } else {
+      article = yield this._getArticle(url);
+    }
+
     if (article && article.url == url) {
       this._showContent(article);
     } else {
