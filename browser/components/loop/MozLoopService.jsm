@@ -964,6 +964,7 @@ let MozLoopServiceInternal = {
     this.promiseFxAOAuthClient().then(
       client => {
         client.onComplete = this._fxAOAuthComplete.bind(this, deferred);
+        client.onError = this._fxAOAuthError.bind(this, deferred);
         client.launchWebFlow();
       },
       error => {
@@ -1003,18 +1004,24 @@ let MozLoopServiceInternal = {
   /**
    * Called once gFxAOAuthClient fires onComplete.
    *
-   * @param {Deferred} deferred used to resolve or reject the gFxAOAuthClientPromise
+   * @param {Deferred} deferred used to resolve the gFxAOAuthClientPromise
    * @param {Object} result (with code and state)
    */
   _fxAOAuthComplete: function(deferred, result) {
     gFxAOAuthClientPromise = null;
-
     // Note: The state was already verified in FxAccountsOAuthClient.
-    if (result) {
-      deferred.resolve(result);
-    } else {
-      deferred.reject("Invalid token data");
-    }
+    deferred.resolve(result);
+  },
+
+  /**
+   * Called if gFxAOAuthClient fires onError.
+   *
+   * @param {Deferred} deferred used to reject the gFxAOAuthClientPromise
+   * @param {Object} error object returned by FxAOAuthClient
+   */
+  _fxAOAuthError: function(deferred, err) {
+    gFxAOAuthClientPromise = null;
+    deferred.reject(err);
   },
 };
 Object.freeze(MozLoopServiceInternal);

@@ -10,11 +10,11 @@ function spawnTest () {
   let { EVENTS, PerformanceController, $, gFront } = panel.panelWin;
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
-  let originalProbability = Services.prefs.getCharPref("devtools.performance.memory.sample-probability");
-  let originalLogLength = Services.prefs.getIntPref("devtools.performance.memory.max-log-length");
+  let originalProbability = Services.prefs.getCharPref(MEMORY_SAMPLE_PROB_PREF);
+  let originalLogLength = Services.prefs.getIntPref(MEMORY_MAX_LOG_LEN_PREF);
 
-  Services.prefs.setCharPref("devtools.performance.memory.sample-probability", "0.213");
-  Services.prefs.setIntPref("devtools.performance.memory.max-log-length", 777777);
+  Services.prefs.setCharPref(MEMORY_SAMPLE_PROB_PREF, "0.213");
+  Services.prefs.setIntPref(MEMORY_MAX_LOG_LEN_PREF, 777777);
 
   yield startRecording(panel);
 
@@ -26,8 +26,8 @@ function spawnTest () {
   is(maxLogLength, 777777, "allocations max log length option is set on memory actor");
 
   Services.prefs.setBoolPref(MEMORY_PREF, false);
-  Services.prefs.setCharPref("devtools.performance.memory.sample-probability", originalProbability);
-  Services.prefs.setIntPref("devtools.performance.memory.max-log-length", originalLogLength);
+  Services.prefs.setCharPref(MEMORY_SAMPLE_PROB_PREF, originalProbability);
+  Services.prefs.setIntPref(MEMORY_MAX_LOG_LEN_PREF, originalLogLength);
   yield teardown(panel);
   finish();
 }
