@@ -1245,11 +1245,13 @@ nsLineLayout::SyncAnnotationBounds(PerFrameData* aRubyFrame)
 
   PerSpanData* span = aRubyFrame->mSpan;
   WritingMode lineWM = mRootSpan->mWritingMode;
-  nscoord containerWidth = ContainerWidthForSpan(span);
   for (PerFrameData* pfd = span->mFirstFrame; pfd; pfd = pfd->mNext) {
     for (PerFrameData* rtc = pfd->mNextAnnotation;
          rtc; rtc = rtc->mNextAnnotation) {
-      LogicalRect rtcBounds(lineWM, rtc->mFrame->GetRect(), containerWidth);
+      // When the annotation container is reflowed, the width of the
+      // ruby container is unknown, hence zero should be used here
+      // as container width to get the correct logical rect.
+      LogicalRect rtcBounds(lineWM, rtc->mFrame->GetRect(), 0);
       rtc->mBounds = rtcBounds;
       nscoord rtcWidth = rtcBounds.Width(lineWM);
       for (PerFrameData* rt = rtc->mSpan->mFirstFrame; rt; rt = rt->mNext) {
@@ -2969,8 +2971,24 @@ nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
     ExpandRubyBox(aFrame, reservedISize, aContainerWidth);
   }
 
+  WritingMode lineWM = mRootSpan->mWritingMode;
+  bool isLevelContainer =
+    aFrame->mFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame;
   for (PerFrameData* annotation = aFrame->mNextAnnotation;
        annotation; annotation = annotation->mNextAnnotation) {
+    if (isLevelContainer) {
+      nsIFrame* rtcFrame = annotation->mFrame;
+      MOZ_ASSERT(rtcFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
+      // It is necessary to set the rect again because the container
+      // width was unknown, and zero was used instead when we reflow
+      // them. The corresponding base containers were repositioned in
+      // VerticalAlignFrames and PlaceTopBottomFrames.
+      MOZ_ASSERT(
+        rtcFrame->GetLogicalSize(lineWM) == annotation->mBounds.Size(lineWM));
+      rtcFrame->SetPosition(lineWM, annotation->mBounds.Origin(lineWM),
+                            aContainerWidth);
+    }
+
     nscoord reservedISize = RubyUtils::GetReservedISize(annotation->mFrame);
     if (!reservedISize) {
       continue;
