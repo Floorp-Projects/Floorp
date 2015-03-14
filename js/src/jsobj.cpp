@@ -1159,27 +1159,25 @@ NewObjectCache::fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto 
 
 static bool
 NewObjectWithTaggedProtoIsCachable(ExclusiveContext *cxArg, Handle<TaggedProto> proto,
-                                   NewObjectKind newKind, const Class *clasp,
-                                   HandleObject parentArg)
+                                   NewObjectKind newKind, const Class *clasp)
 {
     return cxArg->isJSContext() &&
            proto.isObject() &&
            newKind == GenericObject &&
            clasp->isNative() &&
            !cxArg->asJSContext()->compartment()->hasObjectMetadataCallback() &&
-           (!parentArg || parentArg == proto.toObject()->getParent()) &&
            !proto.toObject()->is<GlobalObject>();
 }
 
 JSObject *
 js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
-                                  Handle<TaggedProto> proto, HandleObject parentArg,
+                                  Handle<TaggedProto> proto,
                                   gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, proto, newKind, clasp, parentArg);
+    bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, proto, newKind, clasp);
     if (isCachable) {
         JSContext *cx = cxArg->asJSContext();
         JSRuntime *rt = cx->runtime();
@@ -1197,9 +1195,7 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext *cxArg, const Class *clasp,
         return nullptr;
 
     // Default parent to the global.
-    RootedObject parent(cxArg, parentArg);
-    if (!parent)
-        parent = cxArg->global();
+    RootedObject parent(cxArg, cxArg->global());
 
     RootedObject obj(cxArg, NewObject(cxArg, group, parent, allocKind, newKind));
     if (!obj)
@@ -1326,7 +1322,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg, const Class *clasp,
                                   gc::AllocKind allocKind, NewObjectKind newKind)
 {
     if (protoArg) {
-        return NewObjectWithGivenTaggedProto(cxArg, clasp, AsTaggedProto(protoArg), NullPtr(),
+        return NewObjectWithGivenTaggedProto(cxArg, clasp, AsTaggedProto(protoArg),
                                              allocKind, newKind);
     }
 
@@ -1523,8 +1519,7 @@ CreateThisForFunctionWithGroup(JSContext *cx, HandleObjectGroup group,
 
     if (newKind == SingletonObject) {
         Rooted<TaggedProto> protoRoot(cx, group->proto());
-        return NewObjectWithGivenTaggedProto(cx, &PlainObject::class_, protoRoot, cx->global(),
-                                             allocKind, newKind);
+        return NewObjectWithGivenTaggedProto(cx, &PlainObject::class_, protoRoot, allocKind, newKind);
     }
     return NewObjectWithGroup<PlainObject>(cx, group, cx->global(), allocKind, newKind);
 }
@@ -1705,7 +1700,7 @@ js::CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto)
 
     RootedObject clone(cx);
     if (obj->isNative()) {
-        clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto, NullPtr());
+        clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto);
         if (!clone)
             return nullptr;
 
