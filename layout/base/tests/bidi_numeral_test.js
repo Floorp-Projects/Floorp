@@ -8,11 +8,7 @@ var RemoteCanvas = function(url, id) {
 RemoteCanvas.CANVAS_WIDTH = 200;
 RemoteCanvas.CANVAS_HEIGHT = 100;
 
-RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
-    return compareSnapshots(this.snapshot, otherCanvas.snapshot, expected)[0];
-}
-
-RemoteCanvas.prototype.load = function(callback) {
+RemoteCanvas.prototype.load = function(callback, callbackData) {
   var iframe = document.createElement("iframe");
   iframe.id = this.id + "-iframe";
   iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
@@ -20,15 +16,15 @@ RemoteCanvas.prototype.load = function(callback) {
   iframe.src = this.url;
   var me = this;
   iframe.addEventListener("load", function() {
-      me.remotePageLoaded(callback);
+      me.remotePageLoaded(callback, callbackData);
     }, false);
   window.document.body.appendChild(iframe);
 };
 
-RemoteCanvas.prototype.remotePageLoaded = function(callback) {
+RemoteCanvas.prototype.remotePageLoaded = function(callback, callbackData) {
   var ldrFrame = document.getElementById(this.id + "-iframe");
   this.snapshot = snapshotWindow(ldrFrame.contentWindow);
-  callback(this);
+  callback(this, callbackData);
 };
 
 var currentPass = 0;
@@ -42,20 +38,18 @@ function run()
 
 function do_test()
 {
-  var canvases = [];
-  function callbackTestCanvas(canvas)
+  var canvases = [ null, null ];
+  var countDone = 0;
+  function callbackTestCanvas(canvas, index)
   {
-    canvases.push(canvas);
+    ++countDone;
+    canvases[index] = canvas;
 
-    if (canvases.length == 2) { // when both canvases are loaded
-      if (passes[currentPass].op == "==") {
-        ok(canvases[0].compare(canvases[1], true), "Rendering of reftest " + fileprefix + passes[currentPass].file +
-           " is different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
-      } else if (passes[currentPass].op == "!=") {
-        ok(canvases[0].compare(canvases[1], false), "Rendering of reftest " + fileprefix + passes[currentPass].file +
-           " is not different with bidi.numeral == " + passes[currentPass].bidiNumeralValue);
-      }
-
+    if (countDone == 2) { // when both canvases are loaded
+      assertSnapshots(canvases[0].snapshot, canvases[1].snapshot,
+                      passes[currentPass].op == "==", 0,
+                      testfile,
+                      reffile + " (with bidi.numeral == " + passes[currentPass].bidiNumeralValue + ")");
 
       if (currentPass < passes.length - 1) {
         ++currentPass;
@@ -68,6 +62,8 @@ function do_test()
 
   var fileprefix = passes[currentPass].prefix + "-";
   var file = passes[currentPass].file;
+  var testfile = fileprefix + file + ".html";
+  var reffile = fileprefix + file + "-ref.html";
 
   var header = document.createElement("p");
   header.appendChild(document.createTextNode("Testing reftest " + fileprefix + file +
@@ -78,11 +74,11 @@ function do_test()
   SpecialPowers.pushPrefEnv({'set': [['bidi.numeral', passes[currentPass].bidiNumeralValue]]},callback);
 
   function callback() {
-    var testCanvas = new RemoteCanvas(fileprefix + file + ".html", "test-" + currentPass);
-    testCanvas.load(callbackTestCanvas);
+    var testCanvas = new RemoteCanvas(testfile, "test-" + currentPass);
+    testCanvas.load(callbackTestCanvas, 0);
 
-    var refCanvas = new RemoteCanvas(fileprefix + file + "-ref.html", "ref-" + currentPass);
-    refCanvas.load(callbackTestCanvas);
+    var refCanvas = new RemoteCanvas(reffile, "ref-" + currentPass);
+    refCanvas.load(callbackTestCanvas, 1);
   }
 }
 
