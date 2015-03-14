@@ -10,6 +10,7 @@ test $MOZHARNESS_REV # mozharness revision
 
 # XXX: Note that all tests could be faster at smaller bit depth
 Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 2>/dev/null &
+
 export DISPLAY=:0
 
 # First check if the mozharness directory is available. This is intended to be
