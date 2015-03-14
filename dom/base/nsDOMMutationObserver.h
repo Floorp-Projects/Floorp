@@ -24,6 +24,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/MutationObserverBinding.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/AnimationPlayer.h"
 
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
@@ -34,6 +35,8 @@ class nsDOMMutationRecord MOZ_FINAL : public nsISupports,
   virtual ~nsDOMMutationRecord() {}
 
 public:
+  typedef nsTArray<nsRefPtr<mozilla::dom::AnimationPlayer>> AnimationPlayerArray;
+
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
   : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
   {
@@ -91,6 +94,21 @@ public:
     aRetVal.SetOwnedString(mPrevValue);
   }
 
+  void GetAddedAnimations(AnimationPlayerArray& aRetVal) const
+  {
+    aRetVal = mAddedAnimations;
+  }
+
+  void GetRemovedAnimations(AnimationPlayerArray& aRetVal) const
+  {
+    aRetVal = mRemovedAnimations;
+  }
+
+  void GetChangedAnimations(AnimationPlayerArray& aRetVal) const
+  {
+    aRetVal = mChangedAnimations;
+  }
+
   nsCOMPtr<nsINode>             mTarget;
   nsCOMPtr<nsIAtom>             mType;
   nsCOMPtr<nsIAtom>             mAttrName;
@@ -100,6 +118,9 @@ public:
   nsRefPtr<nsSimpleContentList> mRemovedNodes;
   nsCOMPtr<nsINode>             mPreviousSibling;
   nsCOMPtr<nsINode>             mNextSibling;
+  AnimationPlayerArray          mAddedAnimations;
+  AnimationPlayerArray          mRemovedAnimations;
+  AnimationPlayerArray          mChangedAnimations;
 
   nsRefPtr<nsDOMMutationRecord> mNext;
   nsCOMPtr<nsISupports>         mOwner;
@@ -166,6 +187,13 @@ public:
   {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAllAttributes = aAll;
+  }
+
+  bool Animations() { return mParent ? mParent->Animations() : mAnimations; }
+  void SetAnimations(bool aAnimations)
+  {
+    NS_ASSERTION(!mParent, "Shouldn't have parent");
+    mAnimations = aAnimations;
   }
 
   bool AttributeOldValue() {
@@ -263,6 +291,7 @@ private:
   bool                               mAttributes;
   bool                               mAllAttributes;
   bool                               mAttributeOldValue;
+  bool                               mAnimations;
   nsCOMArray<nsIAtom>                mAttributeFilter;
 };
 
