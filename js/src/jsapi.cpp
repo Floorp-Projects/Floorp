@@ -1932,10 +1932,7 @@ JS_NewObject(JSContext *cx, const JSClass *jsclasp)
     MOZ_ASSERT(clasp != &JSFunction::class_);
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    JSObject *obj = NewObjectWithClassProto(cx, clasp, NullPtr());
-    if (obj)
-        obj->assertParentIs(cx->global());
-    return obj;
+    return NewObjectWithClassProto(cx, clasp, NullPtr());
 }
 
 JS_PUBLIC_API(JSObject *)
