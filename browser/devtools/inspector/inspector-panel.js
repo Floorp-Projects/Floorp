@@ -808,7 +808,7 @@ InspectorPanel.prototype = {
       let jsterm = panel.hud.jsterm;
 
       jsterm.execute("inspect($0)");
-      jsterm.focusInput();
+      jsterm.inputNode.focus();
     });
   },
 
