@@ -359,13 +359,14 @@ this.CrashManager.prototype = Object.freeze({
    * @param crashType (string) One of the CRASH_TYPE constants.
    * @param id (string) Crash ID. Likely a UUID.
    * @param date (Date) When the crash occurred.
+   * @param metadata (dictionary) Crash metadata, may be empty.
    *
    * @return promise<null> Resolved when the store has been saved.
    */
-  addCrash: function (processType, crashType, id, date) {
+  addCrash: function (processType, crashType, id, date, metadata) {
     return Task.spawn(function* () {
       let store = yield this._getStore();
-      if (store.addCrash(processType, crashType, id, date)) {
+      if (store.addCrash(processType, crashType, id, date, metadata)) {
         yield store.save();
       }
     }.bind(this));
@@ -1052,10 +1053,12 @@ CrashStore.prototype = Object.freeze({
    *        (string) The crash ID.
    * @param date
    *        (Date) When this crash occurred.
+   * @param metadata
+   *        (dictionary) Crash metadata, may be empty.
    *
    * @return null | object crash record
    */
-  _ensureCrashRecord: function (processType, crashType, id, date) {
+  _ensureCrashRecord: function (processType, crashType, id, date, metadata) {
     if (!id) {
       // Crashes are keyed on ID, so it's not really helpful to store crashes
       // without IDs.
@@ -1083,6 +1086,7 @@ CrashStore.prototype = Object.freeze({
         crashDate: date,
         submissions: new Map(),
         classifications: [],
+        metadata: metadata,
       });
     }
 
@@ -1100,11 +1104,12 @@ CrashStore.prototype = Object.freeze({
    * @param crashType (string) One of the CRASH_TYPE constants.
    * @param id (string) Crash ID. Likely a UUID.
    * @param date (Date) When the crash occurred.
+   * @param metadata (dictionary) Crash metadata, may be empty.
    *
    * @return boolean True if the crash was recorded and false if not.
    */
-  addCrash: function (processType, crashType, id, date) {
-    return !!this._ensureCrashRecord(processType, crashType, id, date);
+  addCrash: function (processType, crashType, id, date, metadata) {
+    return !!this._ensureCrashRecord(processType, crashType, id, date, metadata);
   },
 
   /**
@@ -1264,6 +1269,10 @@ CrashRecord.prototype = Object.freeze({
 
   get classifications() {
     return this._o.classifications;
+  },
+
+  get metadata() {
+    return this._o.metadata;
   },
 });
 
