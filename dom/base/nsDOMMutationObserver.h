@@ -710,7 +710,7 @@ class nsAutoAnimationMutationBatch
   struct Entry;
 
 public:
-  nsAutoAnimationMutationBatch(nsINode* aTarget)
+  explicit nsAutoAnimationMutationBatch(nsINode* aTarget)
     : mBatchTarget(nullptr)
   {
     Init(aTarget);
