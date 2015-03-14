@@ -1975,7 +1975,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
 
         AutoValueVector values(cx);
         if (mode == XDR_ENCODE && !GetScriptArrayObjectElements(cx, aobj, values))
-            return nullptr;
+            return false;
 
         uint32_t initialized;
         {
