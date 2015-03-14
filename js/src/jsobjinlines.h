@@ -648,23 +648,21 @@ NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto,
  */
 JSObject *
 NewObjectWithClassProtoCommon(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                              HandleObject parent, gc::AllocKind allocKind,
-                              NewObjectKind newKind);
+                              gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
 NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, gc::AllocKind allocKind,
-                        NewObjectKind newKind = GenericObject)
+                        gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithClassProtoCommon(cx, clasp, proto, parent, allocKind, newKind);
+    return NewObjectWithClassProtoCommon(cx, clasp, proto, allocKind, newKind);
 }
 
 inline JSObject *
 NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, NewObjectKind newKind = GenericObject)
+                        NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-    return NewObjectWithClassProto(cx, clasp, proto, parent, allocKind, newKind);
+    return NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind);
 }
 
 template<typename T>
@@ -672,7 +670,7 @@ inline T *
 NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), allocKind, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -681,7 +679,7 @@ inline T *
 NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -693,7 +691,7 @@ inline JSObject *
 NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithClassProto(cx, clasp, NullPtr(), NullPtr(), allocKind, newKind);
+    return NewObjectWithClassProto(cx, clasp, NullPtr(), allocKind, newKind);
 }
 
 inline JSObject *
