@@ -1462,10 +1462,6 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisobj)
-        return false;
-
     RootedString str(cx, JS::ToString(cx, args[0]));
     if (!str)
         return false;
@@ -1493,11 +1489,11 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, thisobj, ucbuf, buflen, options, &script))
+        if (!JS_CompileUCScript(cx, cx->global(), ucbuf, buflen, options, &script))
             return false;
     }
 
-    if (!JS_ExecuteScript(cx, thisobj, script))
+    if (!JS_ExecuteScript(cx, cx->global(), script))
         return false;
 
     int64_t endClock = PRMJ_Now();
