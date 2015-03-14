@@ -33,6 +33,7 @@ class nsAttrAndChildArray;
 class nsChildContentList;
 struct nsCSSSelectorList;
 class nsDOMAttributeMap;
+class nsIAnimationObserver;
 class nsIContent;
 class nsIDocument;
 class nsIDOMElement;
@@ -948,6 +949,9 @@ public:
    * adding observers while inside a notification is not a good idea.  An
    * observer that is already observing the node must not be added without
    * being removed first.
+   *
+   * For mutation observers that implement nsIAnimationObserver, use
+   * AddAnimationObserver instead.
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver)
   {
@@ -961,12 +965,29 @@ public:
   /**
    * Same as above, but only adds the observer if its not observing
    * the node already.
+   *
+   * For mutation observers that implement nsIAnimationObserver, use
+   * AddAnimationObserverUnlessExists instead.
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
   {
     nsSlots* s = Slots();
     s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
   }
+
+  /**
+   * Same as AddMutationObserver, but for nsIAnimationObservers.  This
+   * additionally records on the document that animation observers have
+   * been registered, which is used to determine whether notifications
+   * must be fired when animations are added, removed or changed.
+   */
+  void AddAnimationObserver(nsIAnimationObserver* aAnimationObserver);
+
+  /**
+   * Same as above, but only adds the observer if its not observing
+   * the node already.
+   */
+  void AddAnimationObserverUnlessExists(nsIAnimationObserver* aAnimationObserver);
 
   /**
    * Removes a mutation observer.

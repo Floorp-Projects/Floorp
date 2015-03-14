@@ -457,6 +457,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       newDoc->SetMayHaveDOMMutationObservers();
     }
 
+    if (oldDoc != newDoc && oldDoc->MayHaveAnimationObservers()) {
+      newDoc->SetMayHaveAnimationObservers();
+    }
+
     if (elem) {
       elem->RecompileScriptEventListeners();
     }
