@@ -3221,8 +3221,7 @@ CreateArrayPrototype(JSContext *cx, JSProtoKey key)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_, TaggedProto(proto),
-                                                      cx->global(), metadata,
-                                                      gc::AllocKind::OBJECT0));
+                                                      metadata, gc::AllocKind::OBJECT0));
     if (!shape)
         return nullptr;
 
@@ -3350,7 +3349,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
      * See JSObject::createArray.
      */
     RootedShape shape(cxArg, EmptyShape::getInitialShape(cxArg, &ArrayObject::class_,
-                                                         TaggedProto(proto), cxArg->global(),
+                                                         TaggedProto(proto),
                                                          metadata, gc::AllocKind::OBJECT0));
     if (!shape)
         return nullptr;

@@ -174,7 +174,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
-                                                      cx->global(), metadata, FINALIZE_KIND,
+                                                      metadata, FINALIZE_KIND,
                                                       BaseShape::INDEXED));
     if (!shape)
         return nullptr;

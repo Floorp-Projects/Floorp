@@ -54,8 +54,7 @@ NativeObject::canRemoveLastProperty()
      */
     MOZ_ASSERT(!inDictionaryMode());
     Shape *previous = lastProperty()->previous().get();
-    return previous->getObjectParent() == lastProperty()->getObjectParent()
-        && previous->getObjectMetadata() == lastProperty()->getObjectMetadata()
+    return previous->getObjectMetadata() == lastProperty()->getObjectMetadata()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 

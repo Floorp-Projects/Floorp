@@ -949,7 +949,6 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
         // dictionary mode.
         RootedShape last(cx, EmptyShape::getInitialShape(cx, nobj->getClass(),
                                                          nobj->getTaggedProto(),
-                                                         nobj->getParent(),
                                                          nobj->getMetadata(),
                                                          nobj->numFixedSlots(),
                                                          nobj->lastProperty()->getObjectFlags()));
@@ -1122,7 +1121,7 @@ NewObject(ExclusiveContext *cx, HandleObjectGroup group, gc::AllocKind kind,
                     : GetGCKindSlots(kind, clasp);
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(),
-                                                      cx->global(), metadata, nfixed));
+                                                      metadata, nfixed));
     if (!shape)
         return nullptr;
 
@@ -2096,8 +2095,10 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject srcObj)
         if (!res)
             return nullptr;
 
-        RootedShape newShape(cx, ReshapeForParentAndAllocKind(cx, srcObj->as<PlainObject>().lastProperty(),
-                                                              TaggedProto(proto), cx->global(), kind));
+        // XXXbz Do we still need the reshape here?  We got "kind" off the
+        // srcObj, no?  See bug 1143270.
+        RootedShape newShape(cx, ReshapeForAllocKind(cx, srcObj->as<PlainObject>().lastProperty(),
+                                                     TaggedProto(proto), kind));
         if (!newShape || !res->setLastProperty(cx, newShape))
             return nullptr;
 
@@ -3863,10 +3864,6 @@ JSObject::dump()
         dumpValue(ObjectOrNullValue(proto.toObjectOrNull()));
     fputc('\n', stderr);
 
-    fprintf(stderr, "parent ");
-    dumpValue(ObjectOrNullValue(obj->getParent()));
-    fputc('\n', stderr);
-
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         fprintf(stderr, "private %p\n", obj->as<NativeObject>().getPrivate());
 
@@ -4096,14 +4093,4 @@ JSObject::markChildren(JSTracer *trc)
                                "objectElements");
         } while (false);
     }
-}
-
-JSObject *
-JSObject::getParent() const
-{
-    if (Shape *shape = maybeShape())
-        return shape->getObjectParent();
-
-    MOZ_ASSERT(is<UnboxedPlainObject>());
-    return &global();
 }
