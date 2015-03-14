@@ -519,10 +519,16 @@ this.CrashManager.prototype = Object.freeze({
                            entry.path);
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
-
-          let [crashID] = lines;
+          // fall-through
+        case "crash.main.2":
+          let crashID = lines[0];
+          let metadata = {};
+          for (let i = 1; i < lines.length; i++) {
+            let [key, val] = lines[i].split("=");
+            metadata[key] = val;
+          }
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                         crashID, date);
+                         crashID, date, metadata);
           break;
 
         case "crash.submission.1":
