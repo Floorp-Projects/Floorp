@@ -1070,7 +1070,7 @@ ProcessArgs(JSContext *cx, char **argv, int argc, XPCShellDirProvider* aDirProvi
 
             JS::CompileOptions opts(cx);
             opts.setFileAndLine("-e", 1);
-            JS::Evaluate(cx, global, opts, argv[i], strlen(argv[i]), &rval);
+            JS::Evaluate(cx, opts, argv[i], strlen(argv[i]), &rval);
 
             isInteractive = false;
             break;

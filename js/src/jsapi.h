@@ -3765,24 +3765,50 @@ CloneAndExecuteScript(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSScr
 
 namespace JS {
 
+/*
+ * Evaluate the given source buffer in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          SourceBufferHolder &srcBuf, JS::MutableHandleValue rval);
 
+/*
+ * As above, but providing an explicit scope chain.  scopeChain must not include
+ * the global object on it; that's implicit.  It needs to contain the other
+ * objects that should end up on the script's scope chain.
+ */
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &options,
          SourceBufferHolder &srcBuf, JS::MutableHandleValue rval);
 
+/*
+ * Evaluate the given character buffer in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char16_t *chars, size_t length, JS::MutableHandleValue rval);
 
+/*
+ * As above, but providing an explicit scope chain.  scopeChain must not include
+ * the global object on it; that's implicit.  It needs to contain the other
+ * objects that should end up on the script's scope chain.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &options,
+         const char16_t *chars, size_t length, JS::MutableHandleValue rval);
+
+/*
+ * Evaluate the given byte buffer in the scope of the current global of cx.
+ */
+extern JS_PUBLIC_API(bool)
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char *bytes, size_t length, JS::MutableHandleValue rval);
 
+/*
+ * Evaluate the given file in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char *filename, JS::MutableHandleValue rval);
 
 } /* namespace JS */
