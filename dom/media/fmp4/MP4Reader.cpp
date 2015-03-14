@@ -1083,8 +1083,9 @@ bool MP4Reader::IsDormantNeeded()
 #endif
         mVideo.mDecoder &&
         mVideo.mDecoder->IsDormantNeeded();
-#endif
+#else
   return false;
+#endif
 }
 
 void MP4Reader::ReleaseMediaResources()
