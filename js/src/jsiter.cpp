@@ -824,7 +824,7 @@ js::CreateItrResultObject(JSContext *cx, HandleValue value, bool done)
     if (!proto)
         return nullptr;
 
-    RootedPlainObject obj(cx, NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global()));
+    RootedPlainObject obj(cx, NewObjectWithGivenProto<PlainObject>(cx, proto));
     if (!obj)
         return nullptr;
 

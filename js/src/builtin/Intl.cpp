@@ -420,7 +420,7 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
 static bool
 CreateDefaultOptions(JSContext *cx, MutableHandleValue defaultOptions)
 {
-    RootedObject options(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), cx->global()));
+    RootedObject options(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr()));
     if (!options)
         return false;
     defaultOptions.setObject(*options);
@@ -439,7 +439,7 @@ static bool
 intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
                       GetAvailable getAvailable, MutableHandleValue result)
 {
-    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(), NullPtr()));
+    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr()));
     if (!locales)
         return false;
 
@@ -629,7 +629,7 @@ Collator(JSContext *cx, CallArgs args, bool construct)
         RootedObject proto(cx, cx->global()->getOrCreateCollatorPrototype(cx));
         if (!proto)
             return false;
-        obj = NewObjectWithGivenProto(cx, &CollatorClass, proto, cx->global());
+        obj = NewObjectWithGivenProto(cx, &CollatorClass, proto);
         if (!obj)
             return false;
 
@@ -1121,7 +1121,7 @@ NumberFormat(JSContext *cx, CallArgs args, bool construct)
         RootedObject proto(cx, cx->global()->getOrCreateNumberFormatPrototype(cx));
         if (!proto)
             return false;
-        obj = NewObjectWithGivenProto(cx, &NumberFormatClass, proto, cx->global());
+        obj = NewObjectWithGivenProto(cx, &NumberFormatClass, proto);
         if (!obj)
             return false;
 
@@ -1580,7 +1580,7 @@ DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
         RootedObject proto(cx, cx->global()->getOrCreateDateTimeFormatPrototype(cx));
         if (!proto)
             return false;
-        obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto, cx->global());
+        obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto);
         if (!obj)
             return false;
 
@@ -2069,7 +2069,7 @@ GlobalObject::initIntlObject(JSContext *cx, Handle<GlobalObject*> global)
 {
     RootedObject Intl(cx);
     RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
-    Intl = NewObjectWithGivenProto(cx, &IntlClass, proto, global, SingletonObject);
+    Intl = NewObjectWithGivenProto(cx, &IntlClass, proto, SingletonObject);
     if (!Intl)
         return false;
 

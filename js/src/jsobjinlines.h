@@ -598,33 +598,33 @@ NewObjectWithGivenTaggedProto(ExclusiveContext *cx, Handle<TaggedProto> proto, H
 
 inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind)
+                        gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, allocKind,
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), NullPtr(), allocKind,
                                          newKind);
 }
 
 inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, NewObjectKind newKind = GenericObject)
-{
-    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, newKind);
-}
-
-template <typename T>
-inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), parent, newKind);
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), NullPtr(), newKind);
 }
 
 template <typename T>
 inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto,
+                        NewObjectKind newKind = GenericObject)
+{
+    return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), NullPtr(), newKind);
+}
+
+template <typename T>
+inline T *
+NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto), parent,
+    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto), NullPtr(),
                                                   allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }

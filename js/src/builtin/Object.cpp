@@ -635,7 +635,7 @@ js::ObjectCreateImpl(JSContext *cx, HandleObject proto, NewObjectKind newKind,
                                                newKind);
     }
 
-    return NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global(), allocKind, newKind);
+    return NewObjectWithGivenProto<PlainObject>(cx, proto, allocKind, newKind);
 }
 
 PlainObject *
@@ -1093,17 +1093,15 @@ CreateObjectConstructor(JSContext *cx, JSProtoKey key)
 static JSObject *
 CreateObjectPrototype(JSContext *cx, JSProtoKey key)
 {
-    Rooted<GlobalObject*> self(cx, cx->global());
-
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(self->isNative());
+    MOZ_ASSERT(cx->global()->isNative());
 
     /*
      * Create |Object.prototype| first, mirroring CreateBlankProto but for the
      * prototype of the created object.
      */
     RootedPlainObject objectProto(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr(),
-                                                                           self, SingletonObject));
+                                                                           SingletonObject));
     if (!objectProto)
         return nullptr;
 
@@ -1135,7 +1133,7 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     if (isSelfHostingGlobal) {
         intrinsicsHolder = self;
     } else {
-        intrinsicsHolder = NewObjectWithGivenProto<PlainObject>(cx, proto, self, TenuredObject);
+        intrinsicsHolder = NewObjectWithGivenProto<PlainObject>(cx, proto, TenuredObject);
         if (!intrinsicsHolder)
             return false;
     }
