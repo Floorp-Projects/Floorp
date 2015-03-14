@@ -422,10 +422,6 @@ class JSObject : public js::gc::Cell
      * a mix of other objects above it before the global object is reached.
      */
 
-    /* Access the parent link of an object. */
-    JSObject *getParent() const;
-    static bool setParent(JSContext *cx, js::HandleObject obj, js::HandleObject newParent);
-
     /*
      * Get the enclosing scope of an object. When called on non-scope object,
      * this will just be the global (the name "enclosing scope" still applies
