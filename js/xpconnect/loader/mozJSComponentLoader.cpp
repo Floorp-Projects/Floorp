@@ -671,6 +671,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
     RootedObject obj(cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(),
                                                   mReuseLoaderGlobal, &realFile));
     NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
+    MOZ_ASSERT(JS_IsGlobalObject(obj) == !mReuseLoaderGlobal);
 
     JSAutoCompartment ac(cx, obj);
 
@@ -898,6 +899,12 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
         return NS_ERROR_FAILURE;
     }
 
+    // We must have a script or a function (but not both!) here.  We have a
+    // script when we're not reusing the loader global, and a function
+    // otherwise.
+    MOZ_ASSERT(!!script != !!function);
+    MOZ_ASSERT(!!script == JS_IsGlobalObject(obj));
+
     if (writeToCache) {
         // We successfully compiled the script, so cache it.
         if (script) {
@@ -940,7 +947,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
         if (aPropagateExceptions)
             ContextOptionsRef(cx).setDontReportUncaught(true);
         if (script) {
-            ok = JS_ExecuteScript(cx, obj, script);
+            ok = JS_ExecuteScript(cx, script);
         } else {
             RootedValue rval(cx);
             ok = JS_CallFunction(cx, obj, function, JS::HandleValueArray::empty(), &rval);
