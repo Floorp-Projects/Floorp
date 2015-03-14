@@ -766,8 +766,13 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       nsLineLayout* lineLayout = textReflowStates[i]->mLineLayout;
       nscoord textIStart = lineLayout->GetCurrentICoord();
       lineLayout->ReflowFrame(textFrame, reflowStatus, nullptr, pushedFrame);
-      MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
-                 "Any line break inside ruby box should has been suppressed");
+      if (MOZ_UNLIKELY(NS_INLINE_IS_BREAK(reflowStatus) || pushedFrame)) {
+        MOZ_ASSERT_UNREACHABLE(
+            "Any line break inside ruby box should have been suppressed");
+        // For safety, always drain the overflow list, so that
+        // no frames are left there after reflow.
+        textFrame->DrainSelfOverflowList();
+      }
       nscoord textISize = lineLayout->GetCurrentICoord() - textIStart;
       columnISize = std::max(columnISize, textISize);
     }
@@ -783,8 +788,13 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
     nscoord baseIStart = lineLayout->GetCurrentICoord();
     lineLayout->ReflowFrame(aColumn.mBaseFrame, reflowStatus,
                             nullptr, pushedFrame);
-    MOZ_ASSERT(!NS_INLINE_IS_BREAK(reflowStatus) && !pushedFrame,
-               "Any line break inside ruby box should has been suppressed");
+    if (MOZ_UNLIKELY(NS_INLINE_IS_BREAK(reflowStatus) || pushedFrame)) {
+      MOZ_ASSERT_UNREACHABLE(
+        "Any line break inside ruby box should have been suppressed");
+      // For safety, always drain the overflow list, so that
+      // no frames are left there after reflow.
+      aColumn.mBaseFrame->DrainSelfOverflowList();
+    }
     nscoord baseISize = lineLayout->GetCurrentICoord() - baseIStart;
     columnISize = std::max(columnISize, baseISize);
   }
