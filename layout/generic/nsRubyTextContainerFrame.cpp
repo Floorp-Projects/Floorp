@@ -149,22 +149,19 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   LogicalSize size(lineWM, mISize, 0);
   if (!mFrames.IsEmpty()) {
     size.BSize(lineWM) = maxBCoord - minBCoord;
-    nscoord deltaBCoord = -minBCoord;
-    if (lineWM.IsVerticalRL()) {
-      deltaBCoord -= size.BSize(lineWM);
-    }
-
-    if (deltaBCoord != 0) {
-      nscoord containerWidth = size.Width(lineWM);
-      for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-        nsIFrame* child = e.get();
-        LogicalPoint pos = child->GetLogicalPosition(lineWM, containerWidth);
-        pos.B(lineWM) += deltaBCoord;
-        // Relative positioning hasn't happened yet.
-        // So MovePositionBy should not be used here.
-        child->SetPosition(lineWM, pos, containerWidth);
-        nsContainerFrame::PlaceFrameView(child);
-      }
+    nscoord containerWidth = size.Width(lineWM);
+    for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+      // We reflowed the child with container width 0, as the true width
+      // was not yet known at that time.
+      LogicalPoint pos = child->GetLogicalPosition(lineWM, 0);
+      // Adjust block position to account for minBCoord,
+      // then reposition child based on the true container width.
+      pos.B(lineWM) -= minBCoord;
+      // Relative positioning hasn't happened yet.
+      // So MovePositionBy should not be used here.
+      child->SetPosition(lineWM, pos, containerWidth);
+      nsContainerFrame::PlaceFrameView(child);
     }
   }
 
