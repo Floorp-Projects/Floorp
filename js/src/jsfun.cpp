@@ -2108,8 +2108,16 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         if (!cloneProto)
             return nullptr;
     }
+#ifdef DEBUG
     RootedObject realParent(cx, SkipScopeParent(parent));
-    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto, realParent,
+    // We'd like to assert that realParent is null-or-global, but
+    // js::ExecuteInGlobalAndReturnScope messes that up.  Assert that it's one
+    // of those or the unqualified var obj, since it should still be ok to
+    // parent to the global in that case.
+    MOZ_ASSERT(!realParent || realParent == cx->global() ||
+               realParent->isUnqualifiedVarObj());
+#endif
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto, NullPtr(),
                                                  allocKind, newKind);
     if (!cloneobj)
         return nullptr;

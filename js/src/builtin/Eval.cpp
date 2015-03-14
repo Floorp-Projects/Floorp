@@ -528,6 +528,8 @@ js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScri
 
     RootedValue thisv(cx, ObjectValue(*thisobj));
     RootedValue rval(cx);
+    // XXXbz when this is fixed to pass in an actual ScopeObject, fix
+    // up the assert in js::CloneFunctionObject accordingly.
     if (!ExecuteKernel(cx, script, *scope, thisv, EXECUTE_GLOBAL,
                        NullFramePtr() /* evalInFrame */, rval.address()))
     {
