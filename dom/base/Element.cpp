@@ -3188,7 +3188,7 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
          playerIdx < collection->mPlayers.Length();
          playerIdx++) {
       AnimationPlayer* player = collection->mPlayers[playerIdx];
-      if (player->HasCurrentSource() || player->HasInEffectSource()) {
+      if (player->IsRelevant()) {
         aPlayers.AppendElement(player);
       }
     }

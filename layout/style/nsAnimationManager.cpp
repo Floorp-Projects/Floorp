@@ -350,6 +350,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         newPlayer = nullptr;
         newPlayers.ReplaceElementAt(newIdx, oldPlayer);
         collection->mPlayers.RemoveElementAt(oldIdx);
+
+        // We've touched the old animation's timing properties, so this
+        // could update the old player's relevance.
+        oldPlayer->UpdateRelevance();
       }
     }
   } else {
