@@ -16,25 +16,37 @@ class TestCommitParser(unittest.TestCase):
 
     def test_normalize_test_list_none(self):
         self.assertEqual(
-            normalize_test_list(['woot'], 'none'), []
+            normalize_test_list({}, ['woot'], 'none'), []
         )
 
     def test_normalize_test_list_all(self):
         self.assertEqual(
-            normalize_test_list(['woot'], 'all'),
+            normalize_test_list({}, ['woot'], 'all'),
             [{ 'test': 'woot' }]
         )
 
     def test_normalize_test_list_specific_tests(self):
         self.assertEqual(
-            normalize_test_list(['woot'], 'a,b,c'),
+            normalize_test_list({}, ['woot'], 'a,b,c'),
             [{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }]
         )
 
     def test_normalize_test_list_specific_tests_with_whitespace(self):
         self.assertEqual(
-            normalize_test_list(['woot'], 'a, b, c'),
+            normalize_test_list({}, ['woot'], 'a, b, c'),
             [{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }]
+        )
+
+    def test_normalize_test_list_with_alias(self):
+        self.assertEqual(
+            normalize_test_list({ "a": "alpha" }, ['woot'], 'a, b, c'),
+            [{ 'test': 'alpha' }, { 'test': 'b' }, { 'test': 'c' }]
+        )
+
+    def test_normalize_test_list_with_alias_and_chunk(self):
+        self.assertEqual(
+            normalize_test_list({ "a": "alpha" }, ['woot'], 'a-1, a-3'),
+            [{ 'test': 'alpha', "only_chunks": set([1, 3])  }]
         )
 
     def test_invalid_commit(self):
@@ -51,6 +63,42 @@ class TestCommitParser(unittest.TestCase):
         commit = 'try: -b o -p linux -u none -t none'
         jobs = {
             'flags': {
+                'builds': ['linux', 'linux64'],
+                'tests': ['web-platform-tests'],
+            },
+            'builds': {
+                'linux': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
+                    }
+                },
+            },
+            'tests': {}
+        }
+
+        expected = [
+            {
+                'task': 'task/linux',
+                'dependents': [],
+                'additional-parameters': {}
+            }
+        ]
+
+        result = parse_commit(commit, jobs)
+        self.assertEqual(expected, result)
+
+    def test_flag_aliasing(self):
+        commit = 'try: -b o -p magic-alias -u none -t none'
+        jobs = {
+            'flags': {
+                'aliases': {
+                    'magic-alias': 'linux'
+                },
                 'builds': ['linux', 'linux64'],
                 'tests': ['web-platform-tests'],
             },
