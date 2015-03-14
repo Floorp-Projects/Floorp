@@ -600,7 +600,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         if (uint16_t(flagsword) & JSFunction::EXTENDED)
             allocKind = JSFunction::ExtendedFinalizeKind;
         fun = NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                                   /* parent = */ NullPtr(), NullPtr(), proto,
+                                   /* enclosingDynamicScope = */ NullPtr(), NullPtr(), proto,
                                    allocKind, TenuredObject);
         if (!fun)
             return false;
@@ -2046,8 +2046,11 @@ js::NewFunctionWithProto(ExclusiveContext *cx, Native native,
     // isSingleton implies isInterpreted.
     if (native && !IsAsmJSModuleNative(native))
         newKind = SingletonObject;
-    RootedObject realParent(cx, SkipScopeParent(enclosingDynamicScope));
-    funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, realParent, allocKind,
+#ifdef DEBUG
+    RootedObject nonScopeParent(cx, SkipScopeParent(enclosingDynamicScope));
+    MOZ_ASSERT(!nonScopeParent || nonScopeParent == cx->global());
+#endif
+    funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, NullPtr(), allocKind,
                                      newKind);
     if (!funobj)
         return nullptr;
