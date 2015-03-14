@@ -56,6 +56,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord,
                                       mTarget,
                                       mPreviousSibling, mNextSibling,
                                       mAddedNodes, mRemovedNodes,
+                                      mAddedAnimations, mRemovedAnimations,
+                                      mChangedAnimations,
                                       mNext, mOwner)
 
 // Observer
@@ -467,6 +469,10 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   bool characterDataOldValue =
     aOptions.mCharacterDataOldValue.WasPassed() &&
     aOptions.mCharacterDataOldValue.Value();
+  bool animations =
+    aOptions.mAnimations.WasPassed() &&
+    aOptions.mAnimations.Value() &&
+    nsContentUtils::ThreadsafeIsCallerChrome();
 
   if (!aOptions.mAttributes.WasPassed() &&
       (aOptions.mAttributeOldValue.WasPassed() ||
@@ -479,7 +485,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     characterData = true;
   }
 
-  if (!(childList || attributes || characterData)) {
+  if (!(childList || attributes || characterData || animations)) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
@@ -531,6 +537,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   r->SetCharacterDataOldValue(characterDataOldValue);
   r->SetAttributeFilter(filters);
   r->SetAllAttributes(allAttrs);
+  r->SetAnimations(animations);
   r->RemoveClones();
 
 #ifdef DEBUG
@@ -582,6 +589,7 @@ nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfo>
     info.mSubtree = mr->Subtree();
     info.mAttributeOldValue.Construct(mr->AttributeOldValue());
     info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
+    info.mAnimations.Construct(mr->Animations());
     nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
     if (filters.Count()) {
       info.mAttributeFilter.Construct();
