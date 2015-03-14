@@ -631,8 +631,7 @@ js::ObjectCreateImpl(JSContext *cx, HandleObject proto, NewObjectKind newKind,
 
         MOZ_ASSERT(!ngroup->proto().toObjectOrNull());
 
-        return NewObjectWithGroup<PlainObject>(cx, ngroup, cx->global(), allocKind,
-                                               newKind);
+        return NewObjectWithGroup<PlainObject>(cx, ngroup, allocKind, newKind);
     }
 
     return NewObjectWithGivenProto<PlainObject>(cx, proto, allocKind, newKind);
