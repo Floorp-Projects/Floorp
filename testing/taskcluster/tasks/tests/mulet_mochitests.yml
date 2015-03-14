@@ -27,8 +27,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 5
     treeherder:
       groupSymbol: tc-M
       groupName: Mulet mochitests
       symbol: {{chunk}}
-

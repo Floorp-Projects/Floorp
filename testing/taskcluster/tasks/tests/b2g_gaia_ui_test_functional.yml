@@ -31,6 +31,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 3
+
     treeherder:
       groupName: Gaia Python Integration Tests
       groupSymbol: tc-Gip

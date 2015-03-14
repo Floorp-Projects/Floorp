@@ -27,6 +27,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 20
     treeherder:
       groupName: Reftest
       groupSymbol: tc-R
