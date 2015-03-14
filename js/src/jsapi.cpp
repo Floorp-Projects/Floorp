@@ -4115,15 +4115,15 @@ ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain, HandleScript scriptAr
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, MutableHandleValue rval)
+JS_ExecuteScript(JSContext *cx, HandleScript scriptArg, MutableHandleValue rval)
 {
-    return ExecuteScript(cx, obj, scriptArg, rval.address());
+    return ExecuteScript(cx, cx->global(), scriptArg, rval.address());
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
+JS_ExecuteScript(JSContext *cx, HandleScript scriptArg)
 {
-    return ExecuteScript(cx, obj, scriptArg, nullptr);
+    return ExecuteScript(cx, cx->global(), scriptArg, nullptr);
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
