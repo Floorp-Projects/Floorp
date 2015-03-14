@@ -1234,8 +1234,8 @@ nsLineLayout::GetCurrentFrameInlineDistanceFromBlock()
  * containers from their rect. It is necessary because:
  * Containers are not part of the line in their levels, which means
  * their bounds are not set properly before.
- * Ruby annotations' block-axis coordinate may have been changed when
- * reflowing their containers.
+ * Ruby annotations' position may have been changed when reflowing
+ * their containers.
  */
 void
 nsLineLayout::SyncAnnotationBounds(PerFrameData* aRubyFrame)
@@ -1256,11 +1256,9 @@ nsLineLayout::SyncAnnotationBounds(PerFrameData* aRubyFrame)
       nscoord rtcWidth = rtcBounds.Width(lineWM);
       for (PerFrameData* rt = rtc->mSpan->mFirstFrame; rt; rt = rt->mNext) {
         LogicalRect rtBounds = rt->mFrame->GetLogicalRect(lineWM, rtcWidth);
-        MOZ_ASSERT(rt->mBounds.IStart(lineWM) == rtBounds.IStart(lineWM) &&
-                   rt->mBounds.ISize(lineWM) == rtBounds.ISize(lineWM) &&
-                   rt->mBounds.BSize(lineWM) == rtBounds.BSize(lineWM),
-                   "Metrics other than bstart should not have been changed");
-        rt->mBounds.BStart(lineWM) = rtBounds.BStart(lineWM);
+        MOZ_ASSERT(rt->mBounds.Size(lineWM) == rtBounds.Size(lineWM),
+                   "Size of the annotation should not have been changed");
+        rt->mBounds.SetOrigin(lineWM, rtBounds.Origin(lineWM));
       }
     }
   }
