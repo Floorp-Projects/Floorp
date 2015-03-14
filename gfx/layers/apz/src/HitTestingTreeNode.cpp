@@ -156,7 +156,7 @@ HitTestingTreeNode::IsPrimaryHolder() const
 void
 HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
                                    const gfx::Matrix4x4& aTransform,
-                                   const Maybe<nsIntRegion>& aClipRegion,
+                                   const Maybe<ParentLayerIntRegion>& aClipRegion,
                                    const EventRegionsOverride& aOverride)
 {
   mEventRegions = aRegions;
