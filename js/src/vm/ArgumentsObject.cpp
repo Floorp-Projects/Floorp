@@ -173,7 +173,6 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!NewObjectMetadata(cx, &metadata))
         return nullptr;
 
-    proto->assertParentIs(cx->global());
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
                                                       cx->global(), metadata, FINALIZE_KIND,
                                                       BaseShape::INDEXED));

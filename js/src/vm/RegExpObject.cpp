@@ -111,7 +111,6 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other)
      * the clone -- if the |RegExpStatics| provides more flags we'll
      * need a different |RegExpShared|.
      */
-    other->getProto()->assertParentIs(&other->getProto()->global());
     RegExpStatics *res = other->getProto()->global().getRegExpStatics(cx);
     if (!res)
         return nullptr;
