@@ -65,6 +65,17 @@ hangs in child processes can be easily recorded by the main process, we do not
 foresee the need for writing event files for child processes, design
 considerations below notwithstanding.
 
+crash.main.2
+^^^^^^^^^^^^
+
+This event is produced when the main process crashes.
+
+The payload of this event is delimited by UNIX newlines (*\n*) and contains the
+following fields:
+
+* The crash ID string, very likely a UUID
+* 0 or more lines of metadata, each containing one key=value pair of text
+
 crash.main.1
 ^^^^^^^^^^^^
 
