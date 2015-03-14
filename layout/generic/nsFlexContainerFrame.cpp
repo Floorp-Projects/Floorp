@@ -3693,7 +3693,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       if (item->HadMeasuringReflow()) {
         // We've already reflowed the child once. Was the size we gave it in
         // that reflow the same as its final (post-flexing/stretching) size?
-        if (item->Frame()->GetSize() == finalFlexedPhysicalSize) {
+        if (finalFlexedPhysicalSize ==
+            item->Frame()->GetContentRectRelativeToSelf().Size()) {
           // It has the correct size --> no need to reflow! Just make sure it's
           // at the right position.
           itemNeedsReflow = false;

@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1142686
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1142686</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .flex {
+      display: flex;
+    }
+    #outerFlex {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1142686">Mozilla Bug 1142686</a>
+<div id="display">
+  <div id="content">
+    <div class="flex" id="outerFlex">
+      <div class="flex" id="midFlex">
+        <div id="innerBlock">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+"use strict";
+
+/** Test for Bug 1142686 **/
+
+/**
+ * This test checks how many reflows are required, when we make a change inside
+ * a set of two nested flex containers, with various styles applied to
+ * the containers & innermost child.  Some flex layout operations require two
+ * passes (which can cause exponential blowup). This test is intended to verify
+ * that certain configurations do *not* require two-pass layout, by comparing
+ * the reflow-count for a more-complex scenario against a less-complex scenario.
+ *
+ * We have two nested flex containers around an initially-empty block. For each
+ * measurement, we put some text in the block, and we see how many frame-reflow
+ * operations occur as a result.
+ */
+
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+// The elements:
+const gOuterFlex = document.getElementById("outerFlex");
+const gMidFlex = document.getElementById("midFlex");
+const gInnerBlock = document.getElementById("innerBlock");
+
+// Remove contents of inner block, and remove manual styling:
+function cleanup()
+{
+  outerFlex.style = midFlex.style = innerBlock.style = "";
+  while (innerBlock.firstChild) {
+    innerBlock.removeChild(innerBlock.firstChild);
+  }
+}
+
+// Each testcase here has a label (used in test output), a function to set up
+// the testcase, and (optionally) a function to set up the reference case.
+let gTestcases = [
+ {
+    label : "border on flex items",
+    addTestStyle : function() {
+      midFlex.style.border = innerBlock.style.border = "3px solid black";
+    },
+ },
+ {
+    label : "padding on flex items",
+    addTestStyle : function() {
+      midFlex.style.padding = innerBlock.style.padding = "5px";
+    },
+ },
+ {
+    label : "margin on flex items",
+    addTestStyle : function() {
+      midFlex.style.margin = innerBlock.style.margin = "2px";
+    },
+ },
+];
+
+// Flush layout & return the global frame-reflow-count
+function getReflowCount()
+{
+  let unusedVal = gOuterFlex.offsetHeight; // flush layout
+  return gUtils.framesReflowed;
+}
+
+// This function adds some text inside of gInnerBlock, and returns the number
+// of frames that need to be reflowed as a result.
+function makeTweakAndCountReflows()
+{
+  let beforeCount = getReflowCount();
+  gInnerBlock.appendChild(document.createTextNode("hello"));
+  let afterCount = getReflowCount();
+
+  let numReflows = afterCount - beforeCount;
+  if (numReflows <= 0) {
+    ok(false, "something's wrong -- we should've reflowed *something*");
+  }
+  return numReflows;
+}
+
+// Given a testcase (from gTestcases), this function verifies that the
+// testcase scenario requires the same number of reflows as the reference
+// scenario.
+function runOneTest(aTestcase)
+{
+  aTestcase.addTestStyle();
+  let numTestcaseReflows = makeTweakAndCountReflows();
+  cleanup();
+
+  if (aTestcase.addReferenceStyle) {
+    aTestcase.addReferenceStyle();
+  }
+  let numReferenceReflows = makeTweakAndCountReflows();
+  cleanup();
+
+  is(numTestcaseReflows, numReferenceReflows,
+     "Testcase & reference case should require same number of reflows" +
+     " (testcase label: '" + aTestcase.label + "')");
+}
+
+gTestcases.forEach(runOneTest);
+
+</script>
+</pre>
+</body>
+</html>
