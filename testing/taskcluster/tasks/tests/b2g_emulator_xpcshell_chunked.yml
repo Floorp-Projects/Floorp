@@ -28,6 +28,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 2
     treeherder:
       groupName: XPCShell
       symbol: X{{chunk}}
