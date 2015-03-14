@@ -2,6 +2,9 @@
 # List of all possible flags for each category of tests used in the case where
 # "all" is specified.
 flags:
+  aliases:
+    mochitests: mochitest
+
   builds:
     - emulator
     - emulator-jb
