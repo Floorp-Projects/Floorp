@@ -18,6 +18,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
+#include "nsDOMMutationObserver.h"
 #include <math.h>
 
 using namespace mozilla;
@@ -259,6 +260,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       disp->mAnimations[0].GetName().IsEmpty()) {
     return nullptr;
   }
+
+  nsAutoAnimationMutationBatch mb(aElement);
 
   // build the animations list
   dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
@@ -714,6 +717,9 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
        l = PR_NEXT_LINK(l)) {
     AnimationPlayerCollection* collection =
       static_cast<AnimationPlayerCollection*>(l);
+
+    nsAutoAnimationMutationBatch mb(collection->mElement);
+
     collection->Tick();
     bool canThrottleTick = aFlags == Can_Throttle &&
       collection->CanPerformOnCompositorThread(

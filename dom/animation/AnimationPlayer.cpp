@@ -335,7 +335,15 @@ AnimationPlayer::IsRunning() const
 void
 AnimationPlayer::UpdateRelevance()
 {
+  bool wasRelevant = mIsRelevant;
   mIsRelevant = HasCurrentSource() || HasInEffectSource();
+
+  // Notify animation observers.
+  if (wasRelevant && !mIsRelevant) {
+    nsNodeUtils::AnimationRemoved(this);
+  } else if (!wasRelevant && mIsRelevant) {
+    nsNodeUtils::AnimationAdded(this);
+  }
 }
 
 bool
