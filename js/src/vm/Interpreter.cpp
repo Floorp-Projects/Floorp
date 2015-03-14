@@ -3581,7 +3581,7 @@ CASE(JSOP_OBJWITHPROTO)
     RootedObject &proto = rootObject0;
     proto = REGS.sp[-1].toObjectOrNull();
 
-    JSObject *obj = NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global());
+    JSObject *obj = NewObjectWithGivenProto<PlainObject>(cx, proto);
     if (!obj)
         goto error;
 

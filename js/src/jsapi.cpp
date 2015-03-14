@@ -1953,7 +1953,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *jsclasp, HandleObject p
     MOZ_ASSERT(clasp != &JSFunction::class_);
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    return NewObjectWithGivenProto(cx, clasp, proto, JS::NullPtr());
+    return NewObjectWithGivenProto(cx, clasp, proto);
 }
 
 JS_PUBLIC_API(JSObject *)
