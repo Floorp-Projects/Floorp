@@ -1885,8 +1885,6 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
 {
     assertSameCompartment(cx, src, dst);
     MOZ_ASSERT(src->getClass() == dst->getClass());
-    src->assertParentIs(cx->global());
-    dst->assertParentIs(cx->global());
     MOZ_ASSERT(src->getProto() == dst->getProto());
     MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
     MOZ_ASSERT(!src->getMetadata());
@@ -2339,7 +2337,6 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
 static void
 SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 {
-    obj->assertParentIs(nullptr);
     if (!obj->is<GlobalObject>())
         return;
 
@@ -2350,7 +2347,6 @@ SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 static void
 ClearClassObject(JSObject *obj, JSProtoKey key)
 {
-    obj->assertParentIs(nullptr);
     if (!obj->is<GlobalObject>())
         return;
 
