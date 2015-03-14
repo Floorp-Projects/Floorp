@@ -6,6 +6,9 @@
 #ifndef NS_SMILKEYSPLINE_H_
 #define NS_SMILKEYSPLINE_H_
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/PodOperations.h"
+
 /**
  * Utility class to provide scaling defined in a keySplines element.
  */
@@ -43,6 +46,16 @@ public:
   double GetSplineValue(double aX) const;
 
   void GetSplineDerivativeValues(double aX, double& aDX, double& aDY) const;
+
+  bool operator==(const nsSMILKeySpline& aOther) const {
+    return mX1 == aOther.mX1 &&
+           mY1 == aOther.mY1 &&
+           mX2 == aOther.mX2 &&
+           mY2 == aOther.mY2;
+  }
+  bool operator!=(const nsSMILKeySpline& aOther) const {
+    return !(*this == aOther);
+  }
 
 private:
   void

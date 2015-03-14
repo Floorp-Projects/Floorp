@@ -317,11 +317,16 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           continue;
         }
 
+        bool animationChanged = false;
+
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
         if (oldPlayer->GetSource() && newPlayer->GetSource()) {
           Animation* oldAnim = oldPlayer->GetSource();
           Animation* newAnim = newPlayer->GetSource();
+          animationChanged =
+            oldAnim->Timing() != newAnim->Timing() ||
+            oldAnim->Properties() != newAnim->Properties();
           oldAnim->Timing() = newAnim->Timing();
           oldAnim->Properties() = newAnim->Properties();
         }
@@ -339,8 +344,14 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         //  making IsPaused synonymous in this case.)
         if (!oldPlayer->IsStylePaused() && newPlayer->IsPaused()) {
           oldPlayer->PauseFromStyle();
+          animationChanged = true;
         } else if (oldPlayer->IsStylePaused() && !newPlayer->IsPaused()) {
           oldPlayer->PlayFromStyle();
+          animationChanged = true;
+        }
+
+        if (animationChanged) {
+          nsNodeUtils::AnimationChanged(oldPlayer);
         }
 
         // Replace new animation with the (updated) old one and remove the
