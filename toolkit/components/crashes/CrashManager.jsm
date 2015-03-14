@@ -800,6 +800,15 @@ CrashStore.prototype = Object.freeze({
 
           let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
           actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
+
+          // If we have an OOM size, count the crash as an OOM in addition to
+          // being a main process crash.
+          if (denormalized.metadata && 
+              denormalized.metadata.OOMAllocationSize) {
+            let oomKey = key + "-oom";
+            actualCounts.set(oomKey, (actualCounts.get(oomKey) || 0) + 1);
+          }
+
         }
 
         if (hasSubmissionsStoredAsCrashes) {
@@ -1083,6 +1092,14 @@ CrashStore.prototype = Object.freeze({
       if (count > this.HIGH_WATER_DAILY_THRESHOLD &&
           processType != CrashManager.prototype.PROCESS_TYPE_MAIN) {
         return null;
+      }
+
+      // If we have an OOM size, count the crash as an OOM in addition to
+      // being a main process crash.
+      if (metadata && metadata.OOMAllocationSize) {
+        let oomType = type + "-oom";
+        let oomCount = (this._countsByDay.get(day).get(oomType) || 0) + 1;
+        this._countsByDay.get(day).set(oomType, oomCount);
       }
 
       this._data.crashes.set(id, {
