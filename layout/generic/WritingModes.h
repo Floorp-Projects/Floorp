@@ -1621,6 +1621,12 @@ public:
     CHECK_WRITING_MODE(aWritingMode);
     return LogicalPoint(aWritingMode, IStart(), BStart());
   }
+  void SetOrigin(WritingMode aWritingMode, const LogicalPoint& aPoint)
+  {
+    IStart(aWritingMode) = aPoint.I(aWritingMode);
+    BStart(aWritingMode) = aPoint.B(aWritingMode);
+  }
+
   LogicalSize Size(WritingMode aWritingMode) const
   {
     CHECK_WRITING_MODE(aWritingMode);
