@@ -330,9 +330,11 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                rubyPosition == NS_STYLE_RUBY_POSITION_UNDER);
     Maybe<Side> side;
     if (rubyPosition == NS_STYLE_RUBY_POSITION_OVER) {
-      side.emplace(lineWM.PhysicalSide(eLineRelativeDirOver));
+      side.emplace(lineWM.PhysicalSide(
+        lineWM.LogicalSideForLineRelativeDir(eLineRelativeDirOver)));
     } else if (rubyPosition == NS_STYLE_RUBY_POSITION_UNDER) {
-      side.emplace(lineWM.PhysicalSide(eLineRelativeDirUnder));
+      side.emplace(lineWM.PhysicalSide(
+        lineWM.LogicalSideForLineRelativeDir(eLineRelativeDirUnder)));
     } else {
       // XXX inter-character support in bug 1055672
       MOZ_ASSERT_UNREACHABLE("Unsupported ruby-position");
