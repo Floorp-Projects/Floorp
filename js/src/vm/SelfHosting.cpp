@@ -1193,7 +1193,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
             ok = false;
         }
 
-        ok = ok && Evaluate(cx, shg, options, src, srcLen, &rv);
+        ok = ok && Evaluate(cx, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx->runtime(), oldReporter);
     return ok;
