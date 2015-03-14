@@ -345,7 +345,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         if (!compileOnly) {
             // XXXbz are we intentionally allowing load.call(someNonGlobalObject)?
             if (JS_IsGlobalObject(obj)) {
-                if (!JS_ExecuteScript(cx, obj, script)) {
+                if (!JS_ExecuteScript(cx, script)) {
                     return false;
                 }
             } else {
@@ -838,7 +838,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
                .setFileAndLine(filename, 1)
                .setCompileAndGo(true);
         if (JS::Compile(cx, global, options, file, &script) && !compileOnly)
-            (void)JS_ExecuteScript(cx, global, script, &result);
+            (void)JS_ExecuteScript(cx, script, &result);
         JS_EndRequest(cx);
 
         return;
@@ -878,7 +878,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
             JSErrorReporter older;
 
             if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, global, script, &result);
+                ok = JS_ExecuteScript(cx, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS::ToString(). */
                     older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);

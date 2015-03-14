@@ -379,7 +379,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString &url,
                              retval);
     } else {
         if (JS_IsGlobalObject(targetObj)) {
-            ok = JS_ExecuteScript(cx, targetObj, script, retval);
+            ok = JS_ExecuteScript(cx, script, retval);
         } else {
             JS::AutoObjectVector scopeChain(cx);
             ok = scopeChain.append(targetObj) &&
