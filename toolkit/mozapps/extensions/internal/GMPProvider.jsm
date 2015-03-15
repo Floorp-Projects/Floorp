@@ -213,7 +213,7 @@ GMPWrapper.prototype = {
   get version() { return GMPPrefs.get(KEY_PLUGIN_VERSION, null,
                                       this._plugin.id); },
 
-  get isActive() { return !this.userDisabled; },
+  get isActive() { return !this.appDisabled && !this.userDisabled; },
   get appDisabled() {
     if (this._plugin.isEME && !GMPPrefs.get(KEY_EME_ENABLED, true)) {
       // If "media.eme.enabled" is false, all EME plugins are disabled.
@@ -236,8 +236,9 @@ GMPWrapper.prototype = {
   get operationsRequiringRestart() { return AddonManager.OP_NEEDS_RESTART_NONE },
 
   get permissions() {
-    let permissions = AddonManager.PERM_CAN_UPGRADE;
+    let permissions = 0;
     if (!this.appDisabled) {
+      permissions |= AddonManager.PERM_CAN_UPGRADE;
       permissions |= this.userDisabled ? AddonManager.PERM_CAN_ENABLE :
                                          AddonManager.PERM_CAN_DISABLE;
     }
