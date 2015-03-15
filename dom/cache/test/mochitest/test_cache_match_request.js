@@ -48,9 +48,12 @@ function testRequest(request, unknownRequest) {
   }).then(function(r) {
     return checkResponse(r);
   }).then(function() {
-    return caches.match(request, {cacheName: name + "mambojambo"});
-  }).catch(function(err) {
-    is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+    return caches.match(request, {cacheName: name + "mambojambo"})
+      .then(function() {
+        ok(false, "Promise should be rejected");
+      }, function(err) {
+        is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+      });
   }).then(function() {
     return c.match(unknownRequest);
   }).then(function(r) {
@@ -74,7 +77,7 @@ function testRequest(request, unknownRequest) {
     return caches.open(name);
   }).then(function(cache) {
     return cache.match(request);
-  }).catch(function(err) {
-    is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  }).then(function(r) {
+    is(typeof r, "undefined", "Searching in the cache after deletion should not succeed");
   });
 }

@@ -66,8 +66,8 @@ function testRequest(request1, request2, request3, unknownRequest) {
     ]);
   }).then(function() {
     return c.matchAll({cacheName: name + "mambojambo"});
-  }).catch(function(err) {
-    is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+  }).then(function(r) {
+    is(r.length, 0, "Searching in the wrong cache should not succeed");
   }).then(function() {
     return c.matchAll(unknownRequest);
   }).then(function(r) {
@@ -102,7 +102,7 @@ function testRequest(request1, request2, request3, unknownRequest) {
     return caches.open(name);
   }).then(function(cache) {
     return cache.matchAll();
-  }).catch(function(err) {
-    is(err.name, "NotFoundError", "Searching in the cache after deletion should not succeed");
+  }).then(function(r) {
+    is(r.length, 0, "Searching in the cache after deletion should not succeed");
   });
 }
