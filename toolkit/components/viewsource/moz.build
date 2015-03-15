@@ -8,3 +8,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'View Source')

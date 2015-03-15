@@ -26,3 +26,6 @@ XPIDL_MODULE = 'toolkit_crashservice'
 XPIDL_SOURCES += [
     'nsICrashService.idl',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Breakpad Integration')
