@@ -469,18 +469,31 @@ public:
       // situations. According to the docs, it is compatible with all displays running on the computer
       // But if we have different monitors at different display rates, we may hit issues.
       if (CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink) != kCVReturnSuccess) {
-        NS_WARNING("Could not create a display link, returning");
-        return;
+        NS_WARNING("Could not create a display link with all active displays. Falling back to main display\n");
+        CVDisplayLinkRelease(mDisplayLink);
+
+        // bug 1142708 - When coming back from sleep, there may be no active displays ready yet,
+        // even if listening for the kIOMessageSystemHasPoweredOn event from OS X sleep notifications.
+        // Active displays are those that are drawable.
+        // In these cases, default back to the main display to try to get a vsync event.
+        // The alternative would be to keep polling the CGActiveDisplayList for the displays to be ready.
+        if (CVDisplayLinkCreateWithCGDisplay(CGMainDisplayID(), &mDisplayLink) != kCVReturnSuccess) {
+          MOZ_CRASH("Could not create a CVDisplayLink with either active displays or the main display");
+        }
+        NS_WARNING("Using the CVDisplayLink from the main display\n");
       }
 
       if (CVDisplayLinkSetOutputCallback(mDisplayLink, &VsyncCallback, this) != kCVReturnSuccess) {
         NS_WARNING("Could not set displaylink output callback");
+        CVDisplayLinkRelease(mDisplayLink);
+        mDisplayLink = nullptr;
         return;
       }
 
       mPreviousTimestamp = TimeStamp::Now();
       if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
         NS_WARNING("Could not activate the display link");
+        CVDisplayLinkRelease(mDisplayLink);
         mDisplayLink = nullptr;
       }
     }
