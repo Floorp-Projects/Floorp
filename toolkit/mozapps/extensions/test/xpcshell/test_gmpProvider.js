@@ -185,11 +185,10 @@ add_task(function* test_globalEmeDisabled() {
   GMPScope.GMPProvider.startup();
   for (let addon of addons) {
     Assert.ok(!addon.isActive);
-    Assert.ok(!addon.appDisabled);
-    Assert.ok(addon.userDisabled);
+    Assert.ok(addon.appDisabled);
+    Assert.ok(!addon.userDisabled);
 
-    Assert.equal(addon.permissions, AddonManager.PERM_CAN_UPGRADE |
-                                    AddonManager.PERM_CAN_ENABLE);
+    Assert.equal(addon.permissions, 0);
   }
   gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
   GMPScope.GMPProvider.shutdown();

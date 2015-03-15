@@ -129,7 +129,7 @@ add_task(function* initializeState() {
   GMPScope.GMPProvider.startup();
 });
 
-add_task(function* testNotInstalled() {
+add_task(function* testNotInstalledDisabled() {
   Assert.ok(gCategoryUtilities.isTypeVisible("plugin"), "Plugin tab visible.");
   yield gCategoryUtilities.openType("plugin");
 
@@ -140,7 +140,7 @@ add_task(function* testNotInstalled() {
     is(item.getAttribute("active"), "false");
 
     let el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "warning");
-    is_element_visible(el, "Warning notification is visible.");
+    is_element_hidden(el, "Warning notification is hidden.");
     el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "disabled-postfix");
     is_element_visible(el, "disabled-postfix is visible.");
     el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "disable-btn");
@@ -156,13 +156,56 @@ add_task(function* testNotInstalled() {
   }
 });
 
-add_task(function* testNotInstalledDetails() {
+add_task(function* testNotInstalledDisabledDetails() {
   for (let addon of gMockAddons) {
     yield openDetailsView(addon.id);
     let doc = gManagerWindow.document;
 
     let el = doc.getElementsByClassName("disabled-postfix")[0];
     is_element_visible(el, "disabled-postfix is visible.");
+    el = doc.getElementById("detail-findUpdates-btn");
+    is_element_visible(el, "Find updates link is visible.");
+    el = doc.getElementById("detail-warning");
+    is_element_hidden(el, "Warning notification is hidden.");
+    el = doc.getElementsByTagName("setting")[0];
+  }
+});
+
+add_task(function* testNotInstalled() {
+  Assert.ok(gCategoryUtilities.isTypeVisible("plugin"), "Plugin tab visible.");
+  yield gCategoryUtilities.openType("plugin");
+
+  for (let addon of gMockAddons) {
+    gPrefs.setBoolPref(getKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), true);
+    let item = get_addon_element(gManagerWindow, addon.id);
+    Assert.ok(item, "Got add-on element:" + addon.id);
+    item.parentNode.ensureElementIsVisible(item);
+    is(item.getAttribute("active"), "true");
+
+    let el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "warning");
+    is_element_visible(el, "Warning notification is visible.");
+    el = item.ownerDocument.getAnonymousElementByAttribute(item, "class", "disabled-postfix");
+    is_element_hidden(el, "disabled-postfix is hidden.");
+    el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "disable-btn");
+    is_element_hidden(el, "Disable button not visible.");
+    el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "enable-btn");
+    is_element_hidden(el, "Enable button not visible.");
+
+    let menu = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "state-menulist");
+    is_element_visible(menu, "State menu should be visible.");
+
+    let alwaysActivate = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "always-activate-menuitem");
+    is(menu.selectedItem, alwaysActivate, "Plugin state should be always-activate.");
+  }
+});
+
+add_task(function* testNotInstalledDetails() {
+  for (let addon of gMockAddons) {
+    yield openDetailsView(addon.id);
+    let doc = gManagerWindow.document;
+
+    let el = doc.getElementsByClassName("disabled-postfix")[0];
+    is_element_hidden(el, "disabled-postfix is hidden.");
     el = doc.getElementById("detail-findUpdates-btn");
     is_element_visible(el, "Find updates link is visible.");
     el = doc.getElementById("detail-warning");
@@ -173,7 +216,6 @@ add_task(function* testNotInstalledDetails() {
 
 add_task(function* testInstalled() {
   for (let addon of gMockAddons) {
-    gPrefs.setBoolPref(getKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), true);
     gPrefs.setIntPref(getKey(GMPScope.KEY_PLUGIN_LAST_UPDATE, addon.id),
                       TEST_DATE.getTime());
     gPrefs.setBoolPref(getKey(GMPScope.KEY_PLUGIN_AUTOUPDATE, addon.id), false);
@@ -270,7 +312,7 @@ add_task(function* testInstalledGlobalEmeDisabledDetails() {
     let el = doc.getElementsByClassName("disabled-postfix")[0];
     is_element_visible(el, "disabled-postfix is visible.");
     el = doc.getElementById("detail-findUpdates-btn");
-    is_element_visible(el, "Find updates link is visible.");
+    is_element_hidden(el, "Find updates link is hidden.");
     el = doc.getElementById("detail-warning");
     is_element_hidden(el, "Warning notification is hidden.");
     el = doc.getElementsByTagName("setting")[0];
