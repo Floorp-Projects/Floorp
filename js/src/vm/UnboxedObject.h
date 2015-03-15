@@ -162,14 +162,25 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     static bool makeConstructorCode(JSContext *cx, HandleObjectGroup group);
 };
 
+// Class for expando objects holding extra properties given to an unboxed plain
+// object. These objects behave identically to normal native plain objects, and
+// have a separate Class to distinguish them for memory usage reporting.
+class UnboxedExpandoObject : public NativeObject
+{
+  public:
+    static const Class class_;
+};
+
 // Class for a plain object using an unboxed representation. The physical
 // layout of these objects is identical to that of an InlineTypedObject, though
 // these objects use an UnboxedLayout instead of a TypeDescr to keep track of
 // how their properties are stored.
 class UnboxedPlainObject : public JSObject
 {
-    // Placeholder for extra properties. See bug 1137180.
-    void *dummy_;
+    // Optional object which stores extra properties on this object. This is
+    // not automatically barriered to avoid problems if the object is converted
+    // to a native. See ensureExpando().
+    UnboxedExpandoObject *expando_;
 
     // Start of the inline data, which immediately follows the group and extra properties.
     uint8_t data_[1];
@@ -214,6 +225,18 @@ class UnboxedPlainObject : public JSObject
         return &data_[0];
     }
 
+    UnboxedExpandoObject *maybeExpando() const {
+        return expando_;
+    }
+
+    void initExpando() {
+        expando_ = nullptr;
+    }
+
+    bool containsUnboxedOrExpandoProperty(ExclusiveContext *cx, jsid id) const;
+
+    static UnboxedExpandoObject *ensureExpando(JSContext *cx, Handle<UnboxedPlainObject *> obj);
+
     bool setValue(ExclusiveContext *cx, const UnboxedLayout::Property &property, const Value &v);
     Value getValue(const UnboxedLayout::Property &property);
 
@@ -224,6 +247,10 @@ class UnboxedPlainObject : public JSObject
                                           NewObjectKind newKind, IdValuePair *properties);
 
     static void trace(JSTracer *trc, JSObject *object);
+
+    static size_t offsetOfExpando() {
+        return offsetof(UnboxedPlainObject, expando_);
+    }
 
     static size_t offsetOfData() {
         return offsetof(UnboxedPlainObject, data_[0]);

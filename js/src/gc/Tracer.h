@@ -320,7 +320,6 @@ class GCMarker : public JSTracer
 
     void markAndScanString(JSObject *source, JSString *str);
     void markAndScanSymbol(JSObject *source, JS::Symbol *sym);
-    bool markObject(JSObject *source, JSObject *obj);
 
     void appendGrayRoot(void *thing, JSGCTraceKind kind);
 
