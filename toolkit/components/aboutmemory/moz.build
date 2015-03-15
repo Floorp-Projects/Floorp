@@ -7,3 +7,6 @@
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'about:memory')
