@@ -19,3 +19,6 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Video/Audio')
