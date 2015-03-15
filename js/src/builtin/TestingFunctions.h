@@ -20,6 +20,12 @@ testingFunc_bailout(JSContext *cx, unsigned argc, Value *vp);
 bool
 testingFunc_assertFloat32(JSContext *cx, unsigned argc, Value *vp);
 
+bool
+testingFunc_inJit(JSContext *cx, unsigned argc, Value *vp);
+
+bool
+testingFunc_inIon(JSContext *cx, unsigned argc, Value *vp);
+
 } /* namespace js */
 
 #endif /* builtin_TestingFunctions_h */
