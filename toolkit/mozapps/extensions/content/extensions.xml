@@ -1294,7 +1294,8 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.vulnerableNoUpdate.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
-            } else if (this.mAddon.isGMPlugin && !this.mAddon.isInstalled) {
+            } else if (this.mAddon.isGMPlugin && !this.mAddon.isInstalled &&
+                       this.mAddon.isActive) {
               this.setAttribute("notification", "warning");
               this._warning.textContent =
                 gStrings.ext.formatStringFromName("notification.gmpPending",
@@ -1314,7 +1315,7 @@
             this._askToActivateMenuitem.disabled = !this.hasPermission("ask_to_activate");
             this._alwaysActivateMenuitem.disabled = !this.hasPermission("enable");
             this._neverActivateMenuitem.disabled = !this.hasPermission("disable");
-            if (this.mAddon.userDisabled === true) {
+            if (!this.mAddon.isActive) {
               this._stateMenulist.selectedItem = this._neverActivateMenuitem;
             } else if (this.mAddon.userDisabled == AddonManager.STATE_ASK_TO_ACTIVATE) {
               this._stateMenulist.selectedItem = this._askToActivateMenuitem;
