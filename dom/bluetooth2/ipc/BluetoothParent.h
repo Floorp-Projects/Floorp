@@ -225,6 +225,9 @@ protected:
 
   bool
   DoRequest(const UnregisterGattClientRequest& aRequest);
+
+  bool
+  DoRequest(const GattClientReadRemoteRssiRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE
