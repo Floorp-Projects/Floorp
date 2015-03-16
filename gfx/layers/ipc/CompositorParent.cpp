@@ -1455,7 +1455,6 @@ InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
   MOZ_ASSERT(CompositorParent::IsInCompositorThread());
-  MOZ_ASSERT(profiler_is_active());
   VsyncPayload* payload = new VsyncPayload(aVsyncTimestamp);
   PROFILER_MARKER_PAYLOAD("VsyncTimestamp", payload);
 #endif
@@ -1464,6 +1463,7 @@ InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 /*static */ void
 CompositorParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
+  // Called in the vsync thread
   if (profiler_is_active() && sCompositorThreadHolder) {
     CompositorLoop()->PostTask(FROM_HERE,
       NewRunnableFunction(InsertVsyncProfilerMarker, aVsyncTimestamp));

@@ -21,8 +21,14 @@
 package org.mozilla.gecko.widget;
 
 // Mozilla: New import
+import android.accounts.Account;
+import android.content.pm.PackageManager;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
+import org.mozilla.gecko.R;
 import java.io.File;
 
 import android.content.BroadcastReceiver;
@@ -324,6 +330,11 @@ public class ActivityChooserModel extends DataSetObservable {
     private OnChooseActivityListener mActivityChooserModelPolicy;
 
     /**
+     * Mozilla: Share overlay variables.
+     */
+    private final SyncStatusListener mSyncStatusListener = new SyncStatusListener();
+
+    /**
      * Gets the data model backed by the contents of the provided file with historical data.
      * Note that only one data model is backed by a given file, thus multiple calls with
      * the same file name will return the same model instance. If no such instance is present
@@ -371,6 +382,12 @@ public class ActivityChooserModel extends DataSetObservable {
          * Mozilla: Uses modified receiver
          */
         mPackageMonitor.register(mContext);
+
+        /**
+         * Mozilla: Add Sync Status Listener.
+         */
+        // TODO: We only need to add a sync status listener if the ShareDialog passes the intent filter.
+        FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
     }
 
     /**
@@ -688,6 +705,7 @@ public class ActivityChooserModel extends DataSetObservable {
          * Mozilla: Not needed for the application.
          */
         mPackageMonitor.unregister();
+        FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
     }
 
     /**
@@ -736,8 +754,37 @@ public class ActivityChooserModel extends DataSetObservable {
             List<ResolveInfo> resolveInfos = mContext.getPackageManager()
                     .queryIntentActivities(mIntent, 0);
             final int resolveInfoCount = resolveInfos.size();
+
+            /**
+             * Mozilla: Temporary variables to prevent performance degradation in the loop.
+             */
+            final PackageManager packageManager = mContext.getPackageManager();
+            final String channelToRemoveLabel = mContext.getResources().getString(R.string.overlay_share_label);
+            final String shareDialogClassName = ShareDialog.class.getCanonicalName();
+
             for (int i = 0; i < resolveInfoCount; i++) {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
+
+                /**
+                 * Mozilla: We want "Add to Firefox" to appear differently inside of Firefox than
+                 * from external applications - override the name and icon here.
+                 *
+                 * Do not display the menu item if there are no devices to share to.
+                 *
+                 * Note: we check both the class name and the label to ensure we only change the
+                 * label of the current channel.
+                 */
+                if (shareDialogClassName.equals(resolveInfo.activityInfo.name) &&
+                        channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
+                    // Don't add the menu item if there are no devices to share to.
+                    if (!hasOtherSyncClients()) {
+                        continue;
+                    }
+
+                    resolveInfo.labelRes = R.string.overlay_share_send_other;
+                    resolveInfo.icon = R.drawable.share_plane;
+                }
+
                 mActivities.add(new ActivityResolveInfo(resolveInfo));
             }
             return true;
@@ -1249,6 +1296,42 @@ public class ActivityChooserModel extends DataSetObservable {
             }
 
             mReloadActivities = true;
+        }
+    }
+
+    /**
+     * Mozilla: Return whether or not there are other synced clients.
+     */
+    private boolean hasOtherSyncClients() {
+        final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(mContext);
+        return db.clientsCount() > 0;
+    }
+
+    /**
+     * Mozilla: Reload activities on sync.
+     */
+    private class SyncStatusListener implements FirefoxAccounts.SyncStatusListener {
+        @Override
+        public Context getContext() {
+            return mContext;
+        }
+
+        @Override
+        public Account getAccount() {
+            return FirefoxAccounts.getFirefoxAccount(getContext());
+        }
+
+        @Override
+        public void onSyncStarted() {
+        }
+
+        @Override
+        public void onSyncFinished() {
+            // TODO: We only need to reload activities when the number of devices changes.
+            // This may not be worth it if we have to touch the DB to get the client count.
+            synchronized (mInstanceLock) {
+                mReloadActivities = true;
+            }
         }
     }
 }
