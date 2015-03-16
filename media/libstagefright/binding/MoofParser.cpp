@@ -30,23 +30,30 @@ namespace mp4_demuxer
 using namespace stagefright;
 using namespace mozilla;
 
-void
+bool
 MoofParser::RebuildFragmentedIndex(
   const nsTArray<mozilla::MediaByteRange>& aByteRanges)
 {
   BoxContext context(mSource, aByteRanges);
-  RebuildFragmentedIndex(context);
+  return RebuildFragmentedIndex(context);
 }
 
-void
+bool
 MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
 {
+  bool foundValidMoof = false;
+
   for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moov")) {
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
       Moof moof(box, mTrex, mMdhd, mEdts, mSinf);
+
+      if (!moof.IsValid() && !box.Next().IsAvailable()) {
+        // Moof isn't valid abort search for now.
+        break;
+      }
 
       if (!mMoofs.IsEmpty()) {
         // Stitch time ranges together in the case of a (hopefully small) time
@@ -55,9 +62,11 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       }
 
       mMoofs.AppendElement(moof);
+      foundValidMoof = true;
     }
     mOffset = box.NextOffset();
   }
+  return foundValidMoof;
 }
 
 class BlockingStream : public Stream {
@@ -100,8 +109,7 @@ MoofParser::BlockingReadNextMoof()
     if (box.IsType("moof")) {
       byteRanges.Clear();
       byteRanges.AppendElement(MediaByteRange(mOffset, box.Range().mEnd));
-      RebuildFragmentedIndex(context);
-      return true;
+      return RebuildFragmentedIndex(context);
     }
   }
   return false;
@@ -240,7 +248,9 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf)
       ParseTraf(box, aTrex, aMdhd, aEdts, aSinf);
     }
   }
-  ProcessCenc();
+  if (IsValid()) {
+    ProcessCenc();
+  }
 }
 
 bool
