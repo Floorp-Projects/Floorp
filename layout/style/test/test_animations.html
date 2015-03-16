@@ -1969,6 +1969,48 @@ is(cs.getPropertyValue("left"), "0px", "left is not animating");
 is(cs.getPropertyValue("top"), "50px", "top is animating");
 done_div();
 
+/*
+ * Bug 962594 - Turn off CSS animations when the element is display:none, or
+ * is in a display:none subtree.
+ */
+
+// Helper function for the two tests below
+function testDisplayNoneTurnsOffAnimations(aTestName, aElementToDisplayNone) {
+  is(cs.getPropertyValue("margin-right"), "0px",
+    aTestName + "margin-right at 0s");
+  advance_clock(1000);
+  is(cs.getPropertyValue("margin-right"), "10px",
+    aTestName + "margin-right at 1s");
+  aElementToDisplayNone.style.display = "none";
+  is(cs.getPropertyValue("margin-right"), "0px",
+    aTestName + "margin-right after display:none");
+  advance_clock(1000);
+  is(cs.getPropertyValue("margin-right"), "0px",
+    aTestName + "margin-right 1s after display:none");
+  aElementToDisplayNone.style.display = "";
+  is(cs.getPropertyValue("margin-right"), "0px",
+    aTestName + "margin-right after display:block");
+  advance_clock(1000);
+  is(cs.getPropertyValue("margin-right"), "10px",
+    aTestName + "margin-right 1s after display:block");
+}
+
+// Check that it works if the animated element itself becomes display:none
+new_div("animation: anim2 linear 10s");
+testDisplayNoneTurnsOffAnimations("AnimatedElement ", div);
+done_div();
+
+// Check that it works if an ancestor of the animated element becomes display:none
+new_div("animation: anim2 linear 10s");
+var ancestor = document.createElement("div");
+div.parentNode.insertBefore(ancestor, div);
+ancestor.appendChild(div);
+testDisplayNoneTurnsOffAnimations("AncestorElement ", ancestor);
+ancestor.parentNode.insertBefore(div, ancestor);
+ancestor.parentNode.removeChild(ancestor);
+done_div();
+
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
