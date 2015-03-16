@@ -6,6 +6,7 @@ task:
     name: '[TC] Reftest'
     description: Reftest test run {{chunk}}
 
+  workerType: b2gtest-emulator
   payload:
     command:
       - entrypoint
@@ -27,6 +28,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 40
     treeherder:
       groupName: Reftest
       groupSymbol: tc-R

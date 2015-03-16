@@ -6,6 +6,7 @@ task:
     name: '[TC] JSReftest'
     description: JSReftest test run {{chunk}}
 
+  workerType: b2gtest-emulator
   payload:
     command:
       - entrypoint

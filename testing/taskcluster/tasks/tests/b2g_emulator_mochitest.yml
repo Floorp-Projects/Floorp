@@ -6,6 +6,7 @@ task:
     name: '[TC] Mochitest'
     description: Mochitest test run {{chunk}}
 
+  workerType: b2gtest-emulator
   payload:
     maxRunTime: 7200
     command:
@@ -29,6 +30,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 50
     treeherder:
       groupName: Mochitest
       groupSymbol: tc-M
