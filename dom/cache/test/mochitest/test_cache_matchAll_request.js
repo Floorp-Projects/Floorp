@@ -1,6 +1,7 @@
 var request1 = new Request("//mochi.test:8888/?1&" + context + "#fragment");
 var request2 = new Request("//mochi.test:8888/?2&" + context);
 var request3 = new Request("//mochi.test:8888/?3&" + context);
+var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
 var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response1, response3;
 var c;
@@ -33,10 +34,11 @@ fetch(new Request(request1)).then(function(r) {
 }).then(function(text) {
   response3Text = text;
   return testRequest(request1, request2, request3, unknownRequest,
+                     requestWithAltQS,
                      request1.url.replace("#fragment", "#other"));
 }).then(function() {
   return testRequest(request1.url, request2.url, request3.url,
-                     unknownRequest.url,
+                     unknownRequest.url, requestWithAltQS.url,
                      request1.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
@@ -44,6 +46,7 @@ fetch(new Request(request1)).then(function(r) {
 
 // The request arguments can either be a URL string, or a Request object.
 function testRequest(request1, request2, request3, unknownRequest,
+                     requestWithAlternateQueryString,
                      requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
     c = cache;
@@ -73,6 +76,15 @@ function testRequest(request1, request2, request3, unknownRequest,
   }).then(function(r) {
     is(r.length, 1, "Should only find 1 item");
     return checkResponse(r[0], response1, response1Text);
+  }).then(function() {
+    return c.matchAll(requestWithAlternateQueryString,
+                      {ignoreSearch: true, cacheName: name});
+  }).then(function(r) {
+    is(r.length, 2, "Should find 2 items");
+    return Promise.all([
+      checkResponse(r[0], response1, response1Text),
+      checkResponse(r[1], response3, response3Text)
+    ]);
   }).then(function() {
     return c.matchAll(request3);
   }).then(function(r) {
