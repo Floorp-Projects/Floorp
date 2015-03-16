@@ -6,6 +6,7 @@ task:
     name: '[TC] Marionette WebAPI Tests'
     description: Marionette WebAPI test run
 
+  workerType: b2gtest-emulator
   payload:
     command:
       - entrypoint

@@ -5,10 +5,15 @@ task:
   scopes:
     - 'docker-worker:cache:workspace-emulator-jb-opt'
   metadata:
-    name: '[TC] B2G JB Emulator Opt'
+    name: '[TC] B2G JB Emulator: (Opt)'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
+    # Disable "TC" prefix...
     treeherder:
+      groupSymbol: "?"
       machine:
         platform: b2g-emu-jb
 

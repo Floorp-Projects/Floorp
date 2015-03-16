@@ -89,11 +89,6 @@ browser.jar:
     content/browser/devtools/webaudioeditor/views/inspector.js         (webaudioeditor/views/inspector.js)
     content/browser/devtools/webaudioeditor/views/properties.js        (webaudioeditor/views/properties.js)
     content/browser/devtools/webaudioeditor/views/automation.js        (webaudioeditor/views/automation.js)
-    content/browser/devtools/profiler.xul                              (profiler/profiler.xul)
-    content/browser/devtools/profiler.js                               (profiler/profiler.js)
-    content/browser/devtools/ui-recordings.js                          (profiler/ui-recordings.js)
-    content/browser/devtools/ui-profile.js                             (profiler/ui-profile.js)
-#ifdef MOZ_DEVTOOLS_PERFTOOLS
     content/browser/devtools/performance.xul                           (performance/performance.xul)
     content/browser/devtools/performance/performance-controller.js     (performance/performance-controller.js)
     content/browser/devtools/performance/performance-view.js           (performance/performance-view.js)
@@ -107,7 +102,6 @@ browser.jar:
     content/browser/devtools/performance/views/details-memory-call-tree.js  (performance/views/details-memory-call-tree.js)
     content/browser/devtools/performance/views/details-memory-flamegraph.js (performance/views/details-memory-flamegraph.js)
     content/browser/devtools/performance/views/recordings.js           (performance/views/recordings.js)
-#endif
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)
     content/browser/devtools/commandlineoutput.xhtml                   (commandline/commandlineoutput.xhtml)
@@ -148,5 +142,3 @@ browser.jar:
     content/browser/devtools/eyedropper.xul                            (eyedropper/eyedropper.xul)
     content/browser/devtools/eyedropper/crosshairs.css                 (eyedropper/crosshairs.css)
     content/browser/devtools/eyedropper/nocursor.css                   (eyedropper/nocursor.css)
-    content/browser/devtools/timeline/timeline.xul                     (timeline/timeline.xul)
-    content/browser/devtools/timeline/timeline.js                      (timeline/timeline.js)

@@ -9,6 +9,8 @@ import platform
 import sys
 import os.path
 
+# Don't forgot to add new mozboot modules to the bootstrap download
+# list in bin/bootstrap.py!
 from mozboot.centos import CentOSBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.fedora import FedoraBootstrapper

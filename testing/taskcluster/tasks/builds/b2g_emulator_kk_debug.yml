@@ -5,10 +5,15 @@ task:
   scopes:
     - 'docker-worker:cache:workspace-emulator-kk-debug'
   metadata:
-    name: '[TC] B2G Emulator KK Debug'
+    name: '[TC] B2G Emulator KK (Debug)'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "?"
       collection:
         debug: true
       machine:

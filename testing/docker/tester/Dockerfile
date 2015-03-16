@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/base-test:0.0.1
+FROM          quay.io/mozilla/base-test:0.0.5
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
@@ -13,7 +13,7 @@ ADD            https://raw.githubusercontent.com/taskcluster/buildbot-step/maste
 
 # Run test setup script
 RUN chmod u+x /home/worker/bin/buildbot_step
-RUN pip install virtualenv;
+RUN apt-get install -y python-pip && pip install virtualenv;
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 RUN chown -R worker:worker /home/worker/* /home/worker/.*
 RUN npm install -g taskcluster-vcs@2.3.1
