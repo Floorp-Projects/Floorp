@@ -18,11 +18,9 @@ namespace gfx {
  * systems. This is effectively a type-safe float, intended to be used in
  * combination with the known-type instances of gfx::Point, gfx::Rect, etc.
  *
- * Note that some parts of the code that pre-date this class used separate
- * scaling factors for the x and y axes. However, at runtime these values
- * were always expected to be the same, so this class uses only one scale
- * factor for both axes. The two constructors that take two-axis scaling
- * factors check to ensure that this assertion holds.
+ * This class is meant to be used in cases where a single scale applies to
+ * both the x and y axes. For cases where two diferent scales apply, use
+ * ScaleFactors2D.
  */
 template<class src, class dst>
 struct ScaleFactor {
@@ -31,10 +29,6 @@ struct ScaleFactor {
   MOZ_CONSTEXPR ScaleFactor() : scale(1.0) {}
   MOZ_CONSTEXPR ScaleFactor(const ScaleFactor<src, dst>& aCopy) : scale(aCopy.scale) {}
   explicit MOZ_CONSTEXPR ScaleFactor(float aScale) : scale(aScale) {}
-
-  explicit ScaleFactor(float aX, float aY) : scale(aX) {
-    MOZ_ASSERT(fabs(aX - aY) < 1e-6);
-  }
 
   ScaleFactor<dst, src> Inverse() {
     return ScaleFactor<dst, src>(1 / scale);

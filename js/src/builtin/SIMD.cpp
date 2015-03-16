@@ -416,7 +416,7 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
     if (!objProto)
         return nullptr;
     RootedObject SIMD(cx, NewObjectWithGivenProto(cx, &SIMDObject::class_, objProto,
-                                                  global, SingletonObject));
+                                                  SingletonObject));
     if (!SIMD)
         return nullptr;
 

@@ -3487,11 +3487,9 @@ ChangeObjectFixedSlotCount(JSContext *cx, PlainObject *obj, gc::AllocKind allocK
 {
     MOZ_ASSERT(OnlyHasDataProperties(obj->lastProperty()));
 
-    obj->assertParentIs(cx->global());
-    Shape *newShape = ReshapeForParentAndAllocKind(cx, obj->lastProperty(),
-                                                   obj->getTaggedProto(),
-                                                   cx->global(),
-                                                   allocKind);
+    Shape *newShape = ReshapeForAllocKind(cx, obj->lastProperty(),
+                                          obj->getTaggedProto(),
+                                          allocKind);
     if (!newShape)
         return false;
 
@@ -3617,7 +3615,7 @@ TypeNewScript::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate,
     }
 
     RootedObjectGroup groupRoot(cx, group);
-    templateObject_ = NewObjectWithGroup<PlainObject>(cx, groupRoot, cx->global(), kind,
+    templateObject_ = NewObjectWithGroup<PlainObject>(cx, groupRoot, kind,
                                                       MaybeSingletonObject);
     if (!templateObject_)
         return false;

@@ -101,7 +101,7 @@ protected:
   void DestroyMembers();
 
 public:
-  nsCString mClassName; // The name of the class.
+  nsString mClassName; // The name of the class.
 
 protected:
   JSObject* mPrecompiledMemberHolder; // The class object for the binding. We'll use this to pre-compile properties

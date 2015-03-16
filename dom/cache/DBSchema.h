@@ -88,6 +88,9 @@ public:
                                  Namespace aNamespace,
                                  nsTArray<nsString>& aKeysOut);
 
+  // We will wipe out databases with a schema versions less than this.
+  static const int32_t kMaxWipeSchemaVersion;
+
 private:
   typedef int32_t EntryId;
 

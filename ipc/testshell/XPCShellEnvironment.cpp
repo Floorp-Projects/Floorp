@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set ts=8 sts=4 et sw=4 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -149,6 +150,11 @@ Load(JSContext *cx,
     if (!obj)
         return false;
 
+    if (!JS_IsGlobalObject(obj)) {
+        JS_ReportError(cx, "Trying to load() into a non-global object");
+        return false;
+    }
+
     for (unsigned i = 0; i < args.length(); i++) {
         JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
         if (!str)
@@ -171,7 +177,7 @@ Load(JSContext *cx,
         if (!ok)
             return false;
 
-        if (!JS_ExecuteScript(cx, obj, script)) {
+        if (!JS_ExecuteScript(cx, script)) {
             return false;
         }
     }
@@ -294,7 +300,6 @@ typedef enum JSShellErrNum
 
 void
 XPCShellEnvironment::ProcessFile(JSContext *cx,
-                                 JS::Handle<JSObject*> obj,
                                  const char *filename,
                                  FILE *file,
                                  bool forceTTY)
@@ -306,6 +311,9 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
     bool ok, hitEOF;
     char *bufp, buffer[4096];
     JSString *str;
+
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+    MOZ_ASSERT(global);
 
     if (forceTTY) {
         file = stdin;
@@ -329,15 +337,12 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         }
         ungetc(ch, file);
 
-        JSAutoRequest ar(cx);
-        JSAutoCompartment ac(cx, obj);
-
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename, 1);
         JS::Rooted<JSScript*> script(cx);
-        if (JS::Compile(cx, obj, options, file, &script))
-            (void)JS_ExecuteScript(cx, obj, script, &result);
+        if (JS::Compile(cx, global, options, file, &script))
+            (void)JS_ExecuteScript(cx, script, &result);
 
         return;
     }
@@ -348,9 +353,6 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
     do {
         bufp = buffer;
         *bufp = '\0';
-
-        JSAutoRequest ar(cx);
-        JSAutoCompartment ac(cx, obj);
 
         /*
          * Accumulate lines until we get a 'compilable unit' - one that either
@@ -366,17 +368,18 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline);
         JS::Rooted<JSScript*> script(cx);
-        if (JS_CompileScript(cx, obj, buffer, strlen(buffer), options, &script)) {
+        if (JS_CompileScript(cx, global, buffer, strlen(buffer), options,
+                             &script)) {
             JSErrorReporter older;
 
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+            ok = JS_ExecuteScript(cx, script, &result);
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS::ToString(). */
                 older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
@@ -570,7 +573,7 @@ XPCShellEnvironment::Init()
     FILE* runtimeScriptFile = fopen(kDefaultRuntimeScriptFilename, "r");
     if (runtimeScriptFile) {
         fprintf(stdout, "[loading '%s'...]\n", kDefaultRuntimeScriptFilename);
-        ProcessFile(cx, globalObj, kDefaultRuntimeScriptFilename,
+        ProcessFile(cx, kDefaultRuntimeScriptFilename,
                     runtimeScriptFile, false);
         fclose(runtimeScriptFile);
     }
@@ -600,7 +603,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   }
 
   JS::Rooted<JS::Value> result(cx);
-  bool ok = JS_ExecuteScript(cx, global, script, &result);
+  bool ok = JS_ExecuteScript(cx, script, &result);
   if (ok && result != JSVAL_VOID) {
       JSErrorReporter old = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
       JSString* str = JS::ToString(cx, result);

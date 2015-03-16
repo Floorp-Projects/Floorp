@@ -231,7 +231,7 @@ nsPluginInstanceOwner::GetImageContainer()
   // NotifySize() causes Flash to do a bunch of stuff like ask for surfaces to render
   // into, set y-flip flags, etc, so we do this at the beginning.
   gfxSize resolution = mPluginFrame->PresContext()->PresShell()->GetCumulativeResolution();
-  ScreenSize screenSize = (r * LayoutDeviceToScreenScale(resolution.width, resolution.height)).Size();
+  ScreenSize screenSize = (r * LayoutDeviceToScreenScale2D(resolution.width, resolution.height)).Size();
   mInstance->NotifySize(nsIntSize(screenSize.width, screenSize.height));
 
   container = LayerManager::CreateImageContainer();
