@@ -277,7 +277,8 @@ describe("loop.contacts", function() {
         sinon.assert.calledWithExactly(
           notifications.successL10n,
           "import_contacts_success_message",
-          {total: 42});
+          // Num is for the plural selection.
+          {num: 42, total: 42});
       });
 
       it("should notify the end user from any encountered error", function() {
