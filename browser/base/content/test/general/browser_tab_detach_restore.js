@@ -21,7 +21,7 @@ add_task(function*() {
   is(SessionStore.getClosedWindowCount(), 1, "Should have restore data for the closed window");
 
   win = SessionStore.undoCloseWindow(0);
-  yield BrowserTestUtils.waitForEvent(win, "load");
+  yield BrowserTestUtils.waitForEvent(win, "load", 10000);
   yield BrowserTestUtils.waitForEvent(win.gBrowser.tabs[0], "SSTabRestored");
 
   is(win.gBrowser.tabs.length, 1, "Should have restored one tab");

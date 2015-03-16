@@ -60,7 +60,7 @@ eval(const char *asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
     options.setMutedErrors(mutedErrors)
            .setFileAndLine("", 0);
 
-    bool ok = JS::Evaluate(cx, global, options, chars, len, rval);
+    bool ok = JS::Evaluate(cx, options, chars, len, rval);
 
     delete[] chars;
     return ok;

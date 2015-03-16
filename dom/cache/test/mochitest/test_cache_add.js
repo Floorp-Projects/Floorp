@@ -5,12 +5,13 @@ var urlList = [
   './test_cache.js'
 ];
 var cache;
-caches.open('adder').then(function(openCache) {
+var name = "adder" + context;
+caches.open(name).then(function(openCache) {
   cache = openCache;
-  return cache.add('ftp://example.com/invalid');
+  return cache.add('ftp://example.com/invalid' + context);
 }).catch(function (err) {
   is(err.name, 'NetworkError', 'add() should throw NetworkError for invalid scheme');
-  return cache.addAll(['http://example.com/valid', 'ftp://example.com/invalid']);
+  return cache.addAll(['http://example.com/valid' + context, 'ftp://example.com/invalid' + context]);
 }).catch(function (err) {
   is(err.name, 'NetworkError', 'addAll() should throw NetworkError for invalid scheme');
   var promiseList = urlList.map(function(url) {
@@ -45,7 +46,7 @@ caches.open('adder').then(function(openCache) {
   resultList.every(function(result) {
     ok(!!result, 'Responses should now be in cache for each URL.');
   });
-  return caches.delete("adder");
+  return caches.delete(name);
 }).then(function() {
   testDone();
 }).catch(function(err) {

@@ -5,11 +5,14 @@
 
 package org.mozilla.gecko.widget;
 
+import android.view.Menu;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemActionView;
 import org.mozilla.gecko.menu.QuickShareBarActionView;
+import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -136,10 +139,24 @@ public class GeckoActionProvider {
         PackageManager packageManager = mContext.getPackageManager();
 
         // Populate the sub-menu with a sub set of the activities.
+        final String shareDialogClassName = ShareDialog.class.getCanonicalName();
+        final String sendTabLabel = mContext.getResources().getString(R.string.overlay_share_send_other);
         final int count = dataModel.getActivityCount();
         for (int i = 0; i < count; i++) {
             ResolveInfo activity = dataModel.getActivity(i);
-            subMenu.add(0, i, i, activity.loadLabel(packageManager))
+            final CharSequence activityLabel = activity.loadLabel(packageManager);
+
+            // Pin internal actions to the top. Note:
+            // the order here does not affect quick share.
+            final int order;
+            if (shareDialogClassName.equals(activity.activityInfo.name) &&
+                    sendTabLabel.equals(activityLabel)) {
+                order = i;
+            } else {
+                order = i | Menu.CATEGORY_SECONDARY;
+            }
+
+            subMenu.add(0, i, order, activityLabel)
                 .setIcon(activity.loadIcon(packageManager))
                 .setOnMenuItemClickListener(mCallbacks);
         }
