@@ -6424,7 +6424,10 @@ var ViewportHandler = {
    * metadata is available for that document.
    */
   getMetadataForDocument: function getMetadataForDocument(aDocument) {
-    let metadata = this._metadata.get(aDocument, new ViewportMetadata());
+    let metadata = this._metadata.get(aDocument);
+    if (metadata === undefined) {
+      metadata = new ViewportMetadata();
+    }
     return metadata;
   },
 
