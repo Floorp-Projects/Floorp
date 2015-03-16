@@ -90,6 +90,12 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
       !byteRange->Contains(boxRange)) {
     return;
   }
+
+  nsTArray<uint8_t> content;
+  if (!Read(&content, boxRange)) {
+    return;
+  }
+
   mRange = boxRange;
 }
 
@@ -114,10 +120,16 @@ Box::FirstChild() const
   return Box(mContext, mChildOffset, this);
 }
 
-void
+bool
 Box::Read(nsTArray<uint8_t>* aDest)
 {
-  aDest->SetLength(mRange.mEnd - mChildOffset);
+  return Read(aDest, mRange);
+}
+
+bool
+Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange)
+{
+  aDest->SetLength(aRange.mEnd - mChildOffset);
   size_t bytes;
   if (!mContext->mSource->CachedReadAt(mChildOffset, aDest->Elements(),
                                        aDest->Length(), &bytes) ||
@@ -125,6 +137,8 @@ Box::Read(nsTArray<uint8_t>* aDest)
     // Byte ranges are being reported incorrectly
     NS_WARNING("Read failed in mp4_demuxer::Box::Read()");
     aDest->Clear();
+    return false;
   }
+  return true;
 }
 }
