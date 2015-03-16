@@ -131,6 +131,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIAppStartup.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/TextEvents.h" // For WidgetKeyboardEvent
 #include "nsThemeConstants.h"
 
 #include "nsIGfxInfo.h"
@@ -3659,21 +3660,22 @@ bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
   return result;
 }
 
-bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
+bool nsWindow::DispatchKeyboardEvent(WidgetKeyboardEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* aEvent)
+bool nsWindow::DispatchContentCommandEvent(WidgetContentCommandEvent* aEvent)
 {
-  if (aEvent->mClass != eWheelEventClass) {
-    nsEventStatus status;
-    DispatchEvent(aEvent, status);
-    return ConvertStatus(status);
-  }
+  nsEventStatus status;
+  DispatchEvent(aEvent, status);
+  return ConvertStatus(status);
+}
 
+bool nsWindow::DispatchWheelEvent(WidgetWheelEvent* aEvent)
+{
   nsEventStatus status = DispatchAPZAwareEvent(aEvent->AsInputEvent());
   return ConvertStatus(status);
 }
