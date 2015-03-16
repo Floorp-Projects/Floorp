@@ -415,23 +415,10 @@ APZCCallbackHelper::ApplyCallbackTransform(WidgetTouchEvent& aEvent,
 nsEventStatus
 APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent)
 {
-  if (!aEvent.widget)
-    return nsEventStatus_eConsumeNoDefault;
-
-  // A nested process may be capturing events.
-  if (TabParent* capturer = TabParent::GetEventCapturer()) {
-    if (capturer->TryCapture(aEvent)) {
-      // Only touch events should be captured, and touch events from a parent
-      // process should not make it here. Capture for those is done elsewhere
-      // (for gonk, in nsWindow::DispatchTouchInputViaAPZ).
-      MOZ_ASSERT(!XRE_IsParentProcess());
-
-      return nsEventStatus_eConsumeNoDefault;
-    }
+  nsEventStatus status = nsEventStatus_eConsumeNoDefault;
+  if (aEvent.widget) {
+    aEvent.widget->DispatchEvent(&aEvent, status);
   }
-  nsEventStatus status;
-  NS_ENSURE_SUCCESS(aEvent.widget->DispatchEvent(&aEvent, status),
-                    nsEventStatus_eConsumeNoDefault);
   return status;
 }
 
