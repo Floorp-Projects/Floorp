@@ -7,6 +7,23 @@
 #include "mp4_demuxer/SinfParser.h"
 #include <limits>
 
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetDemuxerLog();
+
+/* Polyfill __func__ on MSVC to pass to the log. */
+#ifdef _MSC_VER
+#define __func__ __FUNCTION__
+#endif
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOG(name, arg, ...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (TOSTRING(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#else
+#define LOG(...)
+#endif
+
 namespace mp4_demuxer
 {
 
@@ -349,11 +366,14 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
 {
   if (!aTfhd.IsValid() || !aTfdt.IsValid() ||
       !aMdhd.IsValid() || !aEdts.IsValid()) {
+    LOG(Moof, "Invalid dependencies: aTfhd(%d) aTfdt(%d) aMdhd(%d) aEdts(%d)",
+        aTfhd.IsValid(), aTfdt.IsValid(), aMdhd.IsValid(), !aEdts.IsValid());
     return;
   }
 
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Moof, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
@@ -366,6 +386,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
   uint8_t version = flags >> 24;
 
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Moof, "Incomplete Box (missing sampleCount)");
     return;
   }
   uint32_t sampleCount = reader->ReadU32();
@@ -384,6 +405,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     }
   }
   if (reader->Remaining() < need) {
+    LOG(Moof, "Incomplete Box (have:%lld need:%lld)",
+        reader->Remaining(), need);
     return;
   }
 
@@ -444,6 +467,7 @@ Tkhd::Tkhd(Box& aBox)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Tkhd, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
@@ -451,6 +475,8 @@ Tkhd::Tkhd(Box& aBox)
   size_t need =
     3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(int32_t);
   if (reader->Remaining() < need) {
+    LOG(Tkhd, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   if (version == 0) {
@@ -477,6 +503,7 @@ Mdhd::Mdhd(Box& aBox)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Mdhd, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
@@ -484,6 +511,8 @@ Mdhd::Mdhd(Box& aBox)
   size_t need =
     3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(uint32_t);
   if (reader->Remaining() < need) {
+    LOG(Mdhd, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
 
@@ -509,6 +538,8 @@ Trex::Trex(Box& aBox)
 {
   BoxReader reader(aBox);
   if (reader->Remaining() < 6*sizeof(uint32_t)) {
+    LOG(Trex, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)6*sizeof(uint32_t));
     return;
   }
   mFlags = reader->ReadU32();
@@ -529,6 +560,7 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex)
 
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Tfhd, "Incomplete Box (missing flags)");
     return;
   }
   mFlags = reader->ReadU32();
@@ -540,6 +572,8 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex)
     }
   }
   if (reader->Remaining() < need) {
+    LOG(Tfhd, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   mBaseDataOffset =
@@ -564,12 +598,15 @@ Tfdt::Tfdt(Box& aBox)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Tfdt, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
   size_t need = version ? sizeof(uint64_t) : sizeof(uint32_t) ;
   if (reader->Remaining() < need) {
+    LOG(Tfdt, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   if (version == 0) {
@@ -591,6 +628,7 @@ Edts::Edts(Box& aBox)
 
   BoxReader reader(child);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Edts, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
@@ -598,6 +636,8 @@ Edts::Edts(Box& aBox)
   size_t need =
     sizeof(uint32_t) + 2*(version ? sizeof(int64_t) : sizeof(uint32_t));
   if (reader->Remaining() < need) {
+    LOG(Edts, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   uint32_t entryCount = reader->ReadU32();
@@ -625,6 +665,7 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Saiz, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
@@ -632,6 +673,8 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
   size_t need =
     ((flags & 1) ? 2*sizeof(uint32_t) : 0) + sizeof(uint8_t) + sizeof(uint32_t);
   if (reader->Remaining() < need) {
+    LOG(Saiz, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   if (flags & 1) {
@@ -646,6 +689,7 @@ Saiz::Saiz(Box& aBox, AtomType aDefaultType)
     }
   } else {
     if (!reader->ReadArray(mSampleInfoSize, count)) {
+      LOG(Saiz, "Incomplete Box (missing count:%u)", count);
       return;
     }
   }
@@ -658,12 +702,15 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
 {
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
+    LOG(Saio, "Incomplete Box (missing flags)");
     return;
   }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
   size_t need = ((flags & 1) ? (2*sizeof(uint32_t)) : 0) + sizeof(uint32_t);
   if (reader->Remaining() < need) {
+    LOG(Saio, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   if (flags & 1) {
@@ -673,6 +720,8 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   size_t count = reader->ReadU32();
   need = (version ? sizeof(uint64_t) : sizeof(uint32_t)) * count;
   if (reader->Remaining() < count) {
+    LOG(Saio, "Incomplete Box (have:%lld need:%lld)",
+        (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
   }
   mOffsets.SetCapacity(count);
@@ -687,4 +736,6 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   }
   mValid = true;
 }
+
+#undef LOG
 }
