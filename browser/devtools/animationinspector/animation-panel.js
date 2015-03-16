@@ -184,6 +184,7 @@ function PlayerWidget(player, containerEl) {
 
   this.onStateChanged = this.onStateChanged.bind(this);
   this.onPlayPauseBtnClick = this.onPlayPauseBtnClick.bind(this);
+  this.onCurrentTimeChanged = this.onCurrentTimeChanged.bind(this);
 
   this.metaDataComponent = new PlayerMetaDataHeader();
 }
@@ -217,11 +218,17 @@ PlayerWidget.prototype = {
   startListeners: function() {
     this.player.on(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.addEventListener("click", this.onPlayPauseBtnClick);
+    if (AnimationsController.hasSetCurrentTime) {
+      this.currentTimeEl.addEventListener("input", this.onCurrentTimeChanged);
+    }
   },
 
   stopListeners: function() {
     this.player.off(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.removeEventListener("click", this.onPlayPauseBtnClick);
+    if (AnimationsController.hasSetCurrentTime) {
+      this.currentTimeEl.removeEventListener("input", this.onCurrentTimeChanged);
+    }
   },
 
   createMarkup: function() {
@@ -288,11 +295,13 @@ PlayerWidget.prototype = {
         "min": "0",
         "max": max,
         "step": "10",
-        "value": "0",
-        // The currentTime isn't settable yet, so disable the timeline slider
-        "disabled": "true"
+        "value": "0"
       }
     });
+
+    if (!AnimationsController.hasSetCurrentTime) {
+      this.currentTimeEl.setAttribute("disabled", "true");
+    }
 
     // Time display
     this.timeDisplayEl = createNode({
@@ -324,6 +333,14 @@ PlayerWidget.prototype = {
   },
 
   /**
+   * Executed when the current-time range input is changed.
+   */
+  onCurrentTimeChanged: function(e) {
+    let time = e.target.value;
+    this.setCurrentTime(parseFloat(time), true);
+  },
+
+  /**
    * Whenever a player state update is received.
    */
   onStateChanged: function() {
@@ -346,6 +363,29 @@ PlayerWidget.prototype = {
         break;
     }
   },
+
+  /**
+   * Set the current time of the animation.
+   * @param {Number} time.
+   * @param {Boolean} shouldPause Should the player be paused too.
+   * @return {Promise} Resolves when the current time has been set.
+   */
+  setCurrentTime: Task.async(function*(time, shouldPause) {
+    if (!AnimationsController.hasSetCurrentTime) {
+      throw new Error("This server version doesn't support setting animations' currentTime");
+    }
+
+    this.stopTimelineAnimation();
+    if (shouldPause) {
+      yield this.pause();
+    }
+
+    if (this.player.state.delay) {
+      time += this.player.state.delay;
+    }
+
+    yield this.player.setCurrentTime(time);
+  }),
 
   /**
    * Pause the animation player via this widget.
