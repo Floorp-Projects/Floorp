@@ -821,11 +821,17 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
 
     nsAutoCString queryValue;
     queryHeaders->Get(varyValues[i], queryValue, errorResult);
-    if (errorResult.Failed()) { return errorResult.ErrorCode(); };
+    if (errorResult.Failed()) {
+      errorResult.ClearMessage();
+      return errorResult.ErrorCode();
+    }
 
     nsAutoCString cachedValue;
     cachedHeaders->Get(varyValues[i], cachedValue, errorResult);
-    if (errorResult.Failed()) { return errorResult.ErrorCode(); };
+    if (errorResult.Failed()) {
+      errorResult.ClearMessage();
+      return errorResult.ErrorCode();
+    }
 
     if (queryValue != cachedValue) {
       varyHeadersMatch = false;
