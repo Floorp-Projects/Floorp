@@ -61,7 +61,9 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let testURL =
     getRootDirectory(gTestPath) + "browser_662743_sample.html";
   let tab = gBrowser.addTab(testURL);
-  let tabState = { entries: [{ url: testURL, formdata: aFormData}] };
+
+  aFormData.url = testURL;
+  let tabState = { entries: [{ url: testURL, }], formdata: aFormData };
 
   promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     promiseTabState(tab, tabState).then(() => {

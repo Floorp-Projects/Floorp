@@ -280,42 +280,6 @@ ContentRestoreInternal.prototype = {
   },
 
   /**
-   * Accumulates a list of frames that need to be restored for the given browser
-   * element. A frame is only restored if its current URL matches the one saved
-   * in the session data. Each frame to be restored is returned along with its
-   * associated session data.
-   *
-   * @param browser the browser being restored
-   * @return an array of [frame, data] pairs
-   */
-  getFramesToRestore: function (content, data) {
-    function hasExpectedURL(aDocument, aURL) {
-      return !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
-    }
-
-    let frameList = [];
-
-    function enumerateFrame(content, data) {
-      // Skip the frame if the user has navigated away before loading finished.
-      if (!hasExpectedURL(content.document, data.url)) {
-        return;
-      }
-
-      frameList.push([content, data]);
-
-      for (let i = 0; i < content.frames.length; i++) {
-        if (data.children && data.children[i]) {
-          enumerateFrame(content.frames[i], data.children[i]);
-        }
-      }
-    }
-
-    enumerateFrame(content, data);
-
-    return frameList;
-  },
-
-  /**
    * Finish restoring the tab by filling in form data and setting the scroll
    * position. The restore is complete when this function exits. It should be
    * called when the "load" event fires for the restoring tab.
@@ -329,34 +293,12 @@ ContentRestoreInternal.prototype = {
     let {entry, pageStyle, formdata, scrollPositions} = this._restoringDocument;
     this._restoringDocument = null;
 
-    let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-    let frameList = this.getFramesToRestore(window, entry);
+    let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
 
-    // Support the old pageStyle format.
-    if (typeof(pageStyle) === "string") {
-      PageStyle.restore(this.docShell, frameList, pageStyle);
-    } else {
-      PageStyle.restoreTree(this.docShell, pageStyle);
-    }
-
+    PageStyle.restoreTree(this.docShell, pageStyle);
     FormData.restoreTree(window, formdata);
     ScrollPosition.restoreTree(window, scrollPositions);
-
-    // We need to support the old form and scroll data for a while at least.
-    for (let [frame, data] of frameList) {
-      if (data.hasOwnProperty("formdata") || data.hasOwnProperty("innerHTML")) {
-        let formdata = data.formdata || {};
-        formdata.url = data.url;
-
-        if (data.hasOwnProperty("innerHTML")) {
-          formdata.innerHTML = data.innerHTML;
-        }
-
-        FormData.restore(frame, formdata);
-      }
-
-      ScrollPosition.restore(frame, data.scroll || "");
-    }
   },
 
   /**

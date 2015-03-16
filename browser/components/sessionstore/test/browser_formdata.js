@@ -59,54 +59,6 @@ add_task(function test_formdata() {
 });
 
 /**
- * This test ensures that we maintain backwards compatibility with the form
- * data format used pre Fx 29.
- */
-add_task(function test_old_format() {
-  const URL = "data:text/html;charset=utf-8,<input%20id=input>";
-  const VALUE = "value-" + Math.random();
-
-  // Create a tab with an iframe containing an input field.
-  let tab = gBrowser.addTab(URL);
-  let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-
-  // Check that the form value is restored.
-  let state = {entries: [{url: URL, formdata: {id: {input: VALUE}}}]};
-  yield promiseTabState(tab, state);
-  is((yield getInputValue(browser, "input")), VALUE, "form data restored");
-
-  // Cleanup.
-  gBrowser.removeTab(tab);
-});
-
-/**
- * This test ensures that we maintain backwards compatibility with the form
- * data form used pre Fx 29, esp. the .innerHTML property for editable docs.
- */
-add_task(function test_old_format_inner_html() {
-  const URL = "data:text/html;charset=utf-8,<h1>mozilla</h1>" +
-              "<script>document.designMode='on'</script>";
-  const VALUE = "<h1>value-" + Math.random() + "</h1>";
-
-  // Create a tab with an iframe containing an input field.
-  let tab = gBrowser.addTab(URL);
-  let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-
-  // Restore the tab state.
-  let state = {entries: [{url: URL, innerHTML: VALUE}]};
-  yield promiseTabState(tab, state);
-
-  // Check that the innerHTML value was restored.
-  let html = yield getInnerHTML(browser);
-  is(html, VALUE, "editable document has been restored correctly");
-
-  // Cleanup.
-  gBrowser.removeTab(tab);
-});
-
-/**
  * This test ensures that a malicious website can't trick us into restoring
  * form data into a wrong website and that we always check the stored URL
  * before doing so.
