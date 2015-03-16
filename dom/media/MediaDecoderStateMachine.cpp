@@ -2561,44 +2561,26 @@ MediaDecoderStateMachine::SeekCompleted()
   }
 }
 
-// Runnable to dispose of the decoder and state machine on the main thread.
-class nsDecoderDisposeEvent : public nsRunnable {
+class DecoderDisposer
+{
 public:
-  nsDecoderDisposeEvent(already_AddRefed<MediaDecoder> aDecoder,
-                        already_AddRefed<MediaDecoderStateMachine> aStateMachine)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecoderDisposer)
+  DecoderDisposer(MediaDecoder* aDecoder, MediaDecoderStateMachine* aStateMachine)
     : mDecoder(aDecoder), mStateMachine(aStateMachine) {}
-  NS_IMETHOD Run() {
-    NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
+
+  void OnTaskQueueShutdown()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mStateMachine);
     MOZ_ASSERT(mDecoder);
-    mStateMachine->TaskQueue()->BeginShutdown();
-    mStateMachine->TaskQueue()->AwaitShutdownAndIdle();
     mStateMachine->BreakCycles();
     mDecoder->BreakCycles();
     mStateMachine = nullptr;
     mDecoder = nullptr;
-    return NS_OK;
   }
-private:
-  nsRefPtr<MediaDecoder> mDecoder;
-  nsRefPtr<MediaDecoderStateMachine> mStateMachine;
-};
 
-// Runnable which dispatches an event to the main thread to dispose of the
-// decoder and state machine. This runs on the state machine thread after
-// the state machine has shutdown, and all events for that state machine have
-// finished running.
-class nsDispatchDisposeEvent : public nsRunnable {
-public:
-  nsDispatchDisposeEvent(MediaDecoder* aDecoder,
-                         MediaDecoderStateMachine* aStateMachine)
-    : mDecoder(aDecoder), mStateMachine(aStateMachine) {}
-  NS_IMETHOD Run() {
-    NS_DispatchToMainThread(new nsDecoderDisposeEvent(mDecoder.forget(),
-                                                      mStateMachine.forget()));
-    return NS_OK;
-  }
 private:
+  virtual ~DecoderDisposer() {}
   nsRefPtr<MediaDecoder> mDecoder;
   nsRefPtr<MediaDecoderStateMachine> mStateMachine;
 };
@@ -2643,10 +2625,13 @@ MediaDecoderStateMachine::FinishShutdown()
   // finished and released its monitor/references. That event then will
   // dispatch an event to the main thread to release the decoder and
   // state machine.
-  RefPtr<nsIRunnable> task = new nsDispatchDisposeEvent(mDecoder, this);
-  TaskQueue()->Dispatch(task);
-
-  DECODER_LOG("Dispose Event Dispatched");
+  DECODER_LOG("Shutting down state machine task queue");
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  RefPtr<DecoderDisposer> disposer = new DecoderDisposer(mDecoder, this);
+  TaskQueue()->BeginShutdown()->Then(mainThread.get(), __func__, disposer.get(),
+                                     &DecoderDisposer::OnTaskQueueShutdown,
+                                     &DecoderDisposer::OnTaskQueueShutdown);
 }
 
 nsresult MediaDecoderStateMachine::RunStateMachine()
