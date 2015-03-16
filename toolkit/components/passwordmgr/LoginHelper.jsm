@@ -23,6 +23,7 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +33,33 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
  * Contains functions shared by different Login Manager components.
  */
 this.LoginHelper = {
+  /**
+   * Warning: this only updates if a logger was created.
+   */
+  debug: Services.prefs.getBoolPref("signon.debug"),
+
+  createLogger(aLogPrefix) {
+    let getMaxLogLevel = () => {
+      return this.debug ? "debug" : "error";
+    };
+
+    // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+    let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
+    let consoleOptions = {
+      maxLogLevel: getMaxLogLevel(),
+      prefix: aLogPrefix,
+    };
+    let logger = new ConsoleAPI(consoleOptions);
+
+    // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
+    Services.prefs.addObserver("signon.", () => {
+      this.debug = Services.prefs.getBoolPref("signon.debug");
+      logger.maxLogLevel = getMaxLogLevel();
+    }, false);
+
+    return logger;
+  },
+
   /**
    * Due to the way the signons2.txt file is formatted, we need to make
    * sure certain field values or characters do not cause the file to
