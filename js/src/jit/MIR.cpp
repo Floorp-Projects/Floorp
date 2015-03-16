@@ -4909,8 +4909,7 @@ AddGroupGuard(TempAllocator &alloc, MBasicBlock *current, MDefinition *obj,
 
     if (key->isGroup()) {
         guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality,
-                                       Bailout_ObjectIdentityOrTypeGuard,
-                                       /* checkUnboxedExpando = */ false);
+                                       Bailout_ObjectIdentityOrTypeGuard);
     } else {
         MConstant *singletonConst = MConstant::NewConstraintlessObject(alloc, key->singleton());
         current->add(singletonConst);

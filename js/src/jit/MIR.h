@@ -10157,15 +10157,13 @@ class MGuardObjectGroup
     AlwaysTenured<ObjectGroup *> group_;
     bool bailOnEquality_;
     BailoutKind bailoutKind_;
-    bool checkUnboxedExpando_;
 
     MGuardObjectGroup(MDefinition *obj, ObjectGroup *group, bool bailOnEquality,
-                      BailoutKind bailoutKind, bool checkUnboxedExpando)
+                      BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         group_(group),
         bailOnEquality_(bailOnEquality),
-        bailoutKind_(bailoutKind),
-        checkUnboxedExpando_(checkUnboxedExpando)
+        bailoutKind_(bailoutKind)
     {
         setGuard();
         setMovable();
@@ -10180,10 +10178,8 @@ class MGuardObjectGroup
     INSTRUCTION_HEADER(GuardObjectGroup)
 
     static MGuardObjectGroup *New(TempAllocator &alloc, MDefinition *obj, ObjectGroup *group,
-                                  bool bailOnEquality, BailoutKind bailoutKind,
-                                  bool checkUnboxedExpando) {
-        return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind,
-                                            checkUnboxedExpando);
+                                  bool bailOnEquality, BailoutKind bailoutKind) {
+        return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind);
     }
 
     MDefinition *obj() const {
@@ -10197,9 +10193,6 @@ class MGuardObjectGroup
     }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
-    }
-    bool checkUnboxedExpando() const {
-        return checkUnboxedExpando_;
     }
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         if (!ins->isGuardObjectGroup())
