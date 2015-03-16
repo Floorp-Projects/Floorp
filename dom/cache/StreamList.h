@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_StreamList_h
 #define mozilla_dom_cache_StreamList_h
 
+#include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsRefPtr.h"
 #include "nsTArray.h"
@@ -18,10 +19,9 @@ namespace dom {
 namespace cache {
 
 class CacheStreamControlParent;
-class Context;
 class Manager;
 
-class StreamList
+class StreamList MOZ_FINAL : public Context::Activity
 {
 public:
   StreamList(Manager* aManager, Context* aContext);
@@ -38,6 +38,10 @@ public:
   void NoteClosedAll();
   void Close(const nsID& aId);
   void CloseAll();
+
+  // Context::Activity methods
+  virtual void Cancel() MOZ_OVERRIDE;
+  virtual bool MatchesCacheId(CacheId aCacheId) const MOZ_OVERRIDE;
 
 private:
   ~StreamList();

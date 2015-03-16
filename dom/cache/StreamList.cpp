@@ -23,7 +23,7 @@ StreamList::StreamList(Manager* aManager, Context* aContext)
   , mActivated(false)
 {
   MOZ_ASSERT(mManager);
-  MOZ_ASSERT(mContext);
+  mContext->AddActivity(this);
 }
 
 void
@@ -142,6 +142,20 @@ StreamList::CloseAll()
   }
 }
 
+void
+StreamList::Cancel()
+{
+  NS_ASSERT_OWNINGTHREAD(StreamList);
+  CloseAll();
+}
+
+bool
+StreamList::MatchesCacheId(CacheId aCacheId) const
+{
+  NS_ASSERT_OWNINGTHREAD(StreamList);
+  return aCacheId == mCacheId;
+}
+
 StreamList::~StreamList()
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
@@ -153,6 +167,7 @@ StreamList::~StreamList()
     }
     mManager->ReleaseCacheId(mCacheId);
   }
+  mContext->RemoveActivity(this);
 }
 
 } // namespace cache
