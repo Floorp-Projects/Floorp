@@ -81,7 +81,6 @@ static const gl::GLFeature kRequiredFeatures[] = {
     gl::GLFeature::gpu_shader4,
     gl::GLFeature::instanced_arrays,
     gl::GLFeature::instanced_non_arrays,
-    gl::GLFeature::invalidate_framebuffer,
     gl::GLFeature::map_buffer_range,
     gl::GLFeature::occlusion_query2,
     gl::GLFeature::packed_depth_stencil,
