@@ -403,18 +403,7 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
     } else {
         // Else something changed, so resize:
         UniquePtr<DrawBuffer> draw;
-        bool drawOk = true;
-
-        /* Don't change out the draw buffer unless we resize. In the
-         * preserveDrawingBuffer:true case, prior contents of the buffer must
-         * be retained. If we're using a draw buffer, it's an MSAA buffer, so
-         * even if we copy the previous frame into the (single-sampled) read
-         * buffer, if we need to re-resolve from draw to read (as triggered by
-         * drawing), we'll need the old MSAA content to still be in the draw
-         * buffer.
-         */
-        if (!mDraw || size != Size())
-            drawOk = CreateDraw(size, &draw);  // Can be null.
+        bool drawOk = CreateDraw(size, &draw);  // Can be null.
 
         UniquePtr<ReadBuffer> read = CreateRead(surf);
         bool readOk = !!read;
@@ -425,9 +414,7 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
             return false;
         }
 
-        if (draw)
-            mDraw = Move(draw);
-
+        mDraw = Move(draw);
         mRead = Move(read);
     }
 
@@ -439,8 +426,6 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
         BindFB(0);
         mRead->SetReadBuffer(mUserReadBufferMode);
     }
-
-    RequireBlit();
 
     return true;
 }
@@ -465,8 +450,7 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
 
     if (ShouldPreserveBuffer() &&
         mFront &&
-        mBack &&
-        !mDraw)
+        mBack)
     {
         auto src  = mFront->Surf();
         auto dest = mBack->Surf();
