@@ -51,7 +51,7 @@ tab:last-of-type {
 }
 
 @media (-moz-mac-lion-theme) {
-  tab[selected="true"] {
+  tab[visuallyselected="true"] {
     color: #FFF;
     text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
   }
@@ -104,14 +104,14 @@ tabs.tabs-bottom > tab > .tab-middle {
   padding: 1px 2px 0 2px;
 }
 
-tabbox.tabs-bottom > tabs > tab:not([selected=true]):hover,
-tabs.tabs-bottom > tab:not([selected=true]):hover {
+tabbox.tabs-bottom > tabs > tab:not([visuallyselected=true]):hover,
+tabs.tabs-bottom > tab:not([visuallyselected=true]):hover {
   background-color: rgba(0, 0, 0, 0.1);
   -moz-border-end-color: rgba(0, 0, 0, 0.1);
 }
 
-tabbox.tabs-bottom > tabs > tab[selected=true],
-tabs.tabs-bottom > tab[selected=true] {
+tabbox.tabs-bottom > tabs > tab[visuallyselected=true],
+tabs.tabs-bottom > tab[visuallyselected=true] {
   color: #000;
   text-shadow: none;
   border: solid #888;
@@ -132,19 +132,19 @@ tabs.tabs-bottom > tab[beforeselected=true] {
   -moz-margin-end: -2px;
 }
 
-tabbox.tabs-bottom > tabs > tab:first-of-type:not([selected=true]),
-tabs.tabs-bottom > tab:first-of-type:not([selected=true]) {
+tabbox.tabs-bottom > tabs > tab:first-of-type:not([visuallyselected=true]),
+tabs.tabs-bottom > tab:first-of-type:not([visuallyselected=true]) {
   -moz-border-start: 4px solid transparent;
 }
 
-tabbox.tabs-bottom > tabs > tab:first-of-type[selected=true],
-tabs.tabs-bottom > tab:first-of-type[selected=true] {
+tabbox.tabs-bottom > tabs > tab:first-of-type[visuallyselected=true],
+tabs.tabs-bottom > tab:first-of-type[visuallyselected=true] {
   -moz-margin-start: 2px;
 }
 
 tabbox.tabs-bottom,
 tabbox.tabs-bottom > tabpanels,
-tabbox.tabs-bottom > tabs > tab[selected=true] > .tab-middle,
-tabs.tabs-bottom > tab[selected=true] > .tab-middle {
+tabbox.tabs-bottom > tabs > tab[visuallyselected=true] > .tab-middle,
+tabs.tabs-bottom > tab[visuallyselected=true] > .tab-middle {
   -moz-appearance: dialog;
 }
