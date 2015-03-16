@@ -40,11 +40,6 @@ public:
   friend class SharedDecoderProxy;
   friend class SharedDecoderCallback;
 
-  bool Recreate(PlatformDecoderModule* aPDM,
-    const mp4_demuxer::VideoDecoderConfig& aConfig,
-    layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer);
-
 private:
   virtual ~SharedDecoderManager();
   void DrainComplete();
