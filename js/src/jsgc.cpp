@@ -1734,7 +1734,7 @@ ZoneHeapThreshold::computeZoneTriggerBytes(double growthFactor, size_t lastBytes
                                            const GCSchedulingTunables &tunables)
 {
     size_t base = gckind == GC_SHRINK
-                ? lastBytes
+                ? Max(lastBytes, tunables.minEmptyChunkCount() * ChunkSize)
                 : Max(lastBytes, tunables.gcZoneAllocThresholdBase());
     double trigger = double(base) * growthFactor;
     return size_t(Min(double(tunables.gcMaxBytes()), trigger));
