@@ -170,8 +170,8 @@ function GMPWrapper(aPluginInfo) {
   Preferences.observe(GMPPrefs.getPrefKey(KEY_PLUGIN_VERSION, this._plugin.id),
                       this.onPrefVersionChanged, this);
   if (this._plugin.isEME) {
-    Preferences.observe(GMPPrefs.getPrefKey(KEY_EME_ENABLED, this._plugin.id),
-                        this.onPrefEnabledChanged, this);
+    Preferences.observe(KEY_EME_ENABLED, this.onPrefEMEGlobalEnabledChanged,
+                        this);
   }
 }
 
@@ -371,7 +371,7 @@ GMPWrapper.prototype = {
     return this.version && this.version.length > 0;
   },
 
-  onPrefEnabledChanged: function() {
+  _handleEnabledChanged: function() {
     AddonManagerPrivate.callAddonListeners(this.isActive ?
                                            "onEnabling" : "onDisabling",
                                            this, false);
@@ -389,6 +389,20 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners(this.isActive ?
                                            "onEnabled" : "onDisabled",
                                            this);
+  },
+
+  onPrefEMEGlobalEnabledChanged: function() {
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this,
+                                           ["appDisabled"]);
+    if (!this.userDisabled) {
+      this._handleEnabledChanged();
+    }
+  },
+
+  onPrefEnabledChanged: function() {
+    if (!this._plugin.isEME || !this.appDisabled) {
+      this._handleEnabledChanged();
+    }
   },
 
   onPrefVersionChanged: function() {
@@ -422,9 +436,9 @@ GMPWrapper.prototype = {
                        this.onPrefEnabledChanged, this);
     Preferences.ignore(GMPPrefs.getPrefKey(KEY_PLUGIN_VERSION, this._plugin.id),
                        this.onPrefVersionChanged, this);
-    if (this._isEME) {
-      Preferences.ignore(GMPPrefs.getPrefKey(KEY_EME_ENABLED, this._plugin.id),
-                         this.onPrefEnabledChanged, this);
+    if (this._plugin.isEME) {
+      Preferences.ignore(KEY_EME_ENABLED, this.onPrefEMEGlobalEnabledChanged,
+                         this);
     }
     return this._updateTask;
   },
