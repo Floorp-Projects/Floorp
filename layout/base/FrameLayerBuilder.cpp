@@ -3604,8 +3604,7 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
 {
   if (mInactiveLayerManager) {
-    BasicLayerManager* basic = static_cast<BasicLayerManager*>(mInactiveLayerManager.get());
-    basic->SetUserData(&gLayerManagerLayerBuilder, nullptr);
+    mInactiveLayerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
   }
 }
 
