@@ -778,6 +778,11 @@ public:
     }
   };
 
+protected:
+  // Expose enough to derived classes from them to define conversions
+  // between different types of BaseIntRegions.
+  explicit BaseIntRegion(const nsRegion& aImpl) : mImpl(aImpl) {}
+  const nsRegion& Impl() const { return mImpl; }
 private:
   nsRegion mImpl;
 
