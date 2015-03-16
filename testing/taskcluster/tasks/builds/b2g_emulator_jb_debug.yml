@@ -5,10 +5,12 @@ task:
   scopes:
     - 'docker-worker:cache:workspace-emulator-jb-debug'
   metadata:
-    name: '[TC] B2G Emulator JB Debug'
+    name: '[TC] B2G Emulator JB: (Debug)'
 
   extra:
+    # Disable "TC" prefix...
     treeherder:
+      groupSymbol: "?"
       collection:
         debug: true
       machine:
