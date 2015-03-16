@@ -99,7 +99,7 @@ typedef int64_t GMPTimestamp;
 //
 // Note: Gecko does not currently support the caps changing at runtime.
 // Set them once per plugin initialization, during the startup of
-// the GMPDecryptor.
+// the GMPdecryptor.
 
 // Capability; CDM can decrypt encrypted buffers and return still
 // compressed buffers back to Gecko for decompression there.
