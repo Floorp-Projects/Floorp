@@ -670,10 +670,6 @@ class GetPropertyIC : public RepatchIonCache
                           HandleObject obj, HandlePropertyName name,
                           void *returnAddr, bool *emitted);
 
-    bool tryAttachUnboxedExpando(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                                 HandleObject obj, HandlePropertyName name,
-                                 void *returnAddr, bool *emitted);
-
     bool tryAttachTypedArrayLength(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                    HandleObject obj, HandlePropertyName name, bool *emitted);
 
@@ -743,14 +739,14 @@ class SetPropertyIC : public RepatchIonCache
     };
 
     bool attachSetSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, HandleShape shape, bool checkTypeset);
+                       HandleNativeObject obj, HandleShape shape, bool checkTypeset);
 
     bool attachCallSetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
                           HandleObject obj, HandleObject holder, HandleShape shape,
                           void *returnAddr);
 
     bool attachAddSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, HandleShape oldShape, HandleObjectGroup oldGroup,
+                       HandleNativeObject obj, HandleShape oldShape, HandleObjectGroup oldGroup,
                        bool checkTypeset);
 
     bool attachSetUnboxed(JSContext *cx, HandleScript outerScript, IonScript *ion,
