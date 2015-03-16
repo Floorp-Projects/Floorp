@@ -8,6 +8,7 @@ const { loaderID } = require('@loader/options');
 const { processID } = require('sdk/system/runtime');
 const system = require('sdk/system/events');
 const { Cu } = require('chrome');
+const { isChildLoader } = require('sdk/remote/core');
 
 function log(str) {
   console.log("remote[" + loaderID + "][" + processID + "]: " + str);
@@ -79,6 +80,24 @@ frames.port.on('sdk/test/sendevent', (frame) => {
   doc.dispatchEvent(event);
   system.off("Test:Reply", listener);
   frame.port.emit('sdk/test/eventsent');
+});
+
+process.port.on('sdk/test/parentload', () => {
+  let loaded = false;
+  let message = "";
+  try {
+    require('sdk/remote/parent');
+    loaded = true;
+  }
+  catch (e) {
+    message = "" + e;
+  }
+
+  process.port.emit('sdk/test/parentload',
+    isChildLoader,
+    loaded,
+    message
+  )
 });
 
 function listener(event) {

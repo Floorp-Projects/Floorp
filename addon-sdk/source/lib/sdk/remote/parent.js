@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { isChildLoader } = require('./core');
+if (isChildLoader)
+  throw new Error("Cannot load sdk/remote/parent in a child loader.");
+
 const { Cu, Ci, Cc } = require('chrome');
 const runtime = require('../system/runtime');
 
@@ -53,6 +57,7 @@ catch (e) {
 }
 const loaderID = getNewLoaderID();
 childOptions.loaderID = loaderID;
+childOptions.childLoader = true;
 
 const ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1'].
              getService(Ci.nsIMessageBroadcaster);
