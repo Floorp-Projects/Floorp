@@ -508,6 +508,7 @@ var gHotfixID = null;
 var gShutdownBarrier = null;
 var gRepoShutdownState = "";
 var gShutdownInProgress = false;
+var gPluginPageListener = null;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -848,6 +849,13 @@ var AddonManagerInternal = {
           delete this.startupChanges[type];
       }
 
+      // Support for remote about:plugins. Note that this module isn't loaded
+      // at the top because Services.appinfo is defined late in tests.
+      Cu.import("resource://gre/modules/RemotePageManager.jsm");
+
+      gPluginPageListener = new RemotePages("about:plugins");
+      gPluginPageListener.addMessageListener("RequestPlugins", this.requestPlugins);
+
       gStartupComplete = true;
       this.recordTimestamp("AMI_startup_end");
     }
@@ -1059,6 +1067,8 @@ var AddonManagerInternal = {
     Services.prefs.removeObserver(PREF_EM_UPDATE_ENABLED, this);
     Services.prefs.removeObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
     Services.prefs.removeObserver(PREF_EM_HOTFIX_ID, this);
+    gPluginPageListener.destroy();
+    gPluginPageListener = null;
 
     let savedError = null;
     // Only shut down providers if they've been started.
@@ -1101,6 +1111,24 @@ var AddonManagerInternal = {
       throw savedError;
     }
   }),
+
+  requestPlugins: function({ target: port }) {
+    // Lists all the properties that plugins.html needs
+    const NEEDED_PROPS = ["name", "pluginLibraries", "pluginFullpath", "version",
+                          "isActive", "blocklistState", "description",
+                          "pluginMimeTypes"];
+    function filterProperties(plugin) {
+      let filtered = {};
+      for (let prop of NEEDED_PROPS) {
+        filtered[prop] = plugin[prop];
+      }
+      return filtered;
+    }
+
+    AddonManager.getAddonsByTypes(["plugin"], function (aPlugins) {
+      port.sendAsyncMessage("PluginList", [filterProperties(p) for (p of aPlugins)]);
+    });
+  },
 
   /**
    * Notified when a preference we're interested in has changed.

@@ -4,15 +4,16 @@
 // ServiceWorker equivalent of worker_wrapper.js.
 
 var client;
+var context;
 
 function ok(a, msg) {
-  dump("OK: " + !!a + "  =>  " + a + ": " + msg + "\n");
-  client.postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+  client.postMessage({type: 'status', status: !!a,
+                      msg: a + ": " + msg, context: context});
 }
 
 function is(a, b, msg) {
-  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + ": " + msg + "\n");
-  client.postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+  client.postMessage({type: 'status', status: a === b,
+                      msg: a + " === " + b + ": " + msg, context: context });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -28,7 +29,7 @@ function workerTestArrayEquals(a, b) {
 }
 
 function testDone() {
-  client.postMessage({ type: 'finish' });
+  client.postMessage({ type: 'finish', context: context });
 }
 
 function workerTestGetPrefs(prefs, cb) {
@@ -42,6 +43,7 @@ function workerTestGetPrefs(prefs, cb) {
   });
   client.postMessage({
     type: 'getPrefs',
+    context: context,
     prefs: prefs
   });
 }
@@ -57,6 +59,7 @@ function workerTestGetPermissions(permissions, cb) {
   });
   client.postMessage({
     type: 'getPermissions',
+    context: context,
     permissions: permissions
   });
 }
@@ -70,6 +73,7 @@ function workerTestGetVersion(cb) {
     cb(e.data.result);
   });
   client.postMessage({
+    context: context,
     type: 'getVersion'
   });
 }
@@ -83,6 +87,7 @@ function workerTestGetUserAgent(cb) {
     cb(e.data.result);
   });
   client.postMessage({
+    context: context,
     type: 'getUserAgent'
   });
 }
@@ -97,17 +102,28 @@ addEventListener('message', function workerWrapperOnMessage(e) {
       client.postMessage({
         type: 'status',
         status: false,
+        context: context,
         msg: 'worker failed to import ' + data.script + "; error: " + e.message
       });
     }
   }
   if ("ServiceWorker" in self) {
     self.clients.matchAll().then(function(clients) {
-      client = clients[0];
+      for (var i = 0; i < clients.length; ++i) {
+        if (clients[i].url.indexOf("message_receiver.html") > -1) {
+          client = clients[i];
+          break;
+        }
+      }
+      if (!client) {
+        dump("We couldn't find the message_receiver window, the test will fail\n");
+      }
+      context = "ServiceWorker";
       runScript();
     });
   } else {
     client = self;
+    context = "Worker";
     runScript();
   }
 });

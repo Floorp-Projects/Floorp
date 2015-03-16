@@ -71,6 +71,34 @@ using mozilla::AutoJSContext;
   }                                                               \
   PR_END_MACRO
 
+#define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)     \
+  PR_BEGIN_MACRO                                                  \
+  bool needsEnterLeave = doc->MayHaveDOMMutationObservers();      \
+  if (needsEnterLeave) {                                          \
+    nsDOMMutationObserver::EnterMutationHandling();               \
+  }                                                               \
+  nsINode* node = content_;                                       \
+  do {                                                            \
+    nsINode::nsSlots* slots = node->GetExistingSlots();           \
+    if (slots && !slots->mMutationObservers.IsEmpty()) {          \
+      /* No need to explicitly notify the first observer first    \
+         since that'll happen anyway. */                          \
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(                 \
+        slots->mMutationObservers, nsIMutationObserver,           \
+        nsIAnimationObserver, func_, params_);                    \
+    }                                                             \
+    ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
+    if (shadow) {                                                 \
+      node = shadow->GetPoolHost();                               \
+    } else {                                                      \
+      node = node->GetParentNode();                               \
+    }                                                             \
+  } while (node);                                                 \
+  if (needsEnterLeave) {                                          \
+    nsDOMMutationObserver::LeaveMutationHandling();               \
+  }                                                               \
+  PR_END_MACRO
+
 void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
                                      CharacterDataChangeInfo* aInfo)
@@ -183,6 +211,70 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
                              (document, container, aChild, aIndexInContainer,
                               aPreviousSibling));
+}
+
+static inline Element*
+GetTarget(AnimationPlayer* aPlayer)
+{
+  Animation* source = aPlayer->GetSource();
+  if (!source) {
+    return nullptr;
+  }
+
+  Element* target;
+  nsCSSPseudoElements::Type pseudoType;
+  source->GetTarget(target, pseudoType);
+
+  // If the animation targets a pseudo-element, we don't dispatch
+  // notifications for it.  (In the future we will have PseudoElement
+  // objects we can use as the target of the notifications.)
+  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    return nullptr;
+  }
+
+  return source->GetTarget();
+}
+
+void
+nsNodeUtils::AnimationAdded(AnimationPlayer* aPlayer)
+{
+  Element* target = GetTarget(aPlayer);
+  if (!target) {
+    return;
+  }
+  nsIDocument* doc = target->OwnerDoc();
+
+  if (doc->MayHaveAnimationObservers()) {
+    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target, (aPlayer));
+  }
+}
+
+void
+nsNodeUtils::AnimationChanged(AnimationPlayer* aPlayer)
+{
+  Element* target = GetTarget(aPlayer);
+  if (!target) {
+    return;
+  }
+  nsIDocument* doc = target->OwnerDoc();
+
+  if (doc->MayHaveAnimationObservers()) {
+    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target, (aPlayer));
+  }
+}
+
+void
+nsNodeUtils::AnimationRemoved(AnimationPlayer* aPlayer)
+{
+  Element* target = GetTarget(aPlayer);
+  if (!target) {
+    return;
+  }
+  nsIDocument* doc = target->OwnerDoc();
+
+  if (doc->MayHaveAnimationObservers()) {
+    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target, (aPlayer));
+  }
 }
 
 void
@@ -455,6 +547,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     if (oldDoc != newDoc && oldDoc->MayHaveDOMMutationObservers()) {
       newDoc->SetMayHaveDOMMutationObservers();
+    }
+
+    if (oldDoc != newDoc && oldDoc->MayHaveAnimationObservers()) {
+      newDoc->SetMayHaveAnimationObservers();
     }
 
     if (elem) {

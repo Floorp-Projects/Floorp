@@ -809,14 +809,12 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   // all the pres shells from here up to the root, as well as any css-driven
   // resolution. We don't need to compute it as it's already stored in the
   // container parameters.
-  // TODO(botond): As a workaround for bug 1071018, avoid asserting if
-  // mYScale is different from mXScale. This will be handled properly in
-  // bug 1036967.
-  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale(aContainerParameters.mXScale));
+  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(aContainerParameters.mXScale,
+                                                             aContainerParameters.mYScale));
 
-  LayoutDeviceToScreenScale resolutionToScreen(
-      presShell->GetCumulativeResolution().width
-    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame).width);
+  LayoutDeviceToScreenScale2D resolutionToScreen(
+      presShell->GetCumulativeResolution()
+    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame));
   metrics.SetExtraResolution(metrics.GetCumulativeResolution() / resolutionToScreen);
 
   metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
@@ -888,10 +886,10 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
       } else {
         LayoutDeviceIntSize contentSize;
         if (nsLayoutUtils::GetContentViewerSize(presContext, contentSize)) {
-          LayoutDeviceToParentLayerScale scale(1.0f);
+          LayoutDeviceToParentLayerScale2D scale;
           if (presContext->GetParentPresContext()) {
             gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
-            scale = LayoutDeviceToParentLayerScale(res.width, res.height);
+            scale = LayoutDeviceToParentLayerScale2D(res.width, res.height);
           }
           metrics.mCompositionBounds.SizeTo(contentSize * scale);
         }

@@ -1061,6 +1061,20 @@ PushMarkStack(GCMarker *gcmarker, Shape *thing)
 static inline void
 ScanBaseShape(GCMarker *gcmarker, BaseShape *base);
 
+void
+BaseShape::markChildren(JSTracer *trc)
+{
+    if (isOwned())
+        gc::MarkBaseShape(trc, &unowned_, "base");
+
+    JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
+    MOZ_ASSERT(global);
+    MarkObjectUnbarriered(trc, &global, "global");
+
+    if (metadata)
+        gc::MarkObject(trc, &metadata, "metadata");
+}
+
 static void
 PushMarkStack(GCMarker *gcmarker, BaseShape *thing)
 {
@@ -1102,11 +1116,8 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 
     base->compartment()->mark();
 
-    if (JSObject *parent = base->getObjectParent()) {
-        MaybePushMarkStackBetweenSlices(gcmarker, parent);
-    } else if (GlobalObject *global = base->compartment()->unsafeUnbarrieredMaybeGlobal()) {
+    if (GlobalObject *global = base->compartment()->unsafeUnbarrieredMaybeGlobal())
         gcmarker->traverse(global);
-    }
 
     if (JSObject *metadata = base->getObjectMetadata())
         MaybePushMarkStackBetweenSlices(gcmarker, metadata);
@@ -1249,45 +1260,30 @@ PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym)
 }
 
 /*
- * This function is used by the cycle collector to trace through the
- * children of a BaseShape (and its baseUnowned(), if any). The cycle
- * collector does not directly care about BaseShapes, so only the
- * parent is marked. Furthermore, the parent is marked only if it isn't the
- * same as prevParent, which will be updated to the current shape's parent.
- */
-static inline void
-MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent)
-{
-    MOZ_ASSERT(base);
-
-    /*
-     * The cycle collector does not need to trace unowned base shapes,
-     * as they have the same parent as the original base shape.
-     */
-    base->assertConsistency();
-
-    JSObject *parent = base->getObjectParent();
-    if (parent && parent != *prevParent) {
-        MarkObjectUnbarriered(trc, &parent, "parent");
-        MOZ_ASSERT(parent == base->getObjectParent());
-        *prevParent = parent;
-    }
-}
-
-/*
  * This function is used by the cycle collector to trace through a
  * shape. The cycle collector does not care about shapes or base
  * shapes, so those are not marked. Instead, any shapes or base shapes
  * that are encountered have their children marked. Stack space is
- * bounded. If two shapes in a row have the same parent pointer, the
- * parent pointer will only be marked once.
+ * bounded.
  */
 void
 gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
 {
-    JSObject *prevParent = nullptr;
+    /*
+     * We need to mark the global, but it's OK to only do this once instead of
+     * doing it for every Shape in our lineage, since it's always the same
+     * global.
+     */
+    JSObject *global = shape->compartment()->unsafeUnbarrieredMaybeGlobal();
+    MOZ_ASSERT(global);
+    MarkObjectUnbarriered(trc, &global, "global");
+
     do {
-        MarkCycleCollectorChildren(trc, shape->base(), &prevParent);
+        MOZ_ASSERT(global == shape->compartment()->unsafeUnbarrieredMaybeGlobal());
+
+        MOZ_ASSERT(shape->base());
+        shape->base()->assertConsistency();
+
         MarkId(trc, &shape->propidRef(), "propid");
 
         if (shape->hasGetterObject()) {

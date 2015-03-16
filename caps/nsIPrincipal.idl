@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(204555e7-04ad-4cc8-9f0e-840615cc43e8)]
+[scriptable, builtinclass, uuid(264fe8ca-c382-11e4-95a6-782bcbaebb28)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -230,6 +230,15 @@ interface nsIPrincipal : nsISerializable
      * unknown, hence assumed minimally privileged, security context).
      */
     [infallible] readonly attribute boolean isNullPrincipal;
+
+    /**
+     * Returns true if this principal's origin is recognized as being on the
+     * whitelist of sites that can use the CSS Unprefixing Service.
+     *
+     * (This interface provides a trivial implementation, just returning false;
+     * subclasses can implement something more complex as-needed.)
+     */
+    [noscript,notxpcom,nostdcall] bool IsOnCSSUnprefixingWhitelist();
 };
 
 /**

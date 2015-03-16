@@ -359,13 +359,14 @@ this.CrashManager.prototype = Object.freeze({
    * @param crashType (string) One of the CRASH_TYPE constants.
    * @param id (string) Crash ID. Likely a UUID.
    * @param date (Date) When the crash occurred.
+   * @param metadata (dictionary) Crash metadata, may be empty.
    *
    * @return promise<null> Resolved when the store has been saved.
    */
-  addCrash: function (processType, crashType, id, date) {
+  addCrash: function (processType, crashType, id, date, metadata) {
     return Task.spawn(function* () {
       let store = yield this._getStore();
-      if (store.addCrash(processType, crashType, id, date)) {
+      if (store.addCrash(processType, crashType, id, date, metadata)) {
         yield store.save();
       }
     }.bind(this));
@@ -518,10 +519,16 @@ this.CrashManager.prototype = Object.freeze({
                            entry.path);
             return this.EVENT_FILE_ERROR_MALFORMED;
           }
-
-          let [crashID] = lines;
+          // fall-through
+        case "crash.main.2":
+          let crashID = lines[0];
+          let metadata = {};
+          for (let i = 1; i < lines.length; i++) {
+            let [key, val] = lines[i].split("=");
+            metadata[key] = val;
+          }
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
-                         crashID, date);
+                         crashID, date, metadata);
           break;
 
         case "crash.submission.1":
@@ -793,6 +800,15 @@ CrashStore.prototype = Object.freeze({
 
           let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
           actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
+
+          // If we have an OOM size, count the crash as an OOM in addition to
+          // being a main process crash.
+          if (denormalized.metadata && 
+              denormalized.metadata.OOMAllocationSize) {
+            let oomKey = key + "-oom";
+            actualCounts.set(oomKey, (actualCounts.get(oomKey) || 0) + 1);
+          }
+
         }
 
         if (hasSubmissionsStoredAsCrashes) {
@@ -1052,10 +1068,12 @@ CrashStore.prototype = Object.freeze({
    *        (string) The crash ID.
    * @param date
    *        (Date) When this crash occurred.
+   * @param metadata
+   *        (dictionary) Crash metadata, may be empty.
    *
    * @return null | object crash record
    */
-  _ensureCrashRecord: function (processType, crashType, id, date) {
+  _ensureCrashRecord: function (processType, crashType, id, date, metadata) {
     if (!id) {
       // Crashes are keyed on ID, so it's not really helpful to store crashes
       // without IDs.
@@ -1076,6 +1094,14 @@ CrashStore.prototype = Object.freeze({
         return null;
       }
 
+      // If we have an OOM size, count the crash as an OOM in addition to
+      // being a main process crash.
+      if (metadata && metadata.OOMAllocationSize) {
+        let oomType = type + "-oom";
+        let oomCount = (this._countsByDay.get(day).get(oomType) || 0) + 1;
+        this._countsByDay.get(day).set(oomType, oomCount);
+      }
+
       this._data.crashes.set(id, {
         id: id,
         remoteID: null,
@@ -1083,6 +1109,7 @@ CrashStore.prototype = Object.freeze({
         crashDate: date,
         submissions: new Map(),
         classifications: [],
+        metadata: metadata,
       });
     }
 
@@ -1100,11 +1127,12 @@ CrashStore.prototype = Object.freeze({
    * @param crashType (string) One of the CRASH_TYPE constants.
    * @param id (string) Crash ID. Likely a UUID.
    * @param date (Date) When the crash occurred.
+   * @param metadata (dictionary) Crash metadata, may be empty.
    *
    * @return boolean True if the crash was recorded and false if not.
    */
-  addCrash: function (processType, crashType, id, date) {
-    return !!this._ensureCrashRecord(processType, crashType, id, date);
+  addCrash: function (processType, crashType, id, date, metadata) {
+    return !!this._ensureCrashRecord(processType, crashType, id, date, metadata);
   },
 
   /**
@@ -1264,6 +1292,10 @@ CrashRecord.prototype = Object.freeze({
 
   get classifications() {
     return this._o.classifications;
+  },
+
+  get metadata() {
+    return this._o.metadata;
   },
 });
 

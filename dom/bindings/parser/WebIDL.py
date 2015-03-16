@@ -3540,7 +3540,9 @@ class IDLArgument(IDLObjectWithIdentifier):
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
             else:
-                raise WebIDLError("Unhandled extended attribute on an argument",
+                raise WebIDLError("Unhandled extended attribute on %s" %
+                                  ("a dictionary member" if self.dictionaryMember else
+                                   "an argument"),
                                   [attribute.location])
 
     def isComplete(self):

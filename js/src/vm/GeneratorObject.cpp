@@ -271,7 +271,7 @@ NewSingletonObjectWithObjectPrototype(JSContext *cx, Handle<GlobalObject *> glob
     RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
-    return NewObjectWithGivenProto<PlainObject>(cx, proto, global, SingletonObject);
+    return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
 }
 
 static JSObject*
@@ -280,7 +280,7 @@ NewSingletonObjectWithFunctionPrototype(JSContext *cx, Handle<GlobalObject *> gl
     RootedObject proto(cx, global->getOrCreateFunctionPrototype(cx));
     if (!proto)
         return nullptr;
-    return NewObjectWithGivenProto<PlainObject>(cx, proto, global, SingletonObject);
+    return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
 }
 
 /* static */ bool

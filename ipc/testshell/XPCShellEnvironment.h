@@ -29,8 +29,7 @@ public:
     static XPCShellEnvironment* CreateEnvironment();
     ~XPCShellEnvironment();
 
-    void ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj,
-                     const char *filename, FILE *file, bool forceTTY);
+    void ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY);
     bool EvaluateString(const nsString& aString,
                         nsString* aResult = nullptr);
 

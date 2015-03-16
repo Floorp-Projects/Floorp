@@ -189,7 +189,6 @@ JSObject::enclosingScope()
         return nullptr;
 
     MOZ_ASSERT_IF(is<JSFunction>(), as<JSFunction>().isInterpreted());
-    assertParentIs(&global());
     return &global();
 }
 

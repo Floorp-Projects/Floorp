@@ -70,8 +70,6 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
      */
     if (CanReuseFunctionForClone(cx, fun)) {
         RootedObject obj(cx, SkipScopeParent(parent));
-        if (!JSObject::setParent(cx, fun, obj))
-            return nullptr;
         ObjectOpResult succeeded;
         if (proto && !SetPrototype(cx, fun, proto, succeeded))
             return nullptr;

@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/InternalHeaders.h"
 #include "nsStreamUtils.h"
+#include "nsSerializationHelper.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,6 +33,7 @@ InternalResponse::InternalResponse(const InternalResponse& aOther)
   , mStatus(aOther.mStatus)
   , mStatusText(aOther.mStatusText)
   , mContentType(aOther.mContentType)
+  , mSecurityInfo(aOther.mSecurityInfo)
 {
 }
 
@@ -82,6 +84,25 @@ InternalResponse::CORSResponse(InternalResponse* aInner)
   cors->mHeaders = InternalHeaders::CORSHeaders(aInner->mHeaders);
   cors->mBody.swap(aInner->mBody);
   return cors.forget();
+}
+
+void
+InternalResponse::SetSecurityInfo(nsISupports* aSecurityInfo)
+{
+  MOZ_ASSERT(mSecurityInfo.IsEmpty(), "security info should only be set once");
+  nsCOMPtr<nsISerializable> serializable = do_QueryInterface(aSecurityInfo);
+  if (!serializable) {
+    NS_WARNING("A non-serializable object was passed to InternalResponse::SetSecurityInfo");
+    return;
+  }
+  NS_SerializeToString(serializable, mSecurityInfo);
+}
+
+void
+InternalResponse::SetSecurityInfo(const nsCString& aSecurityInfo)
+{
+  MOZ_ASSERT(mSecurityInfo.IsEmpty(), "security info should only be set once");
+  mSecurityInfo = aSecurityInfo;
 }
 
 } // namespace dom

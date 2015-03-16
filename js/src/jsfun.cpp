@@ -393,7 +393,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, objProto,
-                                                                     NullPtr(), SingletonObject));
+                                                                     SingletonObject));
     if (!proto)
         return nullptr;
 
@@ -600,7 +600,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         if (uint16_t(flagsword) & JSFunction::EXTENDED)
             allocKind = JSFunction::ExtendedFinalizeKind;
         fun = NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                                   /* parent = */ NullPtr(), NullPtr(), proto,
+                                   /* enclosingDynamicScope = */ NullPtr(), NullPtr(), proto,
                                    allocKind, TenuredObject);
         if (!fun)
             return false;
@@ -2046,8 +2046,11 @@ js::NewFunctionWithProto(ExclusiveContext *cx, Native native,
     // isSingleton implies isInterpreted.
     if (native && !IsAsmJSModuleNative(native))
         newKind = SingletonObject;
-    RootedObject realParent(cx, SkipScopeParent(enclosingDynamicScope));
-    funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, realParent, allocKind,
+#ifdef DEBUG
+    RootedObject nonScopeParent(cx, SkipScopeParent(enclosingDynamicScope));
+    MOZ_ASSERT(!nonScopeParent || nonScopeParent == cx->global());
+#endif
+    funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
                                      newKind);
     if (!funobj)
         return nullptr;
@@ -2105,8 +2108,16 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
         if (!cloneProto)
             return nullptr;
     }
+#ifdef DEBUG
     RootedObject realParent(cx, SkipScopeParent(parent));
-    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto, realParent,
+    // We'd like to assert that realParent is null-or-global, but
+    // js::ExecuteInGlobalAndReturnScope messes that up.  Assert that it's one
+    // of those or the unqualified var obj, since it should still be ok to
+    // parent to the global in that case.
+    MOZ_ASSERT(!realParent || realParent == cx->global() ||
+               realParent->isUnqualifiedVarObj());
+#endif
+    JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto,
                                                  allocKind, newKind);
     if (!cloneobj)
         return nullptr;

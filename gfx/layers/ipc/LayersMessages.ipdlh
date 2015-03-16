@@ -325,7 +325,8 @@ struct SurfaceDescriptorTiles {
   int         retainedWidth;
   int         retainedHeight;
   float       resolution;
-  float       frameResolution;
+  float       frameXResolution;
+  float       frameYResolution;
 };
 
 struct OpUseTiledLayerBuffer {

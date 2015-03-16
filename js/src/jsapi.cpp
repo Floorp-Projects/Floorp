@@ -1932,10 +1932,7 @@ JS_NewObject(JSContext *cx, const JSClass *jsclasp)
     MOZ_ASSERT(clasp != &JSFunction::class_);
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    JSObject *obj = NewObjectWithClassProto(cx, clasp, NullPtr(), NullPtr());
-    if (obj)
-        obj->assertParentIs(cx->global());
-    return obj;
+    return NewObjectWithClassProto(cx, clasp, NullPtr());
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1953,7 +1950,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *jsclasp, HandleObject p
     MOZ_ASSERT(clasp != &JSFunction::class_);
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    return NewObjectWithGivenProto(cx, clasp, proto, JS::NullPtr());
+    return NewObjectWithGivenProto(cx, clasp, proto);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2604,7 +2601,7 @@ JS_DefineObject(JSContext *cx, HandleObject obj, const char *name, const JSClass
     if (!clasp)
         clasp = &PlainObject::class_;    /* default class is Object */
 
-    RootedObject nobj(cx, NewObjectWithClassProto(cx, clasp, NullPtr(), obj));
+    RootedObject nobj(cx, NewObjectWithClassProto(cx, clasp, NullPtr()));
     if (!nobj)
         return nullptr;
 
@@ -2747,6 +2744,17 @@ JS_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name,
                             MutableHandle<JSPropertyDescriptor> desc)
 {
     JSAtom *atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext *cx, HandleObject obj, const char16_t *name,
+                              MutableHandle<JSPropertyDescriptor> desc)
+{
+    JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
@@ -4104,15 +4112,15 @@ ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain, HandleScript scriptAr
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, MutableHandleValue rval)
+JS_ExecuteScript(JSContext *cx, HandleScript scriptArg, MutableHandleValue rval)
 {
-    return ExecuteScript(cx, obj, scriptArg, rval.address());
+    return ExecuteScript(cx, cx->global(), scriptArg, rval.address());
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
+JS_ExecuteScript(JSContext *cx, HandleScript scriptArg)
 {
-    return ExecuteScript(cx, obj, scriptArg, nullptr);
+    return ExecuteScript(cx, cx->global(), scriptArg, nullptr);
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
@@ -4147,28 +4155,28 @@ JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptAr
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
 
 static bool
-Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+Evaluate(JSContext *cx, HandleObject scope, const ReadOnlyCompileOptions &optionsArg,
          SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
     CompileOptions options(cx, optionsArg);
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    assertSameCompartment(cx, scope);
 
     AutoLastFrameCheck lfc(cx);
 
-    options.setCompileAndGo(obj->is<GlobalObject>());
+    options.setCompileAndGo(scope->is<GlobalObject>());
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                    obj, NullPtr(), NullPtr(), options,
+                                                    scope, NullPtr(), NullPtr(), options,
                                                     srcBuf, nullptr, 0, &sct));
     if (!script)
         return false;
 
     MOZ_ASSERT(script->getVersion() == options.version);
 
-    bool result = Execute(cx, script, *obj,
+    bool result = Execute(cx, script, *scope,
                           options.noScriptRval ? nullptr : rval.address());
     if (!sct.complete())
         result = false;
@@ -4199,16 +4207,16 @@ Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptio
 }
 
 static bool
-Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
          const char16_t *chars, size_t length, MutableHandleValue rval)
 {
   SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-  return ::Evaluate(cx, obj, optionsArg, srcBuf, rval);
+  return ::Evaluate(cx, cx->global(), optionsArg, srcBuf, rval);
 }
 
 extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-         const char *bytes, size_t length, MutableHandleValue rval)
+JS::Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
+             const char *bytes, size_t length, MutableHandleValue rval)
 {
     char16_t *chars;
     if (options.utf8)
@@ -4219,12 +4227,12 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
         return false;
 
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
-    bool ok = ::Evaluate(cx, obj, options, srcBuf, rval);
+    bool ok = ::Evaluate(cx, cx->global(), options, srcBuf, rval);
     return ok;
 }
 
 static bool
-Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
          const char *filename, MutableHandleValue rval)
 {
     FileContents buffer(cx);
@@ -4236,14 +4244,14 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
 
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
+    return Evaluate(cx, options, buffer.begin(), buffer.length(), rval);
 }
 
 JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+JS::Evaluate(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
              SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, srcBuf, rval);
+    return ::Evaluate(cx, cx->global(), optionsArg, srcBuf, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -4254,17 +4262,25 @@ JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileO
 }
 
 JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+JS::Evaluate(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
              const char16_t *chars, size_t length, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, chars, length, rval);
+    return ::Evaluate(cx, optionsArg, chars, length, rval);
 }
 
 JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
+JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
+             const char16_t *chars, size_t length, MutableHandleValue rval)
+{
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, rval);
+}
+
+JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
              const char *filename, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, filename, rval);
+    return ::Evaluate(cx, optionsArg, filename, rval);
 }
 
 JS_PUBLIC_API(bool)

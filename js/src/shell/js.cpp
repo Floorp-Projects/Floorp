@@ -427,7 +427,7 @@ SkipUTF8BOM(FILE* file)
 }
 
 static void
-RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, bool compileOnly)
+RunFile(JSContext *cx, const char *filename, FILE *file, bool compileOnly)
 {
     SkipUTF8BOM(file);
 
@@ -454,7 +454,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
                .setNoScriptRval(true);
 
         gGotError = false;
-        (void) JS::Compile(cx, obj, options, file, &script);
+        (void) JS::Compile(cx, cx->global(), options, file, &script);
         MOZ_ASSERT_IF(!script, gGotError);
     }
 
@@ -463,7 +463,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
             AnalyzeEntrainedVariables(cx, script);
     #endif
     if (script && !compileOnly) {
-        if (!JS_ExecuteScript(cx, obj, script)) {
+        if (!JS_ExecuteScript(cx, script)) {
             if (!gQuitting && gExitCode != EXITCODE_TIMEOUT)
                 gExitCode = EXITCODE_RUNTIME_ERROR;
         }
@@ -474,7 +474,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
 }
 
 static bool
-EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t length,
+EvalAndPrint(JSContext *cx, const char *bytes, size_t length,
              int lineno, bool compileOnly, FILE *out)
 {
     // Eval.
@@ -484,12 +484,12 @@ EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t 
            .setCompileAndGo(true)
            .setFileAndLine("typein", lineno);
     RootedScript script(cx);
-    if (!JS::Compile(cx, global, options, bytes, length, &script))
+    if (!JS::Compile(cx, cx->global(), options, bytes, length, &script))
         return false;
     if (compileOnly)
         return true;
     RootedValue result(cx);
-    if (!JS_ExecuteScript(cx, global, script, &result))
+    if (!JS_ExecuteScript(cx, script, &result))
         return false;
 
     if (!result.isUndefined()) {
@@ -509,7 +509,7 @@ EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t 
 }
 
 static void
-ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, bool compileOnly)
+ReadEvalPrintLoop(JSContext *cx, FILE *in, FILE *out, bool compileOnly)
 {
     int lineno = 1;
     bool hitEOF = false;
@@ -547,12 +547,12 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, global, buffer.begin(), buffer.length()));
+        } while (!JS_BufferIsCompilableUnit(cx, cx->global(), buffer.begin(), buffer.length()));
 
         if (hitEOF && buffer.empty())
             break;
 
-        if (!EvalAndPrint(cx, global, buffer.begin(), buffer.length(), startline, compileOnly,
+        if (!EvalAndPrint(cx, buffer.begin(), buffer.length(), startline, compileOnly,
                           out))
         {
             // Catch the error, report it, and keep going.
@@ -576,10 +576,8 @@ class AutoCloseInputFile
 };
 
 static void
-Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
+Process(JSContext *cx, const char *filename, bool forceTTY)
 {
-    RootedObject obj(cx, obj_);
-
     FILE *file;
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -596,10 +594,10 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 
     if (!forceTTY && !isatty(fileno(file))) {
         // It's not interactive - just execute it.
-        RunFile(cx, obj, filename, file, compileOnly);
+        RunFile(cx, filename, file, compileOnly);
     } else {
         // It's an interactive filehandle; drop into read-eval-print loop.
-        ReadEvalPrintLoop(cx, obj, file, gOutFile, compileOnly);
+        ReadEvalPrintLoop(cx, file, gOutFile, compileOnly);
     }
 }
 
@@ -847,9 +845,6 @@ static bool
 LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisobj)
-        return false;
 
     RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
@@ -874,8 +869,8 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
             .setNoScriptRval(true);
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr(), &script)) ||
-            !Evaluate(cx, thisobj, opts, filename.ptr(), &unused))
+        if ((compileOnly && !Compile(cx, cx->global(), opts, filename.ptr(), &script)) ||
+            !Evaluate(cx, opts, filename.ptr(), &unused))
         {
             return false;
         }
@@ -1329,7 +1324,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
-        if (!JS_ExecuteScript(cx, global, script, args.rval())) {
+        if (!JS_ExecuteScript(cx, script, args.rval())) {
             if (catchTermination && !JS_IsExceptionPending(cx)) {
                 JSAutoCompartment ac1(cx, callerGlobal);
                 JSString *str = JS_NewStringCopyZ(cx, "terminated");
@@ -1464,10 +1459,6 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisobj)
-        return false;
-
     RootedString str(cx, JS::ToString(cx, args[0]));
     if (!str)
         return false;
@@ -1495,11 +1486,11 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, thisobj, ucbuf, buflen, options, &script))
+        if (!JS_CompileUCScript(cx, cx->global(), ucbuf, buflen, options, &script))
             return false;
     }
 
-    if (!JS_ExecuteScript(cx, thisobj, script))
+    if (!JS_ExecuteScript(cx, script))
         return false;
 
     int64_t endClock = PRMJ_Now();
@@ -2756,7 +2747,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         }
         JS::CompileOptions opts(cx);
         opts.setFileAndLine(filename.get(), lineno);
-        if (!JS::Evaluate(cx, sobj, opts, src, srclen, args.rval())) {
+        if (!JS::Evaluate(cx, opts, src, srclen, args.rval())) {
             return false;
         }
     }
@@ -2825,7 +2816,7 @@ WorkerMain(void *arg)
         if (!JS::Compile(cx, global, options, input->chars, input->length, &script))
             break;
         RootedValue result(cx);
-        JS_ExecuteScript(cx, global, script, &result);
+        JS_ExecuteScript(cx, script, &result);
     } while (0);
 
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
@@ -3567,7 +3558,7 @@ runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
     if (!script)
         return false;
 
-    return JS_ExecuteScript(cx, cx->global(), script, args.rval());
+    return JS_ExecuteScript(cx, script, args.rval());
 }
 
 struct FreeOnReturn
@@ -5678,17 +5669,15 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
 }
 
 static bool
-BindScriptArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
+BindScriptArgs(JSContext *cx, OptionParser *op)
 {
-    RootedObject obj(cx, obj_);
-
     MultiStringRange msr = op->getMultiStringArg("scriptArgs");
     RootedObject scriptArgs(cx);
     scriptArgs = JS_NewArrayObject(cx, 0);
     if (!scriptArgs)
         return false;
 
-    if (!JS_DefineProperty(cx, obj, "scriptArgs", scriptArgs, 0))
+    if (!JS_DefineProperty(cx, cx->global(), "scriptArgs", scriptArgs, 0))
         return false;
 
     for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
@@ -5712,22 +5701,20 @@ OptionFailure(const char *option, const char *str)
 }
 
 static int
-ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
+ProcessArgs(JSContext *cx, OptionParser *op)
 {
-    RootedObject obj(cx, obj_);
-
     if (op->getBoolOption('s'))
         JS::RuntimeOptionsRef(cx).toggleExtraWarnings();
 
     /* |scriptArgs| gets bound on the global before any code is run. */
-    if (!BindScriptArgs(cx, obj, op))
+    if (!BindScriptArgs(cx, op))
         return EXIT_FAILURE;
 
     MultiStringRange filePaths = op->getMultiStringOption('f');
     MultiStringRange codeChunks = op->getMultiStringOption('e');
 
     if (filePaths.empty() && codeChunks.empty() && !op->getStringArg("script")) {
-        Process(cx, obj, nullptr, true); /* Interactive. */
+        Process(cx, nullptr, true); /* Interactive. */
         return gExitCode;
     }
 
@@ -5736,7 +5723,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         size_t ccArgno = codeChunks.empty() ? -1 : codeChunks.argno();
         if (fpArgno < ccArgno) {
             char *path = filePaths.front();
-            Process(cx, obj, path, false);
+            Process(cx, path, false);
             if (gExitCode)
                 return gExitCode;
             filePaths.popFront();
@@ -5745,7 +5732,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
             RootedValue rval(cx);
             JS::CompileOptions opts(cx);
             opts.setFileAndLine("-e", 1);
-            if (!JS::Evaluate(cx, obj, opts, code, strlen(code), &rval))
+            if (!JS::Evaluate(cx, opts, code, strlen(code), &rval))
                 return gExitCode ? gExitCode : EXITCODE_RUNTIME_ERROR;
             codeChunks.popFront();
         }
@@ -5753,13 +5740,13 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     /* The |script| argument is processed after all options. */
     if (const char *path = op->getStringArg("script")) {
-        Process(cx, obj, path, false);
+        Process(cx, path, false);
         if (gExitCode)
             return gExitCode;
     }
 
     if (op->getBoolOption('i'))
-        Process(cx, obj, nullptr, true);
+        Process(cx, nullptr, true);
 
     return gExitCode ? gExitCode : EXIT_SUCCESS;
 }
@@ -6016,7 +6003,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 
     JSAutoCompartment ac(cx, glob);
 
-    int result = ProcessArgs(cx, glob, op);
+    int result = ProcessArgs(cx, op);
 
     if (enableDisassemblyDumps)
         js::DumpCompartmentPCCounts(cx);

@@ -94,7 +94,7 @@ CreateDataView(JSContext *cx)
 
     JS::Rooted<JS::Value> val(cx);
     JS::CompileOptions opts(cx);
-    if (!JS::Evaluate(cx, global, opts.setFileAndLine(__FILE__, __LINE__),
+    if (!JS::Evaluate(cx, opts.setFileAndLine(__FILE__, __LINE__),
                       code, strlen(code), &val))
         return nullptr;
 

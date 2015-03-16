@@ -14,16 +14,19 @@ function serviceWorkerTestExec(testFile) {
       var worker = registration.waiting ||
                    registration.active;
 
-      window.onmessage = function(event) {
+      window.addEventListener("message",function onMessage(event) {
+        if (event.data.context != "ServiceWorker") {
+          return;
+        }
         if (event.data.type == 'finish') {
-          window.onmessage = null;
+          window.removeEventListener("message", onMessage);
           registration.unregister()
             .then(resolve)
             .catch(reject);
         } else if (event.data.type == 'status') {
-          ok(event.data.status, event.data.msg);
+          ok(event.data.status, event.data.context + ": " + event.data.msg);
         }
-      };
+      }, false);
 
       worker.onerror = reject;
 

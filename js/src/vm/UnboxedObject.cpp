@@ -392,7 +392,7 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
             return false;
 
         PlainObject *templateObject = NewObjectWithGroup<PlainObject>(cx, replacementNewGroup,
-                                                                      cx->global(), layout.getAllocKind(),
+                                                                      layout.getAllocKind(),
                                                                       MaybeSingletonObject);
         if (!templateObject)
             return false;
@@ -418,7 +418,7 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
 
     size_t nfixed = gc::GetGCKindSlots(layout.getAllocKind());
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto,
-                                                      cx->global(), nullptr, nfixed, 0));
+                                                      nullptr, nfixed, 0));
     if (!shape)
         return false;
 
@@ -503,8 +503,8 @@ UnboxedPlainObject::create(ExclusiveContext *cx, HandleObjectGroup group, NewObj
     MOZ_ASSERT(group->clasp() == &class_);
     gc::AllocKind allocKind = group->unboxedLayout().getAllocKind();
 
-    UnboxedPlainObject *res = NewObjectWithGroup<UnboxedPlainObject>(cx, group, cx->global(),
-                                                                     allocKind, newKind);
+    UnboxedPlainObject *res =
+        NewObjectWithGroup<UnboxedPlainObject>(cx, group, allocKind, newKind);
     if (!res)
         return nullptr;
 
@@ -963,7 +963,6 @@ js::TryConvertToUnboxedLayout(ExclusiveContext *cx, Shape *templateShape,
     // Get an empty shape which we can use for the preliminary objects.
     Shape *newShape = EmptyShape::getInitialShape(cx, &UnboxedPlainObject::class_,
                                                   group->proto(),
-                                                  templateShape->getObjectParent(),
                                                   templateShape->getObjectMetadata(),
                                                   templateShape->getObjectFlags());
     if (!newShape) {

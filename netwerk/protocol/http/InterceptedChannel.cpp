@@ -194,6 +194,12 @@ InterceptedChannelChrome::Cancel()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+InterceptedChannelChrome::SetSecurityInfo(nsISupports* aSecurityInfo)
+{
+  return mChannel->OverrideSecurityInfo(aSecurityInfo);
+}
+
 InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
                                                      nsINetworkInterceptController* aController,
                                                      nsIStreamListener* aListener)
@@ -288,6 +294,12 @@ InterceptedChannelContent::Cancel()
   mChannel = nullptr;
   mStreamListener = nullptr;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::SetSecurityInfo(nsISupports* aSecurityInfo)
+{
+  return mChannel->OverrideSecurityInfo(aSecurityInfo);
 }
 
 } // namespace net

@@ -136,7 +136,7 @@ public:
 
   // Stores the absolute resolution of the containing frame, calculated
   // by the sum of the resolutions of all parent layers' FrameMetrics.
-  const CSSToParentLayerScale& GetFrameResolution() { return mFrameResolution; }
+  const CSSToParentLayerScale2D& GetFrameResolution() { return mFrameResolution; }
 
   void ReadUnlock();
 
@@ -176,7 +176,7 @@ protected:
   void UnlockTile(TileHost aTile) {}
   void PostValidate(const nsIntRegion& aPaintRegion) {}
 private:
-  CSSToParentLayerScale mFrameResolution;
+  CSSToParentLayerScale2D mFrameResolution;
   bool mHasDoubleBufferedTiles;
   bool mIsValid;
 };

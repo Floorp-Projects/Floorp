@@ -422,14 +422,6 @@ class JSObject : public js::gc::Cell
      * a mix of other objects above it before the global object is reached.
      */
 
-    /* Access the parent link of an object. */
-    JSObject *getParent() const;
-    /* A way to assert something about the parent of an object */
-    MOZ_ALWAYS_INLINE void assertParentIs(JSObject *parent) const {
-        MOZ_ASSERT(getParent() == parent);
-    }
-    static bool setParent(JSContext *cx, js::HandleObject obj, js::HandleObject newParent);
-
     /*
      * Get the enclosing scope of an object. When called on non-scope object,
      * this will just be the global (the name "enclosing scope" still applies
@@ -1264,7 +1256,7 @@ bool
 XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj);
 
 extern JSObject *
-CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj);
+CloneObjectLiteral(JSContext *cx, HandleObject srcObj);
 
 extern void
 GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);

@@ -233,6 +233,7 @@ TypeUtils::ToPCacheResponseWithoutBody(PCacheResponse& aOut,
   MOZ_ASSERT(headers);
   headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
+  aOut.securityInfo() = aIn.GetSecurityInfo();
 }
 
 void
@@ -317,6 +318,8 @@ TypeUtils::ToResponse(const PCacheResponse& aIn)
   MOZ_ASSERT(!result.Failed());
   ir->Headers()->Fill(*internalHeaders, result);
   MOZ_ASSERT(!result.Failed());
+
+  ir->SetSecurityInfo(aIn.securityInfo());
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
   ir->SetBody(stream);
