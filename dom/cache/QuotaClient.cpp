@@ -8,7 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/cache/Manager.h"
-#include "mozilla/dom/cache/OfflineStorage.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "nsIFile.h"
@@ -19,7 +18,6 @@ namespace {
 
 using mozilla::DebugOnly;
 using mozilla::dom::cache::Manager;
-using mozilla::dom::cache::OfflineStorage;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -61,41 +59,6 @@ GetBodyUsage(nsIFile* aDir, UsageInfo* aUsageInfo)
 
   return NS_OK;
 }
-
-class StoragesDestroyedRunnable MOZ_FINAL : public nsRunnable
-{
-  uint32_t mExpectedCalls;
-  nsCOMPtr<nsIRunnable> mCallback;
-
-public:
-  StoragesDestroyedRunnable(uint32_t aExpectedCalls, nsIRunnable* aCallback)
-    : mExpectedCalls(aExpectedCalls)
-    , mCallback(aCallback)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mExpectedCalls);
-    MOZ_ASSERT(mCallback);
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mExpectedCalls);
-    mExpectedCalls -= 1;
-    if (!mExpectedCalls) {
-      mCallback->Run();
-    }
-    return NS_OK;
-  }
-
-private:
-  ~StoragesDestroyedRunnable()
-  {
-    // This is a callback runnable and not used for thread dispatch.  It should
-    // always be destroyed on the main thread.
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-};
 
 class CacheQuotaClient MOZ_FINAL : public Client
 {
@@ -188,14 +151,13 @@ public:
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin) MOZ_OVERRIDE
   {
-    // Nothing to do here.
+    // nothing to do
   }
 
   virtual void
   ReleaseIOThreadObjects() MOZ_OVERRIDE
   {
-    // Nothing to do here as the Context handles cleaning everything up
-    // automatically.
+    // nothing to do
   }
 
   virtual bool
@@ -207,26 +169,15 @@ public:
   virtual bool
   IsTransactionServiceActivated() MOZ_OVERRIDE
   {
-    return true;
+    // TODO: implement nsIOfflineStorage interface (bug 1110487)
+    return false;
   }
 
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                             nsIRunnable* aCallback) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!aStorages.IsEmpty());
-
-    nsCOMPtr<nsIRunnable> callback =
-      new StoragesDestroyedRunnable(aStorages.Length(), aCallback);
-
-    for (uint32_t i = 0; i < aStorages.Length(); ++i) {
-      MOZ_ASSERT(aStorages[i]->GetClient());
-      MOZ_ASSERT(aStorages[i]->GetClient()->GetType() == Client::DOMCACHE);
-      nsRefPtr<OfflineStorage> storage =
-        static_cast<OfflineStorage*>(aStorages[i]);
-      storage->AddDestroyCallback(callback);
-    }
+    // TODO: implement nsIOfflineStorage interface (bug 1110487)
   }
 
 
@@ -240,11 +191,9 @@ public:
   }
 
 private:
-  ~CacheQuotaClient()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+  ~CacheQuotaClient() { }
 
+public:
   NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, MOZ_OVERRIDE)
 };
 
