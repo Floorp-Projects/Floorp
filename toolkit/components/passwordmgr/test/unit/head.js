@@ -16,6 +16,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LoginRecipes.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
@@ -196,6 +197,12 @@ const LoginTest = {
   {
     do_check_true(Math.abs(aTimeMs - Date.now()) < 30000);
   }
+};
+
+const RecipeHelpers = {
+  initNewParent() {
+    return (new LoginRecipesParent()).initializationPromise;
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
