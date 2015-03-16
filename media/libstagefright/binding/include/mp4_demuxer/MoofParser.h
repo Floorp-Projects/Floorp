@@ -201,9 +201,9 @@ public:
     // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
     // the composition range for MSE. We need an array of tracks.
   }
-  void RebuildFragmentedIndex(
+  bool RebuildFragmentedIndex(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
-  void RebuildFragmentedIndex(BoxContext& aContext);
+  bool RebuildFragmentedIndex(BoxContext& aContext);
   Interval<Microseconds> GetCompositionRange(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   bool ReachedEnd();
