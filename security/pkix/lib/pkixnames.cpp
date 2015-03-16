@@ -348,8 +348,10 @@ SearchNames(/*optional*/ const Input* subjectAltName,
       return rv;
     }
 
-    // do { ... } while(...) because subjectAltName isn't allowed to be empty.
-    do {
+    // According to RFC 5280, "If the subjectAltName extension is present, the
+    // sequence MUST contain at least one entry." For compatibility reasons, we
+    // do not enforce this. See bug 1143085.
+    while (!altNames.AtEnd()) {
       GeneralNameType presentedIDType;
       Input presentedID;
       rv = ReadGeneralName(altNames, presentedIDType, presentedID);
@@ -371,7 +373,7 @@ SearchNames(/*optional*/ const Input* subjectAltName,
           presentedIDType == GeneralNameType::iPAddress) {
         fallBackToCommonName = FallBackToSearchWithinSubject::No;
       }
-    } while (!altNames.AtEnd());
+    }
   }
 
   if (referenceIDType == GeneralNameType::nameConstraints) {
