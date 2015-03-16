@@ -20,7 +20,7 @@ const REGEX_CUBIC_BEZIER = /^linear|^ease-in-out|^ease-in|^ease-out|^ease|^cubic
 //   In CSS, identifiers (including element names, classes, and IDs in
 //   selectors) can contain only the characters [a-zA-Z0-9] and ISO 10646
 //   characters U+00A0 and higher, plus the hyphen (-) and the underscore (_).
-const REGEX_CSS_VAR = /\bvar\(\s*--[-_a-zA-Z0-9\u00A0-\u10FFFF]+\s*\)/;
+const REGEX_CSS_VAR = /^\bvar\(\s*--[-_a-zA-Z0-9\u00A0-\u10FFFF]+\s*\)/;
 
 /**
  * This regex matches:
