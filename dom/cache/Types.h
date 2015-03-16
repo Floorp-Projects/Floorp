@@ -34,7 +34,6 @@ struct QuotaInfo
   nsCOMPtr<nsIFile> mDir;
   nsCString mGroup;
   nsCString mOrigin;
-  nsCString mStorageId;
   bool mIsApp;
 };
 
