@@ -2523,6 +2523,8 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   }
 }
 
+%include ../shared/readinglist.inc.css
+
 /* Reader mode button */
 
 #reader-mode-button {
