@@ -477,21 +477,19 @@ let AboutHomeListener = {
 AboutHomeListener.init(this);
 
 let AboutReaderListener = {
-
-  _articlePromise: null,
+  _savedArticle: null,
 
   init: function() {
     addEventListener("AboutReaderContentLoaded", this, false, true);
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
-    addMessageListener("Reader:ParseDocument", this);
+    addMessageListener("Reader:SavedArticleGet", this);
   },
 
   receiveMessage: function(message) {
     switch (message.name) {
-      case "Reader:ParseDocument":
-        this._articlePromise = ReaderMode.parseDocument(content.document);
-        content.document.location = "about:reader?url=" + encodeURIComponent(message.data.url);
+      case "Reader:SavedArticleGet":
+        sendAsyncMessage("Reader:SavedArticleData", { article: this._savedArticle });
         break;
     }
   },
@@ -514,7 +512,7 @@ let AboutReaderListener = {
         if (content.document.body) {
           // Update the toolbar icon to show the "reader active" icon.
           sendAsyncMessage("Reader:UpdateReaderButton");
-          new AboutReader(global, content, this._articlePromise);
+          new AboutReader(global, content);
         }
         break;
 
@@ -527,8 +525,27 @@ let AboutReaderListener = {
           return;
         }
 
-        let isArticle = ReaderMode.isProbablyReaderable(content.document);
-        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: isArticle });
+        // Reader mode is disabled until proven enabled.
+        this._savedArticle = null;
+
+        ReaderMode.parseDocument(content.document).then(article => {
+          // Do nothing if there is no article, or if the content window has been destroyed.
+          if (article === null || content === null) {
+            return;
+          }
+
+          // The loaded page may have changed while we were parsing the document.
+          // Make sure we've got the current one.
+          let url = Services.io.newURI(content.document.documentURI, null, null).spec;
+          if (article.url !== url) {
+            return;
+          }
+
+          this._savedArticle = article;
+          sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
+
+        }).catch(e => Cu.reportError("Error parsing document: " + e));
+        break;
     }
   }
 };
