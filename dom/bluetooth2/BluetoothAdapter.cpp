@@ -853,53 +853,44 @@ BluetoothAdapter::HandleDeviceFound(const BluetoothValue& aValue)
 void
 BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-
-  if (mState != BluetoothAdapterState::Enabled) {
-    BT_WARNING("HandleDevicePaired() is called when adapter isn't enabled.");
+  if (NS_WARN_IF(mState != BluetoothAdapterState::Enabled)) {
     return;
   }
+
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
 
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aValue.get_ArrayOfBluetoothNamedValue();
 
   MOZ_ASSERT(arr.Length() == 3 &&
              arr[0].value().type() == BluetoothValue::TnsString && // Address
-             arr[1].value().type() == BluetoothValue::Tbool &&     // Paired
-             arr[2].value().type() == BluetoothValue::TnsString);  // Name
+             arr[1].value().type() == BluetoothValue::TnsString && // Name
+             arr[2].value().type() == BluetoothValue::Tbool);      // Paired
   MOZ_ASSERT(!arr[0].value().get_nsString().IsEmpty() &&
-             arr[1].value().get_bool());
+             arr[2].value().get_bool());
 
-  nsString deviceAddress = arr[0].value().get_nsString();
-
-  nsRefPtr<BluetoothDevice> pairedDevice = nullptr;
-
-  // Check whether or not the address exists in mDevices.
-  size_t index = mDevices.IndexOf(deviceAddress);
+  // Append the paired device if it doesn't exist in adapter's devices array
+  size_t index = mDevices.IndexOf(arr[0].value().get_nsString());
   if (index == mDevices.NoIndex) {
-    // Create a new device and append it to adapter's device array
-    pairedDevice = BluetoothDevice::Create(GetOwner(), aValue);
-    mDevices.AppendElement(pairedDevice);
-  } else {
-    // Use existing device
-    pairedDevice = mDevices[index];
+    index = mDevices.Length(); // the new device's index
+    mDevices.AppendElement(
+      BluetoothDevice::Create(GetOwner(), aValue));
   }
 
   // Notify application of paired device
   BluetoothDeviceEventInit init;
-  init.mDevice = pairedDevice;
-  DispatchDeviceEvent(NS_LITERAL_STRING("devicepaired"), init);
+  init.mDevice = mDevices[index];
+  DispatchDeviceEvent(NS_LITERAL_STRING(DEVICE_PAIRED_ID), init);
 }
 
 void
 BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-
-  if (mState != BluetoothAdapterState::Enabled) {
-    BT_WARNING("HandleDeviceUnpaired() is called when adapter isn't enabled.");
+  if (NS_WARN_IF(mState != BluetoothAdapterState::Enabled)) {
     return;
   }
+
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
 
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aValue.get_ArrayOfBluetoothNamedValue();
@@ -910,15 +901,14 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
   MOZ_ASSERT(!arr[0].value().get_nsString().IsEmpty() &&
              !arr[1].value().get_bool());
 
-  nsString deviceAddress = arr[0].value().get_nsString();
-
   // Remove the device with the same address
+  nsString deviceAddress = arr[0].value().get_nsString();
   mDevices.RemoveElement(deviceAddress);
 
   // Notify application of unpaired device
   BluetoothDeviceEventInit init;
   init.mAddress = deviceAddress;
-  DispatchDeviceEvent(NS_LITERAL_STRING("deviceunpaired"), init);
+  DispatchDeviceEvent(NS_LITERAL_STRING(DEVICE_UNPAIRED_ID), init);
 }
 
 void
