@@ -93,7 +93,7 @@
     <style name="Widget.MenuItemSecondaryActionBar">
         <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
-        <item name="android:scaleType">fitCenter</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
     <style name="Widget.MenuItemActionView">
