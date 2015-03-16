@@ -661,7 +661,7 @@
             setfocus="false"
             tooltip="tabbrowser-tab-tooltip"
             stopwatchid="FX_TAB_CLICK_MS">
-        <tab class="tabbrowser-tab" selected="true" fadein="true"/>
+        <tab class="tabbrowser-tab" selected="true" visuallyselected="true" fadein="true"/>
       </tabs>
 
       <toolbarbutton id="new-tab-button"
