@@ -5,10 +5,15 @@ task:
   scopes:
     - 'docker-worker:cache:workspace-emulator-l-opt'
   metadata:
-    name: '[TC] B2G L Emulator Opt'
+    name: '[TC] B2G L Emulator (Opt)'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "?"
       machine:
         platform: b2g-emu-l
 
