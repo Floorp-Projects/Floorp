@@ -80,10 +80,8 @@ class MarionetteTransport(object):
         response = self.send({'to': 'root', 'name': 'getMarionetteID'})
         self.actor = response['id']
 
-    def send(self, msg, ignore_response=False):
+    def send(self, msg):
         """ Send a message on the socket, prepending it with len(msg) + ':'.
-        The ignore_response parameter indicates no response is expected from
-        the remote end, for instance when the client requests a quit.
         """
         if not self.sock:
             self.connect()
@@ -102,10 +100,7 @@ class MarionetteTransport(object):
                 else:
                     raise e
 
-        if not ignore_response:
-            response = self.receive()
-        else:
-            response = {'ok': True}
+        response = self.receive()
         return response
 
     def close(self):
