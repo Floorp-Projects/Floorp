@@ -87,6 +87,19 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
 - (NSColor*)_currentFillColor;
 @end
 
+static NSColor*
+AdjustedColor(NSColor* aFillColor, VibrancyType aType)
+{
+  if (aType == VibrancyType::MENU && [aFillColor alphaComponent] == 1.0) {
+    // The opaque fill color that's used for the menu background when "Reduce
+    // vibrancy" is checked in the system accessibility prefs is too dark.
+    // This is probably because we're not using the right material for menus,
+    // see VibrancyManager::CreateEffectView.
+    return [NSColor colorWithDeviceWhite:0.96 alpha:1.0];
+  }
+  return aFillColor;
+}
+
 NSColor*
 VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
 {
@@ -98,7 +111,7 @@ VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
     // -[NSVisualEffectView _currentFillColor] is the color that our view
     // would draw during its drawRect implementation, if we hadn't
     // disabled that.
-    return [views[0] _currentFillColor];
+    return AdjustedColor([views[0] _currentFillColor], aType);
   }
   return [NSColor whiteColor];
 }
