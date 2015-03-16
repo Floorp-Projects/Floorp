@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="52775e03a2d8532429dff579cb2cd56718e488c3">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="9fa6e19a288f71a4e3200a9eb1b3d7aeb92d00e3"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="0864c13f863a0348defab74135aa0210e81e521f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2e9f0341416e97926d4cfdb1ff961ec4d4069b0a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -124,7 +124,6 @@
   <project name="platform/ndk" path="ndk" revision="869c05cab7b4315c2bc607493db3f5b18ead2580"/>
   <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="da8b660db117e2a69a7624bfdca2f02cad397f2e"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="5fd638a4a0ff3677fc3c970fab038d6db1bb7665"/>
-  <project name="platform/prebuilts/qemu-kernel" path="prebuilts/qemu-kernel" revision="530cad9b205442d2db29361e796299dc323ef9ce"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="6e18b61ee446bdd9880c07ae84197a087490c2e5"/>
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="e0fc03e0a3062063c3c85996dcc881c0a49ed98d"/>
@@ -146,6 +145,7 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="7639c5c496ffd207bb627f2a59b2c5203ae6fefc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>
   <project name="platform/development" path="development" revision="7ec1ce5e75f943a4a673aa12d8177d5cf2c0a4cf"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="2c0d193349c55337e37196a7f2d5cef37753ed3e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="94704df982a90d2ab74bd620d54155d148c415b2"/>
   <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
   <project name="platform/hardware/ril" path="hardware/ril" revision="71dfa8228ad0d6cdf6bac0426ac59404ab74b7f3"/>
