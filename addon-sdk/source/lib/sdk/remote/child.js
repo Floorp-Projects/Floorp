@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { isChildLoader } = require('./core');
+if (!isChildLoader)
+  throw new Error("Cannot load sdk/remote/child in a main process loader.");
+
 const { Ci, Cc } = require('chrome');
 const runtime = require('../system/runtime');
 const { Class } = require('../core/heritage');
