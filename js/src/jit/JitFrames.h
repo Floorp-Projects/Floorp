@@ -807,6 +807,43 @@ struct IonDOMMethodExitFrameLayoutTraits {
         offsetof(IonDOMMethodExitFrameLayout, argv_);
 };
 
+// Cannot inherit implementation since we need to extend the top of
+// ExitFrameLayout.
+class LazyLinkExitFrameLayout
+{
+  protected: // silence clang warning about unused private fields
+    JitCode *stubCode_;
+    ExitFooterFrame footer_;
+    JitFrameLayout exit_;
+
+  public:
+    static JitCode *Token() { return (JitCode *) 0xFE; }
+
+    static inline size_t Size() {
+        return sizeof(LazyLinkExitFrameLayout);
+    }
+
+    inline JitCode **stubCode() {
+        return &stubCode_;
+    }
+    inline JitFrameLayout *jsFrame() {
+        return &exit_;
+    }
+    static size_t offsetOfExitFrame() {
+        return offsetof(LazyLinkExitFrameLayout, exit_);
+    }
+};
+
+template <>
+inline LazyLinkExitFrameLayout *
+ExitFrameLayout::as<LazyLinkExitFrameLayout>()
+{
+    MOZ_ASSERT(is<LazyLinkExitFrameLayout>());
+    uint8_t *sp = reinterpret_cast<uint8_t *>(this);
+    sp -= LazyLinkExitFrameLayout::offsetOfExitFrame();
+    return reinterpret_cast<LazyLinkExitFrameLayout *>(sp);
+}
+
 class ICStub;
 
 class BaselineStubFrameLayout : public CommonFrameLayout
