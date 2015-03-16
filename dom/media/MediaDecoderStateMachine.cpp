@@ -1492,8 +1492,18 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     }
     mPendingSeek.RejectIfExists(__func__);
     mCurrentSeek.RejectIfExists(__func__);
-    ScheduleStateMachine();
     SetState(DECODER_STATE_DORMANT);
+    if (IsPlaying()) {
+      StopPlayback();
+    }
+    StopAudioThread();
+    FlushDecoding();
+    // Now that those threads are stopped, there's no possibility of
+    // mPendingWakeDecoder being needed again. Revoke it.
+    mPendingWakeDecoder = nullptr;
+    DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     mDecoder->GetReentrantMonitor().NotifyAll();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     mDecodingFrozenAtStateDecoding = true;
@@ -2668,17 +2678,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     }
 
     case DECODER_STATE_DORMANT: {
-      if (IsPlaying()) {
-        StopPlayback();
-      }
-      StopAudioThread();
-      FlushDecoding();
-      // Now that those threads are stopped, there's no possibility of
-      // mPendingWakeDecoder being needed again. Revoke it.
-      mPendingWakeDecoder = nullptr;
-      DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
-      NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
       return NS_OK;
     }
 
