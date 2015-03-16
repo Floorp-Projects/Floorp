@@ -929,21 +929,26 @@ ReadAllocation(const JitFrameIterator &frame, const LAllocation *a)
 #endif
 
 static void
-MarkFrameAndActualArguments(JSTracer *trc, const JitFrameIterator &frame)
+MarkFrameAndActualArguments(JSTracer *trc, JitFrameLayout *layout)
 {
     // The trampoline produced by |generateEnterJit| is pushing |this| on the
     // stack, as requested by |setEnterJitData|.  Thus, this function is also
     // used for marking the |this| value of the top-level frame.
 
-    JitFrameLayout *layout = frame.jsFrame();
-
-    size_t nargs = frame.numActualArgs();
+    size_t nargs = layout->numActualArgs();
     MOZ_ASSERT_IF(!CalleeTokenIsFunction(layout->calleeToken()), nargs == 0);
 
     // Trace function arguments. Note + 1 for thisv.
     Value *argv = layout->argv();
     for (size_t i = 0; i < nargs + 1; i++)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
+}
+
+static void
+MarkFrameAndActualArguments(JSTracer *trc, const JitFrameIterator &frame)
+{
+    JitFrameLayout *layout = frame.jsFrame();
+    MarkFrameAndActualArguments(trc, layout);
 }
 
 #ifdef JS_NUNBOX32
@@ -1272,6 +1277,16 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         } else {
             gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
         }
+        return;
+    }
+
+    if (frame.isExitFrameLayout<LazyLinkExitFrameLayout>()) {
+        LazyLinkExitFrameLayout *ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
+        JitFrameLayout *layout = ll->jsFrame();
+
+        gc::MarkJitCodeRoot(trc, ll->stubCode(), "lazy-link-code");
+        layout->replaceCalleeToken(MarkCalleeToken(trc, layout->calleeToken()));
+        MarkFrameAndActualArguments(trc, layout);
         return;
     }
 
