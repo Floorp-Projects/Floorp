@@ -6,6 +6,7 @@ task:
     name: '[TC] XPCShell'
     description: XPCShell test run {{chunk}}
 
+  workerType: b2gtest-emulator
   payload:
     maxRunTime: 6000
     command:
@@ -28,6 +29,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 20
     treeherder:
       groupName: XPCShell
       symbol: X{{chunk}}

@@ -30,6 +30,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 20
     treeherder:
       groupName: Gaia JS Integration Test
       groupSymbol: tc-Gij

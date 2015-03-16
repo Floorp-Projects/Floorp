@@ -6,6 +6,7 @@ task:
     name: '[TC] Crashtest'
     description: Crashtest test run {{chunk}}
 
+  workerType: b2gtest-emulator
   payload:
     maxRunTime: 3600
     command:
@@ -28,6 +29,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 5
+
     treeherder:
       groupName: Reftest
       groupSymbol: tc-R

@@ -1,0 +1,21 @@
+$inherits:
+  from: 'tasks/builds/b2g_emulator_base.yml'
+task:
+  workerType: emulator-l
+  scopes:
+    - 'docker-worker:cache:workspace-emulator-l-opt'
+  metadata:
+    name: '[TC] B2G L Emulator Opt'
+
+  extra:
+    treeherder:
+      machine:
+        platform: b2g-emu-l
+
+  payload:
+    cache:
+      workspace-emulator-l-opt: /home/worker/workspace
+    env:
+      TARGET: 'emulator-l'
+
+

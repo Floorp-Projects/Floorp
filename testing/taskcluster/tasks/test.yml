@@ -42,6 +42,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    chunks:
+      total: 1
+      current: {{chunk}}
     treeherder:
       groupSymbol: tc
       groupName: Submitted by taskcluster
