@@ -1230,6 +1230,7 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
     GtkStyleContext* style;
     GtkScrollbar *scrollbar;
     GtkAdjustment *adj;
+    GtkBorder margin;
 
     ensure_scrollbar_widget();
 
@@ -1239,15 +1240,20 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
         scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
 
     gtk_widget_set_direction(GTK_WIDGET(scrollbar), direction);
-  
+
     style = gtk_widget_get_style_context(GTK_WIDGET(scrollbar));
     gtk_style_context_save(style);
-       
+
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SLIDER);
     gtk_style_context_set_state(style, state_flags);
 
-    gtk_render_slider(style, cr, rect->x, rect->y,
-                      rect->width,  rect->height,
+    gtk_style_context_get_margin (style, state_flags, &margin);
+
+    gtk_render_slider(style, cr,
+                      rect->x + margin.left,
+                      rect->y + margin.top,
+                      rect->width - margin.left - margin.right,
+                      rect->height - margin.top - margin.bottom,
                      (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
                      GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL);
 
