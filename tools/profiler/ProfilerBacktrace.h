@@ -8,6 +8,7 @@
 #define __PROFILER_BACKTRACE_H
 
 class SyncProfile;
+class JSStreamWriter;
 
 class ProfilerBacktrace
 {
