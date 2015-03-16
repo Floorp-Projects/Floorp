@@ -1,4 +1,5 @@
 var request = new Request("//mochi.test:8888/?" + context + "#fragment");
+var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
 var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response;
 var c;
@@ -24,17 +25,18 @@ fetch(new Request(request)).then(function(r) {
   return response.text();
 }).then(function(text) {
   responseText = text;
-  return testRequest(request, unknownRequest,
+  return testRequest(request, unknownRequest, requestWithAltQS,
                      request.url.replace("#fragment", "#other"));
 }).then(function() {
-  return testRequest(request.url, unknownRequest.url,
+  return testRequest(request.url, unknownRequest.url, requestWithAltQS.url,
                      request.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
 });
 
 // The request argument can either be a URL string, or a Request object.
-function testRequest(request, unknownRequest, requestWithDifferentFragment) {
+function testRequest(request, unknownRequest, requestWithAlternateQueryString,
+                     requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
     c = cache;
     return c.add(request);
@@ -61,6 +63,11 @@ function testRequest(request, unknownRequest, requestWithDifferentFragment) {
     return checkResponse(r);
   }).then(function() {
     return caches.match(requestWithDifferentFragment);
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    return caches.match(requestWithAlternateQueryString,
+                        {ignoreSearch: true, cacheName: name});
   }).then(function(r) {
     return checkResponse(r);
   }).then(function() {
