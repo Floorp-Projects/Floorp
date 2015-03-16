@@ -348,6 +348,12 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "audio-channel-system": {
+                             app: DENY_ACTION,
+                             trusted: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            "audio-channel-telephony": {
                              app: DENY_ACTION,
                              trusted: DENY_ACTION,
