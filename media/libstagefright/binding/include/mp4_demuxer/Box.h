@@ -48,7 +48,8 @@ public:
 
   Box Next() const;
   Box FirstChild() const;
-  void Read(nsTArray<uint8_t>* aDest);
+  bool Read(nsTArray<uint8_t>* aDest);
+  bool Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange);
 
 private:
   bool Contains(MediaByteRange aRange) const;
