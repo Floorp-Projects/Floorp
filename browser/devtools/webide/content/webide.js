@@ -49,7 +49,7 @@ window.addEventListener("load", function onLoad() {
 
 window.addEventListener("unload", function onUnload() {
   window.removeEventListener("unload", onUnload);
-  UI.uninit();
+  UI.destroy();
 });
 
 let projectList;
@@ -118,10 +118,10 @@ let UI = {
     gDevToolsBrowser.isWebIDEInitialized.resolve();
   },
 
-  uninit: function() {
+  destroy: function() {
     window.removeEventListener("focus", this.onfocus, true);
     AppManager.off("app-manager-update", this.appManagerUpdate);
-    AppManager.uninit();
+    AppManager.destroy();
     projectList = null;
     window.removeEventListener("message", this.onMessage);
     this.updateConnectionTelemetry();
@@ -186,6 +186,7 @@ let UI = {
       case "project-is-running":
       case "list-tabs-response":
         this.updateCommands();
+        projectList.update();
         break;
       case "runtime-details":
         this.updateRuntimeButton();
