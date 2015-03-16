@@ -1,4 +1,4 @@
-var request = new Request("//mochi.test:8888/?" + context);
+var request = new Request("//mochi.test:8888/?" + context + "#fragment");
 var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response;
 var c;
@@ -7,7 +7,8 @@ var name = "match-request" + context;
 
 function checkResponse(r) {
   ok(r !== response, "The objects should not be the same");
-  is(r.url, response.url, "The URLs should be the same");
+  is(r.url, response.url.replace("#fragment", ""),
+     "The URLs should be the same");
   is(r.status, response.status, "The status codes should be the same");
   is(r.type, response.type, "The response types should be the same");
   is(r.ok, response.ok, "Both responses should have succeeded");
@@ -23,15 +24,17 @@ fetch(new Request(request)).then(function(r) {
   return response.text();
 }).then(function(text) {
   responseText = text;
-  return testRequest(request, unknownRequest);
+  return testRequest(request, unknownRequest,
+                     request.url.replace("#fragment", "#other"));
 }).then(function() {
-  return testRequest(request.url, unknownRequest.url);
+  return testRequest(request.url, unknownRequest.url,
+                     request.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
 });
 
 // The request argument can either be a URL string, or a Request object.
-function testRequest(request, unknownRequest) {
+function testRequest(request, unknownRequest, requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
     c = cache;
     return c.add(request);
@@ -54,6 +57,10 @@ function testRequest(request, unknownRequest) {
     return checkResponse(r);
   }).then(function() {
     return caches.match(request);
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
+    return caches.match(requestWithDifferentFragment);
   }).then(function(r) {
     return checkResponse(r);
   }).then(function() {

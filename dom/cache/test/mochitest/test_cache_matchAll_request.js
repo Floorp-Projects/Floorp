@@ -1,4 +1,4 @@
-var request1 = new Request("//mochi.test:8888/?1&" + context);
+var request1 = new Request("//mochi.test:8888/?1&" + context + "#fragment");
 var request2 = new Request("//mochi.test:8888/?2&" + context);
 var request3 = new Request("//mochi.test:8888/?3&" + context);
 var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
@@ -9,7 +9,8 @@ var name = "matchAll-request" + context;
 
 function checkResponse(r, response, responseText) {
   ok(r !== response, "The objects should not be the same");
-  is(r.url, response.url, "The URLs should be the same");
+  is(r.url, response.url.replace("#fragment", ""),
+     "The URLs should be the same");
   is(r.status, response.status, "The status codes should be the same");
   is(r.type, response.type, "The response types should be the same");
   is(r.ok, response.ok, "Both responses should have succeeded");
@@ -31,16 +32,19 @@ fetch(new Request(request1)).then(function(r) {
   return response3.text();
 }).then(function(text) {
   response3Text = text;
-  return testRequest(request1, request2, request3, unknownRequest);
+  return testRequest(request1, request2, request3, unknownRequest,
+                     request1.url.replace("#fragment", "#other"));
 }).then(function() {
   return testRequest(request1.url, request2.url, request3.url,
-                     unknownRequest.url);
+                     unknownRequest.url,
+                     request1.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
 });
 
 // The request arguments can either be a URL string, or a Request object.
-function testRequest(request1, request2, request3, unknownRequest) {
+function testRequest(request1, request2, request3, unknownRequest,
+                     requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
     c = cache;
     return c.add(request1);
@@ -61,6 +65,11 @@ function testRequest(request1, request2, request3, unknownRequest) {
     );
   }).then(function() {
     return c.matchAll(request1);
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response1, response1Text);
+  }).then(function() {
+    return c.matchAll(requestWithDifferentFragment);
   }).then(function(r) {
     is(r.length, 1, "Should only find 1 item");
     return checkResponse(r[0], response1, response1Text);
