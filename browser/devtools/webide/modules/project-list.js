@@ -28,6 +28,8 @@ module.exports = ProjectList = function(window, parentWindow) {
     this._panelNodeEl = "div";
   }
 
+  AppManager.init();
+
   return this;
 };
 
