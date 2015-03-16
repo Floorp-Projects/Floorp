@@ -189,6 +189,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
 
   this.observing = null;
   this._browserIds = new WeakMap();
+  this.quitFlags = null;
 }
 
 MarionetteServerConnection.prototype = {
@@ -228,6 +229,12 @@ MarionetteServerConnection.prototype = {
   onClosed: function MSC_onClosed(aStatus) {
     this.server._connectionClosed(this);
     this.sessionTearDown();
+
+    if (this.quitFlags !== null) {
+      let flags = this.quitFlags;
+      this.quitFlags = null;
+      Services.startup.quit(flags);
+    }
   },
 
   /**
@@ -2637,7 +2644,7 @@ MarionetteServerConnection.prototype = {
    * current session.
    */
   quitApplication: function MDA_quitApplication (aRequest) {
-    let command_id = this.getCommandId();
+    let command_id = this.command_id = this.getCommandId();
     if (appName != "Firefox") {
       this.sendError("In app initiated quit only supported on Firefox", 500, null, command_id);
     }
@@ -2648,8 +2655,13 @@ MarionetteServerConnection.prototype = {
       flags |= Ci.nsIAppStartup[k];
     }
 
-    this.sessionTearDown();
-    Services.startup.quit(flags);
+    // Close the listener so we can't re-connect until after the restart.
+    this.server.closeListener();
+    this.quitFlags = flags;
+
+    // This notifies the client it's safe to begin attempting to reconnect.
+    // The actual quit will happen when the current socket connection is closed.
+    this.sendOk(command_id);
   },
 
   /**
