@@ -125,11 +125,6 @@ public:
   // Must be called by Context objects before they are destroyed.
   void RemoveContext(Context* aContext);
 
-  // Marks the Manager "invalid".  Once the Context completes no new operations
-  // will be permitted with this Manager.  New actors will get a new Manager.
-  void Invalidate();
-  bool IsValid() const;
-
   // If an actor represents a long term reference to a cache or body stream,
   // then they must call AddRefCacheId() or AddRefBodyId().  This will
   // cause the Manager to keep the backing data store alive for the given
@@ -219,8 +214,8 @@ private:
   struct ListenerEntry
   {
     ListenerEntry()
-      : mId(UINT64_MAX)
-      , mListener(nullptr)
+      : mId(UINT64_MAX),
+      mListener(nullptr)
     {
     }
 
@@ -260,7 +255,6 @@ private:
   nsTArray<StreamList*> mStreamLists;
 
   bool mShuttingDown;
-  bool mValid;
 
   struct CacheIdRefCounter
   {

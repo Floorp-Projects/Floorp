@@ -14,8 +14,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-already_AddRefed<quota::Client>
-CreateQuotaClient();
+already_AddRefed<quota::Client> CreateQuotaClient();
 
 } // namespace cache
 } // namespace dom
