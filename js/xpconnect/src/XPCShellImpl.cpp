@@ -342,8 +342,20 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         if (!script)
             return false;
 
-        if (!compileOnly && !JS_ExecuteScript(cx, obj, script))
-            return false;
+        if (!compileOnly) {
+            // XXXbz are we intentionally allowing load.call(someNonGlobalObject)?
+            if (JS_IsGlobalObject(obj)) {
+                if (!JS_ExecuteScript(cx, script)) {
+                    return false;
+                }
+            } else {
+                JS::AutoObjectVector scopeChain(cx);
+                if (!scopeChain.append(obj) ||
+                    !JS_ExecuteScript(cx, scopeChain, script)) {
+                    return false;
+                }
+            }
+        }
     }
     args.rval().setUndefined();
     return true;
@@ -787,8 +799,7 @@ my_GetErrorMessage(void *userRef, const unsigned errorNumber)
 }
 
 static void
-ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE *file,
-            bool forceTTY)
+ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
 {
     JS::RootedScript script(cx);
     JS::RootedValue result(cx);
@@ -796,6 +807,9 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
     bool ok, hitEOF;
     char *bufp, buffer[4096];
     JSString *str;
+
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+    MOZ_ASSERT(global);
 
     if (forceTTY) {
         file = stdin;
@@ -823,8 +837,8 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
         options.setUTF8(true)
                .setFileAndLine(filename, 1)
                .setCompileAndGo(true);
-        if (JS::Compile(cx, obj, options, file, &script) && !compileOnly)
-            (void)JS_ExecuteScript(cx, obj, script, &result);
+        if (JS::Compile(cx, global, options, file, &script) && !compileOnly)
+            (void)JS_ExecuteScript(cx, script, &result);
         JS_EndRequest(cx);
 
         return;
@@ -851,7 +865,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
         JS_BeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
@@ -859,11 +873,12 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline)
                .setCompileAndGo(true);
-        if (JS_CompileScript(cx, obj, buffer, strlen(buffer), options, &script)) {
+        if (JS_CompileScript(cx, global, buffer, strlen(buffer), options,
+                             &script)) {
             JSErrorReporter older;
 
             if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, obj, script, &result);
+                ok = JS_ExecuteScript(cx, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS::ToString(). */
                     older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
@@ -884,7 +899,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
 }
 
 static void
-Process(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, bool forceTTY)
+Process(JSContext *cx, const char *filename, bool forceTTY)
 {
     FILE *file;
 
@@ -901,7 +916,7 @@ Process(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, bool for
         }
     }
 
-    ProcessFile(cx, obj, filename, file, forceTTY);
+    ProcessFile(cx, filename, file, forceTTY);
     if (file != stdin)
         fclose(file);
 }
@@ -942,7 +957,7 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
 }
 
 static int
-ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPCShellDirProvider* aDirProvider)
+ProcessArgs(JSContext *cx, char **argv, int argc, XPCShellDirProvider* aDirProvider)
 {
     const char rcfilename[] = "xpcshell.js";
     FILE *rcfile;
@@ -955,9 +970,11 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
     rcfile = fopen(rcfilename, "r");
     if (rcfile) {
         printf("[loading '%s'...]\n", rcfilename);
-        ProcessFile(cx, obj, rcfilename, rcfile, false);
+        ProcessFile(cx, rcfilename, rcfile, false);
         fclose(rcfile);
     }
+
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
 
     /*
      * Scan past all optional arguments so we can create the arguments object
@@ -990,7 +1007,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
     argsObj = JS_NewArrayObject(cx, 0);
     if (!argsObj)
         return 1;
-    if (!JS_DefineProperty(cx, obj, "arguments", argsObj, 0))
+    if (!JS_DefineProperty(cx, global, "arguments", argsObj, 0))
         return 1;
 
     for (int j = 0, length = argc - rootPosition; j < length; j++) {
@@ -1032,7 +1049,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
             if (++i == argc) {
                 return usage();
             }
-            Process(cx, obj, argv[i], false);
+            Process(cx, argv[i], false);
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks test
@@ -1053,7 +1070,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
 
             JS::CompileOptions opts(cx);
             opts.setFileAndLine("-e", 1);
-            JS::Evaluate(cx, obj, opts, argv[i], strlen(argv[i]), &rval);
+            JS::Evaluate(cx, opts, argv[i], strlen(argv[i]), &rval);
 
             isInteractive = false;
             break;
@@ -1085,7 +1102,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
     }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename, forceTTY);
+        Process(cx, filename, forceTTY);
 
     return gExitCode;
 }
@@ -1496,7 +1513,7 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             // We are almost certainly going to run script here, so we need an
             // AutoEntryScript. This is Gecko-specific and not in any spec.
             dom::AutoEntryScript aes(backstagePass);
-            result = ProcessArgs(aes.cx(), glob, argv, argc, &dirprovider);
+            result = ProcessArgs(aes.cx(), argv, argc, &dirprovider);
 
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(aes.cx(), glob);

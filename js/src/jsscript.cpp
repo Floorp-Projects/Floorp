@@ -141,7 +141,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
 
     // Start with the empty shape and then append one shape per aliased binding.
     RootedShape shape(cx,
-        EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr), nullptr, nullptr,
+        EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr), nullptr,
                                     nfixed, BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE));
     if (!shape)
         return false;
@@ -164,7 +164,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
             return false;
 #endif
 
-        StackBaseShape stackBase(cx, &CallObject::class_, nullptr, nullptr,
+        StackBaseShape stackBase(cx, &CallObject::class_, nullptr,
                                  BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
 
         UnownedBaseShape *base = BaseShape::getUnowned(cx, stackBase);
@@ -1356,7 +1356,7 @@ const Class ScriptSourceObject::class_ = {
 ScriptSourceObject *
 ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NullPtr(), cx->global()));
+    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, NullPtr()));
     if (!object)
         return nullptr;
     RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
@@ -3029,7 +3029,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                  * with JSOPTION_COMPILE_N_GO set. As we don't clone the latter type of code, this
                  * case should only ever be hit when cloning objects from self-hosted code.
                  */
-                clone = CloneObjectLiteral(cx, cx->global(), obj);
+                clone = CloneObjectLiteral(cx, obj);
             }
             if (!clone || !objects.append(clone))
                 return nullptr;

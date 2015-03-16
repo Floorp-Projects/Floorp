@@ -54,8 +54,7 @@ NativeObject::canRemoveLastProperty()
      */
     MOZ_ASSERT(!inDictionaryMode());
     Shape *previous = lastProperty()->previous().get();
-    return previous->getObjectParent() == lastProperty()->getObjectParent()
-        && previous->getObjectMetadata() == lastProperty()->getObjectMetadata()
+    return previous->getObjectMetadata() == lastProperty()->getObjectMetadata()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
@@ -346,7 +345,7 @@ NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
                                     Handle<TaggedProto> proto,
                                     gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, NullPtr(), allocKind,
+    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind,
                                                            newKind));
 }
 
@@ -355,7 +354,7 @@ NewNativeObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp,
                                     Handle<TaggedProto> proto,
                                     NewObjectKind newKind = GenericObject)
 {
-    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, NullPtr(), newKind));
+    return MaybeNativeObject(NewObjectWithGivenTaggedProto(cx, clasp, proto, newKind));
 }
 
 inline NativeObject *
@@ -363,7 +362,7 @@ NewNativeObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp,
                               HandleObject proto,
                               gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, NullPtr(), allocKind, newKind));
+    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, allocKind, newKind));
 }
 
 inline NativeObject *
@@ -371,7 +370,7 @@ NewNativeObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp,
                               HandleObject proto,
                               NewObjectKind newKind = GenericObject)
 {
-    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, NullPtr(), newKind));
+    return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, newKind));
 }
 
 inline NativeObject *
@@ -379,14 +378,14 @@ NewNativeObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleOb
                               gc::AllocKind allocKind,
                               NewObjectKind newKind = GenericObject)
 {
-    return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, NullPtr(), allocKind, newKind));
+    return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind));
 }
 
 inline NativeObject *
 NewNativeObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
                               NewObjectKind newKind = GenericObject)
 {
-    return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, NullPtr(), newKind));
+    return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, newKind));
 }
 
 /*

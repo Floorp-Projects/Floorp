@@ -18,6 +18,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
+#include "nsDOMMutationObserver.h"
 #include <math.h>
 
 using namespace mozilla;
@@ -260,6 +261,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     return nullptr;
   }
 
+  nsAutoAnimationMutationBatch mb(aElement);
+
   // build the animations list
   dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
   AnimationPlayerPtrArray newPlayers;
@@ -314,11 +317,16 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           continue;
         }
 
+        bool animationChanged = false;
+
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
         if (oldPlayer->GetSource() && newPlayer->GetSource()) {
           Animation* oldAnim = oldPlayer->GetSource();
           Animation* newAnim = newPlayer->GetSource();
+          animationChanged =
+            oldAnim->Timing() != newAnim->Timing() ||
+            oldAnim->Properties() != newAnim->Properties();
           oldAnim->Timing() = newAnim->Timing();
           oldAnim->Properties() = newAnim->Properties();
         }
@@ -336,8 +344,14 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         //  making IsPaused synonymous in this case.)
         if (!oldPlayer->IsStylePaused() && newPlayer->IsPaused()) {
           oldPlayer->PauseFromStyle();
+          animationChanged = true;
         } else if (oldPlayer->IsStylePaused() && !newPlayer->IsPaused()) {
           oldPlayer->PlayFromStyle();
+          animationChanged = true;
+        }
+
+        if (animationChanged) {
+          nsNodeUtils::AnimationChanged(oldPlayer);
         }
 
         // Replace new animation with the (updated) old one and remove the
@@ -350,6 +364,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         newPlayer = nullptr;
         newPlayers.ReplaceElementAt(newIdx, oldPlayer);
         collection->mPlayers.RemoveElementAt(oldIdx);
+
+        // We've touched the old animation's timing properties, so this
+        // could update the old player's relevance.
+        oldPlayer->UpdateRelevance();
       }
     }
   } else {
@@ -710,6 +728,9 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
        l = PR_NEXT_LINK(l)) {
     AnimationPlayerCollection* collection =
       static_cast<AnimationPlayerCollection*>(l);
+
+    nsAutoAnimationMutationBatch mb(collection->mElement);
+
     collection->Tick();
     bool canThrottleTick = aFlags == Can_Throttle &&
       collection->CanPerformOnCompositorThread(

@@ -577,54 +577,54 @@ class AutoPropertyDescriptorVector : public AutoVectorRooter<PropertyDescriptor>
  */
 JSObject *
 NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, Handle<TaggedProto> proto,
-                              HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind);
+                              gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
 NewObjectWithGivenTaggedProto(ExclusiveContext *cx, const Class *clasp, Handle<TaggedProto> proto,
-                              HandleObject parent, NewObjectKind newKind = GenericObject)
+                              NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-    return NewObjectWithGivenTaggedProto(cx, clasp, proto, parent, allocKind, newKind);
+    return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind);
 }
 
 template <typename T>
 inline T *
-NewObjectWithGivenTaggedProto(ExclusiveContext *cx, Handle<TaggedProto> proto, HandleObject parent,
+NewObjectWithGivenTaggedProto(ExclusiveContext *cx, Handle<TaggedProto> proto,
                               NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, parent, newKind);
+    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, proto, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
 inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, gc::AllocKind allocKind, NewObjectKind newKind)
+                        gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, allocKind,
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), allocKind,
                                          newKind);
 }
 
 inline JSObject *
 NewObjectWithGivenProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, NewObjectKind newKind = GenericObject)
-{
-    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), parent, newKind);
-}
-
-template <typename T>
-inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), parent, newKind);
+    return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), newKind);
 }
 
 template <typename T>
 inline T *
-NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject parent,
+NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto,
+                        NewObjectKind newKind = GenericObject)
+{
+    return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), newKind);
+}
+
+template <typename T>
+inline T *
+NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto), parent,
+    JSObject *obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto),
                                                   allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
@@ -648,23 +648,21 @@ NewObjectWithGivenProto(ExclusiveContext *cx, HandleObject proto, HandleObject p
  */
 JSObject *
 NewObjectWithClassProtoCommon(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                              HandleObject parent, gc::AllocKind allocKind,
-                              NewObjectKind newKind);
+                              gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject *
 NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, gc::AllocKind allocKind,
-                        NewObjectKind newKind = GenericObject)
+                        gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithClassProtoCommon(cx, clasp, proto, parent, allocKind, newKind);
+    return NewObjectWithClassProtoCommon(cx, clasp, proto, allocKind, newKind);
 }
 
 inline JSObject *
 NewObjectWithClassProto(ExclusiveContext *cx, const Class *clasp, HandleObject proto,
-                        HandleObject parent, NewObjectKind newKind = GenericObject)
+                        NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-    return NewObjectWithClassProto(cx, clasp, proto, parent, allocKind, newKind);
+    return NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind);
 }
 
 template<typename T>
@@ -672,7 +670,7 @@ inline T *
 NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), allocKind, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -681,7 +679,7 @@ inline T *
 NewObjectWithProto(ExclusiveContext *cx, HandleObject proto,
                    NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, NullPtr(), newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -693,7 +691,7 @@ inline JSObject *
 NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
-    return NewObjectWithClassProto(cx, clasp, NullPtr(), NullPtr(), allocKind, newKind);
+    return NewObjectWithClassProto(cx, clasp, NullPtr(), allocKind, newKind);
 }
 
 inline JSObject *
@@ -724,25 +722,25 @@ bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
 
 JSObject *
-NewObjectWithGroupCommon(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent,
+NewObjectWithGroupCommon(ExclusiveContext *cx, HandleObjectGroup group,
                          gc::AllocKind allocKind, NewObjectKind newKind);
 
 template <typename T>
 inline T *
-NewObjectWithGroup(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent,
+NewObjectWithGroup(ExclusiveContext *cx, HandleObjectGroup group,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
-    JSObject *obj = NewObjectWithGroupCommon(cx, group, parent, allocKind, newKind);
+    JSObject *obj = NewObjectWithGroupCommon(cx, group, allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
 }
 
 template <typename T>
 inline T *
-NewObjectWithGroup(ExclusiveContext *cx, HandleObjectGroup group, HandleObject parent,
+NewObjectWithGroup(ExclusiveContext *cx, HandleObjectGroup group,
                    NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(group->clasp());
-    return NewObjectWithGroup<T>(cx, group, parent, allocKind, newKind);
+    return NewObjectWithGroup<T>(cx, group, allocKind, newKind);
 }
 
 /*

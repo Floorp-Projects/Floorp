@@ -1433,33 +1433,8 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
-// Enable the Profiler
-pref("devtools.profiler.enabled", true);
-
-// Timeline panel settings
-#ifdef NIGHTLY_BUILD
-pref("devtools.timeline.enabled", true);
-#else
-pref("devtools.timeline.enabled", false);
-#endif
-
-// TODO remove `devtools.timeline.hiddenMarkers.` branches when performance
-// tool lands (bug 1075567)
-pref("devtools.timeline.hiddenMarkers", "[]");
-
-// Enable perftools via build command
-#ifdef MOZ_DEVTOOLS_PERFTOOLS
-  pref("devtools.performance_dev.enabled", true);
-#else
-  pref("devtools.performance_dev.enabled", false);
-#endif
-
-// The default Profiler UI settings
-// TODO remove `devtools.profiler.ui.` branches when performance
-// tool lands (bug 1075567)
-pref("devtools.profiler.ui.flatten-tree-recursion", true);
-pref("devtools.profiler.ui.show-platform-data", false);
-pref("devtools.profiler.ui.show-idle-blocks", true);
+// Enable the Performance tools
+pref("devtools.performance.enabled", true);
 
 // The default Performance UI settings
 pref("devtools.performance.memory.sample-probability", "0.05");

@@ -487,4 +487,17 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
       obs_ -> func_ params_ ;                                                \
     }                                                                        \
   PR_END_MACRO
+
+#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, basetype_, obstype_, func_, params_) \
+  PR_BEGIN_MACRO                                                             \
+    nsTObserverArray<basetype_ *>::ForwardIterator iter_(array_);            \
+    basetype_* obsbase_;                                                     \
+    while (iter_.HasMore()) {                                                \
+      obsbase_ = iter_.GetNext();                                            \
+      nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);                 \
+      if (obs_) {                                                            \
+        obs_ -> func_ params_ ;                                              \
+      }                                                                      \
+    }                                                                        \
+  PR_END_MACRO
 #endif // nsTObserverArray_h___

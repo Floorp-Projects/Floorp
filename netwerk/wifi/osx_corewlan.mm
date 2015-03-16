@@ -95,7 +95,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
       accessPoints.AppendObject(ap);
     }
   }
-  @catch(NSException *_exn) {
+  @catch(NSException*) {
     [pool release];
     return NS_ERROR_NOT_AVAILABLE;
   }

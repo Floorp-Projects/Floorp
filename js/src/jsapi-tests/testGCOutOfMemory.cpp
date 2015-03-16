@@ -31,7 +31,7 @@ BEGIN_TEST(testGCOutOfMemory)
         "    array = []; array.push(0);"
         "})();";
     JS::CompileOptions opts(cx);
-    bool ok = JS::Evaluate(cx, global, opts, source, strlen(source), &root);
+    bool ok = JS::Evaluate(cx, opts, source, strlen(source), &root);
 
     /* Check that we get OOM. */
     CHECK(!ok);

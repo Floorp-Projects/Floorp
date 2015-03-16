@@ -161,8 +161,15 @@ add_task(function* test_add_main_crash() {
   );
   Assert.equal(s.crashesCount, 2);
 
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "id3", new Date(),
+               { OOMAllocationSize: 1048576 })
+  );
+  Assert.equal(s.crashesCount, 3);
+  Assert.deepEqual(s.crashes[2].metadata, { OOMAllocationSize: 1048576 });
+
   let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 2);
+  Assert.equal(crashes.length, 3);
 });
 
 add_task(function* test_add_main_hang() {

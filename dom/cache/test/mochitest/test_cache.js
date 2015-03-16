@@ -1,32 +1,34 @@
 var c = null
-var request = "http://example.com/hmm?q=foobar";
+var request = "http://example.com/hmm?q=foobar" + context;
 var response = new Response("This is some Response!");
+var name = 'snafu' + context;
+var foobar = 'foobar' + context;
 
 ok(!!caches, 'caches object should be available on global');
-caches.open('snafu').then(function(openCache) {
+caches.open(name).then(function(openCache) {
   ok(openCache instanceof Cache, 'cache object should be resolved from caches.open');
-  return caches.has('snafu');
+  return caches.has(name);
 }).then(function(hasResult) {
   ok(hasResult, 'caches.has() should resolve true');
   return caches.keys();
 }).then(function(keys) {
   ok(!!keys, 'caches.keys() should resolve to a truthy value');
-  is(1, keys.length, 'caches.keys() should resolve to an array of length 1');
-  is(0, keys.indexOf('snafu'), 'caches.keys() should resolve to an array containing key');
-  return caches.delete('snafu');
+  ok(keys.length >= 1, 'caches.keys() should resolve to an array of length at least 1');
+  ok(keys.indexOf(name) >= 0, 'caches.keys() should resolve to an array containing key');
+  return caches.delete(name);
 }).then(function(deleteResult) {
   ok(deleteResult, 'caches.delete() should resolve true');
-  return caches.has('snafu');
+  return caches.has(name);
 }).then(function(hasMissingCache) {
   ok(!hasMissingCache, 'missing key should return false from has');
 }).then(function() {
-  return caches.open('snafu');
+  return caches.open(name);
 }).then(function(snafu) {
   return snafu.keys();
 }).then(function(empty) {
   is(0, empty.length, 'cache.keys() should resolve to an array of length 0');
 }).then(function() {
-  return caches.open('snafu');
+  return caches.open(name);
 }).then(function(snafu) {
   var req = './cachekey';
   var res = new Response("Hello world");
@@ -65,7 +67,7 @@ caches.open('snafu').then(function(openCache) {
   // FIXME(nsm): Can't use a Request object for now since the operations
   // consume it's 'body'. See
   // https://github.com/slightlyoff/ServiceWorker/issues/510.
-  return caches.open("foobar");
+  return caches.open(foobar);
 }).then(function(openCache) {
   c = openCache;
   return c.put(request, response);
@@ -89,10 +91,10 @@ caches.open('snafu').then(function(openCache) {
   return caches.match(request);
 }).then(function(storageMatchResponse) {
   ok(storageMatchResponse, 'storage match should succeed');
-  return caches.match(request, {cacheName:"foobar"});
+  return caches.match(request, {cacheName:foobar});
 }).then(function(storageMatchResponse) {
-  ok(storageMatchResponse, 'storage match should succeed');
-  var request2 = new Request("http://example.com/hmm?q=snafu");
+  ok(storageMatchResponse, 'storage match with cacheName should succeed');
+  var request2 = new Request("http://example.com/hmm?q=snafu" + context);
   return c.match(request2, {ignoreSearch:true});
 }).then(function(match2Response) {
   ok(match2Response, 'match should succeed');
@@ -107,19 +109,19 @@ caches.open('snafu').then(function(openCache) {
 }).then(function(matchAll2Responses) {
   ok(matchAll2Responses, 'matchAll should succeed');
   is(matchAll2Responses.length, 0, 'Zero matches is expected');
-  return caches.has("foobar");
+  return caches.has(foobar);
 }).then(function(hasResult) {
   ok(hasResult, 'has should succeed');
   return caches.keys();
 }).then(function(keys) {
   ok(keys, 'Valid keys object expected');
-  is(keys.length, 2, 'Two keys are expected');
-  is(keys.indexOf("snafu"), 0, 'snafu should be the first key');
-  is(keys.indexOf("foobar"), 1, 'foobar should be the second key');
-  return caches.delete("foobar");
+  ok(keys.length >= 2, 'At least two keys are expected');
+  ok(keys.indexOf(name) >= 0, 'snafu should exist');
+  ok(keys.indexOf(foobar) >= keys.indexOf(name), 'foobar should come after it');
+  return caches.delete(foobar);
 }).then(function(deleteResult) {
   ok(deleteResult, 'delete should succeed');
-  return caches.has("foobar");
+  return caches.has(foobar);
 }).then(function(hasMissingCache) {
   ok(!hasMissingCache, 'has should have a result');
 }).then(function() {

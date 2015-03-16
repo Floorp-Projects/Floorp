@@ -1084,6 +1084,12 @@
           if (this.isRemoteBrowser != aOtherBrowser.isRemoteBrowser)
             throw new Error("Can only swap docshells between browsers in the same process.");
 
+          // Give others a chance to swap state.
+          let event = new CustomEvent("SwapDocShells", {"detail": aOtherBrowser});
+          this.dispatchEvent(event);
+          event = new CustomEvent("SwapDocShells", {"detail": this});
+          aOtherBrowser.dispatchEvent(event);
+
           // We need to swap fields that are tied to our docshell or related to
           // the loaded page
           // Fields which are built as a result of notifactions (pageshow/hide,

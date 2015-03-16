@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<script type="text/javascript">
+addMessageListener("Ping", function(message) {
+  sendAsyncMessage("Pong", {
+    str: message.data.str,
+    counter: message.data.counter + 1
+  });
+});
+
+addMessageListener("Ping2", function(message) {
+  sendAsyncMessage("Pong2", message.data);
+});
+
+function neverCalled() {
+  sendAsyncMessage("Pong3");
+}
+addMessageListener("Pong3", neverCalled);
+removeMessageListener("Pong3", neverCalled);
+
+function testData(data) {
+  var response = {
+    result: true,
+    status: "All data correctly received"
+  }
+
+  function compare(prop, expected) {
+    if (uneval(data[prop]) == uneval(expected))
+      return;
+    if (response.result)
+      response.status = "";
+    response.result = false;
+    response.status += "Property " + prop + " should have been " + expected + " but was " + data[prop] + "\n";
+  }
+
+  compare("integer", 45);
+  compare("real", 45.78);
+  compare("str", "foobar");
+  compare("array", [1, 2, 3, 5, 27]);
+
+  return response;
+}
+
+addMessageListener("SendData", function(message) {
+  sendAsyncMessage("ReceivedData", testData(message.data));
+});
+
+addMessageListener("SendData2", function(message) {
+  sendAsyncMessage("ReceivedData2", testData(message.data.data));
+});
+
+var cookie = "nom";
+addMessageListener("SetCookie", function(message) {
+  cookie = message.data.value;
+});
+
+addMessageListener("GetCookie", function(message) {
+  sendAsyncMessage("Cookie", { value: cookie });
+});
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -14,12 +14,14 @@
 #include "pratom.h"
 #include "nsIURI.h"
 #include "nsJSPrincipals.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIProtocolHandler.h"
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsNetCID.h"
 #include "jswrapper.h"
 
 #include "mozilla/dom/ScriptSettings.h"
@@ -31,8 +33,8 @@
 
 using namespace mozilla;
 
+static bool gIsWhitelistingTestDomains = false;
 static bool gCodeBasePrincipalSupport = false;
-static bool gIsObservingCodeBasePrincipalSupport = false;
 
 static bool URIIsImmutable(nsIURI* aURI)
 {
@@ -72,15 +74,6 @@ nsBasePrincipal::Release()
 
 nsBasePrincipal::nsBasePrincipal()
 {
-  if (!gIsObservingCodeBasePrincipalSupport) {
-    nsresult rv =
-      Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
-                                   "signed.applets.codebase_principal_support",
-                                   false);
-    gIsObservingCodeBasePrincipalSupport = NS_SUCCEEDED(rv);
-    NS_WARN_IF_FALSE(gIsObservingCodeBasePrincipalSupport,
-                     "Installing gCodeBasePrincipalSupport failed!");
-  }
 }
 
 nsBasePrincipal::~nsBasePrincipal(void)
@@ -125,6 +118,19 @@ NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
                             nsISerializable)
 NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
 NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
+
+// Called at startup:
+/* static */ void
+nsPrincipal::InitializeStatics()
+{
+  Preferences::AddBoolVarCache(
+    &gIsWhitelistingTestDomains,
+    "layout.css.unprefixing-service.include-test-domains");
+
+  Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
+                               "signed.applets.codebase_principal_support",
+                               false);
+}
 
 nsPrincipal::nsPrincipal()
   : mAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
@@ -608,6 +614,145 @@ nsPrincipal::GetAppStatus()
   return nsScriptSecurityManager::AppStatusForPrincipal(this);
 }
 
+// Helper-function to indicate whether the CSS Unprefixing Service
+// whitelist should include dummy domains that are only intended for
+// use in testing. (Controlled by a pref.)
+static inline bool
+IsWhitelistingTestDomains()
+{
+  return gIsWhitelistingTestDomains;
+}
+
+// Checks if the given URI's host is on our "full domain" whitelist
+// (i.e. if it's an exact match against a domain that needs unprefixing)
+static bool
+IsOnFullDomainWhitelist(nsIURI* aURI)
+{
+  nsAutoCString hostStr;
+  nsresult rv = aURI->GetHost(hostStr);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // NOTE: This static whitelist is expected to be short. If that changes,
+  // we should consider a different representation; e.g. hash-set, prefix tree.
+  static const nsLiteralCString sFullDomainsOnWhitelist[] = {
+    // 0th entry only active when testing:
+    NS_LITERAL_CSTRING("test1.example.org"),
+    NS_LITERAL_CSTRING("map.baidu.com"),
+    NS_LITERAL_CSTRING("music.baidu.com"),
+    NS_LITERAL_CSTRING("3g.163.com"),
+    NS_LITERAL_CSTRING("3glogo.gtimg.com"), // for 3g.163.com
+    NS_LITERAL_CSTRING("info.3g.qq.com"), // for 3g.qq.com
+    NS_LITERAL_CSTRING("3gimg.qq.com"), // for 3g.qq.com
+    NS_LITERAL_CSTRING("img.m.baidu.com"), // for [shucheng|ks].baidu.com
+    NS_LITERAL_CSTRING("m.mogujie.com"),
+    NS_LITERAL_CSTRING("touch.qunar.com"),
+  };
+  static const size_t sNumFullDomainsOnWhitelist =
+    MOZ_ARRAY_LENGTH(sFullDomainsOnWhitelist);
+
+  // Skip 0th (dummy) entry in whitelist, unless a pref is enabled.
+  const size_t firstWhitelistIdx = IsWhitelistingTestDomains() ? 0 : 1;
+
+  for (size_t i = firstWhitelistIdx; i < sNumFullDomainsOnWhitelist; ++i) {
+    if (hostStr == sFullDomainsOnWhitelist[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Checks if the given URI's host is on our "base domain" whitelist
+// (i.e. if it's a subdomain of some host that we've whitelisted as needing
+// unprefixing for all its subdomains)
+static bool
+IsOnBaseDomainWhitelist(nsIURI* aURI)
+{
+  static const nsLiteralCString sBaseDomainsOnWhitelist[] = {
+    // 0th entry only active when testing:
+    NS_LITERAL_CSTRING("test2.example.org"),
+    NS_LITERAL_CSTRING("tbcdn.cn"), // for m.taobao.com
+    NS_LITERAL_CSTRING("dpfile.com"), // for m.dianping.com
+    NS_LITERAL_CSTRING("hao123img.com"), // for hao123.com
+  };
+  static const size_t sNumBaseDomainsOnWhitelist =
+    MOZ_ARRAY_LENGTH(sBaseDomainsOnWhitelist);
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+
+  if (tldService) {
+    // Skip 0th test-entry in whitelist, unless the testing pref is enabled.
+    const size_t firstWhitelistIdx = IsWhitelistingTestDomains() ? 0 : 1;
+
+    // Right now, the test base-domain "test2.example.org" is the only entry in
+    // its whitelist with a nonzero "depth". So we'll only bother going beyond
+    // 0 depth (to 1) if that entry is enabled. (No point in slowing down the
+    // normal codepath, for the benefit of a disabled test domain.)  If we add a
+    // "real" base-domain with a depth of >= 1 to our whitelist, we can get rid
+    // of this conditional & just make this a static variable.
+    const uint32_t maxSubdomainDepth = IsWhitelistingTestDomains() ? 1 : 0;
+
+    for (uint32_t subdomainDepth = 0;
+         subdomainDepth <= maxSubdomainDepth; ++subdomainDepth) {
+
+      // Get the base domain (to depth |subdomainDepth|) from passed-in URI:
+      nsAutoCString baseDomainStr;
+      nsresult rv = tldService->GetBaseDomain(aURI, subdomainDepth,
+                                              baseDomainStr);
+      if (NS_FAILED(rv)) {
+        // aURI doesn't have |subdomainDepth| levels of subdomains. If we got
+        // here without a match yet, then aURI is not on our whitelist.
+        return false;
+      }
+
+      // Compare the base domain against each entry in our whitelist:
+      for (size_t i = firstWhitelistIdx; i < sNumBaseDomainsOnWhitelist; ++i) {
+        if (baseDomainStr == sBaseDomainsOnWhitelist[i]) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+// The actual (non-cached) implementation of IsOnCSSUnprefixingWhitelist():
+static bool
+IsOnCSSUnprefixingWhitelistImpl(nsIURI* aURI)
+{
+  // Check scheme, so we can drop any non-HTTP/HTTPS URIs right away
+  nsAutoCString schemeStr;
+  nsresult rv = aURI->GetScheme(schemeStr);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Only proceed if scheme is "http" or "https"
+  if (!(StringBeginsWith(schemeStr, NS_LITERAL_CSTRING("http")) &&
+        (schemeStr.Length() == 4 ||
+         (schemeStr.Length() == 5 && schemeStr[4] == 's')))) {
+    return false;
+  }
+
+  return (IsOnFullDomainWhitelist(aURI) ||
+          IsOnBaseDomainWhitelist(aURI));
+}
+
+
+bool
+nsPrincipal::IsOnCSSUnprefixingWhitelist()
+{
+  if (mIsOnCSSUnprefixingWhitelist.isNothing()) {
+    // Value not cached -- perform our lazy whitelist-check.
+    // (NOTE: If our URI is mutable, we just assume it's not on the whitelist,
+    // since our caching strategy won't work. This isn't expected to be common.)
+    mIsOnCSSUnprefixingWhitelist.emplace(
+      mCodebaseImmutable &&
+      IsOnCSSUnprefixingWhitelistImpl(mCodebase));
+  }
+
+  return *mIsOnCSSUnprefixingWhitelist;
+}
+
 /************************************************************************************************************************/
 
 static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
@@ -822,6 +967,15 @@ nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
+
+bool
+nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
+{
+  // CSS Unprefixing Whitelist is a per-origin thing; doesn't really make sense
+  // for an expanded principal. (And probably shouldn't be needed.)
+  return false;
+}
+
 
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)

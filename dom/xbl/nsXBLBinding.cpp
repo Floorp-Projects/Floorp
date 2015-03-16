@@ -958,7 +958,7 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
 nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx,
                             JS::Handle<JSObject*> obj,
-                            const nsAFlatCString& aClassName,
+                            const nsAFlatString& aClassName,
                             nsXBLPrototypeBinding* aProtoBinding,
                             JS::MutableHandle<JSObject*> aClassObject,
                             bool* aNew)
@@ -1003,7 +1003,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   // to create and define it.
   JS::Rooted<JSObject*> proto(cx);
   JS::Rooted<JSPropertyDescriptor> desc(cx);
-  if (!JS_GetOwnPropertyDescriptor(cx, holder, aClassName.get(), &desc)) {
+  if (!JS_GetOwnUCPropertyDescriptor(cx, holder, aClassName.get(), &desc)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   *aNew = !desc.object();
@@ -1035,9 +1035,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     // stick it on.
     JSAutoCompartment ac3(cx, holder);
     if (!JS_WrapObject(cx, &proto) ||
-        !JS_DefineProperty(cx, holder, aClassName.get(), proto,
-                           JSPROP_READONLY | JSPROP_PERMANENT,
-                           JS_STUBGETTER, JS_STUBSETTER))
+        !JS_DefineUCProperty(cx, holder, aClassName.get(), -1, proto,
+                             JSPROP_READONLY | JSPROP_PERMANENT,
+                             JS_STUBGETTER, JS_STUBSETTER))
     {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1156,8 +1156,8 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   // Find our class object. It's in a protected scope and permanent just in case,
   // so should be there no matter what.
   JS::Rooted<JS::Value> classObject(aCx);
-  if (!JS_GetProperty(aCx, aXBLScope, PrototypeBinding()->ClassName().get(),
-                      &classObject)) {
+  if (!JS_GetUCProperty(aCx, aXBLScope, PrototypeBinding()->ClassName().get(),
+                        -1, &classObject)) {
     return false;
   }
 

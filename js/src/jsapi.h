@@ -2846,6 +2846,10 @@ extern JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, const char *name,
                             JS::MutableHandle<JSPropertyDescriptor> desc);
 
+extern JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext *cx, JS::HandleObject obj, const char16_t *name,
+                              JS::MutableHandle<JSPropertyDescriptor> desc);
+
 /*
  * Like JS_GetOwnPropertyDescriptorById but will return a property on
  * an object on the prototype chain (returned in desc->obj). If desc->obj is null,
@@ -3695,29 +3699,29 @@ extern JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JS::Handle<JSFunction*> fun, unsigned indent);
 
 /*
- * NB: JS_ExecuteScript and the JS::Evaluate APIs use the obj
- * parameter as the initial scope chain header, the 'this' keyword value, and
- * the variables object (ECMA parlance for where 'var' and 'function' bind
- * names) of the execution context for script.
+ * NB: JS_ExecuteScript and the JS::Evaluate APIs come in two flavors: either
+ * they use the global as the scope, or they take an AutoObjectVector of objects
+ * to use as the scope chain.  In the former case, the global is also used as
+ * the "this" keyword value and the variables object (ECMA parlance for where
+ * 'var' and 'function' bind names) of the execution context for script.  In the
+ * latter case, the first object in the provided list is used, unless the list
+ * is empty, in which case the global is used.
  *
- * Using obj as the variables object is problematic if obj's parent (which is
- * the scope chain link) is not null, which in practice is always true: in
- * this case, variables created by 'var x = 0', e.g., go in obj, but variables
- * created by assignment to an unbound id, 'x = 0', go in the last object on
- * the scope chain linked by parent.
+ * Using a non-global object as the variables object is problematic: in this
+ * case, variables created by 'var x = 0', e.g., go in that object, but
+ * variables created by assignment to an unbound id, 'x = 0', go in the global.
  *
- * ECMA calls that last scoping object the "global object", but note that many
- * embeddings have several such objects.  ECMA requires that "global code" be
- * executed with the variables object equal to this global object.  But these
- * JS API entry points provide freedom to execute code against a "sub-global",
- * i.e., a parented or scoped object, in which case the variables object will
- * differ from the last object on the scope chain, resulting in confusing and
- * non-ECMA explicit vs. implicit variable creation.
+ * ECMA requires that "global code" be executed with the variables object equal
+ * to the global object.  But these JS API entry points provide freedom to
+ * execute code against a "sub-global", i.e., a parented or scoped object, in
+ * which case the variables object will differ from the global, resulting in
+ * confusing and non-ECMA explicit vs. implicit variable creation.
  *
  * Caveat embedders: unless you already depend on this buggy variables object
  * binding behavior, you should call RuntimeOptionsRef(rt).setVarObjFix(true)
- * for each context in the application, if you pass parented objects as the obj
- * parameter, or may ever pass such objects in the future.
+ * for each context in the application, if you use the versions of
+ * JS_ExecuteScript and JS::Evaluate that take a scope chain argument, or may
+ * ever use them in the future.
  *
  * Why a runtime option?  The alternative is to add APIs duplicating those below
  * for the other value of varobjfix, and that doesn't seem worth the code bloat
@@ -3726,16 +3730,20 @@ JS_DecompileFunctionBody(JSContext *cx, JS::Handle<JSFunction*> fun, unsigned in
  * more easily hacked into existing code that does not depend on the bug; such
  * code can continue to use the familiar JS::Evaluate, etc., entry points.
  */
+
+/*
+ * Evaluate a script in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, JS::HandleObject obj, JS::HandleScript script, JS::MutableHandleValue rval);
+JS_ExecuteScript(JSContext *cx, JS::HandleScript script, JS::MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, JS::HandleObject obj, JS::HandleScript script);
+JS_ExecuteScript(JSContext *cx, JS::HandleScript script);
 
 /*
  * As above, but providing an explicit scope chain.  scopeChain must not include
  * the global object on it; that's implicit.  It needs to contain the other
- * objects that should end up on the scripts's scope chain.
+ * objects that should end up on the script's scope chain.
  */
 extern JS_PUBLIC_API(bool)
 JS_ExecuteScript(JSContext *cx, JS::AutoObjectVector &scopeChain,
@@ -3757,24 +3765,50 @@ CloneAndExecuteScript(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSScr
 
 namespace JS {
 
+/*
+ * Evaluate the given source buffer in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          SourceBufferHolder &srcBuf, JS::MutableHandleValue rval);
 
+/*
+ * As above, but providing an explicit scope chain.  scopeChain must not include
+ * the global object on it; that's implicit.  It needs to contain the other
+ * objects that should end up on the script's scope chain.
+ */
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &options,
          SourceBufferHolder &srcBuf, JS::MutableHandleValue rval);
 
+/*
+ * Evaluate the given character buffer in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char16_t *chars, size_t length, JS::MutableHandleValue rval);
 
+/*
+ * As above, but providing an explicit scope chain.  scopeChain must not include
+ * the global object on it; that's implicit.  It needs to contain the other
+ * objects that should end up on the script's scope chain.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &options,
+         const char16_t *chars, size_t length, JS::MutableHandleValue rval);
+
+/*
+ * Evaluate the given byte buffer in the scope of the current global of cx.
+ */
+extern JS_PUBLIC_API(bool)
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char *bytes, size_t length, JS::MutableHandleValue rval);
 
+/*
+ * Evaluate the given file in the scope of the current global of cx.
+ */
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
+Evaluate(JSContext *cx, const ReadOnlyCompileOptions &options,
          const char *filename, JS::MutableHandleValue rval);
 
 } /* namespace JS */

@@ -513,6 +513,24 @@ struct ParamTraits< mozilla::gfx::ScaleFactor<T, U> >
   }
 };
 
+template<class T, class U>
+struct ParamTraits< mozilla::gfx::ScaleFactors2D<T, U> >
+{
+  typedef mozilla::gfx::ScaleFactors2D<T, U> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.xScale);
+    WriteParam(msg, param.yScale);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->xScale) &&
+            ReadParam(msg, iter, &result->yScale));
+  }
+};
+
 template<class T>
 struct ParamTraits< mozilla::gfx::PointTyped<T> >
 {
