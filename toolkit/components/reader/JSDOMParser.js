@@ -624,6 +624,14 @@
 
   let JSDOMParser = function () {
     this.currentChar = 0;
+
+    // In makeElementNode() we build up many strings one char at a time. Using
+    // += for this results in lots of short-lived intermediate strings. It's
+    // better to build an array of single-char strings and then join() them
+    // together at the end. And reusing a single array (i.e. |this.strBuf|)
+    // over and over for this purpose uses less memory than using a new array
+    // for each string.
+    this.strBuf = [];
   };
 
   JSDOMParser.prototype = {
@@ -708,13 +716,15 @@
       let c = this.nextChar();
 
       // Read the Element tag name
-      let tag = "";
+      let strBuf = this.strBuf;
+      strBuf.length = 0;
       while (c !== " " && c !== ">" && c !== "/") {
         if (c === undefined)
           return null;
-        tag += c;
+        strBuf.push(c);
         c = this.nextChar();
       }
+      let tag = strBuf.join('');
 
       if (!tag)
         return null;
