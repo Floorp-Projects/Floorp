@@ -262,8 +262,6 @@ public:
   // the newer async model.
   virtual bool IsAsync() const { return false; }
 
-  virtual void DisableHardwareAcceleration() {}
-
 protected:
   virtual ~MediaDecoderReader();
 
