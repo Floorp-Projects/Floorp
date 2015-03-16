@@ -397,6 +397,7 @@ EXTRA_JS_MODULES.commonjs.sdk['private-browsing'] += [
 
 EXTRA_JS_MODULES.commonjs.sdk.remote += [
     'source/lib/sdk/remote/child.js',
+    'source/lib/sdk/remote/core.js',
     'source/lib/sdk/remote/parent.js',
     'source/lib/sdk/remote/utils.js',
 ]
