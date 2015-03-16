@@ -215,6 +215,8 @@ struct cubeb_stream
 
   /* Main handle on the WASAPI stream. */
   IAudioClient * client;
+  /* Interface pointer to the clock, to estimate latency. */
+  IAudioClock * audio_clock;
   /* Interface pointer to use the event-driven interface. */
   IAudioRenderClient * render_client;
   /* Interface pointer to use the volume facilities. */
@@ -236,8 +238,15 @@ struct cubeb_stream
   HANDLE refill_event;
   /* Each cubeb_stream has its own thread. */
   HANDLE thread;
-  /* We synthesize our clock from the callbacks. */
-  LONG64 clock;
+  /* We synthesize our clock from the callbacks. This in fractional frames, in
+   * the stream samplerate. */
+  double clock;
+  /* This is the clock value last time we reset the stream. This is in
+   * fractional frames, in the stream samplerate. */
+  double base_clock;
+  /* The latency in frames of the stream */
+  UINT32 latency_frames;
+  UINT64 device_frequency;
   owned_critical_section * stream_reset_lock;
   /* Maximum number of frames we can be requested in a callback. */
   uint32_t buffer_frame_count;
@@ -342,14 +351,29 @@ private:
 };
 
 namespace {
-void clock_add(cubeb_stream * stm, LONG64 value)
+void clock_add(cubeb_stream * stm, double value)
 {
-  InterlockedExchangeAdd64(&stm->clock, value);
+  auto_lock lock(stm->stream_reset_lock);
+  stm->clock += value;
 }
 
-LONG64 clock_get(cubeb_stream * stm)
+UINT64 clock_get(cubeb_stream * stm)
 {
-  return InterlockedExchangeAdd64(&stm->clock, 0);
+  auto_lock lock(stm->stream_reset_lock);
+  // Round to the nearest integer.
+  return UINT64(stm->clock + 0.5);
+}
+
+void latency_set(cubeb_stream * stm, UINT32 value)
+{
+  auto_lock lock(stm->stream_reset_lock);
+  stm->latency_frames = value;
+}
+
+UINT32 latency_get(cubeb_stream * stm)
+{
+  auto_lock lock(stm->stream_reset_lock);
+  return stm->latency_frames;
 }
 
 bool should_upmix(cubeb_stream * stream)
@@ -443,7 +467,15 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
 
   long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
 
-  clock_add(stm, roundf(frames_needed * stream_to_mix_samplerate_ratio(stm)));
+  clock_add(stm, frames_needed * stream_to_mix_samplerate_ratio(stm));
+
+  UINT64 position = 0;
+  HRESULT hr = stm->audio_clock->GetPosition(&position, NULL);
+  if (SUCCEEDED(hr)) {
+    double playing_frame = stm->mix_params.rate * (double)position / stm->device_frequency;
+    double last_written_frame = stm->clock - stm->base_clock;
+    latency_set(stm, max(last_written_frame - playing_frame, latency_get(stm)));
+  }
 
   /* XXX: Handle this error. */
   if (out_frames < 0) {
@@ -518,6 +550,8 @@ wasapi_stream_render_loop(LPVOID stream)
       {
         auto_lock lock(stm->stream_reset_lock);
         close_wasapi_stream(stm);
+        stm->base_clock = stm->clock;
+        stm->latency_frames = 0;
         /* Reopen a stream and start it immediately. This will automatically pick the
          * new default device for this role. */
         int r = setup_wasapi_stream(stm);
@@ -1035,6 +1069,19 @@ int setup_wasapi_stream(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
+  hr = stm->client->GetService(__uuidof(IAudioClock),
+                               (void **)&stm->audio_clock);
+  if (FAILED(hr)) {
+    LOG("Could not get IAudioClock: %x.\n", hr);
+    return CUBEB_ERROR;
+  }
+
+  hr = stm->audio_clock->GetFrequency(&stm->device_frequency);
+  if (FAILED(hr)) {
+    LOG("Could not get the device frequency from IAudioClock: %x.\n", hr);
+    return CUBEB_ERROR;
+  }
+
   hr = stm->client->GetService(__uuidof(IAudioRenderClient),
                                (void **)&stm->render_client);
   if (FAILED(hr)) {
@@ -1093,11 +1140,14 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->stream_params = stream_params;
   stm->draining = false;
   stm->latency = latency;
-  stm->clock = 0;
+  stm->clock = 0.0;
+  stm->base_clock = 0.0;
+  stm->latency_frames = 0;
 
   /* Null out WASAPI-specific state */
   stm->resampler = NULL;
   stm->client = NULL;
+  stm->audio_clock = NULL;
   stm->render_client = NULL;
   stm->audio_stream_volume = NULL;
   stm->device_enumerator = NULL;
@@ -1151,6 +1201,9 @@ void close_wasapi_stream(cubeb_stream * stm)
 
   SafeRelease(stm->client);
   stm->client = NULL;
+
+  SafeRelease(stm->audio_clock);
+  stm->audio_clock = NULL;
 
   SafeRelease(stm->render_client);
   stm->render_client = NULL;
@@ -1264,7 +1317,7 @@ int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   XASSERT(stm && position);
 
-  *position = clock_get(stm);
+  *position = max(0, clock_get(stm) - latency_get(stm));
 
   return CUBEB_OK;
 }
