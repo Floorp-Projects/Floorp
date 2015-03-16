@@ -685,6 +685,18 @@ OU(const ByteString& value)
   return AVA(tlv_id_at_organizationalUnitName, der::UTF8String, value);
 }
 
+ByteString
+emailAddress(const ByteString& value)
+{
+  // id-emailAddress AttributeType ::= { pkcs-9 1 }
+  // python DottedOIDToCode.py --tlv id-emailAddress 1.2.840.113549.1.9.1
+  static const uint8_t tlv_id_emailAddress[] = {
+    0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x09, 0x01
+  };
+
+  return AVA(tlv_id_emailAddress, der::IA5String, value);
+}
+
 // RelativeDistinguishedName ::=
 //   SET SIZE (1..MAX) OF AttributeTypeAndValue
 //
