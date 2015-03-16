@@ -47,6 +47,19 @@ function testRequest(request1, request2, request3, unknownRequest) {
   }).then(function() {
     return c.add(request3);
   }).then(function() {
+    return Promise.all(
+      ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
+        .map(function(method) {
+          var r = new Request(request1, {method: method});
+          return c.add(r)
+            .then(function() {
+              ok(false, "Promise should be rejected");
+            }, function(err) {
+              is(err.name, "TypeError", "Adding a request with type '" + method + "' should fail");
+            });
+        })
+    );
+  }).then(function() {
     return c.matchAll(request1);
   }).then(function(r) {
     is(r.length, 1, "Should only find 1 item");

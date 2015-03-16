@@ -36,6 +36,19 @@ function testRequest(request, unknownRequest) {
     c = cache;
     return c.add(request);
   }).then(function() {
+    return Promise.all(
+      ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
+        .map(function(method) {
+          var r = new Request(request, {method: method});
+          return c.add(r)
+            .then(function() {
+              ok(false, "Promise should be rejected");
+            }, function(err) {
+              is(err.name, "TypeError", "Adding a request with type '" + method + "' should fail");
+            });
+        })
+    );
+  }).then(function() {
     return c.match(request);
   }).then(function(r) {
     return checkResponse(r);
