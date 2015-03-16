@@ -3065,26 +3065,26 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
       url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
   }
 
-  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([visuallyselected=true]),
   .tabs-newtab-button:hover {
     background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
                       url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
                       url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
   }
 
-  .tab-background-middle[selected=true] {
+  .tab-background-middle[visuallyselected=true] {
     background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
                       @fgTabTexture@,
                       none;
   }
 
-  .tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
+  .tab-background-start[visuallyselected=true]:-moz-locale-dir(ltr)::after,
+  .tab-background-end[visuallyselected=true]:-moz-locale-dir(rtl)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start@2x.png);
   }
 
-  .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
+  .tab-background-end[visuallyselected=true]:-moz-locale-dir(ltr)::after,
+  .tab-background-start[visuallyselected=true]:-moz-locale-dir(rtl)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
   }
 
@@ -3102,13 +3102,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
   /* Background tab separators */
   #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-  .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-  #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+  .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
+  #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-separator@2x.png);
   }
 }
 
-.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]) {
+.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([visuallyselected="true"]) {
   opacity: .9;
 }
 
@@ -3120,7 +3120,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   opacity: 0.9999;
 }
 
-.tab-label:not([selected="true"]) {
+.tab-label:not([visuallyselected="true"]) {
   opacity: .7;
 }
 
@@ -3130,12 +3130,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none;
 }
 
-.tabbrowser-tab[selected=true]:not(:-moz-lwtheme) {
+.tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   /* overriding tabbox.css */
   color: inherit;
 }
 
-.tabbrowser-tab[selected=true] {
+.tabbrowser-tab[visuallyselected=true] {
   /* overriding tabbox.css */
   text-shadow: inherit;
 }
@@ -3185,7 +3185,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  * of the window (e.g. no menubar, tabs in titlebar, etc.) to make it easier to drag the window by
  * the titlebar. We don't need this in fullscreen since window dragging is not an issue there.
  */
-#main-window[tabsintitlebar]:not([inFullscreen]) .tab-background-middle:not([selected=true]) {
+#main-window[tabsintitlebar]:not([inFullscreen]) .tab-background-middle:not([visuallyselected=true]) {
   clip-path: url(chrome://browser/content/browser.xul#tab-hover-clip-path);
 }
 
@@ -3221,12 +3221,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   cursor: default;
 }
 
-#TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
+#TabsToolbar[brighttext] .tab-close-button.close-icon:not([visuallyselected=true]):not(:hover) {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 
 @media (min-resolution: 2dppx) {
-  #TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
+  #TabsToolbar[brighttext] .tab-close-button.close-icon:not([visuallyselected=true]):not(:hover) {
     -moz-image-region: rect(0, 128px, 32px, 96px);
   }
 }

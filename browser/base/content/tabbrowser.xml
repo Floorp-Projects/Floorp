@@ -2760,7 +2760,8 @@
           let wasFocused = (document.activeElement == this.mCurrentTab);
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
-          this.mCurrentTab._selected = false;
+          this.mCurrentTab._logicallySelected = false;
+          this.mCurrentTab._visuallySelected = false;
 
           // invalidate caches
           this._browsers = null;
@@ -2772,9 +2773,11 @@
 
           for (let i = 0; i < this.tabs.length; i++) {
             this.tabs[i]._tPos = i;
-            this.tabs[i]._selected = false;
+            this.tabs[i]._logicallySelected = false;
+            this.tabs[i]._visuallySelected = false;
           }
-          this.mCurrentTab._selected = true;
+          this.mCurrentTab._logicallySelected = true;
+          this.mCurrentTab._visuallySelected = true;
 
           if (wasFocused)
             this.mCurrentTab.focus();
@@ -3107,9 +3110,16 @@
                     this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
                   }
                 }
+
+                // This doesn't necessarily exist if we're a new window and haven't switched tabs yet
+                if (this.lastVisibleTab)
+                  this.lastVisibleTab._visuallySelected = false;
+
+                this.visibleTab._visuallySelected = true;
               }
 
               this.lastVisibleTab = this.visibleTab;
+
             },
 
             assert: function(cond) {
@@ -5384,22 +5394,22 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,titlechanged,fadein"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
                     class="tab-background-start"/>
-          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
                     class="tab-background-middle"/>
-          <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
                     class="tab-background-end"/>
         </xul:hbox>
-        <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
                   class="tab-content" align="center">
-          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected"
+          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected,visuallyselected"
                      class="tab-throbber"
                      role="presentation"
                      layer="true" />
-          <xul:image xbl:inherits="src=image,fadein,pinned,selected,busy,crashed"
+          <xul:image xbl:inherits="src=image,fadein,pinned,selected,visuallyselected,busy,crashed"
                      anonid="tab-icon-image"
                      class="tab-icon-image"
                      validate="never"
@@ -5409,17 +5419,36 @@
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
-                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
-                             xbl:inherits="fadein,pinned,selected"
+                             xbl:inherits="fadein,pinned,selected,visuallyselected"
                              class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>
     </content>
 
     <implementation>
+
+      <property name="_selected">
+        <setter>
+          <![CDATA[
+          // in e10s we want to only pseudo-select a tab before its rendering is done, so that
+          // the rest of the system knows that the tab is selected, but we don't want to update its
+          // visual status to selected until after we receive confirmation that its content has painted.
+          this._logicallySelected = val;
+
+          // If we're non-e10s we should update the visual selection as well at the same time
+          if (!gMultiProcessBrowser) {
+            this._visuallySelected = val;
+          }
+
+          return val;
+        ]]>
+        </setter>
+      </property>
+
       <property name="label">
         <getter>
           return this.getAttribute("label");

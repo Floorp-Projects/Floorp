@@ -1860,15 +1860,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Tab close button */
-.tab-close-button:not([selected]):not(:hover) {
+.tab-close-button:not([visuallyselected]):not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 64, 16, 48);
 }
 
-#TabsToolbar[brighttext] .tab-close-button:not([selected]):not(:hover) {
+#TabsToolbar[brighttext] .tab-close-button:not([visuallyselected]):not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
-.tab-close-button:not([selected]):not(:hover):-moz-lwtheme-darktext {
+.tab-close-button:not([visuallyselected]):not(:hover):-moz-lwtheme-darktext {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 96, 16, 80);
 }
 
@@ -1943,7 +1943,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-.alltabs-item[selected="true"] {
+.alltabs-item[visuallyselected="true"] {
   font-weight: bold;
 }
 
