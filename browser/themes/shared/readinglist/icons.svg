@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 16 16"
+     xml:space="preserve">
+
+  <defs>
+    <style type="text/css">
+      use:not(:target) {
+        display: none;
+      }
+
+      #addpage {
+        fill: #808080;
+      }
+      #addpage-hover {
+        fill: #555555;
+      }
+      #addpage-active {
+        fill: #0095DD;
+      }
+
+      #alreadyadded {
+        fill: #0095DD;
+      }
+      #alreadyadded-hover {
+        fill: #555555;
+      }
+      #alreadyadded-active {
+        fill: #808080;
+      }
+    </style>
+
+    <mask id="plus-mask">
+      <rect width="100%" height="100%" fill="white"/>
+      <rect x="4" y="7.5" width="8" height="1"/>
+      <rect x="7.5" y="4" width="1" height="8"/>
+    </mask>
+
+    <g id="addpage-shape">
+      <circle cx="8" cy="8" r="7" mask="url(#plus-mask)"/>
+    </g>
+
+  </defs>
+
+  <use id="addpage"                 xlink:href="#addpage-shape"/>
+  <use id="addpage-hover"           xlink:href="#addpage-shape"/>
+  <use id="addpage-active"          xlink:href="#addpage-shape"/>
+
+  <use id="alreadyadded"            xlink:href="#addpage-shape"/>
+  <use id="alreadyadded-hover"      xlink:href="#addpage-shape"/>
+  <use id="alreadyadded-active"     xlink:href="#addpage-shape"/>
+
+</svg>
