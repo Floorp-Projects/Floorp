@@ -6,6 +6,7 @@ task:
     name: '[TC] CPP Unit Tests'
     description: CPP Unit Tests test run
 
+  workerType: b2gtest-emulator
   payload:
     command:
       - entrypoint

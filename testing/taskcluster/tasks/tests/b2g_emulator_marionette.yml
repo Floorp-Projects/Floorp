@@ -6,6 +6,7 @@ task:
     name: '[TC] Marionette Framework Unit Tests'
     description: Marionette Framework Unit Tests test run
 
+  workerType: b2gtest-emulator
   payload:
     command:
       - entrypoint

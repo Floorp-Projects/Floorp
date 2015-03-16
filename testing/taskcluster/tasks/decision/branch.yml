@@ -16,6 +16,8 @@ tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
     reruns: 3
     task:
+      routes:
+        - tc-treeherder-stage.{{project}}.{{revision_hash}}
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
