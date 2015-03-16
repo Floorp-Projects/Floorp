@@ -51,7 +51,7 @@ tab:-moz-locale-dir(rtl) {
   margin: 0 !important;
 }
 
-tab[selected="true"] {
+tab[visuallyselected="true"] {
   margin-top: 0;
   border-bottom-color: transparent;
   padding: 1px 6px 4px 6px;
@@ -63,18 +63,18 @@ tab:focus > .tab-middle {
 }
 
 tab[beforeselected="true"]:not(:-moz-locale-dir(rtl)),
-tab[selected="true"]:-moz-locale-dir(rtl) + tab {
+tab[visuallyselected="true"]:-moz-locale-dir(rtl) + tab {
   border-right: none;
   border-top-right-radius: 0;
 }
 
-tab[selected="true"]:not(:-moz-locale-dir(rtl)) + tab,
+tab[visuallyselected="true"]:not(:-moz-locale-dir(rtl)) + tab,
 tab[beforeselected="true"]:-moz-locale-dir(rtl) {
   border-left: none;
   border-top-left-radius: 0;
 }
 
-tab:first-of-type[selected="true"] {
+tab:first-of-type[visuallyselected="true"] {
   padding-right: 5px;
   padding-left: 5px;
 }
@@ -96,18 +96,18 @@ tab:first-of-type[selected="true"] {
   padding: 2px 4px 1px 4px;
 }
 
-.tab-bottom[selected="true"] {
+.tab-bottom[visuallyselected="true"] {
   margin-bottom: 0;
   -moz-border-top-colors: -moz-Dialog;
   padding: 4px 6px 1px 6px;
 }
 
 .tab-bottom[beforeselected="true"]:not(:-moz-locale-dir(rtl)),
-.tab-bottom[selected="true"]:-moz-locale-dir(rtl) + .tab-bottom {
+.tab-bottom[visuallyselected="true"]:-moz-locale-dir(rtl) + .tab-bottom {
   border-bottom-right-radius: 0;
 }
 
-.tab-bottom[selected="true"]:not(:-moz-locale-dir(rtl)) + .tab-bottom,
+.tab-bottom[visuallyselected="true"]:not(:-moz-locale-dir(rtl)) + .tab-bottom,
 .tab-bottom[beforeselected="true"]:-moz-locale-dir(rtl) {
   border-bottom-left-radius: 0;
 }
