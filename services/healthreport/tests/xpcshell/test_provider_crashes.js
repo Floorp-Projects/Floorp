@@ -49,7 +49,7 @@ add_task(function* test_collect() {
 
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
                          manager.CRASH_TYPE_CRASH,
-                         "mc1", day1);
+                         "mc1", day1, { OOMAllocationSize: 1073741824 });
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
                          manager.CRASH_TYPE_CRASH,
                          "mc2", day1);
@@ -88,7 +88,7 @@ add_task(function* test_collect() {
 
   yield provider.collectDailyData();
 
-  let m = provider.getMeasurement("crashes", 5);
+  let m = provider.getMeasurement("crashes", 6);
   let values = yield m.getValues();
   do_check_eq(values.days.size, 2);
   do_check_true(values.days.hasDay(day1));
@@ -97,6 +97,8 @@ add_task(function* test_collect() {
   let value = values.days.getDay(day1);
   do_check_true(value.has("main-crash"));
   do_check_eq(value.get("main-crash"), 2);
+  do_check_true(value.has("main-crash-oom"));
+  do_check_eq(value.get("main-crash-oom"), 1);
   do_check_true(value.has("content-hang"));
   do_check_eq(value.get("content-hang"), 1);
   do_check_true(value.has("plugin-crash"));

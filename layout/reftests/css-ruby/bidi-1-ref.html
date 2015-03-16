@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1141928 - Position of ruby annotation in RTL text</title>
+  <style>
+    body { color: transparent; }
+    rb { background: green; }
+    rtc { background: red; }
+    rt { background: cyan; }
+  </style>
+</head>
+<body style="text-align: right">
+  <ruby><rb>base<rtc><rt>text</ruby>
+</body>
+</html>

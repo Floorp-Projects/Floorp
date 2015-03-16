@@ -603,15 +603,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     }
 
     const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
-    CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
-    CSSRect displayPort(metrics.GetCriticalDisplayPort().IsEmpty() ?
-                        metrics.GetDisplayPort() : metrics.GetCriticalDisplayPort());
     ScreenPoint offset(0, 0);
-    // XXX this call to SyncFrameMetrics is not currently being used. It will be cleaned
-    // up as part of bug 776030 or one of its dependencies.
-    SyncFrameMetrics(scrollOffset, asyncTransformWithoutOverscroll.mScale.scale,
-                     metrics.GetScrollableRect(), mLayersUpdated, displayPort,
-                     paintScale, mIsFirstPaint, fixedLayerMargins, offset);
+    // TODO: When we enable APZ on Fennec, we'll need to call SyncFrameMetrics here.
+    // When doing so, it might be useful to look at how it was called here before
+    // bug 1036967 removed the (dead) call.
 
     mIsFirstPaint = false;
     mLayersUpdated = false;
@@ -730,7 +725,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // Note: |metrics.GetZoom()| doesn't yet include the async zoom, so
     // |metrics.CalculateCompositedSizeInCssPixels()| would not give a correct
     // result.
-    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().scale * asyncZoomY);
+    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().yScale * asyncZoomY);
     const CSSCoord compositedHeight = (metrics.mCompositionBounds / effectiveZoom).height;
     const CSSCoord scrollableHeight = metrics.GetScrollableRect().height;
 
@@ -782,7 +777,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
 
     const float xScale = 1.f / asyncZoomX;
 
-    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().scale * asyncZoomX);
+    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().xScale * asyncZoomX);
     const CSSCoord compositedWidth = (metrics.mCompositionBounds / effectiveZoom).width;
     const CSSCoord scrollableWidth = metrics.GetScrollableRect().width;
 
@@ -922,7 +917,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // GetTransform here.
   Matrix4x4 oldTransform = aLayer->GetTransform();
 
-  CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel();
+  CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
 
   LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
 
@@ -955,7 +950,11 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
   // however, we can assume there is no async zooming in progress and so the following statement
   // works fine.
-  CSSToParentLayerScale userZoom(metrics.GetDevPixelsPerCSSPixel() * metrics.GetCumulativeResolution() * LayerToParentLayerScale(1));
+  CSSToParentLayerScale userZoom(metrics.GetDevPixelsPerCSSPixel()
+                                 // This function only applies to the root scrollable frame,
+                                 // for which we can assume that x and y scales are equal.
+                               * metrics.GetCumulativeResolution().ToScaleFactor()
+                               * LayerToParentLayerScale(1));
   ParentLayerPoint userScroll = metrics.GetScrollOffset() * userZoom;
   SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
                    userScroll, userZoom, fixedLayerMargins,
@@ -976,7 +975,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
     geckoScroll = metrics.GetScrollOffset() * userZoom;
   }
 
-  LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel();
+  LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
   ParentLayerPoint translation = userScroll - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(asyncZoom, -translation);
 

@@ -885,16 +885,17 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   nsPresContext* presContext = frame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  LayoutDeviceToScreenScale res(presContext->PresShell()->GetCumulativeResolution().width
-                              * nsLayoutUtils::GetTransformToAncestorScale(frame).width);
+  LayoutDeviceToScreenScale2D res(presContext->PresShell()->GetCumulativeResolution()
+                                * nsLayoutUtils::GetTransformToAncestorScale(frame));
 
   // First convert the base rect to screen pixels
-  LayoutDeviceToScreenScale parentRes = res;
+  LayoutDeviceToScreenScale2D parentRes = res;
   if (isRoot) {
     // the base rect for root scroll frames is specified in the parent document
     // coordinate space, so it doesn't include the local resolution.
     gfxSize localRes = presContext->PresShell()->GetResolution();
-    parentRes.scale /= localRes.width;
+    parentRes.xScale /= localRes.width;
+    parentRes.yScale /= localRes.height;
   }
   ScreenRect screenRect = LayoutDeviceRect::FromAppUnits(base, auPerDevPixel)
                         * parentRes;
@@ -1832,9 +1833,10 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame, uint32_t aFlags)
         return scrollableFrame;
     }
     if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
-      nsPresContext* pc = f->PresContext();
-      if (pc->IsRootContentDocument() && pc->PresShell()->GetRootFrame() == f) {
-        return pc->PresShell()->GetRootScrollFrameAsScrollable();
+      nsIPresShell* ps = f->PresContext()->PresShell();
+      if (ps->GetDocument() && ps->GetDocument()->IsRootDisplayDocument() &&
+          ps->GetRootFrame() == f) {
+        return ps->GetRootScrollFrameAsScrollable();
       }
     }
   }
@@ -2821,9 +2823,9 @@ CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
   // divides out mExtraResolution anyways, so we get the correct result by
   // setting the mCumulativeResolution to everything except the extra resolution
   // and leaving mExtraResolution at 1.
-  LayoutDeviceToLayerScale cumulativeResolution(
-      presShell->GetCumulativeResolution().width
-    * nsLayoutUtils::GetTransformToAncestorScale(frame).width);
+  LayoutDeviceToLayerScale2D cumulativeResolution(
+      presShell->GetCumulativeResolution()
+    * nsLayoutUtils::GetTransformToAncestorScale(frame));
 
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetDevPixelsPerCSSPixel(deviceScale);
@@ -2834,11 +2836,11 @@ CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
   nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(frame);
-  LayoutDeviceToParentLayerScale compBoundsScale(1.0f);
+  LayoutDeviceToParentLayerScale2D compBoundsScale;
   if (frame == presShell->GetRootScrollFrame() && presContext->IsRootContentDocument()) {
     if (presContext->GetParentPresContext()) {
       gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
-      compBoundsScale = LayoutDeviceToParentLayerScale(res.width, res.height);
+      compBoundsScale = LayoutDeviceToParentLayerScale2D(res.width, res.height);
     }
   } else {
     compBoundsScale = cumulativeResolution * layerToParentLayerScale;
@@ -7543,11 +7545,11 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
 #ifdef MOZ_WIDGET_ANDROID
         nsRect frameRect = aFrame->GetRect();
         gfxSize cumulativeResolution = presShell->GetCumulativeResolution();
-        LayoutDeviceToParentLayerScale layoutToParentLayerScale =
+        LayoutDeviceToParentLayerScale2D layoutToParentLayerScale =
           // The ScreenToParentLayerScale should be mTransformScale which is
           // not calculated yet, but we don't yet handle CSS transforms, so we
           // assume it's 1 here.
-          LayoutDeviceToLayerScale(cumulativeResolution.width, cumulativeResolution.height) *
+          LayoutDeviceToLayerScale2D(cumulativeResolution.width, cumulativeResolution.height) *
           LayerToScreenScale(1.0) * ScreenToParentLayerScale(1.0);
         ParentLayerRect frameRectPixels =
           LayoutDeviceRect::FromAppUnits(frameRect, auPerDevPixel)
@@ -7629,10 +7631,10 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
       } else {
         LayoutDeviceIntSize contentSize;
         if (nsLayoutUtils::GetContentViewerSize(rootPresContext, contentSize)) {
-          LayoutDeviceToLayerScale scale(1.0f);
+          LayoutDeviceToLayerScale2D scale;
           if (rootPresContext->GetParentPresContext()) {
             gfxSize res = rootPresContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
-            scale = LayoutDeviceToLayerScale(res.width, res.height);
+            scale = LayoutDeviceToLayerScale2D(res.width, res.height);
           }
           rootCompositionSize = contentSize * scale * LayerToScreenScale(1.0f);
         }

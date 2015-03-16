@@ -24,8 +24,8 @@ public:
   }
 
   virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
-  virtual Layer* AsLayer() { return this; }
-  virtual void RenderLayer() {}
+  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
+  virtual void RenderLayer() MOZ_OVERRIDE {}
 };
 
 } /* layers */

@@ -49,6 +49,29 @@ FileUtils::BodyCreateDir(nsIFile* aBaseDir)
 
 // static
 nsresult
+FileUtils::BodyDeleteDir(nsIFile* aBaseDir)
+{
+  MOZ_ASSERT(aBaseDir);
+
+  nsCOMPtr<nsIFile> aBodyDir;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(aBodyDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aBodyDir->Append(NS_LITERAL_STRING("morgue"));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aBodyDir->Remove(/* recursive = */ true);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    rv = NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+// static
+nsresult
 FileUtils::BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
                            nsIFile** aCacheDirOut)
 {

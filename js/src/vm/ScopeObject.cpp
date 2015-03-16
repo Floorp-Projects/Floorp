@@ -332,7 +332,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
 
     RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
-                                                    cx->global(), nullptr, FINALIZE_KIND,
+                                                    nullptr, FINALIZE_KIND,
                                                     BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
         return nullptr;
@@ -405,7 +405,7 @@ StaticWithObject::create(ExclusiveContext *cx)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
-                                                      nullptr, nullptr, FINALIZE_KIND));
+                                                      nullptr, FINALIZE_KIND));
     if (!shape)
         return nullptr;
 
@@ -439,8 +439,7 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(staticWith),
-                                                      &enclosing->global(), nullptr,
-                                                      FINALIZE_KIND));
+                                                      nullptr, FINALIZE_KIND));
     if (!shape)
         return nullptr;
 
@@ -573,7 +572,7 @@ StaticEvalObject::create(JSContext *cx, HandleObject enclosing)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
-                                                      cx->global(), nullptr, FINALIZE_KIND,
+                                                      nullptr, FINALIZE_KIND,
                                                       BaseShape::DELEGATE));
     if (!shape)
         return nullptr;
@@ -612,14 +611,6 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Hand
                                                                   gc::TenuredHeap, shape, group)));
     if (!obj)
         return nullptr;
-
-    /* Set the parent if necessary, as for call objects. */
-    if (&enclosing->global() != obj->getParent()) {
-        MOZ_ASSERT(obj->getParent() == nullptr);
-        Rooted<GlobalObject*> global(cx, &enclosing->global());
-        if (!JSObject::setParent(cx, obj, global))
-            return nullptr;
-    }
 
     MOZ_ASSERT(!obj->inDictionaryMode());
     MOZ_ASSERT(obj->slotSpan() >= block->numVariables() + RESERVED_SLOTS);
@@ -680,7 +671,7 @@ StaticBlockObject::create(ExclusiveContext *cx)
         return nullptr;
 
     RootedShape emptyBlockShape(cx);
-    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockObject::class_, TaggedProto(nullptr), nullptr,
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockObject::class_, TaggedProto(nullptr),
                                                   nullptr, FINALIZE_KIND, BaseShape::DELEGATE);
     if (!emptyBlockShape)
         return nullptr;
@@ -892,7 +883,7 @@ UninitializedLexicalObject::create(JSContext *cx, HandleObject enclosing)
         return nullptr;
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &class_, TaggedProto(nullptr),
-                                                      nullptr, nullptr, FINALIZE_KIND));
+                                                      nullptr, FINALIZE_KIND));
     if (!shape)
         return nullptr;
 

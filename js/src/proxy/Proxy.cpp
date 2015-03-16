@@ -752,7 +752,6 @@ void
 ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
 {
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
-    assertParentIs(cx->global());
     MOZ_ASSERT(getClass() == &ProxyObject::class_);
     MOZ_ASSERT(!getClass()->ext.innerObject);
     MOZ_ASSERT(hasLazyPrototype());
