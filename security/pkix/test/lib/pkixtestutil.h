@@ -146,6 +146,15 @@ OU(const char* value)
                        std::strlen(value)));
 }
 
+ByteString emailAddress(const ByteString&);
+
+inline ByteString
+emailAddress(const char* value)
+{
+  return emailAddress(ByteString(reinterpret_cast<const uint8_t*>(value),
+                                 std::strlen(value)));
+}
+
 // RelativeDistinguishedName ::=
 //   SET SIZE (1..MAX) OF AttributeTypeAndValue
 //
