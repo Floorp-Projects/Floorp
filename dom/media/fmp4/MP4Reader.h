@@ -81,8 +81,6 @@ public:
 
   virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
 
-  virtual void DisableHardwareAcceleration() MOZ_OVERRIDE;
-
 private:
 
   bool InitDemuxer();
