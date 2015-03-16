@@ -153,7 +153,7 @@ add_task(function* test_malformed_files_deleted() {
 add_task(function* test_aggregate_ignore_unknown_events() {
   let m = yield getManager();
 
-  yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "id1");
+  yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1");
   yield m.createEventsFile("2", "foobar.1", new Date(), "dummy");
 
   let count = yield m.aggregateEventsFiles();
@@ -170,7 +170,7 @@ add_task(function* test_prune_old() {
   let m = yield getManager();
   let oldDate = new Date(Date.now() - 86400000);
   let newDate = new Date(Date.now() - 10000);
-  yield m.createEventsFile("1", "crash.main.1", oldDate, "id1");
+  yield m.createEventsFile("1", "crash.main.2", oldDate, "id1");
   yield m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH, "id2", newDate);
 
   yield m.aggregateEventsFiles();
@@ -195,10 +195,10 @@ add_task(function* test_prune_old() {
 
 add_task(function* test_schedule_maintenance() {
   let m = yield getManager();
-  yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "id1");
+  yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1");
 
   let oldDate = new Date(Date.now() - m.PURGE_OLDER_THAN_DAYS * 2 * 24 * 60 * 60 * 1000);
-  yield m.createEventsFile("2", "crash.main.1", oldDate, "id2");
+  yield m.createEventsFile("2", "crash.main.2", oldDate, "id2");
 
   yield m.scheduleMaintenance(25);
   let crashes = yield m.getCrashes();
@@ -208,7 +208,7 @@ add_task(function* test_schedule_maintenance() {
 
 add_task(function* test_main_crash_event_file() {
   let m = yield getManager();
-  yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "id1");
+  yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1\nk1=v1\nk2=v2");
   let count = yield m.aggregateEventsFiles();
   Assert.equal(count, 1);
 
@@ -216,6 +216,7 @@ add_task(function* test_main_crash_event_file() {
   Assert.equal(crashes.length, 1);
   Assert.equal(crashes[0].id, "id1");
   Assert.equal(crashes[0].type, "main-crash");
+  Assert.deepEqual(crashes[0].metadata, { k1: "v1", k2: "v2"});
   Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
 
   count = yield m.aggregateEventsFiles();
@@ -224,7 +225,7 @@ add_task(function* test_main_crash_event_file() {
 
 add_task(function* test_crash_submission_event_file() {
   let m = yield getManager();
-  yield m.createEventsFile("1", "crash.main.1", DUMMY_DATE, "crash1");
+  yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "crash1");
   yield m.createEventsFile("1-submission", "crash.submission.1", DUMMY_DATE_2,
                            "crash1\nfalse\n");
 
@@ -279,7 +280,7 @@ add_task(function* test_high_water_mark() {
   let store = yield m._getStore();
 
   for (let i = 0; i < store.HIGH_WATER_DAILY_THRESHOLD + 1; i++) {
-    yield m.createEventsFile("m" + i, "crash.main.1", DUMMY_DATE, "m" + i);
+    yield m.createEventsFile("m" + i, "crash.main.2", DUMMY_DATE, "m" + i);
   }
 
   let count = yield m.aggregateEventsFiles();

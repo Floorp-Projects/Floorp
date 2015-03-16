@@ -3696,7 +3696,7 @@ JS_InitReflect(JSContext *cx, HandleObject obj)
     RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
-    RootedPlainObject Reflect(cx, NewObjectWithGivenProto<PlainObject>(cx, proto, obj,
+    RootedPlainObject Reflect(cx, NewObjectWithGivenProto<PlainObject>(cx, proto,
                                                                        SingletonObject));
     if (!Reflect)
         return nullptr;

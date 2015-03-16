@@ -1079,11 +1079,8 @@ static bool
 MakeFakePromise(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject scope(cx, cx->global());
-    if (!scope)
-        return false;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, NullPtr(), scope));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, NullPtr()));
     if (!obj)
         return false;
 

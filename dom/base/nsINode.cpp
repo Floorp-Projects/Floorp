@@ -104,6 +104,7 @@
 #include "nsGlobalWindow.h"
 #include "nsDOMMutationObserver.h"
 #include "GeometryUtils.h"
+#include "nsIAnimationObserver.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2747,4 +2748,19 @@ nsINode*
 nsINode::GetScopeChainParent() const
 {
   return nullptr;
+}
+
+void
+nsINode::AddAnimationObserver(nsIAnimationObserver* aAnimationObserver)
+{
+  AddMutationObserver(aAnimationObserver);
+  OwnerDoc()->SetMayHaveAnimationObservers();
+}
+
+void
+nsINode::AddAnimationObserverUnlessExists(
+                               nsIAnimationObserver* aAnimationObserver)
+{
+  AddMutationObserverUnlessExists(aAnimationObserver);
+  OwnerDoc()->SetMayHaveAnimationObservers();
 }

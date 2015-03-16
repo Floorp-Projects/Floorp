@@ -287,6 +287,7 @@ CheckEncodedECParameters(const SECItem* aEcParams)
 inline SECItem*
 CreateECParamsForCurve(const nsString& aNamedCurve, PLArenaPool* aArena)
 {
+  MOZ_ASSERT(aArena);
   SECOidTag curveOIDTag;
 
   if (aNamedCurve.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P256)) {

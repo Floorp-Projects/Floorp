@@ -37,7 +37,7 @@ print(uneval(findPath(gc, o)));
 
 Match.Pattern([{node: {}, edge: "shape"},
                {node: Match.Pattern.ANY, edge: "base"},
-               {node: Match.Pattern.ANY, edge: "parent"},
+               {node: Match.Pattern.ANY, edge: "global"},
                {node: {}, edge: "o"}])
   .assert(findPath(o, o));
 print(findPath(o, o).map((e) => e.edge).toString());

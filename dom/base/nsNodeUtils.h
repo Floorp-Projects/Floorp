@@ -16,6 +16,11 @@ class nsIVariant;
 class nsIDOMNode;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
+namespace mozilla {
+namespace dom {
+class AnimationPlayer;
+}
+}
 
 class nsNodeUtils
 {
@@ -121,6 +126,10 @@ public:
                                          (aContent));
     }
   }
+
+  static void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer);
+  static void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer);
+  static void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer);
 
   /**
    * To be called when reference count of aNode drops to zero.

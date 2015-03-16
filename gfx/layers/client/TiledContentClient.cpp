@@ -199,9 +199,10 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
-  if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
-    TILING_LOG("TILING: Aborting because resolution changed from %f to %f\n",
-        contentMetrics.GetZoom().scale, compositorMetrics.GetZoom().scale);
+  if (!FuzzyEquals(compositorMetrics.GetZoom().xScale, contentMetrics.GetZoom().xScale) ||
+      !FuzzyEquals(compositorMetrics.GetZoom().yScale, contentMetrics.GetZoom().yScale)) {
+    TILING_LOG("TILING: Aborting because resolution changed from %s to %s\n",
+        ToString(contentMetrics.GetZoom()).c_str(), ToString(compositorMetrics.GetZoom()).c_str());
     return true;
   }
 
@@ -855,7 +856,8 @@ ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
   }
   return SurfaceDescriptorTiles(mValidRegion, mPaintedRegion,
                                 tiles, mRetainedWidth, mRetainedHeight,
-                                mResolution, mFrameResolution.scale);
+                                mResolution, mFrameResolution.xScale,
+                                mFrameResolution.yScale);
 }
 
 void

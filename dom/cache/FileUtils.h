@@ -30,6 +30,10 @@ public:
   };
 
   static nsresult BodyCreateDir(nsIFile* aBaseDir);
+  // Note that this function can only be used during the initialization of the
+  // database.  We're unlikely to be able to delete the DB successfully past
+  // that point due to the file being in use.
+  static nsresult BodyDeleteDir(nsIFile* aBaseDir);
   static nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
                                   nsIFile** aCacheDirOut);
 

@@ -20,7 +20,8 @@ namespace dom {
 namespace cache {
 
 
-const int32_t DBSchema::kLatestSchemaVersion = 1;
+const int32_t DBSchema::kMaxWipeSchemaVersion = 3;
+const int32_t DBSchema::kLatestSchemaVersion = 3;
 const int32_t DBSchema::kMaxEntriesPerStatement = 255;
 
 using mozilla::void_t;
@@ -40,6 +41,9 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
     "PRAGMA journal_mode = TRUNCATE; "
 #endif
     "PRAGMA foreign_keys = ON; "
+    // Enable auto-vaccum but in incremental mode in order to avoid doing a lot
+    // of work at the end of each transaction.
+    "PRAGMA auto_vacuum = INCREMENTAL; "
 
     // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
     // the work necessary to convert UTF-16 nsString values for us.  We don't
@@ -55,6 +59,12 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (schemaVersion == kLatestSchemaVersion) {
+    // We already have the correct schema, so just do an incremental vaccum and
+    // get started.
+    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA incremental_vacuum;"));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
     return rv;
   }
 
@@ -96,6 +106,7 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
         "response_status_text TEXT NOT NULL, "
         "response_headers_guard INTEGER NOT NULL, "
         "response_body_id TEXT NULL, "
+        "response_security_info BLOB NULL, "
         "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE"
       ");"
     ));
@@ -924,8 +935,9 @@ DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "response_status_text, "
       "response_headers_guard, "
       "response_body_id, "
+      "response_security_info, "
       "cache_id "
-    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)"
+    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -974,7 +986,12 @@ DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = BindId(state, 13, aResponseBodyId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(14, aCacheId);
+  rv = state->BindBlobParameter(14, reinterpret_cast<const uint8_t*>
+                                  (aResponse.securityInfo().get()),
+                                aResponse.securityInfo().Length());
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->BindInt32Parameter(15, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -1061,7 +1078,8 @@ DBSchema::ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       "response_status, "
       "response_status_text, "
       "response_headers_guard, "
-      "response_body_id "
+      "response_body_id, "
+      "response_security_info "
     "FROM entries "
     "WHERE id=?1;"
   ), getter_AddRefs(state));
@@ -1105,6 +1123,13 @@ DBSchema::ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     rv = ExtractId(state, 5, &aSavedResponseOut->mBodyId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
+
+  uint8_t* data = nullptr;
+  uint32_t dataLength = 0;
+  rv = state->GetBlob(6, &dataLength, &data);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  aSavedResponseOut->mValue.securityInfo().Adopt(
+    reinterpret_cast<char*>(data), dataLength);
 
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT "

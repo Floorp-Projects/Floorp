@@ -66,12 +66,10 @@ RegExpObjectBuilder::getOrCreateClone(HandleObjectGroup group)
 {
     MOZ_ASSERT(!reobj_);
     MOZ_ASSERT(group->clasp() == &RegExpObject::class_);
-    group->proto().toObject()->assertParentIs(&group->proto().toObject()->global());
-    RootedObject parent(cx, &group->proto().toObject()->global());
 
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    reobj_ = NewObjectWithGroup<RegExpObject>(cx->asJSContext(), group, parent, TenuredObject);
+    reobj_ = NewObjectWithGroup<RegExpObject>(cx->asJSContext(), group, TenuredObject);
     if (!reobj_)
         return false;
     reobj_->initPrivate(nullptr);
@@ -113,7 +111,6 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other)
      * the clone -- if the |RegExpStatics| provides more flags we'll
      * need a different |RegExpShared|.
      */
-    other->getProto()->assertParentIs(&other->getProto()->global());
     RegExpStatics *res = other->getProto()->global().getRegExpStatics(cx);
     if (!res)
         return nullptr;

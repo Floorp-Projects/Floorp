@@ -1243,7 +1243,7 @@ AtomicsObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
     if (!objProto)
         return nullptr;
     RootedObject Atomics(cx, NewObjectWithGivenProto(cx, &AtomicsObject::class_, objProto,
-                                                     global, SingletonObject));
+                                                     SingletonObject));
     if (!Atomics)
         return nullptr;
 

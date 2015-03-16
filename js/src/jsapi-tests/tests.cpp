@@ -55,7 +55,7 @@ bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
     JS::RootedValue v(cx);
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(filename, lineno);
-    return JS::Evaluate(cx, global, opts, bytes, strlen(bytes), &v) ||
+    return JS::Evaluate(cx, opts, bytes, strlen(bytes), &v) ||
         fail(JSAPITestString(bytes), filename, lineno);
 }
 
@@ -64,7 +64,7 @@ bool JSAPITest::evaluate(const char *bytes, const char *filename, int lineno,
 {
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(filename, lineno);
-    return JS::Evaluate(cx, global, opts, bytes, strlen(bytes), vp) ||
+    return JS::Evaluate(cx, opts, bytes, strlen(bytes), vp) ||
         fail(JSAPITestString(bytes), filename, lineno);
 }
 

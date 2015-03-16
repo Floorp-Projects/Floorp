@@ -538,9 +538,13 @@ ShouldSuppressLineBreak(const nsStyleDisplay* aStyleDisplay,
   // the level containers themselves are breakable. We have to check
   // the container display type against all ruby display type here
   // because any of the ruby boxes could be anonymous.
-  if (aContainerDisplay->IsRubyDisplayType() &&
-      aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
-      aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+  if ((aContainerDisplay->IsRubyDisplayType() &&
+       aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
+       aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
+      // Since ruby base and ruby text may exist themselves without any
+      // non-anonymous frame outside, we should also check them.
+      aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
+      aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT) {
     return true;
   }
   return false;

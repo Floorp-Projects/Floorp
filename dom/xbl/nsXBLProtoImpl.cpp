@@ -99,11 +99,11 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // end up with a different content prototype, but we'll already have a property
   // holder called |foo| in the XBL scope. Check for that to avoid wasteful and
   // weird property holder duplication.
-  const char* className = aPrototypeBinding->ClassName().get();
+  const char16_t* className = aPrototypeBinding->ClassName().get();
   JS::Rooted<JSObject*> propertyHolder(cx);
   JS::Rooted<JSPropertyDescriptor> existingHolder(cx);
   if (scopeObject != globalObject &&
-      !JS_GetOwnPropertyDescriptor(cx, scopeObject, className, &existingHolder)) {
+      !JS_GetOwnUCPropertyDescriptor(cx, scopeObject, className, &existingHolder)) {
     return NS_ERROR_FAILURE;
   }
   bool propertyHolderIsNew = !existingHolder.object() || !existingHolder.value().isObject();
@@ -118,9 +118,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
 
     // Define it as a property on the scopeObject, using the same name used on
     // the content side.
-    bool ok = JS_DefineProperty(cx, scopeObject, className, propertyHolder,
-                                JSPROP_PERMANENT | JSPROP_READONLY,
-                                JS_STUBGETTER, JS_STUBSETTER);
+    bool ok = JS_DefineUCProperty(cx, scopeObject, className, -1, propertyHolder,
+                                  JSPROP_PERMANENT | JSPROP_READONLY,
+                                  JS_STUBGETTER, JS_STUBSETTER);
     NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
   } else {
     propertyHolder = targetClassObject;
@@ -490,7 +490,7 @@ nsXBLProtoImpl::Write(nsIObjectOutputStream* aStream,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = aStream->WriteStringZ(mClassName.get());
+  rv = aStream->WriteUtf8Z(mClassName.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (nsXBLProtoImplField* curr = mFields; curr; curr = curr->GetNext()) {
@@ -519,10 +519,14 @@ NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding,
                    nsXBLProtoImpl** aResult)
 {
   nsXBLProtoImpl* impl = new nsXBLProtoImpl();
-  if (aClassName)
-    impl->mClassName.AssignWithConversion(aClassName);
-  else
-    aBinding->BindingURI()->GetSpec(impl->mClassName);
+  if (aClassName) {
+    impl->mClassName = aClassName;
+  } else {
+    nsCString spec;
+    aBinding->BindingURI()->GetSpec(spec);
+    impl->mClassName = NS_ConvertUTF8toUTF16(spec);
+  }
+
   aBinding->SetImplementation(impl);
   *aResult = impl;
 
