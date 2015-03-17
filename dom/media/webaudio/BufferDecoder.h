@@ -36,7 +36,7 @@ public:
 
   virtual bool OnStateMachineTaskQueue() const final override;
 
-  virtual bool OnDecodeThread() const final override;
+  virtual bool OnDecodeTaskQueue() const final override;
 
   virtual MediaResource* GetResource() const final override;
 

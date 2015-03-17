@@ -64,7 +64,7 @@ BufferDecoder::OnStateMachineTaskQueue() const
 }
 
 bool
-BufferDecoder::OnDecodeThread() const
+BufferDecoder::OnDecodeTaskQueue() const
 {
   MOZ_ASSERT(mTaskQueueIdentity, "Forgot to call BeginDecoding?");
   return mTaskQueueIdentity->IsCurrentThreadIn();
