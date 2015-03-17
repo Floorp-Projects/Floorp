@@ -54,7 +54,7 @@ public:
   // Returns true if the decoder is shut down.
   virtual bool IsShutdown() const = 0;
 
-  virtual bool OnStateMachineThread() const = 0;
+  virtual bool OnStateMachineTaskQueue() const = 0;
 
   virtual bool OnDecodeThread() const = 0;
 
