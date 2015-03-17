@@ -31,7 +31,6 @@ typedef enum {
     gif_image_header,
     gif_image_header_continue,
     gif_image_colormap,
-    gif_image_body,
     gif_lzw_start,
     gif_lzw,
     gif_sub_block,
@@ -107,4 +106,3 @@ typedef struct gif_struct {
 } gif_struct;
 
 #endif // mozilla_image_decoders_GIF2_H
-
