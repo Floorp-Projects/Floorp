@@ -53,3 +53,6 @@ OS_LIBS += [
 ]
 
 FAIL_ON_WARNINGS = True
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Application Update')

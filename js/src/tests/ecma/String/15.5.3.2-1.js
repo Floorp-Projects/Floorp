@@ -153,4 +153,24 @@ new TestCase( SECTION,   "String.fromCharCode(0x007D)",     "}",   String.fromCh
 new TestCase( SECTION,   "String.fromCharCode(0x007E)",     "~",   String.fromCharCode(0x007E) );
 //    new TestCase( SECTION,   "String.fromCharCode(0x0020, 0x007F)",     "",   String.fromCharCode(0x0040, 0x007F) );
 
+new TestCase( SECTION,   "String.fromCharCode(<2 args>)",   "ab",                   String.fromCharCode(97,98));
+new TestCase( SECTION,   "String.fromCharCode(<3 args>)",   "abc",                  String.fromCharCode(97,98,99));
+new TestCase( SECTION,   "String.fromCharCode(<4 args>)",   "abcd",                 String.fromCharCode(97,98,99,100));
+new TestCase( SECTION,   "String.fromCharCode(<5 args>)",   "abcde",                String.fromCharCode(97,98,99,100,101));
+new TestCase( SECTION,   "String.fromCharCode(<6 args>)",   "abcdef",               String.fromCharCode(97,98,99,100,101,102));
+new TestCase( SECTION,   "String.fromCharCode(<7 args>)",   "abcdefg",              String.fromCharCode(97,98,99,100,101,102,103));
+new TestCase( SECTION,   "String.fromCharCode(<8 args>)",   "abcdefgh",             String.fromCharCode(97,98,99,100,101,102,103,104));
+new TestCase( SECTION,   "String.fromCharCode(<9 args>)",   "abcdefghi",            String.fromCharCode(97,98,99,100,101,102,103,104,105));
+new TestCase( SECTION,   "String.fromCharCode(<10 args>)",  "abcdefghij",           String.fromCharCode(97,98,99,100,101,102,103,104,105,106));
+new TestCase( SECTION,   "String.fromCharCode(<11 args>)",  "abcdefghijk",          String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107));
+new TestCase( SECTION,   "String.fromCharCode(<12 args>)",  "abcdefghijkl",         String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108));
+new TestCase( SECTION,   "String.fromCharCode(<13 args>)",  "abcdefghijklm",        String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109));
+new TestCase( SECTION,   "String.fromCharCode(<14 args>)",  "abcdefghijklmn",       String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110));
+new TestCase( SECTION,   "String.fromCharCode(<15 args>)",  "abcdefghijklmno",      String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111));
+new TestCase( SECTION,   "String.fromCharCode(<16 args>)",  "abcdefghijklmnop",     String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112));
+new TestCase( SECTION,   "String.fromCharCode(<17 args>)",  "abcdefghijklmnopq",    String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113));
+new TestCase( SECTION,   "String.fromCharCode(<18 args>)",  "abcdefghijklmnopqr",   String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114));
+new TestCase( SECTION,   "String.fromCharCode(<19 args>)",  "abcdefghijklmnopqrs",  String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115));
+new TestCase( SECTION,   "String.fromCharCode(<20 args>)",  "abcdefghijklmnopqrst", String.fromCharCode(97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116));
+
 test();

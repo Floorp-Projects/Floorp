@@ -965,13 +965,13 @@ class MacroAssemblerX86Shared : public Assembler
     void packedSubInt32(const Operand &src, FloatRegister dest) {
         vpsubd(src, dest, dest);
     }
-    void packedReciprocalFloat32x4(const Operand &src, FloatRegister dest) {
+    void packedRcpApproximationFloat32x4(const Operand &src, FloatRegister dest) {
         // This function is an approximation of the result, this might need
         // fix up if the spec requires a given precision for this operation.
         // TODO See also bug 1068028.
         vrcpps(src, dest);
     }
-    void packedReciprocalSqrtFloat32x4(const Operand &src, FloatRegister dest) {
+    void packedRcpSqrtApproximationFloat32x4(const Operand &src, FloatRegister dest) {
         // TODO See comment above. See also bug 1068028.
         vrsqrtps(src, dest);
     }

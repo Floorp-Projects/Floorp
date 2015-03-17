@@ -50,6 +50,8 @@ namespace gcstats {
 struct Statistics;
 }
 
+class Nursery;
+
 namespace gc {
 
 struct FinalizePhase;
@@ -780,11 +782,6 @@ class ArenaLists
         return freeLists[thingKind].allocate(thingSize);
     }
 
-    // Returns false on Out-Of-Memory. This method makes no attempt to
-    // synchronize with background finalization, so may miss available memory
-    // that is waiting to be finalized.
-    TenuredCell *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
-
     /*
      * Moves all arenas from |fromArenaLists| into |this|.
      */
@@ -841,12 +838,12 @@ class ArenaLists
 
     enum ArenaAllocMode { HasFreeThings = true, IsEmpty = false };
     template <ArenaAllocMode hasFreeThings>
-    inline TenuredCell *allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader,
-                                               AllocKind thingKind);
+    TenuredCell *allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader, AllocKind kind);
 
     inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
 
     friend class GCRuntime;
+    friend class js::Nursery;
 };
 
 /* The number of GC cycles an empty chunk can survive before been released. */

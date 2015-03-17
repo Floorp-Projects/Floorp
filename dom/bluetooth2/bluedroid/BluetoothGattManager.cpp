@@ -57,6 +57,7 @@ public:
     mConnectRunnable = nullptr;
     mDisconnectRunnable = nullptr;
     mUnregisterClientRunnable = nullptr;
+    mReadRemoteRssiRunnable = nullptr;
   }
 
   nsString mAppUuid;
@@ -66,6 +67,7 @@ public:
   nsRefPtr<BluetoothReplyRunnable> mConnectRunnable;
   nsRefPtr<BluetoothReplyRunnable> mDisconnectRunnable;
   nsRefPtr<BluetoothReplyRunnable> mUnregisterClientRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mReadRemoteRssiRunnable;
 };
 
 NS_IMPL_ISUPPORTS0(BluetoothGattClient)
@@ -484,6 +486,63 @@ BluetoothGattManager::Disconnect(const nsAString& aAppUuid,
     new DisconnectResultHandler(client));
 }
 
+class BluetoothGattManager::ReadRemoteRssiResultHandler MOZ_FINAL
+  : public BluetoothGattClientResultHandler
+{
+public:
+  ReadRemoteRssiResultHandler(BluetoothGattClient* aClient)
+  : mClient(aClient)
+  {
+    MOZ_ASSERT(mClient);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    BT_WARNING("BluetoothGattClientInterface::ReadRemoteRssi failed: %d",
+               (int)aStatus);
+    MOZ_ASSERT(mClient->mReadRemoteRssiRunnable);
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    // Reject the read remote rssi request
+    DispatchReplyError(mClient->mReadRemoteRssiRunnable,
+                       NS_LITERAL_STRING("ReadRemoteRssi failed"));
+    mClient->mReadRemoteRssiRunnable = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothGattClient> mClient;
+};
+
+void
+BluetoothGattManager::ReadRemoteRssi(int aClientIf,
+                                     const nsAString& aDeviceAddr,
+                                     BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_CLIENT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
+                                   ClientIfComparator());
+
+  // Reject the read remote rssi request if the client is not found
+  if (index == sClients->NoIndex) {
+    DispatchReplyError(aRunnable,
+                       NS_LITERAL_STRING("Read remote RSSI failed"));
+    return;
+  }
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  client->mReadRemoteRssiRunnable = aRunnable;
+
+  sBluetoothGattClientInterface->ReadRemoteRssi(
+    aClientIf, aDeviceAddr,
+    new ReadRemoteRssiResultHandler(client));
+}
+
 //
 // Notification Handlers
 //
@@ -728,7 +787,40 @@ BluetoothGattManager::ReadRemoteRssiNotification(int aClientIf,
                                                  const nsAString& aBdAddr,
                                                  int aRssi,
                                                  BluetoothGattStatus aStatus)
-{ }
+{
+  BT_API2_LOGR();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
+                                   ClientIfComparator());
+  NS_ENSURE_TRUE_VOID(index != sClients->NoIndex);
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+
+  if (aStatus != GATT_STATUS_SUCCESS) { // operation failed
+    BT_API2_LOGR("ReadRemoteRssi failed, clientIf = %d, bdAddr = %s, " \
+                 "rssi = %d, status = %d", aClientIf,
+                 NS_ConvertUTF16toUTF8(aBdAddr).get(), aRssi, (int)aStatus);
+
+    // Reject the read remote rssi request
+    if (client->mReadRemoteRssiRunnable) {
+      DispatchReplyError(client->mReadRemoteRssiRunnable,
+                         NS_LITERAL_STRING("ReadRemoteRssi failed"));
+      client->mReadRemoteRssiRunnable = nullptr;
+    }
+
+    return;
+  }
+
+  // Resolve the read remote rssi request
+  if (client->mReadRemoteRssiRunnable) {
+    DispatchReplySuccess(client->mReadRemoteRssiRunnable,
+                         BluetoothValue(static_cast<uint32_t>(aRssi)));
+    client->mReadRemoteRssiRunnable = nullptr;
+  }
+}
 
 void
 BluetoothGattManager::ListenNotification(BluetoothGattStatus aStatus,

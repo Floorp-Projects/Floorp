@@ -169,5 +169,8 @@ function TestFilledHeaders() {
   }, TypeError, "Fill with non-tuple sequence should throw TypeError.");
 }
 
-TestEmptyHeaders();
-TestFilledHeaders();
+function runTest() {
+  TestEmptyHeaders();
+  TestFilledHeaders();
+  return Promise.resolve();
+}
