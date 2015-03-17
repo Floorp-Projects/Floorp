@@ -33,7 +33,6 @@ class nsICycleCollectorLogSink;
 class nsIDOMBlob;
 class nsIDumpGCAndCCLogsCallback;
 class nsIMemoryReporter;
-class nsITimer;
 class ParentIdleListener;
 
 namespace mozilla {
@@ -348,8 +347,6 @@ public:
 
     virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) override;
 
-    virtual bool RecvFinishShutdown() override;
-
 protected:
     void OnChannelConnected(int32_t pid) override;
     virtual void ActorDestroy(ActorDestroyReason why) override;
@@ -455,38 +452,21 @@ private:
     void MarkAsDead();
 
     /**
-     * How we will shut down this ContentParent and its subprocess.
-     */
-    enum ShutDownMethod {
-        // Send a shutdown message and wait for FinishShutdown call back.
-        SEND_SHUTDOWN_MESSAGE,
-        // Close the channel ourselves and let the subprocess clean up itself.
-        CLOSE_CHANNEL,
-        // Close the channel with error and let the subprocess clean up itself.
-        CLOSE_CHANNEL_WITH_ERROR,
-    };
-
-    /**
      * Exit the subprocess and vamoose.  After this call IsAlive()
      * will return false and this ContentParent will not be returned
      * by the Get*() funtions.  However, the shutdown sequence itself
      * may be asynchronous.
      *
-     * If aMethod is CLOSE_CHANNEL_WITH_ERROR and this is the first call
-     * to ShutDownProcess, then we'll close our channel using CloseWithError()
+     * If aCloseWithError is true and this is the first call to
+     * ShutDownProcess, then we'll close our channel using CloseWithError()
      * rather than vanilla Close().  CloseWithError() indicates to IPC that this
      * is an abnormal shutdown (e.g. a crash).
      */
-    void ShutDownProcess(ShutDownMethod aMethod);
+    void ShutDownProcess(bool aCloseWithError);
 
     // Perform any steps necesssary to gracefully shtudown the message
     // manager and null out mMessageManager.
     void ShutDownMessageManager();
-
-    // Start the force-kill timer on shutdown.
-    void StartForceKillTimer();
-
-    static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
@@ -819,7 +799,7 @@ private:
     // that even content processes that are 100% blocked (say from
     // SIGSTOP), are still killed eventually.  This task enforces that
     // timer.
-    nsCOMPtr<nsITimer> mForceKillTimer;
+    CancelableTask* mForceKillTask;
     // How many tabs we're waiting to finish their destruction
     // sequence.  Precisely, how many TabParents have called
     // NotifyTabDestroying() but not called NotifyTabDestroyed().
@@ -845,8 +825,6 @@ private:
     bool mCalledCloseWithError;
     bool mCalledKillHard;
     bool mCreatedPairedMinidumps;
-    bool mShutdownPending;
-    bool mIPCOpen;
 
     friend class CrashReporterParent;
 
