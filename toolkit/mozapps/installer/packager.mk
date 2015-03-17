@@ -33,7 +33,6 @@ endif
 # set earlier in this file.
 
 stage-package: $(MOZ_PKG_MANIFEST)
-	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 	OMNIJAR_NAME=$(OMNIJAR_NAME) \
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
 		--format $(MOZ_PACKAGER_FORMAT) \
