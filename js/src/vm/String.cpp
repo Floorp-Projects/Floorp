@@ -290,6 +290,16 @@ JSFlatString *
 JSRope::flattenInternal(ExclusiveContext *maybecx)
 {
     /*
+     * Consider the DAG of JSRopes rooted at this JSRope, with non-JSRopes as
+     * its leaves. Mutate the root JSRope into a JSExtensibleString containing
+     * the full flattened text that the root represents, and mutate all other
+     * JSRopes in the interior of the DAG into JSDependentStrings that refer to
+     * this new JSExtensibleString.
+     *
+     * If the leftmost leaf of our DAG is a JSExtensibleString, consider
+     * stealing its buffer for use in our new root, and transforming it into a
+     * JSDependentString too. Do not mutate any of the other leaves.
+     *
      * Perform a depth-first dag traversal, splatting each node's characters
      * into a contiguous buffer. Visit each rope node three times:
      *   1. record position in the buffer and recurse into left child;
@@ -300,25 +310,37 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
      * encountered multiple times during traversal. However, step 3 above leaves
      * a valid dependent string, so everything works out.
      *
-     * While ropes avoid all sorts of quadratic cases with string
-     * concatenation, they can't help when ropes are immediately flattened.
-     * One idiomatic case that we'd like to keep linear (and has traditionally
-     * been linear in SM and other JS engines) is:
+     * While ropes avoid all sorts of quadratic cases with string concatenation,
+     * they can't help when ropes are immediately flattened. One idiomatic case
+     * that we'd like to keep linear (and has traditionally been linear in SM
+     * and other JS engines) is:
      *
      *   while (...) {
      *     s += ...
      *     s.flatten
      *   }
      *
-     * To do this, when the buffer for a to-be-flattened rope is allocated, the
-     * allocation size is rounded up. Then, if the resulting flat string is the
-     * left-hand side of a new rope that gets flattened and there is enough
-     * capacity, the rope is flattened into the same buffer, thereby avoiding
-     * copying the left-hand side. Clearing the 'extensible' bit turns off this
-     * optimization. This is necessary, e.g., when the JSAPI hands out the raw
-     * null-terminated char array of a flat string.
+     * Two behaviors accomplish this:
      *
-     * N.B. This optimization can create chains of dependent strings.
+     * - When the leftmost non-rope in the DAG we're flattening is a
+     *   JSExtensibleString with sufficient capacity to hold the entire
+     *   flattened string, we just flatten the DAG into its buffer. Then, when
+     *   we transform the root of the DAG from a JSRope into a
+     *   JSExtensibleString, we steal that buffer, and change the victim from a
+     *   JSExtensibleString to a JSDependentString. In this case, the left-hand
+     *   side of the string never needs to be copied.
+     *
+     * - Otherwise, we round up the total flattened size and create a fresh
+     *   JSExtensibleString with that much capacity. If this in turn becomes the
+     *   leftmost leaf of a subsequent flatten, we will hopefully be able to
+     *   fill it, as in the case above.
+     *
+     * Note that, even though the code for creating JSDependentStrings avoids
+     * creating dependents of dependents, we can create that situation here: the
+     * JSExtensibleStrings we transform into JSDependentStrings might have
+     * JSDependentStrings pointing to them already. Stealing the buffer doesn't
+     * change its address, only its owning JSExtensibleString, so all chars()
+     * pointers in the JSDependentStrings are still valid.
      */
     const size_t wholeLength = length();
     size_t wholeCapacity;
