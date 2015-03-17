@@ -4,6 +4,7 @@ MOZ_AUTOMATION_PACKAGE_TESTS=0
 MOZ_AUTOMATION_INSTALLER=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 MOZ_AUTOMATION_UPDATE_PACKAGING=0
+MOZ_AUTOMATION_SDK=0
 . "$topsrcdir/browser/config/mozconfigs/win32/nightly"
 
 ac_add_options --enable-application=b2g/dev
