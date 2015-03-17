@@ -128,7 +128,7 @@ public:
         return mPluginName + mPluginVersion;
     }
 
-    nsresult GetRunID(uint32_t* aRunID);
+    virtual nsresult GetRunID(uint32_t* aRunID) override;
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy

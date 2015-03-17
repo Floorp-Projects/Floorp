@@ -211,6 +211,9 @@ interface MozObjectLoadingContent {
    */
   [ChromeOnly, Throws]
   void cancelPlayPreview();
+
+  [ChromeOnly, Throws]
+  readonly attribute unsigned long runID;
 };
 
 /**

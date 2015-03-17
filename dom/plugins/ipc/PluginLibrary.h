@@ -84,6 +84,7 @@ public:
                                          const nsIntRect&, gfxContext**) = 0;
   virtual nsresult EndUpdateBackground(NPP instance,
                                        gfxContext*, const nsIntRect&) = 0;
+  virtual nsresult GetRunID(uint32_t* aRunID) = 0;
 };
 
 
