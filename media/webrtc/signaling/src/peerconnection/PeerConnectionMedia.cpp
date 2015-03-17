@@ -26,9 +26,11 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsICancelable.h"
+#include "nsIDocument.h"
+#include "nsILoadInfo.h"
+#include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
 #include "nsIProtocolProxyService.h"
-#include "nsIIOService.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "MediaStreamList.h"
@@ -227,15 +229,14 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     return;
   }
 
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  if (NS_FAILED(rv)) {
-    CSFLogError(logTag, "%s: Failed to get IOService: %d",
-                __FUNCTION__, (int)rv);
-    return;
-  }
-
   nsCOMPtr<nsIChannel> channel;
-  rv = ios->NewChannelFromURI(fakeHttpsLocation, getter_AddRefs(channel));
+  nsCOMPtr<nsIDocument> doc = mParent->GetWindow()->GetExtantDoc();
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     fakeHttpsLocation,
+                     doc,
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER);
+
   if (NS_FAILED(rv)) {
     CSFLogError(logTag, "%s: Failed to get channel from URI: %d",
                 __FUNCTION__, (int)rv);
