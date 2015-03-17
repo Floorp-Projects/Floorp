@@ -130,7 +130,7 @@ describe("loop.conversation", function() {
   });
 
   describe("AppControllerView", function() {
-    var conversationStore, client, ccView, oldTitle, dispatcher;
+    var conversationStore, client, ccView, dispatcher;
     var conversationAppStore, roomStore;
 
     function mountTestComponent() {
@@ -142,7 +142,6 @@ describe("loop.conversation", function() {
     }
 
     beforeEach(function() {
-      oldTitle = document.title;
       client = new loop.Client();
       dispatcher = new loop.Dispatcher();
       conversationStore = new loop.store.ConversationStore(
@@ -177,7 +176,6 @@ describe("loop.conversation", function() {
 
     afterEach(function() {
       ccView = undefined;
-      document.title = oldTitle;
     });
 
     it("should display the CallControllerView for outgoing calls", function() {
