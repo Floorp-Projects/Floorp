@@ -353,6 +353,150 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
+    def _handle_libraries(self, context):
+        host_libname = context.get('HOST_LIBRARY_NAME')
+        libname = context.get('LIBRARY_NAME')
+
+        if host_libname:
+            if host_libname == libname:
+                raise SandboxValidationError('LIBRARY_NAME and '
+                    'HOST_LIBRARY_NAME must have a different value', context)
+            lib = HostLibrary(context, host_libname)
+            self._libs[host_libname].append(lib)
+            self._linkage.append((context, lib, 'HOST_USE_LIBS'))
+
+        final_lib = context.get('FINAL_LIBRARY')
+        if not libname and final_lib:
+            # If no LIBRARY_NAME is given, create one.
+            libname = context.relsrcdir.replace('/', '_')
+
+        static_lib = context.get('FORCE_STATIC_LIB')
+        shared_lib = context.get('FORCE_SHARED_LIB')
+
+        static_name = context.get('STATIC_LIBRARY_NAME')
+        shared_name = context.get('SHARED_LIBRARY_NAME')
+
+        is_framework = context.get('IS_FRAMEWORK')
+        is_component = context.get('IS_COMPONENT')
+
+        soname = context.get('SONAME')
+
+        lib_defines = context.get('LIBRARY_DEFINES')
+
+        shared_args = {}
+        static_args = {}
+
+        if final_lib:
+            if static_lib:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY implies FORCE_STATIC_LIB. '
+                    'Please remove the latter.', context)
+            if shared_lib:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with FORCE_SHARED_LIB. '
+                    'Please remove one.', context)
+            if is_framework:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_FRAMEWORK. '
+                    'Please remove one.', context)
+            if is_component:
+                raise SandboxValidationError(
+                    'FINAL_LIBRARY conflicts with IS_COMPONENT. '
+                    'Please remove one.', context)
+            static_args['link_into'] = final_lib
+            static_lib = True
+
+        if libname:
+            if is_component:
+                if static_lib:
+                    raise SandboxValidationError(
+                        'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
+                        'Please remove one.', context)
+                shared_lib = True
+                shared_args['variant'] = SharedLibrary.COMPONENT
+
+            if is_framework:
+                if soname:
+                    raise SandboxValidationError(
+                        'IS_FRAMEWORK conflicts with SONAME. '
+                        'Please remove one.', context)
+                shared_lib = True
+                shared_args['variant'] = SharedLibrary.FRAMEWORK
+
+            if not static_lib and not shared_lib:
+                static_lib = True
+
+            if static_name:
+                if not static_lib:
+                    raise SandboxValidationError(
+                        'STATIC_LIBRARY_NAME requires FORCE_STATIC_LIB',
+                        context)
+                static_args['real_name'] = static_name
+
+            if shared_name:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SHARED_LIBRARY_NAME requires FORCE_SHARED_LIB',
+                        context)
+                shared_args['real_name'] = shared_name
+
+            if soname:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SONAME requires FORCE_SHARED_LIB', context)
+                shared_args['soname'] = soname
+
+            # If both a shared and a static library are created, only the
+            # shared library is meant to be a SDK library.
+            if context.get('SDK_LIBRARY'):
+                if shared_lib:
+                    shared_args['is_sdk'] = True
+                elif static_lib:
+                    static_args['is_sdk'] = True
+
+            if shared_lib and static_lib:
+                if not static_name and not shared_name:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but neither STATIC_LIBRARY_NAME or '
+                        'SHARED_LIBRARY_NAME is set. At least one is required.',
+                        context)
+                if static_name and not shared_name and static_name == libname:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but STATIC_LIBRARY_NAME is the same as LIBRARY_NAME, '
+                        'and SHARED_LIBRARY_NAME is unset. Please either '
+                        'change STATIC_LIBRARY_NAME or LIBRARY_NAME, or set '
+                        'SHARED_LIBRARY_NAME.', context)
+                if shared_name and not static_name and shared_name == libname:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but SHARED_LIBRARY_NAME is the same as LIBRARY_NAME, '
+                        'and STATIC_LIBRARY_NAME is unset. Please either '
+                        'change SHARED_LIBRARY_NAME or LIBRARY_NAME, or set '
+                        'STATIC_LIBRARY_NAME.', context)
+                if shared_name and static_name and shared_name == static_name:
+                    raise SandboxValidationError(
+                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
+                        'but SHARED_LIBRARY_NAME is the same as '
+                        'STATIC_LIBRARY_NAME. Please change one of them.',
+                        context)
+
+            if shared_lib:
+                lib = SharedLibrary(context, libname, **shared_args)
+                self._libs[libname].append(lib)
+                self._linkage.append((context, lib, 'USE_LIBS'))
+            if static_lib:
+                lib = StaticLibrary(context, libname, **static_args)
+                self._libs[libname].append(lib)
+                self._linkage.append((context, lib, 'USE_LIBS'))
+
+            if lib_defines:
+                if not libname:
+                    raise SandboxValidationError('LIBRARY_DEFINES needs a '
+                        'LIBRARY_NAME to take effect', context)
+                lib.defines.update(lib_defines)
+
     def emit_from_context(self, context):
         """Convert a Context to tree metadata objects.
 
@@ -684,148 +828,7 @@ class TreeMetadataEmitter(LoggingMixin):
         if final_target_files:
             yield FinalTargetFiles(context, final_target_files, context['FINAL_TARGET'])
 
-        host_libname = context.get('HOST_LIBRARY_NAME')
-        libname = context.get('LIBRARY_NAME')
-
-        if host_libname:
-            if host_libname == libname:
-                raise SandboxValidationError('LIBRARY_NAME and '
-                    'HOST_LIBRARY_NAME must have a different value', context)
-            lib = HostLibrary(context, host_libname)
-            self._libs[host_libname].append(lib)
-            self._linkage.append((context, lib, 'HOST_USE_LIBS'))
-
-        final_lib = context.get('FINAL_LIBRARY')
-        if not libname and final_lib:
-            # If no LIBRARY_NAME is given, create one.
-            libname = context.relsrcdir.replace('/', '_')
-
-        static_lib = context.get('FORCE_STATIC_LIB')
-        shared_lib = context.get('FORCE_SHARED_LIB')
-
-        static_name = context.get('STATIC_LIBRARY_NAME')
-        shared_name = context.get('SHARED_LIBRARY_NAME')
-
-        is_framework = context.get('IS_FRAMEWORK')
-        is_component = context.get('IS_COMPONENT')
-
-        soname = context.get('SONAME')
-
-        lib_defines = context.get('LIBRARY_DEFINES')
-
-        shared_args = {}
-        static_args = {}
-
-        if final_lib:
-            if static_lib:
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY implies FORCE_STATIC_LIB. '
-                    'Please remove the latter.', context)
-            if shared_lib:
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY conflicts with FORCE_SHARED_LIB. '
-                    'Please remove one.', context)
-            if is_framework:
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY conflicts with IS_FRAMEWORK. '
-                    'Please remove one.', context)
-            if is_component:
-                raise SandboxValidationError(
-                    'FINAL_LIBRARY conflicts with IS_COMPONENT. '
-                    'Please remove one.', context)
-            static_args['link_into'] = final_lib
-            static_lib = True
-
-        if libname:
-            if is_component:
-                if static_lib:
-                    raise SandboxValidationError(
-                        'IS_COMPONENT conflicts with FORCE_STATIC_LIB. '
-                        'Please remove one.', context)
-                shared_lib = True
-                shared_args['variant'] = SharedLibrary.COMPONENT
-
-            if is_framework:
-                if soname:
-                    raise SandboxValidationError(
-                        'IS_FRAMEWORK conflicts with SONAME. '
-                        'Please remove one.', context)
-                shared_lib = True
-                shared_args['variant'] = SharedLibrary.FRAMEWORK
-
-            if not static_lib and not shared_lib:
-                static_lib = True
-
-            if static_name:
-                if not static_lib:
-                    raise SandboxValidationError(
-                        'STATIC_LIBRARY_NAME requires FORCE_STATIC_LIB',
-                        context)
-                static_args['real_name'] = static_name
-
-            if shared_name:
-                if not shared_lib:
-                    raise SandboxValidationError(
-                        'SHARED_LIBRARY_NAME requires FORCE_SHARED_LIB',
-                        context)
-                shared_args['real_name'] = shared_name
-
-            if soname:
-                if not shared_lib:
-                    raise SandboxValidationError(
-                        'SONAME requires FORCE_SHARED_LIB', context)
-                shared_args['soname'] = soname
-
-            # If both a shared and a static library are created, only the
-            # shared library is meant to be a SDK library.
-            if context.get('SDK_LIBRARY'):
-                if shared_lib:
-                    shared_args['is_sdk'] = True
-                elif static_lib:
-                    static_args['is_sdk'] = True
-
-            if shared_lib and static_lib:
-                if not static_name and not shared_name:
-                    raise SandboxValidationError(
-                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
-                        'but neither STATIC_LIBRARY_NAME or '
-                        'SHARED_LIBRARY_NAME is set. At least one is required.',
-                        context)
-                if static_name and not shared_name and static_name == libname:
-                    raise SandboxValidationError(
-                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
-                        'but STATIC_LIBRARY_NAME is the same as LIBRARY_NAME, '
-                        'and SHARED_LIBRARY_NAME is unset. Please either '
-                        'change STATIC_LIBRARY_NAME or LIBRARY_NAME, or set '
-                        'SHARED_LIBRARY_NAME.', context)
-                if shared_name and not static_name and shared_name == libname:
-                    raise SandboxValidationError(
-                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
-                        'but SHARED_LIBRARY_NAME is the same as LIBRARY_NAME, '
-                        'and STATIC_LIBRARY_NAME is unset. Please either '
-                        'change SHARED_LIBRARY_NAME or LIBRARY_NAME, or set '
-                        'STATIC_LIBRARY_NAME.', context)
-                if shared_name and static_name and shared_name == static_name:
-                    raise SandboxValidationError(
-                        'Both FORCE_STATIC_LIB and FORCE_SHARED_LIB are True, '
-                        'but SHARED_LIBRARY_NAME is the same as '
-                        'STATIC_LIBRARY_NAME. Please change one of them.',
-                        context)
-
-            if shared_lib:
-                lib = SharedLibrary(context, libname, **shared_args)
-                self._libs[libname].append(lib)
-                self._linkage.append((context, lib, 'USE_LIBS'))
-            if static_lib:
-                lib = StaticLibrary(context, libname, **static_args)
-                self._libs[libname].append(lib)
-                self._linkage.append((context, lib, 'USE_LIBS'))
-
-            if lib_defines:
-                if not libname:
-                    raise SandboxValidationError('LIBRARY_DEFINES needs a '
-                        'LIBRARY_NAME to take effect', context)
-                lib.defines.update(lib_defines)
+        self._handle_libraries(context)
 
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
