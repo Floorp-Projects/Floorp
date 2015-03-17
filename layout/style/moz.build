@@ -198,6 +198,7 @@ LOCAL_INCLUDES += [
     '/dom/html',
     '/dom/xbl',
     '/dom/xul',
+    '/image',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
