@@ -43,16 +43,19 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   virtual bool CheckElementStart(nsIContent * aContent,
                           bool & aForceFormat,
-                          nsAString& aStr) MOZ_OVERRIDE;
+                          nsAString& aStr,
+                          nsresult& aResult) MOZ_OVERRIDE;
 
-  virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
+  NS_WARN_UNUSED_RESULT
+  virtual bool AppendEndOfElementStart(nsIContent *aOriginalElement,
                                nsIAtom * aName,
                                int32_t aNamespaceID,
                                nsAString& aStr) MOZ_OVERRIDE;
 
-  virtual void AfterElementStart(nsIContent * aContent,
-                         nsIContent *aOriginalElement,
-                         nsAString& aStr) MOZ_OVERRIDE;
+  NS_WARN_UNUSED_RESULT
+  virtual bool AfterElementStart(nsIContent* aContent,
+                                 nsIContent* aOriginalElement,
+                                 nsAString& aStr) MOZ_OVERRIDE;
 
   virtual bool CheckElementEnd(nsIContent * aContent,
                           bool & aForceFormat,
@@ -72,7 +75,8 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void MaybeEnterInPreContent(nsIContent* aNode) MOZ_OVERRIDE;
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode) MOZ_OVERRIDE;
 
-  virtual void SerializeAttributes(nsIContent* aContent,
+  NS_WARN_UNUSED_RESULT
+  virtual bool SerializeAttributes(nsIContent* aContent,
                            nsIContent *aOriginalElement,
                            nsAString& aTagPrefix,
                            const nsAString& aTagNamespaceURI,
@@ -83,12 +87,16 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   bool IsFirstChildOfOL(nsIContent* aElement);
 
-  void SerializeLIValueAttribute(nsIContent* aElement,
+  NS_WARN_UNUSED_RESULT
+  bool SerializeLIValueAttribute(nsIContent* aElement,
                                  nsAString& aStr);
   bool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
-  virtual void AppendAndTranslateEntities(const nsAString& aStr,
+
+  NS_WARN_UNUSED_RESULT
+  virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) MOZ_OVERRIDE;
+
   nsresult EscapeURI(nsIContent* aContent,
                      const nsAString& aURI,
                      nsAString& aEscapedURI);
