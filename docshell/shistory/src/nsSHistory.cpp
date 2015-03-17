@@ -1406,7 +1406,7 @@ nsSHistory::RemoveEntries(nsTArray<uint64_t>& aIDs, int32_t aStartIndex)
     --index;
   }
   if (didRemove && mRootDocShell) {
-    nsRefPtr<nsIRunnable> ev =
+    nsCOMPtr<nsIRunnable> ev =
       NS_NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
                            &nsDocShell::FireDummyOnLocationChange);
     NS_DispatchToCurrentThread(ev);

@@ -38,7 +38,7 @@ MediaDataDecoderProxy::Input(mp4_demuxer::MP4Sample* aSample)
   MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  nsRefPtr<nsIRunnable> task(new InputTask(mProxyDecoder, aSample));
+  nsCOMPtr<nsIRunnable> task(new InputTask(mProxyDecoder, aSample));
   nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -53,7 +53,7 @@ MediaDataDecoderProxy::Flush()
 
   mFlushComplete.Set(false);
 
-  nsRefPtr<nsIRunnable> task;
+  nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Flush);
   nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -69,7 +69,7 @@ MediaDataDecoderProxy::Drain()
   MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  nsRefPtr<nsIRunnable> task;
+  nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Drain);
   nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -84,7 +84,7 @@ MediaDataDecoderProxy::Shutdown()
 #if defined(DEBUG)
   mIsShutdown = true;
 #endif
-  nsRefPtr<nsIRunnable> task;
+  nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Shutdown);
   nsresult rv = mProxyThread->Dispatch(task, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, rv);
