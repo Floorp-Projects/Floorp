@@ -104,11 +104,30 @@ function initializeAutoCompletion(ctx, options = {}) {
     completer = new cssAutoCompleter({walker: options.walker});
   }
 
+  function insertSelectedPopupItem() {
+    let autocompleteState = autocompleteMap.get(ed);
+    if (!popup || !popup.isOpen || !autocompleteState) {
+      return;
+    }
+
+    if (!autocompleteState.suggestionInsertedOnce && popup.selectedItem) {
+      autocompleteMap.get(ed).insertingSuggestion = true;
+      let {label, preLabel, text} = popup.selectedItem;
+      let cur = ed.getCursor();
+      ed.replaceText(text.slice(preLabel.length), cur, cur);
+    }
+
+    popup.hidePopup();
+    ed.emit("popup-hidden"); // This event is used in tests.
+    return true;
+  }
+
   let popup = new AutocompletePopup(win.parent.document, {
     position: "after_start",
     fixedWidth: true,
     theme: "auto",
-    autoSelect: true
+    autoSelect: true,
+    onClick: insertSelectedPopupItem
   });
 
   let cycle = (reverse) => {
@@ -126,20 +145,8 @@ function initializeAutoCompletion(ctx, options = {}) {
     "Shift-Tab": cycle.bind(null, true),
     "Up": cycle.bind(null, true),
     "Enter": () => {
-      if (popup && popup.isOpen) {
-        if (!autocompleteMap.get(ed).suggestionInsertedOnce) {
-          autocompleteMap.get(ed).insertingSuggestion = true;
-          let {label, preLabel, text} = popup.getItemAtIndex(0);
-          let cur = ed.getCursor();
-          ed.replaceText(text.slice(preLabel.length), cur, cur);
-        }
-        popup.hidePopup();
-        // This event is used in tests
-        ed.emit("popup-hidden");
-        return;
-      }
-
-      return CodeMirror.Pass;
+      let wasHandled = insertSelectedPopupItem();
+      return wasHandled ? true : CodeMirror.Pass;
     }
   };
   let autoCompleteCallback = autoComplete.bind(null, ctx);
