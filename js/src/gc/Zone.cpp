@@ -253,6 +253,23 @@ Zone::canCollect()
     return true;
 }
 
+void
+Zone::notifyObservingDebuggers()
+{
+    for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
+        RootedGlobalObject global(runtimeFromAnyThread(), comps->maybeGlobal());
+        if (!global)
+            continue;
+
+        GlobalObject::DebuggerVector *dbgs = global->getDebuggers();
+        if (!dbgs)
+            continue;
+
+        for (GlobalObject::DebuggerVector::Range r = dbgs->all(); !r.empty(); r.popFront())
+            r.front()->debuggeeIsBeingCollected();
+    }
+}
+
 JS::Zone *
 js::ZoneOfValue(const JS::Value &value)
 {

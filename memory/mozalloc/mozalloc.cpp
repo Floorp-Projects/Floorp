@@ -237,7 +237,7 @@ moz_valloc(size_t size)
 }
 #endif // if defined(HAVE_VALLOC)
 
-#if !(defined(_MT) && !defined(_DLL))
+#ifndef MOZ_STATIC_RUNTIME
 size_t
 moz_malloc_usable_size(void *ptr)
 {

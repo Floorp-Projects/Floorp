@@ -200,6 +200,12 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
     mMaxPayloadSize = 0; // No limit.
   }
 
+  if (aCodecSettings->mode == webrtc::kScreensharing) {
+    mCodecParams.mMode = kGMPScreensharing;
+  } else {
+    mCodecParams.mMode = kGMPRealtimeVideo;
+  }
+
   // Pass dummy codecSpecific data for now...
   nsTArray<uint8_t> codecSpecific;
 

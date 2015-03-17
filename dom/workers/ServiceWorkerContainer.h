@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-struct RegistrationOptionList;
+struct RegistrationOptions;
 
 namespace workers {
 class ServiceWorker;
@@ -40,7 +40,7 @@ public:
 
   already_AddRefed<Promise>
   Register(const nsAString& aScriptURL,
-           const RegistrationOptionList& aOptions,
+           const RegistrationOptions& aOptions,
            ErrorResult& aRv);
 
   already_AddRefed<workers::ServiceWorker>

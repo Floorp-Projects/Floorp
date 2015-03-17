@@ -124,6 +124,10 @@ VsyncSource::Display::UpdateVsyncStatus()
   } else {
     DisableVsync();
   }
+
+  if (IsVsyncEnabled() != enableVsync) {
+    NS_WARNING("Vsync status did not change.");
+  }
 }
 
 nsRefPtr<RefreshTimerVsyncDispatcher>

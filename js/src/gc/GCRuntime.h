@@ -821,10 +821,6 @@ class GCRuntime
     bool isVerifyPreBarriersEnabled() const { return false; }
 #endif
 
-    template <AllowGC allowGC>
-    static void *refillFreeListFromAnyThread(ExclusiveContext *cx, AllocKind thingKind);
-    static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
-
     // Free certain LifoAlloc blocks from the background sweep thread.
     void freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo);
     void freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo);
@@ -833,6 +829,19 @@ class GCRuntime
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
 
     void releaseHeldRelocatedArenas();
+
+    // Allocator
+    template <AllowGC allowGC>
+    bool checkAllocatorState(JSContext *cx, AllocKind kind);
+    template <AllowGC allowGC>
+    JSObject *tryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots,
+                                  const Class *clasp);
+    template <AllowGC allowGC>
+    static JSObject *tryNewTenuredObject(ExclusiveContext *cx, AllocKind kind, size_t thingSize,
+                                         size_t nDynamicSlots);
+    template <typename T, AllowGC allowGC>
+    static T *tryNewTenuredThing(ExclusiveContext *cx, AllocKind kind, size_t thingSize);
+    static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
 
   private:
     enum IncrementalProgress
@@ -848,8 +857,14 @@ class GCRuntime
     Chunk *pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
     ArenaHeader *allocateArena(Chunk *chunk, Zone *zone, AllocKind kind, const AutoLockGC &lock);
-    inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
+    void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
+    // Allocator internals
+    bool gcIfNeededPerAllocation(JSContext *cx);
+    template <typename T>
+    static void checkIncrementalZoneState(ExclusiveContext *cx, T *t);
+    template <AllowGC allowGC>
+    static void *refillFreeListFromAnyThread(ExclusiveContext *cx, AllocKind thingKind);
     template <AllowGC allowGC>
     static void *refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
     static void *tryRefillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);

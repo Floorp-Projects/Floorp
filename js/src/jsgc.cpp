@@ -984,29 +984,6 @@ GCRuntime::startBackgroundAllocTaskIfIdle()
     allocTask.startWithLockHeld();
 }
 
-class js::gc::AutoMaybeStartBackgroundAllocation
-{
-  private:
-    JSRuntime *runtime;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-  public:
-    explicit AutoMaybeStartBackgroundAllocation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-      : runtime(nullptr)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    void tryToStartBackgroundAllocation(JSRuntime *rt) {
-        runtime = rt;
-    }
-
-    ~AutoMaybeStartBackgroundAllocation() {
-        if (runtime)
-            runtime->gc.startBackgroundAllocTaskIfIdle();
-    }
-};
-
 Chunk *
 GCRuntime::pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
@@ -1737,7 +1714,7 @@ ZoneHeapThreshold::computeZoneTriggerBytes(double growthFactor, size_t lastBytes
                                            const GCSchedulingTunables &tunables)
 {
     size_t base = gckind == GC_SHRINK
-                ? lastBytes
+                ? Max(lastBytes, tunables.minEmptyChunkCount() * ChunkSize)
                 : Max(lastBytes, tunables.gcZoneAllocThresholdBase());
     double trigger = double(base) * growthFactor;
     return size_t(Min(double(tunables.gcMaxBytes()), trigger));
@@ -1766,7 +1743,7 @@ ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables &tunables)
     gcTriggerBytes_ -= amount;
 }
 
-inline void
+void
 GCMarker::delayMarkingArena(ArenaHeader *aheader)
 {
     if (aheader->hasDelayedMarking) {
@@ -1797,92 +1774,6 @@ ArenaLists::prepareForIncrementalGC(JSRuntime *rt)
             rt->gc.marker.delayMarkingArena(aheader);
         }
     }
-}
-
-inline void
-GCRuntime::arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena)
-{
-    if (zone->needsIncrementalBarrier()) {
-        arena->allocatedDuringIncremental = true;
-        marker.delayMarkingArena(arena);
-    } else if (zone->isGCSweeping()) {
-        arena->setNextAllocDuringSweep(arenasAllocatedDuringSweep);
-        arenasAllocatedDuringSweep = arena;
-    }
-}
-
-TenuredCell *
-ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind)
-{
-    AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
-    return allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
-}
-
-TenuredCell *
-ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
-                              AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc)
-{
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-    Maybe<AutoLockGC> maybeLock;
-
-    // See if we can proceed without taking the GC lock.
-    if (backgroundFinalizeState[thingKind] != BFS_DONE)
-        maybeLock.emplace(rt);
-
-    ArenaList &al = arenaLists[thingKind];
-    ArenaHeader *aheader = al.takeNextArena();
-    if (aheader) {
-        // Empty arenas should be immediately freed.
-        MOZ_ASSERT(!aheader->isEmpty());
-
-        return allocateFromArenaInner<HasFreeThings>(zone, aheader, thingKind);
-    }
-
-    // Parallel threads have their own ArenaLists, but chunks are shared;
-    // if we haven't already, take the GC lock now to avoid racing.
-    if (maybeLock.isNothing())
-        maybeLock.emplace(rt);
-
-    Chunk *chunk = rt->gc.pickChunk(maybeLock.ref(), maybeStartBGAlloc);
-    if (!chunk)
-        return nullptr;
-
-    // Although our chunk should definitely have enough space for another arena,
-    // there are other valid reasons why Chunk::allocateArena() may fail.
-    aheader = rt->gc.allocateArena(chunk, zone, thingKind, maybeLock.ref());
-    if (!aheader)
-        return nullptr;
-
-    MOZ_ASSERT(!maybeLock->wasUnlocked());
-    MOZ_ASSERT(al.isCursorAtEnd());
-    al.insertAtCursor(aheader);
-
-    return allocateFromArenaInner<IsEmpty>(zone, aheader, thingKind);
-}
-
-template <ArenaLists::ArenaAllocMode hasFreeThings>
-inline TenuredCell *
-ArenaLists::allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader, AllocKind thingKind)
-{
-    size_t thingSize = Arena::thingSize(thingKind);
-
-    FreeSpan span;
-    if (hasFreeThings) {
-        MOZ_ASSERT(aheader->hasFreeThings());
-        span = aheader->getFirstFreeSpan();
-        aheader->setAsFullyUsed();
-    } else {
-        MOZ_ASSERT(!aheader->hasFreeThings());
-        Arena *arena = aheader->getArena();
-        span.initFinal(arena->thingsStart(thingKind), arena->thingsEnd() - thingSize, thingSize);
-    }
-    freeLists[thingKind].setHead(&span);
-
-    if (MOZ_UNLIKELY(zone->wasGCStarted()))
-        zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-    TenuredCell *thing = freeLists[thingKind].allocate(thingSize);
-    MOZ_ASSERT(thing); // This allocation is infallible.
-    return thing;
 }
 
 /* Compacting GC */
@@ -2974,110 +2865,6 @@ ArenaLists::queueForegroundThingsForSweep(FreeOp *fop)
 }
 
 /* static */ void *
-GCRuntime::tryRefillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
-{
-    ArenaLists *arenas = cx->arenas();
-    Zone *zone = cx->zone();
-
-    AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-
-    void *thing = arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
-    if (MOZ_LIKELY(thing))
-        return thing;
-
-    // Even if allocateFromArena failed due to OOM, a background
-    // finalization or allocation task may be running freeing more memory
-    // or adding more available memory to our free pool; wait for them to
-    // finish, then try to allocate again in case they made more memory
-    // available.
-    cx->runtime()->gc.waitBackgroundSweepOrAllocEnd();
-
-    thing = arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
-    if (thing)
-        return thing;
-
-    return nullptr;
-}
-
-template <AllowGC allowGC>
-/* static */ void *
-GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
-{
-    JSRuntime *rt = cx->runtime();
-    MOZ_ASSERT(!rt->isHeapBusy(), "allocating while under GC");
-    MOZ_ASSERT_IF(allowGC, !rt->currentThreadHasExclusiveAccess());
-
-    // Try to allocate; synchronize with background GC threads if necessary.
-    void *thing = tryRefillFreeListFromMainThread(cx, thingKind);
-    if (MOZ_LIKELY(thing))
-        return thing;
-
-    // Perform a last-ditch GC to hopefully free up some memory.
-    {
-        // If we are doing a fallible allocation, percolate up the OOM
-        // instead of reporting it.
-        if (!allowGC)
-            return nullptr;
-
-        JS::PrepareForFullGC(rt);
-        AutoKeepAtoms keepAtoms(cx->perThreadData);
-        rt->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
-    }
-
-    // Retry the allocation after the last-ditch GC.
-    thing = tryRefillFreeListFromMainThread(cx, thingKind);
-    if (thing)
-        return thing;
-
-    // We are really just totally out of memory.
-    MOZ_ASSERT(allowGC, "A fallible allocation must not report OOM on failure.");
-    ReportOutOfMemory(cx);
-    return nullptr;
-}
-
-/* static */ void *
-GCRuntime::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind)
-{
-    ArenaLists *arenas = cx->arenas();
-    Zone *zone = cx->zone();
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-
-    AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-
-    // If we're off the main thread, we try to allocate once and return
-    // whatever value we get. We need to first ensure the main thread is not in
-    // a GC session.
-    AutoLockHelperThreadState lock;
-    while (rt->isHeapBusy())
-        HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
-
-    void *thing = arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
-    if (thing)
-        return thing;
-
-    ReportOutOfMemory(cx);
-    return nullptr;
-}
-
-template <AllowGC allowGC>
-/* static */ void *
-GCRuntime::refillFreeListFromAnyThread(ExclusiveContext *cx, AllocKind thingKind)
-{
-    MOZ_ASSERT(cx->arenas()->freeLists[thingKind].isEmpty());
-
-    if (cx->isJSContext())
-        return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind);
-
-    return refillFreeListOffMainThread(cx, thingKind);
-}
-
-template void *
-GCRuntime::refillFreeListFromAnyThread<NoGC>(ExclusiveContext *cx, AllocKind thingKind);
-
-template void *
-GCRuntime::refillFreeListFromAnyThread<CanGC>(ExclusiveContext *cx, AllocKind thingKind);
-
-/* static */ void *
 GCRuntime::refillFreeListInGC(Zone *zone, AllocKind thingKind)
 {
     /*
@@ -3089,7 +2876,8 @@ GCRuntime::refillFreeListInGC(Zone *zone, AllocKind thingKind)
     MOZ_ASSERT(rt->isHeapMajorCollecting());
     MOZ_ASSERT(!rt->gc.isBackgroundSweeping());
 
-    return zone->arenas.allocateFromArena(zone, thingKind);
+    AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
+    return zone->arenas.allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
 }
 
 SliceBudget::SliceBudget()

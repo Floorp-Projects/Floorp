@@ -17,3 +17,6 @@ if CONFIG['MAKENSISU']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['tools/redit']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'XULRunner')

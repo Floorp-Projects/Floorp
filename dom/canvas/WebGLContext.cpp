@@ -921,6 +921,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     mViewportWidth = mWidth;
     mViewportHeight = mHeight;
 
+    gl->fScissor(0, 0, mWidth, mHeight);
+
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);

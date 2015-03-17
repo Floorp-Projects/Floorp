@@ -10,8 +10,8 @@
 #define mozilla_IntegerRange_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/ReverseIterator.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

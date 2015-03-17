@@ -20,3 +20,6 @@ EXTRA_COMPONENTS += [
     'nsAsyncShutdown.js',
     'nsAsyncShutdown.manifest',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')

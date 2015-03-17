@@ -852,9 +852,15 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
     if (!uri) {
       return;
     }
-    nsAutoCString host;
-    uri->GetHost(host);
-    CopyUTF8toUTF16(host, hostname);
+    nsresult rv;
+    bool isLocalResource = false;
+    rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                             &isLocalResource);
+    if (NS_SUCCEEDED(rv) && !isLocalResource) {
+      nsAutoCString host;
+      uri->GetHost(host);
+      CopyUTF8toUTF16(host, hostname);
+    }
   }
 
   if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {

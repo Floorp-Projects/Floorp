@@ -624,6 +624,19 @@
 
   let JSDOMParser = function () {
     this.currentChar = 0;
+
+    // In makeElementNode() we build up many strings one char at a time. Using
+    // += for this results in lots of short-lived intermediate strings. It's
+    // better to build an array of single-char strings and then join() them
+    // together at the end. And reusing a single array (i.e. |this.strBuf|)
+    // over and over for this purpose uses less memory than using a new array
+    // for each string.
+    this.strBuf = [];
+
+    // Similarly, we reuse this array to return the two arguments from
+    // makeElementNode(), which saves us from having to allocate a new array
+    // every time.
+    this.retPair = [];
   };
 
   JSDOMParser.prototype = {
@@ -704,27 +717,29 @@
      *          the second index is a boolean indicating whether this is a void
      *          Element
      */
-    makeElementNode: function () {
+    makeElementNode: function (retPair) {
       let c = this.nextChar();
 
       // Read the Element tag name
-      let tag = "";
+      let strBuf = this.strBuf;
+      strBuf.length = 0;
       while (c !== " " && c !== ">" && c !== "/") {
         if (c === undefined)
-          return null;
-        tag += c;
+          return false;
+        strBuf.push(c);
         c = this.nextChar();
       }
+      let tag = strBuf.join('');
 
       if (!tag)
-        return null;
+        return false;
 
       let node = new Element(tag);
 
       // Read Element attributes
       while (c !== "/" && c !== ">") {
         if (c === undefined)
-          return null;
+          return false;
         while (this.match(" "));
         c = this.nextChar();
         if (c !== "/" && c !== ">") {
@@ -740,11 +755,13 @@
         c = this.nextChar();
         if (c !== ">") {
           error("expected '>'");
-          return null;
+          return false;
         }
       }
 
-      return [node, closed];
+      retPair[0] = node;
+      retPair[1] = closed;
+      return true
     },
 
     /**
@@ -845,11 +862,12 @@
       }
 
       // Otherwise, we're looking at an Element node
-      let result = this.makeElementNode();
-      if (result === null)
+      let result = this.makeElementNode(this.retPair);
+      if (!result)
         return null;
 
-      let [node, closed] = result;
+      let node = this.retPair[0];
+      let closed = this.retPair[1];
       let localName = node.localName;
 
       // If this isn't a void Element, read its child nodes

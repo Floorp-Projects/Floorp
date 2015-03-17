@@ -322,15 +322,6 @@ MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindowBase* aWidget,
 }
 
 /* static */
-bool
-MouseScrollHandler::DispatchEvent(nsWindowBase* aWidget,
-                                  WidgetGUIEvent& aEvent)
-{
-  // note, in metrofx, this will always return false for now
-  return aWidget->DispatchScrollEvent(&aEvent);
-}
-
-/* static */
 void
 MouseScrollHandler::InitEvent(nsWindowBase* aWidget,
                               WidgetGUIEvent& aEvent,
@@ -597,7 +588,7 @@ MouseScrollHandler::ProcessNativeScrollMessage(nsWindowBase* aWidget,
   }
   // XXX If this is a plugin window, we should dispatch the event from
   //     parent window.
-  DispatchEvent(aWidget, commandEvent);
+  aWidget->DispatchContentCommandEvent(&commandEvent);
   return true;
 }
 
@@ -648,7 +639,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::HandleMouseWheelMessage: dispatching "
        "NS_WHEEL_WHEEL event"));
-    DispatchEvent(aWidget, wheelEvent);
+    aWidget->DispatchWheelEvent(&wheelEvent);
     if (aWidget->Destroyed()) {
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
         ("MouseScroll::HandleMouseWheelMessage: The window was destroyed "
@@ -730,7 +721,7 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindowBase* aWidget
      GetBoolName(wheelEvent.IsAlt()),
      GetBoolName(wheelEvent.IsMeta())));
 
-  DispatchEvent(aWidget, wheelEvent);
+  aWidget->DispatchWheelEvent(&wheelEvent);
 }
 
 /******************************************************************************
@@ -1241,7 +1232,7 @@ MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
       WidgetCommandEvent commandEvent(true, nsGkAtoms::onAppCommand,
         (aWParam == VK_NEXT) ? nsGkAtoms::Forward : nsGkAtoms::Back, aWidget);
       InitEvent(aWidget, commandEvent);
-      MouseScrollHandler::DispatchEvent(aWidget, commandEvent);
+      aWidget->DispatchWindowEvent(&commandEvent);
     }
 #ifdef PR_LOGGING
     else {

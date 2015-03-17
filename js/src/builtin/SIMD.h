@@ -29,8 +29,8 @@
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1, 0)                   \
   V(neg, (UnaryFunc<Float32x4, Neg, Float32x4>), 1, 0)                              \
   V(not, (CoercedUnaryFunc<Float32x4, Int32x4, Not, Float32x4>), 1, 0)              \
-  V(reciprocal, (UnaryFunc<Float32x4, Rec, Float32x4>), 1, 0)                       \
-  V(reciprocalSqrt, (UnaryFunc<Float32x4, RecSqrt, Float32x4>), 1, 0)               \
+  V(reciprocalApproximation, (UnaryFunc<Float32x4, RecApprox, Float32x4>), 1, 0)    \
+  V(reciprocalSqrtApproximation, (UnaryFunc<Float32x4, RecSqrtApprox, Float32x4>), 1, 0) \
   V(splat, (FuncSplat<Float32x4>), 1, 0)                                            \
   V(sqrt, (UnaryFunc<Float32x4, Sqrt, Float32x4>), 1, 0)
 
@@ -88,8 +88,8 @@
   V(fromInt32x4, (FuncConvert<Int32x4, Float64x2> ), 1, 0)                          \
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float64x2>), 1, 0)                   \
   V(neg, (UnaryFunc<Float64x2, Neg, Float64x2>), 1, 0)                              \
-  V(reciprocal, (UnaryFunc<Float64x2, Rec, Float64x2>), 1, 0)                       \
-  V(reciprocalSqrt, (UnaryFunc<Float64x2, RecSqrt, Float64x2>), 1, 0)               \
+  V(reciprocalApproximation, (UnaryFunc<Float64x2, RecApprox, Float64x2>), 1, 0)    \
+  V(reciprocalSqrtApproximation, (UnaryFunc<Float64x2, RecSqrtApprox, Float64x2>), 1, 0) \
   V(splat, (FuncSplat<Float64x2>), 1, 0)                                            \
   V(sqrt, (UnaryFunc<Float64x2, Sqrt, Float64x2>), 1, 0)
 
@@ -198,8 +198,8 @@
 #define UNARY_ARITH_FLOAT32X4_SIMD_OP(_) \
     _(abs)                           \
     _(sqrt)                          \
-    _(reciprocal)                    \
-    _(reciprocalSqrt)
+    _(reciprocalApproximation)       \
+    _(reciprocalSqrtApproximation)
 #define BINARY_ARITH_FLOAT32X4_SIMD_OP(_) \
     _(div)                           \
     _(max)                           \

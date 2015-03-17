@@ -317,24 +317,10 @@ nsWindow::DispatchTouchEventForAPZ(const MultiTouchInput& aInput,
     // Convert it to an event we can send to Gecko
     WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
 
-    // If there is an event capturing child process, send it directly there.
-    // This happens if we already sent a touchstart event through the root
-    // process hit test and it ended up going to a child process. The event
-    // capturing process should get all subsequent touch events in the same
-    // event block. In this case the TryCapture call below will return true,
-    // and the child process will take care of responding to the event as needed
-    // so we don't need to do anything else here.
-    if (TabParent* capturer = TabParent::GetEventCapturer()) {
-        InputAPZContext context(aGuid, aInputBlockId);
-        if (capturer->TryCapture(event)) {
-            return;
-        }
-    }
-
-    // If it didn't get captured, dispatch the event into the gecko root process
-    // for "normal" flow. The event might get sent to the child process still,
-    // but if it doesn't we need to notify the APZ of various things. All of
-    // that happens in DispatchEventForAPZ
+    // Dispatch the event into the gecko root process for "normal" flow.
+    // The event might get sent to a child process, but if it doesn't we need to
+    // notify the APZ of various things. All of that happens in
+    // ProcessUntransformedAPZEvent
     ProcessUntransformedAPZEvent(&event, aGuid, aInputBlockId);
 }
 

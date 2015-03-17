@@ -50,6 +50,10 @@ ActorChild::FeatureNotified() const
   return mFeature && mFeature->Notified();
 }
 
+ActorChild::ActorChild()
+{
+}
+
 ActorChild::~ActorChild()
 {
   MOZ_ASSERT(!mFeature);

@@ -58,8 +58,10 @@ class imgIContainer;
 #define NS_STYLE_IS_GOING_AWAY             0x040000000
 // See nsStyleContext::ShouldSuppressLineBreak
 #define NS_STYLE_SUPPRESS_LINEBREAK        0x080000000
+// See nsStyleContext::IsInDisplayNoneSubtree
+#define NS_STYLE_IN_DISPLAY_NONE_SUBTREE   0x100000000
 // See nsStyleContext::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_SHIFT        32
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        33
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK                0x02000000

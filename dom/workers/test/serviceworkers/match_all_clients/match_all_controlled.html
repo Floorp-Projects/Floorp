@@ -7,6 +7,7 @@
 <head>
   <title>Bug 1058311 - controlled page</title>
 <script class="testbody" type="text/javascript">
+  var re = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   var frameType = "none";
   var testWindow = parent;
 
@@ -38,6 +39,9 @@
 
   navigator.serviceWorker.onmessage = function(msg) {
     // worker message;
+    result = re.test(msg.data.id);
+    postResult(result, "Client id test");
+
     result = msg.data.url == window.location;
     postResult(result, "Client url test");
 
