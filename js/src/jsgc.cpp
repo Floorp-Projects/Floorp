@@ -1060,6 +1060,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     nextFullGCTime(0),
     lastGCTime(PRMJ_Now()),
     mode(JSGC_MODE_INCREMENTAL),
+    numActiveZoneIters(0),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBufferState(GCRuntime::GrayBufferState::Unused),
@@ -3526,6 +3527,10 @@ Zone::sweepCompartments(FreeOp *fop, bool keepAtleastOne, bool destroyingRuntime
 void
 GCRuntime::sweepZones(FreeOp *fop, bool destroyingRuntime)
 {
+    MOZ_ASSERT_IF(destroyingRuntime, rt->gc.numActiveZoneIters == 0);
+    if (rt->gc.numActiveZoneIters)
+        return;
+
     AutoLockGC lock(rt); // Avoid race with background sweeping.
 
     JSZoneCallback callback = rt->destroyZoneCallback;

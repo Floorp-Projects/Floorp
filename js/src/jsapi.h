@@ -1488,8 +1488,7 @@ typedef void (*JSIterateCompartmentCallback)(JSRuntime *rt, void *data, JSCompar
 /*
  * This function calls |compartmentCallback| on every compartment. Beware that
  * there is no guarantee that the compartment will survive after the callback
- * returns. Also, if the callback can GC, there is no guarantee that every
- * compartment will be visited.
+ * returns.
  */
 extern JS_PUBLIC_API(void)
 JS_IterateCompartments(JSRuntime *rt, void *data,
