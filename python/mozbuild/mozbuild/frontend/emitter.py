@@ -597,39 +597,8 @@ class TreeMetadataEmitter(LoggingMixin):
             yield Exports(context, exports,
                 dist_install=not context.get('NO_DIST_INSTALL', False))
 
-        generated_files = context.get('GENERATED_FILES')
-        if generated_files:
-            for f in generated_files:
-                flags = generated_files[f]
-                output = f
-                if flags.script:
-                    method = "main"
-                    # Deal with cases like "C:\\path\\to\\script.py:function".
-                    if not flags.script.endswith('.py') and ':' in flags.script:
-                        script, method = flags.script.rsplit(':', 1)
-                    else:
-                        script = flags.script
-                    script = mozpath.join(context.srcdir, script)
-                    inputs = [mozpath.join(context.srcdir, i) for i in flags.inputs]
-
-                    if not os.path.exists(script):
-                        raise SandboxValidationError(
-                            'Script for generating %s does not exist: %s'
-                            % (f, script), context)
-                    if os.path.splitext(script)[1] != '.py':
-                        raise SandboxValidationError(
-                            'Script for generating %s does not end in .py: %s'
-                            % (f, script), context)
-                    for i in inputs:
-                        if not os.path.exists(i):
-                            raise SandboxValidationError(
-                                'Input for generating %s does not exist: %s'
-                                % (f, i), context)
-                else:
-                    script = None
-                    method = None
-                    inputs = []
-                yield GeneratedFile(context, script, method, output, inputs)
+        for obj in self._process_generated_files(context):
+            yield obj
 
         test_harness_files = context.get('TEST_HARNESS_FILES')
         if test_harness_files:
@@ -859,6 +828,43 @@ class TreeMetadataEmitter(LoggingMixin):
         for f in sources_with_flags:
             ext = mozpath.splitext(f)[1]
             yield PerSourceFlag(context, f, sources[f].flags)
+
+    def _process_generated_files(self, context):
+        generated_files = context.get('GENERATED_FILES')
+        if not generated_files:
+            return
+
+        for f in generated_files:
+            flags = generated_files[f]
+            output = f
+            if flags.script:
+                method = "main"
+                # Deal with cases like "C:\\path\\to\\script.py:function".
+                if not flags.script.endswith('.py') and ':' in flags.script:
+                    script, method = flags.script.rsplit(':', 1)
+                else:
+                    script = flags.script
+                script = mozpath.join(context.srcdir, script)
+                inputs = [mozpath.join(context.srcdir, i) for i in flags.inputs]
+
+                if not os.path.exists(script):
+                    raise SandboxValidationError(
+                        'Script for generating %s does not exist: %s'
+                        % (f, script), context)
+                if os.path.splitext(script)[1] != '.py':
+                    raise SandboxValidationError(
+                        'Script for generating %s does not end in .py: %s'
+                        % (f, script), context)
+                for i in inputs:
+                    if not os.path.exists(i):
+                        raise SandboxValidationError(
+                            'Input for generating %s does not exist: %s'
+                            % (f, i), context)
+            else:
+                script = None
+                method = None
+                inputs = []
+            yield GeneratedFile(context, script, method, output, inputs)
 
     def _process_test_manifests(self, context):
         # While there are multiple test manifests, the behavior is very similar
