@@ -1838,15 +1838,29 @@ PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE_WRAP == 3);
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE_LINE == 4);
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE_SPACE == 5);
 
-static const nsTextFrameUtils::CompressionMode CSSWhitespaceToCompressionMode[] =
+static nsTextFrameUtils::CompressionMode
+GetCSSWhitespaceToCompressionMode(nsTextFrame* aFrame,
+                                  const nsStyleText* aStyleText)
 {
-  nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,     // normal
-  nsTextFrameUtils::COMPRESS_NONE,                   // pre
-  nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,     // nowrap
-  nsTextFrameUtils::COMPRESS_NONE,                   // pre-wrap
-  nsTextFrameUtils::COMPRESS_WHITESPACE,             // pre-line
-  nsTextFrameUtils::COMPRESS_NONE_TRANSFORM_TO_SPACE // -moz-pre-space
-};
+  static const nsTextFrameUtils::CompressionMode sModes[] =
+  {
+    nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,     // normal
+    nsTextFrameUtils::COMPRESS_NONE,                   // pre
+    nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,     // nowrap
+    nsTextFrameUtils::COMPRESS_NONE,                   // pre-wrap
+    nsTextFrameUtils::COMPRESS_WHITESPACE,             // pre-line
+    nsTextFrameUtils::COMPRESS_NONE_TRANSFORM_TO_SPACE // -moz-pre-space
+  };
+
+  auto compression = sModes[aStyleText->mWhiteSpace];
+  if (compression == nsTextFrameUtils::COMPRESS_NONE &&
+      !aStyleText->NewlineIsSignificant(aFrame)) {
+    // If newline is set to be preserved, but then suppressed,
+    // transform newline to space.
+    compression = nsTextFrameUtils::COMPRESS_NONE_TRANSFORM_TO_SPACE;
+  }
+  return compression;
+}
 
 gfxTextRun*
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
@@ -1927,7 +1941,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= GetSpacingFlags(LetterSpacing(f));
     textFlags |= GetSpacingFlags(WordSpacing(f));
     nsTextFrameUtils::CompressionMode compression =
-      CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
+      GetCSSWhitespaceToCompressionMode(f, textStyle);
     if ((enabledJustification || f->StyleContext()->ShouldSuppressLineBreak()) &&
         !textStyle->WhiteSpaceIsSignificant() && !isSVG) {
       textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
@@ -2293,7 +2307,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 
     textStyle = f->StyleText();
     nsTextFrameUtils::CompressionMode compression =
-      CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
+      GetCSSWhitespaceToCompressionMode(f, textStyle);
 
     // Figure out what content is included in this flow.
     nsIContent* content = f->GetContent();
