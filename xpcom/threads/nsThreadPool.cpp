@@ -122,7 +122,7 @@ nsThreadPool::PutEvent(nsIRunnable* aEvent)
     // of nsStreamCopier. To prevent this situation, dispatch a shutdown event
     // to the current thread instead of calling nsIThread::Shutdown() directly.
 
-    nsRefPtr<nsIRunnable> r = NS_NewRunnableMethod(thread,
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(thread,
                                                    &nsIThread::Shutdown);
     NS_DispatchToCurrentThread(r);
   } else {
@@ -142,7 +142,7 @@ nsThreadPool::ShutdownThread(nsIThread* aThread)
 
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
-  nsRefPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread, &nsIThread::Shutdown);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread, &nsIThread::Shutdown);
   NS_DispatchToMainThread(r);
 }
 
