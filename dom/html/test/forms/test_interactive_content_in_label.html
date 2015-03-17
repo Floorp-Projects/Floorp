@@ -32,13 +32,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
     <select id="yes12"><option>select</option></select>
     <textarea id="yes13" cols="1" rows="1"></textarea>
     <video id="yes14" controls></video>
-    <span id="yes15" tabindex="1">tabindex</span>
 
     <audio id="no1"></audio>
     <img id="no2" src="data:image/png,">
     <input id="no3" type="hidden">
     <object id="no4">object</object>
     <video id="no5"></video>
+    <span id="no6" tabindex="1">tabindex</span>
   </label>
 </form>
 <script class="testbody" type="text/javascript">
@@ -62,7 +62,6 @@ var yes_nodes = [
   document.getElementById("yes12"),
   document.getElementById("yes13"),
   document.getElementById("yes14"),
-  document.getElementById("yes15"),
 ];
 
 var no_nodes = [
@@ -72,6 +71,7 @@ var no_nodes = [
   document.getElementById("no3"),
   document.getElementById("no4"),
   document.getElementById("no5"),
+  document.getElementById("no6"),
 ];
 
 var target_clicked = false;
