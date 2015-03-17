@@ -50,6 +50,7 @@ let gSubDialog = {
 
     this._closingEvent = null;
     this._isClosing = false;
+    this._openedURL = aURL;
 
     features = features.replace(/,/g, "&");
     let featureParams = new URLSearchParams(features.toLowerCase());
@@ -124,7 +125,7 @@ let gSubDialog = {
   /* Private methods */
 
   _onUnload: function(aEvent) {
-    if (aEvent.target.location.href != "about:blank") {
+    if (aEvent.target.location.href == this._openedURL) {
       this.close(this._closingEvent);
     }
   },
