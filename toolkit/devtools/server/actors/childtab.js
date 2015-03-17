@@ -29,19 +29,16 @@ function ContentActor(connection, chromeGlobal)
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
   this._chromeGlobal.addMessageListener("debug:form", this._sendForm);
+
+  Object.defineProperty(this, "docShell", {
+    value: this._chromeGlobal.docShell,
+    configurable: true
+  });
 }
 
 ContentActor.prototype = Object.create(TabActor.prototype);
 
 ContentActor.prototype.constructor = ContentActor;
-
-Object.defineProperty(ContentActor.prototype, "docShell", {
-  get: function() {
-    return this._chromeGlobal.docShell;
-  },
-  enumerable: true,
-  configurable: true
-});
 
 Object.defineProperty(ContentActor.prototype, "title", {
   get: function() {
