@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger.initialize"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebugger.initialize_worker.js";
+    const CHILD_WORKER_URL = "WorkerDebugger.initialize_childWorker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebugger.initialize_debugger.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        info("Create a worker that creates a child worker, wait for their " +
+             "debuggers to be registered, and initialize them.");
+        let promise = waitForMultiple([
+          waitForRegister(WORKER_URL, DEBUGGER_URL),
+          waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
+        ]);
+        let worker = new Worker(WORKER_URL);
+        yield promise;
+
+        info("Check that the debuggers are initialized before the workers " +
+             "start running.");
+        yield waitForMultiple([
+          waitForWorkerMessage(worker, "debugger"),
+          waitForWorkerMessage(worker, "worker"),
+          waitForWorkerMessage(worker, "child:debugger"),
+          waitForWorkerMessage(worker, "child:worker")
+        ]);
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

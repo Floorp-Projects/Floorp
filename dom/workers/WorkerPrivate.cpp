@@ -1042,9 +1042,13 @@ private:
 
 class CompileScriptRunnable MOZ_FINAL : public WorkerRunnable
 {
+  nsString mScriptURL;
+
 public:
-  explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+  explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate,
+                                 const nsAString& aScriptURL)
+  : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+    mScriptURL(aScriptURL)
   { }
 
 private:
@@ -1059,12 +1063,42 @@ private:
     }
 
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
+
     JSAutoCompartment ac(aCx, global);
-    bool result = scriptloader::LoadWorkerScript(aCx);
+    bool result = scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript);
     if (result) {
       aWorkerPrivate->SetWorkerScriptExecutedSuccessfully();
     }
     return result;
+  }
+};
+
+class CompileDebuggerScriptRunnable MOZ_FINAL : public WorkerDebuggerRunnable
+{
+  nsString mScriptURL;
+
+public:
+  CompileDebuggerScriptRunnable(WorkerPrivate* aWorkerPrivate,
+                                const nsAString& aScriptURL)
+  : WorkerDebuggerRunnable(aWorkerPrivate),
+    mScriptURL(aScriptURL)
+  { }
+
+private:
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    WorkerDebuggerGlobalScope* globalScope =
+      aWorkerPrivate->CreateDebuggerGlobalScope(aCx);
+    if (!globalScope) {
+      NS_WARNING("Failed to make global!");
+      return false;
+    }
+
+    JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
+
+    JSAutoCompartment ac(aCx, global);
+    return scriptloader::LoadMainScript(aCx, mScriptURL, DebuggerScript);
   }
 };
 
@@ -4135,7 +4169,8 @@ WorkerDebugger::WorkerDebugger(WorkerPrivate* aWorkerPrivate)
 : mMutex("WorkerDebugger::mMutex"),
   mCondVar(mMutex, "WorkerDebugger::mCondVar"),
   mWorkerPrivate(aWorkerPrivate),
-  mIsEnabled(false)
+  mIsEnabled(false),
+  mIsInitialized(false)
 {
   mWorkerPrivate->AssertIsOnParentThread();
 }
@@ -4261,6 +4296,28 @@ WorkerDebugger::GetWindow(nsIDOMWindow** aResult)
 
   nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
   window.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mMutex);
+
+  if (!mWorkerPrivate || mIsInitialized) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsRefPtr<CompileDebuggerScriptRunnable> runnable =
+    new CompileDebuggerScriptRunnable(mWorkerPrivate, aURL);
+  if (!runnable->Dispatch(aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mIsInitialized = true;
+
   return NS_OK;
 }
 
@@ -4526,7 +4583,8 @@ WorkerPrivate::Constructor(JSContext* aCx,
 
   worker->EnableDebugger();
 
-  nsRefPtr<CompileScriptRunnable> compiler = new CompileScriptRunnable(worker);
+  nsRefPtr<CompileScriptRunnable> compiler =
+    new CompileScriptRunnable(worker, aScriptURL);
   if (!compiler->Dispatch(aCx)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
