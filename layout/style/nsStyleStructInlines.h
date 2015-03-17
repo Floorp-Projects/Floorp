@@ -58,6 +58,14 @@ nsStyleText::GetTextShadow() const
 }
 
 bool
+nsStyleText::NewlineIsSignificant(const nsIFrame* aContextFrame) const
+{
+  NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
+  return NewlineIsSignificantStyle() &&
+    !aContextFrame->StyleContext()->ShouldSuppressLineBreak();
+}
+
+bool
 nsStyleText::WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
