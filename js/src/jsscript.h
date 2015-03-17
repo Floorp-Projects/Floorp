@@ -977,6 +977,9 @@ class JSScript : public js::gc::TenuredCell
     // Idempotent cache has triggered invalidation.
     bool invalidatedIdempotentCache_:1;
 
+    // Lexical check did fail and bail out.
+    bool failedLexicalCheck_:1;
+
     // If the generator was created implicitly via a generator expression,
     // isGeneratorExp will be true.
     bool isGeneratorExp_:1;
@@ -1223,12 +1226,16 @@ class JSScript : public js::gc::TenuredCell
     bool invalidatedIdempotentCache() const {
         return invalidatedIdempotentCache_;
     }
+    bool failedLexicalCheck() const {
+        return failedLexicalCheck_;
+    }
 
     void setFailedBoundsCheck() { failedBoundsCheck_ = true; }
     void setFailedShapeGuard() { failedShapeGuard_ = true; }
     void setHadFrequentBailouts() { hadFrequentBailouts_ = true; }
     void setUninlineable() { uninlineable_ = true; }
     void setInvalidatedIdempotentCache() { invalidatedIdempotentCache_ = true; }
+    void setFailedLexicalCheck() { failedLexicalCheck_ = true; }
 
     bool hasScriptCounts() const { return hasScriptCounts_; }
 
