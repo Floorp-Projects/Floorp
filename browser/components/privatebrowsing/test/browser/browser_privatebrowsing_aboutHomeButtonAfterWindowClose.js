@@ -2,49 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This test checks that the Session Restore about:home button
-// is disabled in private mode
+// This test checks that the Session Restore "Restore Previous Session"
+// button on about:home is disabled in private mode
+add_task(function* test_no_sessionrestore_button() {
+  // Opening, then closing, a private window shouldn't create session data.
+  (yield BrowserTestUtils.openNewBrowserWindow({private: true})).close();
 
-function test() {
-  waitForExplicitFinish();
+  let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let tab = win.gBrowser.addTab("about:home");
+  let browser = tab.linkedBrowser;
 
-  function testNoSessionRestoreButton() {
-    let win = OpenBrowserWindow({private: true});
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
-      executeSoon(function() {
-        info("The second private window got loaded");
-        let newTab = win.gBrowser.addTab();
-        win.gBrowser.selectedTab = newTab;
-        let tabBrowser = win.gBrowser.getBrowserForTab(newTab);
-        tabBrowser.addEventListener("load", function tabLoadListener() {
-          if (win.content.location != "about:home") {
-            win.content.location = "about:home";
-            return;
-          }
-          tabBrowser.removeEventListener("load", tabLoadListener, true);
-          executeSoon(function() {
-            info("about:home got loaded");
-            let sessionRestoreButton = win.gBrowser
-                                          .contentDocument
-                                          .getElementById("restorePreviousSession");
-            is(win.getComputedStyle(sessionRestoreButton).display, 
-               "none", "The Session Restore about:home button should be disabled");
-            win.close();
-            finish();
-          });
-        }, true);
-      });
-    }, false);
-  }
+  yield BrowserTestUtils.browserLoaded(browser);
 
-  let win = OpenBrowserWindow({private: true});
-  win.addEventListener("load", function onload() {
-    win.removeEventListener("load", onload, false);
-    executeSoon(function() {
-      info("The first private window got loaded");
-      win.close();
-      testNoSessionRestoreButton();
-    });
-  }, false);
-}
+  let display = yield ContentTask.spawn(browser, {}, function* (){
+    let button = content.document.getElementById("restorePreviousSession");
+    return content.getComputedStyle(button).display;
+  });
+
+  is(display, "none",
+    "The Session Restore about:home button should be disabled");
+
+  win.close();
+});

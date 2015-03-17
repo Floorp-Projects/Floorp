@@ -45,7 +45,7 @@ add_task(function* test_nodb_pluschanges() {
   yield new Promise(resolve => do_execute_soon(resolve));
 
   do_print("Forcing flush");
-  let promiseCommit = new Promise(resolve => afterCommit(resolve));
+  let promiseCommit = promiseAfterCommit();
   search.QueryInterface(Ci.nsIObserver)
         .observe(null, "quit-application", "");
   yield promiseCommit;
