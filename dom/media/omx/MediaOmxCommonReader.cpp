@@ -44,7 +44,7 @@ MediaOmxCommonReader::MediaOmxCommonReader(AbstractMediaDecoder *aDecoder)
 #ifdef MOZ_AUDIO_OFFLOAD
 void MediaOmxCommonReader::CheckAudioOffload()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   char offloadProp[128];
   property_get("audio.offload.disable", offloadProp, "0");

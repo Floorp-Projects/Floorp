@@ -143,13 +143,13 @@ public:
 
   virtual bool HasAudio() override
   {
-    NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+    MOZ_ASSERT(OnTaskQueue());
     return mHasAudio;
   }
 
   virtual bool HasVideo() override
   {
-    NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+    MOZ_ASSERT(OnTaskQueue());
     return mHasVideo;
   }
 
