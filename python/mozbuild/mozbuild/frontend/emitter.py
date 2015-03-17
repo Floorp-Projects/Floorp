@@ -522,28 +522,8 @@ class TreeMetadataEmitter(LoggingMixin):
             yield self._create_substitution(HeaderFileSubstitution, context,
                 path)
 
-        # XPIDL source files get processed and turned into .h and .xpt files.
-        # If there are multiple XPIDL files in a directory, they get linked
-        # together into a final .xpt, which has the name defined by
-        # XPIDL_MODULE.
-        xpidl_module = context['XPIDL_MODULE']
-
-        if context['XPIDL_SOURCES'] and not xpidl_module:
-            raise SandboxValidationError('XPIDL_MODULE must be defined if '
-                'XPIDL_SOURCES is defined.', context)
-
-        if xpidl_module and not context['XPIDL_SOURCES']:
-            raise SandboxValidationError('XPIDL_MODULE cannot be defined '
-                'unless there are XPIDL_SOURCES', context)
-
-        if context['XPIDL_SOURCES'] and context['NO_DIST_INSTALL']:
-            self.log(logging.WARN, 'mozbuild_warning', dict(
-                path=context.main_path),
-                '{path}: NO_DIST_INSTALL has no effect on XPIDL_SOURCES.')
-
-        for idl in context['XPIDL_SOURCES']:
-            yield XPIDLFile(context, mozpath.join(context.srcdir, idl),
-                xpidl_module)
+        for obj in self._process_xpidl(context):
+            yield obj
 
         # Proxy some variables as-is until we have richer classes to represent
         # them. We should aim to keep this set small because it violates the
@@ -802,6 +782,30 @@ class TreeMetadataEmitter(LoggingMixin):
         for f in sources_with_flags:
             ext = mozpath.splitext(f)[1]
             yield PerSourceFlag(context, f, sources[f].flags)
+
+    def _process_xpidl(self, context):
+        # XPIDL source files get processed and turned into .h and .xpt files.
+        # If there are multiple XPIDL files in a directory, they get linked
+        # together into a final .xpt, which has the name defined by
+        # XPIDL_MODULE.
+        xpidl_module = context['XPIDL_MODULE']
+
+        if context['XPIDL_SOURCES'] and not xpidl_module:
+            raise SandboxValidationError('XPIDL_MODULE must be defined if '
+                'XPIDL_SOURCES is defined.', context)
+
+        if xpidl_module and not context['XPIDL_SOURCES']:
+            raise SandboxValidationError('XPIDL_MODULE cannot be defined '
+                'unless there are XPIDL_SOURCES', context)
+
+        if context['XPIDL_SOURCES'] and context['NO_DIST_INSTALL']:
+            self.log(logging.WARN, 'mozbuild_warning', dict(
+                path=context.main_path),
+                '{path}: NO_DIST_INSTALL has no effect on XPIDL_SOURCES.')
+
+        for idl in context['XPIDL_SOURCES']:
+            yield XPIDLFile(context, mozpath.join(context.srcdir, idl),
+                xpidl_module)
 
     def _process_generated_files(self, context):
         generated_files = context.get('GENERATED_FILES')
