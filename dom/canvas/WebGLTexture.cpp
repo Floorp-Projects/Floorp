@@ -181,8 +181,6 @@ WebGLTexture::SetImageInfo(TexImageTarget texImageTarget, GLint level,
     MOZ_ASSERT(depth == 1 || texImageTarget == LOCAL_GL_TEXTURE_3D);
     MOZ_ASSERT(TexImageTargetToTexTarget(texImageTarget) == mTarget);
 
-    InvalidateStatusOfAttachedFBs();
-
     EnsureMaxLevelWithCustomImagesAtLeast(level);
 
     ImageInfoAt(texImageTarget, level) = ImageInfo(width, height, depth,
@@ -191,6 +189,9 @@ WebGLTexture::SetImageInfo(TexImageTarget texImageTarget, GLint level,
 
     if (level > 0)
         SetCustomMipmap();
+
+    // Invalidate framebuffer status cache.
+    NotifyFBsStatusChanged();
 
     SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
 }

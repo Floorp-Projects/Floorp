@@ -3,28 +3,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLFramebufferAttachable.h"
-
 #include "WebGLContext.h"
+#include "WebGLFramebufferAttachable.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 
-namespace mozilla {
+using namespace mozilla;
 
 void
-WebGLFramebufferAttachable::MarkAttachment(const WebGLFramebuffer::AttachPoint& attachment)
+WebGLFramebufferAttachable::AttachTo(WebGLFramebuffer* fb, FBAttachment attachment)
 {
-    if (mAttachmentPoints.Contains(&attachment))
+    MOZ_ASSERT(fb);
+    if (!fb)
+        return;
+
+    if (mAttachmentPoints.Contains(AttachmentPoint(fb, attachment)))
         return; // Already attached. Ignore.
 
-    mAttachmentPoints.AppendElement(&attachment);
+    mAttachmentPoints.AppendElement(AttachmentPoint(fb, attachment));
 }
 
 void
-WebGLFramebufferAttachable::UnmarkAttachment(const WebGLFramebuffer::AttachPoint& attachment)
+WebGLFramebufferAttachable::DetachFrom(WebGLFramebuffer* fb, FBAttachment attachment)
 {
-    const size_t i = mAttachmentPoints.IndexOf(&attachment);
+    MOZ_ASSERT(fb);
+    if (!fb)
+        return;
+
+    const size_t i = mAttachmentPoints.IndexOf(AttachmentPoint(fb, attachment));
     if (i == mAttachmentPoints.NoIndex) {
         MOZ_ASSERT(false, "Is not attached to FB");
         return;
@@ -34,13 +41,11 @@ WebGLFramebufferAttachable::UnmarkAttachment(const WebGLFramebuffer::AttachPoint
 }
 
 void
-WebGLFramebufferAttachable::InvalidateStatusOfAttachedFBs() const
+WebGLFramebufferAttachable::NotifyFBsStatusChanged()
 {
-    const size_t count = mAttachmentPoints.Length();
-    for (size_t i = 0; i < count; ++i) {
-        MOZ_ASSERT(mAttachmentPoints[i]->mFB);
-        mAttachmentPoints[i]->mFB->InvalidateFramebufferStatus();
+    for (size_t i = 0; i < mAttachmentPoints.Length(); ++i) {
+        MOZ_ASSERT(mAttachmentPoints[i].mFB,
+                   "Unexpected null pointer; seems that a WebGLFramebuffer forgot to call DetachFrom before dying");
+        mAttachmentPoints[i].mFB->NotifyAttachableChanged();
     }
 }
-
-} // namespace mozilla
