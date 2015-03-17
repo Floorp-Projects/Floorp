@@ -791,7 +791,6 @@ function runTest() {
     ruleText += "}";
 
     style.textContent = ruleText;
-    document.body.offsetTop;
 
     var rule = style.sheet.cssRules[0];
 
@@ -818,7 +817,6 @@ function runTest() {
     ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when delete is called (TEST 33)");
 
     style.textContent = "";
-    document.body.offsetTop;
 
     ok(!document.fonts.has(face), "CSS-connected FontFace should be removed from document.fonts once the rule has been removed (TEST 33)");
 
@@ -836,7 +834,6 @@ function runTest() {
     var ruleText = "@font-face { font-family: something; src: url(x); }";
 
     style.textContent = ruleText;
-    document.body.offsetTop;
 
     var all = Array.from(document.fonts);
     var face = all[0];
@@ -846,7 +843,6 @@ function runTest() {
     });
 
     style.textContent = "";
-    document.body.offsetTop;
 
   }).then(function() {
 
