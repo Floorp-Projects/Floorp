@@ -451,7 +451,7 @@ function runTest() {
     is(all[0], face, "FontFaces should be not be reordered when a duplicate entry is added (TEST 25)");
     is(all[1], face2, "FontFaces should be not be reordered when a duplicate entry is added (TEST 25)");
     document.fonts.clear();
-    return document.fonts.read;
+    return document.fonts.ready;
 
   }).then(function() {
 
