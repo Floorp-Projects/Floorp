@@ -39,7 +39,7 @@ class PeerConnectionCtx {
     return true;
   }
 
-  void queueJSEPOperation(nsRefPtr<nsIRunnable> aJSEPOperation);
+  void queueJSEPOperation(nsIRunnable* aJSEPOperation);
   void onGMPReady();
 
   bool gmpHasH264();
