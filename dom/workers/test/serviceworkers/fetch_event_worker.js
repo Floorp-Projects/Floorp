@@ -118,6 +118,31 @@ onfetch = function(ev) {
     }));
   }
 
+  else if (ev.request.url.contains('opaque-on-same-origin')) {
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200';
+    ev.respondWith(fetch(url, { mode: 'no-cors' }));
+  }
+
+  else if (ev.request.url.contains('opaque-no-cors')) {
+    if (ev.request.mode != "no-cors") {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200';
+    ev.respondWith(fetch(url, { mode: ev.request.mode }));
+  }
+
+  else if (ev.request.url.contains('cors-for-no-cors')) {
+    if (ev.request.mode != "no-cors") {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*';
+    ev.respondWith(fetch(url));
+  }
+
   else if (ev.request.url.contains('example.com')) {
     ev.respondWith(fetch(ev.request));
   }

@@ -135,7 +135,7 @@
     } else if (e.data == "expect") {
       gExpected++;
     } else if (e.data.type == "ok") {
-      my_ok(e.data.value, e.data.msg);
+      my_ok(e.data.value, "Fetch test on worker: " + e.data.msg);
     }
   };
   worker.onerror = function() {
