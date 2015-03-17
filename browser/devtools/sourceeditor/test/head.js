@@ -14,32 +14,71 @@ SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
 });
 
-function setup(cb) {
+/**
+ * Open a new tab at a URL and call a callback on load
+ */
+function addTab(aURL, aCallback) {
+  waitForExplicitFinish();
+
+  gBrowser.selectedTab = gBrowser.addTab();
+  content.location = aURL;
+
+  let tab = gBrowser.selectedTab;
+  let browser = gBrowser.getBrowserForTab(tab);
+
+  function onTabLoad() {
+    browser.removeEventListener("load", onTabLoad, true);
+    aCallback(browser, tab, browser.contentDocument);
+  }
+
+  browser.addEventListener("load", onTabLoad, true);
+}
+
+function promiseTab(aURL) {
+  return new Promise(resolve =>
+    addTab(aURL, resolve));
+}
+
+function setup(cb, additionalOpts = {}) {
+  cb = cb || function() {};
+  let def = promise.defer();
   const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-  const url = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
+  const url = "data:application/vnd.mozilla.xul+xml;charset=UTF-8,<?xml version='1.0'?>" +
     "<?xml-stylesheet href='chrome://global/skin/global.css'?>" +
     "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'" +
     " title='Editor' width='600' height='500'><box flex='1'/></window>";
 
   let win = Services.ww.openWindow(null, url, "_blank", opt, null);
+  let opts = {
+    value: "Hello.",
+    lineNumbers: true,
+    foldGutter: true,
+    gutters: [ "CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter" ]
+  }
+  for (let o in additionalOpts) {
+    opts[o] = additionalOpts[o];
+  }
 
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
 
     waitForFocus(function () {
       let box = win.document.querySelector("box");
-      let editor = new Editor({
-        value: "Hello.",
-        lineNumbers: true,
-        foldGutter: true,
-        gutters: [ "CodeMirror-linenumbers", "breakpoints", "CodeMirror-foldgutter" ]
-      });
+      let editor = new Editor(opts);
 
       editor.appendTo(box)
-        .then(() => cb(editor, win))
-        .then(null, (err) => ok(false, err.message));
+        .then(() => {
+          def.resolve({
+            ed: editor,
+            win: win,
+            edWin: editor.container.contentWindow.wrappedJSObject
+          });
+          cb(editor, win);
+        }, err => ok(false, err.message));
     }, win);
   }, false);
+
+  return def.promise;
 }
 
 function ch(exp, act, label) {
@@ -50,6 +89,10 @@ function ch(exp, act, label) {
 function teardown(ed, win) {
   ed.destroy();
   win.close();
+
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
   finish();
 }
 
