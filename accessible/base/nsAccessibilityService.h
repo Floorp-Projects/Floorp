@@ -252,6 +252,8 @@ GetAccService()
 inline bool
 IPCAccessibilityActive()
 {
+	// XXX disable ipc accessibility for firefox 38
+	return false;
 #ifdef MOZ_B2G
   return false;
 #else
