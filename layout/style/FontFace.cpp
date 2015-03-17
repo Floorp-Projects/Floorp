@@ -463,11 +463,10 @@ FontFace::GetUnicodeRange(nsString& aResult)
 {
   mPresContext->FlushUserFontSet();
 
-  nsCSSValue value;
-  GetDesc(eCSSFontDesc_UnicodeRange, value);
-
-  aResult.Truncate();
-  nsStyleUtil::AppendUnicodeRange(value, aResult);
+  // There is no eCSSProperty_unicode_range for us to pass in to GetDesc
+  // to get a serialized (possibly defaulted) value, but that function
+  // doesn't use the property ID for this descriptor anyway.
+  GetDesc(eCSSFontDesc_UnicodeRange, eCSSProperty_UNKNOWN, aResult);
 }
 
 void
@@ -500,12 +499,8 @@ void
 FontFace::GetFeatureSettings(nsString& aResult)
 {
   mPresContext->FlushUserFontSet();
-
-  nsCSSValue value;
-  GetDesc(eCSSFontDesc_FontFeatureSettings, value);
-
-  aResult.Truncate();
-  nsStyleUtil::AppendFontFeatureSettings(value, aResult);
+  GetDesc(eCSSFontDesc_FontFeatureSettings, eCSSProperty_font_feature_settings,
+          aResult);
 }
 
 void
@@ -758,6 +753,10 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
                   nsCSSProperty aPropID,
                   nsString& aResult) const
 {
+  MOZ_ASSERT(aDescID == eCSSFontDesc_UnicodeRange ||
+             aPropID != eCSSProperty_UNKNOWN,
+             "only pass eCSSProperty_UNKNOWN for eCSSFontDesc_UnicodeRange");
+
   nsCSSValue value;
   GetDesc(aDescID, value);
 
@@ -771,6 +770,13 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
                aDescID != eCSSFontDesc_Src) {
       aResult.AssignLiteral("normal");
     }
+    return;
+  }
+
+  if (aDescID == eCSSFontDesc_UnicodeRange) {
+    // Since there's no unicode-range property, we can't use
+    // nsCSSValue::AppendToString to serialize this descriptor.
+    nsStyleUtil::AppendUnicodeRange(value, aResult);
   } else {
     value.AppendToString(aPropID, aResult, nsCSSValue::eNormalized);
   }
