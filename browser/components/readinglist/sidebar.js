@@ -270,9 +270,7 @@ let RLSidebar = {
    * @param {Event} event - KeyEvent or MouseEvent that triggered this action.
    */
   openURL(url, event) {
-    // TODO: Disabled while working on the listbox mechanics.
     log.debug(`Opening page ${url}`);
-    return;
 
     let mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
