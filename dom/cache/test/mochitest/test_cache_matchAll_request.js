@@ -101,7 +101,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     return checkResponse(r[0], response1, response1Text);
   }).then(function() {
     return c.matchAll(requestWithAlternateQueryString,
-                      {ignoreSearch: true, cacheName: name});
+                      {ignoreSearch: true});
   }).then(function(r) {
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
@@ -122,16 +122,25 @@ function testRequest(request1, request2, request3, unknownRequest,
       checkResponse(r[1], response3, response3Text)
     ]);
   }).then(function() {
-    return c.matchAll({cacheName: name + "mambojambo"});
-  }).then(function(r) {
-    is(r.length, 0, "Searching in the wrong cache should not succeed");
+    return caches.match(request1, {cacheName: name + "mambojambo"})
+      .then(function() {
+        ok(false, "Promise should be rejected");
+      }, function(err) {
+        is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
+      });
   }).then(function() {
     return c.matchAll(unknownRequest);
   }).then(function(r) {
     is(r.length, 0, "Searching for an unknown request should not succeed");
-    return c.matchAll(unknownRequest, {cacheName: name});
+    return caches.match(unknownRequest, {cacheName: name});
   }).then(function(r) {
-    is(r.length, 0, "Searching for an unknown request should not succeed");
+    is(typeof r, "undefined", "Searching for an unknown request should not succeed");
+    // Make sure that cacheName is ignored on Cache
+    return c.matchAll(request1, {cacheName: name + "mambojambo"});
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response1, response1Text);
+  }).then(function() {
     return caches.delete(name);
   }).then(function(success) {
     ok(success, "We should be able to delete the cache successfully");
