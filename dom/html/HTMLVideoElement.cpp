@@ -127,7 +127,7 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 }
 
 bool
-HTMLVideoElement::IsInteractiveHTMLContent() const
+HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::controls);
 }
