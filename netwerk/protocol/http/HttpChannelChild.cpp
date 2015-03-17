@@ -136,7 +136,7 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCon
     OnStatus(mOwner, aContext, NS_NET_STATUS_READING, NS_ConvertUTF8toUTF16(host).get());
 
     int64_t progress = aOffset + aCount;
-    OnProgress(mOwner, aContext, progress, mOwner->GetResponseHead()->ContentLength());
+    OnProgress(mOwner, aContext, progress, mOwner->mSynthesizedStreamLength);
   }
 
   mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);
@@ -167,6 +167,7 @@ InterceptStreamListener::Cleanup()
 
 HttpChannelChild::HttpChannelChild()
   : HttpAsyncAborter<HttpChannelChild>(this)
+  , mSynthesizedStreamLength(0)
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
   , mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)
@@ -2083,10 +2084,12 @@ HttpChannelChild::ResetInterception()
 
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
-                                                  nsInputStreamPump* aPump)
+                                                  nsInputStreamPump* aPump,
+                                                  int64_t aStreamLength)
 {
   mSynthesizedResponsePump = aPump;
   mResponseHead = aResponseHead;
+  mSynthesizedStreamLength = aStreamLength;
 
   // if this channel has been suspended previously, the pump needs to be
   // correspondingly suspended now that it exists.
