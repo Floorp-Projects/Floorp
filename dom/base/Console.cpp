@@ -1157,8 +1157,8 @@ Console::ProcessCallData(ConsoleCallData* aData)
     event.mInnerID.Value().SetAsString() = aData->mInnerIDString;
   } else {
     MOZ_ASSERT(aData->mIDType == ConsoleCallData::eNumber);
-    event.mID.Value().SetAsUnsignedLong() = aData->mOuterIDNumber;
-    event.mInnerID.Value().SetAsUnsignedLong() = aData->mInnerIDNumber;
+    event.mID.Value().SetAsUnsignedLongLong() = aData->mOuterIDNumber;
+    event.mInnerID.Value().SetAsUnsignedLongLong() = aData->mInnerIDNumber;
   }
 
   event.mLevel = aData->mMethodString;
