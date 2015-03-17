@@ -1068,8 +1068,8 @@ BaseShape::markChildren(JSTracer *trc)
         gc::MarkBaseShape(trc, &unowned_, "base");
 
     JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
-    MOZ_ASSERT(global);
-    MarkObjectUnbarriered(trc, &global, "global");
+    if (global)
+        MarkObjectUnbarriered(trc, &global, "global");
 
     if (metadata)
         gc::MarkObject(trc, &metadata, "metadata");
