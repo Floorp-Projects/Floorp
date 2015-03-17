@@ -1,0 +1,111 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PIccRequest;
+include PIccTypes;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+namespace icc {
+
+union OptionalIccInfoData
+{
+  void_t;
+  IccInfoData;
+};
+
+struct GetCardLockEnabledRequest
+{
+  uint32_t lockType;
+};
+
+struct UnlockCardLockRequest
+{
+  uint32_t lockType;
+  nsString password;
+  nsString newPin;
+};
+
+struct SetCardLockEnabledRequest
+{
+  uint32_t lockType;
+  nsString password;
+  bool enabled;
+};
+
+struct ChangeCardLockPasswordRequest
+{
+  uint32_t lockType;
+  nsString password;
+  nsString newPassword;
+};
+
+struct GetCardLockRetryCountRequest
+{
+  uint32_t lockType;
+};
+
+struct MatchMvnoRequest
+{
+  uint32_t mvnoType;
+  nsString mvnoData;
+};
+
+struct GetServiceStateEnabledRequest
+{
+  uint32_t service;
+};
+
+union IccRequest
+{
+  GetCardLockEnabledRequest;
+  UnlockCardLockRequest;
+  SetCardLockEnabledRequest;
+  ChangeCardLockPasswordRequest;
+  GetCardLockRetryCountRequest;
+  MatchMvnoRequest;
+  GetServiceStateEnabledRequest;
+};
+
+sync protocol PIcc
+{
+  manager PContent;
+  manages PIccRequest;
+
+child:
+  /**
+   * Notify CardStateChanged with updated CardState.
+   */
+  NotifyCardStateChanged(uint32_t aCardState);
+
+  /**
+   * Notify IccInfoChanged with updated IccInfo.
+   */
+  NotifyIccInfoChanged(OptionalIccInfoData aInfoData);
+
+parent:
+  /**
+   * Sent when the child no longer needs to use PIcc.
+   */
+  __delete__();
+
+  /**
+   * Sent when the child makes an asynchronous request to the parent.
+   */
+  PIccRequest(IccRequest aRequest);
+
+  /**
+   * Sync call to initialize the updated IccInfo/CardState.
+   */
+  sync Init()
+     returns (OptionalIccInfoData aInfoData, uint32_t aCardState);
+
+};
+
+} // namespace icc
+} // namespace dom
+} // namespace mozilla

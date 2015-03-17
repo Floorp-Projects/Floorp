@@ -8,6 +8,7 @@
 #include "mozilla/dom/MozIccBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
+class nsIIcc;
 class nsIIccInfo;
 class nsIIccProvider;
 
@@ -25,7 +26,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Icc, DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Icc(nsPIDOMWindow* aWindow, long aClientId, nsIIccInfo* aIccInfo);
+  Icc(nsPIDOMWindow* aWindow, long aClientId,
+      nsIIcc* aHandler, nsIIccInfo* aIccInfo);
 
   void
   Shutdown();
@@ -111,14 +113,20 @@ public:
   IMPL_EVENT_HANDLER(stksessionend)
 
 private:
+  // Put definition of the destructor in Icc.cpp to ensure forward declaration
+  // of nsIIccProvider, nsIIcc for the auto-generated .cpp file (i.e.,
+  // MozIccManagerBinding.cpp) that includes this header.
   ~Icc();
 
   bool mLive;
   uint32_t mClientId;
   nsString mIccId;
-  // mProvider is a xpcom service and will be released at shutdown, so it
+  // mProvider is a xpcom service and will be released at Shutdown(), so it
   // doesn't need to be cycle collected.
   nsCOMPtr<nsIIccProvider> mProvider;
+  // mHandler will be released at Shutdown(), so there is no need to join cycle
+  // collection.
+  nsCOMPtr<nsIIcc> mHandler;
   Nullable<OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo> mIccInfo;
 };
 
