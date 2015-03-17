@@ -50,6 +50,7 @@ let gSubDialog = {
 
     this._closingEvent = null;
     this._isClosing = false;
+    this._openedURL = aURL;
 
     features = features.replace(/,/g, "&");
     let featureParams = new URLSearchParams(features.toLowerCase());
@@ -124,7 +125,7 @@ let gSubDialog = {
   /* Private methods */
 
   _onUnload: function(aEvent) {
-    if (aEvent.target.location.href != "about:blank") {
+    if (aEvent.target.location.href == this._openedURL) {
       this.close(this._closingEvent);
     }
   },
@@ -222,6 +223,11 @@ let gSubDialog = {
   },
 
   _onKeyDown: function(aEvent) {
+    if (aEvent.currentTarget == window && aEvent.keyCode == aEvent.DOM_VK_ESCAPE &&
+        !aEvent.defaultPrevented) {
+      this.close(aEvent);
+      return;
+    }
     if (aEvent.keyCode != aEvent.DOM_VK_TAB ||
         aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey) {
       return;
@@ -278,6 +284,10 @@ let gSubDialog = {
     this._frame.addEventListener("load", this);
 
     chromeBrowser.addEventListener("unload", this, true);
+    // Ensure we get <esc> keypresses even if nothing in the subdialog is focusable
+    // (happens on OS X when only text inputs and lists are focusable, and
+    //  the subdialog only has checkboxes/radiobuttons/buttons)
+    window.addEventListener("keydown", this, true);
   },
 
   _removeDialogEventListeners: function() {
@@ -290,6 +300,7 @@ let gSubDialog = {
     window.removeEventListener("DOMFrameContentLoaded", this, true);
     this._frame.removeEventListener("load", this);
     this._frame.contentWindow.removeEventListener("dialogclosing", this);
+    window.removeEventListener("keydown", this, true);
     this._untrapFocus();
   },
 

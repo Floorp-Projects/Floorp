@@ -94,7 +94,8 @@ class DebianBootstrapper(BaseBootstrapper):
         # "Troubleshooting Ubuntu" at
         # http://developer.android.com/sdk/installing/index.html?pkg=tools.
         self.run_as_root(['dpkg', '--add-architecture', 'i386'])
-        # self.apt_update()
+        # After adding a new arch, the list of packages has to be updated
+        self.run_as_root(['apt-get', 'update'])
         self.apt_install(*self.mobile_android_packages)
 
         # 2. The user may have an external Android SDK (in which case we save

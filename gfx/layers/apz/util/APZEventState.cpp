@@ -85,6 +85,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
   , mPendingTouchPreventedBlockId(0)
   , mEndTouchIsClick(false)
   , mTouchEndCancelled(false)
+  , mActiveAPZTransforms(0)
 {
   nsresult rv;
   mWidget = do_GetWeakReference(aWidget, &rv);
@@ -320,17 +321,19 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       scrollbarMediator->ScrollbarActivityStarted();
     }
 
-    if (aDocument) {
+    if (aDocument && mActiveAPZTransforms == 0) {
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
         nsdocshell->NotifyAsyncPanZoomStarted(sf->GetScrollPositionCSSPixels());
       }
     }
+    mActiveAPZTransforms++;
     break;
   }
   case APZStateChange::TransformEnd:
   {
+    mActiveAPZTransforms--;
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
     if (sf) {
       sf->SetTransformingByAPZ(false);
@@ -340,7 +343,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       scrollbarMediator->ScrollbarActivityStopped();
     }
 
-    if (aDocument) {
+    if (aDocument && mActiveAPZTransforms == 0) {
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());

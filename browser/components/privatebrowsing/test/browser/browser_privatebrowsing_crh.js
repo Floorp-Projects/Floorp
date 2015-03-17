@@ -5,55 +5,38 @@
 // This test makes sure that the Clear Recent History menu item and command 
 // is disabled inside the private browsing mode.
 
-function test() {
-  waitForExplicitFinish();
+add_task(function test() {
+  function checkDisableOption(aPrivateMode, aWindow) {
+    let crhCommand = aWindow.document.getElementById("Tools:Sanitize");
+    ok(crhCommand, "The clear recent history command should exist");
 
-  function checkDisableOption(aPrivateMode, aWindow, aCallback) {
-    executeSoon(function() {
-      let crhCommand = aWindow.document.getElementById("Tools:Sanitize");
-      ok(crhCommand, "The clear recent history command should exist");
-
-      is(PrivateBrowsingUtils.isWindowPrivate(aWindow), aPrivateMode,
-        "PrivateBrowsingUtils should report the correct per-window private browsing status");
-      is(crhCommand.hasAttribute("disabled"), aPrivateMode,
-        "Clear Recent History command should be disabled according to the private browsing mode");
-
-      executeSoon(aCallback);
-    });
+    is(PrivateBrowsingUtils.isWindowPrivate(aWindow), aPrivateMode,
+      "PrivateBrowsingUtils should report the correct per-window private browsing status");
+    is(crhCommand.hasAttribute("disabled"), aPrivateMode,
+      "Clear Recent History command should be disabled according to the private browsing mode");
   };
 
-  let windowsToClose = [];
   let testURI = "http://mochi.test:8888/";
 
-  function testOnWindow(aIsPrivate, aCallback) {
-    whenNewWindowLoaded({private: aIsPrivate}, function(aWin) {
-      windowsToClose.push(aWin);
-      aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-        if (aWin.content.location.href != testURI) {
-          aWin.gBrowser.loadURI(testURI);
-          return;
-        }
-        aWin.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-        executeSoon(function() aCallback(aWin));
-      }, true);
+  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  let privateBrowser = privateWin.gBrowser.selectedBrowser;
+  privateBrowser.loadURI(testURI);
+  yield BrowserTestUtils.browserLoaded(privateBrowser);
 
-      aWin.gBrowser.loadURI(testURI);
-    });
-  };
+  info("Test on private window");
+  checkDisableOption(true, privateWin);
 
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(aWin) {
-      aWin.close();
-    });
-  });
 
-  testOnWindow(true, function(aWin) {
-    info("Test on private window");
-    checkDisableOption(true, aWin, function() {
-      testOnWindow(false, function(aPrivWin) {
-        info("Test on public window");
-        checkDisableOption(false, aPrivWin, finish);
-      });
-    });
-  });
-}
+  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let browser = win.gBrowser.selectedBrowser;
+  browser.loadURI(testURI);
+  yield BrowserTestUtils.browserLoaded(browser);
+
+  info("Test on public window");
+  checkDisableOption(false, win);
+
+
+  // Cleanup
+  yield BrowserTestUtils.closeWindow(privateWin);
+  yield BrowserTestUtils.closeWindow(win);
+});

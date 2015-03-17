@@ -31,7 +31,8 @@ public:
   explicit ServiceWorkerClientInfo(nsIDocument* aDoc);
 
 private:
-  uint64_t mClientId;
+  nsString mClientId;
+  uint64_t mWindowId;
   nsString mUrl;
 
   // Window Clients
@@ -51,6 +52,7 @@ public:
                       const ServiceWorkerClientInfo& aClientInfo)
     : mOwner(aOwner),
       mId(aClientInfo.mClientId),
+      mWindowId(aClientInfo.mWindowId),
       mUrl(aClientInfo.mUrl)
   {
     MOZ_ASSERT(aOwner);
@@ -60,6 +62,11 @@ public:
   GetParentObject() const
   {
     return mOwner;
+  }
+
+  void GetId(nsString& aRetval) const
+  {
+    aRetval = mId;
   }
 
   void
@@ -81,7 +88,8 @@ protected:
 
 private:
   nsCOMPtr<nsISupports> mOwner;
-  uint64_t mId;
+  nsString mId;
+  uint64_t mWindowId;
   nsString mUrl;
 };
 

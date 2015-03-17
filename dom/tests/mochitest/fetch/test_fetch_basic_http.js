@@ -1,15 +1,3 @@
-if (typeof ok !== "function") {
-  function ok(a, msg) {
-    postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-  }
-}
-
-if (typeof is !== "function") {
-  function is(a, b, msg) {
-    postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-  }
-}
-
 var path = "/tests/dom/base/test/";
 
 var passFiles = [['file_XHR_pass1.xml', 'GET', 200, 'OK', 'text/xml'],
@@ -133,40 +121,25 @@ function testBlob() {
     ok(r.status, 200, "status should match");
     return r.blob().then((b) => {
       ok(b.size, 65536, "blob should have size 65536");
-      var frs = new FileReaderSync();
-      var buf = frs.readAsArrayBuffer(b);
-      var u8 = new Uint8Array(buf);
-      for (var i = 0; i < 65536; i++) {
-        if (u8[i] !== (i & 255)) {
-          break;
+      return readAsArrayBuffer(b).then(function(ab) {
+        var u8 = new Uint8Array(ab);
+        for (var i = 0; i < 65536; i++) {
+          if (u8[i] !== (i & 255)) {
+            break;
+          }
         }
-      }
-      is(i, 65536, "wrong value at offset " + i);
+        is(i, 65536, "wrong value at offset " + i);
+      });
     });
   });
 }
 
 function runTest() {
-  var done = function() {
-    if (typeof SimpleTest === "object") {
-      SimpleTest.finish();
-    } else {
-      postMessage({ type: 'finish' });
-    }
-  }
-
-  Promise.resolve()
+  return Promise.resolve()
     .then(testURL)
     .then(testURLFail)
     .then(testRequestGET)
     .then(testResponses)
     .then(testBlob)
     // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some test failed " + e);
-      done();
-    });
 }
-
-onmessage = runTest;

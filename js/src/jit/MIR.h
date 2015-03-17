@@ -1970,12 +1970,12 @@ class MSimdUnaryArith
 
     static const char* OperationName(Operation op) {
         switch (op) {
-          case abs:            return "abs";
-          case neg:            return "neg";
-          case not_:           return "not";
-          case reciprocal:     return "reciprocal";
-          case reciprocalSqrt: return "reciprocalSqrt";
-          case sqrt:           return "sqrt";
+          case abs:                         return "abs";
+          case neg:                         return "neg";
+          case not_:                        return "not";
+          case reciprocalApproximation:     return "reciprocalApproximation";
+          case reciprocalSqrtApproximation: return "reciprocalSqrtApproximation";
+          case sqrt:                        return "sqrt";
         }
         MOZ_CRASH("unexpected operation");
     }

@@ -8,56 +8,9 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+<script type="text/javascript" src="fetch_test_framework.js"> </script>
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-
-function testOnWorker(done) {
-  ok(true, "=== Start Worker Headers Tests ===");
-  var worker = new Worker("worker_wrapper.js");
-  worker.onmessage = function(event) {
-    if (event.data.type == "finish") {
-      ok(true, "=== Finish Worker Headers Tests ===");
-      done();
-    } else if (event.data.type == "status") {
-      ok(event.data.status, event.data.msg);
-    }
-  }
-
-  worker.onerror = function(event) {
-    ok(false, "Worker had an error: " + event.data);
-    ok(true, "=== Finish Worker Headers Tests ===");
-    done();
-  };
-
-  worker.postMessage({ script: "test_headers_common.js" });
-}
-
-function testOnMainThread(done) {
-  ok(true, "=== Start Main Thread Headers Tests ===");
-  var commonScript = document.createElement("script");
-  commonScript.setAttribute("src", "test_headers_common.js");
-  commonScript.onload = function() {
-    var mainThreadScript = document.createElement("script");
-    mainThreadScript.setAttribute("src", "test_headers_mainthread.js");
-    mainThreadScript.onload = function() {
-      ok(true, "=== Finish Main Thread Headers Tests ===");
-      done();
-    }
-    document.head.appendChild(mainThreadScript);
-  };
-  document.head.appendChild(commonScript);
-}
-
-
-//
-// Driver
-//
-
-testOnMainThread(function() {
-  testOnWorker(function() {
-    SimpleTest.finish();
-  });
-});
+testScript("test_headers_common.js");
 </script>
 </body>
 </html>

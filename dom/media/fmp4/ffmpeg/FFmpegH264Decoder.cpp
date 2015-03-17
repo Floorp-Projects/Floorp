@@ -289,7 +289,7 @@ FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 AVCodecID
 FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const char* aMimeType)
 {
-  if (!strcmp(aMimeType, "video/avc")) {
+  if (!strcmp(aMimeType, "video/avc") || !strcmp(aMimeType, "video/mp4")) {
     return AV_CODEC_ID_H264;
   }
 

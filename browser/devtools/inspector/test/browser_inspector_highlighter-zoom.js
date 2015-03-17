@@ -41,7 +41,7 @@ add_task(function*() {
     isVisible = yield isHighlighting(toolbox);
     ok(isVisible, "The highlighter is still visible at zoom level " + level);
 
-    yield isNodeCorrectlyHighlighted(getNode("div"), toolbox);
+    yield isNodeCorrectlyHighlighted("div", toolbox);
 
     info("Check that the highlighter root wrapper node was scaled down");
 

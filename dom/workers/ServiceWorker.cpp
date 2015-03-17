@@ -6,6 +6,7 @@
 #include "ServiceWorker.h"
 
 #include "nsPIDOMWindow.h"
+#include "ServiceWorkerClient.h"
 #include "ServiceWorkerManager.h"
 #include "SharedWorker.h"
 #include "WorkerPrivate.h"
@@ -95,7 +96,12 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  workerPrivate->PostMessage(aCx, aMessage, aTransferable, aRv);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(doc));
+
+  workerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
+                                            clientInfo, aRv);
 }
 
 WorkerPrivate*

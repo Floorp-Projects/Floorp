@@ -26,6 +26,12 @@ window.addEventListener("load", function testOnLoad() {
 
 let sdkpath = null;
 
+// Strip off the chrome prefix to get the actual path of the test directory
+function realPath(chrome) {
+  return chrome.substring("chrome://mochitests/content/jetpack-addon/".length)
+               .replace(".xpi", "");
+}
+
 // Installs a single add-on returning a promise for when install is completed
 function installAddon(url) {
   return new Promise(function(resolve, reject) {
@@ -68,8 +74,12 @@ function installAddon(url) {
           resolve(addon);
         },
 
+        onDownloadFailed: function(install) {
+          reject("Download failed: " + install.error);
+        },
+
         onInstallFailed: function(install) {
-          reject();
+          reject("Install failed: " + install.error);
         }
       });
 
@@ -110,10 +120,15 @@ function waitForResults() {
 
 // Runs tests for the add-on available at URL.
 let testAddon = Task.async(function*({ url, expected }) {
+  dump("TEST-INFO | jetpack-addon-harness.js | Installing test add-on " + realPath(url) + "\n");
   let addon = yield installAddon(url);
+
   let results = yield waitForResults();
+
+  dump("TEST-INFO | jetpack-addon-harness.js | Uninstalling test add-on " + realPath(url) + "\n");
   yield uninstallAddon(addon);
 
+  dump("TEST-INFO | jetpack-addon-harness.js | Testing add-on " + realPath(url) + " is complete\n");
   return results;
 });
 
@@ -196,13 +211,20 @@ function testInit() {
         testAddon(filename).then(results => {
           passed += results.passed;
           failed += results.failed;
-        }).then(testNextAddon);
+        }).then(testNextAddon, error => {
+          // If something went wrong during the test then a previous test add-on
+          // may still be installed, this leaves us in an unexpected state so
+          // probably best to just abandon testing at this point
+          failed++;
+          dump("TEST-UNEXPECTED-FAIL | jetpack-addon-harness.js | Error testing " + realPath(filename.url) + ": " + error + "\n");
+          finish();
+        });
       }
 
       testNextAddon();
     }
     catch (e) {
-      dump("TEST-UNEXPECTED-FAIL: jetpack-addon-harness.js | error starting test harness (" + e + ")\n");
+      dump("TEST-UNEXPECTED-FAIL | jetpack-addon-harness.js | error starting test harness (" + e + ")\n");
       dump(e.stack);
     }
   });

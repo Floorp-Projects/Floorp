@@ -299,6 +299,12 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
 {
   MOZ_ASSERT(aNewParent != mParent);
 
+  // This function shouldn't be getting called if the parents have different
+  // values for some flags in mBits, because if that were the case we would need
+  // to recompute those bits for |this|. (TODO: add more flags to |mask|.)
+  DebugOnly<uint64_t> mask = NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
+  MOZ_ASSERT((mParent->mBits & mask) == (aNewParent->mBits & mask));
+
   // Assertions checking for visited style are just to avoid some tricky
   // cases we can't be bothered handling at the moment.
   MOZ_ASSERT(!IsStyleIfVisited());
@@ -686,6 +692,12 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
         mutable_display->mDisplay = displayVal;
       }
     }
+  }
+
+  // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
+  if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
+      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
+    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
   }
 
   // Suppress border/padding of ruby level containers

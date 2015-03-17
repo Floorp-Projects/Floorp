@@ -50,6 +50,8 @@ public:
   static const NPClass* GetClass() { return &sNPClass; }
   static void NP_GetEntryPoints(NPPluginFuncs* aFuncs);
   static PluginAsyncSurrogate* Cast(NPP aInstance);
+  static void NotifyDestroyPending(NPP aInstance);
+  void NotifyDestroyPending();
 
   virtual PluginAsyncSurrogate*
   GetAsyncSurrogate() { return this; }
@@ -63,8 +65,9 @@ public:
                          bool* aHasProperty, bool* aHasMethod,
                          NPVariant* aResult);
 
-  PluginModuleParent*
-  GetParent() { return mParent; }
+  PluginModuleParent* GetParent() { return mParent; }
+
+  bool IsDestroyPending() const { return mDestroyPending; }
 
   bool SetAcceptingCalls(bool aAccept)
   {
@@ -151,6 +154,7 @@ private:
   bool      mInstantiated;
   bool      mAsyncSetWindow;
   bool      mInitCancelled;
+  bool      mDestroyPending;
   int32_t   mAsyncCallsInFlight;
 
   static const NPClass sNPClass;

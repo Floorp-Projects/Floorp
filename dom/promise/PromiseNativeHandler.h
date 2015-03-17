@@ -8,6 +8,7 @@
 #define mozilla_dom_PromiseNativeHandler_h
 
 #include "nsISupports.h"
+#include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace dom {

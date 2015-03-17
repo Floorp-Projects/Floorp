@@ -3695,7 +3695,7 @@ Tab.prototype = {
     if (BrowserApp.selectedTab == this) {
       if (resolution != this._drawZoom) {
         this._drawZoom = resolution;
-        cwu.setResolutionAndScaleTo(resolution / window.devicePixelRatio, resolution / window.devicePixelRatio);
+        cwu.setResolutionAndScaleTo(resolution / window.devicePixelRatio);
       }
     } else if (!fuzzyEquals(resolution, zoom)) {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
@@ -3819,7 +3819,7 @@ Tab.prototype = {
       if (BrowserApp.selectedTab == this) {
         let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         this._drawZoom = aZoom;
-        cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
+        cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio);
       }
     }
   },
@@ -4558,16 +4558,16 @@ Tab.prototype = {
   },
 
   _getGeckoZoom: function() {
-    let res = {x: {}, y: {}};
+    let res = {};
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.getResolution(res.x, res.y);
-    let zoom = res.x.value * window.devicePixelRatio;
+    cwu.getResolution(res);
+    let zoom = res.value * window.devicePixelRatio;
     return zoom;
   },
 
   saveSessionZoom: function(aZoom) {
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
+    cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio);
   },
 
   restoredSessionZoom: function() {
@@ -6442,7 +6442,10 @@ var ViewportHandler = {
    * metadata is available for that document.
    */
   getMetadataForDocument: function getMetadataForDocument(aDocument) {
-    let metadata = this._metadata.get(aDocument, new ViewportMetadata());
+    let metadata = this._metadata.get(aDocument);
+    if (metadata === undefined) {
+      metadata = new ViewportMetadata();
+    }
     return metadata;
   },
 

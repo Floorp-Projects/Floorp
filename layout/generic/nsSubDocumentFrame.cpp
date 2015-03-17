@@ -455,7 +455,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsIScrollableFrame *sf = presShell->GetRootScrollFrameAsScrollable();
   bool constructResolutionItem = subdocRootFrame &&
-    (presShell->GetXResolution() != 1.0 || presShell->GetYResolution() != 1.0);
+    (presShell->GetResolution() != 1.0);
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
   bool needsOwnLayer = false;
   if (constructResolutionItem ||

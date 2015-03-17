@@ -646,33 +646,25 @@ CloseGesture()
 
 // defined in nsWindowBase, called from shared module WinMouseScrollHandler.
 bool
-MetroWidget::DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent)
+MetroWidget::DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent)
 {
-  WidgetGUIEvent* newEvent = nullptr;
-  switch(aEvent->mClass) {
-    case eWheelEventClass:
-    {
-      WidgetWheelEvent* oldEvent = aEvent->AsWheelEvent();
-      WidgetWheelEvent* wheelEvent =
-        new WidgetWheelEvent(oldEvent->mFlags.mIsTrusted, oldEvent->message, oldEvent->widget);
-      wheelEvent->AssignWheelEventData(*oldEvent, true);
-      newEvent = static_cast<WidgetGUIEvent*>(wheelEvent);
-    }
-    break;
-    case eContentCommandEventClass:
-    {
-      WidgetContentCommandEvent* oldEvent = aEvent->AsContentCommandEvent();
-      WidgetContentCommandEvent* cmdEvent =
-        new WidgetContentCommandEvent(oldEvent->mFlags.mIsTrusted, oldEvent->message, oldEvent->widget);
-      cmdEvent->AssignContentCommandEventData(*oldEvent, true);
-      newEvent = static_cast<WidgetGUIEvent*>(cmdEvent);
-    }
-    break;
-    default:
-      MOZ_CRASH("unknown event in DispatchScrollEvent");
-    break;
-  }
-  mEventQueue.Push(newEvent);
+  WidgetWheelEvent* wheelEvent =
+    new WidgetWheelEvent(aEvent->mFlags.mIsTrusted, aEvent->message, aEvent->widget);
+  wheelEvent->AssignWheelEventData(*aEvent, true);
+  mEventQueue.Push(wheelEvent);
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &MetroWidget::DeliverNextScrollEvent);
+  NS_DispatchToCurrentThread(runnable);
+  return false;
+}
+
+bool
+MetroWidget::DispatchContentCommandEvent(mozilla::WidgetGUIEvent* aEvent)
+{
+  WidgetContentCommandEvent* cmdEvent =
+    new WidgetContentCommandEvent(aEvent->mFlags.mIsTrusted, aEvent->message, aEvent->widget);
+  cmdEvent->AssignContentCommandEventData(*aEvent, true);
+  mEventQueue.Push(cmdEvent);
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &MetroWidget::DeliverNextScrollEvent);
   NS_DispatchToCurrentThread(runnable);
@@ -683,22 +675,21 @@ void
 MetroWidget::DeliverNextScrollEvent()
 {
   WidgetGUIEvent* event =
-    static_cast<WidgetInputEvent*>(mEventQueue.PopFront());
+    static_cast<WidgetGUIEvent*>(mEventQueue.PopFront());
   DispatchWindowEvent(event);
   delete event;
 }
 
 // defined in nsWindowBase, called from shared module KeyboardLayout.
 bool
-MetroWidget::DispatchKeyboardEvent(WidgetGUIEvent* aEvent)
+MetroWidget::DispatchKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
-  WidgetKeyboardEvent* oldKeyEvent = aEvent->AsKeyboardEvent();
   WidgetKeyboardEvent* keyEvent =
-    new WidgetKeyboardEvent(oldKeyEvent->mFlags.mIsTrusted,
-                            oldKeyEvent->message, oldKeyEvent->widget);
+    new WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+                            aEvent->message, aEvent->widget);
   // XXX note this leaves pluginEvent null, which is fine for now.
-  keyEvent->AssignKeyEventData(*oldKeyEvent, true);
+  keyEvent->AssignKeyEventData(*aEvent, true);
   mKeyEventQueue.Push(keyEvent);
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &MetroWidget::DeliverNextKeyboardEvent);

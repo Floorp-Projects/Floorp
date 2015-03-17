@@ -99,6 +99,7 @@ PluginAsyncSurrogate::PluginAsyncSurrogate(PluginModuleParent* aParent)
   , mInstantiated(false)
   , mAsyncSetWindow(false)
   , mInitCancelled(false)
+  , mDestroyPending(false)
   , mAsyncCallsInFlight(0)
 {
   MOZ_ASSERT(aParent);
@@ -179,9 +180,27 @@ PluginAsyncSurrogate::NP_GetEntryPoints(NPPluginFuncs* aFuncs)
   aFuncs->asfile = &PluginModuleParent::NPP_StreamAsFile;
 }
 
+/* static */ void
+PluginAsyncSurrogate::NotifyDestroyPending(NPP aInstance)
+{
+  PluginAsyncSurrogate* surrogate = Cast(aInstance);
+  if (!surrogate) {
+    return;
+  }
+  surrogate->NotifyDestroyPending();
+}
+
+void
+PluginAsyncSurrogate::NotifyDestroyPending()
+{
+  mDestroyPending = true;
+  nsJSNPRuntime::OnPluginDestroyPending(mInstance);
+}
+
 NPError
 PluginAsyncSurrogate::NPP_Destroy(NPSavedData** aSave)
 {
+  NotifyDestroyPending();
   if (!WaitForInit()) {
     return NPERR_GENERIC_ERROR;
   }
@@ -417,7 +436,7 @@ PluginAsyncSurrogate::SetStreamType(NPStream* aStream, uint16_t aStreamType)
 void
 PluginAsyncSurrogate::OnInstanceCreated(PluginInstanceParent* aInstance)
 {
-  for (PRUint32 i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
+  for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
     PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
     uint16_t streamType = NP_NORMAL;
     NPError curError = aInstance->NPP_NewStream(

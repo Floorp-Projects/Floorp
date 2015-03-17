@@ -30,6 +30,7 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
                                   JSObject *aScopeObj,
                                   jsval *_params)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
 
 #ifdef DEBUG
@@ -45,15 +46,20 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
     NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
 
     JS::RootedObject scope(aCtx, aScopeObj);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
     rv = xpc->WrapNative(
       aCtx,
       ::JS_GetGlobalForObject(aCtx, scope),
       params,
       NS_GET_IID(mozIStorageStatementParams),
-      getter_AddRefs(aStatement->mStatementParamsHolder)
+      getter_AddRefs(holder)
     );
     NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<AsyncStatementParamsHolder> paramsHolder =
+      new AsyncStatementParamsHolder(holder);
+    aStatement->mStatementParamsHolder =
+      new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(paramsHolder);
   }
 
   JS::Rooted<JSObject*> obj(aCtx);
@@ -110,6 +116,35 @@ AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     return getParams(stmt, aCtx, scope, _result);
 
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// AsyncStatementParamsHolder
+
+NS_IMPL_ISUPPORTS(AsyncStatementParamsHolder, nsIXPConnectJSObjectHolder);
+
+JSObject*
+AsyncStatementParamsHolder::GetJSObject()
+{
+  return mHolder->GetJSObject();
+}
+
+AsyncStatementParamsHolder::AsyncStatementParamsHolder(nsIXPConnectJSObjectHolder* aHolder)
+  : mHolder(aHolder)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mHolder);
+}
+
+AsyncStatementParamsHolder::~AsyncStatementParamsHolder()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // We are considered dead at this point, so any wrappers for row or params
+  // need to lose their reference to the statement.
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(mHolder);
+  nsCOMPtr<mozIStorageStatementParams> iObj = do_QueryWrappedNative(wrapper);
+  AsyncStatementParams *obj = static_cast<AsyncStatementParams *>(iObj.get());
+  obj->mStatement = nullptr;
 }
 
 } // namespace storage
