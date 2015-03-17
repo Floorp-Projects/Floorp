@@ -1018,6 +1018,8 @@ class GCRuntime
 
     JSGCMode mode;
 
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
+
     uint64_t decommitThreshold;
 
     /* During shutdown, the GC needs to clean up every possible object. */
@@ -1303,6 +1305,22 @@ class GCRuntime
     friend class js::GCHelperState;
     friend class js::gc::MarkingValidator;
     friend class js::gc::AutoTraceSession;
+    friend class AutoEnterIteration;
+};
+
+/* Prevent compartments and zones from being collected during iteration. */
+class AutoEnterIteration {
+    GCRuntime *gc;
+
+  public:
+    AutoEnterIteration(GCRuntime *gc_) : gc(gc_) {
+        ++gc->numActiveZoneIters;
+    }
+
+    ~AutoEnterIteration() {
+        MOZ_ASSERT(gc->numActiveZoneIters);
+        --gc->numActiveZoneIters;
+    }
 };
 
 #ifdef JS_GC_ZEAL
