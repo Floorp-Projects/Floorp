@@ -219,6 +219,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins);
+    void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect *ins);
     void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
     void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
