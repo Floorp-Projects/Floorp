@@ -238,6 +238,7 @@ AVCCMediaDataDecoder::UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraD
   mp4_demuxer::SPSData spsdata;
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
       spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+    mp4_demuxer::H264::EnsureSPSIsSane(spsdata);
     mCurrentConfig.image_width = spsdata.pic_width;
     mCurrentConfig.image_height = spsdata.pic_height;
     mCurrentConfig.display_width = spsdata.display_width;
