@@ -33,25 +33,20 @@ class WebGLFramebuffer MOZ_FINAL
 public:
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLFramebuffer)
 
-    class AttachPoint
+    explicit WebGLFramebuffer(WebGLContext* webgl, GLuint fbo);
+
+    struct Attachment
     {
-    public:
-        WebGLFramebuffer* const mFB;
-    private:
+        // deleting a texture or renderbuffer immediately detaches it
         WebGLRefPtr<WebGLTexture> mTexturePtr;
         WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
         FBAttachment mAttachmentPoint;
         TexImageTarget mTexImageTarget;
         GLint mTexImageLevel;
+        mutable bool mNeedsFinalize;
 
-    public:
-        AttachPoint(WebGLFramebuffer* fb, FBAttachment attachmentPoint);
-        ~AttachPoint();
-
-        void Unlink() {
-            mRenderbufferPtr = nullptr;
-            mTexturePtr = nullptr;
-        }
+        explicit Attachment(FBAttachment attachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0);
+        ~Attachment();
 
         bool IsDefined() const;
 
@@ -61,10 +56,6 @@ public:
 
         bool HasAlpha() const;
         bool IsReadableFloat() const;
-
-        void Clear() {
-            SetRenderbuffer(nullptr);
-        }
 
         void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level);
         void SetRenderbuffer(WebGLRenderbuffer* rb);
@@ -91,6 +82,8 @@ public:
         bool HasUninitializedImageData() const;
         void SetImageDataStatus(WebGLImageDataStatus x);
 
+        void Reset();
+
         const WebGLRectangleObject& RectangleObject() const;
 
         bool HasImage() const;
@@ -100,29 +93,6 @@ public:
                                 FBAttachment attachmentLoc) const;
     };
 
-private:
-    mutable GLenum mStatus;
-
-    GLenum mReadBufferMode;
-
-    // No need to chase pointers for the oft-used color0.
-    AttachPoint mColorAttachment0;
-    AttachPoint mDepthAttachment;
-    AttachPoint mStencilAttachment;
-    AttachPoint mDepthStencilAttachment;
-    nsTArray<AttachPoint> mMoreColorAttachments;
-
-public:
-    WebGLFramebuffer(WebGLContext* webgl, GLuint fbo);
-
-private:
-    ~WebGLFramebuffer() {
-        DeleteOnce();
-    }
-
-    const WebGLRectangleObject& GetAnyRectObject() const;
-
-public:
     void Delete();
 
     void FramebufferRenderbuffer(FBAttachment attachment, RBTarget rbtarget,
@@ -132,6 +102,13 @@ public:
                               TexImageTarget texImageTarget, WebGLTexture* tex,
                               GLint level);
 
+private:
+    void DetachAttachment(WebGLFramebuffer::Attachment& attachment);
+    void DetachAllAttachments();
+    const WebGLRectangleObject& GetAnyRectObject() const;
+    Attachment* GetAttachmentOrNull(FBAttachment attachment);
+
+public:
     bool HasDefinedAttachments() const;
     bool HasIncompleteAttachments() const;
     bool AllImageRectsMatch() const;
@@ -139,7 +116,7 @@ public:
     FBStatus CheckFramebufferStatus() const;
 
     GLenum
-    GetFormatForAttachment(const WebGLFramebuffer::AttachPoint& attachment) const;
+    GetFormatForAttachment(const WebGLFramebuffer::Attachment& attachment) const;
 
     bool HasDepthStencilConflict() const {
         return int(mDepthAttachment.IsDefined()) +
@@ -148,28 +125,25 @@ public:
     }
 
     size_t ColorAttachmentCount() const {
-        return 1 + mMoreColorAttachments.Length();
+        return mColorAttachments.Length();
+    }
+    const Attachment& ColorAttachment(size_t colorAttachmentId) const {
+        return mColorAttachments[colorAttachmentId];
     }
 
-    const AttachPoint& ColorAttachment(size_t colorAttachmentId) const {
-        MOZ_ASSERT(colorAttachmentId < ColorAttachmentCount());
-        return colorAttachmentId ? mMoreColorAttachments[colorAttachmentId - 1]
-                                 : mColorAttachment0;
-    }
-
-    const AttachPoint& DepthAttachment() const {
+    const Attachment& DepthAttachment() const {
         return mDepthAttachment;
     }
 
-    const AttachPoint& StencilAttachment() const {
+    const Attachment& StencilAttachment() const {
         return mStencilAttachment;
     }
 
-    const AttachPoint& DepthStencilAttachment() const {
+    const Attachment& DepthStencilAttachment() const {
         return mDepthStencilAttachment;
     }
 
-    AttachPoint& GetAttachPoint(FBAttachment attachPointEnum);
+    const Attachment& GetAttachment(FBAttachment attachment) const;
 
     void DetachTexture(const WebGLTexture* tex);
 
@@ -196,13 +170,26 @@ public:
     bool CheckColorAttachmentNumber(FBAttachment attachment,
                                     const char* funcName) const;
 
-    void EnsureColorAttachPoints(size_t colorAttachmentId);
+    void EnsureColorAttachments(size_t colorAttachmentId);
 
-    void InvalidateFramebufferStatus() const {
-        mStatus = 0;
-    }
+    void NotifyAttachableChanged() const;
 
     bool ValidateForRead(const char* info, TexInternalFormat* const out_format);
+
+private:
+    ~WebGLFramebuffer() {
+        DeleteOnce();
+    }
+
+    mutable GLenum mStatus;
+
+    // we only store pointers to attached renderbuffers, not to attached textures, because
+    // we will only need to initialize renderbuffers. Textures are already initialized.
+    nsTArray<Attachment> mColorAttachments;
+    Attachment mDepthAttachment;
+    Attachment mStencilAttachment;
+    Attachment mDepthStencilAttachment;
+    GLenum mReadBufferMode;
 };
 
 } // namespace mozilla
