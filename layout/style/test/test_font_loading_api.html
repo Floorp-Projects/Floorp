@@ -830,6 +830,26 @@ function runTest() {
 
   }).then(function() {
 
+    // (TEST 34) Test that descriptor getters for unspecified descriptors on
+    // CSS-connected FontFace objects return their default values.
+    var style = document.querySelector("style");
+    var ruleText = "@font-face { font-family: something; src: url(x); }";
+
+    style.textContent = ruleText;
+    document.body.offsetTop;
+
+    var all = Array.from(document.fonts);
+    var face = all[0];
+
+    Object.keys(defaultValues).forEach(function(aDesc) {
+      is(face[aDesc], defaultValues[aDesc], "FontFace should return default value for " + aDesc + " (TEST 34)");
+    });
+
+    style.textContent = "";
+    document.body.offsetTop;
+
+  }).then(function() {
+
     // (TEST LAST) Test that a pending style sheet load prevents
     // document.fonts.status from being set to "loaded".
 
