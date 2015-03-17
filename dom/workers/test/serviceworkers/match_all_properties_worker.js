@@ -8,6 +8,7 @@ onmessage = function(e) {
     for (i = 0; i < res.length; i++) {
       client = res[i];
       response = {
+        id: client.id,
         url: client.url,
         visibilityState: client.visibilityState,
         focused: client.focused,

@@ -17,12 +17,12 @@ var g = newGlobal();
 
 // Start an off thread compilation that will not run until GC has finished
 if ("gcstate" in this)
-   assertEq("mark", gcstate());
+   assertEq(gcstate(), "mark");
 g.offThreadCompileScript('23;', {});
 
 // Wait for the compilation to finish, which must finish the GC first
 assertEq(23, g.runOffThreadScript());
 if ("gcstate" in this)
-   assertEq("none", gcstate());
+   assertEq(gcstate(), "none");
 
 print("done");

@@ -13,3 +13,6 @@ EXTRA_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Async Tooling')

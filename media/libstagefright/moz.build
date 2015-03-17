@@ -156,4 +156,5 @@ elif CONFIG['GNU_CXX']:
         CXXFLAGS += [
             '-Wno-mismatched-tags',
             '-Wno-tautological-constant-out-of-range-compare',
+            '-Wno-unreachable-code-return',
         ]
