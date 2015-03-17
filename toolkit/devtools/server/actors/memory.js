@@ -181,6 +181,10 @@ let MemoryActor = protocol.ActorClass({
    *        See the protocol.js definition of AllocationsRecordingOptions above.
    */
   startRecordingAllocations: method(expectState("attached", function(options = {}) {
+    if (this.dbg.memory.trackingAllocationSites) {
+      return Date.now();
+    }
+
     this._frameCache.initFrames();
 
     this.dbg.memory.allocationSamplingProbability = options.probability != null
