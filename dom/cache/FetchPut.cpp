@@ -20,6 +20,8 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "nsCRT.h"
+#include "nsHttp.h"
 
 namespace mozilla {
 namespace dom {
@@ -367,31 +369,47 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
     bool varyHeadersMatch = true;
 
     for (uint32_t j = 0; j < varyHeaders.Length(); ++j) {
-      if (varyHeaders[i].EqualsLiteral("*")) {
-        continue;
+      // Extract the header names inside the Vary header value.
+      nsAutoCString varyValue(varyHeaders[j]);
+      char* rawBuffer = varyValue.BeginWriting();
+      char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+      bool bailOut = false;
+      for (; token;
+           token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+        nsDependentCString header(token);
+        if (header.EqualsLiteral("*")) {
+          continue;
+        }
+
+        // The VARY header could in theory contain an illegal header name.  So
+        // we need to detect the error in the Get() calls below.  Treat these
+        // as not matching.
+        ErrorResult headerRv;
+
+        nsAutoCString value;
+        requestHeaders->Get(header, value, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          varyHeadersMatch = false;
+          bailOut = true;
+          break;
+        }
+
+        nsAutoCString cachedValue;
+        cachedRequestHeaders->Get(header, value, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          varyHeadersMatch = false;
+          bailOut = true;
+          break;
+        }
+
+        if (value != cachedValue) {
+          varyHeadersMatch = false;
+          bailOut = true;
+          break;
+        }
       }
 
-      // The VARY header could in theory contain an illegal header name.  So
-      // we need to detect the error in the Get() calls below.  Treat these
-      // as not matching.
-      ErrorResult headerRv;
-
-      nsAutoCString value;
-      requestHeaders->Get(varyHeaders[j], value, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        varyHeadersMatch = false;
-        break;
-      }
-
-      nsAutoCString cachedValue;
-      cachedRequestHeaders->Get(varyHeaders[j], value, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        varyHeadersMatch = false;
-        break;
-      }
-
-      if (value != cachedValue) {
-        varyHeadersMatch = false;
+      if (bailOut) {
         break;
       }
     }
