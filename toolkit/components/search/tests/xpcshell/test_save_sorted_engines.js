@@ -39,7 +39,7 @@ add_task(function* test_save_sorted_engines() {
   search.moveEngine(engine2, 1);
 
   // Changes should be commited immediately
-  yield new Promise(resolve => afterCommit(resolve));
+  yield promiseAfterCommit();
   do_print("Commit complete after moveEngine");
 
   // Check that the entries are placed as specified correctly
@@ -49,7 +49,7 @@ add_task(function* test_save_sorted_engines() {
 
   // Test removing an engine
   search.removeEngine(engine1);
-  yield new Promise(resolve => afterCommit(resolve));
+  yield promiseAfterCommit();
   do_print("Commit complete after removeEngine");
 
   // Check that the order of the remaining engine was updated correctly
@@ -59,7 +59,7 @@ add_task(function* test_save_sorted_engines() {
   // Test adding a new engine
   search.addEngineWithDetails("foo", "", "foo", "", "GET",
                               "http://searchget/?search={searchTerms}");
-  yield new Promise(resolve => afterCommit(resolve));
+  yield promiseAfterCommit();
   do_print("Commit complete after addEngineWithDetails");
 
   json = getSearchMetadata();

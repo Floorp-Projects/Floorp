@@ -13,6 +13,12 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
+#define VARIANT_BASE_IID                                   \
+{ /* 78888042-0fa3-4f7a-8b19-7996f99bf1aa */               \
+  0x78888042, 0x0fa3, 0x4f7a,                              \
+  { 0x8b, 0x19, 0x79, 0x96, 0xf9, 0x9b, 0xf1, 0xaa }       \
+}
+
 /**
  * This class is used by the storage module whenever an nsIVariant needs to be
  * returned.  We provide traits for the basic sqlite types to make use easier.
@@ -36,10 +42,14 @@ class Variant_base : public nsIVariant
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIVARIANT
+  NS_DECLARE_STATIC_IID_ACCESSOR(VARIANT_BASE_IID)
 
 protected:
   virtual ~Variant_base() { }
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(Variant_base,
+                              VARIANT_BASE_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Traits
@@ -366,7 +376,7 @@ public:
 //// Template Implementation
 
 template <typename DataType, bool Adopting=false>
-class Variant : public Variant_base
+class Variant MOZ_FINAL : public Variant_base
 {
   ~Variant()
   {

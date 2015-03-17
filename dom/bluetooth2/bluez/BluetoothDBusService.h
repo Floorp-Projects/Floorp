@@ -198,6 +198,11 @@ public:
   UnregisterGattClientInternal(int aClientIf,
                                BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual void
+  GattClientReadRemoteRssiInternal(
+    int aClientIf, const nsAString& aDeviceAddress,
+    BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

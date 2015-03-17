@@ -5,12 +5,12 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
+Cu.importGlobalProperties(["URL"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UserAutoCompleteResult",
                                   "resource://gre/modules/LoginManagerContent.jsm");
@@ -120,6 +120,12 @@ var LoginManagerParent = {
     mm.addMessageListener("RemoteLogins:findLogins", this);
     mm.addMessageListener("RemoteLogins:onFormSubmit", this);
     mm.addMessageListener("RemoteLogins:autoCompleteLogins", this);
+
+    XPCOMUtils.defineLazyGetter(this, "recipeParentPromise", () => {
+      const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
+      let parent = new LoginRecipesParent();
+      return parent.initializationPromise;
+    });
   },
 
   receiveMessage: function (msg) {
@@ -127,11 +133,11 @@ var LoginManagerParent = {
     switch (msg.name) {
       case "RemoteLogins:findLogins": {
         // TODO Verify msg.target's principals against the formOrigin?
-        this.findLogins(data.options.showMasterPassword,
-                        data.formOrigin,
-                        data.actionOrigin,
-                        data.requestId,
-                        msg.target.messageManager);
+        this.sendLoginDataToChild(data.options.showMasterPassword,
+                                  data.formOrigin,
+                                  data.actionOrigin,
+                                  data.requestId,
+                                  msg.target.messageManager);
         break;
       }
 
@@ -154,19 +160,40 @@ var LoginManagerParent = {
     }
   },
 
-  findLogins: function(showMasterPassword, formOrigin, actionOrigin,
-                       requestId, target) {
+  /**
+   * Send relevant data (e.g. logins and recipes) to the child process (LoginManagerContent).
+   */
+  sendLoginDataToChild: Task.async(function*(showMasterPassword, formOrigin, actionOrigin,
+                                             requestId, target) {
+    let recipes = [];
+    if (formOrigin) {
+      let formHost;
+      try {
+        formHost = (new URL(formOrigin)).host;
+        let recipeManager = yield this.recipeParentPromise;
+        recipes = recipeManager.getRecipesForHost(formHost);
+      } catch (ex) {
+        // Some schemes e.g. chrome aren't supported by URL
+      }
+    }
+
     if (!showMasterPassword && !Services.logins.isLoggedIn) {
-      target.sendAsyncMessage("RemoteLogins:loginsFound",
-                              { requestId: requestId, logins: [] });
+      target.sendAsyncMessage("RemoteLogins:loginsFound", {
+        requestId: requestId,
+        logins: [],
+        recipes,
+      });
       return;
     }
 
     let allLoginsCount = Services.logins.countLogins(formOrigin, "", null);
     // If there are no logins for this site, bail out now.
     if (!allLoginsCount) {
-      target.sendAsyncMessage("RemoteLogins:loginsFound",
-                              { requestId: requestId, logins: [] });
+      target.sendAsyncMessage("RemoteLogins:loginsFound", {
+        requestId: requestId,
+        logins: [],
+        recipes,
+      });
       return;
     }
 
@@ -185,13 +212,16 @@ var LoginManagerParent = {
           Services.obs.removeObserver(this, "passwordmgr-crypto-login");
           Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
           if (topic == "passwordmgr-crypto-loginCanceled") {
-            target.sendAsyncMessage("RemoteLogins:loginsFound",
-                                    { requestId: requestId, logins: [] });
+            target.sendAsyncMessage("RemoteLogins:loginsFound", {
+              requestId: requestId,
+              logins: [],
+              recipes,
+            });
             return;
           }
 
-          self.findLogins(showMasterPassword, formOrigin, actionOrigin,
-                          requestId, target);
+          self.sendLoginDataToChild(showMasterPassword, formOrigin, actionOrigin,
+                                    requestId, target);
         },
       };
 
@@ -212,6 +242,7 @@ var LoginManagerParent = {
     target.sendAsyncMessage("RemoteLogins:loginsFound", {
       requestId: requestId,
       logins: jsLogins,
+      recipes,
     });
 
     const PWMGR_FORM_ACTION_EFFECT =  Services.telemetry.getHistogramById("PWMGR_FORM_ACTION_EFFECT");
@@ -223,7 +254,7 @@ var LoginManagerParent = {
       // logins.length < allLoginsCount
       PWMGR_FORM_ACTION_EFFECT.add(1);
     }
-  },
+  }),
 
   doAutocompleteSearch: function({ formOrigin, actionOrigin,
                                    searchString, previousResult,
