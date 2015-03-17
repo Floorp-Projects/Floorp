@@ -2,53 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
+ add_task(function test() {
   requestLongerTimeout(2);
-  waitForExplicitFinish();
-
   const page1 = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
                 'browser_privatebrowsing_localStorage_page1.html'
 
-  function checkLocalStorage(aWindow, aCallback) {
-    executeSoon(function() {
-      let tab = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
-      let browser = aWindow.gBrowser.selectedBrowser;
-      browser.addEventListener('load', function() {
-        if (browser.contentWindow.location != page1) {
-          browser.loadURI(page1);
-          return;
-        }
-        browser.removeEventListener('load', arguments.callee, true);
-        let tab2 = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
-        browser.contentWindow.location = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
-                         'browser_privatebrowsing_localStorage_page2.html';
-        browser.addEventListener('load', function() {
-          browser.removeEventListener('load', arguments.callee, true);
-          is(browser.contentWindow.document.title, '2', "localStorage should contain 2 items");
-          aCallback();
-        }, true);
-      }, true);
-    });
-  }
+  let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
 
-  let windowsToClose = [];
-  function testOnWindow(options, callback) {
-    let win = OpenBrowserWindow(options);
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
-      windowsToClose.push(win);
-      callback(win);
-    }, false);
-  };
+  let tab = win.gBrowser.selectedTab = win.gBrowser.addTab(page1);
+  let browser = win.gBrowser.selectedBrowser;
+  yield BrowserTestUtils.browserLoaded(browser);
 
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
+  browser.loadURI(
+    'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+    'browser_privatebrowsing_localStorage_page2.html');
+  yield BrowserTestUtils.browserLoaded(browser);
 
-  testOnWindow({private: true}, function(win) {
-    checkLocalStorage(win, finish);
-  });
+  is(browser.contentTitle, '2', "localStorage should contain 2 items");
 
-}
+  // Cleanup
+  yield BrowserTestUtils.closeWindow(win);
+ });

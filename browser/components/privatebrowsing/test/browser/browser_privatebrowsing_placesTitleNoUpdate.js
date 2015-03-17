@@ -4,108 +4,69 @@
 
 // Test to make sure that the visited page titles do not get updated inside the
 // private browsing mode.
+"use strict";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* test() {
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html"
   const TEST_URI = Services.io.newURI(TEST_URL, null, null);
   const TITLE_1 = "Title 1";
   const TITLE_2 = "Title 2";
 
-  let selectedWin = null;
-  let windowsToClose = [];
-  let tabToClose = null;
-  let testNumber = 0;
-  let historyObserver;
+  function waitForTitleChanged() {
+    return new Promise(resolve => {
+      let historyObserver = {
+        onTitleChanged: function(uri, pageTitle) {
+          PlacesUtils.history.removeObserver(historyObserver, false);
+          resolve({uri: uri, pageTitle: pageTitle});
+        },
+        onBeginUpdateBatch: function () {},
+        onEndUpdateBatch: function () {},
+        onVisit: function () {},
+        onDeleteURI: function () {},
+        onClearHistory: function () {},
+        onPageChanged: function () {},
+        onDeleteVisits: function() {},
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+      };
 
-
-  registerCleanupFunction(function() {
-    PlacesUtils.history.removeObserver(historyObserver, false);
-    windowsToClose.forEach(function(aWin) {
-      aWin.close();
+      PlacesUtils.history.addObserver(historyObserver, false);
     });
-    gBrowser.removeTab(tabToClose);
+  };
+
+  yield PlacesTestUtils.clearHistory();
+
+  let tabToClose = gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
+  yield waitForTitleChanged();
+  is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1, "The title matches the orignal title after first visit");
+
+  let place = {
+    uri: TEST_URI,
+    title: TITLE_2,
+    visits: [{
+      visitDate: Date.now() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+    }]
+  };
+  PlacesUtils.asyncHistory.updatePlaces(place, {
+    handleError: function () ok(false, "Unexpected error in adding visit."),
+    handleResult: function () { },
+    handleCompletion: function () {}
   });
 
+  yield waitForTitleChanged();
+  is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title matches the updated title after updating visit");
 
-  PlacesTestUtils.clearHistory().then(() => {
-    historyObserver = {
-      onTitleChanged: function(aURI, aPageTitle) {
-        switch (++testNumber) {
-          case 1:
-            afterFirstVisit();
-          break;
-          case 2:
-            afterUpdateVisit();
-          break;
-        }
-      },
-      onBeginUpdateBatch: function () {},
-      onEndUpdateBatch: function () {},
-      onVisit: function () {},
-      onDeleteURI: function () {},
-      onClearHistory: function () {},
-      onPageChanged: function () {},
-      onDeleteVisits: function() {},
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
-    };
-    PlacesUtils.history.addObserver(historyObserver, false);
+  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private:true});
+  yield BrowserTestUtils.browserLoaded(privateWin.gBrowser.addTab(TEST_URL).linkedBrowser);
 
-    tabToClose = gBrowser.addTab();
-    gBrowser.selectedTab = tabToClose;
-    whenPageLoad(window, function() {});
-  });
+  is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title remains the same after visiting in private window");
+  yield PlacesTestUtils.clearHistory();
 
-  function afterFirstVisit() {
-    is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_1, "The title matches the orignal title after first visit");
-
-    let place = {
-      uri: TEST_URI,
-      title: TITLE_2,
-      visits: [{
-        visitDate: Date.now() * 1000,
-        transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
-      }]
-    };
-    PlacesUtils.asyncHistory.updatePlaces(place, {
-      handleError: function () do_throw("Unexpected error in adding visit."),
-      handleResult: function () { },
-      handleCompletion: function () {}
-    });
-  }
-
-  function afterUpdateVisit() {
-    is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title matches the updated title after updating visit");
-
-    testOnWindow(true, function(aWin) {
-      whenPageLoad(aWin, function() {
-        executeSoon(afterFirstVisitInPrivateWindow);
-      });
-    });
-  }
-
-  function afterFirstVisitInPrivateWindow() {
-     is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title remains the same after visiting in private window");
-     PlacesTestUtils.clearHistory().then(finish);
-  }
-
-  function whenPageLoad(aWin, aCallback) {
-    aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-      aWin.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-      aCallback();
-    }, true);
-    aWin.gBrowser.selectedBrowser.loadURI(TEST_URL);
-  }
-
-  function testOnWindow(aPrivate, aCallback) {
-    whenNewWindowLoaded({ private: aPrivate }, function(aWin) {
-      selectedWin = aWin;
-      windowsToClose.push(aWin);
-      executeSoon(function() { aCallback(aWin) });
-    });
-  }
-}
+  // Cleanup
+  BrowserTestUtils.closeWindow(privateWin);
+  gBrowser.removeTab(tabToClose);
+});
 
