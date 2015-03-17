@@ -1,118 +1,95 @@
 onfetch = function(ev) {
   if (ev.request.url.contains("synthesized.txt")) {
-    var p = new Promise(function(resolve) {
-      var r = new Response("synthesized response body", {});
-      resolve(r);
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(
+      new Response("synthesized response body", {})
+    ));
   }
 
   else if (ev.request.url.contains("synthesized-404.txt")) {
-    var p = new Promise(function(resolve) {
-      var r = new Response("synthesized response body", { status: 404 });
-      resolve(r);
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(
+      new Response("synthesized response body", { status: 404 })
+    ));
   }
 
   else if (ev.request.url.contains("synthesized-headers.txt")) {
-    var p = new Promise(function(resolve) {
-      var r = new Response("synthesized response body", {
+    ev.respondWith(Promise.resolve(
+      new Response("synthesized response body", {
         headers: {
           "X-Custom-Greeting": "Hello"
         }
-      });
-      resolve(r);
-    });
-    ev.respondWith(p);
+      })
+    ));
   }
 
   else if (ev.request.url.contains("ignored.txt")) {
   }
 
   else if (ev.request.url.contains("rejected.txt")) {
-    var p = new Promise(function(resolve, reject) {
-      reject();
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.reject());
   }
 
   else if (ev.request.url.contains("nonresponse.txt")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(5);
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(5));
   }
 
   else if (ev.request.url.contains("nonresponse2.txt")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve({});
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve({}));
   }
 
   else if (ev.request.url.contains("headers.txt")) {
-    var p = new Promise(function(resolve, reject) {
-      var ok = true;
-      ok &= ev.request.headers.get("X-Test1") == "header1";
-      ok &= ev.request.headers.get("X-Test2") == "header2";
-      var r = new Response(ok.toString(), {});
-      resolve(r);
-    });
-    ev.respondWith(p);    
+    var ok = true;
+    ok &= ev.request.headers.get("X-Test1") == "header1";
+    ok &= ev.request.headers.get("X-Test2") == "header2";
+    ev.respondWith(Promise.resolve(
+      new Response(ok.toString(), {})
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_image.gif")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response(atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs"), {
+    ev.respondWith(Promise.resolve(
+      new Response(atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs"), {
         headers: {
           "Content-Type": "image/gif"
         }
-      }));
-    });
-    ev.respondWith(p);
+      })
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_script.js")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response("check_intercepted_script();", {}));
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(
+      new Response("check_intercepted_script();", {})
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_stylesheet.css")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response("#style-test { background-color: black !important; }", {
+    ev.respondWith(Promise.resolve(
+      new Response("#style-test { background-color: black !important; }", {
         headers : {
           "Content-Type": "text/css"
         }
-      }));
-    });
-    ev.respondWith(p);
+      })
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_page.html")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response("<script>window.frameElement.test_result = true;</script>", {
+    ev.respondWith(Promise.resolve(
+      new Response("<script>window.frameElement.test_result = true;</script>", {
         headers : {
           "Content-Type": "text/html"
         }
-      }));
-    });
-    ev.respondWith(p);
+      })
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_worker_script.js")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response("postMessage('worker-intercept-success')", {}));
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(
+      new Response("postMessage('worker-intercept-success')", {})
+    ));
   }
 
   else if (ev.request.url.contains("nonexistent_imported_script.js")) {
-    var p = new Promise(function(resolve, reject) {
-      resolve(new Response("check_intercepted_script();", {}));
-    });
-    ev.respondWith(p);
+    ev.respondWith(Promise.resolve(
+      new Response("check_intercepted_script();", {})
+    ));
   }
 }
