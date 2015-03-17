@@ -130,6 +130,38 @@ ReadingListImpl.prototype = {
   }),
 
   /**
+   * Checks whether a given URL is in the ReadingList already.
+   *
+   * @param {String/nsIURI} url - URL to check.
+   * @returns {Promise} Promise that is fulfilled with a boolean indicating
+   *                    whether the URL is in the list or not.
+   */
+  containsURL: Task.async(function* (url) {
+    url = normalizeURI(url).spec;
+
+    // This is used on every tab switch and page load of the current tab, so we
+    // want it to be quick and avoid a DB query whenever possible.
+
+    // First check if any cached items have a direct match.
+    if (this._itemsByURL.has(url)) {
+      return true;
+    }
+
+    // Then check if any cached items may have a different resolved URL
+    // that matches.
+    for (let itemWeakRef of this._itemsByURL.values()) {
+      let item = itemWeakRef.get();
+      if (item && item.resolvedURL == url) {
+        return true;
+      }
+    }
+
+    // Finally, fall back to the DB.
+    let count = yield this.count({url: url}, {resolvedURL: url});
+    return (count > 0);
+  }),
+
+  /**
    * Enumerates the items in the list that match the given options.
    *
    * @param callback Called for each item in the enumeration.  It's passed a
@@ -190,6 +222,7 @@ ReadingListImpl.prototype = {
    */
   addItem: Task.async(function* (obj) {
     obj = stripNonItemProperties(obj);
+    normalizeReadingListProperties(obj);
     yield this._store.addItem(obj);
     this._invalidateIterators();
     let item = this._itemFromObject(obj);
@@ -248,8 +281,35 @@ ReadingListImpl.prototype = {
    * @param {String/nsIURI} uri - URI to match against. This will be normalized.
    */
   getItemForURL: Task.async(function* (uri) {
-    let url = this._normalizeURI(uri).spec;
+    let url = normalizeURI(uri).spec;
     let [item] = yield this.iterator({url: url}, {resolvedURL: url}).items(1);
+    return item;
+  }),
+
+   /**
+   * Add to the ReadingList the page that is loaded in a given browser.
+   *
+   * @param {<xul:browser>} browser - Browser element for the document.
+   * @return {Promise} Promise that is fullfilled with the added item.
+   */
+  addItemFromBrowser: Task.async(function* (browser) {
+    let metadata = yield getMetadataFromBrowser(browser);
+    let itemData = {
+      url: browser.currentURI,
+      title: metadata.title,
+      resolvedURL: metadata.url,
+      excerpt: metadata.description,
+    };
+
+    if (metadata.description) {
+      itemData.exerpt = metadata.description;
+    }
+
+    if (metadata.previews.length > 0) {
+      itemData.image = metadata.previews[0];
+    }
+
+    let item = yield ReadingList.addItem(itemData);
     return item;
   }),
 
@@ -303,22 +363,6 @@ ReadingListImpl.prototype = {
 
   // A Set containing listener objects.
   _listeners: null,
-
-  /**
-   * Normalize a URI, stripping away extraneous parts we don't want to store
-   * or compare against.
-   *
-   * @param {nsIURI/String} uri - URI to normalize.
-   * @returns {nsIURI} Cloned and normalized version of the input URI.
-   */
-  _normalizeURI(uri) {
-    if (typeof uri == "string") {
-      uri = Services.io.newURI(uri, "", null);
-    }
-    uri = uri.cloneIgnoringRef();
-    uri.userPass = "";
-    return uri;
-  },
 
   /**
    * Returns the ReadingListItem represented by the given simple object.  If
@@ -375,11 +419,25 @@ ReadingListImpl.prototype = {
   },
 
   _ensureItemBelongsToList(item) {
-    if (item.list != this) {
-      throw new Error("The item does not belong to this list");
+    if (!item || !item._ensureBelongsToList) {
+      throw new Error("The item is not a ReadingListItem");
     }
+    item._ensureBelongsToList();
   },
 };
+
+/*
+ * normalize the properties of a "regular" object that reflects a ReadingListItem
+ */
+function normalizeReadingListProperties(obj) {
+  if (obj.url) {
+    obj.url = normalizeURI(obj.url).spec;
+  }
+  if (obj.resolvedURL) {
+    obj.resolvedURL = normalizeURI(obj.resolvedURL).spec;
+  }
+}
+
 
 let _unserializable = () => {}; // See comments in the ReadingListItem ctor.
 
@@ -431,9 +489,6 @@ ReadingListItem.prototype = {
   },
   set guid(val) {
     this._properties.guid = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -447,9 +502,6 @@ ReadingListItem.prototype = {
   },
   set lastModified(val) {
     this._properties.lastModified = val.valueOf();
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -460,10 +512,7 @@ ReadingListItem.prototype = {
     return this._properties.url;
   },
   set url(val) {
-    this._properties.url = val;
-    if (this.list) {
-      this.commit();
-    }
+    this._properties.url = normalizeURI(val).spec;
   },
 
   /**
@@ -476,10 +525,7 @@ ReadingListItem.prototype = {
            undefined;
   },
   set uri(val) {
-    this.url = val.spec;
-    if (this.list) {
-      this.commit();
-    }
+    this.url = normalizeURI(val).spec;
   },
 
   /**
@@ -502,10 +548,7 @@ ReadingListItem.prototype = {
     return this._properties.resolvedURL;
   },
   set resolvedURL(val) {
-    this._properties.resolvedURL = val;
-    if (this.list) {
-      this.commit();
-    }
+    this._properties.resolvedURL = normalizeURI(val).spec;
   },
 
   /**
@@ -519,9 +562,6 @@ ReadingListItem.prototype = {
   },
   set resolvedURI(val) {
     this.resolvedURL = val.spec;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -533,9 +573,6 @@ ReadingListItem.prototype = {
   },
   set title(val) {
     this._properties.title = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -547,9 +584,6 @@ ReadingListItem.prototype = {
   },
   set resolvedTitle(val) {
     this._properties.resolvedTitle = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -561,9 +595,6 @@ ReadingListItem.prototype = {
   },
   set excerpt(val) {
     this._properties.excerpt = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -575,9 +606,6 @@ ReadingListItem.prototype = {
   },
   set status(val) {
     this._properties.status = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -589,9 +617,6 @@ ReadingListItem.prototype = {
   },
   set favorite(val) {
     this._properties.favorite = !!val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -603,9 +628,6 @@ ReadingListItem.prototype = {
   },
   set isArticle(val) {
     this._properties.isArticle = !!val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -617,9 +639,6 @@ ReadingListItem.prototype = {
   },
   set wordCount(val) {
     this._properties.wordCount = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -631,9 +650,6 @@ ReadingListItem.prototype = {
   },
   set unread(val) {
     this._properties.unread = !!val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -647,9 +663,6 @@ ReadingListItem.prototype = {
   },
   set addedOn(val) {
     this._properties.addedOn = val.valueOf();
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -663,9 +676,6 @@ ReadingListItem.prototype = {
   },
   set storedOn(val) {
     this._properties.storedOn = val.valueOf();
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -677,9 +687,6 @@ ReadingListItem.prototype = {
   },
   set markedReadBy(val) {
     this._properties.markedReadBy = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -693,9 +700,6 @@ ReadingListItem.prototype = {
   },
   set markedReadOn(val) {
     this._properties.markedReadOn = val.valueOf();
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
@@ -707,25 +711,24 @@ ReadingListItem.prototype = {
   },
   set readPosition(val) {
     this._properties.readPosition = val;
-    if (this.list) {
-      this.commit();
-    }
   },
 
   /**
-   * Sets the given properties of the item, optionally calling commit().
+   * Sets the given properties of the item, optionally calling list.updateItem().
    *
    * @param props A simple object containing the properties to set.
-   * @param commit If true, commit() is called.
-   * @return Promise<null> If commit is true, resolved when the commit
+   * @param update If true, updateItem() is called for this item.
+   * @return Promise<null> If update is true, resolved when the update
    *         completes; otherwise resolved immediately.
    */
-  setProperties: Task.async(function* (props, commit=true) {
+  setProperties: Task.async(function* (props, update=true) {
     for (let name in props) {
       this._properties[name] = props[name];
     }
-    if (commit) {
-      yield this.commit();
+    // make sure everything is normalized.
+    normalizeReadingListProperties(this._properties);
+    if (update) {
+      yield this.list.updateItem(this);
     }
   }),
 
@@ -738,17 +741,6 @@ ReadingListItem.prototype = {
     this._ensureBelongsToList();
     yield this.list.deleteItem(this);
     this.delete = () => Promise.reject("The item has already been deleted");
-  }),
-
-  /**
-   * Notifies the item's list that the item has changed so that the list can
-   * update itself.
-   *
-   * @return Promise<null> Resolved when the list has been updated.
-   */
-  commit: Task.async(function* () {
-    this._ensureBelongsToList();
-    yield this.list.updateItem(this);
   }),
 
   toJSON() {
@@ -855,6 +847,23 @@ ReadingListItemIterator.prototype = {
   },
 };
 
+/**
+ * Normalize a URI, stripping away extraneous parts we don't want to store
+ * or compare against.
+ *
+ * @param {nsIURI/String} uri - URI to normalize.
+ * @returns {nsIURI} Cloned and normalized version of the input URI.
+ */
+function normalizeURI(uri) {
+  if (typeof uri == "string") {
+    uri = Services.io.newURI(uri, "", null);
+  }
+  uri = uri.cloneIgnoringRef();
+  try {
+    uri.userPass = "";
+  } catch (ex) {} // Not all nsURI impls (eg, nsSimpleURI) support .userPass
+  return uri;
+};
 
 function stripNonItemProperties(item) {
   let obj = {};
@@ -885,6 +894,24 @@ function clone(obj) {
   return Cu.cloneInto(obj, {}, { cloneFunctions: false });
 }
 
+/**
+ * Get page metadata from the content document in a given <xul:browser>.
+ * @see PageMetadata.jsm
+ *
+ * @param {<xul:browser>} browser - Browser element for the document.
+ * @returns {Promise} Promise that is fulfilled with an object describing the metadata.
+ */
+function getMetadataFromBrowser(browser) {
+  let mm = browser.messageManager;
+  return new Promise(resolve => {
+    function handleResult(msg) {
+      mm.removeMessageListener("PageMetadata:PageDataResult", handleResult);
+      resolve(msg.json);
+    }
+    mm.addMessageListener("PageMetadata:PageDataResult", handleResult);
+    mm.sendAsyncMessage("PageMetadata:GetPageData");
+  });
+}
 
 Object.defineProperty(this, "ReadingList", {
   get() {
