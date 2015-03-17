@@ -162,13 +162,13 @@ SourceBufferDecoder::OnStateMachineTaskQueue() const
 }
 
 bool
-SourceBufferDecoder::OnDecodeThread() const
+SourceBufferDecoder::OnDecodeTaskQueue() const
 {
   // During initialization we run on our TrackBuffer's task queue.
   if (mTaskQueue) {
     return mTaskQueue->IsCurrentThreadIn();
   }
-  return mParentDecoder->OnDecodeThread();
+  return mParentDecoder->OnDecodeTaskQueue();
 }
 
 SourceBufferResource*
