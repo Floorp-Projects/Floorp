@@ -12,6 +12,8 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
@@ -69,7 +71,9 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
-    public boolean isReadingListItem(ContentResolver cr, String uri) {
+    public boolean isReadingListItem(final ContentResolver cr, String uri) {
+        uri = stripURI(uri);
+
         final Cursor c = cr.query(mReadingListUriWithProfile,
                                   new String[] { ReadingListItems._ID },
                                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
@@ -97,6 +101,10 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
                 throw new IllegalArgumentException("Missing required field for reading list item: " + field);
             }
         }
+
+        // URL is a required field so no key check needed.
+        final String url = values.getAsString(ReadingListItems.URL);
+        values.put(ReadingListItems.URL, stripURI(url));
 
         // We're adding locally, so we can specify these.
         values.put(ReadingListItems.ADDED_ON, System.currentTimeMillis());
@@ -129,6 +137,10 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
             throw new IllegalArgumentException("Cannot update reading list item without an ID");
         }
 
+        if (values.containsKey(ReadingListItems.URL)) {
+            values.put(ReadingListItems.URL, stripURI(values.getAsString(ReadingListItems.URL)));
+        }
+
         final int updated = cr.update(mReadingListUriWithProfile,
                                       values,
                                       ReadingListItems._ID + " = ? ",
@@ -138,7 +150,8 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
-    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
+    public void removeReadingListItemWithURL(final ContentResolver cr, String uri) {
+        uri = stripURI(uri);
         cr.delete(mReadingListUriWithProfile,
                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
                   new String[]{ uri, uri });
@@ -176,5 +189,12 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
 
         // The ContentProvider will take care of updating the sync metadata.
         cr.update(mReadingListUriWithProfile, values, ReadingListItems._ID + " = " + itemID, null);
+    }
+
+    /**
+     * Gets the URI from an about:reader URI if applicable, else returns the URI.
+     */
+    private String stripURI(final String uri) {
+        return !AboutPages.isAboutReader(uri) ? uri : ReaderModeUtils.getUrlFromAboutReader(uri);
     }
 }
