@@ -1381,17 +1381,15 @@ public:
    *
    * The resolution defaults to 1.0.
    */
-  virtual nsresult SetResolution(float aXResolution, float aYResolution) = 0;
-  gfxSize GetResolution() { return gfxSize(mXResolution, mYResolution); }
-  float GetXResolution() { return mXResolution; }
-  float GetYResolution() { return mYResolution; }
-  virtual gfxSize GetCumulativeResolution() = 0;
+  virtual nsresult SetResolution(float aResolution) = 0;
+  float GetResolution() { return mResolution; }
+  virtual float GetCumulativeResolution() = 0;
 
   /**
    * Similar to SetResolution() but also increases the scale of the content
    * by the same amount.
    */
-  virtual nsresult SetResolutionAndScaleTo(float aXResolution, float aYResolution) = 0;
+  virtual nsresult SetResolutionAndScaleTo(float aResolution) = 0;
 
   /**
    * Return whether we are scaling to the set resolution.
@@ -1718,9 +1716,8 @@ protected:
   nscolor                   mCanvasBackgroundColor;
 
   // Used to force allocation and rendering of proportionally more or
-  // less pixels in the given dimension.
-  float                     mXResolution;
-  float                     mYResolution;
+  // less pixels in both dimensions.
+  float                     mResolution;
 
   int16_t                   mSelectionFlags;
 

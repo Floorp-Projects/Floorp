@@ -35,17 +35,7 @@ function testSwizzleForType(type) {
     assertThrowsInstanceOf(() => type.swizzle()               , TypeError);
     assertThrowsInstanceOf(() => type.swizzle(v, 0)           , TypeError);
     assertThrowsInstanceOf(() => type.swizzle(v, 0, 1, 2)     , TypeError);
-    assertThrowsInstanceOf(() => type.swizzle(v, 0, 1, 2, 4)  , TypeError);
-    assertThrowsInstanceOf(() => type.swizzle(v, 0, 1, 2, -1) , TypeError);
     assertThrowsInstanceOf(() => type.swizzle(0, 1, 2, 3, v)  , TypeError);
-
-    if (lanes == 2) {
-        assertThrowsInstanceOf(() => type.swizzle(v, 0, -1)   , TypeError);
-        assertThrowsInstanceOf(() => type.swizzle(v, 0, 2)    , TypeError);
-    } else {
-        assertEq(lanes, 4);
-        assertThrowsInstanceOf(() => type.swizzle(v, 0, 1), TypeError);
-    }
 
     // Test all possible swizzles.
     if (lanes == 4) {
@@ -63,24 +53,34 @@ function testSwizzleForType(type) {
         }
     }
 
-    // Test that the lane inputs are converted into an int32.
-    // n.b, order of evaluation of args is left-to-right.
-    var obj = {
-        x: 0,
-        valueOf: function() { return this.x++ }
-    };
+    // Test that we throw if an lane argument isn't an int32 or isn't in bounds.
     if (lanes == 4) {
-        assertEqVec(type.swizzle(v, obj, obj, obj, obj), swizzle4(simdToArray(v), 0, 1, 2, 3));
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, 0.5), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, {}), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, {valueOf: function(){return 42}}), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, "one"), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, null), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, undefined), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, true), TypeError);
+
+        // In bounds is [0, 3]
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, -1), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0, 0, 4), TypeError);
     } else {
         assertEq(lanes, 2);
-        assertEqVec(type.swizzle(v, obj, obj), swizzle2(simdToArray(v), 0, 1));
-    }
 
-    // Object for which ToInt32 will fail.
-    obj = {
-        valueOf: function() { throw new Error; }
-    };
-    assertThrowsInstanceOf(() => type.swizzle(v, 0, 1, 2, obj), Error);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 0.5), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, {}), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, {valueOf: function(){return 42}}), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, "one"), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, null), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, undefined), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, true), TypeError);
+
+        // In bounds is [0, 1]
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, -1), TypeError);
+        assertThrowsInstanceOf(() => type.swizzle(v, 0, 2), TypeError);
+    }
 }
 
 function testSwizzleInt32x4() {
@@ -110,7 +110,7 @@ function testSwizzleFloat64x2() {
         float32x4.swizzle(v, 0, 0, 0, 0);
     }, TypeError);
 
-   testSwizzleForType(float64x2);
+    testSwizzleForType(float64x2);
 }
 
 function shuffle2(lhsa, rhsa, x, y) {
@@ -140,17 +140,7 @@ function testShuffleForType(type) {
     assertThrowsInstanceOf(() => type.shuffle(lhs, rhs)              , TypeError);
     assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0)           , TypeError);
     assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 1, 2)     , TypeError);
-    assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 1, 2, -1) , TypeError);
-    assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 1, 2, 8)  , TypeError);
     assertThrowsInstanceOf(() => type.shuffle(lhs, 0, 1, 2, 7, rhs)  , TypeError);
-
-    if (lanes == 2) {
-        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 4)    , TypeError);
-        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, -1)   , TypeError);
-    } else {
-        assertEq(lanes, 4);
-        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 1) , TypeError);
-    }
 
     // Test all possible shuffles.
     var x, y, z, w;
@@ -171,26 +161,34 @@ function testShuffleForType(type) {
         }
     }
 
-    // Test that the lane inputs are converted into an int32.
-    // n.b, order of evaluation of args is left-to-right.
-    var obj = {
-        x: 0,
-        valueOf: function() { return this.x++ }
-    };
+    // Test that we throw if an lane argument isn't an int32 or isn't in bounds.
     if (lanes == 4) {
-        assertEqVec(type.shuffle(lhs, rhs, obj, obj, obj, obj),
-                    shuffle4(simdToArray(lhs), simdToArray(rhs), 0, 1, 2, 3));
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, 0.5), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, {}), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, {valueOf: function(){return 42}}), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, "one"), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, null), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, undefined), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, true), TypeError);
+
+        // In bounds is [0, 7]
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, -1), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0, 0, 8), TypeError);
     } else {
         assertEq(lanes, 2);
-        assertEqVec(type.shuffle(lhs, rhs, obj, obj),
-                    shuffle2(simdToArray(lhs), simdToArray(rhs), 0, 1));
-    }
 
-    // Object for which ToInt32 will fail.
-    obj = {
-        valueOf: function() { throw new Error; }
-    };
-    assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 1, 2, obj), Error);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 0.5), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, {}), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, {valueOf: function(){return 42}}), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, "one"), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, null), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, undefined), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, true), TypeError);
+
+        // In bounds is [0, 3]
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, -1), TypeError);
+        assertThrowsInstanceOf(() => type.shuffle(lhs, rhs, 0, 4), TypeError);
+    }
 }
 
 function testShuffleInt32x4() {

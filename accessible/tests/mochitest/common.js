@@ -370,7 +370,8 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 
   // Test accessible properties.
   for (var prop in accTree) {
-    var msg = "Wrong value of property '" + prop + "' for " + prettyName(acc) + ".";
+    var msg = "Wrong value of property '" + prop + "' for " +
+               prettyName(acc) + ".";
 
     switch (prop) {
     case "actions": {
@@ -451,10 +452,29 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
     var children = acc.children;
     var childCount = children.length;
 
-    is(childCount, accTree.children.length,
-       "Different amount of expected children of " + prettyName(acc) + ".");
 
-    if (accTree.children.length == childCount) {
+    if (accTree.children.length != childCount) {
+      for (var i = 0; i < Math.max(accTree.children.length, childCount); i++) {
+        var accChild;
+        try {
+          accChild = children.queryElementAt(i, nsIAccessible);
+          if (!accTree.children[i]) {
+            ok(false, prettyName(acc) + " has an extra child at index " + i +
+              " : " + prettyName(accChild));
+          }
+          if (accChild.role !== accTree.children[i].role) {
+            ok(false, prettyName(accTree) + " and " + prettyName(acc) +
+              " have different children at index " + i + " : " +
+              prettyName(accTree.children[i]) + ", " + prettyName(accChild));
+          }
+          info("Matching " + prettyName(accTree) + " and " + prettyName(acc) +
+               " child at index " + i + " : " + prettyName(accChild));
+        } catch (e) {
+          ok(false, prettyName(accTree) + " has an extra child at index " + i +
+             " : " + prettyName(accTree.children[i]));
+        }
+      }
+    } else {
       if (aFlags & kSkipTreeFullCheck) {
         for (var i = 0; i < childCount; i++) {
           var child = children.queryElementAt(i, nsIAccessible);
@@ -537,7 +557,8 @@ function testDefunctAccessible(aAcc, aNodeOrId)
     ok(!isAccessible(aNodeOrId),
        "Accessible for " + aNodeOrId + " wasn't properly shut down!");
 
-  var msg = " doesn't fail for shut down accessible " + prettyName(aNodeOrId) + "!";
+  var msg = " doesn't fail for shut down accessible " +
+             prettyName(aNodeOrId) + "!";
 
   // firstChild
   var success = false;
@@ -719,6 +740,10 @@ function prettyName(aIdentifier)
 
   if (aIdentifier instanceof nsIDOMNode)
     return "[ " + getNodePrettyName(aIdentifier) + " ]";
+
+  if (aIdentifier && typeof aIdentifier === "object" ) {
+    return JSON.stringify(aIdentifier);
+  }
 
   return " '" + aIdentifier + "' ";
 }

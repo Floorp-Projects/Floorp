@@ -176,8 +176,8 @@ function GMPWrapper(aPluginInfo) {
   Preferences.observe(GMPPrefs.getPrefKey(KEY_PLUGIN_VERSION, this._plugin.id),
                       this.onPrefVersionChanged, this);
   if (this._plugin.isEME) {
-    Preferences.observe(GMPPrefs.getPrefKey(KEY_EME_ENABLED, this._plugin.id),
-                        this.onPrefEnabledChanged, this);
+    Preferences.observe(KEY_EME_ENABLED, this.onPrefEMEGlobalEnabledChanged,
+                        this);
   }
 }
 
@@ -213,14 +213,16 @@ GMPWrapper.prototype = {
   get version() { return GMPPrefs.get(KEY_PLUGIN_VERSION, null,
                                       this._plugin.id); },
 
-  get isActive() { return !this.userDisabled; },
-  get appDisabled() { return false; },
-
-  get userDisabled() {
+  get isActive() { return !this.appDisabled && !this.userDisabled; },
+  get appDisabled() {
     if (this._plugin.isEME && !GMPPrefs.get(KEY_EME_ENABLED, true)) {
       // If "media.eme.enabled" is false, all EME plugins are disabled.
       return true;
     }
+   return false;
+  },
+
+  get userDisabled() {
     return !GMPPrefs.get(KEY_PLUGIN_ENABLED, true, this._plugin.id);
   },
   set userDisabled(aVal) { GMPPrefs.set(KEY_PLUGIN_ENABLED, aVal === false,
@@ -234,8 +236,9 @@ GMPWrapper.prototype = {
   get operationsRequiringRestart() { return AddonManager.OP_NEEDS_RESTART_NONE },
 
   get permissions() {
-    let permissions = AddonManager.PERM_CAN_UPGRADE;
+    let permissions = 0;
     if (!this.appDisabled) {
+      permissions |= AddonManager.PERM_CAN_UPGRADE;
       permissions |= this.userDisabled ? AddonManager.PERM_CAN_ENABLE :
                                          AddonManager.PERM_CAN_DISABLE;
     }
@@ -374,7 +377,7 @@ GMPWrapper.prototype = {
     return this.version && this.version.length > 0;
   },
 
-  onPrefEnabledChanged: function() {
+  _handleEnabledChanged: function() {
     AddonManagerPrivate.callAddonListeners(this.isActive ?
                                            "onEnabling" : "onDisabling",
                                            this, false);
@@ -392,6 +395,20 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners(this.isActive ?
                                            "onEnabled" : "onDisabled",
                                            this);
+  },
+
+  onPrefEMEGlobalEnabledChanged: function() {
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this,
+                                           ["appDisabled"]);
+    if (!this.userDisabled) {
+      this._handleEnabledChanged();
+    }
+  },
+
+  onPrefEnabledChanged: function() {
+    if (!this._plugin.isEME || !this.appDisabled) {
+      this._handleEnabledChanged();
+    }
   },
 
   onPrefVersionChanged: function() {
@@ -425,9 +442,9 @@ GMPWrapper.prototype = {
                        this.onPrefEnabledChanged, this);
     Preferences.ignore(GMPPrefs.getPrefKey(KEY_PLUGIN_VERSION, this._plugin.id),
                        this.onPrefVersionChanged, this);
-    if (this._isEME) {
-      Preferences.ignore(GMPPrefs.getPrefKey(KEY_EME_ENABLED, this._plugin.id),
-                         this.onPrefEnabledChanged, this);
+    if (this._plugin.isEME) {
+      Preferences.ignore(KEY_EME_ENABLED, this.onPrefEMEGlobalEnabledChanged,
+                         this);
     }
     return this._updateTask;
   },

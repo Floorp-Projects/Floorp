@@ -14,8 +14,8 @@ function sub(a, b) { return a - b; }
 function mul(a, b) { return a * b; }
 function div(a, b) { return a / b; }
 function neg(a) { return -a; }
-function reciprocal(a) { return 1 / a; }
-function reciprocalSqrt(a) { return Math.sqrt(1 / a); }
+function reciprocalApproximation(a) { return 1 / a; }
+function reciprocalSqrtApproximation(a) { return Math.sqrt(1 / a); }
 
 function testAdd(v, w) {
     return testBinaryFunc(v, w, float64x2.add, add);
@@ -35,11 +35,11 @@ function testAbs(v) {
 function testNeg(v) {
     return testUnaryFunc(v, float64x2.neg, neg);
 }
-function testReciprocal(v) {
-    return testUnaryFunc(v, float64x2.reciprocal, reciprocal);
+function testReciprocalApproximation(v) {
+    return testUnaryFunc(v, float64x2.reciprocalApproximation, reciprocalApproximation);
 }
-function testReciprocalSqrt(v) {
-    return testUnaryFunc(v, float64x2.reciprocalSqrt, reciprocalSqrt);
+function testReciprocalSqrtApproximation(v) {
+    return testUnaryFunc(v, float64x2.reciprocalSqrtApproximation, reciprocalSqrtApproximation);
 }
 function testSqrt(v) {
     return testUnaryFunc(v, float64x2.sqrt, Math.sqrt);
@@ -60,9 +60,9 @@ function test() {
       testDiv(v, w);
       testAbs(v);
       testNeg(v);
-      testReciprocal(v);
+      testReciprocalApproximation(v);
       testSqrt(v);
-      testReciprocalSqrt(v);
+      testReciprocalSqrtApproximation(v);
   }
 
   if (typeof reportCompare === "function")

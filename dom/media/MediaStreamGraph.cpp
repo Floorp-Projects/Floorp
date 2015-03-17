@@ -278,7 +278,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
   }
 
   for (uint32_t i = 0; i < runnables.Length(); ++i) {
-    runnables[i].mTarget->Dispatch(runnables[i].mRunnable, 0);
+    runnables[i].mTarget->Dispatch(runnables[i].mRunnable);
   }
 }
 
@@ -1084,6 +1084,23 @@ SetImageToBlackPixel(PlanarYCbCrImage* aImage)
   aImage->SetData(data);
 }
 
+class VideoFrameContainerInvalidateRunnable : public nsRunnable {
+public:
+  explicit VideoFrameContainerInvalidateRunnable(VideoFrameContainer* aVideoFrameContainer)
+    : mVideoFrameContainer(aVideoFrameContainer)
+  {}
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mVideoFrameContainer->Invalidate();
+
+    return NS_OK;
+  }
+private:
+  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
+};
+
 void
 MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 {
@@ -1147,7 +1164,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     }
 
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
+      new VideoFrameContainerInvalidateRunnable(output);
     DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
   if (!aStream->mNotifiedFinished) {
@@ -2476,21 +2493,21 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
 
 void
 SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
-    nsIEventTarget* aSignalThread, nsIRunnable* aSignalRunnable)
+    MediaTaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable)
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);
   if (!data) {
-    aSignalThread->Dispatch(aSignalRunnable, 0);
+    aSignalQueue->Dispatch(aSignalRunnable);
     return;
   }
 
   if (data->mHaveEnough) {
     if (data->mDispatchWhenNotEnough.IsEmpty()) {
-      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
+      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalQueue, aSignalRunnable);
     }
   } else {
-    aSignalThread->Dispatch(aSignalRunnable, 0);
+    aSignalQueue->Dispatch(aSignalRunnable);
   }
 }
 

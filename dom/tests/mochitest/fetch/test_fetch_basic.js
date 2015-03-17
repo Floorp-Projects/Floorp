@@ -1,17 +1,3 @@
-if (typeof ok !== "function") {
-  function ok(a, msg) {
-    dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
-    postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-  }
-}
-
-if (typeof is !== "function") {
-  function is(a, b, msg) {
-    dump("IS: " + (a===b) + "  =>  " + a + " | " + b + " " + msg + "\n");
-    postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-  }
-}
-
 function testAboutURL() {
   var p1 = fetch('about:blank').then(function(res) {
     is(res.status, 200, "about:blank should load a valid Response");
@@ -72,24 +58,9 @@ function testSameOriginBlobURL() {
 }
 
 function runTest() {
-  var done = function() {
-    if (typeof SimpleTest === "object") {
-      SimpleTest.finish();
-    } else {
-      postMessage({ type: 'finish' });
-    }
-  }
-
-  Promise.resolve()
+  return Promise.resolve()
     .then(testAboutURL)
     .then(testDataURL)
     .then(testSameOriginBlobURL)
     // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some Response tests failed " + e);
-      done();
-    })
 }
-
-onmessage = runTest;

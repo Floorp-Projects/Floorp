@@ -1417,12 +1417,14 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     }
 
     bool isUp;
-    if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
+    if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED)) {
+        // CHANGED means UP/DOWN didn't change
+        return NS_OK;
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         isUp = false;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
         isUp = true;
-    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED) ||
-               !strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
+    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
         nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {

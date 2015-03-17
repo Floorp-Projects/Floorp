@@ -57,3 +57,6 @@ else:
     ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Password Manager')

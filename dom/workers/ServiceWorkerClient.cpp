@@ -31,8 +31,13 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   MOZ_ASSERT(aDoc);
   MOZ_ASSERT(aDoc->GetWindow());
 
+  nsresult rv = aDoc->GetId(mClientId);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get the UUID of the document.");
+  }
+
   nsRefPtr<nsGlobalWindow> outerWindow = static_cast<nsGlobalWindow*>(aDoc->GetWindow());
-  mClientId = outerWindow->WindowID();
+  mWindowId = outerWindow->WindowID();
   aDoc->GetURL(mUrl);
   mVisibilityState = aDoc->VisibilityState();
 
@@ -61,15 +66,15 @@ namespace {
 
 class ServiceWorkerClientPostMessageRunnable MOZ_FINAL : public nsRunnable
 {
-  uint64_t mId;
+  uint64_t mWindowId;
   JSAutoStructuredCloneBuffer mBuffer;
   nsTArray<nsCOMPtr<nsISupports>> mClonedObjects;
 
 public:
-  ServiceWorkerClientPostMessageRunnable(uint64_t aId,
+  ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId,
                                          JSAutoStructuredCloneBuffer&& aData,
                                          nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
-    : mId(aId),
+    : mWindowId(aWindowId),
       mBuffer(Move(aData))
   {
     mClonedObjects.SwapElements(aClonedObjects);
@@ -79,7 +84,7 @@ public:
   Run()
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetOuterWindowWithId(mId);
+    nsGlobalWindow* window = nsGlobalWindow::GetOuterWindowWithId(mWindowId);
     if (!window) {
       return NS_ERROR_FAILURE;
     }
@@ -182,7 +187,7 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   nsRefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
-    new ServiceWorkerClientPostMessageRunnable(mId, Move(buffer), clonedObjects);
+    new ServiceWorkerClientPostMessageRunnable(mWindowId, Move(buffer), clonedObjects);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_FAILURE);

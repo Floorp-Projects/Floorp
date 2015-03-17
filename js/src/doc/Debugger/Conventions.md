@@ -136,6 +136,12 @@ associated `Debugger` instance's `uncaughtExceptionHook` property, as
 described below.
 
 
+## Timestamps
+
+Timestamps are expressed in units of microseconds since the epoch (midnight,
+January 1st, 1970).
+
+
 ## The `Debugger.DebuggeeWouldRun` Exception
 
 Some debugger operations that appear to simply inspect the debuggee's state

@@ -168,7 +168,7 @@ private:
 class Moof : public Atom
 {
 public:
-  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf);
+  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio);
   bool GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
@@ -181,8 +181,8 @@ public:
   nsTArray<Saio> mSaios;
 
 private:
-  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf);
-  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts);
+  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio);
+  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts, bool aIsAudio);
   void ParseSaiz(Box& aBox);
   void ParseSaio(Box& aBox);
   bool ProcessCenc();
@@ -192,18 +192,19 @@ private:
 class MoofParser
 {
 public:
-  MoofParser(Stream* aSource, uint32_t aTrackId, Monitor* aMonitor)
+  MoofParser(Stream* aSource, uint32_t aTrackId, bool aIsAudio, Monitor* aMonitor)
     : mSource(aSource)
     , mOffset(0)
     , mTrex(aTrackId)
     , mMonitor(aMonitor)
+    , mIsAudio(aIsAudio)
   {
     // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
     // the composition range for MSE. We need an array of tracks.
   }
-  void RebuildFragmentedIndex(
+  bool RebuildFragmentedIndex(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
-  void RebuildFragmentedIndex(BoxContext& aContext);
+  bool RebuildFragmentedIndex(BoxContext& aContext);
   Interval<Microseconds> GetCompositionRange(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   bool ReachedEnd();
@@ -233,6 +234,7 @@ public:
   nsTArray<Moof>& Moofs() { mMonitor->AssertCurrentThreadOwns(); return mMoofs; }
 private:
   nsTArray<Moof> mMoofs;
+  bool mIsAudio;
 };
 }
 

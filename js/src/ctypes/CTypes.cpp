@@ -5341,6 +5341,11 @@ StructType::AddressOfField(JSContext* cx, unsigned argc, jsval* vp)
     return false;
   }
 
+  if (!args[0].isString()) {
+    JS_ReportError(cx, "argument must be a string");
+    return false;
+  }
+
   JSFlatString *str = JS_FlattenString(cx, args[0].toString());
   if (!str)
     return false;

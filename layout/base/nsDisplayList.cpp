@@ -800,7 +800,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
-    metrics.SetPresShellResolution(presShell->GetXResolution());
+    metrics.SetPresShellResolution(presShell->GetResolution());
   } else {
     metrics.SetPresShellResolution(1.0f);
   }
@@ -886,10 +886,10 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
       } else {
         LayoutDeviceIntSize contentSize;
         if (nsLayoutUtils::GetContentViewerSize(presContext, contentSize)) {
-          LayoutDeviceToParentLayerScale2D scale;
+          LayoutDeviceToParentLayerScale scale;
           if (presContext->GetParentPresContext()) {
-            gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
-            scale = LayoutDeviceToParentLayerScale2D(res.width, res.height);
+            float res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+            scale = LayoutDeviceToParentLayerScale(res);
           }
           metrics.mCompositionBounds.SizeTo(contentSize * scale);
         }
@@ -1640,7 +1640,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   }
 
   ContainerLayerParameters containerParameters
-    (presShell->GetXResolution(), presShell->GetYResolution());
+    (presShell->GetResolution(), presShell->GetResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
                            containerParameters, nullptr);
@@ -4207,8 +4207,8 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   bool isRootContentDocument = presContext->IsRootContentDocument();
   nsIPresShell* presShell = presContext->PresShell();
   ContainerLayerParameters params(
-      aContainerParameters.mXScale * presShell->GetXResolution(),
-      aContainerParameters.mYScale * presShell->GetYResolution(),
+      aContainerParameters.mXScale * presShell->GetResolution(),
+      aContainerParameters.mYScale * presShell->GetResolution(),
       nsIntPoint(), aContainerParameters);
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
@@ -4330,15 +4330,15 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 const ContainerLayerParameters& aContainerParameters) {
   nsIPresShell* presShell = mFrame->PresContext()->PresShell();
   ContainerLayerParameters containerParameters(
-    presShell->GetXResolution(), presShell->GetYResolution(), nsIntPoint(),
+    presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
     aContainerParameters);
 
   nsRefPtr<Layer> layer = nsDisplaySubDocument::BuildLayer(
     aBuilder, aManager, containerParameters);
-  layer->SetPostScale(1.0f / presShell->GetXResolution(),
-                      1.0f / presShell->GetYResolution());
+  layer->SetPostScale(1.0f / presShell->GetResolution(),
+                      1.0f / presShell->GetResolution());
   layer->AsContainerLayer()->SetScaleToResolution(
-      presShell->ScaleToResolution(), presShell->GetXResolution());
+      presShell->ScaleToResolution(), presShell->GetResolution());
   return layer.forget();
 }
 
