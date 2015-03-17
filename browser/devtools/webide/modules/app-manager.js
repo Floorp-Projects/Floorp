@@ -34,7 +34,14 @@ let AppManager = exports.AppManager = {
   DEFAULT_PROJECT_ICON: "chrome://browser/skin/devtools/app-manager/default-app-icon.png",
   DEFAULT_PROJECT_NAME: "--",
 
+  _initialized: false,
+
   init: function() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     let port = Services.prefs.getIntPref("devtools.debugger.remote-port");
     this.connection = ConnectionManager.createConnection("localhost", port);
     this.onConnectionChanged = this.onConnectionChanged.bind(this);
@@ -57,7 +64,12 @@ let AppManager = exports.AppManager = {
     this._telemetry = new Telemetry();
   },
 
-  uninit: function() {
+  destroy: function() {
+    if (!this._initialized) {
+      return;
+    }
+    this._initialized = false;
+
     this.selectedProject = null;
     this.selectedRuntime = null;
     RuntimeScanners.off("runtime-list-updated", this._rebuildRuntimeList);
