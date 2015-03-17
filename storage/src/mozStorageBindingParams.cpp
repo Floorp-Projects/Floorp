@@ -215,7 +215,7 @@ already_AddRefed<mozIStorageError>
 BindingParams::bind(sqlite3_stmt *aStatement)
 {
   // Iterate through all of our stored data, and bind it.
-  for (int32_t i = 0; i < mParameters.Count(); i++) {
+  for (size_t i = 0; i < mParameters.Length(); i++) {
     int rc = variantToSQLiteT(BindingColumnData(aStatement, i), mParameters[i]);
     if (rc != SQLITE_OK) {
       // We had an error while trying to bind.  Now we need to create an error
@@ -274,7 +274,11 @@ AsyncBindingParams::BindByName(const nsACString &aName,
 {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
 
-  mNamedParameters.Put(aName, aValue);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  if (!variant)
+    return NS_ERROR_UNEXPECTED;
+
+  mNamedParameters.Put(aName, variant);
   return NS_OK;
 }
 
@@ -378,8 +382,17 @@ BindingParams::BindByIndex(uint32_t aIndex,
   ENSURE_INDEX_VALUE(aIndex, mParamCount);
 
   // Store the variant for later use.
-  NS_ENSURE_TRUE(mParameters.ReplaceObjectAt(aValue, aIndex),
-                 NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  if (!variant)
+    return NS_ERROR_UNEXPECTED;
+  if (mParameters.Length() <= aIndex) {
+    (void)mParameters.SetLength(aIndex);
+    (void)mParameters.AppendElement(variant);
+  }
+  else {
+    NS_ENSURE_TRUE(mParameters.ReplaceElementAt(aIndex, variant),
+                   NS_ERROR_OUT_OF_MEMORY);
+  }
   return NS_OK;
 }
 
@@ -391,9 +404,17 @@ AsyncBindingParams::BindByIndex(uint32_t aIndex,
   // In the asynchronous case we do not know how many parameters there are to
   // bind to, so we cannot check the validity of aIndex.
 
-  // Store the variant for later use.
-  NS_ENSURE_TRUE(mParameters.ReplaceObjectAt(aValue, aIndex),
-                 NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  if (!variant)
+    return NS_ERROR_UNEXPECTED;
+  if (mParameters.Length() <= aIndex) {
+    mParameters.SetLength(aIndex);
+    mParameters.AppendElement(variant);
+  }
+  else {
+    NS_ENSURE_TRUE(mParameters.ReplaceElementAt(aIndex, variant),
+                   NS_ERROR_OUT_OF_MEMORY);
+  }
   return NS_OK;
 }
 

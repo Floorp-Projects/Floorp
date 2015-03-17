@@ -27,6 +27,13 @@ interface BluetoothGatt : EventTarget
   Promise<void>                                     connect();
   [NewObject]
   Promise<void>                                     disconnect();
+
+  /**
+   * Read RSSI for the remote BLE device if the connectState is connected.
+   * Otherwise, the Promise will be rejected directly.
+   */
+  [NewObject]
+  Promise<short>                                    readRemoteRssi();
 };
 
 enum BluetoothConnectionState

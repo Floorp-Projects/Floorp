@@ -1131,6 +1131,21 @@ BluetoothServiceBluedroid::UnregisterGattClientInternal(
   gatt->UnregisterClient(aClientIf, aRunnable);
 }
 
+void
+BluetoothServiceBluedroid::GattClientReadRemoteRssiInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->ReadRemoteRssi(aClientIf, aDeviceAddress, aRunnable);
+}
+
 //
 // Bluetooth notifications
 //

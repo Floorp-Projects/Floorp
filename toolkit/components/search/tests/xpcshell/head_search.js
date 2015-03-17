@@ -143,36 +143,19 @@ function isUSTimezone() {
 }
 
 /**
- * Run some callback once metadata has been committed to disk.
+ * Waits for metadata being committed.
+ * @return {Promise} Resolved when the metadata is committed to disk.
  */
-function afterCommit(callback)
-{
-  let obs = function(result, topic, verb) {
-    if (verb == "write-metadata-to-disk-complete") {
-      Services.obs.removeObserver(obs, topic);
-      callback(result);
-    } else {
-      dump("TOPIC: " + topic+ "\n");
-    }
-  }
-  Services.obs.addObserver(obs, "browser-search-service", false);
+function promiseAfterCommit() {
+  return waitForSearchNotification("write-metadata-to-disk-complete");
 }
 
 /**
- * Run some callback once cache has been built.
+ * Waits for the cache file to be saved.
+ * @return {Promise} Resolved when the cache file is saved.
  */
-function afterCache(callback)
-{
-  let obs = function(result, topic, verb) {
-    do_print("afterCache: " + verb);
-    if (verb == "write-cache-to-disk-complete") {
-      Services.obs.removeObserver(obs, topic);
-      callback(result);
-    } else {
-      dump("TOPIC: " + topic+ "\n");
-    }
-  }
-  Services.obs.addObserver(obs, "browser-search-service", false);
+function promiseAfterCache() {
+  return waitForSearchNotification("write-cache-to-disk-complete");
 }
 
 function parseJsonFromStream(aInputStream) {

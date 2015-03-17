@@ -256,6 +256,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
     case Request::TUnregisterGattClientRequest:
       return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
+    case Request::TGattClientReadRemoteRssiRequest:
+      return actor->DoRequest(aRequest.get_GattClientReadRemoteRssiRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -725,6 +727,20 @@ BluetoothRequestParent::DoRequest(const UnregisterGattClientRequest& aRequest)
 
   mService->UnregisterGattClientInternal(aRequest.clientIf(),
                                          mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientReadRemoteRssiRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGattClientReadRemoteRssiRequest);
+
+  mService->GattClientReadRemoteRssiInternal(aRequest.clientIf(),
+                                             aRequest.deviceAddress(),
+                                             mReplyRunnable.get());
 
   return true;
 }

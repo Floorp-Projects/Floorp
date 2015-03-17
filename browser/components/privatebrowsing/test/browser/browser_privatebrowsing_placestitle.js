@@ -5,19 +5,23 @@
 // This test makes sure that the title of existing history entries does not
 // change inside a private window.
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(function* test() {
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
                    "privatebrowsing/test/browser/title.sjs";
-  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
+  let cm = Services.cookies;
 
-  function waitForCleanup(aCallback) {
+  function cleanup() {
     // delete all cookies
     cm.removeAll();
     // delete all history items
-    PlacesTestUtils.clearHistory().then(aCallback);
+    return PlacesTestUtils.clearHistory();
   }
+
+  yield cleanup();
+
+  let deferredFirst = PromiseUtils.defer();
+  let deferredSecond = PromiseUtils.defer();
+  let deferredThird = PromiseUtils.defer();
 
   let testNumber = 0;
   let historyObserver = {
@@ -27,27 +31,15 @@ function test() {
       switch (++testNumber) {
         case 1:
           // The first time that the page is loaded
-          is(aPageTitle, "No Cookie",
-             "The page should be loaded without any cookie for the first time");
-          openTestPage(selectedWin);
+          deferredFirst.resolve(aPageTitle);
           break;
         case 2:
           // The second time that the page is loaded
-          is(aPageTitle, "Cookie",
-             "The page should be loaded with a cookie for the second time");
-          waitForCleanup(function () {
-            openTestPage(selectedWin);
-          });
+          deferredSecond.resolve(aPageTitle);
           break;
         case 3:
           // After clean up
-          is(aPageTitle, "No Cookie",
-             "The page should be loaded without any cookie again");
-          testOnWindow(true, function(win) {
-            whenPageLoad(win, function() {
-              waitForCleanup(finish);
-            });
-          });
+          deferredThird.resolve(aPageTitle);
           break;
         default:
           // Checks that opening the page in a private window should not fire a
@@ -67,38 +59,37 @@ function test() {
   };
   PlacesUtils.history.addObserver(historyObserver, false);
 
-  let selectedWin = null;
-  let windowsToClose = [];
-  registerCleanupFunction(function() {
-    PlacesUtils.history.removeObserver(historyObserver);
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
 
-  function openTestPage(aWin) {
-    aWin.gBrowser.selectedTab = aWin.gBrowser.addTab(TEST_URL);
-  }
+  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
+  let aPageTitle = yield deferredFirst.promise;
+  // The first time that the page is loaded
+  is(aPageTitle, "No Cookie",
+     "The page should be loaded without any cookie for the first time");
 
-  function whenPageLoad(aWin, aCallback) {
-    aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-      aWin.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-      aCallback();
-    }, true);
-    aWin.gBrowser.selectedBrowser.loadURI(TEST_URL);
-  }
+  win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
+  aPageTitle = yield deferredSecond.promise;
+  // The second time that the page is loaded
+  is(aPageTitle, "Cookie",
+     "The page should be loaded with a cookie for the second time");
 
-  function testOnWindow(aPrivate, aCallback) {
-    whenNewWindowLoaded({ private: aPrivate }, function(win) {
-      selectedWin = win;
-      windowsToClose.push(win);
-      executeSoon(function() { aCallback(win) });
-    });
-  }
+  yield cleanup();
 
-  waitForCleanup(function() {
-    testOnWindow(false, function(win) {
-      openTestPage(win);
-    });
-  });
-}
+  win.gBrowser.selectedTab = win.gBrowser.addTab(TEST_URL);
+  aPageTitle = yield deferredThird.promise;
+  // After clean up
+  is(aPageTitle, "No Cookie",
+     "The page should be loaded without any cookie again");
+
+  let win2 = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+
+  let private_tab = win2.gBrowser.addTab(TEST_URL);
+  win2.gBrowser.selectedTab = private_tab;
+  yield BrowserTestUtils.browserLoaded(private_tab.linkedBrowser);
+
+  // Cleanup
+  yield cleanup();
+  PlacesUtils.history.removeObserver(historyObserver);
+  yield BrowserTestUtils.closeWindow(win);
+  yield BrowserTestUtils.closeWindow(win2);
+});

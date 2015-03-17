@@ -293,6 +293,20 @@ function test() {
       test: fragment => {
         is(countAll(fragment), 0);
       }
+    },
+    {
+      name: "background",
+      value: "rgb(255, var(--g-value), 192)",
+      test: fragment => {
+	is(fragment.textContent, "rgb(255, var(--g-value), 192)");
+      }
+    },
+    {
+      name: "background",
+      value: "rgb(255, var(--g-value, 0), 192)",
+      test: fragment => {
+	is(fragment.textContent, "rgb(255, var(--g-value, 0), 192)");
+      }
     }
   ];
 
