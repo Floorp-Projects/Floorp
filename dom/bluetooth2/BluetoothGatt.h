@@ -51,6 +51,7 @@ public:
    ***************************************************************************/
   already_AddRefed<Promise> Connect(ErrorResult& aRv);
   already_AddRefed<Promise> Disconnect(ErrorResult& aRv);
+  already_AddRefed<Promise> ReadRemoteRssi(ErrorResult& aRv);
 
   /****************************************************************************
    * Others

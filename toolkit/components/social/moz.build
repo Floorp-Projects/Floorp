@@ -19,3 +19,6 @@ if CONFIG['MOZ_SOCIAL']:
         'SocialService.jsm',
         'WorkerAPI.jsm',
     ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'SocialAPI')

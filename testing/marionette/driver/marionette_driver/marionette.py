@@ -677,8 +677,7 @@ class Marionette(object):
                                                  timeout=timeout)
 
     @do_crash_check
-    def _send_message(self, command, response_key="ok", ignore_response=False,
-                      **kwargs):
+    def _send_message(self, command, response_key="ok", **kwargs):
         if not self.session_id and command != "newSession":
             raise errors.MarionetteException("Please start a session")
 
@@ -689,7 +688,7 @@ class Marionette(object):
             message["parameters"] = kwargs
 
         try:
-            response = self.client.send(message, ignore_response=ignore_response)
+            response = self.client.send(message)
         except socket.timeout:
             self.session = None
             self.window = None
@@ -909,7 +908,7 @@ class Marionette(object):
                 "eForceQuit",
                 "eRestart",
             ]
-            self._send_message('quitApplication', flags=restart_flags, ignore_response=True)
+            self._send_message('quitApplication', flags=restart_flags)
             self.client.close()
         else:
             self.delete_session()

@@ -167,6 +167,55 @@ BluetoothGatt::Disconnect(ErrorResult& aRv)
   return promise.forget();
 }
 
+class ReadRemoteRssiTask MOZ_FINAL : public BluetoothReplyRunnable
+{
+public:
+  ReadRemoteRssiTask(Promise* aPromise)
+    : BluetoothReplyRunnable(nullptr, aPromise,
+                             NS_LITERAL_STRING("GattClientReadRemoteRssi"))
+  {
+    MOZ_ASSERT(aPromise);
+  }
+
+  bool
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
+  {
+    aValue.setUndefined();
+
+    const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
+    NS_ENSURE_TRUE(v.type() == BluetoothValue::Tuint32_t, false);
+
+    aValue.setInt32(static_cast<int32_t>(v.get_uint32_t()));
+    return true;
+  }
+};
+
+already_AddRefed<Promise>
+BluetoothGatt::ReadRemoteRssi(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(
+    mConnectionState == BluetoothConnectionState::Connected,
+    NS_ERROR_DOM_INVALID_STATE_ERR);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new ReadRemoteRssiTask(promise);
+  bs->GattClientReadRemoteRssiInternal(mClientIf, mDeviceAddr, result);
+
+  return promise.forget();
+}
+
 void
 BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 {

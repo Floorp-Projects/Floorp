@@ -3025,8 +3025,15 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
 
   if (oldContext->ShouldSuppressLineBreak() !=
         aNewContext->ShouldSuppressLineBreak()) {
-    LOG_RESTYLE_CONTINUE("NS_STYLE_SUPPRESS_LINEBREAK differes"
+    LOG_RESTYLE_CONTINUE("NS_STYLE_SUPPRESS_LINEBREAK differs"
                          "between old and new style contexts");
+    return eRestyleResult_Continue;
+  }
+
+  if (oldContext->IsInDisplayNoneSubtree() !=
+        aNewContext->IsInDisplayNoneSubtree()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_IN_DISPLAY_NONE_SUBTREE differs between old"
+                         " and new style contexts");
     return eRestyleResult_Continue;
   }
 

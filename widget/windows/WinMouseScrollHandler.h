@@ -69,13 +69,6 @@ private:
   static MouseScrollHandler* sInstance;
 
   /**
-   * DispatchEvent() dispatches aEvent on aWidget.
-   *
-   * @return TRUE if the event was consumed.  Otherwise, FALSE.
-   */
-  static bool DispatchEvent(nsWindowBase* aWidget, WidgetGUIEvent& aEvent);
-
-  /**
    * InitEvent() initializes the aEvent.  If aPoint is null, the result of
    * GetCurrentMessagePos() will be used.
    */

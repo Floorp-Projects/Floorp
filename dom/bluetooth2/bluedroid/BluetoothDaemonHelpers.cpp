@@ -1070,9 +1070,9 @@ PackPDU(const BluetoothAvrcpElementAttribute& aIn, BluetoothDaemonPDU& aPDU)
     return NS_ERROR_ILLEGAL_VALUE; /* integer overflow detected */
   }
 
-  PRUint32 clen = cstr.Length() + 1; /* include \0 character */
+  uint32_t clen = cstr.Length() + 1; /* include \0 character */
 
-  rv = PackPDU(PackConversion<PRUint32, uint8_t>(clen), aPDU);
+  rv = PackPDU(PackConversion<uint32_t, uint8_t>(clen), aPDU);
   if (NS_FAILED(rv)) {
     return rv;
   }

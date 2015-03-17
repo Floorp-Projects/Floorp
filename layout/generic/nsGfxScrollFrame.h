@@ -177,9 +177,9 @@ public:
   // Get the scroll range assuming the scrollport has size (aWidth, aHeight).
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetScrollPositionClampingScrollPortSize() const;
-  gfxSize GetResolution() const;
-  void SetResolution(const gfxSize& aResolution);
-  void SetResolutionAndScaleTo(const gfxSize& aResolution);
+  float GetResolution() const;
+  void SetResolution(float aResolution);
+  void SetResolutionAndScaleTo(float aResolution);
   void FlingSnap(const mozilla::CSSPoint& aDestination);
   void ScrollSnap();
   void ScrollSnap(const nsPoint &aDestination);
@@ -433,7 +433,7 @@ public:
   nsPoint mLastPos;
 
   // The current resolution derived from the zoom level and device pixel ratio.
-  gfxSize mResolution;
+  float mResolution;
 
   nsExpirationState mActivityExpirationState;
 
@@ -689,13 +689,13 @@ public:
   virtual nsSize GetScrollPositionClampingScrollPortSize() const MOZ_OVERRIDE {
     return mHelper.GetScrollPositionClampingScrollPortSize();
   }
-  virtual gfxSize GetResolution() const MOZ_OVERRIDE {
+  virtual float GetResolution() const MOZ_OVERRIDE {
     return mHelper.GetResolution();
   }
-  virtual void SetResolution(const gfxSize& aResolution) MOZ_OVERRIDE {
+  virtual void SetResolution(float aResolution) MOZ_OVERRIDE {
     return mHelper.SetResolution(aResolution);
   }
-  virtual void SetResolutionAndScaleTo(const gfxSize& aResolution) MOZ_OVERRIDE {
+  virtual void SetResolutionAndScaleTo(float aResolution) MOZ_OVERRIDE {
     return mHelper.SetResolutionAndScaleTo(aResolution);
   }
   virtual nsSize GetLineScrollAmount() const MOZ_OVERRIDE {
@@ -1070,13 +1070,13 @@ public:
   virtual nsSize GetScrollPositionClampingScrollPortSize() const MOZ_OVERRIDE {
     return mHelper.GetScrollPositionClampingScrollPortSize();
   }
-  virtual gfxSize GetResolution() const MOZ_OVERRIDE {
+  virtual float GetResolution() const MOZ_OVERRIDE {
     return mHelper.GetResolution();
   }
-  virtual void SetResolution(const gfxSize& aResolution) MOZ_OVERRIDE {
+  virtual void SetResolution(float aResolution) MOZ_OVERRIDE {
     return mHelper.SetResolution(aResolution);
   }
-  virtual void SetResolutionAndScaleTo(const gfxSize& aResolution) MOZ_OVERRIDE {
+  virtual void SetResolutionAndScaleTo(float aResolution) MOZ_OVERRIDE {
     return mHelper.SetResolutionAndScaleTo(aResolution);
   }
   virtual nsSize GetLineScrollAmount() const MOZ_OVERRIDE {

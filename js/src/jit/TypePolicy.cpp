@@ -800,7 +800,7 @@ SimdSwizzlePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
         if (in->type() == MIRType_Int32)
             continue;
 
-        MInstruction *replace = MTruncateToInt32::New(alloc, in);
+        MInstruction *replace = MToInt32::New(alloc, in, MacroAssembler::IntConversion_NumbersOnly);
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(i + 1, replace);
         if (!replace->typePolicy()->adjustInputs(alloc, replace))

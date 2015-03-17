@@ -64,7 +64,7 @@ STYLE_STRUCTS = [("INHERITED",) + x for x in [
     ("Background",     "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
     ("Position",       "nullptr",   NORMAL_DEP + LENGTH_DEP),
     ("TextReset",      "nullptr",   NORMAL_DEP + LENGTH_DEP + COLOR_DEP),
-    ("Display",        "nullptr",   NORMAL_DEP),
+    ("Display",        "nullptr",   NORMAL_DEP + LENGTH_DEP),
     ("Content",        "nullptr",   NORMAL_DEP + LENGTH_DEP),
     ("UIReset",        "nullptr",   NORMAL_DEP),
     ("Table",          "nullptr",   NORMAL_DEP),

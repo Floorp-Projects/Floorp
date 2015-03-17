@@ -97,3 +97,6 @@ if CONFIG['MOZ_PLACES']:
     FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Places')
