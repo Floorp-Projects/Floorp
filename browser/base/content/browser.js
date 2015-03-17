@@ -1030,6 +1030,7 @@ var gBrowserInit = {
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
+    ReadingListUI.init();
 
 #ifdef XP_WIN
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
@@ -1398,7 +1399,6 @@ var gBrowserInit = {
 
       SocialUI.init();
       TabView.init();
-      ReadingListUI.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -2441,6 +2441,7 @@ function UpdatePageProxyState()
 function SetPageProxyState(aState)
 {
   BookmarkingUI.onPageProxyStateChanged(aState);
+  ReadingListUI.onPageProxyStateChanged(aState);
 
   if (!gURLBar)
     return;
