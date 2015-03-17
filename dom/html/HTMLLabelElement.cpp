@@ -88,7 +88,7 @@ InInteractiveHTMLContent(nsIContent* aContent, nsIContent* aStop)
   nsIContent* content = aContent;
   while (content && content != aStop) {
     if (content->IsElement() &&
-        content->AsElement()->IsInteractiveHTMLContent()) {
+        content->AsElement()->IsInteractiveHTMLContent(true)) {
       return true;
     }
     content = content->GetParent();
