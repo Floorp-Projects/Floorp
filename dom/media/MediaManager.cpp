@@ -112,8 +112,8 @@ using dom::SupportedVideoConstraints;
 static bool
 HostInDomain(const nsCString &aHost, const nsCString &aPattern)
 {
-  PRInt32 patternOffset = 0;
-  PRInt32 hostOffset = 0;
+  int32_t patternOffset = 0;
+  int32_t hostOffset = 0;
 
   // Act on '*.' wildcard in the left-most position in a domain pattern.
   if (aPattern.Length() > 2 && aPattern[0] == '*' && aPattern[1] == '.') {
