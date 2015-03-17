@@ -1220,6 +1220,7 @@ def parseKeyValue(strings, separator='=', context='key, value: '):
 
 
 class Mochitest(MochitestUtilsMixin):
+    _active_tests = None
     certdbNew = False
     sslTunnel = None
     vmwareHelper = None
@@ -1848,6 +1849,9 @@ class Mochitest(MochitestUtilsMixin):
         """
           This method is used to parse the manifest and return active filtered tests.
         """
+        if self._active_tests:
+            return self._active_tests
+
         self.setTestRoot(options)
         manifest = self.getTestManifest(options)
         if manifest:
@@ -1958,8 +1962,8 @@ class Mochitest(MochitestUtilsMixin):
             return cmp(path1, path2)
 
         paths.sort(path_sort)
-
-        return paths
+        self._active_tests = paths
+        return self._active_tests
 
     def logPreamble(self, tests):
         """Logs a suite_start message and test_start/test_end at the beginning of a run.
@@ -1988,10 +1992,8 @@ class Mochitest(MochitestUtilsMixin):
 
         return testsToRun
 
-    def runMochitests(self, options, onLaunch=None):
+    def runMochitests(self, options, testsToRun, onLaunch=None):
         "This is a base method for calling other methods in this class for --bisect-chunk."
-        testsToRun = self.getTestsToRun(options)
-
         # Making an instance of bisect class for --bisect-chunk option.
         bisect = bisection.Bisect(self)
         finished = False
@@ -2037,25 +2039,26 @@ class Mochitest(MochitestUtilsMixin):
         if options.browserChrome:
             options.runByDir = True
 
+        testsToRun = self.getTestsToRun(options)
         if not options.runByDir:
-            return self.runMochitests(options, onLaunch)
+            return self.runMochitests(options, testsToRun, onLaunch)
 
         # code for --run-by-dir
         dirs = self.getDirectories(options)
 
         result = 1  # default value, if no tests are run.
         inputTestPath = self.getTestPath(options)
-        for dir in dirs:
-            if inputTestPath and not inputTestPath.startswith(dir):
+        for d in dirs:
+            if inputTestPath and not inputTestPath.startswith(d):
                 continue
 
-            options.testPath = dir
-            print "testpath: %s" % options.testPath
+            print "dir: %s" % d
+            tests_in_dir = [t for t in testsToRun if t.startswith(d)]
 
             # If we are using --run-by-dir, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face problems
             # if we use the directory provided by the user.
-            result = self.runMochitests(options, onLaunch)
+            result = self.runMochitests(options, tests_in_dir, onLaunch)
 
             # Dump the logging buffer
             self.message_logger.dump_buffered()
@@ -2515,10 +2518,12 @@ class Mochitest(MochitestUtilsMixin):
         """
             Make the list of directories by parsing manifests
         """
-        tests = self.getActiveTests(options, False)
+        tests = self.getActiveTests(options)
         dirlist = []
-
         for test in tests:
+            if 'disabled' in test:
+                continue
+
             rootdir = '/'.join(test['path'].split('/')[:-1])
             if rootdir not in dirlist:
                 dirlist.append(rootdir)
