@@ -670,7 +670,7 @@ public:
 
   bool OnStateMachineTaskQueue() const override;
 
-  bool OnDecodeThread() const override;
+  bool OnDecodeTaskQueue() const override;
 
   // Returns the monitor for other threads to synchronise access to
   // state.
