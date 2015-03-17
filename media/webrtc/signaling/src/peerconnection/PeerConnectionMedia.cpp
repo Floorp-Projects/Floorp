@@ -501,8 +501,7 @@ PeerConnectionMedia::FlushIceCtxOperationQueueIfReady()
 }
 
 void
-PeerConnectionMedia::PerformOrEnqueueIceCtxOperation(
-    const nsRefPtr<nsIRunnable>& runnable)
+PeerConnectionMedia::PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable)
 {
   ASSERT_ON_THREAD(mMainThread);
 
