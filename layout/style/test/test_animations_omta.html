@@ -2067,5 +2067,67 @@ addAsyncAnimTest(function *() {
   visitedLink.remove();
 });
 
+/*
+ * Bug 962594 - Turn off CSS animations when the element is display:none, or
+ * is in a display:none subtree.
+ */
+
+// Check that it works if the animated element itself becomes display:none
+addAsyncAnimTest(function *() {
+  new_div("animation: anim4 linear 10s");
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation is running on compositor");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation is at 1s on compositor");
+  gDiv.style.display = "none";
+  yield waitForPaintsFlushed();
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation stopped on compositor");
+  advance_clock(1000);
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation 1s after display:none");
+  gDiv.style.display = "";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation after display:block");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation 1s after display:block");
+  done_div();
+});
+
+// Check that it works if an ancestor of the animated element becomes display:none
+addAsyncAnimTest(function *() {
+  new_div("animation: anim4 linear 10s");
+  var ancestor = document.createElement("div");
+  gDiv.parentNode.insertBefore(ancestor, gDiv);
+  ancestor.appendChild(gDiv);
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation is running on compositor");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation is at 1s on compositor");
+  gDiv.style.display = "none";
+  yield waitForPaintsFlushed();
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation stopped on compositor");
+  advance_clock(1000);
+  omta_is("transform", "none", RunningOn.MainThread,
+          "transform animation 1s after display:none");
+  gDiv.style.display = "";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          "transform animation after display:block");
+  advance_clock(1000);
+  omta_is("transform", { ty: 10 }, RunningOn.Compositor,
+          "transform animation 1s after display:block");
+  ancestor.parentNode.insertBefore(gDiv, ancestor);
+  ancestor.parentNode.removeChild(ancestor);
+  done_div();
+});
+
 </script>
 </html>

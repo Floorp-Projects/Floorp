@@ -193,6 +193,12 @@ struct UnregisterGattClientRequest
   int clientIf;
 };
 
+struct GattClientReadRemoteRssiRequest
+{
+  int clientIf;
+  nsString deviceAddress;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -228,6 +234,7 @@ union Request
   ConnectGattClientRequest;
   DisconnectGattClientRequest;
   UnregisterGattClientRequest;
+  GattClientReadRemoteRssiRequest;
 };
 
 protocol PBluetooth

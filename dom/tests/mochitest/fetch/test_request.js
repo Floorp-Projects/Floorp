@@ -1,11 +1,3 @@
-function ok(a, msg) {
-  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-}
-
-function is(a, b, msg) {
-  postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-}
-
 function testDefaultCtor() {
   var req = new Request("");
   is(req.method, "GET", "Default Request method is GET");
@@ -271,8 +263,9 @@ function testBodyExtraction() {
   }).then(function() {
     return newReq().blob().then(function(v) {
       ok(v instanceof Blob, "Should resolve to Blob");
-      var fs = new FileReaderSync();
-      is(fs.readAsText(v), text, "Decoded Blob should match original");
+      return readAsText(v).then(function(result) {
+        is(result, text, "Decoded Blob should match original");
+      });
     });
   }).then(function() {
     return newReq().json().then(function(v) {
@@ -311,9 +304,7 @@ function testModeCorsPreflightEnumValue() {
   }
 }
 
-onmessage = function() {
-  var done = function() { postMessage({ type: 'finish' }) }
-
+function runTest() {
   testDefaultCtor();
   testSimpleUrlParse();
   testUrlFragment();
@@ -321,16 +312,11 @@ onmessage = function() {
   testBug1109574();
   testModeCorsPreflightEnumValue();
 
-  Promise.resolve()
+  return Promise.resolve()
     .then(testBodyCreation)
     .then(testBodyUsed)
     .then(testBodyExtraction)
     .then(testUsedRequest)
     .then(testClone())
     // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some Request tests failed " + e);
-      done();
-    })
 }

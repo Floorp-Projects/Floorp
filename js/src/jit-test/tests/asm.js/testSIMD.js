@@ -554,18 +554,18 @@ var CheckSqrt = CheckUnaryF4('sqrt', function(x) { return Math.sqrt(x); });
 CheckSqrt([1, 42.42, 0.63, 13.37]);
 CheckSqrt([NaN, -Infinity, Infinity, 0]);
 
-// Reciprocal and reciprocalSqrt give approximate results
+// ReciprocalApproximation and reciprocalSqrtApproximation give approximate results
 function assertNear(a, b) {
     if (a !== a && b === b)
         throw 'Observed NaN, expected ' + b;
     if (Math.abs(a - b) > 1e-3)
         throw 'More than 1e-3 between ' + a + ' and ' + b;
 }
-var CheckRecp = CheckUnaryF4('reciprocal', function(x) { return 1 / x; }, assertNear);
+var CheckRecp = CheckUnaryF4('reciprocalApproximation', function(x) { return 1 / x; }, assertNear);
 CheckRecp([1, 42.42, 0.63, 13.37]);
 CheckRecp([NaN, -Infinity, Infinity, 0]);
 
-var CheckRecp = CheckUnaryF4('reciprocalSqrt', function(x) { return 1 / Math.sqrt(x); }, assertNear);
+var CheckRecp = CheckUnaryF4('reciprocalSqrtApproximation', function(x) { return 1 / Math.sqrt(x); }, assertNear);
 CheckRecp([1, 42.42, 0.63, 13.37]);
 CheckRecp([NaN, -Infinity, Infinity, 0]);
 

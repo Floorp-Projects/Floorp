@@ -1880,7 +1880,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
   , mLastPos(-1, -1)
-  , mResolution(1.0, 1.0)
+  , mResolution(1.0)
   , mScrollPosForLayerPixelAlignment(-1, -1)
   , mLastUpdateImagesPos(-1, -1)
   , mNeverHasVerticalScrollbar(false)
@@ -3290,14 +3290,14 @@ ScrollFrameHelper::GetScrollPositionClampingScrollPortSize() const
   return mScrollPort.Size();
 }
 
-gfxSize
+float
 ScrollFrameHelper::GetResolution() const
 {
   return mResolution;
 }
 
 void
-ScrollFrameHelper::SetResolution(const gfxSize& aResolution)
+ScrollFrameHelper::SetResolution(float aResolution)
 {
   mResolution = aResolution;
   mIsResolutionSet = true;
@@ -3305,7 +3305,7 @@ ScrollFrameHelper::SetResolution(const gfxSize& aResolution)
 }
 
 void
-ScrollFrameHelper::SetResolutionAndScaleTo(const gfxSize& aResolution)
+ScrollFrameHelper::SetResolutionAndScaleTo(float aResolution)
 {
   MOZ_ASSERT(mIsRoot);  // This API should only be called on root scroll frames.
   mResolution = aResolution;
@@ -5227,9 +5227,9 @@ ScrollFrameHelper::RestoreState(nsPresState* aState)
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresContext()->PresShell();
     if (mScaleToResolution) {
-      presShell->SetResolutionAndScaleTo(mResolution.width, mResolution.height);
+      presShell->SetResolutionAndScaleTo(mResolution);
     } else {
-      presShell->SetResolution(mResolution.width, mResolution.height);
+      presShell->SetResolution(mResolution);
     }
   }
 }

@@ -102,30 +102,6 @@ public:
 
     nsIXULBrowserWindow* GetXULBrowserWindow();
 
-    /**
-     * Return the TabParent that has decided it wants to capture an
-     * event series for fast-path dispatch to its subprocess, if one
-     * has.
-     *
-     * DOM event dispatch and widget are free to ignore capture
-     * requests from TabParents; the end result wrt remote content is
-     * (must be) always the same, albeit usually slower without
-     * subprocess capturing.  This allows frontends/widget backends to
-     * "opt in" to faster cross-process dispatch.
-     */
-    static TabParent* GetEventCapturer();
-    /**
-     * If this is the current event capturer, give this a chance to
-     * capture the event.  If it was captured, return true, false
-     * otherwise.  Un-captured events should follow normal DOM
-     * dispatch; captured events should result in no further
-     * processing from the caller of TryCapture().
-     *
-     * It's an error to call TryCapture() if this isn't the event
-     * capturer.
-     */
-    bool TryCapture(const WidgetGUIEvent& aEvent);
-
     void Destroy();
 
     virtual bool RecvMoveFocus(const bool& aForward) MOZ_OVERRIDE;
@@ -439,9 +415,6 @@ protected:
     uint32_t mIMECaretOffset;
     LayoutDeviceIntRect mIMECaretRect;
     LayoutDeviceIntRect mIMEEditorRect;
-
-    // The number of event series we're currently capturing.
-    int32_t mEventCaptureDepth;
 
     nsIntRect mRect;
     ScreenIntSize mDimensions;

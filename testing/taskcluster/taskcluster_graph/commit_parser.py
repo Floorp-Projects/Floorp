@@ -23,13 +23,19 @@ BUILD_TYPE_ALIASES = {
 class InvalidCommitException(Exception):
     pass
 
-def normalize_platform_list(all_builds, build_list):
+def normalize_platform_list(alias, all_builds, build_list):
     if build_list == 'all':
         return all_builds
 
-    return [ build.strip() for build in build_list.split(',') ]
+    results = []
+    for build in build_list.split(','):
+        if build in alias:
+            build = alias[build]
+        results.append(build)
 
-def normalize_test_list(all_tests, job_list):
+    return results
+
+def normalize_test_list(aliases, all_tests, job_list):
     '''
     Normalize a set of jobs (builds or tests) there are three common cases:
 
@@ -37,6 +43,7 @@ def normalize_test_list(all_tests, job_list):
         - job_list is == 'all' (meaning use the list of jobs for that job type)
         - job_list is comma delimited string which needs to be split
 
+    :param dict aliases: Alias mapping for jobs...
     :param list all_tests: test flags from job_flags.yml structure.
     :param str job_list: see above examples.
     :returns: List of jobs
@@ -61,31 +68,36 @@ def normalize_test_list(all_tests, job_list):
             if 'platforms' in all_entry:
                 entry['platforms'] = list(all_entry['platforms'])
             results.append(entry)
-        return parse_test_chunks(results)
+        return parse_test_chunks(aliases, results)
     else:
-        return parse_test_chunks(tests)
+        return parse_test_chunks(aliases, tests)
 
-def parse_test_chunks(tests):
+def parse_test_chunks(aliases, tests):
     '''
     Test flags may include parameters to narrow down the number of chunks in a
     given push. We don't model 1 chunk = 1 job in taskcluster so we must check
     each test flag to see if it is actually specifying a chunk.
 
+    :param dict aliases: Dict of alias name -> real name.
     :param list tests: Result from normalize_test_list
     :returns: List of jobs
     '''
-
     results = []
     seen_chunks = {}
     for test in tests:
         matches = TEST_CHUNK_SUFFIX.match(test['test'])
 
         if not matches:
+            if test['test'] in aliases:
+                test['test'] = aliases[test['test']]
             results.append(test)
             continue
 
         name = matches.group(1)
         chunk = int(matches.group(2))
+
+        if name in aliases:
+            name = aliases[name]
 
         if name in seen_chunks:
             seen_chunks[name].add(chunk)
@@ -191,8 +203,10 @@ def parse_commit(message, jobs):
     build_types = [ BUILD_TYPE_ALIASES.get(build_type, build_type) for
             build_type in args.build_types ]
 
-    platforms = normalize_platform_list(jobs['flags']['builds'], args.platforms)
-    tests = normalize_test_list(jobs['flags']['tests'], args.tests)
+    aliases = jobs['flags'].get('aliases', {})
+
+    platforms = normalize_platform_list(aliases, jobs['flags']['builds'], args.platforms)
+    tests = normalize_test_list(aliases, jobs['flags']['tests'], args.tests)
 
     result = []
 

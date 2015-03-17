@@ -266,7 +266,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   // build the animations list
   dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
   AnimationPlayerPtrArray newPlayers;
-  BuildAnimations(aStyleContext, aElement, timeline, newPlayers);
+  if (!aStyleContext->IsInDisplayNoneSubtree()) {
+    BuildAnimations(aStyleContext, aElement, timeline, newPlayers);
+  }
 
   if (newPlayers.IsEmpty()) {
     if (collection) {

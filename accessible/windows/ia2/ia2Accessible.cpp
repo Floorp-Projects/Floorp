@@ -16,6 +16,7 @@
 #include "IUnknownImpl.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleTypes.h"
+#include "mozilla/a11y/PDocAccessible.h"
 #include "Relation.h"
 
 #include "nsIPersistentProperties2.h"
@@ -23,6 +24,8 @@
 
 using namespace mozilla;
 using namespace mozilla::a11y;
+
+template<typename String> static void EscapeAttributeChars(String& aStr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // ia2Accessible
@@ -65,6 +68,15 @@ ia2Accessible::get_nRelations(long* aNRelations)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
+  if (acc->IsProxy()) {
+    // XXX evaluate performance of collecting all relation targets.
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+    *aNRelations = types.Length();
+    return S_OK;
+  }
+
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
     if (sRelationTypePairs[idx].second == IA2_RELATION_NULL)
       continue;
@@ -84,13 +96,41 @@ ia2Accessible::get_relation(long aRelationIndex,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (!aRelation)
+  if (!aRelation || aRelationIndex < 0)
     return E_INVALIDARG;
   *aRelation = nullptr;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
+
+  if (acc->IsProxy()) {
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+
+    size_t targetSetCount = targetSets.Length();
+    for (size_t i = 0; i < targetSetCount; i++) {
+      uint32_t relTypeIdx = static_cast<uint32_t>(types[i]);
+      MOZ_ASSERT(sRelationTypePairs[relTypeIdx].first == types[i]);
+      if (sRelationTypePairs[relTypeIdx].second == IA2_RELATION_NULL)
+        continue;
+
+      if (static_cast<size_t>(aRelationIndex) == i) {
+        nsTArray<nsRefPtr<Accessible>> targets;
+        size_t targetCount = targetSets[i].Length();
+        for (size_t j = 0; j < targetCount; j++)
+          targets.AppendElement(WrapperFor(targetSets[i][j]));
+
+        nsRefPtr<ia2AccessibleRelation> rel =
+          new ia2AccessibleRelation(types[i], Move(targets));
+        rel.forget(aRelation);
+        return S_OK;
+      }
+    }
+
+    return E_INVALIDARG;
+  }
 
   long relIdx = 0;
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
@@ -123,13 +163,41 @@ ia2Accessible::get_relations(long aMaxRelations,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (!aRelation || !aNRelations)
+  if (!aRelation || !aNRelations || aMaxRelations <= 0)
     return E_INVALIDARG;
   *aNRelations = 0;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
+
+  if (acc->IsProxy()) {
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+
+    size_t count = std::min(targetSets.Length(),
+                            static_cast<size_t>(aMaxRelations));
+    size_t i = 0;
+    while (i < count) {
+      uint32_t relTypeIdx = static_cast<uint32_t>(types[i]);
+      if (sRelationTypePairs[relTypeIdx].second == IA2_RELATION_NULL)
+        continue;
+
+      size_t targetCount = targetSets[i].Length();
+      nsTArray<nsRefPtr<Accessible>> targets(targetCount);
+      for (size_t j = 0; j < targetCount; j++)
+        targets.AppendElement(WrapperFor(targetSets[i][j]));
+
+      nsRefPtr<ia2AccessibleRelation> rel =
+        new ia2AccessibleRelation(types[i], Move(targets));
+      rel.forget(aRelation + i);
+      i++;
+    }
+
+    *aNRelations = i;
+    return S_OK;
+  }
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs) &&
        *aNRelations < aMaxRelations; idx++) {
@@ -169,7 +237,11 @@ ia2Accessible::role(long* aRole)
     *aRole = ia2Role; \
     break;
 
-  a11y::role geckoRole = acc->Role();
+  a11y::role geckoRole;
+  if (acc->IsProxy())
+    geckoRole = acc->Proxy()->Role();
+  else
+    geckoRole = acc->Role();
   switch (geckoRole) {
 #include "RoleMap.h"
     default:
@@ -180,10 +252,16 @@ ia2Accessible::role(long* aRole)
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
-  if (geckoRole == roles::ROW) {
-    Accessible* xpParent = acc->Parent();
-    if (xpParent && xpParent->Role() == roles::TREE_TABLE)
+  if (acc->IsProxy()) {
+    if (geckoRole == roles::ROW && acc->Proxy()->Parent() &&
+        acc->Proxy()->Parent()->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
+  } else {
+    if (geckoRole == roles::ROW) {
+      Accessible* xpParent = acc->Parent();
+      if (xpParent && xpParent->Role() == roles::TREE_TABLE)
+        *aRole = ROLE_SYSTEM_OUTLINEITEM;
+    }
   }
 
   return S_OK;
@@ -274,7 +352,16 @@ ia2Accessible::get_states(AccessibleStates* aStates)
   // XXX: bug 344674 should come with better approach that we have here.
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  uint64_t state = acc->State();
+  if (acc->IsDefunct()) {
+    *aStates = IA2_STATE_DEFUNCT;
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  uint64_t state;
+  if (acc->IsProxy())
+    state = acc->Proxy()->State();
+  else
+    state = acc->State();
 
   if (state & states::INVALID)
     *aStates |= IA2_STATE_INVALID_ENTRY;
@@ -446,7 +533,11 @@ ia2Accessible::get_indexInParent(long* aIndexInParent)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  *aIndexInParent = acc->IndexInParent();
+  if (acc->IsProxy())
+    *aIndexInParent = acc->Proxy()->IndexInParent();
+  else
+    *aIndexInParent = acc->IndexInParent();
+
   if (*aIndexInParent == -1)
     return S_FALSE;
 
@@ -521,8 +612,29 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
 
   // The format is name:value;name:value; with \ for escaping these
   // characters ":;=,\".
-  nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
-  return ConvertToIA2Attributes(attributes, aAttributes);
+  if (!acc->IsProxy()) {
+    nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
+    return ConvertToIA2Attributes(attributes, aAttributes);
+  }
+
+  nsTArray<Attribute> attrs;
+  acc->Proxy()->Attributes(&attrs);
+  nsString attrStr;
+  size_t attrCount = attrs.Length();
+  for (size_t i = 0; i < attrCount; i++) {
+    EscapeAttributeChars(attrs[i].Name());
+    EscapeAttributeChars(attrs[i].Value());
+    AppendUTF8toUTF16(attrs[i].Name(), attrStr);
+    attrStr.Append(':');
+    attrStr.Append(attrs[i].Value());
+    attrStr.Append(';');
+  }
+
+  if (attrStr.IsEmpty())
+    return S_FALSE;
+
+  *aAttributes = ::SysAllocStringLen(attrStr.get(), attrStr.Length());
+  return *aAttributes ? S_OK : E_OUTOFMEMORY;
 
   A11Y_TRYBLOCK_END
 }
@@ -567,7 +679,7 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (!aTargets || !aNTargets)
+  if (!aTargets || !aNTargets || aMaxTargets < 0)
     return E_INVALIDARG;
   *aNTargets = 0;
 
@@ -585,13 +697,23 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  Relation rel = acc->RelationByType(*relationType);
-
   nsTArray<Accessible*> targets;
-  Accessible* target = nullptr;
-  while ((target = rel.Next()) &&
-         static_cast<long>(targets.Length()) <= aMaxTargets)
-    targets.AppendElement(target);
+  if (acc->IsProxy()) {
+    nsTArray<ProxyAccessible*> targetProxies =
+      acc->Proxy()->RelationByType(*relationType);
+
+    size_t targetCount = aMaxTargets;
+    if (targetProxies.Length() < targetCount)
+      targetCount = targetProxies.Length();
+    for (size_t i = 0; i < targetCount; i++)
+      targets.AppendElement(WrapperFor(targetProxies[i]));
+  } else {
+    Relation rel = acc->RelationByType(*relationType);
+    Accessible* target = nullptr;
+    while ((target = rel.Next()) &&
+           static_cast<long>(targets.Length()) <= aMaxTargets)
+      targets.AppendElement(target);
+  }
 
   *aNTargets = targets.Length();
   *aTargets = static_cast<IUnknown**>(
@@ -613,6 +735,18 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
 
+template<typename String>
+static inline void
+EscapeAttributeChars(String& aStr)
+{
+  int32_t offset = 0;
+  static const char kCharsToEscape[] = ":;=,\\";
+  while ((offset = aStr.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
+    aStr.Insert('\\', offset);
+    offset += 2;
+  }
+}
+
 HRESULT
 ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
                                       BSTR* aIA2Attributes)
@@ -632,8 +766,6 @@ ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
 
   nsAutoString strAttrs;
 
-  const char kCharsToEscape[] = ":;=,\\";
-
   bool hasMore = false;
   while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> propSupports;
@@ -647,21 +779,13 @@ ia2Accessible::ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
     if (NS_FAILED(propElem->GetKey(name)))
       return E_FAIL;
 
-    int32_t offset = 0;
-    while ((offset = name.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      name.Insert('\\', offset);
-      offset += 2;
-    }
+    EscapeAttributeChars(name);
 
     nsAutoString value;
     if (NS_FAILED(propElem->GetValue(value)))
       return E_FAIL;
 
-    offset = 0;
-    while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      value.Insert('\\', offset);
-      offset += 2;
-    }
+    EscapeAttributeChars(value);
 
     AppendUTF8toUTF16(name, strAttrs);
     strAttrs.Append(':');

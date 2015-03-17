@@ -339,10 +339,9 @@
                         .defaultView
                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
-          let resx = {}, resy = {};
-          cwu.getResolution(resx, resy);
-          // Resolution set by the apzc and is symmetric.
-          return resx.value;
+          let res = {};
+          cwu.getResolution(res);
+          return res.value;
         ]]></getter>
       </property>
 
