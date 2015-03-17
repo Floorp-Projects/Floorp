@@ -150,6 +150,7 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     numLoopRestarts_(0),
     failedBoundsCheck_(info->script()->failedBoundsCheck()),
     failedShapeGuard_(info->script()->failedShapeGuard()),
+    failedLexicalCheck_(info->script()->failedLexicalCheck()),
     nonStringIteration_(false),
     lazyArguments_(nullptr),
     inlineCallInfo_(nullptr),
@@ -961,6 +962,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     if (callerBuilder->failedShapeGuard_)
         failedShapeGuard_ = true;
+
+    if (callerBuilder->failedLexicalCheck_)
+        failedLexicalCheck_ = true;
 
     // Generate single entrance block.
     if (!setCurrentAndSpecializePhis(newBlock(pc)))
@@ -12816,6 +12820,8 @@ IonBuilder::addLexicalCheck(MDefinition *input)
     if (input->type() == MIRType_Value) {
         lexicalCheck = MLexicalCheck::New(alloc(), input);
         current->add(lexicalCheck);
+        if (failedLexicalCheck_)
+            lexicalCheck->setNotMovableUnchecked();
         return lexicalCheck;
     }
 
