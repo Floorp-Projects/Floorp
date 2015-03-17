@@ -127,10 +127,10 @@
             });
             witness.focus();
             // force reflow
-            var reflow = iframe.offsetLeft;
+            iframe.setAttribute("height", "298px");
           });
           // force reflow
-          var reflow = iframe.offsetLeft;
+          iframe.setAttribute("height", "299px");
         });
 
         document.body.appendChild(witness);
