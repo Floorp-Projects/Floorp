@@ -3819,7 +3819,7 @@ pref("image.cache.size", 5242880);
 pref("image.cache.timeweight", 500);
 
 // Whether we attempt to downscale images during decoding.
-pref("image.downscale-during-decode.enabled", false);
+pref("image.downscale-during-decode.enabled", true);
 
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
