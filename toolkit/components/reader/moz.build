@@ -17,3 +17,6 @@ EXTRA_JS_MODULES.reader = [
   'ReaderWorker.js',
   'ReaderWorker.jsm'
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Reader Mode')

@@ -3963,10 +3963,12 @@ LIRGenerator::visitSimdGeneralSwizzle(MSimdGeneralSwizzle *ins)
     if (ins->input()->type() == MIRType_Int32x4) {
         LSimdGeneralSwizzleI *lir = new (alloc()) LSimdGeneralSwizzleI(useRegister(ins->input()),
                                                                        lanesUses, temp());
+        assignSnapshot(lir, Bailout_BoundsCheck);
         define(lir, ins);
     } else if (ins->input()->type() == MIRType_Float32x4) {
         LSimdGeneralSwizzleF *lir = new (alloc()) LSimdGeneralSwizzleF(useRegister(ins->input()),
                                                                        lanesUses, temp());
+        assignSnapshot(lir, Bailout_BoundsCheck);
         define(lir, ins);
     } else {
         MOZ_CRASH("Unknown SIMD kind when getting lane");

@@ -408,16 +408,16 @@ IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const Ev
   nsSize frameSize = aFrame->GetSize();
   nsPresContext* pc = aFrame->PresContext();
   nsIPresShell* presShell = pc->PresShell();
-  gfxSize cumulativeResolution = presShell->GetCumulativeResolution();
-  if ((pc->AppUnitsToGfxUnits(frameSize.height) * cumulativeResolution.height) < limitReadableSize ||
-      (pc->AppUnitsToGfxUnits(frameSize.width) * cumulativeResolution.width) < limitReadableSize) {
+  float cumulativeResolution = presShell->GetCumulativeResolution();
+  if ((pc->AppUnitsToGfxUnits(frameSize.height) * cumulativeResolution) < limitReadableSize ||
+      (pc->AppUnitsToGfxUnits(frameSize.width) * cumulativeResolution) < limitReadableSize) {
     return false;
   }
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(aFrame));
   if (fm) {
-    if ((pc->AppUnitsToGfxUnits(fm->EmHeight()) * cumulativeResolution.height) < limitReadableSize) {
+    if ((pc->AppUnitsToGfxUnits(fm->EmHeight()) * cumulativeResolution) < limitReadableSize) {
       return false;
     }
   }

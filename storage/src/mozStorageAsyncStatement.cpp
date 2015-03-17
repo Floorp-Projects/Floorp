@@ -227,7 +227,6 @@ AsyncStatement::getParams()
 AsyncStatement::~AsyncStatement()
 {
   destructorAsyncFinalize();
-  cleanupJSHelpers();
 
   // If we are getting destroyed on the wrong thread, proxy the connection
   // release to the right thread.  I'm not sure why we do this.
@@ -240,23 +239,6 @@ AsyncStatement::~AsyncStatement()
     mDBConnection.swap(forgottenConn);
     (void)::NS_ProxyRelease(forgottenConn->threadOpenedOn,
                             static_cast<mozIStorageConnection *>(forgottenConn));
-  }
-}
-
-void
-AsyncStatement::cleanupJSHelpers()
-{
-  // We are considered dead at this point, so any wrappers for row or params
-  // need to lose their reference to us.
-  if (mStatementParamsHolder) {
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper =
-      do_QueryInterface(mStatementParamsHolder);
-    nsCOMPtr<mozIStorageStatementParams> iParams =
-      do_QueryWrappedNative(wrapper);
-    AsyncStatementParams *params =
-      static_cast<AsyncStatementParams *>(iParams.get());
-    params->mStatement = nullptr;
-    mStatementParamsHolder = nullptr;
   }
 }
 
@@ -369,7 +351,9 @@ AsyncStatement::Finalize()
                                       mSQLString.get()));
 
   asyncFinalize();
-  cleanupJSHelpers();
+
+  // Release the params holder, so it can release the reference to us.
+  mStatementParamsHolder = nullptr;
 
   return NS_OK;
 }

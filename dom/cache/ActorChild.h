@@ -34,6 +34,7 @@ public:
   FeatureNotified() const;
 
 protected:
+  ActorChild();
   ~ActorChild();
 
 private:

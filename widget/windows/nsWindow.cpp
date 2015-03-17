@@ -131,6 +131,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIAppStartup.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/TextEvents.h" // For WidgetKeyboardEvent
 #include "nsThemeConstants.h"
 
 #include "nsIGfxInfo.h"
@@ -3659,21 +3660,21 @@ bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
   return result;
 }
 
-bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
+bool nsWindow::DispatchKeyboardEvent(WidgetKeyboardEvent* event)
 {
-  nsEventStatus status;
-  DispatchEvent(event, status);
+  nsEventStatus status = DispatchInputEvent(event);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* aEvent)
+bool nsWindow::DispatchContentCommandEvent(WidgetContentCommandEvent* aEvent)
 {
-  if (aEvent->mClass != eWheelEventClass) {
-    nsEventStatus status;
-    DispatchEvent(aEvent, status);
-    return ConvertStatus(status);
-  }
+  nsEventStatus status;
+  DispatchEvent(aEvent, status);
+  return ConvertStatus(status);
+}
 
+bool nsWindow::DispatchWheelEvent(WidgetWheelEvent* aEvent)
+{
   nsEventStatus status = DispatchAPZAwareEvent(aEvent->AsInputEvent());
   return ConvertStatus(status);
 }
@@ -3987,7 +3988,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       }
     }
 
-    result = DispatchWindowEvent(&event);
+    result = DispatchInputEvent(&event);
 
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Enable();
@@ -5077,7 +5078,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           InitEvent(event);
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(event);
-          DispatchWindowEvent(&event);
+          DispatchInputEvent(&event);
           if (sSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
@@ -5576,7 +5577,7 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
       event.refPoint = LayoutDeviceIntPoint(pt.x, pt.y);
       event.inputSource = MOUSE_INPUT_SOURCE();
       event.mFlags.mOnlyChromeDispatch = true;
-      bool result = DispatchWindowEvent(&event);
+      bool result = DispatchInputEvent(&event);
       if (result) {
         // The mouse is over a blank area
         testResult = testResult == HTCLIENT ? HTCAPTION : testResult;

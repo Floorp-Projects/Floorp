@@ -43,7 +43,7 @@ const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
  * Since the state of a player changes as the animation progresses it is often
  * useful to call getCurrentState at regular intervals to get the current state.
  *
- * This actor also allows playing and pausing the animation.
+ * This actor also allows playing, pausing and seeking the animation.
  */
 let AnimationPlayerActor = ActorClass({
   typeName: "animationplayer",
@@ -282,6 +282,18 @@ let AnimationPlayerActor = ActorClass({
     return this.player.ready;
   }, {
     request: {},
+    response: {}
+  }),
+
+  /**
+   * Set the current time of the animation player.
+   */
+  setCurrentTime: method(function(currentTime) {
+    this.player.currentTime = currentTime;
+  }, {
+    request: {
+      currentTime: Arg(0, "number")
+    },
     response: {}
   })
 });

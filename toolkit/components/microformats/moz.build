@@ -10,3 +10,5 @@ EXTRA_JS_MODULES += [
     'Microformats.js',
 ]
 
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Microformats')

@@ -1,61 +1,36 @@
-var runs = [
-  function (win, tabbrowser, tab) {
-    is(tabbrowser.browsers.length, 2, "test_bug462673.html has opened a second tab");
-    is(tabbrowser.selectedTab, tab.nextSibling, "dependent tab is selected");
-    tabbrowser.removeTab(tab);
-    // Closing a tab will also close its parent chrome window, but async
-    executeSoon(function() {
-      ok(win.closed, "Window is closed");
-      testComplete(win);
-    });
-  },
-  function (win, tabbrowser, tab) {
-    var newTab = tabbrowser.addTab();
-    var newBrowser = newTab.linkedBrowser;
-    tabbrowser.removeTab(tab);
-    ok(!win.closed, "Window stays open");
-    if (!win.closed) {
-      is(tabbrowser.tabContainer.childElementCount, 1, "Window has one tab");
-      is(tabbrowser.browsers.length, 1, "Window has one browser");
-      is(tabbrowser.selectedTab, newTab, "Remaining tab is selected");
-      is(tabbrowser.selectedBrowser, newBrowser, "Browser for remaining tab is selected");
-      is(tabbrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode.parentNode.parentNode, "Panel for remaining tab is selected");
-    }
-    testComplete(win);
-  }
-];
-
-function test() {
-  waitForExplicitFinish();
-  runOneTest();
-}
-
-function testComplete(win) {
-  win.close();
-  if (runs.length)
-    runOneTest();
-  else
-    finish();
-}
-
-function runOneTest() {
+add_task(function* () {
   var win = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  yield SimpleTest.promiseFocus(win);
 
-  win.addEventListener("load", function () {
-    win.removeEventListener("load", arguments.callee, false);
+  let tab = win.gBrowser.tabContainer.firstChild;
+  yield promiseTabLoadEvent(tab, getRootDirectory(gTestPath) + "test_bug462673.html");
 
-    var tab = win.gBrowser.tabContainer.firstChild;
-    var browser = tab.linkedBrowser;
+  is(win.gBrowser.browsers.length, 2, "test_bug462673.html has opened a second tab");
+  is(win.gBrowser.selectedTab, tab.nextSibling, "dependent tab is selected");
+  win.gBrowser.removeTab(tab);
 
-    browser.addEventListener("load", function () {
-      browser.removeEventListener("load", arguments.callee, true);
+  // Closing a tab will also close its parent chrome window, but async
+  yield promiseWindowWillBeClosed(win);
+});
 
-      executeSoon(function () {
-        runs.shift()(win, win.gBrowser, tab);
-      });
-    }, true);
+add_task(function* () {
+  var win = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
+  yield SimpleTest.promiseFocus(win);
 
-    var rootDir = getRootDirectory(gTestPath);
-    browser.contentWindow.location = rootDir + "test_bug462673.html"
-  }, false);
-}
+  let tab = win.gBrowser.tabContainer.firstChild;
+  yield promiseTabLoadEvent(tab, getRootDirectory(gTestPath) + "test_bug462673.html");
+
+  var newTab = win.gBrowser.addTab();
+  var newBrowser = newTab.linkedBrowser;
+  win.gBrowser.removeTab(tab);
+  ok(!win.closed, "Window stays open");
+  if (!win.closed) {
+    is(win.gBrowser.tabContainer.childElementCount, 1, "Window has one tab");
+    is(win.gBrowser.browsers.length, 1, "Window has one browser");
+    is(win.gBrowser.selectedTab, newTab, "Remaining tab is selected");
+    is(win.gBrowser.selectedBrowser, newBrowser, "Browser for remaining tab is selected");
+    is(win.gBrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode.parentNode.parentNode, "Panel for remaining tab is selected");
+  }
+
+  yield promiseWindowClosed(win);
+});

@@ -13,41 +13,10 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
-<script type="text/javascript" src="worker_test_fetch_basic.js"> </script>
+<script type="text/javascript" src="fetch_test_framework.js"> </script>
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-
-function testOnWorker(done) {
-  ok(true, "=== Start Worker Tests ===");
-  var worker = new Worker("worker_test_fetch_basic_http.js");
-  worker.onmessage = function(event) {
-    if (event.data.type == "finish") {
-      ok(true, "=== Finish Worker Tests ===");
-      done();
-    } else if (event.data.type == "status") {
-      ok(event.data.status, event.data.msg);
-    }
-  }
-
-  worker.onerror = function(event) {
-    ok(false, "Worker had an error: " + event.message);
-    ok(true, "=== Finish Worker Tests ===");
-    done();
-  };
-
-  worker.postMessage("start");
-}
-
-//
-// Driver
-//
-
-testOnWorker(function() {
-  SimpleTest.finish();
-});
+testScript("test_fetch_basic_http.js");
 </script>
-</script>
-</pre>
 </body>
 </html>
 

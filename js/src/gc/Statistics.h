@@ -173,7 +173,10 @@ struct Statistics
         if (!aborted)
             slices.back().resetReason = reason;
     }
-    void nonincremental(const char *reason) { nonincrementalReason = reason; }
+
+    void nonincremental(const char *reason) { nonincrementalReason_ = reason; }
+
+    const char *nonincrementalReason() const { return nonincrementalReason_; }
 
     void count(Stat s) {
         MOZ_ASSERT(s < STAT_LIMIT);
@@ -203,6 +206,29 @@ struct Statistics
 
     static const size_t MAX_NESTING = 20;
 
+    struct SliceData {
+        SliceData(JS::gcreason::Reason reason, int64_t start, size_t startFaults)
+          : reason(reason), resetReason(nullptr), start(start), startFaults(startFaults)
+        {
+            for (size_t i = 0; i < MAX_MULTIPARENT_PHASES + 1; i++)
+                mozilla::PodArrayZero(phaseTimes[i]);
+        }
+
+        JS::gcreason::Reason reason;
+        const char *resetReason;
+        int64_t start, end;
+        size_t startFaults, endFaults;
+        int64_t phaseTimes[MAX_MULTIPARENT_PHASES + 1][PHASE_LIMIT];
+
+        int64_t duration() const { return end - start; }
+    };
+
+    typedef Vector<SliceData, 8, SystemAllocPolicy> SliceDataVector;
+    typedef SliceDataVector::ConstRange SliceRange;
+
+    SliceRange sliceRange() const { return slices.all(); }
+    size_t slicesLength() const { return slices.length(); }
+
   private:
     JSRuntime *runtime;
 
@@ -221,26 +247,9 @@ struct Statistics
 
     JSGCInvocationKind gckind;
 
-    const char *nonincrementalReason;
+    const char *nonincrementalReason_;
 
-    struct SliceData {
-        SliceData(JS::gcreason::Reason reason, int64_t start, size_t startFaults)
-          : reason(reason), resetReason(nullptr), start(start), startFaults(startFaults)
-        {
-            for (size_t i = 0; i < MAX_MULTIPARENT_PHASES + 1; i++)
-                mozilla::PodArrayZero(phaseTimes[i]);
-        }
-
-        JS::gcreason::Reason reason;
-        const char *resetReason;
-        int64_t start, end;
-        size_t startFaults, endFaults;
-        int64_t phaseTimes[MAX_MULTIPARENT_PHASES + 1][PHASE_LIMIT];
-
-        int64_t duration() const { return end - start; }
-    };
-
-    Vector<SliceData, 8, SystemAllocPolicy> slices;
+    SliceDataVector slices;
 
     /* Most recent time when the given phase started. */
     int64_t phaseStartTimes[PHASE_LIMIT];

@@ -354,12 +354,13 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 
     if (native == js::simd_int32x4_swizzle)
         return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_INT32);
+    if (native == js::simd_float32x4_swizzle)
+        return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
 
     if (native == js::simd_int32x4_load)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32);
     if (native == js::simd_float32x4_load)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
-
 
     if (native == js::simd_int32x4_store)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32);

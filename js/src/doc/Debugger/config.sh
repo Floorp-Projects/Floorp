@@ -11,6 +11,7 @@ markdown Conventions.md Debugger-API/Conventions
   label 'dbg code'      '#debuggee-code'        "Debugger API: General Conventions: Debuggee Code"
   label 'cv'            '#completion-values'    "Debugger API: General Conventions: Completion Values"
   label 'rv'            '#resumption-values'    "Debugger API: General Conventions: Resumption Values"
+  label 'timestamps'    '#timestamps'           "Debugger API: General Conventions: Timestamps"
   label 'wouldrun'      '#the-debugger.debuggeewouldrun-exception' "Debugger API: DebuggeeWouldRun"
 
 markdown Debugger.md Debugger-API/Debugger

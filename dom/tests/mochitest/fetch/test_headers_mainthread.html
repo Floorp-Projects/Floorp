@@ -1,3 +1,15 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Fetch Headers - Basic</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="test_headers_common.js"> </script>
+<script type="text/javascript">
 // Main thread specific tests because they need SpecialPowers.  Expects
 // test_headers_common.js to already be loaded.
 
@@ -139,3 +151,7 @@ TestRequestHeaders();
 TestRequestNoCorsHeaders();
 TestResponseHeaders();
 TestImmutableHeaders();
+</script>
+</body>
+</html>
+

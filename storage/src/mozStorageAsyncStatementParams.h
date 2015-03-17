@@ -16,8 +16,6 @@ class mozIStorageAsyncStatement;
 namespace mozilla {
 namespace storage {
 
-class AsyncStatement;
-
 /*
  * Since mozIStorageStatementParams is just a tagging interface we do not have
  * an async variant.
@@ -38,7 +36,7 @@ protected:
 
   AsyncStatement *mStatement;
 
-  friend class AsyncStatement;
+  friend class AsyncStatementParamsHolder;
 };
 
 } // namespace storage
