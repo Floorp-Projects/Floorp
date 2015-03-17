@@ -62,7 +62,13 @@ window.addEventListener("load", function() {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
   setPrefDefaults();
-  connect().catch(Cu.reportError);
+  connect().catch(e => {
+    let errorMessageContainer = document.getElementById("error-message-container");
+    let errorMessage = document.getElementById("error-message");
+    errorMessage.value = e;
+    errorMessageContainer.hidden = false;
+    Cu.reportError(e);
+  });
 });
 
 function onCloseCommand(event) {
