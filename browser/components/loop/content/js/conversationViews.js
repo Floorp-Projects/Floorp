@@ -316,7 +316,10 @@ loop.conversationViews = (function(mozL10n) {
    * Something went wrong view. Displayed when there's a big problem.
    */
   var GenericFailureView = React.createClass({displayName: "GenericFailureView",
-    mixins: [sharedMixins.AudioMixin],
+    mixins: [
+      sharedMixins.AudioMixin,
+      sharedMixins.DocumentTitleMixin
+    ],
 
     propTypes: {
       cancelCall: React.PropTypes.func.isRequired
@@ -327,7 +330,7 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     render: function() {
-      document.title = mozL10n.get("generic_failure_title");
+      this.setTitle(mozL10n.get("generic_failure_title"));
 
       return (
         React.createElement("div", {className: "call-window"}, 

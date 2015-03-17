@@ -8,7 +8,7 @@ describe("loop.conversationViews", function () {
 
   var sharedUtils = loop.shared.utils;
   var sharedView = loop.shared.views;
-  var sandbox, oldTitle, view, dispatcher, contact, fakeAudioXHR;
+  var sandbox, view, dispatcher, contact, fakeAudioXHR;
   var fakeMozLoop, fakeWindow;
 
   var CALL_STATES = loop.store.CALL_STATES;
@@ -33,7 +33,6 @@ describe("loop.conversationViews", function () {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers();
 
-    oldTitle = document.title;
     sandbox.stub(document.mozL10n, "get", function(x) {
       return x;
     });
@@ -106,7 +105,6 @@ describe("loop.conversationViews", function () {
 
   afterEach(function() {
     loop.shared.mixins.setRootObject(window);
-    document.title = oldTitle;
     view = undefined;
     delete navigator.mozLoop;
     sandbox.restore();
@@ -912,5 +910,8 @@ describe("loop.conversationViews", function () {
       expect(fakeAudio.loop).to.equal(false);
     });
 
+    it("should set the title to generic_failure_title", function() {
+      expect(fakeWindow.document.title).eql("generic_failure_title");
+    });
   });
 });

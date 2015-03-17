@@ -12,7 +12,6 @@
  */
 
 let hs = PlacesUtils.history;
-let bs = PlacesUtils.bookmarks;
 let as = PlacesUtils.annotations;
 
 /**
@@ -94,8 +93,12 @@ add_task(function test_historyClear() {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // This visit will be expired.
     yield PlacesTestUtils.addVisits({ uri: pageURI });
-    let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
-                               bs.DEFAULT_INDEX, null);
+    let bm = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: pageURI,
+      title: null
+    });
+    let id = yield PlacesUtils.promiseItemId(bm.guid);
     // Will persist because it's an EXPIRE_NEVER item anno.
     as.setItemAnnotation(id, "persist", "test", 0, as.EXPIRE_NEVER);
     // Will persist because the page is bookmarked.
@@ -140,17 +143,15 @@ add_task(function test_historyClear() {
     do_check_eq(items.length, 0);
   });
 
-  ["persist"].forEach(function(aAnno) {
-    let pages = as.getPagesWithAnnotation(aAnno);
-    do_check_eq(pages.length, 5);
-  });
+  let pages = as.getPagesWithAnnotation("persist");
+  do_check_eq(pages.length, 5);
 
-  ["persist"].forEach(function(aAnno) {
-    let items = as.getItemsWithAnnotation(aAnno);
-    do_check_eq(items.length, 5);
-    items.forEach(function(aItemId) {
-      // Check item exists.
-      bs.getItemIndex(aItemId);
-    });
-  });
+  let items = as.getItemsWithAnnotation("persist");
+  do_check_eq(items.length, 5);
+
+  for (let itemId of items) {
+    // Check item exists.
+    let guid = yield PlacesUtils.promiseItemGuid(itemId);
+    do_check_true((yield PlacesUtils.bookmarks.fetch({guid})), "item exists");
+  }
 });

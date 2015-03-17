@@ -18,9 +18,9 @@ add_task(function* test_default_behavior_host() {
     { uri: uri2, title: "visited" },
     { uri: uri4, title: "tpbk", transition: TRANSITION_TYPED },
   ]);
-  addBookmark( { uri: uri3, title: "bookmarked" } );
-  addBookmark( { uri: uri4, title: "tpbk" } );
-  addBookmark( { uri: uri5, title: "title", tags: ["foo"] } );
+  yield addBookmark( { uri: uri3, title: "bookmarked" } );
+  yield addBookmark( { uri: uri4, title: "tpbk" } );
+  yield addBookmark( { uri: uri5, title: "title", tags: ["foo"] } );
 
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
@@ -200,8 +200,8 @@ add_task(function* test_default_behavior_url() {
     { uri: uri2, title: "visited" },
     { uri: uri4, title: "tpbk", transition: TRANSITION_TYPED },
   ]);
-  addBookmark( { uri: uri3, title: "bookmarked" } );
-  addBookmark( { uri: uri4, title: "tpbk" } );
+  yield addBookmark( { uri: uri3, title: "bookmarked" } );
+  yield addBookmark( { uri: uri4, title: "tpbk" } );
 
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);

@@ -12,12 +12,20 @@ add_task(function* test_queryMultipleFolders() {
   let folderIds = [];
   let bookmarkIds = [];
   for (let i = 0; i < 3; ++i) {
-    folderIds.push(PlacesUtils.bookmarks.createFolder(PlacesUtils.bookmarksMenuFolderId,
-                                                      "Folder"+ i, PlacesUtils.bookmarks.DEFAULT_INDEX));
+    let folder = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: `Folder${i}`
+    });
+    folderIds.push(yield PlacesUtils.promiseItemId(folder.guid));
+
     for(let j = 0; j < 7; ++j) {
-      bookmarkIds.push(PlacesUtils.bookmarks.insertBookmark(folderIds[i],
-                                                            uri("http://Bookmark" + i + "_" + j + ".com"),
-                                                            PlacesUtils.bookmarks.DEFAULT_INDEX, ""));
+      let bm = yield PlacesUtils.bookmarks.insert({
+        parentGuid: (yield PlacesUtils.promiseItemGuid(folderIds[i])),
+        url: `http://Bookmark${i}_${j}.com`,
+        title: ""
+      });
+      bookmarkIds.push(yield PlacesUtils.promiseItemId(bm.guid));
     }
   }
 

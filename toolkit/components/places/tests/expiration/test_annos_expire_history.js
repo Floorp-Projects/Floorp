@@ -12,8 +12,6 @@
  * This expiration policy is only valid for page annotations.
  */
 
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 let as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
@@ -47,8 +45,11 @@ add_task(function test_annos_expire_history() {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // We also add a visit before bookmarking.
     yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
-                               bs.DEFAULT_INDEX, null);
+    yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: pageURI,
+      title: null
+    });
     // Notice we use page annotations here, items annotations can't use this
     // kind of expiration policy.
     as.setPageAnnotation(pageURI, "item_persist1", "test", 0, as.EXPIRE_WITH_HISTORY);

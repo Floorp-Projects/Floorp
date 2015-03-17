@@ -186,11 +186,16 @@ add_task(function test_setup()
                              "goog-badbinurl-shavar");
   Services.prefs.setCharPref("urlclassifier.downloadAllowTable",
                              "goog-downloadwhite-digest256");
+  // On Windows SendRemoteQueryInternal needs locale preference.
+  let locale = Services.prefs.getCharPref("general.useragent.locale");
+  Services.prefs.setCharPref("general.useragent.locale", "en-US");
+
   do_register_cleanup(function() {
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
     Services.prefs.clearUserPref("urlclassifier.downloadAllowTable");
+    Services.prefs.setCharPref("general.useragent.locale", locale);
   });
 
   gHttpServer = new HttpServer();

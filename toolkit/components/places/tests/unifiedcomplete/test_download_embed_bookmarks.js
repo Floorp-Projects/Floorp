@@ -24,12 +24,12 @@ add_task(function* test_download_embed_bookmarks() {
     { uri: uri5, title: "embed2", transition: TRANSITION_EMBED },
     { uri: uri6, title: "framed2", transition: TRANSITION_FRAMED_LINK }
   ]);
-  addBookmark({ uri: uri1,
-                title: "download-bookmark" });
-  addBookmark({ uri: uri2,
-                title: "embed-bookmark" });
-  addBookmark({ uri: uri3,
-                title: "framed-bookmark" });
+  yield addBookmark({ uri: uri1,
+                      title: "download-bookmark" });
+  yield addBookmark({ uri: uri2,
+                      title: "embed-bookmark" });
+  yield addBookmark({ uri: uri3,
+                      title: "framed-bookmark" });
 
   do_print("Searching for bookmarked download uri matches");
   yield check_autocomplete({

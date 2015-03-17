@@ -25,14 +25,14 @@ add_task(function* test_javascript_match() {
     { uri: uri7, title: "title" }
   ]);
 
-  addBookmark({ uri: uri2,
-                title: "title" });
-  addBookmark({ uri: uri4,
-                title: "title" });
-  addBookmark({ uri: uri5,
-                title: "title" });
-  addBookmark({ uri: uri6,
-                title: "title" });
+  yield addBookmark({ uri: uri2,
+                      title: "title" });
+  yield addBookmark({ uri: uri4,
+                      title: "title" });
+  yield addBookmark({ uri: uri5,
+                      title: "title" });
+  yield addBookmark({ uri: uri6,
+                      title: "title" });
 
   addOpenPages(uri7, 1);
 

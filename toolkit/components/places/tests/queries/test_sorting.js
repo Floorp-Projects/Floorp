@@ -649,12 +649,15 @@ tests.push({
     LOG("Sorting test 8: SORT BY LASTMODIFIED");
 
     var timeInMicroseconds = Date.now() * 1000;
+    var timeAddedInMicroseconds = timeInMicroseconds - 10000;
+
     this._unsortedData = [
       { isBookmark: true,
         uri: "http://example.com/b1",
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 0,
         title: "y1",
+        dateAdded: timeAddedInMicroseconds,
         lastModified: timeInMicroseconds - 1000,
         isInQuery: true },
 
@@ -663,6 +666,7 @@ tests.push({
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 1,
         title: "z",
+        dateAdded: timeAddedInMicroseconds,
         lastModified: timeInMicroseconds - 2000,
         isInQuery: true },
 
@@ -671,6 +675,7 @@ tests.push({
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 2,
         title: "x",
+        dateAdded: timeAddedInMicroseconds,
         lastModified: timeInMicroseconds,
         isInQuery: true },
 
@@ -680,6 +685,7 @@ tests.push({
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 3,
         title: "y2",
+        dateAdded: timeAddedInMicroseconds,
         lastModified: timeInMicroseconds - 1000,
         isInQuery: true },
 
@@ -690,6 +696,7 @@ tests.push({
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: 4,
         title: "y3",
+        dateAdded: timeAddedInMicroseconds,
         lastModified: timeInMicroseconds - 1000,
         isInQuery: true },
     ];

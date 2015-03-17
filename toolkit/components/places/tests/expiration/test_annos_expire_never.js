@@ -15,8 +15,6 @@
  * the item is removed, thus expiration won't handle this case at all.
  */
 
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 let as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
@@ -50,8 +48,12 @@ add_task(function test_annos_expire_never() {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
     // We also add a visit before bookmarking.
     yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
-    let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
-                               bs.DEFAULT_INDEX, null);
+    let bm = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: pageURI,
+      title: null
+    });
+    let id = yield PlacesUtils.promiseItemId(bm.guid);
     as.setItemAnnotation(id, "item_persist1", "test", 0, as.EXPIRE_NEVER);
     as.setItemAnnotation(id, "item_persist2", "test", 0, as.EXPIRE_NEVER);
   }

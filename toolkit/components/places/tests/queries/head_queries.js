@@ -41,8 +41,7 @@ const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
  */
 function task_populateDB(aArray)
 {
-  // Iterate over aArray and execute all the instructions that can be done with
-  // asynchronous APIs, excluding those that will be done in batch mode later.
+  // Iterate over aArray and execute all instructions.
   for ([, data] in Iterator(aArray)) {
     try {
       // make the data object into a query data object in order to create proper
@@ -101,103 +100,96 @@ function task_populateDB(aArray)
           title: qdata.title
         });
       }
+
+      if (qdata.markPageAsTyped) {
+        PlacesUtils.history.markPageAsTyped(uri(qdata.uri));
+      }
+
+      if (qdata.isPageAnnotation) {
+        if (qdata.removeAnnotation)
+          PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
+                                                       qdata.annoName);
+        else {
+          PlacesUtils.annotations.setPageAnnotation(uri(qdata.uri),
+                                                    qdata.annoName,
+                                                    qdata.annoVal,
+                                                    qdata.annoFlags,
+                                                    qdata.annoExpiration);
+        }
+      }
+
+      if (qdata.isItemAnnotation) {
+        if (qdata.removeAnnotation)
+          PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
+                                                       qdata.annoName);
+        else {
+          PlacesUtils.annotations.setItemAnnotation(qdata.itemId,
+                                                    qdata.annoName,
+                                                    qdata.annoVal,
+                                                    qdata.annoFlags,
+                                                    qdata.annoExpiration);
+        }
+      }
+
+      if (qdata.isFolder) {
+        yield PlacesUtils.bookmarks.insert({
+          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          title: qdata.title,
+          index: qdata.index
+        });
+      }
+
+      if (qdata.isLivemark) {
+        PlacesUtils.livemarks.addLivemark({ title: qdata.title
+                                          , parentId: qdata.parentFolder
+                                          , index: qdata.index
+                                          , feedURI: uri(qdata.feedURI)
+                                          , siteURI: uri(qdata.uri)
+                                          }).then(null, do_throw);
+      }
+
+      if (qdata.isBookmark) {
+        let data = {
+          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          index: qdata.index,
+          title: qdata.title,
+          url: qdata.uri
+        };
+
+        if (qdata.dateAdded) {
+          data.dateAdded = new Date(qdata.dateAdded / 1000);
+        }
+
+        if (qdata.lastModified) {
+          data.lastModified = new Date(qdata.lastModified / 1000);
+        }
+
+        let item = yield PlacesUtils.bookmarks.insert(data);
+
+        if (qdata.keyword) {
+          let itemId = yield PlacesUtils.promiseItemId(item.guid);
+          PlacesUtils.bookmarks.setKeywordForBookmark(itemId, qdata.keyword);
+        }
+      }
+
+      if (qdata.isTag) {
+        PlacesUtils.tagging.tagURI(uri(qdata.uri), qdata.tagArray);
+      }
+
+      if (qdata.isSeparator) {
+        yield PlacesUtils.bookmarks.insert({
+          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          index: qdata.index
+        });
+      }
     } catch (ex) {
       // use the data object here in case instantiation of qdata failed
       LOG("Problem with this URI: " + data.uri);
       do_throw("Error creating database: " + ex + "\n");
     }
   }
-
-  // Now execute the part of the instructions made with synchronous APIs.
-  PlacesUtils.history.runInBatchMode({
-    runBatched: function (aUserData)
-    {
-      aArray.forEach(function (data)
-      {
-        try {
-          // make the data object into a query data object in order to create proper
-          // default values for anything left unspecified
-          var qdata = new queryData(data);
-
-          if (qdata.markPageAsTyped) {
-            PlacesUtils.history.markPageAsTyped(uri(qdata.uri));
-          }
-
-          if (qdata.isPageAnnotation) {
-            if (qdata.removeAnnotation)
-              PlacesUtils.annotations.removePageAnnotation(uri(qdata.uri),
-                                                           qdata.annoName);
-            else {
-              PlacesUtils.annotations.setPageAnnotation(uri(qdata.uri),
-                                                        qdata.annoName,
-                                                        qdata.annoVal,
-                                                        qdata.annoFlags,
-                                                        qdata.annoExpiration);
-            }
-          }
-
-          if (qdata.isItemAnnotation) {
-            if (qdata.removeAnnotation)
-              PlacesUtils.annotations.removeItemAnnotation(qdata.itemId,
-                                                           qdata.annoName);
-            else {
-              PlacesUtils.annotations.setItemAnnotation(qdata.itemId,
-                                                        qdata.annoName,
-                                                        qdata.annoVal,
-                                                        qdata.annoFlags,
-                                                        qdata.annoExpiration);
-            }
-          }
-
-          if (qdata.isFolder) {
-            let folderId = PlacesUtils.bookmarks.createFolder(qdata.parentFolder,
-                                                              qdata.title,
-                                                              qdata.index);
-          }
-
-          if (qdata.isLivemark) {
-            PlacesUtils.livemarks.addLivemark({ title: qdata.title
-                                              , parentId: qdata.parentFolder
-                                              , index: qdata.index
-                                              , feedURI: uri(qdata.feedURI)
-                                              , siteURI: uri(qdata.uri)
-                                              }).then(null, do_throw);
-          }
-
-          if (qdata.isBookmark) {
-            let itemId = PlacesUtils.bookmarks.insertBookmark(qdata.parentFolder,
-                                                              uri(qdata.uri),
-                                                              qdata.index,
-                                                              qdata.title);
-            if (qdata.keyword)
-              PlacesUtils.bookmarks.setKeywordForBookmark(itemId, qdata.keyword);
-            if (qdata.dateAdded)
-              PlacesUtils.bookmarks.setItemDateAdded(itemId, qdata.dateAdded);
-            if (qdata.lastModified)
-              PlacesUtils.bookmarks.setItemLastModified(itemId, qdata.lastModified);
-          }
-
-          if (qdata.isTag) {
-            PlacesUtils.tagging.tagURI(uri(qdata.uri), qdata.tagArray);
-          }
-
-          if (qdata.isDynContainer) {
-            PlacesUtils.bookmarks.createDynamicContainer(qdata.parentFolder,
-                                                         qdata.title,
-                                                         qdata.contractId,
-                                                         qdata.index);
-          }
-
-          if (qdata.isSeparator)
-            PlacesUtils.bookmarks.insertSeparator(qdata.parentFolder, qdata.index);
-        } catch (ex) {
-          // use the data object here in case instantiation of qdata failed
-          LOG("Problem with this URI: " + data.uri);
-          do_throw("Error creating database: " + ex + "\n");
-        }
-      }); // End of function and array
-    }
-  }, null);
 }
 
 
@@ -241,8 +233,8 @@ function queryData(obj) {
   this.index = obj.index ? obj.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;
   this.contractId = obj.contractId ? obj.contractId : "";
-  this.lastModified = obj.lastModified ? obj.lastModified : today;
-  this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
+  this.lastModified = obj.lastModified ? obj.lastModified : null;
+  this.dateAdded = obj.dateAdded ? obj.dateAdded : null;
   this.keyword = obj.keyword ? obj.keyword : "";
   this.visitCount = obj.visitCount ? obj.visitCount : 0;
   this.isSeparator = obj.hasOwnProperty("isSeparator") && obj.isSeparator;
