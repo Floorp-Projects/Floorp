@@ -22,14 +22,14 @@ add_task(function* test_tag_match_url() {
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" }
   ]);
-  addBookmark({ uri: uri1,
-                title: "title",
-                tags: [ "superTag" ],
-                style: [ "bookmark-tag" ] });
-  addBookmark({ uri: uri2,
-                title: "title",
-                tags: [ "superTag" ],
-                style: [ "bookmark-tag" ] });
+  yield addBookmark({ uri: uri1,
+                      title: "title",
+                      tags: [ "superTag" ],
+                      style: [ "bookmark-tag" ] });
+  yield addBookmark({ uri: uri2,
+                      title: "title",
+                      tags: [ "superTag" ],
+                      style: [ "bookmark-tag" ] });
   yield check_autocomplete({
     search: "superTag",
     matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] },

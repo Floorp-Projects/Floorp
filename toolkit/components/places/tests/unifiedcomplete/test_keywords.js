@@ -8,7 +8,7 @@ add_task(function* test_non_keyword() {
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
   });
-  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/") });
+  yield addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/") });
   yield check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
@@ -23,7 +23,7 @@ add_task(function* test_keyword() {
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
   });
-  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  yield addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "moz",
     autofilled: "moz",
@@ -38,7 +38,7 @@ add_task(function* test_more_than_keyword() {
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
   });
-  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  yield addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "mozi",
     autofilled: "mozilla.org/",
@@ -53,7 +53,7 @@ add_task(function* test_less_than_keyword() {
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
   });
-  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  yield addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
@@ -68,7 +68,7 @@ add_task(function* test_keyword_casing() {
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
   });
-  addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
+  yield addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   yield check_autocomplete({
     search: "MoZ",
     autofilled: "MoZ",

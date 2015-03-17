@@ -43,8 +43,8 @@ add_task(function* test_escape() {
     { uri: uri9, title: ideograph.join("") },
     { uri: uri10, title: "title1" }
   ]);
-  addBookmark( { uri: uri5, title: "title1", tags: [ "matchme2" ] } );
-  addBookmark( { uri: uri6, title: "title1", tags: [ "dontmatchme3" ] } );
+  yield addBookmark( { uri: uri5, title: "title1", tags: [ "matchme2" ] } );
+  yield addBookmark( { uri: uri6, title: "title1", tags: [ "dontmatchme3" ] } );
 
   // match only on word boundaries
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 2);
