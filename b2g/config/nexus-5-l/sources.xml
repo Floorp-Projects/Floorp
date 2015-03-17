@@ -149,7 +149,7 @@
   <project name="platform/hardware/broadcom/libbt" path="hardware/broadcom/libbt" revision="3e856528121ae0af0ca26c97cb563160c7e16d85"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="d9e716e14e685f4fc124ae591a1cd0899bc4d7b5"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="505aa92674337b76ce7d038800f2a6d7dc340ac9"/>
-  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="0a21f566d8c9b01b9754d639e13358bdcb6c7650"/>
+  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="c43952000d57f08b93a0e4fb77052871ce587976"/>
   <project name="platform/hardware/qcom/keymaster" path="hardware/qcom/keymaster" revision="028649652cd8f8f18cfb47d34bd78c435eb030ca"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="758a80fbb178b5663d4edbb46944b2dc553cb1ca"/>
   <project name="platform/hardware/qcom/msm8x74" path="hardware/qcom/msm8x74" revision="aa0124820e22302149b1f2db603a9a72f1972527"/>
