@@ -276,7 +276,7 @@ public:
   /**
    * Returns if the element is interactive content as per HTML specification.
    */
-  virtual bool IsInteractiveHTMLContent() const;
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const;
 
   /**
    * Is the attribute named stored in the mapped attributes?
