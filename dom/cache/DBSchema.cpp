@@ -34,21 +34,9 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
   MOZ_ASSERT(aConn);
 
   nsAutoCString pragmas(
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-    // Switch the journaling mode to TRUNCATE to avoid changing the directory
-    // structure at the conclusion of every transaction for devices with slower
-    // file systems.
-    "PRAGMA journal_mode = TRUNCATE; "
-#endif
-    "PRAGMA foreign_keys = ON; "
     // Enable auto-vaccum but in incremental mode in order to avoid doing a lot
     // of work at the end of each transaction.
     "PRAGMA auto_vacuum = INCREMENTAL; "
-
-    // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
-    // the work necessary to convert UTF-16 nsString values for us.  We don't
-    // need ordering and the binary equality operations are correct.  So, do
-    // NOT set PRAGMA encoding to UTF-16.
   );
 
   nsresult rv = aConn->ExecuteSimpleSQL(pragmas);
@@ -173,6 +161,37 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
   }
 
   return rv;
+}
+
+// static
+nsresult
+DBSchema::InitializeConnection(mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  // This function needs to perform per-connection initialization tasks that
+  // need to happen regardless of the schema.
+
+  nsAutoCString pragmas(
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    // Switch the journaling mode to TRUNCATE to avoid changing the directory
+    // structure at the conclusion of every transaction for devices with slower
+    // file systems.
+    "PRAGMA journal_mode = TRUNCATE; "
+#endif
+    "PRAGMA foreign_keys = ON; "
+
+    // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
+    // the work necessary to convert UTF-16 nsString values for us.  We don't
+    // need ordering and the binary equality operations are correct.  So, do
+    // NOT set PRAGMA encoding to UTF-16.
+  );
+
+  nsresult rv = aConn->ExecuteSimpleSQL(pragmas);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return NS_OK;
 }
 
 // static
