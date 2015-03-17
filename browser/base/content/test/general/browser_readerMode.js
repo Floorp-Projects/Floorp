@@ -71,7 +71,7 @@ add_task(function* () {
 
   // Load a new tab that is NOT reader-able.
   let newTab = gBrowser.selectedTab = gBrowser.addTab();
-  yield promiseTabLoadEvent(newTab, TEST_PATH + "download_page.html");
+  yield promiseTabLoadEvent(newTab, "about:robots");
   yield promiseWaitForCondition(() => readerButton.hidden);
   is_element_hidden(readerButton, "Reader mode button is not present on a non-reader-able page");
 
