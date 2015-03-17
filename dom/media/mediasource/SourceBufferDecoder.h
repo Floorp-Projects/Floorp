@@ -41,7 +41,7 @@ public:
   virtual bool IsShutdown() const final override;
   virtual bool IsTransportSeekable() final override;
   virtual bool OnDecodeThread() const final override;
-  virtual bool OnStateMachineThread() const final override;
+  virtual bool OnStateMachineTaskQueue() const final override;
   virtual int64_t GetMediaDuration() final override;
   virtual layers::ImageContainer* GetImageContainer() final override;
   virtual MediaDecoderOwner* GetOwner() final override;

@@ -203,7 +203,7 @@ public:
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnDecodeThread() const;
-  bool OnStateMachineThread() const;
+  bool OnTaskQueue() const;
 
   MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
 
@@ -330,7 +330,7 @@ public:
 
   void OnDelayedSchedule()
   {
-    MOZ_ASSERT(OnStateMachineThread());
+    MOZ_ASSERT(OnTaskQueue());
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDelayedScheduler.CompleteRequest();
     ScheduleStateMachine();
@@ -756,8 +756,7 @@ protected:
 
     void Reset()
     {
-      MOZ_ASSERT(mSelf->OnStateMachineThread(),
-                 "Must be on state machine queue to disconnect");
+      MOZ_ASSERT(mSelf->OnTaskQueue(), "Must be on state machine queue to disconnect");
       if (IsScheduled()) {
         mRequest.Disconnect();
         mTarget = TimeStamp();

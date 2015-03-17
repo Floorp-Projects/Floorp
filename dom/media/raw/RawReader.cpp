@@ -121,8 +121,8 @@ RawReader::IsMediaSeekable()
 
  bool RawReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine thread or decode thread.");
+  NS_ASSERTION(mDecoder->OnStateMachineTaskQueue() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode task queue.");
   return false;
 }
 
