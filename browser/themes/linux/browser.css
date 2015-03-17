@@ -1629,6 +1629,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/Info.png");
 }
 
+%include ../shared/readinglist.inc.css
+
 /* Reader mode button */
 
 #reader-mode-button {
