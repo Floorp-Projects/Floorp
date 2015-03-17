@@ -225,6 +225,7 @@ AboutReader.prototype = {
         this._mm.removeMessageListener("Reader:Removed", this);
         this._mm.removeMessageListener("Sidebar:VisibilityChange", this);
         this._mm.removeMessageListener("ReadingList:VisibilityStatus", this);
+        this._windowUnloaded = true;
         break;
     }
   },
@@ -565,6 +566,10 @@ AboutReader.prototype = {
       article = yield this._getArticle(url);
     }
 
+    if (this._windowUnloaded) {
+      return;
+    }
+
     if (article && article.url == url) {
       this._showContent(article);
     } else {
@@ -724,10 +729,11 @@ AboutReader.prototype = {
 
   _showProgressDelayed: function Reader_showProgressDelayed() {
     this._win.setTimeout(function() {
-      // Article has already been loaded, no need to show
-      // progress anymore.
-      if (this._article)
+      // No need to show progress if the article has been loaded,
+      // or if the window has been unloaded.
+      if (this._article || this._windowUnloaded) {
         return;
+      }
 
       this._headerElement.style.display = "none";
       this._contentElement.style.display = "none";
