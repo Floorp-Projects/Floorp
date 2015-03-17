@@ -1017,12 +1017,12 @@ addEventListener("pageshow", function(event) {
 });
 
 let PageMetadataMessenger = {
-  init() {
+  init: function() {
     addMessageListener("PageMetadata:GetPageData", this);
     addMessageListener("PageMetadata:GetMicrodata", this);
   },
-  receiveMessage(message) {
-    switch(message.name) {
+  receiveMessage: function(aMessage) {
+    switch(aMessage.name) {
       case "PageMetadata:GetPageData": {
         let result = PageMetadata.getData(content.document);
         sendAsyncMessage("PageMetadata:PageDataResult", result);
@@ -1030,7 +1030,7 @@ let PageMetadataMessenger = {
       }
 
       case "PageMetadata:GetMicrodata": {
-        let target = message.objects;
+        let target = aMessage.objects;
         let result = PageMetadata.getMicrodata(content.document, target);
         sendAsyncMessage("PageMetadata:MicrodataResult", result);
         break;
