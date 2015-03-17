@@ -38,8 +38,9 @@ add_test(function test_SmsSegmentHelper_calculateUserDataLength() {
   // Test UCS fallback
   // - No any default enabled nl tables
   test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], []);
-  // - Character not defined in enabled nl tables
-  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], [[2, 2]]);
+  // - Character not defined in enabled nl tables.
+  //   ("\u4e00" -> '一' is one in Chinese).
+  test_calc("\u4e00", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], [[2, 2]]);
 
   // With GSM default nl tables
   test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 0, 0, 0], [[0, 0]]);
@@ -59,16 +60,16 @@ add_test(function test_SmsSegmentHelper_calculateUserDataLength() {
   test_calc("^", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 3, 0, 1], [[0, 1]]);
 
   // Test minimum cost nl tables selection
-  // - 'A' is defined in locking shift table
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[1, 0], [2, 0]]);
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[2, 0], [1, 0]]);
-  // - 'A' is defined in single shift table
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 6, 2, 4], [[2, 0], [2, 4]]);
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 6, 2, 4], [[2, 4], [2, 0]]);
-  // - 'A' is defined in locking shift table of one tuple and in single shift
-  //   table of another.
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[1, 0], [2, 4]]);
-  test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[2, 4], [1, 0]]);
+  // - '\u00e7' -> 'ç' is defined in Turkish locking shift table
+  test_calc("\u00e7", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[1, 0], [2, 0]]);
+  test_calc("\u00e7", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[2, 0], [1, 0]]);
+  // - '\u09fa' -> '৺' is defined in Bengali single shift table
+  test_calc("\u09fa", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 6, 2, 4], [[2, 0], [2, 4]]);
+  test_calc("\u09fa", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 6, 2, 4], [[2, 4], [2, 0]]);
+  // - '\u00e7' -> 'ç' is defined in both Turkish locking shift table and
+  // Spanish single shift table.
+  test_calc("\u00e7", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[1, 0], [2, 2]]);
+  test_calc("\u00e7", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[2, 2], [1, 0]]);
 
   // Test Bug 733981
   // - Case 1, headerLen is in octets, not septets. "\\" is defined in default

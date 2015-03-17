@@ -1697,12 +1697,10 @@ this.PDU_NL_IDENTIFIER_TAMIL      = 11;
 this.PDU_NL_IDENTIFIER_TELUGU     = 12;
 this.PDU_NL_IDENTIFIER_URDU       = 13;
 
-// National Language Locking Shift Tables, see 3GPP TS 23.038
-this.PDU_NL_LOCKING_SHIFT_TABLES = [
-  /**
-   * National Language Identifier: 0x00
-   * 6.2.1 GSM 7 bit Default Alphabet
-   */
+/*
+ * 3GPP TS 23.038 - 6.2.1 GSM 7 bit Default Alphabet
+ */
+this.PDU_NL_GSM_DEFAULT_ALPHABET =
   // 01.....23.....4.....5.....6.....7.....8.....9.....A.B.....C.....D.E.....F.....
     "@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\n\u00d8\u00f8\r\u00c5\u00e5"
   // 0.....12.....3.....4.....5.....6.....7.....8.....9.....A.....B.....C.....D.....E.....F.....
@@ -1718,7 +1716,15 @@ this.PDU_NL_LOCKING_SHIFT_TABLES = [
   // 0.....123456789ABCDEF
   + "\u00bfabcdefghijklmno"
   // 0123456789AB.....C.....D.....E.....F.....
-  + "pqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0",
+  + "pqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0";
+
+// National Language Locking Shift Tables, see 3GPP TS 23.038
+this.PDU_NL_LOCKING_SHIFT_TABLES = [
+  /**
+   * National Language Identifier: 0x00
+   * 6.2.1 GSM 7 bit Default Alphabet
+   */
+  PDU_NL_GSM_DEFAULT_ALPHABET,
 
   /**
    * National Language Identifier: 0x01
@@ -1744,23 +1750,9 @@ this.PDU_NL_LOCKING_SHIFT_TABLES = [
   /**
    * National Language Identifier: 0x02
    * A.3.2 Void
+   * Fallback to GSM Default Alphabet
    */
-  // 0123456789A.BCD.EF
-    "          \n  \r  "
-  // 0123456789AB.....CDEF
-  + "           \uffff    "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                "
-  // 0123456789ABCDEF
-  + "                ",
+  PDU_NL_GSM_DEFAULT_ALPHABET,
 
   /**
    * National Language Identifier: 0x03
@@ -2565,7 +2557,7 @@ this.GECKO_RADIOSTATE_DISABLED  = 1;
 
 // Only used in ril_worker.js
 this.GECKO_CARDSTATE_UNINITIALIZED = 4294967294; // UINT32_MAX - 1
-// See nsIIccProvider::CARD_STATE_*
+// See nsIIcc::CARD_STATE_*
 this.GECKO_CARDSTATE_UNDETECTED = 4294967295; // UINT32_MAX
 this.GECKO_CARDSTATE_UNKNOWN = 0;
 this.GECKO_CARDSTATE_READY = 1;
@@ -2598,7 +2590,7 @@ this.GECKO_CARDSTATE_RUIM_SERVICE_PROVIDER_PUK_REQUIRED = 27;
 this.GECKO_CARDSTATE_RUIM_PUK_REQUIRED = 28;
 this.GECKO_CARDSTATE_ILLEGAL = 29;
 
-// See nsIIccProvider::CARD_LOCK_TYPE_*
+// See nsIIcc::CARD_LOCK_TYPE_*
 this.GECKO_CARDLOCK_PIN = 0;
 this.GECKO_CARDLOCK_PIN2 = 1;
 this.GECKO_CARDLOCK_PUK = 2;
@@ -2641,17 +2633,17 @@ GECKO_CARDLOCK_TO_SEL_CODE[GECKO_CARDLOCK_SPCK] = ICC_SEL_CODE_PH_SP_PIN;
 // TODO: Bug 1116072: identify the mapping between RIL_PERSOSUBSTATE_SIM_SIM @
 //       ril.h and TS 27.007, clause 8.65 for GECKO_CARDLOCK_PCK.
 
-// See nsIIccProvider::CARD_CONTACT_TYPE_*
+// See nsIIcc::CARD_CONTACT_TYPE_*
 this.GECKO_CARDCONTACT_TYPE_ADN = 0;
 this.GECKO_CARDCONTACT_TYPE_FDN = 1;
 this.GECKO_CARDCONTACT_TYPE_SDN = 2;
 
-// See nsIIccProvider::CARD_MVNO_TYPE_*
+// See nsIIcc::CARD_MVNO_TYPE_*
 this.GECKO_CARDMVNO_TYPE_IMSI = 0;
 this.GECKO_CARDMVNO_TYPE_SPN = 1;
 this.GECKO_CARDMVNO_TYPE_GID = 2;
 
-// See nsIIccProvider::CARD_MVNO_TYPE_*
+// See nsIIcc::CARD_SERVICE_*
 this.GECKO_CARDSERVICE_FDN = 0;
 
 // See ril.h RIL_PersoSubstate
