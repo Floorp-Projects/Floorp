@@ -455,6 +455,7 @@ loop.contacts = (function(_, mozL10n) {
           return;
         }
         this.props.notifications.successL10n("import_contacts_success_message", {
+          num: stats.total,
           total: stats.total
         });
       });

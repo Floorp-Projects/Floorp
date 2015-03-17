@@ -404,6 +404,16 @@ BluetoothServiceChildProcess::UnregisterGattClientInternal(
   SendRequest(aRunnable, UnregisterGattClientRequest(aClientIf));
 }
 
+void
+BluetoothServiceChildProcess::GattClientReadRemoteRssiInternal(
+  int aClientIf, const nsAString& aDeviceAddress,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              GattClientReadRemoteRssiRequest(aClientIf,
+                                              nsString(aDeviceAddress)));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {

@@ -38,6 +38,10 @@ public:
   void UnregisterClient(int aClientIf,
                         BluetoothReplyRunnable* aRunnable);
 
+  void ReadRemoteRssi(int aClientIf,
+                      const nsAString& aDeviceAddr,
+                      BluetoothReplyRunnable* aRunnable);
+
 private:
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
@@ -46,6 +50,7 @@ private:
   class UnregisterClientResultHandler;
   class ConnectResultHandler;
   class DisconnectResultHandler;
+  class ReadRemoteRssiResultHandler;
 
   BluetoothGattManager();
 

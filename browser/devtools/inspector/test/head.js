@@ -306,14 +306,22 @@ let getBoxModelStatus = Task.async(function*(toolbox) {
   return ret;
 });
 
-let getGuideStatus = Task.async(function*(location, toolbox) {
+/**
+ * Get data about one of the toolbox box-model highlighter's guides.
+ * @param {String} location One of top, right, bottom, left.
+ * @param {Toolbox} toolbox The toolbox instance, used to retrieve the highlighter.
+ * @return {Object} The returned object has the following form:
+ * - visible {Boolean} Whether that guide is visible.
+ * - x1/y1/x2/y2 {String} The <line>'s coordinates.
+ */
+let getGuideStatus = Task.async(function*(location, {highlighter}) {
   let id = "box-model-guide-" + location;
 
-  let hidden = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "hidden");
-  let x1 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "x1");
-  let y1 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "y1");
-  let x2 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "x2");
-  let y2 = yield getHighlighterNodeAttribute(toolbox.highlighter, id, "y2");
+  let hidden = yield getHighlighterNodeAttribute(highlighter, id, "hidden");
+  let x1 = yield getHighlighterNodeAttribute(highlighter, id, "x1");
+  let y1 = yield getHighlighterNodeAttribute(highlighter, id, "y1");
+  let x2 = yield getHighlighterNodeAttribute(highlighter, id, "x2");
+  let y2 = yield getHighlighterNodeAttribute(highlighter, id, "y2");
 
   return {
     visible: !hidden,
@@ -325,36 +333,68 @@ let getGuideStatus = Task.async(function*(location, toolbox) {
 });
 
 /**
- * Get the coordinate (points attribute) from one of the polygon elements in the
- * box model highlighter.
+ * Get the coordinates of the rectangle that is defined by the 4 guides displayed
+ * in the toolbox box-model highlighter.
+ * @param {Toolbox} toolbox The toolbox instance, used to retrieve the highlighter.
+ * @return {Object} Null if at least one guide is hidden. Otherwise an object
+ * with p1, p2, p3, p4 properties being {x, y} objects.
+ */
+let getGuidesRectangle = Task.async(function*(toolbox) {
+  let tGuide = yield getGuideStatus("top", toolbox);
+  let rGuide = yield getGuideStatus("right", toolbox);
+  let bGuide = yield getGuideStatus("bottom", toolbox);
+  let lGuide = yield getGuideStatus("left", toolbox);
+
+  if (!tGuide.visible || !rGuide.visible || !bGuide.visible || !lGuide.visible) {
+    return null;
+  }
+
+  return {
+    p1: {x: lGuide.x1, y: tGuide.y1},
+    p2: {x: rGuide.x1, y: tGuide. y1},
+    p3: {x: rGuide.x1, y: bGuide.y1},
+    p4: {x: lGuide.x1, y: bGuide.y1}
+  };
+});
+
+/**
+ * Get the coordinate (points defined by the d attribute) from one of the path
+ * elements in the box model highlighter.
  */
 let getPointsForRegion = Task.async(function*(region, toolbox) {
-  let points = yield getHighlighterNodeAttribute(toolbox.highlighter,
-                                                 "box-model-" + region, "points");
-  points = points.split(/[, ]/);
+  let d = yield getHighlighterNodeAttribute(toolbox.highlighter,
+                                            "box-model-" + region, "d");
+  let polygons = d.match(/M[^M]+/g);
+  if (!polygons) {
+    return null;
+  }
+
+  let points = polygons[0].trim().split(" ").map(i => {
+    return i.replace(/M|L/, "").split(",")
+  });
 
   return {
     p1: {
-      x: parseFloat(points[0]),
-      y: parseFloat(points[1])
+      x: parseFloat(points[0][0]),
+      y: parseFloat(points[0][1])
     },
     p2: {
-      x: parseFloat(points[2]),
-      y: parseFloat(points[3])
+      x: parseFloat(points[1][0]),
+      y: parseFloat(points[1][1])
     },
     p3: {
-      x: parseFloat(points[4]),
-      y: parseFloat(points[5])
+      x: parseFloat(points[2][0]),
+      y: parseFloat(points[2][1])
     },
     p4: {
-      x: parseFloat(points[6]),
-      y: parseFloat(points[7])
+      x: parseFloat(points[3][0]),
+      y: parseFloat(points[3][1])
     }
   };
 });
 
 /**
- * Is a given region polygon element of the box-model highlighter currently
+ * Is a given region path element of the box-model highlighter currently
  * hidden?
  */
 let isRegionHidden = Task.async(function*(region, toolbox) {
@@ -387,27 +427,24 @@ let getHighlitNode = Task.async(function*(toolbox) {
 /**
  * Assert that the box-model highlighter's current position corresponds to the
  * given node boxquads.
- * @param {DOMNode|CPOW} node The node to get the boxQuads from
+ * @param {String} selector The selector for the node to get the boxQuads from
  * @param {String} prefix An optional prefix for logging information to the
  * console.
  */
-let isNodeCorrectlyHighlighted = Task.async(function*(node, toolbox, prefix="") {
-  prefix += (prefix ? " " : "") + node.nodeName;
-  prefix += (node.id ? "#" + node.id : "");
-  prefix += (node.classList.length ? "." + [...node.classList].join(".") : "");
-  prefix += " ";
-
+let isNodeCorrectlyHighlighted = Task.async(function*(selector, toolbox, prefix="") {
   let boxModel = yield getBoxModelStatus(toolbox);
-  let {data: regions} = yield executeInContent("Test:GetAllAdjustedQuads", null,
-                                               {node});
+  let {data: regions} = yield executeInContent("Test:GetAllAdjustedQuads",
+                                               {selector});
 
   for (let boxType of ["content", "padding", "border", "margin"]) {
-    let quads = regions[boxType];
+    let [quad] = regions[boxType];
     for (let point in boxModel[boxType].points) {
-      is(boxModel[boxType].points[point].x, quads[point].x,
-        prefix + boxType + " point " + point + " x coordinate is correct");
-      is(boxModel[boxType].points[point].y, quads[point].y,
-        prefix + boxType + " point " + point + " y coordinate is correct");
+      is(boxModel[boxType].points[point].x, quad[point].x,
+        "Node " + selector + " " + boxType + " point " + point +
+        " x coordinate is correct");
+      is(boxModel[boxType].points[point].y, quad[point].y,
+        "Node " + selector + " " + boxType + " point " + point +
+        " y coordinate is correct");
     }
   }
 });
@@ -550,6 +587,37 @@ let getHighlighterNodeAttribute = Task.async(function*(highlighter, nodeID, name
   let {data: value} = yield executeInContent("Test:GetHighlighterAttribute",
                                              {nodeID, name, actorID, connPrefix});
   return value;
+});
+
+/**
+ * Get the "d" attribute value for one of the box-model highlighter's region
+ * <path> elements, and parse it to a list of points.
+ * @param {String} region The box model region name.
+ * @param {Front} highlighter The front of the highlighter.
+ * @return {Object} The object returned has the following form:
+ * - d {String} the d attribute value
+ * - points {Array} an array of all the polygons defined by the path. Each box
+ *   is itself an Array of points, themselves being [x,y] coordinates arrays.
+ */
+let getHighlighterRegionPath = Task.async(function*(region, highlighter) {
+  let d = yield getHighlighterNodeAttribute(highlighter, "box-model-" + region, "d");
+  if (!d) {
+    return {d: null};
+  }
+
+  let polygons = d.match(/M[^M]+/g);
+  if (!polygons) {
+    return {d};
+  }
+
+  let points = [];
+  for (let polygon of polygons) {
+    points.push(polygon.trim().split(" ").map(i => {
+      return i.replace(/M|L/, "").split(",")
+    }));
+  }
+
+  return {d, points};
 });
 
 /**

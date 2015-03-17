@@ -99,6 +99,11 @@ var gContentPane = {
    */
   _rebuildFonts: function ()
   {
+    var preferences = document.getElementById("contentPreferences");
+    // Ensure preferences are "visible" to ensure bindings work.
+    preferences.hidden = false;
+    // Force flush:
+    preferences.clientHeight;
     var langGroupPref = document.getElementById("font.language.group");
     this._selectDefaultLanguageGroup(langGroupPref.value,
                                      this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif");
@@ -115,6 +120,7 @@ var gContentPane = {
     const kFontNameListFmtSansSerif = "font.name-list.sans-serif.%LANG%";
     const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 
+    var preferences = document.getElementById("contentPreferences");
     var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
                    type     : "fontname",
                    element  : "defaultFont",
@@ -127,11 +133,6 @@ var gContentPane = {
                    type     : "int",
                    element  : "defaultFontSize",
                    fonttype : null }];
-    var preferences = document.getElementById("contentPreferences");
-    // Ensure preferences are "visible" to ensure bindings work.
-    preferences.hidden = false;
-    // Force flush:
-    preferences.clientHeight;
     for (var i = 0; i < prefs.length; ++i) {
       var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
       if (!preference) {
