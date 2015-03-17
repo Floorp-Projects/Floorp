@@ -5934,10 +5934,10 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdUnary(f, call, opType, MSimdUnaryArith::not_, def, type);
       case AsmJSSimdOperation_sqrt:
         return CheckSimdUnary(f, call, opType, MSimdUnaryArith::sqrt, def, type);
-      case AsmJSSimdOperation_reciprocal:
-        return CheckSimdUnary(f, call, opType, MSimdUnaryArith::reciprocal, def, type);
-      case AsmJSSimdOperation_reciprocalSqrt:
-        return CheckSimdUnary(f, call, opType, MSimdUnaryArith::reciprocalSqrt, def, type);
+      case AsmJSSimdOperation_reciprocalApproximation:
+        return CheckSimdUnary(f, call, opType, MSimdUnaryArith::reciprocalApproximation, def, type);
+      case AsmJSSimdOperation_reciprocalSqrtApproximation:
+        return CheckSimdUnary(f, call, opType, MSimdUnaryArith::reciprocalSqrtApproximation, def, type);
 
       case AsmJSSimdOperation_swizzle:
         return CheckSimdSwizzle(f, call, opType, def, type);

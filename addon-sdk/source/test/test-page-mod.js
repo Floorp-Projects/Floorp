@@ -2040,4 +2040,27 @@ exports.testUnloadWontAttach = function(assert, done) {
   let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
 }
 
+// Tests that the SDK console isn't injected into documents loaded in tabs
+exports.testDontInjectConsole = function(assert, done) {
+  const TEST_URL = 'data:text/html;charset=utf-8,consoleinject';
+
+  let loader = Loader(module);
+
+  let mod = PageMod({
+    include: TEST_URL,
+    contentScript: Isolate(function() {
+      // This relies on the fact that the SDK console doesn't have assert defined
+      self.postMessage((typeof unsafeWindow.console.assert) == "function");
+    }),
+    onMessage: isNativeConsole => {
+      assert.ok(isNativeConsole, "Shouldn't have injected the SDK console.");
+      mod.destroy();
+      closeTab(tab);
+      done();
+    }
+  });
+
+  let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
+}
+
 require('sdk/test').run(exports);

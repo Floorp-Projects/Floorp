@@ -136,7 +136,9 @@ nsresult
 AVCCMediaDataDecoder::Shutdown()
 {
   if (mDecoder) {
-    return mDecoder->Shutdown();
+    nsresult rv = mDecoder->Shutdown();
+    mDecoder = nullptr;
+    return rv;
   }
   return NS_OK;
 }
@@ -165,10 +167,7 @@ AVCCMediaDataDecoder::AllocateMediaResources()
 void
 AVCCMediaDataDecoder::ReleaseMediaResources()
 {
-  if (mDecoder) {
-    mDecoder->Shutdown();
-    mDecoder = nullptr;
-  }
+  Shutdown();
 }
 
 nsresult
@@ -280,7 +279,8 @@ AVCCDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aCo
 {
   nsRefPtr<MediaDataDecoder> decoder;
 
-  if (strcmp(aConfig.mime_type, "video/avc") ||
+  if ((strcmp(aConfig.mime_type, "video/avc") &&
+       strcmp(aConfig.mime_type, "video/mp4")) ||
       !mPDM->DecoderNeedsAVCC(aConfig)) {
     // There is no need for an AVCC wrapper for non-AVC content.
     decoder = mPDM->CreateVideoDecoder(aConfig,

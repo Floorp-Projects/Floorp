@@ -22,8 +22,8 @@ function f() {
         assertEqX4(SIMD.float32x4.abs(f4), unaryX4(Math.abs, f4, Math.fround));
         assertEqX4(SIMD.float32x4.sqrt(f4), unaryX4(Math.sqrt, f4, Math.fround));
 
-        assertEqX4(SIMD.float32x4.reciprocal(f4), unaryX4((x) => 1 / x, f4, Math.fround), assertNear);
-        assertEqX4(SIMD.float32x4.reciprocalSqrt(f4), unaryX4((x) => 1 / Math.sqrt(x), f4, Math.fround), assertNear);
+        assertEqX4(SIMD.float32x4.reciprocalApproximation(f4), unaryX4((x) => 1 / x, f4, Math.fround), assertNear);
+        assertEqX4(SIMD.float32x4.reciprocalSqrtApproximation(f4), unaryX4((x) => 1 / Math.sqrt(x), f4, Math.fround), assertNear);
 
         assertEqX4(SIMD.int32x4.not(i4), unaryX4((x) => ~x, i4, BitOrZero));
         assertEqX4(SIMD.int32x4.neg(i4), unaryX4((x) => -x, i4, BitOrZero));

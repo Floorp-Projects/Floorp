@@ -1,13 +1,3 @@
-function ok(a, msg) {
-  dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
-  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-}
-
-function is(a, b, msg) {
-  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + " " + msg + "\n");
-  postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-}
-
 function testDefaultCtor() {
   var res = new Response();
   is(res.type, "default", "Default Response type is default");
@@ -212,8 +202,9 @@ function testBodyExtraction() {
   }).then(function() {
     return newRes().blob().then(function(v) {
       ok(v instanceof Blob, "Should resolve to Blob");
-      var fs = new FileReaderSync();
-      is(fs.readAsText(v), text, "Decoded Blob should match original");
+      return readAsText(v).then(function(result) {
+        is(result, text, "Decoded Blob should match original");
+      });
     });
   }).then(function() {
     return newRes().json().then(function(v) {
@@ -230,24 +221,17 @@ function testBodyExtraction() {
   })
 }
 
-onmessage = function() {
-  var done = function() { postMessage({ type: 'finish' }) }
-
+function runTest() {
   testDefaultCtor();
   testError();
   testRedirect();
   testOk();
   testFinalURL();
 
-  Promise.resolve()
+  return Promise.resolve()
     .then(testBodyCreation)
     .then(testBodyUsed)
     .then(testBodyExtraction)
     .then(testClone)
     // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some Response tests failed " + e);
-      done();
-    })
 }

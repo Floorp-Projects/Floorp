@@ -264,9 +264,6 @@ bool
 WebGLContext::IsFormatValidForFB(GLenum sizedFormat) const
 {
     switch (sizedFormat) {
-    case LOCAL_GL_ALPHA8:
-    case LOCAL_GL_LUMINANCE8:
-    case LOCAL_GL_LUMINANCE8_ALPHA8:
     case LOCAL_GL_RGB8:
     case LOCAL_GL_RGBA8:
     case LOCAL_GL_RGB565:

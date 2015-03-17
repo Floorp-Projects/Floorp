@@ -31,29 +31,18 @@ add_task(function*() {
     {attributeName: "class", newValue: "multiple-animations-2"}
   ]);
 
-  info("Retrieve the list of animation players for the node");
+  info("Get the list of players, by the time this executes, the first, short, " +
+    "animation should have ended.");
   let players = yield front.getAnimationPlayersForNode(node);
-  is(players.length, 3, "3 animations are currently applied to the node");
+  if (players.length === 3) {
+    info("The short animation hasn't ended yet, wait for a bit.");
+    // The animation lasts for 500ms, so 1000ms should do it.
+    yield new Promise(resolve => setTimeout(resolve, 1000));
 
-  info("Waiting for the first animation to end");
-  let player = players[0];
-  player.startAutoRefresh();
+    info("And get the list again");
+    players = yield front.getAnimationPlayersForNode(node);
+  }
 
-  let onFinished = new Promise(resolve => {
-    let onNewState = (e, state) => {
-      if (state.playState === "finished") {
-        info("Received the 'finished' playState event");
-        player.off(player.AUTO_REFRESH_EVENT, onNewState);
-        resolve();
-      }
-    };
-    info("Listening for auto-refresh events");
-    player.on(player.AUTO_REFRESH_EVENT, onNewState);
-  });
-  yield onFinished;
-
-  info("Get the list of players again");
-  players = yield front.getAnimationPlayersForNode(node);
   is(players.length, 2, "2 animations remain on the node");
 
   is(players[0].state.duration, 1000, "The duration of the first animation is correct");

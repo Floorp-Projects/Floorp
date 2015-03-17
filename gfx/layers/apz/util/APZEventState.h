@@ -87,6 +87,7 @@ private:
   uint64_t mPendingTouchPreventedBlockId;
   bool mEndTouchIsClick;
   bool mTouchEndCancelled;
+  int mActiveAPZTransforms;
 };
 
 }
