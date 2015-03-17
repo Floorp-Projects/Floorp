@@ -36,18 +36,15 @@ EXTRA_JS_MODULES.sessionstore = [
     'SessionFile.jsm',
     'SessionHistory.jsm',
     'SessionMigration.jsm',
+    'SessionSaver.jsm',
     'SessionStorage.jsm',
+    'SessionStore.jsm',
     'SessionWorker.js',
     'SessionWorker.jsm',
     'TabAttributes.jsm',
     'TabState.jsm',
     'TabStateCache.jsm',
     'Utils.jsm',
-]
-
-EXTRA_PP_JS_MODULES.sessionstore += [
-    'SessionSaver.jsm',
-    'SessionStore.jsm',
 ]
 
 with Files('**'):
