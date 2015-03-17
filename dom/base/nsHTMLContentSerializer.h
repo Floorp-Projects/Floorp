@@ -36,7 +36,8 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
                                  nsAString& aStr) MOZ_OVERRIDE;
  protected:
 
-  virtual void SerializeHTMLAttributes(nsIContent* aContent,
+  NS_WARN_UNUSED_RESULT
+  virtual bool SerializeHTMLAttributes(nsIContent* aContent,
                                        nsIContent *aOriginalElement,
                                        nsAString& aTagPrefix,
                                        const nsAString& aTagNamespaceURI,
@@ -44,7 +45,8 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
                                        int32_t aNamespace,
                                        nsAString& aStr);
 
-  virtual void AppendAndTranslateEntities(const nsAString& aStr,
+  NS_WARN_UNUSED_RESULT
+  virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) MOZ_OVERRIDE;
 
 };

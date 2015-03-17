@@ -55,6 +55,9 @@ NS_WARN_UNUSED_RESULT bool AppendASCIItoUTF16(const nsACString& aSource,
                                               const mozilla::fallible_t&);
 
 void LossyAppendUTF16toASCII(const char16_t* aSource, nsACString& aDest);
+NS_WARN_UNUSED_RESULT bool AppendASCIItoUTF16(const char* aSource,
+                                              nsAString& aDest,
+                                              const mozilla::fallible_t&);
 void AppendASCIItoUTF16(const char* aSource, nsAString& aDest);
 
 void AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest);
