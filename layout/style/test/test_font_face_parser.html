@@ -168,28 +168,28 @@
       noncanonical: true },
 
     // Correct unicode-range:
-    { rule: _("unicode-range: U+00A5;"), d: { "unicode-range" : "U+00A5" } },
-    { rule: _("unicode-range: U+A5;"),
-      d: { "unicode-range" : "U+00A5" }, noncanonical: true },
+    { rule: _("unicode-range: U+A5;"), d: { "unicode-range" : "U+A5" } },
+    { rule: _("unicode-range: U+00A5;"),
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
     { rule: _("unicode-range: U+00a5;"),
-      d: { "unicode-range" : "U+00A5" }, noncanonical: true },
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
     { rule: _("unicode-range: u+00a5;"),
-      d: { "unicode-range" : "U+00A5" }, noncanonical: true },
-    { rule: _("unicode-range: U+0000-00FF;"),
-      d: { "unicode-range" : "U+0000-00FF" } },
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
+    { rule: _("unicode-range: U+0-FF;"),
+      d: { "unicode-range" : "U+0-FF" } },
     { rule: _("unicode-range: U+00??;"),
-      d: { "unicode-range" : "U+0000-00FF" }, noncanonical: true },
+      d: { "unicode-range" : "U+0-FF" }, noncanonical: true },
     { rule: _("unicode-range: U+?"),
-      d: { "unicode-range" : "U+0000-000F" }, noncanonical: true },
+      d: { "unicode-range" : "U+0-F" }, noncanonical: true },
     { rule: _("unicode-range: U+??????"),
-      d: { "unicode-range" : "U+0000-10FFFF" }, noncanonical: true },
+      d: { "unicode-range" : "U+0-10FFFF" }, noncanonical: true },
     { rule: _("unicode-range: U+590-5ff;"),
-      d: { "unicode-range" : "U+0590-05FF" }, noncanonical: true },
+      d: { "unicode-range" : "U+590-5FF" }, noncanonical: true },
     { rule: _("unicode-range: U+A0000-12FFFF"),
       d: { "unicode-range" : "U+A0000-10FFFF" }, noncanonical: true },
 
     { rule: _("unicode-range: U+A5, U+4E00-9FFF, U+30??, U+FF00-FF9F;"),
-      d: { "unicode-range" : "U+00A5, U+4E00-9FFF, U+3000-30FF, U+FF00-FF9F" },
+      d: { "unicode-range" : "U+A5, U+4E00-9FFF, U+3000-30FF, U+FF00-FF9F" },
       noncanonical: true },
 
     { rule: _("unicode-range: U+104??;"),
@@ -200,9 +200,9 @@
     { rule: _("unicode-range: U+100000-10ABCD;"),
       d: { "unicode-range" : "U+100000-10ABCD" } },
     { rule: _("unicode-range: U+0121 , U+1023"),
-      d: { "unicode-range" : "U+0121, U+1023" }, noncanonical: true },
+      d: { "unicode-range" : "U+121, U+1023" }, noncanonical: true },
     { rule: _("unicode-range: U+0121/**/, U+1023"),
-      d: { "unicode-range" : "U+0121, U+1023" }, noncanonical: true },
+      d: { "unicode-range" : "U+121, U+1023" }, noncanonical: true },
 
     // Incorrect unicode-range:
     { rule: _("unicode-range:"), d: {} },
@@ -249,9 +249,9 @@
     // Descending ranges and ranges outside 0-10FFFF are ignored
     // but do not invalidate the descriptor
     { rule: _("unicode-range: U+A5, U+90-30"),
-      d: { "unicode-range" : "U+00A5" }, noncanonical: true },
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
     { rule: _("unicode-range: U+A5, U+220043"),
-      d: { "unicode-range" : "U+00A5" }, noncanonical: true },
+      d: { "unicode-range" : "U+A5" }, noncanonical: true },
 
     // font-feature-settings
     { rule: _("font-feature-settings: normal;"),

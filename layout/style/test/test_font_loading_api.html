@@ -24,19 +24,19 @@ var defaultValues = {
   style: "normal",
   weight: "normal",
   stretch: "normal",
-  unicodeRange: "U+0000-10FFFF",
+  unicodeRange: "U+0-10FFFF",
   variant: "normal",
   featureSettings: "normal"
 };
 
 // Non-default values for the FontFace descriptor attributes other than family
 // along with how Gecko currently serializes them.  Each value is chosen to be
-// differeny from the default value and also has a different serialized form.
+// different from the default value and also has a different serialized form.
 var nonDefaultValues = {
   style: ["Italic", "italic"],
   weight: ["Bold", "bold"],
   stretch: ["Ultra-Condensed", "ultra-condensed"],
-  unicodeRange: ["U+3??", "U+0300-03FF"],
+  unicodeRange: ["U+3??", "U+300-3FF"],
   variant: ["Small-Caps", "small-caps"],
   featureSettings: ["'dlig' on", "\"dlig\""]
 };
