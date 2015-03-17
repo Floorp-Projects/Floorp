@@ -436,7 +436,7 @@ PluginAsyncSurrogate::SetStreamType(NPStream* aStream, uint16_t aStreamType)
 void
 PluginAsyncSurrogate::OnInstanceCreated(PluginInstanceParent* aInstance)
 {
-  for (PRUint32 i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
+  for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
     PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
     uint16_t streamType = NP_NORMAL;
     NPError curError = aInstance->NPP_NewStream(
