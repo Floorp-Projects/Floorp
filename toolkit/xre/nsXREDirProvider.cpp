@@ -113,12 +113,11 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
     if (app) {
       bool per = false;
       app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per, getter_AddRefs(mProfileDir));
-      NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR must be persistent!"); 
-      NS_ASSERTION(mProfileDir, "NS_APP_USER_PROFILE_50_DIR not defined! This shouldn't happen!"); 
+      NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR must be persistent!");
+      NS_ASSERTION(mProfileDir, "NS_APP_USER_PROFILE_50_DIR not defined! This shouldn't happen!");
     }
   }
 
-  LoadAppBundleDirs();
   return NS_OK;
 }
 
@@ -641,36 +640,6 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
                              NS_COMPONENT_LOCATION);
     LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
                              NS_SKIN_LOCATION);
-  }
-}
-
-void
-nsXREDirProvider::LoadAppBundleDirs()
-{
-  nsCOMPtr<nsIFile> dir;
-  bool persistent = false;
-  nsresult rv = GetFile(XRE_APP_DISTRIBUTION_DIR, &persistent, getter_AddRefs(dir));
-  if (NS_FAILED(rv))
-    return;
-
-  dir->AppendNative(NS_LITERAL_CSTRING("bundles"));
-
-  nsCOMPtr<nsISimpleEnumerator> e;
-  rv = dir->GetDirectoryEntries(getter_AddRefs(e));
-  if (NS_FAILED(rv))
-    return;
-
-  nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
-  if (!files)
-    return;
-
-  nsCOMPtr<nsIFile> subdir;
-  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(subdir))) && subdir) {
-    mAppBundleDirectories.AppendObject(subdir);
-
-    nsCOMPtr<nsIFile> manifest =
-      CloneAndAppend(subdir, "chrome.manifest");
-    XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
   }
 }
 
