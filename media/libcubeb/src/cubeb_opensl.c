@@ -76,14 +76,17 @@ static void
 play_callback(SLPlayItf caller, void * user_ptr, SLuint32 event)
 {
   cubeb_stream * stm = user_ptr;
+  int draining;
   assert(stm);
   switch (event) {
   case SL_PLAYEVENT_HEADATMARKER:
     pthread_mutex_lock(&stm->mutex);
-    assert(stm->draining);
+    draining = stm->draining;
     pthread_mutex_unlock(&stm->mutex);
-    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
-    (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PAUSED);
+    if (draining) {
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+      (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PAUSED);
+    }
     break;
   default:
     break;
