@@ -548,13 +548,13 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse)
   nsRefPtr<InternalResponse> filteredResponse;
   switch (mRequest->GetResponseTainting()) {
     case InternalRequest::RESPONSETAINT_BASIC:
-      filteredResponse = InternalResponse::BasicResponse(aResponse);
+      filteredResponse = aResponse->BasicResponse();
       break;
     case InternalRequest::RESPONSETAINT_CORS:
-      filteredResponse = InternalResponse::CORSResponse(aResponse);
+      filteredResponse = aResponse->CORSResponse();
       break;
     case InternalRequest::RESPONSETAINT_OPAQUE:
-      filteredResponse = InternalResponse::OpaqueResponse();
+      filteredResponse = aResponse->OpaqueResponse();
       break;
     default:
       MOZ_CRASH("Unexpected case");
