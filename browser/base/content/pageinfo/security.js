@@ -266,7 +266,7 @@ function securityOnLoad() {
                                           info.encryptionStrength + "",
                                           info.version]);
     }
-    msg1 = pkiBundle.getString("pageInfo_Privacy_Broken1");
+    msg1 = pkiBundle.getString("pageInfo_Privacy_Broken2");
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   else if (info.encryptionStrength > 0) {
