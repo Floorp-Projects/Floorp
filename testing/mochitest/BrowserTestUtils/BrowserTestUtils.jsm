@@ -60,6 +60,23 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * @return {Promise}
+   *         A Promise which resolves when a "domwindowopened" notification
+   *         has been fired by the window watcher.
+   */
+  domWindowOpened() {
+    return new Promise(resolve => {
+      function observer(subject, topic, data) {
+        if (topic != "domwindowopened") { return; }
+
+        Services.ww.unregisterNotification(observer);
+        resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+      }
+      Services.ww.registerNotification(observer);
+    });
+  },
+
+  /**
    * @param {Object} options
    *        {
    *          private: A boolean indicating if the window should be
@@ -88,6 +105,29 @@ this.BrowserTestUtils = {
     return TestUtils.topicObserved("browser-delayed-startup-finished",
                                    subject => subject == win).then(() => win);
   },
+
+  /**
+   * Closes a window.
+   *
+   * @param {Window}
+   *        A window to close.
+   *
+   * @return {Promise}
+   *         Resolves when the provided window has been closed.
+   */
+  closeWindow(win) {
+    return new Promise(resolve => {
+      function observer(subject, topic, data) {
+        if (topic == "domwindowclosed" && subject === win) {
+          Services.ww.unregisterNotification(observer);
+          resolve();
+        }
+      }
+      Services.ww.registerNotification(observer);
+      win.close();
+    });
+  },
+
 
   /**
    * Waits a specified number of miliseconds for a specified event to be

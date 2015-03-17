@@ -492,7 +492,36 @@ exports["test processID"] = function*(assert) {
       assert.equal(ID, processID, "Remote processes should have the same process ID");
     }
   }
+
+  loader.unload();
 }
+
+// Check that sdk/remote/parent and sdk/remote/child can only be loaded in the
+// appropriate loaders
+exports["test cannot load in wrong loader"] = function*(assert) {
+  let loader = new Loader(module);
+  let { processes } = yield waitForProcesses(loader);
+
+  try {
+    require('sdk/remote/child');
+    assert.fail("Should not have been able to load sdk/remote/child");
+  }
+  catch (e) {
+    assert.ok(/Cannot load sdk\/remote\/child in a main process loader/.test(e),
+              "Should have seen the right exception.");
+  }
+
+  for (let process of processes) {
+    processes.port.emit('sdk/test/parentload');
+    let [_, isChildLoader, loaded, message] = yield promiseEvent(processes.port, 'sdk/test/parentload');
+    assert.ok(isChildLoader, "Process should see itself in a child loader.");
+    assert.ok(!loaded, "Process couldn't load sdk/remote/parent.");
+    assert.ok(/Cannot load sdk\/remote\/parent in a child loader/.test(message),
+              "Should have seen the right exception.");
+  }
+
+  loader.unload();
+};
 
 after(exports, function*(name, assert) {
   yield cleanUI();

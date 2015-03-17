@@ -5,61 +5,43 @@
 // This test makes sure that the web pages can't register protocol handlers
 // inside the private browsing mode.
 
-function test() {
-  // initialization
-  waitForExplicitFinish();
-  let windowsToClose = [];
+add_task(function* test() {
   let notificationValue = "Protocol Registration: testprotocol";
   let testURI = "http://example.com/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_protocolhandler_page.html";
 
-  function doTest(aIsPrivateMode, aWindow, aCallback) {
-    aWindow.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-      aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+  let doTest = Task.async(function* (aIsPrivateMode, aWindow) {
+    let tab = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab(testURI);
+    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-      setTimeout(function() {
-        let notificationBox = aWindow.gBrowser.getNotificationBox();
-        let notification = notificationBox.getNotificationWithValue(notificationValue);
+    let promiseFinished = PromiseUtils.defer();
+    setTimeout(function() {
+      let notificationBox = aWindow.gBrowser.getNotificationBox();
+      let notification = notificationBox.getNotificationWithValue(notificationValue);
 
-        if (aIsPrivateMode) {
-          // Make sure the notification is correctly displayed without a remember control
-          ok(!notification, "Notification box should not be displayed inside of private browsing mode");
-        } else {
-          // Make sure the notification is correctly displayed with a remember control
-          ok(notification, "Notification box should be displaying outside of private browsing mode");
-        }
+      if (aIsPrivateMode) {
+        // Make sure the notification is correctly displayed without a remember control
+        ok(!notification, "Notification box should not be displayed inside of private browsing mode");
+      } else {
+        // Make sure the notification is correctly displayed with a remember control
+        ok(notification, "Notification box should be displaying outside of private browsing mode");
+      }
 
-        aCallback();
-      }, 100); // remember control is added in a setTimeout(0) call
-    }, true);
+      promiseFinished.resolve();
+    }, 100); // remember control is added in a setTimeout(0) call
 
-    aWindow.gBrowser.selectedBrowser.loadURI(testURI);
-  }
-
-  function testOnWindow(aOptions, aCallback) {
-    whenNewWindowLoaded(aOptions, function(aWin) {
-      windowsToClose.push(aWin);
-      // execute should only be called when need, like when you are opening
-      // web pages on the test. If calling executeSoon() is not necesary, then
-      // call whenNewWindowLoaded() instead of testOnWindow() on your test.
-      executeSoon(function() aCallback(aWin));
-    });
-  };
-
-   // this function is called after calling finish() on the test.
-  registerCleanupFunction(function() {
-    windowsToClose.forEach(function(aWin) {
-      aWin.close();
-    });
+    yield promiseFinished.promise;
   });
 
   // test first when not on private mode
-  testOnWindow({}, function(aWin) {
-    doTest(false, aWin, function() {
-      // then test when on private mode
-      testOnWindow({private: true}, function(aWin) {
-        doTest(true, aWin, finish);
-      });
-    });
-  });
-}
+  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  yield doTest(false, win);
+
+  // then test when on private mode
+  let privateWin = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  yield doTest(true, privateWin);
+
+  // Cleanup
+  yield BrowserTestUtils.closeWindow(win);
+  yield BrowserTestUtils.closeWindow(privateWin);
+});
