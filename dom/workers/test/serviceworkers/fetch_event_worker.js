@@ -118,6 +118,10 @@ onfetch = function(ev) {
     }));
   }
 
+  else if (ev.request.url.contains('example.com')) {
+    ev.respondWith(fetch(ev.request));
+  }
+
   else if (ev.request.url.contains("index.html")) {
     if (seenIndex) {
         var body = "<script>" +
