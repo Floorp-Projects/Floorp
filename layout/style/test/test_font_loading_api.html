@@ -783,6 +783,9 @@ function runTest() {
 
     // (TEST 33) Test that CSS-connected FontFace objects are created
     // for @font-face rules in the document.
+
+    is(document.fonts.status, "loaded", "document.fonts.status should initially be loaded (TEST 33)");
+
     var style = document.querySelector("style");
     var ruleText = "@font-face { font-family: something; src: url(x); ";
     Object.keys(nonDefaultValues).forEach(function(aDesc) {
@@ -804,6 +807,9 @@ function runTest() {
       ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "FontFace should have correct " + aDesc + " value (TEST 33)");
     });
 
+    is(document.fonts.status, "loaded", "document.fonts.status should still be loaded (TEST 33)");
+    is(face.status, "unloaded", "FontFace.status should be unloaded (TEST 33)");
+
     document.fonts.clear();
     ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when clear is called (TEST 33)");
 
@@ -820,8 +826,14 @@ function runTest() {
 
     ok(!document.fonts.has(face), "CSS-connected FontFace should be removed from document.fonts once the rule has been removed (TEST 33)");
 
+    is(document.fonts.status, "loaded", "document.fonts.status should still be loaded after rule is removed (TEST 33)");
+    is(face.status, "unloaded", "FontFace.status should still be unloaded after rule is removed (TEST 33)");
+
     document.fonts.add(face);
     ok(document.fonts.has(face), "previously CSS-connected FontFace should be able to be added to document.fonts (TEST 33)");
+
+    is(document.fonts.status, "loaded", "document.fonts.status should still be loaded after now disconnected FontFace is added (TEST 33)");
+    is(face.status, "unloaded", "FontFace.status should still be unloaded after now disconnected FontFace is added (TEST 33)");
 
     document.fonts.delete(face);
     ok(!document.fonts.has(face), "previously CSS-connected FontFace should be able to be removed from document.fonts (TEST 33)");
