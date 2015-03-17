@@ -1367,8 +1367,7 @@ private:
 
 void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
 {
-  NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
-               "Should be on main or decode thread.");
+  MOZ_ASSERT(NS_IsMainThread() || OnDecodeTaskQueue());
   AssertCurrentThreadInMonitor();
 
   if (aDuration < 0) {
@@ -1420,7 +1419,7 @@ void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
 
 void MediaDecoderStateMachine::SetMediaEndTime(int64_t aEndTime)
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread");
+  MOZ_ASSERT(OnDecodeTaskQueue());
   AssertCurrentThreadInMonitor();
 
   mEndTime = aEndTime;
@@ -1723,7 +1722,7 @@ MediaDecoderStateMachine::EnqueueDecodeFirstFrameTask()
 void
 MediaDecoderStateMachine::SetReaderIdle()
 {
-  MOZ_ASSERT(OnDecodeThread());
+  MOZ_ASSERT(OnDecodeTaskQueue());
   DECODER_LOG("Invoking SetReaderIdle()");
   mReader->SetIdle();
 }
@@ -2469,7 +2468,7 @@ private:
 void
 MediaDecoderStateMachine::ShutdownReader()
 {
-  MOZ_ASSERT(OnDecodeThread());
+  MOZ_ASSERT(OnDecodeTaskQueue());
   mReader->Shutdown()->Then(TaskQueue(), __func__, this,
                             &MediaDecoderStateMachine::FinishShutdown,
                             &MediaDecoderStateMachine::FinishShutdown);
@@ -3320,7 +3319,7 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
   mDelayedScheduler.Ensure(target);
 }
 
-bool MediaDecoderStateMachine::OnDecodeThread() const
+bool MediaDecoderStateMachine::OnDecodeTaskQueue() const
 {
   return !DecodeTaskQueue() || DecodeTaskQueue()->IsCurrentThreadIn();
 }
@@ -3392,7 +3391,7 @@ void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
                                              nsAutoPtr<MediaInfo> aInfo,
                                              nsAutoPtr<MetadataTags> aTags)
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnDecodeTaskQueue());
   AssertCurrentThreadInMonitor();
   TimedMetadata* metadata = new TimedMetadata;
   metadata->mPublishTime = aPublishTime;
