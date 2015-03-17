@@ -92,8 +92,93 @@ function compareFace(aFace, expected)
 
 var suite = new CameraTestSuite();
 
+suite.test('face-detection-op', function() {
+  function start(p) {
+    return new Promise(function(resolve, reject) {
+      suite.hw.attach({
+        startFaceDetection: function() {
+          ok(true, "startFaceDetection() requested");
+          resolve();
+        }
+      });
+      try {
+        suite.camera.startFaceDetection();
+        ok(true, "startFaceDetection() succeeded");
+      } catch(e) {
+        ok(false, "startFaceDetection() failed with: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function stop(p) {
+    return new Promise(function(resolve, reject) {
+      suite.hw.attach({
+        stopFaceDetection: function() {
+          ok(true, "stopFaceDetection() requested");
+          resolve();
+        }
+      });
+      try {
+        suite.camera.stopFaceDetection();
+        ok(true, "stopFaceDetection() succeeded");
+      } catch(e) {
+        ok(false, "stopFaceDetection() failed with: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function startFailure(p) {
+    return new Promise(function(resolve, reject) {
+      suite.hw.attach({
+        startFaceDetection: function() {
+          ok(true, "startFaceDetection() requested and failed");
+          resolve();
+          throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+        }
+      });
+      try {
+        suite.camera.startFaceDetection();
+        ok(true, "startFaceDetection() succeeded and error swallowed");
+      } catch(e) {
+        ok(false, "startFaceDetection() failed with: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function stopFailure(p) {
+    return new Promise(function(resolve, reject) {
+      suite.hw.attach({
+        stopFaceDetection: function() {
+          ok(true, "stopFaceDetection() requested and failed");
+          resolve();
+          throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+        }
+      });
+      try {
+        suite.camera.stopFaceDetection();
+        ok(true, "stopFaceDetection() succeeded and error swallowed");
+      } catch(e) {
+        ok(false, "stopFaceDetection() failed with: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  return suite.getCamera()
+    .then(start, suite.rejectGetCamera)
+    .then(stop)
+    .then(startFailure)
+    .then(stopFailure);
+});
+
 suite.test('face-detection', function() {
-  function detectFace(msg, expected) {
+  function detectFace(msg, given, expected) {
+    if (expected === undefined) {
+      expected = given;
+    }
     var sync = new Promise(function(resolve, reject) {
       function onEvent(evt) {
         try {
@@ -108,7 +193,7 @@ suite.test('face-detection', function() {
       suite.camera.addEventListener('facesdetected', onEvent);
     });
 
-    suite.hw.fireFacesDetected(expected);
+    suite.hw.fireFacesDetected(given);
     return sync;
   }
 
@@ -220,11 +305,47 @@ suite.test('face-detection', function() {
     );
   }
 
+  function detectOneFaceExcessScore() {
+    return detectFace('one-face-excess-score',
+      {
+        faces: [ {
+          id:       1,
+          score:    120,
+          bounds: {
+            left:   3,
+            top:    4,
+            right:  5,
+            bottom: 6
+          },
+          leftEye:  null,
+          rightEye: null,
+          mouth:    null
+        } ]
+      },
+      {
+        faces: [ {
+          id:       1,
+          score:    100,
+          bounds: {
+            left:   3,
+            top:    4,
+            right:  5,
+            bottom: 6
+          },
+          leftEye:  null,
+          rightEye: null,
+          mouth:    null
+        } ]
+      }
+    );
+  }
+
   return suite.getCamera()
     .then(detectOneFace, suite.rejectGetCamera)
     .then(detectTwoFaces)
     .then(detectOneFaceNoFeatures)
-    .then(detectNoFaces);
+    .then(detectNoFaces)
+    .then(detectOneFaceExcessScore);
 });
 
 suite.setup()

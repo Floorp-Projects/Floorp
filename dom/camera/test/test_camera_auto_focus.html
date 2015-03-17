@@ -1,20 +1,15 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=940424
--->
 <head>
-  <title>Bug 940424 - Test camera hardware API failure handling</title>
+  <title>Test for auto focus</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940424">Mozilla Bug 940424</a>
-  <video id="viewfinder" width = "200" height = "200" autoplay></video>
-  <img src="#" alt="This image is going to load" id="testimage"/>
-
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
 var suite = new CameraTestSuite();
@@ -129,39 +124,109 @@ suite.test('auto-focus-failures', function() {
     .then(suite.expectedRejectAutoFocus, rejectAutoFocusError)
 });
 
-suite.test('take-picture-failures', function() {
-  function startTakePictureProcessError(p) {
-    suite.hw.attach({
-      takePicture: function() {
-        suite.hw.fireTakePictureError();
+suite.test('auto-focus-moving', function() {
+  function triggerAutoFocusMoving(p) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        suite.camera.removeEventListener('focus', onEvent);
+        ok(e.newState === 'focusing', 'autofocus event state focusing == ' + e.newState);
+        resolve();
       }
+      suite.camera.addEventListener('focus', onEvent);
     });
-    return suite.camera.takePicture();
+
+    suite.hw.fireAutoFocusMoving(true);
+    return sync;
   }
 
-  function rejectTakePictureProcessError(e) {
-    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() process should fail: ' + e);
-  }
-
-  function startTakePictureError(p) {
-    suite.hw.attach({
-      takePicture: function() {
-        throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+  function waitAutoFocusComplete(p) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        suite.camera.removeEventListener('focus', onEvent);
+        ok(e.newState === 'focused', 'autofocus event state focused == ' + e.newState);
+        resolve();
       }
+      suite.camera.addEventListener('focus', onEvent);
     });
-    return suite.camera.takePicture();
+
+    // Missing the fireAutoFocusComplete but it should timeout on its own
+    suite.hw.fireAutoFocusMoving(false);
+    return sync;
   }
 
-  function rejectTakePictureError(e) {
-    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() should fail: ' + e);
+  function runAutoFocusCycle(p) {
+    return triggerAutoFocusMoving(p)
+      .then(waitAutoFocusComplete);
+  }
+
+  /* If the driver doesn't supply an onAutoFocusComplete notification,
+     gecko will timeout and provide it. After three times, it will no
+     longer rely upon a timeout and fire it immediately. */
+  return suite.getCamera()
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle);
+});
+
+suite.test('auto-focus-interrupted', function() {
+  // bug 1022766
+  function triggerAutoFocus(p) {
+    return new Promise(function(resolve, reject) {
+      var firstCall = false;
+      var secondCall = false;
+
+      function end() {
+        if (firstCall && secondCall) {
+          resolve();
+        }
+      }
+
+      // It doesn't matter if the emulator supports focus or not;
+      // this is just testing the sequencing.
+      suite.camera.autoFocus().then(function(p) {
+        ok(false, "First call to autoFocus() succeeded unexpectedly");
+        firstCall = true;
+        end();
+      }, function(e) {
+        ok(e.name === 'NS_ERROR_IN_PROGRESS', 'First call to autoFocus() failed with: ' + e);
+        firstCall = true;
+        end();
+      });
+
+      suite.camera.autoFocus().then(function(p) {
+        ok(true, "Second call to autoFocus() succeeded");
+        secondCall = true;
+        end();
+      }, function(e) {
+        ok(false, "Second call to autoFocus() failed unexpectedly with: " + e);
+        secondCall = true;
+        end();
+      });
+    });
   }
 
   return suite.getCamera()
-    .catch(suite.rejectGetCamera)
-    .then(startTakePictureProcessError)
-    .then(suite.expectedRejectTakePicture, rejectTakePictureProcessError)
-    .then(startTakePictureError)
-    .then(suite.expectedRejectTakePicture, rejectTakePictureError)
+    .then(triggerAutoFocus, suite.rejectGetCamera)
+});
+
+suite.test('cancel-auto-focus', function() {
+  function cancelAutoFocus(p) {
+    var promise = new Promise(function(resolve, reject) {
+      suite.hw.attach({
+        cancelAutoFocus: function() {
+          ok(true, 'got cancel auto focus');
+          resolve();
+        }
+      });
+    });
+
+    suite.camera.resumeContinuousFocus();
+    return promise;
+  }
+
+  return suite.getCamera()
+    .then(cancelAutoFocus, suite.rejectGetCamera);
 });
 
 suite.setup()

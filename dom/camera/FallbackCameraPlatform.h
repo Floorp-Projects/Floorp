@@ -269,6 +269,8 @@ namespace android {
             return 320;
           } else if (strcmp(aParameter, "vid.height") == 0) {
             return 240;
+          } else if (strcmp(aParameter, "vid.fps") == 0) {
+            return 30;
           }
           return 0;
         case CAMCORDER_QUALITY_HIGH:
@@ -277,6 +279,8 @@ namespace android {
             return 640;
           } else if (strcmp(aParameter, "vid.height") == 0) {
             return 480;
+          } else if (strcmp(aParameter, "vid.fps") == 0) {
+            return 30;
           }
           return 0;
         default:
