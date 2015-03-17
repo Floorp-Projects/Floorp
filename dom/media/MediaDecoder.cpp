@@ -1093,7 +1093,7 @@ MediaDecoder::GetStatistics()
 double MediaDecoder::ComputePlaybackRate(bool* aReliable)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread() || OnDecodeThread());
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineTaskQueue() || OnDecodeThread());
 
   int64_t length = mResource ? mResource->GetLength() : -1;
   if (mDuration >= 0 && length >= 0) {
@@ -1105,7 +1105,7 @@ double MediaDecoder::ComputePlaybackRate(bool* aReliable)
 
 void MediaDecoder::UpdatePlaybackRate()
 {
-  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineTaskQueue());
   GetReentrantMonitor().AssertCurrentThreadIn();
   if (!mResource)
     return;
@@ -1506,7 +1506,7 @@ void MediaDecoder::Resume(bool aForceBuffering)
 
 void MediaDecoder::StopProgressUpdates()
 {
-  MOZ_ASSERT(OnStateMachineThread() || OnDecodeThread());
+  MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = true;
   if (mResource) {
@@ -1516,7 +1516,7 @@ void MediaDecoder::StopProgressUpdates()
 
 void MediaDecoder::StartProgressUpdates()
 {
-  MOZ_ASSERT(OnStateMachineThread() || OnDecodeThread());
+  MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = false;
   if (mResource) {
@@ -1538,9 +1538,9 @@ void MediaDecoder::UpdatePlaybackOffset(int64_t aOffset)
   mPlaybackPosition = aOffset;
 }
 
-bool MediaDecoder::OnStateMachineThread() const
+bool MediaDecoder::OnStateMachineTaskQueue() const
 {
-  return mDecoderStateMachine->OnStateMachineThread();
+  return mDecoderStateMachine->OnTaskQueue();
 }
 
 void MediaDecoder::SetPlaybackRate(double aPlaybackRate)

@@ -1040,8 +1040,8 @@ struct nsAutoOggSyncState {
 
 int64_t OggReader::RangeEndTime(int64_t aEndOffset)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine or decode thread.");
+  NS_ASSERTION(mDecoder->OnStateMachineTaskQueue() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode taks queue");
 
   MediaResource* resource = mDecoder->GetResource();
   NS_ENSURE_TRUE(resource != nullptr, -1);
@@ -1966,8 +1966,8 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
 
 VideoData* OggReader::FindStartTime(int64_t& aOutStartTime)
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine or decode thread.");
+  NS_ASSERTION(mDecoder->OnStateMachineTaskQueue() || mDecoder->OnDecodeThread(),
+               "Should be on state machine or decode task queue");
 
   // Extract the start times of the bitstreams in order to calculate
   // the duration.
