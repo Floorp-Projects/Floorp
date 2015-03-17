@@ -255,7 +255,7 @@ void MediaOmxReader::PreReadMetadata()
 nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
                                       MetadataTags** aTags)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
 
   *aTags = nullptr;
@@ -365,7 +365,7 @@ MediaOmxReader::IsMediaSeekable()
 bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                       int64_t aTimeThreshold)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
 
   // Record number of frames decoded and parsed. Automatically update the
@@ -509,7 +509,7 @@ void MediaOmxReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, in
 
 bool MediaOmxReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
 
   // This is the approximate byte position in the stream.
@@ -544,7 +544,7 @@ bool MediaOmxReader::DecodeAudioData()
 nsRefPtr<MediaDecoderReader::SeekPromise>
 MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
