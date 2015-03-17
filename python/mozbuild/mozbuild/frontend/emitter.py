@@ -648,33 +648,7 @@ class TreeMetadataEmitter(LoggingMixin):
         for pref in sorted(context['JS_PREFERENCE_FILES']):
             yield JsPreferenceFile(context, pref)
 
-        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
-            program = context.get(kind)
-            if program:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" as %s name, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program)
-                self._linkage.append((context, self._binaries[program],
-                    kind.replace('PROGRAM', 'USE_LIBS')))
-
-        for kind, cls in [
-                ('SIMPLE_PROGRAMS', SimpleProgram),
-                ('CPP_UNIT_TESTS', SimpleProgram),
-                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
-            for program in context[kind]:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" in %s, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program,
-                    is_unit_test=kind == 'CPP_UNIT_TESTS')
-                self._linkage.append((context, self._binaries[program],
-                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
-                    else 'USE_LIBS'))
+        self._handle_programs(context)
 
         extra_js_modules = context.get('EXTRA_JS_MODULES')
         if extra_js_modules:
@@ -865,6 +839,35 @@ class TreeMetadataEmitter(LoggingMixin):
                 method = None
                 inputs = []
             yield GeneratedFile(context, script, method, output, inputs)
+
+    def _handle_programs(self, context):
+        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
+            program = context.get(kind)
+            if program:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" as %s name, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program)
+                self._linkage.append((context, self._binaries[program],
+                    kind.replace('PROGRAM', 'USE_LIBS')))
+
+        for kind, cls in [
+                ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('CPP_UNIT_TESTS', SimpleProgram),
+                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
+            for program in context[kind]:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" in %s, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program,
+                    is_unit_test=kind == 'CPP_UNIT_TESTS')
+                self._linkage.append((context, self._binaries[program],
+                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
+                    else 'USE_LIBS'))
 
     def _process_test_manifests(self, context):
         # While there are multiple test manifests, the behavior is very similar
