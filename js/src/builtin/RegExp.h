@@ -16,9 +16,6 @@
 
 namespace js {
 
-bool
-regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp);
-
 JSObject *
 InitRegExpClass(JSContext *cx, HandleObject obj);
 
