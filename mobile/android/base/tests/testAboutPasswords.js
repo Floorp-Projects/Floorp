@@ -63,39 +63,7 @@ add_test(function test_passwords_list() {
   let username = logins_list.querySelector(".username");
   do_check_eq(username.textContent, LOGIN_FIELDS.username);
 
-  let login_item = browser.contentDocument.querySelector("#logins-list > .login-item");
-  browser.addEventListener("PasswordsDetailsLoad", function() {
-    browser.removeEventListener("PasswordsDetailsLoad", this, false);
-    Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
-  }, false);
-
-  // Expand item details.
-  login_item.click();
-});
-
-add_test(function test_passwords_details() {
-  let login_details = browser.contentDocument.getElementById("login-details");
-
-  let hostname = login_details.querySelector(".hostname");
-  do_check_eq(hostname.textContent, LOGIN_FIELDS.hostname);
-  let username = login_details.querySelector(".username");
-  do_check_eq(username.textContent, LOGIN_FIELDS.username);
-
-  // Check that details page opens link to host.
-  BrowserApp.deck.addEventListener("TabOpen", (tabevent) => {
-    // Wait for tab to finish loading.
-    let browser_target = tabevent.target;
-    browser_target.addEventListener("load", () => {
-      browser_target.removeEventListener("load", this, true);
-
-      do_check_eq(BrowserApp.selectedTab.browser.currentURI.spec, LOGIN_FIELDS.hostname);
-      Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
-    }, true);
-
-    BrowserApp.deck.removeEventListener("TabOpen", this, false);
-  }, false);
-
-  browser.contentDocument.getElementById("details-header").click();
+  run_next_test();
 });
 
 run_next_test();
