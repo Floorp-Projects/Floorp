@@ -294,13 +294,14 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
 
     // Register allocation:
     //
-    // The output must be eax.
+    // The output may not be used, but eax will be clobbered regardless
+    // so pin the output to eax.
     //
     // oldval must be in a register.
     //
     // newval must be in a register.  If the source is a byte array
-    // then newval must be a register that has a byte size: on x86
-    // this must be ebx, ecx, or edx (eax is taken for the output).
+    // then newval must be a register that has a byte size: this must
+    // be ebx, ecx, or edx (eax is taken).
     //
     // Bug #1077036 describes some optimization opportunities.
 
@@ -324,7 +325,24 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 
     bool byteArray = byteSize(ins->accessType()) == 1;
 
-    // Register allocation:
+    // Case 1: the result of the operation is not used.
+    //
+    // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
+    // LOCK OR, or LOCK XOR.
+    //
+    // For the 8-bit variant the ops need a byte register for the
+    // value; just pin the value to ebx.
+
+    if (!ins->hasUses()) {
+        LAllocation value = byteArray ? useFixed(ins->value(), ebx) : useRegister(ins->value());
+        LAsmJSAtomicBinopHeapForEffect *lir =
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr), value);
+        lir->setAddrTemp(temp());
+        add(lir, ins);
+        return;
+    }
+
+    // Case 2: the result of the operation is used.
     //
     // For ADD and SUB we'll use XADD:
     //
@@ -354,7 +372,6 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     // For the 8-bit variants the temp must have a byte register.
     //
     // There are optimization opportunities:
-    //  - when the result is unused, Bug #1077014.
     //  - better register allocation and instruction selection, Bug #1077036.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
