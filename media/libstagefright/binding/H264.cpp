@@ -480,4 +480,27 @@ H264::DecodeSPSFromExtraData(const ByteBuffer* aExtraData, SPSData& aDest)
   return DecodeSPS(sps, aDest);
 }
 
+/* static */ bool
+H264::EnsureSPSIsSane(SPSData& aSPS)
+{
+  bool valid = true;
+  static const float default_aspect = 4.0f / 3.0f;
+  if (aSPS.sample_ratio <= 0.0f || aSPS.sample_ratio > 6.0f) {
+    if (aSPS.pic_width && aSPS.pic_height) {
+      aSPS.sample_ratio =
+        (float) aSPS.pic_width / (float) aSPS.pic_height;
+    } else {
+      aSPS.sample_ratio = default_aspect;
+    }
+    aSPS.display_width = aSPS.pic_width;
+    aSPS.display_height = aSPS.pic_height;
+    valid = false;
+  }
+  if (aSPS.max_num_ref_frames > 16) {
+    aSPS.max_num_ref_frames = 16;
+    valid = false;
+  }
+  return valid;
+}
+
 } // namespace mp4_demuxer
