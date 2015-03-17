@@ -24,7 +24,7 @@
       document.currentScript == document.getElementById('intercepted-script');
   }
 
-  function fetch(name, onload, onerror, headers) {
+  function fetchXHR(name, onload, onerror, headers) {
     gExpected++;
 
     onload = onload || function() {
