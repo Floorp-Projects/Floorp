@@ -7,6 +7,26 @@ onfetch = function(ev) {
     ev.respondWith(p);
   }
 
+  else if (ev.request.url.contains("synthesized-404.txt")) {
+    var p = new Promise(function(resolve) {
+      var r = new Response("synthesized response body", { status: 404 });
+      resolve(r);
+    });
+    ev.respondWith(p);
+  }
+
+  else if (ev.request.url.contains("synthesized-headers.txt")) {
+    var p = new Promise(function(resolve) {
+      var r = new Response("synthesized response body", {
+        headers: {
+          "X-Custom-Greeting": "Hello"
+        }
+      });
+      resolve(r);
+    });
+    ev.respondWith(p);
+  }
+
   else if (ev.request.url.contains("ignored.txt")) {
   }
 
@@ -44,7 +64,11 @@ onfetch = function(ev) {
 
   else if (ev.request.url.contains("nonexistent_image.gif")) {
     var p = new Promise(function(resolve, reject) {
-      resolve(new Response(atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs"), {}));
+      resolve(new Response(atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs"), {
+        headers: {
+          "Content-Type": "image/gif"
+        }
+      }));
     });
     ev.respondWith(p);
   }
@@ -58,14 +82,22 @@ onfetch = function(ev) {
 
   else if (ev.request.url.contains("nonexistent_stylesheet.css")) {
     var p = new Promise(function(resolve, reject) {
-      resolve(new Response("#style-test { background-color: black !important; }", {}));
+      resolve(new Response("#style-test { background-color: black !important; }", {
+        headers : {
+          "Content-Type": "text/css"
+        }
+      }));
     });
     ev.respondWith(p);
   }
 
   else if (ev.request.url.contains("nonexistent_page.html")) {
     var p = new Promise(function(resolve, reject) {
-      resolve(new Response("<script>window.frameElement.test_result = true;</script>", {}));
+      resolve(new Response("<script>window.frameElement.test_result = true;</script>", {
+        headers : {
+          "Content-Type": "text/html"
+        }
+      }));
     });
     ev.respondWith(p);
   }
