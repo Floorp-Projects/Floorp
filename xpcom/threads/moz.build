@@ -59,6 +59,11 @@ LOCAL_INCLUDES += [
     '/tools/profiler',
 ]
 
+# BHR disabled for Release builds because of bug 965392.
+# BHR disabled for debug builds because of bug 979069.
+if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release') and not CONFIG['MOZ_DEBUG']:
+    DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
