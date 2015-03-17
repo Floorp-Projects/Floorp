@@ -137,6 +137,48 @@ JSString::dump()
     fputc('\n', stderr);
 }
 
+void
+JSString::dumpRepresentation(FILE *fp, int indent) const
+{
+    if      (isRope())          asRope()        .dumpRepresentation(fp, indent);
+    else if (isDependent())     asDependent()   .dumpRepresentation(fp, indent);
+    else if (isExternal())      asExternal()    .dumpRepresentation(fp, indent);
+    else if (isExtensible())    asExtensible()  .dumpRepresentation(fp, indent);
+    else if (isInline())        asInline()      .dumpRepresentation(fp, indent);
+    else if (isFlat())          asFlat()        .dumpRepresentation(fp, indent);
+    else
+        MOZ_CRASH("Unexpected JSString representation");
+}
+
+void
+JSString::dumpRepresentationHeader(FILE *fp, int indent, const char *subclass) const
+{
+    uint32_t flags = d.u1.flags;
+    // Print the string's address as an actual C++ expression, to facilitate
+    // copy-and-paste into a debugger.
+    fprintf(fp, "((%s *) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
+    if (flags & FLAT_BIT)               fputs(" FLAT", fp);
+    if (flags & HAS_BASE_BIT)           fputs(" HAS_BASE", fp);
+    if (flags & INLINE_CHARS_BIT)       fputs(" INLINE_CHARS", fp);
+    if (flags & ATOM_BIT)               fputs(" ATOM", fp);
+    if (isPermanentAtom())              fputs(" PERMANENT", fp);
+    if (flags & LATIN1_CHARS_BIT)       fputs(" LATIN1", fp);
+    fputc('\n', fp);
+}
+
+void
+JSLinearString::dumpRepresentationChars(FILE *fp, int indent) const
+{
+    if (hasLatin1Chars()) {
+        fprintf(fp, "%*schars: ((Latin1Char *) %p) ", indent, "", rawLatin1Chars());
+        dumpChars(rawLatin1Chars(), length());
+    } else {
+        fprintf(fp, "%*schars: ((char16_t *) %p) ", indent, "", rawTwoByteChars());
+        dumpChars(rawTwoByteChars(), length());
+    }
+    fputc('\n', fp);
+}
+
 bool
 JSString::equals(const char *s)
 {
@@ -244,6 +286,21 @@ JSRope::copyCharsInternal(ExclusiveContext *cx, ScopedJSFreePtr<CharT> &out,
 
     return true;
 }
+
+#ifdef DEBUG
+void
+JSRope::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSRope");
+    indent += 2;
+
+    fprintf(fp, "%*sleft:  ", indent, "");
+    leftChild()->dumpRepresentation(fp, indent);
+
+    fprintf(fp, "%*sright: ", indent, "");
+    rightChild()->dumpRepresentation(fp, indent);
+}
+#endif
 
 namespace js {
 
@@ -593,6 +650,19 @@ JSDependentString::undepend(ExclusiveContext *cx)
            : undependInternal<char16_t>(cx);
 }
 
+#ifdef DEBUG
+void
+JSDependentString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSDependentString");
+    indent += 2;
+
+    fprintf(fp, "%*soffset: %zu\n", indent, "", baseOffset());
+    fprintf(fp, "%*sbase: ", indent, "");
+    base()->dumpRepresentation(fp, indent);
+}
+#endif
+
 template <typename CharT>
 /* static */ bool
 JSFlatString::isIndexSlow(const CharT *s, size_t length, uint32_t *indexp)
@@ -850,6 +920,17 @@ JSAtom::dump()
     fprintf(stderr, "JSAtom* (%p) = ", (void *) this);
     this->JSString::dump();
 }
+
+void
+JSExternalString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSExternalString");
+    indent += 2;
+
+    fprintf(fp, "%*sfinalizer: ((JSStringFinalizer *) %p)\n", indent, "", externalFinalizer());
+    fprintf(fp, "%*sbase: ", indent, "");
+    base()->dumpRepresentation(fp, indent);
+}
 #endif /* DEBUG */
 
 JSLinearString *
@@ -1082,3 +1163,34 @@ template JSFlatString *
 NewStringCopyN<NoGC>(ExclusiveContext *cx, const Latin1Char *s, size_t n);
 
 } /* namespace js */
+
+#ifdef DEBUG
+void
+JSExtensibleString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSExtensibleString");
+    indent += 2;
+
+    fprintf(fp, "%*scapacity: %zu\n", indent, "", capacity());
+    dumpRepresentationChars(fp, indent);
+}
+
+void
+JSInlineString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent,
+                             isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
+    indent += 2;
+
+    dumpRepresentationChars(fp, indent);
+}
+
+void
+JSFlatString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSFlatString");
+    indent += 2;
+
+    dumpRepresentationChars(fp, indent);
+}
+#endif
