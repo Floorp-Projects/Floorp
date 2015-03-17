@@ -60,12 +60,12 @@ let ReaderParent = {
         break;
       }
       case "Reader:ListStatusRequest":
-        ReadingList.containsURL(message.data.url).then(inList => {
+        ReadingList.count(message.data).then(count => {
           let mm = message.target.messageManager
           // Make sure the target browser is still alive before trying to send data back.
           if (mm) {
             mm.sendAsyncMessage("Reader:ListStatusData",
-                                { inReadingList: inList, url: message.data.url });
+                                { inReadingList: !!count, url: message.data.url });
           }
         });
         break;
