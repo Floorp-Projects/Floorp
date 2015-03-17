@@ -301,8 +301,8 @@ DeviceManagerD3D9::Init()
                              &pp,
                              getter_AddRefs(mDevice));
 
-    if (FAILED(hr) || !mDevice) {
-      gfxCriticalError() << "[D3D9] Failed to create the device, code: " << hexa(hr);
+    if (FAILED(hr)) {
+      gfxCriticalError() << "[D3D9] Failed to create the device";
       return false;
     }
   }
