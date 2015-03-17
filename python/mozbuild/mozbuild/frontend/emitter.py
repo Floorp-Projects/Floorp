@@ -830,6 +830,48 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self._handle_libraries(context)
 
+        for obj in self._process_test_manifests(context):
+            yield obj
+
+        jar_manifests = context.get('JAR_MANIFESTS', [])
+        if len(jar_manifests) > 1:
+            raise SandboxValidationError('While JAR_MANIFESTS is a list, '
+                'it is currently limited to one value.', context)
+
+        for path in jar_manifests:
+            yield JARManifest(context, mozpath.join(context.srcdir, path))
+
+        # Temporary test to look for jar.mn files that creep in without using
+        # the new declaration. Before, we didn't require jar.mn files to
+        # declared anywhere (they were discovered). This will detect people
+        # relying on the old behavior.
+        if os.path.exists(os.path.join(context.srcdir, 'jar.mn')):
+            if 'jar.mn' not in jar_manifests:
+                raise SandboxValidationError('A jar.mn exists but it '
+                    'is not referenced in the moz.build file. '
+                    'Please define JAR_MANIFESTS.', context)
+
+        for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
+            yield ContextWrapped(context, jar)
+
+        for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
+            yield ContextWrapped(context, data)
+
+        if passthru.variables:
+            yield passthru
+
+    def _create_substitution(self, cls, context, path):
+        if os.path.isabs(path):
+            path = path[1:]
+
+        sub = cls(context)
+        sub.input_path = mozpath.join(context.srcdir, '%s.in' % path)
+        sub.output_path = mozpath.join(context.objdir, path)
+        sub.relpath = path
+
+        return sub
+
+    def _process_test_manifests(self, context):
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
         # manifests and outputting a single class type with the differences
@@ -871,44 +913,6 @@ class TreeMetadataEmitter(LoggingMixin):
             for path in context.get('%s_MANIFESTS' % flavor.upper(), []):
                 for obj in self._process_reftest_manifest(context, flavor, path):
                     yield obj
-
-        jar_manifests = context.get('JAR_MANIFESTS', [])
-        if len(jar_manifests) > 1:
-            raise SandboxValidationError('While JAR_MANIFESTS is a list, '
-                'it is currently limited to one value.', context)
-
-        for path in jar_manifests:
-            yield JARManifest(context, mozpath.join(context.srcdir, path))
-
-        # Temporary test to look for jar.mn files that creep in without using
-        # the new declaration. Before, we didn't require jar.mn files to
-        # declared anywhere (they were discovered). This will detect people
-        # relying on the old behavior.
-        if os.path.exists(os.path.join(context.srcdir, 'jar.mn')):
-            if 'jar.mn' not in jar_manifests:
-                raise SandboxValidationError('A jar.mn exists but it '
-                    'is not referenced in the moz.build file. '
-                    'Please define JAR_MANIFESTS.', context)
-
-        for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
-            yield ContextWrapped(context, jar)
-
-        for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
-            yield ContextWrapped(context, data)
-
-        if passthru.variables:
-            yield passthru
-
-    def _create_substitution(self, cls, context, path):
-        if os.path.isabs(path):
-            path = path[1:]
-
-        sub = cls(context)
-        sub.input_path = mozpath.join(context.srcdir, '%s.in' % path)
-        sub.output_path = mozpath.join(context.objdir, path)
-        sub.relpath = path
-
-        return sub
 
     def _process_test_manifest(self, context, info, manifest_path):
         flavor, install_root, install_subdir, package_tests = info
