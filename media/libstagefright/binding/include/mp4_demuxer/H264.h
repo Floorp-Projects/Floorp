@@ -325,6 +325,9 @@ public:
   static already_AddRefed<ByteBuffer> DecodeNALUnit(const ByteBuffer* aNAL);
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const ByteBuffer* aSPS, SPSData& aDest);
+  // Ensure that SPS data makes sense, Return true if SPS data was, and false
+  // otherwise. If false, then content will be adjusted accordingly.
+  static bool EnsureSPSIsSane(SPSData& aSPS);
 
 private:
   static void vui_parameters(BitReader& aBr, SPSData& aDest);
