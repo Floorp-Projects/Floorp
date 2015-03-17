@@ -757,23 +757,8 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_test_manifests(context):
             yield obj
 
-        jar_manifests = context.get('JAR_MANIFESTS', [])
-        if len(jar_manifests) > 1:
-            raise SandboxValidationError('While JAR_MANIFESTS is a list, '
-                'it is currently limited to one value.', context)
-
-        for path in jar_manifests:
-            yield JARManifest(context, mozpath.join(context.srcdir, path))
-
-        # Temporary test to look for jar.mn files that creep in without using
-        # the new declaration. Before, we didn't require jar.mn files to
-        # declared anywhere (they were discovered). This will detect people
-        # relying on the old behavior.
-        if os.path.exists(os.path.join(context.srcdir, 'jar.mn')):
-            if 'jar.mn' not in jar_manifests:
-                raise SandboxValidationError('A jar.mn exists but it '
-                    'is not referenced in the moz.build file. '
-                    'Please define JAR_MANIFESTS.', context)
+        for obj in self._process_jar_manifests(context):
+            yield obj
 
         for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
             yield ContextWrapped(context, jar)
@@ -1096,6 +1081,25 @@ class TreeMetadataEmitter(LoggingMixin):
             })
 
         yield obj
+
+    def _process_jar_manifests(self, context):
+        jar_manifests = context.get('JAR_MANIFESTS', [])
+        if len(jar_manifests) > 1:
+            raise SandboxValidationError('While JAR_MANIFESTS is a list, '
+                'it is currently limited to one value.', context)
+
+        for path in jar_manifests:
+            yield JARManifest(context, mozpath.join(context.srcdir, path))
+
+        # Temporary test to look for jar.mn files that creep in without using
+        # the new declaration. Before, we didn't require jar.mn files to
+        # declared anywhere (they were discovered). This will detect people
+        # relying on the old behavior.
+        if os.path.exists(os.path.join(context.srcdir, 'jar.mn')):
+            if 'jar.mn' not in jar_manifests:
+                raise SandboxValidationError('A jar.mn exists but it '
+                    'is not referenced in the moz.build file. '
+                    'Please define JAR_MANIFESTS.', context)
 
     def _emit_directory_traversal_from_context(self, context):
         o = DirectoryTraversal(context)
