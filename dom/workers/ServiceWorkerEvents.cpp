@@ -220,35 +220,38 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  nsCOMPtr<nsIInputStream> body;
-  response->GetBody(getter_AddRefs(body));
-  if (NS_WARN_IF(!body)) {
-    return;
-  }
-  response->SetBodyUsed();
-
-  nsCOMPtr<nsIOutputStream> responseBody;
-  rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   nsRefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return;
   }
 
   nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel, ir));
-  nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(!stsThread)) {
-    return;
-  }
-  rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
-                    RespondWithCopyComplete, closure.forget());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  nsCOMPtr<nsIInputStream> body;
+  response->GetBody(getter_AddRefs(body));
+  // Errors and redirects may not have a body.
+  if (body) {
+    response->SetBodyUsed();
+
+    nsCOMPtr<nsIOutputStream> responseBody;
+    rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_WARN_IF(!stsThread)) {
+      return;
+    }
+    rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
+                      RespondWithCopyComplete, closure.forget());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  } else {
+    RespondWithCopyComplete(closure.forget(), NS_OK);
   }
 
+  MOZ_ASSERT(!closure);
   autoCancel.Reset();
 }
 
