@@ -21,7 +21,6 @@ var div = document.getElementById("target");
 var gRecords = [];
 var gRecordPromiseResolvers = [];
 var gObserver = new MutationObserver(function(newRecords) {
-  dump(`got a record ${newRecords[0].addedAnimations.length}/${newRecords[0].changedAnimations.length}/${newRecords[0].removedAnimations.length}\n`);
   gRecords.push(...newRecords);
 
   var resolvers = gRecordPromiseResolvers;
@@ -177,7 +176,7 @@ function assert_records(expected, desc) {
   // dispatches an added notification and then a removed notification.
   addAsyncAnimTest("single_transition", aOptions, function*() {
     // Start a transition.
-    e.style = "transition: background-color 0.001s; background-color: lime;";
+    e.style = "transition: background-color 100s; background-color: lime;";
 
     // Register for the end of the transition.
     var transitionEnd = await_event(e, "transitionend");
@@ -189,12 +188,11 @@ function assert_records(expected, desc) {
     // Wait for the single MutationRecord for the AnimationPlayer addition to
     // be delivered.
     yield await_frame();
-    // FIXME (bug 1143314): Temporary disabled because the test fails
-    // intermittently, perhaps due to the very short transition.
-    //assert_records([{ added: players, changed: [], removed: [] }],
-    //               "records after transition start");
-    gRecords = []; // FIXME
+    assert_records([{ added: players, changed: [], removed: [] }],
+                   "records after transition start");
 
+    // Advance until near the end of the transition, then wait for it to finish.
+    players[0].currentTime = 99900;
     yield transitionEnd;
 
     // After the transition has finished, the AnimationPlayer should disappear.
@@ -203,11 +201,8 @@ function assert_records(expected, desc) {
     // Wait for the single MutationRecord for the AnimationPlayer removal to
     // be delivered.
     yield await_frame();
-    // FIXME (bug 1143314): Temporary disabled because the test fails
-    // intermittently, perhaps due to the very short transition.
-    //assert_records([{ added: [], changed: [], removed: players }],
-    //               "records after transition end");
-    gRecords = []; // FIXME
+    assert_records([{ added: [], changed: [], removed: players }],
+                   "records after transition end");
 
     e.style = "";
   });
@@ -406,7 +401,7 @@ function assert_records(expected, desc) {
   // dispatches an added notification and then a removed notification.
   addAsyncAnimTest("single_animation", aOptions, function*() {
     // Start an animation.
-    e.style = "animation: anim 0.001s;";
+    e.style = "animation: anim 100s;";
 
     // Register for the end of the animation.
     var animationEnd = await_event(e, "animationend");
@@ -421,6 +416,8 @@ function assert_records(expected, desc) {
     assert_records([{ added: players, changed: [], removed: [] }],
                    "records after animation start");
 
+    // Advance until near the end of the animation, then wait for it to finish.
+    players[0].currentTime = 99900;
     yield animationEnd;
 
     // After the animation has finished, the AnimationPlayer should disappear.
@@ -531,7 +528,7 @@ function assert_records(expected, desc) {
   // then a removed notification.
   addAsyncAnimTest("single_animation_cancelled_fill", aOptions, function*() {
     // Start a short, filled animation.
-    e.style = "animation: anim 0.001s forwards;";
+    e.style = "animation: anim 100s forwards;";
 
     // Register for the end of the animation.
     var animationEnd = await_event(e, "animationend");
@@ -546,7 +543,8 @@ function assert_records(expected, desc) {
     assert_records([{ added: players, changed: [], removed: [] }],
                    "records after animation start");
 
-    // Wait until we are definitely filling.
+    // Advance until near the end of the animation, then wait for it to finish.
+    players[0].currentTime = 99900;
     yield animationEnd;
 
     // No changes to the list of animations at this point.
