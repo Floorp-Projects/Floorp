@@ -19,7 +19,7 @@ add_task(function* test_keyword_search() {
     { uri: uri1, title: "Generic page title" },
     { uri: uri2, title: "Generic page title" }
   ]);
-  addBookmark({ uri: uri1, title: "Keyword title", keyword: "key"});
+  yield addBookmark({ uri: uri1, title: "Keyword title", keyword: "key"});
 
   do_print("Plain keyword query");
   yield check_autocomplete({
@@ -73,7 +73,7 @@ add_task(function* test_keyword_search() {
   // This adds a second keyword so anything after this will match 2 keywords
   let uri3 = NetUtil.newURI("http://xyz/?foo=%s");
   yield PlacesTestUtils.addVisits([ { uri: uri3, title: "Generic page title" } ]);
-  addBookmark({ uri: uri3, title: "Keyword title", keyword: "key"});
+  yield addBookmark({ uri: uri3, title: "Keyword title", keyword: "key"});
 
   do_print("Two keywords matched");
   yield check_autocomplete({

@@ -19,18 +19,18 @@ add_task(function* test_javascript_match() {
     { uri: uri3, title: "tagged" },
     { uri: uri4, title: "tagged" }
   ]);
-  addBookmark({ uri: uri1,
-                title: "tagged",
-                tags: [ "tag1" ] });
-  addBookmark({ uri: uri2,
-                title: "tagged",
-                tags: [ "tag1", "tag2" ] });
-  addBookmark({ uri: uri3,
-                title: "tagged",
-                tags: [ "tag1", "tag3" ] });
-  addBookmark({ uri: uri4,
-                title: "tagged",
-                tags: [ "tag1", "tag2", "tag3" ] });
+  yield addBookmark({ uri: uri1,
+                      title: "tagged",
+                      tags: [ "tag1" ] });
+  yield addBookmark({ uri: uri2,
+                      title: "tagged",
+                      tags: [ "tag1", "tag2" ] });
+  yield addBookmark({ uri: uri3,
+                      title: "tagged",
+                      tags: [ "tag1", "tag3" ] });
+  yield addBookmark({ uri: uri4,
+                      title: "tagged",
+                      tags: [ "tag1", "tag2", "tag3" ] });
 
   do_print("Make sure tags come back in the title when matching tags");
   yield check_autocomplete({
