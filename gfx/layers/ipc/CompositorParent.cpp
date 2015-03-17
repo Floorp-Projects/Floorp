@@ -1135,22 +1135,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     // When testing we synchronously update the shadow tree with the animated
     // values to avoid race conditions when calling GetAnimationTransform etc.
     // (since the above SetShadowProperties will remove animation effects).
-    // However, we only do this update when a composite operation is already
-    // scheduled in order to better match the behavior under regular sampling
-    // conditions.
-    bool needTestComposite = mIsTesting && root &&
-                             (mCurrentCompositeTask ||
-                             (mCompositorVsyncObserver &&
-                              mCompositorVsyncObserver->NeedsComposite()));
-    if (needTestComposite) {
-      AutoResolveRefLayers resolve(mCompositionManager);
-      bool requestNextFrame =
-        mCompositionManager->TransformShadowTree(mTestTime);
-      if (!requestNextFrame) {
-        CancelCurrentCompositeTask();
-        // Pretend we composited in case someone is waiting for this event.
-        DidComposite();
-      }
+    if (mIsTesting) {
+      ApplyAsyncProperties(aLayerTree);
     }
   }
   mLayerManager->NotifyShadowTreeTransaction();
@@ -1195,6 +1181,31 @@ void
 CompositorParent::LeaveTestMode(LayerTransactionParent* aLayerTree)
 {
   mIsTesting = false;
+}
+
+void
+CompositorParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
+{
+  // NOTE: This should only be used for testing. For example, when mIsTesting is
+  // true or when called from test-only methods like
+  // LayerTransactionParent::RecvGetAnimationTransform.
+
+  // Synchronously update the layer tree, but only if a composite was already
+  // scehduled.
+  if (aLayerTree->GetRoot() &&
+      (mCurrentCompositeTask ||
+       (mCompositorVsyncObserver &&
+        mCompositorVsyncObserver->NeedsComposite()))) {
+    AutoResolveRefLayers resolve(mCompositionManager);
+    TimeStamp time = mIsTesting ? mTestTime : mLastCompose;
+    bool requestNextFrame =
+      mCompositionManager->TransformShadowTree(time);
+    if (!requestNextFrame) {
+      CancelCurrentCompositeTask();
+      // Pretend we composited in case someone is waiting for this event.
+      DidComposite();
+    }
+  }
 }
 
 bool
