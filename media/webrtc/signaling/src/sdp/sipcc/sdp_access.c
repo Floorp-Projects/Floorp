@@ -508,69 +508,6 @@ const char *sdp_get_encryption_key (sdp_t *sdp_p, uint16_t level)
     return (encrypt_p->encrypt_key);
 }
 
-/* Function:    sdp_set_encryption_method
- * Description: Sets the value of the encryption method param for the k=
- *              encryption token line.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the k= line.  Will be
- *                          either SDP_SESSION_LEVEL or 1-n specifying a
- *                          media line level.
- *              type        The encryption type.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_encryption_method (sdp_t *sdp_p, uint16_t level,
-                                        sdp_encrypt_type_e type)
-{
-    sdp_encryptspec_t   *encrypt_p;
-    sdp_mca_t           *mca_p;
-
-    if (level == SDP_SESSION_LEVEL) {
-        encrypt_p = &(sdp_p->encrypt);
-    } else {
-        mca_p = sdp_find_media_level(sdp_p, level);
-        if (mca_p == NULL) {
-            sdp_p->conf_p->num_invalid_param++;
-            return (SDP_INVALID_PARAMETER);
-        }
-        encrypt_p = &(mca_p->encrypt);
-    }
-
-    encrypt_p->encrypt_type = type;
-    return (SDP_SUCCESS);
-}
-
-/* Function:    sdp_set_encryption_key
- * Description: Sets the value of the encryption key parameter for the k=
- *              encryption token line.  The string is copied into the
- *              SDP structure so application memory will not be
- *              referenced by the SDP lib.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the k= line.  Will be
- *                          either SDP_SESSION_LEVEL or 1-n specifying a
- *                          media line level.
- *              key         Ptr to the encryption key string.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_encryption_key (sdp_t *sdp_p, uint16_t level, const char *key)
-{
-    sdp_encryptspec_t   *encrypt_p;
-    sdp_mca_t           *mca_p;
-
-    if (level == SDP_SESSION_LEVEL) {
-        encrypt_p = &(sdp_p->encrypt);
-    } else {
-        mca_p = sdp_find_media_level(sdp_p, level);
-        if (mca_p == NULL) {
-            sdp_p->conf_p->num_invalid_param++;
-            return (SDP_INVALID_PARAMETER);
-        }
-        encrypt_p = &(mca_p->encrypt);
-    }
-
-    sstrncpy(encrypt_p->encrypt_key, key, sizeof(encrypt_p->encrypt_key));
-    return (SDP_SUCCESS);
-}
-
 /* Function:    sdp_connection_valid
  * Description: Returns true or false depending on whether the connection c=
  *              token line has been defined for this SDP at the given level.
@@ -941,48 +878,6 @@ sdp_result_e sdp_set_conn_address (sdp_t *sdp_p, uint16_t level,
     sstrncpy(conn_p->conn_addr, address, sizeof(conn_p->conn_addr));
     return (SDP_SUCCESS);
 }
-
-/* Function:    sdp_set_mcast_addr_fields
- * Description: Sets the value of the ttl and num of addresses for
- *              a multicast address.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be
- *                          either SDP_SESSION_LEVEL or 1-n specifying a
- *                          media line level.
- *              ttl         Time to live (ttl) value.
- *              num_of_addresses number of addresses
- .
- * Returns:     SDP_SUCCESS
- */
-sdp_result_e sdp_set_mcast_addr_fields(sdp_t *sdp_p, uint16_t level,
-				       uint16_t ttl, uint16_t num_of_addresses)
-{
-    sdp_conn_t *conn_p;
-    sdp_mca_t  *mca_p;
-
-    if (level == SDP_SESSION_LEVEL) {
-        conn_p = &(sdp_p->default_conn);
-    } else {
-        mca_p = sdp_find_media_level(sdp_p, level);
-        if (mca_p == NULL) {
-            sdp_p->conf_p->num_invalid_param++;
-            return (SDP_INVALID_PARAMETER);
-        }
-        conn_p = &(mca_p->conn);
-    }
-
-    if (conn_p) {
-       conn_p->is_multicast = TRUE;
-       if ((conn_p->ttl >0) && (conn_p->ttl <= SDP_MAX_TTL_VALUE)) {
-          conn_p->ttl = ttl;
-       }
-       conn_p->num_of_addresses = num_of_addresses;
-    } else {
-       return (SDP_FAILURE);
-    }
-    return (SDP_SUCCESS);
-}
-
 
 /* Function:    sdp_media_line_valid
  * Description: Returns true or false depending on whether the specified
@@ -1705,32 +1600,6 @@ sdp_result_e sdp_set_media_type (sdp_t *sdp_p, uint16_t level, sdp_media_e media
     return (SDP_SUCCESS);
 }
 
-/* Function:    sdp_set_media_port_format
- * Description: Sets the value of the port format parameter for the m=
- *              media token line.  Note that this parameter must be set
- *              before any of the port type specific parameters.  If a
- *              parameter is not valid according to the port format
- *              specified, an attempt to set the parameter will fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              port_format Media type for the media line.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_port_format (sdp_t *sdp_p, uint16_t level,
-                                        sdp_port_format_e port_format)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->port_format = port_format;
-    return (SDP_SUCCESS);
-}
-
 /* Function:    sdp_set_media_portnum
  * Description: Sets the value of the port number parameter for the m=
  *              media token line.  If the port number is not valid with the
@@ -1775,127 +1644,6 @@ int32_t sdp_get_media_sctp_port(sdp_t *sdp_p, uint16_t level)
     }
 
     return mca_p->sctpport;
-}
-
-/* Function:    sdp_set_media_portcount
- * Description: Sets the value of the port count parameter for the m=
- *              media token line.  If the port count is not valid with the
- *              port format specified for the media line, this call will
- *              fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              num_ports   Port count to set.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_portcount (sdp_t *sdp_p, uint16_t level,
-                                      int32_t num_ports)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->num_ports = num_ports;
-    return (SDP_SUCCESS);
-}
-
-/* Function:    sdp_set_media_vpi
- * Description: Sets the value of the VPI parameter for the m=
- *              media token line.  If the VPI is not valid with the
- *              port format specified for the media line, this call will
- *              fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              vpi         The VPI value to set.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_vpi (sdp_t *sdp_p, uint16_t level, int32_t vpi)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->vpi = vpi;
-    return (SDP_SUCCESS);
-}
-
-/* Function:    sdp_set_media_vci
- * Description: Sets the value of the VCI parameter for the m=
- *              media token line.  If the VCI is not valid with the
- *              port format specified for the media line, this call will
- *              fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              vci         The VCI value to set.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_vci (sdp_t *sdp_p, uint16_t level, uint32_t vci)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->vci = vci;
-    return (SDP_SUCCESS);
-}
-
-/* Function:    sdp_set_media_vcci
- * Description: Sets the value of the VCCI parameter for the m=
- *              media token line.  If the VCCI is not valid with the
- *              port format specified for the media line, this call will
- *              fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              vcci        The VCCI value to set.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_vcci (sdp_t *sdp_p, uint16_t level, int32_t vcci)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->vcci = vcci;
-    return (SDP_SUCCESS);
-}
-
-/* Function:    sdp_set_media_cid
- * Description: Sets the value of the CID parameter for the m=
- *              media token line.  If the CID is not valid with the
- *              port format specified for the media line, this call will
- *              fail.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to set the param.  Will be 1-n.
- *              cid         The CID value to set.
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
- */
-sdp_result_e sdp_set_media_cid (sdp_t *sdp_p, uint16_t level, int32_t cid)
-{
-    sdp_mca_t  *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    mca_p->cid = cid;
-    return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_set_media_transport
@@ -2422,52 +2170,6 @@ sdp_result_e sdp_delete_bw_line (sdp_t *sdp_p, uint16_t level, uint16_t inst_num
     return (SDP_SUCCESS);
 }
 
-/*
- * sdp_set_bw
- *
- * Once a bandwidth line is added under a level, this function can be used to
- * set the properties of that bandwidth line.
- *
- * Parameters:
- * sdp_p     The SDP handle returned by sdp_init_description.
- * level       The level to at which the bw line resides.
- * inst_num    The instance number of the bw line that is to be set.
- * bw_modifier The Type of bandwidth, CT, AS or TIAS.
- * bw_val      Numerical bandwidth value.
- *
- * NOTE: Before calling this function to set the bw line, the bw line must
- * be added using sdp_add_new_bw_line at the required level.
- */
-sdp_result_e sdp_set_bw (sdp_t *sdp_p, uint16_t level, uint16_t inst_num,
-                         sdp_bw_modifier_e bw_modifier, uint32_t bw_val)
-{
-    sdp_bw_data_t       *bw_data_p;
-
-    if ((bw_modifier < SDP_BW_MODIFIER_AS) ||
-        (bw_modifier >= SDP_MAX_BW_MODIFIER_VAL)) {
-        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s Invalid bw modifier type: %d.",
-                      sdp_p->debug_str, bw_modifier);
-        }
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
-    if (bw_data_p == NULL) {
-        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s The %u instance of a b= line was not found at level %u.",
-                      sdp_p->debug_str, (unsigned)inst_num, (unsigned)level);
-        }
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-    bw_data_p->bw_modifier = bw_modifier;
-    bw_data_p->bw_val = bw_val;
-
-    return (SDP_SUCCESS);
-}
-
 /* Function:    sdp_get_mid_value
  * Description: Returns the mid value parameter from the a= mid: line.
  * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
@@ -2486,23 +2188,3 @@ int32_t sdp_get_mid_value (sdp_t *sdp_p, uint16_t level)
     return (mca_p->mid);
 }
 
-/* Function:    sdp_set_mid_value
- * Description: Sets the value of the mid value for the
- *              a= mid:<val> line.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       SDP_MEDIA_LEVEL
- *              mid_val     mid value .
- * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
-*/
-sdp_result_e sdp_set_mid_value (sdp_t *sdp_p, uint16_t level, uint32_t mid_val)
-{
-    sdp_mca_t           *mca_p;
-
-    mca_p = sdp_find_media_level(sdp_p, level);
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-    mca_p->mid = mid_val;
-    return (SDP_SUCCESS);
-}
