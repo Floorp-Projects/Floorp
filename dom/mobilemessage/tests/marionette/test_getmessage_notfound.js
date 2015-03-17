@@ -13,10 +13,9 @@ function getNonExistentMsg(aId) {
   return getMessage(aId)
     .then(function onresolve() {
       ok(false, "request succeeded when tried to get non-existent sms");
-    }, function onreject(aEvent) {
-      let error = aEvent.target.error;
-      ok(error, "DOMError");
-      is(error.name, "NotFoundError", "error.name");
+    }, function onreject(aError) {
+      ok(aError, "DOMError");
+      is(aError.name, "NotFoundError", "error.name");
     });
 }
 
@@ -27,10 +26,9 @@ function getMsgInvalidId(aId) {
     .then(function onresolve() {
       ok(false, "request succeeded when tried to get message with " +
                 "invalid id (id: " + aId + ").");
-    }, function onreject(aEvent) {
-      let error = aEvent.target.error;
-      ok(error, "DOMError");
-      is(error.name, "NotFoundError", "error.name");
+    }, function onreject(aError) {
+      ok(aError, "DOMError");
+      is(aError.name, "NotFoundError", "error.name");
     });
 }
 
