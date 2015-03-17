@@ -66,6 +66,12 @@ class InterceptedChannelChrome : public InterceptedChannelBase
 
   // Writeable cache entry for use when synthesizing a response in a parent process
   nsCOMPtr<nsICacheEntry> mSynthesizedCacheEntry;
+
+  // When a channel is intercepted, content decoding is disabled since the
+  // ServiceWorker will have already extracted the decoded data. For parent
+  // process channels we need to preserve the earlier value in case
+  // ResetInterception is called.
+  bool mOldApplyConversion;
 public:
   InterceptedChannelChrome(nsHttpChannel* aChannel,
                            nsINetworkInterceptController* aController,
