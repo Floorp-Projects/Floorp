@@ -43,7 +43,7 @@ nsresult AndroidMediaReader::Init(MediaDecoderReader* aCloneDonor)
 nsresult AndroidMediaReader::ReadMetadata(MediaInfo* aInfo,
                                           MetadataTags** aTags)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   if (!mPlugin) {
     mPlugin = GetAndroidMediaPluginHost()->CreateDecoder(mDecoder->GetResource(), mType);
@@ -289,7 +289,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
 bool AndroidMediaReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   // This is the approximate byte position in the stream.
   int64_t pos = mDecoder->GetResource()->Tell();
@@ -322,7 +322,7 @@ bool AndroidMediaReader::DecodeAudioData()
 nsRefPtr<MediaDecoderReader::SeekPromise>
 AndroidMediaReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   if (mHasAudio && mHasVideo) {
     // The decoder seeks/demuxes audio and video streams separately. So if
