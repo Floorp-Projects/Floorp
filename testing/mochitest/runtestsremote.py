@@ -801,8 +801,7 @@ def main(args):
             tests.append(test['name'])
 
         if options.totalChunks:
-            tests_per_chunk = math.ceil(
-                len(tests) / (options.totalChunks * 1.0))
+            tests_per_chunk = float(len(tests)) / options.totalChunks
             start = int(round((options.thisChunk - 1) * tests_per_chunk))
             end = int(round(options.thisChunk * tests_per_chunk))
             if end > len(tests):
