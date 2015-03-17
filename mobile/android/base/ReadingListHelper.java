@@ -227,7 +227,6 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 readingListAccessor.removeReadingListItemWithURL(context.getContentResolver(), url);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", url));
                 showToast(R.string.page_removed, Toast.LENGTH_SHORT);
             }
         });
