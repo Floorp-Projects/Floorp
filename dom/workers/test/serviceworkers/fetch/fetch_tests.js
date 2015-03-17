@@ -137,3 +137,33 @@ fetch('http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?statu
   my_ok(false, "no-cors Fetch failed");
   finish();
 });
+
+expectAsyncResult();
+fetch('opaque-on-same-origin')
+.then(function(res) {
+  my_ok(false, "intercepted opaque response for non no-cors request should fail.");
+  finish();
+}, function(e) {
+  my_ok(true, "intercepted opaque response for non no-cors request should fail.");
+  finish();
+});
+
+expectAsyncResult();
+fetch('http://example.com/opaque-no-cors', { mode: "no-cors" })
+.then(function(res) {
+  my_ok(res.type == "opaque", "intercepted opaque response for no-cors request should have type opaque.");
+  finish();
+}, function(e) {
+  my_ok(false, "intercepted opaque response for no-cors request should pass.");
+  finish();
+});
+
+expectAsyncResult();
+fetch('http://example.com/cors-for-no-cors', { mode: "no-cors" })
+.then(function(res) {
+  my_ok(res.type == "opaque", "intercepted non-opaque response for no-cors request should resolve to opaque response.");
+  finish();
+}, function(e) {
+  my_ok(false, "intercepted non-opaque response for no-cors request should resolve to opaque response. It should not fail.");
+  finish();
+});
