@@ -1488,12 +1488,6 @@ RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
     return NS_OK;
   }
 
-  // Create a decoder.
-  nsRefPtr<Decoder> decoder = CreateDecoder(aSize, aFlags);
-  if (!decoder) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (mDownscaleDuringDecode && aSize) {
     // We're about to decode again, which may mean that some of the previous
     // sizes we've decoded at aren't useful anymore. We can allow them to
@@ -1503,6 +1497,12 @@ RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
     // will become locked again when LookupFrame touches them, and the remainder
     // will eventually expire.
     SurfaceCache::UnlockSurfaces(ImageKey(this));
+  }
+
+  // Create a decoder.
+  nsRefPtr<Decoder> decoder = CreateDecoder(aSize, aFlags);
+  if (!decoder) {
+    return NS_ERROR_FAILURE;
   }
 
   if (aSize) {
