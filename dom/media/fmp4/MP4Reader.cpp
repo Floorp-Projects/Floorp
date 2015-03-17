@@ -248,10 +248,10 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 
   InitLayersBackendType();
 
-  mAudio.mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
+  mAudio.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
   NS_ENSURE_TRUE(mAudio.mTaskQueue, NS_ERROR_FAILURE);
 
-  mVideo.mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
+  mVideo.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
   NS_ENSURE_TRUE(mVideo.mTaskQueue, NS_ERROR_FAILURE);
 
   static bool sSetupPrefCache = false;
