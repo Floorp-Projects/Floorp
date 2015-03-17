@@ -1413,13 +1413,11 @@ TabActor.prototype = {
 
     // TODO bug 997119: move that code to ThreadActor by listening to window-ready
     let threadActor = this.threadActor;
-    if (isTopLevel) {
+    if (isTopLevel && threadActor.state != "detached") {
       this.sources.reset({ sourceMaps: true });
       threadActor.clearDebuggees();
-      if (threadActor.dbg) {
-        threadActor.dbg.enabled = true;
-        threadActor.maybePauseOnExceptions();
-      }
+      threadActor.dbg.enabled = true;
+      threadActor.maybePauseOnExceptions();
       // Update the global no matter if the debugger is on or off,
       // otherwise the global will be wrong when enabled later.
       threadActor.global = window;
