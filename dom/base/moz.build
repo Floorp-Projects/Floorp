@@ -74,6 +74,7 @@ EXPORTS += [
     'nsDOMNavigationTiming.h',
     'nsDOMString.h',
     'nsFocusManager.h',
+    'nsFormData.h',
     'nsFrameMessageManager.h',
     'nsGenericDOMDataNode.h',
     'nsGkAtomList.h',
