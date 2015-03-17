@@ -58,7 +58,7 @@ public:
 };
 
 SharedDecoderManager::SharedDecoderManager()
-  : mTaskQueue(new FlushableMediaTaskQueue(GetMediaDecodeThreadPool()))
+  : mTaskQueue(new FlushableMediaTaskQueue(GetMediaThreadPool()))
   , mActiveProxy(nullptr)
   , mActiveCallback(nullptr)
   , mWaitForInternalDrain(false)
