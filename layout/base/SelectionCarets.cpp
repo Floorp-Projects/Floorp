@@ -783,6 +783,9 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  // Clear maintain selection so that we can drag caret freely.
+  fs->MaintainSelection(eSelectNoAmount);
+
   // Move caret postion.
   nsIFrame *scrollable =
     nsLayoutUtils::GetClosestFrameOfType(anchorFrame, nsGkAtoms::scrollFrame);
