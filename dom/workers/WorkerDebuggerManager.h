@@ -41,15 +41,17 @@ public:
   static WorkerDebuggerManager*
   GetOrCreateService()
   {
-    nsCOMPtr<nsIWorkerDebuggerManager> wdm =
+    nsCOMPtr<nsIWorkerDebuggerManager> manager =
       do_GetService(WORKERDEBUGGERMANAGER_CONTRACTID);
-    return static_cast<WorkerDebuggerManager*>(wdm.get());
+    return static_cast<WorkerDebuggerManager*>(manager.get());
   }
 
   WorkerDebuggerManager();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGERMANAGER
+
+  void ClearListeners();
 
   void RegisterDebugger(WorkerDebugger* aDebugger);
 
@@ -63,6 +65,19 @@ private:
 
   void UnregisterDebuggerOnMainThread(WorkerDebugger* aDebugger);
 };
+
+inline nsresult
+ClearWorkerDebuggerManagerListeners()
+{
+  nsRefPtr<WorkerDebuggerManager> manager =
+    WorkerDebuggerManager::GetOrCreateService();
+  if (!manager) {
+    return NS_ERROR_FAILURE;
+  }
+
+  manager->ClearListeners();
+  return NS_OK;
+}
 
 inline nsresult
 RegisterWorkerDebugger(WorkerDebugger* aDebugger)

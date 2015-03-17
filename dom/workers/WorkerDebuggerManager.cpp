@@ -142,6 +142,16 @@ WorkerDebuggerManager::RemoveListener(
 }
 
 void
+WorkerDebuggerManager::ClearListeners()
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mMutex);
+
+  mListeners.Clear();
+}
+
+void
 WorkerDebuggerManager::RegisterDebugger(WorkerDebugger* aDebugger)
 {
   // May be called on any thread!

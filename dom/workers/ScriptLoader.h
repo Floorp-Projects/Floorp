@@ -29,6 +29,11 @@ class Sequence;
 
 BEGIN_WORKERS_NAMESPACE
 
+enum WorkerScriptType {
+  WorkerScript,
+  DebuggerScript
+};
+
 namespace scriptloader {
 
 nsresult
@@ -48,7 +53,8 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
 void ReportLoadError(JSContext* aCx, const nsAString& aURL,
                      nsresult aLoadResult, bool aIsMainThread);
 
-bool LoadWorkerScript(JSContext* aCx);
+bool LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
+                    WorkerScriptType aWorkerScriptType);
 
 void Load(JSContext* aCx,
           WorkerPrivate* aWorkerPrivate,

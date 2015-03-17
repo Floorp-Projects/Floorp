@@ -729,6 +729,7 @@ class WorkerDebugger : public nsIWorkerDebugger {
   bool mIsEnabled;
 
   // Only touched on the main thread.
+  bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
 public:
