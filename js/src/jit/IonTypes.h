@@ -111,9 +111,6 @@ enum BailoutKind
     // We hit a |debugger;| statement.
     Bailout_Debugger,
 
-    // When we're trying to use an uninitialized lexical.
-    Bailout_UninitializedLexical,
-
     // END Normal bailouts
 
 
@@ -149,6 +146,9 @@ enum BailoutKind
     // (We saw an object whose shape does not match that / any of those observed
     // by the baseline IC.)
     Bailout_ShapeGuard,
+
+    // When we're trying to use an uninitialized lexical.
+    Bailout_UninitializedLexical,
 
     // A bailout to baseline from Ion on exception to handle Debugger hooks.
     Bailout_IonExceptionDebugMode,
@@ -209,8 +209,6 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_InitialState";
       case Bailout_Debugger:
         return "Bailout_Debugger";
-      case Bailout_UninitializedLexical:
-        return "Bailout_UninitializedLexical";
 
       // Bailouts caused by invalid assumptions.
       case Bailout_OverflowInvalidate:
@@ -229,6 +227,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_Neutered";
       case Bailout_ShapeGuard:
         return "Bailout_ShapeGuard";
+      case Bailout_UninitializedLexical:
+        return "Bailout_UninitializedLexical";
       case Bailout_IonExceptionDebugMode:
         return "Bailout_IonExceptionDebugMode";
       default:
