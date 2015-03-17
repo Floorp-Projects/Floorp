@@ -580,42 +580,8 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_generated_files(context):
             yield obj
 
-        test_harness_files = context.get('TEST_HARNESS_FILES')
-        if test_harness_files:
-            srcdir_files = defaultdict(list)
-            srcdir_pattern_files = defaultdict(list)
-            objdir_files = defaultdict(list)
-
-            for path, strings in test_harness_files.walk():
-                if not path and strings:
-                    raise SandboxValidationError(
-                        'Cannot install files to the root of TEST_HARNESS_FILES', context)
-
-                for s in strings:
-                    if context.is_objdir_path(s):
-                        if s.startswith('!/'):
-                            objdir_files[path].append('$(DEPTH)/%s' % s[2:])
-                        else:
-                            objdir_files[path].append(s[1:])
-                    else:
-                        resolved = context.resolve_path(s)
-                        if '*' in s:
-                            if s[0] == '/':
-                                pattern_start = resolved.index('*')
-                                base_path = mozpath.dirname(resolved[:pattern_start])
-                                pattern = resolved[len(base_path)+1:]
-                            else:
-                                base_path = context.srcdir
-                                pattern = s
-                            srcdir_pattern_files[path].append((base_path, pattern));
-                        elif not os.path.exists(resolved):
-                            raise SandboxValidationError(
-                                'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
-                        else:
-                            srcdir_files[path].append(resolved)
-
-            yield TestHarnessFiles(context, srcdir_files,
-                                   srcdir_pattern_files, objdir_files)
+        for obj in self._process_test_harness_files(context):
+            yield obj
 
         defines = context.get('DEFINES')
         if defines:
@@ -843,6 +809,46 @@ class TreeMetadataEmitter(LoggingMixin):
                 method = None
                 inputs = []
             yield GeneratedFile(context, script, method, output, inputs)
+
+    def _process_test_harness_files(self, context):
+        test_harness_files = context.get('TEST_HARNESS_FILES')
+        if not test_harness_files:
+            return
+
+        srcdir_files = defaultdict(list)
+        srcdir_pattern_files = defaultdict(list)
+        objdir_files = defaultdict(list)
+
+        for path, strings in test_harness_files.walk():
+            if not path and strings:
+                raise SandboxValidationError(
+                    'Cannot install files to the root of TEST_HARNESS_FILES', context)
+
+            for s in strings:
+                if context.is_objdir_path(s):
+                    if s.startswith('!/'):
+                        objdir_files[path].append('$(DEPTH)/%s' % s[2:])
+                    else:
+                        objdir_files[path].append(s[1:])
+                else:
+                    resolved = context.resolve_path(s)
+                    if '*' in s:
+                        if s[0] == '/':
+                            pattern_start = resolved.index('*')
+                            base_path = mozpath.dirname(resolved[:pattern_start])
+                            pattern = resolved[len(base_path)+1:]
+                        else:
+                            base_path = context.srcdir
+                            pattern = s
+                        srcdir_pattern_files[path].append((base_path, pattern));
+                    elif not os.path.exists(resolved):
+                        raise SandboxValidationError(
+                            'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
+                    else:
+                        srcdir_files[path].append(resolved)
+
+        yield TestHarnessFiles(context, srcdir_files,
+                               srcdir_pattern_files, objdir_files)
 
     def _handle_programs(self, context):
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
