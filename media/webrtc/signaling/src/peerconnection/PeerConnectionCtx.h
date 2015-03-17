@@ -94,7 +94,7 @@ private:
   // ready to go, since blocking on this init is just begging for deadlock.
   nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
   bool mGMPReady;
-  nsTArray<nsRefPtr<nsIRunnable>> mQueuedJSEPOperations;
+  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedJSEPOperations;
 
   static PeerConnectionCtx *gInstance;
 public:

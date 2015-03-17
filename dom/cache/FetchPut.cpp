@@ -162,7 +162,7 @@ FetchPut::DispatchToMainThread()
 {
   MOZ_ASSERT(!mRunnable);
 
-  nsRefPtr<nsIRunnable> runnable = new Runnable(this);
+  nsCOMPtr<nsIRunnable> runnable = new Runnable(this);
 
   nsresult rv = NS_DispatchToMainThread(runnable, nsIThread::DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {

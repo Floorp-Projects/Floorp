@@ -550,7 +550,7 @@ nsThread::DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
   }
 
 #ifdef MOZ_TASK_TRACER
-  nsRefPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(aEvent);
+  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(aEvent);
   aEvent = tracedRunnable;
 #endif
 

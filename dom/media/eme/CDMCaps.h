@@ -109,7 +109,7 @@ private:
 
   nsTArray<WaitForKeys> mWaitForKeys;
 
-  nsTArray<nsRefPtr<nsIRunnable>> mWaitForCaps;
+  nsTArray<nsCOMPtr<nsIRunnable>> mWaitForCaps;
   uint64_t mCaps;
 
   // It is not safe to copy this object.

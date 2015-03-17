@@ -2234,7 +2234,7 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
       NS_DispatchToCurrentThread(mRunnable);
     }
   private:
-    nsRefPtr<nsIRunnable> mRunnable;
+    nsCOMPtr<nsIRunnable> mRunnable;
   };
 
   graph->AppendMessage(new Message(this, runnable.forget()));

@@ -48,7 +48,7 @@ NS_ProxyRelease(nsIEventTarget* aTarget, nsISupports* aDoomed,
     }
   }
 
-  nsRefPtr<nsIRunnable> ev = new nsProxyReleaseEvent(aDoomed);
+  nsCOMPtr<nsIRunnable> ev = new nsProxyReleaseEvent(aDoomed);
   if (!ev) {
     // we do not release aDoomed here since it may cause a delete on the
     // wrong thread.  better to leak than crash.

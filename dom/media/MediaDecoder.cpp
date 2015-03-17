@@ -368,7 +368,7 @@ public:
       MediaStreamGraph* aGraph,
       MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE {
     if (event == EVENT_FINISHED) {
-      nsRefPtr<nsIRunnable> r = NS_NewRunnableMethod(
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
           this, &OutputStreamListener::DoNotifyFinished);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(r.forget());
     }
