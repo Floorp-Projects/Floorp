@@ -213,15 +213,18 @@ function* check_autocomplete(test) {
   }
 }
 
-function addBookmark(aBookmarkObj) {
+let addBookmark = Task.async(function* (aBookmarkObj) {
   Assert.ok(!!aBookmarkObj.uri, "Bookmark object contains an uri");
   let parentId = aBookmarkObj.parentId ? aBookmarkObj.parentId
                                        : PlacesUtils.unfiledBookmarksFolderId;
-  let itemId = PlacesUtils.bookmarks
-                          .insertBookmark(parentId,
-                                          aBookmarkObj.uri,
-                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                          aBookmarkObj.title || "A bookmark");
+
+  let bm = yield PlacesUtils.bookmarks.insert({
+    parentGuid: (yield PlacesUtils.promiseItemGuid(parentId)),
+    title: aBookmarkObj.title || "A bookmark",
+    url: aBookmarkObj.uri
+  });
+  let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+
   if (aBookmarkObj.keyword) {
     PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aBookmarkObj.keyword);
   }
@@ -229,7 +232,7 @@ function addBookmark(aBookmarkObj) {
   if (aBookmarkObj.tags) {
     PlacesUtils.tagging.tagURI(aBookmarkObj.uri, aBookmarkObj.tags);
   }
-}
+});
 
 function addOpenPages(aUri, aCount=1) {
   let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]

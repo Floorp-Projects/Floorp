@@ -25,7 +25,7 @@ interface nsIRilNetworkInterface : nsINetworkInterface
 interface nsIRilContext : nsISupports
 {
   /**
-   * One of the nsIIccProvider.CARD_STATE_* values.
+   * One of the nsIIcc.CARD_STATE_* values.
    */
   readonly attribute unsigned long cardState;
 
@@ -78,4 +78,14 @@ interface nsIRadioInterfaceLayer : nsISupports
   unsigned long getClientIdForEmergencyCall();
 
   void setMicrophoneMuted(in boolean muted);
+};
+
+
+/**
+ * Helper Interface to define new APIs of nsIRadioInterfaceLayer during
+ * ril-interfaces frozen phase.
+ */
+[scriptable, uuid(f8ec63da-c22e-11e4-89f3-b767dae42a13)]
+interface nsIRadioInterfaceLayer_new : nsIRadioInterfaceLayer
+{
 };

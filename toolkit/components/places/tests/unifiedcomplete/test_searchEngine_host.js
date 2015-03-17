@@ -51,7 +51,7 @@ add_task(function* test_searchEngine_autoFill() {
     visits.push({ uri , title: "Terms - SearchEngine Search" });
   }
   yield PlacesTestUtils.addVisits(visits);
-  addBookmark({ uri: uri, title: "Example bookmark" });
+  yield addBookmark({ uri: uri, title: "Example bookmark" });
   yield PlacesTestUtils.promiseAsyncUpdates();
   ok(frecencyForUrl(uri) > 10000, "Added URI should have expected high frecency");
 

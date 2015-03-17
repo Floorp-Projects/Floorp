@@ -21,9 +21,9 @@ Cu.import("resource://gre/modules/Task.jsm");
 let Path = OS.Path;
 
 #ifdef MOZ_B2G_RIL
-XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
-                                   "@mozilla.org/ril/content-helper;1",
-                                   "nsIIccProvider");
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
 #endif
 
 function debug(aMsg) {
@@ -69,17 +69,18 @@ let iccListener = {
 
   notifyIccInfoChanged: function() {
     // TODO: Bug 927709 - OperatorApps for multi-sim
-    // In Multi-sim, there is more than one client in iccProvider. Each
-    // client represents a icc service. To maintain the backward compatibility
+    // In Multi-sim, there is more than one client in IccService. Each
+    // client represents a icc handle. To maintain the backward compatibility
     // with single sim, we always use client 0 for now. Adding support for
     // multiple sim will be addressed in bug 927709, if needed.
     let clientId = 0;
-    let iccInfo = iccProvider.getIccInfo(clientId);
+    let icc = gIccService.getIccByServiceId(clientId);
+    let iccInfo = icc && icc.iccInfo;
     if (iccInfo && iccInfo.mcc && iccInfo.mnc) {
       let mcc = iccInfo.mcc;
       let mnc = iccInfo.mnc;
       debug("******* iccListener cardIccInfo MCC-MNC: " + mcc + "-" + mnc);
-      iccProvider.unregisterIccMsg(clientId, this);
+      icc.unregisterListener(this);
       OperatorAppsRegistry._installOperatorApps(mcc, mnc);
 
       debug("Broadcast message first-run-with-sim");
@@ -105,13 +106,14 @@ this.OperatorAppsRegistry = {
         try {
           yield this._initializeSourceDir();
           // TODO: Bug 927709 - OperatorApps for multi-sim
-          // In Multi-sim, there is more than one client in iccProvider. Each
-          // client represents a icc service. To maintain the backward
+          // In Multi-sim, there is more than one client in IccService. Each
+          // client represents a icc handle. To maintain the backward
           // compatibility with single sim, we always use client 0 for now.
           // Adding support for multiple sim will be addressed in bug 927709, if
           // needed.
           let clientId = 0;
-          let iccInfo = iccProvider.getIccInfo(clientId);
+          let icc = gIccService.getIccByServiceId(clientId);
+          let iccInfo = icc && icc.iccInfo;
           let mcc = 0;
           let mnc = 0;
           if (iccInfo && iccInfo.mcc) {
@@ -128,7 +130,7 @@ this.OperatorAppsRegistry = {
                                                                mnc: mnc });
 
           } else {
-            iccProvider.registerIccMsg(clientId, iccListener);
+            icc.registerListener(iccListener);
           }
         } catch (e) {
           debug("Error Initializing OperatorApps. " + e);

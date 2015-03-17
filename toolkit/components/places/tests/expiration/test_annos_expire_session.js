@@ -10,8 +10,6 @@
  * Session annotations should be expired when browsing session ends.
  */
 
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 let as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
@@ -35,8 +33,12 @@ add_task(function test_annos_expire_session() {
   // Add some bookmarked page and a couple session annotations for each.
   for (let i = 0; i < 10; i++) {
     let pageURI = uri("http://session_item_anno." + i + ".mozilla.org/");
-    let id = bs.insertBookmark(bs.unfiledBookmarksFolder, pageURI,
-                               bs.DEFAULT_INDEX, null);
+    let bm = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: pageURI,
+      title: null
+    });
+    let id = yield PlacesUtils.promiseItemId(bm.guid);
     as.setItemAnnotation(id, "test1", "test", 0, as.EXPIRE_SESSION);
     as.setItemAnnotation(id, "test2", "test", 0, as.EXPIRE_SESSION);
   }

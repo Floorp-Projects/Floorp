@@ -74,7 +74,7 @@ add_task(function* test_respect_www() {
 add_task(function* test_bookmark_first() {
   do_print("With a bookmark and history, the query result should be the bookmark");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
-  addBookmark({ uri: NetUtil.newURI("http://bookmark1.mozilla.org/") });
+  yield addBookmark({ uri: NetUtil.newURI("http://bookmark1.mozilla.org/") });
   yield PlacesTestUtils.addVisits(NetUtil.newURI("http://bookmark1.mozilla.org/foo"));
   yield check_autocomplete({
     search: "bookmark",
