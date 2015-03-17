@@ -1578,7 +1578,7 @@ void MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 
 bool MediaDecoder::OnDecodeThread() const {
   NS_WARN_IF_FALSE(mDecoderStateMachine, "mDecoderStateMachine is null");
-  return mDecoderStateMachine ? mDecoderStateMachine->OnDecodeThread() : false;
+  return mDecoderStateMachine ? mDecoderStateMachine->OnDecodeTaskQueue() : false;
 }
 
 ReentrantMonitor& MediaDecoder::GetReentrantMonitor() {

@@ -202,7 +202,7 @@ public:
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
-  bool OnDecodeThread() const;
+  bool OnDecodeTaskQueue() const;
   bool OnTaskQueue() const;
 
   MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
