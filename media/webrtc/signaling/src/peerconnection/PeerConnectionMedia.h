@@ -422,7 +422,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                               const std::vector<std::string>& aCandidateList);
   void GatherIfReady();
   void FlushIceCtxOperationQueueIfReady();
-  void PerformOrEnqueueIceCtxOperation(const nsRefPtr<nsIRunnable>& runnable);
+  void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
   void EnsureIceGathering_s();
   void StartIceChecks_s(bool aIsControlling,
                         bool aIsIceLite,
