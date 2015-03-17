@@ -490,7 +490,7 @@ let AboutReaderListener = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Reader:ParseDocument":
-        this._articlePromise = ReaderMode.parseDocument(content.document);
+        this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
         content.document.location = "about:reader?url=" + encodeURIComponent(message.data.url);
         break;
     }
