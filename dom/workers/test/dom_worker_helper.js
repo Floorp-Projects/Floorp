@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
             getService(Ci.nsIWorkerDebuggerManager);
 
+const BASE_URL = "chrome://mochitests/content/chrome/dom/workers/test/";
+
 var gRemainingTests = 0;
 
 function waitForWorkerFinish() {
@@ -47,50 +49,54 @@ function* generateDebuggers() {
   }
 }
 
-function findDebugger(predicate) {
+function findDebugger(url) {
   for (let dbg of generateDebuggers()) {
-    if (predicate(dbg)) {
+    if (dbg.url === url) {
       return dbg;
     }
   }
   return null;
 }
 
-function waitForRegister(predicate = () => true) {
+function waitForRegister(url, dbgUrl) {
   return new Promise(function (resolve) {
     wdm.addListener({
       onRegister: function (dbg) {
-        if (!predicate(dbg)) {
+        if (dbg.url !== url) {
           return;
         }
+        ok(true, "Debugger with url " + url + " should be registered.");
         wdm.removeListener(this);
+        if (dbgUrl) {
+          info("Initializing worker debugger with url " + url + ".");
+          dbg.initialize(dbgUrl);
+        }
         resolve(dbg);
       }
     });
   });
 }
 
-function waitForUnregister(predicate = () => true) {
+function waitForUnregister(url) {
   return new Promise(function (resolve) {
     wdm.addListener({
       onUnregister: function (dbg) {
-        if (!predicate(dbg)) {
+        if (dbg.url !== url) {
           return;
         }
+        ok(true, "Debugger with url " + url + " should be unregistered.");
         wdm.removeListener(this);
-        resolve(dbg);
+        resolve();
       }
     });
   });
 }
 
-function waitForDebuggerClose(dbg, predicate = () => true) {
+function waitForDebuggerClose(dbg) {
   return new Promise(function (resolve) {
     dbg.addListener({
       onClose: function () {
-        if (!predicate()) {
-          return;
-        }
+        ok(true, "Debugger should be closed.");
         dbg.removeListener(this);
         resolve();
       }
@@ -98,17 +104,31 @@ function waitForDebuggerClose(dbg, predicate = () => true) {
   });
 }
 
+function waitForWorkerMessage(worker, message) {
+  return new Promise(function (resolve) {
+    worker.addEventListener("message", function onmessage(event) {
+      if (event.data !== message) {
+        return;
+      }
+      ok(true, "Should receive " + message + " message from worker.");
+      worker.removeEventListener("message", onmessage);
+      resolve();
+    });
+  });
+}
+
 function waitForMultiple(promises) {
   return new Promise(function (resolve) {
-    let results = [];
+    let values = [];
     for (let i = 0; i < promises.length; ++i) {
-      let promise = promises[i];
       let index = i;
-      promise.then(function (result) {
-        is(results.length, index, "events should occur in the specified order");
-        results.push(result);
-        if (results.length === promises.length) {
-          resolve(results);
+      promises[i].then(function (value) {
+        is(index + 1, values.length + 1,
+           "Promise " + (values.length + 1) + " out of " + promises.length +
+           " should be resolved.");
+        values.push(value);
+        if (values.length === promises.length) {
+          resolve(values);
         }
       });
     }

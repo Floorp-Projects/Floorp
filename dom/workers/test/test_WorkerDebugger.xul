@@ -16,7 +16,7 @@
   <script type="application/javascript">
   <![CDATA[
 
-    const PARENT_WORKER_URL = "WorkerDebugger_parentWorker.js";
+    const WORKER_URL = "WorkerDebugger_worker.js";
     const CHILD_WORKER_URL = "WorkerDebugger_childWorker.js";
     const SHARED_WORKER_URL = "WorkerDebugger_sharedWorker.js";
 
@@ -24,65 +24,89 @@
       Task.spawn(function* () {
         SimpleTest.waitForExplicitFinish();
 
+        info("Create a top-level chrome worker that creates a non-top-level " +
+             "content worker and wait for their debuggers to be registered.");
         let promise = waitForMultiple([
-          waitForRegister((dbg) => dbg.url === PARENT_WORKER_URL),
-          waitForRegister((dbg) => dbg.url === CHILD_WORKER_URL),
+          waitForRegister(WORKER_URL),
+          waitForRegister(CHILD_WORKER_URL)
         ]);
-        worker = new ChromeWorker(PARENT_WORKER_URL);
-        let dbgs = yield promise;
-        is(dbgs[0].isChrome, true, "debugger should be for chrome worker");
-        is(dbgs[0].parent, null,
-           "debugger for a top-level worker should not have parent");
-        is(dbgs[0].type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
-           "debugger should be for dedicated worker");
-        is(dbgs[0].window, window,
-           "debugger for top-level dedicated worker should have window");
-        is(dbgs[1].isChrome, false, "debugger should be for content worker");
-        is(dbgs[1].parent, dbgs[0],
-           "debugger for child worker should have parent");
-        is(dbgs[1].type, Ci.nsIWorkerDebugger.TYPE_DEDICATED);
-        is(dbgs[1].window, null,
-           "debugger for non-top-level worker should not have window");
+        worker = new ChromeWorker(WORKER_URL);
+        let [dbg, childDbg] = yield promise;
 
+        info("Check that the top-level chrome worker debugger has the " +
+             "correct properties.");
+        is(dbg.isChrome, true,
+           "Chrome worker debugger should be chrome.");
+        is(dbg.parent, null,
+           "Top-level debugger should not have parent.");
+        is(dbg.type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
+           "Chrome worker debugger should be dedicated.");
+        is(dbg.window, window,
+           "Top-level dedicated worker debugger should have window.");
+
+        info("Check that the non-top-level content worker debugger has the " +
+             "correct properties.");
+        is(childDbg.isChrome, false,
+           "Content worker debugger should be content.");
+        is(childDbg.parent, dbg,
+           "Non-top-level worker debugger should have parent.");
+        is(childDbg.type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
+           "Content worker debugger should be dedicated.");
+        is(childDbg.window, null,
+           "Non-top-level worker debugger should not have window.");
+
+        info("Terminate the top-level chrome worker and the non-top-level " +
+             "content worker, and wait for their debuggers to be " + 
+             "unregistered and closed.");
         promise = waitForMultiple([
-          waitForUnregister((dbg) => dbg.url === CHILD_WORKER_URL),
-          waitForDebuggerClose(dbgs[1]),
-          waitForUnregister((dbg) => dbg.url === PARENT_WORKER_URL),
-          waitForDebuggerClose(dbgs[0]),
+          waitForUnregister(CHILD_WORKER_URL),
+          waitForDebuggerClose(childDbg),
+          waitForUnregister(WORKER_URL),
+          waitForDebuggerClose(dbg),
         ]);
         worker.terminate();
         yield promise;
 
-        promise = waitForRegister();
+        info("Create a shared worker and wait for its debugger to be " + 
+             "registered");
+        promise = waitForRegister(SHARED_WORKER_URL);
         worker = new SharedWorker(SHARED_WORKER_URL);
-        let dbg = yield promise;
-        is(dbg.isChrome, false, "debugger should be for content worker");
-        is(dbg.parent, null,
-           "debugger for top-level worker should not have parent");
-        is(dbg.type, Ci.nsIWorkerDebugger.TYPE_SHARED,
-           "debugger should be for shared worker");
-        is(dbg.window, null,
-           "debugger for non-dedicated worker should not have window");
+        let sharedDbg = yield promise;
 
+        info("Check that the shared worker debugger has the correct " +
+             "properties.");
+        is(sharedDbg.isChrome, false,
+           "Shared worker debugger should be content.");
+        is(sharedDbg.parent, null,
+           "Shared worker debugger should not have parent.");
+        is(sharedDbg.type, Ci.nsIWorkerDebugger.TYPE_SHARED,
+           "Shared worker debugger should be shared.");
+        is(sharedDbg.window, null,
+           "Shared worker debugger should not have window.");
+
+        info("Create a shared worker with the same URL and check that its " +
+             "debugger is not registered again.");
         let listener = {
           onRegistered: function () {
             ok(false,
-               "debugger for shared worker should not be registered twice");
+               "Shared worker debugger should not be registered again.");
           },
         };
         wdm.addListener(listener);
         worker = new SharedWorker(SHARED_WORKER_URL);
 
-        dbg.addListener({
-          onClose: function () {
-            is(dbg.isClosed, true, "debugger should be closed");
-            wdm.removeListener(listener);
-            dbg.removeListener(this);
-            SimpleTest.finish();
-          }
-        });
+        info("Send a message to the shared worker to tell it to close " +
+             "itself, and wait for its debugger to be closed.");
+        promise = waitForMultiple([
+          waitForUnregister(SHARED_WORKER_URL),
+          waitForDebuggerClose(sharedDbg)
+        ]);
         worker.port.start();
         worker.port.postMessage("close");
+        yield promise;
+
+        wdm.removeListener(listener);
+        SimpleTest.finish();
       });
     }
 

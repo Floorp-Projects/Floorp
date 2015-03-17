@@ -8,7 +8,7 @@ interface nsIWorkerDebuggerListener : nsISupports
   void onClose();
 };
 
-[scriptable, builtinclass, uuid(0833b363-bffe-4cdb-ad50-1c4563e0C8ff)]
+[scriptable, builtinclass, uuid(b0ea6da8-8bd9-446a-94e2-2ee979903205)]
 interface nsIWorkerDebugger : nsISupports
 {
   const unsigned long TYPE_DEDICATED = 0;
@@ -26,6 +26,9 @@ interface nsIWorkerDebugger : nsISupports
   readonly attribute DOMString url;
 
   readonly attribute nsIDOMWindow window;
+
+  [implicit_jscontext]
+  void initialize(in DOMString url);
 
   void addListener(in nsIWorkerDebuggerListener listener);
 
