@@ -129,40 +129,41 @@ TEST(Layers, Type) {
 }
 
 TEST(Layers, UserData) {
-  TestContainerLayer* layerPtr = new TestContainerLayer(nullptr);
+  UniquePtr<TestContainerLayer> layerPtr(new TestContainerLayer(nullptr));
   TestContainerLayer& layer = *layerPtr;
 
   void* key1 = (void*)1;
   void* key2 = (void*)2;
   void* key3 = (void*)3;
 
-  TestUserData* data1 = new TestUserData;
-  TestUserData* data2 = new TestUserData;
-  TestUserData* data3 = new TestUserData;
-
   ASSERT_EQ(nullptr, layer.GetUserData(key1));
   ASSERT_EQ(nullptr, layer.GetUserData(key2));
   ASSERT_EQ(nullptr, layer.GetUserData(key3));
+
+  TestUserData* data1 = new TestUserData;
+  TestUserData* data2 = new TestUserData;
+  TestUserData* data3 = new TestUserData;
 
   layer.SetUserData(key1, data1);
   layer.SetUserData(key2, data2);
   layer.SetUserData(key3, data3);
 
   // Also checking that the user data is returned but not free'd
-  ASSERT_EQ(data1, layer.RemoveUserData(key1).forget());
-  ASSERT_EQ(data2, layer.RemoveUserData(key2).forget());
-  ASSERT_EQ(data3, layer.RemoveUserData(key3).forget());
+  UniquePtr<LayerUserData> d1(layer.RemoveUserData(key1).forget());
+  UniquePtr<LayerUserData> d2(layer.RemoveUserData(key2).forget());
+  UniquePtr<LayerUserData> d3(layer.RemoveUserData(key3).forget());
+  ASSERT_EQ(data1, d1.get());
+  ASSERT_EQ(data2, d2.get());
+  ASSERT_EQ(data3, d3.get());
 
-  layer.SetUserData(key1, data1);
-  layer.SetUserData(key2, data2);
-  layer.SetUserData(key3, data3);
+  layer.SetUserData(key1, d1.release());
+  layer.SetUserData(key2, d2.release());
+  layer.SetUserData(key3, d3.release());
 
   // Layer has ownership of data1-3, check that they are destroyed
   EXPECT_CALL(*data1, Die());
   EXPECT_CALL(*data2, Die());
   EXPECT_CALL(*data3, Die());
-  delete layerPtr;
-
 }
 
 static
