@@ -521,6 +521,7 @@ void XPCWrappedNativeTearOff::JSObjectMoved(JSObject *obj, const JSObject *old)
 inline
 XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
+    MOZ_COUNT_DTOR(XPCWrappedNativeTearOff);
     MOZ_ASSERT(!(GetInterface() || GetNative() || GetJSObjectPreserveColor()),
                "tearoff not empty in dtor");
 }
