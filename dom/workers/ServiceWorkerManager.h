@@ -256,6 +256,7 @@ public:
     , mState(ServiceWorkerState::EndGuard_)
   {
     MOZ_ASSERT(mRegistration);
+    MOZ_ASSERT(!aCacheName.IsEmpty());
   }
 
   ServiceWorkerState
