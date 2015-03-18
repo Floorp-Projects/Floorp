@@ -3941,7 +3941,7 @@ GCRuntime::markGrayReferences(gcstats::Phase phase)
     gcstats::AutoPhase ap(stats, phase);
     if (marker.hasBufferedGrayRoots()) {
         for (ZoneIterT zone(rt); !zone.done(); zone.next())
-            marker.markBufferedGrayRoots(zone);
+            markBufferedGrayRoots(zone);
     } else {
         MOZ_ASSERT(!isIncremental);
         if (JSTraceDataOp op = grayRootTracer.op)

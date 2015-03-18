@@ -682,16 +682,16 @@ GCMarker::resetBufferedGrayRoots()
 }
 
 void
-GCMarker::markBufferedGrayRoots(JS::Zone *zone)
+GCRuntime::markBufferedGrayRoots(JS::Zone *zone)
 {
-    MOZ_ASSERT(runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Okay);
+    MOZ_ASSERT(grayBufferState == GrayBufferState::Okay);
     MOZ_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
 
     for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
-        setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
+        marker.setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
 #endif
-        MarkKind(this, &elem->thing, elem->kind);
+        MarkKind(&marker, &elem->thing, elem->kind);
     }
 }
 
