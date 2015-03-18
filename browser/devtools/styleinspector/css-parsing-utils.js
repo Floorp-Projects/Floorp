@@ -15,14 +15,26 @@ function quoteString(string) {
   let hasDoubleQuotes = string.contains('"');
   let hasSingleQuotes = string.contains("'");
 
+  let quote = '"';
   if (hasDoubleQuotes && !hasSingleQuotes) {
-    // In this case, no escaping required, just enclose in single-quotes
-    return "'" + string + "'";
+    quote = "'";
   }
 
-  // In all other cases, enclose in double-quotes, and escape any double-quote
-  // that may be in the string
-  return '"' + string.replace(/"/g, '\"') + '"';
+  // Quote special characters as specified by the CSS grammar.
+  // See http://www.w3.org/TR/CSS2/syndata.html#tokenization
+  // and http://www.w3.org/TR/CSS2/syndata.html#strings
+  return quote +
+    string.replace(/[\\"]/g, match => {
+      switch (match) {
+      case '\\':
+        return '\\\\';
+      case '"':
+        if (quote == '"')
+          return '\\"';
+        return match;
+      }
+    }) +
+    quote;
 }
 
 /**
