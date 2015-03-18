@@ -53,11 +53,11 @@ class DebianBootstrapper(BaseBootstrapper):
     # These are common packages for building Firefox for Android
     # (mobile/android) for all Debian-derived distros (such as Ubuntu).
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        'zlib1g-dev', # mobile/android requires system zlib.
+        'zlib1g-dev',  # mobile/android requires system zlib.
         'openjdk-7-jdk',
         'ant',
-        'wget', # For downloading the Android SDK and NDK.
-        'libncurses5:i386', # See comments about i386 below.
+        'wget',  # For downloading the Android SDK and NDK.
+        'libncurses5:i386',  # See comments about i386 below.
         'libstdc++6:i386',
         'zlib1g:i386',
     ]
