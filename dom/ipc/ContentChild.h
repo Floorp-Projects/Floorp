@@ -172,13 +172,6 @@ public:
     virtual PHalChild* AllocPHalChild() MOZ_OVERRIDE;
     virtual bool DeallocPHalChild(PHalChild*) MOZ_OVERRIDE;
 
-    PIccChild*
-    SendPIccConstructor(PIccChild* aActor, const uint32_t& aServiceId);
-    virtual PIccChild*
-    AllocPIccChild(const uint32_t& aClientId) MOZ_OVERRIDE;
-    virtual bool
-    DeallocPIccChild(PIccChild* aActor) MOZ_OVERRIDE;
-
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                    const bool& aAnonymize,
