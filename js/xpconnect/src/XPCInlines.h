@@ -539,19 +539,17 @@ XPCWrappedNative::SweepTearOffs()
 {
     XPCWrappedNativeTearOffChunk* chunk;
     for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK; i > 0; i--, to++) {
-            bool marked = to->IsMarked();
-            to->Unmark();
-            if (marked)
-                continue;
+        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+        bool marked = to->IsMarked();
+        to->Unmark();
+        if (marked)
+            continue;
 
-            // If this tearoff does not have a live dedicated JSObject,
-            // then let's recycle it.
-            if (!to->GetJSObjectPreserveColor()) {
-                to->SetNative(nullptr);
-                to->SetInterface(nullptr);
-            }
+        // If this tearoff does not have a live dedicated JSObject,
+        // then let's recycle it.
+        if (!to->GetJSObjectPreserveColor()) {
+            to->SetNative(nullptr);
+            to->SetInterface(nullptr);
         }
     }
 }
