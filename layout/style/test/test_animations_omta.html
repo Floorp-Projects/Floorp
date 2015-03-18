@@ -2149,13 +2149,9 @@ addAsyncAnimTest(function *() {
           "opacity transition at 0.5s");
   gDiv.style.animation = "opacitymid 2s linear";
   yield waitForPaintsFlushed();
-  // FIXME: This omta_todo_is leads to a failure, since the compositor
-  // vs. main-thread check actually passes.
   omta_todo_is("opacity", 0.2, RunningOn.Compositor,
           "opacity animation overriding transition at 0s");
   advance_clock(500);
-  // FIXME: This omta_todo_is leads to a failure, since the compositor
-  // vs. main-thread check actually passes.
   omta_todo_is("opacity", 0.35, RunningOn.Compositor,
           "opacity animation overriding transition at 0.5s");
   done_div();
