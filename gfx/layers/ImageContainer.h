@@ -115,18 +115,6 @@ protected:
   ImageBackendData() {}
 };
 
-// sadly we'll need this until we get rid of Deprected image classes
-class ISharedImage {
-public:
-    virtual uint8_t* GetBuffer() = 0;
-
-    /**
-     * For use with the CompositableClient only (so that the later can
-     * synchronize the TextureClient with the TextureHost).
-     */
-    virtual TextureClient* GetTextureClient(CompositableClient* aClient) = 0;
-};
-
 /**
  * A class representing a buffer of pixel data. The data can be in one
  * of various formats including YCbCr.
@@ -145,8 +133,6 @@ class Image {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Image)
 
 public:
-  virtual ISharedImage* AsSharedImage() { return nullptr; }
-
   ImageFormat GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
@@ -174,6 +160,14 @@ public:
   }
 
   virtual bool IsValid() { return true; }
+
+  virtual uint8_t* GetBuffer() { return nullptr; }
+
+  /**
+  * For use with the CompositableClient only (so that the later can
+  * synchronize the TextureClient with the TextureHost).
+  */
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) { return nullptr; }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -793,8 +787,7 @@ protected:
  * device output color space. This class is very simple as all backends
  * have to know about how to deal with drawing a cairo image.
  */
-class CairoImage MOZ_FINAL : public Image,
-                             public ISharedImage {
+class CairoImage MOZ_FINAL : public Image {
 public:
   struct Data {
     gfx::IntSize mSize;
@@ -817,8 +810,6 @@ public:
     return mSourceSurface.get();
   }
 
-  virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
-  virtual uint8_t* GetBuffer() MOZ_OVERRIDE { return nullptr; }
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() MOZ_OVERRIDE { return mSize; }
