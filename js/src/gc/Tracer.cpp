@@ -663,15 +663,14 @@ GCMarker::startBufferingGrayRoots()
 
     MOZ_ASSERT(!callback);
     callback = GrayCallback;
-    MOZ_ASSERT(IS_GC_MARKING_TRACER(this));
+    MOZ_ASSERT(IsMarkingGray(this));
 }
 
 void
 GCMarker::endBufferingGrayRoots()
 {
-    MOZ_ASSERT(callback == GrayCallback);
+    MOZ_ASSERT(IsMarkingGray(this));
     callback = nullptr;
-    MOZ_ASSERT(IS_GC_MARKING_TRACER(this));
     MOZ_ASSERT(grayBufferState == GRAY_BUFFER_OK ||
                grayBufferState == GRAY_BUFFER_FAILED);
 }
