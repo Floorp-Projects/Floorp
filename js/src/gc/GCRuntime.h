@@ -1023,8 +1023,12 @@ class GCRuntime
     /* During shutdown, the GC needs to clean up every possible object. */
     bool cleanUpEverything;
 
-    // Record gray roots in the first slice for later marking. See the comment
-    // in RootMarking.cpp for details.
+    // Gray marking must be done after all black marking is complete. However,
+    // we do not have write barriers on XPConnect roots. Therefore, XPConnect
+    // roots must be accumulated in the first slice of incremental GC. We
+    // accumulate these roots in each zone's gcGrayRoots vector and then mark
+    // them later, after black marking is complete for each compartment. This
+    // accumulation can fail, but in that case we switch to non-incremental GC.
     friend class js::GCMarker;
     enum class GrayBufferState {
         Unused,
@@ -1032,6 +1036,7 @@ class GCRuntime
         Failed
     };
     GrayBufferState grayBufferState;
+    bool hasBufferedGrayRoots() const { return grayBufferState == GrayBufferState::Okay; }
 
     /*
      * The gray bits can become invalid if UnmarkGray overflows the stack. A
