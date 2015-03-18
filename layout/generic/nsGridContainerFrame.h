@@ -58,6 +58,11 @@ protected:
     bool IsAuto() const { return mStart == 0; }
     bool IsDefinite() const { return mStart != 0; }
     uint32_t Extent() const { return mEnd - mStart; }
+    /**
+     * Return the contribution of this line range for step 2 in
+     * http://dev.w3.org/csswg/css-grid/#auto-placement-algo
+     */
+    uint32_t HypotheticalEnd() const { return IsAuto() ? mEnd + 1 : mEnd; }
 
     uint32_t mStart;  // the start line, or zero for 'auto'
     uint32_t mEnd;    // the end line, or the span length for 'auto'
@@ -154,6 +159,16 @@ protected:
    * @param aStyle the StylePosition() for the grid container
    */
   void InitializeGridBounds(const nsStylePosition* aStyle);
+
+  /**
+   * Inflate the implicit grid to include aArea.
+   * @param aArea may be definite or auto
+   */
+  void InflateGridFor(const GridArea& aArea)
+  {
+    mGridColEnd = std::max(mGridColEnd, aArea.mCols.HypotheticalEnd());
+    mGridRowEnd = std::max(mGridRowEnd, aArea.mRows.HypotheticalEnd());
+  }
 
   /**
    * Helper method for ResolveLineRange.
