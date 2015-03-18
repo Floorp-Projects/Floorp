@@ -6,9 +6,6 @@
 #include "nspr.h"
 #include "plstr.h"
 
-// For rtcp-fb constants
-#include "ccsdp.h"
-
 #include "VideoConduit.h"
 #include "AudioConduit.h"
 #include "nsThreadUtils.h"
@@ -25,6 +22,13 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
+#endif
+
+// for ntohs
+#ifdef _MSC_VER
+#include "Winsock2.h"
+#else
+#include <netinet/in.h>
 #endif
 
 #include <algorithm>
