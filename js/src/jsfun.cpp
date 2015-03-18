@@ -901,6 +901,7 @@ const Class JSFunction::class_ = {
         CreateFunctionConstructor,
         CreateFunctionPrototype,
         nullptr,
+        nullptr,
         function_methods,
         function_properties
     }

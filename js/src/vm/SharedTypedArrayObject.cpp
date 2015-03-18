@@ -693,6 +693,7 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
                              JSFunction::FinalizeKind>,                        \
     Shared##_typedArray##Object::CreatePrototype,                              \
     nullptr,                                                                   \
+    nullptr,                                                                   \
     Shared##_typedArray##Object::jsfuncs,                                      \
     Shared##_typedArray##Object::jsprops,                                      \
     Shared##_typedArray##Object::FinishClassInit                               \
