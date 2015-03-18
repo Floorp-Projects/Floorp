@@ -786,23 +786,26 @@ template bool
 SimdPolicy<0>::adjustInputs(TempAllocator &alloc, MInstruction *ins);
 
 bool
-SimdSwizzlePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+SimdShufflePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MIRType specialization = ins->typePolicySpecialization();
 
-    // First input is the vector input.
-    if (!MaybeSimdUnbox(alloc, ins, specialization, 0))
-        return false;
+    MSimdGeneralShuffle *s = ins->toSimdGeneralShuffle();
+
+    for (unsigned i = 0; i < s->numVectors(); i++) {
+        if (!MaybeSimdUnbox(alloc, ins, specialization, i))
+            return false;
+    }
 
     // Next inputs are the lanes, which need to be int32
-    for (unsigned i = 0; i < 4; i++) {
-        MDefinition *in = ins->getOperand(i + 1);
+    for (unsigned i = 0; i < s->numLanes(); i++) {
+        MDefinition *in = ins->getOperand(s->numVectors() + i);
         if (in->type() == MIRType_Int32)
             continue;
 
         MInstruction *replace = MToInt32::New(alloc, in, MacroAssembler::IntConversion_NumbersOnly);
         ins->block()->insertBefore(ins, replace);
-        ins->replaceOperand(i + 1, replace);
+        ins->replaceOperand(s->numVectors() + i, replace);
         if (!replace->typePolicy()->adjustInputs(alloc, replace))
             return false;
     }
@@ -1115,7 +1118,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(PowPolicy)                                \
     _(SimdAllPolicy)                            \
     _(SimdSelectPolicy)                         \
-    _(SimdSwizzlePolicy)                        \
+    _(SimdShufflePolicy)                        \
     _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreUnboxedScalarPolicy)                 \
