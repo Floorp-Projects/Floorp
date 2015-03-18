@@ -195,7 +195,7 @@ nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler, int32_t iparam, void 
         rv = NS_ERROR_NOT_INITIALIZED;
     }
     else {
-        nsRefPtr<nsIRunnable> event = new nsConnEvent(this, handler, iparam, vparam);
+        nsCOMPtr<nsIRunnable> event = new nsConnEvent(this, handler, iparam, vparam);
         rv = mSocketThreadTarget->Dispatch(event, NS_DISPATCH_NORMAL);
     }
     return rv;
@@ -2376,7 +2376,7 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, void *param)
     }
 
     // signal shutdown complete
-    nsRefPtr<nsIRunnable> runnable =
+    nsCOMPtr<nsIRunnable> runnable =
         new nsConnEvent(this, &nsHttpConnectionMgr::OnMsgShutdownConfirm,
                         0, param);
     NS_DispatchToMainThread(runnable);
@@ -3078,6 +3078,7 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
                                    uint32_t caps)
     : mEnt(ent)
     , mTransaction(trans)
+    , mDispatchedMTransaction(false)
     , mCaps(caps)
     , mSpeculative(false)
     , mIsFromPredictor(false)
@@ -3221,7 +3222,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
 nsresult
 nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
 {
-    MOZ_ASSERT(mTransaction && !mTransaction->IsNullTransaction());
+    MOZ_ASSERT(mTransaction);
 
     mBackupSynStarted = TimeStamp::Now();
     nsresult rv = SetupStreams(getter_AddRefs(mBackupTransport),
@@ -3245,8 +3246,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
 {
     uint16_t timeout = gHttpHandler->GetIdleSynTimeout();
     MOZ_ASSERT(!mSynTimer, "timer already initd");
-    if (timeout && !mTransaction->IsDone() &&
-        !mTransaction->IsNullTransaction()) {
+    if (timeout && !mTransaction->IsDone()) {
         // Setup the timer that will establish a backup socket
         // if we do not get a writable event on the main one.
         // We do this because a lost SYN takes a very long time
@@ -3451,9 +3451,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
             LOG(("nsHalfOpenSocket::OnOutputStreamReady null transaction will "
                  "be used to finish SSL handshake on conn %p\n", conn.get()));
             nsRefPtr<nsAHttpTransaction> trans;
-            if (mTransaction->IsNullTransaction()) {
+            if (mTransaction->IsNullTransaction() && !mDispatchedMTransaction) {
                 // null transactions cannot be put in the entry queue, so that
                 // explains why it is not present.
+                mDispatchedMTransaction = true;
                 trans = mTransaction;
             } else {
                 trans = new NullHttpTransaction(mEnt->mConnInfo,

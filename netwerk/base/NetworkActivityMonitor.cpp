@@ -296,6 +296,6 @@ NetworkActivityMonitor::DataInOut(Direction direction)
 void
 NetworkActivityMonitor::PostNotification(Direction direction)
 {
-  nsRefPtr<nsIRunnable> ev = new NotifyNetworkActivity(direction);
+  nsCOMPtr<nsIRunnable> ev = new NotifyNetworkActivity(direction);
   NS_DispatchToMainThread(ev);
 }
