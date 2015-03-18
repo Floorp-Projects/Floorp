@@ -41,6 +41,15 @@ add_task(function* test_changing_pref_changes_tracking() {
     ok(true, "Skipping test, not Nightly")
     return;
   }
+
+  // Register a cleanup function for all the prefs affected by this entire test file.
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref(POLARIS_ENABLED);
+    for (let pref of prefs) {
+      Services.prefs.clearUserPref(pref);
+    }
+  });
+
   function* testPref(pref) {
     Services.prefs.setBoolPref(POLARIS_ENABLED, true);
     yield assertPref(pref, true);
