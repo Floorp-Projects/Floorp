@@ -136,7 +136,8 @@ let ReaderParent = {
     }
 
     let win = event.target.ownerDocument.defaultView;
-    let url = win.gBrowser.selectedBrowser.currentURI.spec;
+    let browser = win.gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
 
     if (url.startsWith("about:reader")) {
       let originalURL = this._getOriginalUrl(url);
@@ -146,7 +147,7 @@ let ReaderParent = {
         win.openUILinkIn(originalURL, "current", {"allowPinnedTabHostChange": true});
       }
     } else {
-      win.openUILinkIn("about:reader?url=" + encodeURIComponent(url), "current", {"allowPinnedTabHostChange": true});
+      browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
     }
   },
 
@@ -173,8 +174,7 @@ let ReaderParent = {
   },
 
   /**
-   * Gets an article for a given URL. This method will download and parse a document
-   * if it does not find the article in the browser data.
+   * Gets an article for a given URL. This method will download and parse a document.
    *
    * @param url The article URL.
    * @param browser The browser where the article is currently loaded.
@@ -182,26 +182,6 @@ let ReaderParent = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   _getArticle: Task.async(function* (url, browser) {
-    // First, look for a saved article.
-    let article = yield this._getSavedArticle(browser);
-    if (article && article.url == url) {
-      return article;
-    }
-
-    // Article hasn't been found in the cache, we need to
-    // download the page and parse the article out of it.
     return yield ReaderMode.downloadAndParseDocument(url);
-  }),
-
-  _getSavedArticle: function(browser) {
-    return new Promise((resolve, reject) => {
-      let mm = browser.messageManager;
-      let listener = (message) => {
-        mm.removeMessageListener("Reader:SavedArticleData", listener);
-        resolve(message.data.article);
-      };
-      mm.addMessageListener("Reader:SavedArticleData", listener);
-      mm.sendAsyncMessage("Reader:SavedArticleGet");
-    });
-  }
+  })
 };
