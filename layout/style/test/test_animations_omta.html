@@ -2149,10 +2149,10 @@ addAsyncAnimTest(function *() {
           "opacity transition at 0.5s");
   gDiv.style.animation = "opacitymid 2s linear";
   yield waitForPaintsFlushed();
-  omta_todo_is("opacity", 0.2, RunningOn.Compositor,
+  omta_is("opacity", 0.2, RunningOn.Compositor,
           "opacity animation overriding transition at 0s");
   advance_clock(500);
-  omta_todo_is("opacity", 0.35, RunningOn.Compositor,
+  omta_is("opacity", 0.35, RunningOn.Compositor,
           "opacity animation overriding transition at 0.5s");
   done_div();
 });

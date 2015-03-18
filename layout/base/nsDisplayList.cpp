@@ -424,6 +424,18 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       continue;
     }
 
+    if (!property->mWinsInCascade) {
+      // We have an animation or transition, but it isn't actually
+      // winning in the CSS cascade, so we don't want to send it to the
+      // compositor.
+      // I believe that anything that changes mWinsInCascade should
+      // trigger this code again, either because of a restyle that
+      // changes the properties in question, or because of the
+      // main-thread style update that results when an animation stops
+      // filling.
+      continue;
+    }
+
     // Don't add animations that are pending when their corresponding
     // refresh driver is under test control. This is because any pending
     // animations on layers will have their start time updated with the
