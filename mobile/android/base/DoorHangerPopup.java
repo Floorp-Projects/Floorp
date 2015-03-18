@@ -16,6 +16,7 @@ import org.mozilla.gecko.prompts.PromptInput;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
+import org.mozilla.gecko.widget.DefaultDoorHanger;
 import org.mozilla.gecko.widget.DoorHanger;
 
 import android.content.Context;
@@ -166,7 +167,7 @@ public class DoorHangerPopup extends AnchoredPopup
             init();
         }
 
-        final DoorHanger newDoorHanger = new DoorHanger(mContext, tabId, value);
+        final DoorHanger newDoorHanger = new DefaultDoorHanger(mContext, tabId, value);
         newDoorHanger.setMessage(message);
         newDoorHanger.setOptions(options);
 
@@ -230,7 +231,7 @@ public class DoorHangerPopup extends AnchoredPopup
      */
     DoorHanger getDoorHanger(int tabId, String value) {
         for (DoorHanger dh : mDoorHangers) {
-            if (dh.getTabId() == tabId && dh.getValue().equals(value))
+            if (dh.getTabId() == tabId && dh.getIdentifier().equals(value))
                 return dh;
         }
 

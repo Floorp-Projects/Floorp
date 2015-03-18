@@ -489,6 +489,7 @@ gbjar.sources += [
     'widget/CheckableLinearLayout.java',
     'widget/ClickableWhenDisabledEditText.java',
     'widget/DateTimePicker.java',
+    'widget/DefaultDoorHanger.java',
     'widget/Divider.java',
     'widget/DoorHanger.java',
     'widget/EllipsisTextView.java',
