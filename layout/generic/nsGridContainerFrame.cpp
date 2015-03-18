@@ -431,6 +431,7 @@ nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
 void
 nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
 {
+  mCellMap.ClearOccupied();
   InitializeGridBounds(aStyle);
 
   // http://dev.w3.org/csswg/css-grid/#auto-placement-algo
@@ -445,6 +446,7 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
       child->Properties().Set(GridAreaProperty(), new GridArea(area));
     }
     if (area.IsDefinite()) {
+      mCellMap.Fill(area);
       InflateGridFor(area);
     }
   }
