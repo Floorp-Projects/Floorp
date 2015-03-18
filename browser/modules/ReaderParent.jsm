@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils","resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReadingList", "resource:///modules/readinglist/ReadingList.jsm");
 
@@ -56,7 +57,18 @@ let ReaderParent = {
         break;
 
       case "Reader:FaviconRequest": {
-        // XXX: To implement.
+        if (message.target.messageManager) {
+          let faviconUrl = PlacesUtils.promiseFaviconLinkUrl(message.data.url);
+          faviconUrl.then(function onResolution(favicon) {
+            message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
+              url: message.data.url,
+              faviconUrl: favicon.path.replace(/^favicon:/, "")
+            })
+          },
+          function onRejection(reason) {
+            Cu.reportError("Error requesting favicon URL for about:reader content: " + reason);
+          }).catch(Cu.reportError);
+        }
         break;
       }
       case "Reader:ListStatusRequest":
