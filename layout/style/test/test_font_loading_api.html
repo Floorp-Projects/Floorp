@@ -495,7 +495,9 @@ function runTest() {
     is(document.fonts.status, "loading", "FontFaceSet.status should be set to \"loading\" when a loading FontFace is added to it (TEST 26)");
 
     return awaitEvents
-        .then(is_pending(newReady, "FontFaceSet.ready should be replaced with a fresh pending Promise when a loading FontFace is added to it", "(TEST 26)"))
+        .then(function() {
+          return is_pending(newReady, "FontFaceSet.ready should be replaced with a fresh pending Promise when a loading FontFace is added to it", "(TEST 26)");
+        })
         .then(function() {
           document.fonts.clear();
           return document.fonts.ready;
@@ -554,7 +556,9 @@ function runTest() {
     document.fonts.clear();
 
     return awaitEvents
-        .then(is_resolved_with(document.fonts.ready, document.fonts, "FontFaceSet.ready when the FontFaceSet is cleared", "(TEST 27)"))
+        .then(function() {
+          return is_resolved_with(document.fonts.ready, document.fonts, "FontFaceSet.ready when the FontFaceSet is cleared", "(TEST 27)");
+        })
         .then(function() {
           is(document.fonts.status, "loaded", "FontFaceSet.status should be set to \"loaded\" when it is cleared (TEST 27)");
           return document.fonts.ready;
@@ -600,7 +604,9 @@ function runTest() {
     is(document.fonts.status, "loading", "FontFaceSet.status should be set to \"loading\" when its only FontFace starts loading (TEST 28)");
 
     return awaitEvents
-        .then(is_pending(newReady, "FontFaceSet.ready when the FontFaceSet's only FontFace starts loading", "(TEST 28)"))
+        .then(function() {
+          return is_pending(newReady, "FontFaceSet.ready when the FontFaceSet's only FontFace starts loading", "(TEST 28)");
+        })
         .then(function() {
           document.fonts.clear();
           return document.fonts.ready;
@@ -659,8 +665,8 @@ function runTest() {
       }, function(aError) {
         is(face.status, "error", "FontFace should have status \"error\" (TEST 29)");
         document.fonts.add(face);
+        return awaitEvents;
       })
-      .then(awaitEvents)
       .then(function() {
         document.fonts.clear();
         return document.fonts.ready;
@@ -701,8 +707,8 @@ function runTest() {
       .then(function() {
         is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 30)");
         document.fonts.add(face);
+        return awaitEvents;
       })
-      .then(awaitEvents)
       .then(function() {
         document.fonts.clear();
       });
@@ -743,8 +749,8 @@ function runTest() {
         .then(function() {
           is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 31)");
           document.fonts.add(face);
+          return awaitEvents;
         })
-        .then(awaitEvents)
         .then(function() {
           document.fonts.clear();
           return document.fonts.ready;
