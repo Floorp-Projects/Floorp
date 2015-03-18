@@ -973,6 +973,7 @@ private:
   DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
                         uint32_t aStringLen)
   {
+    AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
     MOZ_ASSERT(loadInfo.mCacheStatus == ScriptLoadInfo::Cached);
@@ -982,11 +983,18 @@ private:
 
     MOZ_ASSERT(!loadInfo.mScriptTextBuf);
 
-    DebugOnly<nsresult> rv =
+    nsresult rv =
       nsScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen,
                                      NS_LITERAL_STRING("UTF-8"), parentDoc,
                                      loadInfo.mScriptTextBuf,
                                      loadInfo.mScriptTextLength);
+    if (NS_SUCCEEDED(rv) && IsMainWorkerScript()) {
+      nsCOMPtr<nsIURI> finalURI;
+      rv = NS_NewURI(getter_AddRefs(finalURI), loadInfo.mFullURL, nullptr, nullptr);
+      if (NS_SUCCEEDED(rv)) {
+        mWorkerPrivate->SetBaseURI(finalURI);
+      }
+    }
 
     if (NS_SUCCEEDED(rv)) {
       DataReceived();
