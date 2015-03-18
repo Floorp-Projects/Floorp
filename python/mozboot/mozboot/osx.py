@@ -502,4 +502,3 @@ class OSXBootstrapper(BaseBootstrapper):
             self._upgrade_package('python')
         else:
             self._upgrade_package('python27')
-
