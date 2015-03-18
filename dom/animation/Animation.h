@@ -150,10 +150,25 @@ struct AnimationPropertySegment
 struct AnimationProperty
 {
   nsCSSProperty mProperty;
+
+  // Does this property win in the CSS Cascade?
+  //
+  // For CSS transitions, this is true as long as a CSS animation on the
+  // same property and element is not running, in which case we set this
+  // to false so that the animation (lower in the cascade) can win.  We
+  // then use this to decide whether to apply the style both in the CSS
+  // cascade and for OMTA.
+  //
+  // FIXME (bug 847287): For CSS Animations, which are overridden by
+  // !important rules in the cascade, we actually determine this from
+  // the CSS cascade computations, and then use it for OMTA.
+  bool mWinsInCascade;
+
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
   bool operator==(const AnimationProperty& aOther) const {
     return mProperty == aOther.mProperty &&
+           mWinsInCascade == aOther.mWinsInCascade &&
            mSegments == aOther.mSegments;
   }
   bool operator!=(const AnimationProperty& aOther) const {
