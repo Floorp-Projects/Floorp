@@ -11,7 +11,8 @@
         android:id="@+id/overlaybtn_icon"/>
 
     <TextView
-        style="@style/ShareOverlayButton.Text"
+        style="@style/ShareOverlayButton"
+        android:textAppearance="@style/ShareOverlayTextAppearance.Button"
         android:id="@+id/overlaybtn_label"
         android:clickable="false"
         android:enabled="false"/>
