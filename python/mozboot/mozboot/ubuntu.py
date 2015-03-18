@@ -4,6 +4,7 @@
 
 import os
 
+
 from mozboot.debian import DebianBootstrapper
 
 
@@ -11,6 +12,7 @@ MERCURIAL_PPA = '''
 Ubuntu does not provide a modern Mercurial in its package repository. So,
 we will install a PPA that does.
 '''.strip()
+
 
 # Ubuntu shares much logic with Debian, so it inherits from it.
 class UbuntuBootstrapper(DebianBootstrapper):

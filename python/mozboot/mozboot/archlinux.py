@@ -10,6 +10,7 @@ import glob
 
 from mozboot.base import BaseBootstrapper
 
+
 class ArchlinuxBootstrapper(BaseBootstrapper):
     '''Archlinux experimental bootstrapper.'''
 

@@ -4,7 +4,9 @@
 
 import platform
 
+
 from mozboot.base import BaseBootstrapper
+
 
 class CentOSBootstrapper(BaseBootstrapper):
     def __init__(self, version, dist_id):
