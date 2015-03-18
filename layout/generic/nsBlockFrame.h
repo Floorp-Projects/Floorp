@@ -482,10 +482,8 @@ public:
    *  assumes float manager is in aFrame's parent's coord system.
    *  Safe to call on non-blocks (does nothing).
    */
-  static void RecoverFloatsFor(nsIFrame*            aFrame,
-                               nsFloatManager&      aFloatManager,
-                               mozilla::WritingMode aWM,
-                               nscoord              aContainerWidth);
+  static void RecoverFloatsFor(nsIFrame*       aFrame,
+                               nsFloatManager& aFloatManager);
 
   /**
    * Determine if we have any pushed floats from a previous continuation.
@@ -549,9 +547,7 @@ protected:
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
    */
-  void RecoverFloats(nsFloatManager&      aFloatManager,
-                     mozilla::WritingMode aWM,
-                     nscoord              aContainerWidth);
+  void RecoverFloats(nsFloatManager& aFloatManager);
 
   /** Reflow pushed floats
    */
