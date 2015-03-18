@@ -333,13 +333,6 @@ class GCMarker : public JSTracer
     /* Count of arenas that are currently in the stack. */
     mozilla::DebugOnly<size_t> markLaterArenas;
 
-    enum GrayBufferState {
-        GRAY_BUFFER_UNUSED,
-        GRAY_BUFFER_OK,
-        GRAY_BUFFER_FAILED
-    };
-    GrayBufferState grayBufferState;
-
     /* Assert that start and stop are called with correct ordering. */
     mozilla::DebugOnly<bool> started;
 

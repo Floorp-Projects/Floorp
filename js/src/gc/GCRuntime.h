@@ -1014,6 +1014,16 @@ class GCRuntime
     /* During shutdown, the GC needs to clean up every possible object. */
     bool cleanUpEverything;
 
+    // Record gray roots in the first slice for later marking. See the comment
+    // in RootMarking.cpp for details.
+    friend class js::GCMarker;
+    enum class GrayBufferState {
+        Unused,
+        Okay,
+        Failed
+    };
+    GrayBufferState grayBufferState;
+
     /*
      * The gray bits can become invalid if UnmarkGray overflows the stack. A
      * full GC will reset this bit, since it fills in all the gray bits.
