@@ -49,7 +49,7 @@ VsyncParent::NotifyVsync(TimeStamp aTimeStamp)
 {
   // Called on hardware vsync thread. We should post to current ipc thread.
   MOZ_ASSERT(!IsOnBackgroundThread());
-  nsRefPtr<nsIRunnable> vsyncEvent =
+  nsCOMPtr<nsIRunnable> vsyncEvent =
     NS_NewRunnableMethodWithArg<TimeStamp>(this,
                                            &VsyncParent::DispatchVsyncEvent,
                                            aTimeStamp);

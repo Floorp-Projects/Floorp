@@ -172,7 +172,7 @@ nsInputStreamTee::TeeSegment(const char* aBuf, uint32_t aCount)
     if (!SinkIsValid()) {
       return NS_OK; // nothing to do
     }
-    nsRefPtr<nsIRunnable> event =
+    nsCOMPtr<nsIRunnable> event =
       new nsInputStreamTeeWriteEvent(aBuf, aCount, mSink, this);
     LOG(("nsInputStreamTee::TeeSegment [%p] dispatching write %u bytes\n",
          this, aCount));

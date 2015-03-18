@@ -88,11 +88,12 @@ this.SelectContentHelper.prototype = {
 
 function buildOptionListForChildren(node) {
   let result = [];
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    if (child.tagName == 'OPTION' || child.tagName == 'OPTGROUP') {
+  for (let child of node.children) {
+    let tagName = child.tagName.toUpperCase();
+    if (tagName == 'OPTION' || tagName == 'OPTGROUP') {
       let textContent =
-        child.tagName == 'OPTGROUP' ? child.getAttribute("label")
-                                    : child.textContent;
+        tagName == 'OPTGROUP' ? child.getAttribute("label")
+                              : child.textContent;
 
       if (textContent != null) {
         textContent = textContent.trim();
@@ -110,7 +111,7 @@ function buildOptionListForChildren(node) {
         // color does not override color: menutext in the parent.
         // backgroundColor: computedStyle.backgroundColor,
         // color: computedStyle.color,
-        children: child.tagName == 'OPTGROUP' ? buildOptionListForChildren(child) : []
+        children: tagName == 'OPTGROUP' ? buildOptionListForChildren(child) : []
       };
       result.push(info);
     }

@@ -82,7 +82,7 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports *aHttpChannel,
                                            uint64_t aExtraSizeData,
                                            const nsACString & aExtraStringData)
 {
-    nsRefPtr<nsIRunnable> event;
+    nsCOMPtr<nsIRunnable> event;
     {
         MutexAutoLock lock(mLock);
 

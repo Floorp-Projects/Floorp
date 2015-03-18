@@ -612,16 +612,17 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
 void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
 {
+    MOZ_ASSERT(ins->mir()->hasUses());
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
+
     MAsmJSAtomicBinopHeap *mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
-    const LAllocation *ptr = ins->ptr();
+    Register ptrReg = ToRegister(ins->ptr());
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
 
-    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
-    MOZ_ASSERT(ptr->isRegister());
-    BaseIndex srcAddr(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->offset());
 
     // Note that we can't use
     // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
@@ -629,7 +630,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(-mir->endOffset())).offset();
+        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
         Label goahead;
         masm.j(Assembler::BelowOrEqual, &goahead);
         memoryBarrier(MembarFull);
@@ -653,6 +654,48 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
                                         InvalidReg,
                                         ToAnyRegister(ins->output()));
     }
+    uint32_t after = masm.size();
+    if (rejoin.used())
+        masm.bind(&rejoin);
+    MOZ_ASSERT(mir->offset() == 0,
+               "The AsmJS signal handler doesn't yet support emulating "
+               "atomic accesses in the case of a fault from an unwrapped offset");
+    masm.append(AsmJSHeapAccess(after, AsmJSHeapAccess::Throw, maybeCmpOffset));
+}
+
+void
+CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect *ins)
+{
+    MOZ_ASSERT(!ins->mir()->hasUses());
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
+
+    MAsmJSAtomicBinopHeap *mir = ins->mir();
+    Scalar::Type accessType = mir->accessType();
+    Register ptrReg = ToRegister(ins->ptr());
+    const LAllocation* value = ins->value();
+    AtomicOp op = mir->operation();
+
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->offset());
+
+    // Note that we can't use
+    // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
+    // since signal-handler bounds checking is not yet implemented for atomic accesses.
+    Label rejoin;
+    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    if (mir->needsBoundsCheck()) {
+        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
+        Label goahead;
+        masm.j(Assembler::BelowOrEqual, &goahead);
+        memoryBarrier(MembarFull);
+        masm.jmp(&rejoin);
+        masm.bind(&goahead);
+    }
+
+    if (value->isConstant())
+        masm.atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), srcAddr);
+    else
+        masm.atomicBinopToTypedIntArray(op, accessType, ToRegister(value), srcAddr);
+
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);

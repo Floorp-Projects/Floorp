@@ -215,6 +215,11 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
+    // The output may not be used but will be clobbered regardless, so
+    // pin the output to eax.
+    //
+    // The input values must both be in registers.
+
     const LAllocation oldval = useRegister(ins->oldValue());
     const LAllocation newval = useRegister(ins->newValue());
 
@@ -230,7 +235,20 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
-    // Register allocation:
+    // Case 1: the result of the operation is not used.
+    //
+    // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
+    // LOCK OR, or LOCK XOR.
+
+    if (!ins->hasUses()) {
+        LAsmJSAtomicBinopHeapForEffect *lir =
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
+                                                        useRegister(ins->value()));
+        add(lir, ins);
+        return;
+    }
+
+    // Case 2: the result of the operation is used.
     //
     // For ADD and SUB we'll use XADD (with word and byte ops as appropriate):
     //
@@ -252,9 +270,6 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     //
     // We want to fix eax as the output.  We also need a temp for
     // the intermediate value.
-    //
-    // There are optimization opportunities:
-    //  - when the result is unused, Bug #1077014.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
     LAllocation value = useRegister(ins->value());
