@@ -14,9 +14,11 @@
 #include "nsHashKeys.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
+#include "nsRuleNode.h"
 #include "nsStyleContext.h"
 
 using namespace mozilla;
+typedef nsGridContainerFrame::TrackSize TrackSize;
 
 /**
  * Search for the aNth occurrence of aName in aNameList (forward), starting at
@@ -687,6 +689,85 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
   }
 }
 
+static void
+InitializeTrackSize(nscoord aPercentageBasis,
+                    const nsStyleCoord& aMinCoord,
+                    const nsStyleCoord& aMaxCoord,
+                    TrackSize* aTrackSize)
+{
+  // http://dev.w3.org/csswg/css-grid/#algo-init
+  nscoord& base = aTrackSize->mBase;
+  switch (aMaxCoord.GetUnit()) {
+    case eStyleUnit_Enumerated:
+    case eStyleUnit_FlexFraction:
+      base = 0;
+      break;
+    default:
+      base = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
+  }
+  nscoord& limit = aTrackSize->mLimit;
+  switch (aMaxCoord.GetUnit()) {
+    case eStyleUnit_Enumerated:
+      limit = NS_UNCONSTRAINEDSIZE;
+      break;
+    case eStyleUnit_FlexFraction:
+      limit = base;
+      break;
+    default:
+      limit = nsRuleNode::ComputeCoordPercentCalc(aMaxCoord, aPercentageBasis);
+      if (limit < base) {
+        limit = base;
+      }
+  }
+}
+
+static void
+InitializeTrackSizes(nscoord aPercentageBasis,
+                     const nsTArray<nsStyleCoord>& aMinSizingFunctions,
+                     const nsTArray<nsStyleCoord>& aMaxSizingFunctions,
+                     const nsStyleCoord& aAutoMinFunction,
+                     const nsStyleCoord& aAutoMaxFunction,
+                     nsTArray<TrackSize>& aResults)
+{
+  MOZ_ASSERT(aResults.Length() >= aMinSizingFunctions.Length());
+  MOZ_ASSERT(aMinSizingFunctions.Length() == aMaxSizingFunctions.Length());
+  const size_t len = aMinSizingFunctions.Length();
+  size_t i = 0;
+  for (; i < len; ++i) {
+    InitializeTrackSize(aPercentageBasis,
+                        aMinSizingFunctions[i], aMinSizingFunctions[i],
+                        &aResults[i]);
+  }
+  for (; i < aResults.Length(); ++i) {
+    InitializeTrackSize(aPercentageBasis,
+                        aAutoMinFunction, aAutoMaxFunction,
+                        &aResults[i]);
+  }
+}
+
+void
+nsGridContainerFrame::CalculateTrackSizes(const LogicalSize& aPercentageBasis,
+                                          const nsStylePosition* aStyle,
+                                          nsTArray<TrackSize>& aColSizes,
+                                          nsTArray<TrackSize>& aRowSizes)
+{
+  aColSizes.SetLength(mGridColEnd - 1);
+  aRowSizes.SetLength(mGridRowEnd - 1);
+  WritingMode wm = GetWritingMode();
+  InitializeTrackSizes(aPercentageBasis.ISize(wm),
+                       aStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
+                       aStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
+                       aStyle->mGridAutoColumnsMin,
+                       aStyle->mGridAutoColumnsMax,
+                       aColSizes);
+  InitializeTrackSizes(aPercentageBasis.BSize(wm),
+                       aStyle->mGridTemplateRows.mMinTrackSizingFunctions,
+                       aStyle->mGridTemplateRows.mMaxTrackSizingFunctions,
+                       aStyle->mGridAutoRowsMin,
+                       aStyle->mGridAutoRowsMax,
+                       aRowSizes);
+}
+
 void
 nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
@@ -720,6 +801,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   InitImplicitNamedAreas(stylePos);
   PlaceGridItems(stylePos);
+
+  nsAutoTArray<TrackSize, 32> colSizes;
+  nsAutoTArray<TrackSize, 32> rowSizes;
+  LogicalSize percentageBasis(wm, aReflowState.ComputedISize(), contentBSize);
+  CalculateTrackSizes(percentageBasis, stylePos, colSizes, rowSizes);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
