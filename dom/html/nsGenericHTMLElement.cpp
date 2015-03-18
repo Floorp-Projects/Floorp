@@ -1794,11 +1794,11 @@ nsGenericHTMLElement::IsLabelable() const
 }
 
 bool
-nsGenericHTMLElement::IsInteractiveHTMLContent() const
+nsGenericHTMLElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
   return IsAnyOfHTMLElements(nsGkAtoms::details, nsGkAtoms::embed,
                              nsGkAtoms::keygen) ||
-         HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+         (!aIgnoreTabindex && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex));
 }
 
 already_AddRefed<UndoManager>
