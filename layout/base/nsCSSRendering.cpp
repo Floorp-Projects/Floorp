@@ -5195,13 +5195,11 @@ nsImageRenderer::IsAnimatedImage()
 already_AddRefed<mozilla::layers::ImageContainer>
 nsImageRenderer::GetContainer(LayerManager* aManager)
 {
-  if (mType != eStyleImageType_Image || !mImageContainer)
+  if (mType != eStyleImageType_Image || !mImageContainer) {
     return nullptr;
+  }
 
-  nsRefPtr<ImageContainer> container;
-  nsresult rv = mImageContainer->GetImageContainer(aManager, getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return container.forget();
+  return mImageContainer->GetImageContainer(aManager, imgIContainer::FLAG_NONE);
 }
 
 #define MAX_BLUR_RADIUS 300

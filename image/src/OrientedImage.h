@@ -34,8 +34,9 @@ public:
   NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) MOZ_OVERRIDE;
   NS_IMETHOD_(TemporaryRef<SourceSurface>)
     GetFrame(uint32_t aWhichFrame, uint32_t aFlags) MOZ_OVERRIDE;
-  NS_IMETHOD GetImageContainer(layers::LayerManager* aManager,
-                               layers::ImageContainer** _retval) MOZ_OVERRIDE;
+  NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
+    GetImageContainer(layers::LayerManager* aManager,
+                      uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD_(DrawResult) Draw(gfxContext* aContext,
                                const nsIntSize& aSize,
                                const ImageRegion& aRegion,
