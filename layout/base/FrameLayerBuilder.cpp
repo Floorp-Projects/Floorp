@@ -3936,6 +3936,7 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData,
         MOZ_ASSERT(layerState == LAYER_ACTIVE_EMPTY);
         nsRefPtr<Layer> scrollInfoLayer = item->BuildLayer(mBuilder, mManager, mParameters);
         if (!scrollInfoLayer) {
+          item->~nsDisplayScrollInfoLayer();
           continue;
         }
 
@@ -3972,7 +3973,9 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData,
         }
 
         layer = scrollInfoLayer;
+        item->~nsDisplayScrollInfoLayer();
       }
+      mNewChildLayers[i].mScrollInfoItems.Clear();
     }
   }
 

@@ -682,6 +682,12 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
     return false;
   }
 
+  // Make sure we apply the latest animation style or else we can end up with
+  // a race between when we temporarily clear the animation transform (in
+  // CompositorParent::SetShadowProperties) and when animation recalculates
+  // the value.
+  mShadowLayersManager->ApplyAsyncProperties(this);
+
   // This method is specific to transforms applied by animation.
   // This is because this method uses the information stored with an animation
   // such as the origin of the reference frame corresponding to the layer, to

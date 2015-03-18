@@ -50,7 +50,7 @@ HTMLObjectElement::~HTMLObjectElement()
 }
 
 bool
-HTMLObjectElement::IsInteractiveHTMLContent() const
+HTMLObjectElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap);
 }

@@ -44,18 +44,15 @@ FrozenImage::GetFrame(uint32_t aWhichFrame,
   return InnerImage()->GetFrame(FRAME_FIRST, aFlags);
 }
 
-NS_IMETHODIMP
-FrozenImage::GetImageContainer(layers::LayerManager* aManager,
-                               layers::ImageContainer** _retval)
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+FrozenImage::GetImageContainer(layers::LayerManager* aManager, uint32_t aFlags)
 {
   // XXX(seth): GetImageContainer does not currently support anything but the
   // current frame. We work around this by always returning null, but if it ever
   // turns out that FrozenImage is widely used on codepaths that can actually
   // benefit from GetImageContainer, it would be a good idea to fix that method
   // for performance reasons.
-
-  *_retval = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP_(DrawResult)

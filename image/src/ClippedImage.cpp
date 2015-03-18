@@ -266,8 +266,8 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
   return mCachedSurface->Surface();
 }
 
-NS_IMETHODIMP
-ClippedImage::GetImageContainer(LayerManager* aManager, ImageContainer** _retval)
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+ClippedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
   // XXX(seth): We currently don't have a way of clipping the result of
   // GetImageContainer. We work around this by always returning null, but if it
@@ -276,11 +276,10 @@ ClippedImage::GetImageContainer(LayerManager* aManager, ImageContainer** _retval
   // that method for performance reasons.
 
   if (!ShouldClip()) {
-    return InnerImage()->GetImageContainer(aManager, _retval);
+    return InnerImage()->GetImageContainer(aManager, aFlags);
   }
 
-  *_retval = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 static bool

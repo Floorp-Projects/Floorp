@@ -707,6 +707,33 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     }
 }
 
+void
+MessageChannel::ProcessPendingRequests()
+{
+    // Loop until there aren't any more priority messages to process.
+    for (;;) {
+        mozilla::Vector<Message> toProcess;
+
+        for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
+            Message &msg = *it;
+            if (!ShouldDeferMessage(msg)) {
+                toProcess.append(Move(msg));
+                it = mPending.erase(it);
+                continue;
+            }
+            it++;
+        }
+
+        if (toProcess.empty())
+            break;
+
+        // Processing these messages could result in more messages, so we
+        // loop around to check for more afterwards.
+        for (auto it = toProcess.begin(); it != toProcess.end(); it++)
+            ProcessPendingRequest(*it);
+    }
+}
+
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
@@ -766,31 +793,12 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     int32_t transaction = mCurrentTransaction;
     msg->set_transaction_id(transaction);
 
+    ProcessPendingRequests();
+
     mLink->SendMessage(msg.forget());
 
     while (true) {
-        // Loop until there aren't any more priority messages to process.
-        for (;;) {
-            mozilla::Vector<Message> toProcess;
-
-            for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
-                Message &msg = *it;
-                if (!ShouldDeferMessage(msg)) {
-                    toProcess.append(Move(msg));
-                    it = mPending.erase(it);
-                    continue;
-                }
-                it++;
-            }
-
-            if (toProcess.empty())
-                break;
-
-            // Processing these messages could result in more messages, so we
-            // loop around to check for more afterwards.
-            for (auto it = toProcess.begin(); it != toProcess.end(); it++)
-                ProcessPendingRequest(*it);
-        }
+        ProcessPendingRequests();
 
         // See if we've received a reply.
         if (mRecvdErrors) {
