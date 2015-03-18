@@ -3776,7 +3776,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
 
     marker.start();
     MOZ_ASSERT(!marker.callback);
-    MOZ_ASSERT(IS_GC_MARKING_TRACER(&marker));
+    MOZ_ASSERT(IsMarkingTracer(&marker));
 
     /* For non-incremental GC the following sweep discards the jit code. */
     if (isIncremental) {

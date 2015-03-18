@@ -353,12 +353,25 @@ class GCMarker : public JSTracer
 void
 SetMarkStackLimit(JSRuntime *rt, size_t limit);
 
-} /* namespace js */
+// Return true if this trace is happening on behalf of gray buffering during
+// the marking phase of incremental GC.
+inline bool
+IsMarkingGray(JSTracer *trc)
+{
+    return trc->callback == js::GCMarker::GrayCallback;
+}
 
-/*
- * Macro to test if a traversal is the marking phase of the GC.
- */
-#define IS_GC_MARKING_TRACER(trc) \
-    ((trc)->callback == nullptr || (trc)->callback == GCMarker::GrayCallback)
+// Return true if this trace is happening on behalf of the marking phase of GC.
+inline bool
+IsMarkingTracer(JSTracer *trc)
+{
+    // If we call this on the gray-buffering tracer, then we have encountered a
+    // marking path that will be wrong when tracing with a callback marker to
+    // enqueue for deferred gray marking.
+    MOZ_ASSERT(!IsMarkingGray(trc));
+    return trc->callback == nullptr;
+}
+
+} /* namespace js */
 
 #endif /* js_Tracer_h */
