@@ -990,40 +990,11 @@ DataConnectionHandler.prototype = {
   },
 
   _compareDataCallOptions: function(dataCall, newDataCall) {
-    return dataCall.apnProfile.apn == newDataCall.apn &&
-           dataCall.apnProfile.user == newDataCall.user &&
-           dataCall.apnProfile.password == newDataCall.passwd &&
+    return dataCall.apnProfile.apn == newDataCall.apnProfile.apn &&
+           dataCall.apnProfile.user == newDataCall.apnProfile.user &&
+           dataCall.apnProfile.password == newDataCall.apnProfile.passwd &&
            dataCall.chappap == newDataCall.chappap &&
            dataCall.pdptype == newDataCall.pdptype;
-  },
-
-  _deliverDataCallMessage: function(name, args) {
-    for (let i = 0; i < this._dataCalls.length; i++) {
-      let datacall = this._dataCalls[i];
-      // Send message only to the DataCall that matches the data call options.
-      // Currently, args always contain only one datacall info.
-      if (!this._compareDataCallOptions(datacall, args[0])) {
-        continue;
-      }
-      // Do not deliver message to DataCall that contains cid but mistmaches
-      // with the cid in the current message.
-      if (args[0].cid !== undefined && datacall.linkInfo.cid != null &&
-          args[0].cid != datacall.linkInfo.cid) {
-        continue;
-      }
-
-      try {
-        let handler = datacall[name];
-        if (typeof handler !== "function") {
-          throw new Error("No handler for " + name);
-        }
-        handler.apply(datacall, args);
-      } catch (e) {
-        if (DEBUG) {
-          this.debug("Handler for " + name + " threw an exception: " + e);
-        }
-      }
-    }
   },
 
   /**
@@ -1337,10 +1308,62 @@ DataConnectionHandler.prototype = {
     return dataDisconnecting;
   },
 
+  _findDataCallByCid: function(cid) {
+    if (cid === undefined || cid < 0) {
+      return -1;
+    }
+
+    for (let i = 0; i < this._dataCalls.length; i++) {
+      let datacall = this._dataCalls[i];
+      if (datacall.linkInfo.cid != null &&
+          datacall.linkInfo.cid === cid) {
+        return i;
+      }
+    }
+
+    return -1;
+  },
+
   /**
-   * Handle data errors.
+   * Handle unsolicidated data call list changed, called from RadioInterface.
    */
-  handleDataCallError: function(message) {
+  handleDataCallListChanged: function(dataCallList) {
+    let currentDataCalls = this._dataCalls.slice();
+    for (let i = 0; i < dataCallList.length; i++) {
+      let dataCall = dataCallList[i];
+      let index = this._findDataCallByCid(dataCall.cid);
+      if (index == -1) {
+        if (DEBUG) {
+          this.debug("Unexpected new data call: " + JSON.stringify(dataCall));
+        }
+        continue;
+      }
+      currentDataCalls[index].onDataCallChanged(dataCall);
+      currentDataCalls[index] = null;
+    }
+
+    // If there is any CONNECTED DataCall left in currentDataCalls, means that
+    // it is missing in dataCallList, we should send a DISCONNECTED event to
+    // notify about this.
+    for (let i = 0; i < currentDataCalls.length; i++) {
+      let currentDataCall = currentDataCalls[i];
+      if (currentDataCall && currentDataCall.linkInfo.cid != null &&
+          currentDataCall.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+        if (DEBUG) {
+          this.debug("Expected data call missing: " + JSON.stringify(
+            currentDataCall.apnProfile) + ", must have been DISCONNECTED.");
+        }
+        currentDataCall.onDataCallChanged({
+          state: RIL.GECKO_NETWORK_STATE_DISCONNECTED
+        });
+      }
+    }
+  },
+
+  /**
+   * Notify about data call setup error, called from DataCall.
+   */
+  notifyDataCallError: function(message) {
     // Notify data call error only for data APN
     let networkInterface = this.dataNetworkInterfaces.get(NETWORK_TYPE_MOBILE);
     if (networkInterface && networkInterface.enabled) {
@@ -1348,7 +1371,7 @@ DataConnectionHandler.prototype = {
       // If there is a cid, compare cid; otherwise it is probably an error on
       // data call setup.
       if (message.cid !== undefined) {
-        if (message.cid == dataCall.linkInfo.cid) {
+        if (message.linkInfo.cid == dataCall.linkInfo.cid) {
           gMobileConnectionService.notifyDataError(this.clientId, message);
         }
       } else {
@@ -1357,23 +1380,20 @@ DataConnectionHandler.prototype = {
         }
       }
     }
-
-    this._deliverDataCallMessage("dataCallError", [message]);
   },
 
   /**
-   * Handle data call state changes.
+   * Notify about data call changed, called from DataCall.
    */
-  handleDataCallState: function(datacall) {
-    this._deliverDataCallMessage("dataCallStateChanged", [datacall]);
-
+  notifyDataCallChanged: function(updatedDataCall) {
     // Process pending radio power off request after all data calls
     // are disconnected.
-    if (datacall.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED &&
+    if (updatedDataCall.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED ||
+        updatedDataCall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
         this.allDataDisconnected()) {
       if (gRadioEnabledController.isDeactivatingDataCalls()) {
         if (DEBUG) {
-          this.debug("All data connections are disconnected.");
+          this.debug("All data calls are disconnected.");
         }
         gRadioEnabledController.finishDeactivatingDataCalls(this.clientId);
       }
@@ -1870,22 +1890,8 @@ RadioInterface.prototype = {
         gTelephonyService.notifyUssdReceived(this.clientId, message.message,
                                              message.sessionEnded);
         break;
-      case "datacallerror":
-        connHandler.handleDataCallError(message);
-        break;
-      case "datacallstatechange":
-        let addresses = [];
-        for (let i = 0; i < message.addresses.length; i++) {
-          let [address, prefixLength] = message.addresses[i].split("/");
-          // From AOSP hardware/ril/include/telephony/ril.h, that address prefix
-          // is said to be OPTIONAL, but we never met such case before.
-          addresses.push({
-            address: address,
-            prefixLength: prefixLength ? parseInt(prefixLength, 10) : 0
-          });
-        }
-        message.addresses = addresses;
-        connHandler.handleDataCallState(message);
+      case "datacalllistchanged":
+        connHandler.handleDataCallListChanged(message.datacalls);
         break;
       case "emergencyCbModeChange":
         gMobileConnectionService.notifyEmergencyCallbackModeChanged(this.clientId,
@@ -2645,8 +2651,7 @@ function DataCall(clientId, apnSetting) {
   this.linkInfo = {
     cid: null,
     ifname: null,
-    ips: [],
-    prefixLengths: [],
+    addresses: [],
     dnses: [],
     gateways: []
   };
@@ -2678,98 +2683,169 @@ DataCall.prototype = {
   // Holds the authentication type sent to ril worker.
   chappap: null,
 
-  dataCallError: function(message) {
-    if (DEBUG) {
-      this.debug("Data call error on APN " + message.apn + ": " +
-                 message.errorMsg + " (" + message.status + "), retry time: " +
-                 message.suggestedRetryTime);
-    }
-    this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTED;
-
-    if (this.requestedNetworkIfaces.length === 0) {
-      if (DEBUG) this.debug("This DataCall is not requested anymore.");
-      return;
+  /**
+   * @return "deactivate" if <ifname> changes or one of the currentDataCall
+   *         addresses is missing in updatedDataCall, or "identical" if no
+   *         changes found, or "changed" otherwise.
+   */
+  _compareDataCallLink: function(updatedDataCall, currentDataCall) {
+    // If network interface is changed, report as "deactivate".
+    if (updatedDataCall.ifname != currentDataCall.ifname) {
+      return "deactivate";
     }
 
-    // For suggestedRetryTime, the value of INT32_MAX(0x7fffffff) means no retry.
-    if (message.suggestedRetryTime === INT32_MAX ||
-        this.isPermanentFail(message.status, message.errorMsg)) {
-      if (DEBUG) this.debug("Data call error: no retry needed.");
-      return;
+    // If any existing address is missing, report as "deactivate".
+    for (let i = 0; i < currentDataCall.addresses.length; i++) {
+      let address = currentDataCall.addresses[i];
+      if (updatedDataCall.addresses.indexOf(address) < 0) {
+        return "deactivate";
+      }
     }
 
-    this.retry(message.suggestedRetryTime);
+    if (currentDataCall.addresses.length != updatedDataCall.addresses.length) {
+      // Since now all |currentDataCall.addresses| are found in
+      // |updatedDataCall.addresses|, this means one or more new addresses are
+      // reported.
+      return "changed";
+    }
+
+    let fields = ["gateways", "dnses"];
+    for (let i = 0; i < fields.length; i++) {
+      // Compare <datacall>.<field>.
+      let field = fields[i];
+      let lhs = updatedDataCall[field], rhs = currentDataCall[field];
+      if (lhs.length != rhs.length) {
+        return "changed";
+      }
+      for (let i = 0; i < lhs.length; i++) {
+        if (lhs[i] != rhs[i]) {
+          return "changed";
+        }
+      }
+    }
+
+    return "identical";
   },
 
-  dataCallStateChanged: function(datacall) {
-    if (DEBUG) {
-      this.debug("Data call ID: " + datacall.cid + ", interface name: " +
-                 datacall.ifname + ", APN name: " + datacall.apn + ", state: " +
-                 datacall.state);
+  onSetupDataCallResult: function(dataCall) {
+    if (dataCall.status && dataCall.status != RIL.DATACALL_FAIL_NONE) {
+      dataCall.errorMsg =
+        RIL.RIL_DATACALL_FAILCAUSE_TO_GECKO_DATACALL_ERROR[dataCall.status];
     }
 
-    if (this.state == datacall.state &&
-        datacall.state != RIL.GECKO_NETWORK_STATE_CONNECTED) {
+    if (dataCall.errorMsg) {
+      if (DEBUG) {
+        this.debug("SetupDataCall error for apn " + dataCall.apn + ": " +
+                   dataCall.errorMsg + " (" + dataCall.status + "), retry time: " +
+                   dataCall.suggestedRetryTime);
+      }
+
+      this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTED;
+
+      if (this.requestedNetworkIfaces.length === 0) {
+        if (DEBUG) this.debug("This DataCall is not requested anymore.");
+        return;
+      }
+
+      // Let DataConnectionHandler notify MobileConnectionService
+      let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
+      connHandler.notifyDataCallError(this);
+
+      // For suggestedRetryTime, the value of INT32_MAX(0x7fffffff) means no retry.
+      if (dataCall.suggestedRetryTime === INT32_MAX ||
+          this.isPermanentFail(dataCall.status, dataCall.errorMsg)) {
+        if (DEBUG) this.debug("Data call error: no retry needed.");
+        return;
+      }
+
+      this.retry(dataCall.suggestedRetryTime);
       return;
     }
 
-    switch (datacall.state) {
-      case RIL.GECKO_NETWORK_STATE_CONNECTED:
-        if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTING) {
-          this.apnRetryCounter = 0;
-          this.linkInfo.cid = datacall.cid;
+    this.apnRetryCounter = 0;
+    this.linkInfo.cid = dataCall.cid;
 
-          if (this.requestedNetworkIfaces.length === 0) {
-            if (DEBUG) {
-              this.debug("State is connected, but no network interface requested" +
-                         " this DataCall");
-            }
+    if (this.requestedNetworkIfaces.length === 0) {
+      if (DEBUG) {
+        this.debug("State is connected, but no network interface requested" +
+                   " this DataCall");
+      }
+      this.deactivate();
+      return;
+    }
+
+    this.linkInfo.ifname = dataCall.ifname;
+    this.linkInfo.addresses = dataCall.addresses.slice();
+    this.linkInfo.gateways = dataCall.gateways.slice();
+    this.linkInfo.dnses = dataCall.dnses.slice();
+    this.state = dataCall.state;
+
+    // Notify DataConnectionHandler about data call connected.
+    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
+    connHandler.notifyDataCallChanged(this);
+
+    for (let i = 0; i < this.requestedNetworkIfaces.length; i++) {
+      this.requestedNetworkIfaces[i].notifyRILNetworkInterface();
+    }
+  },
+
+  onDeactivateDataCallResult: function() {
+    this.reset();
+
+    if (this.requestedNetworkIfaces.length > 0) {
+      if (DEBUG) {
+        this.debug("State is disconnected/unknown, but this DataCall is" +
+                   " requested.");
+      }
+      this.setup();
+      return;
+    }
+
+    // Notify DataConnectionHandler about data call disconnected.
+    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
+    connHandler.notifyDataCallChanged(this);
+  },
+
+  onDataCallChanged: function(updatedDataCall) {
+    if (DEBUG) {
+      this.debug("onDataCallChanged: " + JSON.stringify(updatedDataCall));
+    }
+
+    if (this.state == updatedDataCall.state &&
+        updatedDataCall.state != RIL.GECKO_NETWORK_STATE_CONNECTED) {
+      return;
+    }
+
+    switch (updatedDataCall.state) {
+      case RIL.GECKO_NETWORK_STATE_CONNECTED:
+        if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          let result =
+            this._compareDataCallLink(updatedDataCall, this.linkInfo);
+
+          if (result == "identical") {
+            if (DEBUG) this.debug("No changes in data call.");
+            return;
+          }
+          if (result == "deactivate") {
+            if (DEBUG) this.debug("Data link changed, cleanup.");
             this.deactivate();
             return;
           }
-
-          this.linkInfo.ifname = datacall.ifname;
-          for (let entry of datacall.addresses) {
-            this.linkInfo.ips.push(entry.address);
-            this.linkInfo.prefixLengths.push(entry.prefixLength);
-          }
-          this.linkInfo.gateways = datacall.gateways.slice();
-          this.linkInfo.dnses = datacall.dnses.slice();
-
-        } else if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
-          // configuration changed.
-          let changed = false;
-          if (this.linkInfo.ips.length != datacall.addresses.length) {
-            changed = true;
-            this.linkInfo.ips = [];
-            this.linkInfo.prefixLengths = [];
-            for (let entry of datacall.addresses) {
-              this.linkInfo.ips.push(entry.address);
-              this.linkInfo.prefixLengths.push(entry.prefixLength);
-            }
+          // Minor change, just update and notify.
+          if (DEBUG) {
+            this.debug("Data link minor change, just update and notify.");
           }
 
-          let reduceFunc = function(aRhs, aChanged, aElement, aIndex) {
-            return aChanged || (aElement != aRhs[aIndex]);
-          };
-          for (let field of ["gateways", "dnses"]) {
-            let lhs = this.linkInfo[field], rhs = datacall[field];
-            if (lhs.length != rhs.length ||
-                lhs.reduce(reduceFunc.bind(null, rhs), false)) {
-              changed = true;
-              this.linkInfo[field] = rhs.slice();
-            }
-          }
-          if (!changed) {
-            return;
-          }
+          this.linkInfo.addresses = updatedDataCall.addresses.slice();
+          this.linkInfo.gateways = updatedDataCall.gateways.slice();
+          this.linkInfo.dnses = updatedDataCall.dnses.slice();
         }
         break;
       case RIL.GECKO_NETWORK_STATE_DISCONNECTED:
       case RIL.GECKO_NETWORK_STATE_UNKNOWN:
         if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
           // Notify first on unexpected data call disconnection.
-          this.state = datacall.state;
+          this.state = updatedDataCall.state;
           for (let i = 0; i < this.requestedNetworkIfaces.length; i++) {
             this.requestedNetworkIfaces[i].notifyRILNetworkInterface();
           }
@@ -2787,7 +2863,12 @@ DataCall.prototype = {
         break;
     }
 
-    this.state = datacall.state;
+    this.state = updatedDataCall.state;
+
+    // Notify DataConnectionHandler about data call changed.
+    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
+    connHandler.notifyDataCallChanged(this);
+
     for (let i = 0; i < this.requestedNetworkIfaces.length; i++) {
       this.requestedNetworkIfaces[i].notifyRILNetworkInterface();
     }
@@ -2854,8 +2935,7 @@ DataCall.prototype = {
   reset: function() {
     this.linkInfo.cid = null;
     this.linkInfo.ifname = null;
-    this.linkInfo.ips = [];
-    this.linkInfo.prefixLengths = [];
+    this.linkInfo.addresses = [];
     this.linkInfo.dnses = [];
     this.linkInfo.gateways = [];
 
@@ -2949,7 +3029,7 @@ DataCall.prototype = {
       passwd: this.apnProfile.password,
       chappap: authType,
       pdptype: pdpType
-    });
+    }, this.onSetupDataCallResult.bind(this));
     this.state = RIL.GECKO_NETWORK_STATE_CONNECTING;
   },
 
@@ -3034,7 +3114,8 @@ DataCall.prototype = {
     radioInterface.sendWorkerMessage("deactivateDataCall", {
       cid: this.linkInfo.cid,
       reason: reason
-    });
+    }, this.onDeactivateDataCallResult.bind(this));
+
     this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTING;
   },
 
@@ -3104,29 +3185,37 @@ RILNetworkInterface.prototype = {
     return this.apnSetting.port || "";
   },
 
-  getAddresses: function(ips, prefixLengths) {
-    let linkInfo = this.dataCall.linkInfo;
+  getAddresses: function(aIps, aPrefixLengths) {
+    let addresses = this.dataCall.linkInfo.addresses;
 
-    ips.value = linkInfo.ips.slice();
-    prefixLengths.value = linkInfo.prefixLengths.slice();
+    let ips = [];
+    let prefixLengths = [];
+    for (let i = 0; i < addresses.length; i++) {
+      let [ip, prefixLength] = addresses[i].split("/");
+      ips.push(ip);
+      prefixLengths.push();
+    }
 
-    return linkInfo.ips.length;
+    aIps.value = ips.slice();
+    aPrefixLengths.value = prefixLengths.slice();
+
+    return aIps.length;
   },
 
-  getGateways: function(count) {
+  getGateways: function(aCount) {
     let linkInfo = this.dataCall.linkInfo;
 
-    if (count) {
-      count.value = linkInfo.gateways.length;
+    if (aCount) {
+      aCount.value = linkInfo.gateways.length;
     }
     return linkInfo.gateways.slice();
   },
 
-  getDnses: function(count) {
+  getDnses: function(aCount) {
     let linkInfo = this.dataCall.linkInfo;
 
-    if (count) {
-      count.value = linkInfo.dnses.length;
+    if (aCount) {
+      aCount.value = linkInfo.dnses.length;
     }
     return linkInfo.dnses.slice();
   },
