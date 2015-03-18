@@ -78,6 +78,59 @@ protected:
   bool mNeedsClearWhite;
 };
 
+class DXGIYCbCrTextureClientD3D11 : public TextureClient
+{
+public:
+  DXGIYCbCrTextureClientD3D11(ISurfaceAllocator* aAllocator,
+                              TextureFlags aFlags);
+
+  virtual ~DXGIYCbCrTextureClientD3D11();
+
+  // TextureClient
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE{ return !!mTextures[0]; }
+
+  virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool IsLocked() const MOZ_OVERRIDE{ return mIsLocked; }
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  void InitWith(ID3D11Texture2D* aTextureY,
+                ID3D11Texture2D* aTextureCb,
+                ID3D11Texture2D* aTextureCr,
+                const gfx::IntSize& aSize)
+  {
+    MOZ_ASSERT(aTextureY && aTextureCb && aTextureCr);
+    MOZ_ASSERT(!mTextures[0]);
+    mTextures[0] = aTextureY;
+    mTextures[1] = aTextureCb;
+    mTextures[2] = aTextureCr;
+    mSize = aSize;
+  }
+
+  virtual gfx::IntSize GetSize() const
+  {
+    return mSize;
+  }
+
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE{ return true; }
+
+    // This TextureClient should not be used in a context where we use CreateSimilar
+    // (ex. component alpha) because the underlying texture data is always created by
+    // an external producer.
+    virtual TemporaryRef<TextureClient>
+    CreateSimilar(TextureFlags, TextureAllocationFlags) const MOZ_OVERRIDE{ return nullptr; }
+
+private:
+  RefPtr<ID3D11Texture2D> mTextures[3];
+  gfx::IntSize mSize;
+  bool mIsLocked;
+};
+
+
 /**
  * TextureSource that provides with the necessary APIs to be composited by a
  * CompositorD3D11.
@@ -210,6 +263,45 @@ protected:
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
+  bool mIsLocked;
+};
+
+class DXGIYCbCrTextureHostD3D11 : public TextureHost
+{
+public:
+  DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
+                            const SurfaceDescriptorDXGIYCbCr& aDescriptor);
+
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE;
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE{}
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE{ return gfx::SurfaceFormat::YUV; }
+
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE{ return mSize; }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return nullptr;
+  }
+
+protected:
+  ID3D11Device* GetDevice();
+
+  bool OpenSharedHandle();
+
+  RefPtr<ID3D11Texture2D> mTextures[3];
+  RefPtr<DataTextureSourceD3D11> mTextureSources[3];
+
+  RefPtr<CompositorD3D11> mCompositor;
+  gfx::IntSize mSize;
+  WindowsHandle mHandles[3];
   bool mIsLocked;
 };
 
