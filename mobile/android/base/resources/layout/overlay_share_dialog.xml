@@ -25,7 +25,7 @@
         <TextView
             android:id="@+id/title"
             style="@style/ShareOverlayTitle"
-            android:textAppearance="@style/ShareOverlayTextAppearance.Title"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"/>
@@ -34,7 +34,7 @@
         <TextView
             android:id="@+id/subtitle"
             style="@style/ShareOverlayTitle"
-            android:textAppearance="@style/ShareOverlayTextAppearance.Subtitle"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header.Subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
