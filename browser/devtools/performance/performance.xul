@@ -200,11 +200,13 @@
                   <label class="plain call-tree-header"
                          type="allocations"
                          crop="end"
-                         value="&profilerUI.table.totalAlloc;"/>
+                         value="&profilerUI.table.totalAlloc1;"
+                         tooltiptext="&profilerUI.table.totalAllocTooltip;"/>
                   <label class="plain call-tree-header"
                          type="self-allocations"
                          crop="end"
-                         value="&profilerUI.table.selfAlloc;"/>
+                         value="&profilerUI.table.selfAlloc1;"
+                         tooltiptext="&profilerUI.table.selfAllocTooltip;"/>
                   <label class="plain call-tree-header"
                          type="function"
                          crop="end"

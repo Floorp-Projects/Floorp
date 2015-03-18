@@ -99,8 +99,11 @@ let AnimationsController = {
 
     let target = gToolbox.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
-    // Not all server versions provide a way to pause all animations at once.
+
+    // Expose actor capabilities.
     this.hasToggleAll = yield target.actorHasMethod("animations", "toggleAll");
+    this.hasSetCurrentTime = yield target.actorHasMethod("animationplayer",
+                                                         "setCurrentTime");
 
     this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
     this.onNewNodeFront = this.onNewNodeFront.bind(this);

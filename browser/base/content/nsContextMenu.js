@@ -870,6 +870,7 @@ nsContextMenu.prototype = {
   _openLinkInParameters : function (extra) {
     let params = { charset: gContextMenuContentData.charSet,
                    referrerURI: gContextMenuContentData.documentURIObject,
+                   referrerPolicy: gContextMenuContentData.referrerPolicy,
                    noReferrer: this.linkHasNoReferrer };
     for (let p in extra)
       params[p] = extra[p];
@@ -1025,22 +1026,35 @@ nsContextMenu.prototype = {
       this.target.forceReload();
   },
 
+  _canvasToDataURL: function(target) {
+    let mm = this.browser.messageManager;
+    return new Promise(function(resolve) {
+      mm.sendAsyncMessage("ContextMenu:Canvas:ToDataURL", {}, { target });
+
+      let onMessage = (message) => {
+        mm.removeMessageListener("ContextMenu:Canvas:ToDataURL:Result", onMessage);
+        resolve(message.data.dataURL);
+      };
+      mm.addMessageListener("ContextMenu:Canvas:ToDataURL:Result", onMessage);
+    });
+  },
+
   // Change current window to the URL of the image, video, or audio.
   viewMedia: function(e) {
-    var viewURL;
-
-    if (this.onCanvas)
-      viewURL = this.target.toDataURL();
+    let referrerURI = gContextMenuContentData.documentURIObject;
+    if (this.onCanvas) {
+      this._canvasToDataURL(this.target).then(function(dataURL) {
+        openUILink(dataURL, e, { disallowInheritPrincipal: true,
+                                 referrerURI: referrerURI });
+      }, Cu.reportError);
+    }
     else {
-      viewURL = this.mediaURL;
-      urlSecurityCheck(viewURL,
+      urlSecurityCheck(this.mediaURL,
                        this.browser.contentPrincipal,
                        Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+      openUILink(this.mediaURL, e, { disallowInheritPrincipal: true,
+                                     referrerURI: referrerURI });
     }
-
-    var doc = this.target.ownerDocument;
-    openUILink(viewURL, e, { disallowInheritPrincipal: true,
-                             referrerURI: doc.documentURIObject });
   },
 
   saveVideoFrameAsImage: function () {
