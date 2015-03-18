@@ -27,7 +27,7 @@
 (function (global) {
 
   function error(m) {
-    dump("JSDOMParser error: " + m);
+    dump("JSDOMParser error: " + m + "\n");
   }
 
   // When a style is set in JS, map it to the corresponding CSS attribute
