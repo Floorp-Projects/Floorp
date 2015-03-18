@@ -59,6 +59,18 @@ protected:
     bool IsDefinite() const { return mStart != 0; }
     uint32_t Extent() const { return mEnd - mStart; }
     /**
+     * Resolve this auto range to start at aStart, making it definite.
+     * Precondition: this range IsAuto()
+     */
+    void ResolveAutoPosition(uint32_t aStart)
+    {
+      MOZ_ASSERT(IsAuto(), "Why call me?");
+      MOZ_ASSERT(aStart > 0, "expected a 1-based line number");
+      MOZ_ASSERT(Extent() == mEnd, "'auto' representation changed?");
+      mStart = aStart;
+      mEnd += aStart;
+    }
+    /**
      * Return the contribution of this line range for step 2 in
      * http://dev.w3.org/csswg/css-grid/#auto-placement-algo
      */
@@ -166,8 +178,63 @@ protected:
   GridArea PlaceDefinite(nsIFrame* aChild, const nsStylePosition* aStyle);
 
   /**
-   * Assign definite grid areas for all child frames and place them into
-   * the grid.
+   * Place aArea in the first column (in row aArea->mRows.mStart) starting at
+   * aStartCol without overlapping other items.  The resulting aArea may
+   * overflow the current implicit grid bounds.
+   * Pre-condition: aArea->mRows.IsDefinite() is true.
+   * Post-condition: aArea->IsDefinite() is true.
+   */
+  void PlaceAutoCol(uint32_t aStartCol, GridArea* aArea) const;
+
+  /**
+   * Find the first column in row aLockedRow starting at aStartCol where aArea
+   * could be placed without overlapping other items.  The returned column may
+   * cause aArea to overflow the current implicit grid bounds if placed there.
+   */
+  uint32_t FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
+                       const GridArea* aArea) const;
+
+  /**
+   * Place aArea in the first row (in column aArea->mCols.mStart) starting at
+   * aStartRow without overlapping other items. The resulting aArea may
+   * overflow the current implicit grid bounds.
+   * Pre-condition: aArea->mCols.IsDefinite() is true.
+   * Post-condition: aArea->IsDefinite() is true.
+   */
+  void PlaceAutoRow(uint32_t aStartRow, GridArea* aArea) const;
+
+  /**
+   * Find the first row in column aLockedCol starting at aStartRow where aArea
+   * could be placed without overlapping other items.  The returned row may
+   * cause aArea to overflow the current implicit grid bounds if placed there.
+   */
+  uint32_t FindAutoRow(uint32_t aLockedCol, uint32_t aStartRow,
+                       const GridArea* aArea) const;
+
+  /**
+   * Place aArea in the first column starting at aStartCol,aStartRow without
+   * causing it to overlap other items or overflow mGridColEnd.
+   * If there's no such column in aStartRow, continue in position 1,aStartRow+1.
+   * Pre-condition: aArea->mCols.IsAuto() && aArea->mRows.IsAuto() is true.
+   * Post-condition: aArea->IsDefinite() is true.
+   */
+  void PlaceAutoAutoInRowOrder(uint32_t aStartCol, uint32_t aStartRow,
+                               GridArea* aArea) const;
+
+  /**
+   * Place aArea in the first row starting at aStartCol,aStartRow without
+   * causing it to overlap other items or overflow mGridRowEnd.
+   * If there's no such row in aStartCol, continue in position aStartCol+1,1.
+   * Pre-condition: aArea->mCols.IsAuto() && aArea->mRows.IsAuto() is true.
+   * Post-condition: aArea->IsDefinite() is true.
+   */
+  void PlaceAutoAutoInColOrder(uint32_t aStartCol, uint32_t aStartRow,
+                               GridArea* aArea) const;
+
+  /**
+   * Place all child frames into the grid and expand the (implicit) grid as
+   * needed.  The allocated GridAreas are stored in the GridAreaProperty
+   * frame property on the child frame.
    * @param aStyle the StylePosition() for the grid container
    */
   void PlaceGridItems(const nsStylePosition* aStyle);
