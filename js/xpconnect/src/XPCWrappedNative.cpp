@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/Likely.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include <algorithm>
 
@@ -905,20 +906,9 @@ XPCWrappedNative::FlatJSObjectFinalized()
             }
 
             // We also need to release any native pointers held...
-            nsISupports* obj = to->GetNative();
-            if (obj) {
-#ifdef XP_WIN
-                // Try to detect free'd pointer
-                MOZ_ASSERT(*(int*)obj != 0xdddddddd, "bad pointer!");
-                MOZ_ASSERT(*(int*)obj != 0,          "bad pointer!");
-#endif
-                XPCJSRuntime* rt = GetRuntime();
-                if (rt) {
-                    DeferredFinalize(obj);
-                } else {
-                    obj->Release();
-                }
-                to->SetNative(nullptr);
+            nsRefPtr<nsISupports> native = to->TakeNative();
+            if (native && GetRuntime()) {
+                DeferredFinalize(native.forget().take());
             }
 
             to->SetInterface(nullptr);
@@ -1004,7 +994,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
             }
             // We leak the tearoff mNative
             // (for the same reason we leak mIdentity - see above).
-            to->SetNative(nullptr);
+            unused << to->TakeNative().take();
             to->SetInterface(nullptr);
         }
     }
@@ -1274,7 +1264,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
     }
 
     aTearOff->SetInterface(aInterface);
-    aTearOff->SetNative(qiResult.forget().take());
+    aTearOff->SetNative(qiResult);
     if (needJSObject && !InitTearOffJSObject(aTearOff))
         return NS_ERROR_OUT_OF_MEMORY;
 

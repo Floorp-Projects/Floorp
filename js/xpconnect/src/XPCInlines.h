@@ -548,11 +548,7 @@ XPCWrappedNative::SweepTearOffs()
             // If this tearoff does not have a live dedicated JSObject,
             // then let's recycle it.
             if (!to->GetJSObjectPreserveColor()) {
-                nsISupports* obj = to->GetNative();
-                if (obj) {
-                    obj->Release();
-                    to->SetNative(nullptr);
-                }
+                to->SetNative(nullptr);
                 to->SetInterface(nullptr);
             }
         }
