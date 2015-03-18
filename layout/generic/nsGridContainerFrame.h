@@ -39,9 +39,135 @@ public:
 #endif
 
 protected:
+  typedef mozilla::css::GridNamedArea GridNamedArea;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  /**
+   * A LineRange can be definite or auto - when it's definite it represents
+   * a consecutive set of tracks between a starting line and an ending line
+   * (both 1-based) where mStart < mEnd.  Before it's definite it can also
+   * represent an auto position with a span, where mStart == 0 and mEnd is
+   * the (non-zero positive) span.
+   * In both states the invariant mEnd > mStart holds.
+   */
+  struct LineRange {
+   LineRange(uint32_t aStart, uint32_t aEnd)
+      : mStart(aStart), mEnd(aEnd) {}
+    bool IsAuto() const { return mStart == 0; }
+    bool IsDefinite() const { return mStart != 0; }
+    uint32_t Extent() const { return mEnd - mStart; }
+
+    uint32_t mStart;  // the start line, or zero for 'auto'
+    uint32_t mEnd;    // the end line, or the span length for 'auto'
+  };
+
+  /**
+   * A GridArea is the area in the grid for a grid item.
+   * The area is represented by two LineRanges, both of which can be auto
+   * (@see LineRange) in intermediate steps while the item is being placed.
+   * @see PlaceGridItems
+   */
+  struct GridArea {
+    GridArea(const LineRange& aCols, const LineRange& aRows)
+      : mCols(aCols), mRows(aRows) {}
+    bool IsDefinite() const { return mCols.IsDefinite() && mRows.IsDefinite(); }
+    LineRange mCols;
+    LineRange mRows;
+  };
+
+  enum LineRangeSide {
+    eLineRangeSideStart, eLineRangeSideEnd
+  };
+  /**
+   * Return a line number for (non-auto) aLine, per:
+   * http://dev.w3.org/csswg/css-grid/#line-placement
+   * @param aLine style data for the line (must be non-auto)
+   * @param aNth a number of lines to find from aFromIndex, negative if the
+   *             search should be in reverse order.  In the case aLine has
+   *             a specified line name, it's permitted to pass in zero which
+   *             will be treated as one.
+   * @param aFromIndex the zero-based index to start counting from
+   * @param aLineNameList the explicit named lines
+   * @param aAreaStart a pointer to GridNamedArea::mColumnStart/mRowStart
+   * @param aAreaEnd a pointer to GridNamedArea::mColumnEnd/mRowEnd
+   * @param aExplicitGridEnd the last line in the explicit grid
+   * @param aEdge indicates whether we are resolving a start or end line
+   * @param aStyle the StylePosition() for the grid container
+   * @return a definite line number, or zero in case aLine is a <custom-ident>
+   * that can't be found.
+   */
+  uint32_t ResolveLine(const nsStyleGridLine& aLine,
+                       int32_t aNth,
+                       uint32_t aFromIndex,
+                       const nsTArray<nsTArray<nsString>>& aLineNameList,
+                       uint32_t GridNamedArea::* aAreaStart,
+                       uint32_t GridNamedArea::* aAreaEnd,
+                       uint32_t aExplicitGridEnd,
+                       LineRangeSide aEdge,
+                       const nsStylePosition* aStyle);
+  /**
+   * Return a LineRange based on the given style data. Non-auto lines
+   * are resolved to a definite line number per:
+   * http://dev.w3.org/csswg/css-grid/#line-placement
+   * with placement errors corrected per:
+   * http://dev.w3.org/csswg/css-grid/#grid-placement-errors
+   * @param aStyle the StylePosition() for the grid container
+   * @param aStart style data for the start line
+   * @param aEnd style data for the end line
+   * @param aLineNameList the explicit named lines
+   * @param aAreaStart a pointer to GridNamedArea::mColumnStart/mRowStart
+   * @param aAreaEnd a pointer to GridNamedArea::mColumnEnd/mRowEnd
+   * @param aExplicitGridEnd the last line in the explicit grid
+   * @param aStyle the StylePosition() for the grid container
+   */
+  LineRange ResolveLineRange(const nsStyleGridLine& aStart,
+                             const nsStyleGridLine& aEnd,
+                             const nsTArray<nsTArray<nsString>>& aLineNameList,
+                             uint32_t GridNamedArea::* aAreaStart,
+                             uint32_t GridNamedArea::* aAreaEnd,
+                             uint32_t aExplicitGridEnd,
+                             const nsStylePosition* aStyle);
+
+  /**
+   * Return a GridArea with non-auto lines placed at a definite line number
+   * and with placement errors resolved.  One or both positions may still be
+   * 'auto'.
+   * @param aChild the grid item
+   * @param aStyle the StylePosition() for the grid container
+   */
+  GridArea PlaceDefinite(nsIFrame* aChild, const nsStylePosition* aStyle);
+
+  /**
+   * Assign definite grid areas for all child frames and place them into
+   * the grid.
+   * @param aStyle the StylePosition() for the grid container
+   */
+  void PlaceGridItems(const nsStylePosition* aStyle);
+
+  /**
+   * Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
+   * This is determined by the larger of the number of rows/columns defined
+   * by 'grid-template-areas' and the 'grid-template-rows'/'-columns', plus one.
+   * Also initialize the Implicit Grid (mGridCol[Row]End) to the same values.
+   * @param aStyle the StylePosition() for the grid container
+   */
+  void InitializeGridBounds(const nsStylePosition* aStyle);
+
+  /**
+   * Helper method for ResolveLineRange.
+   * @see ResolveLineRange
+   * @return a pair (start,end) of lines
+   */
+  typedef std::pair<uint32_t, uint32_t> LinePair;
+  LinePair ResolveLineRangeHelper(const nsStyleGridLine& aStart,
+                                  const nsStyleGridLine& aEnd,
+                                  const nsTArray<nsTArray<nsString>>& aLineNameList,
+                                  uint32_t GridNamedArea::* aAreaStart,
+                                  uint32_t GridNamedArea::* aAreaEnd,
+                                  uint32_t aExplicitGridEnd,
+                                  const nsStylePosition* aStyle);
 
   /**
    * XXX temporary - move the ImplicitNamedAreas stuff to the style system.
@@ -57,10 +183,29 @@ protected:
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
     return static_cast<ImplicitNamedAreas*>(Properties().Get(ImplicitNamedAreasProperty()));
   }
+  bool HasImplicitNamedArea(const nsString& aName) const {
+    ImplicitNamedAreas* areas = GetImplicitNamedAreas();
+    return areas && areas->Contains(aName);
+  }
 
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
 #endif // DEBUG
+
+private:
+  /**
+   * The last column grid line (1-based) in the explicit grid.
+   * (i.e. the number of explicit columns + 1)
+   */
+  uint32_t mExplicitGridColEnd;
+  /**
+   * The last row grid line (1-based) in the explicit grid.
+   * (i.e. the number of explicit rows + 1)
+   */
+  uint32_t mExplicitGridRowEnd;
+  // Same for the implicit grid
+  uint32_t mGridColEnd; // always >= mExplicitGridColEnd
+  uint32_t mGridRowEnd; // always >= mExplicitGridRowEnd
 };
 
 #endif /* nsGridContainerFrame_h___ */
