@@ -86,7 +86,11 @@ public:
       return rv;
     }
 
-    // FIXME(nsm): Set redirect limit.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+    if (httpChannel) {
+      // Spec says no redirects allowed for SW scripts.
+      httpChannel->SetRedirectionLimit(0);
+    }
 
     // Don't let serviceworker intercept.
     nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(mChannel);
