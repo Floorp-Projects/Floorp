@@ -11,7 +11,11 @@ add_task(function*() {
   let {inspector, panel, controller} = yield openAnimationInspector();
 
   info("Apply 2 finite animations to the test node");
-  getNode(".still").classList.add("multi-finite");
+  yield executeInContent("devtools:test:setAttribute", {
+    selector: ".still",
+    attributeName: "class",
+    attributeValue: "ball still multi-finite"
+  });
 
   info("Select the test node");
   yield selectNode(".still", inspector);
