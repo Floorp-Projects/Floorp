@@ -36,3 +36,21 @@ function RegExpFlagsGetter() {
     // Step 19.
     return result;
 }
+
+// ES6 draft rc1 21.2.5.14.
+function RegExpToString()
+{
+    // Steps 1-2.
+    var R = this;
+    if (!IsObject(R))
+        ThrowError(JSMSG_NOT_NONNULL_OBJECT, R === null ? "null" : typeof R);
+
+    // Steps 3-4.
+    var pattern = R.source;
+
+    // Steps 5-6.
+    var flags = R.flags;
+
+    // Step 7.
+    return '/' + pattern + '/' + flags;
+}
