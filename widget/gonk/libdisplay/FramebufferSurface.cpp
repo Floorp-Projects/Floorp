@@ -129,7 +129,11 @@ status_t FramebufferSurface::nextBuffer(sp<GraphicBuffer>& outBuffer, sp<Fence>&
 }
 
 // Overrides ConsumerBase::onFrameAvailable(), does not call base class impl.
+#if ANDROID_VERSION >= 22
+void FramebufferSurface::onFrameAvailable(const ::android::BufferItem &item) {
+#else
 void FramebufferSurface::onFrameAvailable() {
+#endif
     sp<GraphicBuffer> buf;
     sp<Fence> acquireFence;
     status_t err = nextBuffer(buf, acquireFence);
