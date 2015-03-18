@@ -754,7 +754,7 @@ function handleRevivedTab() {
     // won't be sent or received. The child-process message manager works though,
     // despite the fact that we're really running in the parent process.
     let browser = docShell.chromeEventHandler;
-    cpmm.sendSyncMessage("SessionStore:RemoteTabRevived", null, {browser: browser});
+    cpmm.sendAsyncMessage("SessionStore:RemoteTabRevived", null, {browser: browser});
   }
 }
 
