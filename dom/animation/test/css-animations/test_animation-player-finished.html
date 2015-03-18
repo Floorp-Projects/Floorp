@@ -1,0 +1,290 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<div id="log"></div>
+<style>
+@keyframes abc {
+  to { transform: translate(10px) }
+}
+@keyframes def {}
+</style>
+<script>
+'use strict';
+
+const ANIM_PROP_VAL = 'abc 100s';
+const ANIM_DURATION = 100000; // ms
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  var previousFinishedPromise = player.finished;
+
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise is the same object when playing starts');
+    player.pause();
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise does not change when pausing');
+    player.play();
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise does not change when play() unpauses');
+
+    player.currentTime = ANIM_DURATION;
+
+    return player.finished;
+  })).then(t.step_func(function() {
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise is the same object when playing completes');
+    t.done();
+  }));
+}, 'Test pausing then playing does not change the finished promise');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  var previousFinishedPromise = player.finished;
+
+  player.currentTime = ANIM_DURATION;
+
+  player.finished.then(t.step_func(function() {
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise is the same object when playing completes');
+    player.play();
+    assert_not_equals(player.finished, previousFinishedPromise,
+                  'Finished promise changes when replaying animation');
+
+    previousFinishedPromise = player.finished;
+    player.play();
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise is the same after redundant play() call');
+
+    t.done();
+  }));
+}, 'Test restarting a finished animation');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  var previousFinishedPromise;
+
+  player.currentTime = ANIM_DURATION;
+
+  player.finished.then(function() {
+    previousFinishedPromise = player.finished;
+    player.playbackRate = -1;
+    assert_not_equals(player.finished, previousFinishedPromise,
+                      'Finished promise should be replaced when reversing a ' +
+                      'finished promise');
+    player.currentTime = 0;
+    return player.finished;
+  }).then(t.step_func(function() {
+    previousFinishedPromise = player.finished;
+    player.play();
+    assert_not_equals(player.finished, previousFinishedPromise,
+                      'Finished promise is replaced after play() call on ' +
+                      'finished, reversed animation');
+    t.done();
+  }));
+}, 'Test restarting a reversed finished animation');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  var previousFinishedPromise = player.finished;
+
+  player.currentTime = ANIM_DURATION;
+
+  player.finished.then(t.step_func(function() {
+    player.currentTime = ANIM_DURATION + 1000;
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Finished promise is unchanged jumping past end of ' +
+                  'finished animation');
+
+    t.done();
+  }));
+}, 'Test redundant finishing of animation');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  player.currentTime = ANIM_DURATION;
+  player.finished.then(t.step_func(function(resolvedPlayer) {
+    assert_equals(resolvedPlayer, player,
+                  'Object identity of player passed to Promise callback'
+                  + ' matches the player object owning the Promise');
+    t.done();
+  }));
+}, 'The finished promise is fulfilled with its AnimationPlayer');
+
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // Set up pending animation
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+  var previousFinishedPromise = player.finished;
+
+  // Set up listeners on finished promise
+  player.finished.then(t.step_func(function() {
+    assert_unreached('finished promise is fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_not_equals(player.finished, previousFinishedPromise,
+                      'Finished promise should change after the original is ' +
+                      'rejected');
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after animation was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now cancel the animation and flush styles
+  div.style.animation = '';
+  window.getComputedStyle(div).animation;
+
+}, 'finished promise is rejected when an animation is cancelled by resetting ' +
+   'the animation property');
+
+async_test(function(t) {
+  var div = addDiv(t);
+
+  // As before, but this time instead of removing all animations, simply update
+  // the list of animations. At least for Firefox, updating is a different
+  // code path.
+
+  // Set up pending animation
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+  var previousFinishedPromise = player.finished;
+
+  // Set up listeners on finished promise
+  player.finished.then(t.step_func(function() {
+    assert_unreached('finished promise was fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_not_equals(player.finished, previousFinishedPromise,
+                      'Finished promise should change after the original is ' +
+                      'rejected');
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
+    assert_equals(player.playState, 'idle',
+                  'Player is idle after animation was cancelled');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  // Now update the animation and flush styles
+  div.style.animation = 'def 100s';
+  window.getComputedStyle(div).animation;
+
+}, 'finished promise is rejected when an animation is cancelled by changing ' +
+   'the animation property');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  const HALF_DUR = ANIM_DURATION / 2;
+  const QUARTER_DUR = ANIM_DURATION / 4;
+
+  player.currentTime = HALF_DUR;
+  div.style.animationDuration = QUARTER_DUR + 'ms';
+  // Player should now be finished
+
+  // Below we use gotNextFrame to check that shortening of the animation
+  // duration causes the finished promise to resolve, rather than it just
+  // getting resolved on the next animation frame. This relies on the fact
+  // that the promises are resolved as a micro-task before the next frame
+  // happens.
+
+  window.getComputedStyle(div).animationDuration; // flush style
+  var gotNextFrame = false;
+  waitForFrame().then(function() {
+    gotNextFrame = true;
+  });
+
+  player.finished.then(t.step_func(function() {
+    assert_false(gotNextFrame, 'shortening of the animation duration should ' +
+                               'resolve the finished promise');
+    assert_equals(player.currentTime, HALF_DUR,
+                  'currentTime should be unchanged when duration shortened');
+    var previousFinishedPromise = player.finished;
+    div.style.animationDuration = ANIM_DURATION + 'ms'; // now active again
+    window.getComputedStyle(div).animationDuration; // flush style
+    assert_not_equals(player.finished, previousFinishedPromise,
+                      'Finished promise should change after lengthening the ' +
+                      'duration causes the animation to become active');
+    t.done();
+  }));
+}, 'Test finished promise changes for animation duration changes');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(function() {
+    player.playbackRate = 0;
+    player.currentTime = ANIM_DURATION + 1000;
+    return waitForTwoAnimationFrames();
+  }).then(t.step_func(function() {
+    t.done();
+  }));
+
+  player.finished.then(t.step_func(function() {
+    assert_unreached('finished promise should not resolve when playbackRate ' +
+                     'is zero');
+  }));
+}, 'Test finished promise changes when playbackRate == 0');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  player.ready.then(function() {
+    player.playbackRate = -1;
+    return player.finished;
+  }).then(t.step_func(function() {
+    t.done();
+  }));
+}, 'Test finished promise resolves when playbackRate set to a negative value');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var player = div.getAnimationPlayers()[0];
+
+  var previousFinishedPromise = player.finished;
+
+  player.currentTime = ANIM_DURATION;
+
+  player.finished.then(function() {
+    div.style.animationPlayState = 'running';
+    return waitForTwoAnimationFrames();
+  }).then(t.step_func(function() {
+    assert_equals(player.finished, previousFinishedPromise,
+                  'Should not replay when animation-play-state changes to ' +
+                  '"running" on finished animation');
+    assert_equals(player.currentTime, ANIM_DURATION,
+                  'currentTime should not change when animation-play-state ' +
+                  'changes to "running" on finished animation');
+    t.done();
+  }));
+}, 'Test finished promise changes when animationPlayState set to running');
+
+
+</script>
