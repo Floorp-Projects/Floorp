@@ -26,7 +26,7 @@ DispatchBluetoothA2dpHALResult(
 {
   MOZ_ASSERT(aRes);
 
-  nsRunnable* runnable;
+  nsRefPtr<nsRunnable> runnable;
 
   if (aStatus == STATUS_SUCCESS) {
     runnable = new BluetoothA2dpHALResultRunnable(aRes, aMethod);
