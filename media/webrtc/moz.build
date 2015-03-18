@@ -67,7 +67,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/peerconnection/PeerConnectionImpl.cpp',
         'signaling/src/peerconnection/PeerConnectionMedia.cpp',
         'signaling/src/peerconnection/WebrtcGlobalInformation.cpp',
-        'signaling/src/sdp/sipcc/ccsdp.c',
         'signaling/src/sdp/sipcc/cpr_string.c',
         'signaling/src/sdp/sipcc/sdp_access.c',
         'signaling/src/sdp/sipcc/sdp_attr.c',
