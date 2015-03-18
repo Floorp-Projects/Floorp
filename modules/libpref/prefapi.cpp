@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <string>
+#include <vector>
+
 #include "base/basictypes.h"
 
 #include "prefapi.h"
@@ -633,8 +636,7 @@ pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, uint32_t,
         if (!(pref->flags & PREF_HAS_DEFAULT)) {
             nextOp = PL_DHASH_REMOVE;
         }
-
-        pref_DoCallback(pref->key);
+        static_cast<std::vector<std::string>*>(arg)->push_back(std::string(pref->key));
     }
     return nextOp;
 }
@@ -649,7 +651,12 @@ PREF_ClearAllUserPrefs()
     if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
-    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nullptr);
+    std::vector<std::string> prefStrings;
+    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, static_cast<void*>(&prefStrings));
+
+    for (std::string& prefString : prefStrings) {
+        pref_DoCallback(prefString.c_str());
+    }
 
     gDirty = true;
     return NS_OK;
