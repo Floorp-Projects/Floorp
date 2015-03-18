@@ -64,7 +64,6 @@ DIRS += [
     'fmradio',
     'geolocation',
     'html',
-    'icc',
     'json',
     'jsurl',
     'asmjscache',
@@ -123,6 +122,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 
 if CONFIG['MOZ_B2G_RIL']:
     DIRS += [
+        'icc',
         'wappush',
     ]
 

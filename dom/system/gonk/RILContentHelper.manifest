@@ -13,8 +13,6 @@
 # limitations under the License.
 
 # RILContentHelper.js
-# TODO: Bug 815526, deprecate RILContentHelper:
-#       To be removed from b2g/installer/package-manifest.in as well.
 component {472816e1-1fd6-4405-996c-806f9ea68174} RILContentHelper.js
 contract @mozilla.org/ril/content-helper;1 {472816e1-1fd6-4405-996c-806f9ea68174}
 category profile-after-change RILContentHelper @mozilla.org/ril/content-helper;1

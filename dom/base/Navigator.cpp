@@ -36,7 +36,6 @@
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/CellBroadcast.h"
-#include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/Telephony.h"
@@ -54,6 +53,7 @@
 #include "nsIMobileIdentityService.h"
 #endif
 #ifdef MOZ_B2G_RIL
+#include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/MobileConnectionArray.h"
 #endif
 #include "nsIIdleObserver.h"
@@ -177,7 +177,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCellBroadcast)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
@@ -185,6 +184,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
 #endif
 #ifdef MOZ_B2G_BT
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBluetooth)
@@ -250,11 +250,6 @@ Navigator::Invalidate()
     mCellBroadcast = nullptr;
   }
 
-  if (mIccManager) {
-    mIccManager->Shutdown();
-    mIccManager = nullptr;
-  }
-
   if (mMobileMessageManager) {
     mMobileMessageManager->Shutdown();
     mMobileMessageManager = nullptr;
@@ -281,6 +276,11 @@ Navigator::Invalidate()
 #ifdef MOZ_B2G_RIL
   if (mMobileConnections) {
     mMobileConnections = nullptr;
+  }
+
+  if (mIccManager) {
+    mIccManager->Shutdown();
+    mIccManager = nullptr;
   }
 #endif
 
@@ -1707,6 +1707,8 @@ Navigator::GetMozVoicemail(ErrorResult& aRv)
   return mVoicemail;
 }
 
+#ifdef MOZ_B2G_RIL
+
 IccManager*
 Navigator::GetMozIccManager(ErrorResult& aRv)
 {
@@ -1722,6 +1724,7 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
 
   return mIccManager;
 }
+#endif // MOZ_B2G_RIL
 
 #ifdef MOZ_GAMEPAD
 void

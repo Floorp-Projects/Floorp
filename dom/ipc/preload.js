@@ -75,6 +75,7 @@ const BrowserElementIsPreloaded = true;
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
   Cc["@mozilla.org/cspcontext;1"].createInstance(Ci["nsIContentSecurityPolicy"]);
   Cc["@mozilla.org/settingsManager;1"].createInstance(Ci["nsISupports"]);
+  Cc["@mozilla.org/webapps;1"].createInstance(Ci["nsISupports"]);
 
   /* Applications Specific Helper */
   try {

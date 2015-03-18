@@ -5,6 +5,7 @@ MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 COPY           b2g-desktop-config.py         /home/worker/b2g-desktop-config.py
 COPY           dot-config                    /home/worker/.config
 COPY           dot-pulse                     /home/worker/.pulse
+COPY           hgrc                          /home/worker/.hgrc
 COPY           bin                           /home/worker/bin
 COPY           mozharness_configs            /home/worker/mozharness_configs
 COPY           buildprops.json               /home/worker/buildprops.json
