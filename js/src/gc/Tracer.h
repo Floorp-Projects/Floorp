@@ -214,7 +214,6 @@ class GCMarker : public JSTracer
     void startBufferingGrayRoots();
     void endBufferingGrayRoots();
     void resetBufferedGrayRoots();
-    void markBufferedGrayRoots(JS::Zone *zone);
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 
