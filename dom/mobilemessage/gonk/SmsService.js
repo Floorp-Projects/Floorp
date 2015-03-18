@@ -880,7 +880,7 @@ SmsService.prototype = {
         if (DEBUG) debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
       } else if (gRadioInterfaces[aServiceId].rilContext.cardState !=
-                 Ci.nsIIcc.CARD_STATE_READY) {
+                 Ci.nsIIccProvider.CARD_STATE_READY) {
         if (DEBUG) debug("Error! SIM card is not ready when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
       }

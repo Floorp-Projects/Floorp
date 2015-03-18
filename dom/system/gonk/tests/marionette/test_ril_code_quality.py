@@ -2,7 +2,7 @@
 The test performs the static code analysis check by JSHint.
 
 Target js files:
-- RILContentHelper.js TODO: Bug 815526, deprecate RILContentHelper.
+- RILContentHelper.js
 - RadioInterfaceLayer.js
 - ril_worker.js
 - ril_consts.js
@@ -100,7 +100,7 @@ class ResourceUriFileReader:
 
     URI_PREFIX = 'resource://gre/'
     URI_PATH = {
-        'RILContentHelper.js':    'components/RILContentHelper.js', #TODO: Bug 815526, deprecate RILContentHelper.
+        'RILContentHelper.js':    'components/RILContentHelper.js',
         'RadioInterfaceLayer.js': 'components/RadioInterfaceLayer.js',
         'ril_worker.js':          'modules/ril_worker.js',
         'ril_consts.js':          'modules/ril_consts.js',
@@ -354,7 +354,6 @@ class TestRILCodeQuality(MarionetteTestCase):
     def tearDown(self):
         MarionetteTestCase.tearDown(self)
 
-    # TODO: Bug 815526, deprecate RILContentHelper.
     def test_RILContentHelper(self):
         self._check('RILContentHelper.js')
 

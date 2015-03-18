@@ -23,6 +23,10 @@
   -  It allows you to switch the context of the whole toolbox. -->
 <!ENTITY toolboxFramesTooltip          "Select an iframe as the currently targeted document">
 
+<!-- LOCALIZATION NOTE (browserToolboxErrorMessage): This is the label
+  -  shown next to error details when the Browser Toolbox is unable to open. -->
+<!ENTITY browserToolboxErrorMessage          "Error opening Browser Toolbox:">
+
 <!-- LOCALIZATION NOTE (options.context.advancedSettings): This is the label for
   -  the heading of the advanced settings group in the options panel. -->
 <!ENTITY options.context.advancedSettings "Advanced settings">

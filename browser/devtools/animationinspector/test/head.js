@@ -85,20 +85,6 @@ function reloadTab() {
 }
 
 /**
- * Simple DOM node accesor function that takes either a node or a string css
- * selector as argument and returns the corresponding node
- * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
- * doesn't implement *all* of the DOMNode's properties
- */
-function getNode(nodeOrSelector) {
-  info("Getting the node for '" + nodeOrSelector + "'");
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
-}
-
-/**
  * Get the NodeFront for a given css selector, via the protocol
  * @param {String} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
@@ -301,8 +287,7 @@ let togglePlayPauseButton = Task.async(function*(widget) {
  */
 let getAnimationPlayerState = Task.async(function*(selector, animationIndex=0) {
   let playState = yield executeInContent("Test:GetAnimationPlayerState",
-                                         {animationIndex},
-                                         {node: getNode(selector)});
+                                         {selector, animationIndex});
   return playState;
 });
 
