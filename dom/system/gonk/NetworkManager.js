@@ -38,6 +38,7 @@ const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const PREF_MANAGE_OFFLINE_STATUS     = "network.gonk.manage-offline-status";
+const PREF_NETWORK_DEBUG_ENABLED     = "network.debugging.enabled";
 
 const IPV4_ADDRESS_ANY                 = "0.0.0.0";
 const IPV6_ADDRESS_ANY                 = "::0";
@@ -53,13 +54,22 @@ const CONNECTION_TYPE_WIFI      = 3;
 const CONNECTION_TYPE_OTHER     = 4;
 const CONNECTION_TYPE_NONE      = 5;
 
-let DEBUG = false;
+let debug;
+function updateDebug() {
+  let debugPref = false; // set default value here.
+  try {
+    debugPref = debugPref || Services.prefs.getBoolPref(PREF_NETWORK_DEBUG_ENABLED);
+  } catch (e) {}
 
-// Read debug setting from pref.
-try {
-  let debugPref = Services.prefs.getBoolPref("network.debugging.enabled");
-  DEBUG = DEBUG || debugPref;
-} catch (e) {}
+  if (debugPref) {
+    debug = function(s) {
+      dump("-*- NetworkManager: " + s + "\n");
+    };
+  } else {
+    debug = function(s) {};
+  }
+}
+updateDebug();
 
 function defineLazyRegExp(obj, name, pattern) {
   obj.__defineGetter__(name, function() {
@@ -121,6 +131,7 @@ function NetworkManager() {
     // Ignore.
   }
   Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
+  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
   Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
 
   this.setAndConfigureActive();
@@ -147,13 +158,18 @@ NetworkManager.prototype = {
   observe: function(subject, topic, data) {
     switch (topic) {
       case TOPIC_PREF_CHANGED:
-        this._manageOfflineStatus =
-          Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
-        debug(PREF_MANAGE_OFFLINE_STATUS + " has changed to " + this._manageOfflineStatus);
+        if (data === PREF_NETWORK_DEBUG_ENABLED) {
+          updateDebug();
+        } else if (data === PREF_MANAGE_OFFLINE_STATUS) {
+          this._manageOfflineStatus =
+            Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
+          debug(PREF_MANAGE_OFFLINE_STATUS + " has changed to " + this._manageOfflineStatus);
+        }
         break;
       case TOPIC_XPCOM_SHUTDOWN:
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.prefs.removeObserver(PREF_MANAGE_OFFLINE_STATUS, this);
+        Services.prefs.removeObserver(PREF_NETWORK_DEBUG_ENABLED, this);
         break;
     }
   },
@@ -715,8 +731,8 @@ NetworkManager.prototype = {
         return;
       }
 
-      if (DEBUG) debug("hostname is resolved: " + hostname);
-      if (DEBUG) debug("Addresses: " + JSON.stringify(retval));
+      debug("hostname is resolved: " + hostname);
+      debug("Addresses: " + JSON.stringify(retval));
 
       deferred.resolve(retval);
     };
@@ -854,13 +870,3 @@ XPCOMUtils.defineLazyGetter(NetworkManager.prototype, "mRil", function() {
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
-
-
-let debug;
-if (DEBUG) {
-  debug = function(s) {
-    dump("-*- NetworkManager: " + s + "\n");
-  };
-} else {
-  debug = function(s) {};
-}
