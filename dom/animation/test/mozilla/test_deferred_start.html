@@ -11,7 +11,7 @@
   to { transform: translate(100px); }
 }
 .target {
-  // Element needs geometry to be eligible for layerization
+  /* Element needs geometry to be eligible for layerization */
   width: 100px;
   height: 100px;
   background-color: white;
@@ -60,13 +60,18 @@ async_test(function(t) {
       assert_unreached('ready promise was rejected');
     });
 
-  // We need to wait for up to two frames since the animation may not start
-  // until the beginning of the next refresh driver tick and it won't queue
-  // the ready Promise callback until that point.
-  }).then(waitForFrame).then(waitForFrame).then(t.step_func(function() {
+  // We need to wait for up to three frames. This is because in some
+  // cases it can take up to two frames for the initial layout
+  // to take place. Even after that happens we don't actually resolve the
+  // ready promise until the following tick.
+  })
+  .then(waitForFrame)
+  .then(waitForFrame)
+  .then(waitForFrame)
+  .then(t.step_func(function() {
     assert_true(promiseCallbackDone,
-                'ready promise callback was called before the next'
-                + ' requestAnimationFrame callback');
+                'ready promise for an empty animation was resolved'
+                + ' within three animation frames');
     t.done();
   }));
 }, 'AnimationPlayer.ready is resolved for an empty animation');
