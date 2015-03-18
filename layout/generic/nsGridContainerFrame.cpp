@@ -8,7 +8,10 @@
 
 #include "nsGridContainerFrame.h"
 
+#include "mozilla/Maybe.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsStyleContext.h"
@@ -415,6 +418,146 @@ nsGridContainerFrame::PlaceDefinite(nsIFrame* aChild,
                      mExplicitGridRowEnd, aStyle));
 }
 
+uint32_t
+nsGridContainerFrame::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
+                                  const GridArea* aArea) const
+{
+  MOZ_ASSERT(aStartCol > 0, "expected a 1-based track number");
+  MOZ_ASSERT(aLockedRow > 0, "expected a 1-based track number");
+  const uint32_t extent = aArea->mCols.Extent();
+  const uint32_t iStart = aLockedRow - 1;
+  const uint32_t iEnd = iStart + aArea->mRows.Extent();
+  uint32_t candidate = aStartCol - 1;
+  for (uint32_t i = iStart; i < iEnd; ) {
+    if (i >= mCellMap.mCells.Length()) {
+      break;
+    }
+    const nsTArray<CellMap::Cell>& cellsInRow = mCellMap.mCells[i];
+    const uint32_t len = cellsInRow.Length();
+    const uint32_t lastCandidate = candidate;
+    // Find the first gap in the current row that's at least 'extent' wide.
+    // ('gap' tracks how wide the current column gap is.)
+    for (uint32_t j = candidate, gap = 0; j < len && gap < extent; ++j) {
+      ++gap; // tentative, but we may reset it below if a column is occupied
+      if (cellsInRow[j].mIsOccupied) {
+        // Optimization: skip as many occupied cells as we can.
+        do {
+          ++j;
+        } while (j < len && cellsInRow[j].mIsOccupied);
+        candidate = j;
+        gap = 0;
+      }
+    }
+    if (lastCandidate < candidate && i != iStart) {
+      // Couldn't fit 'extent' tracks at 'lastCandidate' here so we must
+      // restart from the beginning with the new 'candidate'.
+      i = iStart;
+    } else {
+      ++i;
+    }
+  }
+  return candidate + 1; // return a 1-based column number
+}
+
+void
+nsGridContainerFrame::PlaceAutoCol(uint32_t aStartCol, GridArea* aArea) const
+{
+  MOZ_ASSERT(aArea->mRows.IsDefinite() && aArea->mCols.IsAuto());
+  uint32_t col = FindAutoCol(aStartCol, aArea->mRows.mStart, aArea);
+  aArea->mCols.ResolveAutoPosition(col);
+  MOZ_ASSERT(aArea->IsDefinite());
+}
+
+uint32_t
+nsGridContainerFrame::FindAutoRow(uint32_t aLockedCol, uint32_t aStartRow,
+                                  const GridArea* aArea) const
+{
+  MOZ_ASSERT(aLockedCol > 0, "expected a 1-based track number");
+  MOZ_ASSERT(aStartRow > 0, "expected a 1-based track number");
+  const uint32_t extent = aArea->mRows.Extent();
+  const uint32_t jStart = aLockedCol - 1;
+  const uint32_t jEnd = jStart + aArea->mCols.Extent();
+  const uint32_t iEnd = mCellMap.mCells.Length();
+  uint32_t candidate = aStartRow - 1;
+  // Find the first gap in the rows that's at least 'extent' tall.
+  // ('gap' tracks how tall the current row gap is.)
+  for (uint32_t i = candidate, gap = 0; i < iEnd && gap < extent; ++i) {
+    ++gap; // tentative, but we may reset it below if a column is occupied
+    const nsTArray<CellMap::Cell>& cellsInRow = mCellMap.mCells[i];
+    const uint32_t clampedJEnd = std::min<uint32_t>(jEnd, cellsInRow.Length());
+    // Check if the current row is unoccupied from jStart to jEnd.
+    for (uint32_t j = jStart; j < clampedJEnd; ++j) {
+      if (cellsInRow[j].mIsOccupied) {
+        // Couldn't fit 'extent' rows at 'candidate' here; we hit something
+        // at row 'i'.  So, try the row after 'i' as our next candidate.
+        candidate = i + 1;
+        gap = 0;
+        break;
+      }
+    }
+  }
+  return candidate + 1; // return a 1-based row number
+}
+
+void
+nsGridContainerFrame::PlaceAutoRow(uint32_t aStartRow, GridArea* aArea) const
+{
+  MOZ_ASSERT(aArea->mCols.IsDefinite() && aArea->mRows.IsAuto());
+  uint32_t row = FindAutoRow(aArea->mCols.mStart, aStartRow, aArea);
+  aArea->mRows.ResolveAutoPosition(row);
+  MOZ_ASSERT(aArea->IsDefinite());
+}
+
+void
+nsGridContainerFrame::PlaceAutoAutoInRowOrder(uint32_t aStartCol,
+                                              uint32_t aStartRow,
+                                              GridArea* aArea) const
+{
+  MOZ_ASSERT(aArea->mCols.IsAuto() && aArea->mRows.IsAuto());
+  const uint32_t colExtent = aArea->mCols.Extent();
+  const uint32_t gridRowEnd = mGridRowEnd;
+  const uint32_t gridColEnd = mGridColEnd;
+  uint32_t col = aStartCol;
+  uint32_t row = aStartRow;
+  for (; row < gridRowEnd; ++row) {
+    col = FindAutoCol(col, row, aArea);
+    if (col + colExtent <= gridColEnd) {
+      break;
+    }
+    col = 1;
+  }
+  MOZ_ASSERT(row < gridRowEnd || col == 1,
+             "expected column 1 for placing in a new row");
+  aArea->mCols.ResolveAutoPosition(col);
+  aArea->mRows.ResolveAutoPosition(row);
+  MOZ_ASSERT(aArea->IsDefinite());
+}
+
+void
+nsGridContainerFrame::PlaceAutoAutoInColOrder(uint32_t aStartCol,
+                                              uint32_t aStartRow,
+                                              GridArea* aArea) const
+{
+  MOZ_ASSERT(aArea->mCols.IsAuto() && aArea->mRows.IsAuto());
+  const uint32_t rowExtent = aArea->mRows.Extent();
+  const uint32_t gridRowEnd = mGridRowEnd;
+  const uint32_t gridColEnd = mGridColEnd;
+  uint32_t col = aStartCol;
+  uint32_t row = aStartRow;
+  for (; col < gridColEnd; ++col) {
+    row = FindAutoRow(col, row, aArea);
+    if (row + rowExtent <= gridRowEnd) {
+      break;
+    }
+    row = 1;
+  }
+  MOZ_ASSERT(col < gridColEnd || row == 1,
+             "expected row 1 for placing in a new column");
+  aArea->mCols.ResolveAutoPosition(col);
+  aArea->mRows.ResolveAutoPosition(row);
+  MOZ_ASSERT(aArea->IsDefinite());
+}
+
 void
 nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
 {
@@ -448,6 +591,98 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
     if (area.IsDefinite()) {
       mCellMap.Fill(area);
       InflateGridFor(area);
+    }
+  }
+
+  // http://dev.w3.org/csswg/css-grid/#auto-placement-algo
+  // Step 1, place 'auto' items that have one definite position -
+  // definite row (column) for grid-auto-flow:row (column).
+  auto flowStyle = aStyle->mGridAutoFlow;
+  const bool isRowOrder = (flowStyle & NS_STYLE_GRID_AUTO_FLOW_ROW);
+  const bool isSparse = !(flowStyle & NS_STYLE_GRID_AUTO_FLOW_DENSE);
+  // We need 1 cursor per row (or column) if placement is sparse.
+  {
+    Maybe<nsDataHashtable<nsUint32HashKey, uint32_t>> cursors;
+    if (isSparse) {
+      cursors.emplace();
+    }
+    auto placeAutoMinorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoCol
+                                         : &nsGridContainerFrame::PlaceAutoRow;
+    for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+      GridArea* area = GetGridAreaForChild(child);
+      LineRange& major = isRowOrder ? area->mRows : area->mCols;
+      LineRange& minor = isRowOrder ? area->mCols : area->mRows;
+      if (major.IsDefinite() && minor.IsAuto()) {
+        // Items with 'auto' in the minor dimension only.
+        uint32_t cursor = 1;
+        if (isSparse) {
+          cursors->Get(major.mStart, &cursor);
+        }
+        (this->*placeAutoMinorFunc)(cursor, area);
+        mCellMap.Fill(*area);
+        if (isSparse) {
+          cursors->Put(major.mStart, minor.mEnd);
+        }
+      }
+      InflateGridFor(*area);  // Step 2, inflating for auto items too
+    }
+  }
+
+  // XXX NOTE possible spec issue.
+  // XXX It's unclear if the remaining major-dimension auto and
+  // XXX auto in both dimensions should use the same cursor or not,
+  // XXX https://www.w3.org/Bugs/Public/show_bug.cgi?id=16044
+  // XXX seems to indicate it shouldn't.
+  // XXX http://dev.w3.org/csswg/css-grid/#auto-placement-cursor
+  // XXX now says it should (but didn't in earlier versions)
+
+  // Step 3, place the remaining grid items
+  uint32_t cursorMajor = 1; // for 'dense' these two cursors will stay at 1,1
+  uint32_t cursorMinor = 1;
+  auto placeAutoMajorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoRow
+                                       : &nsGridContainerFrame::PlaceAutoCol;
+  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
+    nsIFrame* child = e.get();
+    GridArea* area = GetGridAreaForChild(child);
+    LineRange& major = isRowOrder ? area->mRows : area->mCols;
+    LineRange& minor = isRowOrder ? area->mCols : area->mRows;
+    if (major.IsAuto()) {
+      if (minor.IsDefinite()) {
+        // Items with 'auto' in the major dimension only.
+        if (isSparse) {
+          if (minor.mStart < cursorMinor) {
+            ++cursorMajor;
+          }
+          cursorMinor = minor.mStart;
+        }
+        (this->*placeAutoMajorFunc)(cursorMajor, area);
+        if (isSparse) {
+          cursorMajor = major.mStart;
+        }
+      } else {
+        // Items with 'auto' in both dimensions.
+        if (isRowOrder) {
+          PlaceAutoAutoInRowOrder(cursorMinor, cursorMajor, area);
+        } else {
+          PlaceAutoAutoInColOrder(cursorMajor, cursorMinor, area);
+        }
+        if (isSparse) {
+          cursorMajor = major.mStart;
+          cursorMinor = minor.mEnd;
+#ifdef DEBUG
+          uint32_t gridMajorEnd = isRowOrder ? mGridRowEnd : mGridColEnd;
+          uint32_t gridMinorEnd = isRowOrder ? mGridColEnd : mGridRowEnd;
+          MOZ_ASSERT(cursorMajor <= gridMajorEnd,
+                     "we shouldn't need to place items further than 1 track "
+                     "past the current end of the grid, in major dimension");
+          MOZ_ASSERT(cursorMinor <= gridMinorEnd,
+                     "we shouldn't add implicit minor tracks for auto/auto");
+#endif
+        }
+      }
+      mCellMap.Fill(*area);
+      InflateGridFor(*area);
     }
   }
 }
