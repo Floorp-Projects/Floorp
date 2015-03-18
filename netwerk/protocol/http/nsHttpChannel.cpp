@@ -3149,6 +3149,10 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             mRedirectedCachekeys->AppendElement(cacheKey);
     }
 
+    if (doValidation && mInterceptCache == INTERCEPTED) {
+        doValidation = false;
+    }
+
     mCachedContentIsValid = !doValidation;
 
     if (doValidation) {

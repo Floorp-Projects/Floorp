@@ -138,9 +138,9 @@ TestUrgentHangsChild::RecvTest4()
 {
     PR_Sleep(PR_SecondsToInterval(2));
 
-    // This should fail because Test4_1 timed out and hasn't gotten a response
-    // yet.
-    if (SendTestInner())
+    // This won't fail because we should handle Test4_1 here before actually
+    // sending TestInner to the parent.
+    if (!SendTestInner())
         fail("sending TestInner");
 
     return true;
