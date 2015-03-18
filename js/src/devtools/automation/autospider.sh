@@ -12,6 +12,7 @@ function usage() {
 
 clean=""
 platform=""
+TIMEOUT=7200
 while [ $# -gt 1 ]; do
     case "$1" in
         --clobber)
@@ -21,6 +22,11 @@ while [ $# -gt 1 ]; do
         --platform)
             shift
             platform="$1"
+            shift
+            ;;
+        --timeout)
+            shift
+            TIMEOUT="$1"
             shift
             ;;
         *)
@@ -129,6 +135,12 @@ if type setarch >/dev/null 2>&1; then
 fi
 
 RUN_JSTESTS=true
+
+PARENT=$$
+sh -c "sleep $TIMEOUT; kill $PARENT" <&- >&- 2>&- &
+KILLER=$!
+disown %1
+trap "kill $KILLER" EXIT
 
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
