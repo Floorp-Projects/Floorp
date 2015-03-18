@@ -2732,7 +2732,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MSimdSwizzle *ins = MSimdSwizzle::NewAsmJS(alloc(), vector, type, X, Y, Z, W);
+        MSimdSwizzle *ins = MSimdSwizzle::New(alloc(), vector, type, X, Y, Z, W);
         curBlock_->add(ins);
         return ins;
     }
@@ -2743,7 +2743,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MInstruction *ins = MSimdShuffle::NewAsmJS(alloc(), lhs, rhs, type, X, Y, Z, W);
+        MInstruction *ins = MSimdShuffle::New(alloc(), lhs, rhs, type, X, Y, Z, W);
         curBlock_->add(ins);
         return ins;
     }

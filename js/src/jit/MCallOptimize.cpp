@@ -351,9 +351,13 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::TYPE_FLOAT32);
 
     if (native == js::simd_int32x4_swizzle)
-        return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_INT32, 1, 4);
     if (native == js::simd_float32x4_swizzle)
-        return inlineSimdSwizzle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1, 4);
+    if (native == js::simd_int32x4_shuffle)
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_INT32, 2, 4);
+    if (native == js::simd_float32x4_shuffle)
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2, 4);
 
     if (native == js::simd_int32x4_load)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32);
@@ -3113,18 +3117,24 @@ IonBuilder::inlineSimdCheck(CallInfo &callInfo, JSNative native, SimdTypeDescr::
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdSwizzle(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type)
+IonBuilder::inlineSimdShuffle(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                              unsigned numVectors, unsigned numLanes)
 {
     InlineTypedObject *templateObj = nullptr;
-    if (!checkInlineSimd(callInfo, native, type, 5, &templateObj))
+    if (!checkInlineSimd(callInfo, native, type, numVectors + numLanes, &templateObj))
         return InliningStatus_NotInlined;
 
-    MDefinition *lanes[4];
-    for (size_t i = 0; i < 4; i++)
-        lanes[i] = callInfo.getArg(1 + i);
-
     MIRType mirType = SimdTypeDescrToMIRType(type);
-    MSimdGeneralSwizzle *ins = MSimdGeneralSwizzle::New(alloc(), callInfo.getArg(0), lanes, mirType);
+    MSimdGeneralShuffle *ins = MSimdGeneralShuffle::New(alloc(), numVectors, numLanes, mirType);
+
+    if (!ins->init(alloc()))
+        return InliningStatus_Error;
+
+    for (unsigned i = 0; i < numVectors; i++)
+        ins->setVector(i, callInfo.getArg(i));
+    for (size_t i = 0; i < numLanes; i++)
+        ins->setLane(i, callInfo.getArg(numVectors + i));
+
     return boxSimd(callInfo, ins, templateObj);
 }
 
