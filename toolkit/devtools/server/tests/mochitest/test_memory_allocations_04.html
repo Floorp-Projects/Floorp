@@ -34,6 +34,7 @@ window.onload = function() {
       });
       allocator();
       var response = yield memory.getAllocations();
+      yield memory.stopRecordingAllocations();
       return response.allocations.length;
     });
 
@@ -49,7 +50,6 @@ window.onload = function() {
     // jit-tests
     // (js/src/jit-test/tests/debug/Memory-allocationsSamplingProbability-*.js).
 
-    yield memory.stopRecordingAllocations();
     yield memory.detach();
     destroyServerAndFinish(client);
   });
