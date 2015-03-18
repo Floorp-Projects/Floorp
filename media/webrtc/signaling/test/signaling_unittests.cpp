@@ -2313,14 +2313,6 @@ TEST_P(SignalingTest, OfferAnswerVideoInactive)
   CloseStreams();
 }
 
-TEST_P(SignalingTest, OfferAnswerBothInactive)
-{
-  OfferOptions options;
-  options.setInt32Option("OfferToReceiveAudio", 1);
-  options.setInt32Option("OfferToReceiveVideo", 1);
-  OfferAnswer(options, OFFER_NONE);
-}
-
 TEST_P(SignalingTest, CreateOfferAddCandidate)
 {
   OfferOptions options;
