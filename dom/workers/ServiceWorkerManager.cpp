@@ -1297,7 +1297,7 @@ ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
     return result.ErrorCode();
   }
 
-  nsRefPtr<nsIRunnable> runnable =
+  nsCOMPtr<nsIRunnable> runnable =
     new GetRegistrationsRunnable(window, promise);
   promise.forget(aPromise);
   return NS_DispatchToCurrentThread(runnable);
@@ -1398,7 +1398,7 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
     return result.ErrorCode();
   }
 
-  nsRefPtr<nsIRunnable> runnable =
+  nsCOMPtr<nsIRunnable> runnable =
     new GetRegistrationRunnable(window, promise, aDocumentURL);
   promise.forget(aPromise);
   return NS_DispatchToCurrentThread(runnable);
@@ -1464,7 +1464,7 @@ ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
     return result.ErrorCode();
   }
 
-  nsRefPtr<nsIRunnable> runnable =
+  nsCOMPtr<nsIRunnable> runnable =
     new GetReadyPromiseRunnable(window, promise);
   promise.forget(aPromise);
   return NS_DispatchToCurrentThread(runnable);

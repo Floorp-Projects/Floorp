@@ -642,6 +642,98 @@ MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
                                            const Register &value, const BaseIndex &mem,
                                            Register temp1, Register temp2, AnyRegister output);
 
+// Binary operation for effect, result discarded.
+template<typename S, typename T>
+void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S &value,
+                                           const T &mem)
+{
+    // Uint8Clamped is explicitly not supported here
+    switch (arrayType) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicAdd8(value, mem);
+            break;
+          case AtomicFetchSubOp:
+            atomicSub8(value, mem);
+            break;
+          case AtomicFetchAndOp:
+            atomicAnd8(value, mem);
+            break;
+          case AtomicFetchOrOp:
+            atomicOr8(value, mem);
+            break;
+          case AtomicFetchXorOp:
+            atomicXor8(value, mem);
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Int16:
+      case Scalar::Uint16:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicAdd16(value, mem);
+            break;
+          case AtomicFetchSubOp:
+            atomicSub16(value, mem);
+            break;
+          case AtomicFetchAndOp:
+            atomicAnd16(value, mem);
+            break;
+          case AtomicFetchOrOp:
+            atomicOr16(value, mem);
+            break;
+          case AtomicFetchXorOp:
+            atomicXor16(value, mem);
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicAdd32(value, mem);
+            break;
+          case AtomicFetchSubOp:
+            atomicSub32(value, mem);
+            break;
+          case AtomicFetchAndOp:
+            atomicAnd32(value, mem);
+            break;
+          case AtomicFetchOrOp:
+            atomicOr32(value, mem);
+            break;
+          case AtomicFetchXorOp:
+            atomicXor32(value, mem);
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      default:
+        MOZ_CRASH("Invalid typed array type");
+    }
+}
+
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Imm32 &value, const Address &mem);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Imm32 &value, const BaseIndex &mem);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Register &value, const Address &mem);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Register &value, const BaseIndex &mem);
+
 template <typename T>
 void
 MacroAssembler::loadUnboxedProperty(T address, JSValueType type, TypedOrValueRegister output)

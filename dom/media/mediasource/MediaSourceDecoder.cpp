@@ -261,7 +261,7 @@ MediaSourceDecoder::ScheduleDurationChange(double aOldDuration,
     if (NS_IsMainThread()) {
       DurationChanged(aOldDuration, aNewDuration);
     } else {
-      nsRefPtr<nsIRunnable> task =
+      nsCOMPtr<nsIRunnable> task =
         new DurationChangedRunnable(this, aOldDuration, aNewDuration);
       NS_DispatchToMainThread(task);
     }

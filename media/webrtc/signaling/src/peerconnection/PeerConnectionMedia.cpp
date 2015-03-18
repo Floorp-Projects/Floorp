@@ -391,7 +391,7 @@ PeerConnectionMedia::StartIceChecks(const JsepSession& session) {
     }
   }
 
-  nsRefPtr<nsIRunnable> runnable(
+  nsCOMPtr<nsIRunnable> runnable(
       WrapRunnable(
         RefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::StartIceChecks_s,
@@ -501,8 +501,7 @@ PeerConnectionMedia::FlushIceCtxOperationQueueIfReady()
 }
 
 void
-PeerConnectionMedia::PerformOrEnqueueIceCtxOperation(
-    const nsRefPtr<nsIRunnable>& runnable)
+PeerConnectionMedia::PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable)
 {
   ASSERT_ON_THREAD(mMainThread);
 
@@ -517,7 +516,7 @@ void
 PeerConnectionMedia::GatherIfReady() {
   ASSERT_ON_THREAD(mMainThread);
 
-  nsRefPtr<nsIRunnable> runnable(WrapRunnable(
+  nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
         RefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::EnsureIceGathering_s));
 

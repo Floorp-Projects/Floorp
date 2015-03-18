@@ -757,7 +757,7 @@ nsApplicationCache::Discard()
 
   mValid = false;
 
-  nsRefPtr<nsIRunnable> ev =
+  nsCOMPtr<nsIRunnable> ev =
     new nsOfflineCacheDiscardCache(mDevice, mGroup, mClientID);
   nsresult rv = nsCacheService::DispatchToCacheIOThread(ev);
   return rv;

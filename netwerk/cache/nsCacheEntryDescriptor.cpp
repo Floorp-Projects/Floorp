@@ -536,7 +536,7 @@ nsCacheEntryDescriptor::AsyncDoom(nsICacheListener *listener)
         return NS_OK;
     }
 
-    nsRefPtr<nsIRunnable> event = new nsAsyncDoomEvent(this, listener);
+    nsCOMPtr<nsIRunnable> event = new nsAsyncDoomEvent(this, listener);
     return nsCacheService::DispatchToCacheIOThread(event);
 }
 

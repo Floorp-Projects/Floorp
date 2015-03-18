@@ -32,6 +32,8 @@
 #include <unistd.h>
 #endif
 
+#include "mozilla/Atomics.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/PoisonIOInterposer.h"
 
@@ -47,14 +49,24 @@
 #include "plhash.h"
 #include "prmem.h"
 
-#include "prlock.h"
+#include "prthread.h"
 
-// TraceRefcnt has to use bare PRLock instead of mozilla::Mutex
-// because TraceRefcnt can be used very early in startup.
-static PRLock* gTraceLock;
+// We use a spin lock instead of a regular mutex because this lock is usually
+// only held for a very short time, and gets grabbed at a very high frequency
+// (~100000 times per second). On Mac, the overhead of using a regular lock
+// is very high, see bug 1137963.
+static mozilla::Atomic<bool, mozilla::ReleaseAcquire> gTraceLogLocked;
 
-#define LOCK_TRACELOG()   PR_Lock(gTraceLock)
-#define UNLOCK_TRACELOG() PR_Unlock(gTraceLock)
+struct MOZ_STACK_CLASS AutoTraceLogLock MOZ_FINAL
+{
+  AutoTraceLogLock()
+  {
+    while (!gTraceLogLocked.compareExchange(false, true)) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT); /* yield */
+    }
+  }
+  ~AutoTraceLogLock() { gTraceLogLocked = false; }
+};
 
 static PLHashTable* gBloatView;
 static PLHashTable* gTypesToLog;
@@ -470,10 +482,11 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
     aOut = gBloatLog;
   }
 
-  LOCK_TRACELOG();
+  AutoTraceLogLock lock;
 
-  LoggingType wasLogging = gLogging;
-  gLogging = NoLogging;  // turn off logging for this method
+  // Don't try to log while we hold the lock, we'd deadlock.
+  AutoRestore<LoggingType> saveLogging(gLogging);
+  gLogging = NoLogging;
 
   BloatEntry total("TOTAL", 0);
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
@@ -515,9 +528,6 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
     fprintf(aOut, "\nSerial Numbers of Leaked Objects:\n");
     PL_HashTableEnumerateEntries(gSerialNumbers, DumpSerialNumbers, aOut);
   }
-
-  gLogging = wasLogging;
-  UNLOCK_TRACELOG();
 #endif
 
   return NS_OK;
@@ -527,12 +537,11 @@ void
 nsTraceRefcnt::ResetStatistics()
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
-  LOCK_TRACELOG();
+  AutoTraceLogLock lock;
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
     gBloatView = nullptr;
   }
-  UNLOCK_TRACELOG();
 #endif
 }
 
@@ -816,8 +825,6 @@ InitTraceLog()
   if (gRefcntsLog || gAllocLog || gCOMPtrLog) {
     gLogging = FullLogging;
   }
-
-  gTraceLock = PR_NewLock();
 }
 
 #endif
@@ -981,7 +988,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     return;
   }
   if (aRefcnt == 1 || gLogging == FullLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     if (aRefcnt == 1 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, aClassSize);
@@ -1020,7 +1027,6 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
-    UNLOCK_TRACELOG();
   }
 #endif
 }
@@ -1037,7 +1043,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     return;
   }
   if (aRefcnt == 0 || gLogging == FullLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     if (aRefcnt == 0 && gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClass, 0);
@@ -1081,8 +1087,6 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     if (aRefcnt == 0 && gSerialNumbers && loggingThisType) {
       RecycleSerialNumberPtr(aPtr);
     }
-
-    UNLOCK_TRACELOG();
   }
 #endif
 }
@@ -1097,7 +1101,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   }
 
   if (gLogging != NoLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
@@ -1118,8 +1122,6 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
               aType, aPtr, serialno, aInstanceSize);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
-
-    UNLOCK_TRACELOG();
   }
 #endif
 }
@@ -1135,7 +1137,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   }
 
   if (gLogging != NoLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
@@ -1160,8 +1162,6 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
               aType, aPtr, serialno, aInstanceSize);
       nsTraceRefcnt::WalkTheStackCached(gAllocLog);
     }
-
-    UNLOCK_TRACELOG();
   }
 #endif
 }
@@ -1189,7 +1189,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
     InitTraceLog();
   }
   if (gLogging == FullLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     int32_t* count = GetCOMPtrCount(object);
     if (count) {
@@ -1203,8 +1203,6 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
               object, serialno, count ? (*count) : -1, aCOMPtr);
       nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
     }
-
-    UNLOCK_TRACELOG();
   }
 #endif
 }
@@ -1232,7 +1230,7 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
     InitTraceLog();
   }
   if (gLogging == FullLogging) {
-    LOCK_TRACELOG();
+    AutoTraceLogLock lock;
 
     int32_t* count = GetCOMPtrCount(object);
     if (count) {
@@ -1246,8 +1244,6 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
               object, serialno, count ? (*count) : -1, aCOMPtr);
       nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
     }
-
-    UNLOCK_TRACELOG();
   }
 #endif
 }

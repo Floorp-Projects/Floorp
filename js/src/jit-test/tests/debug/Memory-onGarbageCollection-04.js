@@ -23,6 +23,8 @@
 // same time that we are preventing reentrancy into debuggeree's
 // onGarbageCollection hook.
 
+gczeal(0);
+
 const debuggeree = newGlobal();
 const debuggee = debuggeree.debuggee = newGlobal();
 
