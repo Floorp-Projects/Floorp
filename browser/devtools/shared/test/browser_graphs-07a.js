@@ -17,14 +17,18 @@ function* performTest() {
   let [host, win, doc] = yield createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
   yield graph.once("ready");
-
-  testGraph(graph);
-
+  testGraph(graph, normalDragStop);
   yield graph.destroy();
+
+  let graph2 = new LineGraphWidget(doc.body, "fps");
+  yield graph2.once("ready");
+  testGraph(graph2, buggyDragStop);
+  yield graph2.destroy();
+
   host.destroy();
 }
 
-function testGraph(graph) {
+function testGraph(graph, dragStop) {
   graph.setData(TEST_DATA);
 
   info("Making a selection.");
@@ -186,11 +190,22 @@ function dragStart(graph, x, y = 1) {
   graph._onMouseDown({ clientX: x, clientY: y });
 }
 
-function dragStop(graph, x, y = 1) {
+function normalDragStop(graph, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
   graph._onMouseMove({ clientX: x, clientY: y });
   graph._onMouseUp({ clientX: x, clientY: y });
+}
+
+function buggyDragStop(graph, x, y = 1) {
+  x /= window.devicePixelRatio;
+  y /= window.devicePixelRatio;
+
+  // Only fire a mousemove instead of a mouseup.
+  // This happens when the mouseup happens outside of the toolbox,
+  // see Bug 1066504.
+  graph._onMouseMove({ clientX: x, clientY: y });
+  graph._onMouseMove({ clientX: x, clientY: y, buttons: 0 });
 }
 
 function scroll(graph, wheel, x, y = 1) {
