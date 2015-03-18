@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[scriptable, uuid(a8bed710-653c-4ea4-9747-a629cc482cf8)]
+[scriptable, uuid(86ad7e1f-3a64-4e0f-a104-395ebecd7d5c)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -59,6 +59,8 @@ interface nsIHttpChannel : nsIChannel
      * Referrer policies. See ReferrerPolicy.h for more details.
      */
 
+    /*   default state, a shorter name for no-referrer-when-downgrade   */
+    const unsigned long REFERRER_POLICY_DEFAULT                    = 0;
     /*   default state, doesn't send referrer from https->http          */
     const unsigned long REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE = 0;
     /*   sends no referrer                                              */

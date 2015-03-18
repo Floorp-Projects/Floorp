@@ -16,7 +16,7 @@ describe("loop.store.ConversationStore", function () {
   var sandbox, dispatcher, client, store, fakeSessionData, sdkDriver;
   var contact, fakeMozLoop;
   var connectPromise, resolveConnectPromise, rejectConnectPromise;
-  var wsCancelSpy, wsCloseSpy, wsMediaUpSpy, fakeWebsocket;
+  var wsCancelSpy, wsCloseSpy, wsDeclineSpy, wsMediaUpSpy, fakeWebsocket;
 
   function checkFailures(done, f) {
     try {
@@ -65,11 +65,13 @@ describe("loop.store.ConversationStore", function () {
 
     wsCancelSpy = sinon.spy();
     wsCloseSpy = sinon.spy();
+    wsDeclineSpy = sinon.spy();
     wsMediaUpSpy = sinon.spy();
 
     fakeWebsocket = {
       cancel: wsCancelSpy,
       close: wsCloseSpy,
+      decline: wsDeclineSpy,
       mediaUp: wsMediaUpSpy
     };
 
@@ -225,9 +227,12 @@ describe("loop.store.ConversationStore", function () {
       });
     });
 
-    describe("progress: connecting", function() {
+    describe("progress: connecting (outgoing calls)", function() {
       beforeEach(function() {
-        store.setStoreState({callState: CALL_STATES.ALERTING});
+        store.setStoreState({
+          callState: CALL_STATES.ALERTING,
+          outgoing: true
+        });
       });
 
       it("should change the state to 'ongoing'", function() {
@@ -260,6 +265,55 @@ describe("loop.store.ConversationStore", function () {
         sinon.assert.calledOnce(fakeMozLoop.addConversationContext);
         sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
                                        "28", "321456", "142536");
+      });
+    });
+
+    describe("progress: connecting (incoming calls)", function() {
+      beforeEach(function() {
+        store.setStoreState({
+          callState: CALL_STATES.ALERTING,
+          outgoing: false,
+          windowId: 42
+        });
+
+        sandbox.stub(console, "error");
+        store._websocket = fakeWebsocket;
+      });
+
+      it("should log an error", function() {
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        sinon.assert.calledOnce(console.error);
+      });
+
+      it("should call decline on the websocket", function() {
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        sinon.assert.calledOnce(fakeWebsocket.decline);
+      });
+
+      it("should close the websocket", function() {
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        sinon.assert.calledOnce(fakeWebsocket.close);
+      });
+
+      it("should clear the call in progress for the backend", function() {
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        sinon.assert.calledOnce(fakeMozLoop.calls.clearCallInProgress);
+        sinon.assert.calledWithExactly(fakeMozLoop.calls.clearCallInProgress, 42);
+      });
+
+      it("should set the call state to CLOSE", function() {
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
       });
     });
   });
@@ -518,16 +572,43 @@ describe("loop.store.ConversationStore", function () {
 
       sinon.assert.calledOnce(store._websocket.accept);
     });
+
+    it("should change the state to 'ongoing'", function() {
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      expect(store.getStoreState("callState")).eql(CALL_STATES.ONGOING);
+    });
+
+    it("should connect the session", function() {
+      store.setStoreState(fakeSessionData);
+
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      sinon.assert.calledOnce(sdkDriver.connectSession);
+      sinon.assert.calledWithExactly(sdkDriver.connectSession, {
+        apiKey: "fakeKey",
+        sessionId: "321456",
+        sessionToken: "341256"
+      });
+    });
+
+    it("should call mozLoop.addConversationContext", function() {
+      store.setStoreState(fakeSessionData);
+
+      store.acceptCall(
+        new sharedActions.AcceptCall({callType: CALL_TYPES.AUDIO_ONLY}));
+
+      sinon.assert.calledOnce(fakeMozLoop.addConversationContext);
+      sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
+                                     "28", "321456", "142536");
+    });
   });
 
   describe("#declineCall", function() {
-    var fakeWebsocket;
-
     beforeEach(function() {
-      fakeWebsocket = store._websocket = {
-        decline: sinon.stub(),
-        close: sinon.stub()
-      };
+      store._websocket = fakeWebsocket;
 
       store.setStoreState({windowId: 42});
     });

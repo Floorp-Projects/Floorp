@@ -894,4 +894,5 @@
         <item name="android:paddingRight">8dp</item>
     </style>
 
+    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
 </resources>

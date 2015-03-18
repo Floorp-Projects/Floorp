@@ -13,16 +13,14 @@ function test(text, segments, charsPerSegment, charsAvailableInLastSegment) {
   let domRequest = manager.getSegmentInfoForText(text);
   ok(domRequest, "DOMRequest object returned.");
 
-  return wrapDomRequestAsPromise(domRequest)
-    .then(function(aEvent) {
-      let result = aEvent.target.result;
-      ok(result, "aEvent.target.result = " + JSON.stringify(result));
+  return domRequest.then(function(aResult) {
+    ok(aResult, "result = " + JSON.stringify(aResult));
 
-      is(result.segments, segments, "result.segments");
-      is(result.charsPerSegment, charsPerSegment, "result.charsPerSegment");
-      is(result.charsAvailableInLastSegment, charsAvailableInLastSegment,
-         "result.charsAvailableInLastSegment");
-    });
+    is(aResult.segments, segments, "result.segments");
+    is(aResult.charsPerSegment, charsPerSegment, "result.charsPerSegment");
+    is(aResult.charsAvailableInLastSegment, charsAvailableInLastSegment,
+       "result.charsAvailableInLastSegment");
+  });
 }
 
 startTestCommon(function() {

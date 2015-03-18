@@ -11,9 +11,9 @@ const PREF_DEBUG = "dom.payment.debug";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
-                                   "@mozilla.org/icc/iccservice;1",
-                                   "nsIIccService");
+XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
+                                   "@mozilla.org/ril/content-helper;1",
+                                   "nsIIccProvider");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gRil",
                                    "@mozilla.org/ril;1",
@@ -148,8 +148,7 @@ PaymentProviderStrategy.prototype = {
     if (!this._iccInfo) {
       this._iccInfo = [];
       for (let i = 0; i < gRil.numRadioInterfaces; i++) {
-        let icc = gIccService.getIccByServiceId(i);
-        let info = icc && icc.iccInfo;
+        let info = iccProvider.getIccInfo(i);
         if (!info) {
           LOGE("Tried to get the ICC info for an invalid service ID " + i);
           continue;

@@ -157,7 +157,7 @@
 .call-tree-cell[type="allocations"],
 .call-tree-header[type="self-allocations"],
 .call-tree-cell[type="self-allocations"] {
-  width: 7vw;
+  width: 9vw;
 }
 
 .call-tree-header[type="function"],

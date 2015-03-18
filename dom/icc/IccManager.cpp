@@ -10,15 +10,6 @@
 #include "mozilla/dom/IccChangeEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsIIccInfo.h"
-// Service instantiation
-#include "ipc/IccIPCService.h"
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-// TODO: Bug 815526, deprecate RILContentHelper.
-#include "nsIRadioInterfaceLayer.h"
-#include "nsRadioInterfaceLayer.h"
-#include "nsIGonkIccService.h"
-#endif
-#include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 using namespace mozilla::dom;
 
@@ -137,26 +128,4 @@ IccManager::GetIccById(const nsAString& aIccId) const
     }
   }
   return nullptr;
-}
-
-already_AddRefed<nsIIccService>
-NS_CreateIccService()
-{
-  nsCOMPtr<nsIIccService> service;
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    service = new mozilla::dom::icc::IccIPCService();
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-  } else {
-    // TODO: Bug 815526, deprecate RILContentHelper.
-    nsCOMPtr <nsIRadioInterfaceLayer> ril =
-      do_GetService(NS_RADIOINTERFACELAYER_CONTRACTID);
-    nsCOMPtr <nsIRadioInterfaceLayer_new> ril_new(do_QueryInterface(ril));
-
-    service = (ril_new) ? do_GetService(GONK_ICC_SERVICE_CONTRACTID)
-                        : do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-#endif
-  }
-
-  return service.forget();
 }

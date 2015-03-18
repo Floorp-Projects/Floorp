@@ -88,3 +88,12 @@ xul|radio:not([focused="true"]) > xul|*.radio-label-box,
 xul|checkbox:not(:-moz-focusring) > xul|*.checkbox-label-box {
   -moz-margin-start: 0;
 }
+
+/* Use a 2px border so that selected row highlight is still visible behind
+    an existing high-contrast border that uses the background color */
+@media not all and (-moz-windows-default-theme) {
+  xul|treechildren::-moz-tree-row(selected),
+  xul|listbox xul|listitem[selected="true"] {
+     border: 2px dotted Highlight;
+  }
+}

@@ -7,6 +7,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIIccProvider.h"
 #include "nsTArrayHelpers.h"
 
 namespace mozilla {
@@ -24,7 +25,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IccManager, DOMEventTargetHelper)
 
-  explicit IccManager(nsPIDOMWindow* aWindow);
+  IccManager(nsPIDOMWindow* aWindow);
 
   void
   Shutdown();
