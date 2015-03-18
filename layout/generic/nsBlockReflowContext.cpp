@@ -216,7 +216,7 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
 }
 
 void
-nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
+nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   bool                aApplyBStartMargin,
                                   nsCollapsingMargin& aPrevMargin,
                                   nscoord             aClearance,
@@ -229,7 +229,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
   mFrame = aFrameRS.frame;
   mWritingMode = aState.mReflowState.GetWritingMode();
   mContainerWidth = aState.mContainerWidth;
-  mSpace = aSpace;
+  mSpace = LogicalRect(mWritingMode, aSpace, mContainerWidth);
 
   if (!aIsAdjacentWithBStart) {
     aFrameRS.mFlags.mIsTopOfPage = false;  // make sure this is cleared
