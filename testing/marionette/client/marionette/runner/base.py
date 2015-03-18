@@ -548,10 +548,10 @@ class BaseMarionetteTestRunner(object):
             # In the event we're gathering debug without starting a session, skip marionette commands
             if marionette.session is not None:
                 try:
-                    marionette.set_context(marionette.CONTEXT_CHROME)
-                    rv['screenshot'] = marionette.screenshot()
-                    marionette.set_context(marionette.CONTEXT_CONTENT)
-                    rv['source'] = marionette.page_source
+                    with marionette.using_context(marionette.CONTEXT_CHROME):
+                        rv['screenshot'] = marionette.screenshot()
+                    with marionette.using_context(marionette.CONTEXT_CONTENT):
+                        rv['source'] = marionette.page_source
                 except:
                     logger = get_default_logger()
                     logger.warning('Failed to gather test failure debug.', exc_info=True)
