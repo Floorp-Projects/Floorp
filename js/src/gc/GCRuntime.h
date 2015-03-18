@@ -901,6 +901,7 @@ class GCRuntime
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
     template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::Phase phase);
+    void markBufferedGrayRoots(JS::Zone *zone);
     void markGrayReferencesInCurrentGroup(gcstats::Phase phase);
     void markAllWeakReferences(gcstats::Phase phase);
     void markAllGrayReferences(gcstats::Phase phase);
