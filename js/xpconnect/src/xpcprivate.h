@@ -1988,16 +1988,10 @@ private:
 };
 
 /***********************************************/
-// XPCWrappedNativeTearOffChunk is a collections of XPCWrappedNativeTearOff
+// XPCWrappedNativeTearOffChunk is a linked list of XPCWrappedNativeTearOff
 // objects. It lets us allocate a set of XPCWrappedNativeTearOff objects and
 // link the sets - rather than only having the option of linking single
 // XPCWrappedNativeTearOff objects.
-//
-// The value of XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK can be tuned at buildtime
-// to balance between the code of allocations of additional chunks and the waste
-// of space for ununsed XPCWrappedNativeTearOff objects.
-
-#define XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK 1
 
 class XPCWrappedNativeTearOffChunk
 {
@@ -2007,7 +2001,7 @@ private:
     ~XPCWrappedNativeTearOffChunk() {delete mNextChunk;}
 
 private:
-    XPCWrappedNativeTearOff mTearOffs[XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK];
+    XPCWrappedNativeTearOff mTearOff;
     XPCWrappedNativeTearOffChunk* mNextChunk;
 };
 

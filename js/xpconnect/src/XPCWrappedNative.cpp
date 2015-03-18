@@ -103,13 +103,11 @@ XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb)
     // record an edge here.
     XPCWrappedNativeTearOffChunk* chunk;
     for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++) {
-            JSObject* jso = to->GetJSObjectPreserveColor();
-            if (!jso) {
-                NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "tearoff's mNative");
-                cb.NoteXPCOMChild(to->GetNative());
-            }
+        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+        JSObject* jso = to->GetJSObjectPreserveColor();
+        if (!jso) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "tearoff's mNative");
+            cb.NoteXPCOMChild(to->GetNative());
         }
     }
 }
@@ -893,26 +891,24 @@ XPCWrappedNative::FlatJSObjectFinalized()
 
     XPCWrappedNativeTearOffChunk* chunk;
     for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++) {
-            JSObject* jso = to->GetJSObjectPreserveColor();
-            if (jso) {
-                JS_SetPrivate(jso, nullptr);
+        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+        JSObject* jso = to->GetJSObjectPreserveColor();
+        if (jso) {
+            JS_SetPrivate(jso, nullptr);
 #ifdef DEBUG
-                JS_UpdateWeakPointerAfterGCUnbarriered(&jso);
-                MOZ_ASSERT(!jso);
+            JS_UpdateWeakPointerAfterGCUnbarriered(&jso);
+            MOZ_ASSERT(!jso);
 #endif
-                to->JSObjectFinalized();
-            }
-
-            // We also need to release any native pointers held...
-            nsRefPtr<nsISupports> native = to->TakeNative();
-            if (native && GetRuntime()) {
-                DeferredFinalize(native.forget().take());
-            }
-
-            to->SetInterface(nullptr);
+            to->JSObjectFinalized();
         }
+
+        // We also need to release any native pointers held...
+        nsRefPtr<nsISupports> native = to->TakeNative();
+        if (native && GetRuntime()) {
+            DeferredFinalize(native.forget().take());
+        }
+
+        to->SetInterface(nullptr);
     }
 
     nsWrapperCache *cache = nullptr;
@@ -986,17 +982,15 @@ XPCWrappedNative::SystemIsBeingShutDown()
 
     XPCWrappedNativeTearOffChunk* chunk;
     for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = chunk->mTearOffs;
-        for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++) {
-            if (JSObject *jso = to->GetJSObjectPreserveColor()) {
-                JS_SetPrivate(jso, nullptr);
-                to->SetJSObject(nullptr);
-            }
-            // We leak the tearoff mNative
-            // (for the same reason we leak mIdentity - see above).
-            unused << to->TakeNative().take();
-            to->SetInterface(nullptr);
+        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+        if (JSObject *jso = to->GetJSObjectPreserveColor()) {
+            JS_SetPrivate(jso, nullptr);
+            to->SetJSObject(nullptr);
         }
+        // We leak the tearoff mNative
+        // (for the same reason we leak mIdentity - see above).
+        unused << to->TakeNative().take();
+        to->SetInterface(nullptr);
     }
 
     if (mFirstChunk.mNextChunk) {
@@ -1051,15 +1045,9 @@ XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
     for (XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
          chunk != nullptr;
          chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* tearOff = chunk->mTearOffs;
-        XPCWrappedNativeTearOff* const end = tearOff +
-            XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
-        for (tearOff = chunk->mTearOffs;
-             tearOff < end;
-             tearOff++) {
-            if (tearOff->GetInterface() == aInterface) {
-                return tearOff;
-            }
+        XPCWrappedNativeTearOff* tearOff = &chunk->mTearOff;
+        if (tearOff->GetInterface() == aInterface) {
+            return tearOff;
         }
     }
     return nullptr;
@@ -1080,33 +1068,27 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     for (lastChunk = chunk = &mFirstChunk;
          chunk;
          lastChunk = chunk, chunk = chunk->mNextChunk) {
-        to = chunk->mTearOffs;
-        XPCWrappedNativeTearOff* const end = chunk->mTearOffs +
-            XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK;
-        for (to = chunk->mTearOffs;
-             to < end;
-             to++) {
-            if (to->GetInterface() == aInterface) {
-                if (needJSObject && !to->GetJSObjectPreserveColor()) {
-                    AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
-                    bool ok = InitTearOffJSObject(to);
-                    // During shutdown, we don't sweep tearoffs.  So make sure
-                    // to unmark manually in case the auto-marker marked us.
-                    // We shouldn't ever be getting here _during_ our
-                    // Mark/Sweep cycle, so this should be safe.
-                    to->Unmark();
-                    if (!ok) {
-                        to = nullptr;
-                        rv = NS_ERROR_OUT_OF_MEMORY;
-                    }
+        to = &chunk->mTearOff;
+        if (to->GetInterface() == aInterface) {
+            if (needJSObject && !to->GetJSObjectPreserveColor()) {
+                AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
+                bool ok = InitTearOffJSObject(to);
+                // During shutdown, we don't sweep tearoffs.  So make sure
+                // to unmark manually in case the auto-marker marked us.
+                // We shouldn't ever be getting here _during_ our
+                // Mark/Sweep cycle, so this should be safe.
+                to->Unmark();
+                if (!ok) {
+                    to = nullptr;
+                    rv = NS_ERROR_OUT_OF_MEMORY;
                 }
-                if (pError)
-                    *pError = rv;
-                return to;
             }
-            if (!firstAvailable && to->IsAvailable())
-                firstAvailable = to;
+            if (pError)
+                *pError = rv;
+            return to;
         }
+        if (!firstAvailable && to->IsAvailable())
+            firstAvailable = to;
     }
 
     to = firstAvailable;
@@ -1114,7 +1096,7 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     if (!to) {
         auto newChunk = new XPCWrappedNativeTearOffChunk();
         lastChunk->mNextChunk = newChunk;
-        to = newChunk->mTearOffs;
+        to = &newChunk->mTearOff;
     }
 
     {
