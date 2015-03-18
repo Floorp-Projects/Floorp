@@ -538,6 +538,7 @@ public:
         IDX_COLUMNNUMBER            ,
         IDX_STACK                   ,
         IDX_MESSAGE                 ,
+        IDX_LASTINDEX               ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 

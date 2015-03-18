@@ -43,7 +43,9 @@ const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
+const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
+const PREF_NETWORK_DEBUG_ENABLED     = "network.debugging.enabled";
 
 const POSSIBLE_USB_INTERFACE_NAME = "rndis0,usb0";
 const DEFAULT_USB_INTERFACE_NAME  = "rndis0";
@@ -103,21 +105,22 @@ const MOBILE_DUN_CONNECT_TIMEOUT       = 30000;
 const MOBILE_DUN_RETRY_INTERVAL        = 5000;
 const MOBILE_DUN_MAX_RETRIES           = 5;
 
-let DEBUG = false;
-// Read debug setting from pref.
-try {
-  let debugPref = Services.prefs.getBoolPref("network.debugging.enabled");
-  DEBUG = DEBUG || debugPref;
-} catch (e) {}
-
 let debug;
-if (DEBUG) {
-  debug = function(s) {
-    dump("-*- TetheringService: " + s + "\n");
-  };
-} else {
-  debug = function(s) {};
+function updateDebug() {
+  let debugPref = false; // set default value here.
+  try {
+    debugPref = debugPref || Services.prefs.getBoolPref(PREF_NETWORK_DEBUG_ENABLED);
+  } catch (e) {}
+
+  if (debugPref) {
+    debug = function(s) {
+      dump("-*- TetheringService: " + s + "\n");
+    };
+  } else {
+    debug = function(s) {};
+  }
 }
+updateDebug();
 
 function TetheringService() {
   Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
@@ -125,6 +128,7 @@ function TetheringService() {
   Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED, false);
   Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, false);
   Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, false);
+  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
 
   this._dataDefaultServiceId = 0;
 
@@ -236,6 +240,11 @@ TetheringService.prototype = {
     let network;
 
     switch(aTopic) {
+      case TOPIC_PREF_CHANGED:
+        if (aData === PREF_NETWORK_DEBUG_ENABLED) {
+          updateDebug();
+        }
+        break;
       case TOPIC_MOZSETTINGS_CHANGED:
         if ("wrappedJSObject" in aSubject) {
           aSubject = aSubject.wrappedJSObject;
@@ -270,6 +279,7 @@ TetheringService.prototype = {
         Services.obs.removeObserver(this, TOPIC_CONNECTION_STATE_CHANGED);
         Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
         Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
+        Services.prefs.removeObserver(PREF_NETWORK_DEBUG_ENABLED, this);
 
         this.dunConnectTimer.cancel();
         this.dunRetryTimer.cancel();

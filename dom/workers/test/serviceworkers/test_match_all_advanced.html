@@ -1,0 +1,98 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - Test matchAll with multiple clients</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var client_iframes = [];
+  var registration;
+
+  function start() {
+    return navigator.serviceWorker.register("match_all_advanced_worker.js",
+                                            { scope: "./sw_clients/" }).then(function(swr) {
+      registration = swr;
+      window.onmessage = function (e) {
+        if (e.data === "READY") {
+          ok(registration.active, "Worker is active.");
+          registration.active.postMessage("RUN");
+        }
+      }
+    });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+
+  function testMatchAll() {
+    var p = new Promise(function(res, rej) {
+      navigator.serviceWorker.onmessage = function (e) {
+        ok(e.data === client_iframes.length, "MatchAll returned the correct number of clients.");
+        res();
+      }
+    });
+
+    content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/service_worker_controlled.html");
+    content.appendChild(iframe);
+
+    client_iframes.push(iframe);
+    return p;
+  }
+
+  function removeAndTest() {
+    content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    content.removeChild(client_iframes.pop());
+    content.removeChild(client_iframes.pop());
+
+    return testMatchAll();
+  }
+
+  function runTest() {
+    start()
+      .then(testMatchAll)
+      .then(testMatchAll)
+      .then(testMatchAll)
+      .then(removeAndTest)
+      .then(function(e) {
+        content = document.getElementById("content");
+        while (client_iframes.length) {
+          content.removeChild(client_iframes.pop());
+        }
+      }).then(unregister).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(function() {
+        SimpleTest.finish();
+      });
+
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
