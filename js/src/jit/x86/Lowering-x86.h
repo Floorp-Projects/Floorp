@@ -22,8 +22,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
   protected:
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload.
-    void useBox(LInstruction *lir, size_t n, MDefinition *mir,
-                LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
     void useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register reg2);
 
     // It's a trap! On x86, the 1-byte store can only use one of

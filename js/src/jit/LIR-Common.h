@@ -6799,6 +6799,28 @@ class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3>
     }
 };
 
+class LAssertResultT : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(AssertResultT)
+
+    explicit LAssertResultT(const LAllocation &input) {
+        setOperand(0, input);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+};
+
+class LAssertResultV : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(AssertResultV)
+
+    static const size_t Input = 0;
+};
+
 class LRecompileCheck : public LInstructionHelper<0, 0, 1>
 {
   public:
