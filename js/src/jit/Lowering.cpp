@@ -25,6 +25,12 @@ using mozilla::DebugOnly;
 using JS::GenericNaN;
 
 void
+LIRGenerator::useBoxAtStart(LInstruction *lir, size_t n, MDefinition *mir, LUse::Policy policy)
+{
+    return useBox(lir, n, mir, policy, true);
+}
+
+void
 LIRGenerator::visitCloneLiteral(MCloneLiteral *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
@@ -2317,8 +2323,8 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     if (ins->alwaysBails()) {
         LBail *bail = new(alloc()) LBail();
         assignSnapshot(bail, Bailout_Inevitable);
-        redefine(ins, ins->input());
         add(bail, ins);
+        redefine(ins, ins->input());
         return;
     }
 
@@ -2328,8 +2334,8 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
         LTypeBarrierV *barrier = new(alloc()) LTypeBarrierV(tmp);
         useBox(barrier, LTypeBarrierV::Input, ins->input());
         assignSnapshot(barrier, Bailout_TypeBarrierV);
-        redefine(ins, ins->input());
         add(barrier, ins);
+        redefine(ins, ins->input());
         return;
     }
 
@@ -2348,8 +2354,8 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
         LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
         LTypeBarrierO *barrier = new(alloc()) LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
         assignSnapshot(barrier, Bailout_TypeBarrierO);
-        redefine(ins, ins->getOperand(0));
         add(barrier, ins);
+        redefine(ins, ins->getOperand(0));
         return;
     }
 
@@ -4072,10 +4078,10 @@ LIRGenerator::visitLexicalCheck(MLexicalCheck *ins)
     MDefinition *input = ins->input();
     MOZ_ASSERT(input->type() == MIRType_Value);
     LLexicalCheck *lir = new(alloc()) LLexicalCheck();
-    redefine(ins, input);
     useBox(lir, LLexicalCheck::Input, input);
     add(lir, ins);
     assignSafepoint(lir, ins);
+    redefine(ins, input);
 }
 
 void
