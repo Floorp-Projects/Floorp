@@ -3843,7 +3843,9 @@ void
 JSObject::dump()
 {
     JSObject *obj = this;
-    fprintf(stderr, "object %p\n", (void *) obj);
+    JSObject *globalObj = &global();
+    fprintf(stderr, "object %p from global %p [%s]\n", (void *) obj,
+            (void*) globalObj, globalObj->getClass()->name);
     const Class *clasp = obj->getClass();
     fprintf(stderr, "class %p %s\n", (const void *)clasp, clasp->name);
 
