@@ -38,6 +38,11 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
+  struct TrackSize {
+    nscoord mBase;
+    nscoord mLimit;
+  };
+
 protected:
   typedef mozilla::css::GridNamedArea GridNamedArea;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
@@ -257,6 +262,14 @@ protected:
     mGridColEnd = std::max(mGridColEnd, aArea.mCols.HypotheticalEnd());
     mGridRowEnd = std::max(mGridRowEnd, aArea.mRows.HypotheticalEnd());
   }
+
+  /**
+   * Calculate track sizes.
+   */
+  void CalculateTrackSizes(const mozilla::LogicalSize& aPercentageBasis,
+                           const nsStylePosition*      aStyle,
+                           nsTArray<TrackSize>&        aColSizes,
+                           nsTArray<TrackSize>&        aRowSizes);
 
   /**
    * Helper method for ResolveLineRange.
