@@ -825,6 +825,10 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
   }
 
   DeviceManagerD3D9* dm = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  if (!dm || !dm->device()) {
+    return false;
+  }
+
   if (!mTexture) {
     mTexture = dm->CreateTexture(mSize, SurfaceFormatToD3D9Format(mFormat),
                                  D3DPOOL_DEFAULT, this);
@@ -889,7 +893,9 @@ TextureHostD3D9::Updated(const nsIntRegion* aRegion)
                                                nullptr, mFlags);
   }
 
-  mTextureSource->UpdateFromTexture(mTexture, aRegion);
+  if (!mTextureSource->UpdateFromTexture(mTexture, aRegion)) {
+    gfxCriticalError() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
+  }
 }
 
 IDirect3DDevice9*

@@ -21,10 +21,6 @@ class LIRGeneratorNone : public LIRGeneratorShared
         MOZ_CRASH();
     }
 
-    void useBox(LInstruction *, size_t, MDefinition *,
-                LUse::Policy a = LUse::REGISTER, bool b = false) {
-        MOZ_CRASH();
-    }
     void useBoxFixed(LInstruction *, size_t, MDefinition *, Register, Register) { MOZ_CRASH(); }
 
     LAllocation useByteOpRegister(MDefinition *) { MOZ_CRASH(); }

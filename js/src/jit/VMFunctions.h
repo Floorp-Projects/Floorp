@@ -748,13 +748,11 @@ JSString *StringReplace(JSContext *cx, HandleString string, HandleString pattern
 bool SetDenseElement(JSContext *cx, HandleNativeObject obj, int32_t index, HandleValue value,
                      bool strict);
 
-#ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
 void AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj);
 void AssertValidStringPtr(JSContext *cx, JSString *str);
 void AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym);
 void AssertValidValue(JSContext *cx, Value *v);
-#endif
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkStringFromIon(JSRuntime *rt, JSString **stringp);

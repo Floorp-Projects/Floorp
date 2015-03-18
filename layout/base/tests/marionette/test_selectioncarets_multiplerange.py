@@ -126,6 +126,12 @@ class SelectionCaretsMultipleRangeTest(MarionetteTestCase):
         self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
             'this 3\nuser can select this 4\nuser can select this 5\nuser')
 
+        # Drag first caret to target location
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        self.actions.flick(self._body, caret1_x, caret1_y, end_caret_x, end_caret_y, 1).perform()
+        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
+            '4\nuser can select this 5\nuser')
+
     def test_drag_caret_to_beginning_of_a_line(self):
         '''Bug 1094056
         Test caret visibility when caret is dragged to beginning of a line

@@ -102,7 +102,7 @@ public:
   }
 
   NS_IMETHOD
-      Run()
+  Run()
   {
     AssertIsOnMainThread();
 
@@ -113,6 +113,14 @@ public:
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+    }
+
+    mChannel->SynthesizeStatus(mInternalResponse->GetStatus(), mInternalResponse->GetStatusText());
+
+    nsAutoTArray<InternalHeaders::Entry, 5> entries;
+    mInternalResponse->Headers()->GetEntries(entries);
+    for (uint32_t i = 0; i < entries.Length(); ++i) {
+       mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);
     }
 
     rv = mChannel->FinishSynthesizedResponse();
@@ -203,36 +211,47 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
+  // FIXME(nsm) Bug 1136200 deal with opaque and no-cors (fetch spec 4.2.2.2).
+  if (response->Type() == ResponseType::Error) {
+    return;
+  }
+
+  if (NS_WARN_IF(response->BodyUsed())) {
+    return;
+  }
+
   nsRefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return;
   }
 
+  nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel, ir));
   nsCOMPtr<nsIInputStream> body;
   response->GetBody(getter_AddRefs(body));
-  if (NS_WARN_IF(!body) || NS_WARN_IF(response->BodyUsed())) {
-    return;
-  }
-  response->SetBodyUsed();
+  // Errors and redirects may not have a body.
+  if (body) {
+    response->SetBodyUsed();
 
-  nsCOMPtr<nsIOutputStream> responseBody;
-  rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+    nsCOMPtr<nsIOutputStream> responseBody;
+    rv = mInterceptedChannel->GetResponseBody(getter_AddRefs(responseBody));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_WARN_IF(!stsThread)) {
+      return;
+    }
+    rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
+                      RespondWithCopyComplete, closure.forget());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  } else {
+    RespondWithCopyComplete(closure.forget(), NS_OK);
   }
 
-  nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel, ir));
-
-  nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(!stsThread)) {
-    return;
-  }
-  rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
-                    RespondWithCopyComplete, closure.forget());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
+  MOZ_ASSERT(!closure);
   autoCancel.Reset();
 }
 

@@ -923,18 +923,20 @@ class GCRuntime
     void sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
-    IncrementalProgress compactPhase(JS::gcreason::Reason reason);
+    IncrementalProgress beginCompactPhase();
+    IncrementalProgress compactPhase(JS::gcreason::Reason reason, SliceBudget &sliceBudget);
+    void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
-    ArenaHeader *relocateArenas(JS::gcreason::Reason reason);
-    void updateAllCellPointersParallel(MovingTracer *trc);
-    void updateAllCellPointersSerial(MovingTracer *trc);
-    void updatePointersToRelocatedCells();
-    void releaseRelocatedArenas(ArenaHeader *relocatedList);
-    void releaseRelocatedArenasWithoutUnlocking(ArenaHeader *relocatedList, const AutoLockGC& lock);
+    bool relocateArenas(Zone *zone, JS::gcreason::Reason reason, SliceBudget &sliceBudget);
+    void updateAllCellPointersParallel(MovingTracer *trc, Zone *zone);
+    void updateAllCellPointersSerial(MovingTracer *trc, Zone *zone);
+    void updatePointersToRelocatedCells(Zone *zone);
+    void releaseRelocatedArenas();
+    void releaseRelocatedArenasWithoutUnlocking(const AutoLockGC& lock);
 #ifdef DEBUG
-    void protectRelocatedArenas(ArenaHeader *relocatedList);
-    void unprotectRelocatedArenas(ArenaHeader *relocatedList);
+    void protectRelocatedArenas();
+    void unprotectRelocatedArenas();
 #endif
     void finishCollection(JS::gcreason::Reason reason);
 
@@ -1074,6 +1076,7 @@ class GCRuntime
 
     /* Singly linekd list of zones to be swept in the background. */
     ZoneList backgroundSweepZones;
+
     /*
      * Free LIFO blocks are transferred to this allocator before being freed on
      * the background GC thread.
@@ -1104,6 +1107,13 @@ class GCRuntime
      * List head of arenas allocated during the sweep phase.
      */
     js::gc::ArenaHeader *arenasAllocatedDuringSweep;
+
+    /*
+     * Incremental compacting state.
+     */
+    bool startedCompacting;
+    js::gc::ZoneList zonesToMaybeCompact;
+    ArenaHeader* relocatedArenasToRelease;
 
 #ifdef JS_GC_MARKING_VALIDATION
     js::gc::MarkingValidator *markingValidator;
@@ -1239,9 +1249,6 @@ class GCRuntime
     int inUnsafeRegion;
 
     size_t noGCOrAllocationCheck;
-
-    ArenaHeader* relocatedArenasToRelease;
-
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */

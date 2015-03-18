@@ -15,7 +15,7 @@ TBPL_FLAGS = [
     [], # no flags, normal baseline and ion
     ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
     ['--ion-eager', '--ion-offthread-compile=off',
-     '--ion-check-range-analysis', '--no-sse3', '--no-threads'],
+     '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
     ['--baseline-eager'],
     ['--baseline-eager', '--no-fpu'],
     ['--no-baseline', '--no-ion'],

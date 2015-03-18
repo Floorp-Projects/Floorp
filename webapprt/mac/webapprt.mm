@@ -362,7 +362,7 @@ NSString
 
   //we look for these flavors of Firefox, in this order
   NSArray* launchBinarySearchList = [NSArray arrayWithObjects: @"org.mozilla.nightly",
-                                                                @"org.mozilla.aurora",
+                                                                @"org.mozilla.firefoxdeveloperedition",
                                                                 @"org.mozilla.firefox", nil];
 
   // If they provided a binary ID, use that.

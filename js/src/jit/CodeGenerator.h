@@ -356,6 +356,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitAssertRangeF(LAssertRangeF *ins);
     void visitAssertRangeV(LAssertRangeV *ins);
 
+    void visitAssertResultV(LAssertResultV *ins);
+    void visitAssertResultT(LAssertResultT *ins);
+    void emitAssertResultV(const ValueOperand output, TemporaryTypeSet *typeset);
+    void emitAssertObjectOrStringResult(Register input, MIRType type, TemporaryTypeSet *typeset);
+
     void visitInterruptCheck(LInterruptCheck *lir);
     void visitAsmJSInterruptCheck(LAsmJSInterruptCheck *lir);
     void visitRecompileCheck(LRecompileCheck *ins);
@@ -459,9 +464,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp);
 
     Vector<CodeOffsetLabel, 0, JitAllocPolicy> ionScriptLabels_;
-#ifdef DEBUG
+
     void branchIfInvalidated(Register temp, Label *invalidated);
 
+#ifdef DEBUG
     void emitDebugResultChecks(LInstruction *ins);
     void emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mir);
     void emitValueResultChecks(LInstruction *lir, MDefinition *mir);

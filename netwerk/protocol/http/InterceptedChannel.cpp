@@ -68,6 +68,22 @@ InterceptedChannelBase::GetIsNavigation(bool* aIsNavigation)
 }
 
 nsresult
+InterceptedChannelBase::DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason)
+{
+    EnsureSynthesizedResponse();
+
+    // Always assume HTTP 1.1 for synthesized responses.
+    nsAutoCString statusLine;
+    statusLine.AppendLiteral("HTTP/1.1 ");
+    statusLine.AppendInt(aStatus);
+    statusLine.AppendLiteral(" ");
+    statusLine.Append(aReason);
+
+    (*mSynthesizedResponseHead)->ParseStatusLine(statusLine.get());
+    return NS_OK;
+}
+
+nsresult
 InterceptedChannelBase::DoSynthesizeHeader(const nsACString& aName, const nsACString& aValue)
 {
     EnsureSynthesizedResponse();
@@ -124,6 +140,16 @@ InterceptedChannelChrome::ResetInterception()
 
   mChannel = nullptr;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelChrome::SynthesizeStatus(uint16_t aStatus, const nsACString& aReason)
+{
+  if (!mSynthesizedCacheEntry) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return DoSynthesizeStatus(aStatus, aReason);
 }
 
 NS_IMETHODIMP
@@ -240,6 +266,16 @@ InterceptedChannelContent::ResetInterception()
   mChannel->ResetInterception();
   mChannel = nullptr;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedChannelContent::SynthesizeStatus(uint16_t aStatus, const nsACString& aReason)
+{
+  if (!mResponseBody) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return DoSynthesizeStatus(aStatus, aReason);
 }
 
 NS_IMETHODIMP

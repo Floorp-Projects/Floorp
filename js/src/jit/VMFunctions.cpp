@@ -1135,10 +1135,10 @@ AutoDetectInvalidation::setReturnOverride()
     cx_->runtime()->jitRuntime()->setIonReturnOverride(rval_.get());
 }
 
-#ifdef DEBUG
 void
 AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 {
+#ifdef DEBUG
     // Check what we can, so that we'll hopefully assert/crash if we get a
     // bogus object (pointer).
     MOZ_ASSERT(obj->compartment() == cx->compartment());
@@ -1153,6 +1153,7 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
         MOZ_ASSERT(kind <= js::gc::AllocKind::OBJECT_LAST);
         MOZ_ASSERT(obj->asTenured().zone() == cx->zone());
     }
+#endif
 }
 
 void
@@ -1165,6 +1166,7 @@ AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj)
 void
 AssertValidStringPtr(JSContext *cx, JSString *str)
 {
+#ifdef DEBUG
     // We can't closely inspect strings from another runtime.
     if (str->runtimeFromAnyThread() != cx->runtime()) {
         MOZ_ASSERT(str->isPermanentAtom());
@@ -1189,6 +1191,7 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
         MOZ_ASSERT(kind == gc::AllocKind::STRING || kind == gc::AllocKind::FAT_INLINE_STRING);
     else
         MOZ_ASSERT(kind == gc::AllocKind::STRING);
+#endif
 }
 
 void
@@ -1220,7 +1223,6 @@ AssertValidValue(JSContext *cx, Value *v)
     else if (v->isSymbol())
         AssertValidSymbolPtr(cx, v->toSymbol());
 }
-#endif
 
 bool
 ObjectIsCallable(JSObject *obj)

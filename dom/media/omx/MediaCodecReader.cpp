@@ -457,8 +457,13 @@ MediaCodecReader::DecodeAudioDataSync()
 void
 MediaCodecReader::DecodeAudioDataTask()
 {
-  DecodeAudioDataSync();
+  if (AudioQueue().GetSize() == 0 && !AudioQueue().IsFinished()) {
+    DecodeAudioDataSync();
+  }
   MonitorAutoLock al(mAudioTrack.mTrackMonitor);
+  if (mAudioTrack.mAudioPromise.IsEmpty()) {
+    return;
+  }
   if (AudioQueue().GetSize() > 0) {
     nsRefPtr<AudioData> a = AudioQueue().PopFront();
     if (a) {

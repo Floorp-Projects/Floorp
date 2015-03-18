@@ -1091,7 +1091,7 @@ NameNode::dump(int indent)
 }
 #endif
 
-ObjectBox::ObjectBox(NativeObject *object, ObjectBox* traceLink)
+ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
   : object(object),
     traceLink(traceLink),
     emitLink(nullptr)

@@ -75,8 +75,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineArrayPush(callInfo);
     if (native == js::array_concat)
         return inlineArrayConcat(callInfo);
-    if (native == js::array_join)
-        return inlineArrayJoin(callInfo);
     if (native == js::array_splice)
         return inlineArraySplice(callInfo);
 
