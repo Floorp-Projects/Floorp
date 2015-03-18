@@ -1789,8 +1789,9 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 }
                 duration = ntohl(duration32);
             }
-            if (duration) {
-              mFileMetaData->setInt64(kKeyMovieDuration, duration * 1000LL);
+            if (duration && mHeaderTimescale) {
+                mFileMetaData->setInt64(
+                        kKeyMovieDuration, (duration * 1000000) / mHeaderTimescale);
             }
 
             *offset += chunk_size;
