@@ -3773,6 +3773,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
                             const nsAString& browserDumpID)
 {
   nsPluginTag* crashedPluginTag = TagForPlugin(aPlugin);
+  MOZ_ASSERT(crashedPluginTag);
 
   // Notify the app's observer that a plugin crashed so it can submit
   // a crashreport.
@@ -3782,6 +3783,18 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
   nsCOMPtr<nsIWritablePropertyBag2> propbag =
     do_CreateInstance("@mozilla.org/hash-property-bag;1");
   if (obsService && propbag) {
+    uint32_t runID = 0;
+    PluginLibrary* library = aPlugin->GetLibrary();
+
+    if (!NS_WARN_IF(!library)) {
+      library->GetRunID(&runID);
+    }
+    propbag->SetPropertyAsUint32(NS_LITERAL_STRING("runID"), runID);
+
+    nsCString pluginName;
+    crashedPluginTag->GetName(pluginName);
+    propbag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
+                                   NS_ConvertUTF8toUTF16(pluginName));
     propbag->SetPropertyAsAString(NS_LITERAL_STRING("pluginDumpID"),
                                   pluginDumpID);
     propbag->SetPropertyAsAString(NS_LITERAL_STRING("browserDumpID"),
