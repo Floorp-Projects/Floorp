@@ -72,8 +72,7 @@ public:
    * space rectangle, relative to the containing block.
    * @param aFloatFrame the float frame that was placed.
    */
-  void UpdateBand(mozilla::WritingMode aWM,
-                  const mozilla::LogicalRect& aNewAvailableSpace,
+  void UpdateBand(const nsRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
   void BeginSpan(nsIFrame* aFrame, const nsHTMLReflowState* aSpanReflowState,
@@ -191,7 +190,7 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableISize)
+  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
   {
     // When reflowing ruby text frames, no block reflow state is
     // provided to the line layout. However, floats should never be
@@ -199,7 +198,7 @@ public:
     // not be called in that case.
     NS_ABORT_IF_FALSE(mBlockRS, "Should not call this method "
                       "if there is no block reflow state available");
-    return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
   }
 
   void SetTrimmableISize(nscoord aTrimmableISize) {
