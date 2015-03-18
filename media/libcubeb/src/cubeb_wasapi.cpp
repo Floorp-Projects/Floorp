@@ -1241,10 +1241,7 @@ int wasapi_stream_stop(cubeb_stream * stm)
   {
     auto_lock lock(stm->stream_reset_lock);
 
-    if (!stm->client) {
-      XASSERT(!stm->thread);
-      LOG("stream already stopped\n");
-    } else {
+    if (stm->client) {
       HRESULT hr = stm->client->Stop();
       if (FAILED(hr)) {
         LOG("could not stop AudioClient\n");
