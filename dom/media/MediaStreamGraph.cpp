@@ -1076,23 +1076,6 @@ SetImageToBlackPixel(PlanarYCbCrImage* aImage)
   aImage->SetData(data);
 }
 
-class VideoFrameContainerInvalidateRunnable : public nsRunnable {
-public:
-  explicit VideoFrameContainerInvalidateRunnable(VideoFrameContainer* aVideoFrameContainer)
-    : mVideoFrameContainer(aVideoFrameContainer)
-  {}
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mVideoFrameContainer->Invalidate();
-
-    return NS_OK;
-  }
-private:
-  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
-};
-
 void
 MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 {
@@ -1156,7 +1139,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     }
 
     nsCOMPtr<nsIRunnable> event =
-      new VideoFrameContainerInvalidateRunnable(output);
+      NS_NewRunnableMethod(output, &VideoFrameContainer::Invalidate);
     DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
   if (!aStream->mNotifiedFinished) {
