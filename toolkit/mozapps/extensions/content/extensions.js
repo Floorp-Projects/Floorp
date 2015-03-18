@@ -3117,7 +3117,8 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableNoUpdate.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
-      } else if (this._addon.isGMPlugin && !this._addon.isInstalled) {
+      } else if (this._addon.isGMPlugin && !this._addon.isInstalled &&
+                 this._addon.isActive) {
         this.node.setAttribute("notification", "warning");
         let warning = document.getElementById("detail-warning");
         warning.textContent =
@@ -3137,7 +3138,7 @@ var gDetailView = {
       let hasActivatePermission =
         ["ask_to_activate", "enable", "disable"].some(perm => hasPermission(this._addon, perm));
 
-      if (this._addon.userDisabled === true) {
+      if (!this._addon.isActive) {
         menulist.selectedItem = neverItem;
       } else if (this._addon.userDisabled == AddonManager.STATE_ASK_TO_ACTIVATE) {
         menulist.selectedItem = askItem;
