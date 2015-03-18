@@ -563,7 +563,7 @@ Parser<ParseHandler>::~Parser()
 
 template <typename ParseHandler>
 ObjectBox *
-Parser<ParseHandler>::newObjectBox(NativeObject *obj)
+Parser<ParseHandler>::newObjectBox(JSObject *obj)
 {
     MOZ_ASSERT(obj && !IsPoisonedPtr(obj));
 

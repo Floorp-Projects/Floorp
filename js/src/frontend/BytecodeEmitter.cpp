@@ -4243,8 +4243,11 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
 }
 
 bool
-ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObjects, MutableHandleValue vp)
+ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObjects, MutableHandleValue vp,
+                            NewObjectKind newKind)
 {
+    MOZ_ASSERT(newKind == TenuredObject || newKind == SingletonObject);
+
     switch (getKind()) {
       case PNK_NUMBER:
         vp.setNumber(pn_dval);
@@ -4284,8 +4287,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, NullPtr(),
-                                                              MaybeSingletonObject));
+        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, NullPtr(), newKind));
         if (!obj)
             return false;
 
@@ -4348,7 +4350,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
         }
 
         JSObject *obj = ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(),
-                                                    TenuredObject);
+                                                    newKind);
         if (!obj)
             return false;
 
@@ -4364,15 +4366,15 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
 static bool
 EmitSingletonInitialiser(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
+    NewObjectKind newKind = (pn->getKind() == PNK_OBJECT) ? SingletonObject : TenuredObject;
+
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value))
+    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value, newKind))
         return false;
 
-    RootedNativeObject obj(cx, &value.toObject().as<NativeObject>());
-    if (!obj->is<ArrayObject>() && !JSObject::setSingleton(cx, obj))
-        return false;
+    MOZ_ASSERT_IF(newKind == SingletonObject, value.toObject().isSingleton());
 
-    ObjectBox *objbox = bce->parser->newObjectBox(obj);
+    ObjectBox *objbox = bce->parser->newObjectBox(&value.toObject());
     if (!objbox)
         return false;
 
