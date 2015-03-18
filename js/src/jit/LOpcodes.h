@@ -28,8 +28,8 @@
     _(SimdInsertElementI)           \
     _(SimdInsertElementF)           \
     _(SimdSignMaskX4)               \
-    _(SimdGeneralSwizzleI)          \
-    _(SimdGeneralSwizzleF)          \
+    _(SimdGeneralShuffleI)          \
+    _(SimdGeneralShuffleF)          \
     _(SimdSwizzleI)                 \
     _(SimdSwizzleF)                 \
     _(SimdShuffle)                  \

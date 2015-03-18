@@ -1814,12 +1814,6 @@ class MSimdSwizzle
   public:
     INSTRUCTION_HEADER(SimdSwizzle)
 
-    static MSimdSwizzle *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType type,
-                                  uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
-    {
-        return new(alloc) MSimdSwizzle(obj, type, laneX, laneY, laneZ, laneW);
-    }
-
     static MSimdSwizzle *New(TempAllocator &alloc, MDefinition *obj, MIRType type,
                              uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
     {
@@ -1842,23 +1836,24 @@ class MSimdSwizzle
     ALLOW_CLONE(MSimdSwizzle)
 };
 
-// A "general swizzle" is a swizzle with non-constant lane indices.  This is the
-// one that Ion inlines and it can be folded into a MSimdSwizzle if lane indices
-// are constant. Performance of general swizzle does not really matter, as we
-// expect to always get constant indices.
-class MSimdGeneralSwizzle :
-    public MAryInstruction<5>,
-    public SimdSwizzlePolicy::Data
+// A "general swizzle" is a swizzle or a shuffle with non-constant lane
+// indices.  This is the one that Ion inlines and it can be folded into a
+// MSimdSwizzle/MSimdShuffle if lane indices are constant.  Performance of
+// general swizzle/shuffle does not really matter, as we expect to get
+// constant indices most of the time.
+class MSimdGeneralShuffle :
+    public MVariadicInstruction,
+    public SimdShufflePolicy::Data
 {
+    unsigned numVectors_;
+    unsigned numLanes_;
+
   protected:
-    MSimdGeneralSwizzle(MDefinition *vec, MDefinition *lanes[4], MIRType type)
+    MSimdGeneralShuffle(unsigned numVectors, unsigned numLanes, MIRType type)
+      : numVectors_(numVectors), numLanes_(numLanes)
     {
         MOZ_ASSERT(IsSimdType(type));
-        MOZ_ASSERT(SimdTypeToLength(type) == 4);
-
-        initOperand(0, vec);
-        for (unsigned i = 0; i < 4; i++)
-            initOperand(1 + i, lanes[i]);
+        MOZ_ASSERT(SimdTypeToLength(type) == numLanes_);
 
         setResultType(type);
         specialization_ = type;
@@ -1866,24 +1861,48 @@ class MSimdGeneralSwizzle :
     }
 
   public:
-    INSTRUCTION_HEADER(SimdGeneralSwizzle);
-    ALLOW_CLONE(MSimdGeneralSwizzle);
+    INSTRUCTION_HEADER(SimdGeneralShuffle);
 
-    static MSimdGeneralSwizzle *New(TempAllocator &alloc, MDefinition *vec, MDefinition *lanes[4],
+    static MSimdGeneralShuffle *New(TempAllocator &alloc, unsigned numVectors, unsigned numLanes,
                                     MIRType type)
     {
-        return new(alloc) MSimdGeneralSwizzle(vec, lanes, type);
+        return new(alloc) MSimdGeneralShuffle(numVectors, numLanes, type);
     }
 
-    MDefinition *input() const {
-        return getOperand(0);
+    bool init(TempAllocator &alloc) {
+        return MVariadicInstruction::init(alloc, numVectors_ + numLanes_);
     }
-    MDefinition *lane(size_t i) const {
-        return getOperand(1 + i);
+    void setVector(unsigned i, MDefinition* vec) {
+        MOZ_ASSERT(i < numVectors_);
+        initOperand(i, vec);
+    }
+    void setLane(unsigned i, MDefinition* laneIndex) {
+        MOZ_ASSERT(i < numLanes_);
+        initOperand(numVectors_ + i, laneIndex);
+    }
+
+    unsigned numVectors() const {
+        return numVectors_;
+    }
+    unsigned numLanes() const {
+        return numLanes_;
+    }
+    MDefinition *vector(unsigned i) const {
+        MOZ_ASSERT(i < numVectors_);
+        return getOperand(i);
+    }
+    MDefinition *lane(unsigned i) const {
+        MOZ_ASSERT(i < numLanes_);
+        return getOperand(numVectors_ + i);
     }
 
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
-        return congruentIfOperandsEqual(ins);
+        if (!ins->isSimdGeneralShuffle())
+            return false;
+        const MSimdGeneralShuffle *other = ins->toSimdGeneralShuffle();
+        return numVectors_ == other->numVectors() &&
+               numLanes_ == other->numLanes() &&
+               congruentIfOperandsEqual(other);
     }
 
     MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
@@ -1918,9 +1937,9 @@ class MSimdShuffle
   public:
     INSTRUCTION_HEADER(SimdShuffle)
 
-    static MInstruction *NewAsmJS(TempAllocator &alloc, MDefinition *lhs, MDefinition *rhs,
-                                  MIRType type, uint32_t laneX, uint32_t laneY, uint32_t laneZ,
-                                  uint32_t laneW)
+    static MInstruction *New(TempAllocator &alloc, MDefinition *lhs, MDefinition *rhs,
+                             MIRType type, uint32_t laneX, uint32_t laneY, uint32_t laneZ,
+                             uint32_t laneW)
     {
         // Swap operands so that new lanes come from LHS in majority.
         // In the balanced case, swap operands if needs be, in order to be able
@@ -1936,7 +1955,7 @@ class MSimdShuffle
 
         // If all lanes come from the same vector, just use swizzle instead.
         if (laneX < 4 && laneY < 4 && laneZ < 4 && laneW < 4)
-            return MSimdSwizzle::NewAsmJS(alloc, lhs, type, laneX, laneY, laneZ, laneW);
+            return MSimdSwizzle::New(alloc, lhs, type, laneX, laneY, laneZ, laneW);
 
         return new(alloc) MSimdShuffle(lhs, rhs, type, laneX, laneY, laneZ, laneW);
     }
