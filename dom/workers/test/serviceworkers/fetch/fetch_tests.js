@@ -27,6 +27,19 @@ fetch('synthesized.txt', function(xhr) {
   finish();
 });
 
+fetch('synthesized-404.txt', function(xhr) {
+  my_ok(xhr.status == 404, "load should 404");
+  my_ok(xhr.responseText == "synthesized response body", "404 load should have synthesized response");
+  finish();
+});
+
+fetch('synthesized-headers.txt', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.getResponseHeader("X-Custom-Greeting") === "Hello", "custom header should be set");
+  my_ok(xhr.responseText == "synthesized response body", "custom header load should have synthesized response");
+  finish();
+});
+
 fetch('ignored.txt', function(xhr) {
   my_ok(xhr.status == 404, "load should be uninterrupted");
   finish();

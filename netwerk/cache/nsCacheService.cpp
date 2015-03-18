@@ -1232,6 +1232,7 @@ nsCacheService::Shutdown()
         // Make sure to wait for any pending cache-operations before
         // proceeding with destructive actions (bug #620660)
         (void) SyncWithCacheIOThread();
+        mActiveEntries.Shutdown();
 
         // obtain the disk cache directory in case we need to sanitize it
         parentDir = mObserver->DiskCacheParentDirectory();
