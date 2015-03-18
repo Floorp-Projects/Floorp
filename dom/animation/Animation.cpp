@@ -297,6 +297,16 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
       continue;
     }
 
+    if (!prop.mWinsInCascade) {
+      // This isn't the winning declaration, so don't add it to style.
+      // For transitions, this is important, because it's how we
+      // implement the rule that CSS transitions don't run when a CSS
+      // animation is running on the same property and element.  For
+      // animations, this is only skipping things that will otherwise be
+      // overridden.
+      continue;
+    }
+
     aSetProperties.AddProperty(prop.mProperty);
 
     MOZ_ASSERT(prop.mSegments.Length() > 0,
