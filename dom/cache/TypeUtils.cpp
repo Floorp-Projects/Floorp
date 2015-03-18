@@ -229,7 +229,7 @@ TypeUtils::ToPCacheResponseWithoutBody(PCacheResponse& aOut,
 
   aOut.status() = aIn.GetStatus();
   aOut.statusText() = aIn.GetStatusText();
-  nsRefPtr<InternalHeaders> headers = aIn.Headers();
+  nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
   headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
@@ -278,37 +278,14 @@ TypeUtils::ToPCacheQueryParams(PCacheQueryParams& aOut,
 already_AddRefed<Response>
 TypeUtils::ToResponse(const PCacheResponse& aIn)
 {
-  nsRefPtr<InternalResponse> ir;
-  switch (aIn.type())
-  {
-    case ResponseType::Error:
-      ir = InternalResponse::NetworkError();
-      break;
-    case ResponseType::Opaque:
-      ir = InternalResponse::OpaqueResponse();
-      break;
-    case ResponseType::Default:
-      ir = new InternalResponse(aIn.status(), aIn.statusText());
-      break;
-    case ResponseType::Basic:
-    {
-      nsRefPtr<InternalResponse> inner = new InternalResponse(aIn.status(),
-                                                              aIn.statusText());
-      ir = InternalResponse::BasicResponse(inner);
-      break;
-    }
-    case ResponseType::Cors:
-    {
-      nsRefPtr<InternalResponse> inner = new InternalResponse(aIn.status(),
-                                                              aIn.statusText());
-      ir = InternalResponse::CORSResponse(inner);
-      break;
-    }
-    default:
-      MOZ_CRASH("Unexpected ResponseType!");
+  if (aIn.type() == ResponseType::Error) {
+    nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
+    nsRefPtr<Response> r = new Response(GetGlobalObject(), error);
+    return r.forget();
   }
-  MOZ_ASSERT(ir);
 
+  nsRefPtr<InternalResponse> ir = new InternalResponse(aIn.status(),
+                                                       aIn.statusText());
   ir->SetUrl(NS_ConvertUTF16toUTF8(aIn.url()));
 
   nsRefPtr<InternalHeaders> internalHeaders =
@@ -323,6 +300,24 @@ TypeUtils::ToResponse(const PCacheResponse& aIn)
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
   ir->SetBody(stream);
+
+  switch (aIn.type())
+  {
+    case ResponseType::Default:
+      break;
+    case ResponseType::Opaque:
+      ir = ir->OpaqueResponse();
+      break;
+    case ResponseType::Basic:
+      ir = ir->BasicResponse();
+      break;
+    case ResponseType::Cors:
+      ir = ir->CORSResponse();
+      break;
+    default:
+      MOZ_CRASH("Unexpected ResponseType!");
+  }
+  MOZ_ASSERT(ir);
 
   nsRefPtr<Response> ref = new Response(GetGlobalObject(), ir);
   return ref.forget();

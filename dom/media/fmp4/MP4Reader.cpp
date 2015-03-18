@@ -486,9 +486,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     mInfo.mVideo.mDisplay =
       nsIntSize(video.display_width, video.display_height);
     mVideo.mCallback = new DecoderCallback(this, kVideo);
-    if (!mIsEncrypted && mSharedDecoderManager) {
-      // Note: Don't use SharedDecoderManager in EME content, as it doesn't
-      // handle reiniting the decoder properly yet.
+    if (mSharedDecoderManager) {
       mVideo.mDecoder =
         mSharedDecoderManager->CreateVideoDecoder(mPlatform,
                                                   video,
@@ -580,7 +578,7 @@ MP4Reader::GetNextKeyframeTime()
 void
 MP4Reader::DisableHardwareAcceleration()
 {
-  if (HasVideo() && !mIsEncrypted && mSharedDecoderManager) {
+  if (HasVideo() && mSharedDecoderManager) {
     mPlatform->DisableHardwareAcceleration();
 
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
@@ -1111,9 +1109,7 @@ void MP4Reader::NotifyResourcesStatusChanged()
 void
 MP4Reader::SetIdle()
 {
-  if (!mIsEncrypted && mSharedDecoderManager && mVideo.mDecoder) {
-    // Note: Don't use SharedDecoderManager in EME content, as it doesn't
-    // handle reiniting the decoder properly yet.
+  if (mSharedDecoderManager && mVideo.mDecoder) {
     mSharedDecoderManager->SetIdle(mVideo.mDecoder);
     NotifyResourcesStatusChanged();
   }
