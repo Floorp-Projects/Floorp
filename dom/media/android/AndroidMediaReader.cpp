@@ -369,7 +369,7 @@ AndroidMediaReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeigh
       }
 
       mImage = image;
-      return image->AsSharedImage()->GetBuffer();
+      return image->GetBuffer();
     case MPAPI::I420:
       return CreateI420Image(aWidth, aHeight);
     default:
