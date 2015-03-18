@@ -782,18 +782,18 @@
         <item name="android:paddingRight">15dp</item>
     </style>
 
-    <style name="TextAppearance.ShareOverlay">
+    <style name="ShareOverlayTextAppearance">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
 
-    <style name="TextAppearance.ShareOverlay.Title">
+    <style name="ShareOverlayTextAppearance.Title">
         <item name="android:textSize">20sp</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
 
-    <style name="TextAppearance.ShareOverlay.Subtitle">
+    <style name="ShareOverlayTextAppearance.Subtitle">
         <item name="android:textSize">12sp</item>
         <item name="android:scrollHorizontally">true</item>
     </style>
