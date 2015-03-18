@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "jsprf.h"
+#include "mozilla/DeferredFinalize.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsContentUtils.h"
