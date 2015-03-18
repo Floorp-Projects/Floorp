@@ -184,6 +184,8 @@ LoopUnroller::go(LoopIterationBound *bound)
     // the original header.
     for (size_t i = 0; i < remainingIterationsInequality.numTerms(); i++) {
         MDefinition *def = remainingIterationsInequality.term(i).term;
+        if (def->isDiscarded())
+            return;
         if (def->block()->id() < header->id())
             continue;
         if (def->block() == header && def->isPhi())
