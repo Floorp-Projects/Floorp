@@ -8,12 +8,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingLeft="15dp"
+        android:paddingRight="15dp"
         android:id="@+id/overlaybtn_icon"/>
 
     <TextView
-        style="@style/ShareOverlayButton"
         android:textAppearance="@style/ShareOverlayTextAppearance.Button"
         android:id="@+id/overlaybtn_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:clickable="false"
         android:enabled="false"/>
 </merge>

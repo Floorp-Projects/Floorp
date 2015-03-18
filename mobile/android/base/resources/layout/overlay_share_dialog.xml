@@ -43,23 +43,26 @@
         <!-- Buttons -->
         <!-- "Send to Firefox Sync" -->
         <org.mozilla.gecko.overlays.ui.SendTabList
-            style="@style/ShareOverlayButton"
             android:id="@+id/overlay_send_tab_btn"
-            android:padding="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:divider="@null"/>
 
         <!-- "Add to reading list" -->
         <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-            style="@style/ShareOverlayButton.Text.Container"
+            style="@style/ShareOverlayRow"
             android:id="@+id/overlay_share_reading_list_btn"
-            android:background="@drawable/overlay_share_button_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:enabled="false"/>
 
         <!-- "Add bookmark" -->
         <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-            style="@style/ShareOverlayButton.Text.Container"
+            style="@style/ShareOverlayRow"
             android:id="@+id/overlay_share_bookmark_btn"
-            android:background="@drawable/overlay_share_button_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:enabled="false"/>
 
     </LinearLayout>

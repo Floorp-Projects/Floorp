@@ -55,6 +55,8 @@ public class OverlayDialogButton extends LinearLayout {
     public OverlayDialogButton(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        setOrientation(LinearLayout.HORIZONTAL);
+
         LayoutInflater.from(context).inflate(R.layout.overlay_share_button, this);
 
         icon = (ImageView) findViewById(R.id.overlaybtn_icon);
