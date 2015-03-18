@@ -811,17 +811,20 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
   nsPluginTagType tagType;
   rv = instanceOwner->GetTagType(&tagType);
   if (NS_FAILED(rv)) {
+    instanceOwner->Destroy();
     return rv;
   }
 
   if (tagType != nsPluginTagType_Embed &&
       tagType != nsPluginTagType_Applet &&
       tagType != nsPluginTagType_Object) {
+    instanceOwner->Destroy();
     return NS_ERROR_FAILURE;
   }
 
   rv = SetUpPluginInstance(aMimeType, aURL, instanceOwner);
   if (NS_FAILED(rv)) {
+    instanceOwner->Destroy();
     return NS_ERROR_FAILURE;
   }
   const bool isAsyncInit = (rv == NS_PLUGIN_INIT_PENDING);
@@ -829,6 +832,7 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
   nsRefPtr<nsNPAPIPluginInstance> instance;
   rv = instanceOwner->GetInstance(getter_AddRefs(instance));
   if (NS_FAILED(rv)) {
+    instanceOwner->Destroy();
     return rv;
   }
 
