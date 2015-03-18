@@ -2933,8 +2933,8 @@ struct DeferredFinalizer
   AddForDeferredFinalization(T* aObject)
   {
     typedef DeferredFinalizerImpl<T> Impl;
-    cyclecollector::DeferredFinalize(Impl::AppendDeferredFinalizePointer,
-                                     Impl::DeferredFinalize, aObject);
+    DeferredFinalize(Impl::AppendDeferredFinalizePointer,
+                     Impl::DeferredFinalize, aObject);
   }
 };
 
@@ -2944,7 +2944,7 @@ struct DeferredFinalizer<T, true>
   static void
   AddForDeferredFinalization(T* aObject)
   {
-    cyclecollector::DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
+    DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
   }
 };
 

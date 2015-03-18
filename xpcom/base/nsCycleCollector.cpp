@@ -3910,7 +3910,6 @@ CycleCollectedJSRuntime::Get()
 
 
 namespace mozilla {
-namespace cyclecollector {
 
 void
 DeferredFinalize(nsISupports* aSupports)
@@ -3930,7 +3929,6 @@ DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
   rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
 }
 
-} // namespace cyclecollector
 } // namespace mozilla
 
 
