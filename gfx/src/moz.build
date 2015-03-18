@@ -39,6 +39,10 @@ EXPORTS.mozilla += [
     'AppUnits.h',
 ]
 
+EXPORTS.mozilla.gfx += [
+    'RegionTyped.h',
+]
+
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla += ['X11Util.h']
     SOURCES += [

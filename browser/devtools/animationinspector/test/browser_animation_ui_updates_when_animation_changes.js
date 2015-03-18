@@ -19,10 +19,9 @@ add_task(function*() {
 
   info("Pause the animation via the content DOM");
   yield executeInContent("Test:ToggleAnimationPlayer", {
+    selector: ".animated",
     animationIndex: 0,
     pause: true
-  }, {
-    node: getNode(".animated")
   });
 
   info("Wait for the next state update");
@@ -34,10 +33,9 @@ add_task(function*() {
 
   info("Play the animation via the content DOM");
   yield executeInContent("Test:ToggleAnimationPlayer", {
+    selector: ".animated",
     animationIndex: 0,
     pause: false
-  }, {
-    node: getNode(".animated")
   });
 
   info("Wait for the next state update");

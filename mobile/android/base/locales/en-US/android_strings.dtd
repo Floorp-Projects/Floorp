@@ -184,6 +184,9 @@
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
 
+<!ENTITY tab_queue_toast_message "Open later">
+<!ENTITY tab_queue_toast_action "Open now">
+
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
 <!ENTITY pref_char_encoding_off "Don\'t show menu">

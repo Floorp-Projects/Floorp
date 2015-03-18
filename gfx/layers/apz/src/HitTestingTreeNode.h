@@ -81,7 +81,7 @@ public:
 
   void SetHitTestData(const EventRegions& aRegions,
                       const gfx::Matrix4x4& aTransform,
-                      const Maybe<nsIntRegion>& aClipRegion,
+                      const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
   /* Convert aPoint into the LayerPixel space for the layer corresponding to
@@ -124,7 +124,7 @@ private:
    * of the touch-sensitive region provided by the GeckoContentController, or
    * because we may use the composition bounds of the layer if the clip is not
    * present. This value is in L's ParentLayerPixels. */
-  Maybe<nsIntRegion> mClipRegion;
+  Maybe<ParentLayerIntRegion> mClipRegion;
 
   /* Indicates whether or not the event regions on this node need to be
    * overridden in a certain way. */

@@ -163,6 +163,7 @@ let handleContentContextMenu = function (event) {
   let charSet = doc.characterSet;
   let baseURI = doc.baseURI;
   let referrer = doc.referrer;
+  let referrerPolicy = doc.referrerPolicy;
 
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
     let editFlags = SpellCheckHelper.isEditable(event.target, content);
@@ -177,7 +178,8 @@ let handleContentContextMenu = function (event) {
     let principal = doc.nodePrincipal;
     sendSyncMessage("contextmenu",
                     { editFlags, spellInfo, customMenuItems, addonInfo,
-                      principal, docLocation, charSet, baseURI, referrer },
+                      principal, docLocation, charSet, baseURI, referrer,
+                      referrerPolicy },
                     { event, popupNode: event.target });
   }
   else {
@@ -194,6 +196,7 @@ let handleContentContextMenu = function (event) {
       docLocation: docLocation,
       charSet: charSet,
       referrer: referrer,
+      referrerPolicy: referrerPolicy,
     };
   }
 }
@@ -658,7 +661,7 @@ let ClickEventHandler = {
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 bookmark: false };
+                 bookmark: false, referrerPolicy: ownerDoc.referrerPolicy };
 
     if (href) {
       json.href = href;
@@ -1108,4 +1111,9 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
         media.mozRequestFullScreen();
       break;
   }
+});
+
+addMessageListener("ContextMenu:Canvas:ToDataURL", (message) => {
+  let dataURL = message.objects.target.toDataURL();
+  sendAsyncMessage("ContextMenu:Canvas:ToDataURL:Result", { dataURL });
 });

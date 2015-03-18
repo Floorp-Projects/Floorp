@@ -130,6 +130,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testErrorObjects();
 
+    testRegExp();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -199,6 +201,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['Function'] =
     ["constructor", "toSource", "toString", "apply", "call", "bind",
      "isGenerator", "length", "name", "arguments", "caller"];
+
+  gPrototypeProperties['RegExp'] =
+    ["constructor", "toSource", "toString", "compile", "exec", "test",
+     "flags", "global", "ignoreCase", "multiline", "source", "sticky",
+     "lastIndex"];
+
+  if (isNightlyBuild) {
+    gPrototypeProperties['TypedArray'].push('includes');
+  }
 
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
@@ -574,6 +585,52 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       testProperty('lineNumber', x => x > 100 && x < 10000, 50, 'foo');
     }
   }
+
+  function testRegExp() {
+    testXray('RegExp', new iwin.RegExp('foo'), new iwin.RegExp());
+
+    // Test the self-hosted |flags| property, toString, and toSource.
+    for (var flags of ["", "g", "i", "m", "y", "gimy"]) {
+      var re = new iwin.RegExp("foo", flags);
+      is(re.flags, re.wrappedJSObject.flags, "Results match");
+
+      isnot(re.toString, Cu.unwaiveXrays(re.wrappedJSObject.toString), "Different function identities");
+      is(Cu.getGlobalForObject(re.toString), window, "Xray global is correct");
+      is(Cu.getGlobalForObject(re.wrappedJSObject.toString), iwin, "Underlying global is correct");
+      is(re.toString(), re.wrappedJSObject.toString(), "Results match");
+
+      isnot(re.toSource, Cu.unwaiveXrays(re.wrappedJSObject.toSource), "Different function identities");
+      is(Cu.getGlobalForObject(re.toSource), window, "Xray global is correct");
+      is(Cu.getGlobalForObject(re.wrappedJSObject.toSource), iwin, "Underlying global is correct");
+      is(re.toSource(), re.wrappedJSObject.toSource(), "Results match");
+
+      // Test with modified flags accessors
+      iwin.eval(`
+var props = ["global", "ignoreCase", "multiline", "sticky", "source"];
+var origDescs = {};
+for (var prop of props) {
+  origDescs[prop] = Object.getOwnPropertyDescriptor(RegExp.prototype, prop);
+  Object.defineProperty(RegExp.prototype, prop, {
+    get: function() {
+      throw new Error("modified accessor is called");
+    }
+  });
+}
+`);
+      try {
+        is(re.flags, flags, "Unmodified flags accessors are called");
+        is(re.toString(), "/foo/" + flags, "Unmodified flags and source accessors are called");
+        is(re.toSource(), "/foo/" + flags, "Unmodified flags and source accessors are called");
+      } finally {
+        iwin.eval(`
+for (var prop of props) {
+  Object.defineProperty(RegExp.prototype, prop, origDescs[prop]);
+}
+`);
+      }
+    }
+  }
+
 
   ]]>
   </script>

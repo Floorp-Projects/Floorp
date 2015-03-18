@@ -18,7 +18,11 @@
 
   function simpleRegister() {
     var p = navigator.serviceWorker.register("fetch_event_worker.js", { scope: "./fetch" });
-    return p;
+    return p.then(function(swr) {
+      return new Promise(function(resolve) {
+        swr.installing.onstatechange = resolve;
+      });
+    });
   }
 
   function testController() {

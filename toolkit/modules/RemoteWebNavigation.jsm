@@ -67,13 +67,21 @@ RemoteWebNavigation.prototype = {
     this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
   },
   loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+    this.loadURIWithOptions(aURI, aLoadFlags, aReferrer,
+                            Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+                            aPostData, aHeaders, null);
+  },
+  loadURIWithOptions: function(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
+                               aPostData, aHeaders, aBaseURI) {
     if (aPostData || aHeaders)
       throw Components.Exception("RemoteWebNavigation doesn't accept postdata or headers.", Cr.NS_ERROR_INVALID_ARGS);
 
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadFlags,
-      referrer: aReferrer ? aReferrer.spec : null
+      referrer: aReferrer ? aReferrer.spec : null,
+      referrerPolicy: aReferrerPolicy,
+      baseURI: aBaseURI ? aBaseURI.spec : null,
     });
   },
   reload: function(aReloadFlags) {

@@ -108,7 +108,6 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     this.tabActor = tabActor;
 
     this._isRecording = false;
-    this._startTime = 0;
     this._stackFrames = null;
 
     // Make sure to get markers from new windows as they become available
@@ -238,11 +237,13 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
    * Start recording profile markers.
    */
   start: method(function({ withMemory, withTicks }) {
+    var startTime = this.docShells[0].now();
+
     if (this._isRecording) {
-      return;
+      return startTime;
     }
+
     this._isRecording = true;
-    this._startTime = this.docShells[0].now();
     this._stackFrames = new StackFrameCache();
     this._stackFrames.initFrames();
 
@@ -260,7 +261,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
 
     this._pullTimelineData();
-    return this._startTime;
+    return startTime;
   }, {
     request: {
       withMemory: Option(0, "boolean"),

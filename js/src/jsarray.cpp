@@ -3265,6 +3265,7 @@ const Class ArrayObject::class_ = {
         GenericCreateConstructor<ArrayConstructor, 1, JSFunction::FinalizeKind>,
         CreateArrayPrototype,
         array_static_methods,
+        nullptr,
         array_methods
     }
 };
