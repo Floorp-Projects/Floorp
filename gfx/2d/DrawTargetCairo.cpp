@@ -413,6 +413,8 @@ class AutoClearDeviceOffset
 public:
   explicit AutoClearDeviceOffset(SourceSurface* aSurface)
     : mSurface(nullptr)
+    , mX(0)
+    , mY(0)
   {
     Init(aSurface);
   }

@@ -2256,17 +2256,36 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
-                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
+                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType,
+                       int aCornerRadiusIfOpaque = 0)
 {
   ChildView* childView = ChildViewForFrame(aFrame);
   if (childView) {
     NSRect rect = NSRectFromCGRect(inBoxRect);
     NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+    [NSGraphicsContext saveGraphicsState];
 
-    [[childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType] set];
+    NSColor* fillColor = [childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType];
+    if ([fillColor alphaComponent] == 1.0 && aCornerRadiusIfOpaque > 0) {
+      // The fillColor being opaque means that the system-wide pref "reduce
+      // transparency" is set. In that scenario, we still go through all the
+      // vibrancy rendering paths (VibrancyManager::SystemSupportsVibrancy()
+      // will still return true), but the result just won't look "vibrant".
+      // However, there's one unfortunate change of behavior that this pref
+      // has: It stops the window server from applying window masks. We use
+      // a window mask to get rounded corners on menus. So since the mask
+      // doesn't work in "reduce vibrancy" mode, we need to do our own rounded
+      // corner clipping here.
+      [[NSBezierPath bezierPathWithRoundedRect:rect
+                                       xRadius:aCornerRadiusIfOpaque
+                                       yRadius:aCornerRadiusIfOpaque] addClip];
+    }
+
+    [fillColor set];
     NSRectFill(rect);
 
+    [NSGraphicsContext restoreGraphicsState];
     [NSGraphicsContext setCurrentContext:savedContext];
   }
 }
@@ -2384,7 +2403,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_MENUPOPUP:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu, 4);
       } else {
         HIThemeMenuDrawInfo mdi;
         memset(&mdi, 0, sizeof(mdi));

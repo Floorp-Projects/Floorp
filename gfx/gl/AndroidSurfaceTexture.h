@@ -109,7 +109,7 @@ private:
 
   RefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
-  nsRefPtr<nsIRunnable> mFrameAvailableCallback;
+  nsCOMPtr<nsIRunnable> mFrameAvailableCallback;
 };
 
 }

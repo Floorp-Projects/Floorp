@@ -221,8 +221,8 @@ public:
 
 private:
   virtual ~GMPShutdownObserver() {}
-  nsRefPtr<nsIRunnable> mShutdownTask;
-  nsRefPtr<nsIRunnable> mContinuation;
+  nsCOMPtr<nsIRunnable> mShutdownTask;
+  nsCOMPtr<nsIRunnable> mContinuation;
   const nsString mNodeId;
 };
 
@@ -290,7 +290,7 @@ public:
 
 private:
   virtual ~ClearGMPStorageTask() {}
-  nsRefPtr<nsIRunnable> mContinuation;
+  nsCOMPtr<nsIRunnable> mContinuation;
   nsCOMPtr<nsIThread> mTarget;
   const PRTime mSince;
 };
@@ -1093,7 +1093,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     bool matches = mExpected[0].mMessage.Equals(msg);
     EXPECT_STREQ(mExpected[0].mMessage.get(), msg.get());
     if (mExpected.Length() > 0 && matches) {
-      nsRefPtr<nsIRunnable> continuation = mExpected[0].mContinuation;
+      nsCOMPtr<nsIRunnable> continuation = mExpected[0].mContinuation;
       mExpected.RemoveElementAt(0);
       if (continuation) {
         NS_DispatchToCurrentThread(continuation);
@@ -1134,7 +1134,7 @@ private:
       , mContinuation(aContinuation)
     {}
     nsCString mMessage;
-    nsRefPtr<nsIRunnable> mContinuation;
+    nsCOMPtr<nsIRunnable> mContinuation;
   };
 
   nsTArray<ExpectedMessage> mExpected;

@@ -376,13 +376,12 @@ LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(MCompareExchangeTyp
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
-    // Register allocation:
-    //
-    // If the target is an integer register then the target must be
-    // eax.
-    //
     // If the target is a floating register then we need a temp at the
     // lower level; that temp must be eax.
+    //
+    // Otherwise the target (if used) is an integer register, which
+    // must be eax.  If the target is not used the machine code will
+    // still clobber eax, so just pretend it's used.
     //
     // oldval must be in a register.
     //
@@ -431,7 +430,29 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
-    // Register allocation:
+    // Case 1: the result of the operation is not used.
+    //
+    // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
+    // LOCK OR, or LOCK XOR.  We can do this even for the Uint32 case.
+    //
+    // If the operand is 8-bit we shall need to use an 8-bit register
+    // for it on x86 systems.
+
+    if (!ins->hasUses()) {
+        LAllocation value;
+        if (useI386ByteRegisters && ins->isByteArray())
+            value = useFixed(ins->value(), ebx);
+        else
+            value = useRegister(ins->value());
+
+        LAtomicTypedArrayElementBinopForEffect *lir =
+            new(alloc()) LAtomicTypedArrayElementBinopForEffect(elements, index, value);
+
+        add(lir, ins);
+        return;
+    }
+
+    // Case 2: the result of the operation is used.
     //
     // For ADD and SUB we'll use XADD:
     //
@@ -470,7 +491,6 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     // any available byte register would have been OK.
     //
     // There are optimization opportunities:
-    //  - when the result is unused, Bug #1077014.
     //  - better register allocation and instruction selection, Bug #1077036.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);

@@ -47,7 +47,7 @@ MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
     // and the CDMProxy knows the capabilities of the CDM. The MP4Reader
     // remains in "waiting for resources" state until then.
     CDMCaps::AutoLock caps(aProxy->Capabilites());
-    nsRefPtr<nsIRunnable> task(
+    nsCOMPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoder::NotifyWaitingForResourcesStatusChanged));
     caps.CallOnMainThreadWhenCapsAvailable(task);
   }

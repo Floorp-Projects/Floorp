@@ -324,26 +324,41 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void atomicFetchAdd16SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAdd16ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAdd32(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAdd8(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAdd16(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAdd32(const T &value, const S &mem) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchSub8SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchSub8ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchSub16SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchSub16ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchSub32(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicSub8(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicSub16(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicSub32(const T &value, const S &mem) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAnd8SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAnd8ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAnd16SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAnd16ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchAnd32(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAnd8(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAnd16(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicAnd32(const T &value, const S &mem) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchOr8SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchOr8ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchOr16SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchOr16ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchOr32(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicOr8(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicOr16(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicOr32(const T &value, const S &mem) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchXor8SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchXor8ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchXor16SignExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchXor16ZeroExtend(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
     template <typename T, typename S> void atomicFetchXor32(const T &value, const S &mem, Register temp, Register output) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicXor8(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicXor16(const T &value, const S &mem) { MOZ_CRASH(); }
+    template <typename T, typename S> void atomicXor32(const T &value, const S &mem) { MOZ_CRASH(); }
 
     void clampIntToUint8(Register) { MOZ_CRASH(); }
 
