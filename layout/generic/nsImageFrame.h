@@ -143,10 +143,11 @@ public:
   static bool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
                                           nsStyleContext* aStyleContext);
   
-  void DisplayAltFeedback(nsRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          imgIRequest*         aRequest,
-                          nsPoint              aPt);
+  DrawResult DisplayAltFeedback(nsRenderingContext& aRenderingContext,
+                                const nsRect& aDirtyRect,
+                                imgIRequest* aRequest,
+                                nsPoint aPt,
+                                uint32_t aFlags);
 
   nsRect GetInnerArea() const;
 
