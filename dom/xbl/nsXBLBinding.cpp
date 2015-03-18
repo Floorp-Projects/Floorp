@@ -74,7 +74,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
-  cyclecollector::DeferredFinalize(docInfo);
+  DeferredFinalize(docInfo);
 }
 
 static bool
