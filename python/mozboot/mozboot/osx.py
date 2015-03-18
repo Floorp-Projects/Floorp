@@ -218,7 +218,7 @@ class OSXBootstrapper(BaseBootstrapper):
                 if 'unable to get active developer directory' in e.output:
                     print(XCODE_NO_DEVELOPER_DIRECTORY)
                     self._install_xcode_app_store()
-                    assert False # Above should exit.
+                    assert False  # Above should exit.
 
                 output = e.output
 
@@ -228,7 +228,7 @@ class OSXBootstrapper(BaseBootstrapper):
             if '.app/' not in output:
                 print(XCODE_REQUIRED)
                 self._install_xcode_app_store()
-                assert False # Above should exit.
+                assert False  # Above should exit.
 
         # Once Xcode is installed, you need to agree to the license before you can
         # use it.
@@ -334,9 +334,9 @@ class OSXBootstrapper(BaseBootstrapper):
         # packages.  If we used the android.py module, we'd need wget.
         packages = [
             ('android-sdk', 'android-sdk'),
-            ('android-ndk', os.path.join(path_to_android, 'android-ndk.rb')), # This is a locally provided brew formula!
+            ('android-ndk', os.path.join(path_to_android, 'android-ndk.rb')),  # This is a locally provided brew formula!
             ('ant', 'ant'),
-            ('brew-cask', 'caskroom/cask/brew-cask'), # For installing Java later.
+            ('brew-cask', 'caskroom/cask/brew-cask'),  # For installing Java later.
         ]
         self._ensure_homebrew_packages(packages)
 
@@ -345,7 +345,7 @@ class OSXBootstrapper(BaseBootstrapper):
         ]
         installed = self._ensure_homebrew_casks(casks)
         if installed:
-            print(JAVA_LICENSE_NOTICE) # We accepted a license agreement for the user.
+            print(JAVA_LICENSE_NOTICE)  # We accepted a license agreement for the user.
 
         # We could probably fish this path from |brew info android-sdk|.
         android_tool = '/usr/local/opt/android-sdk/tools/android'
