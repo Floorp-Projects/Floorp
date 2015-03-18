@@ -511,6 +511,7 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   nsRefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsRefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
 
   ~ServiceWorkerRegisterJob()
   { }
@@ -637,7 +638,6 @@ public:
 
     nsAutoString cacheName;
     rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
-    fprintf(stderr, "NSM Generating cache name for updating worker %s\n", NS_ConvertUTF16toUTF8(cacheName).get());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
       return rv;
@@ -647,12 +647,14 @@ public:
     // errors. Ideally we should just pass this worker on to ContinueInstall.
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
     swm->mSetOfScopesBeingUpdated.Put(mRegistration->mScope, true);
-    nsRefPtr<ServiceWorkerInfo> dummyInfo =
+
+    MOZ_ASSERT(!mUpdateAndInstallInfo);
+    mUpdateAndInstallInfo =
       new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec,
                             cacheName);
     nsRefPtr<ServiceWorker> serviceWorker;
     rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
-                                  dummyInfo,
+                                  mUpdateAndInstallInfo,
                                   getter_AddRefs(serviceWorker));
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -709,14 +711,12 @@ public:
 
     nsAutoString cacheName;
     nsresult rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
-    fprintf(stderr, "NSM Generating cache name for installing worker %s\n", NS_ConvertUTF16toUTF8(cacheName).get());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       ContinueAfterInstallEvent(false /* aSuccess */, false /* aActivateImmediately */);
       return;
     }
 
-    mRegistration->mInstallingWorker =
-      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec, cacheName);
+    mRegistration->mInstallingWorker = mUpdateAndInstallInfo.forget();
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
     Succeed();
@@ -826,6 +826,7 @@ private:
   void
   FailCommon(nsresult aRv)
   {
+    mUpdateAndInstallInfo = nullptr;
     if (mRegistration->mInstallingWorker) {
       nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
                                                          mRegistration->mInstallingWorker->CacheName());
