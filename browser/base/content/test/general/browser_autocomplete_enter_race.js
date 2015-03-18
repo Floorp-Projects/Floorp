@@ -22,7 +22,7 @@ add_task(function*() {
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   yield promiseTabLoadEvent(gBrowser.selectedTab);
-  is(gBrowser.selectedTab.linkedBrowser.currentURI.spec,
+  is(gBrowser.selectedBrowser.currentURI.spec,
      "http://example.com/?q=beard",
      "Latest typed characters should have been used");
 });
