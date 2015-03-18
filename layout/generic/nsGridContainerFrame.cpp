@@ -769,6 +769,83 @@ nsGridContainerFrame::CalculateTrackSizes(const LogicalSize& aPercentageBasis,
 }
 
 void
+nsGridContainerFrame::LineRange::ToPositionAndLength(
+  const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos, nscoord* aLength) const
+{
+  MOZ_ASSERT(mStart != 0 && Extent() > 0, "expected a definite LineRange");
+  nscoord pos = 0;
+  const uint32_t start = mStart - 1;
+  uint32_t i = 0;
+  for (; i < start; ++i) {
+    pos += aTrackSizes[i].mBase;
+  }
+  *aPos = pos;
+
+  nscoord length = 0;
+  const uint32_t end = mEnd - 1;
+  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
+  for (; i < end; ++i) {
+    length += aTrackSizes[i].mBase;
+  }
+  *aLength = length;
+}
+
+LogicalRect
+nsGridContainerFrame::ContainingBlockFor(
+  const WritingMode& aWM,
+  const GridArea& aArea,
+  const nsTArray<TrackSize>& aColSizes,
+  const nsTArray<TrackSize>& aRowSizes) const
+{
+  nscoord i, b, iSize, bSize;
+  aArea.mCols.ToPositionAndLength(aColSizes, &i, &iSize);
+  aArea.mRows.ToPositionAndLength(aRowSizes, &b, &bSize);
+  return LogicalRect(aWM, i, b, iSize, bSize);
+}
+
+void
+nsGridContainerFrame::ReflowChildren(const LogicalRect&         aContentArea,
+                                     const nsTArray<TrackSize>& aColSizes,
+                                     const nsTArray<TrackSize>& aRowSizes,
+                                     nsHTMLReflowMetrics&       aDesiredSize,
+                                     const nsHTMLReflowState&   aReflowState,
+                                     nsReflowStatus&            aStatus)
+{
+  WritingMode wm = aReflowState.GetWritingMode();
+  const LogicalPoint gridOrigin(aContentArea.Origin(wm));
+  const nscoord gridWidth = aContentArea.Width(wm);
+  nsPresContext* pc = PresContext();
+  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
+    nsIFrame* child = e.get();
+    GridArea* area = GetGridAreaForChild(child);
+    MOZ_ASSERT(area && area->IsDefinite());
+    LogicalRect cb = ContainingBlockFor(wm, *area, aColSizes, aRowSizes);
+    cb += gridOrigin;
+    nsHTMLReflowState childRS(pc, aReflowState, child, cb.Size(wm));
+    const LogicalMargin margin = childRS.ComputedLogicalMargin();
+    if (childRS.ComputedBSize() == NS_AUTOHEIGHT) {
+      // XXX the start of an align-self:stretch impl.  Needs min-/max-bsize
+      // clamping though, and check the prop value is actually 'stretch'!
+      LogicalMargin bp = childRS.ComputedLogicalBorderPadding();
+      bp.ApplySkipSides(child->GetLogicalSkipSides());
+      nscoord bSize = cb.BSize(wm) - bp.BStartEnd(wm) - margin.BStartEnd(wm);
+      childRS.SetComputedBSize(std::max(bSize, 0));
+    }
+    LogicalPoint childPos = cb.Origin(wm);
+    childPos.I(wm) += margin.IStart(wm);
+    childPos.B(wm) += margin.BStart(wm);
+    nsHTMLReflowMetrics childSize(childRS);
+    nsReflowStatus childStatus;
+    ReflowChild(child, pc, childSize, childRS, wm, childPos,
+                gridWidth, 0, childStatus);
+    FinishReflowChild(child, pc, childSize, &childRS, wm, childPos,
+                      gridWidth, 0);
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
+    // XXX deal with 'childStatus' not being COMPLETE
+  }
+}
+
+void
 nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -787,26 +864,39 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   LogicalMargin bp = aReflowState.ComputedLogicalBorderPadding();
   bp.ApplySkipSides(GetLogicalSkipSides());
-  nscoord contentBSize = GetEffectiveComputedBSize(aReflowState);
-  if (contentBSize == NS_AUTOHEIGHT) {
-    contentBSize = 0;
-  }
-  WritingMode wm = aReflowState.GetWritingMode();
-  LogicalSize finalSize(wm,
-                        aReflowState.ComputedISize() + bp.IStartEnd(wm),
-                        contentBSize + bp.BStartEnd(wm));
-  aDesiredSize.SetSize(wm, finalSize);
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   InitImplicitNamedAreas(stylePos);
   PlaceGridItems(stylePos);
 
   nsAutoTArray<TrackSize, 32> colSizes;
   nsAutoTArray<TrackSize, 32> rowSizes;
-  LogicalSize percentageBasis(wm, aReflowState.ComputedISize(), contentBSize);
+  WritingMode wm = aReflowState.GetWritingMode();
+  const nscoord computedBSize = aReflowState.ComputedBSize();
+  const nscoord computedISize = aReflowState.ComputedISize();
+  LogicalSize percentageBasis(wm, computedISize,
+      computedBSize == NS_AUTOHEIGHT ? 0 : computedBSize);
   CalculateTrackSizes(percentageBasis, stylePos, colSizes, rowSizes);
 
+  nscoord bSize = 0;
+  if (computedBSize == NS_AUTOHEIGHT) {
+    for (uint32_t i = 0; i < mGridRowEnd - 1; ++i) {
+      bSize += rowSizes[i].mBase;
+    }
+  } else {
+    bSize = computedBSize;
+  }
+  bSize = std::max(bSize - GetConsumedBSize(), 0);
+  LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
+                          bSize + bp.BStartEnd(wm));
+  aDesiredSize.SetSize(wm, desiredSize);
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+
+  LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
+                          computedISize, bSize);
+  ReflowChildren(contentArea, colSizes, rowSizes, aDesiredSize,
+                 aReflowState, aStatus);
+
+  FinishAndStoreOverflow(&aDesiredSize);
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
