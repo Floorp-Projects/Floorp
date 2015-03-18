@@ -78,15 +78,12 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
                                   void** aInstancePtr);
 
 namespace mozilla {
-namespace cyclecollector {
 
 void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                       DeferredFinalizeFunction aFunc,
                       void* aThing);
 void DeferredFinalize(nsISupports* aSupports);
 
-
-} // namespace cyclecollector
 } // namespace mozilla
 
 #endif // nsCycleCollector_h__
