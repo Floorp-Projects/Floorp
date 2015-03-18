@@ -697,12 +697,10 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 
 //******************************************************************************
 /* [noscript] ImageContainer getImageContainer(); */
-NS_IMETHODIMP
-VectorImage::GetImageContainer(LayerManager* aManager,
-                               layers::ImageContainer** _retval)
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+VectorImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  *_retval = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 struct SVGDrawingParameters

@@ -5577,7 +5577,7 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
       event.refPoint = LayoutDeviceIntPoint(pt.x, pt.y);
       event.inputSource = MOUSE_INPUT_SOURCE();
       event.mFlags.mOnlyChromeDispatch = true;
-      bool result = DispatchInputEvent(&event);
+      bool result = ConvertStatus(DispatchInputEvent(&event));
       if (result) {
         // The mouse is over a blank area
         testResult = testResult == HTCLIENT ? HTCAPTION : testResult;

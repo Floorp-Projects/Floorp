@@ -134,6 +134,60 @@ function testBlob() {
   });
 }
 
+// This test is a copy of dom/html/test/formData_test.js testSend() modified to
+// use the fetch API. Please change this if you change that.
+function testFormDataSend() {
+  var file, blob = new Blob(['hey'], {type: 'text/plain'});
+
+  var fd = new FormData();
+  fd.append("string", "hey");
+  fd.append("empty", blob);
+  fd.append("explicit", blob, "explicit-file-name");
+  fd.append("explicit-empty", blob, "");
+  file = new File([blob], 'testname',  {type: 'text/plain'});
+  fd.append("file-name", file);
+  file = new File([blob], '',  {type: 'text/plain'});
+  fd.append("empty-file-name", file);
+  file = new File([blob], 'testname',  {type: 'text/plain'});
+  fd.append("file-name-overwrite", file, "overwrite");
+
+  var req = new Request("/tests/dom/html/test/form_submit_server.sjs", {
+                          method: 'POST',
+                          body: fd,
+                        });
+
+  return fetch(req).then((r) => {
+    ok(r.status, 200, "status should match");
+    return r.json().then((response) => {
+      for (var entry of response) {
+        if (entry.headers['Content-Disposition'] != 'form-data; name="string"') {
+          is(entry.headers['Content-Type'], 'text/plain');
+        }
+
+        is(entry.body, 'hey');
+      }
+
+      is(response[1].headers['Content-Disposition'],
+          'form-data; name="empty"; filename="blob"');
+
+      is(response[2].headers['Content-Disposition'],
+          'form-data; name="explicit"; filename="explicit-file-name"');
+
+      is(response[3].headers['Content-Disposition'],
+          'form-data; name="explicit-empty"; filename=""');
+
+      is(response[4].headers['Content-Disposition'],
+          'form-data; name="file-name"; filename="testname"');
+
+      is(response[5].headers['Content-Disposition'],
+          'form-data; name="empty-file-name"; filename=""');
+
+      is(response[6].headers['Content-Disposition'],
+          'form-data; name="file-name-overwrite"; filename="overwrite"');
+    });
+  });
+}
+
 function runTest() {
   return Promise.resolve()
     .then(testURL)
@@ -141,5 +195,6 @@ function runTest() {
     .then(testRequestGET)
     .then(testResponses)
     .then(testBlob)
+    .then(testFormDataSend)
     // Put more promise based tests here.
 }

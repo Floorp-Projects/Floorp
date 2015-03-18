@@ -99,7 +99,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  Optional<ArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams> body;
+  Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams> body;
   ResponseInit init;
   init.mStatus = aStatus;
   nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
@@ -120,7 +120,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
 /*static*/ already_AddRefed<Response>
 Response::Constructor(const GlobalObject& aGlobal,
-                      const Optional<ArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams>& aBody,
+                      const Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aBody,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {

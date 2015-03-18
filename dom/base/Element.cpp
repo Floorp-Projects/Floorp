@@ -1832,7 +1832,7 @@ Element::IsLabelable() const
 }
 
 bool
-Element::IsInteractiveHTMLContent() const
+Element::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
   return false;
 }

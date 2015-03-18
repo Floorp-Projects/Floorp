@@ -81,8 +81,7 @@ function runTests(testFile, order) {
   SimpleTest.waitForExplicitFinish();
 
   if (typeof order == "undefined") {
-    order = "sequential"; // sequential by default, see bug 1143222.
-    // TODO: Make this "both".
+    order = "both"; // both by default
   }
 
   ok(order == "parallel" || order == "sequential" || order == "both",
