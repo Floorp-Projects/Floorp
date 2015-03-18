@@ -274,8 +274,8 @@ regexp_compile(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_compile_impl>(cx, args);
 }
 
-static bool
-regexp_construct(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::regexp_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -441,7 +441,7 @@ regexp_sticky(JSContext *cx, unsigned argc, JS::Value *vp)
     return CallNonGenericMethod<IsRegExp, regexp_sticky_impl>(cx, args);
 }
 
-static const JSPropertySpec regexp_properties[] = {
+const JSPropertySpec js::regexp_properties[] = {
     JS_SELF_HOSTED_GET("flags", "RegExpFlagsGetter", 0),
     JS_PSG("global", regexp_global, 0),
     JS_PSG("ignoreCase", regexp_ignoreCase, 0),
@@ -451,7 +451,7 @@ static const JSPropertySpec regexp_properties[] = {
     JS_PS_END
 };
 
-static const JSFunctionSpec regexp_methods[] = {
+const JSFunctionSpec js::regexp_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  regexp_toString,    0,0),
 #endif
@@ -553,7 +553,7 @@ static_multiline_setter(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static const JSPropertySpec regexp_static_props[] = {
+const JSPropertySpec js::regexp_static_props[] = {
     JS_PSGS("input", static_input_getter, static_input_setter,
             JSPROP_PERMANENT | JSPROP_ENUMERATE),
     JS_PSGS("multiline", static_multiline_getter, static_multiline_setter,
@@ -581,13 +581,11 @@ static const JSPropertySpec regexp_static_props[] = {
 };
 
 JSObject *
-js::InitRegExpClass(JSContext *cx, HandleObject obj)
+js::CreateRegExpPrototype(JSContext *cx, JSProtoKey key)
 {
-    MOZ_ASSERT(obj->isNative());
+    MOZ_ASSERT(key == JSProto_RegExp);
 
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-    Rooted<RegExpObject*> proto(cx, global->createBlankPrototype<RegExpObject>(cx));
+    Rooted<RegExpObject*> proto(cx, cx->global()->createBlankPrototype<RegExpObject>(cx));
     if (!proto)
         return nullptr;
     proto->NativeObject::setPrivate(nullptr);
@@ -595,24 +593,6 @@ js::InitRegExpClass(JSContext *cx, HandleObject obj)
     HandlePropertyName empty = cx->names().empty;
     RegExpObjectBuilder builder(cx, proto);
     if (!builder.build(empty, RegExpFlag(0)))
-        return nullptr;
-
-    if (!DefinePropertiesAndFunctions(cx, proto, regexp_properties, regexp_methods))
-        return nullptr;
-
-    RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, regexp_construct, cx->names().RegExp, 2);
-    if (!ctor)
-        return nullptr;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return nullptr;
-
-    /* Add static properties to the RegExp constructor. */
-    if (!JS_DefineProperties(cx, ctor, regexp_static_props))
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_RegExp, ctor, proto))
         return nullptr;
 
     return proto;
