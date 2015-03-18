@@ -1463,7 +1463,7 @@ this.PlacesUtils = {
         uri = PlacesUtils.favicons.getFaviconLinkForIcon(uri);
         deferred.resolve(uri);
       } else {
-        deferred.reject();
+        deferred.reject("favicon not found for uri");
       }
     });
     return deferred.promise;
