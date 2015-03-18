@@ -95,7 +95,7 @@ def list_missing_android_packages(android_tool, packages):
     # but packages that are installed don't appear in the list of
     # available packages.
     lines = check_output([android_tool,
-        'list', 'sdk', '--no-ui', '--extended']).splitlines()
+                          'list', 'sdk', '--no-ui', '--extended']).splitlines()
 
     # Lines look like: 'id: 59 or "extra-google-simulators"'
     for line in lines:
@@ -203,8 +203,8 @@ def ensure_android_packages(android_tool, packages=None):
     # may be prompted to agree to the Android license.
     print(INSTALLING_ANDROID_PACKAGES % ', '.join(missing))
     subprocess.check_call([android_tool,
-        'update', 'sdk', '--no-ui',
-        '--filter', ','.join(missing)])
+                           'update', 'sdk', '--no-ui',
+                           '--filter', ','.join(missing)])
 
     # Let's verify.
     failing = list_missing_android_packages(android_tool, packages=packages)

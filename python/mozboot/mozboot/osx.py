@@ -211,7 +211,7 @@ class OSXBootstrapper(BaseBootstrapper):
             select = self.which('xcode-select')
             try:
                 output = self.check_output([select, '--print-path'],
-                    stderr=subprocess.STDOUT)
+                                           stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 # This seems to appear on fresh OS X machines before any Xcode
                 # has been installed. It may only occur on OS X 10.9 and later.
@@ -234,13 +234,13 @@ class OSXBootstrapper(BaseBootstrapper):
         # use it.
         try:
             output = self.check_output(['/usr/bin/xcrun', 'clang'],
-                stderr=subprocess.STDOUT)
+                                       stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             if 'license' in e.output:
                 xcodebuild = self.which('xcodebuild')
                 try:
                     subprocess.check_call([xcodebuild, '-license'],
-                        stderr=subprocess.STDOUT)
+                                          stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as e:
                     if 'requires admin privileges' in e.output:
                         self.run_as_root([xcodebuild, '-license'])
@@ -320,7 +320,7 @@ class OSXBootstrapper(BaseBootstrapper):
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
-                '--with-clang', '--all-targets'])
+                                   '--with-clang', '--all-targets'])
 
     def ensure_homebrew_mobile_android_packages(self):
         import android
@@ -462,7 +462,7 @@ class OSXBootstrapper(BaseBootstrapper):
         url = MACPORTS_URL.get(self.minor_version, None)
         if not url:
             raise Exception('We do not have a MacPorts install URL for your '
-                'OS X version. You will need to install MacPorts manually.')
+                            'OS X version. You will need to install MacPorts manually.')
 
         print(PACKAGE_MANAGER_INSTALL % ('MacPorts', 'MacPorts', 'MacPorts', 'port'))
         pkg = urlopen(url=url, timeout=300).read()
@@ -485,7 +485,7 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.package_manager == 'homebrew':
             try:
                 subprocess.check_output([self.brew, '-v', 'upgrade', package],
-                    stderr=subprocess.STDOUT)
+                                        stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 if 'already installed' not in e.output:
                     raise
