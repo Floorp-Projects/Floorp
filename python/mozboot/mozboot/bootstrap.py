@@ -97,7 +97,7 @@ class Bootstrapper(object):
             args['version'] = platform.uname()[2]
 
         elif sys.platform.startswith('dragonfly') or \
-             sys.platform.startswith('freebsd'):
+                sys.platform.startswith('freebsd'):
             cls = FreeBSDBootstrapper
             args['version'] = platform.release()
             args['flavor']  = platform.system()

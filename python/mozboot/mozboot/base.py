@@ -93,7 +93,7 @@ class BaseBootstrapper(object):
         build system (like autoconf).
         '''
         raise NotImplementedError('%s must implement install_system_packages()' %
-            __name__)
+                                  __name__)
 
     def install_browser_packages(self):
         '''
@@ -101,7 +101,8 @@ class BaseBootstrapper(object):
         'browser').
         '''
         raise NotImplementedError('Cannot bootstrap Firefox for Desktop: '
-            '%s does not yet implement install_browser_packages()' % __name__)
+                                  '%s does not yet implement install_browser_packages()' %
+                                  __name__)
 
     def suggest_browser_mozconfig(self):
         '''
@@ -119,7 +120,8 @@ class BaseBootstrapper(object):
         'mobile/android', also known as Fennec).
         '''
         raise NotImplementedError('Cannot bootstrap Firefox for Android: '
-            '%s does not yet implement install_mobile_android_packages()' % __name__)
+                                  '%s does not yet implement install_mobile_android_packages()'
+                                  % __name__)
 
     def suggest_mobile_android_mozconfig(self):
         '''
@@ -130,7 +132,7 @@ class BaseBootstrapper(object):
         paths to the Android SDK and NDK.
         '''
         raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
-            __name__)
+                                  __name__)
 
     def which(self, name):
         """Python implementation of which.
@@ -276,7 +278,7 @@ class BaseBootstrapper(object):
 
         if not installed or modern:
             print('Your version of Mercurial (%s) is sufficiently modern.' %
-                version)
+                  version)
             return
 
         self._ensure_package_manager_updated()
@@ -305,7 +307,7 @@ class BaseBootstrapper(object):
         assert python
 
         info = self.check_output([python, '--version'],
-            stderr=subprocess.STDOUT)
+                                 stderr=subprocess.STDOUT)
         match = re.search('Python ([a-z0-9\.]+)', info)
         if not match:
             print('ERROR Unable to identify Python version.')
@@ -323,7 +325,7 @@ class BaseBootstrapper(object):
             return
 
         print('Your version of Python (%s) is too old. Will try to upgrade.' %
-            version)
+              version)
 
         self._ensure_package_manager_updated()
         self.upgrade_python(version)
