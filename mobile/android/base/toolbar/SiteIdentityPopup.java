@@ -15,6 +15,7 @@ import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.widget.AnchoredPopup;
+import org.mozilla.gecko.widget.DefaultDoorHanger;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
 import org.json.JSONException;
@@ -53,6 +54,8 @@ public class SiteIdentityPopup extends AnchoredPopup {
     private TextView mOwner;
     private TextView mVerifier;
 
+    private View mDivider;
+
     private DoorHanger mMixedContentNotification;
     private DoorHanger mTrackingContentNotification;
 
@@ -85,6 +88,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
+        mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
     }
 
     private void updateIdentity(final SiteIdentity siteIdentity) {
@@ -137,7 +141,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
     private void addMixedContentNotification(boolean blocked) {
         // Remove any existing mixed content notification.
         removeMixedContentNotification();
-        mMixedContentNotification = new DoorHanger(mContext, DoorHanger.Theme.DARK);
+        mMixedContentNotification = new DefaultDoorHanger(mContext, DoorHanger.Type.SITE);
 
         int icon;
         String message;
@@ -157,6 +161,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         addNotificationButtons(mMixedContentNotification, blocked);
 
         mContent.addView(mMixedContentNotification);
+        mDivider.setVisibility(View.VISIBLE);
     }
 
     private void removeMixedContentNotification() {
@@ -169,7 +174,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
     private void addTrackingContentNotification(boolean blocked) {
         // Remove any existing tracking content notification.
         removeTrackingContentNotification();
-        mTrackingContentNotification = new DoorHanger(mContext, DoorHanger.Theme.DARK);
+        mTrackingContentNotification = new DefaultDoorHanger(mContext, DoorHanger.Type.SITE);
 
         int icon;
         String message;
@@ -190,6 +195,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         addNotificationButtons(mTrackingContentNotification, blocked);
 
         mContent.addView(mTrackingContentNotification);
+        mDivider.setVisibility(View.VISIBLE);
     }
 
     private void removeTrackingContentNotification() {
@@ -276,6 +282,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         super.dismiss();
         removeMixedContentNotification();
         removeTrackingContentNotification();
+        mDivider.setVisibility(View.GONE);
     }
 
     private class PopupButtonListener implements OnButtonClickListener {
