@@ -35,10 +35,10 @@ CSSAnimationPlayer::GetReady(ErrorResult& aRv)
 }
 
 void
-CSSAnimationPlayer::Play()
+CSSAnimationPlayer::Play(LimitBehavior aLimitBehavior)
 {
   mPauseShouldStick = false;
-  AnimationPlayer::Play();
+  AnimationPlayer::Play(aLimitBehavior);
 }
 
 void
@@ -71,7 +71,7 @@ CSSAnimationPlayer::PlayFromStyle()
 {
   mIsStylePaused = false;
   if (!mPauseShouldStick) {
-    DoPlay();
+    DoPlay(AnimationPlayer::LimitBehavior::Continue);
   }
 }
 
