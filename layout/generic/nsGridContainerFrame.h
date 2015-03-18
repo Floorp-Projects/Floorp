@@ -44,6 +44,8 @@ public:
   };
 
 protected:
+  typedef mozilla::LogicalRect LogicalRect;
+  typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
@@ -80,6 +82,12 @@ protected:
      * http://dev.w3.org/csswg/css-grid/#auto-placement-algo
      */
     uint32_t HypotheticalEnd() const { return IsAuto() ? mEnd + 1 : mEnd; }
+    /**
+     * Given an array of track sizes, return the starting position and length
+     * of the tracks in this line range.
+     */
+    void ToPositionAndLength(const nsTArray<TrackSize>& aTrackSizes,
+                             nscoord* aPos, nscoord* aLength) const;
 
     uint32_t mStart;  // the start line, or zero for 'auto'
     uint32_t mEnd;    // the end line, or the span length for 'auto'
@@ -312,6 +320,26 @@ protected:
   static GridArea* GetGridAreaForChild(nsIFrame* aChild) {
     return static_cast<GridArea*>(aChild->Properties().Get(GridAreaProperty()));
   }
+
+  /**
+   * Return the containing block for a grid item occupying aArea.
+   * @param aColSizes column track sizes
+   * @param aRowSizes row track sizes
+   */
+  LogicalRect ContainingBlockFor(const WritingMode& aWM,
+                                 const GridArea& aArea,
+                                 const nsTArray<TrackSize>& aColSizes,
+                                 const nsTArray<TrackSize>& aRowSizes) const;
+
+  /**
+   * Reflow and place our children.
+   */
+  void ReflowChildren(const LogicalRect&          aContentArea,
+                      const nsTArray<TrackSize>&  aColSizes,
+                      const nsTArray<TrackSize>&  aRowSizes,
+                      nsHTMLReflowMetrics&        aDesiredSize,
+                      const nsHTMLReflowState&    aReflowState,
+                      nsReflowStatus&             aStatus);
 
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
