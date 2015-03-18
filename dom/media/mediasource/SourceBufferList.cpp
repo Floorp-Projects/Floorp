@@ -62,6 +62,13 @@ SourceBufferList::Append(SourceBuffer* aSourceBuffer)
 }
 
 void
+SourceBufferList::AppendSimple(SourceBuffer* aSourceBuffer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mSourceBuffers.AppendElement(aSourceBuffer);
+}
+
+void
 SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -86,6 +93,13 @@ SourceBufferList::Clear()
   }
   mSourceBuffers.Clear();
   QueueAsyncSimpleEvent("removesourcebuffer");
+}
+
+void
+SourceBufferList::ClearSimple()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mSourceBuffers.Clear();
 }
 
 bool
