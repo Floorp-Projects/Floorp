@@ -42,7 +42,7 @@
 namespace js {
 namespace jit {
 
-static const Instr kCallRedirInstr = op_special | MAX_BREAK_CODE << RTShift | ff_break;
+static const Instr kCallRedirInstr = op_special | MAX_BREAK_CODE << FunctionBits | ff_break;
 
 // Utils functions.
 static bool
