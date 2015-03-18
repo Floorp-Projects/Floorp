@@ -50,6 +50,13 @@ struct SurfaceDescriptorD3D10 {
   IntSize size;
 };
 
+struct SurfaceDescriptorDXGIYCbCr {
+  WindowsHandle handleY;
+  WindowsHandle handleCb;
+  WindowsHandle handleCr;
+  IntSize size;
+};
+
 struct SurfaceDescriptorMacIOSurface {
   uint32_t surface;
   double scaleFactor;
@@ -104,6 +111,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorD3D9;
   SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
+  SurfaceDescriptorDXGIYCbCr;
   SurfaceDescriptorX11;
   SurfaceTextureDescriptor;
   EGLImageDescriptor;
