@@ -24,18 +24,31 @@ function checkResponse(r, response, responseText) {
 //             with the specified headers.
 // * responseText: The body of the above response object.
 function setupTest(headers) {
+  return setupTestMultipleEntries([headers]).then(function(test) {
+    return {response: test.response[0],
+            responseText: test.responseText[0],
+            cache: test.cache};
+  });
+}
+function setupTestMultipleEntries(headers) {
+  ok(Array.isArray(headers), "headers should be an array");
   return new Promise(function(resolve, reject) {
     var response, responseText, cache;
-    fetch(new Request(requestURL, {headers: headers}))
-      .then(function(r) {
+    Promise.all(headers.map(function(h) {
+      return fetch(new Request(requestURL, {headers: h}));
+    })).then(function(r) {
         response = r;
-        return r.text();
+        return Promise.all(response.map(function(r) {
+          return r.text();
+        }));
       }).then(function(text) {
         responseText = text;
         return caches.open(name);
       }).then(function(c) {
         cache = c;
-        return c.add(new Request(requestURL, {headers: headers}));
+        return Promise.all(headers.map(function(h) {
+          return c.add(new Request(requestURL, {headers: h}));
+        }));
       }).then(function() {
         resolve({response: response, responseText: responseText, cache: cache});
       }).catch(function(err) {
@@ -182,6 +195,65 @@ function testMultipleHeaders() {
     });
 }
 
+function testMultipleCacheEntries() {
+  var test;
+  return setupTestMultipleEntries([
+    {"WhatToVary": "Accept-Language", "Accept-Language": "en-US"},
+    {"WhatToVary": "Accept-Language", "Accept-Language": "en-US, fa-IR"},
+  ]).then(function(t) {
+    test = t;
+    return test.cache.matchAll();
+  }).then(function (r) {
+    is(r.length, 2, "Two cache entries should be stored in the DB");
+    // Ensure that searching without specifying an Accept-Language header fails.
+    return test.cache.matchAll(requestURL);
+  }).then(function(r) {
+    is(r.length, 0, "Searching for a request without specifying an Accept-Language header should not succeed");
+    // Ensure that searching without specifying an Accept-Language header but with ignoreVary succeeds.
+    return test.cache.matchAll(requestURL, {ignoreVary: true});
+  }).then(function(r) {
+    return Promise.all([
+      checkResponse(r[0], test.response[0], test.responseText[0]),
+      checkResponse(r[1], test.response[1], test.responseText[1]),
+    ]);
+  }).then(function() {
+    // Ensure that searching with Accept-Language: en-US succeeds.
+    return test.cache.matchAll(new Request(requestURL, {headers: {"Accept-Language": "en-US"}}));
+  }).then(function(r) {
+    is(r.length, 1, "One cache entry should be found");
+    return checkResponse(r[0], test.response[0], test.responseText[0]);
+  }).then(function() {
+    // Ensure that searching with Accept-Language: en-US,fa-IR succeeds.
+    return test.cache.matchAll(new Request(requestURL, {headers: {"Accept-Language": "en-US, fa-IR"}}));
+  }).then(function(r) {
+    is(r.length, 1, "One cache entry should be found");
+    return checkResponse(r[0], test.response[1], test.responseText[1]);
+  }).then(function() {
+    // Ensure that searching with a valid Accept-Language header but with ignoreVary returns both entries.
+    return test.cache.matchAll(new Request(requestURL, {headers: {"Accept-Language": "en-US"}}),
+                               {ignoreVary: true});
+  }).then(function(r) {
+    return Promise.all([
+      checkResponse(r[0], test.response[0], test.responseText[0]),
+      checkResponse(r[1], test.response[1], test.responseText[1]),
+    ]);
+  }).then(function() {
+    // Ensure that searching with Accept-Language: fa-IR fails.
+    return test.cache.matchAll(new Request(requestURL, {headers: {"Accept-Language": "fa-IR"}}));
+  }).then(function(r) {
+    is(r.length, 0, "Searching for a request with a different Accept-Language header should not succeed");
+    // Ensure that searching with Accept-Language: fa-IR but with ignoreVary should succeed.
+    return test.cache.matchAll(new Request(requestURL, {headers: {"Accept-Language": "fa-IR"}}),
+                               {ignoreVary: true});
+  }).then(function(r) {
+    is(r.length, 2, "Two cache entries should be found");
+    return Promise.all([
+      checkResponse(r[0], test.response[0], test.responseText[0]),
+      checkResponse(r[1], test.response[1], test.responseText[1]),
+    ]);
+  });
+}
+
 // Make sure to clean up after each test step.
 function step(testPromise) {
   return testPromise.then(function() {
@@ -199,6 +271,8 @@ step(testBasics()).then(function() {
   return step(testInvalidHeaderName());
 }).then(function() {
   return step(testMultipleHeaders());
+}).then(function() {
+  return step(testMultipleCacheEntries());
 }).then(function() {
   testDone();
 });
