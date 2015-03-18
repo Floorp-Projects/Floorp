@@ -1217,6 +1217,11 @@ ServiceWorkerRegistrationInfo::Activate()
     // FIXME(nsm): Wait for worker.
     // Terminate worker
     exitingWorker->UpdateState(ServiceWorkerState::Redundant);
+    nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
+                                                       exitingWorker->CacheName());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to purge the activating cache.");
+    }
   }
 
   mActiveWorker = activatingWorker.forget();
