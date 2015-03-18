@@ -62,6 +62,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins);
+    void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect *ins);
     void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
     void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
@@ -69,6 +70,11 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
     void visitOutOfLineTruncate(OutOfLineTruncate *ool);
     void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
+
+  private:
+    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
+                                   int32_t offset, int32_t endOffset, Register out,
+                                   Label &rejoin);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

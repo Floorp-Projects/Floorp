@@ -264,7 +264,7 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
   eventtracer::AutoEventTracer tracer(this, eventtracer::eExec, eventtracer::eDone,
     sLevelTraceName[aLevel]);
 
-  nsTArray<nsRefPtr<nsIRunnable> > events;
+  nsTArray<nsCOMPtr<nsIRunnable> > events;
   events.SwapElements(mEventQueue[aLevel]);
   uint32_t length = events.Length();
 

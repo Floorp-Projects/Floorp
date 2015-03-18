@@ -60,7 +60,7 @@ extern "C" {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     jclass foundClass;
-    nsRefPtr<nsIRunnable> runnable_ref(new GetGlobalClassRefRunnable(className,
+    nsCOMPtr<nsIRunnable> runnable_ref(new GetGlobalClassRefRunnable(className,
                                                                      &foundClass));
     mainThread->Dispatch(runnable_ref, NS_DISPATCH_SYNC);
     if (!foundClass)

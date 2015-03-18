@@ -507,7 +507,7 @@ MediaSource::QueueInitializationEvent()
   }
   mFirstSourceBufferInitialized = true;
   MSE_DEBUG("");
-  nsRefPtr<nsIRunnable> task =
+  nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableMethod(this, &MediaSource::InitializationEvent);
   NS_DispatchToMainThread(task);
 }
