@@ -13,37 +13,18 @@ EXPORTS.mozilla.dom += [
     'IccManager.h',
 ]
 
-EXPORTS.mozilla.dom.icc += [
-    'ipc/IccChild.h',
-    'ipc/IccParent.h',
-]
-
 UNIFIED_SOURCES += [
     'Assertions.cpp',
     'Icc.cpp',
-    'IccCallback.cpp',
     'IccCardLockError.cpp',
     "IccInfo.cpp",
     'IccListener.cpp',
     'IccManager.cpp',
-    'ipc/IccChild.cpp',
-    'ipc/IccIPCService.cpp',
-    'ipc/IccParent.cpp',
-]
-
-IPDL_SOURCES += [
-    'ipc/PIcc.ipdl',
-    'ipc/PIccRequest.ipdl',
-    'ipc/PIccTypes.ipdlh',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES += [
         'gonk/StkProactiveCmdFactory.jsm',
-    ]
-    EXTRA_COMPONENTS += [
-        'gonk/IccService.js',
-        'gonk/IccService.manifest',
     ]
 
 FAIL_ON_WARNINGS = True
