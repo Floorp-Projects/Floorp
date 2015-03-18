@@ -117,6 +117,11 @@ public:
   // Actually remove data between aStart and aEnd
   void DoRangeRemoval(double aStart, double aEnd);
 
+  bool IsActive() const
+  {
+    return mActive;
+  }
+
 #if defined(DEBUG)
   void Dump(const char* aPath);
 #endif
@@ -173,6 +178,8 @@ private:
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
+
+  bool mActive;
 
   // Each time mUpdating is set to true, mUpdateID will be incremented.
   // This allows for a queued AppendData task to identify if it was earlier
