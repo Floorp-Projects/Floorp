@@ -421,6 +421,8 @@ gbjar.sources += [
     'SuggestClient.java',
     'SurfaceBits.java',
     'Tab.java',
+    'tabqueue/TabQueueDispatcher.java',
+    'tabqueue/TabQueueService.java',
     'Tabs.java',
     'tabs/PrivateTabsPanel.java',
     'tabs/TabCurve.java',

@@ -33,11 +33,10 @@ add_task(function*() {
 function* setStyle(widget, name, value) {
   info("Change the animation style via the content DOM. Setting " +
     name + " to " + value);
-  yield executeInContent("Test:SetNodeStyle", {
+  yield executeInContent("devtools:test:setStyle", {
+    selector: ".animated",
     propertyName: name,
     propertyValue: value
-  }, {
-    node: getNode(".animated")
   });
 
   info("Wait for the next state update");

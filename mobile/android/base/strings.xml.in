@@ -239,6 +239,9 @@
   <string name="pref_tab_queue_title">&pref_tab_queue_title;</string>
   <string name="pref_tab_queue_summary">&pref_tab_queue_summary;</string>
 
+  <string name="tab_queue_toast_message">&tab_queue_toast_message;</string>
+  <string name="tab_queue_toast_action">&tab_queue_toast_action;</string>
+
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
   <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>

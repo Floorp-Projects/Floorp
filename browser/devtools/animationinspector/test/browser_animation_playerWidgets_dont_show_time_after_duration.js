@@ -15,7 +15,11 @@ add_task(function*() {
   let {inspector, panel} = yield openAnimationInspector();
 
   info("Start an animation on the test node");
-  getNode(".still").classList.add("short");
+  yield executeInContent("devtools:test:setAttribute", {
+    selector: ".still",
+    attributeName: "class",
+    attributeValue: "ball still short"
+  });
 
   info("Select the node");
   yield selectNode(".still", inspector);

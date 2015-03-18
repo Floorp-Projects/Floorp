@@ -47,6 +47,9 @@ public class DateTimePicker extends FrameLayout {
     private static final int DEFAULT_END_YEAR = 9999;
     // Minimal screen width (in inches) for which we can show the calendar;
     private static final int SCREEN_SIZE_THRESHOLD = 5;
+    private static final char DATE_FORMAT_DAY = 'd';
+    private static final char DATE_FORMAT_MONTH = 'M';
+    private static final char DATE_FORMAT_YEAR = 'y';
 
     boolean mYearEnabled = true;
     boolean mMonthEnabled = true;
@@ -392,21 +395,23 @@ public class DateTimePicker extends FrameLayout {
         mDateSpinners.removeAllViews();
         char[] order = DateFormat.getDateFormatOrder(getContext());
         final int spinnerCount = order.length;
+
         for (int i = 0; i < spinnerCount; i++) {
             switch (order[i]) {
-                case DateFormat.DATE:
+                case DATE_FORMAT_DAY:
                     mDateSpinners.addView(mDaySpinner);
                     break;
-                case DateFormat.MONTH:
+                case DATE_FORMAT_MONTH:
                     mDateSpinners.addView(mMonthSpinner);
                     break;
-                case DateFormat.YEAR:
+                case DATE_FORMAT_YEAR:
                     mDateSpinners.addView(mYearSpinner);
                     break;
                 default:
                     throw new IllegalArgumentException();
             }
         }
+
         mDateSpinners.addView(mWeekSpinner);
     }
 

@@ -243,9 +243,20 @@ var gPrivacyPane = {
     if (document.getElementById("historyMode").value == "custom") {
       let disabled = this._autoStartPrivateBrowsing =
         document.getElementById("privateBrowsingAutoStart").checked;
-      this.dependentControls
-          .forEach(function (aElement)
-                   document.getElementById(aElement).disabled = disabled);
+      this.dependentControls.forEach(function (aElement) {
+        let control = document.getElementById(aElement);
+        let preferenceId = control.getAttribute("preference");
+        if (!preferenceId) {
+          let dependentControlId = control.getAttribute("control");
+          if (dependentControlId) {
+            let dependentControl = document.getElementById(dependentControlId);
+            preferenceId = dependentControl.getAttribute("preference");
+          }
+        }
+
+        let preference = preferenceId ? document.getElementById(preferenceId) : {};
+        control.disabled = disabled || preference.locked;
+      });
 
       // adjust the cookie controls status
       this.readAcceptCookies();

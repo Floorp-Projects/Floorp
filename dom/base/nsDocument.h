@@ -686,6 +686,7 @@ class nsDocument : public nsIDocument,
 public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 

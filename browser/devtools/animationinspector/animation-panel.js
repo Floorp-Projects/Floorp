@@ -184,6 +184,9 @@ function PlayerWidget(player, containerEl) {
 
   this.onStateChanged = this.onStateChanged.bind(this);
   this.onPlayPauseBtnClick = this.onPlayPauseBtnClick.bind(this);
+  this.onRewindBtnClick = this.onRewindBtnClick.bind(this);
+  this.onFastForwardBtnClick = this.onFastForwardBtnClick.bind(this);
+  this.onCurrentTimeChanged = this.onCurrentTimeChanged.bind(this);
 
   this.metaDataComponent = new PlayerMetaDataHeader();
 }
@@ -210,18 +213,29 @@ PlayerWidget.prototype = {
     this.metaDataComponent.destroy();
 
     this.el.remove();
-    this.playPauseBtnEl = this.currentTimeEl = this.timeDisplayEl = null;
+    this.playPauseBtnEl = this.rewindBtnEl = this.fastForwardBtnEl = null;
+    this.currentTimeEl = this.timeDisplayEl = null;
     this.containerEl = this.el = this.player = null;
   }),
 
   startListeners: function() {
     this.player.on(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.addEventListener("click", this.onPlayPauseBtnClick);
+    if (AnimationsController.hasSetCurrentTime) {
+      this.rewindBtnEl.addEventListener("click", this.onRewindBtnClick);
+      this.fastForwardBtnEl.addEventListener("click", this.onFastForwardBtnClick);
+      this.currentTimeEl.addEventListener("input", this.onCurrentTimeChanged);
+    }
   },
 
   stopListeners: function() {
     this.player.off(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.removeEventListener("click", this.onPlayPauseBtnClick);
+    if (AnimationsController.hasSetCurrentTime) {
+      this.rewindBtnEl.removeEventListener("click", this.onRewindBtnClick);
+      this.fastForwardBtnEl.removeEventListener("click", this.onFastForwardBtnClick);
+      this.currentTimeEl.removeEventListener("input", this.onCurrentTimeChanged);
+    }
   },
 
   createMarkup: function() {
@@ -252,8 +266,7 @@ PlayerWidget.prototype = {
       }
     });
 
-    // Control buttons (when currentTime becomes settable, rewind and
-    // fast-forward can be added here).
+    // Control buttons.
     this.playPauseBtnEl = createNode({
       parent: playbackControlsEl,
       nodeType: "button",
@@ -261,6 +274,24 @@ PlayerWidget.prototype = {
         "class": "toggle devtools-button"
       }
     });
+
+    if (AnimationsController.hasSetCurrentTime) {
+      this.rewindBtnEl = createNode({
+        parent: playbackControlsEl,
+        nodeType: "button",
+        attributes: {
+          "class": "rw devtools-button"
+        }
+      });
+
+      this.fastForwardBtnEl = createNode({
+        parent: playbackControlsEl,
+        nodeType: "button",
+        attributes: {
+          "class": "ff devtools-button"
+        }
+      });
+    }
 
     // Sliders container.
     let slidersContainerEl = createNode({
@@ -288,11 +319,13 @@ PlayerWidget.prototype = {
         "min": "0",
         "max": max,
         "step": "10",
-        "value": "0",
-        // The currentTime isn't settable yet, so disable the timeline slider
-        "disabled": "true"
+        "value": "0"
       }
     });
+
+    if (!AnimationsController.hasSetCurrentTime) {
+      this.currentTimeEl.setAttribute("disabled", "true");
+    }
 
     // Time display
     this.timeDisplayEl = createNode({
@@ -323,6 +356,28 @@ PlayerWidget.prototype = {
     }
   },
 
+  onRewindBtnClick: function() {
+    this.setCurrentTime(0, true);
+  },
+
+  onFastForwardBtnClick: function() {
+    let state = this.player.state;
+
+    let time = state.duration;
+    if (state.iterationCount) {
+     time = state.iterationCount * state.duration;
+    }
+    this.setCurrentTime(time, true);
+  },
+
+  /**
+   * Executed when the current-time range input is changed.
+   */
+  onCurrentTimeChanged: function(e) {
+    let time = e.target.value;
+    this.setCurrentTime(parseFloat(time), true);
+  },
+
   /**
    * Whenever a player state update is received.
    */
@@ -346,6 +401,33 @@ PlayerWidget.prototype = {
         break;
     }
   },
+
+  /**
+   * Set the current time of the animation.
+   * @param {Number} time.
+   * @param {Boolean} shouldPause Should the player be paused too.
+   * @return {Promise} Resolves when the current time has been set.
+   */
+  setCurrentTime: Task.async(function*(time, shouldPause) {
+    if (!AnimationsController.hasSetCurrentTime) {
+      throw new Error("This server version doesn't support setting animations' currentTime");
+    }
+
+    if (shouldPause) {
+      this.stopTimelineAnimation();
+      yield this.pause();
+    }
+
+    if (this.player.state.delay) {
+      time += this.player.state.delay;
+    }
+
+    // Set the time locally first so it feels instant, even if the request to
+    // actually set the time is async.
+    this.displayTime(time);
+
+    yield this.player.setCurrentTime(time);
+  }),
 
   /**
    * Pause the animation player via this widget.
