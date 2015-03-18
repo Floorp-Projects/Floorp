@@ -252,16 +252,16 @@ Animation::IsInEffect() const
   return computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction;
 }
 
-bool
-Animation::HasAnimationOfProperty(nsCSSProperty aProperty) const
+const AnimationProperty*
+Animation::GetAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
     if (aProperty == mProperties[propIdx].mProperty) {
-      return true;
+      return &mProperties[propIdx];
     }
   }
-  return false;
+  return nullptr;
 }
 
 void
