@@ -332,7 +332,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(const ComputedTimingFunction& aCTF)
+ToTimingFunction(ComputedTimingFunction& aCTF)
 {
   if (aCTF.GetType() == nsTimingFunction::Function) {
     const nsSMILKeySpline* spline = aCTF.GetFunction();
@@ -345,7 +345,7 @@ ToTimingFunction(const ComputedTimingFunction& aCTF)
 }
 
 static void
-AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
+AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                         AnimationPlayer* aPlayer, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
@@ -373,33 +373,44 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   animation->duration() = timing.mIterationDuration;
   animation->iterationCount() = timing.mIterationCount;
   animation->direction() = timing.mDirection;
-  animation->property() = aProperty.mProperty;
+  animation->property() = aProperty;
   animation->data() = aData;
 
-  for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
-    const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];
+  dom::Animation* anim = aPlayer->GetSource();
+  for (size_t propIdx = 0;
+       propIdx < anim->Properties().Length();
+       propIdx++) {
+    AnimationProperty& property = anim->Properties()[propIdx];
 
-    AnimationSegment* animSegment = animation->segments().AppendElement();
-    if (aProperty.mProperty == eCSSProperty_transform) {
-      animSegment->startState() = InfallibleTArray<TransformFunction>();
-      animSegment->endState() = InfallibleTArray<TransformFunction>();
-
-      nsCSSValueSharedList* list =
-        segment.mFromValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
-                            animSegment->startState().get_ArrayOfTransformFunction());
-
-      list = segment.mToValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
-                            animSegment->endState().get_ArrayOfTransformFunction());
-    } else if (aProperty.mProperty == eCSSProperty_opacity) {
-      animSegment->startState() = segment.mFromValue.GetFloatValue();
-      animSegment->endState() = segment.mToValue.GetFloatValue();
+    if (aProperty != property.mProperty) {
+      continue;
     }
 
-    animSegment->startPortion() = segment.mFromKey;
-    animSegment->endPortion() = segment.mToKey;
-    animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
+    for (uint32_t segIdx = 0; segIdx < property.mSegments.Length(); segIdx++) {
+      AnimationPropertySegment& segment = property.mSegments[segIdx];
+
+      AnimationSegment* animSegment = animation->segments().AppendElement();
+      if (aProperty == eCSSProperty_transform) {
+        animSegment->startState() = InfallibleTArray<TransformFunction>();
+        animSegment->endState() = InfallibleTArray<TransformFunction>();
+
+        nsCSSValueSharedList* list =
+          segment.mFromValue.GetCSSValueSharedListValue();
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+                              animSegment->startState().get_ArrayOfTransformFunction());
+
+        list = segment.mToValue.GetCSSValueSharedListValue();
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+                              animSegment->endState().get_ArrayOfTransformFunction());
+      } else if (aProperty == eCSSProperty_opacity) {
+        animSegment->startState() = segment.mFromValue.GetFloatValue();
+        animSegment->endState() = segment.mToValue.GetFloatValue();
+      }
+
+      animSegment->startPortion() = segment.mFromKey;
+      animSegment->endPortion() = segment.mToKey;
+      animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
+    }
   }
 }
 
@@ -407,32 +418,12 @@ static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                          AnimationPlayerPtrArray& aPlayers,
                          Layer* aLayer, AnimationData& aData,
-                         bool aPending)
-{
+                         bool aPending) {
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
     AnimationPlayer* player = aPlayers[playerIdx];
-    if (!player->IsRunning()) {
-      continue;
-    }
     dom::Animation* anim = player->GetSource();
-    if (!anim) {
-      continue;
-    }
-    const AnimationProperty* property =
-      anim->GetAnimationOfProperty(aProperty);
-    if (!property) {
-      continue;
-    }
-
-    if (!property->mWinsInCascade) {
-      // We have an animation or transition, but it isn't actually
-      // winning in the CSS cascade, so we don't want to send it to the
-      // compositor.
-      // I believe that anything that changes mWinsInCascade should
-      // trigger this code again, either because of a restyle that
-      // changes the properties in question, or because of the
-      // main-thread style update that results when an animation stops
-      // filling.
+    if (!(anim && anim->HasAnimationOfProperty(aProperty) &&
+          player->IsRunning())) {
       continue;
     }
 
@@ -452,7 +443,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       }
     }
 
-    AddAnimationForProperty(aFrame, *property, player, aLayer, aData, aPending);
+    AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
     player->SetIsRunningOnCompositor();
   }
 }
