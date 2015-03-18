@@ -15,6 +15,9 @@ registerCleanupFunction(() => {
 // Allow tabs to restore on demand so we can test pending states
 Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 
+// Running this test in ASAN is slow.
+requestLongerTimeout(2);
+
 /**
  * Returns a Promise that resolves once a remote <xul:browser> has experienced
  * a crash. Also does the job of cleaning up the minidump of the crash.
