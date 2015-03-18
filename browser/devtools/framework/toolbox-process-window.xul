@@ -37,5 +37,9 @@
        for example when viewing network request details. -->
   <popupset id="mainPopupSet"></popupset>
 
+  <vbox id="error-message-container" hidden="true" flex="1">
+    <box>&browserToolboxErrorMessage;</box>
+    <textbox multiline="true" id="error-message" flex="1"></textbox>
+  </vbox>
   <iframe id="toolbox-iframe" flex="1"></iframe>
 </window>

@@ -186,21 +186,24 @@ loop.store = loop.store || {};
           break;
         }
         case WS_STATES.CONNECTING: {
-          this.sdkDriver.connectSession({
-            apiKey: state.apiKey,
-            sessionId: state.sessionId,
-            sessionToken: state.sessionToken
-          });
-          this.mozLoop.addConversationContext(
-            state.windowId,
-            state.sessionId,
-            state.callId);
-          this.setStoreState({callState: CALL_STATES.ONGOING});
+          if (state.outgoing) {
+            // We can start the connection right away if we're the outgoing
+            // call because this is the only way we know the other peer has
+            // accepted.
+            this._startCallConnection();
+          } else if (state.callState !== CALL_STATES.ONGOING) {
+            console.error("Websocket unexpectedly changed to next state whilst waiting for call acceptance.");
+            // Abort and close the window.
+            this.declineCall(new sharedActions.DeclineCall({blockCaller: false}));
+          }
           break;
         }
         case WS_STATES.HALF_CONNECTED:
         case WS_STATES.CONNECTED: {
-          this.setStoreState({callState: CALL_STATES.ONGOING});
+          if (this.getStoreState("callState") !== CALL_STATES.ONGOING) {
+            console.error("Unexpected websocket state received in wrong callState");
+            this.setStoreState({callState: CALL_STATES.ONGOING});
+          }
           break;
         }
         default: {
@@ -258,6 +261,25 @@ loop.store = loop.store || {};
     },
 
     /**
+     * Handles starting a call connection - connecting the session on the
+     * sdk, and setting the state appropriately.
+     */
+    _startCallConnection: function() {
+      var state = this.getStoreState();
+
+      this.sdkDriver.connectSession({
+        apiKey: state.apiKey,
+        sessionId: state.sessionId,
+        sessionToken: state.sessionToken
+      });
+      this.mozLoop.addConversationContext(
+        state.windowId,
+        state.sessionId,
+        state.callId);
+      this.setStoreState({callState: CALL_STATES.ONGOING});
+    },
+
+    /**
      * Accepts an incoming call.
      *
      * @param {sharedActions.AcceptCall} actionData
@@ -273,9 +295,9 @@ loop.store = loop.store || {};
         videoMuted: actionData.callType === CALL_TYPES.AUDIO_ONLY
       });
 
-      // Accepting the call on the websocket will bring us into the connecting
-      // state.
       this._websocket.accept();
+
+      this._startCallConnection();
     },
 
     /**

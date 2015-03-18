@@ -135,7 +135,6 @@ body {
 }
 
 .timeline .playback-controls {
-  width: 50px;
   display: flex;
   flex-direction: row;
 }
@@ -147,8 +146,6 @@ body {
   border-width: 0 1px 0 0;
 }
 
-/* Play/pause button */
-
 .timeline .toggle::before {
   background-image: url(debugger-pause.png);
 }
@@ -156,6 +153,14 @@ body {
 .paused .timeline .toggle::before,
 .finished .timeline .toggle::before {
   background-image: url(debugger-play.png);
+}
+
+.timeline .ff::before {
+  background-image: url(fast-forward.png);
+}
+
+.timeline .rw::before {
+  background-image: url(rewind.png);
 }
 
 @media (min-resolution: 2dppx) {
@@ -166,6 +171,14 @@ body {
   .paused .timeline .toggle::before,
   .finished .timeline .toggle::before {
     background-image: url(debugger-play@2x.png);
+  }
+
+  .timeline .ff::before {
+    background-image: url(fast-forward@2x.png);
+  }
+
+  .timeline .rw::before {
+    background-image: url(rewind@2x.png);
   }
 }
 

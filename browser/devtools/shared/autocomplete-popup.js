@@ -10,6 +10,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+const events  = require("devtools/toolkit/event-emitter");
 
 /**
  * Autocomplete popup UI implementation.
@@ -109,6 +110,8 @@ function AutocompletePopup(aDocument, aOptions = {})
     this._list.addEventListener("keypress", this.onKeypress, false);
   }
   this._itemIdCounter = 0;
+
+  events.decorate(this);
 }
 exports.AutocompletePopup = AutocompletePopup;
 
@@ -144,6 +147,8 @@ AutocompletePopup.prototype = {
     if (this.autoSelect) {
       this.selectFirstItem();
     }
+
+    this.emit("popup-opened");
   },
 
   /**
