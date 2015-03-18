@@ -522,6 +522,7 @@ let settingsToObserve = {
   'layers.effect.invert': false,
   'layers.effect.grayscale': false,
   'layers.effect.contrast': "0.0",
+  'network.debugging.enabled': false,
   'privacy.donottrackheader.enabled': false,
   'ril.debugging.enabled': false,
   'ril.radio.disabled': false,

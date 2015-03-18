@@ -53,6 +53,8 @@ public class SearchBar extends FrameLayout {
         public void onFocusChange(boolean hasFocus);
     }
 
+    // Deprecation warnings suppressed to allow building with API level 22
+    @SuppressWarnings("deprecation")
     public SearchBar(Context context, AttributeSet attrs) {
         super(context, attrs);
 

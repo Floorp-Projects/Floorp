@@ -4,7 +4,6 @@
 
 #include "mozilla/dom/IccInfo.h"
 
-#include "mozilla/dom/icc/PIccTypes.h"
 #include "nsPIDOMWindow.h"
 
 #define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
@@ -21,109 +20,28 @@
 
 using namespace mozilla::dom;
 
-using mozilla::dom::icc::IccInfoData;
-
 // IccInfo
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(IccInfo, mWindow)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(IccInfo, mWindow, mIccInfo)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IccInfo)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IccInfo)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IccInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIIccInfo)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 IccInfo::IccInfo(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  mIccType.SetIsVoid(true);
-  mIccid.SetIsVoid(true);
-  mMcc.SetIsVoid(true);
-  mMnc.SetIsVoid(true);
-  mSpn.SetIsVoid(true);
-}
-
-IccInfo::IccInfo(const IccInfoData& aData)
-{
-  mIccType = aData.iccType();
-  mIccid = aData.iccid();
-  mMcc = aData.mcc();
-  mMnc = aData.mnc();
-  mSpn = aData.spn();
-  mIsDisplayNetworkNameRequired = aData.isDisplayNetworkNameRequired();
-  mIsDisplaySpnRequired = aData.isDisplaySpnRequired();
-}
-
-// nsIIccInfo
-
-NS_IMETHODIMP
-IccInfo::GetIccType(nsAString & aIccType)
-{
-  aIccType = mIccType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetIccid(nsAString & aIccid)
-{
-  aIccid = mIccid;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetMcc(nsAString & aMcc)
-{
-  aMcc = mMcc;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetMnc(nsAString & aMnc)
-{
-  aMnc = mMnc;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetSpn(nsAString & aSpn)
-{
-  aSpn = mSpn;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetIsDisplayNetworkNameRequired(bool *aIsDisplayNetworkNameRequired)
-{
-  *aIsDisplayNetworkNameRequired = mIsDisplayNetworkNameRequired;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IccInfo::GetIsDisplaySpnRequired(bool *aIsDisplaySpnRequired)
-{
-  *aIsDisplaySpnRequired = mIsDisplaySpnRequired;
-  return NS_OK;
 }
 
 void
 IccInfo::Update(nsIIccInfo* aInfo)
 {
-  NS_ASSERTION(aInfo, "aInfo is null");
-
-  aInfo->GetIccType(mIccType);
-  aInfo->GetIccid(mIccid);
-  aInfo->GetMcc(mMcc);
-  aInfo->GetMnc(mMnc);
-  aInfo->GetSpn(mSpn);
-  aInfo->GetIsDisplayNetworkNameRequired(
-    &mIsDisplayNetworkNameRequired);
-  aInfo->GetIsDisplaySpnRequired(
-    &mIsDisplaySpnRequired);
+  mIccInfo = aInfo;
 }
-
-// WebIDL implementation
 
 JSObject*
 IccInfo::WrapObject(JSContext* aCx)
@@ -134,9 +52,15 @@ IccInfo::WrapObject(JSContext* aCx)
 Nullable<IccType>
 IccInfo::GetIccType() const
 {
+  if (!mIccInfo) {
+    return Nullable<IccType>();
+  }
+
+  nsAutoString type;
   Nullable<IccType> iccType;
 
-  CONVERT_STRING_TO_NULLABLE_ENUM(mIccType, IccType, iccType);
+  mIccInfo->GetIccType(type);
+  CONVERT_STRING_TO_NULLABLE_ENUM(type, IccType, iccType);
 
   return iccType;
 }
@@ -144,77 +68,96 @@ IccInfo::GetIccType() const
 void
 IccInfo::GetIccid(nsAString& aIccId) const
 {
-  aIccId = mIccid;
+  if (!mIccInfo) {
+    aIccId.SetIsVoid(true);
+    return;
+  }
+
+  mIccInfo->GetIccid(aIccId);
 }
 
 void
 IccInfo::GetMcc(nsAString& aMcc) const
 {
-  aMcc = mMcc;
+  if (!mIccInfo) {
+    aMcc.SetIsVoid(true);
+    return;
+  }
+
+  mIccInfo->GetMcc(aMcc);
 }
 
 void
 IccInfo::GetMnc(nsAString& aMnc) const
 {
-  aMnc = mMnc;
+  if (!mIccInfo) {
+    aMnc.SetIsVoid(true);
+    return;
+  }
+
+  mIccInfo->GetMnc(aMnc);
 }
 
 void
 IccInfo::GetSpn(nsAString& aSpn) const
 {
-  aSpn = mSpn;
+  if (!mIccInfo) {
+    aSpn.SetIsVoid(true);
+    return;
+  }
+
+  mIccInfo->GetSpn(aSpn);
 }
 
 bool
 IccInfo::IsDisplayNetworkNameRequired() const
 {
-  return mIsDisplayNetworkNameRequired;
+  if (!mIccInfo) {
+    return false;
+  }
+
+  bool isDisplayNetworkNameRequired;
+  mIccInfo->GetIsDisplayNetworkNameRequired(&isDisplayNetworkNameRequired);
+
+  return isDisplayNetworkNameRequired;
 }
 
 bool
 IccInfo::IsDisplaySpnRequired() const
 {
+  if (!mIccInfo) {
+    return false;
+  }
 
-  return mIsDisplaySpnRequired;
+  bool isDisplaySpnRequired;
+  mIccInfo->GetIsDisplaySpnRequired(&isDisplaySpnRequired);
+
+  return isDisplaySpnRequired;
 }
 
 // GsmIccInfo
 
-NS_IMPL_ISUPPORTS_INHERITED(GsmIccInfo, IccInfo, nsIGsmIccInfo)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(GsmIccInfo, IccInfo, mGsmIccInfo)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(GsmIccInfo)
+NS_INTERFACE_MAP_END_INHERITING(IccInfo)
+
+NS_IMPL_ADDREF_INHERITED(GsmIccInfo, IccInfo)
+NS_IMPL_RELEASE_INHERITED(GsmIccInfo, IccInfo)
 
 GsmIccInfo::GsmIccInfo(nsPIDOMWindow* aWindow)
   : IccInfo(aWindow)
 {
-  mPhoneNumber.SetIsVoid(true);
 }
-
-GsmIccInfo::GsmIccInfo(const IccInfoData& aData)
-  : IccInfo(aData)
-{
-  mPhoneNumber = aData.phoneNumber();
-}
-
-// nsIGsmIccInfo
-
-NS_IMETHODIMP
-GsmIccInfo::GetMsisdn(nsAString & aMsisdn)
-{
-  aMsisdn = mPhoneNumber;
-  return NS_OK;
-}
-
-// WebIDL implementation
 
 void
 GsmIccInfo::Update(nsIGsmIccInfo* aInfo)
 {
-  MOZ_ASSERT(aInfo);
   nsCOMPtr<nsIIccInfo> iccInfo = do_QueryInterface(aInfo);
   MOZ_ASSERT(iccInfo);
 
   IccInfo::Update(iccInfo);
-
-  aInfo->GetMsisdn(mPhoneNumber);
+  mGsmIccInfo = aInfo;
 }
 
 JSObject*
@@ -226,56 +169,38 @@ GsmIccInfo::WrapObject(JSContext* aCx)
 void
 GsmIccInfo::GetMsisdn(nsAString& aMsisdn) const
 {
-  aMsisdn = mPhoneNumber;
+  if (!mGsmIccInfo) {
+    aMsisdn.SetIsVoid(true);
+    return;
+  }
+
+  mGsmIccInfo->GetMsisdn(aMsisdn);
 }
 
 // CdmaIccInfo
 
-NS_IMPL_ISUPPORTS_INHERITED(CdmaIccInfo, IccInfo, nsICdmaIccInfo)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CdmaIccInfo, IccInfo, mCdmaIccInfo)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CdmaIccInfo)
+NS_INTERFACE_MAP_END_INHERITING(IccInfo)
+
+NS_IMPL_ADDREF_INHERITED(CdmaIccInfo, IccInfo)
+NS_IMPL_RELEASE_INHERITED(CdmaIccInfo, IccInfo)
 
 CdmaIccInfo::CdmaIccInfo(nsPIDOMWindow* aWindow)
   : IccInfo(aWindow)
 {
-  mPhoneNumber.SetIsVoid(true);
-}
-
-CdmaIccInfo::CdmaIccInfo(const IccInfoData& aData)
-  : IccInfo(aData)
-{
-  mPhoneNumber = aData.phoneNumber();
-  mPrlVersion = aData.prlVersion();
-}
-
-// nsICdmaIccInfo
-
-NS_IMETHODIMP
-CdmaIccInfo::GetMdn(nsAString & aMdn)
-{
-  aMdn = mPhoneNumber;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CdmaIccInfo::GetPrlVersion(int32_t *aPrlVersion)
-{
-  *aPrlVersion = mPrlVersion;
-  return NS_OK;
 }
 
 void
 CdmaIccInfo::Update(nsICdmaIccInfo* aInfo)
 {
-  MOZ_ASSERT(aInfo);
   nsCOMPtr<nsIIccInfo> iccInfo = do_QueryInterface(aInfo);
   MOZ_ASSERT(iccInfo);
 
   IccInfo::Update(iccInfo);
-
-  aInfo->GetMdn(mPhoneNumber);
-  aInfo->GetPrlVersion(&mPrlVersion);
+  mCdmaIccInfo = aInfo;
 }
-
-// WebIDL implementation
 
 JSObject*
 CdmaIccInfo::WrapObject(JSContext* aCx)
@@ -286,11 +211,23 @@ CdmaIccInfo::WrapObject(JSContext* aCx)
 void
 CdmaIccInfo::GetMdn(nsAString& aMdn) const
 {
-  aMdn = mPhoneNumber;
+  if (!mCdmaIccInfo) {
+    aMdn.SetIsVoid(true);
+    return;
+  }
+
+  mCdmaIccInfo->GetMdn(aMdn);
 }
 
 int32_t
 CdmaIccInfo::PrlVersion() const
 {
-  return mPrlVersion;
+  if (!mCdmaIccInfo) {
+    return 0;
+  }
+
+  int32_t prlVersion;
+  mCdmaIccInfo->GetPrlVersion(&prlVersion);
+
+  return prlVersion;
 }
