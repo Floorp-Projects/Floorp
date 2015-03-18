@@ -207,6 +207,32 @@ LIRGeneratorShared::redefine(MDefinition *def, MDefinition *as)
     } else {
         ensureDefined(as);
         def->setVirtualRegister(as->virtualRegister());
+
+#ifdef DEBUG
+        if (js_JitOptions.runExtraChecks &&
+            def->resultTypeSet() && as->resultTypeSet() &&
+            !def->resultTypeSet()->equals(as->resultTypeSet()))
+        {
+            switch (def->type()) {
+              case MIRType_Object:
+              case MIRType_ObjectOrNull:
+              case MIRType_String:
+              case MIRType_Symbol: {
+                LAssertResultT *check = new(alloc()) LAssertResultT(useRegister(def));
+                add(check, def->toInstruction());
+                break;
+              }
+              case MIRType_Value: {
+                LAssertResultV *check = new(alloc()) LAssertResultV();
+                useBox(check, LAssertRangeV::Input, def);
+                add(check, def->toInstruction());
+                break;
+              }
+              default:
+                break;
+            }
+        }
+#endif
     }
 }
 
@@ -497,6 +523,19 @@ LIRGeneratorShared::useRegisterForTypedLoad(MDefinition *mir, MIRType type)
 #endif
 
     return useRegisterAtStart(mir);
+}
+
+void
+LIRGeneratorShared::useBox(LInstruction *lir, size_t n, MDefinition *mir,
+                           LUse::Policy policy, bool useAtStart)
+{
+    MOZ_ASSERT(mir->type() == MIRType_Value);
+
+    ensureDefined(mir);
+    lir->setOperand(n, LUse(mir->virtualRegister(), policy, useAtStart));
+#if defined(JS_NUNBOX32)
+    lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy, useAtStart));
+#endif
 }
 
 } // namespace jit
