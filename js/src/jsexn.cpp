@@ -608,6 +608,12 @@ js::ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 static bool
 IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filename_strp)
 {
+    /*
+     * This function is called from ErrorReport::init and so should not generate
+     * any new exceptions.
+     */
+    AutoClearPendingException acpe(cx);
+
     bool found;
     if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found)
         return false;

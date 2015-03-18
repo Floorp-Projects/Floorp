@@ -229,6 +229,13 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
         if (ErrorToException(cx, message, reportp, callback, userRef))
             return;
+
+        /*
+         * The AutoJSAPI error reporter only allows warnings to be reported so
+         * just ignore this error rather than try to report it.
+         */
+        if (cx->options().autoJSAPIOwnsErrorReporting())
+            return;
     }
 
     /*
