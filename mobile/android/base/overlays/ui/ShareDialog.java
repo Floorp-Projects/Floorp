@@ -122,6 +122,16 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
                 clientrecords.length <= MAXIMUM_INLINE_DEVICES) {
             // Show the list of devices in-line.
             sendTabList.switchState(SendTabList.State.LIST);
+
+            // The first item in the list has a unique style. If there are no items
+            // in the list, the next button appears to be the first item in the list.
+            //
+            // Note: a more thorough implementation would add this
+            // (and other non-ListView buttons) into a custom ListView.
+            if (clientrecords == null || clientrecords.length == 0) {
+                readingListButton.setBackgroundResource(
+                        R.drawable.overlay_share_button_background_first);
+            }
             return;
         }
 
