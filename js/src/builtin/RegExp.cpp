@@ -312,26 +312,6 @@ js::regexp_construct_no_statics(JSContext *cx, unsigned argc, Value *vp)
     return CompileRegExpObject(cx, builder, args, DontUseRegExpStatics, CreateForConstruct);
 }
 
-MOZ_ALWAYS_INLINE bool
-regexp_toString_impl(JSContext *cx, CallArgs args)
-{
-    MOZ_ASSERT(IsRegExp(args.thisv()));
-
-    JSString *str = args.thisv().toObject().as<RegExpObject>().toString(cx);
-    if (!str)
-        return false;
-
-    args.rval().setString(str);
-    return true;
-}
-
-static bool
-regexp_toString(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsRegExp, regexp_toString_impl>(cx, args);
-}
-
 /* ES6 draft rev32 21.2.5.4. */
 MOZ_ALWAYS_INLINE bool
 regexp_global_impl(JSContext *cx, CallArgs args)
@@ -453,9 +433,9 @@ const JSPropertySpec js::regexp_properties[] = {
 
 const JSFunctionSpec js::regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  regexp_toString,    0,0),
+    JS_SELF_HOSTED_FN(js_toSource_str, "RegExpToString", 0, 0),
 #endif
-    JS_FN(js_toString_str,  regexp_toString,    0,0),
+    JS_SELF_HOSTED_FN(js_toString_str, "RegExpToString", 0, 0),
     JS_FN("compile",        regexp_compile,     2,0),
     JS_FN("exec",           regexp_exec,        1,0),
     JS_FN("test",           regexp_test,        1,0),
