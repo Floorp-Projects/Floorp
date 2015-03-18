@@ -80,6 +80,7 @@ static const JSFunctionSpec exception_methods[] = {
             ErrorObject::createConstructor, \
             ErrorObject::createProto, \
             nullptr, \
+            nullptr, \
             exception_methods, \
             nullptr, \
             nullptr, \
@@ -109,6 +110,7 @@ ErrorObject::classes[JSEXN_LIMIT] = {
         {
             ErrorObject::createConstructor,
             ErrorObject::createProto,
+            nullptr,
             nullptr,
             exception_methods,
             0

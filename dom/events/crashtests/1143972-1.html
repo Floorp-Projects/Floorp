@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<script>
+var x;
+function doTest() {
+  f.contentDocument.body.onclick = function (event) {
+    x = event.offsetX;
+  }
+  f.contentDocument.body.dispatchEvent(f.contentWindow.ev);
+}
+</script>
+<iframe id="f" style="display:none" onload="doTest()"
+        src="data:text/html,<script>var ev = new MouseEvent('click', {clientX:0, clientY:0})</script>"></iframe>

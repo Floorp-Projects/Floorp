@@ -1,43 +1,41 @@
 =============
 API Reference
 =============
-.. py:currentmodule:: marionette
 
 Marionette
 ----------
-.. autoclass:: Marionette
+.. autoclass:: marionette_driver.marionette.Marionette
    :members:
 
 HTMLElement
 -----------
-.. autoclass:: HTMLElement
+.. autoclass:: marionette_driver.marionette.HTMLElement
    :members:
 
 DateTimeValue
 -------------
-.. autoclass:: DateTimeValue
+.. autoclass:: marionette_driver.DateTimeValue
    :members:
 
 Actions
 -------
-.. autoclass:: Actions
+.. autoclass:: marionette_driver.marionette.Actions
    :members:
 
 MultiActions
 ------------
-.. autoclass:: MultiActions
+.. autoclass:: marionette_driver.marionette.MultiActions
    :members:
 
 Wait
 ----
-
-.. autoclass:: Wait
+.. autoclass:: marionette_driver.Wait
    :members:
    :special-members:
-.. autoattribute marionette.wait.DEFAULT_TIMEOUT
-.. autoattribute marionette.wait.DEFAULT_INTERVAL
+.. autoattribute marionette_driver.wait.DEFAULT_TIMEOUT
+.. autoattribute marionette_driver.wait.DEFAULT_INTERVAL
 
 Built-in Conditions
 ^^^^^^^^^^^^^^^^^^^
-.. automodule:: marionette.expected
+.. automodule:: marionette_driver.expected
    :members:

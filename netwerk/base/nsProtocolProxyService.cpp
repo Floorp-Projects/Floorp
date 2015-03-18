@@ -1865,11 +1865,11 @@ nsProtocolProxyService::ApplyFilters(nsIChannel *channel,
     // somewhat inefficient, but it seems like a good idea since we want each
     // filter to "see" a valid proxy list.
 
-    nsresult rv;
     nsCOMPtr<nsIProxyInfo> result;
 
     for (FilterLink *iter = mFilters; iter; iter = iter->next) {
         PruneProxyInfo(info, list);
+        nsresult rv = NS_OK;
         if (iter->filter) {
           nsCOMPtr<nsIURI> uri;
           rv = GetProxyURI(channel, getter_AddRefs(uri));

@@ -23,8 +23,6 @@
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/layers/APZUtils.h"    // for HitTestResult
 
-class nsIntRegion;
-
 namespace mozilla {
 class InputData;
 class MultiTouchInput;

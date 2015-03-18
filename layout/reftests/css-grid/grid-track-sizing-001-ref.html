@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+<meta charset="utf-8">
+<title>Test simple track sizing and grid item layout</title>
+<style>
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+span {
+  position: absolute;
+  border: 3px dashed;
+}
+span.bg {
+  position: absolute;
+  background: lime;
+  border: 0 none;
+}
+#item1 { top: 50px; left: 11px; width: 21px; height: 37px; }
+#item2 { top: 50px; left: 11px; width: 15px; height: 31px; }
+#item3 { top: 3px; left: 48px; width: 41px; height: 37px; }
+#item4 { top: 3px; left: 48px; width: 35px; height: 31px; }
+#item5 { top: 3px; left: 105px; width: 57px; height: 37px; }
+#item6 { top: 0px; left: 94px; width: 67px; height: 41px; }
+#item7 { top: 94px; left: 11px; width: 500px; height: 40px; }
+#item8 { top: 141px; left: 0px; width: 94px; height: 10px; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <span id="item1" class="bg"></span>
+  <span id="item2">1</span>
+  <span id="item3" class="bg"></span>
+  <span id="item4">2</span>
+  <span id="item5" class="bg"></span>
+  <span id="item6">3</span>
+  <span id="item7" class="bg">4</span>
+  <span id="item8" class="bg">5</span>
+</div>
+</body>
+</html>

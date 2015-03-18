@@ -24,8 +24,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void defineUntypedPhi(MPhi *phi, size_t lirIndex);
 
     // Adds a use at operand |n| of a value-typed insturction.
-    void useBox(LInstruction *lir, size_t n, MDefinition *mir,
-                LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
     void useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register);
 
     // x86 has constraints on what registers can be formatted for 1-byte
