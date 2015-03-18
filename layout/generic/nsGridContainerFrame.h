@@ -82,6 +82,27 @@ protected:
     LineRange mRows;
   };
 
+  /**
+   * A CellMap holds state for each cell in the grid.
+   * It's row major.  It's sparse in the sense that it only has enough rows to
+   * cover the last row that has a grid item.  Each row only has enough entries
+   * to cover columns that are occupied *on that row*, i.e. it's not a full
+   * matrix covering the entire implicit grid.  An absent Cell means that it's
+   * unoccupied by any grid item.
+   */
+  struct CellMap {
+    struct Cell {
+      Cell() : mIsOccupied(false) {}
+      bool mIsOccupied : 1;
+    };
+    void Fill(const GridArea& aGridArea);
+    void ClearOccupied();
+#if DEBUG
+    void Dump() const;
+#endif
+    nsTArray<nsTArray<Cell>> mCells;
+  };
+
   enum LineRangeSide {
     eLineRangeSideStart, eLineRangeSideEnd
   };
@@ -217,6 +238,11 @@ protected:
 #endif // DEBUG
 
 private:
+  /**
+   * State for each cell in the grid.
+   */
+  CellMap mCellMap;
+
   /**
    * The last column grid line (1-based) in the explicit grid.
    * (i.e. the number of explicit columns + 1)
