@@ -203,6 +203,15 @@ protected:
     return areas && areas->Contains(aName);
   }
 
+  NS_DECLARE_FRAME_PROPERTY(GridAreaProperty, DeleteValue<GridArea>)
+
+  /**
+   * A convenience method to get the stored GridArea* for a frame.
+   */
+  static GridArea* GetGridAreaForChild(nsIFrame* aChild) {
+    return static_cast<GridArea*>(aChild->Properties().Get(GridAreaProperty()));
+  }
+
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
 #endif // DEBUG
