@@ -451,6 +451,57 @@ let gTestSuite = (function() {
   }
 
   /**
+   * Import a certificate with nickname and password.
+   *
+   * Resolve when we import certificate successfully; reject when any error
+   * occurs.
+   *
+   * Fulfill params: An object of certificate information.
+   * Reject params: (none)
+   *
+   * @return A deferred promise.
+   */
+  function importCert(certBlob, password, nickname) {
+    let request = wifiManager.importCert(certBlob, password, nickname);
+    return wrapDomRequestAsPromise(request)
+      .then(event => event.target.result);
+  }
+
+  /**
+   * Delete certificate of nickname.
+   *
+   * Resolve when we delete certificate successfully; reject when any error
+   * occurs.
+   *
+   * Fulfill params: (none)
+   * Reject params: (none)
+   *
+   * @return A deferred promise.
+   */
+  function deleteCert(nickname) {
+    let request = wifiManager.deleteCert(nickname);
+    return wrapDomRequestAsPromise(request)
+      .then(event => event.target.result);
+  }
+
+  /**
+   * Get list of imported certificates.
+   *
+   * Resolve when we get certificate list successfully; reject when any error
+   * occurs.
+   *
+   * Fulfill params: Nickname of imported certificate arranged by usage.
+   * Reject params: (none)
+   *
+   * @return A deferred promise.
+   */
+  function getImportedCerts() {
+    let request = wifiManager.getImportedCerts();
+    return wrapDomRequestAsPromise(request)
+      .then(event => event.target.result);
+  }
+
+  /**
    * Request wifi scan and verify the scan result as well.
    *
    * Issue a wifi scan request and check if the result is expected.
@@ -1188,6 +1239,9 @@ let gTestSuite = (function() {
   suite.waitForTimeout = waitForTimeout;
   suite.waitForRilDataConnected = waitForRilDataConnected;
   suite.requestTetheringEnabled = requestTetheringEnabled;
+  suite.importCert = importCert;
+  suite.getImportedCerts = getImportedCerts;
+  suite.deleteCert = deleteCert;
 
   /**
    * Common test routine.
@@ -1285,6 +1339,62 @@ let gTestSuite = (function() {
           return restoreToInitialState()
             .then(() => { throw aReason; }); // Re-throw the orignal reject reason.
         });
+    });
+  };
+
+  /**
+   * Run test with imported certificate.
+   *
+   * Certificate will be imported and confirmed before running test, and be
+   * deleted after running test.
+   *
+   * Fulfill params: (none)
+   *
+   * @param certBlob
+   *        Certificate content as Blob.
+   * @param password
+   *        Password for importing certificate, only used for importing PKCS#12.
+   * @param nickanem
+   *        Nickname for imported certificate.
+   * @param usage
+   *        Expected usage of imported certificate.
+   * @param aTestCaseChain
+   *        The test case entry point, which can be a function or a promise.
+   *
+   * @return A deferred promise.
+   */
+  suite.doTestWithCertificate = function(certBlob, password, nickname, usage, aTestCaseChain) {
+    return suite.doTest(function() {
+      return ensureWifiEnabled(true)
+      // Import test certificate.
+      .then(() => importCert(certBlob, password, nickname))
+      .then(function(info) {
+        // Check import result.
+        is(info.nickname, nickname, "Imported nickname");
+        for (let i = 0; i < usage.length; i++) {
+          isnot(info.usage.indexOf(usage[i]), -1, "Usage " + usage[i]);
+        }
+      })
+      // Get imported certificate list.
+      .then(getImportedCerts)
+      // Check if certificate exists in imported certificate list.
+      .then(function(list) {
+        for (let i = 0; i < usage.length; i++) {
+          isnot(list[usage[i]].indexOf(nickname), -1,
+                "Certificate \"" + nickname + "\" of usage " + usage[i] + " is imported");
+        }
+      })
+      // Run test case.
+      .then(aTestCaseChain)
+      // Delete imported certificates.
+      .then(() => deleteCert(nickname))
+      // Check if certificate doesn't exist in imported certificate list.
+      .then(getImportedCerts)
+      .then(function(list) {
+        for (let i = 0; i < usage.length; i++) {
+          is(list[usage[i]].indexOf(nickname), -1, "Certificate is deleted");
+        }
+      })
     });
   };
 

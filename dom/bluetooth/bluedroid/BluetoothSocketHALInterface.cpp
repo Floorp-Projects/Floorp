@@ -37,7 +37,7 @@ DispatchBluetoothSocketHALResult(
 {
   MOZ_ASSERT(aRes);
 
-  nsRunnable* runnable;
+  nsRefPtr<nsRunnable> runnable;
 
   if (aStatus == STATUS_SUCCESS) {
     runnable = new BluetoothSocketHALIntResultRunnable(aRes, aMethod, aArg);
@@ -60,7 +60,7 @@ DispatchBluetoothSocketHALResult(
 {
   MOZ_ASSERT(aRes);
 
-  nsRunnable* runnable;
+  nsRefPtr<nsRunnable> runnable;
 
   if (aStatus == STATUS_SUCCESS) {
     runnable = new BluetoothSocketHALIntStringIntResultRunnable(

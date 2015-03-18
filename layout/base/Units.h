@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Coord.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/RegionTyped.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "mozilla/gfx/ScaleFactors2D.h"
 #include "nsRect.h"
@@ -47,6 +48,7 @@ typedef gfx::RectTyped<CSSPixel> CSSRect;
 typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
 typedef gfx::MarginTyped<CSSPixel> CSSMargin;
 typedef gfx::IntMarginTyped<CSSPixel> CSSIntMargin;
+typedef gfx::IntRegionTyped<CSSPixel> CSSIntRegion;
 
 typedef gfx::CoordTyped<LayoutDevicePixel> LayoutDeviceCoord;
 typedef gfx::IntCoordTyped<LayoutDevicePixel> LayoutDeviceIntCoord;
@@ -58,6 +60,7 @@ typedef gfx::RectTyped<LayoutDevicePixel> LayoutDeviceRect;
 typedef gfx::IntRectTyped<LayoutDevicePixel> LayoutDeviceIntRect;
 typedef gfx::MarginTyped<LayoutDevicePixel> LayoutDeviceMargin;
 typedef gfx::IntMarginTyped<LayoutDevicePixel> LayoutDeviceIntMargin;
+typedef gfx::IntRegionTyped<LayoutDevicePixel> LayoutDeviceIntRegion;
 
 typedef gfx::CoordTyped<LayerPixel> LayerCoord;
 typedef gfx::IntCoordTyped<LayerPixel> LayerIntCoord;
@@ -69,6 +72,7 @@ typedef gfx::RectTyped<LayerPixel> LayerRect;
 typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 typedef gfx::MarginTyped<LayerPixel> LayerMargin;
 typedef gfx::IntMarginTyped<LayerPixel> LayerIntMargin;
+typedef gfx::IntRegionTyped<LayerPixel> LayerIntRegion;
 
 typedef gfx::PointTyped<RenderTargetPixel> RenderTargetPoint;
 typedef gfx::IntPointTyped<RenderTargetPixel> RenderTargetIntPoint;
@@ -78,6 +82,7 @@ typedef gfx::RectTyped<RenderTargetPixel> RenderTargetRect;
 typedef gfx::IntRectTyped<RenderTargetPixel> RenderTargetIntRect;
 typedef gfx::MarginTyped<RenderTargetPixel> RenderTargetMargin;
 typedef gfx::IntMarginTyped<RenderTargetPixel> RenderTargetIntMargin;
+typedef gfx::IntRegionTyped<RenderTargetPixel> RenderTargetIntRegion;
 
 typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;
 typedef gfx::IntCoordTyped<ScreenPixel> ScreenIntCoord;
@@ -89,6 +94,7 @@ typedef gfx::RectTyped<ScreenPixel> ScreenRect;
 typedef gfx::IntRectTyped<ScreenPixel> ScreenIntRect;
 typedef gfx::MarginTyped<ScreenPixel> ScreenMargin;
 typedef gfx::IntMarginTyped<ScreenPixel> ScreenIntMargin;
+typedef gfx::IntRegionTyped<ScreenPixel> ScreenIntRegion;
 
 typedef gfx::CoordTyped<ParentLayerPixel> ParentLayerCoord;
 typedef gfx::IntCoordTyped<ParentLayerPixel> ParentLayerIntCoord;
@@ -100,6 +106,7 @@ typedef gfx::RectTyped<ParentLayerPixel> ParentLayerRect;
 typedef gfx::IntRectTyped<ParentLayerPixel> ParentLayerIntRect;
 typedef gfx::MarginTyped<ParentLayerPixel> ParentLayerMargin;
 typedef gfx::IntMarginTyped<ParentLayerPixel> ParentLayerIntMargin;
+typedef gfx::IntRegionTyped<ParentLayerPixel> ParentLayerIntRegion;
 
 typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;

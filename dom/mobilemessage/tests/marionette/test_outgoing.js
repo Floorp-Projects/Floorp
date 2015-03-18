@@ -103,24 +103,22 @@ function doSingleRequest(aRequest, aReceiver, aBody, aNow) {
       sentGot = true;
     }));
 
-  promises.push(wrapDomRequestAsPromise(aRequest)
-    .then(function(aEvent) {
-      log("  onsuccess event for '" + aReceiver + "' received.");
+  promises.push(aRequest.then(function(aResult) {
+    log("  onsuccess event for '" + aReceiver + "' received.");
 
-      let message = aEvent.target.result;
-      checkMessage(message, "sent", aBody);
-      // Should be mostly identical to sendingMessage.
-      is(message.id, sendingMessage.id, "message.id");
-      is(message.receiver, sendingMessage.receiver, "message.receiver");
-      is(message.body, sendingMessage.body, "message.body");
-      is(message.timestamp, sendingMessage.timestamp, "message.timestamp");
+    checkMessage(aResult, "sent", aBody);
+    // Should be mostly identical to sendingMessage.
+    is(aResult.id, sendingMessage.id, "message.id");
+    is(aResult.receiver, sendingMessage.receiver, "message.receiver");
+    is(aResult.body, sendingMessage.body, "message.body");
+    is(aResult.timestamp, sendingMessage.timestamp, "message.timestamp");
 
-      ok(sendingGot, "sending event should have been triggered");
-      ok(!sentGot, "sent event should not have been triggered");
-      ok(!successGot, "success event should not have been triggered");
+    ok(sendingGot, "sending event should have been triggered");
+    ok(!sentGot, "sent event should not have been triggered");
+    ok(!successGot, "success event should not have been triggered");
 
-      successGot = true;
-    }));
+    successGot = true;
+  }));
 
   return Promise.all(promises);
 }

@@ -440,6 +440,7 @@ struct ClassSpec
     ClassObjectCreationOp createConstructor;
     ClassObjectCreationOp createPrototype;
     const JSFunctionSpec *constructorFunctions;
+    const JSPropertySpec *constructorProperties;
     const JSFunctionSpec *prototypeFunctions;
     const JSPropertySpec *prototypeProperties;
     FinishClassInitOp finishInit;
@@ -506,7 +507,7 @@ struct ClassExtension
     JSObjectMovedOp objectMovedOp;
 };
 
-#define JS_NULL_CLASS_SPEC  {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
+#define JS_NULL_CLASS_SPEC  {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
 #define JS_NULL_CLASS_EXT   {nullptr,nullptr,false,nullptr,nullptr}
 
 struct ObjectOps
@@ -538,7 +539,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[24];
+    void                *reserved[25];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
