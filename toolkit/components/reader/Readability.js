@@ -25,9 +25,9 @@
  * This code is heavily based on Arc90's readability.js (1.7.1) script
  * available at: http://code.google.com/p/arc90labs-readability
  */
-
+var root = this;
 var Readability = function(uri, doc) {
-  const ENABLE_LOGGING = false;
+  var ENABLE_LOGGING = false;
 
   this._uri = uri;
   this._doc = doc;
@@ -53,8 +53,26 @@ var Readability = function(uri, doc) {
 
   // Control whether log messages are sent to the console
   if (ENABLE_LOGGING) {
-    this.log = function (msg) {
-      dump("Reader: (Readability) " + msg);
+    function logEl(e) {
+      var rv = e.nodeName + " ";
+      if (e.nodeType == e.TEXT_NODE) {
+        return rv + '("' + e.textContent + '")';
+      }
+      var classDesc = e.className && ("." + e.className.replace(/ /g, "."));
+      var elDesc = e.id ? "(#" + e.id + classDesc + ")" :
+                          (classDesc ? "(" + classDesc + ")" : "");
+      return rv + elDesc;
+    }
+    this.log = function () {
+      if ("dump" in root) {
+        var msg = Array.prototype.map.call(arguments, function(x) {
+          return (x && x.nodeName) ? logEl(x) : x;
+        }).join(" ");
+        dump("Reader: (Readability) " + msg + "\n");
+      } else if ("console" in root) {
+        var args = ["Reader: (Readability) "].concat(arguments);
+        console.log.apply(console, args);
+      }
     };
   } else {
     this.log = function () {};
@@ -203,27 +221,15 @@ Readability.prototype = {
   _prepDocument: function() {
     var doc = this._doc;
 
-    // In some cases a body element can't be found (if the HTML is
-    // totally hosed for example) so we create a new body node and
-    // append it to the document.
-    if (!doc.body) {
-      var body = doc.createElement("body");
-
-      try {
-        doc.body = body;
-      } catch(e) {
-        doc.documentElement.appendChild(body);
-        this.log(e);
-      }
-    }
-
     // Remove all style tags in head
     var styleTags = doc.getElementsByTagName("style");
     for (var st = 0; st < styleTags.length; st += 1) {
       styleTags[st].textContent = "";
     }
 
-    this._replaceBrs(doc.body);
+    if (doc.body) {
+      this._replaceBrs(doc.body);
+    }
 
     var fonts = doc.getElementsByTagName("FONT");
     for (var i = fonts.length; --i >=0;) {
@@ -412,6 +418,13 @@ Readability.prototype = {
     var doc = this._doc;
     var isPaging = (page !== null ? true: false);
     page = page ? page : this._doc.body;
+
+    // We can't grab an article if we don't have a page!
+    if (!page) {
+      this.log("No body found in document. Abort.");
+      return null;
+    }
+
     var pageCacheHtml = page.innerHTML;
 
     // Check if any "dir" is set on the toplevel document element
@@ -576,8 +589,7 @@ Readability.prototype = {
         var candidateScore = candidate.readability.contentScore * (1 - this._getLinkDensity(candidate));
         candidate.readability.contentScore = candidateScore;
 
-        this.log('Candidate: ' + candidate + " (" + candidate.className + ":" +
-          candidate.id + ") with score " + candidateScore);
+        this.log('Candidate:', candidate, "with score " + candidateScore);
 
         for (var t = 0; t < this.N_TOP_CANDIDATES; t++) {
           var aTopCandidate = topCandidates[t];
@@ -592,15 +604,18 @@ Readability.prototype = {
       }
 
       var topCandidate = topCandidates[0] || null;
+      var neededToCreateTopCandidate = false;
 
       // If we still have no top candidate, just use the body as a last resort.
       // We also have to copy the body node so it is something we can modify.
       if (topCandidate === null || topCandidate.tagName === "BODY") {
         // Move all of the page's children into topCandidate
         topCandidate = doc.createElement("DIV");
+        neededToCreateTopCandidate = true;
         var children = page.childNodes;
-        for (var i = 0; i < children.length; ++i) {
-          topCandidate.appendChild(children[i]);
+        while (children.length) {
+          this.log("Moving child out:", children[0]);
+          topCandidate.appendChild(children[0]);
         }
 
         page.appendChild(topCandidate);
@@ -622,7 +637,7 @@ Readability.prototype = {
         var siblingNode = siblingNodes[s];
         var append = false;
 
-        this.log("Looking at sibling node: " + siblingNode + " (" + siblingNode.className + ":" + siblingNode.id + ")" + ((typeof siblingNode.readability !== 'undefined') ? (" with score " + siblingNode.readability.contentScore) : ''));
+        this.log("Looking at sibling node:", siblingNode, ((typeof siblingNode.readability !== 'undefined') ? ("with score " + siblingNode.readability.contentScore) : ''));
         this.log("Sibling has score " + (siblingNode.readability ? siblingNode.readability.contentScore : 'Unknown'));
 
         if (siblingNode === topCandidate)
@@ -651,7 +666,7 @@ Readability.prototype = {
         }
 
         if (append) {
-          this.log("Appending node: " + siblingNode);
+          this.log("Appending node:", siblingNode);
 
           // siblingNodes is a reference to the childNodes array, and
           // siblingNode is removed from the array when we call appendChild()
@@ -663,14 +678,14 @@ Readability.prototype = {
           if (siblingNode.nodeName !== "DIV" && siblingNode.nodeName !== "P") {
             // We have a node that isn't a common block level element, like a form or td tag.
             // Turn it into a div so it doesn't get filtered out later by accident. */
-            this.log("Altering siblingNode of " + siblingNode.nodeName + ' to div.');
+            this.log("Altering siblingNode:", siblingNode, 'to div.');
 
             this._setNodeTag(siblingNode, "DIV");
           }
 
           // To ensure a node does not interfere with readability styles,
           // remove its classnames.
-          siblingNode.className = "";
+          siblingNode.removeAttribute("class");
 
           // Append sibling and subtract from our list because it removes
           // the node when you append to another node.
@@ -678,19 +693,32 @@ Readability.prototype = {
         }
       }
 
+      this.log("Article content pre-prep: " + articleContent.innerHTML);
       // So we have all of the content that we need. Now we clean it up for presentation.
       this._prepArticle(articleContent);
+      this.log("Article content post-prep: " + articleContent.innerHTML);
 
       if (this._curPageNum === 1) {
-        var div = doc.createElement("DIV");
-        div.id = "readability-page-1";
-        div.className = "page";
-        var children = articleContent.childNodes;
-        for (var i = 0; i < children.length; ++i) {
-          div.appendChild(children[i]);
+        if (neededToCreateTopCandidate) {
+          // We already created a fake div thing, and there wouldn't have been any siblings left
+          // for the previous loop, so there's no point trying to create a new div, and then
+          // move all the children over. Just assign IDs and class names here. No need to append
+          // because that already happened anyway.
+          topCandidate.id = "readability-page-1";
+          topCandidate.className = "page";
+        } else {
+          var div = doc.createElement("DIV");
+          div.id = "readability-page-1";
+          div.className = "page";
+          var children = articleContent.childNodes;
+          while (children.length) {
+            div.appendChild(children[0]);
+          }
+          articleContent.appendChild(div);
         }
-        articleContent.appendChild(div);
       }
+
+      this.log("Article content after paging: " + articleContent.innerHTML);
 
       // Now that we've gone through the full algorithm, check to see if
       // we got any meaningful content. If we didn't, we may need to re-run
@@ -1401,7 +1429,7 @@ Readability.prototype = {
       var weight = this._getClassWeight(tagsList[i]);
       var contentScore = 0;
 
-      this.log("Cleaning Conditionally " + tagsList[i] + " (" + tagsList[i].className + ":" + tagsList[i].id + ")");
+      this.log("Cleaning Conditionally", tagsList[i]);
 
       if (weight + contentScore < 0) {
         tagsList[i].parentNode.removeChild(tagsList[i]);
@@ -1507,6 +1535,8 @@ Readability.prototype = {
     var articleContent = this._grabArticle();
     if (!articleContent)
       return null;
+
+    this.log("Grabbed: " + articleContent.innerHTML);
 
     this._postProcessContent(articleContent);
 

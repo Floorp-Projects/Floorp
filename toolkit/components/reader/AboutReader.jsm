@@ -17,13 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/U
 
 const READINGLIST_COMMAND_ID = "readingListSidebar";
 
-function dump(s) {
-  Services.console.logStringMessage("AboutReader: " + s);
-}
-
 let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
-let AboutReader = function(mm, win) {
+let AboutReader = function(mm, win, articlePromise) {
   let doc = win.document;
 
   this._mm = mm;
@@ -36,6 +32,10 @@ let AboutReader = function(mm, win) {
   this._winRef = Cu.getWeakReference(win);
 
   this._article = null;
+
+  if (articlePromise) {
+    this._articlePromise = articlePromise;
+  }
 
   this._headerElementRef = Cu.getWeakReference(doc.getElementById("reader-header"));
   this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
@@ -225,6 +225,7 @@ AboutReader.prototype = {
         this._mm.removeMessageListener("Reader:Removed", this);
         this._mm.removeMessageListener("Sidebar:VisibilityChange", this);
         this._mm.removeMessageListener("ReadingList:VisibilityStatus", this);
+        this._windowUnloaded = true;
         break;
     }
   },
@@ -558,7 +559,17 @@ AboutReader.prototype = {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
-    let article = yield this._getArticle(url);
+    let article;
+    if (this._articlePromise) {
+      article = yield this._articlePromise;
+    } else {
+      article = yield this._getArticle(url);
+    }
+
+    if (this._windowUnloaded) {
+      return;
+    }
+
     if (article && article.url == url) {
       this._showContent(article);
     } else {
@@ -718,10 +729,11 @@ AboutReader.prototype = {
 
   _showProgressDelayed: function Reader_showProgressDelayed() {
     this._win.setTimeout(function() {
-      // Article has already been loaded, no need to show
-      // progress anymore.
-      if (this._article)
+      // No need to show progress if the article has been loaded,
+      // or if the window has been unloaded.
+      if (this._article || this._windowUnloaded) {
         return;
+      }
 
       this._headerElement.style.display = "none";
       this._contentElement.style.display = "none";
