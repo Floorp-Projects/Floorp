@@ -434,8 +434,8 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
   mCellMap.ClearOccupied();
   InitializeGridBounds(aStyle);
 
-  // http://dev.w3.org/csswg/css-grid/#auto-placement-algo
-  // Step 1, place definite positions.
+  // http://dev.w3.org/csswg/css-grid/#line-placement
+  // Resolve definite positions per spec chap 9.2.
   for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
     const GridArea& area = PlaceDefinite(child, aStyle);
