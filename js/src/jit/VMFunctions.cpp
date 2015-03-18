@@ -1138,6 +1138,7 @@ AutoDetectInvalidation::setReturnOverride()
 void
 AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 {
+#ifdef DEBUG
     // Check what we can, so that we'll hopefully assert/crash if we get a
     // bogus object (pointer).
     MOZ_ASSERT(obj->compartment() == cx->compartment());
@@ -1148,10 +1149,11 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 
     if (obj->isTenured()) {
         MOZ_ASSERT(obj->isAligned());
-        mozilla::DebugOnly<gc::AllocKind> kind = obj->asTenured().getAllocKind();
+        gc::AllocKind kind = obj->asTenured().getAllocKind();
         MOZ_ASSERT(kind <= js::gc::AllocKind::OBJECT_LAST);
         MOZ_ASSERT(obj->asTenured().zone() == cx->zone());
     }
+#endif
 }
 
 void
@@ -1164,6 +1166,7 @@ AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj)
 void
 AssertValidStringPtr(JSContext *cx, JSString *str)
 {
+#ifdef DEBUG
     // We can't closely inspect strings from another runtime.
     if (str->runtimeFromAnyThread() != cx->runtime()) {
         MOZ_ASSERT(str->isPermanentAtom());
@@ -1179,7 +1182,7 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
     MOZ_ASSERT(str->isAligned());
     MOZ_ASSERT(str->length() <= JSString::MAX_LENGTH);
 
-    mozilla::DebugOnly<gc::AllocKind> kind = str->getAllocKind();
+    gc::AllocKind kind = str->getAllocKind();
     if (str->isFatInline())
         MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING);
     else if (str->isExternal())
@@ -1188,6 +1191,7 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
         MOZ_ASSERT(kind == gc::AllocKind::STRING || kind == gc::AllocKind::FAT_INLINE_STRING);
     else
         MOZ_ASSERT(kind == gc::AllocKind::STRING);
+#endif
 }
 
 void
