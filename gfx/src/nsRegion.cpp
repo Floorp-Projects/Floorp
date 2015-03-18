@@ -1141,16 +1141,3 @@ nsCString
 nsRegion::ToString() const {
   return nsCString(mozilla::ToString(this).c_str());
 }
-
-
-nsRegion nsIntRegion::ToAppUnits (nscoord aAppUnitsPerPixel) const
-{
-  nsRegion result;
-  nsIntRegionRectIterator rgnIter(*this);
-  const nsIntRect* currentRect;
-  while ((currentRect = rgnIter.Next())) {
-    nsRect appRect = currentRect->ToAppUnits(aAppUnitsPerPixel);
-    result.Or(result, appRect);
-  }
-  return result;
-}

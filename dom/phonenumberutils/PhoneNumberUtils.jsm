@@ -23,9 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "MCC_ISO3166_TABLE",
 XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
                                    "nsIMobileConnectionService");
-XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
-                                   "@mozilla.org/icc/iccservice;1",
-                                   "nsIIccService");
+XPCOMUtils.defineLazyServiceGetter(this, "icc",
+                                   "@mozilla.org/ril/content-helper;1",
+                                   "nsIIccProvider");
 #endif
 
 this.PhoneNumberUtils = {
@@ -46,8 +46,8 @@ this.PhoneNumberUtils = {
 
 #ifdef MOZ_B2G_RIL
     // TODO: Bug 926740 - PhoneNumberUtils for multisim
-    // In Multi-sim, there is more than one client in
-    // iccService/mobileConnectionService. Each client represents a
+    // In Multi-sim, there is more than one client in 
+    // iccProvider/mobileConnectionProvider. Each client represents a
     // icc/mobileConnection service. To maintain the backward compatibility with
     // single sim, we always use client 0 for now. Adding support for multiple
     // sim will be addressed in bug 926740, if needed.
@@ -61,8 +61,7 @@ this.PhoneNumberUtils = {
     }
 
     // Get SIM mcc
-    let icc = gIccService.getIccByServiceId(clientId);
-    let iccInfo = icc && icc.iccInfo;
+    let iccInfo = icc.getIccInfo(clientId);
     if (!mcc && iccInfo && iccInfo.mcc) {
       mcc = iccInfo.mcc;
     }

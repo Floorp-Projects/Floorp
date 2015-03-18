@@ -129,16 +129,6 @@ dictionary IccSetCardLockOptions
                   // Necessary for lock types: "pin", "fdn"
 };
 
-dictionary IccCardLockStatus
-{
-  boolean enabled; // True when CardLock is enabled.
-};
-
-dictionary IccCardLockRetryCount
-{
-  long retryCount; // The number of remaining retries. -1 if unkown.
-};
-
 [Pref="dom.icc.enabled",
  CheckPermissions="mobileconnection",
  AvailableIn="CertifiedApps"]
@@ -257,7 +247,6 @@ interface MozIcc : EventTarget
    *         The request's result will be an object containing
    *         information about the specified lock's status.
    *         e.g. {enabled: true}.
-   *         @see IccCardLockStatus.
    */
   [Throws]
   DOMRequest getCardLock(IccLockType lockType);
@@ -300,8 +289,8 @@ interface MozIcc : EventTarget
    *
    * @return a DOMRequest.
    *         The request's result will be an object containing the number of
-   *         remaining retries. e.g. {retryCount: 3}.
-   *         @see IccCardLockRetryCount.
+   *         remaining retries.
+   *         e.g. {retryCount: 3}.
    */
   [Throws]
   DOMRequest getCardLockRetryCount(IccLockType lockType);

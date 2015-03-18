@@ -16,7 +16,7 @@ interface nsIURI;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(155378c1-ebb2-4492-917f-85483430d5f5)]
+[scriptable, uuid(2fc1170c-4f9d-4c9e-8e5d-2d351dbe03f2)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -24,6 +24,12 @@ interface nsIInterceptedChannel : nsISupports
      * network request.
      */
     void resetInterception();
+
+    /**
+     * Set the status and reason for the forthcoming synthesized response.
+     * Multiple calls overwrite existing values.
+     */
+    void synthesizeStatus(in uint16_t status, in ACString reason);
 
     /**
      * Attach a header name/value pair to the forthcoming synthesized response.

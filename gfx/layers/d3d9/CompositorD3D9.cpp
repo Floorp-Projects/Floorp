@@ -27,6 +27,7 @@ CompositorD3D9::CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget)
   : Compositor(aParent)
   , mWidget(aWidget)
   , mDeviceResetCount(0)
+  , mFailedResetAttemps(0)
 {
   Compositor::SetBackend(LayersBackend::LAYERS_D3D9);
 }
@@ -558,6 +559,7 @@ CompositorD3D9::EnsureSwapChain()
   // We have a swap chain, lets initialise it
   DeviceManagerState state = mSwapChain->PrepareForRendering();
   if (state == DeviceOK) {
+    mFailedResetAttemps = 0;
     return true;
   }
   // Swap chain could not be initialised, handle the failure
@@ -585,10 +587,10 @@ CompositorD3D9::Ready()
     if (EnsureSwapChain()) {
       // We don't need to call VerifyReadyForRendering because that is
       // called by mSwapChain->PrepareForRendering() via EnsureSwapChain().
-
       CheckResetCount();
       return true;
     }
+    FailedToResetDevice();
     return false;
   }
 
@@ -598,6 +600,7 @@ CompositorD3D9::Ready()
 
   mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if (!mDeviceManager) {
+    FailedToResetDevice();
     mParent->SendInvalidateAll();
     return false;
   }
@@ -606,6 +609,19 @@ CompositorD3D9::Ready()
     return true;
   }
   return false;
+}
+
+void
+CompositorD3D9::FailedToResetDevice() {
+  mFailedResetAttemps += 1;
+  auto withoutAssertion = CriticalLog::DefaultOptions(false);
+  gfxCriticalError(withoutAssertion) << "[D3D9] Failed to re-create a D3D9 device, attempt "
+                                     << mFailedResetAttemps;
+  // 10 is a totally arbitrary number that we may want to increase or decrease
+  // depending on how things behave in the wild.
+  if (mFailedResetAttemps > 10) {
+    MOZ_CRASH("Unable to get a working D3D9 Compositor");
+  }
 }
 
 void

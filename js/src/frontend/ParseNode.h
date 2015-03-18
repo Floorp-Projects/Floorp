@@ -872,7 +872,8 @@ class ParseNode
         AllowObjects
     };
 
-    bool getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObjects, MutableHandleValue vp);
+    bool getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObjects, MutableHandleValue vp,
+                          NewObjectKind newKind = TenuredObject);
     inline bool isConstant();
 
     template <class NodeType>
@@ -1634,9 +1635,9 @@ ParseNode::isConstant()
 class ObjectBox
 {
   public:
-    NativeObject *object;
+    JSObject *object;
 
-    ObjectBox(NativeObject *object, ObjectBox *traceLink);
+    ObjectBox(JSObject *object, ObjectBox *traceLink);
     bool isFunctionBox() { return object->is<JSFunction>(); }
     FunctionBox *asFunctionBox();
     void trace(JSTracer *trc);

@@ -67,7 +67,7 @@
     real(Math,                   7,     InitMathClass,          CLASP(Math)) \
     real(Number,                 8,     InitNumberClass,        OCLASP(Number)) \
     real(String,                 9,     InitStringClass,        OCLASP(String)) \
-    real(RegExp,                10,     InitRegExpClass,        OCLASP(RegExp)) \
+    real(RegExp,                10,     InitViaClassSpec,       OCLASP(RegExp)) \
     real(Error,                 11,     InitViaClassSpec,       ERROR_CLASP(JSEXN_ERR)) \
     real(InternalError,         12,     InitViaClassSpec,       ERROR_CLASP(JSEXN_INTERNALERR)) \
     real(EvalError,             13,     InitViaClassSpec,       ERROR_CLASP(JSEXN_EVALERR)) \
