@@ -128,13 +128,6 @@ public:
                            nsStyleContext *aOldStyleContext,
                            nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
-  void UpdateCascadeResultsWithTransitions(
-         AnimationPlayerCollection* aTransitions);
-  void UpdateCascadeResultsWithAnimations(
-         const AnimationPlayerCollection* aAnimations);
-  void UpdateCascadeResults(AnimationPlayerCollection* aTransitions,
-                            const AnimationPlayerCollection* aAnimations);
-
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
   }
