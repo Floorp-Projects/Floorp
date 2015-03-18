@@ -14,6 +14,7 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINetworkInterceptController.h"
 #include "nsPIDOMWindow.h"
+#include "nsScriptLoader.h"
 #include "nsDebug.h"
 
 #include "jsapi.h"
@@ -44,6 +45,7 @@
 #include "ServiceWorkerClient.h"
 #include "ServiceWorkerContainer.h"
 #include "ServiceWorkerRegistration.h"
+#include "ServiceWorkerScriptCache.h"
 #include "ServiceWorkerEvents.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
@@ -110,6 +112,11 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
 
   if (aRegistration->mActiveWorker) {
     aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
+    aData.activeCacheName() = aRegistration->mActiveWorker->CacheName();
+  }
+
+  if (aRegistration->mWaitingWorker) {
+    aData.waitingCacheName() = aRegistration->mWaitingWorker->CacheName();
   }
 
   return NS_OK;
@@ -144,12 +151,25 @@ ServiceWorkerRegistrationInfo::Clear()
 
   if (mWaitingWorker) {
     mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
-    // Fire statechange.
+
+    nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
+                                                       mWaitingWorker->CacheName());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to purge the waiting cache.");
+    }
+
     mWaitingWorker = nullptr;
   }
 
   if (mActiveWorker) {
     mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
+
+    nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
+                                                       mActiveWorker->CacheName());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to purge the active cache.");
+    }
+
     mActiveWorker = nullptr;
   }
 
@@ -502,7 +522,7 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
   } mJobType;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // [[Register]]
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
@@ -596,9 +616,8 @@ public:
       return rv;
     }
 
-
     // FIXME(nsm): "Extract mime type..."
-    // FIXME(nsm): Byte match to aString.
+    // FIXME(baku): The byte-by-byte check with the older script is performed by ScriptLoader.
     NS_WARNING("Byte wise check is disabled, just using new one");
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
@@ -616,13 +635,21 @@ public:
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    nsAutoString cacheName;
+    rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
+    fprintf(stderr, "NSM Generating cache name for updating worker %s\n", NS_ConvertUTF16toUTF8(cacheName).get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Fail(NS_ERROR_DOM_TYPE_ERR);
+      return rv;
+    }
+
     // We have to create a ServiceWorker here simply to ensure there are no
     // errors. Ideally we should just pass this worker on to ContinueInstall.
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
     swm->mSetOfScopesBeingUpdated.Put(mRegistration->mScope, true);
     nsRefPtr<ServiceWorkerInfo> dummyInfo =
       new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec,
-                            EmptyString()); // TODO(baku) this has to be generated.
+                            cacheName);
     nsRefPtr<ServiceWorker> serviceWorker;
     rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
                                   dummyInfo,
@@ -679,8 +706,17 @@ public:
 
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER);
+
+    nsAutoString cacheName;
+    nsresult rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
+    fprintf(stderr, "NSM Generating cache name for installing worker %s\n", NS_ConvertUTF16toUTF8(cacheName).get());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      ContinueAfterInstallEvent(false /* aSuccess */, false /* aActivateImmediately */);
+      return;
+    }
+
     mRegistration->mInstallingWorker =
-      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec, EmptyString()); // TODO(baku)
+      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec, cacheName);
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
     Succeed();
@@ -693,10 +729,9 @@ public:
     NS_DispatchToMainThread(upr);
 
     nsRefPtr<ServiceWorker> serviceWorker;
-    nsresult rv =
-      swm->CreateServiceWorker(mRegistration->mPrincipal,
-                               mRegistration->mInstallingWorker,
-                               getter_AddRefs(serviceWorker));
+    rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
+                                  mRegistration->mInstallingWorker,
+                                  getter_AddRefs(serviceWorker));
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       ContinueAfterInstallEvent(false /* aSuccess */, false /* aActivateImmediately */);
@@ -791,6 +826,14 @@ private:
   void
   FailCommon(nsresult aRv)
   {
+    if (mRegistration->mInstallingWorker) {
+      nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+                                                         mRegistration->mInstallingWorker->CacheName());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to purge the installing worker cache.");
+      }
+    }
+
     mCallback = nullptr;
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->MaybeRemoveRegistration(mRegistration);
@@ -834,6 +877,12 @@ private:
     if (mRegistration->mWaitingWorker) {
       // FIXME(nsm): Terminate
       mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
+
+      nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+                                                         mRegistration->mWaitingWorker->CacheName());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to purge the old waiting cache.");
+      }
     }
 
     mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
@@ -849,7 +898,7 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(ServiceWorkerRegisterJob, ServiceWorkerJob, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS_INHERITED0(ServiceWorkerRegisterJob, ServiceWorkerJob);
 
 NS_IMETHODIMP
 ContinueUpdateRunnable::Run()
@@ -1627,6 +1676,7 @@ private:
     MOZ_ASSERT(swm->mActor);
     swm->mActor->SendUnregisterServiceWorker(mPrincipalInfo,
                                              NS_ConvertUTF8toUTF16(mScope));
+
     return NS_OK;
   }
 
@@ -1812,7 +1862,7 @@ ServiceWorkerManager::LoadRegistrations(
     const nsCString& currentWorkerURL = aRegistrations[i].currentWorkerURL();
     if (!currentWorkerURL.IsEmpty()) {
       registration->mActiveWorker =
-        new ServiceWorkerInfo(registration, currentWorkerURL, EmptyString()); // TODO(baku)
+        new ServiceWorkerInfo(registration, currentWorkerURL, aRegistrations[i].activeCacheName());
       registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
     }
   }

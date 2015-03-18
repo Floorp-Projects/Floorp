@@ -70,6 +70,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerManager.cpp',
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
+    'ServiceWorkerScriptCache.cpp',
     'ServiceWorkerWindowClient.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
