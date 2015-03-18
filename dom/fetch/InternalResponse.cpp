@@ -23,25 +23,17 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
 {
 }
 
-// Headers are not copied since BasicResponse and CORSResponse both need custom
-// header handling.  Body is not copied as it cannot be shared directly.
-InternalResponse::InternalResponse(const InternalResponse& aOther)
-  : mType(aOther.mType)
-  , mTerminationReason(aOther.mTerminationReason)
-  , mURL(aOther.mURL)
-  , mFinalURL(aOther.mFinalURL)
-  , mStatus(aOther.mStatus)
-  , mStatusText(aOther.mStatusText)
-  , mContentType(aOther.mContentType)
-  , mSecurityInfo(aOther.mSecurityInfo)
-{
-}
-
 already_AddRefed<InternalResponse>
 InternalResponse::Clone()
 {
-  nsRefPtr<InternalResponse> clone = new InternalResponse(*this);
+  nsRefPtr<InternalResponse> clone = CreateIncompleteCopy();
+
   clone->mHeaders = new InternalHeaders(*mHeaders);
+  if (mWrappedResponse) {
+    clone->mWrappedResponse = mWrappedResponse->Clone();
+    MOZ_ASSERT(!mBody);
+    return clone.forget();
+  }
 
   if (!mBody) {
     return clone.forget();
@@ -62,27 +54,25 @@ InternalResponse::Clone()
   return clone.forget();
 }
 
-// static
 already_AddRefed<InternalResponse>
-InternalResponse::BasicResponse(InternalResponse* aInner)
+InternalResponse::BasicResponse()
 {
-  MOZ_ASSERT(aInner);
-  nsRefPtr<InternalResponse> basic = new InternalResponse(*aInner);
+  MOZ_ASSERT(!mWrappedResponse, "Can't BasicResponse a already wrapped response");
+  nsRefPtr<InternalResponse> basic = CreateIncompleteCopy();
   basic->mType = ResponseType::Basic;
-  basic->mHeaders = InternalHeaders::BasicHeaders(aInner->mHeaders);
-  basic->mBody.swap(aInner->mBody);
+  basic->mHeaders = InternalHeaders::BasicHeaders(Headers());
+  basic->mWrappedResponse = this;
   return basic.forget();
 }
 
-// static
 already_AddRefed<InternalResponse>
-InternalResponse::CORSResponse(InternalResponse* aInner)
+InternalResponse::CORSResponse()
 {
-  MOZ_ASSERT(aInner);
-  nsRefPtr<InternalResponse> cors = new InternalResponse(*aInner);
+  MOZ_ASSERT(!mWrappedResponse, "Can't CORSResponse a already wrapped response");
+  nsRefPtr<InternalResponse> cors = CreateIncompleteCopy();
   cors->mType = ResponseType::Cors;
-  cors->mHeaders = InternalHeaders::CORSHeaders(aInner->mHeaders);
-  cors->mBody.swap(aInner->mBody);
+  cors->mHeaders = InternalHeaders::CORSHeaders(Headers());
+  cors->mWrappedResponse = this;
   return cors.forget();
 }
 

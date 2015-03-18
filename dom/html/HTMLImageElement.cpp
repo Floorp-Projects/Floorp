@@ -149,7 +149,7 @@ NS_IMPL_STRING_ATTR(HTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(HTMLImageElement, Vspace, vspace)
 
 bool
-HTMLImageElement::IsInteractiveHTMLContent() const
+HTMLImageElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap);
 }

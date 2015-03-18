@@ -122,9 +122,8 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   return target->Snapshot();
 }
 
-NS_IMETHODIMP
-OrientedImage::GetImageContainer(LayerManager* aManager,
-                                 ImageContainer** _retval)
+NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
+OrientedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
   // XXX(seth): We currently don't have a way of orienting the result of
   // GetImageContainer. We work around this by always returning null, but if it
@@ -133,11 +132,10 @@ OrientedImage::GetImageContainer(LayerManager* aManager,
   // that method for performance reasons.
 
   if (mOrientation.IsIdentity()) {
-    return InnerImage()->GetImageContainer(aManager, _retval);
+    return InnerImage()->GetImageContainer(aManager, aFlags);
   }
 
-  *_retval = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 struct MatrixBuilder

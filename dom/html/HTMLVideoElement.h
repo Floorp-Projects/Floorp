@@ -50,7 +50,7 @@ public:
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) MOZ_OVERRIDE;
 
   // Element
-  virtual bool IsInteractiveHTMLContent() const MOZ_OVERRIDE;
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const MOZ_OVERRIDE;
 
   // WebIDL
 

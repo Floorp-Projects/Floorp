@@ -75,5 +75,9 @@ main()
   static_assert(IsSame<decltype(MakePair(constA, constB)), Pair<A, B>>::value,
                 "MakePair should strip CV-qualifiers");
 
+  // Check that copy assignment and move assignment work.
+  a = constA;
+  a = A(0);
+
   return 0;
 }
