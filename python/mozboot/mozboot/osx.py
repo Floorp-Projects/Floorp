@@ -166,6 +166,7 @@ license for you by downloading the JDK. If this is unacceptable you should
 uninstall.
 '''
 
+
 class OSXBootstrapper(BaseBootstrapper):
     def __init__(self, version):
         BaseBootstrapper.__init__(self)

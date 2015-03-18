@@ -108,7 +108,6 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
-
     def bootstrap(self):
         # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
         labels = [ '%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS) ]

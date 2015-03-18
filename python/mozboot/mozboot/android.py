@@ -9,6 +9,7 @@ import errno
 import os
 import subprocess
 
+
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
@@ -82,6 +83,7 @@ def check_output(*args, **kwargs):
 
     return fn(*args, **kwargs)
 
+
 def list_missing_android_packages(android_tool, packages):
     '''
     Use the given |android| tool to return the sub-list of Android
@@ -112,6 +114,7 @@ def list_missing_android_packages(android_tool, packages):
                 missing.append(package)
 
     return missing
+
 
 def install_mobile_android_sdk_or_ndk(url, path):
     '''
@@ -158,6 +161,7 @@ def install_mobile_android_sdk_or_ndk(url, path):
     finally:
         os.chdir(old_path)
 
+
 def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
@@ -179,6 +183,7 @@ def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url):
         print(ANDROID_SDK_EXISTS % sdk_path)
     else:
         install_mobile_android_sdk_or_ndk(sdk_url, path)
+
 
 def ensure_android_packages(android_tool, packages=None):
     '''
@@ -205,6 +210,7 @@ def ensure_android_packages(android_tool, packages=None):
     failing = list_missing_android_packages(android_tool, packages=packages)
     if failing:
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
+
 
 def suggest_mozconfig(sdk_path=None, ndk_path=None):
     print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))

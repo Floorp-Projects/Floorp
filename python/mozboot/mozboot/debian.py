@@ -7,6 +7,7 @@ import sys
 
 from mozboot.base import BaseBootstrapper
 
+
 class DebianBootstrapper(BaseBootstrapper):
     # These are common packages for all Debian-derived distros (such as
     # Ubuntu).
