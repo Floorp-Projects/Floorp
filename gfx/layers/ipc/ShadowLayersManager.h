@@ -35,6 +35,7 @@ public:
     virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                    const TimeStamp& aTime) { return true; }
     virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
+    virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) { }
     virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                                 APZTestData* aOutData) { }
 };

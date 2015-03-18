@@ -18,7 +18,10 @@ function checkResponse(r, response, responseText) {
   is(r.statusText, response.statusText,
      "Both responses should have the same status text");
   return r.text().then(function(text) {
-    is(text, responseText, "The response body should be correct");
+    // Avoid dumping out the large response text to the log if they're equal.
+    if (text !== responseText) {
+      is(text, responseText, "The response body should be correct");
+    }
   });
 }
 
