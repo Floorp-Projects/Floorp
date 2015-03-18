@@ -783,19 +783,28 @@
     </style>
 
     <style name="ShareOverlayTextAppearance">
-        <item name="android:textColor">@android:color/white</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
 
-    <style name="ShareOverlayTextAppearance.Title">
+    <style name="ShareOverlayTextAppearance.Header">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="ShareOverlayTextAppearance.Header.Title">
         <item name="android:textSize">20sp</item>
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
 
-    <style name="ShareOverlayTextAppearance.Subtitle">
+    <style name="ShareOverlayTextAppearance.Header.Subtitle">
         <item name="android:textSize">12sp</item>
         <item name="android:scrollHorizontally">true</item>
+    </style>
+
+    <style name="ShareOverlayTextAppearance.Button">
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primary_text_selector</item>
     </style>
 
     <!-- TODO: Clean up this and inherited styles. -->
@@ -812,14 +821,7 @@
         <item name="android:layout_margin">0dp</item>
     </style>
 
-    <style name="ShareOverlayButton.Text">
-        <item name="android:drawablePadding">15dp</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/primary_text_selector</item>
-    </style>
-
-    <style name="ShareOverlayButton.Text.Container">
+    <style name="ShareOverlayButton.Text.Container" parent="ShareOverlayButton">
         <item name="android:padding">0dp</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:background">@drawable/overlay_share_button_background</item>
