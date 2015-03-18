@@ -502,7 +502,56 @@ nsGridContainerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+void
+nsGridContainerFrame::CellMap::Fill(const GridArea& aGridArea)
+{
+  MOZ_ASSERT(aGridArea.IsDefinite());
+  MOZ_ASSERT(aGridArea.mRows.mStart < aGridArea.mRows.mEnd);
+  MOZ_ASSERT(aGridArea.mRows.mStart > 0);
+  MOZ_ASSERT(aGridArea.mCols.mStart < aGridArea.mCols.mEnd);
+  MOZ_ASSERT(aGridArea.mCols.mStart > 0);
+  // Line numbers are 1-based so convert them to a zero-based index.
+  const auto numRows = aGridArea.mRows.mEnd - 1;
+  const auto numCols = aGridArea.mCols.mEnd - 1;
+  mCells.EnsureLengthAtLeast(numRows);
+  for (auto i = aGridArea.mRows.mStart - 1; i < numRows; ++i) {
+    nsTArray<Cell>& cellsInRow = mCells[i];
+    cellsInRow.EnsureLengthAtLeast(numCols);
+    for (auto j = aGridArea.mCols.mStart - 1; j < numCols; ++j) {
+      cellsInRow[j].mIsOccupied = true;
+    }
+  }
+}
+
+void
+nsGridContainerFrame::CellMap::ClearOccupied()
+{
+  const size_t numRows = mCells.Length();
+  for (size_t i = 0; i < numRows; ++i) {
+    nsTArray<Cell>& cellsInRow = mCells[i];
+    const size_t numCols = cellsInRow.Length();
+    for (size_t j = 0; j < numCols; ++j) {
+      cellsInRow[j].mIsOccupied = false;
+    }
+  }
+}
+
 #ifdef DEBUG
+void
+nsGridContainerFrame::CellMap::Dump() const
+{
+  const size_t numRows = mCells.Length();
+  for (size_t i = 0; i < numRows; ++i) {
+    const nsTArray<Cell>& cellsInRow = mCells[i];
+    const size_t numCols = cellsInRow.Length();
+    printf("%lu:\t", (unsigned long)i + 1);
+    for (size_t j = 0; j < numCols; ++j) {
+      printf(cellsInRow[j].mIsOccupied ? "X " : ". ");
+    }
+    printf("\n");
+  }
+}
+
 static bool
 FrameWantsToBeInAnonymousGridItem(nsIFrame* aFrame)
 {
