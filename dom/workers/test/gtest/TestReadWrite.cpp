@@ -139,17 +139,17 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.Append(SERVICEWORKERREGISTRAR_SYSTEM_PRINCIPAL "\n");
-  buffer.Append("scope 0\nscriptSpec 0\ncurrentWorkerURL 0\n");
+  buffer.Append("scope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append(SERVICEWORKERREGISTRAR_CONTENT_PRINCIPAL "\n");
   buffer.Append("123\n" SERVICEWORKERREGISTRAR_TRUE "\n");
-  buffer.Append("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\n");
+  buffer.Append("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append(SERVICEWORKERREGISTRAR_CONTENT_PRINCIPAL "\n");
   buffer.Append("0\n" SERVICEWORKERREGISTRAR_FALSE "\n");
-  buffer.Append("spec 2\nscope 2\nscriptSpec 2\ncurrentWorkerURL 2\n");
+  buffer.Append("spec 2\nscope 2\nscriptSpec 2\ncurrentWorkerURL 2\nactiveCache 2\nwaitingCache 2\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -168,6 +168,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("scope 0", data[0].scope().get());
   ASSERT_STREQ("scriptSpec 0", data[0].scriptSpec().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
+  ASSERT_STREQ("activeCache 0", NS_ConvertUTF16toUTF8(data[0].activeCacheName()).get());
+  ASSERT_STREQ("waitingCache 0", NS_ConvertUTF16toUTF8(data[0].waitingCacheName()).get());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -179,6 +181,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("scope 1", data[1].scope().get());
   ASSERT_STREQ("scriptSpec 1", data[1].scriptSpec().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  ASSERT_STREQ("activeCache 1", NS_ConvertUTF16toUTF8(data[1].activeCacheName()).get());
+  ASSERT_STREQ("waitingCache 1", NS_ConvertUTF16toUTF8(data[1].waitingCacheName()).get());
 
   const mozilla::ipc::PrincipalInfo& info2 = data[2].principal();
   ASSERT_EQ(info2.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -190,6 +194,8 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("scope 2", data[2].scope().get());
   ASSERT_STREQ("scriptSpec 2", data[2].scriptSpec().get());
   ASSERT_STREQ("currentWorkerURL 2", data[2].currentWorkerURL().get());
+  ASSERT_STREQ("activeCache 2", NS_ConvertUTF16toUTF8(data[2].activeCacheName()).get());
+  ASSERT_STREQ("waitingCache 2", NS_ConvertUTF16toUTF8(data[2].waitingCacheName()).get());
 }
 
 TEST(ServiceWorkerRegistrar, TestDeleteData)
@@ -230,6 +236,8 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       d->scope().AppendPrintf("scope write %d", i);
       d->scriptSpec().AppendPrintf("scriptSpec write %d", i);
       d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
+      d->activeCacheName().AppendPrintf("activeCacheName write %d", i);
+      d->waitingCacheName().AppendPrintf("waitingCacheName write %d", i);
     }
 
     nsresult rv = swr->TestWriteData();
@@ -271,6 +279,14 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     test.Truncate();
     test.AppendPrintf("currentWorkerURL write %d", i);
     ASSERT_STREQ(test.get(), data[i].currentWorkerURL().get());
+
+    test.Truncate();
+    test.AppendPrintf("activeCacheName write %d", i);
+    ASSERT_STREQ(test.get(), NS_ConvertUTF16toUTF8(data[i].activeCacheName()).get());
+
+    test.Truncate();
+    test.AppendPrintf("waitingCacheName write %d", i);
+    ASSERT_STREQ(test.get(), NS_ConvertUTF16toUTF8(data[i].waitingCacheName()).get());
   }
 }
 
