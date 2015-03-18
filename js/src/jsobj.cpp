@@ -1884,10 +1884,10 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
 {
     assertSameCompartment(cx, src, dst);
     MOZ_ASSERT(src->getClass() == dst->getClass());
-    MOZ_ASSERT(src->getProto() == dst->getProto());
     MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
     MOZ_ASSERT(!src->getMetadata());
     MOZ_ASSERT(!src->isSingleton());
+    MOZ_ASSERT(src->numFixedSlots() == dst->numFixedSlots());
 
     // Save the dst metadata, if any, before we start messing with its shape.
     RootedObject dstMetadata(cx, dst->getMetadata());
@@ -1902,7 +1902,35 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
     }
 
     MOZ_ASSERT(!src->hasPrivate());
-    RootedShape shape(cx, src->lastProperty());
+    RootedShape shape(cx);
+    if (src->getProto() == dst->getProto()) {
+        shape = src->lastProperty();
+    } else {
+        // We need to generate a new shape for dst that has dst's proto but all
+        // the property information from src.  Note that we asserted above that
+        // dst's object flags are 0 and we plan to set up the metadata later, so
+        // it's OK to pass null for the metadata here.
+        shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->getTaggedProto(),
+                                            nullptr, dst->numFixedSlots(), 0);
+        if (!shape)
+            return false;
+
+        // Get an in-order list of the shapes in the src object.
+        AutoShapeVector shapes(cx);
+        for (Shape::Range<NoGC> r(src->lastProperty()); !r.empty(); r.popFront()) {
+            if (!shapes.append(&r.front()))
+                return false;
+        }
+        Reverse(shapes.begin(), shapes.end());
+
+        for (size_t i = 0; i < shapes.length(); i++) {
+            StackShape unrootedChild(shapes[i]);
+            RootedGeneric<StackShape*> child(cx, &unrootedChild);
+            shape = cx->compartment()->propertyTree.getChild(cx, shape, *child);
+            if (!shape)
+                return false;
+        }
+    }
     size_t span = shape->slotSpan();
     if (!dst->setLastProperty(cx, shape))
         return false;
