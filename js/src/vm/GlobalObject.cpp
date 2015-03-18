@@ -190,6 +190,10 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
             if (!JS_DefineFunctions(cx, ctor, funs, DontDefineLateProperties))
                 return false;
         }
+        if (const JSPropertySpec *props = clasp->spec.constructorProperties) {
+            if (!JS_DefineProperties(cx, ctor, props))
+                return false;
+        }
     }
 
     // If the prototype exists, link it with the constructor.

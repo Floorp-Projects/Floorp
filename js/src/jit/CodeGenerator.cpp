@@ -3740,7 +3740,6 @@ struct ScriptCountBlockState
     }
 };
 
-#ifdef DEBUG
 void
 CodeGenerator::branchIfInvalidated(Register temp, Label *invalidated)
 {
@@ -3755,16 +3754,13 @@ CodeGenerator::branchIfInvalidated(Register temp, Label *invalidated)
 }
 
 void
-CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mir)
+CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, TemporaryTypeSet *typeset)
 {
-    if (lir->numDefs() == 0)
-        return;
-
-    MOZ_ASSERT(lir->numDefs() == 1);
-    Register output = ToRegister(lir->getDef(0));
+    MOZ_ASSERT(type == MIRType_Object || type == MIRType_ObjectOrNull ||
+               type == MIRType_String || type == MIRType_Symbol);
 
     GeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(output);
+    regs.take(input);
 
     Register temp = regs.takeAny();
     masm.push(temp);
@@ -3774,22 +3770,21 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
     Label done;
     branchIfInvalidated(temp, &done);
 
-    if ((mir->type() == MIRType_Object || mir->type() == MIRType_ObjectOrNull) &&
-        mir->resultTypeSet() &&
-        !mir->resultTypeSet()->unknownObject())
+    if ((type == MIRType_Object || type == MIRType_ObjectOrNull) &&
+        typeset && !typeset->unknownObject())
     {
         // We have a result TypeSet, assert this object is in it.
         Label miss, ok;
-        if (mir->type() == MIRType_ObjectOrNull)
-            masm.branchPtr(Assembler::Equal, output, ImmWord(0), &ok);
-        if (mir->resultTypeSet()->getObjectCount() > 0)
-            masm.guardObjectType(output, mir->resultTypeSet(), temp, &miss);
+        if (type == MIRType_ObjectOrNull)
+            masm.branchPtr(Assembler::Equal, input, ImmWord(0), &ok);
+        if (typeset->getObjectCount() > 0)
+            masm.guardObjectType(input, typeset, temp, &miss);
         else
             masm.jump(&miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
-        masm.guardTypeSetMightBeIncomplete(output, temp, &ok);
+        masm.guardTypeSetMightBeIncomplete(input, temp, &ok);
 
         masm.assumeUnreachable("MIR instruction returned object with unexpected type");
 
@@ -3801,10 +3796,10 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
     masm.setupUnalignedABICall(2, temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
-    masm.passABIArg(output);
+    masm.passABIArg(input);
 
     void *callee;
-    switch (mir->type()) {
+    switch (type) {
       case MIRType_Object:
         callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr);
         break;
@@ -3829,19 +3824,10 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
 }
 
 void
-CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
+CodeGenerator::emitAssertResultV(const ValueOperand input, TemporaryTypeSet *typeset)
 {
-    if (lir->numDefs() == 0)
-        return;
-
-    MOZ_ASSERT(lir->numDefs() == BOX_PIECES);
-    if (!lir->getDef(0)->output()->isRegister())
-        return;
-
-    ValueOperand output = ToOutValue(lir);
-
     GeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(output);
+    regs.take(input);
 
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
@@ -3853,10 +3839,10 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     Label done;
     branchIfInvalidated(temp1, &done);
 
-    if (mir->resultTypeSet() && !mir->resultTypeSet()->unknown()) {
+    if (typeset && !typeset->unknown()) {
         // We have a result TypeSet, assert this value is in it.
         Label miss, ok;
-        masm.guardTypeSet(output, mir->resultTypeSet(), BarrierKind::TypeSet, temp1, &miss);
+        masm.guardTypeSet(input, typeset, BarrierKind::TypeSet, temp1, &miss);
         masm.jump(&ok);
 
         masm.bind(&miss);
@@ -3864,8 +3850,8 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
         // Check for cases where the type set guard might have missed due to
         // changing object groups.
         Label realMiss;
-        masm.branchTestObject(Assembler::NotEqual, output, &realMiss);
-        Register payload = masm.extractObject(output, temp1);
+        masm.branchTestObject(Assembler::NotEqual, input, &realMiss);
+        Register payload = masm.extractObject(input, temp1);
         masm.guardTypeSetMightBeIncomplete(payload, temp1, &ok);
         masm.bind(&realMiss);
 
@@ -3877,7 +3863,7 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     // Check that we have a valid GC pointer.
     saveVolatile();
 
-    masm.pushValue(output);
+    masm.pushValue(input);
     masm.movePtr(StackPointer, temp1);
 
     masm.setupUnalignedABICall(2, temp2);
@@ -3885,12 +3871,40 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     masm.passABIArg(temp2);
     masm.passABIArg(temp1);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, AssertValidValue));
-    masm.popValue(output);
+    masm.popValue(input);
     restoreVolatile();
 
     masm.bind(&done);
     masm.pop(temp2);
     masm.pop(temp1);
+}
+
+#ifdef DEBUG
+void
+CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mir)
+{
+    if (lir->numDefs() == 0)
+        return;
+
+    MOZ_ASSERT(lir->numDefs() == 1);
+    Register output = ToRegister(lir->getDef(0));
+
+    emitAssertObjectOrStringResult(output, mir->type(), mir->resultTypeSet());
+}
+
+void
+CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
+{
+    if (lir->numDefs() == 0)
+        return;
+
+    MOZ_ASSERT(lir->numDefs() == BOX_PIECES);
+    if (!lir->getDef(0)->output()->isRegister())
+        return;
+
+    ValueOperand output = ToOutValue(lir);
+
+    emitAssertResultV(output, mir->resultTypeSet());
 }
 
 void
@@ -9547,6 +9561,22 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
             masm.bind(&notneginf);
         }
     }
+}
+
+void
+CodeGenerator::visitAssertResultV(LAssertResultV *ins)
+{
+    const ValueOperand value = ToValue(ins, LAssertResultV::Input);
+    emitAssertResultV(value, ins->mirRaw()->resultTypeSet());
+}
+
+void
+CodeGenerator::visitAssertResultT(LAssertResultT *ins)
+{
+    Register input = ToRegister(ins->input());
+    MDefinition *mir = ins->mirRaw();
+
+    emitAssertObjectOrStringResult(input, mir->type(), mir->resultTypeSet());
 }
 
 void

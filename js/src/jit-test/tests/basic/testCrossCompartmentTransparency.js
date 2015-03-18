@@ -69,7 +69,6 @@ test("new Iterator({x:1})", function(i) Iterator.prototype.next.call(i).toString
 test("(function(){yield 1})()", function(i) (function(){yield})().next.call(i).toString());
 test("new String('one')", function(s) String.prototype.toSource.call(s));
 test("new String('one')", function(s) String.prototype.toString.call(s));
-test("new RegExp('1')", function(r) RegExp.prototype.toString.call(r));
 test("new RegExp('1')", function(r) RegExp.prototype.exec.call(r, '1').toString());
 test("new RegExp('1')", function(r) RegExp.prototype.test.call(r, '1'));
 test("new RegExp('1')", function(r) RegExp.prototype.compile.call(r, '1').toString());

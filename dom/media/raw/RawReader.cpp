@@ -229,7 +229,6 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   mVideoQueue.Push(v);
   mCurrentFrame++;
   a.mDecoded++;
-  currentFrameTime += USECS_PER_S / mFrameRate;
 
   return true;
 }
