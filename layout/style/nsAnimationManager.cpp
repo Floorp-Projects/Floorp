@@ -272,6 +272,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   if (newPlayers.IsEmpty()) {
     if (collection) {
+      // There might be transitions that run now that animations don't
+      // override them.
+      collection->mPlayers.Clear();
+      collection->mStyleRule = nullptr;
+      mPresContext->TransitionManager()->
+        UpdateCascadeResultsWithAnimations(collection);
+
       collection->Destroy();
     }
     return nullptr;

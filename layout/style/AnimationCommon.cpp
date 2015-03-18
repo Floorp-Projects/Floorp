@@ -741,6 +741,14 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   }
 
   mManager->CheckNeedsRefresh();
+
+  // If one of our animations just started or stopped filling, we need
+  // to notify the transition manager.  This does the notification a bit
+  // more than necessary, but it's easier than doing it exactly.
+  if (mManager->IsAnimationManager()) {
+    mManager->mPresContext->TransitionManager()->
+      UpdateCascadeResultsWithAnimations(this);
+  }
 }
 
 bool
