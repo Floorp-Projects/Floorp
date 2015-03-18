@@ -24,7 +24,7 @@ static const TrackID TRACK_VIDEO = 2;
 void
 FakeMediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
 {
-  nsRefPtr<nsIRunnable> task = aRunnable;
+  nsCOMPtr<nsIRunnable> task = aRunnable;
   NS_DispatchToMainThread(task);
 }
 

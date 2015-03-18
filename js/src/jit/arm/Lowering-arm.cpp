@@ -595,6 +595,14 @@ LIRGeneratorARM::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop
 
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation value = useRegister(ins->value());
+
+    if (!ins->hasUses()) {
+        LAtomicTypedArrayElementBinopForEffect *lir =
+            new(alloc()) LAtomicTypedArrayElementBinopForEffect(elements, index, value);
+        add(lir, ins);
+        return;
+    }
 
     // For most operations we don't need any temps because there are
     // enough scratch registers.  tempDef2 is never needed on ARM.
@@ -609,7 +617,6 @@ LIRGeneratorARM::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop
     LDefinition tempDef1 = LDefinition::BogusTemp();
     LDefinition tempDef2 = LDefinition::BogusTemp();
 
-    const LAllocation value = useRegister(ins->value());
     if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
         tempDef1 = temp();
 
@@ -673,6 +680,14 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 
     MDefinition *ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    if (!ins->hasUses()) {
+        LAsmJSAtomicBinopHeapForEffect *lir =
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
+                                                        useRegister(ins->value()));
+        add(lir, ins);
+        return;
+    }
 
     LAsmJSAtomicBinopHeap *lir =
         new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),

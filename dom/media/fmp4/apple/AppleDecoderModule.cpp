@@ -96,7 +96,7 @@ AppleDecoderModule::CanDecode()
     if (NS_IsMainThread()) {
       Init();
     } else {
-      nsRefPtr<nsIRunnable> task(new InitTask());
+      nsCOMPtr<nsIRunnable> task(new InitTask());
       NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
     }
   }
@@ -127,7 +127,7 @@ AppleDecoderModule::Startup()
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsIRunnable> task(new LinkTask());
+  nsCOMPtr<nsIRunnable> task(new LinkTask());
   NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
 
   return NS_OK;
@@ -152,7 +152,7 @@ public:
 nsresult
 AppleDecoderModule::Shutdown()
 {
-  nsRefPtr<nsIRunnable> task(new UnlinkTask());
+  nsCOMPtr<nsIRunnable> task(new UnlinkTask());
   NS_DispatchToMainThread(task);
   return NS_OK;
 }
