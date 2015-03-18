@@ -1933,12 +1933,12 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     // "Translate" the float manager with an offset of (0, 0) in order to
     // set the origin to our writing mode
     LogicalPoint oPt(wm);
-    WritingMode oldWM = floatManager->Translate(wm, oPt);
+    WritingMode oldWM = floatManager->Translate(wm, oPt, containerWidth);
     bool isDirty = floatManager->IntersectsDamage(wm, lineBCoordBefore,
                                                   lineBCoordAfter) ||
                    floatManager->IntersectsDamage(wm, lineBCoordCombinedBefore,
                                                   lineBCoordCombinedAfter);
-    floatManager->Untranslate(oldWM, oPt);
+    floatManager->Untranslate(oldWM, oPt, containerWidth);
     if (isDirty) {
       aLine->MarkDirty();
       return;
@@ -6172,9 +6172,9 @@ nsBlockFrame::RecoverFloatsFor(nsIFrame*       aFrame,
     // accordingly so that we consider relatively positioned frames
     // at their original position.
     LogicalPoint pos = block->GetLogicalNormalPosition(aWM, aContainerWidth);
-    WritingMode oldWM = aFloatManager.Translate(aWM, pos);
+    WritingMode oldWM = aFloatManager.Translate(aWM, pos, aContainerWidth);
     block->RecoverFloats(aFloatManager, aWM, aContainerWidth);
-    aFloatManager.Untranslate(oldWM, pos);
+    aFloatManager.Untranslate(oldWM, pos, aContainerWidth);
   }
 }
 
