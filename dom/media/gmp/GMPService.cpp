@@ -191,6 +191,27 @@ GeckoMediaPluginService::Init()
     prefs->AddObserver("media.gmp.plugin.crash", this, false);
   }
 
+  nsresult rv = InitStorage();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Kick off scanning for plugins
+  nsCOMPtr<nsIThread> thread;
+  return GetThread(getter_AddRefs(thread));
+}
+
+
+nsresult
+GeckoMediaPluginService::InitStorage()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // GMP storage should be used in the chrome process only.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_OK;
+  }
+
   // Directory service is main thread only, so cache the profile dir here
   // so that we can use it off main thread.
 #ifdef MOZ_WIDGET_GONK
@@ -213,9 +234,7 @@ GeckoMediaPluginService::Init()
     return rv;
   }
 
-  // Kick off scanning for plugins
-  nsCOMPtr<nsIThread> thread;
-  return GetThread(getter_AddRefs(thread));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
