@@ -14,6 +14,7 @@ import org.mozilla.gecko.overlays.ui.SendTabList.State;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -91,6 +92,11 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         TextView row = (TextView) convertView;
         if (row == null) {
             row = (TextView) View.inflate(context, R.layout.overlay_share_send_tab_item, null);
+        }
+
+        // The first view in the list has a unique style.
+        if (position == 0) {
+            row.setBackgroundResource(R.drawable.overlay_share_button_background_first);
         }
 
         if (currentState != State.LIST) {

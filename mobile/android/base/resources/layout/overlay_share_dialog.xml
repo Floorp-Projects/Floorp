@@ -44,7 +44,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:background="@color/overlay_share_background"
             android:orientation="vertical">
 
             <!-- "Send to Firefox Sync" -->
@@ -58,12 +57,14 @@
             <org.mozilla.gecko.overlays.ui.OverlayDialogButton
                 style="@style/ShareOverlayButton.Text.Container"
                 android:id="@+id/overlay_share_reading_list_btn"
+                android:background="@drawable/overlay_share_button_background"
                 android:enabled="false"/>
 
             <!-- "Add bookmark" -->
             <org.mozilla.gecko.overlays.ui.OverlayDialogButton
                 style="@style/ShareOverlayButton.Text.Container"
                 android:id="@+id/overlay_share_bookmark_btn"
+                android:background="@drawable/overlay_share_button_background"
                 android:enabled="false"/>
 
         </LinearLayout>
