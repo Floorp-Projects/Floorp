@@ -211,8 +211,6 @@ class GCMarker : public JSTracer
      * non-incremental GC.
      */
     bool hasBufferedGrayRoots() const;
-    void startBufferingGrayRoots();
-    void endBufferingGrayRoots();
     void resetBufferedGrayRoots();
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);

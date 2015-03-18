@@ -653,28 +653,6 @@ GCMarker::hasBufferedGrayRoots() const
 }
 
 void
-GCMarker::startBufferingGrayRoots()
-{
-    MOZ_ASSERT(runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Unused);
-    runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Okay;
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
-        MOZ_ASSERT(zone->gcGrayRoots.empty());
-
-    MOZ_ASSERT(!callback);
-    callback = GrayCallback;
-    MOZ_ASSERT(IsMarkingGray(this));
-}
-
-void
-GCMarker::endBufferingGrayRoots()
-{
-    MOZ_ASSERT(IsMarkingGray(this));
-    callback = nullptr;
-    MOZ_ASSERT(runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Okay ||
-               runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Failed);
-}
-
-void
 GCMarker::resetBufferedGrayRoots()
 {
     for (GCZonesIter zone(runtime()); !zone.done(); zone.next())

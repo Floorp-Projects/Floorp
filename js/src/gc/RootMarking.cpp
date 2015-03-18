@@ -556,8 +556,34 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 void
 js::gc::GCRuntime::bufferGrayRoots()
 {
-    marker.startBufferingGrayRoots();
+    // Precondition: the state has been reset to "unused" after the last GC
+    //               and the zone's buffers have been cleared.
+    MOZ_ASSERT(grayBufferState == GrayBufferState::Unused);
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        MOZ_ASSERT(zone->gcGrayRoots.empty());
+
+    // The state starts at "Okay" and may be toggled to "Failed" if we OOM
+    // while marking.
+    grayBufferState = GrayBufferState::Okay;
+
+    // Transform the GCMarker into an unholy CallbackTracer doppleganger.
+    MOZ_ASSERT(!IsMarkingGray(&marker));
+    MOZ_ASSERT(IsMarkingTracer(&marker));
+    MOZ_ASSERT(!marker.callback);
+    marker.callback = GCMarker::GrayCallback;
+    MOZ_ASSERT(IsMarkingGray(&marker));
+
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&marker, grayRootTracer.data);
-    marker.endBufferingGrayRoots();
+
+    // Restore the GCMarker to its former correctness.
+    MOZ_ASSERT(IsMarkingGray(&marker));
+    marker.callback = nullptr;
+    MOZ_ASSERT(!IsMarkingGray(&marker));
+    MOZ_ASSERT(IsMarkingTracer(&marker));
+
+    // Postcondition: the state remains at "Okay", or has been toggled to
+    //                "Failed" during marking.
+    MOZ_ASSERT(grayBufferState == GrayBufferState::Okay ||
+               grayBufferState == GrayBufferState::Failed);
 }
