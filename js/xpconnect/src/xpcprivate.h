@@ -2005,8 +2005,6 @@ private:
     XPCWrappedNativeTearOffChunk* mNextChunk;
 };
 
-void *xpc_GetJSPrivate(JSObject *obj);
-
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
 // to be used from JavaScript.
