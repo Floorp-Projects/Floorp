@@ -78,6 +78,7 @@
 
   <string name="quit">&quit;</string>
   <string name="bookmark">&bookmark;</string>
+  <string name="bookmark_remove">&bookmark_remove;</string>
   <string name="bookmark_added">&bookmark_added;</string>
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
