@@ -28,7 +28,6 @@
 
         <!-- Large attractive green tick with label to the right -->
         <TextView
-            style="@style/ShareOverlayButton"
             android:textAppearance="@style/ShareOverlayTextAppearance.Button"
             android:id="@+id/overlay_toast_message"
             android:layout_width="match_parent"
@@ -36,6 +35,11 @@
             android:maxLines="1"
             android:textColor="@color/text_color_primary"
             android:textSize="14sp"
+            android:minHeight="60dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:paddingTop="17dp"
+            android:paddingBottom="17dp"
             android:drawablePadding="15dp"
             android:drawableLeft="@drawable/overlay_check"/>
 
