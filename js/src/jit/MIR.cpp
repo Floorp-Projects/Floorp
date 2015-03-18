@@ -1895,6 +1895,26 @@ MUrsh::infer(BaselineInspector* inspector, jsbytecode* pc)
 }
 
 static inline bool
+CanProduceNegativeZero(MDefinition* def) {
+    // Test if this instruction can produce negative zero even when bailing out
+    // and changing types.
+    switch (def->op()) {
+        case MDefinition::Op_Constant:
+            if (def->type() == MIRType_Double && def->constantValue().toDouble() == -0.0)
+                return true;
+        case MDefinition::Op_BitAnd:
+        case MDefinition::Op_BitOr:
+        case MDefinition::Op_BitXor:
+        case MDefinition::Op_BitNot:
+        case MDefinition::Op_Lsh:
+        case MDefinition::Op_Rsh:
+            return false;
+        default:
+            return true;
+    }
+}
+
+static inline bool
 NeedNegativeZeroCheck(MDefinition* def)
 {
     // Test if all uses have the same semantics for -0 and 0
@@ -1922,42 +1942,47 @@ NeedNegativeZeroCheck(MDefinition* def)
                 second = temp;
             }
 
-            if (def == first) {
-                // Negative zero checks can be removed on the first executed
-                // operand only if it is guaranteed the second executed operand
-                // will produce a value other than -0. While the second is
-                // typed as an int32, a bailout taken between execution of the
-                // operands may change that type and cause a -0 to flow to the
-                // second.
-                //
-                // There is no way to test whether there are any bailouts
-                // between execution of the operands, so remove negative
-                // zero checks from the first only if the second's type is
-                // independent from type changes that may occur after bailing.
-                switch (second->op()) {
-                  case MDefinition::Op_Constant:
-                  case MDefinition::Op_BitAnd:
-                  case MDefinition::Op_BitOr:
-                  case MDefinition::Op_BitXor:
-                  case MDefinition::Op_BitNot:
-                  case MDefinition::Op_Lsh:
-                  case MDefinition::Op_Rsh:
-                    break;
-                  default:
-                    return true;
-                }
-            }
+            // Negative zero checks can be removed on the first executed
+            // operand only if it is guaranteed the second executed operand
+            // will produce a value other than -0. While the second is
+            // typed as an int32, a bailout taken between execution of the
+            // operands may change that type and cause a -0 to flow to the
+            // second.
+            //
+            // There is no way to test whether there are any bailouts
+            // between execution of the operands, so remove negative
+            // zero checks from the first only if the second's type is
+            // independent from type changes that may occur after bailing.
+            if (def == first && CanProduceNegativeZero(second))
+                return true;
 
             // The negative zero check can always be removed on the second
             // executed operand; by the time this executes the first will have
             // been evaluated as int32 and the addition's result cannot be -0.
             break;
           }
-          case MDefinition::Op_Sub:
+          case MDefinition::Op_Sub: {
             // If sub is truncating -0 and 0 are observed as the same
             if (use_def->toSub()->isTruncated())
                 break;
+
+            // x + y gives -0, when x is -0 and y is 0
+
+            // We can remove the negative zero check on the rhs, only if we
+            // are sure the lhs isn't negative zero.
+
+            // The lhs is typed as integer (i.e. not -0.0), but it can bailout
+            // and change type. This should be fine if the lhs is executed
+            // first. However if the rhs is executed first, the lhs can bail,
+            // change type and become -0.0 while the rhs has already been
+            // optimized to not make a difference between zero and negative zero.
+            MDefinition* lhs = use_def->toSub()->lhs();
+            MDefinition* rhs = use_def->toSub()->rhs();
+            if (rhs->id() < lhs->id() && CanProduceNegativeZero(lhs))
+                return true;
+
             /* Fall through...  */
+          }
           case MDefinition::Op_StoreElement:
           case MDefinition::Op_StoreElementHole:
           case MDefinition::Op_LoadElement:
