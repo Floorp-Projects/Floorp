@@ -4,6 +4,7 @@
 
 from mozboot.base import BaseBootstrapper
 
+
 class FedoraBootstrapper(BaseBootstrapper):
     def __init__(self, version, dist_id):
         BaseBootstrapper.__init__(self)
