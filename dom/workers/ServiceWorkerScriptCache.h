@@ -21,6 +21,19 @@ PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName);
 nsresult
 GenerateCacheName(nsAString& aName);
 
+class CompareCallback
+{
+public:
+  virtual void ComparisonResult(nsresult aStatus, bool aInCacheAndEqual) = 0;
+
+  virtual MozExternalRefCountType AddRef() = 0;
+  virtual MozExternalRefCountType Release() = 0;
+};
+
+nsresult
+Compare(nsIPrincipal* aPrincipal, const nsAString& aCacheName,
+        const nsAString& aURL, CompareCallback* aCallback);
+
 } // serviceWorkerScriptCache namespace
 
 } // workers namespace

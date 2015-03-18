@@ -502,7 +502,7 @@ GetRequiredScopeStringPrefix(const nsACString& aScriptSpec, nsACString& aPrefix)
 } // anonymous namespace
 
 class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
-                                       public nsIStreamLoaderObserver
+                                       public serviceWorkerScriptCache::CompareCallback
 {
   friend class ContinueInstallTask;
 
@@ -587,60 +587,40 @@ public:
     Update();
   }
 
-  NS_IMETHOD
-  OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
-                   nsresult aStatus, uint32_t aLen,
-                   const uint8_t* aString) override
+  void
+  ComparisonResult(nsresult aStatus, bool aInCacheAndEqual) override
   {
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
-      return aStatus;
+      return;
     }
 
-    nsCOMPtr<nsIRequest> request;
-    nsresult rv = aLoader->GetRequest(getter_AddRefs(request));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      Fail(NS_ERROR_DOM_TYPE_ERR);
-      return rv;
+    if (aInCacheAndEqual) {
+      Succeed();
+      return;
     }
 
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
-    if (!httpChannel) {
-      Fail(NS_ERROR_DOM_TYPE_ERR);
-      return NS_ERROR_FAILURE;
-    }
-
-    bool requestSucceeded;
-    rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
-    if (NS_WARN_IF(NS_FAILED(rv) || !requestSucceeded)) {
-      Fail(NS_ERROR_DOM_TYPE_ERR);
-      return rv;
-    }
-
-    // FIXME(nsm): "Extract mime type..."
-    // FIXME(baku): The byte-by-byte check with the older script is performed by ScriptLoader.
-    NS_WARNING("Byte wise check is disabled, just using new one");
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
     // FIXME: Bug 1130101 - Read max scope from Service-Worker-Allowed header.
     nsAutoCString allowedPrefix;
-    rv = GetRequiredScopeStringPrefix(mRegistration->mScriptSpec, allowedPrefix);
+    nsresult rv = GetRequiredScopeStringPrefix(mRegistration->mScriptSpec, allowedPrefix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(NS_ERROR_DOM_SECURITY_ERR);
-      return rv;
+      return;
     }
 
     if (!StringBeginsWith(mRegistration->mScope, allowedPrefix)) {
       NS_WARNING("By default a service worker's scope is restricted to at or below it's script's location.");
       Fail(NS_ERROR_DOM_SECURITY_ERR);
-      return NS_ERROR_DOM_SECURITY_ERR;
+      return;
     }
 
     nsAutoString cacheName;
     rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
-      return rv;
+      return;
     }
 
     // We have to create a ServiceWorker here simply to ensure there are no
@@ -660,7 +640,7 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) {
       swm->mSetOfScopesBeingUpdated.Remove(mRegistration->mScope);
       Fail(NS_ERROR_DOM_ABORT_ERR);
-      return rv;
+      return;
     }
 
     nsRefPtr<ServiceWorkerJob> upcasted = this;
@@ -675,10 +655,8 @@ public:
     if (NS_WARN_IF(!ok)) {
       swm->mSetOfScopesBeingUpdated.Remove(mRegistration->mScope);
       Fail(NS_ERROR_DOM_ABORT_ERR);
-      return NS_ERROR_FAILURE;
+      return;
     }
-
-    return NS_OK;
   }
 
   // Public so our error handling code can use it.
@@ -774,42 +752,20 @@ private:
       mRegistration->mInstallingWorker = nullptr;
     }
 
-    // FIXME(nsm): Plug in FetchDriver when it is ready.
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), mRegistration->mScriptSpec, nullptr, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Fail(rv);
+    nsRefPtr<ServiceWorkerInfo> workerInfo = mRegistration->Newest();
+    nsAutoString cacheName;
+
+    // 9.2.20 If newestWorker is not null, and newestWorker's script url is
+    // equal to registration's registering script url and response is a
+    // byte-for-byte match with the script resource of newestWorker...
+    if (workerInfo && workerInfo->ScriptSpec().Equals(mRegistration->mScriptSpec)) {
+      cacheName = workerInfo->CacheName();
     }
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       uri,
-                       mPrincipal,
-                       nsILoadInfo::SEC_NORMAL,
-                       nsIContentPolicy::TYPE_SCRIPT); // FIXME(nsm): TYPE_SERVICEWORKER
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Fail(rv);
-    }
-
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    if (httpChannel) {
-      // Spec says no redirects allowed for SW scripts.
-      httpChannel->SetRedirectionLimit(0);
-    }
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(channel);
-    if (internalChannel) {
-      // Don't let serviceworker intercept.
-      internalChannel->ForceNoIntercept();
-    }
-
-    nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Fail(rv);
-    }
-
-    rv = channel->AsyncOpen(loader, nullptr);
+    nsresult rv =
+      serviceWorkerScriptCache::Compare(mRegistration->mPrincipal, cacheName,
+                                        NS_ConvertUTF8toUTF16(mRegistration->mScriptSpec),
+                                        this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(rv);
     }
