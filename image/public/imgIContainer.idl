@@ -98,7 +98,7 @@ native nsIntRectByVal(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
 native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
-[ptr] native ImageContainer(mozilla::layers::ImageContainer);
+native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
 native Orientation(mozilla::image::Orientation);
@@ -116,7 +116,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(9a43298b-bf49-44fc-9abe-9ff702f1bd25)]
+[scriptable, builtinclass, uuid(44fbd7d5-e417-4d31-ae4a-8ad61d07eb3c)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -277,8 +277,17 @@ interface imgIContainer : nsISupports
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
    * frame. Only valid for RASTER type images.
+   *
+   * @param aManager The LayerManager which will be used to create the
+   *                 ImageContainer.
+   * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
+   *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
+   *               are supported.
+   * @return An ImageContainer for the current frame, or nullptr if one could
+   *         not be created.
    */
-  [noscript] ImageContainer getImageContainer(in LayerManager aManager);
+  [noscript, notxpcom] TempRefImageContainer getImageContainer(in LayerManager aManager,
+                                                               in uint32_t aFlags);
 
   /**
    * Draw the requested frame of this image onto the context specified.

@@ -1427,9 +1427,11 @@ already_AddRefed<ImageContainer>
 nsDisplayImage::GetContainer(LayerManager* aManager,
                              nsDisplayListBuilder* aBuilder)
 {
-  nsRefPtr<ImageContainer> container;
-  mImage->GetImageContainer(aManager, getter_AddRefs(container));
-  return container.forget();
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  return mImage->GetImageContainer(aManager, flags);
 }
 
 gfxRect
@@ -1489,8 +1491,12 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  nsRefPtr<ImageContainer> container;
-  mImage->GetImageContainer(aManager, getter_AddRefs(container));
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  nsRefPtr<ImageContainer> container =
+    mImage->GetImageContainer(aManager, flags);
   if (!container) {
     return LAYER_NONE;
   }
@@ -1534,9 +1540,15 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager,
                            const ContainerLayerParameters& aParameters)
 {
-  nsRefPtr<ImageContainer> container;
-  nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  nsRefPtr<ImageContainer> container =
+    mImage->GetImageContainer(aManager, flags);
+  if (!container) {
+    return nullptr;
+  }
 
   nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
