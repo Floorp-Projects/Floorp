@@ -345,6 +345,15 @@ WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
     return true;
 }
 
+bool
+WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
+                                          nsCString* const out_userName,
+                                          bool* const out_isArray) const
+{
+    // TODO: Extract block information from shader validator.
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Boilerplate
 
