@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1120705</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<select id="sel">
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+  <option value="10">10</option>
+  <option value="11">11</option>
+  <option value="12">12</option>
+  <option value="13">13</option>
+  <option value="14">14</option>
+  <option value="15">15</option>
+  <option value="16">16</option>
+  <option value="17">17</option>
+  <option value="18">18</option>
+  <option value="19">19</option>
+  <option value="20">20</option>
+</select>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+
+function clickDownButton() {
+  var sel = document.getElementById("sel");
+  var scrollbar_width = sel.offsetWidth - sel.clientWidth;
+  synthesizeMouse(sel,
+                  sel.offsetWidth - scrollbar_width / 2,
+                  sel.offsetHeight - scrollbar_width / 2,
+                  { type: "mousedown" });
+
+  synthesizeMouse(sel,
+                  sel.offsetWidth - scrollbar_width / 2,
+                  sel.offsetHeight - scrollbar_width / 2,
+                  { type: "mouseup" });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({
+    "set": [["general.smoothScroll", false],
+            ["toolkit.scrollbox.verticalScrollDistance", 3]]},
+    function() {
+      var sel = document.getElementById("sel");
+      sel.size = 2;
+      sel.scrollTo(0, 0);
+      clickDownButton();
+      window.requestAnimationFrame(function() {
+        var restricted_top = sel.scrollTop;
+        isnot(restricted_top, 0,
+              "Expected to scroll when clicking scrollbar button");
+        sel.size = 10;
+        sel.scrollTo(0, 0);
+        clickDownButton();
+        window.requestAnimationFrame(function() {
+          isnot(sel.scrollTop, restricted_top,
+                "Scrollbar button scrolling should be limited by page size");
+          SimpleTest.finish();
+        });
+      });
+    });
+});
+</script>
+</pre>
+</body>
+
+</html>
+
