@@ -26,7 +26,7 @@ HOMEBREW_AUTOCONF213 = 'https://raw.github.com/Homebrew/homebrew-versions/master
 MACPORTS_URL = {'9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.2.1-10.9-Mavericks.pkg',
                 '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.8-MountainLion.pkg',
                 '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
-                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg',}
+                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg', }
 
 MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 

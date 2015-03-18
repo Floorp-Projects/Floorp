@@ -100,7 +100,7 @@ class Bootstrapper(object):
                 sys.platform.startswith('freebsd'):
             cls = FreeBSDBootstrapper
             args['version'] = platform.release()
-            args['flavor']  = platform.system()
+            args['flavor'] = platform.system()
 
         if cls is None:
             raise NotImplementedError('Bootstrap support is not yet available '
@@ -110,7 +110,7 @@ class Bootstrapper(object):
 
     def bootstrap(self):
         # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
-        labels = [ '%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS) ]
+        labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS)]
         prompt = APPLICATION_CHOICE % '\n'.join(labels)
         choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
         name, application = APPLICATIONS[choice-1]

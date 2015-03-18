@@ -9,7 +9,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
     def __init__(self, version, flavor):
         BaseBootstrapper.__init__(self)
         self.version = int(version.split('.')[0])
-        self.flavor  = flavor.lower()
+        self.flavor = flavor.lower()
 
         self.packages = [
             'autoconf213',
