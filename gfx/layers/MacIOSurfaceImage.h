@@ -15,8 +15,7 @@ namespace mozilla {
 
 namespace layers {
 
-class MacIOSurfaceImage : public Image,
-                          public ISharedImage {
+class MacIOSurfaceImage : public Image {
 public:
   void SetSurface(MacIOSurface* aSurface) { mSurface = aSurface; }
   MacIOSurface* GetSurface() { return mSurface; }
@@ -25,12 +24,9 @@ public:
     return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
   }
 
-  virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
-
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
-  virtual uint8_t* GetBuffer() MOZ_OVERRIDE { return nullptr; }
 
   MacIOSurfaceImage() : Image(nullptr, ImageFormat::MAC_IOSURFACE) {}
 
