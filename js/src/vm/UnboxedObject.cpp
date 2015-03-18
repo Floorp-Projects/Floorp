@@ -72,6 +72,9 @@ UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
 {
     using namespace jit;
 
+    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+        return false;
+
     UnboxedLayout &layout = group->unboxedLayout();
     MOZ_ASSERT(!layout.constructorCode());
 
