@@ -510,7 +510,9 @@ protected:
         this,
         (aNowTime - mTargetTime).ToMilliseconds(),
         delay);
+#ifndef ANDROID  /* bug 1142079 */
     Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_FRAME_DELAY_MS, (aNowTime - mTargetTime).ToMilliseconds());
+#endif
 
     // then schedule the timer
     LOG("[%p] scheduling callback for %d ms (2)", this, delay);
@@ -625,7 +627,9 @@ protected:
         this,
         (aNowTime - mTargetTime).ToMilliseconds(),
         delay);
+#ifndef ANDROID  /* bug 1142079 */
     Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_FRAME_DELAY_MS, (aNowTime - mTargetTime).ToMilliseconds());
+#endif
 
     // then schedule the timer
     LOG("[%p] scheduling callback for %d ms (2)", this, delay);
@@ -1725,7 +1729,9 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
   }
 
+#ifndef ANDROID  /* bug 1142079 */
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::REFRESH_DRIVER_TICK, mTickStart);
+#endif
 
   for (uint32_t i = 0; i < mPostRefreshObservers.Length(); ++i) {
     mPostRefreshObservers[i]->DidRefresh();
