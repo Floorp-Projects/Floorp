@@ -47,7 +47,8 @@ runWithMSE(function () {
     ok(sb, "Create a SourceBuffer");
     is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
     is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
-    is(ms.activeSourceBuffers[0], sb, "SourceBuffer in active list matches our SourceBuffer");
+    is(ms.activeSourceBuffers.length, 0, "MediaSource.activeSourceBuffers is expected length");
+
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
@@ -70,6 +71,7 @@ runWithMSE(function () {
     });
 
     sb.addEventListener("updateend", function () {
+      is(ms.activeSourceBuffers[0], sb, "SourceBuffer in active list matches our SourceBuffer");
       is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
       updateendCount++;
       v.play();

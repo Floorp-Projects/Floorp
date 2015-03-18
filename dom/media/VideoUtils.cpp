@@ -233,6 +233,12 @@ ExtractH264CodecDetails(const nsAString& aCodec,
   aLevel = PromiseFlatString(Substring(aCodec, 9, 2)).ToInteger(&rv, 16);
   NS_ENSURE_SUCCESS(rv, false);
 
+  if (aLevel == 9) {
+    aLevel = H264_LEVEL_1_b;
+  } else if (aLevel <= 5) {
+    aLevel *= 10;
+  }
+
   // Capture the constraint_set flag value for the purpose of Telemetry.
   // We don't NS_ENSURE_SUCCESS here because ExtractH264CodecDetails doesn't
   // care about this, but we make sure constraints is above 4 (constraint_set5_flag)
