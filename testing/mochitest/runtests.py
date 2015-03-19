@@ -503,8 +503,7 @@ class MochitestUtilsMixin(object):
     if options.logFile:
       options.logFile = self.getLogFilePath(options.logFile)
 
-    # Note that all tests under options.subsuite need to be browser chrome tests.
-    if options.browserChrome or options.chrome or options.subsuite or \
+    if options.browserChrome or options.chrome or \
        options.a11y or options.webapprtChrome or options.jetpackPackage or \
        options.jetpackAddon:
       self.makeTestConfig(options)
