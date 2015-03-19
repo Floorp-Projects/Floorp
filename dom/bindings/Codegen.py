@@ -3351,8 +3351,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
-                Argument('JS::MutableHandle<JSObject*>', 'aReflector'),
-                Argument('JS::Handle<JSObject*>', 'aGivenProto', 'JS::NullPtr()')]
+                Argument('JS::Handle<JSObject*>', 'aGivenProto'),
+                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.properties = properties
 

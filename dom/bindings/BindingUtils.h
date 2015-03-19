@@ -1038,7 +1038,7 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    if (!value->WrapObject(cx, &obj)) {
+    if (!value->WrapObject(cx, JS::NullPtr(), &obj)) {
       return false;
     }
   }
@@ -1084,7 +1084,7 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    if (!value->WrapObject(cx, &obj)) {
+    if (!value->WrapObject(cx, JS::NullPtr(), &obj)) {
       return false;
     }
 

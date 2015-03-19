@@ -37,9 +37,10 @@ VRFieldOfView::Constructor(const GlobalObject& aGlobal,
 
 bool
 VRFieldOfView::WrapObject(JSContext* aCx,
+                          JS::Handle<JSObject*> aGivenProto,
                           JS::MutableHandle<JSObject*> aReflector)
 {
-  return VRFieldOfViewBinding::Wrap(aCx, this, aReflector);
+  return VRFieldOfViewBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRPositionState, mParent)

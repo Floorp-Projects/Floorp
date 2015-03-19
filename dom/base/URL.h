@@ -44,7 +44,7 @@ public:
 
   // WebIDL methods
   bool
-  WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
   static already_AddRefed<URL>
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,

@@ -167,9 +167,9 @@ TimeRanges::Find(double aTime, double aTolerance /* = 0 */)
 }
 
 bool
-TimeRanges::WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
+TimeRanges::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
-  return TimeRangesBinding::Wrap(aCx, this, aReflector);
+  return TimeRangesBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 void

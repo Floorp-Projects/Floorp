@@ -65,7 +65,7 @@ public:
     already_AddRefed<nsINode> PreviousNode(ErrorResult& aResult);
     already_AddRefed<nsINode> NextNode(ErrorResult& aResult);
 
-    bool WrapObject(JSContext *aCx, JS::MutableHandle<JSObject*> aReflector);
+    bool WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
 private:
     nsCOMPtr<nsINode> mCurrentNode;
