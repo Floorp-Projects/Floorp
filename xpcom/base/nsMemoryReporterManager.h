@@ -151,6 +151,9 @@ public:
   // when debugging transient memory spikes with printf instrumentation.
   static int64_t ResidentFast();
 
+  // Convenience function to get peak RSS easily from other code.
+  static int64_t ResidentPeak();
+
   // Convenience function to get USS easily from other code.  This is useful
   // when debugging unshared memory pages for forked processes.
   static int64_t ResidentUnique();

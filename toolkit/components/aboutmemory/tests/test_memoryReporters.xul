@@ -157,6 +157,7 @@
     "vsizeMaxContiguous",
     "resident",
     "residentFast",
+    "residentPeak",
     "residentUnique",
     "heapAllocated",
     "heapOverheadRatio",
