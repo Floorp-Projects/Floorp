@@ -554,6 +554,7 @@ public:
   // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
   // from MediaManager thread.
   static MediaManager* Get();
+  static MediaManager* GetIfExists();
   static MessageLoop* GetMessageLoop();
 
   static bool Exists()
