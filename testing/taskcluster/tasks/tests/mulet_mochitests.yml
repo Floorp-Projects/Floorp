@@ -14,6 +14,7 @@ task:
         --no-read-buildbot-config
         --config-file ./mozharness/configs/unittests/linux_unittest.py
         --config-file ./mozharness_configs/linux_mulet_config.py
+        --config-file ./mozharness_configs/remove_executables.py
         --installer-url {{build_url}}
         --test-url {{tests_url}}
         --download-symbols ondemand
