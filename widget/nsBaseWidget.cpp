@@ -1422,16 +1422,6 @@ nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
   return false;
 }
 
-NS_METHOD nsBaseWidget::RegisterTouchWindow()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsBaseWidget::UnregisterTouchWindow()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsBaseWidget::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
                                              double aOriginalDeltaY,
