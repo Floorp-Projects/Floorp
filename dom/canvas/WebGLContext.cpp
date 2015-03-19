@@ -342,14 +342,8 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundTransformFeedback = nullptr;
     mDefaultTransformFeedback = nullptr;
 
-    if (mBoundTransformFeedbackBuffers) {
-        for (GLuint i = 0; i < mGLMaxTransformFeedbackSeparateAttribs; i++) {
-            mBoundTransformFeedbackBuffers[i] = nullptr;
-        }
-    }
-
-    for (GLuint i = 0; i < mGLMaxUniformBufferBindings; i++)
-        mBoundUniformBuffers[i] = nullptr;
+    mBoundTransformFeedbackBuffers.Clear();
+    mBoundUniformBuffers.Clear();
 
     while (!mTextures.isEmpty())
         mTextures.getLast()->DeleteOnce();
@@ -826,6 +820,11 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
         // If we've already drawn, we should commit the current buffer.
         PresentScreenBuffer();
+
+        if (IsContextLost()) {
+            GenerateWarning("WebGL context was lost due to swap failure.");
+            return NS_OK;
+        }
 
         // ResizeOffscreen scraps the current prod buffer before making a new one.
         if (!ResizeBackbuffer(width, height)) {

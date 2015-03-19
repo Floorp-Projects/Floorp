@@ -136,7 +136,6 @@ MOZ_ALWAYS_INLINE void
 JSDependentString::init(js::ExclusiveContext *cx, JSLinearString *base, size_t start,
                         size_t length)
 {
-    MOZ_ASSERT(!js::IsPoisonedPtr(base));
     MOZ_ASSERT(start + length <= base->length());
     d.u1.length = length;
     JS::AutoCheckCannotGC nogc;

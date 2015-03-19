@@ -2564,6 +2564,10 @@ CodeGenerator::visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic *lir)
     }
 
     if (mir->numUnboxedGroups()) {
+        // The guard requires that unboxed objects not have expandos.
+        bailoutCmpPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfShape()),
+                      ImmWord(0), lir->snapshot());
+
         masm.loadObjGroup(obj, temp);
 
         for (size_t i = 0; i < mir->numUnboxedGroups(); i++) {

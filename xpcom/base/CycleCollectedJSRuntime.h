@@ -7,10 +7,10 @@
 #ifndef mozilla_CycleCollectedJSRuntime_h__
 #define mozilla_CycleCollectedJSRuntime_h__
 
+#include "mozilla/DeferredFinalize.h"
 #include "mozilla/MemoryReporting.h"
 #include "jsapi.h"
 
-#include "nsCycleCollector.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
