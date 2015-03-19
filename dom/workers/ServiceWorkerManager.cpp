@@ -621,7 +621,8 @@ public:
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
     swm->mSetOfScopesBeingUpdated.Put(mRegistration->mScope, true);
     nsRefPtr<ServiceWorkerInfo> dummyInfo =
-      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec);
+      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec,
+                            EmptyString()); // TODO(baku) this has to be generated.
     nsRefPtr<ServiceWorker> serviceWorker;
     rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
                                   dummyInfo,
@@ -678,7 +679,8 @@ public:
 
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER);
-    mRegistration->mInstallingWorker = new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec);
+    mRegistration->mInstallingWorker =
+      new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec, EmptyString()); // TODO(baku)
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
     Succeed();
@@ -1750,22 +1752,34 @@ ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
-
-  RuntimeService* rs = RuntimeService::GetOrCreateService();
-  nsRefPtr<SharedWorker> sharedWorker;
+  MOZ_ASSERT(aInfo);
 
   AutoJSAPI jsapi;
   jsapi.Init(aWindow);
   JSContext* cx = jsapi.cx();
 
-  nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(aWindow);
-  JS::Rooted<JSObject*> jsGlobal(cx, sgo->GetGlobalJSObject());
-  GlobalObject global(cx, jsGlobal);
-  nsresult rv = rs->CreateSharedWorkerForServiceWorker(global,
-                                                       NS_ConvertUTF8toUTF16(aInfo->ScriptSpec()),
-                                                       aInfo->Scope(),
-                                                       getter_AddRefs(sharedWorker));
+  WorkerLoadInfo loadInfo;
+  nsresult rv = WorkerPrivate::GetLoadInfo(cx, aWindow, nullptr,
+                                           NS_ConvertUTF8toUTF16(aInfo->ScriptSpec()),
+                                           false,
+                                           WorkerPrivate::OverrideLoadGroup,
+                                           &loadInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
+  loadInfo.mServiceWorkerCacheName = aInfo->CacheName();
+
+  RuntimeService* rs = RuntimeService::GetOrCreateService();
+  if (!rs) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<SharedWorker> sharedWorker;
+  rv = rs->CreateSharedWorkerForServiceWorkerFromLoadInfo(cx, &loadInfo,
+                                                          NS_ConvertUTF8toUTF16(aInfo->ScriptSpec()),
+                                                          aInfo->Scope(),
+                                                          getter_AddRefs(sharedWorker));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1798,7 +1812,7 @@ ServiceWorkerManager::LoadRegistrations(
     const nsCString& currentWorkerURL = aRegistrations[i].currentWorkerURL();
     if (!currentWorkerURL.IsEmpty()) {
       registration->mActiveWorker =
-        new ServiceWorkerInfo(registration, currentWorkerURL);
+        new ServiceWorkerInfo(registration, currentWorkerURL, EmptyString()); // TODO(baku)
       registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
     }
   }
@@ -2533,6 +2547,7 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   }
 
   info.mResolvedScriptURI = info.mBaseURI;
+  info.mServiceWorkerCacheName = aInfo->CacheName();
 
   rv = info.mBaseURI->GetHost(info.mDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {

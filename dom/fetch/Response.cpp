@@ -124,6 +124,8 @@ Response::Constructor(const GlobalObject& aGlobal,
                       const Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aBody,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
     aRv.ThrowRangeError(MSG_INVALID_RESPONSE_STATUSCODE_ERROR);
     return nullptr;
@@ -153,7 +155,6 @@ Response::Constructor(const GlobalObject& aGlobal,
   nsRefPtr<InternalResponse> internalResponse =
     new InternalResponse(aInit.mStatus, statusText);
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<Response> r = new Response(global, internalResponse);
 
   if (aInit.mHeaders.WasPassed()) {
@@ -162,7 +163,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     // Instead of using Fill, create an object to allow the constructor to
     // unwrap the HeadersInit.
     nsRefPtr<Headers> headers =
-      Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+      Headers::Create(global, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
