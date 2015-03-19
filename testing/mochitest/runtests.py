@@ -2029,10 +2029,40 @@ class Mochitest(MochitestUtilsMixin):
 
         return result
 
+    def killNamedOrphans(self, pname):
+        """ Kill orphan processes matching the given command name """
+        self.log.info("Checking for orphan %s processes..." % pname)
+        def _psInfo(line):
+            if pname in line:
+                self.log.info(line)
+        process = mozprocess.ProcessHandler(['ps', '-f', '--no-headers'],
+                                            processOutputLine=_psInfo)
+        process.run()
+        process.wait()
+
+        def _psKill(line):
+            parts = line.split()
+            pid = int(parts[0])
+            if len(parts) == 3 and parts[2] == pname and parts[1] == '1':
+                self.log.info("killing %s orphan with pid %d" % (pname, pid))
+                killPid(pid, self.log)
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm', '--no-headers'],
+                                            processOutputLine=_psKill)
+        process.run()
+        process.wait()
+
     def runTests(self, options, onLaunch=None):
         """ Prepare, configure, run tests and cleanup """
 
         self.setTestRoot(options)
+
+        # Despite our efforts to clean up servers started by this script, in practice
+        # we still see infrequent cases where a process is orphaned and interferes
+        # with future tests, typically because the old server is keeping the port in use.
+        # Try to avoid those failures by checking for and killing orphan servers before
+        # trying to start new ones.
+        self.killNamedOrphans('ssltunnel')
+        self.killNamedOrphans('xpcshell')
 
         # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
         # jobs, not webapprt*, jetpack*, or plain
