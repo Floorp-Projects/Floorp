@@ -51,6 +51,7 @@ from manifestparser.filters import (
     chunk_by_runtime,
     chunk_by_slice,
     subsuite,
+    tags,
 )
 from mochitest_options import MochitestOptions
 from mozprofile import Profile, Preferences
@@ -1926,11 +1927,17 @@ class Mochitest(MochitestUtilsMixin):
                     else:
                         filters.append(chunk_by_slice(options.thisChunk,
                                                       options.totalChunks))
+
+                if options.test_tags:
+                    filters.append(tags(options.test_tags))
+
                 tests = manifest.active_tests(
                     exists=False, disabled=disabled, filters=filters, **info)
+
                 if len(tests) == 0:
-                    tests = manifest.active_tests(
-                        exists=False, disabled=True, **info)
+                    self.log.error("no tests to run using specified "
+                                   "combination of filters: {}".format(
+                                        manifest.fmt_filters()))
 
         paths = []
 

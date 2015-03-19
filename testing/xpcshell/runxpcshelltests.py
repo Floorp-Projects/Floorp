@@ -61,7 +61,7 @@ if os.path.isdir(mozbase):
         sys.path.append(os.path.join(mozbase, package))
 
 from manifestparser import TestManifest
-from manifestparser.filters import chunk_by_slice
+from manifestparser.filters import chunk_by_slice, tags
 from mozlog import structured
 import mozcrash
 import mozinfo
@@ -752,7 +752,7 @@ class XPCShellTests(object):
         self.harness_timeout = HARNESS_TIMEOUT
         self.nodeProc = {}
 
-    def buildTestList(self):
+    def buildTestList(self, test_tags=None):
         """
           read the xpcshell.ini manifest and set self.alltests to be
           an array of test objects.
@@ -773,14 +773,21 @@ class XPCShellTests(object):
         self.buildTestPath()
 
         filters = []
+        if test_tags:
+            filters.append(tags(test_tags))
+
         if self.singleFile is None and self.totalChunks > 1:
             filters.append(chunk_by_slice(self.thisChunk, self.totalChunks))
-
         try:
             self.alltests = mp.active_tests(filters=filters, **mozinfo.info)
         except TypeError:
             sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
             raise
+
+        if len(self.alltests) == 0:
+            self.log.error("no tests to run using specified "
+                           "combination of filters: {}".format(
+                                mp.fmt_filters()))
 
     def setAbsPath(self):
         """
@@ -1016,7 +1023,7 @@ class XPCShellTests(object):
                  testsRootDir=None, testingModulesDir=None, pluginsPath=None,
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
-                 **otherOptions):
+                 test_tags=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1164,7 +1171,7 @@ class XPCShellTests(object):
 
         pStdout, pStderr = self.getPipes()
 
-        self.buildTestList()
+        self.buildTestList(test_tags)
         if self.singleFile:
             self.sequential = True
 
@@ -1467,6 +1474,12 @@ class XPCShellOptions(OptionParser):
                         default=6000,
                         help="The port to listen on for a debugger connection if "
                              "--jsdebugger is specified.")
+        self.add_option("--tag",
+                        action="append", dest="test_tags",
+                        default=None,
+                        help="filter out tests that don't have the given tag. Can be "
+                             "used multiple times in which case the test must contain "
+                             "at least one of the given tags.")
 
 def main():
     parser = XPCShellOptions()

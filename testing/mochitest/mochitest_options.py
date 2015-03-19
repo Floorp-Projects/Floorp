@@ -476,6 +476,14 @@ class MochitestOptions(optparse.OptionParser):
            "help": "maximum number of timeouts permitted before halting testing",
            "default": None,
            }],
+        [["--tag"],
+         { "action": "append",
+           "dest": "test_tags",
+           "default": None,
+           "help": "filter out tests that don't have the given tag. Can be "
+                   "used multiple times in which case the test must contain "
+                   "at least one of the given tags.",
+         }],
     ]
 
     def __init__(self, **kwargs):
