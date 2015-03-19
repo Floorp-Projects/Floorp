@@ -562,28 +562,26 @@ js::gc::GCRuntime::bufferGrayRoots()
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         MOZ_ASSERT(zone->gcGrayRoots.empty());
 
-    // The state starts at "Okay" and may be toggled to "Failed" if we OOM
-    // while marking.
-    grayBufferState = GrayBufferState::Okay;
-
     // Transform the GCMarker into an unholy CallbackTracer doppleganger.
     MOZ_ASSERT(!IsMarkingGray(&marker));
     MOZ_ASSERT(IsMarkingTracer(&marker));
     MOZ_ASSERT(!marker.callback);
+    MOZ_ASSERT(!marker.bufferingGrayRootsFailed);
     marker.callback = GCMarker::GrayCallback;
     MOZ_ASSERT(IsMarkingGray(&marker));
 
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&marker, grayRootTracer.data);
 
+    // Propagate the failure flag from the marker to the runtime.
+    grayBufferState = marker.bufferingGrayRootsFailed
+                      ? GrayBufferState::Failed
+                      : GrayBufferState::Okay;
+
     // Restore the GCMarker to its former correctness.
     MOZ_ASSERT(IsMarkingGray(&marker));
+    marker.bufferingGrayRootsFailed = false;
     marker.callback = nullptr;
     MOZ_ASSERT(!IsMarkingGray(&marker));
     MOZ_ASSERT(IsMarkingTracer(&marker));
-
-    // Postcondition: the state remains at "Okay", or has been toggled to
-    //                "Failed" during marking.
-    MOZ_ASSERT(grayBufferState == GrayBufferState::Okay ||
-               grayBufferState == GrayBufferState::Failed);
 }
