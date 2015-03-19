@@ -91,11 +91,6 @@ struct GCMethods<nsXBLMaybeCompiled<UncompiledT> >
 
   static nsXBLMaybeCompiled<UncompiledT> initial() { return nsXBLMaybeCompiled<UncompiledT>(); }
 
-  static bool poisoned(nsXBLMaybeCompiled<UncompiledT> function)
-  {
-    return function.IsCompiled() && Base::poisoned(function.GetJSFunction());
-  }
-
   static bool needsPostBarrier(nsXBLMaybeCompiled<UncompiledT> function)
   {
     return function.IsCompiled() && Base::needsPostBarrier(function.GetJSFunction());

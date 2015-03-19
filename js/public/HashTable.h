@@ -539,7 +539,6 @@ struct PointerHasher
 {
     typedef Key Lookup;
     static HashNumber hash(const Lookup &l) {
-        MOZ_ASSERT(!JS::IsPoisonedPtr(l));
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
         static_assert(sizeof(HashNumber) == 4,
                       "subsequent code assumes a four-byte hash");
@@ -553,8 +552,6 @@ struct PointerHasher
 #endif
     }
     static bool match(const Key &k, const Lookup &l) {
-        MOZ_ASSERT(!JS::IsPoisonedPtr(k));
-        MOZ_ASSERT(!JS::IsPoisonedPtr(l));
         return k == l;
     }
     static void rekey(Key &k, const Key& newKey) {

@@ -226,8 +226,6 @@ class ImmMaybeNurseryPtr
   public:
     explicit ImmMaybeNurseryPtr(const gc::Cell *ptr) : value(ptr)
     {
-        MOZ_ASSERT(!IsPoisonedPtr(ptr));
-
         // asm.js shouldn't be creating GC things
         MOZ_ASSERT(!IsCompilingAsmJS());
     }
@@ -257,7 +255,6 @@ class ImmGCPtr
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(ptr)
     {
-        MOZ_ASSERT(!IsPoisonedPtr(ptr));
         MOZ_ASSERT_IF(ptr, ptr->isTenured());
 
         // asm.js shouldn't be creating GC things
@@ -266,7 +263,6 @@ class ImmGCPtr
 
     explicit ImmGCPtr(IonNurseryPtr ptr) : value(ptr.ptr)
     {
-        MOZ_ASSERT(!IsPoisonedPtr(value));
         MOZ_ASSERT(value);
 
         // asm.js shouldn't be creating GC things
@@ -279,8 +275,6 @@ class ImmGCPtr
     friend class AssemblerShared;
     explicit ImmGCPtr(ImmMaybeNurseryPtr ptr) : value(ptr.value)
     {
-        MOZ_ASSERT(!IsPoisonedPtr(ptr.value));
-
         // asm.js shouldn't be creating GC things
         MOZ_ASSERT(!IsCompilingAsmJS());
     }

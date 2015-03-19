@@ -13,6 +13,7 @@
 #include "nsJSUtils.h"
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
+#include "nsCycleCollector.h"
 #include "jsfriendapi.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
@@ -2764,9 +2765,9 @@ nsXPCComponents_Utils::ForceGC()
 
 /* void forceCC (); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForceCC()
+nsXPCComponents_Utils::ForceCC(nsICycleCollectorListener *listener)
 {
-    nsJSContext::CycleCollectNow();
+    nsJSContext::CycleCollectNow(listener);
     return NS_OK;
 }
 

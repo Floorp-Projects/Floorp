@@ -46,7 +46,7 @@ void
 WeakMapBase::trace(JSTracer *tracer)
 {
     MOZ_ASSERT(isInList());
-    if (IS_GC_MARKING_TRACER(tracer)) {
+    if (IsMarkingTracer(tracer)) {
         // We don't trace any of the WeakMap entries at this time, just record
         // record the fact that the WeakMap has been marked. Enties are marked
         // in the iterative marking phase by markAllIteratively(), which happens

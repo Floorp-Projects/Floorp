@@ -71,13 +71,11 @@ struct RootKind<TaggedProto>
 template <> struct GCMethods<const TaggedProto>
 {
     static TaggedProto initial() { return TaggedProto(); }
-    static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 
 template <> struct GCMethods<TaggedProto>
 {
     static TaggedProto initial() { return TaggedProto(); }
-    static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 
 template<class Outer>
@@ -428,7 +426,8 @@ class ObjectGroup : public gc::TenuredCell
      * objects, property types account for plain data properties (those with a
      * slot and no getter or setter hook) and dense elements. In typed objects
      * and unboxed objects, property types account for object and value
-     * properties and elements in the object.
+     * properties and elements in the object, and expando properties in unboxed
+     * objects.
      *
      * For accesses on these properties, the correspondence is as follows:
      *

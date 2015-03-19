@@ -143,7 +143,7 @@ IsThingPoisoned(T *thing)
 static GCMarker *
 AsGCMarker(JSTracer *trc)
 {
-    MOZ_ASSERT(IS_GC_MARKING_TRACER(trc));
+    MOZ_ASSERT(IsMarkingTracer(trc));
     return static_cast<GCMarker *>(trc);
 }
 
@@ -191,13 +191,12 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
     MOZ_ASSERT(zone->runtimeFromAnyThread() == trc->runtime());
     MOZ_ASSERT(trc->hasTracingDetails());
 
-    bool isGcMarkingTracer = IS_GC_MARKING_TRACER(trc);
+    MOZ_ASSERT(thing->isAligned());
+    MOZ_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
+
+    bool isGcMarkingTracer = IsMarkingGray(trc) || IsMarkingTracer(trc);
 
     MOZ_ASSERT_IF(zone->requireGCTracer(), isGcMarkingTracer);
-
-    MOZ_ASSERT(thing->isAligned());
-
-    MOZ_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
 
     if (isGcMarkingTracer) {
         GCMarker *gcMarker = static_cast<GCMarker *>(trc);
@@ -299,9 +298,9 @@ MarkInternal(JSTracer *trc, T **thingp)
     trc->clearTracingDetails();
 }
 
-#define JS_ROOT_MARKING_ASSERT(trc)                                     \
-    MOZ_ASSERT_IF(IS_GC_MARKING_TRACER(trc),                            \
-                  trc->runtime()->gc.state() == NO_INCREMENTAL ||       \
+#define JS_ROOT_MARKING_ASSERT(trc) \
+    MOZ_ASSERT_IF(IsMarkingTracer(trc), \
+                  trc->runtime()->gc.state() == NO_INCREMENTAL || \
                   trc->runtime()->gc.state() == MARK_ROOTS);
 
 namespace js {
@@ -954,7 +953,7 @@ gc::MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t n
 static bool
 ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
 {
-    if (!IS_GC_MARKING_TRACER(trc))
+    if (!IsMarkingTracer(trc))
         return true;
 
     uint32_t color = AsGCMarker(trc)->markColor();
@@ -1708,6 +1707,9 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
                 goto scan_unboxed;
             }
             if (clasp == &UnboxedPlainObject::class_) {
+                JSObject *expando = obj->as<UnboxedPlainObject>().maybeExpando();
+                if (expando && mark(expando))
+                    repush(expando);
                 const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layout();
                 unboxedTraceList = layout.traceList();
                 if (!unboxedTraceList)

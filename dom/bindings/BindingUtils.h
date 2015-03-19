@@ -14,6 +14,8 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/DeferredFinalize.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -26,8 +28,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
-#include "nsCycleCollector.h"
 #include "nsIGlobalObject.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -2933,8 +2933,8 @@ struct DeferredFinalizer
   AddForDeferredFinalization(T* aObject)
   {
     typedef DeferredFinalizerImpl<T> Impl;
-    cyclecollector::DeferredFinalize(Impl::AppendDeferredFinalizePointer,
-                                     Impl::DeferredFinalize, aObject);
+    DeferredFinalize(Impl::AppendDeferredFinalizePointer,
+                     Impl::DeferredFinalize, aObject);
   }
 };
 
@@ -2944,7 +2944,7 @@ struct DeferredFinalizer<T, true>
   static void
   AddForDeferredFinalization(T* aObject)
   {
-    cyclecollector::DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
+    DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
   }
 };
 

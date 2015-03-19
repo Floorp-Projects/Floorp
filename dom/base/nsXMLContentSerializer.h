@@ -72,13 +72,15 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   /**
    * Appends a char16_t character and increments the column position
    */
-  void AppendToString(const char16_t aChar,
+  NS_WARN_UNUSED_RESULT
+  bool AppendToString(const char16_t aChar,
                       nsAString& aOutputStr);
 
   /**
    * Appends a nsAString string and increments the column position
    */
-  void AppendToString(const nsAString& aStr,
+  NS_WARN_UNUSED_RESULT
+  bool AppendToString(const nsAString& aStr,
                       nsAString& aOutputStr);
 
   /**
@@ -86,32 +88,37 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by mLineBreak, except in the case of raw output.
    * It increments the column position.
    */
-  void AppendToStringConvertLF(const nsAString& aStr,
+  NS_WARN_UNUSED_RESULT
+  bool AppendToStringConvertLF(const nsAString& aStr,
                                nsAString& aOutputStr);
 
   /**
    * Appends a string by wrapping it when necessary.
    * It updates the column position.
    */
-  void AppendToStringWrapped(const nsASingleFragmentString& aStr,
+  NS_WARN_UNUSED_RESULT
+  bool AppendToStringWrapped(const nsASingleFragmentString& aStr,
                              nsAString& aOutputStr);
 
   /**
    * Appends a string by formating and wrapping it when necessary
    * It updates the column position.
    */
-  void AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
+  NS_WARN_UNUSED_RESULT
+  bool AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
                                      nsAString& aOutputStr);
 
   // used by AppendToStringWrapped
-  void AppendWrapped_WhitespaceSequence(
+  NS_WARN_UNUSED_RESULT
+  bool AppendWrapped_WhitespaceSequence(
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
           const nsASingleFragmentString::const_char_iterator aSequenceStart,
           nsAString &aOutputStr);
 
   // used by AppendToStringFormatedWrapped
-  void AppendFormatedWrapped_WhitespaceSequence(
+  NS_WARN_UNUSED_RESULT
+  bool AppendFormatedWrapped_WhitespaceSequence(
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
           const nsASingleFragmentString::const_char_iterator aSequenceStart,
@@ -119,7 +126,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
           nsAString &aOutputStr);
 
   // used by AppendToStringWrapped and AppendToStringFormatedWrapped
-  void AppendWrapped_NonWhitespaceSequence(
+  NS_WARN_UNUSED_RESULT
+  bool AppendWrapped_NonWhitespaceSequence(
           nsASingleFragmentString::const_char_iterator &aPos,
           const nsASingleFragmentString::const_char_iterator aEnd,
           const nsASingleFragmentString::const_char_iterator aSequenceStart,
@@ -131,14 +139,16 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * add mLineBreak to the string
    * It updates the column position and other flags.
    */
-  void AppendNewLineToString(nsAString& aOutputStr);
+  NS_WARN_UNUSED_RESULT
+  bool AppendNewLineToString(nsAString& aOutputStr);
 
 
   /**
    * Appends a string by translating entities
    * It doesn't increment the column position
    */
-  virtual void AppendAndTranslateEntities(const nsAString& aStr,
+  NS_WARN_UNUSED_RESULT
+  virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr);
 
   /**
@@ -187,7 +197,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                      nsIContent *aOriginalElement,
                                      const nsAString& aTagNamespaceURI);
 
-  virtual void SerializeAttributes(nsIContent* aContent,
+  NS_WARN_UNUSED_RESULT
+  virtual bool SerializeAttributes(nsIContent* aContent,
                                    nsIContent *aOriginalElement,
                                    nsAString& aTagPrefix,
                                    const nsAString& aTagNamespaceURI,
@@ -196,7 +207,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                    uint32_t aSkipAttr,
                                    bool aAddNSAttr);
 
-  void SerializeAttr(const nsAString& aPrefix,
+  NS_WARN_UNUSED_RESULT
+  bool SerializeAttr(const nsAString& aPrefix,
                      const nsAString& aName,
                      const nsAString& aValue,
                      nsAString& aStr,
@@ -217,13 +229,15 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    */
   virtual bool CheckElementStart(nsIContent * aContent,
                                    bool & aForceFormat,
-                                   nsAString& aStr);
+                                   nsAString& aStr,
+                                   nsresult& aResult);
 
   /**
    * this method is responsible to finish the start tag,
    * in particulary to append the "greater than" sign
    */
-  virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
+  NS_WARN_UNUSED_RESULT
+  virtual bool AppendEndOfElementStart(nsIContent *aOriginalElement,
                                        nsIAtom * aName,
                                        int32_t aNamespaceID,
                                        nsAString& aStr);
@@ -233,9 +247,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * after the serialization ot the start tag.
    * (called at the end of AppendElementStart)
    */
-  virtual void AfterElementStart(nsIContent * aContent,
-                                 nsIContent *aOriginalElement,
-                                 nsAString& aStr) { };
+  NS_WARN_UNUSED_RESULT
+  virtual bool AfterElementStart(nsIContent* aContent,
+                                 nsIContent* aOriginalElement,
+                                 nsAString& aStr) { return true; };
 
   /**
    * This method can be redefined to check if the element can be serialized.
@@ -281,13 +296,17 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * add intendation. Call only in the case of formating and if the current
    * position is at 0. It updates the column position.
    */
-  void AppendIndentation(nsAString& aStr);
-  void IncrIndentation(nsIAtom* aName);
+  NS_WARN_UNUSED_RESULT
+  bool AppendIndentation(nsAString& aStr);
+
+  NS_WARN_UNUSED_RESULT
+  bool IncrIndentation(nsIAtom* aName);
   void DecrIndentation(nsIAtom* aName);
 
   // Functions to check for newlines that needs to be added between nodes in
   // the root of a document. See mAddNewlineForRootNode
-  void MaybeAddNewlineForRootNode(nsAString& aStr);
+  NS_WARN_UNUSED_RESULT
+  bool MaybeAddNewlineForRootNode(nsAString& aStr);
   void MaybeFlagNewlineForRootNode(nsINode* aNode);
 
   // Functions to check if we enter in or leave from a preformated content

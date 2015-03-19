@@ -329,7 +329,7 @@ InterpreterFrame::mark(JSTracer *trc)
     } else {
         gc::MarkScriptUnbarriered(trc, &exec.script, "script");
     }
-    if (IS_GC_MARKING_TRACER(trc))
+    if (IsMarkingTracer(trc))
         script()->compartment()->zone()->active = true;
     if (hasReturnValue())
         gc::MarkValueUnbarriered(trc, &rval_, "rval");

@@ -19,6 +19,7 @@
 #include "prlog.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
+#include "IMFYCbCrImage.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -29,6 +30,7 @@ PRLogModuleInfo* GetDemuxerLog();
 
 using mozilla::gfx::ToIntRect;
 using mozilla::layers::Image;
+using mozilla::layers::IMFYCbCrImage;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 
@@ -392,20 +394,26 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
 
   Microseconds pts = GetSampleTime(aSample);
   Microseconds duration = GetSampleDuration(aSample);
-  nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
-                                            mImageContainer,
-                                            aStreamOffset,
-                                            std::max(0LL, pts),
-                                            duration,
-                                            b,
-                                            false,
-                                            -1,
-                                            ToIntRect(mPictureRegion));
-  if (twoDBuffer) {
-    twoDBuffer->Unlock2D();
-  } else {
-    buffer->Unlock();
-  }
+
+  nsRefPtr<layers::PlanarYCbCrImage> image =
+    new IMFYCbCrImage(buffer, twoDBuffer);
+
+  VideoData::SetVideoDataToImage(image,
+                                 mVideoInfo,
+                                 b,
+                                 ToIntRect(mPictureRegion),
+                                 false);
+
+  nsRefPtr<VideoData> v =
+    VideoData::CreateFromImage(mVideoInfo,
+                               mImageContainer,
+                               aStreamOffset,
+                               std::max(0LL, pts),
+                               duration,
+                               image.forget(),
+                               false,
+                               -1,
+                               ToIntRect(mPictureRegion));
 
   v.forget(aOutVideoData);
   return S_OK;

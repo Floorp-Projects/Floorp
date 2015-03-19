@@ -1828,18 +1828,14 @@ BackgroundRequestChild::BackgroundRequestChild(IDBRequest* aRequest)
   mTransaction->AssertIsOnOwningThread();
 
   MOZ_COUNT_CTOR(indexedDB::BackgroundRequestChild);
-
-  mTransaction->OnNewRequest();
 }
 
 BackgroundRequestChild::~BackgroundRequestChild()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(!IsActorDestroyed(), mTransaction);
+  MOZ_ASSERT(!mTransaction);
 
   MOZ_COUNT_DTOR(indexedDB::BackgroundRequestChild);
-
-  MaybeFinishTransactionEarly();
 }
 
 void
@@ -1853,19 +1849,6 @@ BackgroundRequestChild::HoldFileInfosUntilComplete(
 }
 
 void
-BackgroundRequestChild::MaybeFinishTransactionEarly()
-{
-  AssertIsOnOwningThread();
-
-  if (mTransaction) {
-    mTransaction->AssertIsOnOwningThread();
-
-    mTransaction->OnRequestFinished();
-    mTransaction = nullptr;
-  }
-}
-
-bool
 BackgroundRequestChild::HandleResponse(nsresult aResponse)
 {
   AssertIsOnOwningThread();
@@ -1874,10 +1857,9 @@ BackgroundRequestChild::HandleResponse(nsresult aResponse)
   MOZ_ASSERT(mTransaction);
 
   DispatchErrorEvent(mRequest, aResponse, mTransaction);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(const Key& aResponse)
 {
   AssertIsOnOwningThread();
@@ -1885,10 +1867,9 @@ BackgroundRequestChild::HandleResponse(const Key& aResponse)
   ResultHelper helper(mRequest, mTransaction, &aResponse);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(const nsTArray<Key>& aResponse)
 {
   AssertIsOnOwningThread();
@@ -1896,10 +1877,9 @@ BackgroundRequestChild::HandleResponse(const nsTArray<Key>& aResponse)
   ResultHelper helper(mRequest, mTransaction, &aResponse);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(
                              const SerializedStructuredCloneReadInfo& aResponse)
 {
@@ -1919,10 +1899,9 @@ BackgroundRequestChild::HandleResponse(
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfo);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(
                    const nsTArray<SerializedStructuredCloneReadInfo>& aResponse)
 {
@@ -1957,10 +1936,9 @@ BackgroundRequestChild::HandleResponse(
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfos);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(JS::Handle<JS::Value> aResponse)
 {
   AssertIsOnOwningThread();
@@ -1968,10 +1946,9 @@ BackgroundRequestChild::HandleResponse(JS::Handle<JS::Value> aResponse)
   ResultHelper helper(mRequest, mTransaction, &aResponse);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
-bool
+void
 BackgroundRequestChild::HandleResponse(uint64_t aResponse)
 {
   AssertIsOnOwningThread();
@@ -1981,7 +1958,6 @@ BackgroundRequestChild::HandleResponse(uint64_t aResponse)
   ResultHelper helper(mRequest, mTransaction, &response);
 
   DispatchSuccessEvent(&helper);
-  return true;
 }
 
 void
@@ -1991,9 +1967,17 @@ BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 
   MaybeCollectGarbageOnIPCMessage();
 
-  MaybeFinishTransactionEarly();
-
   NoteActorDestroyed();
+
+  if (mTransaction) {
+    mTransaction->AssertIsOnOwningThread();
+
+    mTransaction->OnRequestFinished(/* aActorDestroyedNormally */
+                                    aWhy == Deletion);
+#ifdef DEBUG
+    mTransaction = nullptr;
+#endif
+  }
 }
 
 bool
@@ -2005,62 +1989,80 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
 
   MaybeCollectGarbageOnIPCMessage();
 
-  // Always fire an "error" event with ABORT_ERR if the transaction was aborted,
-  // even if the request succeeded or failed with another error.
   if (mTransaction->IsAborted()) {
-    return HandleResponse(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+    // Always fire an "error" event with ABORT_ERR if the transaction was
+    // aborted, even if the request succeeded or failed with another error.
+    HandleResponse(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+  } else {
+    switch (aResponse.type()) {
+      case RequestResponse::Tnsresult:
+        HandleResponse(aResponse.get_nsresult());
+        break;
+
+      case RequestResponse::TObjectStoreAddResponse:
+        HandleResponse(aResponse.get_ObjectStoreAddResponse().key());
+        break;
+
+      case RequestResponse::TObjectStorePutResponse:
+        HandleResponse(aResponse.get_ObjectStorePutResponse().key());
+        break;
+
+      case RequestResponse::TObjectStoreGetResponse:
+        HandleResponse(aResponse.get_ObjectStoreGetResponse().cloneInfo());
+        break;
+
+      case RequestResponse::TObjectStoreGetAllResponse:
+        HandleResponse(aResponse.get_ObjectStoreGetAllResponse().cloneInfos());
+        break;
+
+      case RequestResponse::TObjectStoreGetAllKeysResponse:
+        HandleResponse(aResponse.get_ObjectStoreGetAllKeysResponse().keys());
+        break;
+
+      case RequestResponse::TObjectStoreDeleteResponse:
+        HandleResponse(JS::UndefinedHandleValue);
+        break;
+
+      case RequestResponse::TObjectStoreClearResponse:
+        HandleResponse(JS::UndefinedHandleValue);
+        break;
+
+      case RequestResponse::TObjectStoreCountResponse:
+        HandleResponse(aResponse.get_ObjectStoreCountResponse().count());
+        break;
+
+      case RequestResponse::TIndexGetResponse:
+        HandleResponse(aResponse.get_IndexGetResponse().cloneInfo());
+        break;
+
+      case RequestResponse::TIndexGetKeyResponse:
+        HandleResponse(aResponse.get_IndexGetKeyResponse().key());
+        break;
+
+      case RequestResponse::TIndexGetAllResponse:
+        HandleResponse(aResponse.get_IndexGetAllResponse().cloneInfos());
+        break;
+
+      case RequestResponse::TIndexGetAllKeysResponse:
+        HandleResponse(aResponse.get_IndexGetAllKeysResponse().keys());
+        break;
+
+      case RequestResponse::TIndexCountResponse:
+        HandleResponse(aResponse.get_IndexCountResponse().count());
+        break;
+
+      default:
+        MOZ_CRASH("Unknown response type!");
+    }
   }
 
-  switch (aResponse.type()) {
-    case RequestResponse::Tnsresult:
-      return HandleResponse(aResponse.get_nsresult());
+  mTransaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
 
-    case RequestResponse::TObjectStoreAddResponse:
-      return HandleResponse(aResponse.get_ObjectStoreAddResponse().key());
+  // Null this out so that we don't try to call OnRequestFinished() again in
+  // ActorDestroy.
+  mTransaction = nullptr;
 
-    case RequestResponse::TObjectStorePutResponse:
-      return HandleResponse(aResponse.get_ObjectStorePutResponse().key());
-
-    case RequestResponse::TObjectStoreGetResponse:
-      return HandleResponse(aResponse.get_ObjectStoreGetResponse().cloneInfo());
-
-    case RequestResponse::TObjectStoreGetAllResponse:
-      return HandleResponse(aResponse.get_ObjectStoreGetAllResponse()
-                                     .cloneInfos());
-
-    case RequestResponse::TObjectStoreGetAllKeysResponse:
-      return HandleResponse(aResponse.get_ObjectStoreGetAllKeysResponse()
-                                     .keys());
-
-    case RequestResponse::TObjectStoreDeleteResponse:
-      return HandleResponse(JS::UndefinedHandleValue);
-
-    case RequestResponse::TObjectStoreClearResponse:
-      return HandleResponse(JS::UndefinedHandleValue);
-
-    case RequestResponse::TObjectStoreCountResponse:
-      return HandleResponse(aResponse.get_ObjectStoreCountResponse().count());
-
-    case RequestResponse::TIndexGetResponse:
-      return HandleResponse(aResponse.get_IndexGetResponse().cloneInfo());
-
-    case RequestResponse::TIndexGetKeyResponse:
-      return HandleResponse(aResponse.get_IndexGetKeyResponse().key());
-
-    case RequestResponse::TIndexGetAllResponse:
-      return HandleResponse(aResponse.get_IndexGetAllResponse().cloneInfos());
-
-    case RequestResponse::TIndexGetAllKeysResponse:
-      return HandleResponse(aResponse.get_IndexGetAllKeysResponse().keys());
-
-    case RequestResponse::TIndexCountResponse:
-      return HandleResponse(aResponse.get_IndexCountResponse().count());
-
-    default:
-      MOZ_CRASH("Unknown response type!");
-  }
-
-  MOZ_CRASH("Should never get here!");
+  return true;
 }
 
 /*******************************************************************************
@@ -2370,7 +2372,8 @@ BackgroundCursorChild::ActorDestroy(ActorDestroyReason aWhy)
   MaybeCollectGarbageOnIPCMessage();
 
   if (mStrongRequest && !mStrongCursor && mTransaction) {
-    mTransaction->OnRequestFinished();
+    mTransaction->OnRequestFinished(/* aActorDestroyedNormally */
+                                    aWhy == Deletion);
   }
 
   if (mCursor) {
@@ -2435,7 +2438,7 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
       MOZ_CRASH("Should never get here!");
   }
 
-  mTransaction->OnRequestFinished();
+  mTransaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
 
   return true;
 }

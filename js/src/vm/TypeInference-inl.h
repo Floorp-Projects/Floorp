@@ -1098,20 +1098,12 @@ template <>
 struct GCMethods<const TypeSet::Type>
 {
     static TypeSet::Type initial() { return TypeSet::UnknownType(); }
-    static bool poisoned(TypeSet::Type v) {
-        return (v.isGroup() && IsPoisonedPtr(v.group()))
-            || (v.isSingleton() && IsPoisonedPtr(v.singleton()));
-    }
 };
 
 template <>
 struct GCMethods<TypeSet::Type>
 {
     static TypeSet::Type initial() { return TypeSet::UnknownType(); }
-    static bool poisoned(TypeSet::Type v) {
-        return (v.isGroup() && IsPoisonedPtr(v.group()))
-            || (v.isSingleton() && IsPoisonedPtr(v.singleton()));
-    }
 };
 
 } // namespace js

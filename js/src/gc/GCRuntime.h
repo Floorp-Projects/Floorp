@@ -625,6 +625,12 @@ class GCRuntime
     void startDebugGC(JSGCInvocationKind gckind, SliceBudget &budget);
     void debugGCSlice(SliceBudget &budget);
 
+    void triggerFullGCForAtoms() {
+        MOZ_ASSERT(fullGCForAtomsRequested_);
+        fullGCForAtomsRequested_ = false;
+        triggerGC(JS::gcreason::ALLOC_TRIGGER);
+    }
+
     void runDebugGC();
     inline void poke();
 
@@ -787,6 +793,8 @@ class GCRuntime
     bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool isGcNeeded() { return minorGCRequested() || majorGCRequested(); }
 
+    bool fullGCForAtomsRequested() { return fullGCForAtomsRequested_; }
+
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
 
@@ -901,6 +909,7 @@ class GCRuntime
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
     template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::Phase phase);
+    void markBufferedGrayRoots(JS::Zone *zone);
     void markGrayReferencesInCurrentGroup(gcstats::Phase phase);
     void markAllWeakReferences(gcstats::Phase phase);
     void markAllGrayReferences(gcstats::Phase phase);
@@ -1014,6 +1023,16 @@ class GCRuntime
     /* During shutdown, the GC needs to clean up every possible object. */
     bool cleanUpEverything;
 
+    // Record gray roots in the first slice for later marking. See the comment
+    // in RootMarking.cpp for details.
+    friend class js::GCMarker;
+    enum class GrayBufferState {
+        Unused,
+        Okay,
+        Failed
+    };
+    GrayBufferState grayBufferState;
+
     /*
      * The gray bits can become invalid if UnmarkGray overflows the stack. A
      * full GC will reset this bit, since it fills in all the gray bits.
@@ -1023,6 +1042,9 @@ class GCRuntime
     mozilla::Atomic<JS::gcreason::Reason, mozilla::Relaxed> majorGCTriggerReason;
 
     JS::gcreason::Reason minorGCTriggerReason;
+
+    /* Perform full GC if rt->keepAtoms() becomes false. */
+    bool fullGCForAtomsRequested_;
 
     /* Incremented at the start of every major GC. */
     uint64_t majorGCNumber;

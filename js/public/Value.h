@@ -1043,17 +1043,14 @@ class Value
     }
 
     void setString(JSString *str) {
-        MOZ_ASSERT(!IsPoisonedPtr(str));
         data = STRING_TO_JSVAL_IMPL(str);
     }
 
     void setSymbol(JS::Symbol *sym) {
-        MOZ_ASSERT(!IsPoisonedPtr(sym));
         data = SYMBOL_TO_JSVAL_IMPL(sym);
     }
 
     void setObject(JSObject &obj) {
-        MOZ_ASSERT(!IsPoisonedPtr(&obj));
         data = OBJECT_TO_JSVAL_IMPL(&obj);
     }
 
@@ -1641,17 +1638,11 @@ namespace js {
 template <> struct GCMethods<const JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
-    static bool poisoned(const JS::Value &v) {
-        return v.isMarkable() && JS::IsPoisonedPtr(v.toGCThing());
-    }
 };
 
 template <> struct GCMethods<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
-    static bool poisoned(const JS::Value &v) {
-        return v.isMarkable() && JS::IsPoisonedPtr(v.toGCThing());
-    }
     static gc::Cell *asGCThingOrNull(const JS::Value &v) {
         return v.isMarkable() ? v.toGCThing() : nullptr;
     }
@@ -1889,12 +1880,6 @@ IMPL_TO_JSVAL(jsval_layout l)
 }
 
 namespace JS {
-
-inline bool
-IsPoisonedValue(const Value &v)
-{
-    return js::GCMethods<Value>::poisoned(v);
-}
 
 #ifdef JS_DEBUG
 namespace detail {

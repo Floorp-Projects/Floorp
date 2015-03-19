@@ -470,6 +470,7 @@ freetype/ftbitmap.h
 freetype/ftxf86.h
 freetype.h
 ftcache.h
+ftfntfmt.h
 ftglyph.h
 ftsynth.h
 ftoutln.h
