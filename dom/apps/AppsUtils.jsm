@@ -925,6 +925,10 @@ ManifestHelper.prototype = {
     // If no start point is specified, we use the root launch path.
     // In all error cases, we just return null.
     if ((aStartPoint || "") === "") {
+      // W3C start_url takes precedence over mozApps launch_path
+      if (this._localeProp("start_url")) {
+        return this._baseURI.resolve(this._localeProp("start_url") || "/");
+      }
       return this._baseURI.resolve(this._localeProp("launch_path") || "/");
     }
 
