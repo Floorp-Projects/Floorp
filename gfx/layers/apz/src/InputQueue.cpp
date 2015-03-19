@@ -92,6 +92,7 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
       // from a fast fling to a pinch state (i.e. second finger goes down while
       // the first finger is moving).
       block->SetDuringFastMotion();
+      block->SetConfirmedTargetApzc(aTarget);
       INPQ_LOG("block %p tagged as fast-motion\n", block);
     }
 
@@ -201,11 +202,6 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
                                         CancelableBlockState* aBlock)
 {
   bool waitForMainThread = !aBlock->IsTargetConfirmed();
-  if (aBlock->AsTouchBlock() && aBlock->AsTouchBlock()->IsDuringFastMotion()) {
-    aBlock->SetConfirmedTargetApzc(aTarget);
-    waitForMainThread = false;
-  }
-
   if (waitForMainThread) {
     // We either don't know for sure if aTarget is the right APZC, or we may
     // need to wait to give content the opportunity to prevent-default the
