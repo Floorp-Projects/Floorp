@@ -320,7 +320,7 @@ BluetoothDevice::GetGatt()
 }
 
 JSObject*
-BluetoothDevice::WrapObject(JSContext* aContext)
+BluetoothDevice::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return BluetoothDeviceBinding::Wrap(aContext, this);
+  return BluetoothDeviceBinding::Wrap(aContext, this, aGivenProto);
 }

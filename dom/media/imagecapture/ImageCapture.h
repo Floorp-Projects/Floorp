@@ -65,9 +65,9 @@ public:
   VideoStreamTrack* GetVideoStreamTrack() const;
 
   // nsWrapperCache member
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return ImageCaptureBinding::Wrap(aCx, this);
+    return ImageCaptureBinding::Wrap(aCx, this, aGivenProto);
   }
 
   // ImageCapture class members

@@ -21,9 +21,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationTimeline, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationTimeline, Release)
 
 JSObject*
-AnimationTimeline::WrapObject(JSContext* aCx)
+AnimationTimeline::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AnimationTimelineBinding::Wrap(aCx, this);
+  return AnimationTimelineBinding::Wrap(aCx, this, aGivenProto);
 }
 
 Nullable<TimeDuration>

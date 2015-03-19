@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GetUserMediaRequest)
 
-  virtual JSObject* WrapObject(JSContext* cx)
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE;
   nsISupports* GetParentObject();
 

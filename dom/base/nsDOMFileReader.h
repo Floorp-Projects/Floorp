@@ -62,7 +62,7 @@ public:
   {
     return GetOwner();
   }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // WebIDL
   static already_AddRefed<nsDOMFileReader>

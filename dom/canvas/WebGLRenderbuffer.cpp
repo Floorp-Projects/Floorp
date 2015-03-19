@@ -41,9 +41,9 @@ NeedsDepthStencilEmu(gl::GLContext* gl, GLenum internalFormat)
 }
 
 JSObject*
-WebGLRenderbuffer::WrapObject(JSContext* cx)
+WebGLRenderbuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLRenderbufferBinding::Wrap(cx, this);
+    return dom::WebGLRenderbufferBinding::Wrap(cx, this, aGivenProto);
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)

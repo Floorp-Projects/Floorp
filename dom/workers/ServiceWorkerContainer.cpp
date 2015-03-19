@@ -66,9 +66,9 @@ ServiceWorkerContainer::RemoveReadyPromise()
 }
 
 JSObject*
-ServiceWorkerContainer::WrapObject(JSContext* aCx)
+ServiceWorkerContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ServiceWorkerContainerBinding::Wrap(aCx, this);
+  return ServiceWorkerContainerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

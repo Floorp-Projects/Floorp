@@ -44,9 +44,9 @@ WorkerNavigator::Create(bool aOnLine)
 }
 
 JSObject*
-WorkerNavigator::WrapObject(JSContext* aCx)
+WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerNavigatorBinding_workers::Wrap(aCx, this);
+  return WorkerNavigatorBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 // A WorkerMainThreadRunnable to synchronously add DataStoreChangeEventProxy on
@@ -142,7 +142,7 @@ GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
     if (!global) {
       MOZ_ASSERT(false, "cannot get global!");
     } else {
-      workerStoreObj = workerStore->WrapObject(aCx);
+      workerStoreObj = workerStore->WrapObject(aCx, JS::NullPtr());
       if (!JS_WrapObject(aCx, &workerStoreObj)) {
         MOZ_ASSERT(false, "cannot wrap object for workerStoreObj!");
         workerStoreObj = nullptr;
