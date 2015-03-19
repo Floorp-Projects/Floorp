@@ -280,7 +280,8 @@ template void MacroAssembler::guardType(const ValueOperand &value, TypeSet::Type
 
 template<typename S, typename T>
 static void
-StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest)
+StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest,
+                       unsigned numElems)
 {
     switch (arrayType) {
       case Scalar::Float32:
@@ -294,10 +295,38 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
         masm.storeDouble(value, dest);
         break;
       case Scalar::Float32x4:
-        masm.storeUnalignedFloat32x4(value, dest);
+        switch (numElems) {
+          case 1:
+            masm.storeFloat32(value, dest);
+            break;
+          case 2:
+            masm.storeDouble(value, dest);
+            break;
+          case 3:
+            masm.storeFloat32x3(value, dest);
+            break;
+          case 4:
+            masm.storeUnalignedFloat32x4(value, dest);
+            break;
+          default: MOZ_CRASH("unexpected number of elements in simd write");
+        }
         break;
       case Scalar::Int32x4:
-        masm.storeUnalignedInt32x4(value, dest);
+        switch (numElems) {
+          case 1:
+            masm.storeInt32x1(value, dest);
+            break;
+          case 2:
+            masm.storeInt32x2(value, dest);
+            break;
+          case 3:
+            masm.storeInt32x3(value, dest);
+            break;
+          case 4:
+            masm.storeUnalignedInt32x4(value, dest);
+            break;
+          default: MOZ_CRASH("unexpected number of elements in simd write");
+        }
         break;
       default:
         MOZ_CRASH("Invalid typed array type");
@@ -306,15 +335,15 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
 
 void
 MacroAssembler::storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value,
-                                       const BaseIndex &dest)
+                                       const BaseIndex &dest, unsigned numElems)
 {
-    StoreToTypedFloatArray(*this, arrayType, value, dest);
+    StoreToTypedFloatArray(*this, arrayType, value, dest, numElems);
 }
 void
 MacroAssembler::storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value,
-                                       const Address &dest)
+                                       const Address &dest, unsigned numElems)
 {
-    StoreToTypedFloatArray(*this, arrayType, value, dest);
+    StoreToTypedFloatArray(*this, arrayType, value, dest, numElems);
 }
 
 template<typename T>
