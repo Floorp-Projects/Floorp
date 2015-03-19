@@ -98,10 +98,10 @@ ImageHost::RemoveTextureHost(TextureHost* aTexture)
 
 int ImageHost::ChooseImageIndex() const
 {
-  if (!mCompositor || mImages.IsEmpty()) {
+  if (!GetCompositor() || mImages.IsEmpty()) {
     return -1;
   }
-  TimeStamp now = mCompositor->GetCompositionTime();
+  TimeStamp now = GetCompositor()->GetCompositionTime();
 
   if (now.IsNull()) {
     // Not in a composition, so just return the last image we composited
@@ -171,11 +171,16 @@ ImageHost::Composite(EffectChain& aEffectChain,
     // set the new compositor yet.
     return;
   }
-  TimedImage* img = ChooseImage();
-  if (!img) {
+  int imageIndex = ChooseImageIndex();
+  if (imageIndex < 0) {
     return;
   }
 
+  if (uint32_t(imageIndex) + 1 < mImages.Length()) {
+    GetCompositor()->CompositeAgainAt(mImages[imageIndex + 1].mTimeStamp);
+  }
+
+  TimedImage* img = &mImages[imageIndex];
   // Make sure the front buffer has a compositor
   img->mFrontBuffer->SetCompositor(GetCompositor());
 
