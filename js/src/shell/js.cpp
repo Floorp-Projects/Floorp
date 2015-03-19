@@ -1486,7 +1486,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, cx->global(), ucbuf, buflen, options, &script))
+        if (!JS_CompileUCScript(cx, ucbuf, buflen, options, &script))
             return false;
     }
 
@@ -3258,8 +3258,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
            .setNoScriptRval(true);
     RootedScript script(cx);
     const char16_t *chars = stableChars.twoByteRange().start().get();
-    bool ok = JS_CompileUCScript(cx, global, chars,
-                                 scriptContents->length(), options, &script);
+    bool ok = JS_CompileUCScript(cx, chars, scriptContents->length(), options, &script);
     args.rval().setUndefined();
     return ok;
 }

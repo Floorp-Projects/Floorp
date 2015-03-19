@@ -591,7 +591,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", 0);
   JS::Rooted<JSScript*> script(cx);
-  if (!JS_CompileUCScript(cx, global, aString.get(), aString.Length(), options,
+  if (!JS_CompileUCScript(cx, aString.get(), aString.Length(), options,
                           &script))
   {
      return false;
