@@ -483,7 +483,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     mInfo.mVideo.mDisplay =
       nsIntSize(video.display_width, video.display_height);
     mVideo.mCallback = new DecoderCallback(this, kVideo);
-    if (!mIsEncrypted && mSharedDecoderManager) {
+    if (!mIsEncrypted && mSharedDecoderManager && mPlatform->SupportsSharedDecoders(video)) {
       // Note: Don't use SharedDecoderManager in EME content, as it doesn't
       // handle reiniting the decoder properly yet.
       mVideo.mDecoder =
