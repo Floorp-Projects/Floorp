@@ -9879,9 +9879,8 @@ nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
     return;
   }
 
-  nsStyleContext* parentStyle = aParentFrame->StyleContext();
-  if (!parentStyle->GetPseudo()) {
-    // Normally, pseudo frames start from and end at some elements,
+  if (!IsRubyPseudo(aParentFrame)) {
+    // Normally, ruby pseudo frames start from and end at some elements,
     // which means they don't have leading and trailing whitespaces at
     // all.  But there are two cases where they do actually have leading
     // or trailing whitespaces:
@@ -9896,6 +9895,7 @@ nsCSSFrameConstructor::CreateNeededPseudoInternalRubyBoxes(
 
   FCItemIterator iter(aItems);
   nsIContent* parentContent = aParentFrame->GetContent();
+  nsStyleContext* parentStyle = aParentFrame->StyleContext();
   while (!iter.IsDone()) {
     if (!iter.SkipItemsWantingParentType(ourParentType)) {
       if (ourParentType == eTypeRuby) {
