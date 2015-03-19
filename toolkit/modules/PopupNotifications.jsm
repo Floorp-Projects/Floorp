@@ -644,6 +644,9 @@ PopupNotifications.prototype = {
       notificationsToShow.forEach(function (n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
       }, this);
+      // This notification is used by tests to know when all the processing
+      // required to display the panel has happened.
+      this.panel.dispatchEvent(new this.window.CustomEvent("Shown"));
     });
   },
 
