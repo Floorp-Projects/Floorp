@@ -28,11 +28,11 @@ body {
 }
 
 .sans-serif {
-  font-family: sans-serif;
+  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
 }
 
 .serif {
-  font-family: serif;
+  font-family: "Charis SIL", Georgia, "Times New Roman", serif;
 }
 
 .font-size1 {
@@ -93,7 +93,7 @@ body {
   font-size: 0.9rem;
   line-height: 1.33rem;
   padding-bottom: 4px;
-  font-family: sans-serif;
+  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
   text-decoration: none;
   border-bottom: 1px solid;
   color: #0095dd;
@@ -231,7 +231,7 @@ body {
 /*======= Controls toolbar =======*/
 
 .toolbar {
-  font-family: sans-serif;
+  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
   position: fixed;
   height: 100%;
   top: 0px;
@@ -396,7 +396,7 @@ body {
 }
 
 .serif-button {
-  font-family: serif;
+  font-family: "Charis SIL", Georgia, "Times New Roman", serif;
 }
 
 .minus-button,
