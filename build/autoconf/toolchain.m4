@@ -101,9 +101,9 @@ AC_SUBST(CLANG_CXX)
 AC_SUBST(CLANG_CL)
 
 if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
-    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 6 ||
+    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 7 ||
        test "$GCC_MAJOR_VERSION" -lt 4; then
-        AC_MSG_ERROR([Only GCC 4.6 or newer supported])
+        AC_MSG_ERROR([Only GCC 4.7 or newer supported])
     fi
 fi
 ])
