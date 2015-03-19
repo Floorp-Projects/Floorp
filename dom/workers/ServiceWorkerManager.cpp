@@ -1781,6 +1781,7 @@ ServiceWorkerManager::CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
     return rv;
   }
 
+  MOZ_ASSERT(!aInfo->CacheName().IsEmpty());
   loadInfo.mServiceWorkerCacheName = aInfo->CacheName();
 
   RuntimeService* rs = RuntimeService::GetOrCreateService();
@@ -2560,6 +2561,7 @@ ServiceWorkerManager::CreateServiceWorker(nsIPrincipal* aPrincipal,
   }
 
   info.mResolvedScriptURI = info.mBaseURI;
+  MOZ_ASSERT(!aInfo->CacheName().IsEmpty());
   info.mServiceWorkerCacheName = aInfo->CacheName();
 
   rv = info.mBaseURI->GetHost(info.mDomain);
