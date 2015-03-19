@@ -148,10 +148,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
   mLastUpdateGenerationCounter = generationCounter;
 
-  if (images.IsEmpty()) {
-    return false;
-  }
-
   Image* image = images[0].mImage;
   // Don't try to update to an invalid image. We return true because the caller
   // would attempt to recreate the ImageClient otherwise, and that isn't going
