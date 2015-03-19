@@ -101,7 +101,6 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
                                                      nsIContent* aOwner,
                                                      nsFrameMessageManager* aChrome)
 : mDocShell(aShell), mInitialized(false), mLoadingScript(false),
-  mPreventEventsEscaping(false),
   mOwner(aOwner), mChromeMessageManager(aChrome)
 {
   SetIsNotDOMBinding();
@@ -208,24 +207,25 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 }
 
 void
-nsInProcessTabChildGlobal::FireUnloadEvent()
+nsInProcessTabChildGlobal::Disconnect()
 {
-  // We're called from nsDocument::MaybeInitializeFinalizeFrameLoaders, so it
-  // should be safe to run script.
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-
-  // Don't let the unload event propagate to chrome event handlers.
-  mPreventEventsEscaping = true;
-  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
-
-  // Allow events fired during docshell destruction (pagehide, unload) to
-  // propagate to the <browser> element since chrome code depends on this.
-  mPreventEventsEscaping = false;
+  // Let the frame scripts know the child is being closed. We do any other
+  // cleanup after the event has been fired. See DelayedDisconnect
+  nsContentUtils::AddScriptRunner(
+     NS_NewRunnableMethod(this, &nsInProcessTabChildGlobal::DelayedDisconnect)
+  );
 }
 
 void
-nsInProcessTabChildGlobal::DisconnectEventListeners()
+nsInProcessTabChildGlobal::DelayedDisconnect()
 {
+  // Don't let the event escape
+  mOwner = nullptr;
+
+  // Fire the "unload" event
+  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
+
+  // Continue with the Disconnect cleanup
   if (mDocShell) {
     nsCOMPtr<nsPIDOMWindow> win = mDocShell->GetWindow();
     if (win) {
@@ -233,21 +233,14 @@ nsInProcessTabChildGlobal::DisconnectEventListeners()
       win->SetChromeEventHandler(win->GetChromeEventHandler());
     }
   }
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-  }
-
   mDocShell = nullptr;
-}
-
-void
-nsInProcessTabChildGlobal::Disconnect()
-{
   mChromeMessageManager = nullptr;
-  mOwner = nullptr;
   if (mMessageManager) {
     static_cast<nsFrameMessageManager*>(mMessageManager.get())->Disconnect();
     mMessageManager = nullptr;
+  }
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
   }
 }
 
@@ -262,6 +255,18 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
 
+  if (mIsBrowserOrAppFrame &&
+      (!mOwner || !nsContentUtils::IsInChromeDocshell(mOwner->OwnerDoc()))) {
+    if (mOwner) {
+      nsPIDOMWindow* innerWindow = mOwner->OwnerDoc()->GetInnerWindow();
+      if (innerWindow) {
+        aVisitor.mParentTarget = innerWindow->GetParentTarget();
+      }
+    }
+  } else {
+    aVisitor.mParentTarget = mOwner;
+  }
+
 #ifdef DEBUG
   if (mOwner) {
     nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
@@ -274,23 +279,6 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
     }
   }
 #endif
-
-  if (mPreventEventsEscaping) {
-    aVisitor.mParentTarget = nullptr;
-    return NS_OK;
-  }
-
-  if (mIsBrowserOrAppFrame &&
-      (!mOwner || !nsContentUtils::IsInChromeDocshell(mOwner->OwnerDoc()))) {
-    if (mOwner) {
-      nsPIDOMWindow* innerWindow = mOwner->OwnerDoc()->GetInnerWindow();
-      if (innerWindow) {
-        aVisitor.mParentTarget = innerWindow->GetParentTarget();
-      }
-    }
-  } else {
-    aVisitor.mParentTarget = mOwner;
-  }
 
   return NS_OK;
 }

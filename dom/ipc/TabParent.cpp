@@ -316,12 +316,6 @@ TabParent::RemoveTabParentFromTable(uint64_t aLayersId)
 }
 
 void
-TabParent::CacheFrameLoader(nsFrameLoader* aFrameLoader)
-{
-  mFrameLoader = aFrameLoader;
-}
-
-void
 TabParent::SetOwnerElement(Element* aElement)
 {
   mFrameElement = aElement;
@@ -407,13 +401,15 @@ TabParent::ActorDestroy(ActorDestroyReason why)
   if (mIMETabParent == this) {
     mIMETabParent = nullptr;
   }
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  nsRefPtr<nsFrameMessageManager> fmm;
   if (frameLoader) {
+    fmm = frameLoader->GetFrameMessageManager();
     nsCOMPtr<Element> frameElement(mFrameElement);
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr,
                    nullptr);
-    frameLoader->DestroyComplete();
+    frameLoader->DestroyChild();
 
     if (why == AbnormalShutdown && os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
@@ -422,12 +418,13 @@ TabParent::ActorDestroy(ActorDestroyReason why)
                                            NS_LITERAL_STRING("oop-browser-crashed"),
                                            true, true);
     }
-
-    mFrameLoader = nullptr;
   }
 
   if (os) {
     os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this), "ipc:browser-destroyed", nullptr);
+  }
+  if (fmm) {
+    fmm->Disconnect();
   }
 }
 
@@ -2232,7 +2229,7 @@ TabParent::ReceiveMessage(const nsString& aMessage,
                           nsIPrincipal* aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal)
 {
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
     nsRefPtr<nsFrameMessageManager> manager =
       frameLoader->GetFrameMessageManager();
@@ -2350,16 +2347,8 @@ TabParent::AllowContentIME()
 }
 
 already_AddRefed<nsFrameLoader>
-TabParent::GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy) const
+TabParent::GetFrameLoader() const
 {
-  if (mIsDestroyed && !aUseCachedFrameLoaderAfterDestroy) {
-    return nullptr;
-  }
-
-  if (mFrameLoader) {
-    nsRefPtr<nsFrameLoader> fl = mFrameLoader;
-    return fl.forget();
-  }
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
 }
