@@ -418,7 +418,6 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
 
-    MOZ_ASSERT(trc->callback != GCMarker::GrayCallback);
     MOZ_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
     MOZ_ASSERT(rootsSource == TraceRoots || rootsSource == UseSavedRoots);
 
@@ -562,29 +561,16 @@ js::gc::GCRuntime::bufferGrayRoots()
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         MOZ_ASSERT(zone->gcGrayRoots.empty());
 
-    // Transform the GCMarker into an unholy CallbackTracer doppleganger.
-    MOZ_ASSERT(!IsMarkingGray(&marker));
-    MOZ_ASSERT(IsMarkingTracer(&marker));
-    MOZ_ASSERT(!marker.callback);
-    MOZ_ASSERT(!marker.bufferingGrayRootsFailed);
-    marker.callback = GCMarker::GrayCallback;
-    MOZ_ASSERT(IsMarkingGray(&marker));
 
+    BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
-        (*op)(&marker, grayRootTracer.data);
+        (*op)(&grayBufferer, grayRootTracer.data);
 
     // Propagate the failure flag from the marker to the runtime.
-    if (marker.bufferingGrayRootsFailed) {
+    if (grayBufferer.failed()) {
       grayBufferState = GrayBufferState::Failed;
       resetBufferedGrayRoots();
     } else {
       grayBufferState = GrayBufferState::Okay;
     }
-
-    // Restore the GCMarker to its former correctness.
-    MOZ_ASSERT(IsMarkingGray(&marker));
-    marker.bufferingGrayRootsFailed = false;
-    marker.callback = nullptr;
-    MOZ_ASSERT(!IsMarkingGray(&marker));
-    MOZ_ASSERT(IsMarkingTracer(&marker));
 }
