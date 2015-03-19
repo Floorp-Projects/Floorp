@@ -427,18 +427,18 @@ ElementManager.prototype = {
    *        as the start node instead of the document root
    *        If this object has a 'time' member, this number will be
    *        used to see if we have hit the search timelimit.
-   * @param function on_success
-   *        The notification callback used when we are returning successfully.
-   * @param function on_error
-            The callback to invoke when an error occurs.
    * @param boolean all
    *        If true, all found elements will be returned.
    *        If false, only the first element will be returned.
+   * @param function on_success
+   *        Callback used when operating is successful.
+   * @param function on_error
+   *        Callback to invoke when an error occurs.
    *
    * @return nsIDOMElement or list of nsIDOMElements
    *        Returns the element(s) by calling the on_success function.
    */
-  find: function EM_find(win, values, searchTimeout, on_success, on_error, all, command_id) {
+  find: function EM_find(win, values, searchTimeout, all, on_success, on_error, command_id) {
     let startTime = values.time ? values.time : new Date().getTime();
     let startNode = (values.element != undefined) ?
                     this.getKnownElement(values.element, win) : win.document;
@@ -461,13 +461,13 @@ ElementManager.prototype = {
           } else if (values.using == ANON_ATTRIBUTE) {
             message = "Unable to locate anonymous element: " + JSON.stringify(values.value);
           }
-          on_error(message, 7, null, command_id);
+          on_error({message: message, code: 7}, command_id);
         }
       } else {
         values.time = startTime;
         this.timer.initWithCallback(this.find.bind(this, win, values,
-                                                   searchTimeout,
-                                                   on_success, on_error, all,
+                                                   searchTimeout, all,
+                                                   on_success, on_error,
                                                    command_id),
                                     100,
                                     Components.interfaces.nsITimer.TYPE_ONE_SHOT);
@@ -476,14 +476,13 @@ ElementManager.prototype = {
       if (isArrayLike) {
         let ids = []
         for (let i = 0 ; i < found.length ; i++) {
-          ids.push({'ELEMENT': this.addToKnownElements(found[i])});
+          ids.push({"ELEMENT": this.addToKnownElements(found[i])});
         }
         on_success(ids, command_id);
       } else {
         let id = this.addToKnownElements(found);
-        on_success({'ELEMENT':id}, command_id);
+        on_success({"ELEMENT": id}, command_id);
       }
-      return;
     }
   },
 

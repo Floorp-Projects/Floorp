@@ -107,9 +107,11 @@ function registerSelf() {
       importedScripts = FileUtils.getDir('TmpD', [], false);
       importedScripts.append('marionetteContentScripts');
       startListeners();
+      let rv = {};
       if (remotenessChange) {
-        sendAsyncMessage("Marionette:listenersAttached", {listenerId: id});
+        rv.listenerId = id;
       }
+      sendAsyncMessage("Marionette:listenersAttached", rv);
     }
   }
 }
@@ -359,9 +361,9 @@ function sendLog(msg) {
 /**
  * Send error message to server
  */
-function sendError(message, status, trace, command_id) {
-  let error_msg = { message: message, status: status, stacktrace: trace };
-  sendToServer("Marionette:error", error_msg, command_id);
+function sendError(msg, code, stack, cmdId) {
+  let payload = {message: msg, code: code, stack: stack};
+  sendToServer("Marionette:error", payload, cmdId);
 }
 
 /**
@@ -432,6 +434,8 @@ function createExecuteContentSandbox(aWindow, timeout) {
                                   marionetteLogObj, timeout,
                                   heartbeatCallback,
                                   marionetteTestName);
+  marionette.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
+  marionette.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -1292,10 +1296,10 @@ function refresh(msg) {
 function findElementContent(msg) {
   let command_id = msg.json.command_id;
   try {
-    let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
-    let on_error = sendError;
+    let on_success = function(el, cmd_id) { sendResponse({value: el}, cmd_id) };
+    let on_error = function(e, cmd_id) { sendError(e.message, e.code, null, cmd_id); };
     elementManager.find(curFrame, msg.json, msg.json.searchTimeout,
-                        on_success, on_error, false, command_id);
+                        false /* all */, on_success, on_error, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
@@ -1308,10 +1312,10 @@ function findElementContent(msg) {
 function findElementsContent(msg) {
   let command_id = msg.json.command_id;
   try {
-    let on_success = function(id, cmd_id) { sendResponse({value:id}, cmd_id); };
-    let on_error = sendError;
+    let on_success = function(els, cmd_id) { sendResponse({value: els}, cmd_id); };
+    let on_error = function(e, cmd_id) { sendError(e.message, e.code, null, cmd_id); };
     elementManager.find(curFrame, msg.json, msg.json.searchTimeout,
-                        on_success, on_error, true, command_id);
+                        true /* all */, on_success, on_error, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
@@ -1702,21 +1706,20 @@ function switchToFrame(msg) {
   let frameValue = elementManager.wrapValue(curFrame.wrappedJSObject)['ELEMENT'];
   sendSyncMessage("Marionette:switchedToFrame", { frameValue: frameValue });
 
-  if (curFrame.contentWindow == null) {
-    // The frame we want to switch to is a remote (out-of-process) frame;
-    // notify our parent to handle the switch.
+  let rv = null;
+  if (curFrame.contentWindow === null) {
+    // The frame we want to switch to is a remote/OOP frame;
+    // notify our parent to handle the switch
     curFrame = content;
-    sendToServer('Marionette:switchToFrame', {win: parWindow,
-                                              frame: foundFrame,
-                                              command_id: command_id});
-  }
-  else {
+    rv = {win: parWindow, frame: foundFrame};
+  } else {
     curFrame = curFrame.contentWindow;
-    if(msg.json.focus == true) {
+    if (msg.json.focus)
       curFrame.focus();
-    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
+
+  sendResponse({value: rv}, command_id);
 }
  /**
   * Add a cookie to the document
