@@ -139,28 +139,6 @@ function configureLogging() {
   }
 }
 
-// Takes an array of promises and returns a promise that is resolved once all of
-// them are rejected or resolved.
-function allResolvedOrRejected(promises) {
-  if (!promises.length) {
-    return Promise.resolve([]);
-  }
-
-  let countdown = promises.length;
-  let deferred = Promise.defer();
-
-  for (let p of promises) {
-    let helper = () => {
-      if (--countdown == 0) {
-        deferred.resolve();
-      }
-    };
-    Promise.resolve(p).then(helper, helper);
-  }
-
-  return deferred.promise;
-}
-
 // Loads a JSON file using OS.file. file is a string representing the path
 // of the file to be read, options contains additional options to pass to
 // OS.File.read.
