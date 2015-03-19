@@ -204,8 +204,6 @@ class GCMarker : public JSTracer
     /* Set to false if we OOM while buffering gray roots. */
     bool bufferingGrayRootsFailed;
 
-    void resetBufferedGrayRoots();
-
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 
     void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
