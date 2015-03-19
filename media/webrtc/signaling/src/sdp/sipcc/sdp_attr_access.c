@@ -500,7 +500,7 @@ int sdp_find_fmtp_inst (sdp_t *sdp_p, uint16_t level, uint16_t payload_num)
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_type   The type of attribute to find.
- *              inst_num    The instance num of the attribute to delete.
+ *              inst_num    The instance num of the attribute to find.
  *                          Range should be (1 - max num insts of this
  *                          particular type of attribute at this level).
  * Returns:     Pointer to the attribute or NULL if not found.
@@ -995,85 +995,6 @@ sdp_direction_e sdp_get_media_direction (sdp_t *sdp_p, uint16_t level,
     }
 
     return (direction);
-}
-
-/*
- * sdp_delete_all_media_direction_attrs
- *
- * Deletes all the media direction attributes from a given SDP level.
- * Media direction attributes include:
- * a=sendonly
- * a=recvonly
- * a=sendrecv
- * a=inactive
- *
- * This function can be used in conjunction with sdp_add_new_attr, to ensure
- * that there is only one direction attribute per level.
- * It can also be used to delete all attributes when the client wants to
- * advertise the default direction, i.e. a=sendrecv.
- */
-sdp_result_e sdp_delete_all_media_direction_attrs (sdp_t *sdp_p, uint16_t level)
-{
-    sdp_mca_t   *mca_p;
-    sdp_attr_t  *attr_p;
-    sdp_attr_t  *prev_attr_p = NULL;
-    sdp_attr_t  *tmp_attr_p = NULL;
-
-    /* Find the pointer to the attr list for this level. */
-    if (level == SDP_SESSION_LEVEL) {
-        attr_p = sdp_p->sess_attrs_p;
-        while (attr_p != NULL) {
-            if ((attr_p->type == SDP_ATTR_INACTIVE) ||
-                (attr_p->type == SDP_ATTR_SENDONLY) ||
-                (attr_p->type == SDP_ATTR_RECVONLY) ||
-                (attr_p->type == SDP_ATTR_SENDRECV)) {
-
-                tmp_attr_p = attr_p;
-
-                if (prev_attr_p == NULL) {
-                    sdp_p->sess_attrs_p = attr_p->next_p;
-                } else {
-                    prev_attr_p->next_p = attr_p->next_p;
-                }
-                attr_p = attr_p->next_p;
-
-                sdp_free_attr(tmp_attr_p);
-            } else {
-                prev_attr_p = attr_p;
-                attr_p = attr_p->next_p;
-            }
-        }
-    } else {  /* Attr is at a media level */
-        mca_p = sdp_find_media_level(sdp_p, level);
-        if (mca_p == NULL) {
-            return (SDP_INVALID_MEDIA_LEVEL);
-        }
-
-        attr_p = mca_p->media_attrs_p;
-        while (attr_p != NULL) {
-            if ((attr_p->type == SDP_ATTR_INACTIVE) ||
-                (attr_p->type == SDP_ATTR_SENDONLY) ||
-                (attr_p->type == SDP_ATTR_RECVONLY) ||
-                (attr_p->type == SDP_ATTR_SENDRECV)) {
-
-                tmp_attr_p = attr_p;
-
-                if (prev_attr_p == NULL) {
-                    mca_p->media_attrs_p = attr_p->next_p;
-                } else {
-                    prev_attr_p->next_p = attr_p->next_p;
-                }
-                attr_p = attr_p->next_p;
-
-                sdp_free_attr(tmp_attr_p);
-            } else {
-                prev_attr_p = attr_p;
-                attr_p = attr_p->next_p;
-            }
-        }
-    }
-
-    return (SDP_SUCCESS);
 }
 
 /* Since there are four different attribute names which all have the same
