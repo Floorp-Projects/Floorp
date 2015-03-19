@@ -23,6 +23,8 @@ pkgpath=${pkg%.tar*}
 tgtpath=${DIST}/${pkgpath}
 taropts="-jcf"
 
+TOPSRCDIR=${SRCDIR}/../..
+
 case $cmd in
 "clean")
 	echo "Cleaning ${pkg} and ${tgtpath} ..."
@@ -43,21 +45,21 @@ case $cmd in
 
 	# copy the embedded icu
 	${MKDIR} -p ${tgtpath}/intl
-	cp -t ${tgtpath}/intl -dRp ${SRCDIR}/../../intl/icu
+	cp -t ${tgtpath}/intl -dRp ${TOPSRCDIR}/intl/icu
 
 	# copy main moz.build and Makefile.in
-	cp -t ${tgtpath} -dRp ${SRCDIR}/../../Makefile.in ${SRCDIR}/../../moz.build
+	cp -t ${tgtpath} -dRp ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build
 
 	# copy a nspr file used by the build system
 	${MKDIR} -p ${tgtpath}/nsprpub/config
 	cp -t ${tgtpath}/nsprpub/config -dRp \
-		${SRCDIR}/../../nsprpub/config/make-system-wrappers.pl
+		${TOPSRCDIR}/nsprpub/config/make-system-wrappers.pl
 
 	# copy build and config directory.
-	cp -t ${tgtpath} -dRp ${SRCDIR}/../../build ${SRCDIR}/../../config
+	cp -t ${tgtpath} -dRp ${TOPSRCDIR}/build ${TOPSRCDIR}/config
 
 	# put in js itself
-	cp -t ${tgtpath} -dRp ${SRCDIR}/../../mfbt
+	cp -t ${tgtpath} -dRp ${TOPSRCDIR}/mfbt
 	cp -t ${tgtpath}/js -dRp ${SRCDIR}/../public
 	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${DIST} -a -not -name ${pkg} \
 		-exec cp -t ${tgtpath}/js/src -dRp {} +
@@ -68,26 +70,37 @@ case $cmd in
 	fi
 
 	cp -t ${tgtpath} -dRp \
-		${SRCDIR}/../../python
+		${TOPSRCDIR}/python
 	${MKDIR} -p ${tgtpath}/dom/bindings
 	cp -t ${tgtpath}/dom/bindings -dRp \
-		${SRCDIR}/../../dom/bindings/mozwebidlcodegen
+		${TOPSRCDIR}/dom/bindings/mozwebidlcodegen
 	${MKDIR} -p ${tgtpath}/media/webrtc/trunk/tools
 	cp -t ${tgtpath}/media/webrtc/trunk/tools -dRp \
-		${SRCDIR}/../../media/webrtc/trunk/tools/gyp
+		${TOPSRCDIR}/media/webrtc/trunk/tools/gyp
 	${MKDIR} -p ${tgtpath}/testing
 	cp -t ${tgtpath}/testing -dRp \
-		${SRCDIR}/../../testing/mozbase
+		${TOPSRCDIR}/testing/mozbase
 	${MKDIR} -p ${tgtpath}/modules/zlib
 	cp -t ${tgtpath}/modules/zlib -dRp \
-		${SRCDIR}/../../modules/zlib/src
+		${TOPSRCDIR}/modules/zlib/src
 	${MKDIR} -p ${tgtpath}/layout/tools/reftest
 	cp -t ${tgtpath}/layout/tools/reftest -dRp \
-	        ${SRCDIR}/../../layout/tools/reftest/reftest
+	        ${TOPSRCDIR}/layout/tools/reftest/reftest
 	${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
 	cp -t ${tgtpath}/toolkit/mozapps/installer -dRp \
-	        ${SRCDIR}/../../toolkit/mozapps/installer/package-name.mk \
-	        ${SRCDIR}/../../toolkit/mozapps/installer/upload-files.mk \
+	        ${TOPSRCDIR}/toolkit/mozapps/installer/package-name.mk \
+	        ${TOPSRCDIR}/toolkit/mozapps/installer/upload-files.mk
+	${MKDIR} -p ${tgtpath}/mozglue
+	cp -t ${tgtpath}/mozglue -dRp \
+	        ${TOPSRCDIR}/mozglue/build \
+	        ${TOPSRCDIR}/mozglue/crt \
+	        ${TOPSRCDIR}/mozglue/moz.build
+        ${MKDIR} -p ${tgtpath}/memory
+        cp -t ${tgtpath}/memory -dRp \
+                ${TOPSRCDIR}/memory/moz.build \
+                ${TOPSRCDIR}/memory/build \
+                ${TOPSRCDIR}/memory/jemalloc \
+                ${TOPSRCDIR}/memory/mozjemalloc
 
 	# remove *.pyc and *.pyo files if any
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f
@@ -128,17 +141,17 @@ README_EOF
 	fi
 
 	# copy LICENSE
-	if [ -e ${SRCDIR}/../../b2g/LICENSE ]; then
-		cp ${SRCDIR}/../../b2g/LICENSE ${tgtpath}/
+	if [ -e ${TOPSRCDIR}/b2g/LICENSE ]; then
+		cp ${TOPSRCDIR}/b2g/LICENSE ${tgtpath}/
 	else
-		cp ${SRCDIR}/../../LICENSE ${tgtpath}/
+		cp ${TOPSRCDIR}/LICENSE ${tgtpath}/
 	fi
 
 	# copy patches dir, if it currently exists in DIST
 	if [ -d ${DIST}/patches ]; then
 		cp -t ${tgtpath} -dRp ${DIST}/patches
-	elif [ -d ${SRCDIR}/../../patches ]; then
-		cp -t ${tgtpath} -dRp ${SRCDIR}/../../patches
+	elif [ -d ${TOPSRCDIR}/patches ]; then
+		cp -t ${tgtpath} -dRp ${TOPSRCDIR}/patches
 	fi
 
 	# Roll the tarball
