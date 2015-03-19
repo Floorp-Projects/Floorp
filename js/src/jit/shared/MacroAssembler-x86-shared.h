@@ -1041,6 +1041,34 @@ class MacroAssemblerX86Shared : public Assembler
     void loadUnalignedInt32x4(const Operand &src, FloatRegister dest) {
         vmovdqu(src, dest);
     }
+
+    void storeInt32x1(FloatRegister src, const Address &dest) {
+        vmovd(src, Operand(dest));
+    }
+    void storeInt32x1(FloatRegister src, const BaseIndex &dest) {
+        vmovd(src, Operand(dest));
+    }
+    void storeInt32x2(FloatRegister src, const Address &dest) {
+        vmovq(src, Operand(dest));
+    }
+    void storeInt32x2(FloatRegister src, const BaseIndex &dest) {
+        vmovq(src, Operand(dest));
+    }
+    void storeInt32x3(FloatRegister src, const Address &dest) {
+        Address destZ(dest);
+        destZ.offset += 2 * sizeof(int32_t);
+        vmovq(src, Operand(dest));
+        vmovhlps(src, ScratchSimdReg, ScratchSimdReg);
+        vmovd(ScratchSimdReg, Operand(destZ));
+    }
+    void storeInt32x3(FloatRegister src, const BaseIndex &dest) {
+        BaseIndex destZ(dest);
+        destZ.offset += 2 * sizeof(int32_t);
+        vmovq(src, Operand(dest));
+        vmovhlps(src, ScratchSimdReg, ScratchSimdReg);
+        vmovd(ScratchSimdReg, Operand(destZ));
+    }
+
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
         vmovdqu(src, Operand(dest));
     }
@@ -1115,6 +1143,21 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void loadAlignedFloat32x4(const Operand &src, FloatRegister dest) {
         vmovaps(src, dest);
+    }
+
+    void storeFloat32x3(FloatRegister src, const Address &dest) {
+        Address destZ(dest);
+        destZ.offset += 2 * sizeof(int32_t);
+        storeDouble(src, dest);
+        vmovhlps(src, ScratchSimdReg, ScratchSimdReg);
+        storeFloat32(ScratchSimdReg, destZ);
+    }
+    void storeFloat32x3(FloatRegister src, const BaseIndex &dest) {
+        BaseIndex destZ(dest);
+        destZ.offset += 2 * sizeof(int32_t);
+        storeDouble(src, dest);
+        vmovhlps(src, ScratchSimdReg, ScratchSimdReg);
+        storeFloat32(ScratchSimdReg, destZ);
     }
     void storeAlignedFloat32x4(FloatRegister src, const Address &dest) {
         vmovaps(src, Operand(dest));

@@ -844,7 +844,8 @@ class IonBuilder
                                  MDefinition **index, Scalar::Type *arrayType);
     InliningStatus inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
                                   unsigned numElems);
-    InliningStatus inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type);
+    InliningStatus inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                                   unsigned numElems);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
