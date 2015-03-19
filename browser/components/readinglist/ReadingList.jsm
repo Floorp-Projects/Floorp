@@ -42,6 +42,7 @@ const ITEM_BASIC_PROPERTY_NAMES = `
   resolvedURL
   resolvedTitle
   excerpt
+  preview
   status
   favorite
   isArticle
@@ -303,12 +304,8 @@ ReadingListImpl.prototype = {
       excerpt: metadata.description,
     };
 
-    if (metadata.description) {
-      itemData.exerpt = metadata.description;
-    }
-
     if (metadata.previews.length > 0) {
-      itemData.image = metadata.previews[0];
+      itemData.preview = metadata.previews[0];
     }
 
     let item = yield ReadingList.addItem(itemData);
@@ -918,7 +915,7 @@ function getMetadataFromBrowser(browser) {
 Object.defineProperty(this, "ReadingList", {
   get() {
     if (!this._singleton) {
-      let store = new SQLiteStore("reading-list-temp.sqlite");
+      let store = new SQLiteStore("reading-list-temp2.sqlite");
       this._singleton = new ReadingListImpl(store);
     }
     return this._singleton;
