@@ -186,8 +186,8 @@ public:
   virtual bool TextIsOnlyWhitespace() override;
   virtual bool HasTextForTranslation() override;
   virtual void AppendTextTo(nsAString& aResult) override;
-  virtual bool AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t&) override NS_WARN_UNUSED_RESULT; 
+  MOZ_WARN_UNUSED_RESULT
+  virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
   virtual nsIContent *GetBindingParent() const override;
   virtual nsXBLBinding *GetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,

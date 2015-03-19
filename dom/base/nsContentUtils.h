@@ -1277,8 +1277,9 @@ public:
    * @param aResult the result. Out param.
    * @return false on out of memory errors, true otherwise.
    */
+  MOZ_WARN_UNUSED_RESULT
   static bool GetNodeTextContent(nsINode* aNode, bool aDeep,
-                                 nsAString& aResult) NS_WARN_UNUSED_RESULT;
+                                 nsAString& aResult);
 
   /**
    * Same as GetNodeTextContents but appends the result rather than sets it.
@@ -1753,8 +1754,9 @@ public:
    * @param aString the string to convert the newlines inside [in/out]
    */
   static void PlatformToDOMLineBreaks(nsString &aString);
-  static NS_WARN_UNUSED_RESULT bool PlatformToDOMLineBreaks(nsString &aString,
-                                                            const mozilla::fallible_t&);
+  MOZ_WARN_UNUSED_RESULT
+  static bool PlatformToDOMLineBreaks(nsString &aString,
+                                      const mozilla::fallible_t&);
 
   /**
    * Populates aResultString with the contents of the string-buffer aBuf, up
