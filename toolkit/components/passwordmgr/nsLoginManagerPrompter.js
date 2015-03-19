@@ -854,10 +854,12 @@ LoginManagerPrompter.prototype = {
 
       var { browser } = this._getNotifyWindow();
 
-      aNotifyObj.show(browser, "password-save", notificationText,
+      aNotifyObj.show(browser, "password", notificationText,
                       "password-notification-icon", mainAction,
-                      secondaryActions, { timeout: Date.now() + 10000,
-                                          persistWhileVisible: true });
+                      secondaryActions,
+                      { timeout: Date.now() + 10000,
+                        persistWhileVisible: true,
+                        passwordNotificationType: "password-save" });
     } else {
       var notNowButtonText =
             this._getLocalizedString("notifyBarNotNowButtonText");
@@ -906,7 +908,7 @@ LoginManagerPrompter.prototype = {
   _removeLoginNotifications : function () {
     var popupNote = this._getPopupNote();
     if (popupNote)
-      popupNote = popupNote.getNotification("password-save");
+      popupNote = popupNote.getNotification("password");
     if (popupNote)
       popupNote.remove();
 
@@ -1052,10 +1054,11 @@ LoginManagerPrompter.prototype = {
       var { browser } = this._getNotifyWindow();
 
       Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
-      aNotifyObj.show(browser, "password-change", notificationText,
+      aNotifyObj.show(browser, "password", notificationText,
                       "password-notification-icon", mainAction,
                       null, { timeout: Date.now() + 10000,
-                              persistWhileVisible: true });
+                              persistWhileVisible: true,
+                              passwordNotificationType: "password-change" });
     } else {
       var dontChangeButtonText =
             this._getLocalizedString("notifyBarDontChangeButtonText");
