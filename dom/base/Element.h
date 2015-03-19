@@ -960,7 +960,7 @@ public:
                            nsIDOMHTMLCollection** aResult);
   void GetClassList(nsISupports** aClassList);
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_FINAL MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_FINAL MOZ_OVERRIDE;
 
   nsINode* GetScopeChainParent() const MOZ_OVERRIDE;
 
@@ -1315,7 +1315,7 @@ public:
   virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
   virtual nsINode* GetParentObject() MOZ_OVERRIDE { return mParent; }
   virtual uint32_t Length() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 protected:
   virtual ~DestinationInsertionPointList();
 

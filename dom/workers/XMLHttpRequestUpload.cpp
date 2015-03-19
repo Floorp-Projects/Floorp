@@ -30,9 +30,9 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XMLHttpRequestUpload, nsXHREventTarget,
                                    mXHR)
 
 JSObject*
-XMLHttpRequestUpload::WrapObject(JSContext* aCx)
+XMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return XMLHttpRequestUploadBinding_workers::Wrap(aCx, this);
+  return XMLHttpRequestUploadBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 // static

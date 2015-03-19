@@ -42,9 +42,9 @@ XMLStylesheetProcessingInstruction::~XMLStylesheetProcessingInstruction()
 }
 
 JSObject*
-XMLStylesheetProcessingInstruction::WrapNode(JSContext *aCx)
+XMLStylesheetProcessingInstruction::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return XMLStylesheetProcessingInstructionBinding::Wrap(aCx, this);
+  return XMLStylesheetProcessingInstructionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIContent

@@ -34,9 +34,9 @@ WebGLSync::GetParentObject() const
 // -------------------------------------------------------------------------
 // IMPLEMENT NS
 JSObject*
-WebGLSync::WrapObject(JSContext* cx)
+WebGLSync::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLSyncBinding::Wrap(cx, this);
+    return dom::WebGLSyncBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSync)

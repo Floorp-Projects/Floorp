@@ -47,9 +47,9 @@ DataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-DataStore::WrapObject(JSContext* aCx)
+DataStore::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DataStoreBinding::Wrap(aCx, this);
+  return DataStoreBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /*static*/ bool

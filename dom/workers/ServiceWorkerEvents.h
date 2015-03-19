@@ -44,9 +44,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, Event)
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return FetchEventBinding::Wrap(aCx, this);
+    return FetchEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
@@ -103,9 +103,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ExtendableEvent, Event)
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return mozilla::dom::ExtendableEventBinding::Wrap(aCx, this);
+    return mozilla::dom::ExtendableEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   static already_AddRefed<ExtendableEvent>
@@ -161,9 +161,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InstallEvent, ExtendableEvent)
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return mozilla::dom::InstallEventBinding::Wrap(aCx, this);
+    return mozilla::dom::InstallEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   static already_AddRefed<InstallEvent>

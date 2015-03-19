@@ -54,9 +54,9 @@ MobileNetworkInfo::Update(nsIMobileNetworkInfo* aInfo)
 }
 
 JSObject*
-MobileNetworkInfo::WrapObject(JSContext* aCx)
+MobileNetworkInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozMobileNetworkInfoBinding::Wrap(aCx, this);
+  return MozMobileNetworkInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIMobileNetworkInfo

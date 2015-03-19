@@ -27,7 +27,7 @@ protected:
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGSymbolElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   ~SVGSymbolElement();
-  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   // interfaces:

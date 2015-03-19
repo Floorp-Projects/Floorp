@@ -39,9 +39,9 @@ WebGLSampler::GetParentObject() const
 }
 
 JSObject*
-WebGLSampler::WrapObject(JSContext* cx)
+WebGLSampler::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLSamplerBinding::Wrap(cx, this);
+    return dom::WebGLSamplerBinding::Wrap(cx, this, aGivenProto);
 }
 
 

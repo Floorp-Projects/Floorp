@@ -2516,9 +2516,9 @@ HTMLFormElement::AddToPastNamesMap(const nsAString& aName,
 }
  
 JSObject*
-HTMLFormElement::WrapNode(JSContext* aCx)
+HTMLFormElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLFormElementBinding::Wrap(aCx, this);
+  return HTMLFormElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

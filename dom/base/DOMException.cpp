@@ -490,9 +490,9 @@ Exception::Initialize(const nsACString& aMessage, nsresult aResult,
 }
 
 JSObject*
-Exception::WrapObject(JSContext* cx)
+Exception::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ExceptionBinding::Wrap(cx, this);
+  return ExceptionBinding::Wrap(cx, this, aGivenProto);
 }
 
 void
@@ -706,9 +706,9 @@ DOMException::Constructor(GlobalObject& /* unused */,
 }
 
 JSObject*
-DOMException::WrapObject(JSContext* aCx)
+DOMException::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMExceptionBinding::Wrap(aCx, this);
+  return DOMExceptionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */already_AddRefed<DOMException>
