@@ -137,6 +137,10 @@ public:
 
   virtual void DisableHardwareAcceleration() {}
 
+  virtual bool SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& aConfig) const {
+    return true;
+  }
+
 protected:
   PlatformDecoderModule() {}
   virtual ~PlatformDecoderModule() {}
