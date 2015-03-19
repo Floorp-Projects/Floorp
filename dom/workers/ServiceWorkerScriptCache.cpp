@@ -86,6 +86,18 @@ public:
       return rv;
     }
 
+    nsLoadFlags flags;
+    rv = mChannel->GetLoadFlags(&flags);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    flags |= nsIRequest::LOAD_BYPASS_CACHE;
+    rv = mChannel->SetLoadFlags(flags);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     if (httpChannel) {
       // Spec says no redirects allowed for SW scripts.
