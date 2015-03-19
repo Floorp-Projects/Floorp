@@ -2858,18 +2858,11 @@ class MNewArray
     // Allocate space at initialization or not
     AllocatingBehaviour allocating_;
 
+    // Whether values written to this array should be converted to double first.
+    bool convertDoubleElements_;
+
     MNewArray(CompilerConstraintList *constraints, uint32_t count, MConstant *templateConst,
-              gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
-      : MUnaryInstruction(templateConst),
-        count_(count),
-        initialHeap_(initialHeap),
-        allocating_(allocating)
-    {
-        ArrayObject *obj = templateObject();
-        setResultType(MIRType_Object);
-        if (!obj->isSingleton())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
-    }
+              gc::InitialHeap initialHeap, AllocatingBehaviour allocating);
 
   public:
     INSTRUCTION_HEADER(NewArray)
@@ -2895,6 +2888,10 @@ class MNewArray
 
     AllocatingBehaviour allocatingBehaviour() const {
         return allocating_;
+    }
+
+    bool convertDoubleElements() const {
+        return convertDoubleElements_;
     }
 
     // Returns true if the code generator should call through to the
