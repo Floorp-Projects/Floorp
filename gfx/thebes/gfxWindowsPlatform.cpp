@@ -1168,6 +1168,10 @@ gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
           break;
         case DXGI_ERROR_INVALID_CALL:
           *aResetReason = DeviceResetReason::INVALID_CALL;
+          break;
+        case E_OUTOFMEMORY:
+          *aResetReason = DeviceResetReason::OUT_OF_MEMORY;
+          break;
         default:
           MOZ_ASSERT(false);
         }
