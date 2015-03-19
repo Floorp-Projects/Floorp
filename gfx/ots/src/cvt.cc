@@ -38,7 +38,7 @@ bool ots_cvt_should_serialise(OpenTypeFile *file) {
   if (!file->glyf) {
     return false;  // this table is not for CFF fonts.
   }
-  return file->cvt;
+  return file->cvt != NULL;
 }
 
 bool ots_cvt_serialise(OTSStream *out, OpenTypeFile *file) {

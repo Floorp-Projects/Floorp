@@ -14,21 +14,17 @@
 #include <map>
 #include <vector>
 
-#ifndef OTS_DISABLE_WOFF2
 #include "woff2.h"
-#endif
 
 // The OpenType Font File
 // http://www.microsoft.com/typography/otspec/cmap.htm
 
 namespace {
 
-bool g_debug_output = true;
-bool g_enable_woff2 = false;
-
 // Generate a message with or without a table tag, when 'header' is the OpenTypeFile pointer
 #define OTS_FAILURE_MSG_TAG(msg_,tag_) OTS_FAILURE_MSG_TAG_(header, msg_, tag_)
 #define OTS_FAILURE_MSG_HDR(msg_)      OTS_FAILURE_MSG_(header, msg_)
+#define OTS_WARNING_MSG_HDR(msg_)      OTS_WARNING_MSG_(header, msg_)
 
 
 struct OpenTypeTable {
@@ -289,7 +285,7 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   // We don't care about these fields of the header:
   //   uint16_t major_version, minor_version
   if (!file.Skip(2 * 2)) {
-    return OTS_FAILURE_MSG_HDR("error skipping WOFF header fields");
+    return OTS_FAILURE_MSG_HDR("Failed to read 'majorVersion' or 'minorVersion'");
   }
 
   // Checks metadata block size.
@@ -299,11 +295,11 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   if (!file.ReadU32(&meta_offset) ||
       !file.ReadU32(&meta_length) ||
       !file.ReadU32(&meta_length_orig)) {
-    return OTS_FAILURE_MSG_HDR("error reading WOFF header fields");
+    return OTS_FAILURE_MSG_HDR("Failed to read header metadata block fields");
   }
   if (meta_offset) {
     if (meta_offset >= length || length - meta_offset < meta_length) {
-      return OTS_FAILURE_MSG_HDR("invalid metadata block location/size");
+      return OTS_FAILURE_MSG_HDR("Invalid metadata block offset or length");
     }
   }
 
@@ -312,11 +308,11 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   uint32_t priv_length;
   if (!file.ReadU32(&priv_offset) ||
       !file.ReadU32(&priv_length)) {
-    return OTS_FAILURE_MSG_HDR("error reading WOFF header fields");
+    return OTS_FAILURE_MSG_HDR("Failed to read header private block fields");
   }
   if (priv_offset) {
     if (priv_offset >= length || length - priv_offset < priv_length) {
-      return OTS_FAILURE_MSG_HDR("invalid private block location/size");
+      return OTS_FAILURE_MSG_HDR("Invalid private block offset or length");
     }
   }
 
@@ -371,51 +367,49 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   }
   if (meta_offset) {
     if (block_end != meta_offset) {
-      return OTS_FAILURE_MSG_HDR("invalid metadata block location");
+      return OTS_FAILURE_MSG_HDR("Invalid metadata block offset");
     }
     block_end = ots::Round4(static_cast<uint64_t>(meta_offset) +
                             static_cast<uint64_t>(meta_length));
     if (block_end > std::numeric_limits<uint32_t>::max()) {
-      return OTS_FAILURE_MSG_HDR("invalid metadata block size");
+      return OTS_FAILURE_MSG_HDR("Invalid metadata block length");
     }
   }
   if (priv_offset) {
     if (block_end != priv_offset) {
-      return OTS_FAILURE_MSG_HDR("invalid private block location");
+      return OTS_FAILURE_MSG_HDR("Invalid private block offset");
     }
     block_end = ots::Round4(static_cast<uint64_t>(priv_offset) +
                             static_cast<uint64_t>(priv_length));
     if (block_end > std::numeric_limits<uint32_t>::max()) {
-      return OTS_FAILURE_MSG_HDR("invalid private block size");
+      return OTS_FAILURE_MSG_HDR("Invalid private block length");
     }
   }
   if (block_end != ots::Round4(length)) {
-    return OTS_FAILURE_MSG_HDR("file length mismatch (trailing junk?)");
+    return OTS_FAILURE_MSG_HDR("File length mismatch (trailing junk?)");
   }
 
   return ProcessGeneric(header, woff_tag, output, data, length, tables, file);
 }
 
-#ifndef OTS_DISABLE_WOFF2
 bool ProcessWOFF2(ots::OpenTypeFile *header,
                   ots::OTSStream *output, const uint8_t *data, size_t length) {
   size_t decompressed_size = ots::ComputeWOFF2FinalSize(data, length);
   if (decompressed_size == 0) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 is set to 0");
   }
   // decompressed font must be <= 30MB
   if (decompressed_size > 30 * 1024 * 1024) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds 30MB");
   }
 
   std::vector<uint8_t> decompressed_buffer(decompressed_size);
-  if (!ots::ConvertWOFF2ToTTF(header, &decompressed_buffer[0], decompressed_size,
-                              data, length)) {
-    return OTS_FAILURE();
+  if (!ots::ConvertWOFF2ToSFNT(header, &decompressed_buffer[0], decompressed_size,
+                               data, length)) {
+    return OTS_FAILURE_MSG_HDR("Failed to convert WOFF 2.0 font to SFNT");
   }
   return ProcessTTF(header, output, &decompressed_buffer[0], decompressed_size);
 }
-#endif
 
 ots::TableAction GetTableAction(ots::OpenTypeFile *header, uint32_t tag) {
   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
@@ -479,7 +473,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
       const uint32_t this_tag = ntohl(tables[i].tag);
       const uint32_t prev_tag = ntohl(tables[i - 1].tag);
       if (this_tag <= prev_tag) {
-        return OTS_FAILURE_MSG_HDR("table directory not correctly ordered");
+        OTS_WARNING_MSG_HDR("Table directory is not correctly ordered");
       }
     }
 
@@ -606,8 +600,14 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
   } else {
     if (!header->glyf || !header->loca) {
       // No TrueType glyph found.
-      // Note: bitmap-only fonts are not supported.
-      return OTS_FAILURE_MSG_HDR("neither PS nor TT glyphs present");
+#define PASSTHRU_TABLE(TAG) (table_map.find(Tag(TAG)) != table_map.end() && \
+                             GetTableAction(header, Tag(TAG)) == ots::TABLE_ACTION_PASSTHRU)
+      // We don't sanitise bitmap table, but don't reject bitmap-only fonts if
+      // we keep the tables.
+      if (!PASSTHRU_TABLE("CBDT") || !PASSTHRU_TABLE("CBLC")) {
+        return OTS_FAILURE_MSG_HDR("no supported glyph shapes table(s) present");
+      }
+#undef PASSTHRU_TABLE
     }
   }
 
@@ -792,14 +792,6 @@ bool IsValidVersionTag(uint32_t tag) {
          tag == Tag("typ1");
 }
 
-void DisableDebugOutput() {
-  g_debug_output = false;
-}
-
-void EnableWOFF2() {
-  g_enable_woff2 = true;
-}
-
 bool OTSContext::Process(OTSStream *output,
                          const uint8_t *data,
                          size_t length) {
@@ -814,12 +806,8 @@ bool OTSContext::Process(OTSStream *output,
   bool result;
   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {
     result = ProcessWOFF(&header, output, data, length);
-#ifndef OTS_DISABLE_WOFF2
-  } else if (g_enable_woff2 &&
-             data[0] == 'w' && data[1] == 'O' && data[2] == 'F' &&
-             data[3] == '2') {
+  } else if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == '2') {
     result = ProcessWOFF2(&header, output, data, length);
-#endif
   } else {
     result = ProcessTTF(&header, output, data, length);
   }
@@ -830,21 +818,5 @@ bool OTSContext::Process(OTSStream *output,
   }
   return result;
 }
-
-// For backward compatibility
-bool Process(OTSStream *output, const uint8_t *data, size_t length) {
-  static OTSContext context;
-  return context.Process(output, data, length);
-}
-
-#if !defined(_MSC_VER) && defined(OTS_DEBUG)
-bool Failure(const char *f, int l, const char *fn) {
-  if (g_debug_output) {
-    std::fprintf(stderr, "ERROR at %s:%d (%s)\n", f, l, fn);
-    std::fflush(stderr);
-  }
-  return false;
-}
-#endif
 
 }  // namespace ots
