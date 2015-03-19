@@ -83,6 +83,7 @@ CollectLaterSiblings(nsISupports* aElement,
 
 struct RestyleEnumerateData : RestyleTracker::Hints {
   nsRefPtr<dom::Element> mElement;
+  UniquePtr<ProfilerBacktrace> mBacktrace;
 };
 
 struct RestyleCollector {
@@ -140,6 +141,7 @@ CollectRestyles(nsISupports* aElement,
   currentRestyle->mElement = element;
   currentRestyle->mRestyleHint = aData->mRestyleHint;
   currentRestyle->mChangeHint = aData->mChangeHint;
+  currentRestyle->mBacktrace = Move(aData->mBacktrace);
 
 #ifdef RESTYLE_LOGGING
   collector->count++;
@@ -305,6 +307,10 @@ RestyleTracker::DoProcessRestyles()
           continue;
         }
 
+        Maybe<GeckoProfilerTracingRAII> profilerRAII;
+        if (profiler_feature_active("restyle")) {
+          profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
+        }
         ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint);
         AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
       }
@@ -340,6 +346,11 @@ RestyleTracker::DoProcessRestyles()
                       FrameTagToString(currentRestyle->mElement).get(),
                       index++, collector.count);
           LOG_RESTYLE_INDENT();
+
+          Maybe<GeckoProfilerTracingRAII> profilerRAII;
+          if (profiler_feature_active("restyle")) {
+            profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
+          }
           ProcessOneRestyle(currentRestyle->mElement,
                             currentRestyle->mRestyleHint,
                             currentRestyle->mChangeHint);
