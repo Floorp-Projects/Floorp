@@ -1187,7 +1187,6 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
     mListNode = listNode;
   }
 
-  // Now we are the autocomplete controller's bitch
   mController->SetInput(this);
 }
 
