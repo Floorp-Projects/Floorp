@@ -67,6 +67,11 @@ public:
               const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
               ErrorResult& aRv);
 
+  static already_AddRefed<Headers>
+  Create(nsIGlobalObject* aGlobalObject,
+         const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+         ErrorResult& aRv);
+
   void Append(const nsACString& aName, const nsACString& aValue,
               ErrorResult& aRv)
   {

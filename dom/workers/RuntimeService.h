@@ -145,16 +145,6 @@ public:
   }
 
   nsresult
-  CreateSharedWorkerForServiceWorker(const GlobalObject& aGlobal,
-                                     const nsAString& aScriptURL,
-                                     const nsACString& aScope,
-                                     SharedWorker** aSharedWorker)
-  {
-    return CreateSharedWorkerInternal(aGlobal, aScriptURL, aScope,
-                                      WorkerTypeService, aSharedWorker);
-  }
-
-  nsresult
   CreateSharedWorkerForServiceWorkerFromLoadInfo(JSContext* aCx,
                                                  WorkerLoadInfo* aLoadInfo,
                                                  const nsAString& aScriptURL,
