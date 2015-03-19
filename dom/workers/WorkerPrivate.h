@@ -487,10 +487,24 @@ public:
   {
     MOZ_ASSERT(IsServiceWorker());
     AssertIsOnMainThread();
-    return mLoadingWorkerScript ?
-             mLoadInfo.mServiceWorkerCacheName : EmptyString();
+    return mLoadInfo.mServiceWorkerCacheName;
   }
-  
+
+  // This is used to handle importScripts(). When the worker is first loaded
+  // and executed, it happens in a sync loop. At this point it sets
+  // mLoadingWorkerScript to true. importScripts() calls that occur during the
+  // execution run in nested sync loops and so this continues to return true,
+  // leading to these scripts being cached offline.
+  // mLoadingWorkerScript is set to false when the top level loop ends.
+  // importScripts() in function calls or event handlers are always fetched
+  // from the network.
+  bool
+  LoadScriptAsPartOfLoadingServiceWorkerScript()
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    return mLoadingWorkerScript;
+  }
+
   void
   SetLoadingWorkerScript(bool aLoadingWorkerScript)
   {

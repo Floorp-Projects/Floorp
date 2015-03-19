@@ -314,6 +314,7 @@ public:
     : mCacheName(aWorkerPrivate->ServiceWorkerCacheName())
   {
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+    MOZ_ASSERT(aWorkerPrivate->LoadScriptAsPartOfLoadingServiceWorkerScript());
     AssertIsOnMainThread();
   }
 
@@ -645,7 +646,7 @@ private:
     }
 
     if (!mWorkerPrivate->IsServiceWorker() ||
-        mWorkerPrivate->ServiceWorkerCacheName().IsEmpty()) {
+        !mWorkerPrivate->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
       for (uint32_t index = 0, len = mLoadInfos.Length(); index < len;
            ++index) {
         nsresult rv = LoadScript(index);
