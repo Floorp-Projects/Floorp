@@ -124,11 +124,21 @@ Pickle::Pickle(int header_size)
 
 Pickle::Pickle(const char* data, int data_len)
     : header_(reinterpret_cast<Header*>(const_cast<char*>(data))),
-      header_size_(data_len - header_->payload_size),
+      header_size_(0),
       capacity_(kCapacityReadOnly),
       variable_buffer_offset_(0) {
-  DCHECK(header_size_ >= sizeof(Header));
-  DCHECK(header_size_ == AlignInt(header_size_));
+  if (data_len >= static_cast<int>(sizeof(Header)))
+    header_size_ = data_len - header_->payload_size;
+
+  if (header_size_ > static_cast<unsigned int>(data_len))
+    header_size_ = 0;
+
+  if (header_size_ != AlignInt(header_size_))
+    header_size_ = 0;
+
+  // If there is anything wrong with the data, we're not going to use it.
+  if (!header_size_)
+    header_ = nullptr;
 }
 
 Pickle::Pickle(const Pickle& other)
@@ -648,11 +658,15 @@ const char* Pickle::FindNext(uint32_t header_size,
   DCHECK(header_size == AlignInt(header_size));
   DCHECK(header_size <= static_cast<memberAlignmentType>(kPayloadUnit));
 
-  const Header* hdr = reinterpret_cast<const Header*>(start);
-  const char* payload_base = start + header_size;
-  const char* payload_end = payload_base + hdr->payload_size;
-  if (payload_end < payload_base)
-    return NULL;
+  if (end < start)
+    return nullptr;
+  size_t length = static_cast<size_t>(end - start);
+  if (length < sizeof(Header))
+    return nullptr;
 
-  return (payload_end > end) ? NULL : payload_end;
+  const Header* hdr = reinterpret_cast<const Header*>(start);
+  if (length < header_size || length - header_size < hdr->payload_size)
+    return nullptr;
+
+  return start + header_size + hdr->payload_size;
 }
