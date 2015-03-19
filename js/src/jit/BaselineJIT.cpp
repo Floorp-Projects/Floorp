@@ -65,8 +65,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     traceLoggerScriptEvent_(),
 #endif
     postDebugPrologueOffset_(postDebugPrologueOffset),
-    flags_(0),
-    maxInliningDepth_(UINT8_MAX)
+    flags_(0)
 { }
 
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
