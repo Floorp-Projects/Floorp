@@ -1038,7 +1038,6 @@ class GCRuntime
     // accumulate these roots in each zone's gcGrayRoots vector and then mark
     // them later, after black marking is complete for each compartment. This
     // accumulation can fail, but in that case we switch to non-incremental GC.
-    friend class js::GCMarker;
     enum class GrayBufferState {
         Unused,
         Okay,
