@@ -160,11 +160,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     "toLocaleDateString", "toLocaleTimeString", "toDateString", "toTimeString",
     "toISOString", "toJSON", "toSource", "toString", "valueOf", "constructor",
     "toGMTString"];
-  gPrototypeProperties['Object'] = /* __proto__ is intentionally excluded here, because
-                                      the JS engine filters it out of getOwnPropertyNames */
+  gPrototypeProperties['Object'] =
     ["constructor", "toSource", "toString", "toLocaleString", "valueOf", "watch",
      "unwatch", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
-     "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__"];
+     "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__",
+     "__proto__"];
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",

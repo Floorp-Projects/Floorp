@@ -7,9 +7,6 @@
 <script>
 test(function() {
   var props = Object.getOwnPropertyNames(Object.prototype);
-  // getOwnPropertyNames intentionally filters out the non-standard
-  // "__proto__" property.
-  props.push("__proto__");
   // If you change this list, make sure it continues to match the list in
   // Codegen.py's CGDictionary.getMemberDefinition method.
   var expected = [
