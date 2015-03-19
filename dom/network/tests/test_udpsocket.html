@@ -324,13 +324,13 @@ function testCloseBeforeOpened() {
 function testOpenWithoutClose() {
   info('test for open without close');
 
-  let opened = [];
+  let closed = [];
   for (let i = 0; i < 50; i++) {
     let socket = new UDPSocket();
-    opened.push(socket.opened);
+    closed.push(socket.closed);
   }
 
-  return Promise.all(opened);
+  return Promise.all(closed);
 }
 
 function testBFCache() {
@@ -388,6 +388,10 @@ function runTest() {
   .then(testBFCache)
   .then(function() {
     info('test finished');
+    SimpleTest.finish();
+  })
+  .catch(function(err) {
+    ok(false, 'test failed due to: ' + err);
     SimpleTest.finish();
   });
 }
