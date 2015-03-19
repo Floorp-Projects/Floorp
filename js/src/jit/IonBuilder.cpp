@@ -6402,14 +6402,6 @@ IonBuilder::jsop_newarray(uint32_t count)
                                     NewArray_FullyAllocating);
     current->add(ins);
     current->push(ins);
-
-    TemporaryTypeSet::DoubleConversion conversion =
-        ins->resultTypeSet()->convertDoubleElements(constraints());
-
-    if (conversion == TemporaryTypeSet::AlwaysConvertToDoubles)
-        templateObject->as<ArrayObject>().setShouldConvertDoubleElements();
-    else
-        templateObject->as<ArrayObject>().clearShouldConvertDoubleElements();
     return true;
 }
 
@@ -6515,9 +6507,7 @@ IonBuilder::jsop_initelem_array()
     MElements *elements = MElements::New(alloc(), obj);
     current->add(elements);
 
-    NativeObject *templateObject = obj->toNewArray()->templateObject();
-
-    if (templateObject->shouldConvertDoubleElements()) {
+    if (obj->toNewArray()->convertDoubleElements()) {
         MInstruction *valueDouble = MToDouble::New(alloc(), value);
         current->add(valueDouble);
         value = valueDouble;

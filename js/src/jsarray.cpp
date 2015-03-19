@@ -3418,7 +3418,7 @@ js::NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length,
 
 ArrayObject *
 js::NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleObjectGroup group,
-                  AllocatingBehaviour allocating)
+                  AllocatingBehaviour allocating, bool convertDoubleElements)
 {
     NewObjectKind newKind = !group ? SingletonObject : GenericObject;
     if (group && group->shouldPreTenure())
@@ -3438,6 +3438,9 @@ js::NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleObjectGroup group
 
     if (group)
         arr->setGroup(group);
+
+    if (convertDoubleElements)
+        arr->setShouldConvertDoubleElements();
 
     // If the length calculation overflowed, make sure that is marked for the
     // new group.
