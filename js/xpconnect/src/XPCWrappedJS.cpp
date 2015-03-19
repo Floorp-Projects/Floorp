@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "jsprf.h"
+#include "mozilla/DeferredFinalize.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsContentUtils.h"
@@ -468,7 +469,7 @@ nsXPCWrappedJS::Unlink()
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if (rt->GCIsRunning()) {
-            cyclecollector::DeferredFinalize(mOuter.forget().take());
+            DeferredFinalize(mOuter.forget().take());
         } else {
             mOuter = nullptr;
         }

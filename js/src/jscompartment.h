@@ -110,7 +110,6 @@ struct CrossCompartmentKey
 struct WrapperHasher : public DefaultHasher<CrossCompartmentKey>
 {
     static HashNumber hash(const CrossCompartmentKey &key) {
-        MOZ_ASSERT(!IsPoisonedPtr(key.wrapped));
         static_assert(sizeof(HashNumber) == sizeof(uint32_t),
                       "subsequent code assumes a four-byte hash");
         return uint32_t(uintptr_t(key.wrapped)) | uint32_t(key.kind);

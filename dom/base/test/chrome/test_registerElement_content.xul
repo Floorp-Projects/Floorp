@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1130028
+-->
+<window title="Mozilla Bug 1130028"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1130028"
+     target="_blank">Mozilla Bug 1130028</a>
+  <iframe onload="startTests()" id="frame" src="http://example.com/chrome/dom/base/test/chrome/frame_registerElement_content.html"></iframe>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 1130028 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var createdCallbackCount = 0;
+
+  // Callback should be called once by element created in chrome,
+  // and once by element created in content.
+  function createdCallbackCalled() {
+    createdCallbackCount++;
+    ok(true, "Created callback called, should be called twice in test.");
+    is(this.magicNumber, 42, "Callback should be able to see the custom prototype.");
+    if (createdCallbackCount == 2) {
+      SimpleTest.finish();
+    }
+  }
+
+  function startTests() {
+    var frame = $("frame");
+
+    var c = frame.contentDocument.registerElement("x-foo");
+    var elem = new c();
+    is(elem.tagName, "X-FOO", "Constructor should create an x-foo element.");
+
+    var proto = Object.create(frame.contentWindow.HTMLElement.prototype);
+    proto.magicNumber = 42;
+    proto.createdCallback = createdCallbackCalled;
+    frame.contentDocument.registerElement("x-bar", { prototype: proto });
+
+    frame.contentDocument.createElement("x-bar");
+  }
+
+  ]]></script>
+</window>

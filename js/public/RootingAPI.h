@@ -282,14 +282,12 @@ class Heap : public js::HeapBase<T>
 
   private:
     void init(T newPtr) {
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(newPtr));
         ptr = newPtr;
         if (js::GCMethods<T>::needsPostBarrier(ptr))
             post();
     }
 
     void set(T newPtr) {
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(newPtr));
         if (js::GCMethods<T>::needsPostBarrier(newPtr)) {
             ptr = newPtr;
             post();
@@ -362,7 +360,6 @@ class TenuredHeap : public js::HeapBase<T>
 
     void setPtr(T newPtr) {
         MOZ_ASSERT((reinterpret_cast<uintptr_t>(newPtr) & flagsMask) == 0);
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(newPtr));
         if (newPtr)
             AssertGCThingMustBeTenured(newPtr);
         bits = (bits & flagsMask) | reinterpret_cast<uintptr_t>(newPtr);
@@ -526,7 +523,6 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 
   public:
     void set(T v) {
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(v));
         *ptr = v;
     }
 
@@ -642,7 +638,6 @@ template <typename T>
 struct GCMethods<T *>
 {
     static T *initial() { return nullptr; }
-    static bool poisoned(T *v) { return JS::IsPoisonedPtr(v); }
     static bool needsPostBarrier(T *v) { return false; }
     static void postBarrier(T **vp) {}
     static void relocate(T **vp) {}
@@ -652,7 +647,6 @@ template <>
 struct GCMethods<JSObject *>
 {
     static JSObject *initial() { return nullptr; }
-    static bool poisoned(JSObject *v) { return JS::IsPoisonedPtr(v); }
     static gc::Cell *asGCThingOrNull(JSObject *v) {
         if (!v)
             return nullptr;
@@ -674,7 +668,6 @@ template <>
 struct GCMethods<JSFunction *>
 {
     static JSFunction *initial() { return nullptr; }
-    static bool poisoned(JSFunction *v) { return JS::IsPoisonedPtr(v); }
     static bool needsPostBarrier(JSFunction *v) {
         return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell *>(v));
     }
@@ -708,8 +701,6 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         this->stack = &cx->thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
-
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(ptr));
     }
 
   public:
@@ -789,7 +780,6 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
      * interchangeably with a MutableHandleValue.
      */
     void set(T value) {
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(value));
         ptr = value;
     }
 
@@ -889,7 +879,6 @@ class FakeRooted : public RootedBase<T>
     T ptr;
 
     void set(const T &value) {
-        MOZ_ASSERT(!GCMethods<T>::poisoned(value));
         ptr = value;
     }
 
@@ -912,7 +901,6 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
     }
 
     void set(T v) {
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(v));
         *ptr = v;
     }
 
@@ -1158,7 +1146,6 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
   private:
     void set(T value) {
         MOZ_ASSERT(initialized());
-        MOZ_ASSERT(!js::GCMethods<T>::poisoned(value));
         ptr = value;
     }
 

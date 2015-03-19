@@ -7,6 +7,9 @@
 DIRS += ['public', 'src', 'decoders', 'encoders']
 DIRS += ['build']
 
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'ImageLib')
+
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']

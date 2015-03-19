@@ -18,8 +18,7 @@ namespace layers {
 // passed into SetData(), so that it can be accessed from other D3D devices.
 // This class also manages the synchronization of the copy, to ensure the
 // resource is ready to use.
-class D3D9SurfaceImage : public Image
-                       , public ISharedImage {
+class D3D9SurfaceImage : public Image {
 public:
 
   struct Data {
@@ -31,8 +30,6 @@ public:
 
   D3D9SurfaceImage();
   virtual ~D3D9SurfaceImage();
-
-  virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
   // Copies the surface into a sharable texture's surface, and initializes
   // the image.
@@ -46,7 +43,6 @@ public:
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
-  virtual uint8_t* GetBuffer() MOZ_OVERRIDE { return nullptr; }
 
   virtual bool IsValid() MOZ_OVERRIDE;
 

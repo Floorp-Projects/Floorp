@@ -542,17 +542,6 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       if (bMustRevalidate)
         aCacheEntry->SetMustValidate(bMustRevalidate);
     }
-
-    // We always need to validate file URIs.
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    if (channel) {
-      nsCOMPtr<nsIURI> uri;
-      channel->GetURI(getter_AddRefs(uri));
-      bool isfile = false;
-      uri->SchemeIs("file", &isfile);
-      if (isfile)
-        aCacheEntry->SetMustValidate(isfile);
-    }
   }
 }
 

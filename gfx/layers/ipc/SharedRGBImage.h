@@ -37,7 +37,6 @@ already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
  * It is assumed that the image width and stride are equal
  */
 class SharedRGBImage : public Image
-                     , public ISharedImage
 {
 public:
   explicit SharedRGBImage(ImageClient* aCompositable);
@@ -46,8 +45,6 @@ protected:
   ~SharedRGBImage();
 
 public:
-  virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
-
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;

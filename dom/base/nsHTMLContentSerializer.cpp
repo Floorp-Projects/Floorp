@@ -67,7 +67,7 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
   return NS_OK;
 }
 
-void 
+bool
 nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
                                                  nsIContent *aOriginalElement,
                                                  nsAString& aTagPrefix,
@@ -78,7 +78,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
 {
   int32_t count = aContent->GetAttrCount();
   if (!count)
-    return;
+    return true;
 
   nsresult rv;
   nsAutoString valueStr;
@@ -169,8 +169,11 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
         valueStr.IsEmpty()) {
       valueStr = nameStr;
     }
-    SerializeAttr(prefix, nameStr, valueStr, aStr, !isJS);
+    NS_ENSURE_TRUE(SerializeAttr(prefix, nameStr, valueStr,
+                                 aStr, !isJS), false);
   }
+
+  return true;
 }
 
 NS_IMETHODIMP
@@ -183,9 +186,12 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
   nsIContent* content = aElement;
 
   bool forceFormat = false;
-  if (!CheckElementStart(content, forceFormat, aStr)) {
-    return NS_OK;
+  nsresult rv = NS_OK;
+  if (!CheckElementStart(content, forceFormat, aStr, rv)) {
+    return rv;
   }
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIAtom *name = content->NodeInfo()->NameAtom();
   int32_t ns = content->GetNameSpaceID();
@@ -194,39 +200,41 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     if (mColPos && lineBreakBeforeOpen) {
-      AppendNewLineToString(aStr);
+      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-      MaybeAddNewlineForRootNode(aStr);
+      NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      AppendIndentation(aStr);
+      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
     }
     else if (mAddSpace) {
-      AppendToString(char16_t(' '), aStr);
+      bool result = AppendToString(char16_t(' '), aStr);
       mAddSpace = false;
+      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     }
   }
   else if (mAddSpace) {
-    AppendToString(char16_t(' '), aStr);
+    bool result = AppendToString(char16_t(' '), aStr);
     mAddSpace = false;
+    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   }
   else {
-    MaybeAddNewlineForRootNode(aStr);
+    NS_ENSURE_TRUE(MaybeAddNewlineForRootNode(aStr), NS_ERROR_OUT_OF_MEMORY);
   }
   // Always reset to avoid false newlines in case MaybeAddNewlineForRootNode wasn't
   // called
   mAddNewlineForRootNode = false;
-  
-  AppendToString(kLessThan, aStr);
 
-  AppendToString(nsDependentAtomString(name), aStr);
+  NS_ENSURE_TRUE(AppendToString(kLessThan, aStr), NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr), NS_ERROR_OUT_OF_MEMORY);
 
   MaybeEnterInPreContent(content);
 
   // for block elements, we increase the indentation
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel())
-    IncrIndentation(name);
+    NS_ENSURE_TRUE(IncrIndentation(name), NS_ERROR_OUT_OF_MEMORY);
 
   // Need to keep track of OL and LI elements in order to get ordinal number 
   // for the LI.
@@ -255,22 +263,22 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
     if (mIsFirstChildOfOL){
       // If OL is parent of this LI, serialize attributes in different manner.
-      SerializeLIValueAttribute(aElement, aStr);
+      NS_ENSURE_TRUE(SerializeLIValueAttribute(aElement, aStr), NS_ERROR_OUT_OF_MEMORY);
     }
   }
 
   // Even LI passed above have to go through this 
   // for serializing attributes other than "value".
   nsAutoString dummyPrefix;
-  SerializeHTMLAttributes(content,
-                          aOriginalElement,
-                          dummyPrefix,
-                          EmptyString(),
-                          name,
-                          ns,
-                          aStr);
+  NS_ENSURE_TRUE(SerializeHTMLAttributes(content,
+                                         aOriginalElement,
+                                         dummyPrefix,
+                                         EmptyString(),
+                                         name,
+                                         ns,
+                                         aStr), NS_ERROR_OUT_OF_MEMORY);
 
-  AppendToString(kGreaterThan, aStr);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   if (ns == kNameSpaceID_XHTML &&
       (name == nsGkAtoms::script ||
@@ -282,10 +290,10 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
     LineBreakAfterOpen(ns, name)) {
-    AppendNewLineToString(aStr);
+    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  AfterElementStart(content, aOriginalElement, aStr);
+  NS_ENSURE_TRUE(AfterElementStart(content, aOriginalElement, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -356,30 +364,32 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     bool lineBreakBeforeClose = LineBreakBeforeClose(ns, name);
 
     if (mColPos && lineBreakBeforeClose) {
-      AppendNewLineToString(aStr);
+      NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
     }
     if (!mColPos) {
-      AppendIndentation(aStr);
+      NS_ENSURE_TRUE(AppendIndentation(aStr), NS_ERROR_OUT_OF_MEMORY);
     }
     else if (mAddSpace) {
-      AppendToString(char16_t(' '), aStr);
+      bool result = AppendToString(char16_t(' '), aStr);
       mAddSpace = false;
+      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     }
   }
   else if (mAddSpace) {
-    AppendToString(char16_t(' '), aStr);
+    bool result = AppendToString(char16_t(' '), aStr);
     mAddSpace = false;
+    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  AppendToString(kEndTag, aStr);
-  AppendToString(nsDependentAtomString(name), aStr);
-  AppendToString(kGreaterThan, aStr);
+  NS_ENSURE_TRUE(AppendToString(kEndTag, aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(nsDependentAtomString(name), aStr), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(AppendToString(kGreaterThan, aStr), NS_ERROR_OUT_OF_MEMORY);
 
   MaybeLeaveFromPreContent(content);
 
   if ((mDoFormat || forceFormat)&& !mDoRaw  && !PreLevel()
       && LineBreakAfterClose(ns, name)) {
-    AppendNewLineToString(aStr);
+    NS_ENSURE_TRUE(AppendNewLineToString(aStr), NS_ERROR_OUT_OF_MEMORY);
   }
   else {
     MaybeFlagNewlineForRootNode(aElement);
@@ -451,17 +461,16 @@ uint32_t FindNextBasicEntity(const nsAString& aStr,
   return aIndex;
 }
 
-void
+bool
 nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
                                                      nsAString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
-    return;
+    return true;
   }
 
   if (mDisableEntityEncoding) {
-    aOutputStr.Append(aStr);
-    return;
+    return aOutputStr.Append(aStr, mozilla::fallible);
   }
 
   bool nonBasicEntities =
@@ -479,20 +488,21 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       i = FindNextBasicEntity(aStr, len, i, entityTable, &entity);
       uint32_t normalTextLen = i - start; 
       if (normalTextLen) {
-        aOutputStr.Append(Substring(aStr, start, normalTextLen));
+        NS_ENSURE_TRUE(aOutputStr.Append(Substring(aStr, start, normalTextLen),
+                                         mozilla::fallible), false);
       }
       if (entity) {
-        aOutputStr.AppendASCII(entity);
+        NS_ENSURE_TRUE(aOutputStr.AppendASCII(entity, mozilla::fallible), false);
         start = i + 1;
       }
     }
-    return;
+    return true;
   } else if (nonBasicEntities) {
     nsIParserService* parserService = nsContentUtils::GetParserService();
 
     if (!parserService) {
       NS_ERROR("Can't get parser service");
-      return;
+      return true;
     }
 
     nsReadingIterator<char16_t> done_reading;
@@ -563,25 +573,29 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
         }
       }
 
-      aOutputStr.Append(fragmentStart, advanceLength);
+      bool result = aOutputStr.Append(fragmentStart, advanceLength, mozilla::fallible);
       if (entityText) {
-        aOutputStr.Append(char16_t('&'));
-        AppendASCIItoUTF16(entityText, aOutputStr);
-        aOutputStr.Append(char16_t(';'));
+        NS_ENSURE_TRUE(aOutputStr.Append(char16_t('&'), mozilla::fallible), false);
+        NS_ENSURE_TRUE(AppendASCIItoUTF16(entityText, aOutputStr, mozilla::fallible), false);
+        NS_ENSURE_TRUE(aOutputStr.Append(char16_t(';'), mozilla::fallible), false);
         advanceLength++;
       }
       else if (fullConstEntityText) {
-        aOutputStr.AppendASCII(fullConstEntityText);
+        NS_ENSURE_TRUE(aOutputStr.AppendASCII(fullConstEntityText, mozilla::fallible), false);
         ++advanceLength;
       }
       // if it comes from nsIEntityConverter, it already has '&' and ';'
       else if (fullEntityText) {
-        AppendASCIItoUTF16(fullEntityText, aOutputStr);
+        bool ok = AppendASCIItoUTF16(fullEntityText, aOutputStr, mozilla::fallible);
         nsMemory::Free(fullEntityText);
         advanceLength += lengthReplaced;
+        NS_ENSURE_TRUE(ok, false);
       }
+      NS_ENSURE_TRUE(result, false);
     }
   } else {
-    nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr);
+    NS_ENSURE_TRUE(nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr), false);
   }
+
+  return true;
 }

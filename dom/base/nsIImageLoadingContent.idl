@@ -28,16 +28,11 @@ interface nsIFrame;
  * become current only when the image is loaded.  It is the responsibility of
  * observers to check which request they are getting notifications for.
  *
- * Observers added in mid-load will not get any notifications they
- * missed.  We should NOT freeze this interface without considering
- * this issue.  (It could be that the image status on imgIRequest is
- * sufficient, when combined with the imageBlockingStatus information.)
- *
  * Please make sure to update the MozImageLoadingContent WebIDL
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, builtinclass, uuid(5794d12b-3195-4526-a814-a2181f6c71fe)]
+[scriptable, builtinclass, uuid(770f7d84-c917-42d7-bf8d-d1b70649e733)]
 interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
@@ -99,6 +94,11 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * known
    */
   imgIRequest getRequest(in long aRequestType);
+
+  /**
+   * @return true if the current request's size is available.
+   */
+  [noscript, notxpcom] boolean currentRequestHasSize();
 
   /**
    * Used to notify the image loading content node that a frame has been
