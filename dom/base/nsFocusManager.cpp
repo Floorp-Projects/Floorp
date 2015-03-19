@@ -1810,10 +1810,6 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     // focus can be traversed from the top level down to the newly focused
     // window.
     AdjustWindowFocus(aWindow, false);
-
-    // Update the window touch registration to reflect the state of
-    // the new document that got focus
-    aWindow->UpdateTouchState();
   }
 
   // indicate that the window has taken focus.

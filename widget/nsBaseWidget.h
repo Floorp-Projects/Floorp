@@ -229,8 +229,6 @@ public:
   NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) MOZ_OVERRIDE;
   virtual nsIWidgetListener* GetAttachedWidgetListener() MOZ_OVERRIDE;
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) MOZ_OVERRIDE;
-  NS_IMETHOD              RegisterTouchWindow() MOZ_OVERRIDE;
-  NS_IMETHOD              UnregisterTouchWindow() MOZ_OVERRIDE;
   NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() MOZ_OVERRIDE MOZ_FINAL;
 
   // Helper function for dispatching events which are not processed by APZ,

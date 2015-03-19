@@ -21,9 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=648573
 SimpleTest.waitForExplicitFinish();
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
-ok(!utils.mayHaveTouchEventListeners,
-  "There shouldn't be any touch event listeners yet.");
-
 ok("createTouch" in document, "Should have createTouch function");
 ok("createTouchList" in document, "Should have createTouchList function");
 ok(document.createEvent("touchevent"), "Should be able to create TouchEvent objects");
@@ -101,8 +98,6 @@ for (var i = 0; i < events.length; ++i) {
   runEventTest(events[i]);
 }
 
-ok(utils.mayHaveTouchEventListeners,
-  "There should be touch event listeners.");
 SimpleTest.finish();
 </script>
 </pre>
