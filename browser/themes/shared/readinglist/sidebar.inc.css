@@ -84,11 +84,12 @@ body {
   color: #008ACB;
 }
 
-.item:not(:hover) .remove-button {
+.item:not(:hover):not(.selected) .remove-button {
   display: none;
 }
 
 .remove-button {
+  padding: 0;
   width: 16px;
   height: 16px;
   background-size: contain;
