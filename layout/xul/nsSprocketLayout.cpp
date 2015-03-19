@@ -293,9 +293,6 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
     origX = x;
     origY = y;
 
-    nscoord nextX = x;
-    nscoord nextY = y;
-
     // Now we iterate over our box children and our box size lists in 
     // parallel.  For each child, we look at its sizes and figure out
     // where to place it.
@@ -354,9 +351,6 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           y -= (childBoxSize->right);
       }
 
-      nextX = x;
-      nextY = y;
-
       // Now we build a child rect.
       nscoord rectX = x;
       nscoord rectY = y;
@@ -383,6 +377,9 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
     
       // Either |nextX| or |nextY| is updated by this function call, according
       // to our axis.
+      nscoord nextX = x;
+      nscoord nextY = y;
+
       ComputeChildsNextPosition(aBox, x, y, nextX, nextY, childRect);
 
       // Now we further update our nextX/Y along our axis.
