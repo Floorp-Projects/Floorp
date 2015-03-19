@@ -289,13 +289,6 @@ nsImageFrame::Init(nsIContent*       aContent,
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
   if (p)
     p->AdjustPriority(-1);
-
-  // If we already have an image container, OnSizeAvailable won't be called.
-  if (currentRequest) {
-    nsCOMPtr<imgIContainer> image;
-    currentRequest->GetImage(getter_AddRefs(image));
-    OnSizeAvailable(currentRequest, image);
-  }
 }
 
 bool
@@ -750,10 +743,18 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   NS_ASSERTION(imageLoader, "No content node??");
   mozilla::IntrinsicSize intrinsicSize(mIntrinsicSize);
 
+  // XXX(seth): We may sometimes find ourselves in the situation where we have
+  // mImage, but imageLoader's current request does not have a size yet.
+  // This can happen when we load an image speculatively from cache, it fails
+  // to validate, and the new image load hasn't fired SIZE_AVAILABLE yet. In
+  // this situation we should always use mIntrinsicSize, because
+  // GetNaturalWidth/Height will return 0, so we check CurrentRequestHasSize()
+  // below. See bug 1019840. We will fix this in bug 1141395.
+
   // Content may override our default dimensions. This is termed as overriding
   // the intrinsic size by the spec, but all other consumers of mIntrinsic*
   // values are being used to refer to the real/true size of the image data.
-  if (imageLoader && mImage &&
+  if (imageLoader && imageLoader->CurrentRequestHasSize() && mImage &&
       intrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
       intrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
     uint32_t width;

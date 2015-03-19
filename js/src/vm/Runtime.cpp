@@ -792,6 +792,8 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
     MOZ_ASSERT(zone->usedByExclusiveThread);
     zone->usedByExclusiveThread = false;
     numExclusiveThreads--;
+    if (gc.fullGCForAtomsRequested() && !keepAtoms())
+        gc.triggerFullGCForAtoms();
 }
 
 bool

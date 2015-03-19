@@ -320,9 +320,6 @@ class Bindings
 template <>
 struct GCMethods<Bindings> {
     static Bindings initial();
-    static bool poisoned(const Bindings &bindings) {
-        return IsPoisonedPtr(bindings.callObjShape());
-    }
 };
 
 class ScriptCounts
