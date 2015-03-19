@@ -49,7 +49,7 @@ BEGIN_TEST(testXDR_bug506491)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, global, s, strlen(s), options, &script));
+    CHECK(JS_CompileScript(cx, s, strlen(s), options, &script));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -76,7 +76,7 @@ BEGIN_TEST(testXDR_bug516827)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, global, "", 0, options, &script));
+    CHECK(JS_CompileScript(cx, "", 0, options, &script));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -100,7 +100,7 @@ BEGIN_TEST(testXDR_source)
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, __LINE__);
         JS::RootedScript script(cx);
-        CHECK(JS_CompileScript(cx, global, *s, strlen(*s), options, &script));
+        CHECK(JS_CompileScript(cx, *s, strlen(*s), options, &script));
         CHECK(script);
         script = FreezeThaw(cx, script);
         CHECK(script);
@@ -125,7 +125,7 @@ BEGIN_TEST(testXDR_sourceMap)
     for (const char **sm = sourceMaps; *sm; sm++) {
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, __LINE__);
-        CHECK(JS_CompileScript(cx, global, "", 0, options, &script));
+        CHECK(JS_CompileScript(cx, "", 0, options, &script));
         CHECK(script);
 
         size_t len = strlen(*sm);

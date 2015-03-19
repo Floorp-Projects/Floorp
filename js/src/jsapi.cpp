@@ -3861,10 +3861,10 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext *cx, JS::HandleObject obj, const char *ascii,
-                 size_t length, const JS::CompileOptions &options, MutableHandleScript script)
+JS_CompileScript(JSContext *cx, const char *ascii, size_t length,
+                 const JS::CompileOptions &options, MutableHandleScript script)
 {
-    return Compile(cx, obj, options, ascii, length, script);
+    return Compile(cx, cx->global(), options, ascii, length, script);
 }
 
 JS_PUBLIC_API(bool)

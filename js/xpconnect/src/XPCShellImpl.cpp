@@ -873,8 +873,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline)
                .setCompileAndGo(true);
-        if (JS_CompileScript(cx, global, buffer, strlen(buffer), options,
-                             &script)) {
+        if (JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
             JSErrorReporter older;
 
             if (!compileOnly) {

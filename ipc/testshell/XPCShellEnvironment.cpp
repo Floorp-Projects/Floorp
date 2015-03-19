@@ -375,8 +375,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline);
         JS::Rooted<JSScript*> script(cx);
-        if (JS_CompileScript(cx, global, buffer, strlen(buffer), options,
-                             &script)) {
+        if (JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
             JSErrorReporter older;
 
             ok = JS_ExecuteScript(cx, script, &result);
