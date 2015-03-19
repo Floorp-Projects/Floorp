@@ -70,6 +70,10 @@ toolbarpaletteitem[place="palette"] > #feed-button {
   -moz-image-region: rect(0px, 416px, 32px, 384px);
 }
 
+#feed-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+  -moz-image-region: rect(32px, 416px, 64px, 384px);
+}
+
 #social-share-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #social-share-button {
   -moz-image-region: rect(0px, 448px, 32px, 416px);

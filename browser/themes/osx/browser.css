@@ -1286,6 +1286,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0px, 832px, 64px, 768px);
   }
 
+  #feed-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+    -moz-image-region: rect(64px, 832px, 128px, 768px);
+  }
+
   #social-share-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #social-share-button {
     -moz-image-region: rect(0px, 896px, 64px, 832px);
