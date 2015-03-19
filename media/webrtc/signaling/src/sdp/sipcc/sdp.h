@@ -1235,7 +1235,6 @@ extern uint32_t sdp_get_media_payload_type(sdp_t *sdp_p, uint16_t level,
 extern uint32_t sdp_get_media_profile_payload_type(sdp_t *sdp_p, uint16_t level,
                   uint16_t prof_num, uint16_t payload_num, sdp_payload_ind_e *indicator);
 extern sdp_result_e sdp_insert_media_line(sdp_t *sdp_p, uint16_t level);
-extern void sdp_delete_media_line(sdp_t *sdp_p, uint16_t level);
 extern sdp_result_e sdp_set_media_type(sdp_t *sdp_p, uint16_t level,
                                        sdp_media_e media);
 extern sdp_result_e sdp_set_media_portnum(sdp_t *sdp_p, uint16_t level,
@@ -1568,9 +1567,6 @@ extern sdp_mediadir_role_e sdp_attr_get_comediadir_role(sdp_t *sdp_p,
                                                         uint16_t level, uint8_t cap_num,
                                                         uint16_t inst_num);
 
-extern sdp_result_e sdp_delete_all_media_direction_attrs (sdp_t *sdp_p,
-                                                          uint16_t level);
-
 extern uint16_t sdp_attr_get_mptime_num_intervals(
     sdp_t *sdp_p, uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern uint16_t sdp_attr_get_mptime_interval(
@@ -1579,7 +1575,6 @@ extern sdp_result_e sdp_attr_add_mptime_interval(
     sdp_t *sdp_p, uint16_t level, uint8_t cap_num, uint16_t inst_num, uint16_t interval);
 
 
-extern sdp_result_e sdp_delete_bw_line (sdp_t *sdp_p, uint16_t level, uint16_t inst_num);
 extern sdp_result_e sdp_copy_all_bw_lines(sdp_t *src_sdp_ptr, sdp_t *dst_sdp_ptr,
                                           uint16_t src_level, uint16_t dst_level);
 extern sdp_bw_modifier_e sdp_get_bw_modifier(sdp_t *sdp_p, uint16_t level,
