@@ -4674,7 +4674,7 @@ this.DOMApplicationRegistry = {
   },
 
   // Returns a promise that resolves to the app object with the manifest.
-  getFullAppByManifestURL: function(aManifestURL, aEntryPoint, aLang) {
+  getFullAppByManifestURL: function(aManifestURL, aEntryPoint) {
     let app = this.getAppByManifestURL(aManifestURL);
     if (!app) {
       return Promise.reject("NoSuchApp");
@@ -4692,8 +4692,7 @@ this.DOMApplicationRegistry = {
         manifest.version = aManifest.version;
       }
 
-      app.manifest =
-        new ManifestHelper(manifest, app.origin, app.manifestURL, aLang);
+      app.manifest = new ManifestHelper(manifest, app.origin, app.manifestURL);
       return app;
     });
   },
