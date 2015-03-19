@@ -16,6 +16,12 @@ body {
   overflow: hidden;
 }
 
+#emptyListInfo {
+  cursor: default;
+  padding: 3em 1em;
+  text-align: center;
+}
+
 #list {
   height: 100%;
   overflow-x: auto;
