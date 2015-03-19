@@ -245,7 +245,7 @@ this.Langpacks = {
 
     // We need to get the app with the manifest since the version is only
     // available in the manifest.
-    this._appFromManifestURL(aData.manifestURL, aData.entryPoint)
+    this._appFromManifestURL(aData.manifestURL, aData.entryPoint, aData.lang)
       .then(aApp => {
         let manifest = aApp.manifest;
 
