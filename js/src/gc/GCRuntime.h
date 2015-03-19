@@ -625,6 +625,12 @@ class GCRuntime
     void startDebugGC(JSGCInvocationKind gckind, SliceBudget &budget);
     void debugGCSlice(SliceBudget &budget);
 
+    void triggerFullGCForAtoms() {
+        MOZ_ASSERT(fullGCForAtomsRequested_);
+        fullGCForAtomsRequested_ = false;
+        triggerGC(JS::gcreason::ALLOC_TRIGGER);
+    }
+
     void runDebugGC();
     inline void poke();
 
@@ -786,6 +792,8 @@ class GCRuntime
     bool minorGCRequested() const { return minorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool isGcNeeded() { return minorGCRequested() || majorGCRequested(); }
+
+    bool fullGCForAtomsRequested() { return fullGCForAtomsRequested_; }
 
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
@@ -1006,6 +1014,9 @@ class GCRuntime
     mozilla::Atomic<JS::gcreason::Reason, mozilla::Relaxed> majorGCTriggerReason;
 
     JS::gcreason::Reason minorGCTriggerReason;
+
+    /* Perform full GC if rt->keepAtoms() becomes false. */
+    bool fullGCForAtomsRequested_;
 
     /* Incremented at the start of every major GC. */
     uint64_t majorGCNumber;
