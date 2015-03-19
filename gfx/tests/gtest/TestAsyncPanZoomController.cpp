@@ -1230,7 +1230,7 @@ protected:
     // the fling to slow down more, advance to 2000ms. These numbers may need adjusting if our
     // friction and threshold values change, but they should be deterministic at least.
     int timeDelta = aSlow ? 2000 : 10;
-    int tapCallsExpected = aSlow ? 1 : 0;
+    int tapCallsExpected = aSlow ? 2 : 1;
 
     // Advance the fling animation by timeDelta milliseconds.
     ParentLayerPoint pointOut;
@@ -1241,6 +1241,12 @@ protected:
     // call out of it if and only if the fling is slow.
     EXPECT_CALL(*mcc, HandleSingleTap(_, 0, apzc->GetGuid())).Times(tapCallsExpected);
     Tap(apzc, 10, 10, time, 0);
+    while (mcc->RunThroughDelayedTasks());
+
+    // Deliver another tap, to make sure that taps are flowing properly once
+    // the fling is aborted.
+    time += 500;
+    Tap(apzc, 100, 100, time, 0);
     while (mcc->RunThroughDelayedTasks());
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
