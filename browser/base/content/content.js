@@ -479,29 +479,6 @@ let AboutHomeListener = {
 };
 AboutHomeListener.init(this);
 
-let AboutPrivateBrowsingListener = {
-  init: function(chromeGlobal) {
-    chromeGlobal.addEventListener('AboutPrivateBrowsingOpenWindow', this,
-                                  false, true);
-  },
-
-  get isAboutPrivateBrowsing() {
-    return content.document.documentURI.toLowerCase() == "about:privatebrowsing";
-  },
-
-  handleEvent: function(aEvent) {
-    if (!this.isAboutPrivateBrowsing) {
-      return;
-    }
-    switch (aEvent.type) {
-      case "AboutPrivateBrowsingOpenWindow":
-        sendAsyncMessage("AboutPrivateBrowsing:OpenPrivateWindow");
-        break;
-    }
-  },
-};
-AboutPrivateBrowsingListener.init(this);
-
 let AboutReaderListener = {
 
   _articlePromise: null,

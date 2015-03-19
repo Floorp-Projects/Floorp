@@ -48,6 +48,8 @@ function test() {
 
   function testDownloadDir(aWin, gDownloadLastDir, aFile, aDisplayDir, aLastDir,
                            aGlobalLastDir, aCallback) {
+    let context = aWin.gBrowser.selectedBrowser.contentWindow;
+
     // Check lastDir preference.
     is(prefs.getComplexValue("lastDir", Ci.nsIFile).path, aDisplayDir.path,
        "LastDir should be the expected display dir");
@@ -76,7 +78,7 @@ function test() {
       aCallback();
     };
 
-    launcherDialog.promptForSaveToFileAsync(launcher, aWin, null, null, null);
+    launcherDialog.promptForSaveToFileAsync(launcher, context, null, null, null);
   }
 
   testOnWindow(false, function(win, downloadDir) {
