@@ -453,6 +453,10 @@ WiFiRuntime.prototype = {
     }
     connection.advertisement = service;
     connection.authenticator.sendOOB = this.sendOOB;
+    // Disable the default connection timeout, since QR scanning can take an
+    // unknown amount of time.  This prevents spurious errors (even after
+    // eventual success) from being shown.
+    connection.timeoutDelay = 0;
     connection.connect();
     return promise.resolve();
   },
