@@ -107,7 +107,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, global, options, script_filename, &script));
+    CHECK(JS::Compile(cx, options, script_filename, &script));
     tempScript.remove();
     return tryScript(script);
 }
@@ -122,7 +122,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, global, options, script_filename, &script));
+    CHECK(JS::Compile(cx, options, script_filename, &script));
     tempScript.remove();
     return tryScript(script);
 }
@@ -138,7 +138,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    CHECK(JS::Compile(cx, options, script_stream, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
@@ -151,7 +151,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    CHECK(JS::Compile(cx, options, script_stream, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
@@ -165,7 +165,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
     JS::CompileOptions options(cx);
     options.setFileAndLine("temporary file", 1);
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, global, options, script_stream, &script));
+    CHECK(JS::Compile(cx, options, script_stream, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)
