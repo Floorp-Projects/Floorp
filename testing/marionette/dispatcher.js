@@ -244,6 +244,7 @@ Dispatcher.prototype.sendToClient = function(payload, cmdId) {
     logger.warn(`Ignoring out-of-sync response with command ID: ${cmdId}`);
     return;
   }
+  this.driver.responseCompleted();
   this.sendRaw("client", payload);
 };
 
