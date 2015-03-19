@@ -3990,7 +3990,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       }
     }
 
-    result = DispatchInputEvent(&event);
+    result = ConvertStatus(DispatchInputEvent(&event));
 
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Enable();
