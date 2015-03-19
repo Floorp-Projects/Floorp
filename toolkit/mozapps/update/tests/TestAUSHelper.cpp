@@ -99,11 +99,15 @@ CheckMsg(const NS_tchar *path, const char *expected)
 
   struct stat ms;
   if (fstat(fileno(inFP), &ms)) {
+    fclose(inFP);
+    inFP = nullptr;
     return false;
   }
 
   char *mbuf = (char *) malloc(ms.st_size + 1);
   if (!mbuf) {
+    fclose(inFP);
+    inFP = nullptr;
     return false;
   }
 
@@ -113,14 +117,19 @@ CheckMsg(const NS_tchar *path, const char *expected)
   r -= c;
   rb += c;
   if (c == 0 && r) {
+    free(mbuf);
+    fclose(inFP);
+    inFP = nullptr;
     return false;
   }
   mbuf[ms.st_size] = '\0';
   rb = mbuf;
 
+  bool isMatch = strcmp(rb, expected) == 0;
+  free(mbuf);
   fclose(inFP);
   inFP = nullptr;
-  return strcmp(rb, expected) == 0;
+  return isMatch;
 }
 
 #ifdef XP_WIN

@@ -134,24 +134,25 @@ nsXHTMLContentSerializer::AppendText(nsIContent* aText,
     return NS_ERROR_FAILURE;
 
   if (mDoRaw || PreLevel() > 0) {
-    AppendToStringConvertLF(data, aStr);
+    NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
   }
   else if (mDoFormat) {
-    AppendToStringFormatedWrapped(data, aStr);
+    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(data, aStr), NS_ERROR_OUT_OF_MEMORY);
   }
   else if (mDoWrap) {
-    AppendToStringWrapped(data, aStr);
+    NS_ENSURE_TRUE(AppendToStringWrapped(data, aStr), NS_ERROR_OUT_OF_MEMORY);
   }
   else {
     int32_t lastNewlineOffset = kNotFound;
     if (HasLongLines(data, lastNewlineOffset)) {
       // We have long lines, rewrap
       mDoWrap = true;
-      AppendToStringWrapped(data, aStr);
+      bool result = AppendToStringWrapped(data, aStr);
       mDoWrap = false;
+      NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
-      AppendToStringConvertLF(data, aStr);
+      NS_ENSURE_TRUE(AppendToStringConvertLF(data, aStr), NS_ERROR_OUT_OF_MEMORY);
     }
   }
 
@@ -222,7 +223,7 @@ nsXHTMLContentSerializer::EscapeURI(nsIContent* aContent, const nsAString& aURI,
   return rv;
 }
 
-void
+bool
 nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                               nsIContent *aOriginalElement,
                                               nsAString& aTagPrefix,
@@ -271,7 +272,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
       if (mIsFirstChildOfOL) {
         // If OL is parent of this LI, serialize attributes in different manner.
-        SerializeLIValueAttribute(aContent, aStr);
+        NS_ENSURE_TRUE(SerializeLIValueAttribute(aContent, aStr), false);
       }
     }
   }
@@ -281,10 +282,14 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   if (aAddNSAttr) {
     if (aTagPrefix.IsEmpty()) {
       // Serialize default namespace decl
-      SerializeAttr(EmptyString(), xmlnsStr, aTagNamespaceURI, aStr, true);
+      NS_ENSURE_TRUE(SerializeAttr(EmptyString(), xmlnsStr,
+                                   aTagNamespaceURI,
+                                   aStr, true), false);
     } else {
       // Serialize namespace decl
-      SerializeAttr(xmlnsStr, aTagPrefix, aTagNamespaceURI, aStr, true);
+      NS_ENSURE_TRUE(SerializeAttr(xmlnsStr, aTagPrefix,
+                                   aTagNamespaceURI,
+                                   aStr, true), false);
     }
     PushNameSpaceDecl(aTagPrefix, aTagNamespaceURI, aOriginalElement);
   }
@@ -395,19 +400,21 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       isJS = IsJavaScript(aContent, attrName, namespaceID, valueStr);
     }
 
-    SerializeAttr(prefixStr, nameStr, valueStr, aStr, !isJS);
+    NS_ENSURE_TRUE(SerializeAttr(prefixStr, nameStr, valueStr, aStr, !isJS), false);
 
     if (addNSAttr) {
       NS_ASSERTION(!prefixStr.IsEmpty(),
                    "Namespaced attributes must have a prefix");
-      SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, true);
+      NS_ENSURE_TRUE(SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, true), false);
       PushNameSpaceDecl(prefixStr, uriStr, aOriginalElement);
     }
   }
+
+  return true;
 }
 
 
-void 
+bool
 nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
                                                   nsIAtom * aName,
                                                   int32_t aNamespaceID,
@@ -418,9 +425,8 @@ nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
   NS_ASSERTION(!mIsHTMLSerializer, "nsHTMLContentSerializer shouldn't call this method !");
 
   if (kNameSpaceID_XHTML != aNamespaceID) {
-    nsXMLContentSerializer::AppendEndOfElementStart(aOriginalElement, aName,
-                                                    aNamespaceID, aStr);
-    return;
+    return nsXMLContentSerializer::AppendEndOfElementStart(aOriginalElement, aName,
+                                                           aNamespaceID, aStr);
   }
 
   nsIContent* content = aOriginalElement;
@@ -441,17 +447,16 @@ nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
         // for backward compatibility with HTML 4 user agents
         // only non-container HTML elements can be closed immediatly,
         // and a space is added before />
-        AppendToString(NS_LITERAL_STRING(" />"), aStr);
-        return;
+        return AppendToString(NS_LITERAL_STRING(" />"), aStr);
       }
     }
   }
-  AppendToString(kGreaterThan, aStr);
+  return AppendToString(kGreaterThan, aStr);
 }
 
-void
-nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
-                                            nsIContent *aOriginalElement,
+bool
+nsXHTMLContentSerializer::AfterElementStart(nsIContent* aContent,
+                                            nsIContent* aOriginalElement,
                                             nsAString& aStr)
 {
   if (mRewriteEncodingDeclaration &&
@@ -477,20 +482,22 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
     }
 
     if (!hasMeta) {
-      AppendNewLineToString(aStr);
+      NS_ENSURE_TRUE(AppendNewLineToString(aStr), false);
       if (mDoFormat) {
-        AppendIndentation(aStr);
+        NS_ENSURE_TRUE(AppendIndentation(aStr), false);
       }
-      AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
-                    aStr);
-      AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
-      AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
-      if (mIsHTMLSerializer)
-        AppendToString(NS_LITERAL_STRING("\">"), aStr);
-      else
-        AppendToString(NS_LITERAL_STRING("\" />"), aStr);
+      NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""), aStr), false);
+      NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr), false);
+      NS_ENSURE_TRUE(AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr), false);
+      if (mIsHTMLSerializer) {
+        NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("\">"), aStr), false);
+      } else {
+        NS_ENSURE_TRUE(AppendToString(NS_LITERAL_STRING("\" />"), aStr), false);
+      }
     }
   }
+
+  return true;
 }
 
 void
@@ -520,8 +527,11 @@ nsXHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
 bool
 nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
                                             bool & aForceFormat,
-                                            nsAString& aStr)
+                                            nsAString& aStr,
+                                            nsresult& aResult)
 {
+  aResult = NS_OK;
+
   // The _moz_dirty attribute is emitted by the editor to
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
@@ -531,7 +541,7 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   if (aContent->IsHTMLElement(nsGkAtoms::br) &&
       (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
       PreLevel() > 0) {
-    AppendNewLineToString(aStr);
+    aResult = AppendNewLineToString(aStr) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     return false;
   }
 
@@ -591,20 +601,19 @@ nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
   return nsXMLContentSerializer::CheckElementEnd(aContent, dummyFormat, aStr);
 }
 
-void
+bool
 nsXHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
                                                      nsAString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
-    return;
+    return true;
   }
 
   if (mDisableEntityEncoding) {
-    aOutputStr.Append(aStr);
-    return;
+    return aOutputStr.Append(aStr, mozilla::fallible);
   }
- 
-  nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr);
+
+  return nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr);
 }
 
 bool
@@ -884,7 +893,7 @@ nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
   return false;
 }
 
-void 
+bool
 nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
                                                     nsAString& aStr)
 {
@@ -936,7 +945,8 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   if (offset == 0 && found) {
     // offset = 0 => LI itself has the value attribute and we did not need to traverse back.
     // Just serialize value attribute like other tags.
-    SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"), valueStr, aStr, false);
+    NS_ENSURE_TRUE(SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"),
+                                 valueStr, aStr, false), false);
   }
   else if (offset == 1 && !found) {
     /*(offset = 1 && !found) means either LI is the first child node of OL
@@ -951,8 +961,11 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
 
     //As serializer needs to use this valueAttr we are creating here, 
     valueStr.AppendInt(startVal + offset);
-    SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"), valueStr, aStr, false);
+    NS_ENSURE_TRUE(SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"),
+                                 valueStr, aStr, false), false);
   }
+
+  return true;
 }
 
 bool

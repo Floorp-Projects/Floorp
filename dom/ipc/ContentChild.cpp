@@ -662,8 +662,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
                                   XRE_GetProcessType());
 #endif
 
-    GetCPOWManager();
-
     SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
     InitProcessAttributes();
 

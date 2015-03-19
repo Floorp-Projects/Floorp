@@ -1272,21 +1272,8 @@ extern sdp_attr_t *sdp_find_attr (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
 extern int sdp_find_fmtp_inst(sdp_t *sdp_ptr, uint16_t level, uint16_t payload_num);
 extern sdp_result_e sdp_add_new_attr(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
                                      sdp_attr_e attr_type, uint16_t *inst_num);
-extern sdp_result_e sdp_copy_attr (sdp_t *src_sdp_ptr, sdp_t *dst_sdp_ptr,
-                                   uint16_t src_level, uint16_t dst_level,
-                                   uint8_t src_cap_num, uint8_t dst_cap_num,
-                                   sdp_attr_e src_attr_type, uint16_t src_inst_num);
-extern sdp_result_e sdp_copy_all_attrs(sdp_t *src_sdp_ptr, sdp_t *dst_sdp_ptr,
-                                       uint16_t src_level, uint16_t dst_level);
 extern sdp_result_e sdp_attr_num_instances(sdp_t *sdp_p, uint16_t level,
                          uint8_t cap_num, sdp_attr_e attr_type, uint16_t *num_attr_inst);
-extern sdp_result_e sdp_get_total_attrs(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
-                                        uint16_t *num_attrs);
-extern sdp_result_e sdp_get_attr_type(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
-                          uint16_t attr_num, sdp_attr_e *attr_type, uint16_t *inst_num);
-extern sdp_result_e sdp_delete_attr(sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
-                             sdp_attr_e attr_type, uint16_t inst_num);
-extern sdp_result_e sdp_delete_all_attrs(sdp_t *sdp_p, uint16_t level, uint8_t cap_num);
 extern tinybool sdp_attr_valid(sdp_t *sdp_p, sdp_attr_e attr_type,
                                 uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern uint32_t sdp_attr_line_number(sdp_t *sdp_p, sdp_attr_e attr_type,

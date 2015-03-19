@@ -1289,9 +1289,6 @@ struct StackShape
     {}
 
     void updateGetterSetter(GetterOp rawGetter, SetterOp rawSetter) {
-        MOZ_ASSERT_IF((attrs & JSPROP_GETTER) && rawGetter, !IsPoisonedPtr(rawGetter));
-        MOZ_ASSERT_IF((attrs & JSPROP_SETTER) && rawSetter, !IsPoisonedPtr(rawSetter));
-
         if (rawGetter || rawSetter || (attrs & (JSPROP_GETTER|JSPROP_SETTER)))
             flags |= Shape::ACCESSOR_SHAPE;
         else

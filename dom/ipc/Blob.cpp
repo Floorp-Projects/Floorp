@@ -481,8 +481,9 @@ class RemoteInputStream MOZ_FINAL
   uint64_t mLength;
 
 public:
-  explicit
-  RemoteInputStream(FileImpl* aBlobImpl);
+  RemoteInputStream(FileImpl* aBlobImpl,
+                    uint64_t aStart,
+                    uint64_t aLength);
 
   RemoteInputStream(BlobChild* aActor,
                     FileImpl* aBlobImpl,
@@ -1115,13 +1116,15 @@ BlobDataFromBlobImpl(FileImpl* aBlobImpl, BlobData& aBlobData)
                       &readCount)));
 }
 
-RemoteInputStream::RemoteInputStream(FileImpl* aBlobImpl)
+RemoteInputStream::RemoteInputStream(FileImpl* aBlobImpl,
+                                     uint64_t aStart,
+                                     uint64_t aLength)
   : mMonitor("RemoteInputStream.mMonitor")
   , mActor(nullptr)
   , mBlobImpl(aBlobImpl)
   , mWeakSeekableStream(nullptr)
-  , mStart(0)
-  , mLength(0)
+  , mStart(aStart)
+  , mLength(aLength)
 {
   MOZ_ASSERT(aBlobImpl);
 
@@ -2550,9 +2553,9 @@ CreateStreamHelper::RunInternal(RemoteBlobImpl* aBaseRemoteBlobImpl,
 
     if (!NS_IsMainThread() && GetCurrentThreadWorkerPrivate()) {
       stream =
-        new RemoteInputStream(actor, aBaseRemoteBlobImpl, mStart, mLength);
+        new RemoteInputStream(actor, mRemoteBlobImpl, mStart, mLength);
     } else {
-      stream = new RemoteInputStream(aBaseRemoteBlobImpl);
+      stream = new RemoteInputStream(mRemoteBlobImpl, mStart, mLength);
     }
 
     InputStreamChild* streamActor = new InputStreamChild(stream);

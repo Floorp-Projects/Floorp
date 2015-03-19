@@ -2959,7 +2959,7 @@ js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, JSObject **
             // are not handled here.
             if (!obj->is<UnboxedPlainObject>())
                 return false;
-            if (obj->as<UnboxedPlainObject>().layout().lookup(id)) {
+            if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
                 *objp = obj;
                 MarkNonNativePropertyFound<NoGC>(propp);
                 return true;

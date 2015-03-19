@@ -3908,32 +3908,6 @@ CycleCollectedJSRuntime::Get()
   return nullptr;
 }
 
-
-namespace mozilla {
-namespace cyclecollector {
-
-void
-DeferredFinalize(nsISupports* aSupports)
-{
-  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  rt->DeferredFinalize(aSupports);
-}
-
-void
-DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
-                 DeferredFinalizeFunction aFunc,
-                 void* aThing)
-{
-  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
-}
-
-} // namespace cyclecollector
-} // namespace mozilla
-
-
 MOZ_NEVER_INLINE static void
 SuspectAfterShutdown(void* aPtr, nsCycleCollectionParticipant* aCp,
                      nsCycleCollectingAutoRefCnt* aRefCnt,

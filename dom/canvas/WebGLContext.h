@@ -926,8 +926,8 @@ protected:
     WebGLRefPtr<WebGLBuffer> mBoundTransformFeedbackBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundUniformBuffer;
 
-    UniquePtr<WebGLRefPtr<WebGLBuffer>[]> mBoundUniformBuffers;
-    UniquePtr<WebGLRefPtr<WebGLBuffer>[]> mBoundTransformFeedbackBuffers;
+    nsTArray<WebGLRefPtr<WebGLBuffer>> mBoundUniformBuffers;
+    nsTArray<WebGLRefPtr<WebGLBuffer>> mBoundTransformFeedbackBuffers;
 
     WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTarget(GLenum target);
     WebGLRefPtr<WebGLBuffer>& GetBufferSlotByTargetIndexed(GLenum target,

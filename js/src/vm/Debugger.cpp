@@ -6127,8 +6127,6 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     MOZ_ASSERT_IF(frame, thisv.get() == frame.thisValue());
     MOZ_ASSERT_IF(frame, pc);
 
-    MOZ_ASSERT(!IsPoisonedPtr(chars.start().get()));
-
     /*
      * NB: This function breaks the assumption that the compiler can see all
      * calls and properly compute a static level. In practice, any non-zero

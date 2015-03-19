@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 :root, body {
   height: 100%;
@@ -14,6 +14,12 @@ body {
   color: #333333;
   -moz-user-select: none;
   overflow: hidden;
+}
+
+#emptyListInfo {
+  cursor: default;
+  padding: 3em 1em;
+  text-align: center;
 }
 
 #list {
@@ -52,11 +58,18 @@ body {
   flex-flow: column;
   -moz-padding-start: 4px;
   overflow: hidden;
+  flex-grow: 1;
+}
+
+.item-title-lines {
+  display: flex;
 }
 
 .item-title {
   overflow: hidden;
-  height: 2.8em;
+  max-height: 2.8em;
+  line-height: 1.4;
+  flex-grow: 1;
 }
 
 .item-domain {
@@ -70,3 +83,16 @@ body {
 .item:hover .item-domain {
   color: #008ACB;
 }
+
+.item:not(:hover) .remove-button {
+  display: none;
+}
+
+.remove-button {
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-color: transparent;
+  border-width: 0;
+}
+

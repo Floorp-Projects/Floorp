@@ -7494,7 +7494,7 @@ class MElements
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition *store) const;
+    bool mightAlias(const MDefinition *store) const MOZ_OVERRIDE;
 
     ALLOW_CLONE(MElements)
 };
@@ -7682,7 +7682,7 @@ class MInitializedLength
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition *store) const;
+    bool mightAlias(const MDefinition *store) const MOZ_OVERRIDE;
 
     void computeRange(TempAllocator &alloc) MOZ_OVERRIDE;
 
@@ -8186,7 +8186,7 @@ class MLoadElement
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::Load(AliasSet::Element);
     }
-    bool mightAlias(const MDefinition *store) const;
+    bool mightAlias(const MDefinition *store) const MOZ_OVERRIDE;
 
     ALLOW_CLONE(MLoadElement)
 };
@@ -10160,13 +10160,15 @@ class MGuardObjectGroup
     AlwaysTenured<ObjectGroup *> group_;
     bool bailOnEquality_;
     BailoutKind bailoutKind_;
+    bool checkUnboxedExpando_;
 
     MGuardObjectGroup(MDefinition *obj, ObjectGroup *group, bool bailOnEquality,
-                      BailoutKind bailoutKind)
+                      BailoutKind bailoutKind, bool checkUnboxedExpando)
       : MUnaryInstruction(obj),
         group_(group),
         bailOnEquality_(bailOnEquality),
-        bailoutKind_(bailoutKind)
+        bailoutKind_(bailoutKind),
+        checkUnboxedExpando_(checkUnboxedExpando)
     {
         setGuard();
         setMovable();
@@ -10181,8 +10183,10 @@ class MGuardObjectGroup
     INSTRUCTION_HEADER(GuardObjectGroup)
 
     static MGuardObjectGroup *New(TempAllocator &alloc, MDefinition *obj, ObjectGroup *group,
-                                  bool bailOnEquality, BailoutKind bailoutKind) {
-        return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind);
+                                  bool bailOnEquality, BailoutKind bailoutKind,
+                                  bool checkUnboxedExpando) {
+        return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind,
+                                            checkUnboxedExpando);
     }
 
     MDefinition *obj() const {
@@ -10196,6 +10200,9 @@ class MGuardObjectGroup
     }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
+    }
+    bool checkUnboxedExpando() const {
+        return checkUnboxedExpando_;
     }
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         if (!ins->isGuardObjectGroup())

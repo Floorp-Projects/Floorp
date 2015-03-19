@@ -13,6 +13,7 @@ interface xpcIJSWeakReference;
 interface nsIAddonInterposition;
 interface nsIClassInfo;
 interface nsIComponentManager;
+interface nsICycleCollectorListener;
 interface nsIJSCID;
 interface nsIJSIID;
 interface nsIPrincipal;
@@ -122,7 +123,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(0354f8b4-08c6-4074-a466-2b6524b64ca3)]
+[scriptable, uuid(1a9bcb85-67a9-4a22-89a2-40eaf7fc31ec)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -284,7 +285,7 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Force an immediate cycle collection cycle.
      */
-    void forceCC();
+    void forceCC([optional] in nsICycleCollectorListener aListener);
 
     /*
      * To be called from JS only.

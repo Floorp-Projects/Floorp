@@ -146,6 +146,16 @@ LossyAppendUTF16toASCII(const char16_t* aSource, nsACString& aDest)
   }
 }
 
+bool
+AppendASCIItoUTF16(const char* aSource, nsAString& aDest, const mozilla::fallible_t& aFallible)
+{
+  if (aSource) {
+    return AppendASCIItoUTF16(nsDependentCString(aSource), aDest, aFallible);
+  }
+
+  return true;
+}
+
 void
 AppendASCIItoUTF16(const char* aSource, nsAString& aDest)
 {

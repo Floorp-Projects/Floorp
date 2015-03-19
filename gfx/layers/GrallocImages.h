@@ -44,7 +44,6 @@ class GrallocTextureClientOGL;
  * mPicSize, not mYSize or mCbCrSize.
  */
 class GrallocImage : public PlanarYCbCrImage
-                   , public ISharedImage
 {
   typedef PlanarYCbCrData Data;
   static int32_t sColorIdMap[];
@@ -92,8 +91,6 @@ public:
   void* GetNativeBuffer();
 
   virtual bool IsValid() { return !!mTextureClient; }
-
-  virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 

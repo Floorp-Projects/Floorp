@@ -115,7 +115,6 @@ struct Token
 
     void setName(PropertyName *name) {
         MOZ_ASSERT(type == TOK_NAME);
-        MOZ_ASSERT(!IsPoisonedPtr(name));
         u.name = name;
     }
 
@@ -123,7 +122,6 @@ struct Token
         MOZ_ASSERT(type == TOK_STRING ||
                    type == TOK_TEMPLATE_HEAD ||
                    type == TOK_NO_SUBS_TEMPLATE);
-        MOZ_ASSERT(!IsPoisonedPtr(atom));
         u.atom = atom;
     }
 

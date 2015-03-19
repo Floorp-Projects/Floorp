@@ -1062,9 +1062,11 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     mode(JSGC_MODE_INCREMENTAL),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
+    grayBufferState(GCRuntime::GrayBufferState::Unused),
     grayBitsValid(false),
     majorGCTriggerReason(JS::gcreason::NO_REASON),
     minorGCTriggerReason(JS::gcreason::NO_REASON),
+    fullGCForAtomsRequested_(false),
     majorGCNumber(0),
     jitReleaseNumber(0),
     number(0),
@@ -3035,6 +3037,12 @@ GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 
     if (rt->isAtomsZone(zone)) {
         /* We can't do a zone GC of the atoms compartment. */
+        if (rt->keepAtoms()) {
+            /* Skip GC and retrigger later, since atoms zone won't be collected
+             * if keepAtoms is true. */
+            fullGCForAtomsRequested_ = true;
+            return false;
+        }
         triggerGC(reason);
         return true;
     }
@@ -3776,7 +3784,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
 
     marker.start();
     MOZ_ASSERT(!marker.callback);
-    MOZ_ASSERT(IS_GC_MARKING_TRACER(&marker));
+    MOZ_ASSERT(IsMarkingTracer(&marker));
 
     /* For non-incremental GC the following sweep discards the jit code. */
     if (isIncremental) {
@@ -3830,8 +3838,10 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
 
     gcstats::AutoPhase ap2(stats, gcstats::PHASE_MARK_ROOTS);
 
-    if (isIncremental)
+    if (isIncremental) {
+        gcstats::AutoPhase ap3(stats, gcstats::PHASE_BUFFER_GRAY_ROOTS);
         bufferGrayRoots();
+    }
 
     /*
      * This code ensures that if a compartment is "dead", then it will be
@@ -3938,7 +3948,7 @@ GCRuntime::markGrayReferences(gcstats::Phase phase)
     gcstats::AutoPhase ap(stats, phase);
     if (marker.hasBufferedGrayRoots()) {
         for (ZoneIterT zone(rt); !zone.done(); zone.next())
-            marker.markBufferedGrayRoots(zone);
+            markBufferedGrayRoots(zone);
     } else {
         MOZ_ASSERT(!isIncremental);
         if (JSTraceDataOp op = grayRootTracer.op)

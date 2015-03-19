@@ -398,12 +398,13 @@ class IonBuilder
     MDefinition *addMaybeCopyElementsForWrite(MDefinition *object);
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
-    MInstruction *addGroupGuard(MDefinition *obj, ObjectGroup *group, BailoutKind bailoutKind);
+    MInstruction *addGroupGuard(MDefinition *obj, ObjectGroup *group, BailoutKind bailoutKind,
+                                bool checkUnboxedExpando = false);
 
     MInstruction *
-    addShapeGuardPolymorphic(MDefinition *obj,
-                             const BaselineInspector::ShapeVector &shapes,
-                             const BaselineInspector::ObjectGroupVector &unboxedGroups);
+    addGuardReceiverPolymorphic(MDefinition *obj,
+                                const BaselineInspector::ShapeVector &shapes,
+                                const BaselineInspector::ObjectGroupVector &unboxedGroups);
 
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
                                                        Scalar::Type viewType);

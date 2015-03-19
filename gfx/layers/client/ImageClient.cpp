@@ -158,9 +158,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     return true;
   }
 
-  RefPtr<TextureClient> texture = image->AsSharedImage()
-                                ? image->AsSharedImage()->GetTextureClient(this)
-                                : nullptr;
+  RefPtr<TextureClient> texture = image->GetTextureClient(this);
 
   AutoRemoveTexture autoRemoveTexture(this);
   if (texture != mFrontBuffer) {

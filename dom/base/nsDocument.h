@@ -409,7 +409,8 @@ protected:
     CandidateMap;
 
   // Hashtable for custom element definitions in web components.
-  // Custom prototypes are in the document's compartment.
+  // Custom prototypes are stored in the compartment where
+  // registerElement was called.
   DefinitionMap mCustomDefinitions;
 
   // The "upgrade candidates map" from the web components spec. Maps from a

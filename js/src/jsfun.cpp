@@ -744,7 +744,7 @@ JSFunction::trace(JSTracer *trc)
             // self-hosted function which can be cloned over again. The latter
             // is stored in the first extended slot.
             JSRuntime *rt = trc->runtime();
-            if (IS_GC_MARKING_TRACER(trc) &&
+            if (IsMarkingTracer(trc) &&
                 (rt->allowRelazificationForTesting || !compartment()->hasBeenEntered()) &&
                 !compartment()->isDebuggee() && !compartment()->isSelfHosting &&
                 u.i.s.script_->isRelazifiable() && (!isSelfHostedBuiltin() || isExtended()))
