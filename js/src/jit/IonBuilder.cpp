@@ -776,6 +776,9 @@ IonBuilder::build()
     if (!init())
         return false;
 
+    if (script()->hasBaselineScript())
+        script()->baselineScript()->resetMaxInliningDepth();
+
     if (!setCurrentAndSpecializePhis(newBlock(pc)))
         return false;
     if (!current)
@@ -4841,56 +4844,6 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
     // Heuristics!
     JSScript *targetScript = target->nonLazyScript();
 
-    // Cap the inlining depth.
-    if (js_JitOptions.isSmallFunction(targetScript)) {
-        if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth()) {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
-            return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
-        }
-    } else {
-        if (inliningDepth_ >= optimizationInfo().maxInlineDepth()) {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
-            return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
-        }
-
-        if (targetScript->hasLoops()) {
-            // Currently, we are not inlining function which have loops because
-            // the cost inherent to inlining the function overcome the cost
-            // calling it. The reason is not yet clear to everybody, and we
-            // hope that we might be able to remove this restriction in the
-            // future.
-            //
-            // In the mean time, if we have opportunities to optimize the
-            // loop better, then we should try it. Such opportunity might be
-            // suggested by:
-            //
-            //  - Constant as argument. Inlining a function called with a
-            //    constant, might help GVN, as well as UCE, and potentially
-            //    improve bound check removal.
-            //
-            //  - Inner function as argument. Inlining a function called
-            //    with an inner function might help scalar replacement at
-            //    removing the scope chain, and thus using registers within
-            //    the loop instead of writting everything back to memory.
-            bool hasOpportunities = false;
-            for (size_t i = 0, e = callInfo.argv().length(); !hasOpportunities && i < e; i++) {
-                MDefinition *arg = callInfo.argv()[i];
-                hasOpportunities = arg->isLambda() || arg->isConstantValue();
-            }
-
-            if (!hasOpportunities) {
-                trackOptimizationOutcome(TrackedOutcome::CantInlineBigLoop);
-                return DontInline(targetScript, "Vetoed: big function that contains a loop");
-            }
-        }
-
-        // Caller must not be excessively large.
-        if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength()) {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineBigCaller);
-            return DontInline(targetScript, "Vetoed: caller excessively large");
-        }
-    }
-
     // Callee must not be excessively large.
     // This heuristic also applies to the callsite as a whole.
     bool offThread = options.offThreadCompilationAvailable();
@@ -4921,6 +4874,65 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
         trackOptimizationOutcome(TrackedOutcome::CantInlineExceededTotalBytecodeLength);
         return DontInline(targetScript, "Vetoed: exceeding max total bytecode length");
     }
+
+    // Cap the inlining depth.
+
+    uint32_t maxInlineDepth;
+    if (js_JitOptions.isSmallFunction(targetScript)) {
+        maxInlineDepth = optimizationInfo().smallFunctionMaxInlineDepth();
+    } else {
+        maxInlineDepth = optimizationInfo().maxInlineDepth();
+
+        // Caller must not be excessively large.
+        if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength()) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineBigCaller);
+            return DontInline(targetScript, "Vetoed: caller excessively large");
+        }
+    }
+
+    BaselineScript *outerBaseline = outermostBuilder()->script()->baselineScript();
+    if (inliningDepth_ >= maxInlineDepth) {
+        // We hit the depth limit and won't inline this function. Give the
+        // outermost script a max inlining depth of 0, so that it won't be
+        // inlined in other scripts. This heuristic is currently only used
+        // when we're inlining scripts with loops, see the comment below.
+        outerBaseline->setMaxInliningDepth(0);
+
+        trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
+        return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
+    }
+
+    // Inlining functions with loops can be complicated. For instance, if we're
+    // close to the inlining depth limit and we inline the function f below, we
+    // can no longer inline the call to g:
+    //
+    //   function f() {
+    //      while (cond) {
+    //          g();
+    //      }
+    //   }
+    //
+    // If the loop has many iterations, it's more efficient to call f and inline
+    // g in f.
+    //
+    // To avoid this problem, we record a separate max inlining depth for each
+    // script, indicating at which depth we won't be able to inline all functions
+    // we inlined this time. This solves the issue above, because we will only
+    // inline f if it means we can also inline g.
+    if (targetScript->hasLoops() &&
+        inliningDepth_ >= targetScript->baselineScript()->maxInliningDepth())
+    {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
+        return DontInline(targetScript, "Vetoed: exceeding allowed script inline depth");
+    }
+
+    // Update the max depth at which we can inline the outer script.
+    MOZ_ASSERT(maxInlineDepth > inliningDepth_);
+    uint32_t scriptInlineDepth = maxInlineDepth - inliningDepth_ - 1;
+    if (scriptInlineDepth < outerBaseline->maxInliningDepth())
+        outerBaseline->setMaxInliningDepth(scriptInlineDepth);
+
+    // End of heuristics, we will inline this function.
 
     // TI calls ObjectStateChange to trigger invalidation of the caller.
     TypeSet::ObjectKey *targetKey = TypeSet::ObjectKey::get(target);

@@ -212,6 +212,13 @@ struct BaselineScript
     // instruction.
     uint32_t yieldEntriesOffset_;
 
+    // The max inlining depth where we can still inline all functions we inlined
+    // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
+    // no data yet, and won't affect inlining heuristics in that case. The value
+    // is updated when we Ion-compile this script. See makeInliningDecision for
+    // more info.
+    uint8_t maxInliningDepth_;
+
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -423,6 +430,17 @@ struct BaselineScript
     uint32_t *bytecodeTypeMap() {
         MOZ_ASSERT(bytecodeTypeMapOffset_);
         return reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(this) + bytecodeTypeMapOffset_);
+    }
+
+    uint8_t maxInliningDepth() const {
+        return maxInliningDepth_;
+    }
+    void setMaxInliningDepth(uint32_t depth) {
+        MOZ_ASSERT(depth <= UINT8_MAX);
+        maxInliningDepth_ = depth;
+    }
+    void resetMaxInliningDepth() {
+        maxInliningDepth_ = UINT8_MAX;
     }
 };
 static_assert(sizeof(BaselineScript) % sizeof(uintptr_t) == 0,
