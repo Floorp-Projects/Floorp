@@ -157,6 +157,7 @@
     "vsizeMaxContiguous",
     "resident",
     "residentFast",
+    "residentUnique",
     "heapAllocated",
     "heapOverheadRatio",
     "JSMainRuntimeGCHeap",
