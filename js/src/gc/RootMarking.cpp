@@ -574,9 +574,12 @@ js::gc::GCRuntime::bufferGrayRoots()
         (*op)(&marker, grayRootTracer.data);
 
     // Propagate the failure flag from the marker to the runtime.
-    grayBufferState = marker.bufferingGrayRootsFailed
-                      ? GrayBufferState::Failed
-                      : GrayBufferState::Okay;
+    if (marker.bufferingGrayRootsFailed) {
+      grayBufferState = GrayBufferState::Failed;
+      resetBufferedGrayRoots();
+    } else {
+      grayBufferState = GrayBufferState::Okay;
+    }
 
     // Restore the GCMarker to its former correctness.
     MOZ_ASSERT(IsMarkingGray(&marker));

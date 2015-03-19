@@ -555,7 +555,7 @@ GCMarker::stop()
     /* Free non-ballast stack memory. */
     stack.reset();
 
-    resetBufferedGrayRoots();
+    runtime()->gc.resetBufferedGrayRoots();
     runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Unused;
 }
 
@@ -648,9 +648,9 @@ GCMarker::checkZone(void *p)
 #endif
 
 void
-GCMarker::resetBufferedGrayRoots()
+GCRuntime::resetBufferedGrayRoots() const
 {
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
 }
 
@@ -699,10 +699,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
           default:
             break;
         }
-        if (!zone->gcGrayRoots.append(root)) {
+        if (!zone->gcGrayRoots.append(root))
             bufferingGrayRootsFailed = true;
-            resetBufferedGrayRoots();
-        }
     }
 }
 
