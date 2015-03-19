@@ -406,8 +406,9 @@ public:
     WaitRequestRef(aRejection.mType).Complete();
   }
 
-  // Resets all state related to decoding, emptying all buffers etc.
-  void ResetDecode();
+  // Resets all state related to decoding and playback, emptying all buffers
+  // and aborting all pending operations on the decode task queue.
+  void Reset();
 
 private:
   void AcquireMonitorAndInvokeDecodeError();
@@ -510,14 +511,6 @@ protected:
 
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
-
-  // Resets playback timing data. Called when we seek, on the decode thread.
-  void ResetPlayback();
-
-  // Orders the Reader to stop decoding, and blocks until the Reader
-  // has stopped decoding and finished delivering samples, then calls
-  // ResetPlayback() to discard all enqueued data.
-  void FlushDecoding();
 
   // Called when AudioSink reaches the end. |mPlayStartTime| and
   // |mPlayDuration| are updated to provide a good base for calculating video
