@@ -219,7 +219,7 @@ class SharedThreadPool;
 
 // Returns the thread pool that is shared amongst all decoder state machines
 // for decoding streams.
-TemporaryRef<SharedThreadPool> GetMediaThreadPool();
+TemporaryRef<SharedThreadPool> GetMediaDecodeThreadPool();
 
 enum H264_PROFILE {
   H264_PROFILE_UNKNOWN                     = 0,

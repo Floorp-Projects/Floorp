@@ -197,9 +197,9 @@ IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
     aDisplay.width * aDisplay.height != 0;
 }
 
-TemporaryRef<SharedThreadPool> GetMediaThreadPool()
+TemporaryRef<SharedThreadPool> GetMediaDecodeThreadPool()
 {
-  return SharedThreadPool::Get(NS_LITERAL_CSTRING("Media Playback"),
+  return SharedThreadPool::Get(NS_LITERAL_CSTRING("Media Decode"),
                                Preferences::GetUint("media.num-decode-threads", 25));
 }
 
@@ -301,7 +301,7 @@ class CreateTaskQueueTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue = new MediaTaskQueue(GetMediaThreadPool());
+    mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
     return NS_OK;
   }
   nsRefPtr<MediaTaskQueue> mTaskQueue;
@@ -311,7 +311,7 @@ class CreateFlushableTaskQueueTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
+    mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
     return NS_OK;
   }
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;

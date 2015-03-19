@@ -249,9 +249,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   // Set up our task queue.
-  RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
-  MOZ_DIAGNOSTIC_ASSERT(pool);
-  mTaskQueue = new MediaTaskQueue(pool.forget());
+  RefPtr<SharedThreadPool> threadPool(
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("Media State Machine"), 1));
+  mTaskQueue = new MediaTaskQueue(threadPool.forget());
 
   static bool sPrefCacheInit = false;
   if (!sPrefCacheInit) {
