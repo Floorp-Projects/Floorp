@@ -215,6 +215,7 @@ class ServiceWorkerInfo final
 private:
   const ServiceWorkerRegistrationInfo* mRegistration;
   nsCString mScriptSpec;
+  nsString mCacheName;
   ServiceWorkerState mState;
   // We hold rawptrs since the ServiceWorker constructor and destructor ensure
   // addition and removal.
@@ -247,9 +248,11 @@ public:
   }
 
   explicit ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
-                             const nsACString& aScriptSpec)
+                             const nsACString& aScriptSpec,
+                             const nsAString& aCacheName)
     : mRegistration(aReg)
     , mScriptSpec(aScriptSpec)
+    , mCacheName(aCacheName)
     , mState(ServiceWorkerState::EndGuard_)
   {
     MOZ_ASSERT(mRegistration);
@@ -259,6 +262,12 @@ public:
   State() const
   {
     return mState;
+  }
+
+  const nsString&
+  CacheName() const
+  {
+    return mCacheName;
   }
 
   void

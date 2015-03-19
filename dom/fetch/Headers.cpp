@@ -56,8 +56,17 @@ Headers::Constructor(const GlobalObject& aGlobal,
                      const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
                      ErrorResult& aRv)
 {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  return Create(global, aInit, aRv);
+}
+
+/* static */ already_AddRefed<Headers>
+Headers::Create(nsIGlobalObject* aGlobal,
+                const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+                ErrorResult& aRv)
+{
   nsRefPtr<InternalHeaders> ih = new InternalHeaders();
-  nsRefPtr<Headers> headers = new Headers(aGlobal.GetAsSupports(), ih);
+  nsRefPtr<Headers> headers = new Headers(aGlobal, ih);
 
   if (aInit.IsHeaders()) {
     ih->Fill(*(aInit.GetAsHeaders().get()->mInternalHeaders), aRv);

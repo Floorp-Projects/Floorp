@@ -240,6 +240,8 @@ struct WorkerLoadInfo
   nsAutoPtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   nsCString mDomain;
 
+  nsString mServiceWorkerCacheName;
+
   uint64_t mWindowID;
 
   bool mFromWindow;

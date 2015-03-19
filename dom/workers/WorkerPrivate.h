@@ -164,6 +164,8 @@ private:
   // they do not need to be cycle collected.
   WorkerLoadInfo mLoadInfo;
 
+  Atomic<bool> mLoadingWorkerScript;
+
   // Only used for top level workers.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 
@@ -478,6 +480,23 @@ public:
   {
     AssertIsOnMainThread();
     return mLoadInfo.mResolvedScriptURI;
+  }
+
+  const nsString&
+  ServiceWorkerCacheName() const
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    AssertIsOnMainThread();
+    return mLoadingWorkerScript ?
+             mLoadInfo.mServiceWorkerCacheName : EmptyString();
+  }
+  
+  void
+  SetLoadingWorkerScript(bool aLoadingWorkerScript)
+  {
+    // any thread
+    MOZ_ASSERT(IsServiceWorker());
+    mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
   TimeStamp CreationTimeStamp() const
