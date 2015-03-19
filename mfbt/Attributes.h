@@ -283,6 +283,35 @@
 #  define MOZ_TSAN_BLACKLIST /* nothing */
 #endif
 
+/**
+ * MOZ_ALLOCATOR tells the compiler that the function it marks returns either a
+ * "fresh", "pointer-free" block of memory, or nullptr. "Fresh" means that the
+ * block is not pointed to by any other reachable pointer in the program.
+ * "Pointer-free" means that the block contains no pointers to any valid object
+ * in the program. It may be initialized with other (non-pointer) values.
+ *
+ * Placing this attribute on appropriate functions helps GCC analyze pointer
+ * aliasing more accurately in their callers.
+ *
+ * GCC warns if a caller ignores the value returned by a function marked with
+ * MOZ_ALLOCATOR: it is hard to imagine cases where dropping the value returned
+ * by a function that meets the criteria above would be intentional.
+ *
+ * Place this attribute after the argument list and 'this' qualifiers of a
+ * function definition. For example, write
+ *
+ *   void *my_allocator(size_t) MOZ_ALLOCATOR;
+ *
+ * or
+ *
+ *   void *my_allocator(size_t bytes) MOZ_ALLOCATOR { ... }
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_ALLOCATOR __attribute__ ((malloc, warn_unused_result))
+#else
+#  define MOZ_ALLOCATOR
+#endif
+
 #ifdef __cplusplus
 
 /**
