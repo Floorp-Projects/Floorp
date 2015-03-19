@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.gecko.overlays.ui.OverlayDialogButton xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/ShareOverlayRow"
+    android:id="@+id/overlay_send_tab_item"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textAppearance="@style/ShareOverlayTextAppearance.Button"
-    android:clickable="true"/>
+    android:layout_height="wrap_content"/>
