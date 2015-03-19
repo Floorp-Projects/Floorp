@@ -215,7 +215,15 @@ protected:
   // Initializes mLayersBackendType if possible.
   void InitLayersBackendType();
 
+  bool ShouldSkipVideoFrame(int64_t aTimeThreshold);
+
 private:
+  // Get the timestamp of keyframe greater than aTimeThreshold.
+  int64_t GetNextKeyframeTime(int64_t aTimeThreshold);
+  // Push the packets into aOutput which's timestamp is less than aEndTime.
+  // Return false if we reach the end of stream or something wrong.
+  bool FilterPacketByTime(int64_t aEndTime, WebMPacketQueue& aOutput);
+
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.
   nestegg* mContext;
