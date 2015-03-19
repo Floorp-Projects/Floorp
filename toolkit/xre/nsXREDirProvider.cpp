@@ -52,6 +52,9 @@
 #ifdef XP_UNIX
 #include <ctype.h>
 #endif
+#ifdef XP_IOS
+#include "UIKitDirProvider.h"
+#endif
 
 #if defined(XP_MACOSX)
 #define APP_REGISTRY_NAME "Application Registry"
@@ -1235,6 +1238,14 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal)
   NS_ENSURE_SUCCESS(rv, rv);
 
   localDir = do_QueryInterface(dirFileMac, &rv);
+#elif defined(XP_IOS)
+  nsAutoCString userDir;
+  if (GetUIKitDirectory(aLocal, userDir)) {
+    rv = NS_NewNativeLocalFile(userDir, true, getter_AddRefs(localDir));
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_WIN)
   nsString path;
   if (aLocal) {
