@@ -42,7 +42,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, global, code, code_size, options, &script));
+    CHECK(JS_CompileScript(cx, code, code_size, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
@@ -52,7 +52,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, global, "", 0, options, &script));
+    CHECK(JS_CompileScript(cx, "", 0, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
@@ -62,7 +62,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, global, code, code_size, options, &script));
+    CHECK(JS_CompileScript(cx, code, code_size, options, &script));
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
