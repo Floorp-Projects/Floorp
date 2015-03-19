@@ -2,47 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- *  Skip this file if not doing video on the device.
- *
- *  The ccsdp_xxx api's provide a means to query and populate the SDP attributes
- *  for video m lines. These Api are not needed if we are not supporting video on
- *  the platform. For audio the stack will populate the appropriate attributes
- *
- *
- *  These API's can be invoked from the vcmCheckAttrs() and vcmPopulateAttrs()
- *  methods to populate or extract the value of specific attributes in the video SDP.
- *  These api require an handle to the SDP that is passed in the above methods.
- * <pre>
- * sdp_handle     The SDP handle
- * level       The level the attribute is defined.  Can be either
- *             SDP_SESSION_LEVEL or 0-n specifying a media line level.
- * inst_num    The instance number of the attribute.  Multiple instances
- *             of a particular attribute may exist at each level and so
- *             the inst_num determines the particular attribute at that
- *             level that should be accessed.  Note that this is the
- *             instance number of the specified type of attribute, not the
- *             overall attribute number at the level.  Also note that the
- *             instance number is 1-based.  For example:
- *             v=0
- *             o=mhandley 2890844526 2890842807 IN IP4 126.16.64.4
- *             s=SDP Seminar
- *             c=IN IP4 10.1.0.2
- *             t=0 0
- *             m=audio 1234 RTP/AVP 0 101 102
- *             a=foo 1
- *             a=foo 2
- *             a=bar 1   # This is instance 1 of attribute bar.
- *             a=foo 3   # This is instance 3 of attribute foo.
- * cap_num     Almost all of the attributes may be defined as X-cpar
- *             parameters (with the exception of X-sqn, X-cap, and X-cpar).
- *             If the cap_num is set to zero, then the attribute is not
- *             an X-cpar parameter attribute.  If the cap_num is any other
- *             value, it specifies the capability number that the X-cpar
- *             attribute is specified for.
- * </pre>
- */
-
 #ifndef __CCSDP_H__
 #define __CCSDP_H__
 
@@ -84,38 +43,6 @@ typedef enum rtp_ptype_
     RTP_I420         = 124,
     RTP_ISAC         = 124
 } rtp_ptype;
-
-/**
- * IANA-registered static payload types for the RTP/AVP profile.
- * See http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xml
- */
-typedef enum static_rtp_ptype_
-{
-    STATIC_RTP_AVP_PCMU_8000_1          = 0,
-    STATIC_RTP_AVP_GSM_8000_1           = 3,
-    STATIC_RTP_AVP_G723_8000_1          = 4,
-    STATIC_RTP_AVP_DVI4_8000_1          = 5,
-    STATIC_RTP_AVP_DVI4_16000_1         = 6,
-    STATIC_RTP_AVP_LPC_8000_1           = 7,
-    STATIC_RTP_AVP_PCMA_8000_1          = 8,
-    STATIC_RTP_AVP_G722_8000_1          = 9,
-    STATIC_RTP_AVP_L16_44100_2          = 10,
-    STATIC_RTP_AVP_L16_44100_1          = 11,
-    STATIC_RTP_AVP_QCELP_8000_1         = 12,
-    STATIC_RTP_AVP_CN_8000_1            = 13,
-    STATIC_RTP_AVP_MPA_90000_1          = 14,
-    STATIC_RTP_AVP_G728_8000_1          = 15,
-    STATIC_RTP_AVP_DVI4_11025_1         = 16,
-    STATIC_RTP_AVP_DVI4_22050_1         = 17,
-    STATIC_RTP_AVP_G729_8000_1          = 18,
-    STATIC_RTP_AVP_CELB_90000_1         = 25,
-    STATIC_RTP_AVP_JPEG_90000_1         = 26,
-    STATIC_RTP_AVP_NV_90000_1           = 28,
-    STATIC_RTP_AVP_H261_90000_1         = 31,
-    STATIC_RTP_AVP_MPV_90000_1          = 32,
-    STATIC_RTP_AVP_MP2T_90000_1         = 33,
-    STATIC_RTP_AVP_H263_90000_1         = 34
-} static_rtp_ptype;
 
 typedef struct {
     const char *name;
@@ -260,7 +187,7 @@ typedef enum {
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;
-/* This is here so that it can be used in the VcmSIPCCBinding interface */
+
 typedef enum {
     SDP_SETUP_NOT_FOUND = -1,
     SDP_SETUP_ACTIVE = 0,

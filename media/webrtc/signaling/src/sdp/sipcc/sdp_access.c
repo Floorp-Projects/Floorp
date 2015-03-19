@@ -1518,66 +1518,6 @@ sdp_result_e sdp_insert_media_line (sdp_t *sdp_p, uint16_t level)
     return (SDP_SUCCESS);
 }
 
-/* Function:    sdp_delete_media_line
- * Description: Delete the media line at the level specified for the
- *              given SDP.
- * Parameters:  sdp_p     The SDP handle returned by sdp_init_description.
- *              level       The media level to delete.  Will be 1-n.
- * Returns:     SDP_SUCCESS, SDP_NO_RESOURCE, or SDP_INVALID_PARAMETER
- */
-void sdp_delete_media_line (sdp_t *sdp_p, uint16_t level)
-{
-    sdp_mca_t  *mca_p;
-    sdp_mca_t  *prev_mca_p = NULL;
-    sdp_attr_t *attr_p;
-    sdp_attr_t *next_attr_p;
-    sdp_bw_t        *bw_p;
-    sdp_bw_data_t   *bw_data_p;
-
-    /* If we're not deleting media line 1, then we need a pointer
-     * to the previous media line so we can relink. */
-    if (level == 1) {
-        mca_p = sdp_find_media_level(sdp_p, level);
-    } else {
-        prev_mca_p = sdp_find_media_level(sdp_p, (uint16_t)(level-1));
-        if (prev_mca_p == NULL) {
-            sdp_p->conf_p->num_invalid_param++;
-            return;
-        }
-        mca_p = prev_mca_p->next_p;
-    }
-    if (mca_p == NULL) {
-        sdp_p->conf_p->num_invalid_param++;
-        return;
-    }
-
-    /* Delete all attributes from this level. */
-    for (attr_p = mca_p->media_attrs_p; attr_p != NULL;) {
-        next_attr_p = attr_p->next_p;
-        sdp_free_attr(attr_p);
-        attr_p = next_attr_p;
-    }
-
-     /* Delete bw line */
-     bw_p = &(mca_p->bw);
-     bw_data_p = bw_p->bw_data_list;
-     while (bw_data_p != NULL) {
-         bw_p->bw_data_list = bw_data_p->next_p;
-         SDP_FREE(bw_data_p);
-         bw_data_p = bw_p->bw_data_list;
-     }
-
-    /* Now relink the media levels and delete the specified one. */
-    if (prev_mca_p == NULL) {
-        sdp_p->mca_p = mca_p->next_p;
-    } else {
-        prev_mca_p->next_p = mca_p->next_p;
-    }
-    SDP_FREE(mca_p);
-    sdp_p->mca_count--;
-    return;
-}
-
 /* Function:    sdp_set_media_type
  * Description: Sets the value of the media type parameter for the m=
  *              media token line.
@@ -2108,65 +2048,6 @@ sdp_result_e sdp_add_new_bw_line (sdp_t *sdp_p, uint16_t level, sdp_bw_modifier_
     }
     *inst_num = ++bw_p->bw_data_count;
 
-    return (SDP_SUCCESS);
-}
-
-/*
- * sdp_delete_bw_line
- *
- * Deletes the bw line instance at the specified level.
- *
- * sdp_p     The SDP handle returned by sdp_init_description.
- * level       The level to delete the bw line.
- * inst_num   The instance of the bw line to delete.
- */
-sdp_result_e sdp_delete_bw_line (sdp_t *sdp_p, uint16_t level, uint16_t inst_num)
-{
-    sdp_bw_t            *bw_p;
-    sdp_mca_t           *mca_p;
-    sdp_bw_data_t       *bw_data_p = NULL;
-    sdp_bw_data_t       *prev_bw_data_p = NULL;
-    int                 bw_data_count = 0;
-
-    if (level == SDP_SESSION_LEVEL) {
-        bw_p = &(sdp_p->bw);
-    } else {
-        mca_p = sdp_find_media_level(sdp_p, level);
-        if (mca_p == NULL) {
-            sdp_p->conf_p->num_invalid_param++;
-            return (SDP_INVALID_PARAMETER);
-        }
-        bw_p = &(mca_p->bw);
-    }
-
-    bw_data_p = bw_p->bw_data_list;
-    while (bw_data_p != NULL) {
-        bw_data_count++;
-        if (bw_data_count == inst_num) {
-            break;
-        }
-
-        prev_bw_data_p = bw_data_p;
-        bw_data_p = bw_data_p->next_p;
-    }
-
-    if (bw_data_p == NULL) {
-        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s bw line instance %u not found.",
-                      sdp_p->debug_str, (unsigned)inst_num);
-        }
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
-    }
-
-    if (prev_bw_data_p == NULL) {
-        bw_p->bw_data_list = bw_data_p->next_p;
-    } else {
-        prev_bw_data_p->next_p = bw_data_p->next_p;
-    }
-    bw_p->bw_data_count--;
-
-    SDP_FREE(bw_data_p);
     return (SDP_SUCCESS);
 }
 
