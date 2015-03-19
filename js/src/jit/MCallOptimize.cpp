@@ -378,9 +378,21 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 3);
 
     if (native == js::simd_int32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 4);
+    if (native == js::simd_int32x4_storeX)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 1);
+    if (native == js::simd_int32x4_storeXY)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 2);
+    if (native == js::simd_int32x4_storeXYZ)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 3);
     if (native == js::simd_float32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 4);
+    if (native == js::simd_float32x4_storeX)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1);
+    if (native == js::simd_float32x4_storeXY)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2);
+    if (native == js::simd_float32x4_storeXYZ)
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 3);
 
     return InliningStatus_NotInlined;
 }
@@ -3230,7 +3242,8 @@ IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::T
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type)
+IonBuilder::inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                            unsigned numElems)
 {
     InlineTypedObject *templateObj = nullptr;
     if (!checkInlineSimd(callInfo, native, type, 3, &templateObj))
@@ -3247,7 +3260,7 @@ IonBuilder::inlineSimdStore(CallInfo &callInfo, JSNative native, SimdTypeDescr::
     MDefinition *valueToWrite = callInfo.getArg(2);
     MStoreUnboxedScalar *store = MStoreUnboxedScalar::New(alloc(), elements, index,
                                                           valueToWrite, arrayType);
-    store->setWriteType(simdType);
+    store->setSimdWrite(simdType, numElems);
 
     current->add(store);
     current->push(valueToWrite);

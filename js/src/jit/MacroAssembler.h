@@ -757,8 +757,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     template<typename S, typename T>
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S &value, const T &mem);
 
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex &dest);
-    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address &dest);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex &dest,
+                                unsigned numElems = 0);
+    void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address &dest,
+                                unsigned numElems = 0);
 
     // Load a property from an UnboxedPlainObject.
     template <typename T>
