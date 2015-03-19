@@ -1,5 +1,9 @@
 /* Reading List button */
 
+#urlbar:not([focused]):not(:hover) #readinglist-addremove-button {
+  display: none;
+}
+
 #readinglist-addremove-button {
   -moz-appearance: none;
   border: none;
@@ -16,11 +20,11 @@
   height: 16px
 }
 
-#readinglist-addremove-button:not([already-added="true"]):hover {
+#readinglist-addremove-button:hover {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage-hover");
 }
 
-#readinglist-addremove-button:not([already-added="true"]):active {
+#readinglist-addremove-button:active {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage-active");
 }
 
@@ -35,4 +39,3 @@
 #readinglist-addremove-button[already-added="true"]:active {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#alreadyadded-active");
 }
-
