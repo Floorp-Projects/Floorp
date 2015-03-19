@@ -204,7 +204,8 @@ this.SQLiteStore.prototype = {
         storedOn INTEGER,
         markedReadBy TEXT,
         markedReadOn INTEGER,
-        readPosition INTEGER
+        readPosition INTEGER,
+        preview TEXT
       );
     `);
     yield conn.execute(`
