@@ -343,7 +343,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
                .setCompileAndGo(true);
         JS::Rooted<JSScript*> script(cx);
         JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-        JS::Compile(cx, global, options, file, &script);
+        JS::Compile(cx, options, file, &script);
         fclose(file);
         if (!script)
             return false;
@@ -834,7 +834,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
         options.setUTF8(true)
                .setFileAndLine(filename, 1)
                .setCompileAndGo(true);
-        if (JS::Compile(cx, global, options, file, &script) && !compileOnly)
+        if (JS::Compile(cx, options, file, &script) && !compileOnly)
             (void)JS_ExecuteScript(cx, script, &result);
         JS_EndRequest(cx);
 

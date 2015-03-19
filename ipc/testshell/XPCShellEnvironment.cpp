@@ -167,12 +167,11 @@ Load(JSContext *cx,
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return false;
         }
-        Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1);
         JS::Rooted<JSScript*> script(cx);
-        bool ok = JS::Compile(cx, obj, options, file, &script);
+        bool ok = JS::Compile(cx, options, file, &script);
         fclose(file);
         if (!ok)
             return false;
@@ -341,7 +340,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         options.setUTF8(true)
                .setFileAndLine(filename, 1);
         JS::Rooted<JSScript*> script(cx);
-        if (JS::Compile(cx, global, options, file, &script))
+        if (JS::Compile(cx, options, file, &script))
             (void)JS_ExecuteScript(cx, script, &result);
 
         return;
