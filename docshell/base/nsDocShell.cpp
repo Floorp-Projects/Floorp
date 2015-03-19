@@ -4635,7 +4635,8 @@ nsDocShell::IsNavigationAllowed(bool aDisplayPrintErrorDialog,
                                 bool aCheckIfUnloadFired)
 {
   bool isAllowed = !IsPrintingOrPP(aDisplayPrintErrorDialog) &&
-                   (!aCheckIfUnloadFired || !mFiredUnloadEvent);
+                   (!aCheckIfUnloadFired || !mFiredUnloadEvent) &&
+                   !mBlockNavigation;
   if (!isAllowed) {
     return false;
   }
@@ -9999,146 +10000,151 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       GetCurScrollPos(ScrollOrientation_X, &cx);
       GetCurScrollPos(ScrollOrientation_Y, &cy);
 
-      // ScrollToAnchor doesn't necessarily cause us to scroll the window;
-      // the function decides whether a scroll is appropriate based on the
-      // arguments it receives.  But even if we don't end up scrolling,
-      // ScrollToAnchor performs other important tasks, such as informing
-      // the presShell that we have a new hash.  See bug 680257.
-      rv = ScrollToAnchor(curHash, newHash, aLoadType);
-      NS_ENSURE_SUCCESS(rv, rv);
+      {
+        AutoRestore<bool> scrollingToAnchor(mBlockNavigation);
+        mBlockNavigation = true;
 
-      // Reset mLoadType to its original value once we exit this block,
-      // because this short-circuited load might have started after a
-      // normal, network load, and we don't want to clobber its load type.
-      // See bug 737307.
-      AutoRestore<uint32_t> loadTypeResetter(mLoadType);
+        // ScrollToAnchor doesn't necessarily cause us to scroll the window;
+        // the function decides whether a scroll is appropriate based on the
+        // arguments it receives.  But even if we don't end up scrolling,
+        // ScrollToAnchor performs other important tasks, such as informing
+        // the presShell that we have a new hash.  See bug 680257.
+        rv = ScrollToAnchor(curHash, newHash, aLoadType);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      // If a non-short-circuit load (i.e., a network load) is pending,
-      // make this a replacement load, so that we don't add a SHEntry here
-      // and the network load goes into the SHEntry it expects to.
-      if (JustStartedNetworkLoad() && (aLoadType & LOAD_CMD_NORMAL)) {
-        mLoadType = LOAD_NORMAL_REPLACE;
-      } else {
-        mLoadType = aLoadType;
-      }
+        // Reset mLoadType to its original value once we exit this block,
+        // because this short-circuited load might have started after a
+        // normal, network load, and we don't want to clobber its load type.
+        // See bug 737307.
+        AutoRestore<uint32_t> loadTypeResetter(mLoadType);
 
-      mURIResultedInDocument = true;
+        // If a non-short-circuit load (i.e., a network load) is pending,
+        // make this a replacement load, so that we don't add a SHEntry here
+        // and the network load goes into the SHEntry it expects to.
+        if (JustStartedNetworkLoad() && (aLoadType & LOAD_CMD_NORMAL)) {
+          mLoadType = LOAD_NORMAL_REPLACE;
+        } else {
+          mLoadType = aLoadType;
+        }
 
-      nsCOMPtr<nsISHEntry> oldLSHE = mLSHE;
+        mURIResultedInDocument = true;
 
-      /* we need to assign mLSHE to aSHEntry right here, so that on History
-       * loads, SetCurrentURI() called from OnNewURI() will send proper
-       * onLocationChange() notifications to the browser to update
-       * back/forward buttons.
-       */
-      SetHistoryEntry(&mLSHE, aSHEntry);
+        nsCOMPtr<nsISHEntry> oldLSHE = mLSHE;
 
-      /* This is a anchor traversal with in the same page.
-       * call OnNewURI() so that, this traversal will be
-       * recorded in session and global history.
-       */
-      nsCOMPtr<nsISupports> owner;
-      if (mOSHE) {
-        mOSHE->GetOwner(getter_AddRefs(owner));
-      }
-      // Pass true for aCloneSHChildren, since we're not
-      // changing documents here, so all of our subframes are
-      // still relevant to the new session history entry.
-      //
-      // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
-      // flag on firing onLocationChange(...).
-      // Anyway, aCloneSHChildren param is simply reflecting
-      // doShortCircuitedLoad in this scope.
-      OnNewURI(aURI, nullptr, owner, mLoadType, true, true, true);
+        /* we need to assign mLSHE to aSHEntry right here, so that on History
+         * loads, SetCurrentURI() called from OnNewURI() will send proper
+         * onLocationChange() notifications to the browser to update
+         * back/forward buttons.
+         */
+        SetHistoryEntry(&mLSHE, aSHEntry);
 
-      nsCOMPtr<nsIInputStream> postData;
-      nsCOMPtr<nsISupports> cacheKey;
+        /* This is a anchor traversal with in the same page.
+         * call OnNewURI() so that, this traversal will be
+         * recorded in session and global history.
+         */
+        nsCOMPtr<nsISupports> owner;
+        if (mOSHE) {
+          mOSHE->GetOwner(getter_AddRefs(owner));
+        }
+        // Pass true for aCloneSHChildren, since we're not
+        // changing documents here, so all of our subframes are
+        // still relevant to the new session history entry.
+        //
+        // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
+        // flag on firing onLocationChange(...).
+        // Anyway, aCloneSHChildren param is simply reflecting
+        // doShortCircuitedLoad in this scope.
+        OnNewURI(aURI, nullptr, owner, mLoadType, true, true, true);
 
-      if (mOSHE) {
-        /* save current position of scroller(s) (bug 59774) */
-        mOSHE->SetScrollPosition(cx, cy);
-        // Get the postdata and page ident from the current page, if
-        // the new load is being done via normal means.  Note that
-        // "normal means" can be checked for just by checking for
-        // LOAD_CMD_NORMAL, given the loadType and allowScroll check
-        // above -- it filters out some LOAD_CMD_NORMAL cases that we
-        // wouldn't want here.
-        if (aLoadType & LOAD_CMD_NORMAL) {
-          mOSHE->GetPostData(getter_AddRefs(postData));
-          mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+        nsCOMPtr<nsIInputStream> postData;
+        nsCOMPtr<nsISupports> cacheKey;
 
-          // Link our new SHEntry to the old SHEntry's back/forward
-          // cache data, since the two SHEntries correspond to the
-          // same document.
-          if (mLSHE) {
-            mLSHE->AdoptBFCacheEntry(mOSHE);
+        if (mOSHE) {
+          /* save current position of scroller(s) (bug 59774) */
+          mOSHE->SetScrollPosition(cx, cy);
+          // Get the postdata and page ident from the current page, if
+          // the new load is being done via normal means.  Note that
+          // "normal means" can be checked for just by checking for
+          // LOAD_CMD_NORMAL, given the loadType and allowScroll check
+          // above -- it filters out some LOAD_CMD_NORMAL cases that we
+          // wouldn't want here.
+          if (aLoadType & LOAD_CMD_NORMAL) {
+            mOSHE->GetPostData(getter_AddRefs(postData));
+            mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+
+            // Link our new SHEntry to the old SHEntry's back/forward
+            // cache data, since the two SHEntries correspond to the
+            // same document.
+            if (mLSHE) {
+              mLSHE->AdoptBFCacheEntry(mOSHE);
+            }
           }
         }
-      }
 
-      /* Assign mOSHE to mLSHE. This will either be a new entry created
-       * by OnNewURI() for normal loads or aSHEntry for history loads.
-       */
-      if (mLSHE) {
-        SetHistoryEntry(&mOSHE, mLSHE);
-        // Save the postData obtained from the previous page
-        // in to the session history entry created for the
-        // anchor page, so that any history load of the anchor
-        // page will restore the appropriate postData.
-        if (postData) {
-          mOSHE->SetPostData(postData);
+        /* Assign mOSHE to mLSHE. This will either be a new entry created
+         * by OnNewURI() for normal loads or aSHEntry for history loads.
+         */
+        if (mLSHE) {
+          SetHistoryEntry(&mOSHE, mLSHE);
+          // Save the postData obtained from the previous page
+          // in to the session history entry created for the
+          // anchor page, so that any history load of the anchor
+          // page will restore the appropriate postData.
+          if (postData) {
+            mOSHE->SetPostData(postData);
+          }
+
+          // Make sure we won't just repost without hitting the
+          // cache first
+          if (cacheKey) {
+            mOSHE->SetCacheKey(cacheKey);
+          }
         }
 
-        // Make sure we won't just repost without hitting the
-        // cache first
-        if (cacheKey) {
-          mOSHE->SetCacheKey(cacheKey);
+        /* restore previous position of scroller(s), if we're moving
+         * back in history (bug 59774)
+         */
+        if (mOSHE && (aLoadType == LOAD_HISTORY ||
+                      aLoadType == LOAD_RELOAD_NORMAL)) {
+          nscoord bx, by;
+          mOSHE->GetScrollPosition(&bx, &by);
+          SetCurScrollPosEx(bx, by);
         }
-      }
 
-      /* restore previous position of scroller(s), if we're moving
-       * back in history (bug 59774)
-       */
-      if (mOSHE && (aLoadType == LOAD_HISTORY ||
-                    aLoadType == LOAD_RELOAD_NORMAL)) {
-        nscoord bx, by;
-        mOSHE->GetScrollPosition(&bx, &by);
-        SetCurScrollPosEx(bx, by);
-      }
-
-      /* Restore the original LSHE if we were loading something
-       * while short-circuited load was initiated.
-       */
-      SetHistoryEntry(&mLSHE, oldLSHE);
-      /* Set the title for the SH entry for this target url. so that
-       * SH menus in go/back/forward buttons won't be empty for this.
-       */
-      if (mSessionHistory) {
-        int32_t index = -1;
-        mSessionHistory->GetIndex(&index);
-        nsCOMPtr<nsISHEntry> shEntry;
-        mSessionHistory->GetEntryAtIndex(index, false, getter_AddRefs(shEntry));
-        NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
-        shEntry->SetTitle(mTitle);
-      }
-
-      /* Set the title for the Global History entry for this anchor url.
-       */
-      if (mUseGlobalHistory && !mInPrivateBrowsing) {
-        nsCOMPtr<IHistory> history = services::GetHistoryService();
-        if (history) {
-          history->SetURITitle(aURI, mTitle);
-        } else if (mGlobalHistory) {
-          mGlobalHistory->SetPageTitle(aURI, mTitle);
+        /* Restore the original LSHE if we were loading something
+         * while short-circuited load was initiated.
+         */
+        SetHistoryEntry(&mLSHE, oldLSHE);
+        /* Set the title for the SH entry for this target url. so that
+         * SH menus in go/back/forward buttons won't be empty for this.
+         */
+        if (mSessionHistory) {
+          int32_t index = -1;
+          mSessionHistory->GetIndex(&index);
+          nsCOMPtr<nsISHEntry> shEntry;
+          mSessionHistory->GetEntryAtIndex(index, false, getter_AddRefs(shEntry));
+          NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+          shEntry->SetTitle(mTitle);
         }
+
+        /* Set the title for the Global History entry for this anchor url.
+         */
+        if (mUseGlobalHistory && !mInPrivateBrowsing) {
+          nsCOMPtr<IHistory> history = services::GetHistoryService();
+          if (history) {
+            history->SetURITitle(aURI, mTitle);
+          } else if (mGlobalHistory) {
+            mGlobalHistory->SetPageTitle(aURI, mTitle);
+          }
+        }
+
+        // Set the doc's URI according to the new history entry's URI.
+        nsCOMPtr<nsIDocument> doc = GetDocument();
+        NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+        doc->SetDocumentURI(aURI);
+
+        SetDocCurrentStateObj(mOSHE);
       }
-
-      // Set the doc's URI according to the new history entry's URI.
-      nsCOMPtr<nsIDocument> doc = GetDocument();
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-      doc->SetDocumentURI(aURI);
-
-      SetDocCurrentStateObj(mOSHE);
 
       // Dispatch the popstate and hashchange events, as appropriate.
       //
