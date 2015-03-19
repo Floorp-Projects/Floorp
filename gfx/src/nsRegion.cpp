@@ -312,7 +312,6 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
   pixman_box32_t *tmpRect = tmpStorage.Elements();
 
   pixman_box32_t *destRect = boxes;
-  pixman_box32_t *rect = tmpRect;
   // find the end of the first span of rectangles
   while (topRectsEnd < end && topRectsEnd->y1 == topRects->y1) {
     topRectsEnd++;
@@ -334,6 +333,7 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
 
     if (totalArea <= aThreshold) {
       // merge the rects into tmpRect
+      pixman_box32_t *rect;
       rect = MergeRects(topRects, topRectsEnd, bottomRects, bottomRectsEnd, tmpRect);
 
       // set topRects to where the newly merged rects will be so that we use them
