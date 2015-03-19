@@ -13,24 +13,14 @@
         display: none;
       }
 
-      #addpage {
+      #addpage, #alreadyadded {
         fill: #808080;
       }
-      #addpage-hover {
+      #addpage-hover, #alreadyadded-hover {
         fill: #555555;
       }
-      #addpage-active {
+      #addpage-active, #alreadyadded-active {
         fill: #0095DD;
-      }
-
-      #alreadyadded {
-        fill: #0095DD;
-      }
-      #alreadyadded-hover {
-        fill: #555555;
-      }
-      #alreadyadded-active {
-        fill: #808080;
       }
     </style>
 
@@ -40,8 +30,17 @@
       <rect x="7.5" y="4" width="1" height="8"/>
     </mask>
 
+    <mask id="minus-mask">
+      <rect width="100%" height="100%" fill="white"/>
+      <rect x="4" y="7.5" width="8" height="1"/>
+    </mask>
+
     <g id="addpage-shape">
       <circle cx="8" cy="8" r="7" mask="url(#plus-mask)"/>
+    </g>
+
+    <g id="removepage-shape">
+      <circle cx="8" cy="8" r="7" mask="url(#minus-mask)"/>
     </g>
 
   </defs>
@@ -50,8 +49,8 @@
   <use id="addpage-hover"           xlink:href="#addpage-shape"/>
   <use id="addpage-active"          xlink:href="#addpage-shape"/>
 
-  <use id="alreadyadded"            xlink:href="#addpage-shape"/>
-  <use id="alreadyadded-hover"      xlink:href="#addpage-shape"/>
-  <use id="alreadyadded-active"     xlink:href="#addpage-shape"/>
+  <use id="alreadyadded"            xlink:href="#removepage-shape"/>
+  <use id="alreadyadded-hover"      xlink:href="#removepage-shape"/>
+  <use id="alreadyadded-active"     xlink:href="#removepage-shape"/>
 
 </svg>
