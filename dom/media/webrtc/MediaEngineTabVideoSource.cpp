@@ -199,19 +199,22 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
+  float pixelRatio;
+  win->GetDevicePixelRatio(&pixelRatio);
+  const int deviceInnerWidth = (int)(pixelRatio * innerWidth);
+  const int deviceInnerHeight = (int)(pixelRatio * innerHeight);
+
   IntSize size;
-  // maintain source aspect ratio
-  if (mBufWidthMax/innerWidth < mBufHeightMax/innerHeight) {
-    // mBufWidthMax is quite large by default, so use innerWidth if less.
-    int32_t width = std::min(innerWidth, mBufWidthMax);
-    // adjust width to be divisible by 4 to work around bug 1125393
-    width = width - (width % 4);
-    size = IntSize(width, (width * ((float) innerHeight/innerWidth)));
+
+  if ((deviceInnerWidth <= mBufWidthMax) && (deviceInnerHeight <= mBufHeightMax)) {
+    size = IntSize(deviceInnerWidth, deviceInnerHeight);
   } else {
-    int32_t width = std::min(innerHeight, mBufHeightMax) *
-                     ((float) innerWidth/innerHeight);
-    width =  width - (width % 4);
-    size = IntSize(width, (width * ((float) innerHeight/innerWidth)));
+
+    const float scaleWidth = (float)mBufWidthMax / (float)deviceInnerWidth;
+    const float scaleHeight = (float)mBufHeightMax / (float)deviceInnerHeight;
+    const float scale = scaleWidth < scaleHeight ? scaleWidth : scaleHeight;
+
+    size = IntSize((int)(scale * deviceInnerWidth), (int)(scale * deviceInnerHeight));
   }
 
   gfxImageFormat format = gfxImageFormat::RGB24;
