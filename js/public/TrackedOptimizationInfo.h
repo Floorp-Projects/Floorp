@@ -203,8 +203,6 @@ namespace JS {
       "can't inline: type has unknown properties")                      \
     _(CantInlineExceededDepth,                                          \
       "can't inline: exceeded inlining depth")                          \
-    _(CantInlineBigLoop,                                                \
-      "can't inline: big function with a loop")                         \
     _(CantInlineExceededTotalBytecodeLength,                            \
       "can't inline: exceeded max total bytecode length")               \
     _(CantInlineBigCaller,                                              \
