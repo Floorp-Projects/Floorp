@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
+#include "mozilla/Move.h"
 
 #ifdef __cplusplus
 
@@ -100,15 +101,9 @@ public:
     MOZ_ASSERT(mStatementDone);
   }
 
-  void init(const GuardObjectNotifier& aConstNotifier)
+  void init(GuardObjectNotifier& aNotifier)
   {
-    /*
-     * aConstNotifier is passed as a const reference so that we can pass a
-     * temporary, but we really intend it as non-const.
-     */
-    GuardObjectNotifier& notifier =
-      const_cast<GuardObjectNotifier&>(aConstNotifier);
-    notifier.setStatementDone(&mStatementDone);
+    aNotifier.setStatementDone(&mStatementDone);
   }
 };
 
@@ -121,19 +116,19 @@ public:
 #  define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER \
      mozilla::detail::GuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM \
-     , const mozilla::detail::GuardObjectNotifier& _notifier = \
+     , mozilla::detail::GuardObjectNotifier&& _notifier = \
          mozilla::detail::GuardObjectNotifier()
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM \
-     const mozilla::detail::GuardObjectNotifier& _notifier = \
+     mozilla::detail::GuardObjectNotifier&& _notifier = \
          mozilla::detail::GuardObjectNotifier()
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL \
-     , const mozilla::detail::GuardObjectNotifier& _notifier
+     , mozilla::detail::GuardObjectNotifier&& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL \
-     const mozilla::detail::GuardObjectNotifier& _notifier
+     mozilla::detail::GuardObjectNotifier&& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT \
-     , _notifier
+     , mozilla::Move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT \
-       _notifier
+       mozilla::Move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
      do { _mCheckNotUsedAsTemporary.init(_notifier); } while (0)
 #else
