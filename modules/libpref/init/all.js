@@ -4631,6 +4631,11 @@ pref("media.gmp.insecure.allow", false);
 #if defined(XP_MACOSX) || defined(XP_WIN)
 pref("gfx.vsync.hw-vsync.enabled", true);
 pref("gfx.vsync.compositor", true);
+#endif
+
+#if defined(XP_MACOSX)
+pref("gfx.vsync.refreshdriver", true);
+#else
 pref("gfx.vsync.refreshdriver", false);
 #endif
 
