@@ -4218,6 +4218,11 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       return;
     }
 
+    if (video->ContainsRestrictedContent()) {
+      error.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+
     uint16_t readyState;
     if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&
         readyState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
