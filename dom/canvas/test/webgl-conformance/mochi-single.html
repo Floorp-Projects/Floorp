@@ -71,9 +71,6 @@ var OS_VERSION_OSX_10_8 = 10.8;
 // ICS 4.0-4.0.2 was 14, 4.0.3+ was 15.
 var OS_VERSION_ANDROID_ICS = 14;
 
-// Jellybean 4.3
-var OS_VERSION_ANDROID_JB = 18;
-
 var ALWAYS_FAIL_TEST_FILEPATH = 'always-fail.html';
 
 function GetExpectedTestFailSet() {
@@ -109,19 +106,7 @@ function GetExpectedTestFailSet() {
       break;
 
     case DriverInfo.OS.ANDROID:
-      if (DriverInfo.getOSVersion() == OS_VERSION_ANDROID_JB) {
-        // Android 4.3 slaves.
-        failSet['conformance/extensions/oes-texture-float.html' = true;
-        failSet['conformance/glsl/functions/glsl-function-faceforward.html'] = true;
-        failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
-        failSet['conformance/glsl/misc/object-deletion-behaviour.html'] = true;
-        failSet['conformance/textures/tex-image-with-format-and-type.html'] = true;
-        failSet['conformance/textures/texture-mips.html'] = true;
-        failSet['conformance/textures/texture-npot.html'] = true;
-        failSet['conformance/textures/texture-npot-video.html'] = true;
-        failSet['conformance/textures/texture-size-cube-maps.html'] = true;
-        failSet['conformance/uniforms/uniform-samplers-test.html'] = true;
-      } else if (DriverInfo.getOSVersion() >= OS_VERSION_ANDROID_ICS) {
+      if (DriverInfo.getOSVersion() >= OS_VERSION_ANDROID_ICS) {
         // Android 4.0 slaves.
         failSet['conformance/extensions/oes-vertex-array-object.html'] = true;
         failSet['conformance/glsl/functions/glsl-function-abs.html'] = true;
