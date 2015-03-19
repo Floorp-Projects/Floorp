@@ -214,7 +214,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call)"
+    "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FORGET_SKIPPABLE_MAX": {
     "expires_in_version": "never",
