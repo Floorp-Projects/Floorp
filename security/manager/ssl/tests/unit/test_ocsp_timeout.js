@@ -64,10 +64,14 @@ function add_tests_in_mode(useHardFail) {
 
     // With OCSP hard-fail on, we timeout after 10 seconds.
     // With OCSP soft-fail, we timeout after 2 seconds.
+    // Date() is not guaranteed to be monotonic, so add extra fuzz time to
+    // prevent intermittent failures (this only appeared to be a problem on
+    // Windows XP). See Bug 1121117.
+    const FUZZ_MS = 300;
     if (useHardFail) {
-      do_check_true(timeDifference > 10000);
+      do_check_true(timeDifference + FUZZ_MS > 10000);
     } else {
-      do_check_true(timeDifference > 2000);
+      do_check_true(timeDifference + FUZZ_MS > 2000);
     }
     // Make sure we didn't wait too long.
     // (Unfortunately, we probably can't have a tight upper bound on
