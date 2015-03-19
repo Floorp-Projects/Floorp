@@ -116,7 +116,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(44fbd7d5-e417-4d31-ae4a-8ad61d07eb3c)]
+[scriptable, builtinclass, uuid(e3261ae7-4749-4cf6-bf06-59946233366f)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -173,12 +173,7 @@ interface imgIContainer : nsISupports
   /**
    * The type of this image (one of the TYPE_* values above).
    */
-  readonly attribute unsigned short type;
-
-  /**
-   * Direct C++ accessor for 'type' attribute, for convenience.
-   */
-  [noscript, notxpcom] uint16_t GetType();
+  [infallible] readonly attribute unsigned short type;
 
   /**
    * Whether this image is animated. You can only be guaranteed that querying

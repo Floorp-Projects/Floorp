@@ -162,12 +162,6 @@ DynamicImage::GetType(uint16_t* aType)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(uint16_t)
-DynamicImage::GetType()
-{
-  return imgIContainer::TYPE_RASTER;
-}
-
 NS_IMETHODIMP
 DynamicImage::GetAnimated(bool* aAnimated)
 {
