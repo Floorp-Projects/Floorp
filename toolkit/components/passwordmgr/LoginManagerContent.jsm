@@ -8,15 +8,15 @@
 this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
                           "UserAutoCompleteResult" ];
 
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cc = Components.classes;
-const Cu = Components.utils;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoginRecipesContent",
+                                  "resource://gre/modules/LoginRecipes.jsm");
 
 // These mirror signon.* prefs.
 var gEnabled, gDebug, gAutofillForms, gStoreWhenAutocompleteOff;
@@ -183,8 +183,11 @@ var LoginManagerContent = {
     switch (msg.name) {
       case "RemoteLogins:loginsFound": {
         let loginsFound = jsLoginsToXPCOM(msg.data.logins);
-        request.promise.resolve({ form: request.form,
-                                  loginsFound: loginsFound});
+        request.promise.resolve({
+          form: request.form,
+          loginsFound: loginsFound,
+          recipes: msg.data.recipes,
+        });
         break;
       }
 
@@ -196,7 +199,14 @@ var LoginManagerContent = {
     }
   },
 
-  _asyncFindLogins: function(form, options) {
+  /**
+   * Get relevant logins and recipes from the parent
+   *
+   * @param {HTMLFormElement} form - form to get login data for
+   * @param {Object} options
+   * @param {boolean} options.showMasterPassword - whether to show a master password prompt
+   */
+  _getLoginDataFromParent: function(form, options) {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
 
@@ -257,16 +267,16 @@ var LoginManagerContent = {
 
     let form = event.target;
     log("onFormPassword for", form.ownerDocument.documentURI);
-    this._asyncFindLogins(form, { showMasterPassword: true })
+    this._getLoginDataFromParent(form, { showMasterPassword: true })
         .then(this.loginsFound.bind(this))
         .then(null, Cu.reportError);
   },
 
-  loginsFound: function({ form, loginsFound }) {
+  loginsFound: function({ form, loginsFound, recipes }) {
     let doc = form.ownerDocument;
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
-    this._fillForm(form, autofillForm, false, false, loginsFound);
+    this._fillForm(form, autofillForm, false, false, loginsFound, recipes);
   },
 
   /*
@@ -307,9 +317,9 @@ var LoginManagerContent = {
     var [usernameField, passwordField, ignored] =
         this._getFormFields(acForm, false);
     if (usernameField == acInputField && passwordField) {
-      this._asyncFindLogins(acForm, { showMasterPassword: false })
-          .then(({ form, loginsFound }) => {
-              this._fillForm(form, true, true, true, loginsFound);
+      this._getLoginDataFromParent(acForm, { showMasterPassword: false })
+          .then(({ form, loginsFound, recipes }) => {
+            this._fillForm(form, true, true, true, loginsFound, recipes);
           })
           .then(null, Cu.reportError);
     } else {
@@ -377,14 +387,15 @@ var LoginManagerContent = {
   },
 
 
-  /*
-   * _getFormFields
-   *
+  /**
    * Returns the username and password fields found in the form.
    * Can handle complex forms by trying to figure out what the
    * relevant fields are.
    *
-   * Returns: [usernameField, newPasswordField, oldPasswordField]
+   * @param {HTMLFormElement} form
+   * @param {bool} isSubmission
+   * @param {Set} recipes
+   * @return {Array} [usernameField, newPasswordField, oldPasswordField]
    *
    * usernameField may be null.
    * newPasswordField will always be non-null.
@@ -393,25 +404,52 @@ var LoginManagerContent = {
    * change-password field, with oldPasswordField containing the password
    * that is being changed.
    */
-  _getFormFields : function (form, isSubmission) {
+  _getFormFields : function (form, isSubmission, recipes) {
     var usernameField = null;
+    var pwFields = null;
+    var fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(recipes, form);
+    if (fieldOverrideRecipe) {
+      var pwOverrideField = LoginRecipesContent.queryLoginField(
+        form,
+        fieldOverrideRecipe.passwordSelector
+      );
+      if (pwOverrideField) {
+        pwFields = [{
+          index   : [...pwOverrideField.form.elements].indexOf(pwOverrideField),
+          element : pwOverrideField,
+        }];
+      }
 
-    // Locate the password field(s) in the form. Up to 3 supported.
-    // If there's no password field, there's nothing for us to do.
-    var pwFields = this._getPasswordFields(form, isSubmission);
-    if (!pwFields)
+      var usernameOverrideField = LoginRecipesContent.queryLoginField(
+        form,
+        fieldOverrideRecipe.usernameSelector
+      );
+      if (usernameOverrideField) {
+        usernameField = usernameOverrideField;
+      }
+    }
+
+    if (!pwFields) {
+      // Locate the password field(s) in the form. Up to 3 supported.
+      // If there's no password field, there's nothing for us to do.
+      pwFields = this._getPasswordFields(form, isSubmission);
+    }
+
+    if (!pwFields) {
       return [null, null, null];
+    }
 
-
-    // Locate the username field in the form by searching backwards
-    // from the first passwordfield, assume the first text field is the
-    // username. We might not find a username field if the user is
-    // already logged in to the site.
-    for (var i = pwFields[0].index - 1; i >= 0; i--) {
-      var element = form.elements[i];
-      if (this._isUsernameFieldType(element)) {
-        usernameField = element;
-        break;
+    if (!usernameField) {
+      // Locate the username field in the form by searching backwards
+      // from the first passwordfield, assume the first text field is the
+      // username. We might not find a username field if the user is
+      // already logged in to the site.
+      for (var i = pwFields[0].index - 1; i >= 0; i--) {
+        var element = form.elements[i];
+        if (this._isUsernameFieldType(element)) {
+          usernameField = element;
+          break;
+        }
       }
     }
 
@@ -570,21 +608,21 @@ var LoginManagerContent = {
                                     { openerWin: opener });
   },
 
-  /*
-   * _fillform
-   *
+  /**
    * Attempt to find the username and password fields in a form, and fill them
-   * in using the provided logins.
+   * in using the provided logins and recipes.
    *
-   * - autofillForm denotes if we should fill the form in automatically
-   * - clobberPassword controls if an existing password value can be
-   *     overwritten
-   * - userTriggered is an indication of whether this filling was triggered by
-   *     the user
-   * - foundLogins is an array of nsILoginInfo that could be used for the form
+   * @param {HTMLFormElement} form
+   * @param {bool} autofillForm denotes if we should fill the form in automatically
+   * @param {bool} clobberPassword controls if an existing password value can be
+   *                               overwritten
+   * @param {bool} userTriggered is an indication of whether this filling was triggered by
+   *                             the user
+   * @param {nsILoginInfo[]} foundLogins is an array of nsILoginInfo that could be used for the form
+   * @param {Set} recipes that could be used to affect how the form is filled
    */
   _fillForm : function (form, autofillForm, clobberPassword,
-                        userTriggered, foundLogins) {
+                        userTriggered, foundLogins, recipes) {
     let ignoreAutocomplete = true;
     const AUTOFILL_RESULT = {
       FILLED: 0,
@@ -621,7 +659,7 @@ var LoginManagerContent = {
       // so that the user isn't prompted for a master password
       // without need.
       var [usernameField, passwordField, ignored] =
-          this._getFormFields(form, false);
+            this._getFormFields(form, false, recipes);
 
       // Need a valid password field to do anything.
       if (passwordField == null) {
