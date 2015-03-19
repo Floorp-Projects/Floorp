@@ -133,7 +133,6 @@ struct nsMessageListenerInfo
   // Exactly one of mStrongListener and mWeakListener must be non-null.
   nsCOMPtr<nsIMessageListener> mStrongListener;
   nsWeakPtr mWeakListener;
-  bool mListenWhenClosed;
 };
 
 
@@ -170,7 +169,6 @@ public:
     mIsBroadcaster(!!(aFlags & mozilla::dom::ipc::MM_BROADCASTER)),
     mOwnsCallback(!!(aFlags & mozilla::dom::ipc::MM_OWNSCALLBACK)),
     mHandlingMessage(false),
-    mClosed(false),
     mDisconnected(false),
     mCallback(aCallback),
     mParentManager(aParentManager)
@@ -240,7 +238,6 @@ public:
     mChildManagers.RemoveObject(aManager);
   }
   void Disconnect(bool aRemoveFromParent = true);
-  void Close();
 
   void InitWithCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
   void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
@@ -293,11 +290,6 @@ private:
                        JS::MutableHandle<JS::Value> aRetval,
                        bool aIsSync);
 
-  nsresult ReceiveMessage(nsISupports* aTarget, bool aTargetClosed, const nsAString& aMessage,
-                          bool aIsSync, const StructuredCloneData* aCloneData,
-                          mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          InfallibleTArray<nsString>* aJSONRetVal);
-
   NS_IMETHOD LoadScript(const nsAString& aURL,
                         bool aAllowDelayedLoad,
                         bool aRunInGlobalScope);
@@ -317,7 +309,6 @@ protected:
   bool mIsBroadcaster; // true if the message manager is a broadcaster
   bool mOwnsCallback;
   bool mHandlingMessage;
-  bool mClosed;    // true if we can no longer send messages
   bool mDisconnected;
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;

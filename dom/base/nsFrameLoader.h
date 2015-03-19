@@ -78,9 +78,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   nsresult CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
-  void StartDestroy();
-  void DestroyDocShell();
-  void DestroyComplete();
+  void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
   mozilla::dom::EventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
@@ -320,11 +318,6 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK
-
-  // After the frameloader has been removed from the DOM but before all of the
-  // messages from the frame have been received, we keep a strong reference to
-  // our <browser> element.
-  nsRefPtr<mozilla::dom::Element> mOwnerContentStrong;
 
   // Note: this variable must be modified only by ResetPermissionManagerStatus()
   uint32_t mAppIdSentToPermissionManager;
