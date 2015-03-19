@@ -9,8 +9,6 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const { require } =
   Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const QR = require("devtools/toolkit/qrcode/index");
-const PROPERTIES = "chrome://browser/locale/devtools/webide.properties";
-const Strings = Services.strings.createBundle(PROPERTIES);
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
@@ -33,10 +31,6 @@ function createQR(oob) {
 }
 
 function createToken(oob) {
-  let spacedCert = oob.sha256.replace(/:/g, " ").toLowerCase();
-  let certText = Strings.formatStringFromName("wifi_auth_cert",
-                                              [spacedCert], 1);
-  document.querySelector("#cert").textContent = certText;
   let token = oob.sha256.replace(/:/g, "").toLowerCase() + oob.k;
   document.querySelector("#token pre").textContent = token;
 }

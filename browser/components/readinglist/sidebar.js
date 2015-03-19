@@ -54,6 +54,7 @@ let RLSidebar = {
     addEventListener("unload", () => this.uninit());
 
     this.list = document.getElementById("list");
+    this.emptyListInfo = document.getElementById("emptyListInfo");
     this.itemTemplate = document.getElementById("item-template");
 
     this.list.addEventListener("click", event => this.onListClick(event));
@@ -91,6 +92,8 @@ let RLSidebar = {
     this.list.appendChild(itemNode);
     this.itemNodesById.set(item.id, itemNode);
     this.itemsById.set(item.id, item);
+
+    this.emptyListInfo.hidden = true;
   },
 
   /**
@@ -106,6 +109,8 @@ let RLSidebar = {
     this.itemsById.delete(item.id);
     // TODO: ensureListItems doesn't yet cope with needing to add one item.
     //this.ensureListItems();
+
+    this.emptyListInfo.hidden = (this.numItems > 0);
   },
 
   /**
@@ -148,6 +153,7 @@ let RLSidebar = {
         log.warn("Error adding item", e);
       }
     });
+    this.emptyListInfo.hidden = (this.numItems > 0);
   }),
 
   /**
@@ -349,6 +355,11 @@ let RLSidebar = {
     let itemNode = this.findParentItemNode(event.target);
     if (!itemNode)
       return;
+
+    if (event.target.classList.contains("remove-button")) {
+      ReadingList.deleteItem(this.getItemFromNode(itemNode));
+      return;
+    }
 
     this.activeItem = itemNode;
     this.openActiveItem(event);

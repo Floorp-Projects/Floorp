@@ -39,7 +39,11 @@ function getPopupNotifications(aWindow) {
  */
 function getPopup(aPopupNote, aKind) {
     ok(true, "Looking for " + aKind + " popup notification");
-    return aPopupNote.getNotification(aKind);
+    var notification = aPopupNote.getNotification("password");
+    if (notification) {
+      is(notification.options.passwordNotificationType, aKind);
+    }
+    return notification;
 }
 
 
