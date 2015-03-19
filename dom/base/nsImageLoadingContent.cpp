@@ -493,6 +493,12 @@ nsImageLoadingContent::GetRequest(int32_t aRequestType,
   return result.ErrorCode();
 }
 
+NS_IMETHODIMP_(bool)
+nsImageLoadingContent::CurrentRequestHasSize()
+{
+  return HaveSize(mCurrentRequest);
+}
+
 NS_IMETHODIMP_(void)
 nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
