@@ -205,7 +205,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(51e17609-e98a-47cc-9f95-095ef3c3823e)]
+[scriptable, builtinclass, uuid(5e4eaa5a-4808-4b97-8005-e7cdc4d73693)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -344,6 +344,8 @@ interface nsIMemoryReporterManager : nsISupports
    * |residentFast|, and so |resident| and |residentFast| should not be used
    * together.
    *
+   * |residentPeak| (UNITS_BYTES)  The peak resident size.
+   *
    * |residentUnique| (UNITS_BYTES)  The unique set size (a.k.a. USS).
    *
    * |heapAllocated| (UNITS_BYTES)  Memory mapped by the heap allocator.
@@ -381,6 +383,7 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
   readonly attribute int64_t residentFast;
+  readonly attribute int64_t residentPeak;
   readonly attribute int64_t residentUnique;
 
   readonly attribute int64_t heapAllocated;
