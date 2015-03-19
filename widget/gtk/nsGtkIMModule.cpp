@@ -438,7 +438,39 @@ nsGtkIMModule::ResetIME()
         return;
     }
 
+    nsRefPtr<nsGtkIMModule> kungFuDeathGrip(this);
+    nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
+
     gtk_im_context_reset(activeContext);
+
+    // The last focused window might have been destroyed by a DOM event handler
+    // which was called by us during a call of gtk_im_context_reset().
+    if (!lastFocusedWindow ||
+        NS_WARN_IF(lastFocusedWindow != mLastFocusedWindow) ||
+        lastFocusedWindow->Destroyed()) {
+        return;
+    }
+
+    nsAutoString compositionString;
+    GetCompositionString(activeContext, compositionString);
+
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): ResetIME() called gtk_im_context_reset(), "
+         "activeContext=%p, mCompositionState=%s, compositionString=%s, "
+         "mIsIMFocused=%s",
+         this, activeContext, GetCompositionStateName(),
+         NS_ConvertUTF16toUTF8(compositionString).get(),
+         GetBoolName(mIsIMFocused)));
+
+    // XXX IIIMF (ATOK X3 which is one of the Language Engine of it is still
+    //     used in Japan!) sends only "preedit_changed" signal with empty
+    //     composition string synchronously.  Therefore, if composition string
+    //     is now empty string, we should assume that the IME won't send
+    //     "commit" signal.
+    if (IsComposing() && compositionString.IsEmpty()) {
+        // WARNING: The widget might have been gone after this.
+        DispatchCompositionCommitEvent(activeContext, &EmptyString());
+    }
 }
 
 nsresult
