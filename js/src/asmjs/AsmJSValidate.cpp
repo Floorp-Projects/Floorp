@@ -27,6 +27,7 @@
 
 #include "jsmath.h"
 #include "jsprf.h"
+#include "jsutil.h"
 #include "prmjtime.h"
 
 #include "asmjs/AsmJSLink.h"
@@ -4327,9 +4328,17 @@ FoldMaskedArrayIndex(FunctionCompiler &f, ParseNode **indexExpr, int32_t *mask,
     if (IsLiteralOrConstInt(f, maskNode, &mask2)) {
         // Flag the access to skip the bounds check if the mask ensures that an 'out of
         // bounds' access can not occur based on the current heap length constraint.
-        if (mask2 == 0 ||
-            CountLeadingZeroes32(f.m().minHeapLength() - 1) <= CountLeadingZeroes32(mask2)) {
+        if (mask2 == 0) {
             *needsBoundsCheck = NO_BOUNDS_CHECK;
+        } else {
+            uint32_t minHeap = f.m().minHeapLength();
+            uint32_t minHeapZeroes = CountLeadingZeroes32(minHeap - 1);
+            uint32_t maskZeroes = CountLeadingZeroes32(mask2);
+            if ((minHeapZeroes < maskZeroes) ||
+                (IsPowerOfTwo(minHeap) && minHeapZeroes == maskZeroes))
+            {
+                *needsBoundsCheck = NO_BOUNDS_CHECK;
+            }
         }
         *mask &= mask2;
         *indexExpr = indexNode;
