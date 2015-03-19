@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/readinglist/sidebar.inc.css
+
+.item-title {
+  margin: 4px 0 0;
+}
+
+.remove-button {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.png"), 0, 16, 16, 0);
+}
+
+.remove-button:hover {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.png"), 0, 32, 16, 16);
+}
+
+.remove-button:hover:active {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.png"), 0, 48, 16, 32);
+}
+
+@media (min-resolution: 2dppx) {
+  .remove-button {
+    background-image: -moz-image-rect(url("chrome://global/skin/icons/close@2x.png"), 0, 32, 32, 0);
+  }
+
+  .remove-button:hover {
+    background-image: -moz-image-rect(url("chrome://global/skin/icons/close@2x.png"), 0, 64, 32, 32);
+  }
+
+  .remove-button:hover:active {
+    background-image: -moz-image-rect(url("chrome://global/skin/icons/close@2x.png"), 0, 96, 32, 64);
+  }
+}
