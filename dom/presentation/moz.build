@@ -9,12 +9,16 @@ DIRS += ['interfaces', 'provider']
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
-EXPORTS.mozilla.dom.presentation += [
+EXPORTS.mozilla.dom += [
+    'Presentation.h',
     'PresentationDeviceManager.h',
+    'PresentationSession.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
+    'Presentation.cpp',
     'PresentationDeviceManager.cpp',
+    'PresentationSession.cpp',
     'PresentationSessionRequest.cpp',
 ]
 
