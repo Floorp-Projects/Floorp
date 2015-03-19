@@ -7338,12 +7338,13 @@ struct LambdaFunctionInfo
     // information while still on the main thread to avoid races.
     AlwaysTenuredFunction fun;
     uint16_t flags;
+    uint16_t nargs;
     gc::Cell *scriptOrLazyScript;
     bool singletonType;
     bool useSingletonForClone;
 
     explicit LambdaFunctionInfo(JSFunction *fun)
-      : fun(fun), flags(fun->flags()),
+      : fun(fun), flags(fun->flags()), nargs(fun->nargs()),
         scriptOrLazyScript(fun->hasScript()
                            ? (gc::Cell *) fun->nonLazyScript()
                            : (gc::Cell *) fun->lazyScript()),
@@ -7351,19 +7352,16 @@ struct LambdaFunctionInfo
         useSingletonForClone(ObjectGroup::useSingletonForClone(fun))
     {}
 
-    LambdaFunctionInfo(const LambdaFunctionInfo &info)
-      : fun((JSFunction *) info.fun), flags(info.flags),
-        scriptOrLazyScript(info.scriptOrLazyScript),
-        singletonType(info.singletonType),
-        useSingletonForClone(info.useSingletonForClone)
-    {}
+  private:
+    LambdaFunctionInfo(const LambdaFunctionInfo &) = delete;
+    void operator=(const LambdaFunctionInfo &) = delete;
 };
 
 class MLambda
   : public MBinaryInstruction,
     public SingleObjectPolicy::Data
 {
-    LambdaFunctionInfo info_;
+    const LambdaFunctionInfo info_;
 
     MLambda(CompilerConstraintList *constraints, MDefinition *scopeChain, MConstant *cst)
       : MBinaryInstruction(scopeChain, cst), info_(&cst->value().toObject().as<JSFunction>())
@@ -7400,7 +7398,7 @@ class MLambdaArrow
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
-    LambdaFunctionInfo info_;
+    const LambdaFunctionInfo info_;
 
     MLambdaArrow(CompilerConstraintList *constraints, MDefinition *scopeChain,
                  MDefinition *this_, JSFunction *fun)
