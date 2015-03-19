@@ -258,3 +258,25 @@ function dumpLogin(label, login) {
     loginText += login.passwordField;
     ok(true, label + loginText);
 }
+
+// Code to run when loaded as a chrome script in tests via loadChromeScript
+if (this.addMessageListener) {
+  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+  var SpecialPowers = { Cc, Ci, Cr, Cu, };
+  var ok, is;
+  // Ignore ok/is in commonInit since they aren't defined in a chrome script.
+  ok = is = () => {};
+
+  Cu.import("resource://gre/modules/Task.jsm");
+
+  addMessageListener("setupParent", () => {
+    commonInit(true);
+    sendAsyncMessage("doneSetup");
+  });
+  addMessageListener("loadRecipes", Task.async(function* loadRecipes(recipes) {
+    var { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
+    var recipeParent = yield LoginManagerParent.recipeParentPromise;
+    yield recipeParent.load(recipes);
+    sendAsyncMessage("loadedRecipes", recipes);
+  }));
+}
