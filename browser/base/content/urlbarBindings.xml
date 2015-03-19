@@ -3002,7 +3002,7 @@
           // otherwise just rely on the panel id for common arrowpanels.
           let type = this._panel.firstChild.getAttribute("popupid") ||
                      this._panel.id;
-          if (type.startsWith("password-"))
+          if (type == "password")
             return "passwords";
           if (type == "editBookmarkPanel")
             return "bookmarks";
