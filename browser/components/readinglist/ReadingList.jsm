@@ -289,13 +289,15 @@ ReadingListImpl.prototype = {
    /**
    * Add to the ReadingList the page that is loaded in a given browser.
    *
-   * @param {<xul:browser>} browser - Browser element for the document.
+   * @param {<xul:browser>} browser - Browser element for the document,
+   * used to get metadata about the article.
+   * @param {nsIURI/string} url - url to add to the reading list.
    * @return {Promise} Promise that is fullfilled with the added item.
    */
-  addItemFromBrowser: Task.async(function* (browser) {
+  addItemFromBrowser: Task.async(function* (browser, url) {
     let metadata = yield getMetadataFromBrowser(browser);
     let itemData = {
-      url: browser.currentURI,
+      url: url,
       title: metadata.title,
       resolvedURL: metadata.url,
       excerpt: metadata.description,

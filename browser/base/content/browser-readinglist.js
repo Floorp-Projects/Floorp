@@ -232,12 +232,22 @@ let ReadingListUI = {
       // nothing to do if we have no button.
       return;
     }
-    if (!this.enabled || state == "invalid") {
+
+    let uri;
+    if (this.enabled && state == "valid") {
+      uri = gBrowser.currentURI;
+      if (uri.schemeIs("about"))
+        uri = ReaderParent.parseReaderUrl(uri.spec);
+      else if (!uri.schemeIs("http") && !uri.schemeIs("https"))
+        uri = null;
+    }
+
+    if (!uri) {
       this.toolbarButton.setAttribute("hidden", true);
       return;
     }
 
-    let isInList = yield ReadingList.containsURL(gBrowser.currentURI);
+    let isInList = yield ReadingList.containsURL(uri);
     this.setToolbarButtonState(isInList);
   }),
 
@@ -268,11 +278,17 @@ let ReadingListUI = {
    * @returns {Promise} Promise resolved when operation has completed.
    */
   togglePageByBrowser: Task.async(function* (browser) {
-    let item = yield ReadingList.getItemForURL(browser.currentURI);
+    let uri = browser.currentURI;
+    if (uri.spec.startsWith("about:reader?"))
+      uri = ReaderParent.parseReaderUrl(uri.spec);
+    if (!uri)
+      return;
+
+    let item = yield ReadingList.getItemForURL(uri);
     if (item) {
       yield item.delete();
     } else {
-      yield ReadingList.addItemFromBrowser(browser);
+      yield ReadingList.addItemFromBrowser(browser, uri);
     }
   }),
 
@@ -284,6 +300,9 @@ let ReadingListUI = {
    */
   isItemForCurrentBrowser(item) {
     let currentURL = gBrowser.currentURI.spec;
+    if (currentURL.startsWith("about:reader?"))
+      currentURL = ReaderParent.parseReaderUrl(currentURL);
+
     if (item.url == currentURL || item.resolvedURL == currentURL) {
       return true;
     }
