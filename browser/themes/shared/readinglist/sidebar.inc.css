@@ -62,6 +62,7 @@ body {
 .item-title {
   overflow: hidden;
   max-height: 2.8em;
+  line-height: 1.4;
   flex-grow: 1;
 }
 
