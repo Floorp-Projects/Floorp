@@ -1037,7 +1037,15 @@ class GCRuntime
     };
     GrayBufferState grayBufferState;
     bool hasBufferedGrayRoots() const { return grayBufferState == GrayBufferState::Okay; }
+
+    // Clear each zone's gray buffers, but do not change the current state.
     void resetBufferedGrayRoots() const;
+
+    // Reset the gray buffering state to Unused.
+    void clearBufferedGrayRoots() {
+        grayBufferState = GrayBufferState::Unused;
+        resetBufferedGrayRoots();
+    }
 
     /*
      * The gray bits can become invalid if UnmarkGray overflows the stack. A

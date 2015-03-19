@@ -554,9 +554,6 @@ GCMarker::stop()
 
     /* Free non-ballast stack memory. */
     stack.reset();
-
-    runtime()->gc.resetBufferedGrayRoots();
-    runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Unused;
 }
 
 void
@@ -650,6 +647,8 @@ GCMarker::checkZone(void *p)
 void
 GCRuntime::resetBufferedGrayRoots() const
 {
+    MOZ_ASSERT(grayBufferState != GrayBufferState::Okay,
+               "Do not clear the gray buffers unless we are Failed or becoming Unused");
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
 }
