@@ -129,7 +129,6 @@ public:
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) override;
   virtual bool Connect() override { return false; }
-  virtual void Updated() {}
 
   virtual TextureInfo GetTextureInfo() const override
   {
