@@ -8,7 +8,6 @@
   -moz-appearance: none;
   border: none;
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage");
-  padding: 3px;
 }
 
 #readinglist-addremove-button:hover {
@@ -16,8 +15,8 @@
 }
 
 #readinglist-addremove-button > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px
+  width: 14px;
+  height: 14px
 }
 
 #readinglist-addremove-button:hover {
