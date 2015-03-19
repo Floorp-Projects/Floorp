@@ -12,6 +12,7 @@
 #include "crashreporter.h"
 
 #include <windows.h>
+#include <versionhelpers.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <shellapi.h>
@@ -31,6 +32,9 @@
 #define EMAIL_ME_VALUE       L"EmailMe"
 #define EMAIL_VALUE          L"Email"
 #define MAX_EMAIL_LENGTH     1024
+
+#define SENDURL_ORIGINAL L"https://crash-reports.mozilla.com/submit"
+#define SENDURL_XPSP2 L"https://crash-reports-xpsp2.mozilla.com/submit"
 
 #define WM_UPLOADCOMPLETE WM_APP
 
@@ -1299,6 +1303,14 @@ bool UIShowCrashUI(const StringTable& files,
 {
   gSendData.hDlg = nullptr;
   gSendData.sendURL = UTF8ToWide(sendURL);
+
+  // Windows XP SP2 doesn't support the crash report server's crypto.
+  // This is a hack to use an alternate server.
+  if (!IsWindowsXPSP3OrGreater() &&
+      gSendData.sendURL.find(SENDURL_ORIGINAL) == 0) {
+    gSendData.sendURL.replace(0, ARRAYSIZE(SENDURL_ORIGINAL) - 1,
+                              SENDURL_XPSP2);
+  }
 
   for (StringTable::const_iterator i = files.begin();
        i != files.end();
