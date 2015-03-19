@@ -31,7 +31,7 @@ public:
    * touch-action css property value from it according the rules specified in the spec:
    * http://www.w3.org/TR/pointerevents/#the-touch-action-css-property.
    */
-  static TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget, const nsIntPoint& aPoint);
+  static TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint);
 };
 
 }

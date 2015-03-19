@@ -1037,7 +1037,7 @@ MetroWidget::CreateRootContentController()
 }
 
 MetroWidget::TouchBehaviorFlags
-MetroWidget::ContentGetAllowedTouchBehavior(const nsIntPoint& aPoint)
+MetroWidget::ContentGetAllowedTouchBehavior(const LayoutDeviceIntPoint& aPoint)
 {
   return ContentHelper::GetAllowedTouchBehavior(this, aPoint);
 }
