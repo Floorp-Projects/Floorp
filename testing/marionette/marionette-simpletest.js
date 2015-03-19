@@ -1,12 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+this.EXPORTED_SYMBOLS = ["Marionette"];
+
 /*
  * The Marionette object, passed to the script context.
  */
-
-this.Marionette = function Marionette(scope, window, context, logObj, timeout,
-                                      heartbeatCallback, testName) {
+this.Marionette = function(scope, window, context, logObj, timeout,
+                           heartbeatCallback, testName) {
   this.scope = scope;
   this.window = window;
   this.tests = [];
@@ -19,12 +21,23 @@ this.Marionette = function Marionette(scope, window, context, logObj, timeout,
   this.TEST_UNEXPECTED_PASS = "TEST-UNEXPECTED-PASS";
   this.TEST_PASS = "TEST-PASS";
   this.TEST_KNOWN_FAIL = "TEST-KNOWN-FAIL";
-}
+};
 
 Marionette.prototype = {
-  exports: ['ok', 'is', 'isnot', 'todo', 'log', 'getLogs', 'generate_results', 'waitFor',
-            'runEmulatorCmd', 'runEmulatorShell', 'TEST_PASS', 'TEST_KNOWN_FAIL',
-            'TEST_UNEXPECTED_FAIL', 'TEST_UNEXPECTED_PASS'],
+  exports: [
+    "ok",
+    "is",
+    "isnot",
+    "todo",
+    "log",
+    "getLogs",
+    "generate_results",
+    "waitFor",
+    "TEST_PASS",
+    "TEST_KNOWN_FAIL",
+    "TEST_UNEXPECTED_FAIL",
+    "TEST_UNEXPECTED_PASS"
+  ],
 
   addTest: function Marionette__addTest(condition, name, passString, failString, diag, state) {
 
@@ -194,6 +207,4 @@ Marionette.prototype = {
     this.heartbeatCallback();
     this.scope.runEmulatorShell(args, callback);
   },
-
 };
-
