@@ -195,6 +195,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "mapped-array-buffer", value))
         return false;
 
+#ifdef MOZ_MEMORY
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "moz-memory", value))
+        return false;
+
     args.rval().setObject(*info);
     return true;
 }
