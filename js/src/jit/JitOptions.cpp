@@ -160,10 +160,6 @@ JitOptions::JitOptions()
     SET_DEFAULT(osrPcMismatchesBeforeRecompile, 6000);
 
     // The bytecode length limit for small function.
-    //
-    // The default for this was arrived at empirically via benchmarking.
-    // We may want to tune it further after other optimizations have gone
-    // in.
     SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
 }
 
