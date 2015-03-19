@@ -17,7 +17,6 @@
 #if defined(__cplusplus)
 #  include <new>
 #endif
-#include "xpcom-config.h"
 
 #if defined(__cplusplus)
 #include "mozilla/fallible.h"
