@@ -117,12 +117,16 @@ JsepSessionImpl::AddTrack(const RefPtr<JsepTrack>& track)
 
     if (track->GetSsrcs().empty()) {
       uint32_t ssrc;
-      SECStatus rv = PK11_GenerateRandom(
-          reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
-      if (rv != SECSuccess) {
-        JSEP_SET_ERROR("Failed to generate SSRC, error=" << rv);
-        return NS_ERROR_FAILURE;
-      }
+      do {
+        SECStatus rv = PK11_GenerateRandom(
+            reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
+        if (rv != SECSuccess) {
+          JSEP_SET_ERROR("Failed to generate SSRC, error=" << rv);
+          return NS_ERROR_FAILURE;
+        }
+      } while (mSsrcs.count(ssrc));
+
+      mSsrcs.insert(ssrc);
       track->AddSsrc(ssrc);
     }
   }

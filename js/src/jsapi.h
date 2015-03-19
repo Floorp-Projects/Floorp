@@ -1728,12 +1728,6 @@ JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
-/* For assertions only. */
-#ifdef JS_DEBUG
-extern JS_PUBLIC_API(bool)
-JS_IsMarkingGray(JSTracer *trc);
-#endif
-
 /*
  * Weak pointers and garbage collection
  *
@@ -2677,12 +2671,6 @@ namespace js {
 template <>
 struct GCMethods<JSPropertyDescriptor> {
     static JSPropertyDescriptor initial() { return JSPropertyDescriptor(); }
-    static bool poisoned(const JSPropertyDescriptor &desc) {
-        return (desc.obj && JS::IsPoisonedPtr(desc.obj)) ||
-               (desc.attrs & JSPROP_GETTER && desc.getter && JS::IsPoisonedPtr(desc.getter)) ||
-               (desc.attrs & JSPROP_SETTER && desc.setter && JS::IsPoisonedPtr(desc.setter)) ||
-               (desc.value.isGCThing() && JS::IsPoisonedPtr(desc.value.toGCThing()));
-    }
 };
 
 template <>

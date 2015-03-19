@@ -561,7 +561,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 
             // must exit via VARIANT_DONE from here on...
             du.mType = nsIDataType::VTYPE_ARRAY;
-            bool success = false;
 
             nsXPTType conversionType;
             uint16_t elementType = du.u.array.mArrayType;
@@ -613,16 +612,16 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                 case nsIDataType::VTYPE_EMPTY:
                 default:
                     NS_ERROR("bad type in array!");
-                    goto VARIANT_DONE;
+                    nsVariant::Cleanup(&du);
+                    return false;
             }
 
-            success =
+            bool success =
                 XPCConvert::NativeArray2JS(pJSVal,
                                            (const void**)&du.u.array.mArrayValue,
                                            conversionType, pid,
                                            du.u.array.mArrayCount, pErr);
 
-VARIANT_DONE:
             nsVariant::Cleanup(&du);
             return success;
         }

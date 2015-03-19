@@ -504,6 +504,11 @@ public:
                                 const char* aData,
                                 size_type aLength = size_type(-1));
 
+  NS_WARN_UNUSED_RESULT bool NS_FASTCALL ReplaceASCII(index_type aCutStart, size_type aCutLength,
+                                                      const char* aData,
+                                                      size_type aLength,
+                                                      const fallible_t&);
+
   // ReplaceLiteral must ONLY be applied to an actual literal string.
   // Do not attempt to use it with a regular char* pointer, or with a char
   // array variable. Use Replace or ReplaceASCII for those.
@@ -544,6 +549,10 @@ public:
   {
     Replace(mLength, 0, aStr);
   }
+  NS_WARN_UNUSED_RESULT bool Append(const self_type& aStr, const fallible_t& aFallible)
+  {
+    return Replace(mLength, 0, aStr, aFallible);
+  }
   void Append(const substring_tuple_type& aTuple)
   {
     Replace(mLength, 0, aTuple);
@@ -552,6 +561,16 @@ public:
   void AppendASCII(const char* aData, size_type aLength = size_type(-1))
   {
     ReplaceASCII(mLength, 0, aData, aLength);
+  }
+
+  NS_WARN_UNUSED_RESULT bool AppendASCII(const char* aData, const fallible_t& aFallible)
+  {
+    return ReplaceASCII(mLength, 0, aData, size_type(-1), aFallible);
+  }
+
+  NS_WARN_UNUSED_RESULT bool AppendASCII(const char* aData, size_type aLength, const fallible_t& aFallible)
+  {
+    return ReplaceASCII(mLength, 0, aData, aLength, aFallible);
   }
 
   /**
@@ -617,6 +636,12 @@ public:
   void AppendLiteral(const char (&aStr)[N])
   {
     AppendASCII(aStr, N - 1);
+  }
+
+  template<int N>
+  NS_WARN_UNUSED_RESULT bool AppendLiteral(const char (&aStr)[N], const fallible_t& aFallible)
+  {
+    return AppendASCII(aStr, N - 1, aFallible);
   }
 #endif
 

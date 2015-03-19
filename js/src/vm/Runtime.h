@@ -1603,6 +1603,8 @@ class MOZ_STACK_CLASS AutoKeepAtoms
         if (JSRuntime *rt = pt->runtimeIfOnOwnerThread()) {
             MOZ_ASSERT(rt->keepAtoms_);
             rt->keepAtoms_--;
+            if (rt->gc.fullGCForAtomsRequested() && !rt->keepAtoms())
+                rt->gc.triggerFullGCForAtoms();
         }
     }
 };
