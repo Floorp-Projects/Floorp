@@ -289,13 +289,6 @@ nsImageFrame::Init(nsIContent*       aContent,
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
   if (p)
     p->AdjustPriority(-1);
-
-  // If we already have an image container, OnSizeAvailable won't be called.
-  if (currentRequest) {
-    nsCOMPtr<imgIContainer> image;
-    currentRequest->GetImage(getter_AddRefs(image));
-    OnSizeAvailable(currentRequest, image);
-  }
 }
 
 bool
