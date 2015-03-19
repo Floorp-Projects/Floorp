@@ -449,7 +449,7 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
 {
   AssertIsOnMainThread();
 
-  if (!mAborted) {
+  if (mAborted) {
     return aStatus;
   }
 
