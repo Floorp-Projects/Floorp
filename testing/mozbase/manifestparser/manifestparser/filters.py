@@ -84,10 +84,23 @@ class InstanceFilter(object):
     Generally only one instance of a class filter should be applied at a time.
     Two instances of `InstanceFilter` are considered equal if they have the
     same class name. This ensures only a single instance is ever added to
-    `filterlist`.
+    `filterlist`. This class also formats filters' __str__ method for easier
+    debugging.
     """
+    unique = True
+
+    def __init__(self, *args, **kwargs):
+        self.fmt_args = ', '.join(itertools.chain(
+            [str(a) for a in args],
+            ['{}={}'.format(k, v) for k, v in kwargs.iteritems()]))
+
     def __eq__(self, other):
-        return self.__class__ == other.__class__
+        if self.unique:
+            return self.__class__ == other.__class__
+        return self.__hash__() == other.__hash__()
+
+    def __str__(self):
+        return "{}({})".format(self.__class__.__name__, self.fmt_args)
 
 
 class subsuite(InstanceFilter):
@@ -105,6 +118,7 @@ class subsuite(InstanceFilter):
     :param name: The name of the subsuite to run (default None)
     """
     def __init__(self, name=None):
+        InstanceFilter.__init__(self, name=name)
         self.name = name
 
     def __call__(self, tests, values):
@@ -146,6 +160,8 @@ class chunk_by_slice(InstanceFilter):
 
     def __init__(self, this_chunk, total_chunks, disabled=False):
         assert 1 <= this_chunk <= total_chunks
+        InstanceFilter.__init__(self, this_chunk, total_chunks,
+                                disabled=disabled)
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.disabled = disabled
@@ -196,6 +212,7 @@ class chunk_by_dir(InstanceFilter):
     """
 
     def __init__(self, this_chunk, total_chunks, depth):
+        InstanceFilter.__init__(self, this_chunk, total_chunks, depth)
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.depth = depth
@@ -252,6 +269,8 @@ class chunk_by_runtime(InstanceFilter):
     """
 
     def __init__(self, this_chunk, total_chunks, runtimes, default_runtime=0):
+        InstanceFilter.__init__(self, this_chunk, total_chunks, runtimes,
+                                default_runtime=default_runtime)
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
 
@@ -285,6 +304,32 @@ class chunk_by_runtime(InstanceFilter):
             tests_by_chunk[0][1].extend(batch)
 
         return (t for t in tests_by_chunk[self.this_chunk-1][1])
+
+
+class tags(InstanceFilter):
+    """
+    Removes tests that don't contain any of the given tags. This overrides
+    InstanceFilter's __eq__ method, so multiple instances can be added.
+    Multiple tag filters is equivalent to joining tags with the AND operator.
+
+    :param tags: A tag or list of tags to filter tests on
+    """
+    unique = False
+
+    def __init__(self, tags):
+        InstanceFilter.__init__(self, tags)
+        if isinstance(tags, basestring):
+            tags = [tags]
+        self.tags = tags
+
+    def __call__(self, tests, values):
+        for test in tests:
+            if 'tags' not in test:
+                continue
+
+            test_tags = [t.strip() for t in test['tags'].split(',')]
+            if any(t in self.tags for t in test_tags):
+                yield test
 
 
 # filter container

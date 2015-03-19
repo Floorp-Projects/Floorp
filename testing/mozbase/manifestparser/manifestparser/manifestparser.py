@@ -10,6 +10,7 @@ import fnmatch
 import os
 import shutil
 import sys
+import types
 
 from .ini import read_ini
 from .filters import (
@@ -710,6 +711,7 @@ class TestManifest(ManifestParser):
     def __init__(self, *args, **kwargs):
         ManifestParser.__init__(self, *args, **kwargs)
         self.filters = filterlist(DEFAULT_FILTERS)
+        self.last_used_filters = []
 
     def active_tests(self, exists=True, disabled=True, filters=None, **values):
         """
@@ -741,9 +743,20 @@ class TestManifest(ManifestParser):
         if filters:
             fltrs += filters
 
+        self.last_used_filters = fltrs[:]
         for fn in fltrs:
             tests = fn(tests, values)
         return list(tests)
 
     def test_paths(self):
         return [test['path'] for test in self.active_tests()]
+
+    def fmt_filters(self, filters=None):
+        filters = filters or self.last_used_filters
+        names = []
+        for f in filters:
+            if isinstance(f, types.FunctionType):
+                names.append(f.__name__)
+            else:
+                names.append(str(f))
+        return ', '.join(names)
