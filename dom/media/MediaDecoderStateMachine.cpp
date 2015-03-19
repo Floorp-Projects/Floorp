@@ -1501,12 +1501,18 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     }
     StopAudioThread();
     FlushDecoding();
-    // Now that those threads are stopped, there's no possibility of
-    // mPendingWakeDecoder being needed again. Revoke it.
-    mPendingWakeDecoder = nullptr;
+
+    // Note that we do not wait for the decode task queue to go idle before
+    // queuing the ReleaseMediaResources task - instead, we disconnect promises,
+    // reset state, and put a ResetDecode in the decode task queue. Any tasks
+    // that run after ResetDecode are supposed to run with a clean slate. We rely
+    // on that in other places (i.e. seeking), so it seems reasonable to rely on
+    // it here as well.
     DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
     NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    // There's now no possibility of mPendingWakeDecoder being needed again. Revoke it.
+    mPendingWakeDecoder = nullptr;
     mDecoder->GetReentrantMonitor().NotifyAll();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     mDecodingFrozenAtStateDecoding = true;
@@ -2788,18 +2794,6 @@ MediaDecoderStateMachine::FlushDecoding()
   // The reader is not supposed to put any tasks to deliver samples into
   // the queue after this runs (unless we request another sample from it).
   ResetDecode();
-  {
-    // Wait for the ResetDecode to run and for the decoder to abort
-    // decoding operations and run any pending callbacks. This is
-    // important, as we don't want any pending tasks posted to the task
-    // queue by the reader to deliver any samples after we've posted the
-    // reader Shutdown() task below, as the sample-delivery tasks will
-    // keep video frames alive until after we've called Reader::Shutdown(),
-    // and shutdown on B2G will fail as there are outstanding video frames
-    // alive.
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    DecodeTaskQueue()->AwaitIdle();
-  }
 
   // We must reset playback so that all references to frames queued
   // in the state machine are dropped, else subsequent calls to Shutdown()
