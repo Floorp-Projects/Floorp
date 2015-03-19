@@ -126,7 +126,6 @@ SYMBOL_TO_JSID(JS::Symbol *sym)
     MOZ_ASSERT(sym != nullptr);
     MOZ_ASSERT((size_t(sym) & JSID_TYPE_MASK) == 0);
     MOZ_ASSERT(!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell *>(sym)));
-    MOZ_ASSERT(!JS::IsPoisonedPtr(sym));
     JSID_BITS(id) = (size_t(sym) | JSID_TYPE_SYMBOL);
     return id;
 }
@@ -169,20 +168,9 @@ extern JS_PUBLIC_DATA(const JS::HandleId) JSID_EMPTYHANDLE;
 
 namespace js {
 
-inline bool
-IsPoisonedId(jsid id)
-{
-    if (JSID_IS_STRING(id))
-        return JS::IsPoisonedPtr(JSID_TO_STRING(id));
-    if (JSID_IS_SYMBOL(id))
-        return JS::IsPoisonedPtr(JSID_TO_SYMBOL(id));
-    return false;
-}
-
 template <> struct GCMethods<jsid>
 {
     static jsid initial() { return JSID_VOID; }
-    static bool poisoned(jsid id) { return IsPoisonedId(id); }
     static bool needsPostBarrier(jsid id) { return false; }
     static void postBarrier(jsid *idp) {}
     static void relocate(jsid *idp) {}
