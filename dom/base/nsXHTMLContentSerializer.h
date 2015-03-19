@@ -46,13 +46,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                           nsAString& aStr,
                           nsresult& aResult) override;
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool AppendEndOfElementStart(nsIContent *aOriginalElement,
                                nsIAtom * aName,
                                int32_t aNamespaceID,
                                nsAString& aStr) override;
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool AfterElementStart(nsIContent* aContent,
                                  nsIContent* aOriginalElement,
                                  nsAString& aStr) override;
@@ -75,7 +75,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void MaybeEnterInPreContent(nsIContent* aNode) override;
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode) override;
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool SerializeAttributes(nsIContent* aContent,
                            nsIContent *aOriginalElement,
                            nsAString& aTagPrefix,
@@ -87,13 +87,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
 
   bool IsFirstChildOfOL(nsIContent* aElement);
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   bool SerializeLIValueAttribute(nsIContent* aElement,
                                  nsAString& aStr);
   bool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
 

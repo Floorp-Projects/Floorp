@@ -312,8 +312,6 @@
 #  define MOZ_ALLOCATOR
 #endif
 
-#ifdef __cplusplus
-
 /**
  * MOZ_WARN_UNUSED_RESULT tells the compiler to emit a warning if a function's
  * return value is not used by the caller.
@@ -332,6 +330,8 @@
 #else
 #  define MOZ_WARN_UNUSED_RESULT
 #endif
+
+#ifdef __cplusplus
 
 /*
  * The following macros are attributes that support the static analysis plugin

@@ -36,7 +36,7 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
                                  nsAString& aStr) override;
  protected:
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool SerializeHTMLAttributes(nsIContent* aContent,
                                        nsIContent *aOriginalElement,
                                        nsAString& aTagPrefix,
@@ -45,7 +45,7 @@ class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
                                        int32_t aNamespace,
                                        nsAString& aStr);
 
-  NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr) override;
 
