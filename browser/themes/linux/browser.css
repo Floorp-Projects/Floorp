@@ -1630,6 +1630,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 %include ../shared/readinglist/readinglist.inc.css
 
+#readinglist-addremove-button {
+  padding: 0 2px;
+}
+
 /* Reader mode button */
 
 #reader-mode-button {
