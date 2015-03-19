@@ -810,18 +810,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-IDBCursor::WrapObject(JSContext* aCx)
+IDBCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   AssertIsOnOwningThread();
 
   switch (mType) {
     case Type_ObjectStore:
     case Type_Index:
-      return IDBCursorWithValueBinding::Wrap(aCx, this);
+      return IDBCursorWithValueBinding::Wrap(aCx, this, aGivenProto);
 
     case Type_ObjectStoreKey:
     case Type_IndexKey:
-      return IDBCursorBinding::Wrap(aCx, this);
+      return IDBCursorBinding::Wrap(aCx, this, aGivenProto);
 
     default:
       MOZ_CRASH("Bad type!");

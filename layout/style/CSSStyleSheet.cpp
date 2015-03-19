@@ -497,9 +497,9 @@ nsMediaList::~nsMediaList()
 }
 
 /* virtual */ JSObject*
-nsMediaList::WrapObject(JSContext* aCx)
+nsMediaList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaListBinding::Wrap(aCx, this);
+  return MediaListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -2181,9 +2181,9 @@ CSSStyleSheet::GetOriginalURI() const
 
 /* virtual */
 JSObject*
-CSSStyleSheet::WrapObject(JSContext* aCx)
+CSSStyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSStyleSheetBinding::Wrap(aCx, this);
+  return CSSStyleSheetBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

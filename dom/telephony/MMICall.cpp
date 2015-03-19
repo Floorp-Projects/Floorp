@@ -48,9 +48,9 @@ MMICall::GetParentObject() const
 }
 
 JSObject*
-MMICall::WrapObject(JSContext* aCx)
+MMICall::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MMICallBinding::Wrap(aCx, this);
+  return MMICallBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

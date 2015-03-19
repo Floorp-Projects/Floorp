@@ -314,9 +314,9 @@ CacheStorage::GetParentObject() const
 }
 
 JSObject*
-CacheStorage::WrapObject(JSContext* aContext)
+CacheStorage::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::CacheStorageBinding::Wrap(aContext, this);
+  return mozilla::dom::CacheStorageBinding::Wrap(aContext, this, aGivenProto);
 }
 
 void

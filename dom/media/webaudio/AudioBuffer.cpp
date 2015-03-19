@@ -96,9 +96,9 @@ AudioBuffer::Create(AudioContext* aContext, uint32_t aNumberOfChannels,
 }
 
 JSObject*
-AudioBuffer::WrapObject(JSContext* aCx)
+AudioBuffer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioBufferBinding::Wrap(aCx, this);
+  return AudioBufferBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

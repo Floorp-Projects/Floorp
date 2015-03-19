@@ -675,9 +675,9 @@ TreeBoxObject::ClearCachedValues()
 }
 
 JSObject*
-TreeBoxObject::WrapObject(JSContext* aCx)
+TreeBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TreeBoxObjectBinding::Wrap(aCx, this);
+  return TreeBoxObjectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

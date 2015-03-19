@@ -56,9 +56,9 @@ TVManager::Init()
 }
 
 /* virtual */ JSObject*
-TVManager::WrapObject(JSContext* aCx)
+TVManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TVManagerBinding::Wrap(aCx, this);
+  return TVManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

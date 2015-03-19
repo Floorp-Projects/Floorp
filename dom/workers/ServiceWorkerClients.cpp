@@ -34,9 +34,9 @@ ServiceWorkerClients::ServiceWorkerClients(ServiceWorkerGlobalScope* aWorkerScop
 }
 
 JSObject*
-ServiceWorkerClients::WrapObject(JSContext* aCx)
+ServiceWorkerClients::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ClientsBinding::Wrap(aCx, this);
+  return ClientsBinding::Wrap(aCx, this, aGivenProto);
 }
 
 namespace {

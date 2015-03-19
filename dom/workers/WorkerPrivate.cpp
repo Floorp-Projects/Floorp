@@ -444,7 +444,7 @@ ReadBlobOrFile(JSContext* aCx,
                JS::MutableHandle<JSObject*> aBlobOrFile)
 {
   nsRefPtr<File> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
-  aBlobOrFile.set(blob->WrapObject(aCx));
+  aBlobOrFile.set(blob->WrapObject(aCx, JS::NullPtr()));
 }
 
 // See WriteFormData for serialization format.
@@ -502,7 +502,7 @@ ReadFormData(JSContext* aCx,
     }
   }
 
-  aFormData.set(formData->WrapObject(aCx));
+  aFormData.set(formData->WrapObject(aCx, JS::NullPtr()));
 }
 
 bool
@@ -2679,7 +2679,7 @@ WorkerPrivateParent<Derived>::~WorkerPrivateParent()
 
 template <class Derived>
 JSObject*
-WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx)
+WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(!IsSharedWorker(),
              "We should never wrap a WorkerPrivate for a SharedWorker");
@@ -2689,7 +2689,7 @@ WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx)
   // XXXkhuey this should not need to be rooted, the analysis is dumb.
   // See bug 980181.
   JS::Rooted<JSObject*> wrapper(aCx,
-    WorkerBinding::Wrap(aCx, ParentAsWorkerPrivate()));
+    WorkerBinding::Wrap(aCx, ParentAsWorkerPrivate(), aGivenProto));
   if (wrapper) {
     MOZ_ALWAYS_TRUE(TryPreserveWrapper(wrapper));
   }

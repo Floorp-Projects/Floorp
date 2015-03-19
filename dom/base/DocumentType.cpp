@@ -60,9 +60,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-DocumentType::WrapNode(JSContext *cx)
+DocumentType::WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DocumentTypeBinding::Wrap(cx, this);
+  return DocumentTypeBinding::Wrap(cx, this, aGivenProto);
 }
 
 DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

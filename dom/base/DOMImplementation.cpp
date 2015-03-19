@@ -29,9 +29,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMImplementation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMImplementation)
 
 JSObject*
-DOMImplementation::WrapObject(JSContext* aCx)
+DOMImplementation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMImplementationBinding::Wrap(aCx, this);
+  return DOMImplementationBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

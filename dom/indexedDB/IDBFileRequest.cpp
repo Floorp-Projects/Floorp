@@ -117,12 +117,12 @@ NS_IMPL_RELEASE_INHERITED(IDBFileRequest, DOMRequest)
 
 // virtual
 JSObject*
-IDBFileRequest::WrapObject(JSContext* aCx)
+IDBFileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mWrapAsDOMRequest) {
-    return DOMRequest::WrapObject(aCx);
+    return DOMRequest::WrapObject(aCx, aGivenProto);
   }
-  return IDBFileRequestBinding::Wrap(aCx, this);
+  return IDBFileRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
 

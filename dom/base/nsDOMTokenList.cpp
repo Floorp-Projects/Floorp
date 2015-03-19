@@ -309,8 +309,8 @@ nsDOMTokenList::Stringify(nsAString& aResult)
 }
 
 JSObject*
-nsDOMTokenList::WrapObject(JSContext *cx)
+nsDOMTokenList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMTokenListBinding::Wrap(cx, this);
+  return DOMTokenListBinding::Wrap(cx, this, aGivenProto);
 }
 

@@ -899,9 +899,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject*
-IDBFactory::WrapObject(JSContext* aCx)
+IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBFactoryBinding::Wrap(aCx, this);
+  return IDBFactoryBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ISUPPORTS(IDBFactory::BackgroundCreateCallback,

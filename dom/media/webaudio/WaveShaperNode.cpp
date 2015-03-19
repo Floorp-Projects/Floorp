@@ -302,9 +302,9 @@ WaveShaperNode::ClearCurve()
 }
 
 JSObject*
-WaveShaperNode::WrapObject(JSContext *aCx)
+WaveShaperNode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WaveShaperNodeBinding::Wrap(aCx, this);
+  return WaveShaperNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -61,9 +61,9 @@ ServiceWorkerRegistration::DisconnectFromOwner()
 }
 
 JSObject*
-ServiceWorkerRegistration::WrapObject(JSContext* aCx)
+ServiceWorkerRegistration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ServiceWorkerRegistrationBinding::Wrap(aCx, this);
+  return ServiceWorkerRegistrationBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<workers::ServiceWorker>

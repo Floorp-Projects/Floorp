@@ -22,9 +22,9 @@ VideoTrack::VideoTrack(const nsAString& aId,
 }
 
 JSObject*
-VideoTrack::WrapObject(JSContext* aCx)
+VideoTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoTrackBinding::Wrap(aCx, this);
+  return VideoTrackBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void VideoTrack::SetSelected(bool aSelected)

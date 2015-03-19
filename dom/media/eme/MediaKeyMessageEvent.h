@@ -37,7 +37,7 @@ protected:
 public:
   virtual MediaKeyMessageEvent* AsMediaKeyMessageEvent();
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   static already_AddRefed<MediaKeyMessageEvent>
   Constructor(EventTarget* aOwner,

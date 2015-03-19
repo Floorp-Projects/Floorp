@@ -97,9 +97,9 @@ ValidityState::GetValid(bool* aValid)
 }
 
 JSObject*
-ValidityState::WrapObject(JSContext* aCx)
+ValidityState::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ValidityStateBinding::Wrap(aCx, this);
+  return ValidityStateBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

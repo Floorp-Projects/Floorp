@@ -102,9 +102,9 @@ CellBroadcast::~CellBroadcast()
 NS_IMPL_ISUPPORTS_INHERITED0(CellBroadcast, DOMEventTargetHelper)
 
 JSObject*
-CellBroadcast::WrapObject(JSContext* aCx)
+CellBroadcast::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozCellBroadcastBinding::Wrap(aCx, this);
+  return MozCellBroadcastBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // Forwarded nsICellBroadcastListener methods

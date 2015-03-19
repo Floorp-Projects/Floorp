@@ -96,9 +96,9 @@ Telephony::Shutdown()
 }
 
 JSObject*
-Telephony::WrapObject(JSContext* aCx)
+Telephony::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TelephonyBinding::Wrap(aCx, this);
+  return TelephonyBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // static

@@ -30,9 +30,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return MouseEventBinding::Wrap(aCx, this);
+    return MouseEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   // Web IDL binding methods

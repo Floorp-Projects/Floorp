@@ -65,7 +65,7 @@ public:
     Init();
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // nsIContent
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,

@@ -28,7 +28,7 @@ public:
     void Delete();
     WebGLContext* GetParentObject() const;
 
-    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 private:
 

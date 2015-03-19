@@ -38,7 +38,7 @@ public:
   virtual void ClearCachedValues() MOZ_OVERRIDE;
 
   // WebIDL
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   already_AddRefed<nsTreeColumns> GetColumns();
 

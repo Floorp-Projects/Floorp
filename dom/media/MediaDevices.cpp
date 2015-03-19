@@ -88,9 +88,9 @@ NS_INTERFACE_MAP_BEGIN(MediaDevices)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 JSObject*
-MediaDevices::WrapObject(JSContext* aCx)
+MediaDevices::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaDevicesBinding::Wrap(aCx, this);
+  return MediaDevicesBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

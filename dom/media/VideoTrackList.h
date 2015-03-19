@@ -23,7 +23,7 @@ public:
     , mSelectedIndex(-1)
   {}
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   VideoTrack* operator[](uint32_t aIndex);
 

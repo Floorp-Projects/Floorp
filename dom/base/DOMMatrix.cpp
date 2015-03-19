@@ -658,9 +658,9 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
 }
 
 JSObject*
-DOMMatrix::WrapObject(JSContext* aCx)
+DOMMatrix::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMMatrixBinding::Wrap(aCx, this);
+  return DOMMatrixBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

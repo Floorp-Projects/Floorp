@@ -143,16 +143,16 @@ HTMLSharedListElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLSharedListElement::WrapNode(JSContext *aCx)
+HTMLSharedListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol)) {
-    return HTMLOListElementBinding::Wrap(aCx, this);
+    return HTMLOListElementBinding::Wrap(aCx, this, aGivenProto);
   }
   if (mNodeInfo->Equals(nsGkAtoms::dl)) {
-    return HTMLDListElementBinding::Wrap(aCx, this);
+    return HTMLDListElementBinding::Wrap(aCx, this, aGivenProto);
   }
   MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::ul));
-  return HTMLUListElementBinding::Wrap(aCx, this);
+  return HTMLUListElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

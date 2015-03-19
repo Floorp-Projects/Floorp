@@ -69,9 +69,9 @@ MobileCellInfo::Update(nsIMobileCellInfo* aInfo)
 }
 
 JSObject*
-MobileCellInfo::WrapObject(JSContext* aCx)
+MobileCellInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozMobileCellInfoBinding::Wrap(aCx, this);
+  return MozMobileCellInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIMobileCellInfo

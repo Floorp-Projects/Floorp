@@ -96,9 +96,9 @@ nsresult HTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 }
 
 JSObject*
-HTMLAudioElement::WrapNode(JSContext* aCx)
+HTMLAudioElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLAudioElementBinding::Wrap(aCx, this);
+  return HTMLAudioElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

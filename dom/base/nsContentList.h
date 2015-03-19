@@ -87,7 +87,7 @@ public:
 
   virtual int32_t IndexOf(nsIContent *aContent, bool aDoFlush);
 
-  virtual JSObject* WrapObject(JSContext *cx)
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE = 0;
 
   void SetCapacity(uint32_t aCapacity)
@@ -125,7 +125,7 @@ public:
   {
     return mRoot;
   }
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsSimpleContentList() {}
@@ -251,7 +251,7 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 protected:
   virtual ~nsContentList();
 
@@ -536,7 +536,7 @@ public:
 #endif
   }
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 #ifdef DEBUG
   static const ContentListType sType;
@@ -560,7 +560,7 @@ public:
 #endif
   }
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 #ifdef DEBUG
   static const ContentListType sType;

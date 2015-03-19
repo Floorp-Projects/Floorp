@@ -74,9 +74,9 @@ TVChannel::Init(nsITVChannelData* aData)
 }
 
 /* virtual */ JSObject*
-TVChannel::WrapObject(JSContext* aCx)
+TVChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TVChannelBinding::Wrap(aCx, this);
+  return TVChannelBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

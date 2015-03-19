@@ -117,9 +117,9 @@ Voicemail::Shutdown()
 }
 
 JSObject*
-Voicemail::WrapObject(JSContext* aCx)
+Voicemail::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozVoicemailBinding::Wrap(aCx, this);
+  return MozVoicemailBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<nsIVoicemailProvider>

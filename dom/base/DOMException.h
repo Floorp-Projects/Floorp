@@ -63,7 +63,7 @@ public:
   void StowJSVal(JS::Value& aVp);
 
   // WebIDL API
-  virtual JSObject* WrapObject(JSContext* cx)
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE;
 
   nsISupports* GetParentObject() const { return nullptr; }
@@ -136,7 +136,7 @@ public:
   NS_IMETHOD ToString(nsACString& aReturn) MOZ_OVERRIDE;
 
   // nsWrapperCache overrides
-  virtual JSObject* WrapObject(JSContext* aCx)
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE;
 
   static already_AddRefed<DOMException>

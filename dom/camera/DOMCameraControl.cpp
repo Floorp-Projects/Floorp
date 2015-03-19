@@ -311,9 +311,9 @@ nsDOMCameraControl::~nsDOMCameraControl()
 }
 
 JSObject*
-nsDOMCameraControl::WrapObject(JSContext* aCx)
+nsDOMCameraControl::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CameraControlBinding::Wrap(aCx, this);
+  return CameraControlBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

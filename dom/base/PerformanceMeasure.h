@@ -20,7 +20,7 @@ public:
                      DOMHighResTimeStamp aStartTime,
                      DOMHighResTimeStamp aEndTime);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual DOMHighResTimeStamp StartTime() const MOZ_OVERRIDE
   {

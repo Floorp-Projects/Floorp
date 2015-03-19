@@ -77,9 +77,9 @@ ArchiveRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 /* virtual */ JSObject*
-ArchiveRequest::WrapObject(JSContext* aCx)
+ArchiveRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ArchiveRequestBinding::Wrap(aCx, this);
+  return ArchiveRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
 ArchiveReader*

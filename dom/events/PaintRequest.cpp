@@ -28,9 +28,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(PaintRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequest)
 
 /* virtual */ JSObject*
-PaintRequest::WrapObject(JSContext* aCx)
+PaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PaintRequestBinding::Wrap(aCx, this);
+  return PaintRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMRect>
@@ -71,9 +71,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(PaintRequestList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PaintRequestList)
 
 JSObject*
-PaintRequestList::WrapObject(JSContext* aCx)
+PaintRequestList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PaintRequestListBinding::Wrap(aCx, this);
+  return PaintRequestListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

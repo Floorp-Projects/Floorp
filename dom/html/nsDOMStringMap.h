@@ -36,7 +36,7 @@ public:
   explicit nsDOMStringMap(nsGenericHTMLElement* aElement);
 
   // WebIDL API
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   void NamedGetter(const nsAString& aProp, bool& found,
                    mozilla::dom::DOMString& aResult) const;
   void NamedSetter(const nsAString& aProp, const nsAString& aValue,

@@ -29,9 +29,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return CommandEventBinding::Wrap(aCx, this);
+    return CommandEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   void InitCommandEvent(const nsAString& aType,

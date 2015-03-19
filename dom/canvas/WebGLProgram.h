@@ -138,7 +138,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* js) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 private:
     ~WebGLProgram() {

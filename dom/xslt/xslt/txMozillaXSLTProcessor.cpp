@@ -1279,9 +1279,9 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
 }
 
 /* virtual */ JSObject*
-txMozillaXSLTProcessor::WrapObject(JSContext* aCx)
+txMozillaXSLTProcessor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-    return XSLTProcessorBinding::Wrap(aCx, this);
+    return XSLTProcessorBinding::Wrap(aCx, this, aGivenProto);
 }
 
 

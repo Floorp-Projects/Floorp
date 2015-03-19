@@ -16,9 +16,9 @@
 namespace mozilla {
 
 JSObject*
-WebGLFramebuffer::WrapObject(JSContext* cx)
+WebGLFramebuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLFramebufferBinding::Wrap(cx, this);
+    return dom::WebGLFramebufferBinding::Wrap(cx, this, aGivenProto);
 }
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)

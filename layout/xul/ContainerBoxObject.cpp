@@ -24,9 +24,9 @@ ContainerBoxObject::~ContainerBoxObject()
 }
 
 JSObject*
-ContainerBoxObject::WrapObject(JSContext* aCx)
+ContainerBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ContainerBoxObjectBinding::Wrap(aCx, this);
+  return ContainerBoxObjectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<nsIDocShell>

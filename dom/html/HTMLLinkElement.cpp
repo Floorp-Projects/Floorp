@@ -544,9 +544,9 @@ HTMLLinkElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 JSObject*
-HTMLLinkElement::WrapNode(JSContext* aCx)
+HTMLLinkElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLLinkElementBinding::Wrap(aCx, this);
+  return HTMLLinkElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<nsIDocument>

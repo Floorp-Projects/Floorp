@@ -60,9 +60,9 @@ DOMStorage::~DOMStorage()
 }
 
 /* virtual */ JSObject*
-DOMStorage::WrapObject(JSContext* aCx)
+DOMStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return StorageBinding::Wrap(aCx, this);
+  return StorageBinding::Wrap(aCx, this, aGivenProto);
 }
 
 uint32_t

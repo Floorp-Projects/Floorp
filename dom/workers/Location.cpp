@@ -32,9 +32,9 @@ WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
 }
 
 JSObject*
-WorkerLocation::WrapObject(JSContext* aCx)
+WorkerLocation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerLocationBinding_workers::Wrap(aCx, this);
+  return WorkerLocationBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 END_WORKERS_NAMESPACE

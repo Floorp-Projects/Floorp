@@ -48,9 +48,9 @@ IccManager::~IccManager()
 }
 
 JSObject*
-IccManager::WrapObject(JSContext* aCx)
+IccManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozIccManagerBinding::Wrap(aCx, this);
+  return MozIccManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

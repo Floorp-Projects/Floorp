@@ -3328,7 +3328,7 @@ class CGWrapMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument('T*', 'aObject'),
-                Argument('JS::Handle<JSObject*>', 'aGivenProto', 'JS::NullPtr()')]
+                Argument('JS::Handle<JSObject*>', 'aGivenProto')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args,
                                   inline=True, templateArgs=["class T"])
 
@@ -13106,7 +13106,8 @@ class CGBindingImplClass(CGClass):
                                    name="aName")]),
                     { "infallible": True }))
 
-        wrapArgs = [Argument('JSContext*', 'aCx')]
+        wrapArgs = [Argument('JSContext*', 'aCx'),
+                    Argument('JS::Handle<JSObject*>', 'aGivenProto')]
         self.methodDecls.insert(0,
                                 ClassMethod(wrapMethodName, "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
@@ -13226,9 +13227,9 @@ class CGExampleClass(CGBindingImplClass):
 
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
             JSObject*
-            ${nativeType}::WrapObject(JSContext* aCx)
+            ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
             {
-              return ${ifaceName}Binding::Wrap(aCx, this);
+              return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto);
             }
 
             """)
@@ -13596,7 +13597,7 @@ class CGJSImplClass(CGBindingImplClass):
     def getWrapObjectBody(self):
         return fill(
             """
-            JS::Rooted<JSObject*> obj(aCx, ${name}Binding::Wrap(aCx, this));
+            JS::Rooted<JSObject*> obj(aCx, ${name}Binding::Wrap(aCx, this, aGivenProto));
             if (!obj) {
               return nullptr;
             }
@@ -14989,7 +14990,7 @@ class CGEventClass(CGBindingImplClass):
                          extradeclarations=baseDeclarations)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, this);\n" % self.descriptor.name
+        return "return %sBinding::Wrap(aCx, this, aGivenProto);\n" % self.descriptor.name
 
     def implTraverse(self):
         retVal = ""

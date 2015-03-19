@@ -29,7 +29,7 @@ protected:
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~SVGFEImageElement();
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   virtual bool SubregionIsUnionOfRegions() MOZ_OVERRIDE { return false; }

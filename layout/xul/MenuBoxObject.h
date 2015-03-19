@@ -20,7 +20,7 @@ public:
 
   MenuBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void OpenMenu(bool aOpenFlag);
   already_AddRefed<Element> GetActiveChild();

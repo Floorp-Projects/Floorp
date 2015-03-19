@@ -118,7 +118,7 @@ public:
 protected:
   virtual ~HTMLMenuItemElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 
 protected:
