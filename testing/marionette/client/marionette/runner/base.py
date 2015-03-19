@@ -17,6 +17,7 @@ import unittest
 import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
+from manifestparser.filters import tags
 from marionette_driver.marionette import Marionette
 from mixins.b2g import B2GTestResultMixin, get_b2g_pid, get_dm
 from mozhttpd import MozHttpd
@@ -417,6 +418,12 @@ class BaseMarionetteOptions(OptionParser):
                         action='store_true',
                         default=False,
                         help='Enable e10s when running marionette tests.')
+        self.add_option('--tag',
+                        action='append', dest='test_tags',
+                        default=None,
+                        help="Filter out tests that don't have the given tag. Can be "
+                             "used multiple times in which case the test must contain "
+                             "at least one of the given tags.")
 
     def parse_args(self, args=None, values=None):
         options, tests = OptionParser.parse_args(self, args, values)
@@ -494,7 +501,7 @@ class BaseMarionetteTestRunner(object):
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
                  server_root=None, gecko_log=None, result_callbacks=None,
-                 adb_host=None, adb_port=None, prefs=None,
+                 adb_host=None, adb_port=None, prefs=None, test_tags=None,
                  socket_timeout=BaseMarionetteOptions.socket_timeout_default,
                  **kwargs):
         self.address = address
@@ -540,6 +547,7 @@ class BaseMarionetteTestRunner(object):
         self._adb_host = adb_host
         self._adb_port = adb_port
         self.prefs = prefs or {}
+        self.test_tags = test_tags
 
         def gather_debug(test, status):
             rv = {}
@@ -884,11 +892,20 @@ setReq.onerror = function() {
             manifest = TestManifest()
             manifest.read(filepath)
 
+            filters = []
+            if self.test_tags:
+                filters.append(tags(self.test_tags))
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
+                                                   filters=filters,
                                                    device=self.device,
                                                    app=self.appName,
                                                    **mozinfo.info)
+            if len(manifest_tests) == 0:
+                self.logger.error("no tests to run using specified "
+                                  "combination of filters: {}".format(
+                                       manifest.fmt_filters()))
+
             unfiltered_tests = []
             for test in manifest_tests:
                 if test.get('disabled'):
