@@ -2993,10 +2993,20 @@ fi
 dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jemalloc,
-[  --enable-jemalloc       Replace memory allocator with jemalloc],
-    MOZ_MEMORY=1,
+MOZ_MEMORY=1
+MOZ_ARG_DISABLE_BOOL(jemalloc,
+[  --disable-jemalloc       Don't replace memory allocator with jemalloc],
     MOZ_MEMORY=)
+
+case "${OS_TARGET}" in
+Android|WINNT|Darwin)
+  MOZ_GLUE_IN_PROGRAM=
+  ;;
+*)
+  dnl On !Android !Windows !OSX, we only want to link executables against mozglue
+  MOZ_GLUE_IN_PROGRAM=1
+  ;;
+esac
 
 if test "$MOZ_MEMORY"; then
   AC_DEFINE(MOZ_MEMORY)
