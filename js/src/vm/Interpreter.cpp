@@ -667,6 +667,10 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     if (!scopeChain)
         return false;
 
+    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || !script->compileAndGo(),
+                       "Only non-compile-and-go scripts can be executed with "
+                       "interesting scopechains");
+
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG
     JSObject *s = scopeChain;
