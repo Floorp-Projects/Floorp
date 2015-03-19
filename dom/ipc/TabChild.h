@@ -47,6 +47,7 @@ class RenderFrameChild;
 namespace layers {
 class APZEventState;
 struct SetTargetAPZCCallback;
+struct SetAllowedTouchBehaviorCallback;
 }
 
 namespace widget {
@@ -243,6 +244,7 @@ class TabChild MOZ_FINAL : public TabChildBase,
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layers::APZEventState APZEventState;
     typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
+    typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
 
 public:
     /**
@@ -619,6 +621,7 @@ private:
     bool mIgnoreKeyPressEvent;
     nsRefPtr<APZEventState> mAPZEventState;
     nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
+    nsRefPtr<SetAllowedTouchBehaviorCallback> mSetAllowedTouchBehaviorCallback;
     bool mHasValidInnerSize;
     bool mDestroyed;
     // Position of tab, relative to parent widget (typically the window)
