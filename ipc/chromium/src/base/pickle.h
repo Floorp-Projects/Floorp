@@ -226,10 +226,12 @@ class Pickle {
   // Returns the address of the byte immediately following the currently valid
   // header + payload.
   char* end_of_payload() {
+    // We must have a valid header_.
     return payload() + payload_size();
   }
   const char* end_of_payload() const {
-    return payload() + payload_size();
+    // This object may be invalid.
+    return header_ ? payload() + payload_size() : nullptr;
   }
 
   uint32_t capacity() const {
