@@ -40,6 +40,7 @@ class GeckoContentController;
 class APZEventState;
 struct ScrollableLayerGuid;
 struct SetTargetAPZCCallback;
+struct SetAllowedTouchBehaviorCallback;
 }
 
 class CompositorVsyncDispatcher;
@@ -95,6 +96,7 @@ protected:
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
+  typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
   typedef mozilla::ScreenRotation ScreenRotation;
 
   virtual ~nsBaseWidget();
@@ -456,6 +458,7 @@ protected:
   nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<APZEventState> mAPZEventState;
   nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
+  nsRefPtr<SetAllowedTouchBehaviorCallback> mSetAllowedTouchBehaviorCallback;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsRefPtr<TextEventDispatcher> mTextEventDispatcher;
   nsCursor          mCursor;

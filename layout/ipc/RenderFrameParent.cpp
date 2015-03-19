@@ -579,6 +579,17 @@ RenderFrameParent::SetTargetAPZC(uint64_t aInputBlockId,
 }
 
 void
+RenderFrameParent::SetAllowedTouchBehavior(uint64_t aInputBlockId,
+                                           const nsTArray<TouchBehaviorFlags>& aFlags)
+{
+  if (GetApzcTreeManager()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        GetApzcTreeManager(), &APZCTreeManager::SetAllowedTouchBehavior,
+        aInputBlockId, aFlags));
+  }
+}
+
+void
 RenderFrameParent::UpdateZoomConstraints(uint32_t aPresShellId,
                                          ViewID aViewId,
                                          bool aIsRoot,

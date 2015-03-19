@@ -2476,6 +2476,16 @@ TabParent::RecvSetTargetAPZC(const uint64_t& aInputBlockId,
   return true;
 }
 
+bool
+TabParent::RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
+                                       nsTArray<TouchBehaviorFlags>&& aFlags)
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->SetAllowedTouchBehavior(aInputBlockId, aFlags);
+  }
+  return true;
+}
+
 already_AddRefed<nsILoadContext>
 TabParent::GetLoadContext()
 {
