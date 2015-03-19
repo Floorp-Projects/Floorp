@@ -9,7 +9,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true" android:drawable="@color/overlay_share_selected" />
-    <item android:drawable="@color/overlay_share_background"/>
+    <item android:state_pressed="true" android:drawable="@color/toolbar_grey_pressed" />
+    <item android:drawable="@color/toolbar_grey"/>
 
 </selector>

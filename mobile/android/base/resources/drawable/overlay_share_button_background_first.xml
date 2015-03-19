@@ -12,7 +12,7 @@
 
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@color/overlay_share_selected"/>
+            <solid android:color="@color/toolbar_grey_pressed"/>
             <corners android:topLeftRadius="@dimen/button_corner_radius"
                      android:topRightRadius="@dimen/button_corner_radius"/>
         </shape>
@@ -20,7 +20,7 @@
 
     <item>
         <shape>
-            <solid android:color="@color/overlay_share_background"/>
+            <solid android:color="@color/toolbar_grey"/>
             <corners android:topLeftRadius="@dimen/button_corner_radius"
                      android:topRightRadius="@dimen/button_corner_radius"/>
         </shape>
