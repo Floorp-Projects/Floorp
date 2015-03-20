@@ -250,7 +250,7 @@ let ReadingListUI = {
       return;
     }
 
-    let isInList = yield ReadingList.containsURL(uri);
+    let isInList = yield ReadingList.hasItemForURL(uri);
     if (this.isSidebarOpen) {
       if (isInList)
         msg.url = typeof uri == "string" ? uri : uri.spec;
