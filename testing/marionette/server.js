@@ -145,7 +145,8 @@ MarionetteServer.prototype.onSocketAccepted = function(
   let transport = new DebuggerTransport(input, output);
   let connId = "conn" + this.nextConnId++;
 
-  let dispatcher = new Dispatcher(connId, transport, this.driverFactory);
+  let stopSignal = () => this.stop();
+  let dispatcher = new Dispatcher(connId, transport, this.driverFactory, stopSignal);
   dispatcher.onclose = this.onConnectionClosed.bind(this);
   this.conns[connId] = dispatcher;
 
