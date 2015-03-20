@@ -6,6 +6,10 @@
 [Global=(WorkerDebugger), Exposed=WorkerDebugger]
 interface WorkerDebuggerGlobalScope : EventTarget {
   readonly attribute object global;
+
+  void postMessage(DOMString message);
+
+  attribute EventHandler onmessage;
 };
 
 // So you can debug while you debug
