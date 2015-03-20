@@ -66,6 +66,8 @@ let RLSidebar = {
     this.listPromise = this.ensureListItems();
     ReadingList.addListener(this);
 
+    Services.prefs.setBoolPref("browser.readinglist.sidebarEverOpened", true);
+
     let initEvent = new CustomEvent("Initialized", {bubbles: true});
     document.documentElement.dispatchEvent(initEvent);
   },
