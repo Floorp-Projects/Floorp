@@ -1,38 +1,34 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict"
 
-function test() {
-  waitForExplicitFinish();
-
-  let bmFolder = Application.bookmarks.menu.addFolder("keyword-test");
+add_task(function* test_keyword_bookmarklet() {
+  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                title: "bookmarklet",
+                                                url: "javascript:1;" });
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-
-  registerCleanupFunction (function () {
-    bmFolder.remove();
+  registerCleanupFunction (function* () {
     gBrowser.removeTab(tab);
+    yield PlacesUtils.bookmarks.remove(bm);
   });
+  yield promisePageShow();
+  let originalPrincipal = gBrowser.contentPrincipal;
 
-  let bm = bmFolder.addBookmark("bookmarklet", makeURI("javascript:1;"));
-  bm.keyword = "bm";
+  yield PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:1;" })
 
-  addPageShowListener(function () {
-    let originalPrincipal = gBrowser.contentPrincipal;
+  // Enter bookmarklet keyword in the URL bar
+  gURLBar.value = "bm";
+  gURLBar.focus();
+  EventUtils.synthesizeKey("VK_RETURN", {});
 
-    // Enter bookmarklet keyword in the URL bar
-    gURLBar.value = "bm";
-    gURLBar.focus();
-    EventUtils.synthesizeKey("VK_RETURN", {});
+  yield promisePageShow();
 
-    addPageShowListener(function () {
-      ok(gBrowser.contentPrincipal.equals(originalPrincipal), "javascript bookmarklet should inherit principal");
-      finish();
+  ok(gBrowser.contentPrincipal.equals(originalPrincipal), "javascript bookmarklet should inherit principal");
+});
+
+function* promisePageShow() {
+  return new Promise(resolve => {
+    gBrowser.selectedBrowser.addEventListener("pageshow", function listen() {
+      gBrowser.selectedBrowser.removeEventListener("pageshow", listen);
+      resolve();
     });
-  });
-}
-
-function addPageShowListener(func) {
-  gBrowser.selectedBrowser.addEventListener("pageshow", function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", loadListener, false);
-    func();
   });
 }

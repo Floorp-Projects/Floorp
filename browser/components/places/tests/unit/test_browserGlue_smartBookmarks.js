@@ -70,8 +70,6 @@ add_task(function* setup() {
   Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
   Assert.ok(!Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
   Assert.throws(() => Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
-
-  yield waitForImportAndSmartBookmarks();
 });
 
 add_task(function* test_version_0() {

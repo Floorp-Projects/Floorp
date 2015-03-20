@@ -622,13 +622,8 @@ nsNavBookmarks::RemoveItem(int64_t aItemId)
       rv = history->UpdateFrecency(bookmark.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-
     // A broken url should not interrupt the removal process.
-    rv = NS_NewURI(getter_AddRefs(uri), bookmark.url);
-    if (NS_SUCCEEDED(rv)) {
-      rv = UpdateKeywordsForRemovedBookmark(bookmark);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    (void)NS_NewURI(getter_AddRefs(uri), bookmark.url);
   }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -1102,13 +1097,8 @@ nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId)
         rv = history->UpdateFrecency(child.placeId);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
       // A broken url should not interrupt the removal process.
-      rv = NS_NewURI(getter_AddRefs(uri), child.url);
-      if (NS_SUCCEEDED(rv)) {
-        rv = UpdateKeywordsForRemovedBookmark(child);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      (void)NS_NewURI(getter_AddRefs(uri), child.url);
     }
 
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -2233,74 +2223,6 @@ nsNavBookmarks::SetItemIndex(int64_t aItemId, int32_t aNewIndex)
                                bookmark.guid,
                                bookmark.parentGuid,
                                bookmark.parentGuid));
-
-  return NS_OK;
-}
-
-
-nsresult
-nsNavBookmarks::UpdateKeywordsForRemovedBookmark(const BookmarkData& aBookmark)
-{
-  // If there are no keywords for this URI, there's nothing to do.
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aBookmark.url);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<nsString> keywords;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT keyword FROM moz_keywords WHERE place_id = :place_id "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("place_id"), aBookmark.placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasMore;
-    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-      nsAutoString keyword;
-      rv = stmt->GetString(0, keyword);
-      NS_ENSURE_SUCCESS(rv, rv);
-      keywords.AppendElement(keyword);
-    }
-  }
-
-  if (keywords.Length() == 0) {
-    // This uri has no keywords associated, so there's nothing to do.
-    return NS_OK;
-  }
-
-  // If the uri is not bookmarked anymore, we can remove its keywords.
-  nsTArray<BookmarkData> bookmarks;
-  rv = GetBookmarksForURI(uri, bookmarks);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (bookmarks.Length() == 0) {
-    for (uint32_t i = 0; i < keywords.Length(); ++i) {
-      nsString keyword = keywords[i];
-
-      nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-        "DELETE FROM moz_keywords WHERE keyword = :keyword "
-      );
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavBookmarkObserver,
-                     OnItemChanged(aBookmark.id,
-                                   NS_LITERAL_CSTRING("keyword"),
-                                   false,
-                                   EmptyCString(),
-                                   aBookmark.lastModified,
-                                   TYPE_BOOKMARK,
-                                   aBookmark.parentId,
-                                   aBookmark.guid,
-                                   aBookmark.parentGuid));
-  }
 
   return NS_OK;
 }

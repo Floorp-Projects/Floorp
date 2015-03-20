@@ -48,7 +48,7 @@ add_task(function* test_keyword_searc() {
   do_print("Keyword that happens to match a page");
   yield check_autocomplete({
     search: "key ThisPageIsInHistory",
-    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title", style: ["bookmark"] } ]
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "Generic page title", style: ["keyword"] } ]
   });
 
   do_print("Keyword without query (without space)");

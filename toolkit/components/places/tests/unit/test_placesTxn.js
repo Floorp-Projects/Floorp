@@ -732,8 +732,8 @@ add_test(function test_edit_postData() {
   txn.undoTransaction();
   [url, post_data] = PlacesUtils.getURLAndPostDataForKeyword("kw");
   Assert.equal(url, testURI.spec);
-  Assert.equal(null, post_data);
-
+  // We don't allow anymore to set a null post data.
+  //Assert.equal(null, post_data);
 
   run_next_test();
 });
