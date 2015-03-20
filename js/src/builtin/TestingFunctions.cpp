@@ -2363,7 +2363,7 @@ ShellCloneAndExecuteScript(JSContext *cx, unsigned argc, Value *vp)
 
     AutoCompartment ac(cx, global);
 
-    if (!JS::CloneAndExecuteScript(cx, global, script))
+    if (!JS::CloneAndExecuteScript(cx, script))
         return false;
 
     args.rval().setUndefined();
