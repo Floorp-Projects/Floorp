@@ -145,7 +145,14 @@ let RLSidebar = {
     itemNode.setAttribute("title", `${item.title}\n${item.url}`);
 
     itemNode.querySelector(".item-title").textContent = item.title;
-    itemNode.querySelector(".item-domain").textContent = item.domain;
+
+    let domain = item.uri.spec;
+    try {
+      domain = item.uri.host;
+    }
+    catch (err) {}
+    itemNode.querySelector(".item-domain").textContent = domain;
+
     let thumb = itemNode.querySelector(".item-thumb-container");
     if (item.preview) {
       thumb.style.backgroundImage = "url(" + item.preview + ")";
