@@ -254,7 +254,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   AnimationPlayerCollection* collection =
-    GetAnimationPlayers(aElement, aStyleContext->GetPseudoType(), false);
+    GetAnimations(aElement, aStyleContext->GetPseudoType(), false);
   if (!collection &&
       disp->mAnimationNameCount == 1 &&
       disp->mAnimations[0].GetName().IsEmpty()) {
@@ -380,7 +380,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
   } else {
     collection =
-      GetAnimationPlayers(aElement, aStyleContext->GetPseudoType(), true);
+      GetAnimations(aElement, aStyleContext->GetPseudoType(), true);
   }
   collection->mPlayers.SwapElements(newPlayers);
   collection->mNeedsRefreshes = true;
