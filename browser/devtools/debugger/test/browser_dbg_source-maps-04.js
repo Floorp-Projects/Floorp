@@ -89,11 +89,11 @@ function testSetBreakpoint() {
   let sourceForm = getSourceForm(gSources, JS_URL);
   let source = gDebugger.gThreadClient.source(sourceForm);
 
-  source.setBreakpoint({ line: 3, column: 60 }, aResponse => {
+  source.setBreakpoint({ line: 3, column: 61 }, aResponse => {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a js file.");
     ok(!aResponse.actualLocation,
-      "Should be able to set a breakpoint on line 3 and column 60.");
+      "Should be able to set a breakpoint on line 3 and column 61.");
 
     deferred.resolve();
   });
@@ -115,16 +115,20 @@ function testHitBreakpoint() {
     is(aResponse.type, "resumed", "Type should be 'resumed'.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES).then(() => {
-      is(gFrames.itemCount, 1, "Should have one frame.");
+      is(gFrames.itemCount, 2, "Should have two frames.");
 
       // This is weird, but we need to let the debugger a chance to
       // update first
       executeSoon(() => {
         gDebugger.gThreadClient.resume(() => {
-          // We also need to make sure the next step doesn't add a
-          // "resumed" handler until this is completely finished
-          executeSoon(() => {
-            deferred.resolve();
+          gDebugger.gThreadClient.addOneTimeListener("paused", () => {
+            gDebugger.gThreadClient.resume(() => {
+              // We also need to make sure the next step doesn't add a
+              // "resumed" handler until this is completely finished
+              executeSoon(() => {
+                deferred.resolve();
+              });
+            });
           });
         });
       });
