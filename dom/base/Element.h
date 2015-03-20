@@ -809,10 +809,6 @@ public:
   }
 
   void GetAnimations(nsTArray<nsRefPtr<AnimationPlayer> >& aAnimations);
-  // Temporary alias (bug 1145246)
-  void GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aAnimations) {
-    GetAnimations(aAnimations);
-  }
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
