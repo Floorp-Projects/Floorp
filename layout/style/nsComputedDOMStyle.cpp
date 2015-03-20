@@ -2517,8 +2517,8 @@ nsComputedDOMStyle::DoGetBorderSpacing()
   valueList->AppendCSSValue(ySpacing);
 
   const nsStyleTableBorder *border = StyleTableBorder();
-  xSpacing->SetAppUnits(border->mBorderSpacingX);
-  ySpacing->SetAppUnits(border->mBorderSpacingY);
+  xSpacing->SetAppUnits(border->mBorderSpacingCol);
+  ySpacing->SetAppUnits(border->mBorderSpacingRow);
 
   return valueList;
 }
