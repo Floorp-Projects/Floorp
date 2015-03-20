@@ -1561,14 +1561,31 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
     nsresult rv;
     nsCOMPtr<nsIProtocolProxyService> pps =
             do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> systemPrincipal;
+    rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // dummy channel used to create a TCP connection.
+    // we perform security checks on the *real* channel, responsible
+    // for any network loads. this real channel just checks the TCP
+    // pool if there is an available connection created by the
+    // channel we create underneath - hence it's safe to use
+    // the systemPrincipal as the loadingPrincipal for this channel.
     nsCOMPtr<nsIChannel> channel;
-    rv = NewChannelFromURI(aURI, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    rv = NewChannelFromURI2(aURI,
+                            nullptr, // aLoadingNode,
+                            systemPrincipal,
+                            nullptr, //aTriggeringPrincipal,
+                            nsILoadInfo::SEC_NORMAL,
+                            nsIContentPolicy::TYPE_OTHER,
+                            getter_AddRefs(channel));
+
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsICancelable> cancelable;
     nsRefPtr<IOServiceProxyCallback> callback =
