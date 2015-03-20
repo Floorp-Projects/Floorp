@@ -2158,17 +2158,8 @@ BytecodeEmitter::checkSingletonContext()
 bool
 BytecodeEmitter::needsImplicitThis()
 {
-    if (sc->isFunctionBox()) {
-        if (sc->asFunctionBox()->inWith)
-            return true;
-    } else {
-        JSObject *scope = sc->asGlobalSharedContext()->scopeChain();
-        while (scope) {
-            if (scope->is<DynamicWithObject>())
-                return true;
-            scope = scope->enclosingScope();
-        }
-    }
+    if (sc->isFunctionBox() && sc->asFunctionBox()->inWith)
+        return true;
 
     for (StmtInfoBCE *stmt = topStmt; stmt; stmt = stmt->down) {
         if (stmt->type == STMT_WITH)
