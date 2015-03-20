@@ -590,7 +590,21 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       // Stringifying optimization information is delayed until streaming
       // time. To re-lookup the entry in the JitcodeGlobalTable, we need to
       // store the JIT code address ('J') in the circular buffer.
-      if (jsFrames[jsIndex].hasTrackedOptimizations) {
+      //
+      // Note that we cannot do this when we are sychronously sampling the
+      // current thread; that is, when called from profiler_get_backtrace. The
+      // captured backtrace is usually externally stored for an indeterminate
+      // amount of time, such as in nsRefreshDriver. Problematically, the
+      // stored backtrace may be alive across a GC during which the profiler
+      // itself is disabled. In that case, the JS engine is free to discard
+      // its JIT code. This means that if we inserted such 'J' entries into
+      // the buffer, nsRefreshDriver would now be holding on to a backtrace
+      // with stale JIT code return addresses.
+      MOZ_ASSERT_IF(jsFrames[jsIndex].hasTrackedOptimizations,
+                    jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Ion);
+      if (!aSample->isSamplingCurrentThread &&
+          (jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Ion ||
+           jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Baseline)) {
         aProfile.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
       }
 

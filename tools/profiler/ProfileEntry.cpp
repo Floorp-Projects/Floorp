@@ -11,6 +11,7 @@
 
 // JS
 #include "jsapi.h"
+#include "js/ProfilingFrameIterator.h"
 #include "js/TrackedOptimizationInfo.h"
 
 // JSON
@@ -408,15 +409,26 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                         if (rt) {
                           JSScript *optsScript;
                           jsbytecode *optsPC;
-                          b.Name("opts");
-                          b.BeginArray();
-                            StreamOptimizationTypeInfoOp typeInfoOp(b);
-                            JS::ForEachTrackedOptimizationTypeInfo(rt, pc, typeInfoOp);
-                            StreamOptimizationAttemptsOp attemptOp(b);
-                            JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp,
-                                                                  &optsScript, &optsPC);
-                          b.EndArray();
-                          b.NameValue("optsLine", JS_PCToLineNumber(optsScript, optsPC));
+                          bool hasOptInfo = false;
+                          JS::ProfilingFrameIterator::FrameKind frameKind =
+                            JS::GetProfilingFrameKindFromNativeAddr(rt, pc, &hasOptInfo);
+                          MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
+                                     frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
+                          const char *jitLevelString =
+                            (frameKind == JS::ProfilingFrameIterator::Frame_Ion) ? "ion"
+                                                                                 : "baseline";
+                          b.NameValue("implementation", jitLevelString);
+                          if (hasOptInfo) {
+                              b.Name("opts");
+                              b.BeginArray();
+                                StreamOptimizationTypeInfoOp typeInfoOp(b);
+                                JS::ForEachTrackedOptimizationTypeInfo(rt, pc, typeInfoOp);
+                                StreamOptimizationAttemptsOp attemptOp(b);
+                                JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp,
+                                                                      &optsScript, &optsPC);
+                              b.EndArray();
+                              b.NameValue("optsLine", JS_PCToLineNumber(optsScript, optsPC));
+                          }
                         }
                       }
                     b.EndObject();
