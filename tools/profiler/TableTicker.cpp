@@ -565,6 +565,17 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     if (nativeIndex >= 0)
       nativeStackAddr = (uint8_t *) aNativeStack.sp_array[nativeIndex];
 
+    // If there's a native stack entry which has the same SP as a
+    // pseudo stack entry, pretend we didn't see the native stack
+    // entry.  Ditto for a native stack entry which has the same SP as
+    // a JS stack entry.  In effect this means pseudo or JS entries
+    // trump conflicting native entries.
+    if (nativeStackAddr && (pseudoStackAddr == nativeStackAddr || jsStackAddr == nativeStackAddr)) {
+      nativeStackAddr = nullptr;
+      nativeIndex--;
+      MOZ_ASSERT(pseudoStackAddr || jsStackAddr);
+    }
+
     // Sanity checks.
     MOZ_ASSERT_IF(pseudoStackAddr, pseudoStackAddr != jsStackAddr &&
                                    pseudoStackAddr != nativeStackAddr);
