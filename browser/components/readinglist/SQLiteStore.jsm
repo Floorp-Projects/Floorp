@@ -71,7 +71,7 @@ this.SQLiteStore.prototype = {
 
   /**
    * Adds an item to the store that isn't already present.  See
-   * ReadingList.prototype.addItems.
+   * ReadingList.prototype.addItem.
    *
    * @param items A simple object representing an item.
    * @return Promise<null> Resolved when the store is updated.  Rejected with an
