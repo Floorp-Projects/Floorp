@@ -107,6 +107,9 @@ public:
 private:
   ~Cache();
 
+  // Called when we're destroyed or CCed.
+  void DisconnectFromActor();
+
   // TODO: Replace with actor-per-request model during refactor (bug 1110485)
   RequestId AddRequestPromise(Promise* aPromise, ErrorResult& aRv);
   already_AddRefed<Promise> RemoveRequestPromise(RequestId aRequestId);

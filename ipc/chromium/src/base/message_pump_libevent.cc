@@ -175,6 +175,23 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd,
     should_delete_event = false;
     // Ownership is transferred to the controller.
     evt = mozilla::MakeUnique<event>();
+  } else {
+    // It's illegal to use this function to listen on 2 separate fds with the
+    // same |controller|.
+    if (EVENT_FD(evt.get()) != fd) {
+      NOTREACHED() << "FDs don't match" << EVENT_FD(evt.get()) << "!=" << fd;
+      return false;
+    }
+
+    // Make sure we don't pick up any funky internal libevent masks.
+    int old_interest_mask = evt.get()->ev_events &
+      (EV_READ | EV_WRITE | EV_PERSIST);
+
+    // Combine old/new event masks.
+    event_mask |= old_interest_mask;
+
+    // Must disarm the event before we can reuse it.
+    event_del(evt.get());
   }
 
   // Set current interest mask and message pump for this event.
