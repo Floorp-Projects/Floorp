@@ -174,7 +174,7 @@ ClientTiledPaintedLayer::BeginPaint()
     ParentLayerRect criticalDisplayPort =
       (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
       + displayportMetrics.mCompositionBounds.TopLeft();
-    mPaintData.mCriticalDisplayPort = RoundedOut(
+    mPaintData.mCriticalDisplayPort = RoundedToInt(
       ApplyParentLayerToLayerTransform(transformDisplayPortToLayer, criticalDisplayPort));
   }
   TILING_LOG("TILING %p: Critical displayport %s\n", this, Stringify(mPaintData.mCriticalDisplayPort).c_str());
