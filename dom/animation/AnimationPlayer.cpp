@@ -26,9 +26,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationPlayer)
 NS_INTERFACE_MAP_END
 
 JSObject*
-AnimationPlayer::WrapObject(JSContext* aCx)
+AnimationPlayer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::AnimationPlayerBinding::Wrap(aCx, this);
+  return dom::AnimationPlayerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

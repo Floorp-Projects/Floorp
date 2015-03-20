@@ -3946,7 +3946,7 @@ void
 GCRuntime::markGrayReferences(gcstats::Phase phase)
 {
     gcstats::AutoPhase ap(stats, phase);
-    if (marker.hasBufferedGrayRoots()) {
+    if (hasBufferedGrayRoots()) {
         for (ZoneIterT zone(rt); !zone.done(); zone.next())
             markBufferedGrayRoots(zone);
     } else {
@@ -5373,6 +5373,7 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(marker.isDrained());
     marker.stop();
+    clearBufferedGrayRoots();
 
     uint64_t currentTime = PRMJ_Now();
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
@@ -5496,6 +5497,7 @@ GCRuntime::resetIncrementalGC(const char *reason)
 
         marker.reset();
         marker.stop();
+        clearBufferedGrayRoots();
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
             ResetGrayList(c);
@@ -5723,7 +5725,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         AutoGCRooter::traceAllWrappers(&marker);
 
         /* If we needed delayed marking for gray roots, then collect until done. */
-        if (!marker.hasBufferedGrayRoots()) {
+        if (!hasBufferedGrayRoots()) {
             budget.makeUnlimited();
             isIncremental = false;
         }

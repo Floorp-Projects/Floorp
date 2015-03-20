@@ -710,9 +710,9 @@ WebGLProgram::FindUniformByMappedName(const nsACString& mappedName,
 ////////////////////////////////////////////////////////////////////////////////
 
 JSObject*
-WebGLProgram::WrapObject(JSContext* js)
+WebGLProgram::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLProgramBinding::Wrap(js, this);
+    return dom::WebGLProgramBinding::Wrap(js, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mVertShader, mFragShader)

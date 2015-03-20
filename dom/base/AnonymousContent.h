@@ -27,7 +27,7 @@ public:
   explicit AnonymousContent(Element* aContentNode);
   nsCOMPtr<Element> GetContentNode();
   void SetContentNode(Element* aContentNode);
-  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
   // WebIDL methods
   void SetTextContentForElement(const nsAString& aElementId,

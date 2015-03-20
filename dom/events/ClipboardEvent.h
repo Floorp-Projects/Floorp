@@ -30,9 +30,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return ClipboardEventBinding::Wrap(aCx, this);
+    return ClipboardEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   static already_AddRefed<ClipboardEvent>

@@ -513,6 +513,7 @@ MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
  */
 GCMarker::GCMarker(JSRuntime *rt)
   : JSTracer(rt, nullptr, DoNotTraceWeakMaps),
+    bufferingGrayRootsFailed(false),
     stack(size_t(-1)),
     color(BLACK),
     unmarkedArenaStackTop(nullptr),
@@ -553,9 +554,6 @@ GCMarker::stop()
 
     /* Free non-ballast stack memory. */
     stack.reset();
-
-    resetBufferedGrayRoots();
-    runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Unused;
 }
 
 void
@@ -646,38 +644,12 @@ GCMarker::checkZone(void *p)
 }
 #endif
 
-bool
-GCMarker::hasBufferedGrayRoots() const
-{
-    return runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Okay;
-}
-
 void
-GCMarker::startBufferingGrayRoots()
+GCRuntime::resetBufferedGrayRoots() const
 {
-    MOZ_ASSERT(runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Unused);
-    runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Okay;
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
-        MOZ_ASSERT(zone->gcGrayRoots.empty());
-
-    MOZ_ASSERT(!callback);
-    callback = GrayCallback;
-    MOZ_ASSERT(IsMarkingGray(this));
-}
-
-void
-GCMarker::endBufferingGrayRoots()
-{
-    MOZ_ASSERT(IsMarkingGray(this));
-    callback = nullptr;
-    MOZ_ASSERT(runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Okay ||
-               runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Failed);
-}
-
-void
-GCMarker::resetBufferedGrayRoots()
-{
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
+    MOZ_ASSERT(grayBufferState != GrayBufferState::Okay,
+               "Do not clear the gray buffers unless we are Failed or becoming Unused");
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
 }
 
@@ -700,7 +672,7 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 {
     MOZ_ASSERT(started);
 
-    if (runtime()->gc.grayBufferState == GCRuntime::GrayBufferState::Failed)
+    if (bufferingGrayRootsFailed)
         return;
 
     GrayRoot root(thing, kind);
@@ -726,10 +698,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
           default:
             break;
         }
-        if (!zone->gcGrayRoots.append(root)) {
-            resetBufferedGrayRoots();
-            runtime()->gc.grayBufferState = GCRuntime::GrayBufferState::Failed;
-        }
+        if (!zone->gcGrayRoots.append(root))
+            bufferingGrayRootsFailed = true;
     }
 }
 

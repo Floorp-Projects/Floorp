@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)
 
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void Refresh();
 
@@ -69,7 +69,7 @@ public:
              uint32_t aPluginTagMimeIndex, const nsAString& aMimeType);
   nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aMimeType);
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   const nsString& Type() const
   {

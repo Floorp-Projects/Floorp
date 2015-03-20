@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MathML table tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // 'Simple' table
+      var idxes = [
+        [0, 1],
+        [2, 3]
+      ];
+      testTableIndexes("simple", idxes);
+      var cellsArray = [
+        [kDataCell, kDataCell],
+        [kDataCell, kDataCell]
+      ];
+      var rowsArray = [ROLE_MATHML_TABLE_ROW, ROLE_MATHML_TABLE_ROW];
+      testTableStruct("simple", cellsArray, kNoColumnHeader,
+                      "", "", kMathTable, rowsArray);
+
+      // 'Complex' table
+      idxes = [
+        [0, 0, 0],
+        [1, 1, 2],
+        [1, 1, 3]
+      ];
+      testTableIndexes("complex", idxes);
+      cellsArray = [
+        [kDataCell,   kColSpanned, kColSpanned],
+        [kDataCell,   kColSpanned, kDataCell],
+        [kRowSpanned, kSpanned,    kDataCell],
+      ];
+      rowsArray = [
+        ROLE_MATHML_TABLE_ROW,
+        ROLE_MATHML_TABLE_ROW,
+        ROLE_MATHML_TABLE_ROW
+      ];
+      testTableStruct("complex", cellsArray, kNoColumnHeader,
+                      "", "", kMathTable, rowsArray);
+
+      // 'Simple' table with mlabeledtr
+      // At the moment we do not implement mlabeledtr but just hide the label
+      // with display: none. Thus we just test the role for now. See bug 689641.
+      var idxes = [[0]];
+      testTableIndexes("simple_label", idxes);
+      var cellsArray = [[kDataCell]];
+      rowsArray = [ROLE_MATHML_LABELED_ROW];
+      testTableStruct("simple_label", cellsArray, kNoColumnHeader,
+                      "", "", kMathTable, rowsArray);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <math>
+    <mtable id="simple">
+      <mtr>
+        <mtd>
+          <mn>1</mn>
+        </mtd>
+        <mtd>
+          <mn>0</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>0</mn>
+        </mtd>
+        <mtd>
+          <mn>1</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+
+    <mtable id="complex">
+      <mtr>
+        <mtd columnspan="3">
+          <mtext>1 x 3</mtext>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd rowspan="2" columnspan="2">
+          <mtext>2 x 2</mtext>
+        </mtd>
+        <mtd>
+          <mtext>1 x 1</mtext>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mtext>1 x 1</mtext>
+        </mtd>
+      </mtr>
+    </mtable>
+
+    <mtable id="simple_label">
+      <mlabeledtr>
+        <mtd><mtext>1</mtext></mtd>
+        <mtd><mtext>label</mtext></mtd>
+      </mlabeledtr>
+    </mtable>
+  </math>
+
+</body>
+</html>

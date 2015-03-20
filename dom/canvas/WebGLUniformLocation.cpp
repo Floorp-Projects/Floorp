@@ -265,9 +265,9 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
 ////////////////////////////////////////////////////////////////////////////////
 
 JSObject*
-WebGLUniformLocation::WrapObject(JSContext* js)
+WebGLUniformLocation::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLUniformLocationBinding::Wrap(js, this);
+    return dom::WebGLUniformLocationBinding::Wrap(js, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLUniformLocation)

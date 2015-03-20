@@ -1020,7 +1020,7 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
       return;
     }
 
-    JS::Rooted<JSObject*> obj(cx, exposedStore->WrapObject(cx));
+    JS::Rooted<JSObject*> obj(cx, exposedStore->WrapObject(cx, JS::NullPtr()));
     MOZ_ASSERT(obj);
 
     JS::Rooted<JS::Value> exposedObject(cx, JS::ObjectValue(*obj));

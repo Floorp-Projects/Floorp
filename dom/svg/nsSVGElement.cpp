@@ -92,9 +92,9 @@ nsSVGElement::nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
 }
 
 JSObject*
-nsSVGElement::WrapNode(JSContext *aCx)
+nsSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGElementBinding::Wrap(aCx, this);
+  return SVGElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 //----------------------------------------------------------------------

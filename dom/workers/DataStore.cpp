@@ -42,9 +42,9 @@ WorkerDataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-WorkerDataStore::WrapObject(JSContext* aCx)
+WorkerDataStore::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DataStoreBinding_workers::Wrap(aCx, this);
+  return DataStoreBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 // A WorkerMainThreadRunnable which holds a reference to WorkerDataStore.

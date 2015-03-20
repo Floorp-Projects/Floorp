@@ -98,15 +98,6 @@ static inline bool
 Enumerate(JSContext *cx, HandleObject pobj, jsid id,
           bool enumerable, unsigned flags, Maybe<IdSet>& ht, AutoIdVector *props)
 {
-    // We implement __proto__ using a property on |Object.prototype|, but
-    // because __proto__ is highly deserving of removal, we don't want it to
-    // show up in property enumeration, even if only for |Object.prototype|
-    // (think introspection by Prototype-like frameworks that add methods to
-    // the built-in prototypes).  So exclude __proto__ if the object where the
-    // property was found has no [[Prototype]] and might be |Object.prototype|.
-    if (MOZ_UNLIKELY(!pobj->getTaggedProto().isObject() && JSID_IS_ATOM(id, cx->names().proto)))
-        return true;
-
     if (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() || pobj->getOps()->enumerate) {
         if (!ht) {
             ht.emplace(cx);

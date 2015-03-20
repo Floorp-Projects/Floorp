@@ -220,9 +220,9 @@ DOMSVGNumber::IndexIsValid()
 #endif
 
 JSObject*
-DOMSVGNumber::WrapObject(JSContext* aCx)
+DOMSVGNumber::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::SVGNumberBinding::Wrap(aCx, this);
+  return dom::SVGNumberBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

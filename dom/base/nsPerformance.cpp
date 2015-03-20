@@ -361,9 +361,9 @@ nsPerformanceTiming::IsInitialized() const
 }
 
 JSObject*
-nsPerformanceTiming::WrapObject(JSContext *cx)
+nsPerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceTimingBinding::Wrap(cx, this);
+  return PerformanceTimingBinding::Wrap(cx, this, aGivenProto);
 }
 
 
@@ -383,9 +383,9 @@ nsPerformanceNavigation::~nsPerformanceNavigation()
 }
 
 JSObject*
-nsPerformanceNavigation::WrapObject(JSContext *cx)
+nsPerformanceNavigation::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceNavigationBinding::Wrap(cx, this);
+  return PerformanceNavigationBinding::Wrap(cx, this, aGivenProto);
 }
 
 
@@ -466,9 +466,9 @@ nsPerformance::Now()
 }
 
 JSObject*
-nsPerformance::WrapObject(JSContext *cx)
+nsPerformance::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceBinding::Wrap(cx, this);
+  return PerformanceBinding::Wrap(cx, this, aGivenProto);
 }
 
 void

@@ -124,7 +124,7 @@ public:
     return mParent;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   static already_AddRefed<DOMSVGNumber>
   Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv);

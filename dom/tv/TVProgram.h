@@ -34,7 +34,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // WebIDL (public APIs)
 

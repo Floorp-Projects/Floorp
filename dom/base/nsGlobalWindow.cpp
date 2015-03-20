@@ -574,7 +574,7 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
 : mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
   mRunningTimeout(nullptr), mMutationBits(0), mIsDocumentLoaded(false),
   mIsHandlingResizeEvent(false), mIsInnerWindow(aOuterWindow != nullptr),
-  mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
+  mMayHavePaintEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
   mIsModalContentWindow(false),
@@ -8017,7 +8017,7 @@ PostMessageReadTransferStructuredClone(JSContext* aCx,
     port->BindToOwner(scInfo->window);
     scInfo->ports.Put(port, nullptr);
 
-    JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx));
+    JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx, JS::NullPtr()));
     if (JS_WrapObject(aCx, &obj)) {
       MOZ_ASSERT(port->GetOwner() == scInfo->window);
       returnObject.set(obj);
@@ -9842,47 +9842,6 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
     }
   }
 #endif
-}
-
-void nsGlobalWindow::MaybeUpdateTouchState()
-{
-  FORWARD_TO_INNER_VOID(MaybeUpdateTouchState, ());
-
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
-  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-
-  if(this == focusedWindow) {
-    UpdateTouchState();
-  }
-
-  if (mMayHaveTouchEventListener) {
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-
-    if (observerService) {
-      observerService->NotifyObservers(static_cast<nsIDOMWindow*>(this),
-                                       DOM_TOUCH_LISTENER_ADDED,
-                                       nullptr);
-    }
-  }
-}
-
-void nsGlobalWindow::UpdateTouchState()
-{
-  FORWARD_TO_INNER_VOID(UpdateTouchState, ());
-
-  nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-  if (!mainWidget) {
-    return;
-  }
-
-  if (mMayHaveTouchEventListener) {
-    mainWidget->RegisterTouchWindow();
-  } else {
-    mainWidget->UnregisterTouchWindow();
-  }
 }
 
 void

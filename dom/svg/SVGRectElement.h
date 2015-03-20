@@ -21,7 +21,7 @@ class SVGRectElement MOZ_FINAL : public SVGRectElementBase
 {
 protected:
   explicit SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGRectElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 

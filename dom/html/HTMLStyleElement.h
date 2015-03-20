@@ -83,7 +83,7 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::scoped, aScoped, aError);
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   virtual ~HTMLStyleElement();

@@ -165,9 +165,9 @@ SpeakerManager::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-SpeakerManager::WrapObject(JSContext* aCx)
+SpeakerManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozSpeakerManagerBinding::Wrap(aCx, this);
+  return MozSpeakerManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMETHODIMP

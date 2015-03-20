@@ -21,9 +21,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGUseElement::WrapNode(JSContext *aCx)
+SVGUseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGUseElementBinding::Wrap(aCx, this);
+  return SVGUseElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 ////////////////////////////////////////////////////////////////////////
