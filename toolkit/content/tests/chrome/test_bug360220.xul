@@ -28,15 +28,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=360220
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+SimpleTest.waitForExplicitFinish();
+
 /** Test for Bug 360220 **/
 
 var menulist = document.getElementById("menulist");
 var secondItem = document.getElementById("secondItem");
 menulist.selectedItem = secondItem;
 
-ok(menulist.label == "bar", "second item was not selected");
+is(menulist.label, "bar", "second item was not selected");
+
+let mutObserver = new MutationObserver(() => {
+  is(menulist.label, "new label", "menulist label was not updated to the label of its selected item");
+  done();
+});
+mutObserver.observe(menulist, { attributeFilter: ['label'] });
 secondItem.label = "new label";
-ok(menulist.label == "new label", "menulist label was not updated to the label of its selected item");
+
+let failureTimeout = setTimeout(function() {
+  ok(false, "menulist label should have updated");
+  done();
+}, 2000);
+
+function done() {
+  mutObserver.disconnect();
+  clearTimeout(failureTimeout);
+  SimpleTest.finish();
+}
 ]]>
 </script>
 
