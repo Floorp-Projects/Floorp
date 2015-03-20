@@ -54,7 +54,6 @@ public class OverlayToastHelper {
 
         if (retryListener == null) {
             // Hide the retry button.
-            layout.findViewById(R.id.overlay_toast_separator).setVisibility(View.GONE);
             layout.findViewById(R.id.overlay_toast_retry_btn).setVisibility(View.GONE);
         } else {
             // Set up the button to perform a retry.
@@ -68,7 +67,6 @@ public class OverlayToastHelper {
         }
 
         Toast toast = new Toast(context);
-        toast.setGravity(Gravity.CENTER_VERTICAL | Gravity.BOTTOM, 0, 0);
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);
         toast.show();
