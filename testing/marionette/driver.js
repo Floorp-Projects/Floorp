@@ -26,6 +26,7 @@ Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 Cu.import("chrome://marionette/content/marionette-simpletest.js");
+Cu.import("chrome://marionette/content/modal.js");
 
 loader.loadSubScript("chrome://marionette/content/marionette-common.js");
 
@@ -45,8 +46,6 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
-const COMMON_DIALOG_LOADED = "common-dialog-loaded";
-const TABMODAL_DIALOG_LOADED = "tabmodal-dialog-loaded";
 
 const logger = Log.repository.getLogger("Marionette");
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
@@ -105,7 +104,6 @@ this.Context.fromString = function(s) {
 let ListenerProxy = function(mmFn, sendAsyncFn, curBrowserFn) {
   this.curCmdId = null;
   this.sendAsync = sendAsyncFn;
-  this.ondialog = d => {};
 
   this.mmFn_ = mmFn;
   this.curBrowserFn_ = curBrowserFn;
@@ -123,82 +121,52 @@ ListenerProxy.prototype.__noSuchMethod__ = function*(name, args) {
   const ok = "Marionette:ok";
   const val = "Marionette:done";
   const err = "Marionette:error";
-  const all = [ok, val, err];
 
   let proxy = new Promise((resolve, reject) => {
-    let listeners = [];
-    let obs = new Map();
-    obs.add = function(modalHandler) {
-      if (Services.appinfo.name != "Firefox")
-        return;
-      this.set(COMMON_DIALOG_LOADED, modalHandler);
-      this.set(TABMODAL_DIALOG_LOADED, modalHandler);
-      for (let [t,o] of this) {
-        Services.obs.addObserver(o, t, false);
-      }
-    };
-    obs.remove = function() {
-      for (let [t,o] of this) {
-        Services.obs.removeObserver(o, t);
-      }
-    };
-
-    let okListener = () => resolve();
-    let valListener = msg => resolve(msg.json.value);
-    let errListener = msg => reject(
-        "error" in msg.objects ? msg.objects.error : msg.json);
-
-    let handleDialogLoad = function(subject, topic) {
-      obs.remove();
-      this.cancelRequest();
-
-      // we shouldn't return to the client due to the modal associated with the
-      // jsdebugger
-      let clickToStart;
-      try {
-        clickToStart = Services.prefs.getBoolPref(CLICK_TO_START_PREF);
-      } catch (e) {}
-      if (clickToStart) {
-        Services.prefs.setBoolPref(CLICK_TO_START_PREF, false);
-        return;
-      }
-
-      let winr;
-      if (topic == COMMON_DIALOG_LOADED)
-        winr = Cu.getWeakReference(subject);
-      let d = new ModalDialog(() => this.curBrowser, winr);
-      this.ondialog(d);
-
-      // shortcut to return a response immediately,
-      // causes next reply from listener to be out-of-sync
-      resolve();
-    };
-
-    let removeListeners = (name, listenerFn) => {
-      let fn = msg => {
+    let removeListeners = (name, fn) => {
+      let rmFn = msg => {
         if (this.isOutOfSync(msg.json.command_id)) {
           logger.warn("Skipping out-of-sync response from listener: " +
               msg.name + msg.json.toSource());
           return;
         }
 
-        listeners.map(l => this.mm.removeMessageListener(l[0], l[1]));
-        obs.remove();
+        listeners.remove();
+        modal.removeHandler(handleDialog);
 
-        listenerFn(msg);
+        fn(msg);
         this.curCmdId = null;
       };
 
-      listeners.push([name, fn]);
-      return fn;
+      listeners.push([name, rmFn]);
+      return rmFn;
     };
 
-    this.mm.addMessageListener(ok, removeListeners(ok, okListener));
-    this.mm.addMessageListener(val, removeListeners(val, valListener));
-    this.mm.addMessageListener(err, removeListeners(err, errListener));
+    let listeners = [];
+    listeners.add = () => {
+      this.mm.addMessageListener(ok, removeListeners(ok, okListener));
+      this.mm.addMessageListener(val, removeListeners(val, valListener));
+      this.mm.addMessageListener(err, removeListeners(err, errListener));
+    };
+    listeners.remove = () =>
+        listeners.map(l => this.mm.removeMessageListener(l[0], l[1]));
 
-    // install observers for global- and tab modal dialogues
-    obs.add(handleDialogLoad.bind(this));
+    let okListener = () => resolve();
+    let valListener = msg => resolve(msg.json.value);
+    let errListener = msg => reject(
+        "error" in msg.objects ? msg.objects.error : msg.json);
+
+    let handleDialog = function(subject, topic) {
+      listeners.remove();
+      modal.removeHandler(handleDialog);
+      this.sendAsync("cancelRequest");
+      resolve();
+    }.bind(this);
+
+    // start content process listeners, and install observers for global-
+    // and tab modal dialogues
+    listeners.add();
+    modal.addHandler(handleDialog);
 
     // convert to array if passed arguments
     let msg;
@@ -269,7 +237,6 @@ this.GeckoDriver = function(appName, device, emulator) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.dialog = null;
 
   this.sessionCapabilities = {
     // Mandated capabilities
@@ -302,7 +269,15 @@ this.GeckoDriver = function(appName, device, emulator) {
       () => this.mm,
       this.sendAsync.bind(this),
       () => this.curBrowser);
-  this.listener.ondialog = d => this.dialog = d;
+
+  this.dialog = null;
+  let handleDialog = (subject, topic) => {
+    let winr;
+    if (topic == modal.COMMON_DIALOG_LOADED)
+      winr = Cu.getWeakReference(subject);
+    this.dialog = new modal.Dialog(() => this.curBrowser, winr);
+  };
+  modal.addHandler(handleDialog);
 };
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
@@ -3035,46 +3010,6 @@ GeckoDriver.prototype.commands = {
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog
 };
-
-/**
- * Represents the current modal dialogue.
- *
- * @param {function(): BrowserObj} curBrowserFn
- *     Function that returns the current BrowserObj.
- * @param {?nsIWeakReference} winRef
- *     A weak reference to the current ChromeWindow.
- */
-this.ModalDialog = function(curBrowserFn, winRef=null) {
-  Object.defineProperty(this, "curBrowser", {
-    get() { return curBrowserFn(); }
-  });
-  this.win_ = winRef;
-};
-
-/**
- * Returns the ChromeWindow associated with an open dialog window if it is
- * currently attached to the dom.
- *
- */
-Object.defineProperty(ModalDialog.prototype, "window", {
-  get() {
-    if (this.win_ !== null) {
-      let win = this.win_.get();
-      if (win && win.parent)
-        return win;
-    }
-    return null;
-  }
-});
-
-Object.defineProperty(ModalDialog.prototype, "ui", {
-  get() {
-    let win = this.window;
-    if (win)
-      return win.Dialog.ui;
-    return this.curBrowser.getTabModalUI();
-  }
-});
 
 /**
  * Creates a BrowserObj.  BrowserObjs handle interactions with the
