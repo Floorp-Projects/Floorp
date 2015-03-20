@@ -12,7 +12,6 @@
 #include "nsID.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
 #include "nsTArrayForwardDeclare.h"
 
 class nsIThread;
@@ -30,7 +29,6 @@ class PCacheStreamControlParent;
 {0x8e5da7c9, 0x0940, 0x4f1d, \
   {0x97, 0x25, 0x5c, 0x59, 0x38, 0xdd, 0xb9, 0x9f}}
 
-
 // Custom stream class for Request and Response bodies being read from
 // a Cache.  The main purpose of this class is to report back to the
 // Cache's Manager when the stream is closed.  This allows the Cache to
@@ -42,34 +40,9 @@ class PCacheStreamControlParent;
 // stream channel.  For example, Cache.put() can detect that the content
 // script is passing a Cache-originated-stream back into the Cache
 // again.  This enables certain optimizations.
-class ReadStream MOZ_FINAL : public nsIInputStream
+class ReadStream : public nsIInputStream
 {
 public:
-  // Interface that lets the StreamControl classes interact with
-  // our private inner stream.
-  class Controllable
-  {
-  public:
-    // Closes the stream, notifies the stream control, and then forgets
-    // the stream control.
-    virtual void
-    CloseStream() = 0;
-
-    // Closes the stream and then forgets the stream control.  Does not
-    // notify.
-    virtual void
-    CloseStreamWithoutReporting() = 0;
-
-    virtual bool
-    MatchId(const nsID& aId) const = 0;
-
-    NS_IMETHOD_(MozExternalRefCountType)
-    AddRef(void) = 0;
-
-    NS_IMETHOD_(MozExternalRefCountType)
-    Release(void) = 0;
-  };
-
   static already_AddRefed<ReadStream>
   Create(const PCacheReadStreamOrVoid& aReadStreamOrVoid);
 
@@ -83,21 +56,39 @@ public:
   void Serialize(PCacheReadStreamOrVoid* aReadStreamOut);
   void Serialize(PCacheReadStream* aReadStreamOut);
 
-private:
-  class Inner;
+  // methods called from the child and parent CacheStreamControl actors
+  void CloseStream();
+  void CloseStreamWithoutReporting();
+  bool MatchId(const nsID& aId) const;
 
-  explicit ReadStream(Inner* aInner);
-  ~ReadStream();
+protected:
+  class NoteClosedRunnable;
+  class ForgetRunnable;
 
-  // Hold a strong ref to an inner class that actually implements the
-  // majority of the stream logic.  Before releasing this ref the outer
-  // ReadStream guarantees it will call Close() on the inner stream.
-  // This is essential for the inner stream to avoid dealing with the
-  // implicit close that can happen when a stream is destroyed.
-  nsRefPtr<Inner> mInner;
+  ReadStream(const nsID& aId, nsIInputStream* aStream);
+  virtual ~ReadStream();
+
+  void NoteClosed();
+  void Forget();
+
+  virtual void NoteClosedOnOwningThread() = 0;
+  virtual void ForgetOnOwningThread() = 0;
+  virtual void SerializeControl(PCacheReadStream* aReadStreamOut) = 0;
+
+  virtual void
+  SerializeFds(PCacheReadStream* aReadStreamOut,
+               const nsTArray<mozilla::ipc::FileDescriptor>& fds) = 0;
+
+  const nsID mId;
+  nsCOMPtr<nsIInputStream> mStream;
+  nsCOMPtr<nsIInputStream> mSnappyStream;
+  nsCOMPtr<nsIThread> mOwningThread;
+  bool mClosed;
 
 public:
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_CACHE_READSTREAM_IID);
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 };
