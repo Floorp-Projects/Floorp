@@ -36,6 +36,7 @@ enum JsepSdpType {
   kJsepSdpOffer,
   kJsepSdpAnswer,
   kJsepSdpPranswer,
+  kJsepSdpRollback
 };
 
 struct JsepOAOptions {};
