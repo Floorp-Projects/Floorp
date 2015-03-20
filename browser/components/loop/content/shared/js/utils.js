@@ -168,6 +168,228 @@ loop.shared.utils = (function(mozL10n) {
     );
   }
 
+  /**
+   * Binary-compatible Base64 decoding.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {String} base64str The string to decode.
+   * @return {Uint8Array} The decoded result in array format.
+   */
+  function atob(base64str) {
+    var strippedEncoding = base64str.replace(/[^A-Za-z0-9\+\/]/g, "");
+    var inLength = strippedEncoding.length;
+    var outLength = inLength * 3 + 1 >> 2;
+    var result = new Uint8Array(outLength);
+
+    var mod3;
+    var mod4;
+    var uint24 = 0;
+    var outIndex = 0;
+
+    for (var inIndex = 0; inIndex < inLength; inIndex++) {
+      mod4 = inIndex & 3;
+      uint24 |= _b64ToUint6(strippedEncoding.charCodeAt(inIndex)) << 6 * (3 - mod4);
+
+      if (mod4 === 3 || inLength - inIndex === 1) {
+        for (mod3 = 0; mod3 < 3 && outIndex < outLength; mod3++, outIndex++) {
+          result[outIndex] = uint24 >>> (16 >>> mod3 & 24) & 255;
+        }
+        uint24 = 0;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Binary-compatible Base64 encoding.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {Uint8Array} bytes The data to encode.
+   * @return {String} The base64 encoded string.
+   */
+  function btoa(bytes) {
+    var mod3 = 2;
+    var result = "";
+    var length = bytes.length;
+    var uint24 = 0;
+
+    for (var index = 0; index < length; index++) {
+      mod3 = index % 3;
+      if (index > 0 && (index * 4 / 3) % 76 === 0) {
+        result += "\r\n";
+      }
+      uint24 |= bytes[index] << (16 >>> mod3 & 24);
+      if (mod3 === 2 || length - index === 1) {
+        result += String.fromCharCode(_uint6ToB64(uint24 >>> 18 & 63),
+          _uint6ToB64(uint24 >>> 12 & 63),
+          _uint6ToB64(uint24 >>> 6 & 63),
+          _uint6ToB64(uint24 & 63));
+        uint24 = 0;
+      }
+    }
+
+    return result.substr(0, result.length - 2 + mod3) +
+      (mod3 === 2 ? "" : mod3 === 1 ? "=" : "==");
+  }
+
+  /**
+   * Utility function to decode a base64 character into an integer.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {Number} chr The character code to decode.
+   * @return {Number} The decoded value.
+   */
+  function _b64ToUint6 (chr) {
+    return chr > 64 && chr < 91  ? chr - 65 :
+           chr > 96 && chr < 123 ? chr - 71 :
+           chr > 47 && chr < 58  ? chr + 4  :
+           chr === 43            ? 62       :
+           chr === 47            ? 63       : 0;
+  }
+
+  /**
+   * Utility function to encode an integer into a base64 character code.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {Number} uint6 The number to encode.
+   * @return {Number} The encoded value.
+   */
+  function _uint6ToB64 (uint6) {
+    return uint6 < 26   ? uint6 + 65 :
+           uint6 < 52   ? uint6 + 71 :
+           uint6 < 62   ? uint6 - 4  :
+           uint6 === 62 ? 43         :
+           uint6 === 63 ? 47         : 65;
+  }
+
+  /**
+   * Utility function to convert a string into a uint8 array.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {String} inString The string to convert.
+   * @return {Uint8Array} The converted string in array format.
+   */
+  function strToUint8Array(inString) {
+    var inLength = inString.length;
+    var arrayLength = 0;
+    var chr;
+
+    // Mapping.
+    for (var mapIndex = 0; mapIndex < inLength; mapIndex++) {
+      chr = inString.charCodeAt(mapIndex);
+      arrayLength += chr < 0x80      ? 1 :
+                     chr < 0x800     ? 2 :
+                     chr < 0x10000   ? 3 :
+                     chr < 0x200000  ? 4 :
+                     chr < 0x4000000 ? 5 : 6;
+    }
+
+    var result = new Uint8Array(arrayLength);
+    var index = 0;
+
+    // Transcription.
+    for (var chrIndex = 0; index < arrayLength; chrIndex++) {
+      chr = inString.charCodeAt(chrIndex);
+      if (chr < 128) {
+        // One byte.
+        result[index++] = chr;
+      } else if (chr < 0x800) {
+        // Two bytes.
+        result[index++] = 192 + (chr >>> 6);
+        result[index++] = 128 + (chr & 63);
+      } else if (chr < 0x10000) {
+        // Three bytes.
+        result[index++] = 224 + (chr >>> 12);
+        result[index++] = 128 + (chr >>> 6 & 63);
+        result[index++] = 128 + (chr & 63);
+      } else if (chr < 0x200000) {
+        // Four bytes.
+        result[index++] = 240 + (chr >>> 18);
+        result[index++] = 128 + (chr >>> 12 & 63);
+        result[index++] = 128 + (chr >>> 6 & 63);
+        result[index++] = 128 + (chr & 63);
+      } else if (chr < 0x4000000) {
+        // Five bytes.
+        result[index++] = 248 + (chr >>> 24);
+        result[index++] = 128 + (chr >>> 18 & 63);
+        result[index++] = 128 + (chr >>> 12 & 63);
+        result[index++] = 128 + (chr >>> 6 & 63);
+        result[index++] = 128 + (chr & 63);
+      } else { // if (chr <= 0x7fffffff)
+        // Six bytes.
+        result[index++] = 252 + (chr >>> 30);
+        result[index++] = 128 + (chr >>> 24 & 63);
+        result[index++] = 128 + (chr >>> 18 & 63);
+        result[index++] = 128 + (chr >>> 12 & 63);
+        result[index++] = 128 + (chr >>> 6 & 63);
+        result[index++] = 128 + (chr & 63);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Utility function to change a uint8 based integer array to a string.
+   *
+   * Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+   *
+   * @param {Uint8Array} arrayBytes Array to convert.
+   * @param {String} The array as a string.
+   */
+  function Uint8ArrayToStr(arrayBytes) {
+    var result = "";
+    var length = arrayBytes.length;
+    var part;
+
+    for (var index = 0; index < length; index++) {
+      part = arrayBytes[index];
+      result += String.fromCharCode(
+        part > 251 && part < 254 && index + 5 < length ?
+          // Six bytes.
+          // (part - 252 << 30) may be not so safe in ECMAScript! So...:
+          (part - 252) * 1073741824 +
+          (arrayBytes[++index] - 128 << 24) +
+          (arrayBytes[++index] - 128 << 18) +
+          (arrayBytes[++index] - 128 << 12) +
+          (arrayBytes[++index] - 128 << 6) +
+           arrayBytes[++index] - 128 :
+        part > 247 && part < 252 && index + 4 < length ?
+          // Five bytes.
+          (part - 248 << 24) +
+          (arrayBytes[++index] - 128 << 18) +
+          (arrayBytes[++index] - 128 << 12) +
+          (arrayBytes[++index] - 128 << 6) +
+           arrayBytes[++index] - 128 :
+        part > 239 && part < 248 && index + 3 < length ?
+          // Four bytes.
+          (part - 240 << 18) +
+          (arrayBytes[++index] - 128 << 12) +
+          (arrayBytes[++index] - 128 << 6) +
+           arrayBytes[++index] - 128 :
+        part > 223 && part < 240 && index + 2 < length ?
+          // Three bytes.
+          (part - 224 << 12) +
+          (arrayBytes[++index] - 128 << 6) +
+           arrayBytes[++index] - 128 :
+        part > 191 && part < 224 && index + 1 < length ?
+          // Two bytes.
+          (part - 192 << 6) +
+           arrayBytes[++index] - 128 :
+          // One byte.
+          part
+      );
+    }
+
+    return result;
+  }
+
   return {
     CALL_TYPES: CALL_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
@@ -183,6 +405,10 @@ loop.shared.utils = (function(mozL10n) {
     isFirefoxOS: isFirefoxOS,
     isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,
-    locationData: locationData
+    locationData: locationData,
+    atob: atob,
+    btoa: btoa,
+    strToUint8Array: strToUint8Array,
+    Uint8ArrayToStr: Uint8ArrayToStr
   };
 })(document.mozL10n || navigator.mozL10n);
