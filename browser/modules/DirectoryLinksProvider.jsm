@@ -563,10 +563,18 @@ let DirectoryLinksProvider = {
     // from url to relatedLink. Thus, each link has an equal chance of being chosen at
     // random from flattenedLinks if it appears only once.
     let possibleLinks = new Map();
+    let targetedSites = new Map();
     this._topSitesWithRelatedLinks.forEach(topSiteWithRelatedLink => {
       let relatedLinksMap = this._relatedLinks.get(topSiteWithRelatedLink);
       relatedLinksMap.forEach((relatedLink, url) => {
         possibleLinks.set(url, relatedLink);
+
+        // Keep a map of URL to targeted sites. We later use this to show the user
+        // what site they visited to trigger this suggestion.
+        if (!targetedSites.get(url)) {
+          targetedSites.set(url, []);
+        }
+        targetedSites.get(url).push(topSiteWithRelatedLink);
       })
     });
     let flattenedLinks = [...possibleLinks.values()];
@@ -578,9 +586,16 @@ let DirectoryLinksProvider = {
     // Show the new directory tile.
     this._callObservers("onLinkChanged", {
       url: chosenRelatedLink.url,
+      title: chosenRelatedLink.title,
       frecency: RELATED_FRECENCY,
       lastVisitDate: chosenRelatedLink.lastVisitDate,
       type: "related",
+
+      // Choose the first site a user has visited as the target. In the future,
+      // this should be the site with the highest frecency. However, we currently
+      // store frecency by URL not by site.
+      targetedSite: targetedSites.get(chosenRelatedLink.url).length ?
+        targetedSites.get(chosenRelatedLink.url)[0] : null
     });
     return chosenRelatedLink;
    },
