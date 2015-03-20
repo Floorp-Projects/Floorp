@@ -7906,26 +7906,26 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
   const nsCSSValue* borderSpacingValue = aRuleData->ValueForBorderSpacing();
+  // border-spacing: pair(length), inherit
   if (borderSpacingValue->GetUnit() != eCSSUnit_Null) {
-    // border-spacing-x/y: length, inherit
-    nsStyleCoord parentX(parentTable->mBorderSpacingX,
-                         nsStyleCoord::CoordConstructor);
-    nsStyleCoord parentY(parentTable->mBorderSpacingY,
-                         nsStyleCoord::CoordConstructor);
-    nsStyleCoord coordX, coordY;
+    nsStyleCoord parentCol(parentTable->mBorderSpacingCol,
+                           nsStyleCoord::CoordConstructor);
+    nsStyleCoord parentRow(parentTable->mBorderSpacingRow,
+                           nsStyleCoord::CoordConstructor);
+    nsStyleCoord coordCol, coordRow;
 
 #ifdef DEBUG
     bool result =
 #endif
       SetPairCoords(*borderSpacingValue,
-                    coordX, coordY, parentX, parentY,
+                    coordCol, coordRow, parentCol, parentRow,
                     SETCOORD_LH | SETCOORD_INITIAL_ZERO |
                       SETCOORD_CALC_LENGTH_ONLY |
                       SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INHERIT,
                     aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(result, "malformed table border value");
-    table->mBorderSpacingX = coordX.GetCoordValue();
-    table->mBorderSpacingY = coordY.GetCoordValue();
+    table->mBorderSpacingCol = coordCol.GetCoordValue();
+    table->mBorderSpacingRow = coordRow.GetCoordValue();
   }
 
   // caption-side: enum, inherit, initial

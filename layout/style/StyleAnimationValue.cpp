@@ -3017,8 +3017,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);
           nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          nscoordToCSSValue(styleTableBorder->mBorderSpacingX, pair->mXValue);
-          nscoordToCSSValue(styleTableBorder->mBorderSpacingY, pair->mYValue);
+          nscoordToCSSValue(styleTableBorder->mBorderSpacingCol, pair->mXValue);
+          nscoordToCSSValue(styleTableBorder->mBorderSpacingRow, pair->mYValue);
           aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;

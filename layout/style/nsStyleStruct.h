@@ -2300,8 +2300,8 @@ struct nsStyleTableBorder {
                           nsChangeHint_ClearAncestorIntrinsics);
   }
 
-  nscoord       mBorderSpacingX;// [inherited]
-  nscoord       mBorderSpacingY;// [inherited]
+  nscoord       mBorderSpacingCol;// [inherited]
+  nscoord       mBorderSpacingRow;// [inherited]
   uint8_t       mBorderCollapse;// [inherited]
   uint8_t       mCaptionSide;   // [inherited]
   uint8_t       mEmptyCells;    // [inherited]
