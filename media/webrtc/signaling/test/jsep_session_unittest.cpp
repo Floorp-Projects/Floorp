@@ -1932,10 +1932,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
   ASSERT_LE(1U, mSessionOff.GetTransports().size());
   ASSERT_LE(1U, mSessionAns.GetTransports().size());
 
-  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
-            mSessionOff.GetTransports()[0]->mState);
-  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
-            mSessionAns.GetTransports()[0]->mState);
+  ASSERT_EQ(0U, mSessionOff.GetTransports()[0]->mComponents);
+  ASSERT_EQ(0U, mSessionAns.GetTransports()[0]->mComponents);
 }
 
 TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
@@ -3207,6 +3205,98 @@ TEST_F(JsepSessionTest, LowDynamicPayloadType)
   ASSERT_TRUE(codec);
   ASSERT_EQ("opus", codec->mName);
   ASSERT_EQ("12", codec->mDefaultPt);
+}
+
+TEST_P(JsepSessionTest, TestGlareRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+  JsepOfferOptions options;
+
+  std::string offer;
+  ASSERT_EQ(NS_OK, mSessionAns.CreateOffer(options, &offer));
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetLocalDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionAns.GetState());
+
+  ASSERT_EQ(NS_OK, mSessionOff.CreateOffer(options, &offer));
+  ASSERT_EQ(NS_OK,
+            mSessionOff.SetLocalDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetRemoteDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+}
+
+TEST_P(JsepSessionTest, TestRejectOfferRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetRemoteDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+  ASSERT_EQ(types.size(), mSessionAns.GetRemoteTracksRemoved().size());
+
+  ASSERT_EQ(NS_OK,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionOff.GetState());
+
+  OfferAnswer();
+}
+
+TEST_P(JsepSessionTest, TestInvalidRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  std::string offer = CreateOffer();
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetLocalOffer(offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetRemoteOffer(offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+
+  std::string answer = CreateAnswer();
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+
+  SetLocalAnswer(answer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetRemoteAnswer(answer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
 }
 
 } // namespace mozilla

@@ -28,7 +28,7 @@ interface IPeerConnectionObserver : nsISupports
 {
 };
 
-[scriptable, uuid(c9c31639-1a49-4533-8429-f6a348c4d8c3)]
+[scriptable, uuid(14afc8e7-e421-4d0c-99a5-69308d871481)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -38,6 +38,7 @@ interface IPeerConnection : nsISupports
   const long kActionOffer = 0;
   const long kActionAnswer = 1;
   const long kActionPRAnswer = 2;
+  const long kActionRollback = 3;
 
   const long kIceGathering = 0;
   const long kIceWaiting = 1;

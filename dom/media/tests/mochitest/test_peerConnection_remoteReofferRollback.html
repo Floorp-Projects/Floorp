@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "952145",
+    title: "Rollback remote reoffer"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}, {audio: true}],
+                                   [{audio: true}]);
+          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+      ]
+    );
+    test.chain.replaceAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION',
+      [
+        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          test.pcLocal.setupIceCandidateHandler(test);
+          if (test.steeplechase) {
+            test.pcLocal.endOfTrickleIce.then(() => {
+              send_message({"type": "end_of_trickle_ice"});
+            });
+          }
+        },
+
+        function PC_REMOTE_ROLLBACK(test) {
+          return test.setRemoteDescription(
+              test.pcRemote,
+              new mozRTCSessionDescription({ type: "rollback" }),
+              STABLE);
+        },
+
+        function PC_LOCAL_ROLLBACK(test) {
+          return test.setLocalDescription(
+              test.pcLocal,
+              new mozRTCSessionDescription({ type: "rollback", sdp: ""}),
+              STABLE);
+        },
+
+        // Rolling back should shut down gathering
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
+      ],
+      1 // Second PC_REMOTE_SET_REMOTE_DESCRIPTION
+    );
+    test.chain.append(commandsPeerConnectionOfferAnswer);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
+
