@@ -633,7 +633,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, IsValidTerminatingScope(&scopeChainArg));
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
@@ -641,7 +641,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
         MOZ_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
     }
     RootedObject terminatingScope(cx, &scopeChainArg);
-    while (!IsValidTerminatingScope(terminatingScope))
+    while (IsSyntacticScope(terminatingScope))
         terminatingScope = terminatingScope->enclosingScope();
     MOZ_ASSERT(terminatingScope->is<GlobalObject>() ||
                script->hasPollutedGlobalScope());
