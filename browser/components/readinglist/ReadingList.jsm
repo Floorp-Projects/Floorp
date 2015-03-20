@@ -713,6 +713,14 @@ ReadingListItem.prototype = {
   },
 
   /**
+   * The URL to a preview image.
+   * @type string
+   */
+   get preview() {
+     return this._properties.preview;
+   },
+
+  /**
    * Sets the given properties of the item, optionally calling list.updateItem().
    *
    * @param props A simple object containing the properties to set.
