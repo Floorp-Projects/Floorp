@@ -29,7 +29,7 @@ public:
   explicit TextTrackList(nsPIDOMWindow* aOwnerWindow);
   TextTrackList(nsPIDOMWindow* aOwnerWindow, TextTrackManager* aTextTrackManager);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   uint32_t Length() const
   {

@@ -22,9 +22,9 @@ namespace dom {
 class SVGAnimatedLength;
 
 JSObject*
-SVGRectElement::WrapNode(JSContext *aCx)
+SVGRectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGRectElementBinding::Wrap(aCx, this);
+  return SVGRectElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =

@@ -256,7 +256,7 @@ public:
     // Try for a perfect match first.
     nsRefPtr<CachedSurface> surface;
     mSurfaces.Get(aSurfaceKey, getter_AddRefs(surface));
-    if (surface) {
+    if (surface && surface->IsDecoded()) {
       return surface.forget();
     }
 

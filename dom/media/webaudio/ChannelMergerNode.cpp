@@ -82,9 +82,9 @@ ChannelMergerNode::~ChannelMergerNode()
 }
 
 JSObject*
-ChannelMergerNode::WrapObject(JSContext* aCx)
+ChannelMergerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ChannelMergerNodeBinding::Wrap(aCx, this);
+  return ChannelMergerNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 }

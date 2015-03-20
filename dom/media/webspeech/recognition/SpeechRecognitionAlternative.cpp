@@ -33,9 +33,9 @@ SpeechRecognitionAlternative::~SpeechRecognitionAlternative()
 }
 
 JSObject*
-SpeechRecognitionAlternative::WrapObject(JSContext* aCx)
+SpeechRecognitionAlternative::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SpeechRecognitionAlternativeBinding::Wrap(aCx, this);
+  return SpeechRecognitionAlternativeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

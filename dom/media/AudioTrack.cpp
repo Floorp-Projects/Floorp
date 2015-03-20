@@ -23,9 +23,9 @@ AudioTrack::AudioTrack(const nsAString& aId,
 }
 
 JSObject*
-AudioTrack::WrapObject(JSContext* aCx)
+AudioTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioTrackBinding::Wrap(aCx, this);
+  return AudioTrackBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

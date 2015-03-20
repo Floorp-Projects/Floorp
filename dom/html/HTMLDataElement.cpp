@@ -24,9 +24,9 @@ HTMLDataElement::~HTMLDataElement()
 NS_IMPL_ELEMENT_CLONE(HTMLDataElement)
 
 JSObject*
-HTMLDataElement::WrapNode(JSContext* aCx)
+HTMLDataElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLDataElementBinding::Wrap(aCx, this);
+  return HTMLDataElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

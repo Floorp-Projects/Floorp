@@ -27,7 +27,7 @@ protected:
   friend nsresult (::NS_NewSVGClipPathElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGClipPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

@@ -265,9 +265,9 @@ EventSource::Init(nsISupports* aOwner,
 }
 
 /* virtual */ JSObject*
-EventSource::WrapObject(JSContext* aCx)
+EventSource::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return EventSourceBinding::Wrap(aCx, this);
+  return EventSourceBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<EventSource>

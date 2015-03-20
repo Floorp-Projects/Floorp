@@ -76,9 +76,9 @@ DOMCursor::Continue(ErrorResult& aRv)
 }
 
 /* virtual */ JSObject*
-DOMCursor::WrapObject(JSContext* aCx)
+DOMCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMCursorBinding::Wrap(aCx, this);
+  return DOMCursorBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

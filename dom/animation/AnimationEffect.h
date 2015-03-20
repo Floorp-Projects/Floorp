@@ -27,7 +27,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationEffect)
 
   Animation* GetParentObject() const { return mAnimation; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // AnimationEffect interface
   void GetName(nsString& aRetVal) const {

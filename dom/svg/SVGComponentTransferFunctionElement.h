@@ -50,7 +50,7 @@ public:
   AttributeMap ComputeAttributes();
 
   // WebIDL
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE = 0;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE = 0;
   already_AddRefed<SVGAnimatedEnumeration> Type();
   already_AddRefed<DOMSVGAnimatedNumberList> TableValues();
   already_AddRefed<SVGAnimatedNumber> Slope();
@@ -102,7 +102,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -127,7 +127,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -152,7 +152,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 };
 
 } // namespace dom
@@ -177,7 +177,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 };
 
 } // namespace dom

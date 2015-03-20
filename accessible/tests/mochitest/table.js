@@ -28,6 +28,13 @@ const kListboxColumnHeader = 1;
 const kTreeColumnHeader = 2;
 
 /**
+ * Constants to define table type.
+ */
+const kTable = 0;
+const kTreeTable = 1;
+const kMathTable = 2;
+
+/**
  * Test table structure and related methods.
  *
  * @param  aIdentifier     [in] table accessible identifier
@@ -37,10 +44,11 @@ const kTreeColumnHeader = 2;
  *                          arranged into the list.
  * @param  aCaption        [in] caption text if any
  * @param  aSummary        [in] summary text if any
- * @param  aIsTreeTable    [in] specifies whether given table is tree table
+ * @param  aTableType      [in] specifies the table type.
+ * @param  aRowRoles       [in] array of row roles.
  */
 function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
-                         aCaption, aSummary, aIsTreeTable)
+                         aCaption, aSummary, aTableType, aRowRoles)
 {
   var tableNode = getNode(aIdentifier);
   var isGrid = tableNode.getAttribute("role") == "grid" ||
@@ -52,9 +60,19 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
 
   // Test table accessible tree.
   var tableObj = {
-    role: aIsTreeTable ? ROLE_TREE_TABLE : ROLE_TABLE,
     children: []
   };
+  switch (aTableType) {
+    case kTable:
+      tableObj.role = ROLE_TABLE;
+      break;
+    case kTreeTable:
+      tableObj.role = ROLE_TREE_TABLE;
+      break;
+    case kMathTable:
+      tableObj.role = ROLE_MATHML_TABLE;
+      break;
+  }
 
   // caption accessible handling
   if (aCaption) {
@@ -99,7 +117,7 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
   // rows and cells accessibles
   for (var rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     var rowObj = {
-      role: ROLE_ROW,
+      role: aRowRoles ? aRowRoles[rowIdx] : ROLE_ROW,
       children: []
     };
 
@@ -109,7 +127,8 @@ function testTableStruct(aIdentifier, aCellsArray, aColHeaderType,
       var role = ROLE_NOTHING;
       switch (celltype) {
         case kDataCell:
-          role = (isGrid ? ROLE_GRID_CELL : ROLE_CELL);
+          role = (aTableType == kMathTable ? ROLE_MATHML_CELL :
+                  (isGrid ? ROLE_GRID_CELL : ROLE_CELL));
           break;
         case kRowHeaderCell:
           role = ROLE_ROWHEADER;

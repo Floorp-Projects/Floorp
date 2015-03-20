@@ -204,14 +204,14 @@ Assembler::finish()
         size_t oldSize = masm.size();
 #endif
         masm.jmp_rip(2);
-        MOZ_ASSERT(masm.size() - oldSize == 6);
+        MOZ_ASSERT_IF(!masm.oom(), masm.size() - oldSize == 6);
         // Following an indirect branch with ud2 hints to the hardware that
         // there's no fall-through. This also aligns the 64-bit immediate.
         masm.ud2();
-        MOZ_ASSERT(masm.size() - oldSize == 8);
+        MOZ_ASSERT_IF(!masm.oom(), masm.size() - oldSize == 8);
         masm.immediate64(0);
-        MOZ_ASSERT(masm.size() - oldSize == SizeOfExtendedJump);
-        MOZ_ASSERT(masm.size() - oldSize == SizeOfJumpTableEntry);
+        MOZ_ASSERT_IF(!masm.oom(), masm.size() - oldSize == SizeOfExtendedJump);
+        MOZ_ASSERT_IF(!masm.oom(), masm.size() - oldSize == SizeOfJumpTableEntry);
     }
 }
 

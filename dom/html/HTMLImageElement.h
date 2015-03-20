@@ -313,7 +313,7 @@ protected:
   CSSIntPoint GetXY();
   virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   void UpdateFormOwner();
 
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
