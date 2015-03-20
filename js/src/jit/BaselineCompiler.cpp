@@ -1223,6 +1223,7 @@ BaselineCompiler::emit_JSOP_VOID()
 bool
 BaselineCompiler::emit_JSOP_UNDEFINED()
 {
+    // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
     frame.push(UndefinedValue());
     return true;
 }
@@ -2852,6 +2853,11 @@ BaselineCompiler::emit_JSOP_IMPLICITTHIS()
 bool
 BaselineCompiler::emit_JSOP_GIMPLICITTHIS()
 {
+    if (!script->hasPollutedGlobalScope()) {
+        frame.push(UndefinedValue());
+        return true;
+    }
+
     return emit_JSOP_IMPLICITTHIS();
 }
 

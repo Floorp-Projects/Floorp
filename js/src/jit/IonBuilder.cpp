@@ -639,6 +639,10 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecod
               case JSOP_UNDEFINED:
                 type = MIRType_Undefined;
                 break;
+              case JSOP_GIMPLICITTHIS:
+                if (!script()->hasPollutedGlobalScope())
+                    type = MIRType_Undefined;
+                break;
               case JSOP_NULL:
                 type = MIRType_Null;
                 break;
@@ -1579,6 +1583,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_label();
 
       case JSOP_UNDEFINED:
+        // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
         return pushConstant(UndefinedValue());
 
       case JSOP_IFEQ:
@@ -1972,17 +1977,26 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DEBUGGER:
         return jsop_debugger();
 
+      case JSOP_GIMPLICITTHIS:
+        if (!script()->hasPollutedGlobalScope())
+            return pushConstant(UndefinedValue());
+
+        // Just fall through to the unsupported bytecode case.
+        break;
+
       default:
-        // Track a simpler message, since the actionable abort message is a
-        // static string, and the internal opcode name isn't an actionable
-        // thing anyways.
-        trackActionableAbort("Unsupported bytecode");
-#ifdef DEBUG
-        return abort("Unsupported opcode: %s", js_CodeName[op]);
-#else
-        return abort("Unsupported opcode: %d", op);
-#endif
+        break;
     }
+
+    // Track a simpler message, since the actionable abort message is a
+    // static string, and the internal opcode name isn't an actionable
+    // thing anyways.
+    trackActionableAbort("Unsupported bytecode");
+#ifdef DEBUG
+    return abort("Unsupported opcode: %s", js_CodeName[op]);
+#else
+    return abort("Unsupported opcode: %d", op);
+#endif
 }
 
 // Given that the current control flow structure has ended forcefully,
