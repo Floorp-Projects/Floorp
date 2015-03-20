@@ -2094,12 +2094,12 @@ js::CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction 
     if (newParent->is<GlobalObject>())
         return true;
 
-    // Don't need to clone the script if newParent is not a valid lexical scope
-    // chain terminator, since in that case we have some actual scope objects on
-    // our scope chain and whatnot; whoever put them there should be responsible
-    // for setting our script's flags appropriately.  We hit this case for
-    // JSOP_LAMBDA, for example.
-    if (!IsValidTerminatingScope(newParent))
+    // Don't need to clone the script if newParent is a syntactic scope, since
+    // in that case we have some actual scope objects on our scope chain and
+    // whatnot; whoever put them there should be responsible for setting our
+    // script's flags appropriately.  We hit this case for JSOP_LAMBDA, for
+    // example.
+    if (IsSyntacticScope(newParent))
         return true;
 
     // We need to clone the script if we're interpreted and not already marked
