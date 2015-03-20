@@ -54,6 +54,26 @@ let gSyncPane = {
   },
 
   init: function () {
+    // We use a preference observer to notice changes to the Sync engines
+    // enabled state - other techniques are problematic due to the window
+    // being instant-apply on Mac etc but modal on Windows.
+    let prefObserver = () => {
+      // If all our Sync engines are disabled we flip the "master" Sync-enabled pref.
+      let prefElts = document.querySelectorAll("#syncEnginePrefs > preference");
+      let syncEnabled = false;
+      for (let elt of prefElts) {
+        if (elt.name.startsWith("services.sync.") && elt.value) {
+          syncEnabled = true;
+          break;
+        }
+      }
+      Services.prefs.setBoolPref("services.sync.enabled", syncEnabled);
+    }
+    Services.prefs.addObserver("services.sync.engine.", prefObserver, false);
+    window.addEventListener("unload", () => {
+      Services.prefs.removeObserver("services.sync.engine.", prefObserver);
+    }, false);
+
     // If the Service hasn't finished initializing, wait for it.
     let xps = Components.classes["@mozilla.org/weave/service;1"]
                                 .getService(Components.interfaces.nsISupports)
@@ -136,6 +156,11 @@ let gSyncPane = {
     // service.fxAccountsEnabled is false iff sync is already configured for
     // the legacy provider.
     if (service.fxAccountsEnabled) {
+      // unhide the reading-list engine if readinglist is enabled (note we do
+      // it here as it must remain disabled for legacy sync users)
+      if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
+        document.getElementById("readinglist-engine").removeAttribute("hidden");
+      }
       // determine the fxa status...
       this.page = PAGE_PLEASE_WAIT;
       fxAccounts.getSignedInUser().then(data => {
