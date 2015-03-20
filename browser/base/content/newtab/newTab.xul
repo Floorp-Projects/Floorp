@@ -37,13 +37,13 @@
   <xul:panel id="newtab-customize-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
     <xul:hbox id="newtab-customize-enhanced" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.enhanced;</xul:label>
+      <xul:label>&newtab.customize.suggested;</xul:label>
     </xul:hbox>
     <xul:hbox id="newtab-customize-classic" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.classic;</xul:label>
+      <xul:label>&newtab.customize.topsites;</xul:label>
     </xul:hbox>
     <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.blank;</xul:label>
+      <xul:label>&newtab.customize.blank2;</xul:label>
     </xul:hbox>
   </xul:panel>
 

@@ -491,7 +491,7 @@ input[type=button] {
 .newtab-customize-panel-item,
 .newtab-search-panel-engine,
 #newtab-search-manage {
-  padding: 4px 24px;
+  padding: 10px 10px 10px 25px;
 }
 
 .newtab-customize-panel-item:not(:last-child),
@@ -511,6 +511,10 @@ input[type=button] {
 #newtab-search-manage > label {
   padding: 0;
   margin: 0;
+}
+
+.newtab-customize-panel-item:not([selected]) {
+  color: #919191;
 }
 
 .newtab-customize-panel-item[selected],
