@@ -1354,7 +1354,11 @@ static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
 
   // http://tools.ietf.org/html/rfc5280#section-4.2.1.6: "If the subjectAltName
   // extension is present, the sequence MUST contain at least one entry."
-  WITH_SAN("a", RDN(CN("a")), ByteString(), Result::ERROR_BAD_DER),
+  // However, for compatibility reasons, this is not enforced. See bug 1143085.
+  // This case is treated as if the extension is not present (i.e. name
+  // matching falls back to the subject CN).
+  WITH_SAN("a", RDN(CN("a")), ByteString(), Success),
+  WITH_SAN("a", RDN(CN("b")), ByteString(), Result::ERROR_BAD_CERT_DOMAIN),
 
   // http://tools.ietf.org/html/rfc5280#section-4.1.2.6 says "If subject naming
   // information is present only in the subjectAltName extension (e.g., a key
@@ -2217,11 +2221,6 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   { RDN(CN("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
     Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
   },
-  { // Empty SAN is rejected
-    RDN(CN("a.example.com")), ByteString(),
-    GeneralSubtree(DNSName("a.example.com")),
-    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
-  },
   { // DNSName CN-ID match is detected when there is a SAN w/o any DNSName or
     // IPAddress
     RDN(CN("a.example.com")), RFC822Name("foo@example.com"),
@@ -2390,6 +2389,34 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   },
   { ByteString(), RFC822Name("a@a.uses_underscore.example.com"),
     GeneralSubtree(RFC822Name(".uses_underscore.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Name constraint tests that relate to having an empty SAN. According to RFC
+  // 5280 this isn't valid, but we allow it for compatibility reasons (see bug
+  // 1143085).
+  { // For DNSNames, we fall back to the subject CN.
+    RDN(CN("a.example.com")), ByteString(),
+    GeneralSubtree(DNSName("a.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // For RFC822Names, we do not fall back to the subject emailAddress.
+    // This new implementation seems to conform better to the standards for
+    // RFC822 name constraints, by only applying the name constraints to
+    // emailAddress names in the certificate subject if there is no
+    // subjectAltName extension in the cert.
+    // In this case, the presence of the (empty) SAN extension means that RFC822
+    // name constraints are not enforced on the emailAddress attributes of the
+    // subject.
+    RDN(emailAddress("a@example.com")), ByteString(),
+    GeneralSubtree(RFC822Name("a@example.com")),
+    Success, Success
+  },
+  { // Compare this to the case where there is no SAN (i.e. the name
+    // constraints are enforced, because the extension is not present at all).
+    RDN(emailAddress("a@example.com")), NO_SAN,
+    GeneralSubtree(RFC822Name("a@example.com")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
   },
 };
