@@ -688,13 +688,6 @@ public:
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER);
 
-    nsAutoString cacheName;
-    nsresult rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      ContinueAfterInstallEvent(false /* aSuccess */, false /* aActivateImmediately */);
-      return;
-    }
-
     mRegistration->mInstallingWorker = mUpdateAndInstallInfo.forget();
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
 
@@ -708,9 +701,9 @@ public:
     NS_DispatchToMainThread(upr);
 
     nsRefPtr<ServiceWorker> serviceWorker;
-    rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
-                                  mRegistration->mInstallingWorker,
-                                  getter_AddRefs(serviceWorker));
+    nsresult rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
+                                           mRegistration->mInstallingWorker,
+                                           getter_AddRefs(serviceWorker));
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       ContinueAfterInstallEvent(false /* aSuccess */, false /* aActivateImmediately */);
