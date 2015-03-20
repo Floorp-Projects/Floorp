@@ -21,13 +21,15 @@
             helpTopic="prefs-weave"
             onpaneload="gSyncPane.init()">
 
-    <preferences>
+    <preferences id="syncEnginePrefs">
       <preference id="engine.addons"    name="services.sync.engine.addons"    type="bool"/>
       <preference id="engine.bookmarks" name="services.sync.engine.bookmarks" type="bool"/>
       <preference id="engine.history"   name="services.sync.engine.history"   type="bool"/>
       <preference id="engine.tabs"      name="services.sync.engine.tabs"      type="bool"/>
       <preference id="engine.prefs"     name="services.sync.engine.prefs"     type="bool"/>
       <preference id="engine.passwords" name="services.sync.engine.passwords" type="bool"/>
+      <!-- non Sync-Engine engines -->
+      <preference id="engine.readinglist" name="readinglist.scheduler.enabled" type="bool"/>
     </preferences>
 
 
@@ -285,21 +287,33 @@
               <vbox>
                 <checkbox label="&engine.tabs.label;"
                           accesskey="&engine.tabs.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged();"
                           preference="engine.tabs"/>
                 <checkbox label="&engine.bookmarks.label;"
                           accesskey="&engine.bookmarks.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged();"
                           preference="engine.bookmarks"/>
                 <checkbox label="&engine.passwords.label;"
                           accesskey="&engine.passwords.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged();"
                           preference="engine.passwords"/>
                 <checkbox label="&engine.history.label;"
                           accesskey="&engine.history.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged(this);"
                           preference="engine.history"/>
+                <!-- onpreferencechanged not needed for the readinglist engine -->
+                <checkbox id="readinglist-engine"
+                          label="&engine.readinglist.label;"
+                          accesskey="&engine.readinglist.accesskey;"
+                          preference="engine.readinglist"
+                          hidden="true"/>
                 <checkbox label="&engine.addons.label;"
                           accesskey="&engine.addons.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged();"
                           preference="engine.addons"/>
                 <checkbox label="&engine.prefs.label;"
                           accesskey="&engine.prefs.accesskey;"
+                          onsynctopreference="gSyncPane.onPreferenceChanged();"
                           preference="engine.prefs"/>
               </vbox>
               <spacer/>
