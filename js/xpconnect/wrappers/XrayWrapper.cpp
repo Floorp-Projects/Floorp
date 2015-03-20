@@ -2184,19 +2184,6 @@ XrayWrapper<Base, Traits>::className(JSContext* cx, HandleObject wrapper) const
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::defaultValue(JSContext* cx, HandleObject wrapper,
-                                        JSType hint, MutableHandleValue vp) const
-{
-    // Even if this isn't a security wrapper, Xray semantics dictate that we
-    // run the OrdinaryToPrimitive algorithm directly on the Xray wrapper.
-    //
-    // NB: We don't have to worry about things with special [[DefaultValue]]
-    // behavior like Date because we'll never have an XrayWrapper to them.
-    return OrdinaryToPrimitive(cx, wrapper, hint, vp);
-}
-
-template <typename Base, typename Traits>
-bool
 XrayWrapper<Base, Traits>::getPrototype(JSContext* cx, JS::HandleObject wrapper,
                                         JS::MutableHandleObject protop) const
 {
