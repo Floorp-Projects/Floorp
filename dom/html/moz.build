@@ -244,4 +244,7 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+if CONFIG['MOZ_CHILD_PERMISSIONS']:
+    DEFINES['MOZ_CHILD_PERMISSIONS'] = True
+
 FINAL_LIBRARY = 'xul'
