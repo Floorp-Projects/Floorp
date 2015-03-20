@@ -11,7 +11,6 @@
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/InstallEventBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/Response.h"
 #include "nsProxyRelease.h"
 
 class nsIInterceptedChannel;
@@ -83,9 +82,6 @@ public:
 
   void
   RespondWith(Promise& aPromise, ErrorResult& aRv);
-
-  void
-  RespondWith(Response& aResponse, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);
