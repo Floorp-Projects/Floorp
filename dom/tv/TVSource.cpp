@@ -99,9 +99,9 @@ TVSource::Shutdown()
 }
 
 /* virtual */ JSObject*
-TVSource::WrapObject(JSContext* aCx)
+TVSource::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TVSourceBinding::Wrap(aCx, this);
+  return TVSourceBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

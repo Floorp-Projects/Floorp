@@ -132,9 +132,19 @@ protected:
     };
     eCompositionState mCompositionState;
 
-    bool IsComposing()
+    bool IsComposing() const
     {
         return (mCompositionState != eCompositionState_NotComposing);
+    }
+
+    bool IsComposingOn(GtkIMContext* aContext) const
+    {
+        return IsComposing() && mComposingContext == aContext;
+    }
+
+    bool IsComposingOnCurrentContext() const
+    {
+        return IsComposingOn(GetCurrentContext());
     }
 
     bool EditorHasCompositionString()

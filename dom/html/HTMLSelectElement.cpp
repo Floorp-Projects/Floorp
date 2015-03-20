@@ -1928,9 +1928,9 @@ HTMLSelectElement::UpdateSelectedOptions()
 }
 
 JSObject*
-HTMLSelectElement::WrapNode(JSContext* aCx)
+HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLSelectElementBinding::Wrap(aCx, this);
+  return HTMLSelectElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

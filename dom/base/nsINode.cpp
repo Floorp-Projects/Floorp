@@ -2664,7 +2664,7 @@ nsINode::GetElementById(const nsAString& aId)
 }
 
 JSObject*
-nsINode::WrapObject(JSContext *aCx)
+nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   // Make sure one of these is true
   // (1) our owner document has a script handling object,
@@ -2683,7 +2683,7 @@ nsINode::WrapObject(JSContext *aCx)
     return nullptr;
   }
 
-  JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx));
+  JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx, aGivenProto));
   MOZ_ASSERT_IF(ChromeOnlyAccess(),
                 xpc::IsInContentXBLScope(obj) || !xpc::UseContentXBLScope(js::GetObjectCompartment(obj)));
   return obj;

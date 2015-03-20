@@ -27,7 +27,7 @@ public:
     return mSVGElement;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx)
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE MOZ_FINAL;
 
   virtual float BaseVal() = 0;

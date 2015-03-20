@@ -22,18 +22,22 @@ char (&ArraySizeHelper(T (&array)[N]))[N];
 
 namespace ots {
 
-#if defined(_MSC_VER) || !defined(OTS_DEBUG)
+#if !defined(OTS_DEBUG)
 #define OTS_FAILURE() false
 #else
-#define OTS_FAILURE() ots::Failure(__FILE__, __LINE__, __PRETTY_FUNCTION__)
-bool Failure(const char *f, int l, const char *fn);
+#define OTS_FAILURE() \
+  (\
+    std::fprintf(stderr, "ERROR at %s:%d (%s)\n", \
+                 __FILE__, __LINE__, __FUNCTION__) \
+    && false\
+  )
 #endif
 
 // All OTS_FAILURE_* macros ultimately evaluate to 'false', just like the original
 // message-less OTS_FAILURE(), so that the current parser will return 'false' as
 // its result (indicating a failure).
 
-#if defined(_MSC_VER) || !defined(OTS_DEBUG)
+#if !defined(OTS_DEBUG)
 #define OTS_MESSAGE_(level,otf_,...) \
   (otf_)->context->Message(level,__VA_ARGS__)
 #else

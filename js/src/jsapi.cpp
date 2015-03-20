@@ -3750,30 +3750,29 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
 }
 
 bool
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+JS::Compile(JSContext *cx, const ReadOnlyCompileOptions &options,
             SourceBufferHolder &srcBuf, MutableHandleScript script)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), NullPtr(),
-                                       options, srcBuf));
+    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), cx->global(),
+                                       NullPtr(), NullPtr(), options, srcBuf));
     return !!script;
 }
 
 bool
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+JS::Compile(JSContext *cx, const ReadOnlyCompileOptions &options,
             const char16_t *chars, size_t length, MutableHandleScript script)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return Compile(cx, obj, options, srcBuf, script);
+    return Compile(cx, options, srcBuf, script);
 }
 
 bool
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+JS::Compile(JSContext *cx, const ReadOnlyCompileOptions &options,
             const char *bytes, size_t length, MutableHandleScript script)
 {
     mozilla::UniquePtr<char16_t, JS::FreePolicy> chars;
@@ -3784,22 +3783,22 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     if (!chars)
         return false;
 
-    return Compile(cx, obj, options, chars.get(), length, script);
+    return Compile(cx, options, chars.get(), length, script);
 }
 
 bool
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options, FILE *fp,
+JS::Compile(JSContext *cx, const ReadOnlyCompileOptions &options, FILE *fp,
             MutableHandleScript script)
 {
     FileContents buffer(cx);
     if (!ReadCompleteFile(cx, fp, buffer))
         return false;
 
-    return Compile(cx, obj, options, buffer.begin(), buffer.length(), script);
+    return Compile(cx, options, buffer.begin(), buffer.length(), script);
 }
 
 bool
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg, const char *filename,
+JS::Compile(JSContext *cx, const ReadOnlyCompileOptions &optionsArg, const char *filename,
             MutableHandleScript script)
 {
     AutoFile file;
@@ -3807,7 +3806,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
         return false;
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return Compile(cx, obj, options, file.fp(), script);
+    return Compile(cx, options, file.fp(), script);
 }
 
 JS_PUBLIC_API(bool)
@@ -3861,17 +3860,17 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext *cx, JS::HandleObject obj, const char *ascii,
-                 size_t length, const JS::CompileOptions &options, MutableHandleScript script)
+JS_CompileScript(JSContext *cx, const char *ascii, size_t length,
+                 const JS::CompileOptions &options, MutableHandleScript script)
 {
-    return Compile(cx, obj, options, ascii, length, script);
+    return Compile(cx, options, ascii, length, script);
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext *cx, JS::HandleObject obj, const char16_t *chars,
-                   size_t length, const JS::CompileOptions &options, MutableHandleScript script)
+JS_CompileUCScript(JSContext *cx, const char16_t *chars, size_t length,
+                   const JS::CompileOptions &options, MutableHandleScript script)
 {
-    return Compile(cx, obj, options, chars, length, script);
+    return Compile(cx, options, chars, length, script);
 }
 
 JS_PUBLIC_API(bool)

@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="52775e03a2d8532429dff579cb2cd56718e488c3">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="c39e15f631de80c69467fda0d4ea0bcda9e194ca"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="8837f94418d69a0b06c1f4843b0779e2bb72165a"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="86cd7486d8e50eaac8ef6fe2f51f09d25194577b"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="40f5ce12859076b63307480ff2f0bbdf42bbf258"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="acca7d20b79978cff975e755e5e0bac9f731a6f7"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="50d1ca4ab8add54523b7bc692860d57e8ee4c0d1"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="fb3845864573857677f9b500040a8f011eaf5078"/>
@@ -142,7 +142,6 @@
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="ba62cc8b78c30d36181b8060a2016cc8da166236"/>
   <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="c37663f828891cf7a49451a04f3f1ce7f7e5c054"/>
-  <project name="device/qcom/common" path="device/qcom/common" remote="caf" revision="3697e5acf25629b82658334e3f8ee3b6df5becab"/>
   <project name="device_lge_hammerhead-kernel" path="device/lge/hammerhead-kernel" remote="b2g" revision="1268f640184df5ef759ada669f101a613451673a"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0cb8574d338bf9f15b45ace7c08ad6deae9673ee"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>

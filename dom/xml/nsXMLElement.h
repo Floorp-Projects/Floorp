@@ -37,7 +37,7 @@ public:
 protected:
   virtual ~nsXMLElement() {}
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 };
 
 #endif // nsXMLElement_h___

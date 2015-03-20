@@ -196,9 +196,9 @@ MediaQueryList::GetParentObject() const
 }
 
 JSObject*
-MediaQueryList::WrapObject(JSContext* aCx)
+MediaQueryList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaQueryListBinding::Wrap(aCx, this);
+  return MediaQueryListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

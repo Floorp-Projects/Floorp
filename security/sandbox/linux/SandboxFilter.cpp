@@ -177,6 +177,7 @@ SandboxFilterImplContent::Build() {
 #else
   Allow(SYSCALL(select));
 #endif
+  Allow(SYSCALL(pselect6));
   // Some archs used to have 16-bit uid/gid instead of 32-bit.
 #if SYSCALL_EXISTS(getuid32)
   Allow(SYSCALL(getuid32));

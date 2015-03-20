@@ -87,9 +87,9 @@ NS_INTERFACE_MAP_BEGIN(IDBVersionChangeEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 JSObject*
-IDBVersionChangeEvent::WrapObjectInternal(JSContext* aCx)
+IDBVersionChangeEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBVersionChangeEventBinding::Wrap(aCx, this);
+  return IDBVersionChangeEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace indexedDB

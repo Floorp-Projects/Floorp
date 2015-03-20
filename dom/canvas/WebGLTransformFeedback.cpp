@@ -45,9 +45,9 @@ WebGLTransformFeedback::GetParentObject() const
 }
 
 JSObject*
-WebGLTransformFeedback::WrapObject(JSContext* cx)
+WebGLTransformFeedback::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLTransformFeedbackBinding::Wrap(cx, this);
+    return dom::WebGLTransformFeedbackBinding::Wrap(cx, this, aGivenProto);
 }
 
 

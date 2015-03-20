@@ -27,9 +27,9 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return DeviceRotationRateBinding::Wrap(aCx, this);
+    return DeviceRotationRateBinding::Wrap(aCx, this, aGivenProto);
   }
 
   Nullable<double> GetAlpha() const { return mAlpha; }
@@ -59,9 +59,9 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return DeviceAccelerationBinding::Wrap(aCx, this);
+    return DeviceAccelerationBinding::Wrap(aCx, this, aGivenProto);
   }
 
   Nullable<double> GetX() const { return mX; }
@@ -94,9 +94,9 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeviceMotionEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return DeviceMotionEventBinding::Wrap(aCx, this);
+    return DeviceMotionEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   DeviceAcceleration* GetAcceleration() const

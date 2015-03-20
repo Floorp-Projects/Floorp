@@ -194,7 +194,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   explicit IDBRequest(IDBDatabase* aDatabase);
@@ -263,7 +263,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 private:
   IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindow* aOwner);

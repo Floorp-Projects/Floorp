@@ -50,9 +50,9 @@ let consoleOpened = Task.async(function*(aHud) {
 
     // 4 values, and the following properties:
     // __defineGetter__  __defineSetter__ __lookupGetter__ __lookupSetter__
-    // hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString
-    // toSource unwatch valueOf watch constructor.
-    is(popup.itemCount, 18, "popup.itemCount is correct");
+    // __proto__ hasOwnProperty isPrototypeOf propertyIsEnumerable
+    // toLocaleString toString toSource unwatch valueOf watch constructor.
+    is(popup.itemCount, 19, "popup.itemCount is correct");
 
     let sameItems = popup.getItems().reverse().map(function(e) {return e.label;});
     ok(sameItems.every(function(prop, index) {
@@ -61,6 +61,7 @@ let consoleOpened = Task.async(function*(aHud) {
         "__defineSetter__",
         "__lookupGetter__",
         "__lookupSetter__",
+        "__proto__",
         "constructor",
         "hasOwnProperty",
         "isPrototypeOf",
@@ -77,7 +78,7 @@ let consoleOpened = Task.async(function*(aHud) {
         "watch",
       ][index] === prop}), "getItems returns the items we expect");
 
-    is(popup.selectedIndex, 17,
+    is(popup.selectedIndex, 18,
        "Index of the first item from bottom is selected.");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
@@ -115,7 +116,7 @@ let consoleOpened = Task.async(function*(aHud) {
     ok(popup.selectedIndex < currentSelectionIndex, "Index is less after Page UP");
 
     EventUtils.synthesizeKey("VK_END", {});
-    is(popup.selectedIndex, 17, "index is last after End");
+    is(popup.selectedIndex, 18, "index is last after End");
 
     EventUtils.synthesizeKey("VK_HOME", {});
     is(popup.selectedIndex, 0, "index is first after Home");
@@ -152,9 +153,9 @@ function popupHideAfterTab()
 
     ok(popup.isOpen, "popup is open");
 
-    is(popup.itemCount, 18, "popup.itemCount is correct");
+    is(popup.itemCount, 19, "popup.itemCount is correct");
 
-    is(popup.selectedIndex, 17, "First index from bottom is selected");
+    is(popup.selectedIndex, 18, "First index from bottom is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
@@ -201,9 +202,9 @@ function testReturnKey()
 
     ok(popup.isOpen, "popup is open");
 
-    is(popup.itemCount, 18, "popup.itemCount is correct");
+    is(popup.itemCount, 19, "popup.itemCount is correct");
 
-    is(popup.selectedIndex, 17, "First index from bottom is selected");
+    is(popup.selectedIndex, 18, "First index from bottom is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
     let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");

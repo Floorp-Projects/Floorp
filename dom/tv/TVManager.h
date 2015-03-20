@@ -27,7 +27,7 @@ public:
 
   // WebIDL (internal functions)
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   nsresult SetTuners(const nsTArray<nsRefPtr<TVTuner>>& aTuners);
 

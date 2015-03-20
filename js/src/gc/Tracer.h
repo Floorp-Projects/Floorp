@@ -201,19 +201,8 @@ class GCMarker : public JSTracer
 
     bool drainMarkStack(SliceBudget &budget);
 
-    /*
-     * Gray marking must be done after all black marking is complete. However,
-     * we do not have write barriers on XPConnect roots. Therefore, XPConnect
-     * roots must be accumulated in the first slice of incremental GC. We
-     * accumulate these roots in the each compartment's gcGrayRoots vector and
-     * then mark them later, after black marking is complete for each
-     * compartment. This accumulation can fail, but in that case we switch to
-     * non-incremental GC.
-     */
-    bool hasBufferedGrayRoots() const;
-    void startBufferingGrayRoots();
-    void endBufferingGrayRoots();
-    void resetBufferedGrayRoots();
+    /* Set to false if we OOM while buffering gray roots. */
+    bool bufferingGrayRootsFailed;
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 

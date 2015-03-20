@@ -661,11 +661,14 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
 bool
 js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *rval)
 {
-    /* The scope chain could be anything, so innerize just in case. */
+    /* The scope chain is something we control, so we know it can't
+       have any outer objects on it. */
     RootedObject scopeChain(cx, &scopeChainArg);
-    scopeChain = GetInnerObject(scopeChain);
-    if (!scopeChain)
-        return false;
+    MOZ_ASSERT(scopeChain == GetInnerObject(scopeChain));
+
+    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || !script->compileAndGo(),
+                       "Only non-compile-and-go scripts can be executed with "
+                       "interesting scopechains");
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG

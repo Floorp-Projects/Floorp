@@ -318,6 +318,11 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
+    if (!JS_IsGlobalObject(obj)) {
+        JS_ReportError(cx, "Trying to load() into a non-global object");
+        return false;
+    }
+
     RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
         str = ToString(cx, args[i]);
@@ -337,23 +342,15 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true);
         JS::Rooted<JSScript*> script(cx);
-        JS::Compile(cx, obj, options, file, &script);
+        JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+        JS::Compile(cx, options, file, &script);
         fclose(file);
         if (!script)
             return false;
 
         if (!compileOnly) {
-            // XXXbz are we intentionally allowing load.call(someNonGlobalObject)?
-            if (JS_IsGlobalObject(obj)) {
-                if (!JS_ExecuteScript(cx, script)) {
-                    return false;
-                }
-            } else {
-                JS::AutoObjectVector scopeChain(cx);
-                if (!scopeChain.append(obj) ||
-                    !JS_ExecuteScript(cx, scopeChain, script)) {
-                    return false;
-                }
+            if (!JS_ExecuteScript(cx, script)) {
+                return false;
             }
         }
     }
@@ -837,7 +834,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
         options.setUTF8(true)
                .setFileAndLine(filename, 1)
                .setCompileAndGo(true);
-        if (JS::Compile(cx, global, options, file, &script) && !compileOnly)
+        if (JS::Compile(cx, options, file, &script) && !compileOnly)
             (void)JS_ExecuteScript(cx, script, &result);
         JS_EndRequest(cx);
 
@@ -873,8 +870,7 @@ ProcessFile(JSContext *cx, const char *filename, FILE *file, bool forceTTY)
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline)
                .setCompileAndGo(true);
-        if (JS_CompileScript(cx, global, buffer, strlen(buffer), options,
-                             &script)) {
+        if (JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
             JSErrorReporter older;
 
             if (!compileOnly) {

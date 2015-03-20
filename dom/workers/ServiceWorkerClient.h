@@ -80,7 +80,7 @@ public:
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   virtual ~ServiceWorkerClient()

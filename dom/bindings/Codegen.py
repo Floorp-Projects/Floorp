@@ -3182,11 +3182,8 @@ def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
         copyFunc = "JS_InitializePropertiesFromCompatibleNativeObject"
     copyCode.append(CGGeneric(fill(
         """
-        // XXXbz Once we allow subclassing, we'll want to make sure that
-        // this uses the canonical proto, not whatever random passed-in
-        // proto we end up using for the object.
         JS::Rooted<JSObject*> unforgeableHolder(aCx,
-          &js::GetReservedSlot(proto, DOM_INTERFACE_PROTO_SLOTS_BASE).toObject());
+          &js::GetReservedSlot(canonicalProto, DOM_INTERFACE_PROTO_SLOTS_BASE).toObject());
         if (!${copyFunc}(aCx, ${obj}, unforgeableHolder)) {
           $*{cleanup}
           return false;
@@ -3243,6 +3240,30 @@ def InitMemberSlots(descriptor, wrapperCache):
         clearWrapper=clearWrapper)
 
 
+def DeclareProto():
+    """
+    Declare the canonicalProto and proto we have for our wrapping operation.
+    """
+    return dedent(
+        """
+        JS::Handle<JSObject*> canonicalProto = GetProtoObjectHandle(aCx, global);
+        if (!canonicalProto) {
+          return false;
+        }
+        JS::Rooted<JSObject*> proto(aCx);
+        if (aGivenProto) {
+          proto = aGivenProto;
+          if (js::GetContextCompartment(aCx) != js::GetObjectCompartment(proto)) {
+            if (!JS_WrapObject(aCx, &proto)) {
+              return false;
+            }
+          }
+        } else {
+          proto = canonicalProto;
+        }
+        """)
+
+
 class CGWrapWithCacheMethod(CGAbstractMethod):
     """
     Create a wrapper JSObject for a given native that implements nsWrapperCache.
@@ -3254,6 +3275,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache'),
+                Argument('JS::Handle<JSObject*>', 'aGivenProto'),
                 Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.properties = properties
@@ -3261,7 +3283,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     def definition_body(self):
         return fill(
             """
-            $*{assertion}
+            $*{assertInheritance}
+            MOZ_ASSERT_IF(aGivenProto, !aCache->GetWrapper());
 
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
@@ -3275,15 +3298,14 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             // of XBL.  Check for that, and bail out as needed.
             aReflector.set(aCache->GetWrapper());
             if (aReflector) {
+              MOZ_ASSERT(!aGivenProto,
+                         "How are we supposed to change the proto now?");
               return true;
             }
 
             JSAutoCompartment ac(aCx, parent);
             JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(parent));
-            JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
-            if (!proto) {
-              return false;
-            }
+            $*{declareProto}
 
             $*{createObject}
 
@@ -3293,7 +3315,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             creator.InitializationSucceeded();
             return true;
             """,
-            assertion=AssertInheritanceChain(self.descriptor),
+            assertInheritance=AssertInheritanceChain(self.descriptor),
+            declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
             slots=InitMemberSlots(self.descriptor, True))
@@ -3304,14 +3327,15 @@ class CGWrapMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('T*', 'aObject')]
+                Argument('T*', 'aObject'),
+                Argument('JS::Handle<JSObject*>', 'aGivenProto')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args,
                                   inline=True, templateArgs=["class T"])
 
     def definition_body(self):
         return dedent("""
             JS::Rooted<JSObject*> reflector(aCx);
-            return Wrap(aCx, aObject, aObject, &reflector) ? reflector.get() : nullptr;
+            return Wrap(aCx, aObject, aObject, aGivenProto, &reflector) ? reflector.get() : nullptr;
             """)
 
 
@@ -3327,6 +3351,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
+                Argument('JS::Handle<JSObject*>', 'aGivenProto'),
                 Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.properties = properties
@@ -3337,10 +3362,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{assertions}
 
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-            JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
-            if (!proto) {
-              return false;
-            }
+            $*{declareProto}
 
             $*{createObject}
 
@@ -3351,6 +3373,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             return true;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
+            declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, False),
             slots=InitMemberSlots(self.descriptor, False))
@@ -3394,10 +3417,10 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             fireOnNewGlobal = ""
 
         if self.descriptor.hasUnforgeableMembers:
-            declareProto = "JS::Handle<JSObject*> proto =\n"
+            declareProto = "JS::Handle<JSObject*> canonicalProto =\n"
             assertProto = (
-                "MOZ_ASSERT(proto &&\n"
-                "           IsDOMIfaceAndProtoClass(js::GetObjectClass(proto)));\n")
+                "MOZ_ASSERT(canonicalProto &&\n"
+                "           IsDOMIfaceAndProtoClass(js::GetObjectClass(canonicalProto)));\n")
         else:
             declareProto = ""
             assertProto = ""
@@ -13083,7 +13106,8 @@ class CGBindingImplClass(CGClass):
                                    name="aName")]),
                     { "infallible": True }))
 
-        wrapArgs = [Argument('JSContext*', 'aCx')]
+        wrapArgs = [Argument('JSContext*', 'aCx'),
+                    Argument('JS::Handle<JSObject*>', 'aGivenProto')]
         self.methodDecls.insert(0,
                                 ClassMethod(wrapMethodName, "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
@@ -13203,9 +13227,9 @@ class CGExampleClass(CGBindingImplClass):
 
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
             JSObject*
-            ${nativeType}::WrapObject(JSContext* aCx)
+            ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
             {
-              return ${ifaceName}Binding::Wrap(aCx, this);
+              return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto);
             }
 
             """)
@@ -13573,7 +13597,7 @@ class CGJSImplClass(CGBindingImplClass):
     def getWrapObjectBody(self):
         return fill(
             """
-            JS::Rooted<JSObject*> obj(aCx, ${name}Binding::Wrap(aCx, this));
+            JS::Rooted<JSObject*> obj(aCx, ${name}Binding::Wrap(aCx, this, aGivenProto));
             if (!obj) {
               return nullptr;
             }
@@ -14966,7 +14990,7 @@ class CGEventClass(CGBindingImplClass):
                          extradeclarations=baseDeclarations)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, this);\n" % self.descriptor.name
+        return "return %sBinding::Wrap(aCx, this, aGivenProto);\n" % self.descriptor.name
 
     def implTraverse(self):
         retVal = ""

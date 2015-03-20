@@ -25,9 +25,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Activity, DOMRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 /* virtual */ JSObject*
-Activity::WrapObject(JSContext* aCx)
+Activity::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozActivityBinding::Wrap(aCx, this);
+  return MozActivityBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult

@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFilterElement::WrapNode(JSContext *aCx)
+SVGFilterElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFilterElementBinding::Wrap(aCx, this);
+  return SVGFilterElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] =

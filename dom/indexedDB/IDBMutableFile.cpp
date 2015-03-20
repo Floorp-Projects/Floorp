@@ -293,12 +293,12 @@ IDBMutableFile::UnsetThreadLocals()
 }
 
 JSObject*
-IDBMutableFile::WrapObject(JSContext* aCx)
+IDBMutableFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  return IDBMutableFileBinding::Wrap(aCx, this);
+  return IDBMutableFileBinding::Wrap(aCx, this, aGivenProto);
 }
 
 IDBDatabase*

@@ -909,9 +909,9 @@ WebSocket::~WebSocket()
 }
 
 JSObject*
-WebSocket::WrapObject(JSContext* cx)
+WebSocket::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WebSocketBinding::Wrap(cx, this);
+  return WebSocketBinding::Wrap(cx, this, aGivenProto);
 }
 
 //---------------------------------------------------------------------------

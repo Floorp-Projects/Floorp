@@ -31,9 +31,10 @@ DataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 
 bool
 DataStoreCursor::WrapObject(JSContext* aCx,
+                            JS::Handle<JSObject*> aGivenProto,
                             JS::MutableHandle<JSObject*> aReflector)
 {
-  return DataStoreCursorBinding::Wrap(aCx, this, aReflector);
+  return DataStoreCursorBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 already_AddRefed<DataStore>

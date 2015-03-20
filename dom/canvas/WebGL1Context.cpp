@@ -26,9 +26,9 @@ WebGL1Context::~WebGL1Context()
 }
 
 JSObject*
-WebGL1Context::WrapObject(JSContext* cx)
+WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLRenderingContextBinding::Wrap(cx, this);
+    return dom::WebGLRenderingContextBinding::Wrap(cx, this, aGivenProto);
 }
 
 } // namespace mozilla

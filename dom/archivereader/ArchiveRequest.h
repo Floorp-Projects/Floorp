@@ -26,7 +26,7 @@ BEGIN_ARCHIVEREADER_NAMESPACE
 class ArchiveRequest : public mozilla::dom::DOMRequest
 {
 public:
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   ArchiveReader* Reader() const;
 

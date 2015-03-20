@@ -11,9 +11,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-VideoStreamTrack::WrapObject(JSContext* aCx)
+VideoStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoStreamTrackBinding::Wrap(aCx, this);
+  return VideoStreamTrackBinding::Wrap(aCx, this, aGivenProto);
 }
 
 }

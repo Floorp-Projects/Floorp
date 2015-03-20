@@ -20,7 +20,7 @@ class ScrollBoxObject MOZ_FINAL : public BoxObject
 public:
   ScrollBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollFrame();
 

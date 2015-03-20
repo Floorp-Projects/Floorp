@@ -69,9 +69,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 
 JSObject*
-HTMLAnchorElement::WrapNode(JSContext *aCx)
+HTMLAnchorElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLAnchorElementBinding::Wrap(aCx, this);
+  return HTMLAnchorElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)

@@ -21,7 +21,7 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(StereoPannerNode)
   explicit StereoPannerNode(AudioContext* aContext);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) MOZ_OVERRIDE
   {

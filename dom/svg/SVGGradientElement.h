@@ -43,7 +43,7 @@ class SVGGradientElement : public SVGGradientElementBase
 
 protected:
   explicit SVGGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE = 0;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE = 0;
 
 public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
@@ -93,7 +93,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase
 
 protected:
   explicit SVGLinearGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
@@ -126,7 +126,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase
 
 protected:
   explicit SVGRadialGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

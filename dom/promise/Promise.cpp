@@ -350,9 +350,9 @@ Promise::~Promise()
 }
 
 JSObject*
-Promise::WrapObject(JSContext* aCx)
+Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PromiseBinding::Wrap(aCx, this);
+  return PromiseBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

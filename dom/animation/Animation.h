@@ -189,7 +189,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Animation)
 
   nsIDocument* GetParentObject() const { return mDocument; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these

@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEDisplacementMapElement::WrapNode(JSContext* aCx)
+SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEDisplacementMapElementBinding::Wrap(aCx, this);
+  return SVGFEDisplacementMapElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] =

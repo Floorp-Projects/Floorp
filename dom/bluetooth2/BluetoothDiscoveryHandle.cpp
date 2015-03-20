@@ -58,7 +58,7 @@ BluetoothDiscoveryHandle::DispatchDeviceEvent(BluetoothDevice* aDevice)
 }
 
 JSObject*
-BluetoothDiscoveryHandle::WrapObject(JSContext* aCx)
+BluetoothDiscoveryHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BluetoothDiscoveryHandleBinding::Wrap(aCx, this);
+  return BluetoothDiscoveryHandleBinding::Wrap(aCx, this, aGivenProto);
 }

@@ -17,7 +17,7 @@ public:
   AudioStreamTrack(DOMMediaStream* aStream, TrackID aTrackID)
     : MediaStreamTrack(aStream, aTrackID) {}
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual AudioStreamTrack* AsAudioStreamTrack() MOZ_OVERRIDE { return this; }
 

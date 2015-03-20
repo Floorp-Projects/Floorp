@@ -355,7 +355,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
-  virtual JSObject *WrapObject(JSContext *cx) MOZ_OVERRIDE
+  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
     return IsInnerWindow() || EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
@@ -467,9 +467,6 @@ public:
   // Outer windows only.
   virtual bool CanClose() MOZ_OVERRIDE;
   virtual void ForceClose() MOZ_OVERRIDE;
-
-  virtual void MaybeUpdateTouchState() MOZ_OVERRIDE;
-  virtual void UpdateTouchState() MOZ_OVERRIDE;
 
   // Outer windows only.
   virtual bool DispatchCustomEvent(const nsAString& aEventName) MOZ_OVERRIDE;

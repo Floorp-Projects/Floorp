@@ -12,9 +12,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGStopElement::WrapNode(JSContext *aCx)
+SVGStopElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGStopElementBinding::Wrap(aCx, this);
+  return SVGStopElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGStopElement::sNumberInfo =
