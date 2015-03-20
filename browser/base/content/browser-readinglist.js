@@ -178,7 +178,7 @@ let ReadingListUI = {
       });
 
       target.insertBefore(menuitem, insertPoint);
-    });
+    }, {sort: "addedOn", descending: true});
 
     if (!hasItems) {
       let menuitem = document.createElement("menuitem");

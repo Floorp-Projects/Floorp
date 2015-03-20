@@ -224,6 +224,11 @@ ReadingListImpl.prototype = {
   addItem: Task.async(function* (obj) {
     obj = stripNonItemProperties(obj);
     normalizeReadingListProperties(obj);
+
+    obj.addedOn = Date.now();
+    if (Services.prefs.prefHasUserValue("services.sync.client.name"))
+      obj.addedBy = Services.prefs.getCharPref("services.sync.client.name");
+
     yield this._store.addItem(obj);
     this._invalidateIterators();
     let item = this._itemFromObject(obj);
