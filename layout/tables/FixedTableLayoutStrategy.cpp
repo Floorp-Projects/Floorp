@@ -55,7 +55,7 @@ FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
     nscoord result = 0;
 
     if (colCount > 0) {
-        result += mTableFrame->GetCellSpacingX(-1, colCount);
+        result += mTableFrame->GetColSpacing(-1, colCount);
     }
 
     for (int32_t col = 0; col < colCount; ++col) {
@@ -64,7 +64,7 @@ FixedTableLayoutStrategy::GetMinISize(nsRenderingContext* aRenderingContext)
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        nscoord spacing = mTableFrame->GetCellSpacingX(col);
+        nscoord spacing = mTableFrame->GetColSpacing(col);
         const nsStyleCoord *styleWidth =
             &colFrame->StylePosition()->mWidth;
         if (styleWidth->ConvertsToLength()) {
@@ -168,7 +168,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     }
 
     // border-spacing isn't part of the basis for percentages.
-    tableWidth -= mTableFrame->GetCellSpacingX(-1, colCount);
+    tableWidth -= mTableFrame->GetColSpacing(-1, colCount);
 
     // store the old column widths. We might call multiple times SetFinalWidth
     // on the columns, due to this we can't compare at the last call that the
@@ -280,7 +280,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                         // row, split up the space evenly.  (XXX This
                         // isn't quite right if some of the columns it's
                         // in have specified widths.  Should we care?)
-                        nscoord spacing = mTableFrame->GetCellSpacingX(col);
+                        nscoord spacing = mTableFrame->GetColSpacing(col);
                         colWidth = ((colWidth + spacing) / colSpan) - spacing;
                         if (colWidth < 0)
                             colWidth = 0;

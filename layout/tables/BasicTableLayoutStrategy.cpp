@@ -440,7 +440,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext* aRenderingC
     int32_t colCount = cellMap->GetColCount();
     // add a total of (colcount + 1) lots of cellSpacingX for columns where a
     // cell originates
-    nscoord add = mTableFrame->GetCellSpacingX(colCount);
+    nscoord add = mTableFrame->GetColSpacing(colCount);
 
     for (int32_t col = 0; col < colCount; ++col) {
         nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
@@ -449,7 +449,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(nsRenderingContext* aRenderingC
             continue;
         }
         if (mTableFrame->ColumnHasCellSpacingBefore(col)) {
-            add += mTableFrame->GetCellSpacingX(col - 1);
+            add += mTableFrame->GetColSpacing(col - 1);
         }
         min += colFrame->GetMinCoord();
         pref = NSCoordSaturatingAdd(pref, colFrame->GetPrefCoord());
@@ -665,15 +665,15 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
     for (int32_t col = aFirstCol + 1; col < aFirstCol + aColCount; ++col) {
         if (mTableFrame->ColumnHasCellSpacingBefore(col)) {
             // border-spacing isn't part of the basis for percentages.
-            subtract += mTableFrame->GetCellSpacingX(col - 1);
+            subtract += mTableFrame->GetColSpacing(col - 1);
         }
     }
     if (aWidthType == BTLS_FINAL_WIDTH) {
         // If we're computing final col-width, then aWidth initially includes
         // border spacing on the table's far left + far right edge, too.  Need
         // to subtract those out, too.
-        subtract += (mTableFrame->GetCellSpacingX(-1) +
-                     mTableFrame->GetCellSpacingX(aColCount));
+        subtract += (mTableFrame->GetColSpacing(-1) +
+                     mTableFrame->GetColSpacing(aColCount));
     }
     aWidth = NSCoordSaturatingSubtract(aWidth, subtract, nscoord_MAX);
 
