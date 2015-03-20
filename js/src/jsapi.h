@@ -1898,15 +1898,32 @@ JS_StringToId(JSContext* cx, JS::HandleString s, JS::MutableHandleId idp);
 extern JS_PUBLIC_API(bool)
 JS_IdToValue(JSContext* cx, jsid id, JS::MutableHandle<JS::Value> vp);
 
-/*
- * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
- * the specified object, computing a primitive default value for the object.
- * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
- * success the resulting value is stored in *vp.
+/**
+ * Convert obj to a primitive value. On success, store the result in vp and
+ * return true.
+ *
+ * The hint argument must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no
+ * hint).
+ *
+ * Implements: ES6 7.1.1 ToPrimitive(input, [PreferredType]).
  */
 extern JS_PUBLIC_API(bool)
-JS_DefaultValue(JSContext* cx, JS::Handle<JSObject*> obj, JSType hint,
-                JS::MutableHandle<JS::Value> vp);
+JS_DefaultValue(JSContext* cx, JS::HandleObject obj, JSType hint,
+                JS::MutableHandleValue vp);
+
+namespace JS {
+
+/**
+ * If args.get(0) is one of the strings "string", "number", or "default", set
+ * *result to JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID accordingly and
+ * return true. Otherwise, return false with a TypeError pending.
+ *
+ * This can be useful in implementing a @@toPrimitive method.
+ */
+extern JS_PUBLIC_API(bool)
+GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result);
+
+} /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
 JS_PropertyStub(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
@@ -2113,7 +2130,7 @@ struct JSFunctionSpec {
     JS_FNSPEC(name, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_INLINABLE_FN(name,call,nargs,flags,native)                         \
     JS_FNSPEC(name, call, &js::jit::JitInfo_##native, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
-#define JS_SYM_FN(name,call,nargs,flags)                                      \
+#define JS_SYM_FN(symbol,call,nargs,flags)                                    \
     JS_SYM_FNSPEC(symbol, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_FNINFO(name,call,info,nargs,flags)                                 \
     JS_FNSPEC(name, call, info, nargs, flags, nullptr)
@@ -4384,15 +4401,16 @@ GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
 enum class SymbolCode : uint32_t {
-    iterator,                       // Symbol.iterator
-    match,                          // Symbol.match
-    species,                        // Symbol.species
+    iterator,                       // well-known symbols
+    match,
+    species,
+    toPrimitive,
     InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
     UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
 };
 
 /* For use in loops that iterate over the well-known symbols. */
-const size_t WellKnownSymbolLimit = 3;
+const size_t WellKnownSymbolLimit = 4;
 
 /*
  * Return the SymbolCode telling what sort of symbol `symbol` is.
