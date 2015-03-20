@@ -38,7 +38,6 @@ add_task(function* prepare() {
       title: `title ${i}`,
       excerpt: `excerpt ${i}`,
       unread: 0,
-      addedOn: Date.now(),
       lastModified: Date.now(),
       favorite: 0,
       isArticle: 1,
