@@ -10,6 +10,7 @@
 using JS::RootedObject;
 using JS::RootedScript;
 using JS::RootedString;
+using namespace js;
 
 // ubi::Node::zone works
 BEGIN_TEST(test_ubiNodeZone)
