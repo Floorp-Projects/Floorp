@@ -458,8 +458,11 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
     mPrefSize = prefSize;
   }
 
+  bool needCallback = false;
+
   if (shouldPosition) {
     SetPopupPosition(aAnchor, false, aSizedToPopup);
+    needCallback = true;
   }
 
   nsRect bounds(GetRect());
@@ -477,6 +480,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
       mPrefSize = newsize;
       if (isOpen) {
         SetPopupPosition(aAnchor, false, aSizedToPopup);
+        needCallback = true;
       }
     }
   }
@@ -528,6 +532,27 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
     nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);
     NS_DispatchToCurrentThread(event);
   }
+
+  if (needCallback && !mReflowCallbackData.mPosted) {
+    pc->PresShell()->PostReflowCallback(this);
+    mReflowCallbackData.MarkPosted(aAnchor, aSizedToPopup);
+  }
+}
+
+bool
+nsMenuPopupFrame::ReflowFinished()
+{
+  SetPopupPosition(mReflowCallbackData.mAnchor, false, mReflowCallbackData.mSizedToPopup);
+
+  mReflowCallbackData.Clear();
+
+  return false;
+}
+
+void
+nsMenuPopupFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackData.Clear();
 }
 
 nsIContent*
@@ -1943,6 +1968,11 @@ nsMenuPopupFrame::MoveToAttributePosition()
 void
 nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
+  if (mReflowCallbackData.mPosted) {
+    PresContext()->PresShell()->CancelReflowCallback(this);
+    mReflowCallbackData.Clear();
+  }
+
   nsMenuFrame* menu = do_QueryFrame(GetParent());
   if (menu) {
     // clear the open attribute on the parent menu
