@@ -171,11 +171,6 @@ static inline void profiler_save_profile_to_file(char* aFilename) { }
 // Returns a null terminated char* array.
 static inline char** profiler_get_features() { return nullptr; }
 
-// Print the current location to the console. This functill will do it best effort
-// to show the profiler's combined js/c++ if the profiler is running. Note that
-// printing the location require symbolicating which is very slow.
-static inline void profiler_print_location() {}
-
 // Discard the profile, throw away the profile and notify 'profiler-locked'.
 // This function is to be used when entering private browsing to prevent
 // the profiler from collecting sensitive data.

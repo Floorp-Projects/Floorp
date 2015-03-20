@@ -908,11 +908,6 @@ void mozilla_sampler_frame_number(int frameNumber)
   sFrameNumber = frameNumber;
 }
 
-void mozilla_sampler_print_location2()
-{
-  // FIXME
-}
-
 void mozilla_sampler_lock()
 {
   profiler_stop();
