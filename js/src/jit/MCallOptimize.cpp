@@ -360,9 +360,22 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2, 4);
 
     if (native == js::simd_int32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 4);
+    if (native == js::simd_int32x4_loadX)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 1);
+    if (native == js::simd_int32x4_loadXY)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 2);
+    if (native == js::simd_int32x4_loadXYZ)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 3);
+
     if (native == js::simd_float32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 4);
+    if (native == js::simd_float32x4_loadX)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1);
+    if (native == js::simd_float32x4_loadXY)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2);
+    if (native == js::simd_float32x4_loadXYZ)
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 3);
 
     if (native == js::simd_int32x4_store)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32);
@@ -3194,7 +3207,8 @@ IonBuilder::prepareForSimdLoadStore(CallInfo &callInfo, Scalar::Type simdType, M
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type)
+IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::Type type,
+                           unsigned numElems)
 {
     InlineTypedObject *templateObj = nullptr;
     if (!checkInlineSimd(callInfo, native, type, 2, &templateObj))
@@ -3210,7 +3224,7 @@ IonBuilder::inlineSimdLoad(CallInfo &callInfo, JSNative native, SimdTypeDescr::T
 
     MLoadUnboxedScalar *load = MLoadUnboxedScalar::New(alloc(), elements, index, arrayType);
     load->setResultType(SimdTypeDescrToMIRType(type));
-    load->setReadType(simdType);
+    load->setSimdRead(simdType, numElems);
 
     return boxSimd(callInfo, load, templateObj);
 }

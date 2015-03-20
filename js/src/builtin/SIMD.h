@@ -244,14 +244,14 @@
     _(swizzle)                       \
     _(shuffle)                       \
     _(load)                          \
+    _(loadX)                         \
+    _(loadXY)                        \
+    _(loadXYZ)                       \
     _(store)                         \
     _(check)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(_) \
-    _(loadX)                         \
-    _(loadXY)                        \
-    _(loadXYZ)                       \
     _(storeX)                        \
     _(storeXY)                       \
     _(storeXYZ)

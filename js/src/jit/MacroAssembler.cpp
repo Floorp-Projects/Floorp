@@ -320,7 +320,7 @@ MacroAssembler::storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister val
 template<typename T>
 void
 MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegister dest, Register temp,
-                                   Label *fail, bool canonicalizeDoubles)
+                                   Label *fail, bool canonicalizeDoubles, unsigned numElems)
 {
     switch (arrayType) {
       case Scalar::Int8:
@@ -362,10 +362,38 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
             canonicalizeDouble(dest.fpu());
         break;
       case Scalar::Int32x4:
-        loadUnalignedInt32x4(src, dest.fpu());
+        switch (numElems) {
+          case 1:
+            loadInt32x1(src, dest.fpu());
+            break;
+          case 2:
+            loadInt32x2(src, dest.fpu());
+            break;
+          case 3:
+            loadInt32x3(src, dest.fpu());
+            break;
+          case 4:
+            loadUnalignedInt32x4(src, dest.fpu());
+            break;
+          default: MOZ_CRASH("unexpected number of elements in SIMD load");
+        }
         break;
       case Scalar::Float32x4:
-        loadUnalignedFloat32x4(src, dest.fpu());
+        switch (numElems) {
+          case 1:
+            loadFloat32(src, dest.fpu());
+            break;
+          case 2:
+            loadDouble(src, dest.fpu());
+            break;
+          case 3:
+            loadFloat32x3(src, dest.fpu());
+            break;
+          case 4:
+            loadUnalignedFloat32x4(src, dest.fpu());
+            break;
+          default: MOZ_CRASH("unexpected number of elements in SIMD load");
+        }
         break;
       default:
         MOZ_CRASH("Invalid typed array type");
@@ -373,9 +401,11 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T &src, AnyRegi
 }
 
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const Address &src, AnyRegister dest,
-                                                 Register temp, Label *fail, bool canonicalizeDoubles);
+                                                 Register temp, Label *fail, bool canonicalizeDoubles,
+                                                 unsigned numElems);
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const BaseIndex &src, AnyRegister dest,
-                                                 Register temp, Label *fail, bool canonicalizeDoubles);
+                                                 Register temp, Label *fail, bool canonicalizeDoubles,
+                                                 unsigned numElems);
 
 template<typename T>
 void

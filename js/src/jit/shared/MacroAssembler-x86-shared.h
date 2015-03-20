@@ -979,6 +979,35 @@ class MacroAssemblerX86Shared : public Assembler
     template <class T> inline void loadAlignedVector(const Address &src, FloatRegister dest);
     template <class T> inline void storeAlignedVector(FloatRegister src, const Address &dest);
 
+    void loadInt32x1(const Address &src, FloatRegister dest) {
+        vmovd(Operand(src), dest);
+    }
+    void loadInt32x1(const BaseIndex &src, FloatRegister dest) {
+        vmovd(Operand(src), dest);
+    }
+    void loadInt32x2(const Address &src, FloatRegister dest) {
+        vmovq(Operand(src), dest);
+    }
+    void loadInt32x2(const BaseIndex &src, FloatRegister dest) {
+        vmovq(Operand(src), dest);
+    }
+    void loadInt32x3(const BaseIndex &src, FloatRegister dest) {
+        BaseIndex srcZ(src);
+        srcZ.offset += 2 * sizeof(int32_t);
+
+        vmovq(Operand(src), dest);
+        vmovd(Operand(srcZ), ScratchSimdReg);
+        vmovlhps(ScratchSimdReg, dest, dest);
+    }
+    void loadInt32x3(const Address &src, FloatRegister dest) {
+        Address srcZ(src);
+        srcZ.offset += 2 * sizeof(int32_t);
+
+        vmovq(Operand(src), dest);
+        vmovd(Operand(srcZ), ScratchSimdReg);
+        vmovlhps(ScratchSimdReg, dest, dest);
+    }
+
     void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
         vmovdqa(Operand(src), dest);
     }
@@ -1064,6 +1093,21 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void packedUnsignedRightShiftByScalar(Imm32 count, FloatRegister dest) {
         vpsrld(count, dest, dest);
+    }
+
+    void loadFloat32x3(const Address &src, FloatRegister dest) {
+        Address srcZ(src);
+        srcZ.offset += 2 * sizeof(float);
+        vmovsd(src, dest);
+        vmovss(srcZ, ScratchSimdReg);
+        vmovlhps(ScratchSimdReg, dest, dest);
+    }
+    void loadFloat32x3(const BaseIndex &src, FloatRegister dest) {
+        BaseIndex srcZ(src);
+        srcZ.offset += 2 * sizeof(float);
+        vmovsd(src, dest);
+        vmovss(srcZ, ScratchSimdReg);
+        vmovlhps(ScratchSimdReg, dest, dest);
     }
 
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
