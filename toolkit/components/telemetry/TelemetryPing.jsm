@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -40,6 +41,8 @@ const TELEMETRY_DELAY = 60000;
 const TELEMETRY_TEST_DELAY = 100;
 // The number of days to keep pings serialised on the disk in case of failures.
 const DEFAULT_RETENTION_DAYS = 14;
+// Timeout after which we consider a ping submission failed.
+const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
@@ -490,8 +493,8 @@ let Impl = {
       }, error => this._log.error("savePing - Rejection", error));
   },
 
-  finishPingRequest: function finishPingRequest(success, startTime, ping, isPersisted) {
-    this._log.trace("finishPingRequest - Success " + success + ", Persisted " + isPersisted);
+  onPingRequestFinished: function(success, startTime, ping, isPersisted) {
+    this._log.trace("onPingRequestFinished - success: " + success + ", persisted: " + isPersisted);
 
     let hping = Telemetry.getHistogramById("TELEMETRY_PING");
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
@@ -541,21 +544,25 @@ let Impl = {
 
   doPing: function doPing(ping, isPersisted) {
     this._log.trace("doPing - Server " + this._server + ", Persisted " + isPersisted);
-    let deferred = Promise.defer();
-    let isNewPing = isNewPingFormat(ping);
-    let version = isNewPing ? PING_FORMAT_VERSION : 1;
-    let url = this._server + this.submissionPath(ping) + "?v=" + version;
+
+    const isNewPing = isNewPingFormat(ping);
+    const version = isNewPing ? PING_FORMAT_VERSION : 1;
+    const url = this._server + this.submissionPath(ping) + "?v=" + version;
+
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
+    request.timeout = PING_SUBMIT_TIMEOUT_MS;
+
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
     let startTime = new Date();
+    let deferred = PromiseUtils.defer();
 
-    function handler(success) {
-      let handleCompletion = event => {
+    let onRequestFinished = (success, event) => {
+      let onCompletion = () => {
         if (success) {
           deferred.resolve();
         } else {
@@ -563,18 +570,50 @@ let Impl = {
         }
       };
 
-      return function(event) {
-        this.finishPingRequest(success, startTime, ping, isPersisted)
-          .then(() => handleCompletion(event),
-                error => {
-                  this._log.error("doPing - Request Success " + success + ", Error " +
-                                  error);
-                  handleCompletion(event);
-                });
-      };
-    }
-    request.addEventListener("error", handler(false).bind(this), false);
-    request.addEventListener("load", handler(true).bind(this), false);
+      this.onPingRequestFinished(success, startTime, ping, isPersisted)
+        .then(() => onCompletion(),
+              (error) => {
+                this._log.error("doPing - request success: " + success + ", error" + error);
+                onCompletion();
+              });
+    };
+
+    let errorhandler = (event) => {
+      this._log.error("doPing - error making request to " + url + ": " + event.type);
+      onRequestFinished(false, event);
+    };
+    request.onerror = errorhandler;
+    request.ontimeout = errorhandler;
+    request.onabort = errorhandler;
+
+    request.onload = (event) => {
+      let status = request.status;
+      let statusClass = status - (status % 100);
+      let success = false;
+
+      if (statusClass === 200) {
+        // We can treat all 2XX as success.
+        this._log.info("doPing - successfully loaded, status: " + status);
+        success = true;
+      } else if (statusClass === 400) {
+        // 4XX means that something with the request was broken.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + " - ping request broken?");
+        // TODO: we should handle this better, but for now we should avoid resubmitting
+        // broken requests by pretending success.
+        success = true;
+      } else if (statusClass === 500) {
+        // 5XX means there was a server-side error and we should try again later.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + " - server error, should retry later");
+      } else {
+        // We received an unexpected status codes.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + ", type: " + event.type);
+      }
+
+      onRequestFinished(success, event);
+    };
 
     // If that's a legacy ping format, just send its payload.
     let networkPayload = isNewPing ? ping : ping.payload;
@@ -588,6 +627,7 @@ let Impl = {
                         .createInstance(Ci.nsIStringInputStream);
     payloadStream.data = this.gzipCompressString(utf8Payload);
     request.send(payloadStream);
+
     return deferred.promise;
   },
 
