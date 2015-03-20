@@ -12,6 +12,10 @@
 
 [NoInterfaceObject]
 interface Animatable {
+  // Temporary alias for getAnimations (bug 1145246)
   [Func="nsDocument::IsWebAnimationsEnabled"]
   sequence<AnimationPlayer> getAnimationPlayers();
+
+  [Func="nsDocument::IsWebAnimationsEnabled"]
+  sequence<AnimationPlayer> getAnimations();
 };
