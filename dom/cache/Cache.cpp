@@ -375,9 +375,9 @@ Cache::GetParentObject() const
 }
 
 JSObject*
-Cache::WrapObject(JSContext* aContext)
+Cache::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return CacheBinding::Wrap(aContext, this);
+  return CacheBinding::Wrap(aContext, this, aGivenProto);
 }
 
 void

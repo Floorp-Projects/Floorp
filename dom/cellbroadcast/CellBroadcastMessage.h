@@ -44,7 +44,7 @@ public:
   nsPIDOMWindow*
   GetParentObject() const { return mWindow; }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // WebIDL interface
 
@@ -106,7 +106,7 @@ public:
   nsPIDOMWindow*
   GetParentObject() const { return mWindow; }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // WebIDL interface
 

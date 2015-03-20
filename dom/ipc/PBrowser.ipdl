@@ -56,6 +56,7 @@ using mozilla::CommandInt from "mozilla/EventForwards.h";
 using mozilla::Modifiers from "mozilla/EventForwards.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 using mozilla::WritingMode from "WritingModes.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -438,6 +439,13 @@ parent:
      * touch event.
      */
     SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+
+    /**
+     * Notifies the APZ code of the allowed touch-behaviours for a particular
+     * input block. Each item in the aFlags array corresponds to one touch point
+     * in the touch event.
+     */
+    SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aFlags);
 
     /**
      * Updates the zoom constraints for a scrollable frame in this tab.

@@ -97,11 +97,8 @@ public:
     MOZ_ASSERT(aResolver);
     MOZ_ASSERT(aQuotaInfo.mDir);
 
-    if (IsCanceled()) {
-      // TODO: handle orphaned files (bug 1110446)
-      aResolver->Resolve(NS_ERROR_ABORT);
-      return;
-    }
+    // Note that since DeleteOrphanedBodyAction isn't used while the context is
+    // being initialized, we don't need to check for cancellation here.
 
     nsCOMPtr<nsIFile> dbDir;
     nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(dbDir));

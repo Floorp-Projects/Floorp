@@ -50,9 +50,9 @@ BatteryManager::Shutdown()
 }
 
 JSObject*
-BatteryManager::WrapObject(JSContext* aCx)
+BatteryManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BatteryManagerBinding::Wrap(aCx, this);
+  return BatteryManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 double

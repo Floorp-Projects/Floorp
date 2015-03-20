@@ -39,7 +39,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   void Reboot(ErrorResult& aRv);
   void FactoryReset(mozilla::dom::FactoryResetReason& aReason);
   void PowerOff(ErrorResult& aRv);

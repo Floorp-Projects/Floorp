@@ -58,9 +58,9 @@ AbortablePromise::Create(nsIGlobalObject* aGlobal,
 }
 
 JSObject*
-AbortablePromise::WrapObject(JSContext* aCx)
+AbortablePromise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozAbortablePromiseBinding::Wrap(aCx, this);
+  return MozAbortablePromiseBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<AbortablePromise>

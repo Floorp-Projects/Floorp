@@ -223,7 +223,7 @@ PostMessageReadTransferStructuredClone(JSContext* aCx,
     port->BindToOwner(scInfo->mPort->GetOwner());
     scInfo->mPorts.Put(port, nullptr);
 
-    JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx));
+    JS::Rooted<JSObject*> obj(aCx, port->WrapObject(aCx, JS::NullPtr()));
     if (!obj || !JS_WrapObject(aCx, &obj)) {
       return false;
     }
@@ -414,9 +414,9 @@ MessagePort::~MessagePort()
 }
 
 JSObject*
-MessagePort::WrapObject(JSContext* aCx)
+MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MessagePortBinding::Wrap(aCx, this);
+  return MessagePortBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

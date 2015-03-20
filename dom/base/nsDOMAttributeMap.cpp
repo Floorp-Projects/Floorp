@@ -587,7 +587,7 @@ nsDOMAttributeMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 /* virtual */ JSObject*
-nsDOMAttributeMap::WrapObject(JSContext* aCx)
+nsDOMAttributeMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NamedNodeMapBinding::Wrap(aCx, this);
+  return NamedNodeMapBinding::Wrap(aCx, this, aGivenProto);
 }

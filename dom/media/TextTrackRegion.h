@@ -35,7 +35,7 @@ public:
            Preferences::GetBool("media.webvtt.regions.enabled");
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   nsISupports* GetParentObject() const
   {

@@ -26,9 +26,9 @@ DOMCameraDetectedFace::HasSupport(JSContext* aCx, JSObject* aGlobal)
 }
 
 JSObject*
-DOMCameraDetectedFace::WrapObject(JSContext* aCx)
+DOMCameraDetectedFace::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CameraDetectedFaceBinding::Wrap(aCx, this);
+  return CameraDetectedFaceBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */

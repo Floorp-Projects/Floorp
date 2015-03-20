@@ -17,9 +17,22 @@
 #include "base/posix/eintr_wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/DebugOnly.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/services/linux_syscalls.h"
+
+// A note about assertions: in general, the worst thing this module
+// should be able to do is disable sandboxing features, so release
+// asserts or MOZ_CRASH should be avoided, even for seeming
+// impossibilities like an unimplemented syscall returning success
+// (which has happened: https://crbug.com/439795 ).
+//
+// MOZ_DIAGNOSTIC_ASSERT (debug builds, plus Nightly/Aurora non-debug)
+// is probably the best choice for conditions that shouldn't be able
+// to fail without the help of bugs in the kernel or system libraries.
+//
+// Regardless of assertion type, whatever condition caused it to fail
+// should generally also disable the corresponding feature on builds
+// that omit the assertion.
 
 namespace mozilla {
 
@@ -34,12 +47,12 @@ HasSeccompBPF()
   // enable it with an invalid pointer for the filter.  This will
   // fail with EFAULT if supported and EINVAL if not, without
   // changing the process's state.
-  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr) != -1) {
-    MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr)"
-              " didn't fail");
-  }
-  MOZ_ASSERT(errno == EFAULT || errno == EINVAL);
-  return errno == EFAULT;
+
+  int rv = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr);
+  MOZ_DIAGNOSTIC_ASSERT(rv == -1, "prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER,"
+                        " nullptr) didn't fail");
+  MOZ_DIAGNOSTIC_ASSERT(errno == EFAULT || errno == EINVAL);
+  return rv == -1 && errno == EFAULT;
 }
 
 static bool
@@ -50,13 +63,12 @@ HasSeccompTSync()
   if (getenv("MOZ_FAKE_NO_SECCOMP_TSYNC")) {
     return false;
   }
-  if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
-              SECCOMP_FILTER_FLAG_TSYNC, nullptr) != -1) {
-    MOZ_CRASH("seccomp(..., SECCOMP_FILTER_FLAG_TSYNC, nullptr)"
-              " didn't fail");
-  }
-  MOZ_ASSERT(errno == EFAULT || errno == EINVAL || errno == ENOSYS);
-  return errno == EFAULT;
+  int rv = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
+                   SECCOMP_FILTER_FLAG_TSYNC, nullptr);
+  MOZ_DIAGNOSTIC_ASSERT(rv == -1, "seccomp(..., SECCOMP_FILTER_FLAG_TSYNC,"
+                        " nullptr) didn't fail");
+  MOZ_DIAGNOSTIC_ASSERT(errno == EFAULT || errno == EINVAL || errno == ENOSYS);
+  return rv == -1 && errno == EFAULT;
 }
 
 static bool
@@ -106,13 +118,16 @@ CanCreateUserNamespace()
     // Failure.
     MOZ_ASSERT(errno == EINVAL || // unsupported
                errno == EPERM  || // root-only, or we're already chrooted
-               errno == EUSERS);  // already inside 32 nested user namespaces
+               errno == EUSERS);  // already at user namespace nesting limit
     setenv(kCacheEnvName, "0", 1);
     return false;
   }
   // Otherwise, in the parent and successful.
-  DebugOnly<bool> ok = HANDLE_EINTR(waitpid(pid, nullptr, 0)) == pid;
-  MOZ_ASSERT(ok);
+  bool waitpid_ok = HANDLE_EINTR(waitpid(pid, nullptr, 0)) == pid;
+  MOZ_ASSERT(waitpid_ok);
+  if (!waitpid_ok) {
+    return false;
+  }
   setenv(kCacheEnvName, "1", 1);
   return true;
 }

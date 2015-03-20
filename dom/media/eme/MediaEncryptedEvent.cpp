@@ -46,9 +46,9 @@ MediaEncryptedEvent::~MediaEncryptedEvent()
 }
 
 JSObject*
-MediaEncryptedEvent::WrapObjectInternal(JSContext* aCx)
+MediaEncryptedEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaEncryptedEventBinding::Wrap(aCx, this);
+  return MediaEncryptedEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<MediaEncryptedEvent>

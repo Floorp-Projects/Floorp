@@ -64,7 +64,7 @@ DOMMobileMessageError::GetData(OwningMozSmsMessageOrMozMmsMessage& aRetVal) cons
 }
 
 JSObject*
-DOMMobileMessageError::WrapObject(JSContext* aCx)
+DOMMobileMessageError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMMobileMessageErrorBinding::Wrap(aCx, this);
+  return DOMMobileMessageErrorBinding::Wrap(aCx, this, aGivenProto);
 }

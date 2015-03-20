@@ -20,9 +20,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessagePortList)
 NS_INTERFACE_MAP_END
 
 JSObject*
-MessagePortList::WrapObject(JSContext* aCx)
+MessagePortList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MessagePortListBinding::Wrap(aCx, this);
+  return MessagePortListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

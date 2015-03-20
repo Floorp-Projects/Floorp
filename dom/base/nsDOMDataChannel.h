@@ -42,7 +42,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDataChannel,
                                            mozilla::DOMEventTargetHelper)
 
-  virtual JSObject* WrapObject(JSContext* aCx)
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE;
   nsPIDOMWindow* GetParentObject() const
   {

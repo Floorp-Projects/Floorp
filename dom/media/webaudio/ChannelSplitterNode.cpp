@@ -69,9 +69,9 @@ ChannelSplitterNode::~ChannelSplitterNode()
 }
 
 JSObject*
-ChannelSplitterNode::WrapObject(JSContext* aCx)
+ChannelSplitterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ChannelSplitterNodeBinding::Wrap(aCx, this);
+  return ChannelSplitterNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 }

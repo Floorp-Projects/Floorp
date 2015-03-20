@@ -70,11 +70,11 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
                                    mSharedWorker)
 
 JSObject*
-ServiceWorker::WrapObject(JSContext* aCx)
+ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   AssertIsOnMainThread();
 
-  return ServiceWorkerBinding::Wrap(aCx, this);
+  return ServiceWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

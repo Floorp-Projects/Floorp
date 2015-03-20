@@ -23,9 +23,9 @@ NS_IMPL_ISUPPORTS_INHERITED(nsXMLElement, Element,
                             nsIDOMNode, nsIDOMElement)
 
 JSObject*
-nsXMLElement::WrapNode(JSContext *aCx)
+nsXMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ElementBinding::Wrap(aCx, this);
+  return ElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ELEMENT_CLONE(nsXMLElement)

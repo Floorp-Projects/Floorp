@@ -473,7 +473,7 @@ NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
 const nsSubstring&
 NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult)
 {
-  if (T_EscapeURL(aStr.Data(), aStr.Length(), aFlags, aResult)) {
+  if (T_EscapeURL<nsSubstring>(aStr.Data(), aStr.Length(), aFlags, aResult)) {
     return aResult;
   }
   return aStr;

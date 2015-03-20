@@ -234,18 +234,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 JSObject*
-Event::WrapObject(JSContext* aCx)
+Event::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mIsMainThreadEvent && !GetWrapperPreserveColor()) {
     nsJSContext::LikelyShortLivingObjectCreated();
   }
-  return WrapObjectInternal(aCx);
+  return WrapObjectInternal(aCx, aGivenProto);
 }
 
 JSObject*
-Event::WrapObjectInternal(JSContext* aCx)
+Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return EventBinding::Wrap(aCx, this);
+  return EventBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

@@ -16,9 +16,9 @@
   <script>
     // Simulate the behavior of ruby layout.
     var base = document.getElementById('base');
-    makeHeightMatchInlineBox(base, document.getElementById('inline'));
-    base.style.paddingTop = getHeight(document.getElementById('text1'));
-    base.style.paddingBottom = getHeight(document.getElementById('text2'));
+    makeBSizeMatchInlineBox(base, document.getElementById('inline'));
+    base.style.paddingTop = getBSize(document.getElementById('text1'));
+    base.style.paddingBottom = getBSize(document.getElementById('text2'));
   </script>
 </body>
 </html>

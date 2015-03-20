@@ -46,10 +46,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamList)
 NS_INTERFACE_MAP_END
 
 JSObject*
-MediaStreamList::WrapObject(JSContext* cx)
+MediaStreamList::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
 #ifdef MOZILLA_INTERNAL_API
-  return MediaStreamListBinding::Wrap(cx, this);
+  return MediaStreamListBinding::Wrap(cx, this, aGivenProto);
 #else
   return nullptr;
 #endif

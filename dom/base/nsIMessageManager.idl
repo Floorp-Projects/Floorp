@@ -201,7 +201,7 @@ interface nsIMessageListener : nsISupports
   void receiveMessage();
 };
 
-[scriptable, builtinclass, uuid(aae827bd-acf1-45fe-a556-ea545d4c0804)]
+[scriptable, builtinclass, uuid(b949bfec-bb7d-47bc-b387-ac6a9b655072)]
 interface nsIMessageListenerManager : nsISupports
 {
   /**
@@ -213,9 +213,16 @@ interface nsIMessageListenerManager : nsISupports
    *
    * If the same listener registers twice for the same message, the
    * second registration is ignored.
+   *
+   * Pass true for listenWhenClosed if you want to receive messages
+   * during the short period after a frame has been removed from the
+   * DOM and before its frame script has finished unloading. This
+   * parameter only has an effect for frame message managers in
+   * the main process. Default is false.
    */
   void addMessageListener(in AString messageName,
-                          in nsIMessageListener listener);
+                          in nsIMessageListener listener,
+                          [optional] in boolean listenWhenClosed);
 
   /**
    * Undo an |addMessageListener| call -- that is, calling this causes us to no
@@ -252,7 +259,7 @@ interface nsIMessageListenerManager : nsISupports
  * messages that are only delivered to its one parent-process message
  * manager.
  */
-[scriptable, builtinclass, uuid(d6b0d851-43e6-426d-9f13-054bc0198175)]
+[scriptable, builtinclass, uuid(bb5d79e4-e73c-45e7-9651-4d718f4b994c)]
 interface nsIMessageSender : nsIMessageListenerManager
 {
   /**
@@ -284,7 +291,7 @@ interface nsIMessageSender : nsIMessageListenerManager
  * manager will broadcast the message to all frame message managers
  * within its window.
  */
-[scriptable, builtinclass, uuid(d36346b9-5d3b-497d-9c28-ffbc3e4f6d0d)]
+[scriptable, builtinclass, uuid(4d7d62ad-4725-4f39-86cf-8fb22bf9c1d8)]
 interface nsIMessageBroadcaster : nsIMessageListenerManager
 {
   /**
@@ -311,7 +318,7 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
   nsIMessageListenerManager getChildAt(in unsigned long aIndex);
 };
 
-[scriptable, builtinclass, uuid(7fda0941-9dcc-448b-bd39-16373c5b4003)]
+[scriptable, builtinclass, uuid(0e602c9e-1977-422a-a8e4-fe0d4a4f78d0)]
 interface nsISyncMessageSender : nsIMessageSender
 {
   /**
@@ -341,7 +348,7 @@ interface nsISyncMessageSender : nsIMessageSender
                        [optional] in nsIPrincipal principal);
 };
 
-[scriptable, builtinclass, uuid(e04a7ade-c61a-46ec-9f13-efeabedd9d3d)]
+[scriptable, builtinclass, uuid(13f3555f-769e-44ea-b607-5239230c3162)]
 interface nsIMessageManagerGlobal : nsISyncMessageSender
 {
   /**
@@ -376,13 +383,13 @@ interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
   readonly attribute nsIDocShell docShell;
 };
 
-[uuid(a2325927-9c0c-437d-9215-749c79235031)]
+[uuid(a9e07e89-7125-48e3-bf73-2cbae7fc5b1c)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, builtinclass, uuid(9ca95410-b253-11e4-ab27-0800200c9a66)]
+[scriptable, builtinclass, uuid(d0c799a2-d5ff-4a75-acbb-b8c8347944a6)]
 interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
 {
 };

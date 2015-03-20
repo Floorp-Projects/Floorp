@@ -30,9 +30,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return MutationEventBinding::Wrap(aCx, this);
+    return MutationEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   // xpidl implementation

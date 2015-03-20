@@ -50,8 +50,9 @@ static const int kDistanceContextBits = 2;
 
 #define HUFFMAN_TABLE_BITS      8
 #define HUFFMAN_TABLE_MASK      0xff
-/* This is a rough estimate, not an exact bound. */
-#define HUFFMAN_MAX_TABLE_SIZE  2048
+/* Maximum possible Huffman table size for an alphabet size of 704, max code
+ * length 15 and root table bits 8. */
+#define HUFFMAN_MAX_TABLE_SIZE  1080
 
 #define CODE_LENGTH_CODES 18
 static const uint8_t kCodeLengthCodeOrder[CODE_LENGTH_CODES] = {
@@ -531,7 +532,7 @@ static BROTLI_INLINE void IncrementalCopyFastPath(
     uint8_t* dst, const uint8_t* src, int len) {
   if (src < dst) {
     while (dst - src < 8) {
-      UNALIGNED_COPY64(dst, src);
+      UNALIGNED_MOVE64(dst, src);
       len -= (int)(dst - src);
       dst += dst - src;
     }
@@ -552,6 +553,7 @@ int CopyUncompressedBlockToOutput(BrotliOutput output, int len, int pos,
   int rb_pos = pos & ringbuffer_mask;
   int br_pos = br->pos_ & BROTLI_IBUF_MASK;
   int nbytes;
+  uint32_t remaining_bits;
 
   /* For short lengths copy byte-by-byte */
   if (len < 8 || br->bit_pos_ + (uint32_t)(len << 3) < br->bit_end_pos_) {
@@ -574,8 +576,16 @@ int CopyUncompressedBlockToOutput(BrotliOutput output, int len, int pos,
     return 0;
   }
 
-  /* Copy remaining 0-8 bytes from br->val_ to ringbuffer. */
-  while (br->bit_pos_ < 64) {
+  /*
+   * Copy remaining 0-4 in 32-bit case or 0-8 bytes in the 64-bit case
+   * from br->val_ to ringbuffer.
+   */
+#if (BROTLI_USE_64_BITS)
+  remaining_bits = 64;
+#else
+  remaining_bits = 32;
+#endif
+  while (br->bit_pos_ < remaining_bits) {
     ringbuffer[rb_pos] = (uint8_t)(br->val_ >> br->bit_pos_);
     br->bit_pos_ += 8;
     ++rb_pos;
@@ -633,22 +643,62 @@ int CopyUncompressedBlockToOutput(BrotliOutput output, int len, int pos,
 int BrotliDecompressedSize(size_t encoded_size,
                            const uint8_t* encoded_buffer,
                            size_t* decoded_size) {
-  BrotliMemInput memin;
-  BrotliInput input = BrotliInitMemInput(encoded_buffer, encoded_size, &memin);
-  BrotliBitReader br;
-  int meta_block_len;
-  int input_end;
-  int is_uncompressed;
-  if (!BrotliInitBitReader(&br, input)) {
+  int i;
+  uint64_t val = 0;
+  int bit_pos = 0;
+  int is_last;
+  int is_uncompressed = 0;
+  int size_nibbles;
+  int meta_block_len = 0;
+  if (encoded_size == 0) {
     return 0;
   }
-  DecodeWindowBits(&br);
-  DecodeMetaBlockLength(&br, &meta_block_len, &input_end, &is_uncompressed);
-  if (!input_end) {
-    return 0;
+  /* Look at the first 8 bytes, it is enough to decode the length of the first
+     meta-block. */
+  for (i = 0; (size_t)i < encoded_size && i < 8; ++i) {
+    val |= (uint64_t)encoded_buffer[i] << (8 * i);
   }
-  *decoded_size = (size_t)meta_block_len;
-  return 1;
+  /* Skip the window bits. */
+  bit_pos += (val & 1) ? 4 : 1;
+  /* Decode the ISLAST bit. */
+  is_last = (val >> bit_pos) & 1;
+  ++bit_pos;
+  if (is_last) {
+    /* Decode the ISEMPTY bit, if it is set to 1, we are done. */
+    if ((val >> bit_pos) & 1) {
+      *decoded_size = 0;
+      return 1;
+    }
+    ++bit_pos;
+  }
+  /* Decode the length of the first meta-block. */
+  size_nibbles = (int)((val >> bit_pos) & 3) + 4;
+  bit_pos += 2;
+  for (i = 0; i < size_nibbles; ++i) {
+    meta_block_len |= (int)((val >> bit_pos) & 0xf) << (4 * i);
+    bit_pos += 4;
+  }
+  ++meta_block_len;
+  if (is_last) {
+    /* If this meta-block is the only one, we are done. */
+    *decoded_size = (size_t)meta_block_len;
+    return 1;
+  }
+  is_uncompressed = (val >> bit_pos) & 1;
+  ++bit_pos;
+  if (is_uncompressed) {
+    /* If the first meta-block is uncompressed, we skip it and look at the
+       first two bits (ISLAST and ISEMPTY) of the next meta-block, and if
+       both are set to 1, we have a stream with an uncompressed meta-block
+       followed by an empty one, so the decompressed size is the size of the
+       first meta-block. */
+    size_t offset = (size_t)((bit_pos + 7) >> 3) + (size_t)meta_block_len;
+    if (offset < encoded_size && ((encoded_buffer[offset] & 3) == 3)) {
+      *decoded_size = (size_t)meta_block_len;
+      return 1;
+    }
+  }
+  return 0;
 }
 
 int BrotliDecompressBuffer(size_t encoded_size,
@@ -945,7 +995,6 @@ int BrotliDecompress(BrotliInput input, BrotliOutput output) {
                           block_type_rb_index, &br);
           block_length[2] = ReadBlockLength(
               &block_len_trees[2 * HUFFMAN_MAX_TABLE_SIZE], &br);
-          dist_htree_index = (uint8_t)block_type[2];
           dist_context_offset = block_type[2] << kDistanceContextBits;
           dist_context_map_slice = dist_context_map + dist_context_offset;
         }

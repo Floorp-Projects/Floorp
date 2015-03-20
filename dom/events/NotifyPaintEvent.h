@@ -43,9 +43,9 @@ public:
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return NotifyPaintEventBinding::Wrap(aCx, this);
+    return NotifyPaintEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   already_AddRefed<DOMRectList> ClientRects();

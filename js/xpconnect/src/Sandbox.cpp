@@ -204,7 +204,7 @@ SandboxCreateCrypto(JSContext *cx, JS::HandleObject obj)
 
     dom::Crypto* crypto = new dom::Crypto();
     crypto->Init(native);
-    JS::RootedObject wrapped(cx, crypto->WrapObject(cx));
+    JS::RootedObject wrapped(cx, crypto->WrapObject(cx, JS::NullPtr()));
     return JS_DefineProperty(cx, obj, "crypto", wrapped, JSPROP_ENUMERATE);
 }
 
@@ -218,7 +218,7 @@ SandboxCreateRTCIdentityProvider(JSContext *cx, JS::HandleObject obj)
 
     dom::RTCIdentityProviderRegistrar* registrar =
             new dom::RTCIdentityProviderRegistrar(nativeGlobal);
-    JS::RootedObject wrapped(cx, registrar->WrapObject(cx));
+    JS::RootedObject wrapped(cx, registrar->WrapObject(cx, JS::NullPtr()));
     return JS_DefineProperty(cx, obj, "rtcIdentityProvider", wrapped, JSPROP_ENUMERATE);
 }
 

@@ -210,9 +210,9 @@ HTMLAllCollection::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames
 
 
 JSObject*
-HTMLAllCollection::WrapObject(JSContext* aCx)
+HTMLAllCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLAllCollectionBinding::Wrap(aCx, this);
+  return HTMLAllCollectionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
