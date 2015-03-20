@@ -323,6 +323,9 @@ let ReadingListUI = {
    * @param {ReadingListItem} item - Item added.
    */
   onItemAdded(item) {
+    if (!Services.prefs.getBoolPref("browser.readinglist.sidebarEverOpened")) {
+      SidebarUI.show("readingListSidebar");
+    }
     if (this.isItemForCurrentBrowser(item)) {
       this.setToolbarButtonState(true);
       if (this.isSidebarOpen) {
