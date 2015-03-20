@@ -111,6 +111,9 @@ enum BailoutKind
     // We hit a |debugger;| statement.
     Bailout_Debugger,
 
+    // When we're trying to use an uninitialized lexical.
+    Bailout_UninitializedLexical,
+
     // END Normal bailouts
 
 
@@ -206,6 +209,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_InitialState";
       case Bailout_Debugger:
         return "Bailout_Debugger";
+      case Bailout_UninitializedLexical:
+        return "Bailout_UninitializedLexical";
 
       // Bailouts caused by invalid assumptions.
       case Bailout_OverflowInvalidate:
