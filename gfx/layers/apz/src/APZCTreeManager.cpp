@@ -364,9 +364,12 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
 
     // If the content represented by the scrollable layer has changed (which may
     // be possible because of DLBI heuristics) then we don't want to keep using
-    // the same old APZC for the new content. Null it out so we run through the
-    // code to find another one or create one.
-    if (apzc && !apzc->Matches(guid)) {
+    // the same old APZC for the new content. Also, when reparenting a tab into a
+    // new window a layer might get moved to a different layer tree with a
+    // different APZCTreeManager. In these cases we don't want to reuse the same
+    // APZC, so null it out so we run through the code to find another one or
+    // create one.
+    if (apzc && (!apzc->Matches(guid) || !apzc->HasTreeManager(this))) {
       apzc = nullptr;
     }
 
