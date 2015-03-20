@@ -827,10 +827,9 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
                                 float aX, float aY, float aWidth, float aHeight)
 {
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
-  const nsStylePosition* pos = aFrame->StylePosition();
 
-  if (!(pos->mClipFlags & NS_STYLE_CLIP_RECT)) {
-    NS_ASSERTION(pos->mClipFlags == NS_STYLE_CLIP_AUTO,
+  if (!(disp->mClipFlags & NS_STYLE_CLIP_RECT)) {
+    NS_ASSERTION(disp->mClipFlags == NS_STYLE_CLIP_AUTO,
                  "We don't know about this type of clip.");
     return gfxRect(aX, aY, aWidth, aHeight);
   }
@@ -839,14 +838,14 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
       disp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
 
     nsIntRect clipPxRect =
-      pos->mClip.ToOutsidePixels(aFrame->PresContext()->AppUnitsPerDevPixel());
+      disp->mClip.ToOutsidePixels(aFrame->PresContext()->AppUnitsPerDevPixel());
     gfxRect clipRect =
       gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
 
-    if (NS_STYLE_CLIP_RIGHT_AUTO & pos->mClipFlags) {
+    if (NS_STYLE_CLIP_RIGHT_AUTO & disp->mClipFlags) {
       clipRect.width = aWidth - clipRect.X();
     }
-    if (NS_STYLE_CLIP_BOTTOM_AUTO & pos->mClipFlags) {
+    if (NS_STYLE_CLIP_BOTTOM_AUTO & disp->mClipFlags) {
       clipRect.height = aHeight - clipRect.Y();
     }
 
