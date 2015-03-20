@@ -1004,7 +1004,6 @@ const Class PropertyIteratorObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     finalize,
     nullptr, /* call        */
     nullptr, /* hasInstance */
@@ -1366,7 +1365,6 @@ const Class StopIterationObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
     stopiter_hasInstance

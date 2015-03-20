@@ -160,7 +160,6 @@ const JSClass* getGlobalClass() override {
         nullptr, // enumerate
         my_resolve,
         nullptr, // mayResolve
-        nullptr, // convert
         nullptr, // finalize
         nullptr, // call
         nullptr, // hasInstance

@@ -558,7 +558,6 @@ static const js::Class SandboxClass = {
     nullptr, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve,
     nullptr,        /* mayResolve */
-    nullptr,        /* convert */
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
@@ -580,7 +579,6 @@ static const js::Class SandboxWriteToProtoClass = {
     sandbox_addProperty, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve,
     nullptr,        /* mayResolve */
-    nullptr,        /* convert */
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
