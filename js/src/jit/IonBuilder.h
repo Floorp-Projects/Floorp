@@ -1094,6 +1094,10 @@ class IonBuilder
 
     size_t inliningDepth_;
 
+    // Total bytecode length of all inlined scripts. Only tracked for the
+    // outermost builder.
+    size_t inlinedBytecodeLength_;
+
     // Cutoff to disable compilation if excessive time is spent reanalyzing
     // loop bodies to compute a fixpoint of the types for loop variables.
     static const size_t MAX_LOOP_RESTARTS = 40;

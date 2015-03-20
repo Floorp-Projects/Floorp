@@ -205,6 +205,8 @@ namespace JS {
       "can't inline: exceeded inlining depth")                          \
     _(CantInlineBigLoop,                                                \
       "can't inline: big function with a loop")                         \
+    _(CantInlineExceededTotalBytecodeLength,                            \
+      "can't inline: exceeded max total bytecode length")               \
     _(CantInlineBigCaller,                                              \
       "can't inline: big caller")                                       \
     _(CantInlineBigCallee,                                              \

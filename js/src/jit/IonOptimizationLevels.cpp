@@ -39,6 +39,7 @@ OptimizationInfo::initNormalOptimizationInfo()
 
     inlineMaxBytecodePerCallSiteMainThread_ = 500;
     inlineMaxBytecodePerCallSiteOffThread_ = 1000;
+    inlineMaxTotalBytecodeLength_ = 80000;
     inliningMaxCallerBytecodeLength_ = 10000;
     maxInlineDepth_ = 3;
     scalarReplacement_ = true;
