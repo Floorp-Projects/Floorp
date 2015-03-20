@@ -1502,3 +1502,26 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter &writer,
 
 } // namespace jit
 } // namespace js
+
+
+JS_PUBLIC_API(JS::ProfilingFrameIterator::FrameKind)
+JS::GetProfilingFrameKindFromNativeAddr(JSRuntime *rt, void *addr, bool *hasOptInfo)
+{
+    MOZ_ASSERT(hasOptInfo);
+    *hasOptInfo = false;
+
+    JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
+    JitcodeGlobalEntry entry;
+    table->lookupInfallible(addr, &entry, rt);
+    MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline());
+
+    if (false && entry.hasTrackedOptimizations()) {
+        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr);
+        *hasOptInfo = index.isSome();
+    }
+
+    if (entry.isBaseline())
+        return JS::ProfilingFrameIterator::Frame_Baseline;
+
+    return JS::ProfilingFrameIterator::Frame_Ion;
+}
