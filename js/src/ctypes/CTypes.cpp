@@ -5224,6 +5224,8 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
   int32_t dummy;
+  if (!ok && JSID_IS_SYMBOL(idval))
+    return true;
   if (!ok && JSID_IS_STRING(idval) &&
       !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
@@ -5262,6 +5264,8 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
   int32_t dummy;
+  if (!ok && JSID_IS_SYMBOL(idval))
+    return true;
   if (!ok && JSID_IS_STRING(idval) &&
       !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
