@@ -153,14 +153,6 @@ APZCCallbackHandler::HandleLongTap(const CSSPoint& aPoint,
 }
 
 void
-APZCCallbackHandler::HandleLongTapUp(const CSSPoint& aPoint,
-                                     Modifiers aModifiers,
-                                     const mozilla::layers::ScrollableLayerGuid& aGuid)
-{
-    HandleSingleTap(aPoint, aModifiers, aGuid);
-}
-
-void
 APZCCallbackHandler::SendAsyncScrollDOMEvent(bool aIsRoot,
                                              const CSSRect& aContentRect,
                                              const CSSSize& aScrollableSize)

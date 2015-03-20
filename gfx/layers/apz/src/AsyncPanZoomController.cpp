@@ -1637,15 +1637,7 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
 
 nsEventStatus AsyncPanZoomController::OnLongPressUp(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a long-tap-up in state %d\n", this, mState);
-  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
-  if (controller) {
-    CSSPoint geckoScreenPoint;
-    if (ConvertToGecko(aEvent.mLocalPoint, &geckoScreenPoint)) {
-      controller->HandleLongTapUp(geckoScreenPoint, aEvent.modifiers, GetGuid());
-      return nsEventStatus_eConsumeNoDefault;
-    }
-  }
-  return nsEventStatus_eIgnore;
+  return GenerateSingleTap(aEvent.mLocalPoint, aEvent.modifiers);
 }
 
 nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ParentLayerPoint& aPoint, mozilla::Modifiers aModifiers) {
