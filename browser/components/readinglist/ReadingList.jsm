@@ -926,7 +926,7 @@ function getMetadataFromBrowser(browser) {
 Object.defineProperty(this, "ReadingList", {
   get() {
     if (!this._singleton) {
-      let store = new SQLiteStore("reading-list-temp2.sqlite");
+      let store = new SQLiteStore("reading-list-temp6.sqlite");
       this._singleton = new ReadingListImpl(store);
     }
     return this._singleton;
