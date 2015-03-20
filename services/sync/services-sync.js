@@ -24,6 +24,11 @@ pref("services.sync.scheduler.sync11.singleDeviceInterval", 86400); // 1 day
 
 pref("services.sync.errorhandler.networkFailureReportTimeout", 1209600); // 2 weeks
 
+// A "master" pref for Sync being enabled. Will be set to false if the sync
+// customization UI finds all our builtin engines disabled (and addons are
+// free to force this to true if they have their own engine)
+pref("services.sync.enabled", true);
+// Our engines.
 pref("services.sync.engine.addons", true);
 pref("services.sync.engine.bookmarks", true);
 pref("services.sync.engine.history", true);
