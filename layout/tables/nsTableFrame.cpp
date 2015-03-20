@@ -3552,7 +3552,7 @@ nscoord nsTableFrame::GetCellSpacingX()
   if (IsBorderCollapse())
     return 0;
 
-  return StyleTableBorder()->mBorderSpacingX;
+  return StyleTableBorder()->mBorderSpacingCol;
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
@@ -3585,7 +3585,7 @@ nscoord nsTableFrame::GetCellSpacingY()
   if (IsBorderCollapse())
     return 0;
 
-  return StyleTableBorder()->mBorderSpacingY;
+  return StyleTableBorder()->mBorderSpacingRow;
 }
 
 // XXX: could cache this. But be sure to check style changes if you do!
