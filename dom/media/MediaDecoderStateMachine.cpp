@@ -1560,15 +1560,6 @@ void MediaDecoderStateMachine::StartDecoding()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::StartWaitForResources()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  NS_ASSERTION(OnDecodeThread(),
-               "Should be on decode thread.");
-  SetState(DECODER_STATE_WAIT_FOR_RESOURCES);
-  DECODER_LOG("StartWaitForResources");
-}
-
 void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
 {
   AssertCurrentThreadInMonitor();
@@ -1769,19 +1760,6 @@ void MediaDecoderStateMachine::StopAudioThread()
   }
   // Wake up those waiting for audio sink to finish.
   mDecoder->GetReentrantMonitor().NotifyAll();
-}
-
-nsresult
-MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
-{
-  AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-
-  RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
-  nsresult rv = DecodeTaskQueue()->Dispatch(task);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
 }
 
 nsresult
@@ -2205,59 +2183,16 @@ MediaDecoderStateMachine::DecodeError()
 }
 
 void
-MediaDecoderStateMachine::CallDecodeMetadata()
+MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mState != DECODER_STATE_DECODING_METADATA) {
-    return;
-  }
-  if (NS_FAILED(DecodeMetadata())) {
-    DECODER_WARN("Decode metadata failed, shutting down decoder");
-    DecodeError();
-  }
-}
-
-nsresult MediaDecoderStateMachine::DecodeMetadata()
-{
-  AssertCurrentThreadInMonitor();
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnStateMachineThread());
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-  DECODER_LOG("Decoding Media Headers");
+  mMetadataRequest.Complete();
 
-  nsresult res;
-  MediaInfo info;
-  bool isAwaitingResources = false;
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    mReader->PreReadMetadata();
-
-    if (mReader->IsWaitingMediaResources()) {
-      StartWaitForResources();
-      return NS_OK;
-    }
-    res = mReader->ReadMetadata(&info, getter_Transfers(mMetadataTags));
-    isAwaitingResources = mReader->IsWaitingMediaResources();
-  }
-
-  if (NS_SUCCEEDED(res) &&
-      mState == DECODER_STATE_DECODING_METADATA &&
-      isAwaitingResources) {
-    // change state to DECODER_STATE_WAIT_FOR_RESOURCES
-    StartWaitForResources();
-    // affect values only if ReadMetadata succeeds
-    return NS_OK;
-  }
-
-  if (NS_FAILED(res) || (!info.HasValidMedia())) {
-    DECODER_WARN("ReadMetadata failed, res=%x HasValidMedia=%d", res, info.HasValidMedia());
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_SUCCEEDED(res)) {
-    mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
-  }
-
-  mInfo = info;
+  mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
+  mInfo = aMetadata->mInfo;
+  mMetadataTags = aMetadata->mTags.forget();
 
   if (HasVideo()) {
     DECODER_LOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
@@ -2275,23 +2210,33 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     EnqueueLoadedMetadataEvent();
   }
 
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    if (mReader->IsWaitingOnCDMResource()) {
-      // Metadata parsing was successful but we're still waiting for CDM caps
-      // to become available so that we can build the correct decryptor/decoder.
-      SetState(DECODER_STATE_WAIT_FOR_CDM);
-      return NS_OK;
-    }
-
-    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
-    res = EnqueueDecodeFirstFrameTask();
-    if (NS_FAILED(res)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (mReader->IsWaitingOnCDMResource()) {
+    // Metadata parsing was successful but we're still waiting for CDM caps
+    // to become available so that we can build the correct decryptor/decoder.
+    SetState(DECODER_STATE_WAIT_FOR_CDM);
+    return NS_OK;
   }
-  ScheduleStateMachine();
 
-  return NS_OK;
+  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+  EnqueueDecodeFirstFrameTask();
+  ScheduleStateMachine();
+}
+
+void
+MediaDecoderStateMachine::OnMetadataNotRead(ReadMetadataFailureReason aReason)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(OnStateMachineThread());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
+  mMetadataRequest.Complete();
+
+  if (aReason == ReadMetadataFailureReason::WAITING_FOR_RESOURCES) {
+    SetState(DECODER_STATE_WAIT_FOR_RESOURCES);
+  } else {
+    MOZ_ASSERT(aReason == ReadMetadataFailureReason::METADATA_ERROR);
+    DECODER_WARN("Decode metadata failed, shutting down decoder");
+    DecodeError();
+  }
 }
 
 void
@@ -2699,16 +2644,25 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
     case DECODER_STATE_DECODING_NONE: {
       SetState(DECODER_STATE_DECODING_METADATA);
-      // Ensure we have a decode thread to decode metadata.
-      return EnqueueDecodeMetadataTask();
+      ScheduleStateMachine();
+      return NS_OK;
     }
 
     case DECODER_STATE_DECODING_METADATA: {
+      if (!mMetadataRequest.Exists()) {
+        DECODER_LOG("Dispatching CallReadMetadata");
+        mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                                              &MediaDecoderReader::CallReadMetadata)
+          ->RefableThen(TaskQueue(), __func__, this,
+                        &MediaDecoderStateMachine::OnMetadataRead,
+                        &MediaDecoderStateMachine::OnMetadataNotRead));
+
+      }
       return NS_OK;
     }
 
     case DECODER_STATE_DECODING_FIRSTFRAME: {
-      // DECODER_STATE_DECODING_FIRSTFRAME will be started by DecodeMetadata
+      // DECODER_STATE_DECODING_FIRSTFRAME will be started by OnMetadataRead.
       return NS_OK;
     }
 
@@ -2872,6 +2826,7 @@ MediaDecoderStateMachine::ResetDecode()
   MOZ_ASSERT(OnStateMachineThread());
   AssertCurrentThreadInMonitor();
 
+  mMetadataRequest.DisconnectIfExists();
   mAudioDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
   mVideoDataRequest.DisconnectIfExists();
