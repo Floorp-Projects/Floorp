@@ -1253,11 +1253,19 @@ this.NewTabUtils = {
   },
 
   getProviderLinks: function(aProvider) {
-    return Links._providers.get(aProvider).sortedLinks;
+    let cache = Links._providers.get(aProvider);
+    if (cache && cache.sortedLinks) {
+      return cache.sortedLinks;
+    }
+    return [];
   },
 
   isTopSiteGivenProvider: function(aSite, aProvider) {
-    return Links._providers.get(aProvider).siteMap.has(aSite);
+    let cache = Links._providers.get(aProvider);
+    if (cache && cache.siteMap) {
+      return cache.siteMap.has(aSite);
+    }
+    return false;
   },
 
   isTopPlacesSite: function(aSite) {
