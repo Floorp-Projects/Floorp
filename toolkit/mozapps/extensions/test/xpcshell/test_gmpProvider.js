@@ -47,11 +47,12 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   startupManager();
 
-  gPrefs.setBoolPref(GMPScope.KEY_LOGGING_DUMP, true);
-  gPrefs.setIntPref(GMPScope.KEY_LOGGING_LEVEL, 0);
-  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
+  gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
+  gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL, 0);
+  gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, true);
   for (let addon of gMockAddons.values()) {
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_HIDDEN, addon.id), false);
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCEVISIBLE, addon.id),
+                       true);
   }
   GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
@@ -61,8 +62,8 @@ function run_test() {
 
 add_task(function* test_notInstalled() {
   for (let addon of gMockAddons.values()) {
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id), "");
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), false);
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id), "");
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), false);
   }
 
   let addons = yield promiseAddonsByIDs([...gMockAddons.keys()]);
@@ -126,10 +127,10 @@ add_task(function* test_installed() {
     let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file.append(addon.id);
     file.append(TEST_VERSION);
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, mockAddon.id), false);
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_LAST_UPDATE, mockAddon.id),
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, mockAddon.id), false);
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, mockAddon.id),
                       "" + TEST_TIME_SEC);
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, mockAddon.id),
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, mockAddon.id),
                       TEST_VERSION);
 
     Assert.ok(addon.isInstalled);
@@ -165,7 +166,7 @@ add_task(function* test_enable() {
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), true);
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
 
     Assert.ok(addon.isActive);
     Assert.ok(!addon.appDisabled);
@@ -180,7 +181,7 @@ add_task(function* test_globalEmeDisabled() {
   let addons = yield promiseAddonsByIDs([...gMockEmeAddons.keys()]);
   Assert.equal(addons.length, gMockEmeAddons.size);
 
-  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, false);
+  gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
   GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
   for (let addon of addons) {
@@ -190,7 +191,7 @@ add_task(function* test_globalEmeDisabled() {
 
     Assert.equal(addon.permissions, 0);
   }
-  gPrefs.setBoolPref(GMPScope.KEY_EME_ENABLED, true);
+  gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, true);
   GMPScope.GMPProvider.shutdown();
   GMPScope.GMPProvider.startup();
 });
@@ -200,7 +201,7 @@ add_task(function* test_autoUpdatePrefPersistance() {
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
-    let autoupdateKey = gGetKey(GMPScope.KEY_PLUGIN_AUTOUPDATE, addon.id);
+    let autoupdateKey = gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, addon.id);
     gPrefs.clearUserPref(autoupdateKey);
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
@@ -233,10 +234,10 @@ add_task(function* test_pluginRegistration() {
     };
 
     GMPScope.gmpService = MockGMPService;
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), true);
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
 
     // Check that the plugin gets registered after startup.
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id),
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                       TEST_VERSION);
     clearPaths();
     yield promiseRestartManager();
@@ -245,7 +246,7 @@ add_task(function* test_pluginRegistration() {
 
     // Check that clearing the version doesn't trigger registration.
     clearPaths();
-    gPrefs.clearUserPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id));
+    gPrefs.clearUserPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id));
     Assert.deepEqual(addedPaths, []);
     Assert.deepEqual(removedPaths, [file.path]);
 
@@ -256,23 +257,23 @@ add_task(function* test_pluginRegistration() {
     Assert.equal(removedPaths.indexOf(file.path), -1);
 
     // Changing the pref mid-session should cause unregistration and registration.
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id),
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                       TEST_VERSION);
     clearPaths();
     const TEST_VERSION_2 = "5.6.7.8";
     let file2 = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file2.append(addon.id);
     file2.append(TEST_VERSION_2);
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id),
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                       TEST_VERSION_2);
     Assert.deepEqual(addedPaths, [file2.path]);
     Assert.deepEqual(removedPaths, [file.path]);
 
     // Disabling the plugin should cause unregistration.
-    gPrefs.setCharPref(gGetKey(GMPScope.KEY_PLUGIN_VERSION, addon.id),
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
                       TEST_VERSION);
     clearPaths();
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), false);
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), false);
     Assert.deepEqual(addedPaths, []);
     Assert.deepEqual(removedPaths, [file.path]);
 
@@ -284,7 +285,7 @@ add_task(function* test_pluginRegistration() {
 
     // Re-enabling the plugin should cause registration.
     clearPaths();
-    gPrefs.setBoolPref(gGetKey(GMPScope.KEY_PLUGIN_ENABLED, addon.id), true);
+    gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
     Assert.deepEqual(addedPaths, [file.path]);
     Assert.deepEqual(removedPaths, []);
     GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
@@ -303,21 +304,21 @@ add_task(function* test_periodicUpdate() {
   Assert.equal(addons.length, gMockAddons.size);
 
   for (let addon of addons) {
-    gPrefs.clearUserPref(gGetKey(GMPScope.KEY_PLUGIN_AUTOUPDATE, addon.id));
+    gPrefs.clearUserPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, addon.id));
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-    gPrefs.setIntPref(GMPScope.KEY_PROVIDER_LASTCHECK, 0);
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK, 0);
     let result =
       yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
-    gPrefs.setIntPref(GMPScope.KEY_PROVIDER_LASTCHECK, Date.now() / 1000 - 60);
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK, Date.now() / 1000 - 60);
     result =
       yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
-    gPrefs.setIntPref(GMPScope.KEY_PROVIDER_LASTCHECK,
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK,
                      Date.now() / 1000 - 2 * GMPScope.SEC_IN_A_DAY);
     gInstalledAddonId = "";
     result =
