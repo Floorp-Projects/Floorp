@@ -98,6 +98,8 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         // The first view in the list has a unique style.
         if (position == 0) {
             row.setBackgroundResource(R.drawable.overlay_share_button_background_first);
+        } else {
+            row.setBackgroundResource(R.drawable.overlay_share_button_background);
         }
 
         if (currentState != State.LIST) {

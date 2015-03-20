@@ -71,6 +71,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
     private OverlayDialogButton readingListButton;
     private OverlayDialogButton bookmarkButton;
 
+    // The reading list drawable set from XML - we need this to reset state.
+    private Drawable readingListButtonDrawable;
+
     private String url;
     private String title;
 
@@ -184,6 +187,8 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         bookmarkButton = (OverlayDialogButton) findViewById(R.id.overlay_share_bookmark_btn);
         readingListButton = (OverlayDialogButton) findViewById(R.id.overlay_share_reading_list_btn);
 
+        readingListButtonDrawable = readingListButton.getBackground();
+
         final Resources resources = getResources();
         final String bookmarkEnabledLabel = resources.getString(R.string.overlay_share_bookmark_btn_label);
         final Drawable bookmarkEnabledIcon = resources.getDrawable(R.drawable.overlay_bookmark_icon);
@@ -228,6 +233,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         // If the Activity is being reused, we need to reset the state. Ideally, we create a
         // new instance for each call, but Android L breaks this (bug 1137928).
         sendTabList.switchState(SendTabList.State.LOADING);
+        readingListButton.setBackgroundDrawable(readingListButtonDrawable);
 
         // The URL is usually hiding somewhere in the extra text. Extract it.
         final String extraText = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
