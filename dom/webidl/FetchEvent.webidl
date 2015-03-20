@@ -18,7 +18,6 @@ interface FetchEvent : Event {
   readonly attribute boolean isReload;
 
   [Throws] void respondWith(Promise<Response> r);
-  [Throws] void respondWith(Response r);
 };
 
 dictionary FetchEventInit : EventInit {
