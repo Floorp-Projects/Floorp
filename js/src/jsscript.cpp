@@ -3012,7 +3012,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     if (cx->compartment() != innerFun->compartment()) {
                         MOZ_ASSERT(innerFun->isAsmJSNative());
                         JS_ReportError(cx, "AsmJS modules do not yet support cloning.");
-                        return false;
+                        return nullptr;
                     }
                     clone = innerFun;
                 } else {
