@@ -45,6 +45,15 @@ function prefillAlertInfo() {
       gAlertListener = window.arguments[9];
     case 9:
       gReplacedWindow = window.arguments[8];
+    case 8:
+      if (window.arguments[7]) {
+        document.getElementById('alertTitleLabel').setAttribute('lang', window.arguments[7]);
+        document.getElementById('alertTextLabel').setAttribute('lang', window.arguments[7]);
+      }
+    case 7:
+      if (window.arguments[6]) {
+        document.getElementById('alertNotification').style.direction = window.arguments[6];
+      }
     case 6:
       gOrigin = window.arguments[5];
     case 5:

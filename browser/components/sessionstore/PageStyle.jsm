@@ -16,10 +16,6 @@ this.PageStyle = Object.freeze({
     return PageStyleInternal.collect(docShell, frameTree);
   },
 
-  restore: function (docShell, frameList, pageStyle) {
-    PageStyleInternal.restore(docShell, frameList, pageStyle);
-  },
-
   restoreTree: function (docShell, data) {
     PageStyleInternal.restoreTree(docShell, data);
   }
@@ -53,29 +49,6 @@ let PageStyleInternal = {
     }
 
     return result && Object.keys(result).length ? result : null;
-  },
-
-  /**
-   * Restore the selected style sheet of all the frames in frameList
-   * to match |pageStyle|.
-   * @param docShell the root docshell of all the frames
-   * @param frameList a list of [frame, data] pairs, where frame is a
-   * DOM window and data is the session restore data associated with
-   * it.
-   * @param pageStyle the title of the style sheet to apply
-   */
-  restore: function (docShell, frameList, pageStyle) {
-    let disabled = pageStyle == NO_STYLE;
-
-    let markupDocumentViewer =
-      docShell.contentViewer;
-    markupDocumentViewer.authorStyleDisabled = disabled;
-
-    for (let [frame, data] of frameList) {
-      Array.forEach(frame.document.styleSheets, function(aSS) {
-        aSS.disabled = aSS.title && aSS.title != pageStyle;
-      });
-    }
   },
 
   /**

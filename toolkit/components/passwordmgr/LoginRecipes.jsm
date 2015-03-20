@@ -230,8 +230,12 @@ const DEFAULT_RECIPES = {
     {
       "description": "okta uses a hidden password field to disable filling",
       "hosts": ["mozilla.okta.com"],
-      "passwordSelector": "#pass-signin",
-      "pathRegex": "^(|\/login\/(login.htm|do\-login))$"
+      "passwordSelector": "#pass-signin"
     },
+    {
+      "description": "anthem uses a hidden password and username field to disable filling",
+      "hosts": ["www.anthem.com"],
+      "passwordSelector": "#LoginContent_txtLoginPass"
+    }
   ]
 };

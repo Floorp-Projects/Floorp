@@ -47,6 +47,13 @@ const TEST_DATA = [
       value: "\"content!important\"",
       priority: ""
     }
+  },
+  {
+    input: "\"all the \\\"'\\\\ special characters\"",
+    expected: {
+      value: "\"all the \\\"'\\\\ special characters\"",
+      priority: ""
+    }
   }
 ];
 

@@ -12,6 +12,10 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
@@ -69,7 +73,9 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
-    public boolean isReadingListItem(ContentResolver cr, String uri) {
+    public boolean isReadingListItem(final ContentResolver cr, String uri) {
+        uri = stripURI(uri);
+
         final Cursor c = cr.query(mReadingListUriWithProfile,
                                   new String[] { ReadingListItems._ID },
                                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
@@ -98,13 +104,21 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
             }
         }
 
+        // URL is a required field so no key check needed.
+        final String url = stripURI(values.getAsString(ReadingListItems.URL));
+        values.put(ReadingListItems.URL, url);
+
         // We're adding locally, so we can specify these.
         values.put(ReadingListItems.ADDED_ON, System.currentTimeMillis());
         values.put(ReadingListItems.ADDED_BY, ReadingListProvider.PLACEHOLDER_THIS_DEVICE);
 
         // We never un-delete (and we can't; we wipe as we go).
         // Re-add if necessary and allow the server to resolve conflicts.
-        return ContentUris.parseId(cr.insert(mReadingListUriWithProfile, values));
+        final long id = ContentUris.parseId(cr.insert(mReadingListUriWithProfile, values));
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Added", url));
+
+        return id;
     }
 
     @Override
@@ -129,6 +143,10 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
             throw new IllegalArgumentException("Cannot update reading list item without an ID");
         }
 
+        if (values.containsKey(ReadingListItems.URL)) {
+            values.put(ReadingListItems.URL, stripURI(values.getAsString(ReadingListItems.URL)));
+        }
+
         final int updated = cr.update(mReadingListUriWithProfile,
                                       values,
                                       ReadingListItems._ID + " = ? ",
@@ -138,14 +156,20 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
     }
 
     @Override
-    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
+    public void removeReadingListItemWithURL(final ContentResolver cr, String uri) {
+        uri = stripURI(uri);
         cr.delete(mReadingListUriWithProfile,
                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
                   new String[]{ uri, uri });
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", uri));
     }
 
     @Override
     public void deleteItem(ContentResolver cr, long itemID) {
+        // TODO: For completness, we should send a "Reader:Removed"
+        // GeckoEvent, but we don't have the uri. Luckily, this is
+        // only called in testing at the moment.
         cr.delete(ContentUris.appendId(mReadingListUriWithProfile.buildUpon(), itemID).build(),
                   null, null);
     }
@@ -176,5 +200,12 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
 
         // The ContentProvider will take care of updating the sync metadata.
         cr.update(mReadingListUriWithProfile, values, ReadingListItems._ID + " = " + itemID, null);
+    }
+
+    /**
+     * Gets the URI from an about:reader URI if applicable, else returns the URI.
+     */
+    private String stripURI(final String uri) {
+        return !AboutPages.isAboutReader(uri) ? uri : ReaderModeUtils.getUrlFromAboutReader(uri);
     }
 }

@@ -15,6 +15,7 @@ task:
         --no-read-buildbot-config
         --config-file ./mozharness/configs/b2g/gaia_integration_config.py
         --config-file ./mozharness_configs/gaia_integration_override.py
+        --config-file ./mozharness_configs/remove_executables.py
         --download-symbols ondemand
         --installer-url {{build_url}}
         --test-url {{tests_url}}
