@@ -75,13 +75,20 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mDownstreamState(BUFFERING_OPENING_SETTINGS)
   , mInputFrameBufferSize(kDefaultBufferSize)
   , mInputFrameBufferUsed(0)
+  , mInputFrameDataSize(0)
+  , mInputFrameDataRead(0)
   , mInputFrameFinal(false)
+  , mInputFrameType(0)
+  , mInputFrameFlags(0)
+  , mInputFrameID(0)
+  , mPaddingLength(0)
   , mInputFrameDataStream(nullptr)
   , mNeedsCleanup(nullptr)
   , mDownstreamRstReason(NO_HTTP_ERROR)
   , mExpectedHeaderID(0)
   , mExpectedPushPromiseID(0)
   , mContinuedPromiseStream(0)
+  , mFlatHTTPResponseHeadersOut(0)
   , mShouldGoAway(false)
   , mClosed(false)
   , mCleanShutdown(false)
@@ -125,6 +132,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   mLastDataReadEpoch = mLastReadEpoch;
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
+  mPreviousPingThreshold = mPingThreshold;
 
   mNegotiatedToken.AssignLiteral(HTTP2_DRAFT_LATEST_TOKEN);
 }
