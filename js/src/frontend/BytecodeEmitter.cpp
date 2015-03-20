@@ -5401,6 +5401,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool needsPr
             CompileOptions options(cx, bce->parser->options());
             options.setMutedErrors(parent->mutedErrors())
                    .setCompileAndGo(parent->compileAndGo())
+                   .setHasPollutedScope(parent->hasPollutedGlobalScope())
                    .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)
                    .setForEval(false)
