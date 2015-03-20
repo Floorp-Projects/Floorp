@@ -320,7 +320,7 @@ ReadingListImpl.prototype = {
     };
 
     if (metadata.previews.length > 0) {
-      itemData.preview = metadata.previews[0];
+      record.preview = metadata.previews[0];
     }
 
     return (yield this.addItem(record));
@@ -851,18 +851,22 @@ ReadingListItemIterator.prototype = {
  * @return The new normalized record.
  */
 function normalizeRecord(nonNormalizedRecord) {
+  let record = {};
   for (let prop in nonNormalizedRecord) {
     if (!ITEM_RECORD_PROPERTIES.includes(prop)) {
       throw new Error("Unrecognized item property: " + prop);
     }
-  }
-
-  let record = clone(nonNormalizedRecord);
-  if (record.url) {
-    record.url = normalizeURI(record.url).spec;
-  }
-  if (record.resolvedURL) {
-    record.resolvedURL = normalizeURI(record.resolvedURL).spec;
+    switch (prop) {
+    case "url":
+    case "resolvedURL":
+      if (nonNormalizedRecord[prop]) {
+        record[prop] = normalizeURI(nonNormalizedRecord[prop]).spec;
+      }
+      break;
+    default:
+      record[prop] = nonNormalizedRecord[prop];
+      break;
+    }
   }
   return record;
 }
