@@ -78,7 +78,17 @@ using mozilla::dom::workers::WorkerPrivate;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::dom::cache::Cache);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::dom::cache::Cache);
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Cache, mGlobal, mRequestPromises)
+NS_IMPL_CYCLE_COLLECTION_CLASS(mozilla::dom::cache::Cache)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(mozilla::dom::cache::Cache)
+  tmp->DisconnectFromActor();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mRequestPromises)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(mozilla::dom::cache::Cache)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mRequestPromises)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(mozilla::dom::cache::Cache)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Cache)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -533,6 +543,12 @@ Cache::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 }
 
 Cache::~Cache()
+{
+  DisconnectFromActor();
+}
+
+void
+Cache::DisconnectFromActor()
 {
   if (mActor) {
     mActor->StartDestroy();
