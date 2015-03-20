@@ -126,7 +126,6 @@ static const JSClass sWitnessClass = {
   nullptr /* enumerate */,
   nullptr /* resolve */,
   nullptr /* mayResolve */,
-  nullptr /* convert */,
   Finalize /* finalize */
 };
 

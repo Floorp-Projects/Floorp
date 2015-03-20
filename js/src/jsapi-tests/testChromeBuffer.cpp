@@ -22,7 +22,6 @@ static const JSClass global_class = {
     nullptr,
     nullptr,
     nullptr,
-    nullptr,
     JS_GlobalObjectTraceHook
 };
 
