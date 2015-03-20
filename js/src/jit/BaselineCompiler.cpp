@@ -2850,6 +2850,12 @@ BaselineCompiler::emit_JSOP_IMPLICITTHIS()
 }
 
 bool
+BaselineCompiler::emit_JSOP_GIMPLICITTHIS()
+{
+    return emit_JSOP_IMPLICITTHIS();
+}
+
+bool
 BaselineCompiler::emit_JSOP_INSTANCEOF()
 {
     frame.popRegsAndSync(2);
