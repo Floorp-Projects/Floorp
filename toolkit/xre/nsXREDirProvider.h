@@ -127,6 +127,9 @@ protected:
   // Calculate and register extension and theme bundle directories.
   void LoadExtensionBundleDirectories();
 
+  // Calculate and register app-bundled extension directories.
+  void LoadAppBundleDirs();
+
   void Append(nsIFile* aDirectory);
 
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
