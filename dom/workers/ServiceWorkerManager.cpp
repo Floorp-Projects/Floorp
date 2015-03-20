@@ -2780,8 +2780,9 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::Update(const nsAString& aScope)
+ServiceWorkerManager::SoftUpdate(const nsAString& aScope)
 {
+  AssertIsOnMainThread();
   NS_ConvertUTF16toUTF8 scope(aScope);
 
   nsRefPtr<ServiceWorkerRegistrationInfo> registration;
@@ -2790,14 +2791,26 @@ ServiceWorkerManager::Update(const nsAString& aScope)
     return NS_OK;
   }
 
-  // FIXME(nsm): Bug 1089889 Refactor this into SoftUpdate.
+  // "If registration's uninstalling flag is set, abort these steps."
   if (registration->mPendingUninstall) {
     return NS_OK;
   }
 
+  // "If registration's installing worker is not null, abort these steps."
   if (registration->mInstallingWorker) {
     return NS_OK;
   }
+
+  // "Let newestWorker be the result of running Get Newest Worker algorithm
+  // passing registration as its argument.
+  // If newestWorker is null, abort these steps."
+  nsRefPtr<ServiceWorkerInfo> newest = registration->Newest();
+  if (!newest) {
+    return NS_OK;
+  }
+
+  // "Set registration's registering script url to newestWorker's script url."
+  registration->mScriptSpec = newest->ScriptSpec();
 
   ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scope);
   MOZ_ASSERT(queue);
@@ -2805,6 +2818,8 @@ ServiceWorkerManager::Update(const nsAString& aScope)
   nsRefPtr<ServiceWorkerUpdateFinishCallback> cb =
     new ServiceWorkerUpdateFinishCallback();
 
+  // "Invoke Update algorithm, or its equivalent, with client, registration as
+  // its argument."
   nsRefPtr<ServiceWorkerRegisterJob> job =
     new ServiceWorkerRegisterJob(queue, registration, cb);
   queue->Append(job);
@@ -3103,7 +3118,7 @@ UpdateEachRegistration(const nsACString& aKey,
                        void* aUserArg) {
   auto This = static_cast<ServiceWorkerManager*>(aUserArg);
   MOZ_ASSERT(!aInfo->mScope.IsEmpty());
-  nsresult res = This->Update(NS_ConvertUTF8toUTF16(aInfo->mScope));
+  nsresult res = This->SoftUpdate(NS_ConvertUTF8toUTF16(aInfo->mScope));
   unused << NS_WARN_IF(NS_FAILED(res));
 
   return PL_DHASH_NEXT;

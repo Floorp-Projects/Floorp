@@ -158,6 +158,16 @@ NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
 } // anonymous namespace
 
+void
+ServiceWorkerRegistration::Update()
+{
+  nsCOMPtr<nsIServiceWorkerManager> swm =
+    mozilla::services::GetServiceWorkerManager();
+  MOZ_ASSERT(swm);
+  // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
+  swm->SoftUpdate(mScope);
+}
+
 already_AddRefed<Promise>
 ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 {

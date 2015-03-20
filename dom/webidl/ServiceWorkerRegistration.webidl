@@ -17,6 +17,8 @@ interface ServiceWorkerRegistration : EventTarget {
 
   readonly attribute USVString scope;
 
+  void update();
+
   [Throws]
   Promise<boolean> unregister();
 
