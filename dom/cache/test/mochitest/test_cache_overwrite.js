@@ -40,5 +40,8 @@ fetch(new Request(requestURL, {headers: {"Mirror": "bar"}})).then(function(r) {
   is(r.length, 1, "Only one request should be in the cache");
   return checkResponse(r[0]);
 }).then(function() {
+  return caches.delete(name);
+}).then(function(deleted) {
+  ok(deleted, "The cache should be deleted successfully");
   testDone();
 });
