@@ -1008,29 +1008,24 @@ WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject callabl
 extern bool
 UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id);
 
-/* ES6 draft rev 36 (2015 March 17) 7.1.1 ToPrimitive(vp, preferredType) */
+/* ES6 draft rev 36 (2015 March 17) 7.1.1 ToPrimitive(vp[, preferredType]) */
 extern bool
-ToPrimitiveSlow(JSContext* cx, MutableHandleValue vp);
+ToPrimitiveSlow(JSContext* cx, JSType hint, MutableHandleValue vp);
 
 inline bool
 ToPrimitive(JSContext* cx, MutableHandleValue vp)
 {
     if (vp.isPrimitive())
         return true;
-    return ToPrimitiveSlow(cx, vp);
+    return ToPrimitiveSlow(cx, JSTYPE_VOID, vp);
 }
-
-extern bool
-ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp);
 
 inline bool
 ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
 {
-    MOZ_ASSERT(preferredType != JSTYPE_VOID);  // Use the other ToPrimitive!
     if (vp.isPrimitive())
         return true;
-    RootedObject obj(cx, &vp.toObject());
-    return ToPrimitive(cx, obj, preferredType, vp);
+    return ToPrimitiveSlow(cx, preferredType, vp);
 }
 
 /*

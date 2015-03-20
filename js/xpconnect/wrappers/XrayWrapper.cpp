@@ -196,14 +196,20 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
 #endif
 
     nsAutoJSString propertyName;
-    if (!propertyName.init(cx, id))
+    RootedValue idval(cx);
+    if (!JS_IdToValue(cx, id, &idval))
+        return false;
+    JSString* str = JS_ValueToSource(cx, idval);
+    if (!str)
+        return false;
+    if (!propertyName.init(cx, str))
         return false;
     AutoFilename filename;
     unsigned line = 0, column = 0;
     DescribeScriptedCaller(cx, &filename, &line, &column);
 
     // Warn to the terminal for the logs.
-    NS_WARNING(nsPrintfCString("Silently denied access to property |%s|: %s (@%s:%u:%u)",
+    NS_WARNING(nsPrintfCString("Silently denied access to property %s: %s (@%s:%u:%u)",
                                NS_LossyConvertUTF16toASCII(propertyName).get(), reason,
                                filename.get(), line, column).get());
 
