@@ -23,8 +23,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
-#include "WorkerPrivate.h"
-
 using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
@@ -283,26 +281,6 @@ FetchEvent::RespondWith(Promise& aPromise, ErrorResult& aRv)
   mWaitToRespond = true;
   nsRefPtr<RespondWithHandler> handler = new RespondWithHandler(mChannel, mServiceWorker);
   aPromise.AppendNativeHandler(handler);
-}
-
-void
-FetchEvent::RespondWith(Response& aResponse, ErrorResult& aRv)
-{
-  if (mWaitToRespond) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-  nsRefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  promise->MaybeResolve(&aResponse);
-
-  RespondWith(*promise, aRv);
 }
 
 already_AddRefed<ServiceWorkerClient>
