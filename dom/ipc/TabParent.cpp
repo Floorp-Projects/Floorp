@@ -964,15 +964,6 @@ void TabParent::HandleLongTap(const CSSPoint& aPoint,
   }
 }
 
-void TabParent::HandleLongTapUp(const CSSPoint& aPoint,
-                                Modifiers aModifiers,
-                                const ScrollableLayerGuid &aGuid)
-{
-  if (!mIsDestroyed) {
-    unused << SendHandleLongTapUp(aPoint, aModifiers, aGuid);
-  }
-}
-
 void TabParent::NotifyAPZStateChange(ViewID aViewId,
                                      APZStateChange aChange,
                                      int aArg)
@@ -1196,15 +1187,6 @@ bool TabParent::SendHandleLongTap(const CSSPoint& aPoint, const Modifiers& aModi
   }
 
   return PBrowserParent::SendHandleLongTap(AdjustTapToChildWidget(aPoint), aModifiers, aGuid, aInputBlockId);
-}
-
-bool TabParent::SendHandleLongTapUp(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
-  if (mIsDestroyed) {
-    return false;
-  }
-
-  return PBrowserParent::SendHandleLongTapUp(AdjustTapToChildWidget(aPoint), aModifiers, aGuid);
 }
 
 bool TabParent::SendHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)

@@ -50,9 +50,6 @@ public:
                              Modifiers aModifiers,
                              const mozilla::layers::ScrollableLayerGuid& aGuid,
                              uint64_t aInputBlockId);
-  virtual void HandleLongTapUp(const mozilla::CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const mozilla::layers::ScrollableLayerGuid& aGuid);
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
   virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints);

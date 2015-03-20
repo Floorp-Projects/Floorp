@@ -528,7 +528,6 @@ child:
     HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
     HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
     HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    HandleLongTapUp(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid);
     NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
 
 

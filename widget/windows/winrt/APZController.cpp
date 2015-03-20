@@ -235,13 +235,6 @@ APZController::HandleLongTap(const CSSPoint& aPoint,
   ContentReceivedInputBlock(aInputBlockId, false);
 }
 
-void
-APZController::HandleLongTapUp(const CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid)
-{
-}
-
 // requests that we send a mozbrowserasyncscroll domevent. not in use.
 void
 APZController::SendAsyncScrollDOMEvent(bool aIsRoot,
