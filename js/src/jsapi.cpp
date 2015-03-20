@@ -3956,7 +3956,7 @@ JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
  * enclosingDynamicScope is a dynamic scope to use, if it's not the global.
  */
 static bool
-CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &options,
+CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &optionsArg,
                 const char *name, unsigned nargs, const char *const *argnames,
                 SourceBufferHolder &srcBuf,
                 HandleObject enclosingDynamicScope,
@@ -3989,6 +3989,13 @@ CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &options,
                                 enclosingDynamicScope));
     if (!fun)
         return false;
+
+    // Make sure to handle cases when we have a polluted scopechain.
+    OwningCompileOptions options(cx);
+    if (!options.copy(cx, optionsArg))
+        return false;
+    if (!enclosingDynamicScope->is<GlobalObject>())
+        options.setHasPollutedScope(true);
 
     if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf,
                                        enclosingStaticScope))
