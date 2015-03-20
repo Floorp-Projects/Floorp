@@ -3,6 +3,8 @@
 
 "use strict";
 
+let HiddenFrame = Cu.import("resource:///modules/HiddenFrame.jsm", {}).HiddenFrame;
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -14,33 +16,25 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  *        The URL to open in the browser.
  **/
 function createHiddenBrowser(aURL) {
-  let deferred = Promise.defer();
-  let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
+  let frame = new HiddenFrame();
+  return new Promise(resolve =>
+    frame.get().then(aFrame => {
+      let doc = aFrame.document;
+      let browser = doc.createElementNS(XUL_NS, "browser");
+      browser.setAttribute("type", "content");
+      browser.setAttribute("disableglobalhistory", "true");
+      browser.setAttribute("src", aURL);
 
-  // Create a HTML iframe with a chrome URL, then this can host the browser.
-  let iframe = hiddenDoc.createElementNS(HTML_NS, "iframe");
-  iframe.setAttribute("src", "chrome://global/content/mozilla.xhtml");
-  iframe.addEventListener("load", function onLoad() {
-    iframe.removeEventListener("load", onLoad, true);
-
-    let browser = iframe.contentDocument.createElementNS(XUL_NS, "browser");
-    browser.setAttribute("type", "content");
-    browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("src", aURL);
-
-    iframe.contentDocument.documentElement.appendChild(browser);
-    deferred.resolve({frame: iframe, browser: browser});
-  }, true);
-
-  hiddenDoc.documentElement.appendChild(iframe);
-  return deferred.promise;
-};
+      doc.documentElement.appendChild(browser);
+      resolve({frame: frame, browser: browser});
+    }));
+}
 
 /**
- * Remove the browser and the iframe.
+ * Remove the browser and the HiddenFrame.
  *
  * @param aFrame
- *        The iframe to dismiss.
+ *        The HiddenFrame to dismiss.
  * @param aBrowser
  *        The browser to dismiss.
  */
@@ -49,9 +43,7 @@ function destroyHiddenBrowser(aFrame, aBrowser) {
   aBrowser.remove();
 
   // Take care of the frame holding our invisible browser.
-  if (!Cu.isDeadWrapper(aFrame)) {
-    aFrame.remove();
-  }
+  aFrame.destroy();
 };
 
 /**
