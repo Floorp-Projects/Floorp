@@ -276,7 +276,8 @@ CompileCompartment::setSingletonsAsValues()
 
 JitCompileOptions::JitCompileOptions()
   : cloneSingletons_(false),
-    spsSlowAssertionsEnabled_(false)
+    spsSlowAssertionsEnabled_(false),
+    offThreadCompilationAvailable_(false)
 {
 }
 
@@ -286,4 +287,5 @@ JitCompileOptions::JitCompileOptions(JSContext *cx)
     cloneSingletons_ = options.cloneSingletons();
     spsSlowAssertionsEnabled_ = cx->runtime()->spsProfiler.enabled() &&
                                 cx->runtime()->spsProfiler.slowAssertionsEnabled();
+    offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
 }
