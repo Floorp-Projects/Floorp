@@ -214,7 +214,7 @@ class OptimizationInfo
     }
 
     uint32_t inliningMaxCallerBytecodeLength() const {
-        return inlineMaxTotalBytecodeLength_;
+        return inliningMaxCallerBytecodeLength_;
     }
 
     uint32_t inliningWarmUpThreshold() const {
