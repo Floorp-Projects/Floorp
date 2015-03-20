@@ -45,6 +45,7 @@ public:
   virtual nsresult Reset() MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
   virtual const uint64_t ParentID() MOZ_OVERRIDE { return reinterpret_cast<uint64_t>(mPlugin.get()); }
+  virtual const nsCString& GetDisplayName() const MOZ_OVERRIDE;
 
   // GMPSharedMemManager
   virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) MOZ_OVERRIDE

@@ -62,6 +62,7 @@ protected:
    , mGMP(nullptr)
    , mHost(nullptr)
    , mAdapter(aAdapter)
+   , mConvertNALUnitLengths(false)
   {
   }
 
@@ -79,6 +80,7 @@ public:
                                        VideoInfo(aConfig.display_width,
                                                  aConfig.display_height),
                                        aImageContainer))
+   , mConvertNALUnitLengths(false)
   {
   }
 
@@ -100,8 +102,8 @@ private:
   GMPVideoDecoderProxy* mGMP;
   GMPVideoHost* mHost;
   nsAutoPtr<VideoCallbackAdapter> mAdapter;
+  bool mConvertNALUnitLengths;
 };
-
 
 } // namespace mozilla
 
