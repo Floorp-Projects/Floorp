@@ -332,7 +332,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(ComputedTimingFunction& aCTF)
+ToTimingFunction(const ComputedTimingFunction& aCTF)
 {
   if (aCTF.GetType() == nsTimingFunction::Function) {
     const nsSMILKeySpline* spline = aCTF.GetFunction();
@@ -345,7 +345,7 @@ ToTimingFunction(ComputedTimingFunction& aCTF)
 }
 
 static void
-AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
+AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                         AnimationPlayer* aPlayer, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
@@ -373,44 +373,33 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   animation->duration() = timing.mIterationDuration;
   animation->iterationCount() = timing.mIterationCount;
   animation->direction() = timing.mDirection;
-  animation->property() = aProperty;
+  animation->property() = aProperty.mProperty;
   animation->data() = aData;
 
-  dom::Animation* anim = aPlayer->GetSource();
-  for (size_t propIdx = 0;
-       propIdx < anim->Properties().Length();
-       propIdx++) {
-    AnimationProperty& property = anim->Properties()[propIdx];
+  for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
+    const AnimationPropertySegment& segment = aProperty.mSegments[segIdx];
 
-    if (aProperty != property.mProperty) {
-      continue;
+    AnimationSegment* animSegment = animation->segments().AppendElement();
+    if (aProperty.mProperty == eCSSProperty_transform) {
+      animSegment->startState() = InfallibleTArray<TransformFunction>();
+      animSegment->endState() = InfallibleTArray<TransformFunction>();
+
+      nsCSSValueSharedList* list =
+        segment.mFromValue.GetCSSValueSharedListValue();
+      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+                            animSegment->startState().get_ArrayOfTransformFunction());
+
+      list = segment.mToValue.GetCSSValueSharedListValue();
+      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+                            animSegment->endState().get_ArrayOfTransformFunction());
+    } else if (aProperty.mProperty == eCSSProperty_opacity) {
+      animSegment->startState() = segment.mFromValue.GetFloatValue();
+      animSegment->endState() = segment.mToValue.GetFloatValue();
     }
 
-    for (uint32_t segIdx = 0; segIdx < property.mSegments.Length(); segIdx++) {
-      AnimationPropertySegment& segment = property.mSegments[segIdx];
-
-      AnimationSegment* animSegment = animation->segments().AppendElement();
-      if (aProperty == eCSSProperty_transform) {
-        animSegment->startState() = InfallibleTArray<TransformFunction>();
-        animSegment->endState() = InfallibleTArray<TransformFunction>();
-
-        nsCSSValueSharedList* list =
-          segment.mFromValue.GetCSSValueSharedListValue();
-        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
-                              animSegment->startState().get_ArrayOfTransformFunction());
-
-        list = segment.mToValue.GetCSSValueSharedListValue();
-        AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
-                              animSegment->endState().get_ArrayOfTransformFunction());
-      } else if (aProperty == eCSSProperty_opacity) {
-        animSegment->startState() = segment.mFromValue.GetFloatValue();
-        animSegment->endState() = segment.mToValue.GetFloatValue();
-      }
-
-      animSegment->startPortion() = segment.mFromKey;
-      animSegment->endPortion() = segment.mToKey;
-      animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
-    }
+    animSegment->startPortion() = segment.mFromKey;
+    animSegment->endPortion() = segment.mToKey;
+    animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
   }
 }
 
@@ -418,12 +407,20 @@ static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                          AnimationPlayerPtrArray& aPlayers,
                          Layer* aLayer, AnimationData& aData,
-                         bool aPending) {
+                         bool aPending)
+{
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
     AnimationPlayer* player = aPlayers[playerIdx];
+    if (!player->IsRunning()) {
+      continue;
+    }
     dom::Animation* anim = player->GetSource();
-    if (!(anim && anim->HasAnimationOfProperty(aProperty) &&
-          player->IsRunning())) {
+    if (!anim) {
+      continue;
+    }
+    const AnimationProperty* property =
+      anim->GetAnimationOfProperty(aProperty);
+    if (!property) {
       continue;
     }
 
@@ -443,7 +440,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       }
     }
 
-    AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
+    AddAnimationForProperty(aFrame, *property, player, aLayer, aData, aPending);
     player->SetIsRunningOnCompositor();
   }
 }
