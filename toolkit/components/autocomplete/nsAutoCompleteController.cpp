@@ -732,18 +732,6 @@ nsAutoCompleteController::GetSearchString(nsAString &aSearchString)
   return NS_OK;
 }
 
-void
-nsAutoCompleteController::HandleSearchResult(nsIAutoCompleteSearch *aSearch,
-                                             nsIAutoCompleteResult *aResult)
-{
-  // Look up the index of the search which is returning.
-  for (uint32_t i = 0; i < mSearches.Length(); ++i) {
-    if (mSearches[i] == aSearch) {
-      ProcessResult(i, aResult);
-    }
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteObserver
@@ -751,41 +739,18 @@ nsAutoCompleteController::HandleSearchResult(nsIAutoCompleteSearch *aSearch,
 NS_IMETHODIMP
 nsAutoCompleteController::OnUpdateSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
 {
-  MOZ_ASSERT(mSearches.Contains(aSearch));
-
   ClearResults();
-  HandleSearchResult(aSearch, aResult);
-  return NS_OK;
+  return OnSearchResult(aSearch, aResult);
 }
 
 NS_IMETHODIMP
 nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAutoCompleteResult* aResult)
 {
-  MOZ_ASSERT(mSearchesOngoing > 0 && mSearches.Contains(aSearch));
-
-  // If this is the first search result we are processing
-  // we should clear out the previously cached results.
-  if (mFirstSearchResult) {
-    ClearResults();
-    mFirstSearchResult = false;
-  }
-
-  uint16_t result = 0;
-  if (aResult) {
-    aResult->GetSearchResult(&result);
-  }
-
-  // If our results are incremental, the search is still ongoing.
-  if (result != nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING &&
-      result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING) {
-    --mSearchesOngoing;
-  }
-
-  HandleSearchResult(aSearch, aResult);
-
-  if (mSearchesOngoing == 0) {
-    // If this is the last search to return, cleanup.
-    PostSearchCleanup();
+  // look up the index of the search which is returning
+  for (uint32_t i = 0; i < mSearches.Length(); ++i) {
+    if (mSearches[i] == aSearch) {
+      ProcessResult(i, aResult);
+    }
   }
 
   return NS_OK;
@@ -1142,7 +1107,6 @@ nsAutoCompleteController::StartSearch(uint16_t aSearchType)
     rv = search->StartSearch(mSearchString, searchParam, result, static_cast<nsIAutoCompleteObserver *>(this));
     if (NS_FAILED(rv)) {
       ++mSearchesFailed;
-      MOZ_ASSERT(mSearchesOngoing > 0);
       --mSearchesOngoing;
     }
     // Because of the joy of nested event loops (which can easily happen when some
@@ -1465,9 +1429,22 @@ nsAutoCompleteController::ProcessResult(int32_t aSearchIndex, nsIAutoCompleteRes
   NS_ENSURE_STATE(mInput);
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
+  // If this is the first search result we are processing
+  // we should clear out the previously cached results
+  if (mFirstSearchResult) {
+    ClearResults();
+    mFirstSearchResult = false;
+  }
+
   uint16_t result = 0;
   if (aResult)
     aResult->GetSearchResult(&result);
+
+  // if our results are incremental, the search is still ongoing
+  if (result != nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING &&
+      result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING) {
+    --mSearchesOngoing;
+  }
 
   uint32_t oldMatchCount = 0;
   uint32_t matchCount = 0;
@@ -1537,6 +1514,11 @@ nsAutoCompleteController::ProcessResult(int32_t aSearchIndex, nsIAutoCompleteRes
       result == nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING) {
     // Try to autocomplete the default index for this search.
     CompleteDefaultIndex(resultIndex);
+  }
+
+  if (mSearchesOngoing == 0) {
+    // If this is the last search to return, cleanup.
+    PostSearchCleanup();
   }
 
   return NS_OK;
