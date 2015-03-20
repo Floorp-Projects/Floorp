@@ -441,7 +441,7 @@ let RLSidebar = {
     if (!msg.url) {
       this.activeItem = null;
     } else {
-      ReadingList.getItemForURL(msg.url).then(item => {
+      ReadingList.itemForURL(msg.url).then(item => {
         this.activeItem = this.itemNodesById.get(item.id);
       });
     }
