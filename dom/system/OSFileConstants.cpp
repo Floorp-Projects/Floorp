@@ -709,7 +709,7 @@ static const dom::ConstantSpec gWinProperties[] =
   // CreateFile desired access
   INT_CONSTANT(GENERIC_ALL),
   INT_CONSTANT(GENERIC_EXECUTE),
-  UINT_CONSTANT(GENERIC_READ),
+  INT_CONSTANT(GENERIC_READ),
   INT_CONSTANT(GENERIC_WRITE),
 
   // CreateFile share mode
