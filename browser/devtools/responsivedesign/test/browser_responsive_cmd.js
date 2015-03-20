@@ -10,7 +10,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("destroy");
 
 function test() {
   function isOpen() {
-    return gBrowser.getBrowserContainer(gBrowser.selectedTab.linkedBrowser)
+    return gBrowser.getBrowserContainer(gBrowser.selectedBrowser)
                    .hasAttribute("responsivemode");
   }
 

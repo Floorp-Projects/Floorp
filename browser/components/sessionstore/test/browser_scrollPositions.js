@@ -102,30 +102,6 @@ add_task(function test_scroll_nested() {
   gBrowser.removeTab(tab2);
 });
 
-/**
- * This test ensures that by moving scroll positions out of tabData.entries[]
- * we still support the old scroll data format stored per shistory entry.
- */
-add_task(function test_scroll_old_format() {
-  const TAB_STATE = { entries: [{url: URL, scroll: SCROLL_STR}] };
-
-  // Add a blank tab.
-  let tab = gBrowser.addTab("about:blank");
-  let browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
-
-  // Apply the tab state with the old format.
-  yield promiseTabState(tab, TAB_STATE);
-
-  // Check that the scroll positions has been applied.
-  let scroll = yield sendMessage(browser, "ss-test:getScrollPosition");
-  is(JSON.stringify(scroll), JSON.stringify({x: SCROLL_X, y: SCROLL_Y}),
-    "scroll position has been restored correctly");
-
-  // Cleanup.
-  gBrowser.removeTab(tab);
-});
-
 function checkScroll(tab, expected, msg) {
   let browser = tab.linkedBrowser;
   TabState.flush(browser);

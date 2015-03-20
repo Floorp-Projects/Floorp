@@ -142,7 +142,7 @@ add_task(function* test_infoBar() {
   yield promiseWindowIdReceivedOnAdd(handlers[0]);
 
   let getInfoBar = function() {
-    let box = gBrowser.getNotificationBox(gBrowser.selectedTab.linkedBrowser);
+    let box = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
     return box.getNotificationWithValue(kBrowserSharingNotificationId);
   };
 
