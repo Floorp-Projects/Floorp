@@ -1335,7 +1335,7 @@ nsresult
 IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   nsresult rv =
-    IndexedDatabaseManager::CommonPostHandleEvent(this, mFactory, aVisitor);
+    IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, mFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
