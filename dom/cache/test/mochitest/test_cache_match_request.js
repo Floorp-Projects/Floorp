@@ -132,5 +132,8 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return cache.match(request);
   }).then(function(r) {
     is(typeof r, "undefined", "Searching in the cache after deletion should not succeed");
+    return caches.delete(name);
+  }).then(function(deleted) {
+    ok(deleted, "The cache should be deleted successfully");
   });
 }
