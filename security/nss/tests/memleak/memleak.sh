@@ -206,7 +206,8 @@ set_test_mode()
 		${BINDIR}/modutil -dbdir ${CLIENT_DB} -list
 		
 		echo "${SCRIPTNAME}: FIPS is OFF"
-		cipher_list="A B C D E F :C001 :C002 :C003 :C004 :C005 :C006 :C007 :C008 :C009 :C00A :C010 :C011 :C012 :C013 :C014 c d e f g i j k l m n v y z"
+		# ciphers l and m removed, see bug 1136095
+		cipher_list="A B C D E F :C001 :C002 :C003 :C004 :C005 :C006 :C007 :C008 :C009 :C00A :C010 :C011 :C012 :C013 :C014 c d e f g i j k n v y z"
 	fi
 }
 
