@@ -640,6 +640,11 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
         AutoSuppressGC nogc(cx);
         MOZ_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
     }
+    RootedObject terminatingScope(cx, &scopeChainArg);
+    while (!IsValidTerminatingScope(terminatingScope))
+        terminatingScope = terminatingScope->enclosingScope();
+    MOZ_ASSERT(terminatingScope->is<GlobalObject>() ||
+               script->hasPollutedGlobalScope());
 #endif
 
     if (script->isEmpty()) {
@@ -668,6 +673,9 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 
     MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || !script->compileAndGo(),
                        "Only non-compile-and-go scripts can be executed with "
+                       "interesting scopechains");
+    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || script->hasPollutedGlobalScope(),
+                       "Only scripts with polluted scopes can be executed with "
                        "interesting scopechains");
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */

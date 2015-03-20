@@ -6142,6 +6142,7 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
         return false;
     CompileOptions options(cx);
     options.setCompileAndGo(true)
+           .setHasPollutedScope(true)
            .setForEval(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)
