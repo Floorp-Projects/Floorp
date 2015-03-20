@@ -125,6 +125,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
+    this._layoutHelpers = new LayoutHelpers(this._tabActor.window);
     this._createHighlighter();
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
@@ -179,6 +180,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._inspector = null;
     this._walker = null;
     this._tabActor = null;
+    this._layoutHelpers = null;
   },
 
   /**
@@ -512,7 +514,11 @@ function CanvasFrameAnonymousContentHelper(tabActor, nodeBuilder) {
 
   this._onNavigate = this._onNavigate.bind(this);
   events.on(this.tabActor, "navigate", this._onNavigate);
+
+  this.listeners = new Map();
 }
+
+exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
 
 CanvasFrameAnonymousContentHelper.prototype = {
   destroy: function() {
@@ -526,6 +532,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this.tabActor = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
     this.anonymousContentGlobal = null;
+
+    this._removeAllListeners();
   },
 
   _insert: function() {
@@ -562,7 +570,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   _onNavigate: function({isTopLevel}) {
     if (isTopLevel) {
+      this._removeAllListeners();
       this._insert();
+      this.anonymousContentDocument = this.tabActor.window.document;
     }
   },
 
@@ -598,6 +608,129 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
   },
 
+  /**
+   * Add an event listener to one of the elements inserted in the canvasFrame
+   * native anonymous container.
+   * Like other methods in this helper, this requires the ID of the element to
+   * be passed in.
+   *
+   * Note that if the content page navigates, the event listeners won't be
+   * added again.
+   *
+   * Also note that unlike traditional DOM events, the events handled by
+   * listeners added here will propagate through the document only through
+   * bubbling phase, so the useCapture parameter isn't supported.
+   * It is possible however to call e.stopPropagation() to stop the bubbling.
+   *
+   * IMPORTANT: the chrome-only canvasFrame insertion API takes great care of
+   * not leaking references to inserted elements to chrome JS code. That's
+   * because otherwise, chrome JS code could freely modify native anon elements
+   * inside the canvasFrame and probably change things that are assumed not to
+   * change by the C++ code managing this frame.
+   * See https://wiki.mozilla.org/DevTools/Highlighter#The_AnonymousContent_API
+   * Unfortunately, the inserted nodes are still available via
+   * event.originalTarget, and that's what the event handler here uses to check
+   * that the event actually occured on the right element, but that also means
+   * consumers of this code would be able to access the inserted elements.
+   * Therefore, the originalTarget property will be nullified before the event
+   * is passed to your handler.
+   *
+   * IMPL DETAIL: A single event listener is added per event types only, at
+   * browser level and if the event originalTarget is found to have the provided
+   * ID, the callback is executed (and then IDs of parent nodes of the
+   * originalTarget are checked too).
+   *
+   * @param {String} id
+   * @param {String} type
+   * @param {Function} handler
+   */
+  addEventListenerForElement: function(id, type, handler) {
+    if (typeof id !== "string") {
+      throw new Error("Expected a string ID in addEventListenerForElement but" +
+        " got: " + id);
+    }
+
+    // If no one is listening for this type of event yet, add one listener.
+    if (!this.listeners.has(type)) {
+      let target = getPageListenerTarget(this.tabActor);
+      target.addEventListener(type, this, true);
+      // Each type entry in the map is a map of ids:handlers.
+      this.listeners.set(type, new Map);
+    }
+
+    let listeners = this.listeners.get(type);
+    listeners.set(id, handler);
+  },
+
+  /**
+   * Remove an event listener from one of the elements inserted in the
+   * canvasFrame native anonymous container.
+   * @param {String} id
+   * @param {String} type
+   * @param {Function} handler
+   */
+  removeEventListenerForElement: function(id, type, handler) {
+    let listeners = this.listeners.get(type);
+    if (!listeners) {
+      return;
+    }
+    listeners.delete(id);
+
+    // If no one is listening for event type anymore, remove the listener.
+    if (!this.listeners.has(type)) {
+      let target = getPageListenerTarget(this.tabActor);
+      target.removeEventListener(type, this, true);
+    }
+  },
+
+  handleEvent: function(event) {
+    let listeners = this.listeners.get(event.type);
+    if (!listeners) {
+      return;
+    }
+
+    // Hide the originalTarget property to avoid exposing references to native
+    // anonymous elements. See addEventListenerForElement's comment.
+    let isPropagationStopped = false;
+    let eventProxy = new Proxy(event, {
+      get: (obj, name) => {
+        if (name === "originalTarget") {
+          return null;
+        } else if (name === "stopPropagation") {
+          return () => {
+            isPropagationStopped = true;
+          };
+        } else {
+          return obj[name];
+        }
+      }
+    });
+
+    // Start at originalTarget, bubble through ancestors and call handlers when
+    // needed.
+    let node = event.originalTarget;
+    while (node) {
+      let handler = listeners.get(node.id);
+      if (handler) {
+        handler(eventProxy, node.id);
+        if (isPropagationStopped) {
+          break;
+        }
+      }
+      node = node.parentNode;
+    }
+  },
+
+  _removeAllListeners: function() {
+    if (this.tabActor) {
+      let target = getPageListenerTarget(this.tabActor);
+      for (let [type] of this.listeners) {
+        target.removeEventListener(type, this, true);
+      }
+    }
+    this.listeners.clear();
+  },
+
   getElement: function(id) {
     let self = this;
     return {
@@ -605,7 +738,13 @@ CanvasFrameAnonymousContentHelper.prototype = {
       setTextContent: text => self.setTextContentForElement(id, text),
       setAttribute: (name, value) => self.setAttributeForElement(id, name, value),
       getAttribute: name => self.getAttributeForElement(id, name),
-      removeAttribute: name => self.removeAttributeForElement(id, name)
+      removeAttribute: name => self.removeAttributeForElement(id, name),
+      addEventListener: (type, handler) => {
+        return self.addEventListenerForElement(id, type, handler);
+      },
+      removeEventListener: (type, handler) => {
+        return self.removeEventListenerForElement(id, type, handler);
+      }
     };
   },
 
@@ -904,11 +1043,6 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
 
   ID_CLASS_PREFIX: "box-model-",
 
-  get zoom() {
-    return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
-  },
-
   get currentNode() {
     return this._currentNode;
   },
@@ -943,7 +1077,6 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
         "id": "elements",
         "width": "100%",
         "height": "100%",
-        "style": "width:100%;height:100%;",
         "hidden": "true"
       },
       prefix: this.ID_CLASS_PREFIX
@@ -1447,8 +1580,8 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    */
   _moveInfobar: function() {
     let bounds = this._getOuterBounds();
-    let winHeight = this.win.innerHeight * this.zoom;
-    let winWidth = this.win.innerWidth * this.zoom;
+    let winHeight = this.win.innerHeight * LayoutHelpers.getCurrentZoom(this.win);
+    let winWidth = this.win.innerWidth * LayoutHelpers.getCurrentZoom(this.win);
 
     // Ensure that containerBottom and containerTop are at least zero to avoid
     // showing tooltips outside the viewport.
@@ -1726,7 +1859,6 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
 register(CssTransformHighlighter);
 exports.CssTransformHighlighter = CssTransformHighlighter;
 
-
 /**
  * The SelectorHighlighter runs a given selector through querySelectorAll on the
  * document of the provided context node and then uses the BoxModelHighlighter
@@ -1739,6 +1871,7 @@ function SelectorHighlighter(tabActor) {
 
 SelectorHighlighter.prototype = {
   typeName: "SelectorHighlighter",
+
   /**
    * Show BoxModelHighlighter on each node that matches that provided selector.
    * @param {DOMNode} node A context node that is used to get the document on
@@ -2002,8 +2135,7 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
       attributes: {
         "id": "elements",
         "width": "100%",
-        "height": "100%",
-        "style": "width:100%;height:100%;"
+        "height": "100%"
       },
       prefix: this.ID_CLASS_PREFIX
     });
