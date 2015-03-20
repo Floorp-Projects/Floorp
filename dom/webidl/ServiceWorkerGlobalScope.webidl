@@ -15,11 +15,6 @@
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute Clients clients;
 
-  void update();
-
-  [Throws]
-  Promise<boolean> unregister();
-
   attribute EventHandler oninstall;
   attribute EventHandler onactivate;
   attribute EventHandler onfetch;
