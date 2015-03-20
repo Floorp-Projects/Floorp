@@ -686,6 +686,10 @@ nsTransitionManager::UpdateCascadeResults(
 
   if (changed) {
     aTransitions->UpdateAnimationGeneration(mPresContext);
+
+    // Invalidate our style rule.
+    aTransitions->mStyleRuleRefreshTime = TimeStamp();
+    aTransitions->mNeedsRefreshes = true;
   }
 }
 
