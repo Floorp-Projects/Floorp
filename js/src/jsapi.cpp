@@ -4157,6 +4157,7 @@ Evaluate(JSContext *cx, HandleObject scope, const ReadOnlyCompileOptions &option
     AutoLastFrameCheck lfc(cx);
 
     options.setCompileAndGo(scope->is<GlobalObject>());
+    options.setHasPollutedScope(!scope->is<GlobalObject>());
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                     scope, NullPtr(), NullPtr(), options,
