@@ -282,7 +282,7 @@ this.BrowserIDManager.prototype = {
       // The exception is when we've initialized with a user that needs to
       // reauth with the server - in that case we will also get here, but
       // should have the same identity.
-      // initializeWithCurrentIdentity will throw and log if these contraints
+      // initializeWithCurrentIdentity will throw and log if these constraints
       // aren't met, so just go ahead and do the init.
       this.initializeWithCurrentIdentity(true);
       break;
