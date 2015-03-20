@@ -74,7 +74,14 @@ let intervals = {
 // This is the implementation, but it's not exposed directly.
 function InternalScheduler() {
   // oh, I don't know what logs yet - let's guess!
-  let logs = ["readinglist", "FirefoxAccounts", "browserwindow.syncui"];
+  let logs = [
+    "browserwindow.syncui",
+    "FirefoxAccounts",
+    "readinglist.api",
+    "readinglist.serverclient",
+    "readinglist.sync",
+  ];
+
   this._logManager = new LogManager("readinglist.", logs, "readinglist");
   this.log = Log.repository.getLogger("readinglist.scheduler");
   this.log.info("readinglist scheduler created.")
