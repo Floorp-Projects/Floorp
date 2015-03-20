@@ -130,9 +130,9 @@ Touch::Equals(Touch* aTouch)
 }
 
 JSObject*
-Touch::WrapObject(JSContext* aCx)
+Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TouchBinding::Wrap(aCx, this);
+  return TouchBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // Parent ourselves to the window of the target. This achieves the desirable

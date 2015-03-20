@@ -3939,6 +3939,24 @@ MArrayState::Copy(TempAllocator &alloc, MArrayState *state)
     return res;
 }
 
+MNewArray::MNewArray(CompilerConstraintList *constraints, uint32_t count, MConstant *templateConst,
+                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
+  : MUnaryInstruction(templateConst),
+    count_(count),
+    initialHeap_(initialHeap),
+    allocating_(allocating),
+    convertDoubleElements_(false)
+{
+    ArrayObject *obj = templateObject();
+    setResultType(MIRType_Object);
+    if (!obj->isSingleton()) {
+        TemporaryTypeSet *types = MakeSingletonTypeSet(constraints, obj);
+        setResultTypeSet(types);
+        if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
+            convertDoubleElements_ = true;
+    }
+}
+
 bool
 MNewArray::shouldUseVM() const
 {

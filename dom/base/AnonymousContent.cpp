@@ -131,9 +131,10 @@ AnonymousContent::GetElementById(const nsAString& aElementId)
 
 bool
 AnonymousContent::WrapObject(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto,
                              JS::MutableHandle<JSObject*> aReflector)
 {
-  return AnonymousContentBinding::Wrap(aCx, this, aReflector);
+  return AnonymousContentBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 } // dom namespace

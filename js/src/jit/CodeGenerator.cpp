@@ -1767,7 +1767,7 @@ CodeGenerator::emitLambdaInit(Register output, Register scopeChain,
         } s;
         uint32_t word;
     } u;
-    u.s.nargs = info.fun->nargs();
+    u.s.nargs = info.nargs;
     u.s.flags = info.flags;
 
     MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
@@ -4059,7 +4059,7 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef ArrayObject *(*NewDenseArrayFn)(ExclusiveContext *, uint32_t, HandleObjectGroup,
-                                        AllocatingBehaviour);
+                                        AllocatingBehaviour, bool);
 static const VMFunction NewDenseArrayInfo = FunctionInfo<NewDenseArrayFn>(NewDenseArray);
 
 void
@@ -4074,6 +4074,7 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     ObjectGroup *group =
         templateObject->isSingleton() ? nullptr : templateObject->group();
 
+    pushArg(Imm32(lir->mir()->convertDoubleElements()));
     pushArg(Imm32(lir->mir()->allocatingBehaviour()));
     pushArg(ImmGCPtr(group));
     pushArg(Imm32(lir->mir()->count()));
@@ -4161,7 +4162,9 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     OutOfLineNewArray *ool = new(alloc()) OutOfLineNewArray(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    masm.createGCObject(objReg, tempReg, templateObject, lir->mir()->initialHeap(), ool->entry());
+    masm.createGCObject(objReg, tempReg, templateObject, lir->mir()->initialHeap(),
+                        ool->entry(), /* initContents = */ true,
+                        lir->mir()->convertDoubleElements());
 
     masm.bind(ool->rejoin());
 }

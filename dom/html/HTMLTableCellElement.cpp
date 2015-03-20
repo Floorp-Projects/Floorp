@@ -23,9 +23,9 @@ HTMLTableCellElement::~HTMLTableCellElement()
 }
 
 JSObject*
-HTMLTableCellElement::WrapNode(JSContext *aCx)
+HTMLTableCellElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableCellElementBinding::Wrap(aCx, this);
+  return HTMLTableCellElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLTableCellElement, nsGenericHTMLElement,

@@ -26,9 +26,9 @@ MenuBoxObject::~MenuBoxObject()
 {
 }
 
-JSObject* MenuBoxObject::WrapObject(JSContext* aCx)
+JSObject* MenuBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MenuBoxObjectBinding::Wrap(aCx, this);
+  return MenuBoxObjectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void MenuBoxObject::OpenMenu(bool aOpenFlag)

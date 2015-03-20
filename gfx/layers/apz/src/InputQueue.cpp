@@ -77,6 +77,14 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
                               uint64_t* aOutInputBlockId) {
   TouchBlockState* block = nullptr;
   if (aEvent.mType == MultiTouchInput::MULTITOUCH_START) {
+    nsTArray<TouchBehaviorFlags> currentBehaviors;
+    bool haveBehaviors = false;
+    if (!gfxPrefs::TouchActionEnabled()) {
+      haveBehaviors = true;
+    } else if (!mInputBlockQueue.IsEmpty() && CurrentBlock()->AsTouchBlock()) {
+      haveBehaviors = CurrentTouchBlock()->GetAllowedTouchBehaviors(currentBehaviors);
+    }
+
     block = StartNewTouchBlock(aTarget, aTargetConfirmed, false);
     INPQ_LOG("started new touch block %p for target %p\n", block, aTarget.get());
 
@@ -85,13 +93,18 @@ InputQueue::ReceiveTouchInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
     // else. For now assume this is rare enough that it's not an issue.
     if (block == CurrentBlock() &&
         aEvent.mTouches.Length() == 1 &&
-        block->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
+        block->GetOverscrollHandoffChain()->HasFastMovingApzc() &&
+        haveBehaviors) {
       // If we're already in a fast fling, and a single finger goes down, then
       // we want special handling for the touch event, because it shouldn't get
       // delivered to content. Note that we don't set this flag when going
       // from a fast fling to a pinch state (i.e. second finger goes down while
       // the first finger is moving).
       block->SetDuringFastMotion();
+      block->SetConfirmedTargetApzc(aTarget);
+      if (gfxPrefs::TouchActionEnabled()) {
+        block->SetAllowedTouchBehaviors(currentBehaviors);
+      }
       INPQ_LOG("block %p tagged as fast-motion\n", block);
     }
 
@@ -201,11 +214,6 @@ InputQueue::MaybeRequestContentResponse(const nsRefPtr<AsyncPanZoomController>& 
                                         CancelableBlockState* aBlock)
 {
   bool waitForMainThread = !aBlock->IsTargetConfirmed();
-  if (aBlock->AsTouchBlock() && aBlock->AsTouchBlock()->IsDuringFastMotion()) {
-    aBlock->SetConfirmedTargetApzc(aTarget);
-    waitForMainThread = false;
-  }
-
   if (waitForMainThread) {
     // We either don't know for sure if aTarget is the right APZC, or we may
     // need to wait to give content the opportunity to prevent-default the

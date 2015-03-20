@@ -2890,19 +2890,6 @@ nsDOMWindowUtils::LeafLayersPartitionWindow(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetMayHaveTouchEventListeners(bool* aResult)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  nsPIDOMWindow* innerWindow = window->GetCurrentInnerWindow();
-  *aResult = innerWindow ? innerWindow->HasTouchEventListeners() : false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResult)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());

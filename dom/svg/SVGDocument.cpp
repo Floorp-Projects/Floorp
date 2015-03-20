@@ -167,9 +167,9 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
 }
 
 JSObject*
-SVGDocument::WrapNode(JSContext *aCx)
+SVGDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGDocumentBinding::Wrap(aCx, this);
+  return SVGDocumentBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

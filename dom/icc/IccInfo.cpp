@@ -44,9 +44,9 @@ IccInfo::Update(nsIIccInfo* aInfo)
 }
 
 JSObject*
-IccInfo::WrapObject(JSContext* aCx)
+IccInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozIccInfoBinding::Wrap(aCx, this);
+  return MozIccInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 Nullable<IccType>
@@ -161,9 +161,9 @@ GsmIccInfo::Update(nsIGsmIccInfo* aInfo)
 }
 
 JSObject*
-GsmIccInfo::WrapObject(JSContext* aCx)
+GsmIccInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozGsmIccInfoBinding::Wrap(aCx, this);
+  return MozGsmIccInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -203,9 +203,9 @@ CdmaIccInfo::Update(nsICdmaIccInfo* aInfo)
 }
 
 JSObject*
-CdmaIccInfo::WrapObject(JSContext* aCx)
+CdmaIccInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozCdmaIccInfoBinding::Wrap(aCx, this);
+  return MozCdmaIccInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

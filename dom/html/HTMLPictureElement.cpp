@@ -70,9 +70,9 @@ HTMLPictureElement::IsPictureEnabled()
 }
 
 JSObject*
-HTMLPictureElement::WrapNode(JSContext* aCx)
+HTMLPictureElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLPictureElementBinding::Wrap(aCx, this);
+  return HTMLPictureElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

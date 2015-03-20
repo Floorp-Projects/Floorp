@@ -75,9 +75,9 @@ Headers::Constructor(const GlobalObject& aGlobal,
 }
 
 JSObject*
-Headers::WrapObject(JSContext* aCx)
+Headers::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::HeadersBinding::Wrap(aCx, this);
+  return mozilla::dom::HeadersBinding::Wrap(aCx, this, aGivenProto);
 }
 
 Headers::~Headers()

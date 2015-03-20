@@ -518,9 +518,9 @@ DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit)
 }
 
 JSObject*
-DOMSVGLength::WrapObject(JSContext* aCx)
+DOMSVGLength::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::SVGLengthBinding::Wrap(aCx, this);
+  return dom::SVGLengthBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

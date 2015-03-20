@@ -78,7 +78,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual nsresult
   PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

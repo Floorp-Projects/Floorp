@@ -162,9 +162,9 @@ MobileConnectionInfo::Update(nsIMobileConnectionInfo* aInfo)
 }
 
 JSObject*
-MobileConnectionInfo::WrapObject(JSContext* aCx)
+MobileConnectionInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozMobileConnectionInfoBinding::Wrap(aCx, this);
+  return MozMobileConnectionInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIMobileConnectionInfo

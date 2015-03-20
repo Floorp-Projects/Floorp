@@ -201,6 +201,18 @@ static Accessible* New_HTMLProgress(nsIContent* aContent, Accessible* aContext)
   { return new HTMLProgressMeterAccessible(aContent, aContext->Document()); }
 
 static Accessible*
+New_HTMLTableAccessible(nsIContent* aContent, Accessible* aContext)
+  { return new HTMLTableAccessible(aContent, aContext->Document()); }
+
+static Accessible*
+New_HTMLTableRowAccessible(nsIContent* aContent, Accessible* aContext)
+  { return new HTMLTableRowAccessible(aContent, aContext->Document()); }
+
+static Accessible*
+New_HTMLTableCellAccessible(nsIContent* aContent, Accessible* aContext)
+  { return new HTMLTableCellAccessible(aContent, aContext->Document()); }
+
+static Accessible*
 New_HTMLTableHeaderCell(nsIContent* aContent, Accessible* aContext)
 {
   if (aContext->IsTableRow() && aContext->GetContent() == aContent->GetParent())

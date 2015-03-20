@@ -75,7 +75,7 @@ enum AllocatingBehaviour {
  */
 extern ArrayObject *
 NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleObjectGroup group,
-              AllocatingBehaviour allocating);
+              AllocatingBehaviour allocating, bool convertDoubleElements = false);
 
 /* Create a dense array with a copy of the dense array elements in src. */
 extern ArrayObject *

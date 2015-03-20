@@ -188,7 +188,7 @@ public:
     return static_cast<nsIDOMSVGElement*> (svgElement);
   }
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 private:
 

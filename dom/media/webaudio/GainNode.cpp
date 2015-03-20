@@ -151,9 +151,9 @@ GainNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 JSObject*
-GainNode::WrapObject(JSContext* aCx)
+GainNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return GainNodeBinding::Wrap(aCx, this);
+  return GainNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -24,7 +24,7 @@ PerformanceMeasure::~PerformanceMeasure()
 }
 
 JSObject*
-PerformanceMeasure::WrapObject(JSContext* aCx)
+PerformanceMeasure::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceMeasureBinding::Wrap(aCx, this);
+  return PerformanceMeasureBinding::Wrap(aCx, this, aGivenProto);
 }

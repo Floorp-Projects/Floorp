@@ -15,6 +15,7 @@ const UPDATE_ARCHIVE_DIR = "UpdArchD"
 const LOCAL_DIR = "/data/local";
 const UPDATES_DIR = "updates/0";
 const FOTA_DIR = "updates/fota";
+const COREAPPSDIR_PREF = "b2g.coreappsdir"
 
 XPCOMUtils.defineLazyServiceGetter(Services, "env",
                                    "@mozilla.org/process/environment;1",
@@ -97,12 +98,27 @@ DirectoryProvider.prototype = {
       return this.getUpdateDir(persistent, FOTA_DIR, 1.1);
     }
 #else
-    // In desktop builds, coreAppsDir is the same as the profile directory.
-    // We just need to get the path from the parent, and it is then used to
-    // build jar:remoteopenfile:// uris.
+    // In desktop builds, coreAppsDir is the same as the profile
+    // directory unless otherwise specified. We just need to get the
+    // path from the parent, and it is then used to build
+    // jar:remoteopenfile:// uris.
     if (prop == "coreAppsDir") {
-      let appsDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      appsDir.append("webapps");
+      let coreAppsDirPref;
+      try {
+        coreAppsDirPref = Services.prefs.getCharPref(COREAPPSDIR_PREF);
+      } catch (e) {
+        // coreAppsDirPref may not exist if we're on an older version
+        // of gaia, so just fail silently.
+      }
+      let appsDir;
+      // If pref doesn't exist or isn't set, default to old value
+      if (!coreAppsDirPref || coreAppsDirPref == "") {
+        appsDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+        appsDir.append("webapps");
+      } else {
+        appsDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile)
+        appsDir.initWithPath(coreAppsDirPref);
+      }
       persistent.value = true;
       return appsDir;
     } else if (prop == "ProfD") {

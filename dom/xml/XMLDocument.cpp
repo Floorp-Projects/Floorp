@@ -623,13 +623,13 @@ XMLDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 JSObject*
-XMLDocument::WrapNode(JSContext *aCx)
+XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   if (mIsPlainDocument) {
-    return DocumentBinding::Wrap(aCx, this);
+    return DocumentBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  return XMLDocumentBinding::Wrap(aCx, this);
+  return XMLDocumentBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -62,7 +62,7 @@ public:
 
     WebGLContext* GetParentObject() const { return Context(); }
 
-    virtual JSObject* WrapObject(JSContext* js) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShader)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)

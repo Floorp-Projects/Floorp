@@ -578,9 +578,9 @@ AudioBufferSourceNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 JSObject*
-AudioBufferSourceNode::WrapObject(JSContext* aCx)
+AudioBufferSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AudioBufferSourceNodeBinding::Wrap(aCx, this);
+  return AudioBufferSourceNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

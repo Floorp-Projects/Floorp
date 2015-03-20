@@ -15,9 +15,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationEffect, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationEffect, Release)
 
 JSObject*
-AnimationEffect::WrapObject(JSContext* aCx)
+AnimationEffect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AnimationEffectBinding::Wrap(aCx, this);
+  return AnimationEffectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

@@ -59,7 +59,7 @@ public:
 protected:
   virtual ~HTMLTitleElement();
 
-  virtual JSObject* WrapNode(JSContext* cx)
+  virtual JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
     MOZ_OVERRIDE MOZ_FINAL;
 
 private:
