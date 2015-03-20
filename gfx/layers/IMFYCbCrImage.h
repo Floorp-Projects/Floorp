@@ -8,7 +8,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "ImageContainer.h"
-#include "Mfidl.h"
+#include "mfidl.h"
 
 namespace mozilla {
 namespace layers {
