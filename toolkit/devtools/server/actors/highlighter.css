@@ -14,10 +14,15 @@
 */
 
 :-moz-native-anonymous .highlighter-container {
-  pointer-events: none;
   position: absolute;
   width: 100%;
   height: 100%;
+  /* The container for all highlighters doesn't react to pointer-events by
+     default. This is because most highlighters cover the whole viewport but
+     don't contain UIs that need to be accessed.
+     If your highlighter has UI that needs to be interacted with, add
+     'pointer-events:auto;' on its container element. */
+  pointer-events: none;
 }
 
 :-moz-native-anonymous .highlighter-container [hidden] {
@@ -180,6 +185,12 @@
 }
 
 /* Element geometry highlighter */
+
+:-moz-native-anonymous .geometry-editor-root {
+  /* The geometry editor can be interacted with, so it needs to react to
+     pointer events */
+  pointer-events: auto;
+}
 
 :-moz-native-anonymous .geometry-editor-offset-parent {
   stroke: #08c;
