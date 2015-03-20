@@ -21,23 +21,23 @@ async_test(function(t) {
   div.style.marginLeft = '10000px';
   cs.marginLeft;
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
     previousAnimVal = getMarginLeft(cs);
-    player.pause();
+    animation.pause();
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'margin-left does not increase after calling pause()');
     previousAnimVal = getMarginLeft(cs);
-    player.play();
-    return player.ready.then(waitForFrame);
+    animation.play();
+    return animation.ready.then(waitForFrame);
   })).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left increases after calling play()');

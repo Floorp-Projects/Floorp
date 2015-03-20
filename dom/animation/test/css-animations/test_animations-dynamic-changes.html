@@ -17,84 +17,84 @@ async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s';
 
-  var originalPlayer = div.getAnimationPlayers()[0];
+  var originalAnimation = div.getAnimations()[0];
   var originalStartTime;
   var originalCurrentTime;
 
   // Wait a moment so we can confirm the startTime doesn't change (and doesn't
   // simply reflect the current time).
-  originalPlayer.ready.then(function() {
-    originalStartTime = originalPlayer.startTime;
-    originalCurrentTime = originalPlayer.currentTime;
+  originalAnimation.ready.then(function() {
+    originalStartTime = originalAnimation.startTime;
+    originalCurrentTime = originalAnimation.currentTime;
 
     // Wait a moment so we can confirm the startTime doesn't change (and
     // doesn't simply reflect the current time).
     return waitForFrame();
   }).then(t.step_func(function() {
     div.style.animationDuration = '200s';
-    var player = div.getAnimationPlayers()[0];
-    assert_equals(player, originalPlayer,
-                  'The same AnimationPlayer is returned after updating'
+    var animation = div.getAnimations()[0];
+    assert_equals(animation, originalAnimation,
+                  'The same Animation is returned after updating'
                   + ' animation duration');
-    assert_equals(player.startTime, originalStartTime,
-                  'AnimationPlayers returned by getAnimationPlayers preserve'
+    assert_equals(animation.startTime, originalStartTime,
+                  'Animations returned by getAnimations preserve'
                   + ' their startTime even when they are updated');
     // Sanity check
-    assert_not_equals(player.currentTime, originalCurrentTime,
-                      'AnimationPlayer.currentTime has updated in next'
+    assert_not_equals(animation.currentTime, originalCurrentTime,
+                      'Animation.currentTime has updated in next'
                       + ' requestAnimationFrame callback');
     t.done();
   }));
-}, 'AnimationPlayers preserve their startTime when changed');
+}, 'Animations preserve their startTime when changed');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s, anim1 100s';
 
   // Store original state
-  var players = div.getAnimationPlayers();
-  var player1 = players[0];
-  var player2 = players[1];
+  var animations = div.getAnimations();
+  var animation1 = animations[0];
+  var animation2 = animations[1];
 
   // Update first in list
   div.style.animationDuration = '200s, 100s';
-  players = div.getAnimationPlayers();
-  assert_equals(players[0], player1,
-                'First player is in same position after update');
-  assert_equals(players[1], player2,
-                'Second player is in same position after update');
-}, 'Updated AnimationPlayers maintain their order in the list');
+  animations = div.getAnimations();
+  assert_equals(animations[0], animation1,
+                'First Animation is in same position after update');
+  assert_equals(animations[1], animation2,
+                'Second Animation is in same position after update');
+}, 'Updated Animations maintain their order in the list');
 
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 200s, anim1 100s';
 
   // Store original state
-  var players = div.getAnimationPlayers();
-  var player1 = players[0];
-  var player2 = players[1];
+  var animations = div.getAnimations();
+  var animation1 = animations[0];
+  var animation2 = animations[1];
 
   // Wait before continuing so we can compare start times (otherwise the
-  // new player objects and existing player objects will all have the same
+  // new Animation objects and existing Animation objects will all have the same
   // start time).
-  waitForAllPlayers(players).then(waitForFrame).then(t.step_func(function() {
+  waitForAllAnimations(animations).then(waitForFrame).then(t.step_func(function() {
     // Swap duration of first and second in list and prepend animation at the
     // same time
     div.style.animation = 'anim1 100s, anim1 100s, anim1 200s';
-    players = div.getAnimationPlayers();
-    assert_true(players[0] !== player1 && players[0] !== player2,
-                'New player is prepended to start of list');
-    assert_equals(players[1], player1,
-                  'First player is in second position after update');
-    assert_equals(players[2], player2,
-                  'Second player is in third position after update');
-    assert_equals(players[1].startTime, players[2].startTime,
-                  'Old players have the same start time');
-    // TODO: Check that players[0].startTime === null
-    return players[0].ready;
+    animations = div.getAnimations();
+    assert_true(animations[0] !== animation1 && animations[0] !== animation2,
+                'New Animation is prepended to start of list');
+    assert_equals(animations[1], animation1,
+                  'First Animation is in second position after update');
+    assert_equals(animations[2], animation2,
+                  'Second Animation is in third position after update');
+    assert_equals(animations[1].startTime, animations[2].startTime,
+                  'Old Animations have the same start time');
+    // TODO: Check that animations[0].startTime === null
+    return animations[0].ready;
   })).then(t.step_func(function() {
-    assert_true(players[0].startTime > players[1].startTime,
-                'New player has later start time');
+    assert_true(animations[0].startTime > animations[1].startTime,
+                'New Animation has later start time');
     t.done();
   }));
 }, 'Only the startTimes of existing animations are preserved');
@@ -102,58 +102,58 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s, anim1 100s';
-  var secondPlayer = div.getAnimationPlayers()[1];
+  var secondAnimation = div.getAnimations()[1];
 
   // Wait before continuing so we can compare start times
-  secondPlayer.ready.then(waitForFrame).then(t.step_func(function() {
+  secondAnimation.ready.then(waitForFrame).then(t.step_func(function() {
     // Trim list of animations
     div.style.animationName = 'anim1';
-    var players = div.getAnimationPlayers();
-    assert_equals(players.length, 1, 'List of players was trimmed');
-    assert_equals(players[0], secondPlayer,
-                  'Remaining player is the second one in the list');
-    assert_equals(typeof(players[0].startTime), 'number',
-                  'Remaining player has resolved startTime');
-    assert_true(players[0].startTime < players[0].timeline.currentTime,
-                'Remaining player preserves startTime');
+    var animations = div.getAnimations();
+    assert_equals(animations.length, 1, 'List of Animations was trimmed');
+    assert_equals(animations[0], secondAnimation,
+                  'Remaining Animation is the second one in the list');
+    assert_equals(typeof(animations[0].startTime), 'number',
+                  'Remaining Animation has resolved startTime');
+    assert_true(animations[0].startTime < animations[0].timeline.currentTime,
+                'Remaining Animation preserves startTime');
     t.done();
   }));
 }, 'Animations are removed from the start of the list while preserving'
-   + ' the state of existing players');
+   + ' the state of existing Animations');
 
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s';
-  var firstAddedPlayer = div.getAnimationPlayers()[0],
-      secondAddedPlayer,
-      players;
+  var firstAddedAnimation = div.getAnimations()[0],
+      secondAddedAnimation,
+      animations;
 
-  // Wait and add second player
-  firstAddedPlayer.ready.then(waitForFrame).then(t.step_func(function() {
+  // Wait and add second Animation
+  firstAddedAnimation.ready.then(waitForFrame).then(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim1 100s';
-    secondAddedPlayer = div.getAnimationPlayers()[0];
+    secondAddedAnimation = div.getAnimations()[0];
 
-    // Wait again and add another player
-    return secondAddedPlayer.ready.then(waitForFrame);
+    // Wait again and add another Animation
+    return secondAddedAnimation.ready.then(waitForFrame);
   })).then(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim2 100s, anim1 100s';
-    players = div.getAnimationPlayers();
-    assert_not_equals(firstAddedPlayer, secondAddedPlayer,
-                      'New players are added to start of the list');
-    assert_equals(players[0], secondAddedPlayer,
-                  'Second player remains in same position after'
+    animations = div.getAnimations();
+    assert_not_equals(firstAddedAnimation, secondAddedAnimation,
+                      'New Animations are added to start of the list');
+    assert_equals(animations[0], secondAddedAnimation,
+                  'Second Animation remains in same position after'
                   + ' interleaving');
-    assert_equals(players[2], firstAddedPlayer,
-                  'First player remains in same position after'
+    assert_equals(animations[2], firstAddedAnimation,
+                  'First Animation remains in same position after'
                   + ' interleaving');
-    return players[1].ready;
+    return animations[1].ready;
   })).then(t.step_func(function() {
-    assert_true(players[1].startTime > players[0].startTime,
-                'Interleaved player starts later than existing players');
-    assert_true(players[0].startTime > players[2].startTime,
-                'Original players retain their start time');
+    assert_true(animations[1].startTime > animations[0].startTime,
+                'Interleaved animation starts later than existing animations');
+    assert_true(animations[0].startTime > animations[2].startTime,
+                'Original animations retain their start time');
     t.done();
   }));
-}, 'Player state is preserved when interleaving animations in list');
+}, 'Animation state is preserved when interleaving animations in list');
 
 </script>
