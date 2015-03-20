@@ -268,8 +268,30 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
 
   // Buttons have some bonus renderer-determined border/padding,
   // which occupies part of the button's content-box area:
-  const LogicalMargin focusPadding =
+  LogicalMargin focusPadding =
     LogicalMargin(wm, mRenderer.GetAddedButtonBorderAndPadding());
+
+  // See whether out availSize's inline-size is big enough.  If it's
+  // smaller than our intrinsic min iSize, that means that the kid
+  // wouldn't really fit.  In that case, we overflow into our internal
+  // focuspadding (which other browsers don't have) so that there's a
+  // little more space for it.
+  // Note that GetMinISize includes the focusPadding.
+  nscoord IOverflow = GetMinISize(aButtonReflowState.rendContext) -
+                      aButtonReflowState.ComputedISize();
+  nscoord IFocusPadding = focusPadding.IStartEnd(wm);
+  nscoord focusPaddingReduction = std::min(IFocusPadding,
+                                           std::max(IOverflow, 0));
+  if (focusPaddingReduction > 0) {
+    nscoord startReduction = focusPadding.IStart(wm);
+    if (focusPaddingReduction != IFocusPadding) {
+      startReduction = NSToCoordRound(startReduction *
+                                      (float(focusPaddingReduction) /
+                                       float(IFocusPadding)));
+    }
+    focusPadding.IStart(wm) -= startReduction;
+    focusPadding.IEnd(wm) -= focusPaddingReduction - startReduction;
+  }
 
   // shorthand for a value we need to use in a bunch of places
   const LogicalMargin& clbp = aButtonReflowState.ComputedLogicalBorderPadding();
@@ -278,26 +300,8 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // from the regular border.
   availSize.ISize(wm) -= focusPadding.IStartEnd(wm);
 
-  // See whether out availSize's inline-size is big enough.  If it's smaller than
-  // our intrinsic min iSize, that means that the kid wouldn't really fit; for a
-  // better look in such cases we adjust the available iSize and our inline-start
-  // offset to allow the kid to spill start-wards into our padding.
   LogicalPoint childPos(wm);
   childPos.I(wm) = focusPadding.IStart(wm) + clbp.IStart(wm);
-  nscoord extraISize = GetMinISize(aButtonReflowState.rendContext) -
-    aButtonReflowState.ComputedISize();
-  if (extraISize > 0) {
-    nscoord extraIStart = extraISize / 2;
-    nscoord extraIEnd = extraISize - extraIStart;
-    NS_ASSERTION(extraIEnd >=0, "How'd that happen?");
-
-    // Do not allow the extras to be bigger than the relevant padding
-    const LogicalMargin& padding = aButtonReflowState.ComputedLogicalPadding();
-    extraIStart = std::min(extraIStart, padding.IStart(wm));
-    extraIEnd = std::min(extraIEnd, padding.IEnd(wm));
-    childPos.I(wm) -= extraIStart;
-    availSize.ISize(wm) = availSize.ISize(wm) + extraIStart + extraIEnd;
-  }
   availSize.ISize(wm) = std::max(availSize.ISize(wm), 0);
 
   // Give child a clone of the button's reflow state, with height/width reduced
