@@ -61,6 +61,8 @@ let RLSidebar = {
     this.list.addEventListener("mousemove", event => this.onListMouseMove(event));
     this.list.addEventListener("keydown", event => this.onListKeyDown(event), true);
 
+    window.addEventListener("message", event => this.onMessage(event));
+
     this.listPromise = this.ensureListItems();
     ReadingList.addListener(this);
 
@@ -186,14 +188,8 @@ let RLSidebar = {
 
     log.debug(`Setting activeItem: ${node ? node.id : null}`);
 
-    if (node) {
-      if (!node.classList.contains("selected")) {
-        this.selectedItem = node;
-      }
-
-      if (node.classList.contains("active")) {
-        return;
-      }
+    if (node && node.classList.contains("active")) {
+      return;
     }
 
     let prevItem = document.querySelector("#list > .item.active");
@@ -416,6 +412,26 @@ let RLSidebar = {
       }
     }
   },
+
+  /**
+   * Handle a message, typically sent from browser-readinglist.js
+   * @param {Event} event - Triggering event.
+   */
+  onMessage(event) {
+    let msg = event.data;
+
+    if (msg.topic != "UpdateActiveItem") {
+      return;
+    }
+
+    if (!msg.url) {
+      this.activeItem = null;
+    } else {
+      ReadingList.getItemForURL(msg.url).then(item => {
+        this.activeItem = this.itemNodesById.get(item.id);
+      });
+    }
+  }
 };
 
 

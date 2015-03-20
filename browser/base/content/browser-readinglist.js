@@ -242,12 +242,20 @@ let ReadingListUI = {
         uri = null;
     }
 
+    let msg = {topic: "UpdateActiveItem", url: null};
     if (!uri) {
       this.toolbarButton.setAttribute("hidden", true);
+      if (this.isSidebarOpen)
+        document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
       return;
     }
 
     let isInList = yield ReadingList.containsURL(uri);
+    if (this.isSidebarOpen) {
+      if (isInList)
+        msg.url = typeof uri == "string" ? uri : uri.spec;
+      document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
+    }
     this.setToolbarButtonState(isInList);
   }),
 
@@ -317,6 +325,10 @@ let ReadingListUI = {
   onItemAdded(item) {
     if (this.isItemForCurrentBrowser(item)) {
       this.setToolbarButtonState(true);
+      if (this.isSidebarOpen) {
+        let msg = {topic: "UpdateActiveItem", url: item.url};
+        document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
+      }
     }
   },
 
