@@ -9,6 +9,7 @@ EXTRA_JS_MODULES.readinglist += [
     'Scheduler.jsm',
     'ServerClient.jsm',
     'SQLiteStore.jsm',
+    'Sync.jsm',
 ]
 
 TESTING_JS_MODULES += [

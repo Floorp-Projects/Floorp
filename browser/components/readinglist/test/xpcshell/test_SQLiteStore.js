@@ -161,100 +161,88 @@ add_task(function* constraints() {
   yield gStore.deleteItemByURL(url1);
   yield gStore.deleteItemByURL(url2);
   let items = [];
-  yield gStore.forEachItem(i => items.push(i), { url: [url1, url2] });
+  yield gStore.forEachItem(i => items.push(i), [{ url: [url1, url2] }]);
   Assert.equal(items.length, 0);
-
-  // add a new item with no url, which is not allowed
-  item = kindOfClone(gItems[0]);
-  delete item.url;
-  err = null;
-  try {
-    yield gStore.addItem(item);
-  }
-  catch (e) {
-    err = e;
-  }
-  checkError(err, "NOT NULL constraint failed: items.url");
 });
 
 add_task(function* count() {
   let count = yield gStore.count();
   Assert.equal(count, gItems.length);
 
-  count = yield gStore.count({
+  count = yield gStore.count([{
     guid: gItems[0].guid,
-  });
+  }]);
   Assert.equal(count, 1);
 });
 
 add_task(function* forEachItem() {
   // all items
   let items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems);
 
   // first item
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     limit: 1,
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems.slice(0, 1));
 
   // last item
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     limit: 1,
     sort: "guid",
     descending: true,
-  });
+  }]);
   checkItems(items, gItems.slice(gItems.length - 1, gItems.length));
 
   // match on a scalar property
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     guid: gItems[0].guid,
-  });
+  }]);
   checkItems(items, gItems.slice(0, 1));
 
   // match on an array
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     guid: gItems.map(i => i.guid),
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems);
 
   // match on AND'ed properties
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     guid: gItems.map(i => i.guid),
     title: gItems[0].title,
     sort: "guid",
-  });
+  }]);
   checkItems(items, [gItems[0]]);
 
   // match on OR'ed properties
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     guid: gItems[1].guid,
     sort: "guid",
   }, {
     guid: gItems[0].guid,
-  });
+  }]);
   checkItems(items, [gItems[0], gItems[1]]);
 
   // match on AND'ed and OR'ed properties
   items = [];
-  yield gStore.forEachItem(item => items.push(item), {
+  yield gStore.forEachItem(item => items.push(item), [{
     guid: gItems.map(i => i.guid),
     title: gItems[1].title,
     sort: "guid",
   }, {
     guid: gItems[0].guid,
-  });
+  }]);
   checkItems(items, [gItems[0], gItems[1]]);
 });
 
@@ -263,9 +251,21 @@ add_task(function* updateItem() {
   gItems[0].title = newTitle;
   yield gStore.updateItem(gItems[0]);
   let item;
-  yield gStore.forEachItem(i => item = i, {
+  yield gStore.forEachItem(i => item = i, [{
     guid: gItems[0].guid,
-  });
+  }]);
+  Assert.ok(item);
+  Assert.equal(item.title, gItems[0].title);
+});
+
+add_task(function* updateItemByGUID() {
+  let newTitle = "updateItemByGUID";
+  gItems[0].title = newTitle;
+  yield gStore.updateItemByGUID(gItems[0]);
+  let item;
+  yield gStore.forEachItem(i => item = i, [{
+    guid: gItems[0].guid,
+  }]);
   Assert.ok(item);
   Assert.equal(item.title, gItems[0].title);
 });
@@ -276,27 +276,30 @@ add_task(function* deleteItemByURL() {
   yield gStore.deleteItemByURL(gItems[0].url);
   Assert.equal((yield gStore.count()), gItems.length - 1);
   let items = [];
-  yield gStore.forEachItem(i => items.push(i), {
+  yield gStore.forEachItem(i => items.push(i), [{
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems.slice(1));
 
   // delete second item
   yield gStore.deleteItemByURL(gItems[1].url);
   Assert.equal((yield gStore.count()), gItems.length - 2);
   items = [];
-  yield gStore.forEachItem(i => items.push(i), {
+  yield gStore.forEachItem(i => items.push(i), [{
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems.slice(2));
+});
 
+// This test deletes items so it should probably run last.
+add_task(function* deleteItemByGUID() {
   // delete third item
-  yield gStore.deleteItemByURL(gItems[2].url);
+  yield gStore.deleteItemByGUID(gItems[2].guid);
   Assert.equal((yield gStore.count()), gItems.length - 3);
-  items = [];
-  yield gStore.forEachItem(i => items.push(i), {
+  let items = [];
+  yield gStore.forEachItem(i => items.push(i), [{
     sort: "guid",
-  });
+  }]);
   checkItems(items, gItems.slice(3));
 });
 
