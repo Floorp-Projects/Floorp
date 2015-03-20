@@ -37,7 +37,8 @@ OptimizationInfo::initNormalOptimizationInfo()
     sink_ = true;
     registerAllocator_ = RegisterAllocator_Backtracking;
 
-    inlineMaxTotalBytecodeLength_ = 1000;
+    inlineMaxBytecodePerCallSiteMainThread_ = 500;
+    inlineMaxBytecodePerCallSiteOffThread_ = 1000;
     inliningMaxCallerBytecodeLength_ = 10000;
     maxInlineDepth_ = 3;
     scalarReplacement_ = true;

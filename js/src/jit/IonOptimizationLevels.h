@@ -88,8 +88,11 @@ class OptimizationInfo
     // Describes which register allocator to use.
     IonRegisterAllocator registerAllocator_;
 
-    // The maximum total bytecode size of an inline call site.
-    uint32_t inlineMaxTotalBytecodeLength_;
+    // The maximum total bytecode size of an inline call site. We use a lower
+    // value if off-thread compilation is not available, to avoid stalling the
+    // main thread.
+    uint32_t inlineMaxBytecodePerCallSiteOffThread_;
+    uint32_t inlineMaxBytecodePerCallSiteMainThread_;
 
     // The maximum bytecode length the caller may have,
     // before we stop inlining large functions in that caller.
@@ -209,8 +212,10 @@ class OptimizationInfo
         return maxInlineDepth_;
     }
 
-    uint32_t inlineMaxTotalBytecodeLength() const {
-        return inlineMaxTotalBytecodeLength_;
+    uint32_t inlineMaxBytecodePerCallSite(bool offThread) const {
+        return (offThread || !js_JitOptions.limitScriptSize)
+               ? inlineMaxBytecodePerCallSiteOffThread_
+               : inlineMaxBytecodePerCallSiteMainThread_;
     }
 
     uint32_t inliningMaxCallerBytecodeLength() const {
