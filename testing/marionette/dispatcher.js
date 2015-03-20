@@ -31,8 +31,10 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerat
  * @param {function(Emulator): GeckoDriver} driverFactory
  *     A factory function that takes an Emulator as argument and produces
  *     a GeckoDriver.
+ * @param {function()} stopSignal
+ *     Signal to stop the Marionette server.
  */
-this.Dispatcher = function(connId, transport, driverFactory) {
+this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
   this.id = connId;
   this.conn = transport;
 
@@ -52,6 +54,8 @@ this.Dispatcher = function(connId, transport, driverFactory) {
   this.emulator = new Emulator(msg => this.sendResponse(msg, -1));
   this.driver = driverFactory(this.emulator);
   this.commandProcessor = new CommandProcessor(this.driver);
+
+  this.stopSignal_ = stopSignal;
 };
 
 /**
@@ -124,6 +128,9 @@ Dispatcher.prototype.quitApplication = function(msg) {
   for (let k of msg.parameters.flags) {
     flags |= Ci.nsIAppStartup[k];
   }
+
+  this.stopSignal_();
+  this.sendOk(id);
 
   this.driver.sessionTearDown();
   Services.startup.quit(flags);
