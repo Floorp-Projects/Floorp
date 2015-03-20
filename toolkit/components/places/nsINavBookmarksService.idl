@@ -222,7 +222,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(b0f9a80a-d7f0-4421-8513-444125f0d828)]
+[scriptable, uuid(24533891-afa6-4663-b72d-3143d03f1b04)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -535,12 +535,6 @@ interface nsINavBookmarksService : nsISupports
    * In both of these cases, succeeds but does nothing if the URL/keyword is not found.
    */
   void setKeywordForBookmark(in long long aItemId, in AString aKeyword);
-
-  /**
-   * Retrieves the keyword for the given URI. Will be void string
-   * (null in JS) if no such keyword is found.
-   */
-  AString getKeywordForURI(in nsIURI aURI);
 
   /**
    * Retrieves the keyword for the given bookmark. Will be void string

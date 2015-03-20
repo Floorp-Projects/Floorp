@@ -474,23 +474,6 @@ this.PlacesDBUtils = {
     fixOrphanItems.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixOrphanItems);
 
-    // D.5 fix wrong keywords
-    let fixInvalidKeywords = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET keyword_id = NULL WHERE guid NOT IN (
-         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
-       ) AND id IN (
-         SELECT id FROM moz_bookmarks b
-         WHERE keyword_id NOT NULL
-           AND NOT EXISTS
-             (SELECT id FROM moz_keywords WHERE id = b.keyword_id LIMIT 1)
-       )`);
-    fixInvalidKeywords.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
-    fixInvalidKeywords.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
-    fixInvalidKeywords.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
-    fixInvalidKeywords.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
-    fixInvalidKeywords.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
-    cleanupStatements.push(fixInvalidKeywords);
-
     // D.6 fix wrong item types
     //     Folders and separators should not have an fk.
     //     If they have a valid fk convert them to bookmarks. Later in D.9 we
@@ -681,7 +664,7 @@ this.PlacesDBUtils = {
       `DELETE FROM moz_keywords WHERE id IN (
          SELECT id FROM moz_keywords k
          WHERE NOT EXISTS
-           (SELECT id FROM moz_bookmarks WHERE keyword_id = k.id LIMIT 1)
+           (SELECT 1 FROM moz_places h WHERE k.place_id = h.id)
        )`);
     cleanupStatements.push(deleteUnusedKeywords);
 

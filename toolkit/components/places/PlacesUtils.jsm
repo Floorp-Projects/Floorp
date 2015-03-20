@@ -812,13 +812,26 @@ this.PlacesUtils = {
    *   @param aBookmarkId
    *   @returns string of POST data
    */
-  setPostDataForBookmark: function PU_setPostDataForBookmark(aBookmarkId, aPostData) {
-    const annos = this.annotations;
-    if (aPostData)
-      annos.setItemAnnotation(aBookmarkId, this.POST_DATA_ANNO, aPostData, 
-                              0, Ci.nsIAnnotationService.EXPIRE_NEVER);
-    else if (annos.itemHasAnnotation(aBookmarkId, this.POST_DATA_ANNO))
-      annos.removeItemAnnotation(aBookmarkId, this.POST_DATA_ANNO);
+  setPostDataForBookmark(aBookmarkId, aPostData) {
+    // For now we don't have a unified API to create a keyword with postData,
+    // thus here we can just try to complete a keyword that should already exist
+    // without any post data.
+    let nullPostDataFragment = aPostData ? "AND post_data ISNULL" : "";
+    let stmt = PlacesUtils.history.DBConnection.createStatement(
+      `UPDATE moz_keywords SET post_data = :post_data
+       WHERE id = (SELECT k.id FROM moz_keywords k
+                   JOIN moz_bookmarks b ON b.fk = k.place_id
+                   WHERE b.id = :item_id
+                   ${nullPostDataFragment}
+                   LIMIT 1)`);
+    stmt.params.item_id = aBookmarkId;
+    stmt.params.post_data = aPostData;
+    try {
+      stmt.execute();
+    }
+    finally {
+      stmt.finalize();
+    }
   },
 
   /**
@@ -826,12 +839,22 @@ this.PlacesUtils = {
    * @param aBookmarkId
    * @returns string of POST data if set for aBookmarkId. null otherwise.
    */
-  getPostDataForBookmark: function PU_getPostDataForBookmark(aBookmarkId) {
-    const annos = this.annotations;
-    if (annos.itemHasAnnotation(aBookmarkId, this.POST_DATA_ANNO))
-      return annos.getItemAnnotation(aBookmarkId, this.POST_DATA_ANNO);
-
-    return null;
+  getPostDataForBookmark(aBookmarkId) {
+    let stmt = PlacesUtils.history.DBConnection.createStatement(
+      `SELECT k.post_data
+       FROM moz_keywords k
+       JOIN moz_places h ON h.id = k.place_id
+       JOIN moz_bookmarks b ON b.fk = h.id
+       WHERE b.id = :item_id`);
+    stmt.params.item_id = aBookmarkId;
+    try {
+      if (!stmt.executeStep())
+        return null;
+      return stmt.row.post_data;
+    }
+    finally {
+      stmt.finalize();
+    }
   },
 
   /**
@@ -839,24 +862,21 @@ this.PlacesUtils = {
    * @param aKeyword string keyword
    * @returns an array containing a string URL and a string of POST data
    */
-  getURLAndPostDataForKeyword: function PU_getURLAndPostDataForKeyword(aKeyword) {
-    var url = null, postdata = null;
+  getURLAndPostDataForKeyword(aKeyword) {
+    let stmt = PlacesUtils.history.DBConnection.createStatement(
+      `SELECT h.url, k.post_data
+       FROM moz_keywords k
+       JOIN moz_places h ON h.id = k.place_id
+       WHERE k.keyword = :keyword`);
+    stmt.params.keyword = aKeyword;
     try {
-      var uri = this.bookmarks.getURIForKeyword(aKeyword);
-      if (uri) {
-        url = uri.spec;
-        var bookmarks = this.bookmarks.getBookmarkIdsForURI(uri);
-        for (let i = 0; i < bookmarks.length; i++) {
-          var bookmark = bookmarks[i];
-          var kw = this.bookmarks.getKeywordForBookmark(bookmark);
-          if (kw == aKeyword) {
-            postdata = this.getPostDataForBookmark(bookmark);
-            break;
-          }
-        }
-      }
-    } catch(ex) {}
-    return [url, postdata];
+      if (!stmt.executeStep())
+        return [ null, null ];
+      return [ stmt.row.url, stmt.row.post_data ];
+    }
+    finally {
+      stmt.finalize();
+    }
   },
 
   /**
@@ -3069,7 +3089,7 @@ PlacesSortFolderByNameTransaction.prototype = {
     let callback = {
       _self: this,
       runBatched: function() {
-        for (item in this._self._oldOrder)
+        for (let item in this._self._oldOrder)
           PlacesUtils.bookmarks.setItemIndex(item, this._self._oldOrder[item]);
       }
     };

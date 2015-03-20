@@ -121,4 +121,13 @@
     "guid_uniqueindex", "moz_favicons", "guid", "UNIQUE" \
   )
 
+/**
+ * moz_keywords
+ */
+
+#define CREATE_IDX_MOZ_KEYWORDS_PLACEPOSTDATA \
+  CREATE_PLACES_IDX( \
+    "placepostdata_uniqueindex", "moz_keywords", "place_id, post_data", "UNIQUE" \
+  )
+
 #endif // nsPlacesIndexes_h__
