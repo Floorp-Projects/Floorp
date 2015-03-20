@@ -1505,7 +1505,7 @@ nsAutoCompleteController::ProcessResult(int32_t aSearchIndex, nsIAutoCompleteRes
     // get results in the future to avoid unnecessarily canceling searches.
     if (mRowCount || !minResults) {
       OpenPopup();
-    } else if (mSearchesOngoing == 0) {
+    } else if (result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING) {
       ClosePopup();
     }
   }
