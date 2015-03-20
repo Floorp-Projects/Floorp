@@ -2397,6 +2397,7 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
     script->initCompartment(cx);
 
     script->compileAndGo_ = options.compileAndGo;
+    script->hasPollutedGlobalScope_ = options.hasPollutedGlobalScope;
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
 
@@ -3081,6 +3082,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     CompileOptions options(cx);
     options.setMutedErrors(src->mutedErrors())
            .setCompileAndGo(src->compileAndGo())
+           .setHasPollutedScope(src->hasPollutedGlobalScope())
            .setSelfHostingMode(src->selfHosted())
            .setNoScriptRval(src->noScriptRval())
            .setVersion(src->getVersion());
