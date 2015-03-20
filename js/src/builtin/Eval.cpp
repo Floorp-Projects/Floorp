@@ -317,6 +317,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
+               .setHasPollutedScope(evalType == DIRECT_EVAL &&
+                                    callerScript->hasPollutedGlobalScope())
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
@@ -399,6 +401,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
+               .setHasPollutedScope(callerScript->hasPollutedGlobalScope())
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
@@ -502,6 +505,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScri
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, global);
     MOZ_ASSERT(global->is<GlobalObject>());
+    MOZ_RELEASE_ASSERT(scriptArg->hasPollutedGlobalScope());
 
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {

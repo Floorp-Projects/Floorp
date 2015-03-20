@@ -4094,6 +4094,13 @@ ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, jsval *rv
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptArg);
+
+    if (!script->hasPollutedGlobalScope() && !obj->is<GlobalObject>()) {
+        script = CloneScript(cx, NullPtr(), NullPtr(), script, HasPollutedGlobalScope);
+        if (!script)
+            return false;
+        js::Debugger::onNewScript(cx, script);
+    }
     AutoLastFrameCheck lfc(cx);
     return Execute(cx, script, *obj, rval);
 }
@@ -4140,7 +4147,9 @@ JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptAr
     assertSameCompartment(cx, obj);
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {
-        script = CloneScript(cx, NullPtr(), NullPtr(), script);
+        PollutedGlobalScopeOption globalScopeOption = obj->is<GlobalObject>() ?
+            HasCleanGlobalScope : HasPollutedGlobalScope;
+        script = CloneScript(cx, NullPtr(), NullPtr(), script, globalScopeOption);
         if (!script)
             return false;
 
