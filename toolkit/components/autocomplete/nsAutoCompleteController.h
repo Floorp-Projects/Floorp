@@ -50,8 +50,6 @@ protected:
   nsresult ClearSearchTimer();
   void MaybeCompletePlaceholder();
 
-  void HandleSearchResult(nsIAutoCompleteSearch *aSearch,
-                          nsIAutoCompleteResult *aResult);
   nsresult ProcessResult(int32_t aSearchIndex, nsIAutoCompleteResult *aResult);
   nsresult PostSearchCleanup();
 
