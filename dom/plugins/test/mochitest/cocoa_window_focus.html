@@ -53,9 +53,7 @@
         ok(false, "Plugin does not know its initial top-level window activation state!");
       }
 
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-                             getService(SpecialPowers.Ci.nsIFocusManager);
+      var fm = SpecialPowers.Services.focus;
 
       waitForFocus(function() {
         // Make sure the plugin handled the focus event before checking.
@@ -69,7 +67,6 @@
           is(plugin2.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
 
           // Bring our window back to the front and make sure plugins were properly notified.
-          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
           fm.focusedWindow = window;
 
           waitForFocus(function() {
@@ -91,7 +88,6 @@
 
       // Send our window to the back and make sure plugins were properly notified.
       // Calling window.blur() is not allowed.
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       fm.focusedWindow = window.opener;
     }
   </script>
