@@ -738,18 +738,30 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER
 
-  void AssertIsOnParentThread();
+  void
+  AssertIsOnParentThread();
 
-  void WaitIsEnabled(bool aIsEnabled);
+  void
+  WaitIsEnabled(bool aIsEnabled);
 
-  void Enable();
+  void
+  Enable();
 
-  void Disable();
+  void
+  Disable();
+
+  void
+  PostMessageToDebugger(const nsAString& aMessage);
 
 private:
-  virtual ~WorkerDebugger();
+  virtual
+  ~WorkerDebugger();
 
-  void NotifyIsEnabled(bool aIsEnabled);
+  void
+  NotifyIsEnabled(bool aIsEnabled);
+
+  void
+  PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
@@ -949,6 +961,9 @@ public:
                              JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv);
+
+  void
+  PostMessageToDebugger(const nsAString& aMessage);
 
   bool
   NotifyInternal(JSContext* aCx, Status aStatus);
