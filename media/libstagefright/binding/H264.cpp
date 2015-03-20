@@ -116,7 +116,7 @@ H264::DecodeNALUnit(const ByteBuffer* aNAL)
   uint32_t zeros = 0;
   while (reader.Remaining()) {
     uint8_t byte = reader.ReadU8();
-    if (zeros < 2 || byte == 0x03) {
+    if (zeros < 2 || byte != 0x03) {
       rbsp->AppendElement(byte);
     }
     if (byte == 0) {
