@@ -22,9 +22,9 @@ public:
                nsPresContext* aPresContext,
                WidgetPointerEvent* aEvent);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return PointerEventBinding::Wrap(aCx, this);
+    return PointerEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   static already_AddRefed<PointerEvent>

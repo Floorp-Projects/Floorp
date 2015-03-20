@@ -878,9 +878,6 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
 
-    NS_IMETHOD RegisterTouchWindow() = 0;
-    NS_IMETHOD UnregisterTouchWindow() = 0;
-
     /**
      * Return the parent Widget of this Widget or nullptr if this is a 
      * top level window

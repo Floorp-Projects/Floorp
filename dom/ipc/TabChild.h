@@ -47,6 +47,7 @@ class RenderFrameChild;
 namespace layers {
 class APZEventState;
 struct SetTargetAPZCCallback;
+struct SetAllowedTouchBehaviorCallback;
 }
 
 namespace widget {
@@ -137,7 +138,7 @@ public:
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;
   virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
 
-  virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
     MOZ_CRASH("TabChildGlobal doesn't use DOM bindings!");
   }
@@ -243,6 +244,7 @@ class TabChild MOZ_FINAL : public TabChildBase,
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layers::APZEventState APZEventState;
     typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
+    typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
 
 public:
     /**
@@ -619,6 +621,7 @@ private:
     bool mIgnoreKeyPressEvent;
     nsRefPtr<APZEventState> mAPZEventState;
     nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
+    nsRefPtr<SetAllowedTouchBehaviorCallback> mSetAllowedTouchBehaviorCallback;
     bool mHasValidInnerSize;
     bool mDestroyed;
     // Position of tab, relative to parent widget (typically the window)

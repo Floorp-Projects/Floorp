@@ -34,7 +34,7 @@ PerformanceEntry::~PerformanceEntry()
 }
 
 JSObject*
-PerformanceEntry::WrapObject(JSContext* aCx)
+PerformanceEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::PerformanceEntryBinding::Wrap(aCx, this);
+  return mozilla::dom::PerformanceEntryBinding::Wrap(aCx, this, aGivenProto);
 }

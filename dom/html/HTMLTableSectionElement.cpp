@@ -23,9 +23,9 @@ HTMLTableSectionElement::~HTMLTableSectionElement()
 }
 
 JSObject*
-HTMLTableSectionElement::WrapNode(JSContext *aCx)
+HTMLTableSectionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableSectionElementBinding::Wrap(aCx, this);
+  return HTMLTableSectionElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableSectionElement)

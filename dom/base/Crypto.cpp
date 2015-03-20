@@ -46,9 +46,9 @@ Crypto::Init(nsIGlobalObject* aParent)
 }
 
 /* virtual */ JSObject*
-Crypto::WrapObject(JSContext* aCx)
+Crypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CryptoBinding::Wrap(aCx, this);
+  return CryptoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

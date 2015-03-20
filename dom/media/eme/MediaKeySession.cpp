@@ -104,9 +104,9 @@ MediaKeySession::GetSessionId() const
 }
 
 JSObject*
-MediaKeySession::WrapObject(JSContext* aCx)
+MediaKeySession::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaKeySessionBinding::Wrap(aCx, this);
+  return MediaKeySessionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 double

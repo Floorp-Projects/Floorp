@@ -23,9 +23,9 @@ HTMLTableRowElement::~HTMLTableRowElement()
 }
 
 JSObject*
-HTMLTableRowElement::WrapNode(JSContext *aCx)
+HTMLTableRowElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTableRowElementBinding::Wrap(aCx, this);
+  return HTMLTableRowElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableRowElement)

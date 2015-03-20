@@ -221,6 +221,16 @@ TouchBlockState::SetAllowedTouchBehaviors(const nsTArray<TouchBehaviorFlags>& aB
   return true;
 }
 
+bool
+TouchBlockState::GetAllowedTouchBehaviors(nsTArray<TouchBehaviorFlags>& aOutBehaviors) const
+{
+  if (!mAllowedTouchBehaviorSet) {
+    return false;
+  }
+  aOutBehaviors.AppendElements(mAllowedTouchBehaviors);
+  return true;
+}
+
 void
 TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther)
 {

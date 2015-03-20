@@ -40,9 +40,9 @@ USSDSession::GetParentObject() const
 }
 
 JSObject*
-USSDSession::WrapObject(JSContext* aCx)
+USSDSession::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return USSDSessionBinding::Wrap(aCx, this);
+  return USSDSessionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

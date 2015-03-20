@@ -283,7 +283,7 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function(listener) {
         let win = Services.wm.getMostRecentWindow("navigator:browser");
-        let browser = win && win.gBrowser.selectedTab.linkedBrowser;
+        let browser = win && win.gBrowser.selectedBrowser;
         if (!win || !browser) {
           // This may happen when an undocked conversation window is the only
           // window left.

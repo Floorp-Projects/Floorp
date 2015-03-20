@@ -60,6 +60,9 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableCellAccessible, HyperTextAccessible)
 role
 HTMLTableCellAccessible::NativeRole()
 {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtd_)) {
+    return roles::MATHML_CELL;
+  }
   return roles::CELL;
 }
 
@@ -148,8 +151,7 @@ HTMLTableCellAccessible::Table() const
 {
   Accessible* parent = const_cast<HTMLTableCellAccessible*>(this);
   while ((parent = parent->Parent())) {
-    roles::Role role = parent->Role();
-    if (role == roles::TABLE || role == roles::TREE_TABLE)
+    if (parent->IsTable())
       return parent->AsTable();
   }
 
@@ -349,6 +351,11 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableRowAccessible, Accessible)
 role
 HTMLTableRowAccessible::NativeRole()
 {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtr_)) {
+    return roles::MATHML_TABLE_ROW;
+  } else if (mContent->IsMathMLElement(nsGkAtoms::mlabeledtr_)) {
+    return roles::MATHML_LABELED_ROW;
+  }
   return roles::ROW;
 }
 
@@ -384,6 +391,9 @@ HTMLTableAccessible::CacheChildren()
 role
 HTMLTableAccessible::NativeRole()
 {
+  if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
+    return roles::MATHML_TABLE;
+  }
   return roles::TABLE;
 }
 
@@ -421,6 +431,11 @@ HTMLTableAccessible::NativeAttributes()
 {
   nsCOMPtr<nsIPersistentProperties> attributes =
     AccessibleWrap::NativeAttributes();
+
+  if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
+    GetAccService()->MarkupAttributes(mContent, attributes);
+  }
+
   if (IsProbablyLayoutTable()) {
     nsAutoString unused;
     attributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),

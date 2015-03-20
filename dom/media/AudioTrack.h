@@ -23,7 +23,7 @@ public:
              const nsAString& aLanguage,
              bool aEnabled);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual AudioTrack* AsAudioTrack() MOZ_OVERRIDE
   {

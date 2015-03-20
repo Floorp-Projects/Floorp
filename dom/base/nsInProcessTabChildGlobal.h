@@ -1,4 +1,4 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8; -*- */
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8; -*- */
 /* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,6 +118,8 @@ public:
   virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return nsContentUtils::GetSafeJSContext(); }
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
+  void FireUnloadEvent();
+  void DisconnectEventListeners();
   void Disconnect();
   void SendMessageToParent(const nsString& aMessage, bool aSync,
                            const nsString& aJSON,
@@ -137,8 +139,6 @@ public:
     mChromeMessageManager = aParent;
   }
 
-  void DelayedDisconnect();
-
   virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE {
     if (!mGlobal) {
       return nullptr;
@@ -146,7 +146,7 @@ public:
 
     return mGlobal->GetJSObject();
   }
-  virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
     MOZ_CRASH("nsInProcessTabChildGlobal doesn't use DOM bindings!");
   }
@@ -164,6 +164,7 @@ protected:
   // <iframe mozapp>?  This affects where events get sent, so it affects
   // PreHandleEvent.
   bool mIsBrowserOrAppFrame;
+  bool mPreventEventsEscaping;
 public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;

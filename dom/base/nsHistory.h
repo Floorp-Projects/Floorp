@@ -33,7 +33,7 @@ public:
   explicit nsHistory(nsPIDOMWindow* aInnerWindow);
 
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,

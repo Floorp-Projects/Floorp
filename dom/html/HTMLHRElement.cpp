@@ -257,9 +257,9 @@ HTMLHRElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLHRElement::WrapNode(JSContext* aCx)
+HTMLHRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLHRElementBinding::Wrap(aCx, this);
+  return HTMLHRElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

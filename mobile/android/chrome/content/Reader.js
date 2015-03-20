@@ -27,6 +27,13 @@ let Reader = {
         this._fetchContent(data.url, data.id);
         break;
       }
+
+      case "Reader:Added": {
+        let mm = window.getGroupMessageManager("browsers");
+        mm.broadcastAsyncMessage("Reader:Added", { url: aData });
+        break;
+      }
+
       case "Reader:Removed": {
         ReaderMode.removeArticleFromCache(aData).catch(e => Cu.reportError("Error removing article from cache: " + e));
 
@@ -252,8 +259,6 @@ let Reader = {
       excerpt: article.excerpt,
       status: article.status,
     }).then((url) => {
-      let mm = window.getGroupMessageManager("browsers");
-      mm.broadcastAsyncMessage("Reader:Added", { url: url });
       ReaderMode.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
     }).catch(Cu.reportError);
   },

@@ -42,9 +42,9 @@ CallsList::GetParentObject() const
 }
 
 JSObject*
-CallsList::WrapObject(JSContext* aCx)
+CallsList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CallsListBinding::Wrap(aCx, this);
+  return CallsListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<TelephonyCall>

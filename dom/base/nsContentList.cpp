@@ -147,9 +147,9 @@ NS_IMPL_ADDREF_INHERITED(nsSimpleContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
 
 JSObject*
-nsSimpleContentList::WrapObject(JSContext *cx)
+nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this);
+  return NodeListBinding::Wrap(cx, this, aGivenProto);
 }
 
 // Hashtable for storing nsContentLists
@@ -259,16 +259,16 @@ const nsCacheableFuncStringContentList::ContentListType
 #endif
 
 JSObject*
-nsCacheableFuncStringNodeList::WrapObject(JSContext *cx)
+nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return NodeListBinding::Wrap(cx, this);
+  return NodeListBinding::Wrap(cx, this, aGivenProto);
 }
 
 
 JSObject*
-nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx)
+nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(cx, this);
+  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
 }
 
 // Hashtable for storing nsCacheableFuncStringContentList
@@ -469,9 +469,9 @@ nsContentList::~nsContentList()
 }
 
 JSObject*
-nsContentList::WrapObject(JSContext *cx)
+nsContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLCollectionBinding::Wrap(cx, this);
+  return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsContentList, nsBaseContentList,

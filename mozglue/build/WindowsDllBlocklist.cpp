@@ -169,6 +169,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "rndlnpshimswf.dll", ALL_VERSIONS },
   { "rndlmainbrowserrecordplugin.dll", ALL_VERSIONS },
 
+  // Crashes with CyberLink YouCam, bug 1136968
+  { "ycwebcamerasource.ax", MAKE_VERSION(2, 0, 0, 1611) },
+
   { nullptr, 0 }
 };
 

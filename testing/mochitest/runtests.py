@@ -1220,6 +1220,7 @@ def parseKeyValue(strings, separator='=', context='key, value: '):
 
 
 class Mochitest(MochitestUtilsMixin):
+    _active_tests = None
     certdbNew = False
     sslTunnel = None
     vmwareHelper = None
@@ -1848,6 +1849,9 @@ class Mochitest(MochitestUtilsMixin):
         """
           This method is used to parse the manifest and return active filtered tests.
         """
+        if self._active_tests:
+            return self._active_tests
+
         self.setTestRoot(options)
         manifest = self.getTestManifest(options)
         if manifest:
@@ -1958,8 +1962,8 @@ class Mochitest(MochitestUtilsMixin):
             return cmp(path1, path2)
 
         paths.sort(path_sort)
-
-        return paths
+        self._active_tests = paths
+        return self._active_tests
 
     def logPreamble(self, tests):
         """Logs a suite_start message and test_start/test_end at the beginning of a run.
@@ -1988,10 +1992,8 @@ class Mochitest(MochitestUtilsMixin):
 
         return testsToRun
 
-    def runMochitests(self, options, onLaunch=None):
+    def runMochitests(self, options, testsToRun, onLaunch=None):
         "This is a base method for calling other methods in this class for --bisect-chunk."
-        testsToRun = self.getTestsToRun(options)
-
         # Making an instance of bisect class for --bisect-chunk option.
         bisect = bisection.Bisect(self)
         finished = False
@@ -2027,35 +2029,66 @@ class Mochitest(MochitestUtilsMixin):
 
         return result
 
+    def killNamedOrphans(self, pname):
+        """ Kill orphan processes matching the given command name """
+        self.log.info("Checking for orphan %s processes..." % pname)
+        def _psInfo(line):
+            if pname in line:
+                self.log.info(line)
+        process = mozprocess.ProcessHandler(['ps', '-f', '--no-headers'],
+                                            processOutputLine=_psInfo)
+        process.run()
+        process.wait()
+
+        def _psKill(line):
+            parts = line.split()
+            pid = int(parts[0])
+            if len(parts) == 3 and parts[2] == pname and parts[1] == '1':
+                self.log.info("killing %s orphan with pid %d" % (pname, pid))
+                killPid(pid, self.log)
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm', '--no-headers'],
+                                            processOutputLine=_psKill)
+        process.run()
+        process.wait()
+
     def runTests(self, options, onLaunch=None):
         """ Prepare, configure, run tests and cleanup """
 
         self.setTestRoot(options)
+
+        # Despite our efforts to clean up servers started by this script, in practice
+        # we still see infrequent cases where a process is orphaned and interferes
+        # with future tests, typically because the old server is keeping the port in use.
+        # Try to avoid those failures by checking for and killing orphan servers before
+        # trying to start new ones.
+        self.killNamedOrphans('ssltunnel')
+        self.killNamedOrphans('xpcshell')
 
         # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
         # jobs, not webapprt*, jetpack*, or plain
         if options.browserChrome:
             options.runByDir = True
 
+        testsToRun = self.getTestsToRun(options)
         if not options.runByDir:
-            return self.runMochitests(options, onLaunch)
+            return self.runMochitests(options, testsToRun, onLaunch)
 
         # code for --run-by-dir
         dirs = self.getDirectories(options)
 
         result = 1  # default value, if no tests are run.
         inputTestPath = self.getTestPath(options)
-        for dir in dirs:
-            if inputTestPath and not inputTestPath.startswith(dir):
+        for d in dirs:
+            if inputTestPath and not inputTestPath.startswith(d):
                 continue
 
-            options.testPath = dir
-            print "testpath: %s" % options.testPath
+            print "dir: %s" % d
+            tests_in_dir = [t for t in testsToRun if t.startswith(d)]
 
             # If we are using --run-by-dir, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face problems
             # if we use the directory provided by the user.
-            result = self.runMochitests(options, onLaunch)
+            result = self.runMochitests(options, tests_in_dir, onLaunch)
 
             # Dump the logging buffer
             self.message_logger.dump_buffered()
@@ -2515,10 +2548,12 @@ class Mochitest(MochitestUtilsMixin):
         """
             Make the list of directories by parsing manifests
         """
-        tests = self.getActiveTests(options, False)
+        tests = self.getActiveTests(options)
         dirlist = []
-
         for test in tests:
+            if 'disabled' in test:
+                continue
+
             rootdir = '/'.join(test['path'].split('/')[:-1])
             if rootdir not in dirlist:
                 dirlist.append(rootdir)

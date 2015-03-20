@@ -50,9 +50,9 @@ SpeechGrammarList::Constructor(const GlobalObject& aGlobal,
 }
 
 JSObject*
-SpeechGrammarList::WrapObject(JSContext* aCx)
+SpeechGrammarList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SpeechGrammarListBinding::Wrap(aCx, this);
+  return SpeechGrammarListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsISupports*

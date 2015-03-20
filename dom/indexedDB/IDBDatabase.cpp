@@ -1344,9 +1344,9 @@ IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor)
 }
 
 JSObject*
-IDBDatabase::WrapObject(JSContext* aCx)
+IDBDatabase::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBDatabaseBinding::Wrap(aCx, this);
+  return IDBDatabaseBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_ISUPPORTS(CancelableRunnableWrapper, nsIRunnable, nsICancelableRunnable)

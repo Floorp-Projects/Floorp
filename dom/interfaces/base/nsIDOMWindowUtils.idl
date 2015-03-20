@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(dde97573-f4cf-45ce-bbb0-5af4e5f77440)]
+[scriptable, uuid(400db885-c2b8-4bf1-bc12-1dadcb08ad12)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1434,11 +1434,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * the bounds of the window. Always returns true in non-DEBUG builds.
    */
   boolean leafLayersPartitionWindow();
-
-  /**
-   * true if the (current inner) window may have event listeners for touch events.
-   */
-  readonly attribute boolean mayHaveTouchEventListeners;
  
   /**
    * Check if any PaintedLayer painting has been done for this element,

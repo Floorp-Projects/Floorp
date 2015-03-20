@@ -60,9 +60,9 @@ MessageEvent::~MessageEvent()
 }
 
 JSObject*
-MessageEvent::WrapObjectInternal(JSContext* aCx)
+MessageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::MessageEventBinding::Wrap(aCx, this);
+  return mozilla::dom::MessageEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMETHODIMP

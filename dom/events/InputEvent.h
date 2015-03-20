@@ -31,9 +31,9 @@ public:
                                                   const InputEventInit& aParam,
                                                   ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return InputEventBinding::Wrap(aCx, this);
+    return InputEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
   bool IsComposing();

@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Bug 1055665 - Test for ruby-position</title>
   <link rel="stylesheet" href="common.css">
+  <script type="text/javascript" src="utils.js"></script>
   <style>
     body {
       font-family: monospace;
-      line-height: normal;
     }
     .annotation, .annotation > div {
       position: absolute;
@@ -16,17 +16,20 @@
 </head>
 <body>
   <div style="height: 8em; line-height: 8em;">
-    <div style="display: inline-block; line-height: normal;">
+    <div style="display: inline-block;">
       <div class="annotation">
-        <div style="top: -100%;">over##</div>
-        <div style="top: 100%;">under#</div>
-        <div style="top: -200%;">over2#</div>
-        <div style="top: 200%;">under2</div>
-        &nbsp; <!-- to give container a nonzero size for
-                    percent values to resolve against -->
+        <div style="top: -100%;"><span>over##</span></div>
+        <div style="top: 100%;"><span>under#</span></div>
+        <div style="top: -200%;"><span>over2#</span></div>
+        <div style="top: 200%;"><span>under2</span></div>
+        <!-- to give container the proper block-axis size -->
+        <span>&nbsp;</span>
       </div>
-      base##
+      <span>base##</span>
     </div>
   </div>
+  <script type="text/javascript">
+    makeBSizeOfParentMatch(document.getElementsByTagName('span'));
+  </script>
 </body>
 </html>

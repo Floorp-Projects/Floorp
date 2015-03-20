@@ -36,9 +36,9 @@ IccCardLockError::IccCardLockError(nsPIDOMWindow* aWindow,
 }
 
 JSObject*
-IccCardLockError::WrapObject(JSContext* aCx)
+IccCardLockError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IccCardLockErrorBinding::Wrap(aCx, this);
+  return IccCardLockErrorBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

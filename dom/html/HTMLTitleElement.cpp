@@ -33,9 +33,9 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLTitleElement, nsGenericHTMLElement,
 NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 
 JSObject*
-HTMLTitleElement::WrapNode(JSContext* cx)
+HTMLTitleElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLTitleElementBinding::Wrap(cx, this);
+  return HTMLTitleElementBinding::Wrap(cx, this, aGivenProto);
 }
 
 

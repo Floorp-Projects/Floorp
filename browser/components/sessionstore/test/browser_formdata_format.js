@@ -71,7 +71,9 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let URL = ROOT + "browser_formdata_format_sample.html";
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
-  let tabState = { entries: [{ url: URL, formdata: aFormData}] };
+
+  aFormData.url = URL;
+  let tabState = { entries: [{ url: URL }], formdata: aFormData };
 
   Task.spawn(function () {
     yield promiseBrowserLoaded(tab.linkedBrowser);

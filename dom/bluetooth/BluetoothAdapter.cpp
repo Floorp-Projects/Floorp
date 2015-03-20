@@ -1067,7 +1067,7 @@ BluetoothAdapter::SendMediaPlayStatus(const MediaPlayStatus& aMediaPlayStatus, E
 }
 
 JSObject*
-BluetoothAdapter::WrapObject(JSContext* aCx)
+BluetoothAdapter::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return BluetoothAdapterBinding::Wrap(aCx, this);
+  return BluetoothAdapterBinding::Wrap(aCx, this, aGivenProto);
 }

@@ -202,7 +202,7 @@ public:
   virtual void SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
 
-  TouchBehaviorFlags ContentGetAllowedTouchBehavior(const nsIntPoint& aPoint);
+  TouchBehaviorFlags ContentGetAllowedTouchBehavior(const LayoutDeviceIntPoint& aPoint);
 
   // apzc controller related api
   void ApzcSetAllowedTouchBehavior(uint64_t aInputBlockId, nsTArray<TouchBehaviorFlags>& aBehaviors);
