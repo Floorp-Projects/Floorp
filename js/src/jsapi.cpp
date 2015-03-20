@@ -4141,21 +4141,18 @@ JS_ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain, HandleScript scrip
 }
 
 JS_PUBLIC_API(bool)
-JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
+JS::CloneAndExecuteScript(JSContext *cx, HandleScript scriptArg)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {
-        PollutedGlobalScopeOption globalScopeOption = obj->is<GlobalObject>() ?
-            HasCleanGlobalScope : HasPollutedGlobalScope;
-        script = CloneScript(cx, NullPtr(), NullPtr(), script, globalScopeOption);
+        script = CloneScript(cx, NullPtr(), NullPtr(), script);
         if (!script)
             return false;
 
         js::Debugger::onNewScript(cx, script);
     }
-    return ExecuteScript(cx, obj, script, nullptr);
+    return ExecuteScript(cx, cx->global(), script, nullptr);
 }
 
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
