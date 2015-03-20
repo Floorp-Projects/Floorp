@@ -170,5 +170,8 @@ function testRequest(request1, request2, request3, unknownRequest,
     return cache.matchAll();
   }).then(function(r) {
     is(r.length, 0, "Searching in the cache after deletion should not succeed");
+    return caches.delete(name);
+  }).then(function(deleted) {
+    ok(deleted, "The cache should be deleted successfully");
   });
 }
