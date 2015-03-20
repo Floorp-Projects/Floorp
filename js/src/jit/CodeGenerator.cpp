@@ -8694,19 +8694,22 @@ CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar *lir)
     Register temp = lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
     AnyRegister out = ToAnyRegister(lir->output());
 
-    Scalar::Type readType  = lir->mir()->readType();
-    int width = Scalar::byteSize(lir->mir()->indexType());
+    const MLoadUnboxedScalar *mir = lir->mir();
+
+    Scalar::Type readType = mir->readType();
+    unsigned numElems = mir->numElems();
+
+    int width = Scalar::byteSize(mir->indexType());
+    bool canonicalizeDouble = mir->canonicalizeDoubles();
 
     Label fail;
     if (lir->index()->isConstant()) {
-        Address source(elements, ToInt32(lir->index()) * width + lir->mir()->offsetAdjustment());
-        masm.loadFromTypedArray(readType, source, out, temp, &fail,
-                                lir->mir()->canonicalizeDoubles());
+        Address source(elements, ToInt32(lir->index()) * width + mir->offsetAdjustment());
+        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble, numElems);
     } else {
         BaseIndex source(elements, ToRegister(lir->index()), ScaleFromElemWidth(width),
-                         lir->mir()->offsetAdjustment());
-        masm.loadFromTypedArray(readType, source, out, temp, &fail,
-                                lir->mir()->canonicalizeDoubles());
+                         mir->offsetAdjustment());
+        masm.loadFromTypedArray(readType, source, out, temp, &fail, canonicalizeDouble, numElems);
     }
 
     if (fail.used())
