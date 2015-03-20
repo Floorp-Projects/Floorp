@@ -64,9 +64,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
         LAST_USED_FLAG = CROSS_COMPARTMENT
     };
 
-    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint,
-                              MutableHandleValue vp) const override;
-
     static JSObject* New(JSContext* cx, JSObject* obj, const Wrapper* handler,
                          const WrapperOptions& options = WrapperOptions());
 
@@ -155,8 +152,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
                                    unsigned indent) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const override;
-    virtual bool defaultValue(JSContext* cx, HandleObject wrapper, JSType hint,
-                              MutableHandleValue vp) const override;
 
     static const CrossCompartmentWrapper singleton;
     static const CrossCompartmentWrapper singletonWithPrototype;
@@ -211,7 +206,6 @@ class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrap
                          JS::IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject wrapper) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const override;
-    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp) const override;
 
     static const OpaqueCrossCompartmentWrapper singleton;
 };
@@ -253,8 +247,6 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool isArray(JSContext* cx, HandleObject wrapper, JS::IsArrayAnswer* answer) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const override;
-    virtual bool defaultValue(JSContext* cx, HandleObject wrapper, JSType hint,
-                              MutableHandleValue vp) const override;
 
     // Allow isCallable and isConstructor. They used to be class-level, and so could not be guarded
     // against.

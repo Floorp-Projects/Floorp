@@ -293,13 +293,6 @@ BaseProxyHandler::boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHan
 }
 
 bool
-BaseProxyHandler::defaultValue(JSContext* cx, HandleObject proxy, JSType hint,
-                               MutableHandleValue vp) const
-{
-    return OrdinaryToPrimitive(cx, proxy, hint, vp);
-}
-
-bool
 BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                              const CallArgs& args) const
 {
