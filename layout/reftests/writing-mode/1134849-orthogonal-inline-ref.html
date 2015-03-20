@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for bug 1134849</title>
+    <style>
+    div { display: inline-block; vertical-align: top;
+          inline-size: 12em; block-size: 15em;
+          border: solid silver; margin: 10px; }
+    p { margin: 5px; }
+    .h { writing-mode: horizontal-tb; }
+    .v-lr { writing-mode: vertical-lr; }
+    .v-rl { writing-mode: vertical-rl; }
+    p > span, p > b { display: inline-block; }
+    p > span > b { display: inline; }
+    </style>
+  </head>
+  <body>
+   <div class="h">
+    <p>The <span class="v-lr">quick <b>brown</b> fox</span> jumps over<br>the <b class="v-rl">lazy</b> dog.</p>
+   </div>
+   <div class="v-lr">
+    <p>The <span class="h">quick <b>brown</b> fox</span> jumps over<br>the <b class="h">lazy</b> dog.</p>
+   </div>
+   <div class="v-rl">
+    <p>The <span class="h">quick <b>brown</b> fox</span> jumps over<br>the <b class="h">lazy</b> dog.</p>
+   </div>
+   <br>
+   inline-block
+  </body>
+</html>
