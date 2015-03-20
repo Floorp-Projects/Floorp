@@ -2033,18 +2033,19 @@ class Mochitest(MochitestUtilsMixin):
         def _psInfo(line):
             if pname in line:
                 self.log.info(line)
-        process = mozprocess.ProcessHandler(['ps', '-f', '--no-headers'],
+        process = mozprocess.ProcessHandler(['ps', '-f'],
                                             processOutputLine=_psInfo)
         process.run()
         process.wait()
 
         def _psKill(line):
             parts = line.split()
-            pid = int(parts[0])
-            if len(parts) == 3 and parts[2] == pname and parts[1] == '1':
-                self.log.info("killing %s orphan with pid %d" % (pname, pid))
-                killPid(pid, self.log)
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm', '--no-headers'],
+            if len(parts) == 3 and parts[0].isdigit():
+                pid = int(parts[0])
+                if parts[2] == pname and parts[1] == '1':
+                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
+                    killPid(pid, self.log)
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
                                             processOutputLine=_psKill)
         process.run()
         process.wait()
