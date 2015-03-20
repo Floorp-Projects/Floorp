@@ -292,7 +292,7 @@ let ReadingListUI = {
     if (!uri)
       return;
 
-    let item = yield ReadingList.itemForURL(uri);
+    let item = yield ReadingList.getItemForURL(uri);
     if (item) {
       yield item.delete();
     } else {
