@@ -787,7 +787,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
         // Special-case the hidden window: it's allowed to load
         // URI_IS_UI_RESOURCE no matter what.  Bug 1145470 tracks removing this.
-        nsCAutoString sourceSpec;
+        nsAutoCString sourceSpec;
         if (NS_SUCCEEDED(sourceBaseURI->GetSpec(sourceSpec)) &&
             sourceSpec.EqualsLiteral("resource://gre-resources/hiddenWindow.html")) {
             return NS_OK;
