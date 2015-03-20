@@ -61,7 +61,6 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     neuteredTypedObjects(0),
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
-    objectMetadataTable(nullptr),
     lazyArrayBuffers(nullptr),
     gcIncomingGrayPointers(nullptr),
     gcWeakMapList(nullptr),
@@ -92,7 +91,6 @@ JSCompartment::~JSCompartment()
     js_delete(scriptCountsMap);
     js_delete(debugScriptMap);
     js_delete(debugScopes);
-    js_delete(objectMetadataTable);
     js_delete(lazyArrayBuffers);
     js_free(enumerators);
 
@@ -648,6 +646,7 @@ void JSCompartment::fixupAfterMovingGC()
 {
     fixupGlobal();
     fixupInitialShapeTable();
+    fixupBaseShapeTable();
     objectGroups.fixupTablesAfterMovingGC();
 }
 
@@ -821,7 +820,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *compartmentTables,
                                       size_t *innerViewsArg,
                                       size_t *lazyArrayBuffersArg,
-                                      size_t *objectMetadataTablesArg,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
                                       size_t *savedStacksSet)
@@ -835,8 +833,6 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *innerViewsArg += innerViews.sizeOfExcludingThis(mallocSizeOf);
     if (lazyArrayBuffers)
         *lazyArrayBuffersArg += lazyArrayBuffers->sizeOfIncludingThis(mallocSizeOf);
-    if (objectMetadataTable)
-        *objectMetadataTablesArg += objectMetadataTable->sizeOfIncludingThis(mallocSizeOf);
     *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);

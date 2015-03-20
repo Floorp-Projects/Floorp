@@ -477,8 +477,12 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         if (!group)
             return nullptr;
 
+        JSObject *metadata = nullptr;
+        if (!NewObjectMetadata(cx, &metadata))
+            return nullptr;
+
         const Class *clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr),
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr), metadata,
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
             return nullptr;

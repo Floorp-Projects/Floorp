@@ -3579,7 +3579,8 @@ TypeNewScript::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate,
         Shape *shape = obj->lastProperty();
         if (shape->inDictionary() ||
             !OnlyHasDataProperties(shape) ||
-            shape->getObjectFlags() != 0)
+            shape->getObjectFlags() != 0 ||
+            shape->getObjectMetadata() != nullptr)
         {
             return true;
         }

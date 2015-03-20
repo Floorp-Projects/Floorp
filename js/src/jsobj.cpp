@@ -949,6 +949,7 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
         // dictionary mode.
         RootedShape last(cx, EmptyShape::getInitialShape(cx, nobj->getClass(),
                                                          nobj->getTaggedProto(),
+                                                         nobj->getMetadata(),
                                                          nobj->numFixedSlots(),
                                                          nobj->lastProperty()->getObjectFlags()));
         if (!last)
@@ -1108,6 +1109,10 @@ NewObject(ExclusiveContext *cx, HandleObjectGroup group, gc::AllocKind kind,
     MOZ_ASSERT_IF(clasp == &JSFunction::class_,
                   kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
 
+    JSObject *metadata = nullptr;
+    if (!NewObjectMetadata(cx, &metadata))
+        return nullptr;
+
     // For objects which can have fixed data following the object, only use
     // enough fixed slots to cover the number of reserved slots in the object,
     // regardless of the allocation kind specified.
@@ -1115,7 +1120,8 @@ NewObject(ExclusiveContext *cx, HandleObjectGroup group, gc::AllocKind kind,
                     ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
                     : GetGCKindSlots(kind, clasp);
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(), nfixed));
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, group->proto(),
+                                                      metadata, nfixed));
     if (!shape)
         return nullptr;
 
@@ -1157,6 +1163,7 @@ NewObjectWithTaggedProtoIsCachable(ExclusiveContext *cxArg, Handle<TaggedProto> 
            proto.isObject() &&
            newKind == GenericObject &&
            clasp->isNative() &&
+           !cxArg->asJSContext()->compartment()->hasObjectMetadataCallback() &&
            !proto.toObject()->is<GlobalObject>();
 }
 
@@ -1300,7 +1307,8 @@ NewObjectWithClassProtoIsCachable(ExclusiveContext *cxArg,
     return cxArg->isJSContext() &&
            protoKey != JSProto_Null &&
            newKind == GenericObject &&
-           clasp->isNative();
+           clasp->isNative() &&
+           !cxArg->asJSContext()->compartment()->hasObjectMetadataCallback();
 }
 
 JSObject *
@@ -1374,6 +1382,7 @@ NewObjectWithGroupIsCachable(ExclusiveContext *cx, HandleObjectGroup group,
            newKind == GenericObject &&
            group->clasp()->isNative() &&
            (!group->newScript() || group->newScript()->analyzed()) &&
+           !cx->compartment()->hasObjectMetadataCallback() &&
            cx->isJSContext();
 }
 
@@ -1876,8 +1885,12 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
     assertSameCompartment(cx, src, dst);
     MOZ_ASSERT(src->getClass() == dst->getClass());
     MOZ_ASSERT(dst->lastProperty()->getObjectFlags() == 0);
+    MOZ_ASSERT(!src->getMetadata());
     MOZ_ASSERT(!src->isSingleton());
     MOZ_ASSERT(src->numFixedSlots() == dst->numFixedSlots());
+
+    // Save the dst metadata, if any, before we start messing with its shape.
+    RootedObject dstMetadata(cx, dst->getMetadata());
 
     if (!dst->ensureElements(cx, src->getDenseInitializedLength()))
         return false;
@@ -1895,9 +1908,10 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
     } else {
         // We need to generate a new shape for dst that has dst's proto but all
         // the property information from src.  Note that we asserted above that
-        // dst's object flags are 0.
+        // dst's object flags are 0 and we plan to set up the metadata later, so
+        // it's OK to pass null for the metadata here.
         shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->getTaggedProto(),
-                                            dst->numFixedSlots(), 0);
+                                            nullptr, dst->numFixedSlots(), 0);
         if (!shape)
             return false;
 
@@ -1922,6 +1936,11 @@ InitializePropertiesFromCompatibleNativeObject(JSContext *cx,
         return false;
     for (size_t i = JSCLASS_RESERVED_SLOTS(src->getClass()); i < span; i++)
         dst->setSlot(i, src->getSlot(i));
+
+    if (dstMetadata) {
+        if (!js::SetObjectMetadata(cx, dst, dstMetadata))
+            return false;
+    }
 
     return true;
 }

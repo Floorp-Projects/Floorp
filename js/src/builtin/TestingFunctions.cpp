@@ -1389,16 +1389,16 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSObject *
-ShellObjectMetadataCallback(JSContext *cx)
+static bool
+ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        return false;
 
     RootedObject stack(cx, NewDenseEmptyArray(cx));
     if (!stack)
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        return false;
 
     static int createdIndex = 0;
     createdIndex++;
@@ -1406,13 +1406,13 @@ ShellObjectMetadataCallback(JSContext *cx)
     if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        return false;
     }
 
     if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        return false;
     }
 
     int stackIndex = 0;
@@ -1425,13 +1425,14 @@ ShellObjectMetadataCallback(JSContext *cx)
             if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
                                        JS_STUBGETTER, JS_STUBSETTER))
             {
-                CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+                return false;
             }
             stackIndex++;
         }
     }
 
-    return obj;
+    *pmetadata = obj;
+    return true;
 }
 
 static bool
@@ -1459,9 +1460,7 @@ SetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedObject obj(cx, &args[0].toObject());
     RootedObject metadata(cx, &args[1].toObject());
-    SetObjectMetadata(cx, obj, metadata);
-
-    return true;
+    return SetObjectMetadata(cx, obj, metadata);
 }
 
 static bool
