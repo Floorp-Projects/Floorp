@@ -3359,6 +3359,9 @@ class MObjectState
         replaceOperand(slot + 1, def);
     }
 
+    bool hasFixedSlot(uint32_t slot) const {
+        return slot < numSlots() && slot < numFixedSlots();
+    }
     MDefinition *getFixedSlot(uint32_t slot) const {
         MOZ_ASSERT(slot < numFixedSlots());
         return getSlot(slot);
@@ -3368,6 +3371,9 @@ class MObjectState
         setSlot(slot, def);
     }
 
+    bool hasDynamicSlot(uint32_t slot) const {
+        return numFixedSlots() < numSlots() && slot < numSlots() - numFixedSlots();
+    }
     MDefinition *getDynamicSlot(uint32_t slot) const {
         return getSlot(slot + numFixedSlots());
     }
