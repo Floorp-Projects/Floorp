@@ -347,7 +347,7 @@ class MochitestServer(object):
       time.sleep(1)
       i += 1
     else:
-      self._log.error("TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")
+      self._log.info("TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")
       self.stop()
       sys.exit(1)
 
@@ -804,7 +804,7 @@ toolbar#nav-bar {
 
     # Call installChromeJar().
     if not os.path.isdir(os.path.join(SCRIPT_DIR, self.jarDir)):
-      self.log.error("TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
+      self.log.info("TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
       return None
 
     # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
@@ -1222,7 +1222,7 @@ class Mochitest(MochitestUtilsMixin):
     # TODO: this should really be upstreamed somewhere, maybe mozprofile
     certificateStatus = self.fillCertificateDB(options)
     if certificateStatus:
-      self.log.error("TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
+      self.log.info("TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
       return None
 
     return manifest
@@ -1386,7 +1386,7 @@ class Mochitest(MochitestUtilsMixin):
       self.log.info("zombiecheck | Checking for orphan process with PID: %d" % processPID)
       if isPidAlive(processPID):
         foundZombie = True
-        self.log.error("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown" % processPID)
+        self.log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown" % processPID)
         self.killAndGetStack(processPID, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 
     return foundZombie
@@ -1559,7 +1559,7 @@ class Mochitest(MochitestUtilsMixin):
       # record post-test information
       if status:
         self.message_logger.dump_buffered()
-        self.log.error("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % (self.lastTestSeen, status))
+        self.log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % (self.lastTestSeen, status))
       else:
         self.lastTestSeen = 'Main app process exited normally'
 
@@ -1919,7 +1919,7 @@ class Mochitest(MochitestUtilsMixin):
 
     self.message_logger.dump_buffered()
     self.message_logger.buffering = False
-    self.log.error(error_message)
+    self.log.info(error_message)
 
     browserProcessId = browserProcessId or proc.pid
     self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
