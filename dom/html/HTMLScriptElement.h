@@ -85,7 +85,7 @@ public:
 protected:
   virtual ~HTMLScriptElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   // nsScriptElement
   virtual bool HasScriptContent() MOZ_OVERRIDE;
 };

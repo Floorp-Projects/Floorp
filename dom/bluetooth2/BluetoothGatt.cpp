@@ -260,7 +260,7 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
 }
 
 JSObject*
-BluetoothGatt::WrapObject(JSContext* aContext)
+BluetoothGatt::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return BluetoothGattBinding::Wrap(aContext, this);
+  return BluetoothGattBinding::Wrap(aContext, this, aGivenProto);
 }

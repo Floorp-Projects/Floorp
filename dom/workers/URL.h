@@ -46,7 +46,7 @@ public:
   }
 
   bool
-  WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
   // Methods for WebIDL
 

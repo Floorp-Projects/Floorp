@@ -128,16 +128,6 @@ SelectionCarets::~SelectionCarets()
   SELECTIONCARETS_LOG("Destructor");
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mLongTapDetectorTimer) {
-    mLongTapDetectorTimer->Cancel();
-    mLongTapDetectorTimer = nullptr;
-  }
-
-  if (mScrollEndDetectorTimer) {
-    mScrollEndDetectorTimer->Cancel();
-    mScrollEndDetectorTimer = nullptr;
-  }
-
   mPresShell = nullptr;
 }
 
@@ -148,6 +138,16 @@ SelectionCarets::Terminate()
   if (docShell) {
     docShell->RemoveWeakReflowObserver(this);
     docShell->RemoveWeakScrollObserver(this);
+  }
+
+  if (mLongTapDetectorTimer) {
+    mLongTapDetectorTimer->Cancel();
+    mLongTapDetectorTimer = nullptr;
+  }
+
+  if (mScrollEndDetectorTimer) {
+    mScrollEndDetectorTimer->Cancel();
+    mScrollEndDetectorTimer = nullptr;
   }
 
   mPresShell = nullptr;

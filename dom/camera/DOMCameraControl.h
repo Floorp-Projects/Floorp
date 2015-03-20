@@ -123,7 +123,7 @@ public:
   already_AddRefed<dom::Promise> ReleaseHardware(ErrorResult& aRv);
   void ResumeContinuousFocus(ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   operator nsISupports*() { return static_cast<DOMMediaStream*>(this); }
 

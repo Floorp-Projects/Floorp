@@ -559,10 +559,10 @@ File::IsMemoryFile()
 }
 
 JSObject*
-File::WrapObject(JSContext* aCx)
+File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IsFile() ? FileBinding::Wrap(aCx, this)
-                  : BlobBinding::Wrap(aCx, this);
+  return IsFile() ? FileBinding::Wrap(aCx, this, aGivenProto)
+                  : BlobBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<File>
@@ -1235,9 +1235,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileList)
 
 JSObject*
-FileList::WrapObject(JSContext *cx)
+FileList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::FileListBinding::Wrap(cx, this);
+  return mozilla::dom::FileListBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMETHODIMP

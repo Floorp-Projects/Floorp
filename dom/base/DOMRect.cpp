@@ -21,10 +21,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRectReadOnly)
 NS_INTERFACE_MAP_END
 
 JSObject*
-DOMRectReadOnly::WrapObject(JSContext* aCx)
+DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectReadOnlyBinding::Wrap(aCx, this);
+  return DOMRectReadOnlyBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // -----------------------------------------------------------------------------
@@ -47,10 +47,10 @@ FORWARD_GETTER(Width)
 FORWARD_GETTER(Height)
 
 JSObject*
-DOMRect::WrapObject(JSContext* aCx)
+DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectBinding::Wrap(aCx, this);
+  return DOMRectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMRect>
@@ -99,9 +99,9 @@ DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 }
 
 JSObject*
-DOMRectList::WrapObject(JSContext *cx)
+DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::DOMRectListBinding::Wrap(cx, this);
+  return mozilla::dom::DOMRectListBinding::Wrap(cx, this, aGivenProto);
 }
 
 static double

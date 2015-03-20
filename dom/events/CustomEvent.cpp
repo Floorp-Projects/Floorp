@@ -53,9 +53,9 @@ CustomEvent::Constructor(const GlobalObject& aGlobal,
 }
 
 JSObject*
-CustomEvent::WrapObjectInternal(JSContext* aCx)
+CustomEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::CustomEventBinding::Wrap(aCx, this);
+  return mozilla::dom::CustomEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMETHODIMP

@@ -111,9 +111,9 @@ MobileMessageManager::Shutdown()
 }
 
 JSObject*
-MobileMessageManager::WrapObject(JSContext* aCx)
+MobileMessageManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozMobileMessageManagerBinding::Wrap(aCx, this);
+  return MozMobileMessageManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<DOMRequest>

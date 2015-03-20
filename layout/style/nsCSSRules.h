@@ -216,7 +216,7 @@ public:
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
                             nsAString & aResult) const;
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   ~nsCSSFontFaceStyleDecl() {}

@@ -212,6 +212,12 @@ public:
    */
   bool SetAllowedTouchBehaviors(const nsTArray<TouchBehaviorFlags>& aBehaviors);
   /**
+   * If the allowed touch behaviors have been set, populate them into
+   * |aOutBehaviors| and return true. Else, return false.
+   */
+  bool GetAllowedTouchBehaviors(nsTArray<TouchBehaviorFlags>& aOutBehaviors) const;
+
+  /**
    * Copy various properties from another block.
    */
   void CopyPropertiesFrom(const TouchBlockState& aOther);

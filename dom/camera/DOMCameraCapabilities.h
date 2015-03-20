@@ -39,7 +39,7 @@ public:
   explicit CameraRecorderVideoProfile(nsISupports* aParent,
     const ICameraControl::RecorderProfile::Video& aProfile);
   nsISupports* GetParentObject() const        { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   uint32_t BitsPerSecond() const              { return mBitrate; }
   uint32_t FramesPerSecond() const            { return mFramerate; }
@@ -78,7 +78,7 @@ public:
   explicit CameraRecorderAudioProfile(nsISupports* aParent,
     const ICameraControl::RecorderProfile::Audio& aProfile);
   nsISupports* GetParentObject() const    { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   uint32_t BitsPerSecond() const          { return mBitrate; }
   uint32_t SamplesPerSecond() const       { return mSamplerate; }
@@ -112,7 +112,7 @@ public:
   explicit CameraRecorderProfile(nsISupports* aParent,
                                  const ICameraControl::RecorderProfile& aProfile);
   nsISupports* GetParentObject() const          { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void GetMimeType(nsAString& aMimeType) const  { aMimeType = mMimeType; }
 
@@ -158,7 +158,7 @@ public:
   explicit CameraRecorderProfiles(nsISupports* aParent,
                                   ICameraControl* aCameraControl);
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   CameraRecorderProfile* NamedGetter(const nsAString& aName, bool& aFound);
   bool NameIsEnumerable(const nsAString& aName);
@@ -200,7 +200,7 @@ public:
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void GetPreviewSizes(nsTArray<CameraSize>& aRetVal);
   void GetPictureSizes(nsTArray<CameraSize>& aRetVal);

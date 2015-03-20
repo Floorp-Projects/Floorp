@@ -2982,13 +2982,14 @@ public class BrowserApp extends GeckoApp
 
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
 
-        bookmark.setEnabled(!AboutPages.isAboutReader(tab.getURL()));
+        final boolean isAboutReader = AboutPages.isAboutReader(tab.getURL());
+        bookmark.setEnabled(!isAboutReader);
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
 
-        reader.setEnabled(true);
+        reader.setEnabled(isAboutReader || !AboutPages.isAboutPage(tab.getURL()));
         reader.setVisible(!inGuestMode);
         reader.setCheckable(true);
         final boolean isPageInReadingList = tab.isInReadingList();

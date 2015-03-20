@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEDropShadowElement::WrapNode(JSContext* aCx)
+SVGFEDropShadowElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEDropShadowElementBinding::Wrap(aCx, this);
+  return SVGFEDropShadowElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] =

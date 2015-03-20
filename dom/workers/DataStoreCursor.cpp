@@ -42,9 +42,10 @@ WorkerDataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 
 bool
 WorkerDataStoreCursor::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto,
                                   JS::MutableHandle<JSObject*> aReflector)
 {
-  return DataStoreCursorBinding_workers::Wrap(aCx, this, aReflector);
+  return DataStoreCursorBinding_workers::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 // A WorkerMainThreadRunnable which holds a reference to DataStoreCursor.

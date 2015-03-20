@@ -25,7 +25,7 @@ const Observer = {
   start: function () {
     Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'inprocess-browser-shown', false);
-    Services.obs.addObserver(this, 'message-manager-disconnect', false);
+    Services.obs.addObserver(this, 'message-manager-close', false);
 
     SystemAppProxy.getFrames().forEach(frame => {
       let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
@@ -40,7 +40,7 @@ const Observer = {
   stop: function () {
     Services.obs.removeObserver(this, 'remote-browser-shown');
     Services.obs.removeObserver(this, 'inprocess-browser-shown');
-    Services.obs.removeObserver(this, 'message-manager-disconnect');
+    Services.obs.removeObserver(this, 'message-manager-close');
     this._frames.clear();
     this._apps.clear();
   },
@@ -61,7 +61,7 @@ const Observer = {
         break;
 
       // Every time an iframe is destroyed, its message manager also is
-      case 'message-manager-disconnect':
+      case 'message-manager-close':
         this.onMessageManagerDestroyed(subject);
         break;
     }

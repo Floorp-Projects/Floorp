@@ -386,7 +386,7 @@ Tap(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int& aTime, int aTap
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (gfxPrefs::TouchActionEnabled()) {
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
   }
 
@@ -440,11 +440,13 @@ Pan(const nsRefPtr<InputReceiver>& aTarget,
   aTime += TIME_BETWEEN_TOUCH_EVENT;
 
   // Allowed touch behaviours must be set after sending touch-start.
-  if (aAllowedTouchBehaviors) {
-    EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
-    aTarget->SetAllowedTouchBehavior(*aOutInputBlockId, *aAllowedTouchBehaviors);
-  } else if (gfxPrefs::TouchActionEnabled()) {
-    SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
+  if (status != nsEventStatus_eConsumeNoDefault) {
+    if (aAllowedTouchBehaviors) {
+      EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
+      aTarget->SetAllowedTouchBehavior(*aOutInputBlockId, *aAllowedTouchBehaviors);
+    } else if (gfxPrefs::TouchActionEnabled()) {
+      SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
+    }
   }
 
   status = TouchMove(aTarget, 10, aTouchStartY, aTime);
@@ -1228,7 +1230,7 @@ protected:
     // the fling to slow down more, advance to 2000ms. These numbers may need adjusting if our
     // friction and threshold values change, but they should be deterministic at least.
     int timeDelta = aSlow ? 2000 : 10;
-    int tapCallsExpected = aSlow ? 1 : 0;
+    int tapCallsExpected = aSlow ? 2 : 1;
 
     // Advance the fling animation by timeDelta milliseconds.
     ParentLayerPoint pointOut;
@@ -1239,6 +1241,12 @@ protected:
     // call out of it if and only if the fling is slow.
     EXPECT_CALL(*mcc, HandleSingleTap(_, 0, apzc->GetGuid())).Times(tapCallsExpected);
     Tap(apzc, 10, 10, time, 0);
+    while (mcc->RunThroughDelayedTasks());
+
+    // Deliver another tap, to make sure that taps are flowing properly once
+    // the fling is aborted.
+    time += 500;
+    Tap(apzc, 100, 100, time, 0);
     while (mcc->RunThroughDelayedTasks());
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
@@ -1363,7 +1371,7 @@ protected:
     nsEventStatus status = TouchDown(apzc, 10, 10, time, &blockId);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    if (gfxPrefs::TouchActionEnabled()) {
+    if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -1434,7 +1442,7 @@ protected:
     nsEventStatus status = TouchDown(apzc, touchX, touchStartY, time, &blockId);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    if (gfxPrefs::TouchActionEnabled()) {
+    if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -1536,7 +1544,7 @@ DoubleTap(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int& aTime,
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (gfxPrefs::TouchActionEnabled()) {
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
 
@@ -1554,7 +1562,7 @@ DoubleTap(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int& aTime,
   }
   aTime += 10;
 
-  if (gfxPrefs::TouchActionEnabled()) {
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
 

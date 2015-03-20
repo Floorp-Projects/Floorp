@@ -565,9 +565,9 @@ MediaSource::GetParentObject() const
 }
 
 JSObject*
-MediaSource::WrapObject(JSContext* aCx)
+MediaSource::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaSourceBinding::Wrap(aCx, this);
+  return MediaSourceBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaSource, DOMEventTargetHelper,

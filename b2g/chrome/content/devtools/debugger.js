@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyGetter(this, "B2GTabList", function() {
   return B2GTabList;
 });
 
+// Load the discovery module eagerly, so that it can set a device name at
+// startup.  This does not cause discovery to start listening for packets, as
+// that only happens once DevTools is enabled.
+devtools.require("devtools/toolkit/discovery/discovery");
+
 let RemoteDebugger = {
   _listening: false,
 

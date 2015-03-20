@@ -73,7 +73,7 @@ public:
 protected:
   virtual ~HTMLContentElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   /**
    * Updates the destination insertion points of the fallback
@@ -110,7 +110,7 @@ public:
   virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
   virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
   virtual nsINode* GetParentObject() MOZ_OVERRIDE { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 protected:
   virtual ~DistributedContentList();
   nsRefPtr<HTMLContentElement> mParent;

@@ -15,9 +15,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEMorphologyElement::WrapNode(JSContext* aCx)
+SVGFEMorphologyElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEMorphologyElementBinding::Wrap(aCx, this);
+  return SVGFEMorphologyElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::NumberPairInfo SVGFEMorphologyElement::sNumberPairInfo[1] =

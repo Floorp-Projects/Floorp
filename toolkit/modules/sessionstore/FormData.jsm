@@ -86,10 +86,6 @@ this.FormData = Object.freeze({
     return FormDataInternal.collect(frame);
   },
 
-  restore: function (frame, data) {
-    FormDataInternal.restore(frame, data);
-  },
-
   restoreTree: function (root, data) {
     FormDataInternal.restoreTree(root, data);
   }

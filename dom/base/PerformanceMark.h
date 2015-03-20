@@ -18,7 +18,7 @@ public:
   PerformanceMark(nsPerformance* aPerformance,
                   const nsAString& aName);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual DOMHighResTimeStamp StartTime() const MOZ_OVERRIDE
   {

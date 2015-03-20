@@ -94,9 +94,9 @@ MozIsoDepTech::Transceive(const Uint8Array& aCommand, ErrorResult& aRv)
 }
 
 JSObject*
-MozIsoDepTech::WrapObject(JSContext* aCx)
+MozIsoDepTech::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozIsoDepTechBinding::Wrap(aCx, this);
+  return MozIsoDepTechBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

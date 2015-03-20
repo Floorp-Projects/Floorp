@@ -71,6 +71,7 @@ BrotliOutput BrotliInitMemOutput(uint8_t* buffer, size_t length,
 }
 
 int BrotliStdinInputFunction(void* data, uint8_t* buf, size_t count) {
+  (void) data; /* Shut up LLVM */
 #ifndef _WIN32
   return (int)read(STDIN_FILENO, buf, count);
 #else
@@ -86,6 +87,7 @@ BrotliInput BrotliStdinInput() {
 }
 
 int BrotliStdoutOutputFunction(void* data, const uint8_t* buf, size_t count) {
+  (void) data; /* Shut up LLVM */
 #ifndef _WIN32
   return (int)write(STDOUT_FILENO, buf, count);
 #else
@@ -98,6 +100,17 @@ BrotliOutput BrotliStdoutOutput() {
   out.cb_ = BrotliStdoutOutputFunction;
   out.data_ = NULL;
   return out;
+}
+
+int BrotliFileInputFunction(void* data, uint8_t* buf, size_t count) {
+  return (int)fread(buf, 1, count, (FILE*)data);
+}
+
+BrotliInput BrotliFileInput(FILE* f) {
+  BrotliInput in;
+  in.cb_ = BrotliFileInputFunction;
+  in.data_ = f;
+  return in;
 }
 
 int BrotliFileOutputFunction(void* data, const uint8_t* buf, size_t count) {

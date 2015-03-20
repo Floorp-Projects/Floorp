@@ -43,7 +43,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual void
   DisconnectFromOwner() MOZ_OVERRIDE;

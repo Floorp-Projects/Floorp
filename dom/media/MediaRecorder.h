@@ -48,7 +48,7 @@ public:
   MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput, nsPIDOMWindow* aOwnerWindow);
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   nsPIDOMWindow* GetParentObject() { return GetOwner(); }
 

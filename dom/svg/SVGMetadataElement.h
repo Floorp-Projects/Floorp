@@ -24,7 +24,7 @@ protected:
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGMetadataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   nsresult Init();
 
 public:

@@ -82,9 +82,9 @@ WebGLBuffer::IsElementArrayUsedWithMultipleTypes() const
 }
 
 JSObject*
-WebGLBuffer::WrapObject(JSContext* cx)
+WebGLBuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLBufferBinding::Wrap(cx, this);
+    return dom::WebGLBufferBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLBuffer)

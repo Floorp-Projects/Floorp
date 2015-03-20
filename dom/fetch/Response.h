@@ -37,9 +37,9 @@ public:
   Response(const Response& aOther) = delete;
 
   JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return ResponseBinding::Wrap(aCx, this);
+    return ResponseBinding::Wrap(aCx, this, aGivenProto);
   }
 
   ResponseType

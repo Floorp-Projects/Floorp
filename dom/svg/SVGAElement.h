@@ -29,7 +29,7 @@ protected:
   explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
