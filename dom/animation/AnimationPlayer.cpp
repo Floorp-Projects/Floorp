@@ -767,7 +767,7 @@ AnimationPlayer::GetCollection() const
   MOZ_ASSERT(targetElement,
              "A player with an animation manager must have a target");
 
-  return manager->GetAnimationPlayers(targetElement, targetPseudoType, false);
+  return manager->GetAnimations(targetElement, targetPseudoType, false);
 }
 
 } // namespace dom
