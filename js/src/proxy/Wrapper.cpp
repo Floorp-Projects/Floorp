@@ -16,22 +16,6 @@
 
 using namespace js;
 
-/*
- * Wrapper forwards this call directly to the wrapped object for efficiency
- * and transparency. In particular, the hint is needed to properly stringify
- * Date objects in certain cases - see bug 646129. Note also the
- * SecurityWrapper overrides this trap to avoid information leaks. See bug
- * 720619.
- */
-bool
-Wrapper::defaultValue(JSContext* cx, HandleObject proxy, JSType hint, MutableHandleValue vp) const
-{
-    vp.set(ObjectValue(*proxy->as<ProxyObject>().target()));
-    if (hint == JSTYPE_VOID)
-        return ToPrimitive(cx, vp);
-    return ToPrimitive(cx, hint, vp);
-}
-
 JSObject*
 Wrapper::New(JSContext* cx, JSObject* obj, const Wrapper* handler,
              const WrapperOptions& options)
