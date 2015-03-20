@@ -7,8 +7,12 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
 function run_test() {
+  Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
   run_next_test();
 }
 
