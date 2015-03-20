@@ -17,6 +17,7 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-common.js");
+loader.loadSubScript("chrome://marionette/content/marionette-actions.js");
 Cu.import("resource://gre/modules/Services.jsm");
 loader.loadSubScript("chrome://marionette/content/marionette-frame-manager.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
@@ -190,6 +191,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.observing = null;
   this._browserIds = new WeakMap();
   this.quitFlags = null;
+  this.actions = new ActionChain(utils);
 }
 
 MarionetteServerConnection.prototype = {
@@ -1878,18 +1880,36 @@ MarionetteServerConnection.prototype = {
    *        'value' represents a nested array: inner array represents each event; outer array represents collection of events
    */
   actionChain: function MDA_actionChain(aRequest) {
-    this.command_id = this.getCommandId();
+    let command_id = this.command_id = this.getCommandId();
+    let chain = aRequest.parameters.chain;
+    let nextId = aRequest.parameters.nextId;
     if (this.context == "chrome") {
-      this.sendError("Command 'actionChain' is not available in chrome context", 500, null, this.command_id);
-    }
-    else {
+      if (appName != 'Firefox') {
+        // Be conservative until this has a use case and is established to work as
+        // expected on b2g/fennec.
+        this.sendError("Command 'actionChain' is not available in chrome context",
+                       500, null, this.command_id);
+      }
+
+      let callbacks = {};
+      callbacks.onSuccess = (value) => {
+        this.sendResponse(value, command_id);
+      };
+      callbacks.onError = (message, code, trace) => {
+        this.sendError(message, code, trace, command_id);
+      };
+
+      let currWin = this.getCurrentWindow();
+      let elementManager = this.curBrowser.elementManager;
+      this.actions.dispatchActions(chain, nextId, currWin, elementManager, callbacks);
+    } else {
       this.addFrameCloseListener("action chain");
       this.sendAsync("actionChain",
                      {
-                       chain: aRequest.parameters.chain,
-                       nextId: aRequest.parameters.nextId
+                       chain: chain,
+                       nextId: nextId
                      },
-                     this.command_id);
+                     command_id);
     }
   },
 
