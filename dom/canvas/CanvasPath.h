@@ -27,7 +27,7 @@ public:
 
   nsCOMPtr<nsISupports> GetParentObject() { return mParent; }
 
-  JSObject* WrapObject(JSContext* aCx);
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
                                                   ErrorResult& rv);

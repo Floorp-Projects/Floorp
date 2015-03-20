@@ -38,7 +38,7 @@ protected:
 public:
   nsPIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void GetKeySystem(nsString& aRetVal) const;
 

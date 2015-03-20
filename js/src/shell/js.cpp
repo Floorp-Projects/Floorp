@@ -454,7 +454,7 @@ RunFile(JSContext *cx, const char *filename, FILE *file, bool compileOnly)
                .setNoScriptRval(true);
 
         gGotError = false;
-        (void) JS::Compile(cx, cx->global(), options, file, &script);
+        (void) JS::Compile(cx, options, file, &script);
         MOZ_ASSERT_IF(!script, gGotError);
     }
 
@@ -484,7 +484,7 @@ EvalAndPrint(JSContext *cx, const char *bytes, size_t length,
            .setCompileAndGo(true)
            .setFileAndLine("typein", lineno);
     RootedScript script(cx);
-    if (!JS::Compile(cx, cx->global(), options, bytes, length, &script))
+    if (!JS::Compile(cx, options, bytes, length, &script))
         return false;
     if (compileOnly)
         return true;
@@ -869,7 +869,7 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
             .setNoScriptRval(true);
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !Compile(cx, cx->global(), opts, filename.ptr(), &script)) ||
+        if ((compileOnly && !Compile(cx, opts, filename.ptr(), &script)) ||
             !Evaluate(cx, opts, filename.ptr(), &unused))
         {
             return false;
@@ -1291,7 +1291,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 script = JS_DecodeScript(cx, loadBuffer, loadLength);
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
-                (void) JS::Compile(cx, global, options, chars.start().get(), chars.length(), &script);
+                (void) JS::Compile(cx, options, chars.start().get(), chars.length(), &script);
             }
 
             if (!script)
@@ -1486,7 +1486,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, cx->global(), ucbuf, buflen, options, &script))
+        if (!JS_CompileUCScript(cx, ucbuf, buflen, options, &script))
             return false;
     }
 
@@ -2364,10 +2364,6 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
         return true;
     }
 
-    RootedObject thisobj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisobj)
-        return false;
-
     // We should change DisassembleOptionParser to store CallArgs.
     JSString *str = JS::ToString(cx, HandleValue::fromMarkedLocation(&p.argv[0]));
     if (!str)
@@ -2385,7 +2381,7 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
                .setCompileAndGo(true)
                .setNoScriptRval(true);
 
-        if (!JS::Compile(cx, thisobj, options, filename.ptr(), &script))
+        if (!JS::Compile(cx, options, filename.ptr(), &script))
             return false;
     }
 
@@ -2813,7 +2809,7 @@ WorkerMain(void *arg)
                .setCompileAndGo(true);
 
         RootedScript script(cx);
-        if (!JS::Compile(cx, global, options, input->chars, input->length, &script))
+        if (!JS::Compile(cx, options, input->chars, input->length, &script))
             break;
         RootedValue result(cx);
         JS_ExecuteScript(cx, script, &result);
@@ -3258,8 +3254,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
            .setNoScriptRval(true);
     RootedScript script(cx);
     const char16_t *chars = stableChars.twoByteRange().start().get();
-    bool ok = JS_CompileUCScript(cx, global, chars,
-                                 scriptContents->length(), options, &script);
+    bool ok = JS_CompileUCScript(cx, chars, scriptContents->length(), options, &script);
     args.rval().setUndefined();
     return ok;
 }

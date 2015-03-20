@@ -181,8 +181,6 @@ public:
                                           const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD              GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState);
-  NS_IMETHOD              RegisterTouchWindow();
-  NS_IMETHOD              UnregisterTouchWindow();
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
@@ -284,6 +282,8 @@ protected:
   virtual ~nsWindow();
 
   virtual void WindowUsesOMTC() MOZ_OVERRIDE;
+  virtual void ConfigureAPZCTreeManager() MOZ_OVERRIDE;
+  void RegisterTouchWindow();
 
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) MOZ_OVERRIDE;

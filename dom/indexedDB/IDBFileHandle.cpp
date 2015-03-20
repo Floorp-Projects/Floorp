@@ -105,9 +105,9 @@ IDBFileHandle::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
 // virtual
 JSObject*
-IDBFileHandle::WrapObject(JSContext* aCx)
+IDBFileHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBFileHandleBinding::Wrap(aCx, this);
+  return IDBFileHandleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<IDBFileRequest>

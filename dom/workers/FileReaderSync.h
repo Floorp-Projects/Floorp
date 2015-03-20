@@ -41,7 +41,7 @@ public:
   static already_AddRefed<FileReaderSync>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
   void ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
                          File& aBlob, JS::MutableHandle<JSObject*> aRetval,

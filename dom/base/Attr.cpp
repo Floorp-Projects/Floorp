@@ -384,9 +384,9 @@ Attr::Shutdown()
 }
 
 JSObject*
-Attr::WrapNode(JSContext* aCx)
+Attr::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return AttrBinding::Wrap(aCx, this);
+  return AttrBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

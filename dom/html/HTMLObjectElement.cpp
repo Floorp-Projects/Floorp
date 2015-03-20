@@ -501,10 +501,10 @@ HTMLObjectElement::CopyInnerTo(Element* aDest)
 }
 
 JSObject*
-HTMLObjectElement::WrapNode(JSContext* aCx)
+HTMLObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   JS::Rooted<JSObject*> obj(aCx,
-    HTMLObjectElementBinding::Wrap(aCx, this));
+    HTMLObjectElementBinding::Wrap(aCx, this, aGivenProto));
   if (!obj) {
     return nullptr;
   }

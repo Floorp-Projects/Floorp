@@ -1462,7 +1462,7 @@ void
 Assembler::as_break(uint32_t code)
 {
     MOZ_ASSERT(code <= MAX_BREAK_CODE);
-    writeInst(op_special | code << RTShift | ff_break);
+    writeInst(op_special | code << FunctionBits | ff_break);
 }
 
 uint32_t

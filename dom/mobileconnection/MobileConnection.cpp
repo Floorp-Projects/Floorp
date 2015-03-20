@@ -202,9 +202,9 @@ MobileConnection::DisconnectFromOwner()
 }
 
 JSObject*
-MobileConnection::WrapObject(JSContext* aCx)
+MobileConnection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozMobileConnectionBinding::Wrap(aCx, this);
+  return MozMobileConnectionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

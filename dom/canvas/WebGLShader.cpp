@@ -349,9 +349,9 @@ WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
 // Boilerplate
 
 JSObject*
-WebGLShader::WrapObject(JSContext* js)
+WebGLShader::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
 {
-    return dom::WebGLShaderBinding::Wrap(js, this);
+    return dom::WebGLShaderBinding::Wrap(js, this, aGivenProto);
 }
 
 size_t

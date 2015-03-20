@@ -12,9 +12,9 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 
 JSObject*
-ServiceWorkerWindowClient::WrapObject(JSContext* aCx)
+ServiceWorkerWindowClient::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WindowClientBinding::Wrap(aCx, this);
+  return WindowClientBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<Promise>

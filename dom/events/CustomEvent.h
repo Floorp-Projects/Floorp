@@ -38,7 +38,7 @@ public:
               ErrorResult& aRv);
 
   virtual JSObject*
-  WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void
   GetDetail(JSContext* aCx,

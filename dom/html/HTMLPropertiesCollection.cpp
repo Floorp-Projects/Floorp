@@ -95,9 +95,9 @@ HTMLPropertiesCollection::SetDocument(nsIDocument* aDocument) {
 }
 
 JSObject*
-HTMLPropertiesCollection::WrapObject(JSContext* cx)
+HTMLPropertiesCollection::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLPropertiesCollectionBinding::Wrap(cx, this);
+  return HTMLPropertiesCollectionBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMETHODIMP
@@ -378,9 +378,9 @@ PropertyNodeList::GetParentObject()
 }
 
 JSObject*
-PropertyNodeList::WrapObject(JSContext *cx)
+PropertyNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PropertyNodeListBinding::Wrap(cx, this);
+  return PropertyNodeListBinding::Wrap(cx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PropertyNodeList)

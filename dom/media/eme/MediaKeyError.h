@@ -24,7 +24,7 @@ public:
   MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode);
   ~MediaKeyError();
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   uint32_t SystemCode() const;
 

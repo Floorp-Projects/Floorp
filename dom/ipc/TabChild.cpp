@@ -813,6 +813,22 @@ private:
   nsWeakPtr mTabChild;
 };
 
+class TabChildSetAllowedTouchBehaviorCallback : public SetAllowedTouchBehaviorCallback {
+public:
+  explicit TabChildSetAllowedTouchBehaviorCallback(TabChild* aTabChild)
+    : mTabChild(do_GetWeakReference(static_cast<nsITabChild*>(aTabChild)))
+  {}
+
+  void Run(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aFlags) const MOZ_OVERRIDE {
+    if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(mTabChild)) {
+      static_cast<TabChild*>(tabChild.get())->SendSetAllowedTouchBehavior(aInputBlockId, aFlags);
+    }
+  }
+
+private:
+  nsWeakPtr mTabChild;
+};
+
 class TabChildContentReceivedInputBlockCallback : public ContentReceivedInputBlockCallback {
 public:
   explicit TabChildContentReceivedInputBlockCallback(TabChild* aTabChild)
@@ -848,6 +864,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mUpdateHitRegion(false)
   , mIgnoreKeyPressEvent(false)
   , mSetTargetAPZCCallback(new TabChildSetTargetAPZCCallback(this))
+  , mSetAllowedTouchBehaviorCallback(new TabChildSetAllowedTouchBehaviorCallback(this))
   , mHasValidInnerSize(false)
   , mDestroyed(false)
   , mUniqueId(aTabId)
@@ -2360,6 +2377,10 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
       mWidget->GetDefaultScale(), GetPresShellResolution());
 
   if (localEvent.message == NS_TOUCH_START && gfxPrefs::AsyncPanZoomEnabled()) {
+    if (gfxPrefs::TouchActionEnabled()) {
+      APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(WebWidget(),
+          localEvent, aInputBlockId, mSetAllowedTouchBehaviorCallback);
+    }
     nsCOMPtr<nsIDocument> document = GetDocument();
     APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document,
         localEvent, aGuid, aInputBlockId, mSetTargetAPZCCallback);
@@ -2649,32 +2670,6 @@ TabChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
   return true;
 }
 
-class UnloadScriptEvent : public nsRunnable
-{
-public:
-  UnloadScriptEvent(TabChild* aTabChild, TabChildGlobal* aTabChildGlobal)
-    : mTabChild(aTabChild), mTabChildGlobal(aTabChildGlobal)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMEvent(getter_AddRefs(event), mTabChildGlobal, nullptr, nullptr);
-    if (event) {
-      event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
-      event->SetTrusted(true);
-
-      bool dummy;
-      mTabChildGlobal->DispatchEvent(event, &dummy);
-    }
-
-    return NS_OK;
-  }
-
-  nsRefPtr<TabChild> mTabChild;
-  TabChildGlobal* mTabChildGlobal;
-};
-
 bool
 TabChild::RecvDestroy()
 {
@@ -2682,10 +2677,10 @@ TabChild::RecvDestroy()
   mDestroyed = true;
 
   if (mTabChildGlobal) {
-    // Let the frame scripts know the child is being closed
-    nsContentUtils::AddScriptRunner(
-      new UnloadScriptEvent(this, mTabChildGlobal)
-    );
+    // Message handlers are called from the event loop, so it better be safe to
+    // run script.
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+    mTabChildGlobal->DispatchTrustedEvent(NS_LITERAL_STRING("unload"));
   }
 
   nsCOMPtr<nsIObserverService> observerService =

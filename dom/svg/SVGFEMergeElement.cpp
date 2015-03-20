@@ -15,9 +15,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEMergeElement::WrapNode(JSContext *aCx)
+SVGFEMergeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return SVGFEMergeElementBinding::Wrap(aCx, this);
+  return SVGFEMergeElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsSVGElement::StringInfo SVGFEMergeElement::sStringInfo[1] =

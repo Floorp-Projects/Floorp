@@ -83,9 +83,9 @@ CryptoKey::~CryptoKey()
 }
 
 JSObject*
-CryptoKey::WrapObject(JSContext* aCx)
+CryptoKey::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return CryptoKeyBinding::Wrap(aCx, this);
+  return CryptoKeyBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

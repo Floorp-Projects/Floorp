@@ -53,7 +53,7 @@ public:
 
   // WebIDL
   nsIContent* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   mozilla::dom::Element* GetElement(mozilla::ErrorResult& aRv);
 
@@ -164,7 +164,7 @@ public:
   NS_DECL_NSITREECOLUMNS
 
   nsIContent* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // WebIDL
   mozilla::dom::TreeBoxObject* GetTree() const;

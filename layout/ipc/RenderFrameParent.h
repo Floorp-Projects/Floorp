@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include <map>
 
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layout/PRenderFrameParent.h"
 #include "nsDisplayList.h"
@@ -45,6 +46,7 @@ class RenderFrameParent : public PRenderFrameParent
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+  typedef mozilla::layers::TouchBehaviorFlags TouchBehaviorFlags;
   typedef mozilla::layers::ZoomConstraints ZoomConstraints;
   typedef FrameMetrics::ViewID ViewID;
 
@@ -86,6 +88,8 @@ public:
                                  bool aPreventDefault);
   void SetTargetAPZC(uint64_t aInputBlockId,
                      const nsTArray<ScrollableLayerGuid>& aTargets);
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId,
+                               const nsTArray<TouchBehaviorFlags>& aFlags);
 
   void UpdateZoomConstraints(uint32_t aPresShellId,
                              ViewID aViewId,

@@ -28,7 +28,7 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(PannerNode)
   explicit PannerNode(AudioContext* aContext);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   virtual void DestroyMediaStream() MOZ_OVERRIDE;
 

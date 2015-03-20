@@ -52,9 +52,9 @@ public:
   {
   }
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
   {
-    return CanvasPatternBinding::Wrap(aCx, this);
+    return CanvasPatternBinding::Wrap(aCx, this, aGivenProto);
   }
 
   CanvasRenderingContext2D* GetParentObject()

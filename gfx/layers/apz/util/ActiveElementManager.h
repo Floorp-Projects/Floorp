@@ -33,14 +33,15 @@ public:
 
   /**
    * Specify the target of a touch. Typically this should be called right
-   * before HandleTouchStart(), but we give callers the flexibility to specify
-   * the target later if they don't know it at the time they call
-   * HandleTouchStart().
+   * after HandleTouchStart(), but in cases where the APZ needs to wait for
+   * a content response the HandleTouchStart() may be delayed, in which case
+   * this function can be called first.
    * |aTarget| may be nullptr.
    */
   void SetTargetElement(dom::EventTarget* aTarget);
   /**
-   * Handle a touch-start event.
+   * Handle a touch-start state notification from APZ. This notification
+   * may be delayed until after touch listeners have responded to the APZ.
    * @param aCanBePan whether the touch can be a pan
    */
   void HandleTouchStart(bool aCanBePan);
@@ -52,7 +53,12 @@ public:
    * Handle a touch-end or touch-cancel event.
    * @param aWasClick whether the touch was a click
    */
-  void HandleTouchEnd(bool aWasClick);
+  void HandleTouchEndEvent(bool aWasClick);
+  /**
+   * Handle a touch-end state notification from APZ. This notification may be
+   * delayed until after touch listeners have responded to the APZ.
+   */
+  void HandleTouchEnd();
   /**
    * @return true iff the currently active element (or one of its ancestors)
    * actually had a style for the :active pseudo-class. The currently active

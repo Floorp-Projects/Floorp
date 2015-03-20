@@ -111,9 +111,9 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
 }
 
 JSObject*
-DOMSVGPathSegList::WrapObject(JSContext *cx)
+DOMSVGPathSegList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mozilla::dom::SVGPathSegListBinding::Wrap(cx, this);
+  return mozilla::dom::SVGPathSegListBinding::Wrap(cx, this, aGivenProto);
 }
 
 void

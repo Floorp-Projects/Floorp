@@ -43,9 +43,9 @@ TelephonyCallGroup::Create(Telephony* aTelephony)
 }
 
 JSObject*
-TelephonyCallGroup::WrapObject(JSContext* aCx)
+TelephonyCallGroup::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TelephonyCallGroupBinding::Wrap(aCx, this);
+  return TelephonyCallGroupBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

@@ -46,6 +46,7 @@ function runTests() {
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
   }
+  DebuggerServer.allowChromeProcess = true;
   if (!DebuggerServer.createRootActor) {
     DebuggerServer.addBrowserActors();
   }

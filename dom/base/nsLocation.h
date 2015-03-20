@@ -142,7 +142,7 @@ public:
   {
     return mInnerWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   // URLSearchParamsObserver
   void URLSearchParamsUpdated(mozilla::dom::URLSearchParams* aSearchParams) MOZ_OVERRIDE;

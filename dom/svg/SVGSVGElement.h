@@ -96,7 +96,7 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase
 
   SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                 FromParser aFromParser);
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

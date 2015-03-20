@@ -107,25 +107,6 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef FrameMetrics::ViewID ViewID;
 
-class nsAsyncDocShellDestroyer : public nsRunnable
-{
-public:
-  explicit nsAsyncDocShellDestroyer(nsIDocShell* aDocShell)
-    : mDocShell(aDocShell)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
-    if (base_win) {
-      base_win->Destroy();
-    }
-    return NS_OK;
-  }
-  nsRefPtr<nsIDocShell> mDocShell;
-};
-
 // Bug 136580: Limit to the number of nested content frames that can have the
 //             same URL. This is to stop content that is recursively loading
 //             itself.  Note that "#foo" on the end of URL doesn't affect
@@ -181,7 +162,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
 
 nsFrameLoader::~nsFrameLoader()
 {
-  mNeedsAsyncDestroy = true;
   if (mMessageManager) {
     mMessageManager->Disconnect();
   }
@@ -521,16 +501,6 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   NS_IF_ADDREF(*aDocShell);
 
   return rv;
-}
-
-void
-nsFrameLoader::Finalize()
-{
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
-  if (base_win) {
-    base_win->Destroy();
-  }
-  mDocShell = nullptr;
 }
 
 static void
@@ -1358,29 +1328,59 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   return NS_OK;
 }
 
-void
-nsFrameLoader::DestroyChild()
-{
-  if (mRemoteBrowser) {
-    mRemoteBrowser->SetOwnerElement(nullptr);
-    mRemoteBrowser->Destroy();
-    mRemoteBrowser = nullptr;
-  }
-}
-
 NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
+  StartDestroy();
+  return NS_OK;
+}
+
+class nsFrameLoaderDestroyRunnable : public nsRunnable
+{
+  enum DestroyPhase
+  {
+    // See the implementation of Run for an explanation of these phases.
+    eDestroyDocShell,
+    eWaitForUnloadMessage,
+    eDestroyComplete
+  };
+
+  nsRefPtr<nsFrameLoader> mFrameLoader;
+  DestroyPhase mPhase;
+
+public:
+  explicit nsFrameLoaderDestroyRunnable(nsFrameLoader* aFrameLoader)
+   : mFrameLoader(aFrameLoader), mPhase(eDestroyDocShell) {}
+
+  NS_IMETHODIMP Run() MOZ_OVERRIDE;
+};
+
+void
+nsFrameLoader::StartDestroy()
+{
+  // nsFrameLoader::StartDestroy is called just before the frameloader is
+  // detached from the <browser> element. Destruction continues in phases via
+  // the nsFrameLoaderDestroyRunnable.
+
   if (mDestroyCalled) {
-    return NS_OK;
+    return;
   }
   mDestroyCalled = true;
 
+  // After this point, we return an error when trying to send a message using
+  // the message manager on the frame.
   if (mMessageManager) {
-    mMessageManager->Disconnect();
+    mMessageManager->Close();
   }
-  if (mChildMessageManager) {
-    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->Disconnect();
+
+  // Retain references to the <browser> element and the frameloader in case we
+  // receive any messages from the message manager on the frame. These
+  // references are dropped in DestroyComplete.
+  if (mChildMessageManager || mRemoteBrowser) {
+    mOwnerContentStrong = mOwnerContent;
+    if (mRemoteBrowser) {
+      mRemoteBrowser->CacheFrameLoader(this);
+    }
   }
 
   nsCOMPtr<nsIDocument> doc;
@@ -1392,7 +1392,6 @@ nsFrameLoader::Destroy()
 
     SetOwnerContent(nullptr);
   }
-  DestroyChild();
 
   // Seems like this is a dynamic frame removal.
   if (dynamicSubframeRemoval) {
@@ -1412,7 +1411,7 @@ nsFrameLoader::Destroy()
       }
     }
   }
-  
+
   // Let our window know that we are gone
   if (mDocShell) {
     nsCOMPtr<nsPIDOMWindow> win_private(mDocShell->GetWindow());
@@ -1421,21 +1420,120 @@ nsFrameLoader::Destroy()
     }
   }
 
-  if ((mNeedsAsyncDestroy || !doc ||
-       NS_FAILED(doc->FinalizeFrameLoader(this))) && mDocShell) {
-    nsCOMPtr<nsIRunnable> event = new nsAsyncDocShellDestroyer(mDocShell);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-    NS_DispatchToCurrentThread(event);
+  nsCOMPtr<nsIRunnable> destroyRunnable = new nsFrameLoaderDestroyRunnable(this);
+  if (mNeedsAsyncDestroy || !doc ||
+      NS_FAILED(doc->FinalizeFrameLoader(this, destroyRunnable))) {
+    NS_DispatchToCurrentThread(destroyRunnable);
+  }
+}
 
-    // Let go of our docshell now that the async destroyer holds on to
-    // the docshell.
+nsresult
+nsFrameLoaderDestroyRunnable::Run()
+{
+  switch (mPhase) {
+  case eDestroyDocShell:
+    mFrameLoader->DestroyDocShell();
 
-    mDocShell = nullptr;
+    // In the out-of-process case, TabParent will eventually call
+    // DestroyComplete once it receives a __delete__ message from the child. In
+    // the in-process case, we dispatch a series of runnables to ensure that
+    // DestroyComplete gets called at the right time. The frame loader is kept
+    // alive by mFrameLoader during this time.
+    if (mFrameLoader->mChildMessageManager) {
+      // When the docshell is destroyed, NotifyWindowIDDestroyed is called to
+      // asynchronously notify {outer,inner}-window-destroyed via a runnable. We
+      // don't want DestroyComplete to run until after those runnables have
+      // run. Since we're enqueueing ourselves after the window-destroyed
+      // runnables are enqueued, we're guaranteed to run after.
+      mPhase = eWaitForUnloadMessage;
+      NS_DispatchToCurrentThread(this);
+    }
+    break;
+
+   case eWaitForUnloadMessage:
+     // The *-window-destroyed observers have finished running at this
+     // point. However, it's possible that a *-window-destroyed observer might
+     // have sent a message using the message manager. These messages might not
+     // have been processed yet. So we enqueue ourselves again to ensure that
+     // DestroyComplete runs after all messages sent by *-window-destroyed
+     // observers have been processed.
+     mPhase = eDestroyComplete;
+     NS_DispatchToCurrentThread(this);
+     break;
+
+   case eDestroyComplete:
+     // Now that all messages sent by unload listeners and window destroyed
+     // observers have been processed, we disconnect the message manager and
+     // finish destruction.
+     mFrameLoader->DestroyComplete();
+     break;
   }
 
-  // NOTE: 'this' may very well be gone by now.
-
   return NS_OK;
+}
+
+void
+nsFrameLoader::DestroyDocShell()
+{
+  // This code runs after the frameloader has been detached from the <browser>
+  // element. We postpone this work because we may not be allowed to run
+  // script at that time.
+
+  // Ask the TabChild to fire the frame script "unload" event, destroy its
+  // docshell, and finally destroy the PBrowser actor. This eventually leads to
+  // nsFrameLoader::DestroyComplete being called.
+  if (mRemoteBrowser) {
+    mRemoteBrowser->Destroy();
+  }
+
+  // Fire the "unload" event if we're in-process.
+  if (mChildMessageManager) {
+    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->FireUnloadEvent();
+  }
+
+  // Destroy the docshell.
+  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
+  if (base_win) {
+    base_win->Destroy();
+  }
+  mDocShell = nullptr;
+
+  if (mChildMessageManager) {
+    // Stop handling events in the in-process frame script.
+    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->DisconnectEventListeners();
+  }
+}
+
+void
+nsFrameLoader::DestroyComplete()
+{
+  // We get here, as part of StartDestroy, after the docshell has been destroyed
+  // and all message manager messages sent during docshell destruction have been
+  // dispatched.  We also get here if the child process crashes. In the latter
+  // case, StartDestroy might not have been called.
+
+  // Drop the strong references created in StartDestroy.
+  if (mChildMessageManager || mRemoteBrowser) {
+    mOwnerContentStrong = nullptr;
+    if (mRemoteBrowser) {
+      mRemoteBrowser->CacheFrameLoader(nullptr);
+    }
+  }
+
+  // Call TabParent::Destroy if we haven't already (in case of a crash).
+  if (mRemoteBrowser) {
+    mRemoteBrowser->SetOwnerElement(nullptr);
+    mRemoteBrowser->Destroy();
+    mRemoteBrowser = nullptr;
+  }
+
+  if (mMessageManager) {
+    mMessageManager->Disconnect();
+  }
+
+  if (mChildMessageManager) {
+    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->Disconnect();
+  }
 }
 
 NS_IMETHODIMP

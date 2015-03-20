@@ -512,9 +512,9 @@ ScriptProcessorNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 JSObject*
-ScriptProcessorNode::WrapObject(JSContext* aCx)
+ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ScriptProcessorNodeBinding::Wrap(aCx, this);
+  return ScriptProcessorNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
 }

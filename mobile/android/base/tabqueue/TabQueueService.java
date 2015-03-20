@@ -20,8 +20,13 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.ContextUtils;
+
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -46,7 +51,9 @@ import org.mozilla.gecko.mozglue.ContextUtils;
  */
 public class TabQueueService extends Service {
     private static final String LOGTAG = "Gecko" + TabQueueService.class.getSimpleName();
+
     private static final long TOAST_TIMEOUT = 3000;
+
     private WindowManager windowManager;
     private View toastLayout;
     private Button openNowButton;
@@ -54,6 +61,7 @@ public class TabQueueService extends Service {
     private WindowManager.LayoutParams toastLayoutParams;
     private volatile StopServiceRunnable stopServiceRunnable;
     private HandlerThread handlerThread;
+    private ExecutorService executorService;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -64,6 +72,7 @@ public class TabQueueService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        executorService = Executors.newSingleThreadExecutor();
 
         handlerThread = new HandlerThread("TabQueueHandlerThread");
         handlerThread.start();
@@ -108,14 +117,14 @@ public class TabQueueService extends Service {
         stopServiceRunnable = new StopServiceRunnable(startId) {
             @Override
             public void onRun() {
-                addUrlToTabQueue(intent);
+                addURLToTabQueue(intent, TabQueueHelper.FILE_NAME);
                 stopServiceRunnable = null;
             }
         };
 
         openNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
                 tabQueueHandler.removeCallbacks(stopServiceRunnable);
                 stopServiceRunnable = null;
 
@@ -138,17 +147,23 @@ public class TabQueueService extends Service {
         windowManager.removeView(toastLayout);
     }
 
-    private void addUrlToTabQueue(Intent intentParam) {
-        if (intentParam == null) {
-            // This should never happen, but let's return silently instead of crash if it does.
+    private void addURLToTabQueue(final Intent intent, final String filename) {
+        if (intent == null) {
+            // This should never happen, but let's return silently instead of crashing if it does.
             Log.w(LOGTAG, "Error adding URL to tab queue - invalid intent passed in.");
             return;
         }
-        final ContextUtils.SafeIntent intent = new ContextUtils.SafeIntent(intentParam);
-        final String intentData = intent.getDataString();
+        final ContextUtils.SafeIntent safeIntent = new ContextUtils.SafeIntent(intent);
+        final String intentData = safeIntent.getDataString();
 
-        // TODO Add url to tab queue here - bug 1134235
-        Log.d(LOGTAG, "Adding URL to tab queue: " + intentData);
+        // As we're doing disk IO, let's run this stuff in a separate thread.
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                final GeckoProfile profile = GeckoProfile.get(getApplicationContext());
+                TabQueueHelper.queueURL(profile, intentData, filename);
+            }
+        });
     }
 
     @Override
@@ -166,11 +181,11 @@ public class TabQueueService extends Service {
 
         private final int startId;
 
-        public StopServiceRunnable(int startId) {
+        public StopServiceRunnable(final int startId) {
             this.startId = startId;
         }
 
-        public void run(boolean shouldStopService) {
+        public void run(final boolean shouldStopService) {
             onRun();
 
             if (shouldStopService) {

@@ -115,9 +115,9 @@ FontFaceSet::~FontFaceSet()
 }
 
 JSObject*
-FontFaceSet::WrapObject(JSContext* aContext)
+FontFaceSet::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 {
-  return FontFaceSetBinding::Wrap(aContext, this);
+  return FontFaceSetBinding::Wrap(aContext, this, aGivenProto);
 }
 
 void

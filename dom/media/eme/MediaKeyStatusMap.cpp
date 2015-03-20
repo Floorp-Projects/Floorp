@@ -58,9 +58,9 @@ MediaKeyStatusMap::~MediaKeyStatusMap()
 }
 
 JSObject*
-MediaKeyStatusMap::WrapObject(JSContext* aCx)
+MediaKeyStatusMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaKeyStatusMapBinding::Wrap(aCx, this);
+  return MediaKeyStatusMapBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsPIDOMWindow*

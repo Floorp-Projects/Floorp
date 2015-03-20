@@ -9,12 +9,25 @@ this.EXPORTED_SYMBOLS = ["ScrollPosition"];
 const Ci = Components.interfaces;
 
 /**
- * It provides methods to collect and restore scroll positions for single
- * frames and frame trees.
+ * It provides methods to collect scroll positions from single frames and to
+ * restore scroll positions for frame trees.
  *
  * This is a child process module.
  */
 this.ScrollPosition = Object.freeze({
+  collect(frame) {
+    return ScrollPositionInternal.collect(frame);
+  },
+
+  restoreTree(root, data) {
+    ScrollPositionInternal.restoreTree(root, data);
+  }
+});
+
+/**
+ * This module's internal API.
+ */
+let ScrollPositionInternal = {
   /**
    * Collects scroll position data for any given |frame| in the frame hierarchy.
    *
@@ -87,4 +100,4 @@ this.ScrollPosition = Object.freeze({
       }
     });
   }
-});
+};

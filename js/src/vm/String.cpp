@@ -137,6 +137,48 @@ JSString::dump()
     fputc('\n', stderr);
 }
 
+void
+JSString::dumpRepresentation(FILE *fp, int indent) const
+{
+    if      (isRope())          asRope()        .dumpRepresentation(fp, indent);
+    else if (isDependent())     asDependent()   .dumpRepresentation(fp, indent);
+    else if (isExternal())      asExternal()    .dumpRepresentation(fp, indent);
+    else if (isExtensible())    asExtensible()  .dumpRepresentation(fp, indent);
+    else if (isInline())        asInline()      .dumpRepresentation(fp, indent);
+    else if (isFlat())          asFlat()        .dumpRepresentation(fp, indent);
+    else
+        MOZ_CRASH("Unexpected JSString representation");
+}
+
+void
+JSString::dumpRepresentationHeader(FILE *fp, int indent, const char *subclass) const
+{
+    uint32_t flags = d.u1.flags;
+    // Print the string's address as an actual C++ expression, to facilitate
+    // copy-and-paste into a debugger.
+    fprintf(fp, "((%s *) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
+    if (flags & FLAT_BIT)               fputs(" FLAT", fp);
+    if (flags & HAS_BASE_BIT)           fputs(" HAS_BASE", fp);
+    if (flags & INLINE_CHARS_BIT)       fputs(" INLINE_CHARS", fp);
+    if (flags & ATOM_BIT)               fputs(" ATOM", fp);
+    if (isPermanentAtom())              fputs(" PERMANENT", fp);
+    if (flags & LATIN1_CHARS_BIT)       fputs(" LATIN1", fp);
+    fputc('\n', fp);
+}
+
+void
+JSLinearString::dumpRepresentationChars(FILE *fp, int indent) const
+{
+    if (hasLatin1Chars()) {
+        fprintf(fp, "%*schars: ((Latin1Char *) %p) ", indent, "", rawLatin1Chars());
+        dumpChars(rawLatin1Chars(), length());
+    } else {
+        fprintf(fp, "%*schars: ((char16_t *) %p) ", indent, "", rawTwoByteChars());
+        dumpChars(rawTwoByteChars(), length());
+    }
+    fputc('\n', fp);
+}
+
 bool
 JSString::equals(const char *s)
 {
@@ -245,6 +287,21 @@ JSRope::copyCharsInternal(ExclusiveContext *cx, ScopedJSFreePtr<CharT> &out,
     return true;
 }
 
+#ifdef DEBUG
+void
+JSRope::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSRope");
+    indent += 2;
+
+    fprintf(fp, "%*sleft:  ", indent, "");
+    leftChild()->dumpRepresentation(fp, indent);
+
+    fprintf(fp, "%*sright: ", indent, "");
+    rightChild()->dumpRepresentation(fp, indent);
+}
+#endif
+
 namespace js {
 
 template <>
@@ -290,6 +347,16 @@ JSFlatString *
 JSRope::flattenInternal(ExclusiveContext *maybecx)
 {
     /*
+     * Consider the DAG of JSRopes rooted at this JSRope, with non-JSRopes as
+     * its leaves. Mutate the root JSRope into a JSExtensibleString containing
+     * the full flattened text that the root represents, and mutate all other
+     * JSRopes in the interior of the DAG into JSDependentStrings that refer to
+     * this new JSExtensibleString.
+     *
+     * If the leftmost leaf of our DAG is a JSExtensibleString, consider
+     * stealing its buffer for use in our new root, and transforming it into a
+     * JSDependentString too. Do not mutate any of the other leaves.
+     *
      * Perform a depth-first dag traversal, splatting each node's characters
      * into a contiguous buffer. Visit each rope node three times:
      *   1. record position in the buffer and recurse into left child;
@@ -300,25 +367,37 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
      * encountered multiple times during traversal. However, step 3 above leaves
      * a valid dependent string, so everything works out.
      *
-     * While ropes avoid all sorts of quadratic cases with string
-     * concatenation, they can't help when ropes are immediately flattened.
-     * One idiomatic case that we'd like to keep linear (and has traditionally
-     * been linear in SM and other JS engines) is:
+     * While ropes avoid all sorts of quadratic cases with string concatenation,
+     * they can't help when ropes are immediately flattened. One idiomatic case
+     * that we'd like to keep linear (and has traditionally been linear in SM
+     * and other JS engines) is:
      *
      *   while (...) {
      *     s += ...
      *     s.flatten
      *   }
      *
-     * To do this, when the buffer for a to-be-flattened rope is allocated, the
-     * allocation size is rounded up. Then, if the resulting flat string is the
-     * left-hand side of a new rope that gets flattened and there is enough
-     * capacity, the rope is flattened into the same buffer, thereby avoiding
-     * copying the left-hand side. Clearing the 'extensible' bit turns off this
-     * optimization. This is necessary, e.g., when the JSAPI hands out the raw
-     * null-terminated char array of a flat string.
+     * Two behaviors accomplish this:
      *
-     * N.B. This optimization can create chains of dependent strings.
+     * - When the leftmost non-rope in the DAG we're flattening is a
+     *   JSExtensibleString with sufficient capacity to hold the entire
+     *   flattened string, we just flatten the DAG into its buffer. Then, when
+     *   we transform the root of the DAG from a JSRope into a
+     *   JSExtensibleString, we steal that buffer, and change the victim from a
+     *   JSExtensibleString to a JSDependentString. In this case, the left-hand
+     *   side of the string never needs to be copied.
+     *
+     * - Otherwise, we round up the total flattened size and create a fresh
+     *   JSExtensibleString with that much capacity. If this in turn becomes the
+     *   leftmost leaf of a subsequent flatten, we will hopefully be able to
+     *   fill it, as in the case above.
+     *
+     * Note that, even though the code for creating JSDependentStrings avoids
+     * creating dependents of dependents, we can create that situation here: the
+     * JSExtensibleStrings we transform into JSDependentStrings might have
+     * JSDependentStrings pointing to them already. Stealing the buffer doesn't
+     * change its address, only its owning JSExtensibleString, so all chars()
+     * pointers in the JSDependentStrings are still valid.
      */
     const size_t wholeLength = length();
     size_t wholeCapacity;
@@ -570,6 +649,19 @@ JSDependentString::undepend(ExclusiveContext *cx)
            ? undependInternal<Latin1Char>(cx)
            : undependInternal<char16_t>(cx);
 }
+
+#ifdef DEBUG
+void
+JSDependentString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSDependentString");
+    indent += 2;
+
+    fprintf(fp, "%*soffset: %zu\n", indent, "", baseOffset());
+    fprintf(fp, "%*sbase: ", indent, "");
+    base()->dumpRepresentation(fp, indent);
+}
+#endif
 
 template <typename CharT>
 /* static */ bool
@@ -828,6 +920,17 @@ JSAtom::dump()
     fprintf(stderr, "JSAtom* (%p) = ", (void *) this);
     this->JSString::dump();
 }
+
+void
+JSExternalString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSExternalString");
+    indent += 2;
+
+    fprintf(fp, "%*sfinalizer: ((JSStringFinalizer *) %p)\n", indent, "", externalFinalizer());
+    fprintf(fp, "%*sbase: ", indent, "");
+    base()->dumpRepresentation(fp, indent);
+}
 #endif /* DEBUG */
 
 JSLinearString *
@@ -1060,3 +1163,34 @@ template JSFlatString *
 NewStringCopyN<NoGC>(ExclusiveContext *cx, const Latin1Char *s, size_t n);
 
 } /* namespace js */
+
+#ifdef DEBUG
+void
+JSExtensibleString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSExtensibleString");
+    indent += 2;
+
+    fprintf(fp, "%*scapacity: %zu\n", indent, "", capacity());
+    dumpRepresentationChars(fp, indent);
+}
+
+void
+JSInlineString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent,
+                             isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
+    indent += 2;
+
+    dumpRepresentationChars(fp, indent);
+}
+
+void
+JSFlatString::dumpRepresentation(FILE *fp, int indent) const
+{
+    dumpRepresentationHeader(fp, indent, "JSFlatString");
+    indent += 2;
+
+    dumpRepresentationChars(fp, indent);
+}
+#endif
