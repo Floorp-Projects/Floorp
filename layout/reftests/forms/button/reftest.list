@@ -27,16 +27,3 @@ fails-if(Android||B2G||Mulet) == disabled-1.html disabled-1-ref.html # Initial m
 != disabled-4.html disabled-4-notref.html
 != disabled-5.html disabled-5-notref.html
 != disabled-6.html disabled-6-notref.html
-
-== width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
-== width-auto-size-ltr.html width-auto-size-ltr-ref.html
-== width-exact-fit-ltr.html width-auto-size-ltr-ref.html
-== width-erode-part-focuspadding-ltr.html width-erode-part-focuspadding-ltr-ref.html
-== width-erode-all-focuspadding-ltr.html width-erode-all-focuspadding-ltr-ref.html
-== width-erode-overflow-focuspadding-ltr.html width-erode-overflow-focuspadding-ltr-ref.html
-== width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
-== width-auto-size-rtl.html width-auto-size-rtl-ref.html
-== width-exact-fit-rtl.html width-auto-size-rtl-ref.html
-== width-erode-part-focuspadding-rtl.html width-erode-part-focuspadding-rtl-ref.html
-== width-erode-all-focuspadding-rtl.html width-erode-all-focuspadding-rtl-ref.html
-== width-erode-overflow-focuspadding-rtl.html width-erode-overflow-focuspadding-rtl-ref.html
