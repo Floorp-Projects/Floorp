@@ -15,59 +15,59 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
-  var player = div.getAnimationPlayers()[0];
-  assert_equals(player.playState, 'pending');
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.playState, 'pending');
 
-  player.ready.then(t.step_func(function() {
-    assert_equals(player.playState, 'running');
+  animation.ready.then(t.step_func(function() {
+    assert_equals(animation.playState, 'running');
     t.done();
   }));
-}, 'Player returns correct playState when running');
+}, 'Animation returns correct playState when running');
 
 async_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   // FIXME: When we turn on async pausing later in this patch series, enable
   // this
-  //   assert_equals(player.playState, 'pending');
+  //   assert_equals(animation.playState, 'pending');
 
-  player.ready.then(t.step_func(function() {
-    assert_equals(player.playState, 'paused');
+  animation.ready.then(t.step_func(function() {
+    assert_equals(animation.playState, 'paused');
     t.done();
   }));
-}, 'Player returns correct playState when paused');
+}, 'Animation returns correct playState when paused');
 
 async_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
-  var player = div.getAnimationPlayers()[0];
-  player.pause();
+  var animation = div.getAnimations()[0];
+  animation.pause();
   // FIXME: When we turn on async pausing later in this patch series, enable
   // this
-  //   assert_equals(player.playState, 'pending');
+  //   assert_equals(animation.playState, 'pending');
 
-  player.ready.then(t.step_func(function() {
-    assert_equals(player.playState, 'paused');
+  animation.ready.then(t.step_func(function() {
+    assert_equals(animation.playState, 'paused');
     t.done();
   }));
-}, 'Player.playState updates when paused by script');
+}, 'Animation.playState updates when paused by script');
 
 test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   div.style.animationPlayState = 'running';
   // This test also checks that calling playState flushes style
-  assert_equals(player.playState, 'pending',
-                'Player.playState reports pending after updating'
-                + ' animation-play-state (got: ' + player.playState + ')');
-}, 'Player.playState updates when resumed by setting style');
+  assert_equals(animation.playState, 'pending',
+                'Animation.playState reports pending after updating'
+                + ' animation-play-state (got: ' + animation.playState + ')');
+}, 'Animation.playState updates when resumed by setting style');
 
 </script>
