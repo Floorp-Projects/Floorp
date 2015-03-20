@@ -1080,6 +1080,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     nextFullGCTime(0),
     lastGCTime(PRMJ_Now()),
     mode(JSGC_MODE_INCREMENTAL),
+    numActiveZoneIters(0),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBitsValid(false),
@@ -3665,6 +3666,10 @@ Zone::sweepCompartments(FreeOp *fop, bool keepAtleastOne, bool destroyingRuntime
 void
 GCRuntime::sweepZones(FreeOp *fop, bool destroyingRuntime)
 {
+    MOZ_ASSERT_IF(destroyingRuntime, rt->gc.numActiveZoneIters == 0);
+    if (rt->gc.numActiveZoneIters)
+        return;
+
     AutoLockGC lock(rt); // Avoid race with background sweeping.
 
     JSZoneCallback callback = rt->destroyZoneCallback;
@@ -5426,7 +5431,7 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
 }
 
 GCRuntime::IncrementalProgress
-GCRuntime::compactPhase(bool lastGC)
+GCRuntime::compactPhase(bool destroyingRuntime)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
@@ -5464,7 +5469,7 @@ GCRuntime::compactPhase(bool lastGC)
 #else
     protectRelocatedArenas(relocatedList);
     MOZ_ASSERT(!relocatedArenasToRelease);
-    if (!lastGC)
+    if (!destroyingRuntime)
         relocatedArenasToRelease = relocatedList;
     else
         releaseRelocatedArenas(relocatedList);
@@ -5884,7 +5889,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             break;
 
       case COMPACT:
-        if (isCompacting && compactPhase(lastGC) == NotFinished)
+        if (isCompacting && compactPhase(destroyingRuntime) == NotFinished)
             break;
         finishCollection();
         incrementalState = NO_INCREMENTAL;
