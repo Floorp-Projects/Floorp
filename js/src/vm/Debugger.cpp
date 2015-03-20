@@ -6747,7 +6747,7 @@ DebuggerObject_getAllocationSite(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get allocationSite", args, obj);
 
-    RootedObject metadata(cx, obj->getMetadata());
+    RootedObject metadata(cx, GetObjectMetadata(obj));
     if (!cx->compartment()->wrap(cx, &metadata))
         return false;
     args.rval().setObjectOrNull(metadata);

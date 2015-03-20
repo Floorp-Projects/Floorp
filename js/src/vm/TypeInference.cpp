@@ -3579,8 +3579,7 @@ TypeNewScript::maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate,
         Shape *shape = obj->lastProperty();
         if (shape->inDictionary() ||
             !OnlyHasDataProperties(shape) ||
-            shape->getObjectFlags() != 0 ||
-            shape->getObjectMetadata() != nullptr)
+            shape->getObjectFlags() != 0)
         {
             return true;
         }
