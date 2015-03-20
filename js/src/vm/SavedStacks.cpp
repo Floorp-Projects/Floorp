@@ -1152,18 +1152,18 @@ SavedStacks::chooseSamplingProbability(JSContext *cx)
     allocationSamplingProbability = allocationTrackingDbg->allocationSamplingProbability;
 }
 
-bool
-SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
+JSObject *
+SavedStacksMetadataCallback(JSContext *cx)
 {
     SavedStacks &stacks = cx->compartment()->savedStacks();
     if (stacks.allocationSkipCount > 0) {
         stacks.allocationSkipCount--;
-        return true;
+        return nullptr;
     }
 
     stacks.chooseSamplingProbability(cx);
     if (stacks.allocationSamplingProbability == 0.0)
-        return true;
+        return nullptr;
 
     // If the sampling probability is set to 1.0, we are always taking a sample
     // and can therefore leave allocationSkipCount at 0.
@@ -1192,10 +1192,12 @@ SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
 
     RootedSavedFrame frame(cx);
     if (!stacks.saveCurrentStack(cx, &frame))
-        return false;
-    *pmetadata = frame;
+        CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
-    return Debugger::onLogAllocationSite(cx, frame, PRMJ_Now());
+    if (!Debugger::onLogAllocationSite(cx, frame, PRMJ_Now()))
+        CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
+
+    return frame;
 }
 
 JS_FRIEND_API(JSPrincipals *)

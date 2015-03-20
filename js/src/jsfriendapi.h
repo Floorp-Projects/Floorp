@@ -2583,22 +2583,21 @@ class JS_FRIEND_API(AutoCTypesActivityCallback) {
     }
 };
 
-typedef bool
-(* ObjectMetadataCallback)(JSContext *cx, JSObject **pmetadata);
+typedef JSObject *
+(* ObjectMetadataCallback)(JSContext *cx);
 
 /*
  * Specify a callback to invoke when creating each JS object in the current
  * compartment, which may return a metadata object to associate with the
- * object. Objects with different metadata have different shape hierarchies,
- * so for efficiency, objects should generally try to share metadata objects.
+ * object.
  */
 JS_FRIEND_API(void)
 SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback);
 
 /* Manipulate the metadata associated with an object. */
 
-JS_FRIEND_API(bool)
-SetObjectMetadata(JSContext *cx, JS::HandleObject obj, JS::HandleObject metadata);
+JS_FRIEND_API(void)
+SetObjectMetadata(JSContext *cx, JSObject *obj, JSObject *metadata);
 
 JS_FRIEND_API(JSObject *)
 GetObjectMetadata(JSObject *obj);
