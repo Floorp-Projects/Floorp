@@ -422,20 +422,12 @@ private:
   bool mBatching;
 
   /**
-   * Always call EnsureKeywordsHash() and check it for errors before actually
-   * using the hash.  Internal keyword methods are already doing that.
-   */
-  nsresult EnsureKeywordsHash();
-  nsDataHashtable<nsTrimInt64HashKey, nsString> mBookmarkToKeywordHash;
-  bool mBookmarkToKeywordHashInitialized;
-
-  /**
    * This function must be called every time a bookmark is removed.
    *
    * @param aURI
    *        Uri to test.
    */
-  nsresult UpdateKeywordsHashForRemovedBookmark(int64_t aItemId);
+  nsresult UpdateKeywordsForRemovedBookmark(const BookmarkData& aBookmark);
 };
 
 #endif // nsNavBookmarks_h_
