@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="XUL Panel zoom test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    var docviewer;
+    var savedzoom;
+
+    function openPopup()
+    {
+      docviewer = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIWebNavigation)
+                        .QueryInterface(Components.interfaces.nsIDocShell)
+                        .contentViewer;
+      savedzoom = docviewer.fullZoom;
+      docviewer.fullZoom = 2;
+
+      document.getElementById("panel").
+        openPopup(document.getElementById("anchor"), "after_start", 0, 0, false, false, null);
+    }
+
+    function popupShown(event)
+    {
+      var panel = document.getElementById("panel");
+      var panelbcr = panel.getBoundingClientRect();
+      var anchorbcr = document.getElementById("anchor").getBoundingClientRect();
+
+      ok(Math.abs(panelbcr.x - anchorbcr.x) < 3, "x pos is correct");
+      ok(Math.abs(panelbcr.y - anchorbcr.bottom) < 3, "y pos is correct");
+
+      docviewer.fullZoom = savedzoom;
+
+      event.target.hidePopup();
+    }
+
+    SimpleTest.waitForFocus(openPopup);
+   ]]></script>
+
+<description id="anchor" value="Sometext to this some texts"/>
+<panel id="panel" onpopupshown="popupShown(event)" onpopuphidden="SimpleTest.finish()">
+  <resizer id="resizer" dir="bottomend" width="16" height="16"/>
+  <hbox width="50" height="50" flex="1"/>
+</panel>
+
+
+</window>
