@@ -193,9 +193,7 @@ class SharedContext
     {}
 
     virtual ObjectBox *toObjectBox() = 0;
-    inline bool isGlobalSharedContext() { return toObjectBox() == nullptr; }
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
-    inline GlobalSharedContext *asGlobalSharedContext();
     inline FunctionBox *asFunctionBox();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
@@ -231,26 +229,14 @@ class SharedContext
 
 class GlobalSharedContext : public SharedContext
 {
-  private:
-    const RootedObject scopeChain_; /* scope chain object for the script */
-
   public:
-    GlobalSharedContext(ExclusiveContext *cx, JSObject *scopeChain,
+    GlobalSharedContext(ExclusiveContext *cx,
                         Directives directives, bool extraWarnings)
-      : SharedContext(cx, directives, extraWarnings),
-        scopeChain_(cx, scopeChain)
+      : SharedContext(cx, directives, extraWarnings)
     {}
 
     ObjectBox *toObjectBox() { return nullptr; }
-    JSObject *scopeChain() const { return scopeChain_; }
 };
-
-inline GlobalSharedContext *
-SharedContext::asGlobalSharedContext()
-{
-    MOZ_ASSERT(isGlobalSharedContext());
-    return static_cast<GlobalSharedContext*>(this);
-}
 
 class FunctionBox : public ObjectBox, public SharedContext
 {
