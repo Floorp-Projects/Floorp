@@ -695,6 +695,9 @@ RTCPeerConnection.prototype = {
         case "pranswer":
           throw new this._win.DOMException("pranswer not yet implemented",
                                            "NotSupportedError");
+        case "rollback":
+          type = Ci.IPeerConnection.kActionRollback;
+          break;
         default:
           throw new this._win.DOMException(
               "Invalid type " + desc.type + " provided to setLocalDescription",
@@ -768,6 +771,9 @@ RTCPeerConnection.prototype = {
         case "pranswer":
           throw new this._win.DOMException("pranswer not yet implemented",
                                            "NotSupportedError");
+        case "rollback":
+          type = Ci.IPeerConnection.kActionRollback;
+          break;
         default:
           throw new this._win.DOMException(
               "Invalid type " + desc.type + " provided to setRemoteDescription",

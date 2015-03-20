@@ -164,7 +164,7 @@ private:
   struct JsepSendingTrack {
     RefPtr<JsepTrack> mTrack;
     Maybe<size_t> mAssignedMLine;
-    bool mSetInLocalDescription;
+    bool mNegotiated;
   };
 
   struct JsepReceivingTrack {
@@ -204,7 +204,7 @@ private:
   nsresult ValidateLocalDescription(const Sdp& description);
   nsresult ValidateRemoteDescription(const Sdp& description);
   nsresult ValidateAnswer(const Sdp& offer, const Sdp& answer);
-  nsresult SetRemoteTracksFromDescription(const Sdp& remoteDescription);
+  nsresult SetRemoteTracksFromDescription(const Sdp* remoteDescription);
   // Non-const because we use our Uuid generator
   nsresult CreateReceivingTrack(size_t mline,
                                 const Sdp& sdp,
@@ -240,7 +240,7 @@ private:
                          const Sdp& oldAnswer,
                          Sdp* newSdp);
   void SetupBundle(Sdp* sdp) const;
-  nsresult SetupTransportAttributes(Sdp* sdp);
+  nsresult FinalizeTransportAttributes(Sdp* sdp);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
   nsresult GetIdsFromMsid(const Sdp& sdp,
                           const SdpMediaSection& msection,
@@ -280,12 +280,12 @@ private:
                           JsepTrack::Direction,
                           RefPtr<JsepTrack>* track);
 
-  nsresult CreateTransport(const SdpMediaSection& msection,
-                           RefPtr<JsepTransport>* transport);
+  void UpdateTransport(const SdpMediaSection& msection,
+                       JsepTransport* transport);
 
-  nsresult SetupTransport(const SdpAttributeList& remote,
-                          const SdpAttributeList& answer,
-                          const RefPtr<JsepTransport>& transport);
+  nsresult FinalizeTransport(const SdpAttributeList& remote,
+                             const SdpAttributeList& answer,
+                             const RefPtr<JsepTransport>& transport);
 
   nsresult AddCandidateToSdp(Sdp* sdp,
                              const std::string& candidate,
@@ -325,6 +325,8 @@ private:
   std::vector<JsepReceivingTrack> mRemoteTracksAdded;
   std::vector<JsepReceivingTrack> mRemoteTracksRemoved;
   std::vector<RefPtr<JsepTransport> > mTransports;
+  // So we can rollback
+  std::vector<RefPtr<JsepTransport> > mOldTransports;
   std::vector<JsepTrackPair> mNegotiatedTrackPairs;
 
   bool mIsOfferer;
