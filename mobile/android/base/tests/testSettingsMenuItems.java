@@ -15,79 +15,32 @@ import org.mozilla.gecko.util.HardwareUtils;
  *  default values for them
  */
 public class testSettingsMenuItems extends PixelTest {
-    /**
-     * The following String[][] (arrays) match the menu hierarchy for each section.
-     * Each String[] (array) represents the menu items/choices in the following order:
-     *
-     * itemTitle { defaultValue [options] }
-     *
-     * where defaultValue is optional, and there can be multiple options.
-     *
-     * These menu items are the ones that are always present - to test menu items that differ
-     * based on build (e.g., release vs. nightly), add the items in <code>addConditionalSettings</code>.
-     */
-
     // Customize menu items.
-    String[] PATH_CUSTOMIZE = { mStringHelper.CUSTOMIZE_SECTION_LABEL };
-    String[][] OPTIONS_CUSTOMIZE = {
-        { "Home" },
-        { "Search", "", "Show search suggestions", "Installed search engines"},
-        { mStringHelper.TABS_LABEL, "Don't restore after quitting " + mStringHelper.BRAND_NAME, "Always restore", "Don't restore after quitting " + mStringHelper.BRAND_NAME },
-        { mStringHelper.IMPORT_FROM_ANDROID_LABEL, "", "Bookmarks", "History", "Import" },
-    };
+    String[] PATH_CUSTOMIZE;
+    String[][] OPTIONS_CUSTOMIZE;
 
     // Home panel menu items.
-    String[] PATH_HOME = { mStringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
-    String[][] OPTIONS_HOME = {
-      { "Panels" },
-      { "Automatic updates", "Enabled", "Enabled", "Only over Wi-Fi" },
-    };
+    String[] PATH_HOME;
+    String[][] OPTIONS_HOME;
 
     // Display menu items.
-    String[] PATH_DISPLAY = { mStringHelper.DISPLAY_SECTION_LABEL };
-    final String[] TITLE_BAR_LABEL_ARR = { mStringHelper.TITLE_BAR_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL,
-        mStringHelper.SHOW_PAGE_TITLE_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL };
-    String[][] OPTIONS_DISPLAY = {
-        { mStringHelper.TEXT_SIZE_LABEL },
-        TITLE_BAR_LABEL_ARR,
-        { mStringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + mStringHelper.BRAND_NAME + " title bar when scrolling down a page" },
-        { "Advanced" },
-        { mStringHelper.CHARACTER_ENCODING_LABEL, "Don't show menu", "Show menu", "Don't show menu" },
-        { mStringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
-    };
+    String[] PATH_DISPLAY;
+    String[] TITLE_BAR_LABEL_ARR;
+    String[][] OPTIONS_DISPLAY;
 
     // Privacy menu items.
-    String[] PATH_PRIVACY = { mStringHelper.PRIVACY_SECTION_LABEL };
-    final String[] TRACKING_PROTECTION_LABEL_ARR = { mStringHelper.TRACKING_PROTECTION_LABEL };
-    final String[] MANAGE_LOGINS_ARR = { mStringHelper.MANAGE_LOGINS_LABEL };
-    String[][] OPTIONS_PRIVACY = {
-        TRACKING_PROTECTION_LABEL_ARR,
-        { mStringHelper.DNT_LABEL },
-        { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
-        { mStringHelper.REMEMBER_PASSWORDS_LABEL },
-        MANAGE_LOGINS_ARR,
-        { mStringHelper.MASTER_PASSWORD_LABEL },
-        { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Downloads", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
-    };
+    String[] PATH_PRIVACY;
+    String[] TRACKING_PROTECTION_LABEL_ARR;
+    String[] MANAGE_LOGINS_ARR;
+    String[][] OPTIONS_PRIVACY;
 
     // Mozilla/vendor menu items.
-    String[] PATH_MOZILLA = { mStringHelper.MOZILLA_SECTION_LABEL };
-    String[][] OPTIONS_MOZILLA = {
-        { mStringHelper.ABOUT_LABEL },
-        { mStringHelper.FAQS_LABEL },
-        { mStringHelper.FEEDBACK_LABEL },
-        { "Data choices" },
-        { mStringHelper.HEALTH_REPORT_LABEL, "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
-        { mStringHelper.MY_HEALTH_REPORT_LABEL },
-    };
+    String[] PATH_MOZILLA;
+    String[][] OPTIONS_MOZILLA;
 
     // Developer menu items.
-    String[] PATH_DEVELOPER = { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
-    String[][] OPTIONS_DEVELOPER = {
-        { mStringHelper.PAINT_FLASHING_LABEL },
-        { mStringHelper.REMOTE_DEBUGGING_LABEL },
-        { mStringHelper.LEARN_MORE_LABEL },
-    };
+    String[] PATH_DEVELOPER;
+    String[][] OPTIONS_DEVELOPER;
 
     /*
      * This sets up a hierarchy of settings to test.
@@ -102,6 +55,74 @@ public class testSettingsMenuItems extends PixelTest {
      *  - string values of options that are displayed once clicked (optional).
      */
     public void setupSettingsMap(Map<String[], List<String[]>> settingsMap) {
+        /**
+         * The following String[][] (arrays) match the menu hierarchy for each section.
+         * Each String[] (array) represents the menu items/choices in the following order:
+         *
+         * itemTitle { defaultValue [options] }
+         *
+         * where defaultValue is optional, and there can be multiple options.
+         *
+         * These menu items are the ones that are always present - to test menu items that differ
+         * based on build (e.g., release vs. nightly), add the items in <code>addConditionalSettings</code>.
+         */
+
+        String[] PATH_CUSTOMIZE = { mStringHelper.CUSTOMIZE_SECTION_LABEL };
+        String[][] OPTIONS_CUSTOMIZE = {
+                { "Home" },
+                { "Search", "", "Show search suggestions", "Installed search engines"},
+                { mStringHelper.TABS_LABEL, "Don't restore after quitting " + mStringHelper.BRAND_NAME, "Always restore", "Don't restore after quitting " + mStringHelper.BRAND_NAME },
+                { mStringHelper.IMPORT_FROM_ANDROID_LABEL, "", "Bookmarks", "History", "Import" },
+        };
+
+        String[] PATH_HOME = { mStringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
+        String[][] OPTIONS_HOME = {
+                { "Panels" },
+                { "Automatic updates", "Enabled", "Enabled", "Only over Wi-Fi" },
+        };
+
+        String[] PATH_DISPLAY = { mStringHelper.DISPLAY_SECTION_LABEL };
+        final String[] TITLE_BAR_LABEL_ARR = { mStringHelper.TITLE_BAR_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL,
+                mStringHelper.SHOW_PAGE_TITLE_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL };
+        String[][] OPTIONS_DISPLAY = {
+                { mStringHelper.TEXT_SIZE_LABEL },
+                TITLE_BAR_LABEL_ARR,
+                { mStringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + mStringHelper.BRAND_NAME + " title bar when scrolling down a page" },
+                { "Advanced" },
+                { mStringHelper.CHARACTER_ENCODING_LABEL, "Don't show menu", "Show menu", "Don't show menu" },
+                { mStringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
+        };
+
+        String[] PATH_PRIVACY = { mStringHelper.PRIVACY_SECTION_LABEL };
+        final String[] TRACKING_PROTECTION_LABEL_ARR = { mStringHelper.TRACKING_PROTECTION_LABEL };
+        final String[] MANAGE_LOGINS_ARR = { mStringHelper.MANAGE_LOGINS_LABEL };
+        String[][] OPTIONS_PRIVACY = {
+                TRACKING_PROTECTION_LABEL_ARR,
+                { mStringHelper.DNT_LABEL },
+                { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
+                { mStringHelper.REMEMBER_PASSWORDS_LABEL },
+                MANAGE_LOGINS_ARR,
+                { mStringHelper.MASTER_PASSWORD_LABEL },
+                { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Downloads", "Form & search history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
+        };
+
+        String[] PATH_MOZILLA = { mStringHelper.MOZILLA_SECTION_LABEL };
+        String[][] OPTIONS_MOZILLA = {
+                { mStringHelper.ABOUT_LABEL },
+                { mStringHelper.FAQS_LABEL },
+                { mStringHelper.FEEDBACK_LABEL },
+                { "Data choices" },
+                { mStringHelper.HEALTH_REPORT_LABEL, "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
+                { mStringHelper.MY_HEALTH_REPORT_LABEL },
+        };
+
+        String[] PATH_DEVELOPER = { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
+        String[][] OPTIONS_DEVELOPER = {
+                { mStringHelper.PAINT_FLASHING_LABEL },
+                { mStringHelper.REMOTE_DEBUGGING_LABEL },
+                { mStringHelper.LEARN_MORE_LABEL },
+        };
+
         settingsMap.put(PATH_CUSTOMIZE, new ArrayList<String[]>(Arrays.asList(OPTIONS_CUSTOMIZE)));
         settingsMap.put(PATH_HOME, new ArrayList<String[]>(Arrays.asList(OPTIONS_HOME)));
         settingsMap.put(PATH_DISPLAY, new ArrayList<String[]>(Arrays.asList(OPTIONS_DISPLAY)));
