@@ -1768,6 +1768,7 @@ CASE(JSOP_FORCEINTERPRETER)
 END_CASE(JSOP_FORCEINTERPRETER)
 
 CASE(JSOP_UNDEFINED)
+    // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
     PUSH_UNDEFINED();
 END_CASE(JSOP_UNDEFINED)
 
@@ -2700,20 +2701,26 @@ END_CASE(JSOP_SETCALL)
 CASE(JSOP_IMPLICITTHIS)
 CASE(JSOP_GIMPLICITTHIS)
 {
-    RootedPropertyName &name = rootName0;
-    name = script->getName(REGS.pc);
+    JSOp op = JSOp(*REGS.pc);
+    if (op == JSOP_IMPLICITTHIS || script->hasPollutedGlobalScope()) {
+        RootedPropertyName &name = rootName0;
+        name = script->getName(REGS.pc);
 
-    RootedObject &scopeObj = rootObject0;
-    scopeObj = REGS.fp()->scopeChain();
+        RootedObject &scopeObj = rootObject0;
+        scopeObj = REGS.fp()->scopeChain();
 
-    RootedObject &scope = rootObject1;
-    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
-        goto error;
+        RootedObject &scope = rootObject1;
+        if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
+            goto error;
 
-    RootedValue &v = rootValue0;
-    if (!ComputeImplicitThis(cx, scope, &v))
-        goto error;
-    PUSH_COPY(v);
+        RootedValue &v = rootValue0;
+        if (!ComputeImplicitThis(cx, scope, &v))
+            goto error;
+        PUSH_COPY(v);
+    } else {
+        // Treat it like JSOP_UNDEFINED.
+        PUSH_UNDEFINED();
+    }
 }
 END_CASE(JSOP_IMPLICITTHIS)
 
