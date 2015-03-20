@@ -12802,17 +12802,22 @@ IonBuilder::addLexicalCheck(MDefinition *input)
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKLEXICAL || JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL);
 
-    // If we're guaranteed to not be JS_UNINITIALIZED_LEXICAL, no need to check.
     MInstruction *lexicalCheck;
-    if (input->type() == MIRType_MagicUninitializedLexical)
-        lexicalCheck = MThrowUninitializedLexical::New(alloc());
-    else if (input->type() == MIRType_Value)
-        lexicalCheck = MLexicalCheck::New(alloc(), input);
-    else
-        return input;
 
-    current->add(lexicalCheck);
-    if (!resumeAfter(lexicalCheck))
-        return nullptr;
-    return lexicalCheck->isLexicalCheck() ? lexicalCheck : constant(UndefinedValue());
+    // If we're guaranteed to not be JS_UNINITIALIZED_LEXICAL, no need to check.
+    if (input->type() == MIRType_MagicUninitializedLexical) {
+        lexicalCheck = MThrowUninitializedLexical::New(alloc());
+        current->add(lexicalCheck);
+        if (!resumeAfter(lexicalCheck))
+            return nullptr;
+        return constant(UndefinedValue());
+    }
+
+    if (input->type() == MIRType_Value) {
+        lexicalCheck = MLexicalCheck::New(alloc(), input);
+        current->add(lexicalCheck);
+        return lexicalCheck;
+    }
+
+    return input;
 }

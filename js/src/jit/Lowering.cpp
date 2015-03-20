@@ -4084,8 +4084,8 @@ LIRGenerator::visitLexicalCheck(MLexicalCheck *ins)
     MOZ_ASSERT(input->type() == MIRType_Value);
     LLexicalCheck *lir = new(alloc()) LLexicalCheck();
     useBox(lir, LLexicalCheck::Input, input);
+    assignSnapshot(lir, Bailout_UninitializedLexical);
     add(lir, ins);
-    assignSafepoint(lir, ins);
     redefine(ins, input);
 }
 
