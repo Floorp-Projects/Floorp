@@ -214,7 +214,6 @@ const static js::Class sNPObjectJSWrapperClass =
     nullptr,
     NPObjWrapper_Resolve,
     nullptr,                                                /* mayResolve */
-    nullptr,                                                /* convert */
     NPObjWrapper_Finalize,
     NPObjWrapper_Call,
     nullptr,                                                /* hasInstance */
@@ -270,7 +269,7 @@ static const JSClass sNPObjectMemberClass =
   {
     "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
     nullptr, nullptr, NPObjectMember_GetProperty, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr,
     NPObjectMember_Finalize, NPObjectMember_Call,
     nullptr, nullptr, NPObjectMember_Trace
   };

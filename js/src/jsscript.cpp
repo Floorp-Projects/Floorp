@@ -1517,7 +1517,6 @@ const Class ScriptSourceObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */
