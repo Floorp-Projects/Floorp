@@ -131,7 +131,7 @@ struct TypeInferenceSizes;
 
 namespace js {
 class DebugScopes;
-class ObjectWeakMap;
+class LazyArrayBufferTable;
 class WeakMapBase;
 }
 
@@ -256,7 +256,6 @@ struct JSCompartment
                                 size_t *compartmentTables,
                                 size_t *innerViews,
                                 size_t *lazyArrayBuffers,
-                                size_t *objectMetadataTables,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,
                                 size_t *savedStacksSet);
@@ -289,17 +288,11 @@ struct JSCompartment
      */
     js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
 
-    // Keep track of the metadata objects which can be associated with each
-    // JS object.
-    js::ObjectWeakMap *objectMetadataTable;
-
     // Map from array buffers to views sharing that storage.
     js::InnerViewTable innerViews;
 
-    // Inline transparent typed objects do not initially have an array buffer,
-    // but can have that buffer created lazily if it is accessed later. This
-    // table manages references from such typed objects to their buffers.
-    js::ObjectWeakMap *lazyArrayBuffers;
+    // Map from typed objects to array buffers lazily created for them.
+    js::LazyArrayBufferTable *lazyArrayBuffers;
 
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
@@ -398,14 +391,15 @@ struct JSCompartment
     void fixupInitialShapeTable();
     void fixupAfterMovingGC();
     void fixupGlobal();
+    void fixupBaseShapeTable();
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
     void forgetObjectMetadataCallback() {
         objectMetadataCallback = nullptr;
     }
-    JSObject *callObjectMetadataCallback(JSContext *cx) const {
-        return objectMetadataCallback(cx);
+    bool callObjectMetadataCallback(JSContext *cx, JSObject **obj) const {
+        return objectMetadataCallback(cx, obj);
     }
     const void *addressOfMetadataCallback() const {
         return &objectMetadataCallback;

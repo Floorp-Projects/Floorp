@@ -458,7 +458,8 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
     }
 
     size_t nfixed = gc::GetGCKindSlots(layout.getAllocKind());
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto, nfixed, 0));
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto,
+                                                      nullptr, nfixed, 0));
     if (!shape)
         return false;
 
@@ -1116,6 +1117,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext *cx, Shape *templateShape,
     // Get an empty shape which we can use for the preliminary objects.
     Shape *newShape = EmptyShape::getInitialShape(cx, &UnboxedPlainObject::class_,
                                                   group->proto(),
+                                                  templateShape->getObjectMetadata(),
                                                   templateShape->getObjectFlags());
     if (!newShape) {
         cx->recoverFromOutOfMemory();

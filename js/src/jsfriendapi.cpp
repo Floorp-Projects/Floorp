@@ -24,7 +24,6 @@
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/WeakMapObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
@@ -1174,26 +1173,16 @@ js::SetObjectMetadataCallback(JSContext *cx, ObjectMetadataCallback callback)
     cx->compartment()->setObjectMetadataCallback(callback);
 }
 
-JS_FRIEND_API(void)
-js::SetObjectMetadata(JSContext *cx, JSObject *obj, JSObject *metadata)
+JS_FRIEND_API(bool)
+js::SetObjectMetadata(JSContext *cx, HandleObject obj, HandleObject metadata)
 {
-    ObjectWeakMap *&map = cx->compartment()->objectMetadataTable;
-    if (!map) {
-        map = cx->new_<ObjectWeakMap>(cx);
-        if (!map)
-            CrashAtUnhandlableOOM("SetObjectMetadata");
-    }
-    if (!map->add(cx, obj, metadata))
-        CrashAtUnhandlableOOM("SetObjectMetadata");
+    return JSObject::setMetadata(cx, obj, metadata);
 }
 
 JS_FRIEND_API(JSObject *)
 js::GetObjectMetadata(JSObject *obj)
 {
-    ObjectWeakMap *map = obj->compartment()->objectMetadataTable;
-    if (map)
-        return map->lookup(obj);
-    return nullptr;
+    return obj->getMetadata();
 }
 
 JS_FRIEND_API(bool)

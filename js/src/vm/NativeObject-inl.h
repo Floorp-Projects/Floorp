@@ -54,7 +54,8 @@ NativeObject::canRemoveLastProperty()
      */
     MOZ_ASSERT(!inDictionaryMode());
     Shape *previous = lastProperty()->previous().get();
-    return previous->getObjectFlags() == lastProperty()->getObjectFlags();
+    return previous->getObjectMetadata() == lastProperty()->getObjectMetadata()
+        && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
 inline void
@@ -330,7 +331,10 @@ CopyInitializerObject(JSContext *cx, HandlePlainObject baseobj, NewObjectKind ne
     if (!obj)
         return nullptr;
 
+    RootedObject metadata(cx, obj->getMetadata());
     if (!obj->setLastProperty(cx, baseobj->lastProperty()))
+        return nullptr;
+    if (metadata && !JSObject::setMetadata(cx, obj, metadata))
         return nullptr;
 
     return obj;
