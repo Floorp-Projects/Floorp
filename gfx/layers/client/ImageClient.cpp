@@ -130,7 +130,7 @@ ImageClientSingle::FlushAllImages(bool aExceptFront,
   if (!aExceptFront && mFrontBuffer) {
     RemoveTextureWithTracker(mFrontBuffer, aAsyncTransactionTracker);
     mFrontBuffer = nullptr;
-  } else if(aAsyncTransactionTracker) {
+  } else if (aAsyncTransactionTracker) {
     // already flushed
     aAsyncTransactionTracker->NotifyComplete();
   }

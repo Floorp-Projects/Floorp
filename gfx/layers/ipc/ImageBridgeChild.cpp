@@ -413,7 +413,8 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
-static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront, AsyncTransactionTracker* aStatus)
+static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
+                               bool aExceptFront, AsyncTransactionTracker* aStatus)
 {
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
@@ -426,7 +427,8 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
 }
 
 //static
-void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront)
+void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
+                                      ImageContainer* aContainer, bool aExceptFront)
 {
   if (!IsCreated()) {
     return;
@@ -436,8 +438,8 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aCon
   MOZ_ASSERT(!InImageBridgeChildThread());
   if (InImageBridgeChildThread()) {
     NS_ERROR("ImageBridgeChild::FlushAllImages() is called on ImageBridge thread.");
-     return;
-   }
+    return;
+  }
 
   RefPtr<AsyncTransactionTracker> status = aClient->PrepareFlushAllImages();
 
