@@ -139,6 +139,12 @@ let RLSidebar = {
 
     itemNode.querySelector(".item-title").textContent = item.title;
     itemNode.querySelector(".item-domain").textContent = item.domain;
+    let thumb = itemNode.querySelector(".item-thumb-container");
+    if (item.preview) {
+      thumb.style.backgroundImage = "url(" + item.preview + ")";
+    } else {
+      thumb.style.removeProperty("background-image");
+    }
   },
 
   /**
