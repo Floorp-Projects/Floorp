@@ -158,9 +158,7 @@ public:
   }
 
   static nsresult
-  CommonPostHandleEvent(DOMEventTargetHelper* aEventTarget,
-                        IDBFactory* aFactory,
-                        EventChainPostVisitor& aVisitor);
+  CommonPostHandleEvent(EventChainPostVisitor& aVisitor, IDBFactory* aFactory);
 
   static bool
   TabContextMayAccessOrigin(const mozilla::dom::TabContext& aContext,
