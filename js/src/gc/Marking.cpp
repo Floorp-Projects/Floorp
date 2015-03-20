@@ -1069,9 +1069,6 @@ BaseShape::markChildren(JSTracer *trc)
     JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
     if (global)
         MarkObjectUnbarriered(trc, &global, "global");
-
-    if (metadata)
-        gc::MarkObject(trc, &metadata, "metadata");
 }
 
 static void
@@ -1117,9 +1114,6 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 
     if (GlobalObject *global = base->compartment()->unsafeUnbarrieredMaybeGlobal())
         gcmarker->traverse(global);
-
-    if (JSObject *metadata = base->getObjectMetadata())
-        MaybePushMarkStackBetweenSlices(gcmarker, metadata);
 
     /*
      * All children of the owned base shape are consistent with its

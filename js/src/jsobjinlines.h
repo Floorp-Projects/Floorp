@@ -233,6 +233,25 @@ ClassCanHaveFixedData(const Class *clasp)
         || js::IsTypedArrayClass(clasp);
 }
 
+static MOZ_ALWAYS_INLINE void
+SetNewObjectMetadata(ExclusiveContext *cxArg, JSObject *obj)
+{
+    // The metadata callback is invoked for each object created on the main
+    // thread, except when analysis/compilation is active, to avoid recursion.
+    if (JSContext *cx = cxArg->maybeJSContext()) {
+        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
+            !cx->zone()->types.activeAnalysis)
+        {
+            // Use AutoEnterAnalysis to prohibit both any GC activity under the
+            // callback, and any reentering of JS via Invoke() etc.
+            AutoEnterAnalysis enter(cx);
+
+            if (JSObject *metadata = cx->compartment()->callObjectMetadataCallback(cx))
+                SetObjectMetadata(cx, obj, metadata);
+        }
+    }
+}
+
 } // namespace js
 
 /* static */ inline JSObject *
@@ -283,6 +302,8 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     if (group->clasp()->isJSFunction())
         memset(obj->as<JSFunction>().fixedSlots(), 0, sizeof(js::HeapSlot) * GetGCKindSlots(kind));
 
+    SetNewObjectMetadata(cx, obj);
+
     js::gc::TraceCreateObject(obj);
 
     return obj;
@@ -311,14 +332,6 @@ inline void
 JSObject::setInitialElementsMaybeNonNative(js::HeapSlot *elements)
 {
     static_cast<js::NativeObject *>(this)->elements_ = elements;
-}
-
-inline JSObject *
-JSObject::getMetadata() const
-{
-    if (js::Shape *shape = maybeShape())
-        return shape->getObjectMetadata();
-    return nullptr;
 }
 
 inline js::GlobalObject &
@@ -825,28 +838,6 @@ Unbox(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     else
         vp.setUndefined();
 
-    return true;
-}
-
-static MOZ_ALWAYS_INLINE bool
-NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
-{
-    // The metadata callback is invoked before each created object, except when
-    // analysis/compilation is active, to avoid recursion. It is also skipped
-    // when we allocate objects during a bailout, to prevent stack iterations.
-    MOZ_ASSERT(!*pmetadata);
-    if (JSContext *cx = cxArg->maybeJSContext()) {
-        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
-            !cx->zone()->types.activeAnalysis)
-        {
-            // Use AutoEnterAnalysis to prohibit both any GC activity under the
-            // callback, and any reentering of JS via Invoke() etc.
-            AutoEnterAnalysis enter(cx);
-
-            if (!cx->compartment()->callObjectMetadataCallback(cx, pmetadata))
-                return false;
-        }
-    }
     return true;
 }
 
