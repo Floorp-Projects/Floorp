@@ -9,12 +9,207 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
+#include "mozilla/dom/cache/PCacheStreamControlChild.h"
+#include "mozilla/dom/cache/PCacheStreamControlParent.h"
 #include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/FileDescriptorSetChild.h"
+#include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/ipc/PFileDescriptorSetChild.h"
+#include "mozilla/ipc/PFileDescriptorSetParent.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsTArray.h"
+
+namespace {
+
+using mozilla::unused;
+using mozilla::void_t;
+using mozilla::dom::cache::CacheStreamControlChild;
+using mozilla::dom::cache::CacheStreamControlParent;
+using mozilla::dom::cache::PCacheReadStream;
+using mozilla::dom::cache::PCacheStreamControlChild;
+using mozilla::dom::cache::PCacheStreamControlParent;
+using mozilla::dom::cache::ReadStream;
+using mozilla::ipc::FileDescriptor;
+using mozilla::ipc::PFileDescriptorSetChild;
+using mozilla::ipc::PFileDescriptorSetParent;
+
+// There are separate concrete implementations of ReadStream for the child
+// and parent processes.  This is unfortunately necessary because the
+// actor types are distinct for these two cases.  Also, the interface for
+// reporting the close event differs slightly for the child and parent
+// StreamControl actors.
+
+// ----------------------------------------------------------------------------
+
+class ReadStreamChild MOZ_FINAL : public ReadStream
+{
+public:
+  ReadStreamChild(PCacheStreamControlChild* aControl, const nsID& aId,
+                  nsIInputStream* aStream)
+    : ReadStream(aId, aStream)
+    , mControl(static_cast<CacheStreamControlChild*>(aControl))
+  {
+    MOZ_ASSERT(mControl);
+    mControl->AddListener(this);
+  }
+
+  virtual ~ReadStreamChild()
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    NoteClosed();
+  }
+
+  virtual void NoteClosedOnOwningThread() MOZ_OVERRIDE
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    if (mClosed) {
+      return;
+    }
+
+    mClosed = true;
+    mControl->RemoveListener(this);
+    mControl->NoteClosed(mId);
+  }
+
+  virtual void ForgetOnOwningThread() MOZ_OVERRIDE
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    if (mClosed) {
+      return;
+    }
+
+    mClosed = true;
+    mControl->RemoveListener(this);
+  }
+
+  virtual void SerializeControl(PCacheReadStream* aReadStreamOut) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aReadStreamOut);
+    MOZ_ASSERT(!mClosed);
+    aReadStreamOut->controlParent() = nullptr;
+    aReadStreamOut->controlChild() = mControl;
+  }
+
+  virtual void
+  SerializeFds(PCacheReadStream* aReadStreamOut,
+               const nsTArray<FileDescriptor>& fds) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!mClosed);
+    PFileDescriptorSetChild* fdSet = nullptr;
+    if (!fds.IsEmpty()) {
+      fdSet = mControl->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
+      for (uint32_t i = 1; i < fds.Length(); ++i) {
+        unused << fdSet->SendAddFileDescriptor(fds[i]);
+      }
+    }
+
+    if (fdSet) {
+      aReadStreamOut->fds() = fdSet;
+    } else {
+      aReadStreamOut->fds() = void_t();
+    }
+  }
+
+private:
+  CacheStreamControlChild* mControl;
+};
+
+// ----------------------------------------------------------------------------
+
+class ReadStreamParent MOZ_FINAL : public ReadStream
+{
+public:
+  ReadStreamParent(PCacheStreamControlParent* aControl, const nsID& aId,
+                  nsIInputStream* aStream)
+    : ReadStream(aId, aStream)
+    , mControl(static_cast<CacheStreamControlParent*>(aControl))
+  {
+    MOZ_ASSERT(mControl);
+    mControl->AddListener(this);
+  }
+
+  virtual ~ReadStreamParent()
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    NoteClosed();
+  }
+
+  virtual void NoteClosedOnOwningThread() MOZ_OVERRIDE
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    if (mClosed) {
+      return;
+    }
+
+    mClosed = true;
+    mControl->RemoveListener(this);
+    // This can cause mControl to be destructed
+    mControl->RecvNoteClosed(mId);
+    mControl = nullptr;
+  }
+
+  virtual void ForgetOnOwningThread() MOZ_OVERRIDE
+  {
+    NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+    if (mClosed) {
+      return;
+    }
+
+    mClosed = true;
+    // This can cause mControl to be destroyed
+    mControl->RemoveListener(this);
+    mControl = nullptr;
+  }
+
+  virtual void SerializeControl(PCacheReadStream* aReadStreamOut) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aReadStreamOut);
+    MOZ_ASSERT(!mClosed);
+    MOZ_ASSERT(mControl);
+    aReadStreamOut->controlChild() = nullptr;
+    aReadStreamOut->controlParent() = mControl;
+  }
+
+  virtual void
+  SerializeFds(PCacheReadStream* aReadStreamOut,
+               const nsTArray<FileDescriptor>& fds) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!mClosed);
+    MOZ_ASSERT(mControl);
+    PFileDescriptorSetParent* fdSet = nullptr;
+    if (!fds.IsEmpty()) {
+      fdSet = mControl->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
+      for (uint32_t i = 1; i < fds.Length(); ++i) {
+        unused << fdSet->SendAddFileDescriptor(fds[i]);
+      }
+    }
+
+    if (fdSet) {
+      aReadStreamOut->fds() = fdSet;
+    } else {
+      aReadStreamOut->fds() = void_t();
+    }
+  }
+
+private:
+  CacheStreamControlParent* mControl;
+};
+
+// ----------------------------------------------------------------------------
+
+} // anonymous namespace
 
 namespace mozilla {
 namespace dom {
@@ -22,108 +217,26 @@ namespace cache {
 
 using mozilla::unused;
 using mozilla::ipc::FileDescriptor;
-
-// ----------------------------------------------------------------------------
-
-// The inner stream class.  This is where all of the real work is done.  As
-// an invariant Inner::Close() must be called before ~Inner().  This is
-// guaranteed by our outer ReadStream class.
-class ReadStream::Inner MOZ_FINAL : public ReadStream::Controllable
-{
-public:
-  Inner(StreamControl* aControl, const nsID& aId,
-        nsIInputStream* aStream);
-
-  void
-  Serialize(PCacheReadStreamOrVoid* aReadStreamOut);
-
-  void
-  Serialize(PCacheReadStream* aReadStreamOut);
-
-  // ReadStream::Controllable methods
-  virtual void
-  CloseStream() MOZ_OVERRIDE;
-
-  virtual void
-  CloseStreamWithoutReporting() MOZ_OVERRIDE;
-
-  virtual bool
-  MatchId(const nsID& aId) const MOZ_OVERRIDE;
-
-  // Simulate nsIInputStream methods, but we don't actually inherit from it
-  NS_METHOD
-  Close();
-
-  NS_METHOD
-  Available(uint64_t *aNumAvailableOut);
-
-  NS_METHOD
-  Read(char *aBuf, uint32_t aCount, uint32_t *aNumReadOut);
-
-  NS_METHOD
-  ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount,
-               uint32_t *aNumReadOut);
-
-  NS_METHOD
-  IsNonBlocking(bool *aNonBlockingOut);
-
-private:
-  class NoteClosedRunnable;
-  class ForgetRunnable;
-
-  ~Inner();
-
-  void
-  NoteClosed();
-
-  void
-  Forget();
-
-  void
-  NoteClosedOnOwningThread();
-
-  void
-  ForgetOnOwningThread();
-
-  // Weak ref to the stream control actor.  The actor will always call either
-  // CloseStream() or CloseStreamWithoutReporting() before it's destroyed.  The
-  // weak ref is cleared in the resulting NoteClosedOnOwningThread() or
-  // ForgetOnOwningThread() method call.
-  StreamControl* mControl;
-
-  const nsID mId;
-  nsCOMPtr<nsIInputStream> mStream;
-  nsCOMPtr<nsIInputStream> mSnappyStream;
-  nsCOMPtr<nsIThread> mOwningThread;
-
-  enum State
-  {
-    Open,
-    Closed,
-    NumStates
-  };
-  Atomic<State> mState;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner)
-};
-
-// ----------------------------------------------------------------------------
+using mozilla::ipc::FileDescriptorSetChild;
+using mozilla::ipc::FileDescriptorSetParent;
+using mozilla::ipc::InputStreamParams;
+using mozilla::ipc::OptionalFileDescriptorSet;
+using mozilla::ipc::PFileDescriptorSetChild;
 
 // Runnable to notify actors that the ReadStream has closed.  This must
 // be done on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::NoteClosedRunnable MOZ_FINAL : public nsCancelableRunnable
+class ReadStream::NoteClosedRunnable MOZ_FINAL : public nsCancelableRunnable
 {
 public:
-  explicit NoteClosedRunnable(ReadStream::Inner* aStream)
+  explicit NoteClosedRunnable(ReadStream* aStream)
     : mStream(aStream)
   { }
 
   NS_IMETHOD Run()
   {
     mStream->NoteClosedOnOwningThread();
-    mStream = nullptr;
     return NS_OK;
   }
 
@@ -138,27 +251,24 @@ public:
 private:
   ~NoteClosedRunnable() { }
 
-  nsRefPtr<ReadStream::Inner> mStream;
+  nsRefPtr<ReadStream> mStream;
 };
-
-// ----------------------------------------------------------------------------
 
 // Runnable to clear actors without reporting that the ReadStream has
 // closed.  Since this can trigger actor destruction, we need to do
 // it on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::ForgetRunnable MOZ_FINAL : public nsCancelableRunnable
+class ReadStream::ForgetRunnable MOZ_FINAL : public nsCancelableRunnable
 {
 public:
-  explicit ForgetRunnable(ReadStream::Inner* aStream)
+  explicit ForgetRunnable(ReadStream* aStream)
     : mStream(aStream)
   { }
 
   NS_IMETHOD Run()
   {
     mStream->ForgetOnOwningThread();
-    mStream = nullptr;
     return NS_OK;
   }
 
@@ -173,216 +283,11 @@ public:
 private:
   ~ForgetRunnable() { }
 
-  nsRefPtr<ReadStream::Inner> mStream;
+  nsRefPtr<ReadStream> mStream;
 };
 
-// ----------------------------------------------------------------------------
-
-ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
-                         nsIInputStream* aStream)
-  : mControl(aControl)
-  , mId(aId)
-  , mStream(aStream)
-  , mSnappyStream(new SnappyUncompressInputStream(aStream))
-  , mOwningThread(NS_GetCurrentThread())
-  , mState(Open)
-{
-  MOZ_ASSERT(mStream);
-  MOZ_ASSERT(mControl);
-  mControl->AddReadStream(this);
-}
-
-void
-ReadStream::Inner::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-  MOZ_ASSERT(aReadStreamOut);
-  PCacheReadStream stream;
-  Serialize(&stream);
-  *aReadStreamOut = stream;
-}
-
-void
-ReadStream::Inner::Serialize(PCacheReadStream* aReadStreamOut)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-  MOZ_ASSERT(aReadStreamOut);
-  MOZ_ASSERT(mState == Open);
-  MOZ_ASSERT(mControl);
-
-  aReadStreamOut->id() = mId;
-  mControl->SerializeControl(aReadStreamOut);
-
-  nsAutoTArray<FileDescriptor, 4> fds;
-  SerializeInputStream(mStream, aReadStreamOut->params(), fds);
-
-  mControl->SerializeFds(aReadStreamOut, fds);
-
-  // We're passing ownership across the IPC barrier with the control, so
-  // do not signal that the stream is closed here.
-  Forget();
-}
-
-void
-ReadStream::Inner::CloseStream()
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-  Close();
-}
-
-void
-ReadStream::Inner::CloseStreamWithoutReporting()
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-  Forget();
-}
-
-bool
-ReadStream::Inner::MatchId(const nsID& aId) const
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-  return mId.Equals(aId);
-}
-
-NS_IMETHODIMP
-ReadStream::Inner::Close()
-{
-  // stream ops can happen on any thread
-  nsresult rv = mStream->Close();
-  NoteClosed();
-  return rv;
-}
-
-NS_IMETHODIMP
-ReadStream::Inner::Available(uint64_t* aNumAvailableOut)
-{
-  // stream ops can happen on any thread
-  nsresult rv = mSnappyStream->Available(aNumAvailableOut);
-
-  if (NS_FAILED(rv)) {
-    Close();
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-ReadStream::Inner::Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut)
-{
-  // stream ops can happen on any thread
-  MOZ_ASSERT(aNumReadOut);
-
-  nsresult rv = mSnappyStream->Read(aBuf, aCount, aNumReadOut);
-
-  if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) ||
-      *aNumReadOut == 0) {
-    Close();
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-ReadStream::Inner::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                                uint32_t aCount, uint32_t* aNumReadOut)
-{
-  // stream ops can happen on any thread
-  MOZ_ASSERT(aNumReadOut);
-
-  nsresult rv = mSnappyStream->ReadSegments(aWriter, aClosure, aCount,
-                                            aNumReadOut);
-
-  if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK &&
-                        rv != NS_ERROR_NOT_IMPLEMENTED) || *aNumReadOut == 0) {
-    Close();
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-ReadStream::Inner::IsNonBlocking(bool* aNonBlockingOut)
-{
-  // stream ops can happen on any thread
-  return mSnappyStream->IsNonBlocking(aNonBlockingOut);
-}
-
-ReadStream::Inner::~Inner()
-{
-  // Any thread
-  MOZ_ASSERT(mState == Closed);
-  MOZ_ASSERT(!mControl);
-}
-
-void
-ReadStream::Inner::NoteClosed()
-{
-  // Any thread
-  if (mState == Closed) {
-    return;
-  }
-
-  if (NS_GetCurrentThread() == mOwningThread) {
-    NoteClosedOnOwningThread();
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> runnable = new NoteClosedRunnable(this);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
-}
-
-void
-ReadStream::Inner::Forget()
-{
-  // Any thread
-  if (mState == Closed) {
-    return;
-  }
-
-  if (NS_GetCurrentThread() == mOwningThread) {
-    ForgetOnOwningThread();
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> runnable = new ForgetRunnable(this);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
-}
-
-void
-ReadStream::Inner::NoteClosedOnOwningThread()
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-
-  // Mark closed and do nothing if we were already closed
-  if (!mState.compareExchange(Open, Closed)) {
-    return;
-  }
-
-  MOZ_ASSERT(mControl);
-  mControl->NoteClosed(this, mId);
-  mControl = nullptr;
-}
-
-void
-ReadStream::Inner::ForgetOnOwningThread()
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-
-  // Mark closed and do nothing if we were already closed
-  if (!mState.compareExchange(Open, Closed)) {
-    return;
-  }
-
-  MOZ_ASSERT(mControl);
-  mControl->ForgetReadStream(this);
-  mControl = nullptr;
-}
-
-// ----------------------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS(cache::ReadStream, nsIInputStream, ReadStream);
+NS_IMPL_ISUPPORTS(mozilla::dom::cache::ReadStream, nsIInputStream,
+                                                   ReadStream);
 
 // static
 already_AddRefed<ReadStream>
@@ -406,20 +311,33 @@ ReadStream::Create(const PCacheReadStream& aReadStream)
     return nullptr;
   }
 
-  // Control is guaranteed to survive this method as ActorDestroy() cannot
-  // run on this thread until we complete.
-  StreamControl* control;
-  if (aReadStream.controlChild()) {
-    auto actor = static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
-    control = actor;
-  } else {
-    auto actor = static_cast<CacheStreamControlParent*>(aReadStream.controlParent());
-    control = actor;
-  }
-  MOZ_ASSERT(control);
-
   nsAutoTArray<FileDescriptor, 4> fds;
-  control->DeserializeFds(aReadStream, fds);
+  if (aReadStream.fds().type() ==
+      OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
+
+    FileDescriptorSetChild* fdSetActor =
+      static_cast<FileDescriptorSetChild*>(aReadStream.fds().get_PFileDescriptorSetChild());
+    MOZ_ASSERT(fdSetActor);
+
+    fdSetActor->ForgetFileDescriptors(fds);
+    MOZ_ASSERT(!fds.IsEmpty());
+
+    unused << fdSetActor->Send__delete__(fdSetActor);
+  } else if (aReadStream.fds().type() ==
+      OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
+
+    FileDescriptorSetParent* fdSetActor =
+      static_cast<FileDescriptorSetParent*>(aReadStream.fds().get_PFileDescriptorSetParent());
+    MOZ_ASSERT(fdSetActor);
+
+    fdSetActor->ForgetFileDescriptors(fds);
+    MOZ_ASSERT(!fds.IsEmpty());
+
+    if (!fdSetActor->Send__delete__(fdSetActor)) {
+      // child process is gone, warn and allow actor to clean up normally
+      NS_WARNING("Cache failed to delete fd set actor.");
+    }
+  }
 
   nsCOMPtr<nsIInputStream> stream =
     DeserializeInputStream(aReadStream.params(), fds);
@@ -431,8 +349,16 @@ ReadStream::Create(const PCacheReadStream& aReadStream)
   MOZ_ASSERT(!asyncStream);
 #endif
 
-  nsRefPtr<Inner> inner = new Inner(control, aReadStream.id(), stream);
-  nsRefPtr<ReadStream> ref = new ReadStream(inner);
+  nsRefPtr<ReadStream> ref;
+
+  if (aReadStream.controlChild()) {
+    ref = new ReadStreamChild(aReadStream.controlChild(), aReadStream.id(),
+                              stream);
+  } else {
+    ref = new ReadStreamParent(aReadStream.controlParent(), aReadStream.id(),
+                               stream);
+  }
+
   return ref.forget();
 }
 
@@ -441,67 +367,170 @@ already_AddRefed<ReadStream>
 ReadStream::Create(PCacheStreamControlParent* aControl, const nsID& aId,
                    nsIInputStream* aStream)
 {
-  MOZ_ASSERT(aControl);
-  auto actor = static_cast<CacheStreamControlParent*>(aControl);
-  nsRefPtr<Inner> inner = new Inner(actor, aId, aStream);
-  nsRefPtr<ReadStream> ref = new ReadStream(inner);
+  nsRefPtr<ReadStream> ref = new ReadStreamParent(aControl, aId, aStream);
   return ref.forget();
 }
 
 void
 ReadStream::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
 {
-  mInner->Serialize(aReadStreamOut);
+  MOZ_ASSERT(aReadStreamOut);
+  PCacheReadStream stream;
+  Serialize(&stream);
+  *aReadStreamOut = stream;
 }
 
 void
 ReadStream::Serialize(PCacheReadStream* aReadStreamOut)
 {
-  mInner->Serialize(aReadStreamOut);
+  MOZ_ASSERT(aReadStreamOut);
+  MOZ_ASSERT(!mClosed);
+
+  aReadStreamOut->id() = mId;
+  SerializeControl(aReadStreamOut);
+
+  nsAutoTArray<FileDescriptor, 4> fds;
+  SerializeInputStream(mStream, aReadStreamOut->params(), fds);
+
+  SerializeFds(aReadStreamOut, fds);
+
+  // We're passing ownership across the IPC barrier with the control, so
+  // do not signal that the stream is closed here.
+  Forget();
 }
 
-ReadStream::ReadStream(ReadStream::Inner* aInner)
-  : mInner(aInner)
+void
+ReadStream::CloseStream()
 {
-  MOZ_ASSERT(mInner);
+  Close();
+}
+
+void
+ReadStream::CloseStreamWithoutReporting()
+{
+  Forget();
+}
+
+bool
+ReadStream::MatchId(const nsID& aId) const
+{
+  return mId.Equals(aId);
+}
+
+ReadStream::ReadStream(const nsID& aId, nsIInputStream* aStream)
+  : mId(aId)
+  , mStream(aStream)
+  , mSnappyStream(new SnappyUncompressInputStream(aStream))
+  , mOwningThread(NS_GetCurrentThread())
+  , mClosed(false)
+{
+  MOZ_ASSERT(mStream);
 }
 
 ReadStream::~ReadStream()
 {
-  // Explicitly close the inner stream so that it does not have to
-  // deal with implicitly closing at destruction time.
-  mInner->Close();
+  NS_ASSERT_OWNINGTHREAD(ReadStream);
+
+  // We cannot directly call NoteClosed() here.  The concrete subclasses
+  // destructors must do this because it takes code paths through virtual
+  // methods.  We don't want to execute these while partially destroyed.
+  MOZ_ASSERT(mClosed);
+}
+
+void
+ReadStream::NoteClosed()
+{
+  if (mClosed) {
+    return;
+  }
+
+  if (NS_GetCurrentThread() == mOwningThread) {
+    NoteClosedOnOwningThread();
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> runnable = new NoteClosedRunnable(this);
+  nsresult rv = mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch Cache ReadStream NoteClosed() runnable.");
+  }
+}
+
+void
+ReadStream::Forget()
+{
+  if (mClosed) {
+    return;
+  }
+
+  if (NS_GetCurrentThread() == mOwningThread) {
+    ForgetOnOwningThread();
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> runnable = new ForgetRunnable(this);
+  nsresult rv = mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch Cache ReadStream Forget() runnable.");
+  }
 }
 
 NS_IMETHODIMP
 ReadStream::Close()
 {
-  return mInner->Close();
+  nsresult rv = mStream->Close();
+  NoteClosed();
+  return rv;
 }
 
 NS_IMETHODIMP
 ReadStream::Available(uint64_t* aNumAvailableOut)
 {
-  return mInner->Available(aNumAvailableOut);
+  nsresult rv = mSnappyStream->Available(aNumAvailableOut);
+
+  if (NS_FAILED(rv)) {
+    Close();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
 ReadStream::Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut)
 {
-  return mInner->Read(aBuf, aCount, aNumReadOut);
+  MOZ_ASSERT(aNumReadOut);
+
+  nsresult rv = mSnappyStream->Read(aBuf, aCount, aNumReadOut);
+
+  if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) ||
+      *aNumReadOut == 0) {
+    Close();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
 ReadStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                          uint32_t aCount, uint32_t* aNumReadOut)
 {
-  return mInner->ReadSegments(aWriter, aClosure, aCount, aNumReadOut);
+  MOZ_ASSERT(aNumReadOut);
+
+  nsresult rv = mSnappyStream->ReadSegments(aWriter, aClosure, aCount,
+                                            aNumReadOut);
+
+  if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK &&
+                        rv != NS_ERROR_NOT_IMPLEMENTED) || *aNumReadOut == 0) {
+    Close();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
 ReadStream::IsNonBlocking(bool* aNonBlockingOut)
 {
-  return mInner->IsNonBlocking(aNonBlockingOut);
+  return mSnappyStream->IsNonBlocking(aNonBlockingOut);
 }
 
 } // namespace cache
