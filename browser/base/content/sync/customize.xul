@@ -27,6 +27,8 @@
       <preference id="engine.passwords" name="services.sync.engine.passwords" type="bool"/>
       <preference id="engine.addons"    name="services.sync.engine.addons"    type="bool"/>
       <preference id="engine.prefs"     name="services.sync.engine.prefs"     type="bool"/>
+      <!-- non Sync-Engine engines -->
+      <preference id="engine.readinglist" name="readinglist.scheduler.enabled" type="bool"/>
     </preferences>
 
     <label id="sync-customize-title" value="&syncCustomize.title;"/>
@@ -51,6 +53,11 @@
       <checkbox label="&engine.history.label;"
                 accesskey="&engine.history.accesskey;"
                 preference="engine.history"/>
+      <checkbox id="readinglist-engine"
+                label="&engine.readinglist.label;"
+                accesskey="&engine.readinglist.accesskey;"
+                preference="engine.readinglist"
+                hidden="true"/>
       <checkbox label="&engine.addons.label;"
                 accesskey="&engine.addons.accesskey;"
                 preference="engine.addons"/>
