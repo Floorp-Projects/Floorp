@@ -7,9 +7,10 @@ const CRASH_SHENTRY = {url: "about:mozilla"};
 const CRASH_TAB = {entries: [CRASH_SHENTRY]};
 const CRASH_STATE = {windows: [{tabs: [CRASH_TAB]}]};
 
-const TAB_FORMDATA = {id: {sessionData: CRASH_STATE}};
-const TAB_SHENTRY = {url: "about:sessionrestore", formdata: TAB_FORMDATA};
-const TAB_STATE = {entries: [TAB_SHENTRY]};
+const TAB_URL = "about:sessionrestore";
+const TAB_FORMDATA = {url: TAB_URL, id: {sessionData: CRASH_STATE}};
+const TAB_SHENTRY = {url: TAB_URL};
+const TAB_STATE = {entries: [TAB_SHENTRY], formdata: TAB_FORMDATA};
 
 const FRAME_SCRIPT = "data:," +
                      "content.document.getElementById('errorTryAgain').click()";

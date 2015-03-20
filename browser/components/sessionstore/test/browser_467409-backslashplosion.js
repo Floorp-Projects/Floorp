@@ -19,14 +19,14 @@
 // 3c. Check that formdata doesn't require JSON.parse
 
 const CRASH_STATE = {windows: [{tabs: [{entries: [{url: "about:mozilla" }]}]}]};
-const STATE = {entries: [createEntry(CRASH_STATE)]};
-const STATE2 = {entries: [createEntry({windows: [{tabs: [STATE]}]})]};
-const STATE3 = {entries: [createEntry(JSON.stringify(CRASH_STATE))]};
+const STATE = createEntries(CRASH_STATE);
+const STATE2 = createEntries({windows: [{tabs: [STATE]}]});
+const STATE3 = createEntries(JSON.stringify(CRASH_STATE));
 
-function createEntry(sessionData) {
+function createEntries(sessionData) {
   return {
-    url: "about:sessionrestore",
-    formdata: {id: {sessionData: sessionData}}
+    entries: [{url: "about:sessionrestore"}],
+    formdata: {id: {sessionData: sessionData}, url: "about:sessionrestore"}
   };
 }
 

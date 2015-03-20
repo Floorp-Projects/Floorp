@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  let oldState = {
+  let sessionData = {
     windows: [{
       tabs: [
         { entries: [{ url: "about:mozilla" }], hidden: true },
@@ -10,11 +10,9 @@ function test() {
       ]
     }]
   };
-  let pageData = {
-    url: "about:sessionrestore",
-    formdata: { id: { "sessionData": oldState } }
-  };
-  let state = { windows: [{ tabs: [{ entries: [pageData] }] }] };
+  let url = "about:sessionrestore";
+  let formdata = {id: {sessionData}, url};
+  let state = { windows: [{ tabs: [{ entries: [{url}], formdata }] }] };
 
   waitForExplicitFinish();
 
