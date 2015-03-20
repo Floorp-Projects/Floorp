@@ -27,15 +27,6 @@ Cc["@mozilla.org/globalmessagemanager;1"]
   .loadFrameScript(
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js", true);
 
-
-/**
- * Default wait period in millseconds, when waiting for the expected
- * event to occur.
- * @type {number}
- */
-const DEFAULT_WAIT = 2000;
-
-
 this.BrowserTestUtils = {
   /**
    * @param {xul:browser} browser
@@ -128,51 +119,51 @@ this.BrowserTestUtils = {
     });
   },
 
-
   /**
-   * Waits a specified number of miliseconds for a specified event to be
-   * fired on a specified element.
+   * Waits for an event to be fired on a specified element.
    *
    * Usage:
-   *    let receivedEvent = BrowserTestUtil.waitForEvent(element, "eventName");
+   *    let promiseEvent = BrowserTestUtil.waitForEvent(element, "eventName");
    *    // Do some processing here that will cause the event to be fired
    *    // ...
    *    // Now yield until the Promise is fulfilled
-   *    yield receivedEvent;
-   *    if (receivedEvent && !(receivedEvent instanceof Error)) {
-   *      receivedEvent.msg == "eventName";
-   *      // ...
-   *    }
+   *    let receivedEvent = yield promiseEvent;
    *
-   * @param {Element} subject - The element that should receive the event.
-   * @param {string} eventName - The event to wait for.
-   * @param {number} timeoutMs - The number of miliseconds to wait before giving up.
-   * @param {Element} target - Expected target of the event.
-   * @returns {Promise} A Promise that resolves to the received event, or
-   *                    rejects with an Error.
+   * @param {Element} subject
+   *        The element that should receive the event.
+   * @param {string} eventName
+   *        Name of the event to listen to.
+   * @param {function} checkFn [optional]
+   *        Called with the Event object as argument, should return true if the
+   *        event is the expected one, or false if it should be ignored and
+   *        listening should continue. If not specified, the first event with
+   *        the specified name resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next event, since this is probably a bug in the test.
+   *
+   * @returns {Promise}
+   * @resolves The Event object.
    */
-  waitForEvent(subject, eventName, timeoutMs, target) {
+  waitForEvent(subject, eventName, checkFn) {
     return new Promise((resolve, reject) => {
-      function listener(event) {
-        if (target && target !== event.target) {
-          return;
+      subject.addEventListener(eventName, function listener(event) {
+        try {
+          if (checkFn && !checkFn(event)) {
+            return;
+          }
+          subject.removeEventListener(eventName, listener);
+          resolve(event);
+        } catch (ex) {
+          try {
+            subject.removeEventListener(eventName, listener);
+          } catch (ex2) {
+            // Maybe the provided object does not support removeEventListener.
+          }
+          reject(ex);
         }
-
-        subject.removeEventListener(eventName, listener);
-        clearTimeout(timerID);
-        resolve(event);
-      }
-
-      timeoutMs = timeoutMs || DEFAULT_WAIT;
-      let stack = new Error().stack;
-
-      let timerID = setTimeout(() => {
-        subject.removeEventListener(eventName, listener);
-        reject(new Error(`${eventName} event timeout at ${stack}`));
-      }, timeoutMs);
-
-
-      subject.addEventListener(eventName, listener);
+      });
     });
   },
 };
