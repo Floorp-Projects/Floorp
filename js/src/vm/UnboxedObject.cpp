@@ -943,7 +943,6 @@ const Class UnboxedPlainObject::class_ = {
     nullptr,        /* enumerate   */
     nullptr,        /* resolve     */
     nullptr,        /* mayResolve  */
-    nullptr,        /* convert     */
     nullptr,        /* finalize    */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
@@ -1629,7 +1628,6 @@ const Class UnboxedArrayObject::class_ = {
     nullptr,        /* enumerate   */
     nullptr,        /* resolve     */
     nullptr,        /* mayResolve  */
-    nullptr,        /* convert     */
     UnboxedArrayObject::finalize,
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
