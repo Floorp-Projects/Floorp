@@ -1313,7 +1313,7 @@ class AutoEnterIteration {
     GCRuntime *gc;
 
   public:
-    AutoEnterIteration(GCRuntime *gc_) : gc(gc_) {
+    explicit AutoEnterIteration(GCRuntime *gc_) : gc(gc_) {
         ++gc->numActiveZoneIters;
     }
 
