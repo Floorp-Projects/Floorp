@@ -91,57 +91,54 @@ var testData = [
    new keywordResult(null, null, true)]
 ];
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* test_getshortcutoruri() {
+  yield setupKeywords();
 
-  setupKeywords();
+  for (let item of testData) {
+    let [data, result] = item;
 
-  Task.spawn(function() {
-    for each (var item in testData) {
-      let [data, result] = item;
+    let query = data.keyword;
+    if (data.searchWord)
+      query += " " + data.searchWord;
+    let returnedData = yield new Promise(
+      resolve => getShortcutOrURIAndPostData(query, resolve));
+    // null result.url means we should expect the same query we sent in
+    let expected = result.url || query;
+    is(returnedData.url, expected, "got correct URL for " + data.keyword);
+    is(getPostDataString(returnedData.postData), result.postData, "got correct postData for " + data.keyword);
+    is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
+  }
 
-      let query = data.keyword;
-      if (data.searchWord)
-        query += " " + data.searchWord;
-      let returnedData = yield new Promise(
-        resolve => getShortcutOrURIAndPostData(query, resolve));
-      // null result.url means we should expect the same query we sent in
-      let expected = result.url || query;
-      is(returnedData.url, expected, "got correct URL for " + data.keyword);
-      is(getPostDataString(returnedData.postData), result.postData, "got correct postData for " + data.keyword);
-      is(returnedData.mayInheritPrincipal, !result.isUnsafe, "got correct mayInheritPrincipal for " + data.keyword);
-    }
-    cleanupKeywords();
-  }).then(finish);
-}
+  yield cleanupKeywords();
+});
 
-var gBMFolder = null;
-var gAddedEngines = [];
-function setupKeywords() {
-  gBMFolder = Application.bookmarks.menu.addFolder("keyword-test");
-  for each (var item in testData) {
-    var data = item[0];
+let folder = null;
+let gAddedEngines = [];
+
+function* setupKeywords() {
+  folder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                                                title: "keyword-test" });
+  for (let item of testData) {
+    let data = item[0];
     if (data instanceof bmKeywordData) {
-      var bm = gBMFolder.addBookmark(data.keyword, data.uri);
-      bm.keyword = data.keyword;
-      if (data.postData)
-        bm.annotations.set("bookmarkProperties/POSTData", data.postData, Ci.nsIAnnotationService.EXPIRE_SESSION);
+      yield PlacesUtils.bookmarks.insert({ url: data.uri, parentGuid: folder.guid });
+      yield PlacesUtils.keywords.insert({ keyword: data.keyword, url: data.uri.spec, postData: data.postData });
     }
 
     if (data instanceof searchKeywordData) {
       Services.search.addEngineWithDetails(data.keyword, "", data.keyword, "", data.method, data.uri.spec);
-      var addedEngine = Services.search.getEngineByName(data.keyword);
+      let addedEngine = Services.search.getEngineByName(data.keyword);
       if (data.postData) {
-        var [paramName, paramValue] = data.postData.split("=");
+        let [paramName, paramValue] = data.postData.split("=");
         addedEngine.addParam(paramName, paramValue, null);
       }
-
       gAddedEngines.push(addedEngine);
     }
   }
 }
 
-function cleanupKeywords() {
-  gBMFolder.remove();
+function* cleanupKeywords() {
+  PlacesUtils.bookmarks.remove(folder);
   gAddedEngines.map(Services.search.removeEngine);
 }

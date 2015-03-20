@@ -38,11 +38,9 @@ do_register_cleanup(function () {
 
 function simulatePlacesInit() {
   do_print("Simulate Places init");
-  let promise = waitForImportAndSmartBookmarks();
-
   // Force nsBrowserGlue::_initPlaces().
   bg.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_FORCE_PLACES_INIT);
-  return promise;
+  return promiseTopicObserved("places-browser-init-complete");
 }
 
 add_task(function* test_checkPreferences() {
