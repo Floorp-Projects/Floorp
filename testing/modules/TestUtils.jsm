@@ -49,15 +49,13 @@ this.TestUtils = {
     return new Promise((resolve, reject) => {
       Services.obs.addObserver(function observer(subject, topic, data) {
         try {
-          try {
-            if (checkFn && !checkFn(subject, data)) {
-              return;
-            }
-          } finally {
-            Services.obs.removeObserver(observer, topic);
+          if (checkFn && !checkFn(subject, data)) {
+            return;
           }
+          Services.obs.removeObserver(observer, topic);
           resolve([subject, data]);
         } catch (ex) {
+          Services.obs.removeObserver(observer, topic);
           reject(ex);
         }
       }, topic, false);
