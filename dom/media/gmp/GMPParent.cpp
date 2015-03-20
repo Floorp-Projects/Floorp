@@ -1003,6 +1003,12 @@ GMPParent::SetNodeId(const nsACString& aNodeId)
 }
 
 const nsCString&
+GMPParent::GetDisplayName() const
+{
+  return mDisplayName;
+}
+
+const nsCString&
 GMPParent::GetVersion() const
 {
   return mVersion;
