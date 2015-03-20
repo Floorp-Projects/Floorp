@@ -182,6 +182,18 @@ GMPVideoDecoderParent::Drain()
   return NS_OK;
 }
 
+const nsCString&
+GMPVideoDecoderParent::GetDisplayName() const
+{
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video decoder");
+  }
+
+  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+
+  return mPlugin->GetDisplayName();
+}
+
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
 nsresult
 GMPVideoDecoderParent::Shutdown()
