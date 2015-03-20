@@ -19,6 +19,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 
@@ -29,13 +30,52 @@ Cc["@mozilla.org/globalmessagemanager;1"]
 
 this.BrowserTestUtils = {
   /**
+   * Loads a page in a new tab, executes a Task and closes the tab.
+   *
+   * @param options
+   *        An object with the following properties:
+   *        {
+   *          gBrowser:
+   *            Reference to the "tabbrowser" element where the new tab should
+   *            be opened.
+   *          url:
+   *            String with the URL of the page to load.
+   *        }
+   * @param taskFn
+   *        Generator function representing a Task that will be executed while
+   *        the tab is loaded. The first argument passed to the function is a
+   *        reference to the browser object for the new tab.
+   *
+   * @return {Promise}
+   * @resolves When the tab has been closed.
+   * @rejects Any exception from taskFn is propagated.
+   */
+  withNewTab: Task.async(function* (options, taskFn) {
+    let tab = options.gBrowser.addTab(options.url);
+    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    options.gBrowser.selectedTab = tab;
+
+    yield taskFn(tab.linkedBrowser);
+
+    options.gBrowser.removeTab(tab);
+  }),
+
+  /**
+   * Waits for an ongoing page load in a browser window to complete.
+   *
+   * This can be used in conjunction with any synchronous method for starting a
+   * load, like the "addTab" method on "tabbrowser", and must be called before
+   * yielding control to the event loop. This is guaranteed to work because the
+   * way we're listening for the load is in the content-utils.js frame script,
+   * and then sending an async message up, so we can't miss the message.
+   *
    * @param {xul:browser} browser
    *        A xul:browser.
    * @param {Boolean} includeSubFrames
    *        A boolean indicating if loads from subframes should be included.
+   *
    * @return {Promise}
-   *         A Promise which resolves when a load event is triggered
-   *         for browser.
+   * @resolves When a load event is triggered for the browser.
    */
   browserLoaded(browser, includeSubFrames=false) {
     return new Promise(resolve => {
