@@ -2959,6 +2959,7 @@ Rebase(JSScript *dst, JSScript *src, T *srcp)
 
 JSScript *
 js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src,
+                PollutedGlobalScopeOption polluted /* = HasCleanGlobalScope */,
                 NewObjectKind newKind /* = GenericObject */)
 {
     /* NB: Keep this in sync with XDRScript. */
@@ -3082,7 +3083,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     CompileOptions options(cx);
     options.setMutedErrors(src->mutedErrors())
            .setCompileAndGo(src->compileAndGo())
-           .setHasPollutedScope(src->hasPollutedGlobalScope())
+           .setHasPollutedScope(src->hasPollutedGlobalScope() ||
+                                polluted == HasPollutedGlobalScope)
            .setSelfHostingMode(src->selfHosted())
            .setNoScriptRval(src->noScriptRval())
            .setVersion(src->getVersion());
@@ -3153,12 +3155,29 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     if (nblockscopes != 0)
         dst->blockScopes()->vector = Rebase<BlockScopeNote>(dst, src, src->blockScopes()->vector);
 
+    /*
+     * Function delazification assumes that their script does not have a
+     * polluted global scope.  We ensure that as follows:
+     *
+     * 1) Initial parsing only creates lazy functions if
+     *    !hasPollutedGlobalScope.
+     * 2) Cloning a lazy function into a non-global scope will always require
+     *    that its script be cloned.  See comments in
+     *    CloneFunctionObjectUseSameScript.
+     * 3) Cloning a script never sets a lazyScript on the clone, so the function
+     *    cannot be relazified.
+     *
+     * If you decide that lazy functions should be supported with a polluted
+     * global scope, make sure delazification can deal.
+     */
+    MOZ_ASSERT_IF(dst->hasPollutedGlobalScope(), !dst->maybeLazyScript());
+    MOZ_ASSERT_IF(dst->hasPollutedGlobalScope(), !dst->isRelazifiable());
     return dst;
 }
 
 bool
 js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
-                        NewObjectKind newKind /* = GenericObject */)
+                        PollutedGlobalScopeOption polluted, NewObjectKind newKind)
 {
     MOZ_ASSERT(clone->isInterpreted());
 
@@ -3180,7 +3199,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
 
     clone->mutableScript().init(nullptr);
 
-    JSScript *cscript = CloneScript(cx, scope, clone, script, newKind);
+    JSScript *cscript = CloneScript(cx, scope, clone, script, polluted, newKind);
     if (!cscript)
         return false;
 
