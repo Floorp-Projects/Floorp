@@ -321,7 +321,6 @@ const Class SharedArrayBufferObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     SharedArrayBufferObject::Finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */

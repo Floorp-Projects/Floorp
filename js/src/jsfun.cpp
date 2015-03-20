@@ -821,7 +821,6 @@ const Class JSFunction::class_ = {
     fun_enumerate,
     fun_resolve,
     fun_mayResolve,
-    nullptr,                 /* convert     */
     nullptr,                 /* finalize    */
     nullptr,                 /* call        */
     fun_hasInstance,

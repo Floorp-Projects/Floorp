@@ -23542,7 +23542,6 @@ const JSClass NormalJSRuntime::kGlobalClass = {
   /* enumerate */ nullptr,
   /* resolve */ nullptr,
   /* mayResolve */ nullptr,
-  /* convert */ nullptr,
   /* finalize */ nullptr,
   /* call */ nullptr,
   /* hasInstance */ nullptr,

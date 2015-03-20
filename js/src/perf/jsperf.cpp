@@ -163,7 +163,7 @@ static void pm_finalize(JSFreeOp* fop, JSObject* obj);
 
 static const JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, pm_finalize
 };
 
