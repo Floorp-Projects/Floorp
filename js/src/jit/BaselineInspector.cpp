@@ -116,14 +116,16 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode *pc,
         Shape *shape = nullptr;
         ObjectGroup *group = nullptr;
         if (stub->isGetProp_Native()) {
-            shape = stub->toGetProp_Native()->shape();
+            shape = stub->toGetProp_Native()->receiverGuard().ownShape();
         } else if (stub->isSetProp_Native()) {
             shape = stub->toSetProp_Native()->shape();
         } else if (stub->isGetProp_Unboxed()) {
             group = stub->toGetProp_Unboxed()->group();
         } else if (stub->isSetProp_Unboxed()) {
             group = stub->toSetProp_Unboxed()->group();
-        } else {
+        }
+
+        if (!shape && !group) {
             nativeShapes.clear();
             unboxedGroups.clear();
             return true;
@@ -589,12 +591,17 @@ GlobalShapeForGetPropFunction(ICStub *stub)
 static bool
 AddReceiver(BaselineInspector::ShapeVector &nativeShapes,
             BaselineInspector::ObjectGroupVector &unboxedGroups,
-            ReceiverGuard::Token receiver)
+            ReceiverGuard::StackGuard receiver)
 {
-    if (Shape *shape = ReceiverGuard::tokenShape(receiver))
+    if (Shape *shape = receiver.ownShape())
         return VectorAppendNoDuplicate(nativeShapes, shape);
-    ObjectGroup *group = ReceiverGuard::tokenGroup(receiver);
-    return VectorAppendNoDuplicate(unboxedGroups, group);
+
+    // Only unboxed objects with no expandos are handled by the common
+    // getprop/setprop optimizations.
+    if (!receiver.shape)
+        return VectorAppendNoDuplicate(unboxedGroups, receiver.group);
+
+    return false;
 }
 
 static bool
@@ -605,13 +612,7 @@ AddReceiverForGetPropFunction(BaselineInspector::ShapeVector &nativeShapes,
     if (stub->isOwnGetter())
         return true;
 
-    ReceiverGuard::Token token;
-    if (stub->isGetProp_CallScripted())
-        token = stub->toGetProp_CallScripted()->receiverGuard().token();
-    else
-        token = stub->toGetProp_CallNative()->receiverGuard().token();
-
-    return AddReceiver(nativeShapes, unboxedGroups, token);
+    return AddReceiver(nativeShapes, unboxedGroups, stub->receiverGuard());
 }
 
 bool
@@ -690,7 +691,7 @@ BaselineInspector::commonSetPropFunction(jsbytecode *pc, JSObject **holder, Shap
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {
             ICSetPropCallSetter *nstub = static_cast<ICSetPropCallSetter *>(stub);
-            if (!AddReceiver(nativeShapes, unboxedGroups, nstub->guard().token()))
+            if (!AddReceiver(nativeShapes, unboxedGroups, nstub->guard()))
                 return false;
 
             if (!*holder) {
