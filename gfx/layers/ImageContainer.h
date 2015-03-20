@@ -145,9 +145,6 @@ public:
 
   int32_t GetSerial() { return mSerial; }
 
-  void MarkSent() { mSent = true; }
-  bool IsSentToCompositor() { return mSent; }
-
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
 
   virtual GrallocImage* AsGrallocImage()
@@ -169,8 +166,7 @@ protected:
   Image(void* aImplData, ImageFormat aFormat) :
     mImplData(aImplData),
     mSerial(++sSerialCounter),
-    mFormat(aFormat),
-    mSent(false)
+    mFormat(aFormat)
   {}
 
   // Protected destructor, to discourage deletion outside of Release():
