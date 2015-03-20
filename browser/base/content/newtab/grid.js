@@ -168,7 +168,8 @@ let gGrid = {
       '       class="newtab-control newtab-control-pin"/>' +
       '<input type="button" title="' + newTabString("block") + '"' +
       '       class="newtab-control newtab-control-block"/>' +
-      '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>';
+      '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>' +
+      '<span class="newtab-suggested"/>';
 
     this._siteFragment = document.createDocumentFragment();
     this._siteFragment.appendChild(site);
@@ -189,7 +190,8 @@ let gGrid = {
     // Save the cell's computed height/width including margin and border
     if (this._cellMargin === undefined) {
       let refCell = document.querySelector(".newtab-cell");
-      this._cellMargin = parseFloat(getComputedStyle(refCell).marginTop) * 2;
+      this._cellMargin = parseFloat(getComputedStyle(refCell).marginTop) +
+        parseFloat(getComputedStyle(refCell).marginBottom);
       this._cellHeight = refCell.offsetHeight + this._cellMargin;
       this._cellWidth = refCell.offsetWidth + this._cellMargin;
     }
