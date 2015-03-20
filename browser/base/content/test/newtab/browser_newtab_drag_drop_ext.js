@@ -35,8 +35,8 @@ function runTests() {
 
   // force the grid to be small enough that a pinned cell could be pushed out
   Services.prefs.setIntPref(PREF_NEWTAB_COLUMNS, 3);
-  yield simulateExternalDrop(7);
-  checkGrid("0,1,2,3,4,5,7p,99p,8p");
+  yield simulateExternalDrop(5);
+  checkGrid("0,1,2,3,4,99p,5,7p,8p");
 
   // drag a new site beneath a pinned cell and make sure the pinned cell is
   // not moved
@@ -46,8 +46,8 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,1,2,3,4,5,6,7,8p");
 
-  yield simulateExternalDrop(7);
-  checkGrid("0,1,2,3,4,5,6,99p,8p");
+  yield simulateExternalDrop(5);
+  checkGrid("0,1,2,3,4,99p,5,6,8p");
 
   // drag a new site onto a block of pinned sites and make sure they're shifted
   // around accordingly
