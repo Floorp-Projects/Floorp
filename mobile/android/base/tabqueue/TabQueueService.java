@@ -6,6 +6,7 @@
 package org.mozilla.gecko.tabqueue;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
@@ -160,8 +161,10 @@ public class TabQueueService extends Service {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                final GeckoProfile profile = GeckoProfile.get(getApplicationContext());
-                TabQueueHelper.queueURL(profile, intentData, filename);
+                Context applicationContext = getApplicationContext();
+                final GeckoProfile profile = GeckoProfile.get(applicationContext);
+                int tabsQueued = TabQueueHelper.queueURL(profile, intentData, filename);
+                TabQueueHelper.showNotification(applicationContext, tabsQueued);
             }
         });
     }
