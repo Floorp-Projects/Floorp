@@ -219,7 +219,7 @@ public:
   // cached when used from JS.
   already_AddRefed<AnimationEffect> GetEffect();
   Element* GetTarget() const {
-    // Currently we only implement Element.getAnimationPlayers() which only
+    // Currently we only implement Element.getAnimations() which only
     // returns animations targetting Elements so this should never
     // be called for an animation that targets a pseudo-element.
     MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
