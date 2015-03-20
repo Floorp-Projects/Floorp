@@ -1644,8 +1644,9 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
         return;
       }
     } else {
-      // We can't clone compile-and-go scripts.
-      options.setCompileAndGo(false);
+      // We're going to run these against some non-global scope.
+      options.setCompileAndGo(false)
+             .setHasPollutedScope(true);
       if (!JS::Compile(cx, options, srcBuf, &script)) {
         return;
       }
