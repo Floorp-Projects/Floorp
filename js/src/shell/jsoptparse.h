@@ -193,7 +193,8 @@ class OptionParser
         Okay = 0,
         Fail,       /* As in, allocation fail. */
         ParseError, /* Successfully parsed but with an error. */
-        ParseHelp   /* Aborted on help flag. */
+        EarlyExit   /* Successfully parsed but exits the program,
+                     * for example with --help and --version. */
     };
 
   private:
@@ -204,8 +205,9 @@ class OptionParser
     Options     options;
     Options     arguments;
     BoolOption  helpOption;
+    BoolOption  versionOption;
     const char  *usage;
-    const char  *ver;
+    const char  *version;
     const char  *descr;
     size_t      descrWidth;
     size_t      helpWidth;
@@ -234,7 +236,8 @@ class OptionParser
   public:
     explicit OptionParser(const char *usage)
       : helpOption('h', "help", "Display help information"),
-        usage(usage), ver(nullptr), descr(nullptr), descrWidth(80), helpWidth(80),
+        versionOption('v', "version", "Display version information and exit"),
+        usage(usage), version(nullptr), descr(nullptr), descrWidth(80), helpWidth(80),
         nextArgument(0), restArgument(-1)
     {}
 
@@ -242,10 +245,11 @@ class OptionParser
 
     Result parseArgs(int argc, char **argv);
     Result printHelp(const char *progname);
+    Result printVersion();
 
     /* Metadata */
 
-    void setVersion(const char *version) { ver = version; }
+    void setVersion(const char *v) { version = v; }
     void setHelpWidth(size_t width) { helpWidth = width; }
     void setDescriptionWidth(size_t width) { descrWidth = width; }
     void setDescription(const char *description) { descr = description; }
