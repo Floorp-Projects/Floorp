@@ -3695,11 +3695,19 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         // that reflow the same as its final (post-flexing/stretching) size?
         if (finalFlexedPhysicalSize ==
             item->Frame()->GetContentRectRelativeToSelf().Size()) {
-          // It has the correct size --> no need to reflow! Just make sure it's
-          // at the right position.
-          itemNeedsReflow = false;
-          MoveFlexItemToFinalPosition(aReflowState, *item, framePos,
-                                      containerWidth);
+          // Even if our size hasn't changed, some of our descendants might
+          // care that our height is now considered "definite" (whereas it
+          // wasn't in our previous "measuring" reflow), if they have a
+          // relative height.
+          if (!(item->Frame()->GetStateBits() &
+                NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
+            // Item has the correct size (and its children don't care that
+            // it's now "definite"). Let's just make sure it's at the right
+            // position.
+            itemNeedsReflow = false;
+            MoveFlexItemToFinalPosition(aReflowState, *item, framePos,
+                                        containerWidth);
+          }
         }
       }
       if (itemNeedsReflow) {
