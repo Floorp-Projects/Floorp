@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/PCacheStreamControlChild.h"
+#include "mozilla/dom/cache/StreamControl.h"
 #include "nsTObserverArray.h"
 
 namespace mozilla {
@@ -18,28 +19,41 @@ namespace cache {
 class ReadStream;
 
 class CacheStreamControlChild MOZ_FINAL : public PCacheStreamControlChild
+                                        , public StreamControl
                                         , public ActorChild
 {
 public:
   CacheStreamControlChild();
   ~CacheStreamControlChild();
 
-  void AddListener(ReadStream* aListener);
-  void RemoveListener(ReadStream* aListener);
-
-  void NoteClosed(const nsID& aId);
-
   // ActorChild methods
   virtual void StartDestroy() MOZ_OVERRIDE;
 
+  // StreamControl methods
+  virtual void
+  SerializeControl(PCacheReadStream* aReadStreamOut) MOZ_OVERRIDE;
+
+  virtual void
+  SerializeFds(PCacheReadStream* aReadStreamOut,
+               const nsTArray<mozilla::ipc::FileDescriptor>& aFds) MOZ_OVERRIDE;
+
+  virtual void
+  DeserializeFds(const PCacheReadStream& aReadStream,
+                 nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) MOZ_OVERRIDE;
+
 private:
+  virtual void
+  NoteClosedAfterForget(const nsID& aId) MOZ_OVERRIDE;
+
+#ifdef DEBUG
+  virtual void
+  AssertOwningThread() MOZ_OVERRIDE;
+#endif
+
   // PCacheStreamControlChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
   virtual bool RecvClose(const nsID& aId) MOZ_OVERRIDE;
   virtual bool RecvCloseAll() MOZ_OVERRIDE;
-
-  typedef nsTObserverArray<ReadStream*> ReadStreamList;
-  ReadStreamList mListeners;
 
   bool mDestroyStarted;
 
