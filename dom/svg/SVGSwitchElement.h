@@ -26,7 +26,7 @@ protected:
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGSwitchElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   ~SVGSwitchElement();
-  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 public:
   nsIContent * GetActiveChild() const

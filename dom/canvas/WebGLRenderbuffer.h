@@ -64,7 +64,7 @@ public:
     // Only handles a subset of `pname`s.
     GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
 
-    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)

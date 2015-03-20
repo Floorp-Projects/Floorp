@@ -59,7 +59,7 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 protected:
   virtual ~HTMLPropertiesCollection();
 
@@ -155,7 +155,7 @@ public:
   PropertyNodeList(HTMLPropertiesCollection* aCollection,
                    nsIContent* aRoot, const nsAString& aName);
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   void SetDocument(nsIDocument* aDocument);
 

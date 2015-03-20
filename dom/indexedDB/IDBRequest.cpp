@@ -296,9 +296,9 @@ IDBRequest::SetSource(IDBCursor* aSource)
 }
 
 JSObject*
-IDBRequest::WrapObject(JSContext* aCx)
+IDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return IDBRequestBinding::Wrap(aCx, this);
+  return IDBRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -572,11 +572,11 @@ IDBOpenDBRequest::PostHandleEvent(EventChainPostVisitor& aVisitor)
 }
 
 JSObject*
-IDBOpenDBRequest::WrapObject(JSContext* aCx)
+IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   AssertIsOnOwningThread();
 
-  return IDBOpenDBRequestBinding::Wrap(aCx, this);
+  return IDBOpenDBRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool

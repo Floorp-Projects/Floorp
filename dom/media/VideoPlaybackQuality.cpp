@@ -34,9 +34,9 @@ VideoPlaybackQuality::GetParentObject() const
 }
 
 JSObject*
-VideoPlaybackQuality::WrapObject(JSContext *aCx)
+VideoPlaybackQuality::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return VideoPlaybackQualityBinding::Wrap(aCx, this);
+  return VideoPlaybackQualityBinding::Wrap(aCx, this, aGivenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VideoPlaybackQuality, AddRef)

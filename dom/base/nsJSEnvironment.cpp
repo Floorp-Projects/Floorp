@@ -2473,7 +2473,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
       if (!key->ReadStructuredClone(reader)) {
         result = nullptr;
       } else {
-        result = key->WrapObject(cx);
+        result = key->WrapObject(cx, JS::NullPtr());
       }
     }
     return result;
@@ -2529,7 +2529,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     {
       nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
       result = ndefRecord->ReadStructuredClone(cx, reader) ?
-               ndefRecord->WrapObject(cx) : nullptr;
+               ndefRecord->WrapObject(cx, JS::NullPtr()) : nullptr;
     }
     return result;
 #else

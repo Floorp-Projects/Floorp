@@ -4,6 +4,7 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
+#include <math.h>
 #include <poll.h>
 #include <pthread.h>
 #include <sndio.h>
@@ -49,9 +50,16 @@ float_to_s16(void *ptr, long nsamp)
 {
   int16_t *dst = ptr;
   float *src = ptr;
+  int s;
 
-  while (nsamp-- > 0)
-    *(dst++) = *(src++) * 32767;
+  while (nsamp-- > 0) {
+    s = lrintf(*(src++) * 32768);
+    if (s < -32768)
+      s = -32768;
+    else if (s > 32767)
+      s = 32767;
+    *(dst++) = s;
+  }
 }
 
 static void

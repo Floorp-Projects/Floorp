@@ -28,9 +28,9 @@ ListBoxObject::~ListBoxObject()
 {
 }
 
-JSObject* ListBoxObject::WrapObject(JSContext* aCx)
+JSObject* ListBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return ListBoxObjectBinding::Wrap(aCx, this);
+  return ListBoxObjectBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIListBoxObject

@@ -215,7 +215,7 @@ public:
 protected:
   virtual ~HTMLCanvasElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   nsIntSize GetWidthHeight();
 
@@ -279,7 +279,7 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(HTMLCanvasPrintState)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(HTMLCanvasPrintState)
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   HTMLCanvasElement* GetParentObject()
   {

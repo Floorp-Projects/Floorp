@@ -18,7 +18,7 @@ class SVGGElement MOZ_FINAL : public SVGGraphicsElement
 {
 protected:
   explicit SVGGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGGElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 

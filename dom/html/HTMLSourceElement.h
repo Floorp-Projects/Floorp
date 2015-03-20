@@ -99,7 +99,7 @@ public:
 protected:
   virtual ~HTMLSourceElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
 protected:
   virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;

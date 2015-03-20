@@ -102,9 +102,9 @@ CellBroadcastMessage::CellBroadcastMessage(nsPIDOMWindow* aWindow,
 }
 
 JSObject*
-CellBroadcastMessage::WrapObject(JSContext* aCx)
+CellBroadcastMessage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozCellBroadcastMessageBinding::Wrap(aCx, this);
+  return MozCellBroadcastMessageBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<CellBroadcastEtwsInfo>
@@ -144,9 +144,9 @@ CellBroadcastEtwsInfo::CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
 }
 
 JSObject*
-CellBroadcastEtwsInfo::WrapObject(JSContext* aCx)
+CellBroadcastEtwsInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozCellBroadcastEtwsInfoBinding::Wrap(aCx, this);
+  return MozCellBroadcastEtwsInfoBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom

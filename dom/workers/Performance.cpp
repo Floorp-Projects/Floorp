@@ -26,9 +26,9 @@ Performance::~Performance()
 }
 
 JSObject*
-Performance::WrapObject(JSContext* aCx)
+Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return PerformanceBinding_workers::Wrap(aCx, this);
+  return PerformanceBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 double

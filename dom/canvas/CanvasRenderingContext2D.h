@@ -69,7 +69,7 @@ typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
 public:
   CanvasRenderingContext2D();
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
 
   HTMLCanvasElement* GetCanvas() const
   {

@@ -85,9 +85,9 @@ TVTuner::Init(nsITVTunerData* aData)
 }
 
 /* virtual */ JSObject*
-TVTuner::WrapObject(JSContext* aCx)
+TVTuner::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return TVTunerBinding::Wrap(aCx, this);
+  return TVTunerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsresult
