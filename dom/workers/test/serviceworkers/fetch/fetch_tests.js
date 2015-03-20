@@ -27,6 +27,12 @@ fetch('synthesized.txt', function(xhr) {
   finish();
 });
 
+fetch('test-respondwith-response.txt', function(xhr) {
+  my_ok(xhr.status == 200, "test-respondwith-response load should be successful");
+  my_ok(xhr.responseText == "test-respondwith-response response body", "load should have response");
+  finish();
+});
+
 fetch('synthesized-404.txt', function(xhr) {
   my_ok(xhr.status == 404, "load should 404");
   my_ok(xhr.responseText == "synthesized response body", "404 load should have synthesized response");
