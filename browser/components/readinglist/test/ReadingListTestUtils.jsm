@@ -84,7 +84,13 @@ SidebarUtils.prototype = {
                       "Node should have correct title attribute");
     this.Assert.equal(node.querySelector(".item-title").textContent, item.title,
                       "Node's title element's text should match item title");
-    this.Assert.equal(node.querySelector(".item-domain").textContent, item.domain,
+
+    let domain = item.uri.spec;
+    try {
+      domain = item.uri.host;
+    }
+    catch (err) {}
+    this.Assert.equal(node.querySelector(".item-domain").textContent, domain,
                       "Node's domain element's text should match item title");
   },
 
