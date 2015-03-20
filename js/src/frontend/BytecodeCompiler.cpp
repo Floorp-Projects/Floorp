@@ -283,7 +283,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         return nullptr;
 
     Directives directives(options.strictOption);
-    GlobalSharedContext globalsc(cx, scopeChain, directives, options.extraWarningsOption);
+    GlobalSharedContext globalsc(cx, directives, options.extraWarningsOption);
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
     Rooted<JSScript*> script(cx, JSScript::Create(cx, evalStaticScope, savedCallerFun,
