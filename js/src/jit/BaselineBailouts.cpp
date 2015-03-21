@@ -483,8 +483,16 @@ HasLiveIteratorAtStackDepth(JSScript *script, jsbytecode *pc, uint32_t stackDept
         if (pcOffset >= tn->start + tn->length)
             continue;
 
+        // For-in loops have only the iterator on stack.
         if (tn->kind == JSTRY_ITER && stackDepth == tn->stackDepth)
             return true;
+
+        // For-of loops have both the iterator and the result on stack.
+        if (tn->kind == JSTRY_FOR_OF &&
+            (stackDepth == tn->stackDepth || stackDepth == tn->stackDepth - 1))
+        {
+            return true;
+        }
     }
 
     return false;
