@@ -1770,7 +1770,7 @@ GCMarker::delayMarkingChildren(const void *thing)
 inline void
 ArenaLists::prepareForIncrementalGC(JSRuntime *rt)
 {
-    for (ALL_ALLOC_KINDS(i)) {
+    for (auto i : AllAllocKinds()) {
         FreeList *freeList = &freeLists[i];
         if (!freeList->isEmpty()) {
             ArenaHeader *aheader = freeList->arenaHeader();
@@ -2088,7 +2088,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
     checkEmptyFreeLists();
 
     if (ShouldRelocateAllArenas(reason)) {
-        for (ALL_ALLOC_KINDS(i)) {
+        for (auto i : AllAllocKinds()) {
             if (CanRelocateAllocKind(i)) {
                 ArenaList &al = arenaLists[i];
                 ArenaHeader *allArenas = al.head();
@@ -2101,7 +2101,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
         size_t relocCount = 0;
         AllAllocKindArray<ArenaHeader **> toRelocate;
 
-        for (ALL_ALLOC_KINDS(i)) {
+        for (auto i : AllAllocKinds()) {
             toRelocate[i] = nullptr;
             if (CanRelocateAllocKind(i))
                 toRelocate[i] = arenaLists[i].pickArenasToRelocate(arenaCount, relocCount);
@@ -2110,7 +2110,7 @@ ArenaLists::relocateArenas(ArenaHeader *&relocatedListOut, JS::gcreason::Reason 
         if (!ShouldRelocateZone(arenaCount, relocCount, reason))
             return false;
 
-        for (ALL_ALLOC_KINDS(i)) {
+        for (auto i : AllAllocKinds()) {
             if (toRelocate[i]) {
                 ArenaList &al = arenaLists[i];
                 ArenaHeader *arenas = al.removeRemainingArenas(toRelocate[i]);
@@ -2145,7 +2145,7 @@ GCRuntime::relocateArenas(Zone *zone, JS::gcreason::Reason reason, SliceBudget &
 #ifdef DEBUG
     // Check that we did as much compaction as we should have. There
     // should always be less than one arena's worth of free cells.
-    for (ALL_ALLOC_KINDS(i)) {
+    for (auto i : AllAllocKinds()) {
         size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(i));
         if (CanRelocateAllocKind(i)) {
             ArenaList &al = zone->arenas.arenaLists[i];
@@ -2688,7 +2688,7 @@ ArenaLists::~ArenaLists()
 {
     AutoLockGC lock(runtime_);
 
-    for (ALL_ALLOC_KINDS(i)) {
+    for (auto i : AllAllocKinds()) {
         /*
          * We can only call this during the shutdown after the last GC when
          * the background finalization is disabled.
@@ -2698,7 +2698,7 @@ ArenaLists::~ArenaLists()
     }
     ReleaseArenaList(runtime_, incrementalSweptArenas.head(), lock);
 
-    for (OBJECT_ALLOC_KINDS(i))
+    for (auto i : ObjectAllocKinds())
         ReleaseArenaList(runtime_, savedObjectArenas[i].head(), lock);
     ReleaseArenaList(runtime_, savedEmptyObjectArenas, lock);
 }
@@ -2840,8 +2840,9 @@ ArenaLists::queueForegroundObjectsForSweep(FreeOp *fop)
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_OBJECT);
 
 #ifdef DEBUG
-    for (OBJECT_ALLOC_KINDS(i))
+    for (auto i : ObjectAllocKinds()) { // Braces needed to appease MSVC 2013.
         MOZ_ASSERT(savedObjectArenas[i].isEmpty());
+    }
     MOZ_ASSERT(savedEmptyObjectArenas == nullptr);
 #endif
 
@@ -3234,7 +3235,7 @@ GCRuntime::assertBackgroundSweepingFinished()
 #ifdef DEBUG
     MOZ_ASSERT(backgroundSweepZones.isEmpty());
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        for (ALL_ALLOC_KINDS(i)) {
+        for (auto i : AllAllocKinds()) {
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep[i]);
             MOZ_ASSERT(zone->arenas.doneBackgroundFinalize(i));
         }
@@ -3706,7 +3707,7 @@ GCRuntime::checkForCompartmentMismatches()
     CompartmentCheckTracer trc(rt, CheckCompartmentCallback);
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         trc.zone = zone;
-        for (ALL_ALLOC_KINDS(thingKind)) {
+        for (auto thingKind : AllAllocKinds()) {
             for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(thingKind);
@@ -3735,8 +3736,11 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
         /* Assert that zone state is as we expect */
         MOZ_ASSERT(!zone->isCollecting());
         MOZ_ASSERT(!zone->compartments.empty());
-        for (ALL_ALLOC_KINDS(i))
+#ifdef DEBUG
+        for (auto i : AllAllocKinds()) { // Braces needed to appease MSVC 2013.
             MOZ_ASSERT(!zone->arenas.arenaListsToSweep[i]);
+        }
+#endif
 
         /* Set up which zones will be collected. */
         if (zone->isGCScheduled()) {
@@ -5295,7 +5299,7 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
 
 #ifdef DEBUG
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        for (ALL_ALLOC_KINDS(i)) {
+        for (auto i : AllAllocKinds()) {
             MOZ_ASSERT_IF(!IsBackgroundFinalized(i) ||
                           !sweepOnBackgroundThread,
                           !zone->arenas.arenaListsToSweep[i]);
@@ -6470,7 +6474,7 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 
     // Fixup zone pointers in source's zone to refer to target's zone.
 
-    for (ALL_ALLOC_KINDS(thingKind)) {
+    for (auto thingKind : AllAllocKinds()) {
         for (ArenaIter aiter(source->zone(), thingKind); !aiter.done(); aiter.next()) {
             ArenaHeader *aheader = aiter.get();
             aheader->zone = target->zone();
@@ -6666,7 +6670,7 @@ ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
 
     fromArenaLists->purge();
 
-    for (ALL_ALLOC_KINDS(thingKind)) {
+    for (auto thingKind : AllAllocKinds()) {
         // When we enter a parallel section, we join the background
         // thread, and we do not run GC while in the parallel section,
         // so no finalizer should be active!
