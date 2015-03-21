@@ -58,6 +58,11 @@ let ReadingListUI = {
     for (let msg of this.MESSAGES) {
       mm.removeMessageListener(msg, this);
     }
+
+    if (this.listenerRegistered) {
+      ReadingList.removeListener(this);
+      this.listenerRegistered = false;
+    }
   },
 
   /**
@@ -91,7 +96,7 @@ let ReadingListUI = {
         // This is safe to call if we're not currently registered, but we don't
         // want to forcibly load the normally lazy-loaded module on startup.
         ReadingList.removeListener(this);
-        this.listenerRegistered = true;
+        this.listenerRegistered = false;
       }
 
       this.hideSidebar();
@@ -251,6 +256,12 @@ let ReadingListUI = {
     }
 
     let isInList = yield ReadingList.hasItemForURL(uri);
+
+    if (window.closed) {
+      // Skip updating the UI if the window was closed since our hasItemForURL call.
+      return;
+    }
+
     if (this.isSidebarOpen) {
       if (isInList)
         msg.url = typeof uri == "string" ? uri : uri.spec;
