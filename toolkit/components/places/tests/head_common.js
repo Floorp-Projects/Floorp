@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 26;
+const CURRENT_SCHEMA_VERSION = 27;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
@@ -850,4 +850,18 @@ function checkBookmarkObject(info) {
   Assert.ok(info.lastModified.constructor.name == "Date", "lastModified should be a Date");
   Assert.ok(info.lastModified >= info.dateAdded, "lastModified should never be smaller than dateAdded");
   Assert.ok(typeof info.type == "number", "type should be a number");
+}
+
+/**
+ * Reads foreign_count value for a given url.
+ */
+function* foreign_count(url) {
+  if (url instanceof Ci.nsIURI)
+    url = url.spec;
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(
+    `SELECT foreign_count FROM moz_places
+     WHERE url = :url
+    `, { url });
+  return rows.length == 0 ? 0 : rows[0].getResultByName("foreign_count");
 }

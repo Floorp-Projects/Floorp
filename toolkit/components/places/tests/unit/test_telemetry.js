@@ -32,7 +32,7 @@ function run_test()
 add_task(function test_execute()
 {
   // Put some trash in the database.
-  const URI = NetUtil.newURI("http://moz.org/");
+  let uri = NetUtil.newURI("http://moz.org/");
 
   let folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
                                                     "moz test",
@@ -64,7 +64,7 @@ add_task(function test_execute()
   // Test expiration probes.
   for (let i = 0; i < 2; i++) {
     yield PlacesTestUtils.addVisits({
-      uri: uri("http://" +  i + ".moz.org/"),
+      uri: NetUtil.newURI("http://" +  i + ".moz.org/"),
       visitDate: Date.now() // [sic]
     });
   }

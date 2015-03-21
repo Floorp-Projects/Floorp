@@ -2527,7 +2527,13 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   }
 }
 
-%include ../shared/readinglist.inc.css
+%include ../shared/readinglist/readinglist.inc.css
+
+#readinglist-addremove-button {
+  padding: 3px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 1px;
+}
 
 /* Reader mode button */
 

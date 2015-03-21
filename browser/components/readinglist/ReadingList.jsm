@@ -42,6 +42,7 @@ const ITEM_BASIC_PROPERTY_NAMES = `
   resolvedURL
   resolvedTitle
   excerpt
+  preview
   status
   favorite
   isArticle
@@ -289,24 +290,22 @@ ReadingListImpl.prototype = {
    /**
    * Add to the ReadingList the page that is loaded in a given browser.
    *
-   * @param {<xul:browser>} browser - Browser element for the document.
+   * @param {<xul:browser>} browser - Browser element for the document,
+   * used to get metadata about the article.
+   * @param {nsIURI/string} url - url to add to the reading list.
    * @return {Promise} Promise that is fullfilled with the added item.
    */
-  addItemFromBrowser: Task.async(function* (browser) {
+  addItemFromBrowser: Task.async(function* (browser, url) {
     let metadata = yield getMetadataFromBrowser(browser);
     let itemData = {
-      url: browser.currentURI,
+      url: url,
       title: metadata.title,
       resolvedURL: metadata.url,
       excerpt: metadata.description,
     };
 
-    if (metadata.description) {
-      itemData.exerpt = metadata.description;
-    }
-
     if (metadata.previews.length > 0) {
-      itemData.image = metadata.previews[0];
+      itemData.preview = metadata.previews[0];
     }
 
     let item = yield ReadingList.addItem(itemData);
@@ -714,6 +713,14 @@ ReadingListItem.prototype = {
   },
 
   /**
+   * The URL to a preview image.
+   * @type string
+   */
+   get preview() {
+     return this._properties.preview;
+   },
+
+  /**
    * Sets the given properties of the item, optionally calling list.updateItem().
    *
    * @param props A simple object containing the properties to set.
@@ -916,7 +923,7 @@ function getMetadataFromBrowser(browser) {
 Object.defineProperty(this, "ReadingList", {
   get() {
     if (!this._singleton) {
-      let store = new SQLiteStore("reading-list-temp.sqlite");
+      let store = new SQLiteStore("reading-list-temp2.sqlite");
       this._singleton = new ReadingListImpl(store);
     }
     return this._singleton;

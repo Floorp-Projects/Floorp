@@ -193,7 +193,7 @@ class Test1BrowserCall(MarionetteTestCase):
 
     def local_get_media_start_time(self):
         return self.local_get_chatbox_window_expr(
-            "loop.conversation._sdkDriver.connectionStartTime")
+            "loop.conversation._sdkDriver._getTwoWayMediaStartTime()")
 
     # XXX could be memoized
     def local_get_media_start_time_uninitialized(self):
@@ -221,7 +221,7 @@ class Test1BrowserCall(MarionetteTestCase):
 
         self.assertGreater(noted_calls, 0,
                            "OTSdkDriver._connectionLengthNotedCalls should be "
-                           "> 0")
+                           "> 0, noted_calls = " + str(noted_calls))
 
     def test_1_browser_call(self):
         self.switch_to_panel()
@@ -252,8 +252,8 @@ class Test1BrowserCall(MarionetteTestCase):
         # self.local_enable_screenshare()
         # self.standalone_check_remote_screenshare()
 
-        # We hangup on the remote side, because this also leaves the
-        # local chatbox with the local publishing media still connected,
+        # We hangup on the remote (standalone) side, because this also leaves
+        # the local chatbox with the local publishing media still connected,
         # which means that the local_check_connection_length below
         # verifies that the connection is noted at the time the remote media
         # drops, rather than waiting until the window closes.

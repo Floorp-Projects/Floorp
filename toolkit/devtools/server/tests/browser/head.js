@@ -118,6 +118,20 @@ function forceCollections() {
   Cu.forceShrinkingGC();
 }
 
+/**
+ * Get a mock tabActor from a given window.
+ * This is sometimes useful to test actors or classes that use the tabActor in
+ * isolation.
+ * @param {DOMWindow} win
+ * @return {Object}
+ */
+function getMockTabActor(win) {
+  return {
+    window: win,
+    isRootActor: true
+  };
+}
+
 registerCleanupFunction(function tearDown() {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
