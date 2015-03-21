@@ -2,7 +2,7 @@
 metadata:
   name: 'Task graph used to build {{project}} specific jobs'
   description: |
-    {{project}} push for {{owner}} with comment: {{comment}}.
+    {{project}} push for {{owner}}
   owner: mozilla-taskcluster-maintenance@mozilla.com
   source: "{{{source}}}"
 

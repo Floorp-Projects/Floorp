@@ -7,10 +7,37 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
 function run_test() {
+  Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
   run_next_test();
 }
+
+add_task(function validCacheMidPopulation() {
+  let expectedLinks = makeLinks(0, 3, 1);
+
+  let provider = new TestProvider(done => done(expectedLinks));
+  provider.maxNumLinks = expectedLinks.length;
+
+  NewTabUtils.initWithoutProviders();
+  NewTabUtils.links.addProvider(provider);
+  let promise = new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+
+  // isTopSiteGivenProvider() and getProviderLinks() should still return results
+  // even when cache is empty or being populated.
+  do_check_false(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
+  do_check_links(NewTabUtils.getProviderLinks(provider), []);
+
+  yield promise;
+
+  // Once the cache is populated, we get the expected results
+  do_check_true(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
+  do_check_links(NewTabUtils.getProviderLinks(provider), expectedLinks);
+  NewTabUtils.links.removeProvider(provider);
+});
 
 add_task(function notifyLinkDelete() {
   let expectedLinks = makeLinks(0, 3, 1);
