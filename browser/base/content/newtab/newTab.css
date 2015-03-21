@@ -159,7 +159,7 @@ input[type=button] {
 .newtab-cell {
   display: -moz-box;
   height: 180px;
-  margin: 20px 10px;
+  margin: 20px 10px 85px;
   width: 290px;
 }
 
@@ -193,20 +193,45 @@ input[type=button] {
 
 /* TITLES */
 .newtab-sponsored,
-.newtab-title {
-  bottom: -26px;
+.newtab-title,
+.newtab-suggested {
   overflow: hidden;
   position: absolute;
   right: 0;
   text-align: center;
+}
+
+.newtab-sponsored,
+.newtab-title {
+  bottom: -26px;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.newtab-suggested {
+  border: 1px solid #dcdcdc;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  height: 17px;
+  line-height: 17px;
+  margin-bottom: -1px;
+  padding: 2px 8px;
+  display: none;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  top: 215px;
+}
+
+.newtab-suggested-bounds {
+  max-height: 51px; /* 51 / 17 = 3 lines maximum */
 }
 
 .newtab-title {
-  font-size: 13px;
   left: 0;
   padding-top: 14px;
-  text-overflow: ellipsis;
 }
 
 .newtab-sponsored {
@@ -235,6 +260,10 @@ input[type=button] {
 
 .newtab-site:-moz-any([type=enhanced], [type=sponsored]) .newtab-sponsored {
   display: block;
+}
+
+.newtab-site[type=related] .newtab-suggested {
+  display: table;
 }
 
 .sponsored-explain,
@@ -462,7 +491,7 @@ input[type=button] {
 .newtab-customize-panel-item,
 .newtab-search-panel-engine,
 #newtab-search-manage {
-  padding: 4px 24px;
+  padding: 10px 10px 10px 25px;
 }
 
 .newtab-customize-panel-item:not(:last-child),
@@ -482,6 +511,10 @@ input[type=button] {
 #newtab-search-manage > label {
   padding: 0;
   margin: 0;
+}
+
+.newtab-customize-panel-item:not([selected]) {
+  color: #919191;
 }
 
 .newtab-customize-panel-item[selected],
