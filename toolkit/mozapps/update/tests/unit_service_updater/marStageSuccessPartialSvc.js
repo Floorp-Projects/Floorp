@@ -9,7 +9,7 @@ function run_test() {
   // Set to true due to bug 1083653
   DEBUG_AUS_TEST = true;
 
-  if (!shouldRunServiceTest(false, true)) {
+  if (!shouldRunServiceTest()) {
     return;
   }
 

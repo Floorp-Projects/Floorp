@@ -27,25 +27,37 @@ loop.OTSdkDriver = (function() {
       this.dispatcher = options.dispatcher;
       this.sdk = options.sdk;
 
-      // Note that this will only be defined and usable in a desktop-local
-      // context, not in the standalone web client.
-      this.mozLoop = options.mozLoop;
+      this._isDesktop = !!options.isDesktop;
+
+      if (this._isDesktop) {
+        if (!options.mozLoop) {
+          throw new Error("Missing option mozLoop");
+        }
+        this.mozLoop = options.mozLoop;
+      }
 
       this.connections = {};
-      this.connectionStartTime = this.CONNECTION_START_TIME_UNINITIALIZED;
+      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
 
       this.dispatcher.register(this, [
         "setupStreamElements",
         "setMute"
       ]);
 
+      // Set loop.debug.twoWayMediaTelemetry to true in the browser
+      // by changing the hidden pref loop.debug.twoWayMediaTelemetry using
+      // about:config, or use
+      //
+      // localStorage.setItem("debug.twoWayMediaTelemetry", true);
+      this._debugTwoWayMediaTelemetry =
+        loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry");
+
     /**
      * XXX This is a workaround for desktop machines that do not have a
      * camera installed. As we don't yet have device enumeration, when
      * we do, this can be removed (bug 1138851), and the sdk should handle it.
      */
-    if ("isDesktop" in options && options.isDesktop &&
-        !window.MediaStreamTrack.getSources) {
+    if (this._isDesktop && !window.MediaStreamTrack.getSources) {
       // If there's no getSources function, the sdk defines its own and caches
       // the result. So here we define the "normal" one which doesn't get cached, so
       // we can change it later.
@@ -56,9 +68,6 @@ loop.OTSdkDriver = (function() {
   };
 
   OTSdkDriver.prototype = {
-    CONNECTION_START_TIME_UNINITIALIZED: -1,
-    CONNECTION_START_TIME_ALREADY_NOTED: -2,
-
     /**
      * Clones the publisher config into a new object, as the sdk modifies the
      * properties object.
@@ -236,7 +245,7 @@ loop.OTSdkDriver = (function() {
         delete this.publisher;
       }
 
-      this._noteConnectionLengthIfNeeded(this.connectionStartTime, performance.now());
+      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
 
       // Also, tidy these variables ready for next time.
       delete this._sessionConnected;
@@ -244,7 +253,7 @@ loop.OTSdkDriver = (function() {
       delete this._publishedLocalStream;
       delete this._subscribedRemoteStream;
       this.connections = {};
-      this.connectionStartTime = this.CONNECTION_START_TIME_UNINITIALIZED;
+      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
     },
 
     /**
@@ -308,7 +317,7 @@ loop.OTSdkDriver = (function() {
       if (connection && (connection.id in this.connections)) {
         delete this.connections[connection.id];
       }
-      this._noteConnectionLengthIfNeeded(this.connectionStartTime, performance.now());
+      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
       this.dispatcher.dispatch(new sharedActions.RemotePeerDisconnected({
         peerHungup: event.reason === "clientDisconnected"
       }));
@@ -335,7 +344,7 @@ loop.OTSdkDriver = (function() {
           return;
       }
 
-      this._noteConnectionLengthIfNeeded(this.connectionStartTime,
+      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(),
         performance.now());
       this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
         reason: reason
@@ -408,7 +417,7 @@ loop.OTSdkDriver = (function() {
 
       this._subscribedRemoteStream = true;
       if (this._checkAllStreamsConnected()) {
-        this.connectionStartTime = performance.now();
+        this._setTwoWayMediaStartTime(performance.now());
         this.dispatcher.dispatch(new sharedActions.MediaConnected());
       }
     },
@@ -429,6 +438,56 @@ loop.OTSdkDriver = (function() {
       }
     },
 
+    /**
+     * Implementation detail, may be set to one of the CONNECTION_START_TIME
+     * constants, or a positive integer in milliseconds.
+     *
+     * @private
+     */
+    __twoWayMediaStartTime: undefined,
+
+    /**
+     * Used as a guard to make sure we don't inadvertently use an
+     * uninitialized value.
+     */
+    CONNECTION_START_TIME_UNINITIALIZED: -1,
+
+    /**
+     * Use as a guard to ensure that we don't note any bidirectional sessions
+     * twice.
+     */
+    CONNECTION_START_TIME_ALREADY_NOTED: -2,
+
+    /**
+     * Set and get the start time of the two-way media connection.  These
+     * are done as wrapper functions so that we can log sets to make manual
+     * verification of various telemetry scenarios possible.  The get API is
+     * analogous in order to follow the principle of least surprise for
+     * people consuming this code.
+     *
+     * If this._isDesktop is not true, returns immediately without making
+     * any changes, since this data is not used, and it makes reading
+     * the logs confusing for manual verification of both ends of the call in
+     * the same browser, which is a case we care about.
+     *
+     * @param start  start time in milliseconds, as returned by
+     *               performance.now()
+     * @private
+     */
+    _setTwoWayMediaStartTime: function(start) {
+      if (!this._isDesktop) {
+        return;
+      }
+
+      this.__twoWayMediaStartTime = start;
+      if (this._debugTwoWayMediaTelemetry) {
+        console.log("Loop Telemetry: noted two-way connection start, " +
+                    "start time in ms:", start);
+      }
+    },
+    _getTwoWayMediaStartTime: function() {
+      return this.__twoWayMediaStartTime;
+    },
 
     /**
      * Handles the event when the remote stream is destroyed.
@@ -528,7 +587,7 @@ loop.OTSdkDriver = (function() {
         // Now record the fact, and check if we've got all media yet.
         this._publishedLocalStream = true;
         if (this._checkAllStreamsConnected()) {
-          this.connectionStartTime = performance.now();
+          this._setTwoWayMediaStartTime(performance.now);
           this.dispatcher.dispatch(new sharedActions.MediaConnected());
         }
       }
@@ -562,6 +621,14 @@ loop.OTSdkDriver = (function() {
       }));
     },
 
+    /*
+     * XXX all of the bi-directional media connection telemetry stuff in this
+     * file, (much, but not all, of it is below) should be hoisted into its
+     * own object for maintainability and clarity, also in part because this
+     * stuff only wants to run one side of the connection, not both (tracked
+     * by bug 1145237).
+     */
+
     /**
      * A hook exposed only for the use of the functional tests so that
      * they can check that the bi-directional media count is being updated
@@ -574,7 +641,7 @@ loop.OTSdkDriver = (function() {
 
     /**
      * Wrapper for adding a keyed value that also updates
-     * connectionLengthNoted calls and sets this.connectionStartTime to
+     * connectionLengthNoted calls and sets the twoWayMediaStartTime to
      * this.CONNECTION_START_TIME_ALREADY_NOTED.
      *
      * @param {number} callLengthSeconds  the call length in seconds
@@ -594,15 +661,19 @@ loop.OTSdkDriver = (function() {
 
       this.mozLoop.telemetryAddKeyedValue("LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
         bucket);
-      this.connectionStartTime = this.CONNECTION_START_TIME_ALREADY_NOTED;
+      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_ALREADY_NOTED);
 
       this._connectionLengthNotedCalls++;
+      if (this._debugTwoWayMediaTelemetry) {
+        console.log('Loop Telemetry: noted two-way media connection ' +
+          'in bucket: ', bucket);
+      }
     },
 
     /**
      * Note connection length if it's valid (the startTime has been initialized
      * and is not later than endTime) and not yet already noted.  If
-     * this.mozLoop is not defined, we're assumed to be running in the
+     * this._isDesktop is not true, we're assumed to be running in the
      * standalone client and return immediately.
      *
      * @param {number} startTime  in milliseconds
@@ -610,23 +681,31 @@ loop.OTSdkDriver = (function() {
      * @private
      */
     _noteConnectionLengthIfNeeded: function(startTime, endTime) {
-      if (!this.mozLoop) {
+      if (!this._isDesktop) {
         return;
       }
 
       if (startTime == this.CONNECTION_START_TIME_ALREADY_NOTED ||
           startTime == this.CONNECTION_START_TIME_UNINITIALIZED ||
           startTime > endTime) {
-        console.log("_noteConnectionLengthIfNeeded called with " +
-                    " invalid params, either the calls were never" +
-                    " connected or there is a bug; startTime:", startTime,
-                    "endTime:", endTime);
+        if (this._debugTwoWayMediaTelemetry) {
+          console.log("_noteConnectionLengthIfNeeded called with " +
+            " invalid params, either the calls were never" +
+            " connected or there is a bug; startTime:", startTime,
+            "endTime:", endTime);
+        }
         return;
       }
 
       var callLengthSeconds = (endTime - startTime) / 1000;
       this._noteConnectionLength(callLengthSeconds);
-    }
+    },
+
+    /**
+     * If set to true, make it easy to test/verify 2-way media connection
+     * telemetry code operation by viewing the logs.
+     */
+    _debugTwoWayMediaTelemetry: false
   };
 
   return OTSdkDriver;

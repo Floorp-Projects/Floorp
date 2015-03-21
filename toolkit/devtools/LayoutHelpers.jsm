@@ -604,12 +604,13 @@ LayoutHelpers.isShadowAnonymous = function(node) {
  * Container windows are used as a weakmap key to store the corresponding
  * nsIDOMWindowUtils instance to avoid querying it every time.
  *
- * @param {DOMNode} The node for which the zoom factor should be calculated
+ * @param {DOMNode|DOMWindow} The node for which the zoom factor should be
+ * calculated, or its owner window.
  * @return {Number}
  */
 let windowUtils = new WeakMap;
-LayoutHelpers.getCurrentZoom = function(node, map = z=>z) {
-  let win = node.ownerDocument.defaultView;
+LayoutHelpers.getCurrentZoom = function(node) {
+  let win = node.self === node ? node : node.ownerDocument.defaultView;
   let utils = windowUtils.get(win);
   if (utils) {
     return utils.fullZoom;

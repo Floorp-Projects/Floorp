@@ -321,33 +321,8 @@ add_task(function test_bookmarks() {
   // test setKeywordForBookmark
   let kwTestItemId = bs.insertBookmark(testRoot, uri("http://keywordtest.com"),
                                        bs.DEFAULT_INDEX, "");
-  try {
-    let dateAdded = bs.getItemDateAdded(kwTestItemId);
-    // after just inserting, modified should not be set
-    let lastModified = bs.getItemLastModified(kwTestItemId);
-    do_check_eq(lastModified, dateAdded);
+  bs.setKeywordForBookmark(kwTestItemId, "bar");
 
-    // Workaround possible VM timers issues moving lastModified and dateAdded
-    // to the past.
-    lastModified -= 1000;
-    bs.setItemLastModified(kwTestItemId, --lastModified);
-    dateAdded -= 1000;
-    bs.setItemDateAdded(kwTestItemId, dateAdded);
-
-    bs.setKeywordForBookmark(kwTestItemId, "bar");
-
-    let lastModified2 = bs.getItemLastModified(kwTestItemId);
-    LOG("test setKeywordForBookmark");
-    LOG("dateAdded = " + dateAdded);
-    LOG("lastModified = " + lastModified);
-    LOG("lastModified2 = " + lastModified2);
-    do_check_true(is_time_ordered(lastModified, lastModified2));
-    do_check_true(is_time_ordered(dateAdded, lastModified2));
-  } catch(ex) {
-    do_throw("setKeywordForBookmark: " + ex);
-  }
-
-  let lastModified3 = bs.getItemLastModified(kwTestItemId);
   // test getKeywordForBookmark
   let k = bs.getKeywordForBookmark(kwTestItemId);
   do_check_eq("bar", k);

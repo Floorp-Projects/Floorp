@@ -9,6 +9,10 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
+TESTING_JS_MODULES += [
+    'test/LoginTestUtils.jsm',
+]
+
 XPIDL_SOURCES += [
     'nsILoginInfo.idl',
     'nsILoginManager.idl',
