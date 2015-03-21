@@ -11,6 +11,15 @@ function assertWithMessage(got, expected, message) {
 evaluate(`function testFunc() {
     assertWithMessage(checkNameLookup(), "local", "nameLookup");
     assertWithMessage(checkThisBinding(), "local", "thisBinding");
+
+    // Important: lambda needs to close over "reason", so it won't just get the
+    // scope of testFunc as its scope.  Instead it'll get the Call object
+    // "reason" lives in.
+    var reason = " in lambda in Call";
+    (function() {
+	assertWithMessage(checkNameLookup(), "local", "nameLookup" + reason);
+	assertWithMessage(checkThisBinding(), "local", "thisBinding" + reason);
+    })();
 }`, { compileAndGo: false });
 
 var obj = {
