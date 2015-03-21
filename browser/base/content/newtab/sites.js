@@ -131,6 +131,12 @@ Site.prototype = {
     this._querySelector(".newtab-title").textContent = title;
     this.node.setAttribute("type", this.link.type);
 
+    if (this.link.targetedSite) {
+      let targetedSite = `<strong> ${this.link.targetedSite} </strong>`;
+      this._querySelector(".newtab-suggested").innerHTML =
+        `<div class='newtab-suggested-bounds'> ${newTabString("suggested.button", [targetedSite])} </div>`;
+    }
+
     if (this.isPinned())
       this._updateAttributes(true);
     // Capture the page if the thumbnail is missing, which will cause page.js
@@ -177,6 +183,15 @@ Site.prototype = {
     }
   },
 
+  _ignoreHoverEvents: function(element) {
+    element.addEventListener("mouseover", () => {
+      this.cell.node.setAttribute("ignorehover", "true");
+    });
+    element.addEventListener("mouseout", () => {
+      this.cell.node.removeAttribute("ignorehover");
+    });
+  },
+
   /**
    * Adds event handlers for the site and its buttons.
    */
@@ -186,14 +201,12 @@ Site.prototype = {
     this._node.addEventListener("dragend", this, false);
     this._node.addEventListener("mouseover", this, false);
 
-    // Specially treat the sponsored icon to prevent regular hover effects
+    // Specially treat the sponsored icon & suggested explanation
+    // text to prevent regular hover effects
     let sponsored = this._querySelector(".newtab-sponsored");
-    sponsored.addEventListener("mouseover", () => {
-      this.cell.node.setAttribute("ignorehover", "true");
-    });
-    sponsored.addEventListener("mouseout", () => {
-      this.cell.node.removeAttribute("ignorehover");
-    });
+    let suggested = this._querySelector(".newtab-suggested");
+    this._ignoreHoverEvents(sponsored);
+    this._ignoreHoverEvents(suggested);
   },
 
   /**
@@ -268,6 +281,12 @@ Site.prototype = {
     }
     // Only handle primary clicks for the remaining targets
     else if (button == 0) {
+      if (target.parentElement.classList.contains("newtab-suggested") ||
+          target.classList.contains("newtab-suggested")) {
+        // Suggested explanation text should do nothing when clicked and
+        // the link in the suggested explanation should act as default.
+        return;
+      }
       aEvent.preventDefault();
       if (target.classList.contains("newtab-control-block")) {
         this.block();

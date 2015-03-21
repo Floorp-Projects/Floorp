@@ -26,7 +26,7 @@ var gContentPane = {
       row.removeAttribute("hidden");
     }
 
-    setEventListener("font.language.group", "blur",
+    setEventListener("font.language.group", "change",
       gContentPane._rebuildFonts);
     setEventListener("popupPolicyButton", "command",
       gContentPane.showPopupExceptions);

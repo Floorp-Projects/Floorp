@@ -166,7 +166,8 @@ enum class DeviceResetReason
   REMOVED,
   RESET,
   DRIVER_ERROR,
-  INVALID_CALL
+  INVALID_CALL,
+  OUT_OF_MEMORY
 };
 
 class gfxPlatform {

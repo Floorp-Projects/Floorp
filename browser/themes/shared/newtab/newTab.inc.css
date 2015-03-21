@@ -122,7 +122,7 @@
   transition: opacity 100ms ease-out;
 }
 
-.newtab-site:hover .newtab-thumbnail.enhanced-content {
+.newtab-cell:not([ignorehover]) .newtab-site:hover .newtab-thumbnail.enhanced-content {
   opacity: 0;
 }
 
@@ -137,8 +137,13 @@
 /* TITLES */
 #newtab-intro-what,
 .newtab-sponsored,
-.newtab-title {
+.newtab-title,
+.newtab-suggested  {
   color: #5c5c5c;
+}
+
+.newtab-suggested {
+  background-color: white;
 }
 
 .newtab-site:hover .newtab-title {
