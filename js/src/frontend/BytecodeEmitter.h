@@ -174,8 +174,8 @@ struct BytecodeEmitter
     bool            insideEval:1;       /* True if compiling an eval-expression or a function
                                            nested inside an eval. */
 
-    const bool      insideNonGlobalEval:1;  /* True if this is a direct eval
-                                               call in some non-global scope. */
+    const bool      hasGlobalScope:1;   /* frontend::CompileScript's scope chain is the
+                                           global object */
 
     enum EmitterMode {
         Normal,
@@ -205,7 +205,7 @@ struct BytecodeEmitter
     BytecodeEmitter(BytecodeEmitter *parent, Parser<FullParseHandler> *parser, SharedContext *sc,
                     HandleScript script, Handle<LazyScript *> lazyScript,
                     bool insideEval, HandleScript evalCaller,
-                    Handle<StaticEvalObject *> evalStaticScope, bool insideNonGlobalEval,
+                    Handle<StaticEvalObject *> evalStaticScope, bool hasGlobalScope,
                     uint32_t lineNum, EmitterMode emitterMode = Normal);
     bool init();
     bool updateLocalsToFrameSlots();
