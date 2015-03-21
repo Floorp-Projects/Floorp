@@ -367,9 +367,8 @@ public:
   // be held.
   bool IsPlaying() const;
 
-  // Dispatch DoNotifyWaitingForResourcesStatusChanged task to the task queue.
   // Called when the reader may have acquired the hardware resources required
-  // to begin decoding. The decoder monitor must be held while calling this.
+  // to begin decoding.
   void NotifyWaitingForResourcesStatusChanged();
 
   // Notifies the state machine that should minimize the number of samples
@@ -725,10 +724,6 @@ protected:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
-
-  // The state machine may move into DECODING_METADATA if we are in
-  // DECODER_STATE_WAIT_FOR_RESOURCES.
-  void DoNotifyWaitingForResourcesStatusChanged();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.

@@ -71,7 +71,9 @@ MediaSourceReader::PrepareInitialization()
   MSE_DEBUG("trackBuffers=%u", mTrackBuffers.Length());
   mEssentialTrackBuffers.AppendElements(mTrackBuffers);
   mHasEssentialTrackBuffers = true;
-  mDecoder->NotifyWaitingForResourcesStatusChanged();
+  if (!IsWaitingMediaResources()) {
+    mDecoder->NotifyWaitingForResourcesStatusChanged();
+  }
 }
 
 bool
@@ -761,7 +763,10 @@ MediaSourceReader::OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const Medi
     MSE_DEBUG("%p video", aTrackBuffer);
     mVideoTrack = aTrackBuffer;
   }
-  mDecoder->NotifyWaitingForResourcesStatusChanged();
+
+  if (!IsWaitingMediaResources()) {
+    mDecoder->NotifyWaitingForResourcesStatusChanged();
+  }
 }
 
 bool
