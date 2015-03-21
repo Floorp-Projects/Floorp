@@ -6305,7 +6305,7 @@ dnl is not yet sufficient).
 if test "$OS_ARCH" = "WINNT"; then
     MIN_NSIS_MAJOR_VER=2
     MIN_NSIS_MINOR_VER=46
-    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensisu-3.0a2.exe makensisu-2.46.exe makensis)
+    MOZ_PATH_PROGS(MAKENSISU, $MAKENSISU makensis-3.0b1.exe makensisu-3.0a2.exe makensisu-2.46.exe makensis)
     if test -n "$MAKENSISU" -a "$MAKENSISU" != ":"; then
       AC_MSG_RESULT([yes])
       MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null`
