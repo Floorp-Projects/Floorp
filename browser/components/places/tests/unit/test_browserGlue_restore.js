@@ -44,7 +44,7 @@ add_task(function* test_main() {
 
   // The test will continue once restore has finished and smart bookmarks
   // have been created.
-  yield promiseEndUpdateBatch();
+  yield promiseTopicObserved("places-browser-init-complete");
 
   let bm = yield PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,

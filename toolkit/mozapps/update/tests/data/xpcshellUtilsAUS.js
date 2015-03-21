@@ -1572,15 +1572,9 @@ function stageUpdate() {
  *
  * @param  aFirstTest
  *         Whether this is the first test within the test.
- * @param  aSkipTest
- *         Whether to skip this test if the installed maintenance service
- *         isn't the same as the build's maintenance service. This is a
- *         temporary workaround until all build systems grant write access to
- *         the maintenance service install directory so the tests can copy the
- *         version of the maintenance service that should be tests.
  * @return true if the test should run and false if it shouldn't.
  */
-function shouldRunServiceTest(aFirstTest, aSkipTest) {
+function shouldRunServiceTest(aFirstTest) {
   let binDir = getGREBinDir();
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
@@ -1646,7 +1640,7 @@ function shouldRunServiceTest(aFirstTest, aSkipTest) {
   // In case the machine is running an old maintenance service or if it
   // is not installed, and permissions exist to install it. Then install
   // the newer bin that we have since all of the other checks passed.
-  return attemptServiceInstall(aSkipTest);
+  return attemptServiceInstall();
 }
 
 /**
@@ -1854,15 +1848,8 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
  * This is useful for XP where we have permission to upgrade in case an
  * older service installer exists.  Also if the user manually installed into
  * a unprivileged location.
- *
- * @param  aSkipTest
- *         Whether to skip this test if the installed maintenance service
- *         isn't the same as the build's maintenance service. This is a
- *         temporary workaround until all build systems grant write access to
- *         the maintenance service install directory so the tests can copy the
- *         version of the maintenance service that should be tests.
  */
-function attemptServiceInstall(aSkipTest) {
+function attemptServiceInstall() {
   const CSIDL_PROGRAM_FILES = 0x26;
   const CSIDL_PROGRAM_FILESX86 = 0x2A;
   // This will return an empty string on our Win XP build systems.
@@ -1905,7 +1892,6 @@ function attemptServiceInstall(aSkipTest) {
     oldMaintSvcBin.moveTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN + ".backup");
     buildMaintSvcBin.copyTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN);
     backupMaintSvcBin.remove(false);
-    return true;
   } catch (e) {
     // Restore the original file in case the moveTo was successful.
     if (backupMaintSvcBin.exists()) {
@@ -1918,21 +1904,11 @@ function attemptServiceInstall(aSkipTest) {
     logTestInfo("unable to copy new maintenance service into the " +
                 "maintenance service directory: " + maintSvcDir.path + ", " +
                 "Exception: " + e);
+    do_throw("The account running the tests on the build systems should have " +
+             "write access to the maintenance service directory!");
   }
 
-  let version = Cc["@mozilla.org/system-info;1"].
-                getService(Ci.nsIPropertyBag2).
-                getProperty("version");
-  // The account running the tests on Win XP and Win 7 build systems have write
-  // access to the maintenance service directory so throw if copying the
-  // maintenance service binary fails. This should always throw after write
-  // access is provided on all Windows build slaves in bug 1067756.
-  if ((parseFloat(version) <= 6.1)) {
-    do_throw("The account running the tests on Win 7 and below build systems " +
-             "should have write access to the maintenance service directory!");
-  }
-
-  return aSkipTest ? false : true;
+  return true;
 }
 
 /**
