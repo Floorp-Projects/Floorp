@@ -6898,7 +6898,7 @@ EmitLexicalInitialization(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode 
         return false;
 
     if (pn->getOp() != JSOP_INITLEXICAL) {
-        bool global = js_CodeSpec[pn->getOp()].format & JOF_GNAME;
+        bool global = IsGlobalOp(pn->getOp());
         if (!EmitIndex32(cx, global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex, bce))
             return false;
         if (Emit1(cx, bce, JSOP_SWAP) < 0)

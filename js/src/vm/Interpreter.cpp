@@ -2038,28 +2038,33 @@ CASE(JSOP_SETCONST)
 }
 END_CASE(JSOP_SETCONST)
 
-CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(REGS.fp()->global());
-END_CASE(JSOP_BINDGNAME)
-
 CASE(JSOP_BINDINTRINSIC)
     PUSH_OBJECT(*cx->global()->intrinsicsHolder());
 END_CASE(JSOP_BINDINTRINSIC)
 
+CASE(JSOP_BINDGNAME)
 CASE(JSOP_BINDNAME)
 {
-    RootedObject &scopeChain = rootObject0;
-    scopeChain = REGS.fp()->scopeChain();
+    JSOp op = JSOp(*REGS.pc);
+    if (op == JSOP_BINDNAME || script->hasPollutedGlobalScope()) {
+        RootedObject &scopeChain = rootObject0;
+        scopeChain = REGS.fp()->scopeChain();
 
-    RootedPropertyName &name = rootName0;
-    name = script->getName(REGS.pc);
+        RootedPropertyName &name = rootName0;
+        name = script->getName(REGS.pc);
 
-    /* Assigning to an undeclared name adds a property to the global object. */
-    RootedObject &scope = rootObject1;
-    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
-        goto error;
+        /* Assigning to an undeclared name adds a property to the global object. */
+        RootedObject &scope = rootObject1;
+        if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+            goto error;
 
-    PUSH_OBJECT(*scope);
+        PUSH_OBJECT(*scope);
+    } else {
+        PUSH_OBJECT(REGS.fp()->global());
+    }
+
+    static_assert(JSOP_BINDNAME_LENGTH == JSOP_BINDGNAME_LENGTH,
+                  "We're sharing the END_CASE so the lengths better match");
 }
 END_CASE(JSOP_BINDNAME)
 
@@ -2721,6 +2726,8 @@ CASE(JSOP_GIMPLICITTHIS)
         // Treat it like JSOP_UNDEFINED.
         PUSH_UNDEFINED();
     }
+    static_assert(JSOP_IMPLICITTHIS_LENGTH == JSOP_GIMPLICITTHIS_LENGTH,
+                  "We're sharing the END_CASE so the lengths better match");
 }
 END_CASE(JSOP_IMPLICITTHIS)
 
