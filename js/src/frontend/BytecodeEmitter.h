@@ -255,6 +255,12 @@ struct BytecodeEmitter
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
 
+    // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
+    // reserve a type set to store its result.
+    void checkTypeSet(JSOp op);
+
+    bool flushPops(int *npops);
+
     ptrdiff_t emitCheck(ptrdiff_t delta);
 
     // Emit one bytecode.
@@ -267,11 +273,26 @@ struct BytecodeEmitter
     // Emit three bytecodes, an opcode with two bytes of immediate operands.
     bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
 
+    // Emit a bytecode followed by an uint16 immediate operand stored in
+    // big-endian order.
+    bool emitUint16Operand(JSOp op, uint32_t i);
+
     // Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
     ptrdiff_t emitN(JSOp op, size_t extra);
 
     ptrdiff_t emitJump(JSOp op, ptrdiff_t off);
     bool emitCall(JSOp op, uint16_t argc, ParseNode *pn = nullptr);
+
+    bool emitLoopHead(ParseNode *nextpn);
+    bool emitLoopEntry(ParseNode *nextpn);
+
+    // Emit a backpatch op with offset pointing to the previous jump of this
+    // type, so that we can walk back up the chain fixing up the op and jump
+    // offset.
+    bool emitBackPatchOp(ptrdiff_t *lastp);
+    void backPatch(ptrdiff_t last, jsbytecode *target, jsbytecode op);
+
+    ptrdiff_t emitGoto(StmtInfoBCE *toStmt, ptrdiff_t *lastp, SrcNoteType noteType = SRC_NULL);
 };
 
 /*
