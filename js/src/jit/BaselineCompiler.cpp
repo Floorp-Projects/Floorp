@@ -2056,6 +2056,9 @@ BaselineCompiler::emit_JSOP_IN()
 bool
 BaselineCompiler::emit_JSOP_GETGNAME()
 {
+    if (script->hasPollutedGlobalScope())
+        return emit_JSOP_GETNAME();
+
     RootedPropertyName name(cx, script->getName(pc));
 
     if (name == cx->names().undefined) {

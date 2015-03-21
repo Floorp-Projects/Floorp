@@ -1499,7 +1499,9 @@
     macro(JSOP_RETRVAL,       153,"retrval",    NULL,       1,  0,  0,  JOF_BYTE) \
     \
     /*
-     * Looks up name on global scope and pushes its value onto the stack.
+     * Looks up name on global scope and pushes its value onto the stack, unless
+     * the script has a polluted global, in which case it acts just like
+     * JSOP_NAME.
      *
      * Free variable references that must either be found on the global or a
      * ReferenceError.
