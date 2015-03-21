@@ -125,6 +125,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
+    this._layoutHelpers = new LayoutHelpers(this._tabActor.window);
     this._createHighlighter();
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
@@ -179,6 +180,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._inspector = null;
     this._walker = null;
     this._tabActor = null;
+    this._layoutHelpers = null;
   },
 
   /**
@@ -512,7 +514,11 @@ function CanvasFrameAnonymousContentHelper(tabActor, nodeBuilder) {
 
   this._onNavigate = this._onNavigate.bind(this);
   events.on(this.tabActor, "navigate", this._onNavigate);
+
+  this.listeners = new Map();
 }
+
+exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
 
 CanvasFrameAnonymousContentHelper.prototype = {
   destroy: function() {
@@ -526,6 +532,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this.tabActor = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
     this.anonymousContentGlobal = null;
+
+    this._removeAllListeners();
   },
 
   _insert: function() {
@@ -562,7 +570,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   _onNavigate: function({isTopLevel}) {
     if (isTopLevel) {
+      this._removeAllListeners();
       this._insert();
+      this.anonymousContentDocument = this.tabActor.window.document;
     }
   },
 
@@ -598,6 +608,129 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
   },
 
+  /**
+   * Add an event listener to one of the elements inserted in the canvasFrame
+   * native anonymous container.
+   * Like other methods in this helper, this requires the ID of the element to
+   * be passed in.
+   *
+   * Note that if the content page navigates, the event listeners won't be
+   * added again.
+   *
+   * Also note that unlike traditional DOM events, the events handled by
+   * listeners added here will propagate through the document only through
+   * bubbling phase, so the useCapture parameter isn't supported.
+   * It is possible however to call e.stopPropagation() to stop the bubbling.
+   *
+   * IMPORTANT: the chrome-only canvasFrame insertion API takes great care of
+   * not leaking references to inserted elements to chrome JS code. That's
+   * because otherwise, chrome JS code could freely modify native anon elements
+   * inside the canvasFrame and probably change things that are assumed not to
+   * change by the C++ code managing this frame.
+   * See https://wiki.mozilla.org/DevTools/Highlighter#The_AnonymousContent_API
+   * Unfortunately, the inserted nodes are still available via
+   * event.originalTarget, and that's what the event handler here uses to check
+   * that the event actually occured on the right element, but that also means
+   * consumers of this code would be able to access the inserted elements.
+   * Therefore, the originalTarget property will be nullified before the event
+   * is passed to your handler.
+   *
+   * IMPL DETAIL: A single event listener is added per event types only, at
+   * browser level and if the event originalTarget is found to have the provided
+   * ID, the callback is executed (and then IDs of parent nodes of the
+   * originalTarget are checked too).
+   *
+   * @param {String} id
+   * @param {String} type
+   * @param {Function} handler
+   */
+  addEventListenerForElement: function(id, type, handler) {
+    if (typeof id !== "string") {
+      throw new Error("Expected a string ID in addEventListenerForElement but" +
+        " got: " + id);
+    }
+
+    // If no one is listening for this type of event yet, add one listener.
+    if (!this.listeners.has(type)) {
+      let target = getPageListenerTarget(this.tabActor);
+      target.addEventListener(type, this, true);
+      // Each type entry in the map is a map of ids:handlers.
+      this.listeners.set(type, new Map);
+    }
+
+    let listeners = this.listeners.get(type);
+    listeners.set(id, handler);
+  },
+
+  /**
+   * Remove an event listener from one of the elements inserted in the
+   * canvasFrame native anonymous container.
+   * @param {String} id
+   * @param {String} type
+   * @param {Function} handler
+   */
+  removeEventListenerForElement: function(id, type, handler) {
+    let listeners = this.listeners.get(type);
+    if (!listeners) {
+      return;
+    }
+    listeners.delete(id);
+
+    // If no one is listening for event type anymore, remove the listener.
+    if (!this.listeners.has(type)) {
+      let target = getPageListenerTarget(this.tabActor);
+      target.removeEventListener(type, this, true);
+    }
+  },
+
+  handleEvent: function(event) {
+    let listeners = this.listeners.get(event.type);
+    if (!listeners) {
+      return;
+    }
+
+    // Hide the originalTarget property to avoid exposing references to native
+    // anonymous elements. See addEventListenerForElement's comment.
+    let isPropagationStopped = false;
+    let eventProxy = new Proxy(event, {
+      get: (obj, name) => {
+        if (name === "originalTarget") {
+          return null;
+        } else if (name === "stopPropagation") {
+          return () => {
+            isPropagationStopped = true;
+          };
+        } else {
+          return obj[name];
+        }
+      }
+    });
+
+    // Start at originalTarget, bubble through ancestors and call handlers when
+    // needed.
+    let node = event.originalTarget;
+    while (node) {
+      let handler = listeners.get(node.id);
+      if (handler) {
+        handler(eventProxy, node.id);
+        if (isPropagationStopped) {
+          break;
+        }
+      }
+      node = node.parentNode;
+    }
+  },
+
+  _removeAllListeners: function() {
+    if (this.tabActor) {
+      let target = getPageListenerTarget(this.tabActor);
+      for (let [type] of this.listeners) {
+        target.removeEventListener(type, this, true);
+      }
+    }
+    this.listeners.clear();
+  },
+
   getElement: function(id) {
     let self = this;
     return {
@@ -605,7 +738,13 @@ CanvasFrameAnonymousContentHelper.prototype = {
       setTextContent: text => self.setTextContentForElement(id, text),
       setAttribute: (name, value) => self.setAttributeForElement(id, name, value),
       getAttribute: name => self.getAttributeForElement(id, name),
-      removeAttribute: name => self.removeAttributeForElement(id, name)
+      removeAttribute: name => self.removeAttributeForElement(id, name),
+      addEventListener: (type, handler) => {
+        return self.addEventListenerForElement(id, type, handler);
+      },
+      removeEventListener: (type, handler) => {
+        return self.removeEventListenerForElement(id, type, handler);
+      }
     };
   },
 
@@ -904,11 +1043,6 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
 
   ID_CLASS_PREFIX: "box-model-",
 
-  get zoom() {
-    return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
-  },
-
   get currentNode() {
     return this._currentNode;
   },
@@ -943,7 +1077,6 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
         "id": "elements",
         "width": "100%",
         "height": "100%",
-        "style": "width:100%;height:100%;",
         "hidden": "true"
       },
       prefix: this.ID_CLASS_PREFIX
@@ -1071,6 +1204,10 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     this._currentNode = null;
   },
 
+  getElement: function(id) {
+    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  },
+
   /**
    * Show the highlighter on a given node
    */
@@ -1143,16 +1280,14 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    * Hide the infobar
    */
   _hideInfobar: function() {
-    this.markup.setAttributeForElement(
-      this.ID_CLASS_PREFIX + "nodeinfobar-container", "hidden", "true");
+    this.getElement("nodeinfobar-container").setAttribute("hidden", "true");
   },
 
   /**
    * Show the infobar
    */
   _showInfobar: function() {
-    this.markup.removeAttributeForElement(
-      this.ID_CLASS_PREFIX + "nodeinfobar-container", "hidden");
+    this.getElement("nodeinfobar-container").removeAttribute("hidden");
     this._updateInfobar();
   },
 
@@ -1160,16 +1295,14 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    * Hide the box model
    */
   _hideBoxModel: function() {
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden", "true");
+    this.getElement("elements").setAttribute("hidden", "true");
   },
 
   /**
    * Show the box model
    */
   _showBoxModel: function() {
-    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden");
+    this.getElement("elements").removeAttribute("hidden");
   },
 
   /**
@@ -1239,12 +1372,12 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
 
     if (this._nodeNeedsHighlighting()) {
       for (let boxType of BOX_MODEL_REGIONS) {
+        let box = this.getElement(boxType);
+
         if (this.regionFill[boxType]) {
-          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
-            "style", "fill:" + this.regionFill[boxType]);
+          box.setAttribute("style", "fill:" + this.regionFill[boxType]);
         } else {
-          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
-            "style", "");
+          box.setAttribute("style", "");
         }
 
         if (!this.options.showOnly || this.options.showOnly === boxType) {
@@ -1257,10 +1390,9 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
                       "L" + p4.x + "," + p4.y);
           }
 
-          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
-            "d", path.join(" "));
+          box.setAttribute("d", path.join(" "));
         } else {
-          this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + boxType, "d");
+          box.removeAttribute("d");
         }
 
         if (boxType === this.options.region && !this.options.hideGuides) {
@@ -1367,8 +1499,7 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
 
   _hideGuides: function() {
     for (let side of BOX_MODEL_SIDES) {
-      this.markup.setAttributeForElement(
-        this.ID_CLASS_PREFIX + "guide-" + side, "hidden", "true");
+      this.getElement("guide-" + side).setAttribute("hidden", "true");
     }
   },
 
@@ -1382,26 +1513,26 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    *         x or y co-ordinate. If this is undefined we hide the guide.
    */
   _updateGuide: function(side, point=-1) {
-    let guideId = this.ID_CLASS_PREFIX + "guide-" + side;
+    let guide = this.getElement("guide-" + side);
 
     if (point <= 0) {
-      this.markup.setAttributeForElement(guideId, "hidden", "true");
+      guide.setAttribute("hidden", "true");
       return false;
     }
 
     if (side === "top" || side === "bottom") {
-      this.markup.setAttributeForElement(guideId, "x1", "0");
-      this.markup.setAttributeForElement(guideId, "y1", point + "");
-      this.markup.setAttributeForElement(guideId, "x2", "100%");
-      this.markup.setAttributeForElement(guideId, "y2", point + "");
+      guide.setAttribute("x1", "0");
+      guide.setAttribute("y1", point + "");
+      guide.setAttribute("x2", "100%");
+      guide.setAttribute("y2", point + "");
     } else {
-      this.markup.setAttributeForElement(guideId, "x1", point + "");
-      this.markup.setAttributeForElement(guideId, "y1", "0");
-      this.markup.setAttributeForElement(guideId, "x2", point + "");
-      this.markup.setAttributeForElement(guideId, "y2", "100%");
+      guide.setAttribute("x1", point + "");
+      guide.setAttribute("y1", "0");
+      guide.setAttribute("x2", point + "");
+      guide.setAttribute("y2", "100%");
     }
 
-    this.markup.removeAttributeForElement(guideId, "hidden");
+    guide.removeAttribute("hidden");
 
     return true;
   },
@@ -1435,12 +1566,11 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     let rect = this._getOuterQuad("border").bounds;
     let dim = parseFloat(rect.width.toPrecision(6)) + " \u00D7 " + parseFloat(rect.height.toPrecision(6));
 
-    let elementId = this.ID_CLASS_PREFIX + "nodeinfobar-";
-    this.markup.setTextContentForElement(elementId + "tagname", tagName);
-    this.markup.setTextContentForElement(elementId + "id", id);
-    this.markup.setTextContentForElement(elementId + "classes", classList);
-    this.markup.setTextContentForElement(elementId + "pseudo-classes", pseudos);
-    this.markup.setTextContentForElement(elementId + "dimensions", dim);
+    this.getElement("nodeinfobar-tagname").setTextContent(tagName);
+    this.getElement("nodeinfobar-id").setTextContent(id);
+    this.getElement("nodeinfobar-classes").setTextContent(classList);
+    this.getElement("nodeinfobar-pseudo-classes").setTextContent(pseudos);
+    this.getElement("nodeinfobar-dimensions").setTextContent(dim);
 
     this._moveInfobar();
   },
@@ -1450,14 +1580,14 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    */
   _moveInfobar: function() {
     let bounds = this._getOuterBounds();
-    let winHeight = this.win.innerHeight * this.zoom;
-    let winWidth = this.win.innerWidth * this.zoom;
+    let winHeight = this.win.innerHeight * LayoutHelpers.getCurrentZoom(this.win);
+    let winWidth = this.win.innerWidth * LayoutHelpers.getCurrentZoom(this.win);
 
     // Ensure that containerBottom and containerTop are at least zero to avoid
     // showing tooltips outside the viewport.
     let containerBottom = Math.max(0, bounds.bottom) + NODE_INFOBAR_ARROW_SIZE;
     let containerTop = Math.min(winHeight, bounds.top);
-    let containerId = this.ID_CLASS_PREFIX + "nodeinfobar-container";
+    let container = this.getElement("nodeinfobar-container");
 
     // Can the bar be above the node?
     let top;
@@ -1466,16 +1596,16 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
       if (containerBottom + NODE_INFOBAR_HEIGHT > winHeight) {
         // No. Let's move it inside.
         top = containerTop;
-        this.markup.setAttributeForElement(containerId, "position", "overlap");
+        container.setAttribute("position", "overlap");
       } else {
         // Yes. Let's move it under the node.
         top = containerBottom;
-        this.markup.setAttributeForElement(containerId, "position", "bottom");
+        container.setAttribute("position", "bottom");
       }
     } else {
       // Yes. Let's move it on top of the node.
       top = containerTop - NODE_INFOBAR_HEIGHT;
-      this.markup.setAttributeForElement(containerId, "position", "top");
+      container.setAttribute("position", "top");
     }
 
     // Align the bar with the box's center if possible.
@@ -1484,16 +1614,16 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     let buffer = 100;
     if (left < buffer) {
       left = buffer;
-      this.markup.setAttributeForElement(containerId, "hide-arrow", "true");
+      container.setAttribute("hide-arrow", "true");
     } else if (left > winWidth - buffer) {
       left = winWidth - buffer;
-      this.markup.setAttributeForElement(containerId, "hide-arrow", "true");
+      container.setAttribute("hide-arrow", "true");
     } else {
-      this.markup.removeAttributeForElement(containerId, "hide-arrow");
+      container.removeAttribute("hide-arrow");
     }
 
     let style = "top:" + top + "px;left:" + left + "px;";
-    this.markup.setAttributeForElement(containerId, "style", style);
+    container.setAttribute("style", style);
   }
 });
 register(BoxModelHighlighter);
@@ -1626,6 +1756,10 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
     this.markup.destroy();
   },
 
+  getElement: function(id) {
+    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  },
+
   /**
    * Show the highlighter on a given node
    * @param {DOMNode} node
@@ -1652,23 +1786,21 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
     for (let point of ["p1","p2", "p3", "p4"]) {
       points.push(quad[point].x + "," + quad[point].y);
     }
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id,
-                                       "points",
-                                       points.join(" "));
+    this.getElement(id).setAttribute("points", points.join(" "));
   },
 
   _setLinePoints: function(p1, p2, id) {
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "x1", p1.x);
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "y1", p1.y);
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "x2", p2.x);
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "y2", p2.y);
+    let line = this.getElement(id);
+    line.setAttribute("x1", p1.x);
+    line.setAttribute("y1", p1.y);
+    line.setAttribute("x2", p2.x);
+    line.setAttribute("y2", p2.y);
 
     let dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     if (dist < ARROW_LINE_MIN_DISTANCE) {
-      this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + id, "marker-end");
+      line.removeAttribute("marker-end");
     } else {
-      this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "marker-end",
-                                         "url(#" + this.markerId + ")");
+      line.setAttribute("marker-end", "url(#" + this.markerId + ")");
     }
   },
 
@@ -1717,18 +1849,15 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
   },
 
   _hideShapes: function() {
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden", "true");
+    this.getElement("elements").setAttribute("hidden", "true");
   },
 
   _showShapes: function() {
-    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "elements",
-      "hidden");
+    this.getElement("elements").removeAttribute("hidden");
   }
 });
 register(CssTransformHighlighter);
 exports.CssTransformHighlighter = CssTransformHighlighter;
-
 
 /**
  * The SelectorHighlighter runs a given selector through querySelectorAll on the
@@ -1742,6 +1871,7 @@ function SelectorHighlighter(tabActor) {
 
 SelectorHighlighter.prototype = {
   typeName: "SelectorHighlighter",
+
   /**
    * Show BoxModelHighlighter on each node that matches that provided selector.
    * @param {DOMNode} node A context node that is used to get the document on
@@ -1830,6 +1960,10 @@ RectHighlighter.prototype = {
     this.markup.destroy();
   },
 
+  getElement: function(id) {
+    return this.markup.getElement(id);
+  },
+
   _hasValidOptions: function(options) {
     let isValidNb = n => typeof n === "number" && n >= 0 && isFinite(n);
     return options && options.rect &&
@@ -1875,12 +2009,13 @@ RectHighlighter.prototype = {
     }
 
     // Set the coordinates of the highlighter and show it
-    this.markup.setAttributeForElement("highlighted-rect", "style", style);
-    this.markup.removeAttributeForElement("highlighted-rect", "hidden");
+    let rect = this.getElement("highlighted-rect");
+    rect.setAttribute("style", style);
+    rect.removeAttribute("hidden");
   },
 
   hide: function() {
-    this.markup.setAttributeForElement("highlighted-rect", "hidden", "true");
+    this.getElement("highlighted-rect").setAttribute("hidden", "true");
   }
 };
 register(RectHighlighter);
@@ -2000,8 +2135,7 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
       attributes: {
         "id": "elements",
         "width": "100%",
-        "height": "100%",
-        "style": "width:100%;height:100%;"
+        "height": "100%"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -2145,6 +2279,10 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
     this.offsetParent = null;
   },
 
+  getElement: function(id) {
+    return this.markup.getElement(this.ID_CLASS_PREFIX + id);
+  },
+
   /**
    * Get the list of geometry properties that are actually set on the current
    * node.
@@ -2271,7 +2409,7 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
     this.parentQuads = this.layoutHelpers
                       .getAdjustedQuads(this.offsetParent.element, "padding");
 
-    let el = this.markup.getElement(this.ID_CLASS_PREFIX + "offset-parent");
+    let el = this.getElement("offset-parent");
 
     let isPositioned = this.computedStyle.position === "absolute" ||
                        this.computedStyle.position === "fixed";
@@ -2308,7 +2446,7 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
   },
 
   updateCurrentNode: function() {
-    let box = this.markup.getElement(this.ID_CLASS_PREFIX + "current-node");
+    let box = this.getElement("current-node");
     let {p1, p2, p3, p4} = this.currentQuads.margin[0];
     let attr = p1.x + "," + p1.y + " " +
                p2.x + "," + p2.y + " " +
@@ -2321,9 +2459,8 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
   _hide: function() {
     setIgnoreLayoutChanges(true);
 
-    let id = this.ID_CLASS_PREFIX;
-    this.markup.setAttributeForElement(id + "current-node", "hidden", "true");
-    this.markup.setAttributeForElement(id + "offset-parent", "hidden", "true");
+    this.getElement("current-node").setAttribute("hidden", "true");
+    this.getElement("offset-parent").setAttribute("hidden", "true");
     this.hideArrows();
     this.hideSize();
 
@@ -2334,15 +2471,13 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
 
   hideArrows: function() {
     for (let side of GeoProp.SIDES) {
-      let id = this.ID_CLASS_PREFIX;
-      this.markup.setAttributeForElement(id + "arrow-" + side, "hidden", "true");
-      this.markup.setAttributeForElement(id + "label-" + side, "hidden", "true");
+      this.getElement("arrow-" + side).setAttribute("hidden", "true");
+      this.getElement("label-" + side).setAttribute("hidden", "true");
     }
   },
 
   hideSize: function() {
-    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "label-size",
-      "hidden", "true");
+    this.getElement("label-size").setAttribute("hidden", "true");
   },
 
   updateSize: function() {
@@ -2360,9 +2495,8 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
     }
 
     if (labels.length) {
-      let id = this.ID_CLASS_PREFIX;
-      let labelEl = this.markup.getElement(id + "label-size");
-      let labelTextEl = this.markup.getElement(id + "label-text-size");
+      let labelEl = this.getElement("label-size");
+      let labelTextEl = this.getElement("label-text-size");
 
       let {bounds} = this.currentQuads.margin[0];
 
@@ -2440,10 +2574,9 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
   },
 
   updateArrow: function(side, mainStart, mainEnd, crossPos, labelValue) {
-    let id = this.ID_CLASS_PREFIX;
-    let arrowEl = this.markup.getElement(id + "arrow-" + side);
-    let labelEl = this.markup.getElement(id + "label-" + side);
-    let labelTextEl = this.markup.getElement(id + "label-text-" + side);
+    let arrowEl = this.getElement("arrow-" + side);
+    let labelEl = this.getElement("label-" + side);
+    let labelTextEl = this.getElement("label-text-" + side);
 
     // Position the arrow <line>.
     arrowEl.setAttribute(GeoProp.axis(side) + "1", mainStart);

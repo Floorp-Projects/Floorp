@@ -171,4 +171,51 @@ describe("loop.shared.utils", function() {
                               "subject", "body", "fake@invalid.tld");
     });
   });
+
+  describe("#btoa", function() {
+    it("should encode a basic base64 string", function() {
+      var result = sharedUtils.btoa(sharedUtils.strToUint8Array("crypto is great"));
+
+      expect(result).eql("Y3J5cHRvIGlzIGdyZWF0");
+    });
+
+    it("should pad encoded base64 strings", function() {
+      var result = sharedUtils.btoa(sharedUtils.strToUint8Array("crypto is grea"));
+
+      expect(result).eql("Y3J5cHRvIGlzIGdyZWE=");
+
+      result = sharedUtils.btoa(sharedUtils.strToUint8Array("crypto is gre"));
+
+      expect(result).eql("Y3J5cHRvIGlzIGdyZQ==");
+    });
+
+    it("should encode a non-unicode base64 string", function() {
+      var result = sharedUtils.btoa(sharedUtils.strToUint8Array("\uFDFD"));
+      expect(result).eql("77e9");
+    });
+  });
+
+  describe("#atob", function() {
+    it("should decode a basic base64 string", function() {
+      var result = sharedUtils.Uint8ArrayToStr(sharedUtils.atob("Y3J5cHRvIGlzIGdyZWF0"));
+
+      expect(result).eql("crypto is great");
+    });
+
+    it("should decode a padded base64 string", function() {
+      var result = sharedUtils.Uint8ArrayToStr(sharedUtils.atob("Y3J5cHRvIGlzIGdyZWE="));
+
+      expect(result).eql("crypto is grea");
+
+      result = sharedUtils.Uint8ArrayToStr(sharedUtils.atob("Y3J5cHRvIGlzIGdyZQ=="));
+
+      expect(result).eql("crypto is gre");
+    });
+
+    it("should decode a base64 string that has unicode characters", function() {
+      var result = sharedUtils.Uint8ArrayToStr(sharedUtils.atob("77e9"));
+
+      expect(result).eql("\uFDFD");
+    });
+  });
 });
