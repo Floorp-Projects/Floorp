@@ -24,7 +24,7 @@ let TEST_PAGES = [
     }
   },
   {
-    url: URL_PREFIX + "addons.mozilla.org/en-US/firefox/index.html",
+    url: URL_PREFIX + "not_an_article.html",
     expected: null
   },
   {
