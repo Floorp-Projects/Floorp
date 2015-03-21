@@ -621,14 +621,16 @@ BluetoothGattClientHALInterface::Refresh(
 
 void
 BluetoothGattClientHALInterface::SearchService(
-  int aConnId, const BluetoothUuid& aUuid,
+  int aConnId, bool aSearchAll, const BluetoothUuid& aUuid,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
 #if ANDROID_VERSION >= 19
   bt_uuid_t uuid;
 
-  if (NS_SUCCEEDED(Convert(aUuid, uuid))) {
+  if (aSearchAll) {
+    status = mInterface->search_service(aConnId, 0);
+  } else if (NS_SUCCEEDED(Convert(aUuid, uuid))) {
     status = mInterface->search_service(aConnId, &uuid);
   } else {
     status = BT_STATUS_PARM_INVALID;
@@ -647,7 +649,7 @@ BluetoothGattClientHALInterface::SearchService(
 void
 BluetoothGattClientHALInterface::GetIncludedService(
   int aConnId, const BluetoothGattServiceId& aServiceId,
-  const BluetoothGattServiceId& aStartServiceId,
+  bool aFirst, const BluetoothGattServiceId& aStartServiceId,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
@@ -655,8 +657,10 @@ BluetoothGattClientHALInterface::GetIncludedService(
   btgatt_srvc_id_t serviceId;
   btgatt_srvc_id_t startServiceId;
 
-  if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
-      NS_SUCCEEDED(Convert(aStartServiceId, startServiceId))) {
+  if (aFirst && NS_SUCCEEDED(Convert(aServiceId, serviceId))) {
+    status = mInterface->get_included_service(aConnId, &serviceId, 0);
+  } else if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
+             NS_SUCCEEDED(Convert(aStartServiceId, startServiceId))) {
     status = mInterface->get_included_service(aConnId, &serviceId,
                                               &startServiceId);
   } else {
@@ -676,7 +680,7 @@ BluetoothGattClientHALInterface::GetIncludedService(
 void
 BluetoothGattClientHALInterface::GetCharacteristic(
   int aConnId, const BluetoothGattServiceId& aServiceId,
-  const BluetoothGattId& aStartCharId,
+  bool aFirst, const BluetoothGattId& aStartCharId,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
@@ -684,8 +688,10 @@ BluetoothGattClientHALInterface::GetCharacteristic(
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t startCharId;
 
-  if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
-      NS_SUCCEEDED(Convert(aStartCharId, startCharId))) {
+  if (aFirst && NS_SUCCEEDED(Convert(aServiceId, serviceId))) {
+    status = mInterface->get_characteristic(aConnId, &serviceId, 0);
+  } else if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
+             NS_SUCCEEDED(Convert(aStartCharId, startCharId))) {
     status = mInterface->get_characteristic(aConnId, &serviceId, &startCharId);
   } else {
     status = BT_STATUS_PARM_INVALID;
@@ -704,9 +710,8 @@ BluetoothGattClientHALInterface::GetCharacteristic(
 void
 BluetoothGattClientHALInterface::GetDescriptor(
   int aConnId, const BluetoothGattServiceId& aServiceId,
-  const BluetoothGattId& aCharId,
-  const BluetoothGattId& aDescriptorId,
-  BluetoothGattClientResultHandler* aRes)
+  const BluetoothGattId& aCharId, bool aFirst,
+  const BluetoothGattId& aDescriptorId, BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
 #if ANDROID_VERSION >= 19
@@ -714,9 +719,13 @@ BluetoothGattClientHALInterface::GetDescriptor(
   btgatt_gatt_id_t charId;
   btgatt_gatt_id_t descriptorId;
 
-  if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
-      NS_SUCCEEDED(Convert(aCharId, charId)) &&
-      NS_SUCCEEDED(Convert(aDescriptorId, descriptorId))) {
+  if (aFirst &&
+      NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
+      NS_SUCCEEDED(Convert(aCharId, charId))) {
+    status = mInterface->get_descriptor(aConnId, &serviceId, &charId, 0);
+  } else if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
+             NS_SUCCEEDED(Convert(aCharId, charId)) &&
+             NS_SUCCEEDED(Convert(aDescriptorId, descriptorId))) {
     status = mInterface->get_descriptor(aConnId, &serviceId, &charId,
                                         &descriptorId);
   } else {
