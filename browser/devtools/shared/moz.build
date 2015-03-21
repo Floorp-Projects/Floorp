@@ -51,6 +51,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'devices.js',
     'doorhanger.js',
     'frame-script-utils.js',
+    'getjson.js',
     'inplace-editor.js',
     'observable-object.js',
     'options-view.js',
