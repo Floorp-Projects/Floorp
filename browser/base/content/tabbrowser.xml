@@ -1203,7 +1203,7 @@
                 // We need to explicitly focus the new tab, because
                 // tabbox.xml does this only in some cases.
                 this.mCurrentTab.focus();
-              } else if (gMultiProcessBrowser && document.activeElement !== newBrowser) {
+              } else if (gMultiProcessBrowser) {
                 // Clear focus so that _adjustFocusAfterTabSwitch can detect if
                 // some element has been focused and respect that.
                 document.activeElement.blur();
@@ -2866,495 +2866,6 @@
         </body>
       </method>
 
-      <!--
-        The tab switcher is responsible for asynchronously switching
-        tabs in e10s. It waits until the new tab is ready (i.e., the
-        layer tree is available) before switching to it. Then it
-        unloads the layer tree for the old tab.
-
-        The tab switcher is a state machine. For each tab, it
-        maintains state about whether the layer tree for the tab is
-        available, being loaded, being unloaded, or unavailable. It
-        also keeps track of the tab currently being displayed, the tab
-        it's trying to load, and the tab the user has asked to switch
-        to. The switcher object is created upon tab switch. It is
-        released when there are no pending tabs to load or unload.
-
-        The following general principles have guided the design:
-
-        1. We only request one layer tree at a time. If the user
-        switches to a different tab while waiting, we don't request
-        the new layer tree until the old tab has loaded or timed out.
-
-        2. If loading the layers for a tab times out, we show the
-        spinner and possibly request the layer tree for another tab if
-        the user has requested one.
-
-        3. We discard layer trees on a delay. This way, if the user is
-        switching among the same tabs frequently, we don't continually
-        load the same tabs.
-
-        It's important that we always show either the spinner or a tab
-        whose layers are available. Otherwise the compositor will draw
-        an entirely black frame, which is very jarring. To ensure this
-        never happens, we do the following:
-
-        1. When switching away from a tab, we assume the old tab might
-        still be drawn until a MozAfterPaint event occurs. Because
-        layout and compositing happen asynchronously, we don't have
-        any other way of knowing when the switch actually takes
-        place. Therefore, we don't unload the old tab until the next
-        MozAfterPaint event.
-
-        2. Suppose that the user switches from tab A to B and then
-        back to A. Suppose that we ask for tab A's layers to be
-        unloaded via message M1 after the first switch and then
-        request them again via message M2 once the second switch
-        happens. Both loading and unloading of layers happens
-        asynchronously, and this can cause problems. It's possible
-        that the content process publishes one last layer tree before
-        M1 is received. The parent process doesn't know that this
-        layer tree was published before M1 and not after M2, so it
-        will display the tab. However, once M1 arrives, the content
-        process will destroy the layer tree for A and now we will
-        display black for it.
-
-        To counter this problem, we keep tab A in a separate
-        "unloading" state until the layer tree is actually dropped in
-        the compositor thread. While the tab is in the "unloading"
-        state, we're not allowed to request layers for it. Once the
-        layers are dropped in the compositor, an event will fire and
-        we will transition the tab to the "unloaded" state. Then we
-        are free to request the tab's layers again.
-      -->
-      <field name="_switcher">null</field>
-      <method name="_getSwitcher">
-        <body><![CDATA[
-          if (this._switcher) {
-            return this._switcher;
-          }
-
-          let switcher = {
-            // How long to wait for a tab's layers to load. After this
-            // time elapses, we're free to put up the spinner and start
-            // trying to load a different tab.
-            TAB_SWITCH_TIMEOUT: 300 /* ms */,
-
-            // When the user hasn't switched tabs for this long, we unload
-            // layers for all tabs that aren't in use.
-            UNLOAD_DELAY: 300 /* ms */,
-
-            // The next three tabs form the principal state variables.
-            // See the assertions in postActions for their invariants.
-
-            // Tab the user requested most recently.
-            requestedTab: this.selectedTab,
-
-            // Tab we're currently trying to load.
-            loadingTab: null,
-
-            // We show this tab in case the requestedTab hasn't loaded yet.
-            lastVisibleTab: this.selectedTab,
-
-            // Auxilliary state variables:
-
-            visibleTab: this.selectedTab,   // Tab that's on screen.
-            spinnerTab: null,               // Tab showing a spinner.
-            originalTab: this.selectedTab,  // Tab that we started on.
-
-            tabbrowser: this,  // Reference to gBrowser.
-            loadTimer: null,   // TAB_SWITCH_TIMEOUT timer.
-            unloadTimer: null, // UNLOAD_DELAY timer.
-
-            // Map from tabs to STATE_* (below).
-            tabState: new Map(),
-
-            // Set of tabs that might be visible right now. We maintain
-            // this set because we can't be sure when a tab is actually
-            // drawn. A tab is added to this set when we ask to make it
-            // visible. All tabs but the most recently shown tab are
-            // removed from the set upon MozAfterPaint.
-            maybeVisibleTabs: new Set([this.selectedTab]),
-
-            STATE_UNLOADED: 0,
-            STATE_LOADING: 1,
-            STATE_LOADED: 2,
-            STATE_UNLOADING: 3,
-
-            logging: false,
-
-            getTabState: function(tab) {
-              let state = this.tabState.get(tab);
-              if (state === undefined) {
-                return this.STATE_UNLOADED;
-              }
-              return state;
-            },
-
-            setTabState: function(tab, state) {
-              if (state == this.STATE_UNLOADED) {
-                this.tabState.delete(tab);
-              } else {
-                this.tabState.set(tab, state);
-              }
-
-              let browser = tab.linkedBrowser;
-              let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-              if (state == this.STATE_LOADING) {
-                // Ask for a MozLayerTreeReady event.
-                fl.requestNotifyLayerTreeReady();
-                browser.docShellIsActive = true;
-              } else if (state == this.STATE_UNLOADING) {
-                // Ask for MozLayerTreeCleared event.
-                fl.requestNotifyLayerTreeCleared();
-                browser.docShellIsActive = false;
-              }
-            },
-
-            init: function() {
-              this.log("START");
-
-              window.addEventListener("MozAfterPaint", this);
-              window.addEventListener("MozLayerTreeReady", this);
-              window.addEventListener("MozLayerTreeCleared", this);
-              window.addEventListener("TabRemotenessChange", this);
-              this.setTabState(this.requestedTab, this.STATE_LOADED);
-            },
-
-            finish: function() {
-              this.log("FINISH");
-
-              this.assert(this.tabbrowser._switcher === this);
-              this.assert(!this.spinnerTab);
-              this.assert(!this.loadTimer);
-              this.assert(!this.loadingTab);
-              this.assert(this.lastVisibleTab === this.requestedTab);
-              this.assert(this.getTabState(this.requestedTab) == this.STATE_LOADED);
-
-              clearTimeout(this.unloadTimer);
-
-              window.removeEventListener("MozAfterPaint", this);
-              window.removeEventListener("MozLayerTreeReady", this);
-              window.removeEventListener("MozLayerTreeCleared", this);
-              window.removeEventListener("TabRemotenessChange", this);
-
-              this.tabbrowser._switcher = null;
-
-              let toBrowser = this.requestedTab.linkedBrowser;
-              toBrowser.setAttribute("type", "content-primary");
-
-              this.tabbrowser._adjustFocusAfterTabSwitch(this.requestedTab);
-
-              let fromBrowser = this.originalTab.linkedBrowser;
-              // It's possible that the tab we're switching from closed
-              // before we were able to finalize, in which case, fromBrowser
-              // doesn't exist.
-              if (fromBrowser) {
-                fromBrowser.setAttribute("type", "content-targetable");
-              }
-
-              let event = new CustomEvent("TabSwitchDone", {
-                bubbles: true,
-                cancelable: true
-              });
-              this.tabbrowser.dispatchEvent(event);
-            },
-
-            // This function is called after all the main state changes to
-            // make sure we display the right tab.
-            updateDisplay: function() {
-              // Figure out which tab we actually want visible right now.
-              let showTab = null;
-              if (this.getTabState(this.requestedTab) != this.STATE_LOADED &&
-                  this.lastVisibleTab && this.loadTimer) {
-                // If we can't show the requestedTab, and lastVisibleTab is
-                // available, show it.
-                showTab = this.lastVisibleTab;
-              } else {
-                // Show the requested tab. If it's not available, we'll show the spinner.
-                showTab = this.requestedTab;
-              }
-
-              // Show or hide the spinner as needed.
-              let needSpinner = this.getTabState(showTab) != this.STATE_LOADED;
-              if (!needSpinner && this.spinnerTab) {
-                this.tabbrowser.removeAttribute("pendingpaint");
-                this.spinnerTab.linkedBrowser.removeAttribute("pendingpaint");
-                this.spinnerTab = null;
-              } else if (needSpinner && this.spinnerTab !== showTab) {
-                if (this.spinnerTab) {
-                  this.spinnerTab.linkedBrowser.removeAttribute("pendingpaint");
-                }
-                this.spinnerTab = showTab;
-                this.tabbrowser.setAttribute("pendingpaint", "true");
-                this.spinnerTab.linkedBrowser.setAttribute("pendingpaint", "true");
-              }
-
-              // Switch to the tab we've decided to make visible.
-              if (this.visibleTab !== showTab) {
-                this.visibleTab = showTab;
-
-                this.maybeVisibleTabs.add(showTab);
-
-                let tabs = this.tabbrowser.mTabBox.tabs;
-                let tabPanel = this.tabbrowser.mPanelContainer;
-                let showPanel = tabs.getRelatedElement(showTab);
-                let index = Array.indexOf(tabPanel.childNodes, showPanel);
-                if (index != -1) {
-                  this.log(`Switch to tab ${index} - ${this.tinfo(showTab)}`);
-                  tabPanel.setAttribute("selectedIndex", index);
-                  if (showTab === this.requestedTab) {
-                    this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
-                  }
-                }
-              }
-
-              this.lastVisibleTab = this.visibleTab;
-            },
-
-            assert: function(cond) {
-              if (!cond) {
-                dump("Assertion failure\n" + Error().stack);
-                throw new Error("Assertion failure");
-              }
-            },
-
-            // We've decided to try to load requestedTab.
-            loadRequestedTab: function() {
-              this.assert(!this.loadTimer);
-
-              // loadingTab can be non-null here if we timed out loading the current tab.
-              // In that case we just overwrite it with a different tab; it's had its chance.
-              this.loadingTab = this.requestedTab;
-              this.log("Loading tab " + this.tinfo(this.loadingTab));
-
-              this.setTabState(this.requestedTab, this.STATE_LOADING);
-              this.loadTimer = setTimeout(() => this.onLoadTimeout(), this.TAB_SWITCH_TIMEOUT);
-            },
-
-            // This function runs before every event. It fixes up the state
-            // to account for closed tabs.
-            preActions: function() {
-              for (let [tab, state] of this.tabState) {
-                if (!tab.linkedBrowser) {
-                  this.tabState.delete(tab);
-                }
-              }
-
-              if (this.lastVisibleTab && !this.lastVisibleTab.linkedBrowser) {
-                this.lastVisibleTab = null;
-              }
-              if (this.spinnerTab && !this.spinnerTab.linkedBrowser) {
-                this.spinnerTab = null;
-              }
-              if (this.loadingTab && !this.loadingTab.linkedBrowser) {
-                this.loadingTab = null;
-                clearTimeout(this.loadTimer);
-                this.loadTimer = null;
-              }
-            },
-
-            // This code runs after we've responded to an event or requested a new
-            // tab. It's expected that we've already updated all the principal
-            // state variables. This function takes care of updating any auxilliary
-            // state.
-            postActions: function() {
-              // Once we finish loading loadingTab, we null it out. So the state should
-              // always be LOADING.
-              this.assert(!this.loadingTab ||
-                          this.getTabState(this.loadingTab) == this.STATE_LOADING);
-
-              // We guarantee that loadingTab is non-null iff loadTimer is non-null. So
-              // the timer is set only when we're loading something.
-              this.assert(!this.loadTimer || this.loadingTab);
-              this.assert(!this.loadingTab || this.loadTimer);
-
-              // If we're not loading anything, try loading the requested tab.
-              if (!this.loadTimer && this.getTabState(this.requestedTab) == this.STATE_UNLOADED) {
-                this.loadRequestedTab();
-              }
-
-              // See how many tabs still have work to do.
-              let numPending = 0;
-              for (let [tab, state] of this.tabState) {
-                if (state == this.STATE_LOADED && tab !== this.requestedTab) {
-                  numPending++;
-                }
-                if (state == this.STATE_LOADING || state == this.STATE_UNLOADING) {
-                  numPending++;
-                }
-              }
-
-              this.updateDisplay();
-
-              if (numPending == 0) {
-                this.finish();
-              }
-
-              this.logState("done");
-            },
-
-            // Fires when we're ready to unload unused tabs.
-            onUnloadTimeout: function() {
-              this.logState("onUnloadTimeout");
-              this.preActions();
-
-              let numPending = 0;
-
-              // Unload any tabs that can be unloaded.
-              for (let [tab, state] of this.tabState) {
-                if (state == this.STATE_LOADED &&
-                    !this.maybeVisibleTabs.has(tab) &&
-                    tab !== this.lastVisibleTab &&
-                    tab !== this.loadingTab &&
-                    tab !== this.requestedTab)
-                {
-                  this.setTabState(tab, this.STATE_UNLOADING);
-                }
-
-                if (state != this.STATE_UNLOADED && tab !== this.requestedTab) {
-                  numPending++;
-                }
-              }
-
-              if (numPending) {
-                // Keep the timer going since there may be more tabs to unload.
-                this.unloadTimer = setTimeout(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
-              }
-
-              this.postActions();
-            },
-
-            // Fires when an ongoing load has taken too long.
-            onLoadTimeout: function() {
-              this.logState("onLoadTimeout");
-              this.preActions();
-              this.loadTimer = null;
-              this.loadingTab = null;
-              this.postActions();
-            },
-
-            // Fires when the layers become available for a tab.
-            onLayersReady: function(browser) {
-              this.logState("onLayersReady");
-
-              let tab = this.tabbrowser.getTabForBrowser(browser);
-              this.setTabState(tab, this.STATE_LOADED);
-
-              if (this.loadingTab === tab) {
-                clearTimeout(this.loadTimer);
-                this.loadTimer = null;
-                this.loadingTab = null;
-              }
-            },
-
-            // Fires when we paint the screen. Any tab switches we initiated
-            // previously are done, so there's no need to keep the old layers
-            // around.
-            onPaint: function() {
-              this.maybeVisibleTabs.clear();
-            },
-
-            // Called when we're done clearing the layers for a tab.
-            onLayersCleared: function(browser) {
-              this.logState("onLayersCleared");
-
-              let tab = this.tabbrowser.getTabForBrowser(browser);
-              if (tab) {
-                this.setTabState(tab, this.STATE_UNLOADED);
-              }
-            },
-
-            // Called when a tab switches from remote to non-remote. In this case
-            // a MozLayerTreeReady notification that we requested may never fire,
-            // so we need to simulate it.
-            onRemotenessChange: function(tab) {
-              this.logState("onRemotenessChange");
-              if (!tab.linkedBrowser.isRemoteBrowser) {
-                if (this.getTabState(tab) == this.STATE_LOADING) {
-                  this.onLayersReady(tab.linkedBrowser);
-                } else if (this.getTabState(tab) == this.STATE_UNLOADING) {
-                  this.onLayersCleared(tab.linkedBrowser);
-                }
-              }
-            },
-
-            // Called when the user asks to switch to a given tab.
-            requestTab: function(tab) {
-              if (tab === this.requestedTab) {
-                return;
-              }
-
-              this.logState("requestTab " + this.tinfo(tab));
-
-              this.requestedTab = tab;
-
-              this.preActions();
-
-              clearTimeout(this.unloadTimer);
-              this.unloadTimer = setTimeout(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
-
-              this.postActions();
-            },
-
-            handleEvent: function(event) {
-              this.preActions();
-
-              if (event.type == "MozLayerTreeReady") {
-                this.onLayersReady(event.originalTarget);
-              } if (event.type == "MozAfterPaint") {
-                this.onPaint();
-              } else if (event.type == "MozLayerTreeCleared") {
-                this.onLayersCleared(event.originalTarget);
-              } else if (event.type == "TabRemotenessChange") {
-                this.onRemotenessChange(event.target);
-              }
-
-              this.postActions();
-            },
-
-            tinfo: function(tab) {
-              if (tab) {
-                return tab._tPos + "(" + tab.linkedBrowser.currentURI.spec + ")";
-              } else {
-                return "null";
-              }
-            },
-
-            log: function(s) {
-              if (!this.logging)
-                return;
-              dump(s + "\n");
-            },
-
-            logState: function(prefix) {
-              if (!this.logging)
-                return;
-
-              dump(prefix + " ");
-              for (let i = 0; i < this.tabbrowser.tabs.length; i++) {
-                let tab = this.tabbrowser.tabs[i];
-                let state = this.getTabState(tab);
-
-                dump(i + ":");
-                if (tab === this.lastVisibleTab) dump("V");
-                if (tab === this.loadingTab) dump("L");
-                if (tab === this.requestedTab) dump("R");
-                if (state == this.STATE_LOADED) dump("(+)");
-                if (state == this.STATE_LOADING) dump("(+?)");
-                if (state == this.STATE_UNLOADED) dump("(-)");
-                if (state == this.STATE_UNLOADING) dump("(-?)");
-                dump(" ");
-              }
-              dump("\n");
-            },
-          };
-          this._switcher = switcher;
-          switcher.init();
-          return switcher;
-        ]]></body>
-      </method>
-
       <!-- BEGIN FORWARDED BROWSER PROPERTIES.  IF YOU ADD A PROPERTY TO THE BROWSER ELEMENT
            MAKE SURE TO ADD IT HERE AS WELL. -->
       <property name="canGoBack"
@@ -3892,6 +3403,154 @@
         <body>
           return this.tabContainer.visible;
         </body>
+      </method>
+
+      <method name="_showBusySpinnerRemoteBrowser">
+        <parameter name="aBrowser"/>
+        <body><![CDATA[
+          aBrowser.setAttribute("pendingpaint", "true");
+          if (this._contentWaitingCount <= 0) {
+            // We are not currently spinning
+            this.setAttribute("pendingpaint", "true");
+            this._contentWaitingCount = 1;
+          } else {
+            this._contentWaitingCount++;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_hideBusySpinnerRemoteBrowser">
+        <parameter name="aBrowser"/>
+        <body><![CDATA[
+          aBrowser.removeAttribute("pendingpaint");
+          this._contentWaitingCount--;
+          if (this._contentWaitingCount <= 0) {
+            this.removeAttribute("pendingpaint");
+          }
+        ]]></body>
+      </method>
+
+      <method name="_prepareForTabSwitch">
+        <parameter name="toTab"/>
+        <parameter name="fromTab"/>
+        <body><![CDATA[
+          const kTabSwitchTimeout = 300;
+          let toBrowser = this.getBrowserForTab(toTab);
+          let fromBrowser = fromTab ? this.getBrowserForTab(fromTab)
+                                    : null;
+
+          // We only want to wait for the MozAfterRemotePaint event if
+          // the tab we're switching to is a remote tab, and if the tab
+          // we're switching to isn't the one we've already got. The latter
+          // case can occur when closing tabs before the currently selected
+          // one.
+          let shouldWait = toBrowser.getAttribute("remote") == "true" &&
+                           toBrowser != fromBrowser;
+
+          let switchPromise;
+
+          if (shouldWait) {
+            let timeoutId;
+            let panels = this.mPanelContainer;
+
+            // Both the timeout and MozAfterPaint promises use this same
+            // logic to determine whether they should carry out the tab
+            // switch, or reject it outright.
+            let attemptTabSwitch = (aResolve, aReject) => {
+              if (this.selectedBrowser == toBrowser) {
+                aResolve();
+              } else {
+                // We switched away or closed the browser before we timed
+                // out. We reject, which will cancel the tab switch.
+                aReject();
+              }
+            };
+
+            let timeoutPromise = new Promise((aResolve, aReject) => {
+              timeoutId = setTimeout(() => {
+                if (toBrowser.isRemoteBrowser) {
+                  // The browser's remoteness could have changed since we
+                  // setTimeout so only show the spinner if it's still remote.
+                  this._showBusySpinnerRemoteBrowser(toBrowser);
+                }
+                attemptTabSwitch(aResolve, aReject);
+              }, kTabSwitchTimeout);
+            });
+
+            let paintPromise = new Promise((aResolve, aReject) => {
+              let onRemotePaint = () => {
+                toBrowser.removeEventListener("MozAfterRemotePaint", onRemotePaint);
+                this._hideBusySpinnerRemoteBrowser(toBrowser);
+                clearTimeout(timeoutId);
+                attemptTabSwitch(aResolve, aReject);
+              };
+              toBrowser.addEventListener("MozAfterRemotePaint", onRemotePaint);
+              toBrowser.QueryInterface(Ci.nsIFrameLoaderOwner)
+                       .frameLoader
+                       .requestNotifyAfterRemotePaint();
+               // We need to activate the docShell on the tab we're switching
+               // to - otherwise, we won't initiate a remote paint request and
+               // therefore we won't get the MozAfterRemotePaint event that we're
+               // waiting for.
+               // Note that this happens, as we require, even if the timeout in the
+               // timeoutPromise triggers before the paintPromise even runs.
+               toBrowser.docShellIsActive = true;
+            });
+
+            switchPromise = Promise.race([paintPromise, timeoutPromise]);
+          } else {
+            // Activate the docShell on the tab we're switching to.
+            toBrowser.docShellIsActive = true;
+
+            // No need to wait - just resolve immediately to do the switch ASAP.
+            switchPromise = Promise.resolve();
+          }
+
+          return switchPromise;
+        ]]></body>
+      </method>
+
+      <method name="_deactivateContent">
+        <parameter name="tab"/>
+        <body><![CDATA[
+          // It's unlikely, yet possible, that while we were waiting
+          // to deactivate this tab, that something closed it and wiped
+          // out the browser. For example, during a tab switch, while waiting
+          // for the MozAfterRemotePaint event to fire, something closes the
+          // original tab that the user had selected. If that's the case, then
+          // there's nothing to deactivate.
+          let browser = this.getBrowserForTab(tab);
+          if (browser && this.selectedBrowser != browser) {
+            browser.docShellIsActive = false;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_finalizeTabSwitch">
+        <parameter name="toTab"/>
+        <parameter name="fromTab"/>
+        <body><![CDATA[
+          this._adjustFocusAfterTabSwitch(toTab);
+          this._deactivateContent(fromTab);
+
+          let toBrowser = this.getBrowserForTab(toTab);
+          toBrowser.setAttribute("type", "content-primary");
+
+          let fromBrowser = this.getBrowserForTab(fromTab);
+          // It's possible that the tab we're switching from closed
+          // before we were able to finalize, in which case, fromBrowser
+          // doesn't exist.
+          if (fromBrowser) {
+            fromBrowser.setAttribute("type", "content-targetable");
+          }
+        ]]></body>
+      </method>
+
+      <method name="_cancelTabSwitch">
+        <parameter name="toTab"/>
+        <body><![CDATA[
+          this._deactivateContent(toTab);
+        ]]></body>
       </method>
 
       <property name="mContextTab" readonly="true"
@@ -5856,7 +5515,7 @@
           let fromTab = this._selectedPanel ? this.getRelatedElement(this._selectedPanel)
                                             : null;
 
-          gBrowser._getSwitcher().requestTab(toTab);
+          let switchPromise = gBrowser._prepareForTabSwitch(toTab, fromTab);
 
           var panel = this._selectedPanel;
           var newPanel = this.childNodes[val];
@@ -5869,6 +5528,26 @@
             this.dispatchEvent(event);
 
             this._selectedIndex = val;
+
+            switchPromise.then(() => {
+              // If we cannot find the tabpanel that we were trying to switch to, then
+              // it must have been removed before our Promise could be resolved. In
+              // that case, we just cancel the tab switch.
+              var updatedTabIndex = Array.indexOf(this.childNodes, newPanel);
+              if (updatedTabIndex == -1) {
+                gBrowser._cancelTabSwitch(toTab);
+              } else {
+                this.setAttribute("selectedIndex", updatedTabIndex);
+                gBrowser._finalizeTabSwitch(toTab, fromTab);
+              }
+            }, () => {
+              // If the promise rejected, that means we don't want to actually
+              // flip the deck, so we cancel the tab switch.
+              // We need to nullcheck the method we're about to call because
+              // the binding might be dead at this point.
+              if (gBrowser._cancelTabSwitch)
+                gBrowser._cancelTabSwitch(toTab);
+            });
           }
 
           return val;
