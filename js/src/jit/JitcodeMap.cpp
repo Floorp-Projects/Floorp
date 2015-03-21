@@ -447,11 +447,11 @@ JitcodeGlobalTable::lookupForSampler(void *ptr, JitcodeGlobalEntry *result, JSRu
     }
 
 #ifdef DEBUG
-    // JitcodeGlobalEntries are marked during the beginning of the sweep phase
-    // (PHASE_SWEEP_MARK_JITCODE_GLOBAL_TABLE). A read barrier is not needed,
-    // as any JS frames sampled during the sweep phase of the GC must be on
-    // stack, and on-stack frames must already be marked at the beginning of
-    // the sweep phase. This assumption is verified below.
+    // JitcodeGlobalEntries are marked during the beginning of the sweep
+    // phase. A read barrier is not needed, as any JS frames sampled during
+    // the sweep phase of the GC must be on stack, and on-stack frames must
+    // already be marked at the beginning of the sweep phase. This assumption
+    // is verified below.
     if (rt->isHeapBusy() &&
         rt->gc.stats.currentPhase() >= gcstats::PHASE_SWEEP &&
         rt->gc.stats.currentPhase() <= gcstats::PHASE_GC_END)
@@ -798,7 +798,7 @@ JitcodeGlobalTable::sweep(JSRuntime *rt)
 bool
 JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer *trc)
 {
-    if (!isJitcodeMarkedFromAnyThread()) {
+    if (!IsJitCodeMarkedFromAnyThread(&jitcode_)) {
         MarkJitCodeUnbarriered(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
         return true;
     }
@@ -808,9 +808,8 @@ JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer *trc)
 bool
 JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread()
 {
-    if (jitcode_->asTenured().arenaHeader()->allocatedDuringIncremental)
-        return false;
-    return IsJitCodeMarkedFromAnyThread(&jitcode_);
+    return IsJitCodeMarkedFromAnyThread(&jitcode_) ||
+           jitcode_->arenaHeader()->allocatedDuringIncremental;
 }
 
 bool
@@ -822,7 +821,7 @@ JitcodeGlobalEntry::BaseEntry::isJitcodeAboutToBeFinalized()
 bool
 JitcodeGlobalEntry::BaselineEntry::markIfUnmarked(JSTracer *trc)
 {
-    if (!isMarkedFromAnyThread()) {
+    if (!IsScriptMarkedFromAnyThread(&script_)) {
         MarkScriptUnbarriered(trc, &script_, "jitcodeglobaltable-baselineentry-script");
         return true;
     }
@@ -838,7 +837,8 @@ JitcodeGlobalEntry::BaselineEntry::sweep()
 bool
 JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread()
 {
-    return IsScriptMarkedFromAnyThread(&script_);
+    return IsScriptMarkedFromAnyThread(&script_) ||
+           script_->arenaHeader()->allocatedDuringIncremental;
 }
 
 bool
@@ -904,8 +904,11 @@ bool
 JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
 {
     for (unsigned i = 0; i < numScripts(); i++) {
-        if (!IsScriptMarkedFromAnyThread(&sizedScriptList()->pairs[i].script))
+        if (!IsScriptMarkedFromAnyThread(&sizedScriptList()->pairs[i].script) &&
+            !sizedScriptList()->pairs[i].script->arenaHeader()->allocatedDuringIncremental)
+        {
             return false;
+        }
     }
 
     if (!optsAllTypes_)
@@ -914,8 +917,11 @@ JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
     for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
          iter != optsAllTypes_->end(); iter++)
     {
-        if (!TypeSet::IsTypeMarkedFromAnyThread(&iter->type))
+        if (!TypeSet::IsTypeMarkedFromAnyThread(&iter->type) &&
+            !TypeSet::IsTypeAllocatedDuringIncremental(iter->type))
+        {
             return false;
+        }
     }
 
     return true;
@@ -1502,3 +1508,18 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter &writer,
 
 } // namespace jit
 } // namespace js
+
+
+JS_PUBLIC_API(JS::ProfilingFrameIterator::FrameKind)
+JS::GetProfilingFrameKindFromNativeAddr(JSRuntime *rt, void *addr)
+{
+    JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
+    JitcodeGlobalEntry entry;
+    table->lookupInfallible(addr, &entry, rt);
+    MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline());
+
+    if (entry.isBaseline())
+        return JS::ProfilingFrameIterator::Frame_Baseline;
+
+    return JS::ProfilingFrameIterator::Frame_Ion;
+}

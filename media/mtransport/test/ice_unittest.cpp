@@ -411,8 +411,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     expected_remote_type_ = remote;
   }
 
-  void SetExpectedCandidateAddr(const std::string& addr) {
-    expected_local_addr_ = addr;
+  void SetExpectedRemoteCandidateAddr(const std::string& addr) {
     expected_remote_addr_ = addr;
   }
 
@@ -593,9 +592,6 @@ class IceTestPeer : public sigslot::has_slots<> {
           ASSERT_EQ(expected_local_transport_, local->local_addr.transport);
           DumpCandidate("Remote ", *remote);
           ASSERT_EQ(expected_remote_type_, remote->type);
-          if (!expected_local_addr_.empty()) {
-            ASSERT_EQ(expected_local_addr_, local->cand_addr.host);
-          }
           if (!expected_remote_addr_.empty()) {
             ASSERT_EQ(expected_remote_addr_, remote->cand_addr.host);
           }
@@ -961,7 +957,6 @@ class IceTestPeer : public sigslot::has_slots<> {
   NrIceCandidate::Type expected_local_type_;
   std::string expected_local_transport_;
   NrIceCandidate::Type expected_remote_type_;
-  std::string expected_local_addr_;
   std::string expected_remote_addr_;
   TrickleMode trickle_mode_;
   int trickled_;
@@ -1145,9 +1140,9 @@ class IceConnectTest : public ::testing::Test {
     p2_->SetExpectedTypes(local2, remote2);
   }
 
-  void SetExpectedCandidateAddr(const std::string& addr) {
-    p1_->SetExpectedCandidateAddr(addr);
-    p2_->SetExpectedCandidateAddr(addr);
+  void SetExpectedRemoteCandidateAddr(const std::string& addr) {
+    p1_->SetExpectedRemoteCandidateAddr(addr);
+    p2_->SetExpectedRemoteCandidateAddr(addr);
   }
 
   void ConnectP1(TrickleMode mode = TRICKLE_NONE) {
@@ -1523,9 +1518,9 @@ TEST_F(IceConnectTest, TestConnect) {
 TEST_F(IceConnectTest, TestLoopbackOnlySortOf) {
   Init(false, true);
   AddStream("first", 1);
-  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsLoopbackCandidate);
-  SetExpectedCandidateAddr("127.0.0.1");
+  ASSERT_TRUE(Gather());
+  SetExpectedRemoteCandidateAddr("127.0.0.1");
   Connect();
 }
 

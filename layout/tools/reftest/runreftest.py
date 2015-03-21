@@ -289,22 +289,22 @@ class RefTest(object):
     def _psInfo(line):
       if pname in line:
         log.info(line)
-    process = mozprocess.ProcessHandler(['ps', '-f', '--no-headers'],
+    process = mozprocess.ProcessHandler(['ps', '-f'],
                                         processOutputLine=_psInfo)
     process.run()
     process.wait()
 
     def _psKill(line):
       parts = line.split()
-      pid = int(parts[0])
-      if len(parts) == 3 and parts[2] == pname and parts[1] == '1':
-        log.info("killing %s orphan with pid %d" % (pname, pid))
-        try:
-          os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-        except Exception as e:
-          log.info("Failed to kill process %d: %s" % (pid, str(e)))
-
-    process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm', '--no-headers'],
+      if len(parts) == 3 and parts[0].isdigit():
+        pid = int(parts[0])
+        if parts[2] == pname and parts[1] == '1':
+          log.info("killing %s orphan with pid %d" % (pname, pid))
+          try:
+            os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+          except Exception as e:
+            log.info("Failed to kill process %d: %s" % (pid, str(e)))
+    process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
                                         processOutputLine=_psKill)
     process.run()
     process.wait()

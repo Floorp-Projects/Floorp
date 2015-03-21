@@ -269,7 +269,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitSimdInsertElement(MSimdInsertElement *ins);
     void visitSimdSignMask(MSimdSignMask *ins);
     void visitSimdSwizzle(MSimdSwizzle *ins);
-    void visitSimdGeneralSwizzle(MSimdGeneralSwizzle *ins);
+    void visitSimdGeneralShuffle(MSimdGeneralShuffle *ins);
     void visitSimdShuffle(MSimdShuffle *ins);
     void visitSimdUnaryArith(MSimdUnaryArith *ins);
     void visitSimdBinaryComp(MSimdBinaryComp *ins);

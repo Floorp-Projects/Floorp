@@ -54,10 +54,9 @@ AnimationPlayer::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   Nullable<TimeDuration> previousCurrentTime = GetCurrentTime();
   mStartTime = aNewStartTime;
   if (!aNewStartTime.IsNull()) {
-    // Until bug 1127380 (playbackRate) is implemented, the rate is essentially
-    // one. Once that bug is fixed we should only SetNull() if the rate is not
-    // zero.
-    mHoldTime.SetNull();
+    if (mPlaybackRate != 0.0) {
+      mHoldTime.SetNull();
+    }
   } else {
     mHoldTime = previousCurrentTime;
   }
@@ -89,7 +88,8 @@ AnimationPlayer::GetCurrentTime() const
   if (!mStartTime.IsNull()) {
     Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
     if (!timelineTime.IsNull()) {
-      result.SetValue(timelineTime.Value() - mStartTime.Value());
+      result.SetValue((timelineTime.Value() - mStartTime.Value())
+                        .MultDouble(mPlaybackRate));
     }
   }
   return result;
@@ -101,15 +101,16 @@ AnimationPlayer::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 {
   if (!mHoldTime.IsNull() ||
       !mTimeline ||
-      mTimeline->GetCurrentTime().IsNull()
-      /*or, once supported, playback rate is 0, or have pending pause task*/) {
+      mTimeline->GetCurrentTime().IsNull() ||
+      mPlaybackRate == 0.0
+      /*or, once supported, if we have a pending pause task*/) {
     mHoldTime.SetValue(aSeekTime);
     if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
       mStartTime.SetNull();
     }
   } else {
-    // once playback rate is supported, need to account for that here
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() - aSeekTime);
+    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
+                          (aSeekTime / mPlaybackRate));
   }
 
   // Once AnimationPlayers store a previous current time, set that to
@@ -132,6 +133,30 @@ AnimationPlayer::SetCurrentTime(const TimeDuration& aSeekTime)
   // http://w3c.github.io/web-animations/#update-a-players-finished-state
 }
 
+void
+AnimationPlayer::SetPlaybackRate(double aPlaybackRate)
+{
+  Nullable<TimeDuration> previousTime = GetCurrentTime();
+  mPlaybackRate = aPlaybackRate;
+  if (!previousTime.IsNull()) {
+    ErrorResult rv;
+    SetCurrentTime(previousTime.Value());
+    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
+  }
+}
+
+void
+AnimationPlayer::SilentlySetPlaybackRate(double aPlaybackRate)
+{
+  Nullable<TimeDuration> previousTime = GetCurrentTime();
+  mPlaybackRate = aPlaybackRate;
+  if (!previousTime.IsNull()) {
+    ErrorResult rv;
+    SilentlySetCurrentTime(previousTime.Value());
+    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
+  }
+}
+
 AnimationPlayState
 AnimationPlayer::PlayState() const
 {
@@ -148,7 +173,8 @@ AnimationPlayer::PlayState() const
     return AnimationPlayState::Paused;
   }
 
-  if (currentTime.Value() >= SourceContentEnd()) {
+  if ((mPlaybackRate > 0.0 && currentTime.Value() >= SourceContentEnd()) ||
+      (mPlaybackRate < 0.0 && currentTime.Value().ToMilliseconds() <= 0.0)) {
     return AnimationPlayState::Finished;
   }
 
@@ -399,10 +425,17 @@ AnimationPlayer::DoPlay()
   // animation-play-state we *don't* trigger finishing behavior.
 
   Nullable<TimeDuration> currentTime = GetCurrentTime();
-  if (currentTime.IsNull()) {
+  if (mPlaybackRate > 0.0 &&
+      (currentTime.IsNull())) {
     mHoldTime.SetValue(TimeDuration(0));
-  } else if (mHoldTime.IsNull()) {
-    // If the hold time is null, we are already playing normally
+  } else if (mPlaybackRate < 0.0 &&
+             (currentTime.IsNull())) {
+    mHoldTime.SetValue(TimeDuration(SourceContentEnd()));
+  } else if (mPlaybackRate == 0.0 && currentTime.IsNull()) {
+    mHoldTime.SetValue(TimeDuration(0));
+  }
+
+  if (mHoldTime.IsNull()) {
     return;
   }
 
@@ -460,8 +493,12 @@ AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
   MOZ_ASSERT(!mHoldTime.IsNull(),
              "A player in the pending state should have a resolved hold time");
 
-  mStartTime.SetValue(aResumeTime - mHoldTime.Value());
-  mHoldTime.SetNull();
+  if (mPlaybackRate != 0) {
+    mStartTime.SetValue(aResumeTime - (mHoldTime.Value() / mPlaybackRate));
+    mHoldTime.SetNull();
+  } else {
+    mStartTime.SetValue(aResumeTime);
+  }
   mIsPending = false;
 
   UpdateSourceContent();

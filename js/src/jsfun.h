@@ -584,7 +584,8 @@ class FunctionExtended : public JSFunction
 };
 
 extern bool
-CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction fun);
+CloneFunctionObjectUseSameScript(JSCompartment *compartment, HandleFunction fun,
+                                 HandleObject newParent);
 
 extern JSFunction *
 CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,

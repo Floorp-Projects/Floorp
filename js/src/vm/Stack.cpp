@@ -171,7 +171,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *
 
     // The scope chain is always ended by one or more non-syntactic
     // ScopeObjects (viz. GlobalObject or a non-syntactic WithObject).
-    MOZ_ASSERT(IsValidTerminatingScope(scope));
+    MOZ_ASSERT(!IsSyntacticScope(scope));
 #endif
 }
 
@@ -238,7 +238,7 @@ InterpreterFrame::epilogue(JSContext *cx)
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerEvalFrame())
-                MOZ_ASSERT(IsValidTerminatingScope(scopeChain()));
+                MOZ_ASSERT(!IsSyntacticScope(scopeChain()));
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
@@ -258,7 +258,7 @@ InterpreterFrame::epilogue(JSContext *cx)
     }
 
     if (isGlobalFrame()) {
-        MOZ_ASSERT(IsValidTerminatingScope(scopeChain()));
+        MOZ_ASSERT(!IsSyntacticScope(scopeChain()));
         return;
     }
 
@@ -1111,7 +1111,8 @@ FrameIter::matchCallee(JSContext *cx, HandleFunction fun) const
     // Use the same condition as |js::CloneFunctionObject|, to know if we should
     // expect both functions to have the same JSScript. If so, and if they are
     // different, then they cannot be equal.
-    bool useSameScript = CloneFunctionObjectUseSameScript(fun->compartment(), currentCallee);
+    RootedObject global(cx, &fun->global());
+    bool useSameScript = CloneFunctionObjectUseSameScript(fun->compartment(), currentCallee, global);
     if (useSameScript &&
         (currentCallee->hasScript() != fun->hasScript() ||
          currentCallee->nonLazyScript() != fun->nonLazyScript()))
@@ -1908,7 +1909,8 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
     // FIXMEshu: disabled until we can ensure the optimization info is live
     // when we write out the JSON stream of the profile.
     if (false && entry.hasTrackedOptimizations()) {
-        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(returnAddr);
+        uint32_t dummy;
+        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(returnAddr, &dummy);
         frames[offset].hasTrackedOptimizations = index.isSome();
     }
 

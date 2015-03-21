@@ -7,252 +7,141 @@
 #ifndef js_TrackedOptimizationInfo_h
 #define js_TrackedOptimizationInfo_h
 
+#include "mozilla/Maybe.h"
+
 namespace JS {
 
 #define TRACKED_STRATEGY_LIST(_)                        \
-    _(GetProp_ArgumentsLength,                          \
-      "getprop arguments.length")                       \
-    _(GetProp_ArgumentsCallee,                          \
-      "getprop arguments.callee")                       \
-    _(GetProp_InferredConstant,                         \
-      "getprop inferred constant")                      \
-    _(GetProp_Constant,                                 \
-      "getprop constant")                               \
-    _(GetProp_SimdGetter,                               \
-      "getprop SIMD getter")                            \
-    _(GetProp_TypedObject,                              \
-      "getprop TypedObject")                            \
-    _(GetProp_DefiniteSlot,                             \
-      "getprop definite slot")                          \
-    _(GetProp_Unboxed,                                  \
-      "getprop unboxed object")                         \
-    _(GetProp_CommonGetter,                             \
-      "getprop common getter")                          \
-    _(GetProp_InlineAccess,                             \
-      "getprop inline access")                          \
-    _(GetProp_Innerize,                                 \
-      "getprop innerize (access on global window)")     \
-    _(GetProp_InlineCache,                              \
-      "getprop IC")                                     \
+    _(GetProp_ArgumentsLength)                          \
+    _(GetProp_ArgumentsCallee)                          \
+    _(GetProp_InferredConstant)                         \
+    _(GetProp_Constant)                                 \
+    _(GetProp_SimdGetter)                               \
+    _(GetProp_TypedObject)                              \
+    _(GetProp_DefiniteSlot)                             \
+    _(GetProp_Unboxed)                                  \
+    _(GetProp_CommonGetter)                             \
+    _(GetProp_InlineAccess)                             \
+    _(GetProp_Innerize)                                 \
+    _(GetProp_InlineCache)                              \
                                                         \
-    _(SetProp_CommonSetter,                             \
-      "setprop common setter")                          \
-    _(SetProp_TypedObject,                              \
-      "setprop TypedObject")                            \
-    _(SetProp_DefiniteSlot,                             \
-      "setprop definite slot")                          \
-    _(SetProp_Unboxed,                                  \
-      "setprop unboxed object")                         \
-    _(SetProp_InlineAccess,                             \
-      "setprop inline access")                          \
+    _(SetProp_CommonSetter)                             \
+    _(SetProp_TypedObject)                              \
+    _(SetProp_DefiniteSlot)                             \
+    _(SetProp_Unboxed)                                  \
+    _(SetProp_InlineAccess)                             \
                                                         \
-    _(GetElem_TypedObject,                              \
-      "getprop TypedObject")                            \
-    _(GetElem_Dense,                                    \
-      "getelem dense")                                  \
-    _(GetElem_TypedStatic,                              \
-      "getelem TypedArray static")                      \
-    _(GetElem_TypedArray,                               \
-      "getelem TypedArray")                             \
-    _(GetElem_String,                                   \
-      "getelem string")                                 \
-    _(GetElem_Arguments,                                \
-      "getelem arguments")                              \
-    _(GetElem_ArgumentsInlined,                         \
-      "getelem arguments inlined")                      \
-    _(GetElem_InlineCache,                              \
-      "getelem IC")                                     \
+    _(GetElem_TypedObject)                              \
+    _(GetElem_Dense)                                    \
+    _(GetElem_TypedStatic)                              \
+    _(GetElem_TypedArray)                               \
+    _(GetElem_String)                                   \
+    _(GetElem_Arguments)                                \
+    _(GetElem_ArgumentsInlined)                         \
+    _(GetElem_InlineCache)                              \
                                                         \
-    _(SetElem_TypedObject,                              \
-      "setelem TypedObject")                            \
-    _(SetElem_TypedStatic,                              \
-      "setelem TypedArray static")                      \
-    _(SetElem_TypedArray,                               \
-      "setelem TypedArray")                             \
-    _(SetElem_Dense,                                    \
-      "setelem dense")                                  \
-    _(SetElem_Arguments,                                \
-      "setelem arguments")                              \
-    _(SetElem_InlineCache,                              \
-      "setelem IC")                                     \
+    _(SetElem_TypedObject)                              \
+    _(SetElem_TypedStatic)                              \
+    _(SetElem_TypedArray)                               \
+    _(SetElem_Dense)                                    \
+    _(SetElem_Arguments)                                \
+    _(SetElem_InlineCache)                              \
                                                         \
-    _(Call_Inline,                                      \
-      "call inline")
+    _(Call_Inline)
 
 
 // Ordering is important below. All outcomes before GenericSuccess will be
 // considered failures, and all outcomes after GenericSuccess will be
 // considered successes.
 #define TRACKED_OUTCOME_LIST(_)                                         \
-    _(GenericFailure,                                                   \
-      "failure")                                                        \
-    _(Disabled,                                                         \
-      "disabled")                                                       \
-    _(NoTypeInfo,                                                       \
-      "no type info")                                                   \
-    _(NoAnalysisInfo,                                                   \
-      "no newscript analysis")                                          \
-    _(NoShapeInfo,                                                      \
-      "cannot determine shape")                                         \
-    _(UnknownObject,                                                    \
-      "unknown object")                                                 \
-    _(UnknownProperties,                                                \
-      "unknown properties")                                             \
-    _(Singleton,                                                        \
-      "is singleton")                                                   \
-    _(NotSingleton,                                                     \
-      "is not singleton")                                               \
-    _(NotFixedSlot,                                                     \
-      "property not in fixed slot")                                     \
-    _(InconsistentFixedSlot,                                            \
-      "property not in a consistent fixed slot")                        \
-    _(NotObject,                                                        \
-      "not definitely an object")                                       \
-    _(NotStruct,                                                        \
-      "not definitely a TypedObject struct")                            \
-    _(NotUnboxed,                                                       \
-      "not definitely an unboxed object")                               \
-    _(UnboxedConvertedToNative,                                         \
-      "unboxed object may have been converted")                         \
-    _(StructNoField,                                                    \
-      "struct doesn't definitely have field")                           \
-    _(InconsistentFieldType,                                            \
-      "unboxed property does not have consistent type")                 \
-    _(InconsistentFieldOffset,                                          \
-      "unboxed property does not have consistent offset")               \
-    _(NeedsTypeBarrier,                                                 \
-      "needs type barrier")                                             \
-    _(InDictionaryMode,                                                 \
-      "object in dictionary mode")                                      \
-    _(NoProtoFound,                                                     \
-      "no proto found")                                                 \
-    _(MultiProtoPaths,                                                  \
-      "not all paths to property go through same proto")                \
-    _(NonWritableProperty,                                              \
-      "non-writable property")                                          \
-    _(ProtoIndexedProps,                                                \
-      "prototype has indexed properties")                               \
-    _(ArrayBadFlags,                                                    \
-      "array observed to be sparse, overflowed .length, or has been iterated") \
-    _(ArrayDoubleConversion,                                            \
-      "array has ambiguous double conversion")                          \
-    _(ArrayRange,                                                       \
-      "array range issue (.length problems)")                           \
-    _(ArraySeenNegativeIndex,                                           \
-      "has seen array access with negative index")                      \
-    _(TypedObjectNeutered,                                              \
-      "TypedObject might have been neutered")                           \
-    _(TypedObjectArrayRange,                                            \
-      "TypedObject array of unknown length")                            \
-    _(AccessNotDense,                                                   \
-      "access not on dense native (check receiver, index, and result types)") \
-    _(AccessNotSimdObject,                                              \
-      "access not on SIMD object (check receiver)")                     \
-    _(AccessNotTypedObject,                                             \
-      "access not on typed object (check receiver and index types)")    \
-    _(AccessNotTypedArray,                                              \
-      "access not on typed array (check receiver, index, and result types)") \
-    _(AccessNotString,                                                  \
-      "getelem not on string (check receiver and index types)")         \
-    _(StaticTypedArrayUint32,                                           \
-      "static uint32 arrays currently cannot be optimized")             \
-    _(StaticTypedArrayCantComputeMask,                                  \
-      "can't compute mask for static typed array access (index isn't constant or not int32)") \
-    _(OutOfBounds,                                                      \
-      "observed out of bounds access")                                  \
-    _(GetElemStringNotCached,                                           \
-      "getelem on strings is not inline cached")                        \
-    _(NonNativeReceiver,                                                \
-      "observed non-native receiver")                                   \
-    _(IndexType,                                                        \
-      "index type must be int32, string, or symbol")                    \
-    _(SetElemNonDenseNonTANotCached,                                    \
-      "setelem on non-dense non-TAs are not inline cached")             \
-    _(NoSimdJitSupport,                                                 \
-      "SIMD isn't optimized in Ion on this platform yet")               \
-    _(SimdTypeNotOptimized,                                             \
-      "given SIMD type isn't optimized in Ion yet")                     \
-    _(UnknownSimdProperty,                                              \
-      "getelem on an unknown SIMD property ")                           \
+    _(GenericFailure)                                                   \
+    _(Disabled)                                                         \
+    _(NoTypeInfo)                                                       \
+    _(NoAnalysisInfo)                                                   \
+    _(NoShapeInfo)                                                      \
+    _(UnknownObject)                                                    \
+    _(UnknownProperties)                                                \
+    _(Singleton)                                                        \
+    _(NotSingleton)                                                     \
+    _(NotFixedSlot)                                                     \
+    _(InconsistentFixedSlot)                                            \
+    _(NotObject)                                                        \
+    _(NotStruct)                                                        \
+    _(NotUnboxed)                                                       \
+    _(UnboxedConvertedToNative)                                         \
+    _(StructNoField)                                                    \
+    _(InconsistentFieldType)                                            \
+    _(InconsistentFieldOffset)                                          \
+    _(NeedsTypeBarrier)                                                 \
+    _(InDictionaryMode)                                                 \
+    _(NoProtoFound)                                                     \
+    _(MultiProtoPaths)                                                  \
+    _(NonWritableProperty)                                              \
+    _(ProtoIndexedProps)                                                \
+    _(ArrayBadFlags)                                                    \
+    _(ArrayDoubleConversion)                                            \
+    _(ArrayRange)                                                       \
+    _(ArraySeenNegativeIndex)                                           \
+    _(TypedObjectNeutered)                                              \
+    _(TypedObjectArrayRange)                                            \
+    _(AccessNotDense)                                                   \
+    _(AccessNotSimdObject)                                              \
+    _(AccessNotTypedObject)                                             \
+    _(AccessNotTypedArray)                                              \
+    _(AccessNotString)                                                  \
+    _(StaticTypedArrayUint32)                                           \
+    _(StaticTypedArrayCantComputeMask)                                  \
+    _(OutOfBounds)                                                      \
+    _(GetElemStringNotCached)                                           \
+    _(NonNativeReceiver)                                                \
+    _(IndexType)                                                        \
+    _(SetElemNonDenseNonTANotCached)                                    \
+    _(NoSimdJitSupport)                                                 \
+    _(SimdTypeNotOptimized)                                             \
+    _(UnknownSimdProperty)                                              \
                                                                         \
-    _(CantInlineGeneric,                                                \
-      "can't inline")                                                   \
-    _(CantInlineNoTarget,                                               \
-      "can't inline: no target")                                        \
-    _(CantInlineNotInterpreted,                                         \
-      "can't inline: not interpreted")                                  \
-    _(CantInlineNoBaseline,                                             \
-      "can't inline: no baseline code")                                 \
-    _(CantInlineLazy,                                                   \
-      "can't inline: lazy script")                                      \
-    _(CantInlineNotConstructor,                                         \
-      "can't inline: calling non-constructor with 'new'")               \
-    _(CantInlineDisabledIon,                                            \
-      "can't inline: ion disabled for callee")                          \
-    _(CantInlineTooManyArgs,                                            \
-      "can't inline: too many arguments")                               \
-    _(CantInlineRecursive,                                              \
-      "can't inline: recursive")                                        \
-    _(CantInlineHeavyweight,                                            \
-      "can't inline: heavyweight")                                      \
-    _(CantInlineNeedsArgsObj,                                           \
-      "can't inline: needs arguments object")                           \
-    _(CantInlineDebuggee,                                               \
-      "can't inline: debuggee")                                         \
-    _(CantInlineUnknownProps,                                           \
-      "can't inline: type has unknown properties")                      \
-    _(CantInlineExceededDepth,                                          \
-      "can't inline: exceeded inlining depth")                          \
-    _(CantInlineBigLoop,                                                \
-      "can't inline: big function with a loop")                         \
-    _(CantInlineBigCaller,                                              \
-      "can't inline: big caller")                                       \
-    _(CantInlineBigCallee,                                              \
-      "can't inline: big callee")                                       \
-    _(CantInlineNotHot,                                                 \
-      "can't inline: not hot enough")                                   \
-    _(CantInlineNotInDispatch,                                          \
-      "can't inline: not in dispatch table")                            \
-    _(CantInlineUnreachable,                                            \
-      "can't inline: unreachable due to incomplete types for this/arguments") \
-    _(CantInlineNativeBadForm,                                          \
-      "can't inline native: bad form (arity mismatch/constructing)")    \
-    _(CantInlineNativeBadType,                                          \
-      "can't inline native: bad argument or return type observed")      \
-    _(CantInlineNativeNoTemplateObj,                                    \
-      "can't inline native: no template object")                        \
-    _(CantInlineBound,                                                  \
-      "can't inline bound function invocation")                         \
+    _(CantInlineGeneric)                                                \
+    _(CantInlineNoTarget)                                               \
+    _(CantInlineNotInterpreted)                                         \
+    _(CantInlineNoBaseline)                                             \
+    _(CantInlineLazy)                                                   \
+    _(CantInlineNotConstructor)                                         \
+    _(CantInlineDisabledIon)                                            \
+    _(CantInlineTooManyArgs)                                            \
+    _(CantInlineRecursive)                                              \
+    _(CantInlineHeavyweight)                                            \
+    _(CantInlineNeedsArgsObj)                                           \
+    _(CantInlineDebuggee)                                               \
+    _(CantInlineUnknownProps)                                           \
+    _(CantInlineExceededDepth)                                          \
+    _(CantInlineExceededTotalBytecodeLength)                            \
+    _(CantInlineBigCaller)                                              \
+    _(CantInlineBigCallee)                                              \
+    _(CantInlineNotHot)                                                 \
+    _(CantInlineNotInDispatch)                                          \
+    _(CantInlineUnreachable)                                            \
+    _(CantInlineNativeBadForm)                                          \
+    _(CantInlineNativeBadType)                                          \
+    _(CantInlineNativeNoTemplateObj)                                    \
+    _(CantInlineBound)                                                  \
                                                                         \
-    _(GenericSuccess,                                                   \
-      "success")                                                        \
-    _(Inlined,                                                          \
-      "inlined")                                                        \
-    _(DOM,                                                              \
-      "DOM")                                                            \
-    _(Monomorphic,                                                      \
-      "monomorphic")                                                    \
-    _(Polymorphic,                                                      \
-      "polymorphic")
+    _(GenericSuccess)                                                   \
+    _(Inlined)                                                          \
+    _(DOM)                                                              \
+    _(Monomorphic)                                                      \
+    _(Polymorphic)
 
 #define TRACKED_TYPESITE_LIST(_)                \
-    _(Receiver,                                 \
-      "receiver object")                        \
-    _(Index,                                    \
-      "index")                                  \
-    _(Value,                                    \
-      "value")                                  \
-    _(Call_Target,                              \
-      "call target")                            \
-    _(Call_This,                                \
-      "call 'this'")                            \
-    _(Call_Arg,                                 \
-      "call argument")                          \
-    _(Call_Return,                              \
-      "call return")
+    _(Receiver)                                 \
+    _(Index)                                    \
+    _(Value)                                    \
+    _(Call_Target)                              \
+    _(Call_This)                                \
+    _(Call_Arg)                                 \
+    _(Call_Return)
 
 enum class TrackedStrategy : uint32_t {
-#define STRATEGY_OP(name, msg) name,
+#define STRATEGY_OP(name) name,
     TRACKED_STRATEGY_LIST(STRATEGY_OP)
 #undef STRATEGY_OPT
 
@@ -260,7 +149,7 @@ enum class TrackedStrategy : uint32_t {
 };
 
 enum class TrackedOutcome : uint32_t {
-#define OUTCOME_OP(name, msg) name,
+#define OUTCOME_OP(name) name,
     TRACKED_OUTCOME_LIST(OUTCOME_OP)
 #undef OUTCOME_OP
 
@@ -268,20 +157,20 @@ enum class TrackedOutcome : uint32_t {
 };
 
 enum class TrackedTypeSite : uint32_t {
-#define TYPESITE_OP(name, msg) name,
+#define TYPESITE_OP(name) name,
     TRACKED_TYPESITE_LIST(TYPESITE_OP)
 #undef TYPESITE_OP
 
     Count
 };
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedStrategyString(TrackedStrategy strategy);
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedOutcomeString(TrackedOutcome outcome);
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedTypeSiteString(TrackedTypeSite site);
 
 struct ForEachTrackedOptimizationAttemptOp
@@ -290,7 +179,7 @@ struct ForEachTrackedOptimizationAttemptOp
 };
 
 JS_PUBLIC_API(void)
-ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
+ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr, uint8_t index,
                                   ForEachTrackedOptimizationAttemptOp &op,
                                   JSScript **scriptOut, jsbytecode **pcOut);
 
@@ -335,9 +224,12 @@ struct ForEachTrackedOptimizationTypeInfoOp
     virtual void operator()(TrackedTypeSite site, const char *mirType) = 0;
 };
 
-extern JS_PUBLIC_API(void)
-ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr,
+JS_PUBLIC_API(void)
+ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr, uint8_t index,
                                    ForEachTrackedOptimizationTypeInfoOp &op);
+
+JS_PUBLIC_API(mozilla::Maybe<uint8_t>)
+TrackedOptimizationIndexAtAddr(JSRuntime *rt, void *addr, void **entryAddr);
 
 } // namespace JS
 

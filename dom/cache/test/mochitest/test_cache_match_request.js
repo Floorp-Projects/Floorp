@@ -103,6 +103,11 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
         is(err.name, "NotFoundError", "Searching in the wrong cache should not succeed");
       });
   }).then(function() {
+    // Make sure that cacheName is ignored on Cache
+    return c.match(request, {cacheName: name + "mambojambo"});
+  }).then(function(r) {
+    return checkResponse(r);
+  }).then(function() {
     return c.match(unknownRequest);
   }).then(function(r) {
     is(typeof r, "undefined", "Searching for an unknown request should not succeed");

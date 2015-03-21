@@ -55,8 +55,6 @@ public: // GeckoContentController methods
     void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                        const mozilla::layers::ScrollableLayerGuid& aGuid,
                        uint64_t aInputBlockId) MOZ_OVERRIDE;
-    void HandleLongTapUp(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect& aContentRect,
                                  const mozilla::CSSSize& aScrollableSize) MOZ_OVERRIDE;
     void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;

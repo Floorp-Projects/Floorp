@@ -265,6 +265,11 @@ public:
   GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal);
 
   void
+  PostMessage(const nsAString& aMessage);
+
+  IMPL_EVENT_HANDLER(message)
+
+  void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
 
 private:

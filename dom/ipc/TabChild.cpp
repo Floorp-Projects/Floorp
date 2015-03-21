@@ -2114,15 +2114,6 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 }
 
 bool
-TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
-  if (mGlobal && mTabChildGlobal) {
-    mAPZEventState->ProcessLongTapUp(aPoint, aModifiers, aGuid, GetPresShellResolution());
-  }
-  return true;
-}
-
-bool
 TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
                                    const APZStateChange& aChange,
                                    const int& aArg)

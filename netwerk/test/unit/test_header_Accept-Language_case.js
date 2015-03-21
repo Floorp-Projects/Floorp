@@ -8,6 +8,16 @@ function run_test() {
   let oldAcceptLangPref = intlPrefs.getCharPref("accept_languages");
 
   let testData = [
+    ["en",              "en"],
+    ["ast",             "ast"],
+    ["fr-ca",           "fr-CA"],
+    ["zh-yue",          "zh-yue"],
+    ["az-latn",         "az-Latn"],
+    ["sl-nedis",        "sl-nedis"],
+    ["zh-hant-hk",      "zh-Hant-HK"],
+    ["ZH-HANT-HK",      "zh-Hant-HK"],
+    ["en-us-x-priv",    "en-US-x-priv"],
+    ["en-us-x-twain",   "en-US-x-twain"],
     ["de, en-US, en",   "de,en-US;q=0.7,en;q=0.3"],
     ["de,en-us,en",     "de,en-US;q=0.7,en;q=0.3"],
     ["en-US, en",       "en-US,en;q=0.5"],

@@ -31,9 +31,12 @@ runNetworkTest(function() {
         .then(() => {
           var stream = v1.mozCaptureStreamUntilEnded();
           is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
-          stream.getTracks().forEach(tr => {
-            test.pcLocal._pc.addTrack(tr, stream);
-            test.pcLocal.expectedLocalTrackTypesById[tr.id] = tr.kind;
+          stream.getTracks().forEach(track => {
+            test.pcLocal._pc.addTrack(track, stream);
+            test.pcLocal.expectedLocalTrackInfoById[track.id] = {
+                type: track.kind,
+                streamId: stream.id
+              };
           });
           test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
         });

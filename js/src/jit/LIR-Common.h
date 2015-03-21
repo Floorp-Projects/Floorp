@@ -374,46 +374,43 @@ class LSimdSwizzleF : public LSimdSwizzleBase
     {}
 };
 
-class LSimdGeneralSwizzleBase : public LInstructionHelper<1, 5, 1>
+class LSimdGeneralShuffleBase : public LVariadicInstruction<1, 1>
 {
   public:
-    LSimdGeneralSwizzleBase(const LAllocation &base, const LAllocation lanes[4],
-                            const LDefinition &temp)
-    {
-        setOperand(0, base);
-        for (size_t i = 0; i < 4; i++)
-            setOperand(1 + i, lanes[i]);
+    explicit LSimdGeneralShuffleBase(const LDefinition &temp) {
         setTemp(0, temp);
     }
-
-    const LAllocation *base() {
-        return getOperand(0);
+    const LAllocation *vector(unsigned i) {
+        MOZ_ASSERT(i < mir()->numVectors());
+        return getOperand(i);
     }
-    const LAllocation *lane(size_t i) {
-        return getOperand(1 + i);
+    const LAllocation *lane(unsigned i) {
+        MOZ_ASSERT(i < mir()->numLanes());
+        return getOperand(mir()->numVectors() + i);
     }
     const LDefinition *temp() {
         return getTemp(0);
     }
+    MSimdGeneralShuffle *mir() const {
+        return mir_->toSimdGeneralShuffle();
+    }
 };
 
-class LSimdGeneralSwizzleI : public LSimdGeneralSwizzleBase
+class LSimdGeneralShuffleI : public LSimdGeneralShuffleBase
 {
   public:
-    LIR_HEADER(SimdGeneralSwizzleI);
-    LSimdGeneralSwizzleI(const LAllocation &base, const LAllocation lanes[4],
-                         const LDefinition &temp)
-      : LSimdGeneralSwizzleBase(base, lanes, temp)
+    LIR_HEADER(SimdGeneralShuffleI);
+    explicit LSimdGeneralShuffleI(const LDefinition &temp)
+      : LSimdGeneralShuffleBase(temp)
     {}
 };
 
-class LSimdGeneralSwizzleF : public LSimdGeneralSwizzleBase
+class LSimdGeneralShuffleF : public LSimdGeneralShuffleBase
 {
   public:
-    LIR_HEADER(SimdGeneralSwizzleF);
-    LSimdGeneralSwizzleF(const LAllocation &base, const LAllocation lanes[4],
-                         const LDefinition &temp)
-      : LSimdGeneralSwizzleBase(base, lanes, temp)
+    LIR_HEADER(SimdGeneralShuffleF);
+    explicit LSimdGeneralShuffleF(const LDefinition &temp)
+      : LSimdGeneralShuffleBase(temp)
     {}
 };
 
