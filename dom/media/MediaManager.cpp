@@ -1418,7 +1418,11 @@ NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
 MediaManager::Get() {
   if (!sSingleton) {
     NS_ASSERTION(NS_IsMainThread(), "Only create MediaManager on main thread");
-
+#ifdef DEBUG
+    static int timesCreated = 0;
+    timesCreated++;
+    MOZ_ASSERT(timesCreated == 1);
+#endif
     sSingleton = new MediaManager();
 
     sSingleton->mMediaThread = new base::Thread("MediaManager");
@@ -1451,6 +1455,11 @@ MediaManager::Get() {
       prefs->AddObserver("media.navigator.video.default_minfps", sSingleton, false);
     }
   }
+  return sSingleton;
+}
+
+/* static */  MediaManager*
+MediaManager::GetIfExists() {
   return sSingleton;
 }
 

@@ -11,6 +11,12 @@ here = os.path.dirname(os.path.abspath(__file__))
 class ProcTestKill(proctest.ProcTest):
     """ Class to test various process tree killing scenatios """
 
+    def test_kill_before_run(self):
+        """Process is not started, and kill() is called"""
+
+        p = processhandler.ProcessHandler([self.python, '-V'])
+        self.assertRaises(RuntimeError, p.kill)
+
     def test_process_kill(self):
         """Process is started, we kill it"""
 

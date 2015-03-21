@@ -742,9 +742,9 @@ function PeerConnectionWrapper(label, configuration, h264) {
   this.remoteRequiresTrickleIce = false;
   this.localMediaElements = [];
 
-  this.expectedLocalTrackTypesById = {};
-  this.expectedRemoteTrackTypesById = {};
-  this.observedRemoteTrackTypesById = {};
+  this.expectedLocalTrackInfoById = {};
+  this.expectedRemoteTrackInfoById = {};
+  this.observedRemoteTrackInfoById = {};
 
   this.disableRtpCountChecking = false;
 
@@ -875,7 +875,10 @@ PeerConnectionWrapper.prototype = {
       stream.getTracks().forEach(track => {
         ok(track.id, "track has id");
         ok(track.kind, "track has kind");
-        this.expectedLocalTrackTypesById[track.id] = track.kind;
+        this.expectedLocalTrackInfoById[track.id] = {
+            type: track.kind,
+            streamId: stream.id
+          };
       });
     }
 
@@ -893,14 +896,17 @@ PeerConnectionWrapper.prototype = {
 
   removeSender : function(index) {
     var sender = this._pc.getSenders()[index];
-    delete this.expectedLocalTrackTypesById[sender.track.id];
+    delete this.expectedLocalTrackInfoById[sender.track.id];
     this._pc.removeTrack(sender);
   },
 
-  senderReplaceTrack : function(index, withTrack) {
+  senderReplaceTrack : function(index, withTrack, withStreamId) {
     var sender = this._pc.getSenders()[index];
-    delete this.expectedLocalTrackTypesById[sender.track.id];
-    this.expectedLocalTrackTypesById[withTrack.id] = withTrack.kind;
+    delete this.expectedLocalTrackInfoById[sender.track.id];
+    this.expectedLocalTrackInfoById[withTrack.id] = {
+        type: withTrack.kind,
+        streamId: withStreamId
+      };
     return sender.replaceTrack(withTrack);
   },
 
@@ -1081,20 +1087,23 @@ PeerConnectionWrapper.prototype = {
   /**
    * Checks whether a given track is expected, has not been observed yet, and
    * is of the correct type. Then, moves the track from
-   * |expectedTrackTypesById| to |observedTrackTypesById|.
+   * |expectedTrackInfoById| to |observedTrackInfoById|.
    */
   checkTrackIsExpected : function(track,
-                                  expectedTrackTypesById,
-                                  observedTrackTypesById) {
-    ok(expectedTrackTypesById[track.id], "track id " + track.id + " was expected");
-    ok(!observedTrackTypesById[track.id], "track id " + track.id + " was not yet observed");
+                                  expectedTrackInfoById,
+                                  observedTrackInfoById) {
+    ok(expectedTrackInfoById[track.id], "track id " + track.id + " was expected");
+    ok(!observedTrackInfoById[track.id], "track id " + track.id + " was not yet observed");
     var observedKind = track.kind;
-    var expectedKind = expectedTrackTypesById[track.id];
+    var expectedKind = expectedTrackInfoById[track.id].type;
     is(observedKind, expectedKind,
         "track id " + track.id + " was of kind " +
         observedKind + ", which matches " + expectedKind);
-    observedTrackTypesById[track.id] = expectedTrackTypesById[track.id];
-    delete expectedTrackTypesById[track.id];
+    observedTrackInfoById[track.id] = expectedTrackInfoById[track.id];
+  },
+
+  allExpectedTracksAreObserved: function(expected, observed) {
+    return Object.keys(expected).every(trackId => observed[trackId]);
   },
 
   setupAddStreamEventHandler: function() {
@@ -1112,11 +1121,12 @@ PeerConnectionWrapper.prototype = {
 
       event.stream.getTracks().forEach(track => {
         this.checkTrackIsExpected(track,
-                                  this.expectedRemoteTrackTypesById,
-                                  this.observedRemoteTrackTypesById);
+                                  this.expectedRemoteTrackInfoById,
+                                  this.observedRemoteTrackInfoById);
       });
 
-      if (Object.keys(this.expectedRemoteTrackTypesById).length === 0) {
+      if (this.allExpectedTracksAreObserved(this.expectedRemoteTrackInfoById,
+                                            this.observedRemoteTrackInfoById)) {
         resolveAllAddStreamEventsDone();
       }
 
@@ -1363,24 +1373,14 @@ PeerConnectionWrapper.prototype = {
   },
 
   checkLocalMediaTracks : function() {
-    var observedLocalTrackTypesById = {};
-    // We do not want to empty out this.expectedLocalTrackTypesById, so make a
-    // copy.
-    var expectedLocalTrackTypesById =
-      JSON.parse(JSON.stringify((this.expectedLocalTrackTypesById)));
-    info(this + " Checking local tracks " +
-         JSON.stringify(expectedLocalTrackTypesById));
-    this._pc.getLocalStreams().forEach(stream => {
-      stream.getTracks().forEach(track => {
-        this.checkTrackIsExpected(track,
-                                  expectedLocalTrackTypesById,
-                                  observedLocalTrackTypesById);
-      });
+    var observed = {};
+    info(this + " Checking local tracks " + JSON.stringify(this.expectedLocalTrackInfoById));
+    this._pc.getSenders().forEach(sender => {
+      this.checkTrackIsExpected(sender.track, this.expectedLocalTrackInfoById, observed);
     });
 
-    Object.keys(expectedLocalTrackTypesById).forEach(id => {
-      ok(false, this + " local id " + id + " was observed");
-    });
+    Object.keys(this.expectedLocalTrackInfoById).forEach(
+        id => ok(observed[id], this + " local id " + id + " was observed"));
   },
 
   /**
@@ -1393,10 +1393,11 @@ PeerConnectionWrapper.prototype = {
     this.checkLocalMediaTracks();
 
     info(this + " Checking remote tracks " +
-         JSON.stringify(this.expectedRemoteTrackTypesById));
+         JSON.stringify(this.expectedRemoteTrackInfoById));
 
     // No tracks are expected
-    if (Object.keys(this.expectedRemoteTrackTypesById).length === 0) {
+    if (this.allExpectedTracksAreObserved(this.expectedRemoteTrackInfoById,
+                                          this.observedRemoteTrackInfoById)) {
       return;
     }
 
@@ -1404,19 +1405,18 @@ PeerConnectionWrapper.prototype = {
   },
 
   checkMsids: function() {
-    var checkSdpForMsids = (desc, streams, side) => {
-      streams.forEach(stream => {
-        stream.getTracks().forEach(track => {
-          ok(desc.sdp.match(new RegExp("a=msid:" + stream.id + " " + track.id)),
-             this + ": " + side + " SDP contains stream " + stream.id +
-             " and track " + track.id );
-        });
+    var checkSdpForMsids = (desc, expectedTrackInfo, side) => {
+      Object.keys(expectedTrackInfo).forEach(trackId => {
+        var streamId = expectedTrackInfo[trackId].streamId;
+        ok(desc.sdp.match(new RegExp("a=msid:" + streamId + " " + trackId)),
+           this + ": " + side + " SDP contains stream " + streamId +
+           " and track " + trackId );
       });
     };
 
-    checkSdpForMsids(this.localDescription, this._pc.getLocalStreams(),
+    checkSdpForMsids(this.localDescription, this.expectedLocalTrackInfoById,
                      "local");
-    checkSdpForMsids(this.remoteDescription, this._pc.getRemoteStreams(),
+    checkSdpForMsids(this.remoteDescription, this.expectedRemoteTrackInfoById,
                      "remote");
   },
 
@@ -1507,11 +1507,6 @@ PeerConnectionWrapper.prototype = {
    */
   checkStats : function(stats, twoMachines) {
     var toNum = obj => obj? obj : 0;
-    var numTracks = streams =>
-        streams.reduce((count, stream) => count +
-                       stream.getAudioTracks().length +
-                       stream.getVideoTracks().length,
-                       0);
 
     const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
 
@@ -1599,8 +1594,8 @@ PeerConnectionWrapper.prototype = {
       });
     is(JSON.stringify(counters), JSON.stringify(counters2),
        "Spec and MapClass variant of RTCStatsReport enumeration agree");
-    var nin = numTracks(this._pc.getRemoteStreams());
-    var nout = numTracks(this._pc.getLocalStreams());
+    var nin = Object.keys(this.expectedRemoteTrackInfoById).length;
+    var nout = Object.keys(this.expectedLocalTrackInfoById).length;
     var ndata = this.dataChannels.length;
 
     // TODO(Bug 957145): Restore stronger inboundrtp test once Bug 948249 is fixed

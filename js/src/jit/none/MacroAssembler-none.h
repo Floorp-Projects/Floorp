@@ -286,6 +286,11 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void moveDouble(T, S) { MOZ_CRASH(); }
     template <typename T> CodeOffsetLabel movWithPatch(T, Register) { MOZ_CRASH(); }
 
+    template <typename T> void loadInt32x1(T, FloatRegister dest) { MOZ_CRASH(); }
+    template <typename T> void loadInt32x2(T, FloatRegister dest) { MOZ_CRASH(); }
+    template <typename T> void loadInt32x3(T, FloatRegister dest) { MOZ_CRASH(); }
+    template <typename T> void loadFloat32x3(T, FloatRegister dest) { MOZ_CRASH(); }
+
     template <typename T> void loadPtr(T, Register) { MOZ_CRASH(); }
     template <typename T> void load32(T, Register) { MOZ_CRASH(); }
     template <typename T> void loadFloat32(T, FloatRegister) { MOZ_CRASH(); }
@@ -311,6 +316,10 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void storeUnalignedFloat32x4(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store8(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store16(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeInt32x1(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeInt32x2(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeInt32x3(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeFloat32x3(T, S) { MOZ_CRASH(); }
 
     template <typename T> void computeEffectiveAddress(T, Register) { MOZ_CRASH(); }
 

@@ -21,6 +21,10 @@ onfetch = function(ev) {
     ));
   }
 
+  else if (ev.request.url.contains("test-respondwith-response.txt")) {
+    ev.respondWith(new Response("test-respondwith-response response body", {}));
+  }
+
   else if (ev.request.url.contains("ignored.txt")) {
   }
 

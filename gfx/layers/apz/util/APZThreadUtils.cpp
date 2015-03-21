@@ -56,6 +56,12 @@ APZThreadUtils::RunOnControllerThread(Task* aTask)
   // On B2G the controller thread is the compositor thread, and this function
   // is always called from the libui thread or the main thread.
   MessageLoop* loop = CompositorParent::CompositorLoop();
+  if (!loop) {
+    // Could happen on startup
+    NS_WARNING("Dropping task posted to controller thread\n");
+    delete aTask;
+    return;
+  }
   MOZ_ASSERT(MessageLoop::current() != loop);
   loop->PostTask(FROM_HERE, aTask);
 #else

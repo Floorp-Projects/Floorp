@@ -3819,7 +3819,7 @@ pref("image.cache.size", 5242880);
 pref("image.cache.timeweight", 500);
 
 // Whether we attempt to downscale images during decoding.
-pref("image.downscale-during-decode.enabled", true);
+pref("image.downscale-during-decode.enabled", false);
 
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
@@ -4628,6 +4628,11 @@ pref("media.gmp.insecure.allow", false);
 #if defined(XP_MACOSX) || defined(XP_WIN)
 pref("gfx.vsync.hw-vsync.enabled", true);
 pref("gfx.vsync.compositor", true);
+#endif
+
+#if defined(XP_MACOSX)
+pref("gfx.vsync.refreshdriver", true);
+#else
 pref("gfx.vsync.refreshdriver", false);
 #endif
 

@@ -24,6 +24,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCSSPropertySet.h"
 
 class nsIFrame;
 class nsPresContext;
@@ -191,6 +192,14 @@ public:
     mozilla::StyleAnimationValue mValue;
   };
 
+  void AddPropertiesToSet(nsCSSPropertySet& aSet) const
+  {
+    for (size_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
+      const PropertyValuePair &cv = mPropertyValuePairs[i];
+      aSet.AddProperty(cv.mProperty);
+    }
+  }
+
 private:
   ~AnimValuesStyleRule() {}
 
@@ -322,6 +331,19 @@ struct AnimationPlayerCollection : public PRCList
     MOZ_ASSERT(IsForAfterPseudo(),
                "::before & ::after should be the only pseudo-elements here");
     return NS_LITERAL_STRING("::after");
+  }
+
+  nsCSSPseudoElements::Type PseudoElementType() const
+  {
+    if (IsForElement()) {
+      return nsCSSPseudoElements::ePseudo_NotPseudoElement;
+    }
+    if (IsForBeforePseudo()) {
+      return nsCSSPseudoElements::ePseudo_before;
+    }
+    MOZ_ASSERT(IsForAfterPseudo(),
+               "::before & ::after should be the only pseudo-elements here");
+    return nsCSSPseudoElements::ePseudo_after;
   }
 
   mozilla::dom::Element* GetElementToRestyle() const;

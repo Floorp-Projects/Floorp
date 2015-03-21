@@ -3957,28 +3957,33 @@ LIRGenerator::visitSimdSwizzle(MSimdSwizzle *ins)
 }
 
 void
-LIRGenerator::visitSimdGeneralSwizzle(MSimdGeneralSwizzle *ins)
+LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*ins)
 {
-    MOZ_ASSERT(IsSimdType(ins->input()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
 
-    LAllocation lanesUses[4];
-    for (size_t i = 0; i < 4; i++)
-        lanesUses[i] = use(ins->lane(i));
+    LSimdGeneralShuffleBase *lir;
+    if (ins->type() == MIRType_Int32x4)
+        lir = new (alloc()) LSimdGeneralShuffleI(temp());
+    else if (ins->type() == MIRType_Float32x4)
+        lir = new (alloc()) LSimdGeneralShuffleF(temp());
+    else
+        MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
 
-    if (ins->input()->type() == MIRType_Int32x4) {
-        LSimdGeneralSwizzleI *lir = new (alloc()) LSimdGeneralSwizzleI(useRegister(ins->input()),
-                                                                       lanesUses, temp());
-        assignSnapshot(lir, Bailout_BoundsCheck);
-        define(lir, ins);
-    } else if (ins->input()->type() == MIRType_Float32x4) {
-        LSimdGeneralSwizzleF *lir = new (alloc()) LSimdGeneralSwizzleF(useRegister(ins->input()),
-                                                                       lanesUses, temp());
-        assignSnapshot(lir, Bailout_BoundsCheck);
-        define(lir, ins);
-    } else {
-        MOZ_CRASH("Unknown SIMD kind when getting lane");
+    if (!lir->init(alloc(), ins->numVectors() + ins->numLanes()))
+        return;
+
+    for (unsigned i = 0; i < ins->numVectors(); i++) {
+        MOZ_ASSERT(IsSimdType(ins->vector(i)->type()));
+        lir->setOperand(i, useRegister(ins->vector(i)));
     }
+
+    for (unsigned i = 0; i < ins->numLanes(); i++) {
+        MOZ_ASSERT(ins->lane(i)->type() == MIRType_Int32);
+        lir->setOperand(i + ins->numVectors(), useRegister(ins->lane(i)));
+    }
+
+    assignSnapshot(lir, Bailout_BoundsCheck);
+    define(lir, ins);
 }
 
 void
@@ -4079,8 +4084,8 @@ LIRGenerator::visitLexicalCheck(MLexicalCheck *ins)
     MOZ_ASSERT(input->type() == MIRType_Value);
     LLexicalCheck *lir = new(alloc()) LLexicalCheck();
     useBox(lir, LLexicalCheck::Input, input);
+    assignSnapshot(lir, Bailout_UninitializedLexical);
     add(lir, ins);
-    assignSafepoint(lir, ins);
     redefine(ins, input);
 }
 

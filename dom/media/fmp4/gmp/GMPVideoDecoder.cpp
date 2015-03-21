@@ -6,6 +6,7 @@
 
 #include "GMPVideoDecoder.h"
 #include "GMPVideoHost.h"
+#include "mozilla/Endian.h"
 #include "prsystem.h"
 
 namespace mozilla {
@@ -132,13 +133,26 @@ GMPVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
 
   memcpy(frame->Buffer(), aSample->data, frame->Size());
 
+  // Convert 4-byte NAL unit lengths to host-endian 4-byte buffer lengths to
+  // suit the GMP API.
+  if (mConvertNALUnitLengths) {
+    const int kNALLengthSize = 4;
+    uint8_t* buf = frame->Buffer();
+    while (buf < frame->Buffer() + frame->Size() - kNALLengthSize) {
+      uint32_t length = BigEndian::readUint32(buf) + kNALLengthSize;
+      *reinterpret_cast<uint32_t *>(buf) = length;
+      buf += length;
+    }
+  }
+
+  frame->SetBufferType(GMP_BufferLength32);
+
   frame->SetEncodedWidth(mConfig.display_width);
   frame->SetEncodedHeight(mConfig.display_height);
   frame->SetTimeStamp(aSample->composition_timestamp);
   frame->SetCompleteFrame(true);
   frame->SetDuration(aSample->duration);
   frame->SetFrameType(aSample->is_sync_point ? kGMPKeyFrame : kGMPDeltaFrame);
-  frame->SetBufferType(GMP_BufferLength32);
 
   return frame;
 }
@@ -156,6 +170,16 @@ GMPVideoDecoder::Init()
   nsresult rv = mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), &mHost, &mGMP);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(mHost && mGMP);
+
+  // GMP implementations have interpreted the meaning of GMP_BufferLength32
+  // differently.  The OpenH264 GMP expects GMP_BufferLength32 to behave as
+  // specified in the GMP API, where each buffer is prefixed by a 32-bit
+  // host-endian buffer length that includes the size of the buffer length
+  // field.  Other existing GMPs currently expect GMP_BufferLength32 (when
+  // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
+  // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
+  // and do not include the length of the buffer length field.
+  mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
 
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));

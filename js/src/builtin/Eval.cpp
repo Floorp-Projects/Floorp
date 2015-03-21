@@ -212,6 +212,18 @@ TryEvalJSON(JSContext *cx, JSLinearString *str, MutableHandleValue rval)
            : ParseEvalStringAsJSON(cx, linearChars.twoByteRange(), rval);
 }
 
+static bool
+HasPollutedScopeChain(JSObject* scopeChain)
+{
+    while (scopeChain) {
+        if (scopeChain->is<DynamicWithObject>())
+            return true;
+        scopeChain = scopeChain->enclosingScope();
+    }
+
+    return false;
+}
+
 // Define subset of ExecuteType so that casting performs the injection.
 enum EvalType { DIRECT_EVAL = EXECUTE_DIRECT_EVAL, INDIRECT_EVAL = EXECUTE_INDIRECT_EVAL };
 
@@ -314,9 +326,14 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         if (!staticScope)
             return false;
 
+        bool hasPollutedGlobalScope =
+            HasPollutedScopeChain(scopeobj) ||
+            (evalType == DIRECT_EVAL && callerScript->hasPollutedGlobalScope());
+
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
+               .setHasPollutedScope(hasPollutedGlobalScope)
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
@@ -399,6 +416,8 @@ js::DirectEvalStringFromIon(JSContext *cx,
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
                .setCompileAndGo(true)
+               .setHasPollutedScope(HasPollutedScopeChain(scopeobj) ||
+                                    callerScript->hasPollutedGlobalScope())
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
@@ -502,6 +521,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScri
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, global);
     MOZ_ASSERT(global->is<GlobalObject>());
+    MOZ_RELEASE_ASSERT(scriptArg->hasPollutedGlobalScope());
 
     RootedScript script(cx, scriptArg);
     if (script->compartment() != cx->compartment()) {

@@ -707,6 +707,23 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     CreateEmptyStyleData(eStyleStruct_Padding);
   }
 
+  // Elements with display:inline whose writing-mode is orthogonal to their
+  // parent's mode will be converted to display:inline-block.
+  if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE && mParent) {
+    // We don't need the full mozilla::WritingMode value (incorporating dir and
+    // text-orientation) here, all we care about is vertical vs horizontal.
+    bool thisHorizontal =
+      StyleVisibility()->mWritingMode == NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+    bool parentHorizontal = mParent->StyleVisibility()->mWritingMode ==
+                              NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+    if (thisHorizontal != parentHorizontal) {
+      nsStyleDisplay *mutable_display =
+        static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
+      mutable_display->mOriginalDisplay = mutable_display->mDisplay =
+        NS_STYLE_DISPLAY_INLINE_BLOCK;
+    }
+  }
+
   // Compute User Interface style, to trigger loads of cursors
   StyleUserInterface();
 }

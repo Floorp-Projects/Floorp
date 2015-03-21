@@ -21,7 +21,7 @@ class ProcTestPoll(proctest.ProcTest):
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
                                           "process_normal_finish_python.ini"],
                                           cwd=here)
-        self.assertRaises(AttributeError, p.poll)
+        self.assertRaises(RuntimeError, p.poll)
 
     def test_poll_while_running(self):
         """Process is started, and poll() is called"""
@@ -121,6 +121,7 @@ class ProcTestPoll(proctest.ProcTest):
                               output,
                               returncode,
                               p.didTimeout)
+
 
 if __name__ == '__main__':
     unittest.main()

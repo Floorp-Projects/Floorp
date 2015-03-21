@@ -15,6 +15,9 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
+#define PRIVATE_IDBREQUEST_IID \
+  {0xe68901e5, 0x1d50, 0x4ee9, {0xaf, 0x49, 0x90, 0x99, 0x4a, 0xff, 0xc8, 0x39}}
+
 class nsPIDOMWindow;
 struct PRThread;
 

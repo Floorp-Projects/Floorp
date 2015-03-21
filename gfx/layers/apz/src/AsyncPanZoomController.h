@@ -287,6 +287,12 @@ public:
    */
   bool Matches(const ScrollableLayerGuid& aGuid);
 
+  /**
+   * Returns true if the tree manager of this APZC is the same as the one
+   * passed in.
+   */
+  bool HasTreeManager(const APZCTreeManager* aTreeManager) const;
+
   void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
