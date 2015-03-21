@@ -1721,13 +1721,13 @@ const DebugScopeProxy DebugScopeProxy::singleton;
 DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosing)
 {
     MOZ_ASSERT(scope.compartment() == cx->compartment());
+    MOZ_ASSERT(!IsSyntacticScope(enclosing));
+
     RootedValue priv(cx, ObjectValue(scope));
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, priv,
                                    nullptr /* proto */);
     if (!obj)
         return nullptr;
-
-    MOZ_ASSERT(!enclosing->is<ScopeObject>());
 
     DebugScopeObject *debugScope = &obj->as<DebugScopeObject>();
     debugScope->setExtra(ENCLOSING_EXTRA, ObjectValue(*enclosing));
