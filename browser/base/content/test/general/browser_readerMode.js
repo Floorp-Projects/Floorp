@@ -65,6 +65,11 @@ add_task(function* () {
   ok(ReadingListUI.isSidebarOpen,
     "The ReadingListUI should now indicate SideBar-ReadingList open.");
 
+  // Now close the sidebar.
+  listButton.click();
+  yield promiseWaitForCondition(() => !listButton.classList.contains("on"));
+  ok(!ReadingListUI.isSidebarOpen, "The sidebar should be closed.");
+
   readerButton.click();
   yield promiseTabLoadEvent(tab);
   is(gBrowser.selectedBrowser.currentURI.spec, url, "Original page loaded after clicking active reader mode button");
