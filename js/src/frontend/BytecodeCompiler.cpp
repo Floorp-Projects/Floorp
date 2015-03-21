@@ -430,7 +430,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
      * Nowadays the threaded interpreter needs a last return instruction, so we
      * do have to emit that here.
      */
-    if (Emit1(cx, &bce, JSOP_RETRVAL) < 0)
+    if (!Emit1(cx, &bce, JSOP_RETRVAL))
         return nullptr;
 
     // Global/eval script bindings are always empty (all names are added to the
