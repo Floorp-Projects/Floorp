@@ -265,8 +265,9 @@ BluetoothDaemonAvrcpModule::RegisterNotificationRspCmd(
                            1 + // Data length
                            256)); // Maximum data length
 
-  nsresult rv = PackPDU(aEvent, aType,
-                        BluetoothAvrcpEventParamPair(aEvent, aParam), *pdu);
+  BluetoothAvrcpEventParamPair data(aEvent, aParam);
+  nsresult rv = PackPDU(aEvent, aType, static_cast<uint8_t>(data.GetLength()),
+                        data, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }

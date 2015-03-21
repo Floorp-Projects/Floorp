@@ -1196,6 +1196,11 @@ SelectionCarets::ScrollPositionChanged()
     if (!mUseAsyncPanZoom) {
       SetVisibility(false);
       //TODO: handling scrolling for selection bubble when APZ is off
+      // Dispatch event to notify gaia to hide selection bubble.
+      // Positions will be updated when scroll is end, so no need to calculate
+      // and keep scroll positions here. An arbitrary (0, 0) is sent instead.
+      DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started,
+                                    mozilla::CSSIntPoint(0, 0));
 
       SELECTIONCARETS_LOG("Launch scroll end detector");
       LaunchScrollEndDetector();

@@ -274,10 +274,11 @@ static status_t
 ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
                             gfx::DataSourceSurface *aSurface,
                             gfx::DataSourceSurface::MappedSurface *aMappedSurface,
-                            const layers::PlanarYCbCrData& aYcbcrData,
-                            int aOmxFormat)
+                            const layers::PlanarYCbCrData& aYcbcrData)
 {
-  if (!aOmxFormat) {
+  uint32_t omxFormat =
+    GrallocImage::GetOmxFormat(aBuffer->getPixelFormat());
+  if (!omxFormat) {
     NS_WARNING("Unknown color format");
     return BAD_VALUE;
   }
@@ -359,7 +360,7 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
     return OK;
   }
 
-  android::ColorConverter colorConverter((OMX_COLOR_FORMATTYPE)aOmxFormat,
+  android::ColorConverter colorConverter((OMX_COLOR_FORMATTYPE)omxFormat,
                                          OMX_COLOR_Format16bitRGB565);
   if (!colorConverter.isValid()) {
     NS_WARNING("Invalid color conversion");
@@ -402,25 +403,16 @@ GrallocImage::GetAsSourceSurface()
   }
 
   int32_t rv;
-  uint32_t omxFormat = 0;
-
-  omxFormat = GrallocImage::GetOmxFormat(graphicBuffer->getPixelFormat());
-  if (!omxFormat) {
-    rv = ConvertVendorYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface);
+  rv = ConvertOmxYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface, mData);
+  if (rv == OK) {
     surface->Unmap();
-
-    if (rv != OK) {
-      NS_WARNING("Unknown color format");
-      return nullptr;
-    }
-
     return surface;
   }
 
-  rv = ConvertOmxYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface, mData, omxFormat);
+  rv = ConvertVendorYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface);
   surface->Unmap();
-
   if (rv != OK) {
+    NS_WARNING("Unknown color format");
     return nullptr;
   }
 
