@@ -2432,6 +2432,23 @@ DumpStringRepresentation(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
+static bool
+SetLazyParsingEnabled(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc < 1) {
+        JS_ReportError(cx, "setLazyParsingEnabled: need an argument");
+        return false;
+    }
+
+    bool arg = ToBoolean(args.get(0));
+    JS::CompartmentOptionsRef(cx->compartment()).setDiscardSource(!arg);
+
+    args.rval().setUndefined();
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment' [, 'shrinking'])",
@@ -2813,6 +2830,10 @@ gc::ZealModeHelpText),
 "dumpStringRepresentation(str)",
 "  Print a human-readable description of how the string |str| is represented.\n"),
 #endif
+
+    JS_FN_HELP("setLazyParsingEnabled", SetLazyParsingEnabled, 1, 0,
+"setLazyParsingEnabled(bool)",
+"  Enable or disable lazy parsing in the current compartment.  The default is enabled."),
 
     JS_FS_HELP_END
 };
