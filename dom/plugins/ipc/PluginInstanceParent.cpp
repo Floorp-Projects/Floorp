@@ -393,17 +393,6 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
     return true;
 }
 
-class NotificationSink : public CompositionNotifySink
-{
-public:
-  explicit NotificationSink(PluginInstanceParent* aInstance) : mInstance(aInstance)
-  { }
-
-  virtual void DidComposite() { mInstance->DidComposite(); }
-private:
-  PluginInstanceParent *mInstance;
-};
-
 bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, NPError* result)

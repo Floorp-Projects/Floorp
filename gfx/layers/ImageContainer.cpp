@@ -143,7 +143,6 @@ ImageContainer::ImageContainer(ImageContainer::Mode flag)
   mPreviousImagePainted(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
-  mCompositionNotifySink(nullptr),
   mImageClient(nullptr)
 {
   if (ImageBridgeChild::IsCreated()) {
