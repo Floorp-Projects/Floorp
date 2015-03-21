@@ -16,20 +16,20 @@ typedef nsSVGPolyElement SVGPolylineElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGPolylineElement MOZ_FINAL : public SVGPolylineElementBase
+class SVGPolylineElement final : public SVGPolylineElementBase
 {
 protected:
   explicit SVGPolylineElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGPolylineElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
   // nsSVGPathGeometryElement methods:
-  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) override;
 
 public:
   // nsIContent interface
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 };
 
 } // namespace mozilla

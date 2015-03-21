@@ -87,10 +87,10 @@ protected:
                                const uint16_t& aMode,
                                const InfallibleTArray<nsCString>& aNames,
                                const InfallibleTArray<nsCString>& aValues)
-                               MOZ_OVERRIDE;
+                               override;
 
     virtual bool
-    DeallocPPluginInstanceParent(PPluginInstanceParent* aActor) MOZ_OVERRIDE;
+    DeallocPPluginInstanceParent(PPluginInstanceParent* aActor) override;
 
 public:
     explicit PluginModuleParent(bool aIsChrome);
@@ -105,12 +105,12 @@ public:
     bool IsInitialized() const { return mNPInitialized; }
     bool IsChrome() const { return mIsChrome; }
 
-    virtual void SetPlugin(nsNPAPIPlugin* plugin) MOZ_OVERRIDE
+    virtual void SetPlugin(nsNPAPIPlugin* plugin) override
     {
         mPlugin = plugin;
     }
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason why) override;
 
     const NPNetscapeFuncs* GetNetscapeFuncs() {
         return mNPNIface;
@@ -120,7 +120,7 @@ public:
         return !IsOnCxxStack();
     }
 
-    void ProcessRemoteNativeEventsInInterruptCall() MOZ_OVERRIDE;
+    void ProcessRemoteNativeEventsInInterruptCall() override;
 
     virtual bool WaitForIPCConnection() { return true; }
 
@@ -130,53 +130,53 @@ public:
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    MediateInterruptRace(const Message& parent, const Message& child) override
     {
         return MediateRace(parent, child);
     }
 
     virtual bool
-    RecvBackUpXResources(const FileDescriptor& aXSocketFd) MOZ_OVERRIDE;
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd) override;
 
-    virtual bool AnswerProcessSomeEvents() MOZ_OVERRIDE;
+    virtual bool AnswerProcessSomeEvents() override;
 
     virtual bool
-    RecvProcessNativeEventsInInterruptCall() MOZ_OVERRIDE;
+    RecvProcessNativeEventsInInterruptCall() override;
 
     virtual bool
     RecvPluginShowWindow(const uint32_t& aWindowId, const bool& aModal,
                          const int32_t& aX, const int32_t& aY,
-                         const size_t& aWidth, const size_t& aHeight) MOZ_OVERRIDE;
+                         const size_t& aWidth, const size_t& aHeight) override;
 
     virtual bool
-    RecvPluginHideWindow(const uint32_t& aWindowId) MOZ_OVERRIDE;
+    RecvPluginHideWindow(const uint32_t& aWindowId) override;
 
     virtual PCrashReporterParent*
     AllocPCrashReporterParent(mozilla::dom::NativeThreadId* id,
-                              uint32_t* processType) MOZ_OVERRIDE;
+                              uint32_t* processType) override;
     virtual bool
-    DeallocPCrashReporterParent(PCrashReporterParent* actor) MOZ_OVERRIDE;
+    DeallocPCrashReporterParent(PCrashReporterParent* actor) override;
 
     virtual bool
-    RecvSetCursor(const NSCursorInfo& aCursorInfo) MOZ_OVERRIDE;
+    RecvSetCursor(const NSCursorInfo& aCursorInfo) override;
 
     virtual bool
-    RecvShowCursor(const bool& aShow) MOZ_OVERRIDE;
+    RecvShowCursor(const bool& aShow) override;
 
     virtual bool
-    RecvPushCursor(const NSCursorInfo& aCursorInfo) MOZ_OVERRIDE;
+    RecvPushCursor(const NSCursorInfo& aCursorInfo) override;
 
     virtual bool
-    RecvPopCursor() MOZ_OVERRIDE;
+    RecvPopCursor() override;
 
     virtual bool
-    RecvNPN_SetException(const nsCString& aMessage) MOZ_OVERRIDE;
+    RecvNPN_SetException(const nsCString& aMessage) override;
 
     virtual bool
-    RecvNPN_ReloadPlugins(const bool& aReloadPages) MOZ_OVERRIDE;
+    RecvNPN_ReloadPlugins(const bool& aReloadPages) override;
 
     virtual bool
-    RecvNP_InitializeResult(const NPError& aError) MOZ_OVERRIDE;
+    RecvNP_InitializeResult(const NPError& aError) override;
 
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s,
                                            PluginAsyncSurrogate** aSurrogate = nullptr);
@@ -187,7 +187,7 @@ protected:
 
     virtual void UpdatePluginTimeout() {}
 
-    virtual bool RecvNotifyContentModuleDestroyed() MOZ_OVERRIDE { return true; }
+    virtual bool RecvNotifyContentModuleDestroyed() override { return true; }
 
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
@@ -223,43 +223,43 @@ protected:
     static void NPP_URLRedirectNotify(NPP instance, const char* url,
                                       int32_t status, void* notifyData);
 
-    virtual bool HasRequiredFunctions() MOZ_OVERRIDE;
-    virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) MOZ_OVERRIDE;
-    virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) MOZ_OVERRIDE;
-    virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) MOZ_OVERRIDE;
-    virtual bool IsOOP() MOZ_OVERRIDE { return true; }
-    virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
+    virtual bool HasRequiredFunctions() override;
+    virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) override;
+    virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
+    virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) override;
+    virtual bool IsOOP() override { return true; }
+    virtual nsresult SetBackgroundUnknown(NPP instance) override;
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect& aRect,
-                                           gfxContext** aCtx) MOZ_OVERRIDE;
+                                           gfxContext** aCtx) override;
     virtual nsresult EndUpdateBackground(NPP instance,
                                          gfxContext* aCtx,
-                                         const nsIntRect& aRect) MOZ_OVERRIDE;
+                                         const nsIntRect& aRect) override;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) override;
 #else
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) override;
 #endif
-    virtual nsresult NP_Shutdown(NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_Shutdown(NPError* error) override;
 
-    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) MOZ_OVERRIDE;
+    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) override;
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
-                                 void *aValue, NPError* error) MOZ_OVERRIDE;
+                                 void *aValue, NPError* error) override;
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) override;
 #endif
     virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
                              uint16_t mode, int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
-                             NPError* error) MOZ_OVERRIDE;
+                             NPError* error) override;
     virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
-                                       uint64_t maxAge) MOZ_OVERRIDE;
-    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result) MOZ_OVERRIDE;
+                                       uint64_t maxAge) override;
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result) override;
 
 #if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) MOZ_OVERRIDE;
-    virtual nsresult ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor) MOZ_OVERRIDE;
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) override;
+    virtual nsresult ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor) override;
 #endif
 
     void InitAsyncSurrogates();
@@ -323,15 +323,15 @@ class PluginModuleContentParent : public PluginModuleParent
     virtual ~PluginModuleContentParent();
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) MOZ_OVERRIDE;
+    nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) override;
 #endif
 
   private:
-    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
-    virtual void OnExitedSyncSend() MOZ_OVERRIDE;
+    virtual bool ShouldContinueFromReplyTimeout() override;
+    virtual void OnExitedSyncSend() override;
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
-    void OnCrash(DWORD processID) MOZ_OVERRIDE {}
+    void OnCrash(DWORD processID) override {}
 #endif
 
     static PluginModuleContentParent* sSavedModuleParent;
@@ -377,10 +377,10 @@ class PluginModuleChromeParent
     EvaluateHangUIState(const bool aReset);
 #endif // XP_WIN
 
-    virtual bool WaitForIPCConnection() MOZ_OVERRIDE;
+    virtual bool WaitForIPCConnection() override;
 
     virtual bool
-    RecvNP_InitializeResult(const NPError& aError) MOZ_OVERRIDE;
+    RecvNP_InitializeResult(const NPError& aError) override;
 
     void
     SetContentParent(dom::ContentParent* aContentParent);
@@ -390,25 +390,25 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
-    void OnEnteredCall() MOZ_OVERRIDE;
-    void OnExitedCall() MOZ_OVERRIDE;
-    void OnEnteredSyncSend() MOZ_OVERRIDE;
-    void OnExitedSyncSend() MOZ_OVERRIDE;
+    void OnEnteredCall() override;
+    void OnExitedCall() override;
+    void OnEnteredSyncSend() override;
+    void OnExitedSyncSend() override;
 
 private:
     virtual void
-    EnteredCxxStack() MOZ_OVERRIDE;
+    EnteredCxxStack() override;
 
     void
-    ExitedCxxStack() MOZ_OVERRIDE;
+    ExitedCxxStack() override;
 
     mozilla::ipc::IProtocol* GetInvokingProtocol();
     PluginInstanceParent* GetManagingInstance(mozilla::ipc::IProtocol* aProtocol);
 
     virtual void
-    AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) MOZ_OVERRIDE;
+    AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) override;
 
-    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+    virtual bool ShouldContinueFromReplyTimeout() override;
 
 #ifdef MOZ_CRASHREPORTER
     void ProcessFirstMinidump();
@@ -417,24 +417,24 @@ private:
 
     virtual PCrashReporterParent*
     AllocPCrashReporterParent(mozilla::dom::NativeThreadId* id,
-                              uint32_t* processType) MOZ_OVERRIDE;
+                              uint32_t* processType) override;
     virtual bool
-    DeallocPCrashReporterParent(PCrashReporterParent* actor) MOZ_OVERRIDE;
+    DeallocPCrashReporterParent(PCrashReporterParent* actor) override;
 
     PluginProcessParent* Process() const { return mSubprocess; }
     base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) override;
 #else
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) override;
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) MOZ_OVERRIDE;
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) override;
 #endif
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason why) override;
 
     // aFilePath is UTF8, not native!
     explicit PluginModuleChromeParent(const char* aFilePath, uint32_t aPluginId);
@@ -443,7 +443,7 @@ private:
 
     void CleanupFromTimeout(const bool aByHangUI);
 
-    virtual void UpdatePluginTimeout() MOZ_OVERRIDE;
+    virtual void UpdatePluginTimeout() override;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     void InitPluginProfiling();
@@ -453,7 +453,7 @@ private:
     void RegisterSettingsCallbacks();
     void UnregisterSettingsCallbacks();
 
-    virtual bool RecvNotifyContentModuleDestroyed() MOZ_OVERRIDE;
+    virtual bool RecvNotifyContentModuleDestroyed() override;
 
     static void CachedSettingChanged(const char* aPref, void* aModule);
 
@@ -516,7 +516,7 @@ private:
     void DoInjection(const nsAutoHandle& aSnapshot);
     static DWORD WINAPI GetToolhelpSnapshot(LPVOID aContext);
 
-    void OnCrash(DWORD processID) MOZ_OVERRIDE;
+    void OnCrash(DWORD processID) override;
 
     DWORD mFlashProcess1;
     DWORD mFlashProcess2;
@@ -534,7 +534,7 @@ private:
             MOZ_ASSERT(aModule);
         }
 
-        void Run() MOZ_OVERRIDE
+        void Run() override
         {
             mModule->OnProcessLaunched(mLaunchSucceeded);
         }

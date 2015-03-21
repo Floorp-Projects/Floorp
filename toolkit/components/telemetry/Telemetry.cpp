@@ -637,7 +637,7 @@ ClearIOReporting()
 
 class KeyedHistogram;
 
-class TelemetryImpl MOZ_FINAL
+class TelemetryImpl final
   : public nsITelemetry
   , public nsIMemoryReporter
 {

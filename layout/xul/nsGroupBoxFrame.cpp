@@ -24,19 +24,19 @@ public:
   explicit nsGroupBoxFrame(nsStyleContext* aContext):
     nsBoxFrame(aContext) {}
 
-  virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("GroupBoxFrame"), aResult);
   }
 #endif
 
-  virtual bool HonorPrintBackgroundSettings() MOZ_OVERRIDE { return false; }
+  virtual bool HonorPrintBackgroundSettings() override { return false; }
 
   void PaintBorderBackground(nsRenderingContext& aRenderingContext,
       nsPoint aPt, const nsRect& aDirtyRect);
@@ -44,10 +44,10 @@ public:
   // make sure we our kids get our orient and align instead of us.
   // our child box has no content node so it will search for a parent with one.
   // that will be us.
-  virtual void GetInitialOrientation(bool& aHorizontal) MOZ_OVERRIDE { aHorizontal = false; }
-  virtual bool GetInitialHAlignment(Halignment& aHalign) MOZ_OVERRIDE { aHalign = hAlign_Left; return true; } 
-  virtual bool GetInitialVAlignment(Valignment& aValign) MOZ_OVERRIDE { aValign = vAlign_Top; return true; } 
-  virtual bool GetInitialAutoStretch(bool& aStretch) MOZ_OVERRIDE { aStretch = true; return true; } 
+  virtual void GetInitialOrientation(bool& aHorizontal) override { aHorizontal = false; }
+  virtual bool GetInitialHAlignment(Halignment& aHalign) override { aHalign = hAlign_Left; return true; } 
+  virtual bool GetInitialVAlignment(Valignment& aValign) override { aValign = vAlign_Top; return true; } 
+  virtual bool GetInitialAutoStretch(bool& aStretch) override { aStretch = true; return true; } 
 
   nsIFrame* GetCaptionBox(nsPresContext* aPresContext, nsRect& aCaptionRect);
 };
@@ -94,11 +94,11 @@ public:
 #endif
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE {
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override {
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("XULGroupBackground", TYPE_XUL_GROUP_BACKGROUND)
 };
 

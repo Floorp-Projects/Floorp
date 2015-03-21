@@ -24,7 +24,7 @@ namespace mozilla {
 namespace dom {
 class DocumentType;
 
-class DOMImplementation MOZ_FINAL : public nsIDOMDOMImplementation
+class DOMImplementation final : public nsIDOMDOMImplementation
                                   , public nsWrapperCache
 {
   ~DOMImplementation()
@@ -52,7 +52,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIDOMDOMImplementation
   NS_DECL_NSIDOMDOMIMPLEMENTATION

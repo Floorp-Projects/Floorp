@@ -54,7 +54,7 @@ const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
 } // anonymous namespace
 
-class IDBFactory::BackgroundCreateCallback MOZ_FINAL
+class IDBFactory::BackgroundCreateCallback final
   : public nsIIPCBackgroundChildCreateCallback
 {
   nsRefPtr<IDBFactory> mFactory;

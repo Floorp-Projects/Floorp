@@ -23,13 +23,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
   // Widgets
-  virtual bool IsWidget() const MOZ_OVERRIDE;
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual bool IsWidget() const override;
+  virtual Accessible* ContainerWidget() const override;
 
 protected:
   ~XULAlertAccessible();

@@ -304,22 +304,22 @@ public:
   static already_AddRefed<nsIStackFrame>
   CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
 
-  NS_IMETHOD GetLanguageName(nsACString& aLanguageName) MOZ_OVERRIDE;
-  NS_IMETHOD GetFilename(nsAString& aFilename) MOZ_OVERRIDE;
-  NS_IMETHOD GetName(nsAString& aFunction) MOZ_OVERRIDE;
-  NS_IMETHOD GetAsyncCause(nsAString& aAsyncCause) MOZ_OVERRIDE;
-  NS_IMETHOD GetAsyncCaller(nsIStackFrame** aAsyncCaller) MOZ_OVERRIDE;
-  NS_IMETHOD GetCaller(nsIStackFrame** aCaller) MOZ_OVERRIDE;
-  NS_IMETHOD GetFormattedStack(nsAString& aStack) MOZ_OVERRIDE;
-  NS_IMETHOD GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame) MOZ_OVERRIDE;
+  NS_IMETHOD GetLanguageName(nsACString& aLanguageName) override;
+  NS_IMETHOD GetFilename(nsAString& aFilename) override;
+  NS_IMETHOD GetName(nsAString& aFunction) override;
+  NS_IMETHOD GetAsyncCause(nsAString& aAsyncCause) override;
+  NS_IMETHOD GetAsyncCaller(nsIStackFrame** aAsyncCaller) override;
+  NS_IMETHOD GetCaller(nsIStackFrame** aCaller) override;
+  NS_IMETHOD GetFormattedStack(nsAString& aStack) override;
+  NS_IMETHOD GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSavedFrame) override;
 
 protected:
-  virtual bool IsJSFrame() const MOZ_OVERRIDE {
+  virtual bool IsJSFrame() const override {
     return true;
   }
 
-  virtual nsresult GetLineno(int32_t* aLineNo) MOZ_OVERRIDE;
-  virtual nsresult GetColNo(int32_t* aColNo) MOZ_OVERRIDE;
+  virtual nsresult GetLineno(int32_t* aLineNo) override;
+  virtual nsresult GetColNo(int32_t* aColNo) override;
 
 private:
   virtual ~JSStackFrame();

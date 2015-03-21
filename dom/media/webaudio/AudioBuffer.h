@@ -30,7 +30,7 @@ class AudioContext;
  * are Float32Arrays, or in mSharedChannels if the mJSChannels objects have
  * been neutered.
  */
-class AudioBuffer MOZ_FINAL : public nsWrapperCache
+class AudioBuffer final : public nsWrapperCache
 {
 public:
   static already_AddRefed<AudioBuffer>
@@ -48,7 +48,7 @@ public:
     return mContext;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   float SampleRate() const
   {

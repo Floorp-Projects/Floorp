@@ -146,7 +146,7 @@ Atomic<bool> gClosed(false);
 Atomic<bool> gTestingMode(false);
 Atomic<bool> gExperimentalFeaturesEnabled(false);
 
-class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
+class AsyncDeleteFileRunnable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -161,7 +161,7 @@ private:
   int64_t mFileId;
 };
 
-class GetFileReferencesHelper MOZ_FINAL : public nsIRunnable
+class GetFileReferencesHelper final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -712,7 +712,7 @@ IndexedDatabaseManager::InvalidateAllFileManagers()
 {
   AssertIsOnIOThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator

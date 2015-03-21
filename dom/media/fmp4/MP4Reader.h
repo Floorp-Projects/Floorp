@@ -39,7 +39,7 @@ class MP4Stream;
 #undef MP4_READER_DORMANT_HEURISTIC
 #endif
 
-class MP4Reader MOZ_FINAL : public MediaDecoderReader
+class MP4Reader final : public MediaDecoderReader
 {
   typedef mp4_demuxer::TrackType TrackType;
 
@@ -48,55 +48,55 @@ public:
 
   virtual ~MP4Reader();
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
 
-  virtual size_t SizeOfVideoQueueInFrames() MOZ_OVERRIDE;
-  virtual size_t SizeOfAudioQueueInFrames() MOZ_OVERRIDE;
+  virtual size_t SizeOfVideoQueueInFrames() override;
+  virtual size_t SizeOfAudioQueueInFrames() override;
 
   virtual nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
+  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
 
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() MOZ_OVERRIDE;
+  virtual nsRefPtr<AudioDataPromise> RequestAudioData() override;
 
-  virtual bool HasAudio() MOZ_OVERRIDE;
-  virtual bool HasVideo() MOZ_OVERRIDE;
+  virtual bool HasAudio() override;
+  virtual bool HasVideo() override;
 
   // PreReadMetadata() is called by MediaDecoderStateMachine::DecodeMetadata()
   // before checking hardware resource. In Gonk, it requests hardware codec so
   // MediaDecoderStateMachine could go to DORMANT state if the hardware codec is
   // not available.
-  virtual void PreReadMetadata() MOZ_OVERRIDE;
+  virtual void PreReadMetadata() override;
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags) override;
 
-  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
+  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) override;
 
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
-  virtual int64_t GetEvictionOffset(double aTime) MOZ_OVERRIDE;
+  virtual int64_t GetEvictionOffset(double aTime) override;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
 
   // For Media Resource Management
-  virtual void SetIdle() MOZ_OVERRIDE;
-  virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
-  virtual bool IsDormantNeeded() MOZ_OVERRIDE;
-  virtual void ReleaseMediaResources() MOZ_OVERRIDE;
+  virtual void SetIdle() override;
+  virtual bool IsWaitingMediaResources() override;
+  virtual bool IsDormantNeeded() override;
+  virtual void ReleaseMediaResources() override;
   virtual void SetSharedDecoderManager(SharedDecoderManager* aManager)
-    MOZ_OVERRIDE;
+    override;
 
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
+  virtual nsresult ResetDecode() override;
 
-  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
 
-  virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
+  virtual bool IsAsync() const override { return true; }
 
-  virtual bool VideoIsHardwareAccelerated() const MOZ_OVERRIDE;
+  virtual bool VideoIsHardwareAccelerated() const override;
 
-  virtual void DisableHardwareAcceleration() MOZ_OVERRIDE;
+  virtual void DisableHardwareAcceleration() override;
 
 private:
 
@@ -136,7 +136,7 @@ private:
   void NotifyResourcesStatusChanged();
   void RequestCodecResource();
   bool IsWaitingOnCodecResource();
-  virtual bool IsWaitingOnCDMResource() MOZ_OVERRIDE;
+  virtual bool IsWaitingOnCDMResource() override;
 
   Microseconds GetNextKeyframeTime();
   bool ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
@@ -156,22 +156,22 @@ private:
       , mType(aType)
     {
     }
-    virtual void Output(MediaData* aSample) MOZ_OVERRIDE {
+    virtual void Output(MediaData* aSample) override {
       mReader->Output(mType, aSample);
     }
-    virtual void InputExhausted() MOZ_OVERRIDE {
+    virtual void InputExhausted() override {
       mReader->InputExhausted(mType);
     }
-    virtual void Error() MOZ_OVERRIDE {
+    virtual void Error() override {
       mReader->Error(mType);
     }
-    virtual void DrainComplete() MOZ_OVERRIDE {
+    virtual void DrainComplete() override {
       mReader->DrainComplete(mType);
     }
-    virtual void NotifyResourcesStatusChanged() MOZ_OVERRIDE {
+    virtual void NotifyResourcesStatusChanged() override {
       mReader->NotifyResourcesStatusChanged();
     }
-    virtual void ReleaseMediaResources() MOZ_OVERRIDE {
+    virtual void ReleaseMediaResources() override {
       mReader->ReleaseMediaResources();
     }
   private:
@@ -245,9 +245,9 @@ private:
 
     MediaPromiseHolder<PromiseType> mPromise;
 
-    bool HasPromise() MOZ_OVERRIDE { return !mPromise.IsEmpty(); }
+    bool HasPromise() override { return !mPromise.IsEmpty(); }
     void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
-                       const char* aMethodName) MOZ_OVERRIDE
+                       const char* aMethodName) override
     {
       mPromise.Reject(aReason, aMethodName);
     }

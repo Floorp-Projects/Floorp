@@ -24,7 +24,7 @@ class RefCountedMtpServer;
 
 using namespace android;
 
-class MozMtpDatabase MOZ_FINAL : public MtpDatabase
+class MozMtpDatabase final : public MtpDatabase
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MozMtpDatabase)
@@ -124,7 +124,7 @@ protected:
 
 private:
 
-  struct DbEntry MOZ_FINAL
+  struct DbEntry final
   {
     DbEntry()
       : mHandle(0),
@@ -211,7 +211,7 @@ private:
   typedef nsTArray<mozilla::RefPtr<DbEntry> > UnprotectedDbArray;
   typedef ProtectedTArray<mozilla::RefPtr<DbEntry> > ProtectedDbArray;
 
-  struct StorageEntry MOZ_FINAL
+  struct StorageEntry final
   {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StorageEntry)
 

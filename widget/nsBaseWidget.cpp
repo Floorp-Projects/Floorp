@@ -924,7 +924,7 @@ public:
     : mTreeManager(aTreeManager)
   {}
 
-  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const MOZ_OVERRIDE {
+  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const override {
     MOZ_ASSERT(NS_IsMainThread());
     // need a local var to disambiguate between the SetTargetAPZC overloads.
     void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
@@ -943,7 +943,7 @@ public:
     : mTreeManager(aTreeManager)
   {}
 
-  void Run(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aFlags) const MOZ_OVERRIDE {
+  void Run(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aFlags) const override {
     MOZ_ASSERT(NS_IsMainThread());
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
         mTreeManager.get(), &APZCTreeManager::SetAllowedTouchBehavior,
@@ -960,7 +960,7 @@ public:
     : mTreeManager(aTreeManager)
   {}
 
-  void Run(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault) const MOZ_OVERRIDE {
+  void Run(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault) const override {
     MOZ_ASSERT(NS_IsMainThread());
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
         mTreeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
@@ -2023,7 +2023,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,bool aValue)
 }
 
 //////////////////////////////////////////////////////////////
-class Debug_PrefObserver MOZ_FINAL : public nsIObserver {
+class Debug_PrefObserver final : public nsIObserver {
     ~Debug_PrefObserver() {}
 
   public:

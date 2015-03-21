@@ -21,7 +21,7 @@ namespace cache {
 
 struct SavedResponse;
 
-class CacheParent MOZ_FINAL : public PCacheParent
+class CacheParent final : public PCacheParent
                             , public Manager::Listener
                             , public FetchPut::Listener
 {
@@ -31,44 +31,44 @@ public:
 
 private:
   // PCacheParent method
-  virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
-  virtual bool RecvTeardown() MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
+  virtual bool RecvTeardown() override;
   virtual bool
   RecvMatch(const RequestId& aRequestId, const PCacheRequest& aRequest,
-            const PCacheQueryParams& aParams) MOZ_OVERRIDE;
+            const PCacheQueryParams& aParams) override;
   virtual bool
   RecvMatchAll(const RequestId& aRequestId, const PCacheRequestOrVoid& aRequest,
-               const PCacheQueryParams& aParams) MOZ_OVERRIDE;
+               const PCacheQueryParams& aParams) override;
   virtual bool
   RecvAddAll(const RequestId& aRequestId,
-             nsTArray<PCacheRequest>&& aRequests) MOZ_OVERRIDE;
+             nsTArray<PCacheRequest>&& aRequests) override;
   virtual bool
   RecvPut(const RequestId& aRequestId,
-          const CacheRequestResponse& aPut) MOZ_OVERRIDE;
+          const CacheRequestResponse& aPut) override;
   virtual bool
   RecvDelete(const RequestId& aRequestId, const PCacheRequest& aRequest,
-             const PCacheQueryParams& aParams) MOZ_OVERRIDE;
+             const PCacheQueryParams& aParams) override;
   virtual bool
   RecvKeys(const RequestId& aRequestId, const PCacheRequestOrVoid& aRequest,
-           const PCacheQueryParams& aParams) MOZ_OVERRIDE;
+           const PCacheQueryParams& aParams) override;
 
   // Manager::Listener methods
   virtual void OnCacheMatch(RequestId aRequestId, nsresult aRv,
                             const SavedResponse* aSavedResponse,
-                            StreamList* aStreamList) MOZ_OVERRIDE;
+                            StreamList* aStreamList) override;
   virtual void OnCacheMatchAll(RequestId aRequestId, nsresult aRv,
                                const nsTArray<SavedResponse>& aSavedResponses,
-                               StreamList* aStreamList) MOZ_OVERRIDE;
-  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) MOZ_OVERRIDE;
+                               StreamList* aStreamList) override;
+  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) override;
   virtual void OnCacheDelete(RequestId aRequestId, nsresult aRv,
-                             bool aSuccess) MOZ_OVERRIDE;
+                             bool aSuccess) override;
   virtual void OnCacheKeys(RequestId aRequestId, nsresult aRv,
                            const nsTArray<SavedRequest>& aSavedRequests,
-                           StreamList* aStreamList) MOZ_OVERRIDE;
+                           StreamList* aStreamList) override;
 
   // FetchPut::Listener methods
   virtual void OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId,
-                          nsresult aRv) MOZ_OVERRIDE;
+                          nsresult aRv) override;
 
   already_AddRefed<nsIInputStream>
   DeserializeCacheStream(const PCacheReadStreamOrVoid& aStreamOrVoid);

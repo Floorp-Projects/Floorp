@@ -70,7 +70,7 @@ private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
 
-  struct DOMAnimatedEnum MOZ_FINAL : public SVGAnimatedEnumeration
+  struct DOMAnimatedEnum final : public SVGAnimatedEnumeration
   {
     DOMAnimatedEnum(nsSVGOrientType* aVal,
                     nsSVGElement *aSVGElement)
@@ -81,15 +81,15 @@ private:
     nsSVGOrientType *mVal; // kept alive because it belongs to content
 
     using mozilla::dom::SVGAnimatedEnumeration::SetBaseVal;
-    virtual uint16_t BaseVal() MOZ_OVERRIDE
+    virtual uint16_t BaseVal() override
     {
       return mVal->GetBaseValue();
     }
-    virtual void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) MOZ_OVERRIDE
+    virtual void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override
     {
       aRv = mVal->SetBaseValue(aBaseVal, mSVGElement);
     }
-    virtual uint16_t AnimVal() MOZ_OVERRIDE
+    virtual uint16_t AnimVal() override
     {
       return mVal->GetAnimValue();
     }
@@ -106,17 +106,17 @@ protected:
   friend nsresult (::NS_NewSVGMarkerElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
 
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify) override;
 
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+  virtual bool HasValidDimensions() const override;
 
   // public helpers
   gfx::Matrix GetMarkerTransform(float aStrokeWidth,
@@ -125,7 +125,7 @@ public:
   nsSVGViewBoxRect GetViewBoxRect();
   gfx::Matrix GetViewBoxTransform();
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
@@ -149,15 +149,15 @@ protected:
 
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
 
   void SetParentCoordCtxProvider(SVGSVGElement *aContext);
 
-  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
-  virtual AngleAttributesInfo GetAngleInfo() MOZ_OVERRIDE;
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
-  virtual nsSVGViewBox *GetViewBox() MOZ_OVERRIDE;
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
+  virtual LengthAttributesInfo GetLengthInfo() override;
+  virtual AngleAttributesInfo GetAngleInfo() override;
+  virtual EnumAttributesInfo GetEnumInfo() override;
+  virtual nsSVGViewBox *GetViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
   nsSVGLength2 mLengthAttributes[4];

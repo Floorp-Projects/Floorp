@@ -54,7 +54,7 @@ CreateGenericEvent(EventTarget* aOwner,
                    Bubbles aBubbles,
                    Cancelable aCancelable);
 
-class IDBVersionChangeEvent MOZ_FINAL : public Event
+class IDBVersionChangeEvent final : public Event
 {
   uint64_t mOldVersion;
   Nullable<uint64_t> mNewVersion;
@@ -104,7 +104,7 @@ public:
   NS_FORWARD_TO_EVENT
 
   virtual JSObject*
-  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   IDBVersionChangeEvent(EventTarget* aOwner, uint64_t aOldVersion)

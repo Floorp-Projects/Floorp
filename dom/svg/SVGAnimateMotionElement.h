@@ -16,7 +16,7 @@ nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement
+class SVGAnimateMotionElement final : public SVGAnimationElement
 {
 protected:
   explicit SVGAnimateMotionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -26,20 +26,20 @@ protected:
     (::NS_NewSVGAnimateMotionElement(nsIContent **aResult,
                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // nsIDOMNode specializations
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // SVGAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction() MOZ_OVERRIDE;
+  virtual nsSMILAnimationFunction& AnimationFunction() override;
   virtual bool GetTargetAttributeName(int32_t *aNamespaceID,
-                                      nsIAtom **aLocalName) const MOZ_OVERRIDE;
-  virtual nsSMILTargetAttrType GetTargetAttributeType() const MOZ_OVERRIDE;
+                                      nsIAtom **aLocalName) const override;
+  virtual nsSMILTargetAttrType GetTargetAttributeType() const override;
 
   // nsSVGElement
-  virtual nsIAtom* GetPathDataAttrName() const MOZ_OVERRIDE {
+  virtual nsIAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::path;
   }
 

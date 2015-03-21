@@ -23,7 +23,7 @@ public:
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               gfxContext* aRefContext,
-                              gfxMissingFontRecorder* aMFR) MOZ_OVERRIDE;
+                              gfxMissingFontRecorder* aMFR) override;
   enum {
     // Style effects which may override single character <mi> behaviour
     MATH_FONT_STYLING_NORMAL   = 0x1, // fontstyle="normal" has been set.

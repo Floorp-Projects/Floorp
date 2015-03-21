@@ -39,9 +39,9 @@ public:
   BoxObject();
 
   // nsPIBoxObject
-  virtual nsresult Init(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual void Clear() MOZ_OVERRIDE;
-  virtual void ClearCachedValues() MOZ_OVERRIDE;
+  virtual nsresult Init(nsIContent* aContent) override;
+  virtual void Clear() override;
+  virtual void ClearCachedValues() override;
 
   nsIFrame* GetFrame(bool aFlushLayout);
   nsIPresShell* GetPresShell(bool aFlushLayout);
@@ -55,7 +55,7 @@ public:
 
   // WebIDL (wraps old impls)
   nsIContent* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   Element* GetElement() const;
 

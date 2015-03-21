@@ -31,7 +31,7 @@ namespace mozilla {
  * to separate the safebrowsing cookie.
  */
 
-class LoadContext MOZ_FINAL
+class LoadContext final
   : public nsILoadContext
   , public nsIInterfaceRequestor
 {

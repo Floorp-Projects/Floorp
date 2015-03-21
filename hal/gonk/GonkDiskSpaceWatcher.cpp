@@ -76,7 +76,7 @@ int fanotify_mark (int fanotify_fd, unsigned int flags,
   return syscall(__NR_fanotify_mark, fanotify_fd, flags, mask, dfd, pathname);
 }
 
-class GonkDiskSpaceWatcher MOZ_FINAL : public MessageLoopForIO::Watcher
+class GonkDiskSpaceWatcher final : public MessageLoopForIO::Watcher
 {
 public:
   GonkDiskSpaceWatcher();

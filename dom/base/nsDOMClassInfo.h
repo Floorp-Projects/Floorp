@@ -132,7 +132,7 @@ protected:
 
   const nsDOMClassInfoData* mData;
 
-  virtual void PreserveWrapper(nsISupports *aNative) MOZ_OVERRIDE
+  virtual void PreserveWrapper(nsISupports *aNative) override
   {
   }
 
@@ -206,11 +206,11 @@ protected:
   }
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
+                       JSObject *globalObj, JSObject **parentObj) override;
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, JS::Value *vp, bool *_retval) MOZ_OVERRIDE;
+                         JSObject *obj, jsid id, JS::Value *vp, bool *_retval) override;
 
-  virtual void PreserveWrapper(nsISupports *aNative) MOZ_OVERRIDE;
+  virtual void PreserveWrapper(nsISupports *aNative) override;
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -269,23 +269,23 @@ protected:
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
-  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) MOZ_OVERRIDE
+                       JSObject *globalObj, JSObject **parentObj) override;
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) override
   {
     return NS_OK;
   }
   NS_IMETHOD Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                      JSObject *obj, jsid id, bool *resolvedp,
-                     bool *_retval) MOZ_OVERRIDE;
+                     bool *_retval) override;
   NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                  JSObject *obj, const JS::CallArgs &args, bool *_retval) MOZ_OVERRIDE;
+                  JSObject *obj, const JS::CallArgs &args, bool *_retval) override;
 
   NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, const JS::CallArgs &args, bool *_retval) MOZ_OVERRIDE;
+                       JSObject *obj, const JS::CallArgs &args, bool *_retval) override;
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, JS::Handle<JS::Value> val, bool *bp,
-                         bool *_retval) MOZ_OVERRIDE;
+                         bool *_retval) override;
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -305,7 +305,7 @@ protected:
   }
 
 public:
-  NS_IMETHOD GetFlags(uint32_t *aFlags) MOZ_OVERRIDE;
+  NS_IMETHOD GetFlags(uint32_t *aFlags) override;
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -328,9 +328,9 @@ protected:
 public:
   NS_IMETHOD Resolve(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
                      JSObject* obj_, jsid id_, bool* resolvedp,
-                     bool* _retval) MOZ_OVERRIDE;
+                     bool* _retval) override;
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
-                       JSObject* obj_, bool* _retval) MOZ_OVERRIDE;
+                       JSObject* obj_, bool* _retval) override;
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

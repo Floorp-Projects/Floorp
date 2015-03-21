@@ -15,12 +15,12 @@ struct nsRect;
 namespace mozilla {
 namespace dom {
 
-class ScrollBoxObject MOZ_FINAL : public BoxObject
+class ScrollBoxObject final : public BoxObject
 {
 public:
   ScrollBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual nsIScrollableFrame* GetScrollFrame();
 

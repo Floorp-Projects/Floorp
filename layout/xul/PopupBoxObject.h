@@ -24,7 +24,7 @@ class DOMRect;
 class Element;
 class Event;
 
-class PopupBoxObject MOZ_FINAL : public BoxObject
+class PopupBoxObject final : public BoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,7 +37,7 @@ public:
   PopupBoxObject();
 
   nsIContent* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void ShowPopup(Element* aAnchorElement,
                  Element& aPopupElement,

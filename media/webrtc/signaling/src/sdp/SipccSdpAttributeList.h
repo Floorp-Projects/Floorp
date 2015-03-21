@@ -31,51 +31,51 @@ public:
   using SdpAttributeList::GetAttribute;
 
   virtual bool HasAttribute(AttributeType type,
-                            bool sessionFallback) const MOZ_OVERRIDE;
+                            bool sessionFallback) const override;
   virtual const SdpAttribute* GetAttribute(
-      AttributeType type, bool sessionFallback) const MOZ_OVERRIDE;
-  virtual void SetAttribute(SdpAttribute* attr) MOZ_OVERRIDE;
-  virtual void RemoveAttribute(AttributeType type) MOZ_OVERRIDE;
-  virtual void Clear() MOZ_OVERRIDE;
+      AttributeType type, bool sessionFallback) const override;
+  virtual void SetAttribute(SdpAttribute* attr) override;
+  virtual void RemoveAttribute(AttributeType type) override;
+  virtual void Clear() override;
 
-  virtual const SdpConnectionAttribute& GetConnection() const MOZ_OVERRIDE;
+  virtual const SdpConnectionAttribute& GetConnection() const override;
   virtual const SdpFingerprintAttributeList& GetFingerprint() const
-      MOZ_OVERRIDE;
-  virtual const SdpGroupAttributeList& GetGroup() const MOZ_OVERRIDE;
-  virtual const SdpOptionsAttribute& GetIceOptions() const MOZ_OVERRIDE;
-  virtual const SdpRtcpAttribute& GetRtcp() const MOZ_OVERRIDE;
+      override;
+  virtual const SdpGroupAttributeList& GetGroup() const override;
+  virtual const SdpOptionsAttribute& GetIceOptions() const override;
+  virtual const SdpRtcpAttribute& GetRtcp() const override;
   virtual const SdpRemoteCandidatesAttribute& GetRemoteCandidates() const
-      MOZ_OVERRIDE;
-  virtual const SdpSetupAttribute& GetSetup() const MOZ_OVERRIDE;
-  virtual const SdpSsrcAttributeList& GetSsrc() const MOZ_OVERRIDE;
-  virtual const SdpSsrcGroupAttributeList& GetSsrcGroup() const MOZ_OVERRIDE;
+      override;
+  virtual const SdpSetupAttribute& GetSetup() const override;
+  virtual const SdpSsrcAttributeList& GetSsrc() const override;
+  virtual const SdpSsrcGroupAttributeList& GetSsrcGroup() const override;
 
   // These attributes can appear multiple times, so the returned
   // classes actually represent a collection of values.
-  virtual const std::vector<std::string>& GetCandidate() const MOZ_OVERRIDE;
-  virtual const SdpExtmapAttributeList& GetExtmap() const MOZ_OVERRIDE;
-  virtual const SdpFmtpAttributeList& GetFmtp() const MOZ_OVERRIDE;
-  virtual const SdpImageattrAttributeList& GetImageattr() const MOZ_OVERRIDE;
-  virtual const SdpMsidAttributeList& GetMsid() const MOZ_OVERRIDE;
-  virtual const SdpRtcpFbAttributeList& GetRtcpFb() const MOZ_OVERRIDE;
-  virtual const SdpRtpmapAttributeList& GetRtpmap() const MOZ_OVERRIDE;
-  virtual const SdpSctpmapAttributeList& GetSctpmap() const MOZ_OVERRIDE;
+  virtual const std::vector<std::string>& GetCandidate() const override;
+  virtual const SdpExtmapAttributeList& GetExtmap() const override;
+  virtual const SdpFmtpAttributeList& GetFmtp() const override;
+  virtual const SdpImageattrAttributeList& GetImageattr() const override;
+  virtual const SdpMsidAttributeList& GetMsid() const override;
+  virtual const SdpRtcpFbAttributeList& GetRtcpFb() const override;
+  virtual const SdpRtpmapAttributeList& GetRtpmap() const override;
+  virtual const SdpSctpmapAttributeList& GetSctpmap() const override;
 
   // These attributes are effectively simple types, so we'll make life
   // easy by just returning their value.
-  virtual const std::string& GetIcePwd() const MOZ_OVERRIDE;
-  virtual const std::string& GetIceUfrag() const MOZ_OVERRIDE;
-  virtual const std::string& GetIdentity() const MOZ_OVERRIDE;
-  virtual const std::string& GetLabel() const MOZ_OVERRIDE;
-  virtual unsigned int GetMaxptime() const MOZ_OVERRIDE;
-  virtual const std::string& GetMid() const MOZ_OVERRIDE;
+  virtual const std::string& GetIcePwd() const override;
+  virtual const std::string& GetIceUfrag() const override;
+  virtual const std::string& GetIdentity() const override;
+  virtual const std::string& GetLabel() const override;
+  virtual unsigned int GetMaxptime() const override;
+  virtual const std::string& GetMid() const override;
   virtual const SdpMsidSemanticAttributeList& GetMsidSemantic()
-    const MOZ_OVERRIDE;
-  virtual unsigned int GetPtime() const MOZ_OVERRIDE;
+    const override;
+  virtual unsigned int GetPtime() const override;
 
-  virtual SdpDirectionAttribute::Direction GetDirection() const MOZ_OVERRIDE;
+  virtual SdpDirectionAttribute::Direction GetDirection() const override;
 
-  virtual void Serialize(std::ostream&) const MOZ_OVERRIDE;
+  virtual void Serialize(std::ostream&) const override;
 
   virtual ~SipccSdpAttributeList();
 

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-class VoicemailStatus MOZ_FINAL : public nsISupports
+class VoicemailStatus final : public nsISupports
                                 , public nsWrapperCache
 {
 public:
@@ -30,7 +30,7 @@ public:
   GetParentObject() const { return mParent; }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL interface
 
@@ -50,7 +50,7 @@ public:
   GetReturnMessage(nsString& aReturnMessage) const;
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~VoicemailStatus() {}
 
 private:

@@ -30,7 +30,7 @@ class nsJARInputThunk;
 
 //-----------------------------------------------------------------------------
 
-class nsJARChannel MOZ_FINAL : public nsIJARChannel
+class nsJARChannel final : public nsIJARChannel
                              , public mozilla::net::MemoryDownloader::IObserver
                              , public nsIStreamListener
                              , public nsIRemoteOpenFileListener
@@ -67,7 +67,7 @@ private:
                                     nsISupports* aCtxt,
                                     nsresult aStatus,
                                     mozilla::net::MemoryDownloader::Data aData)
-        MOZ_OVERRIDE;
+        override;
 
 #if defined(PR_LOGGING)
     nsCString                       mSpec;

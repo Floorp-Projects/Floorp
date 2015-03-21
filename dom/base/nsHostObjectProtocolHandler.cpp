@@ -36,7 +36,7 @@ static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
 // Memory reporting for the hash table.
 namespace mozilla {
 
-class HostObjectURLsReporter MOZ_FINAL : public nsIMemoryReporter
+class HostObjectURLsReporter final : public nsIMemoryReporter
 {
   ~HostObjectURLsReporter() {}
 
@@ -44,7 +44,7 @@ class HostObjectURLsReporter MOZ_FINAL : public nsIMemoryReporter
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "host-object-urls", KIND_OTHER, UNITS_COUNT,
@@ -56,13 +56,13 @@ class HostObjectURLsReporter MOZ_FINAL : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS(HostObjectURLsReporter, nsIMemoryReporter)
 
-class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
+class BlobURLsReporter final : public nsIMemoryReporter
 {
  public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aCallback,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     EnumArg env;
     env.mCallback = aCallback;

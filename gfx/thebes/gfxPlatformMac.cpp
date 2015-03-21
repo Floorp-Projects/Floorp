@@ -432,19 +432,19 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
                               CVOptionFlags* aFlagsOut,
                               void* aDisplayLinkContext);
 
-class OSXVsyncSource MOZ_FINAL : public VsyncSource
+class OSXVsyncSource final : public VsyncSource
 {
 public:
   OSXVsyncSource()
   {
   }
 
-  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  virtual Display& GetGlobalDisplay() override
   {
     return mGlobalDisplay;
   }
 
-  class OSXDisplay MOZ_FINAL : public VsyncSource::Display
+  class OSXDisplay final : public VsyncSource::Display
   {
   public:
     OSXDisplay()
@@ -470,7 +470,7 @@ public:
       osxDisplay->EnableVsync();
     }
 
-    virtual void EnableVsync() MOZ_OVERRIDE
+    virtual void EnableVsync() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       if (IsVsyncEnabled()) {
@@ -518,7 +518,7 @@ public:
       }
     }
 
-    virtual void DisableVsync() MOZ_OVERRIDE
+    virtual void DisableVsync() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       if (!IsVsyncEnabled()) {
@@ -532,7 +532,7 @@ public:
       }
     }
 
-    virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+    virtual bool IsVsyncEnabled() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       return mDisplayLink != nullptr;

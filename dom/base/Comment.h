@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class Comment MOZ_FINAL : public nsGenericDOMDataNode,
+class Comment final : public nsGenericDOMDataNode,
                           public nsIDOMComment
 {
 private:
@@ -52,16 +52,16 @@ public:
   // Empty interface
 
   // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const override;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() override { return this; }
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
+  virtual void List(FILE* out, int32_t aIndent) const override;
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
-                           bool aDumpAll = true) const MOZ_OVERRIDE
+                           bool aDumpAll = true) const override
   {
     return;
   }
@@ -72,7 +72,7 @@ public:
               ErrorResult& aRv);
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 } // namespace dom

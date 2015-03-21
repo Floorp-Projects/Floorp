@@ -115,27 +115,27 @@ public:
   //
 
   void ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
-                                   const nsAString& aBdAddress) MOZ_OVERRIDE;
+                                   const nsAString& aBdAddress) override;
   void AudioStateNotification(BluetoothHandsfreeAudioState aState,
-                              const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void AnswerCallNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void HangupCallNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+                              const nsAString& aBdAddress) override;
+  void AnswerCallNotification(const nsAString& aBdAddress) override;
+  void HangupCallNotification(const nsAString& aBdAddress) override;
   void VolumeNotification(BluetoothHandsfreeVolumeType aType,
                           int aVolume,
-                          const nsAString& aBdAddress) MOZ_OVERRIDE;
+                          const nsAString& aBdAddress) override;
   void DtmfNotification(char aDtmf,
-                        const nsAString& aBdAddress) MOZ_OVERRIDE;
+                        const nsAString& aBdAddress) override;
   void CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
-                            const nsAString& aBdAddress) MOZ_OVERRIDE;
+                            const nsAString& aBdAddress) override;
   void DialCallNotification(const nsAString& aNumber,
-                            const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void CnumNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void CindNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void CopsNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void ClccNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+                            const nsAString& aBdAddress) override;
+  void CnumNotification(const nsAString& aBdAddress) override;
+  void CindNotification(const nsAString& aBdAddress) override;
+  void CopsNotification(const nsAString& aBdAddress) override;
+  void ClccNotification(const nsAString& aBdAddress) override;
   void UnknownAtNotification(const nsACString& aAtString,
-                             const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void KeyPressedNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+                             const nsAString& aBdAddress) override;
+  void KeyPressedNotification(const nsAString& aBdAddress) override;
 
 protected:
   virtual ~BluetoothHfpManager();

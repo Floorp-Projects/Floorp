@@ -18,7 +18,7 @@ namespace dom {
 
 class TextTrackCue;
 
-class TextTrackCueList MOZ_FINAL : public nsISupports
+class TextTrackCueList final : public nsISupports
                                  , public nsWrapperCache
 {
 public:
@@ -28,7 +28,7 @@ public:
   // TextTrackCueList WebIDL
   explicit TextTrackCueList(nsISupports* aParent);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const
   {

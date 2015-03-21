@@ -23,21 +23,21 @@ public:
 
     ~SharedSurface_IOSurface();
 
-    virtual void LockProdImpl() MOZ_OVERRIDE { }
-    virtual void UnlockProdImpl() MOZ_OVERRIDE { }
+    virtual void LockProdImpl() override { }
+    virtual void UnlockProdImpl() override { }
 
-    virtual void Fence() MOZ_OVERRIDE;
-    virtual bool WaitSync() MOZ_OVERRIDE { return true; }
-    virtual bool PollSync() MOZ_OVERRIDE { return true; }
+    virtual void Fence() override;
+    virtual bool WaitSync() override { return true; }
+    virtual bool PollSync() override { return true; }
 
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
+                            GLenum format, GLenum type, GLvoid *pixels) override;
 
-    virtual GLuint ProdTexture() MOZ_OVERRIDE {
+    virtual GLuint ProdTexture() override {
         return mProdTex;
     }
 
-    virtual GLenum ProdTextureTarget() const MOZ_OVERRIDE {
+    virtual GLenum ProdTextureTarget() const override {
         return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
     }
 
@@ -50,7 +50,7 @@ public:
         return mIOSurf;
     }
 
-    virtual bool NeedsIndirectReads() const MOZ_OVERRIDE {
+    virtual bool NeedsIndirectReads() const override {
         return true;
     }
 
@@ -80,7 +80,7 @@ protected:
     {
     }
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE;
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
 };
 
 } /* namespace gfx */

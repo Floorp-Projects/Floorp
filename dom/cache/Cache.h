@@ -38,7 +38,7 @@ class PCacheRequest;
 class PCacheResponse;
 class PCacheResponseOrVoid;
 
-class Cache MOZ_FINAL : public PromiseNativeHandler
+class Cache final : public PromiseNativeHandler
                       , public nsWrapperCache
                       , public TypeUtils
 {
@@ -71,7 +71,7 @@ public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
   nsISupports* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) override;
 
   // Called when CacheChild actor is being destroyed
   void DestroyInternal(CacheChild* aActor);
@@ -91,18 +91,18 @@ public:
 
   // TypeUtils methods
   virtual nsIGlobalObject*
-  GetGlobalObject() const MOZ_OVERRIDE;
+  GetGlobalObject() const override;
 
 #ifdef DEBUG
-  virtual void AssertOwningThread() const MOZ_OVERRIDE;
+  virtual void AssertOwningThread() const override;
 #endif
 
   // PromiseNativeHandler methods
   virtual void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   virtual void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
 private:
   ~Cache();

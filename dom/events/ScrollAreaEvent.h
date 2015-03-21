@@ -31,14 +31,14 @@ public:
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)
 
   NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION
-  NS_IMETHOD DuplicatePrivateData() MOZ_OVERRIDE
+  NS_IMETHOD DuplicatePrivateData() override
   {
     return Event::DuplicatePrivateData();
   }
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
+  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) override;
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return ScrollAreaEventBinding::Wrap(aCx, this, aGivenProto);
   }

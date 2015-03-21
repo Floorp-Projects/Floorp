@@ -433,7 +433,7 @@ gfxShmSharedReadLock::GetReadCount() {
   return info->readCount;
 }
 
-class TileExpiry MOZ_FINAL : public nsExpirationTracker<TileClient, 3>
+class TileExpiry final : public nsExpirationTracker<TileClient, 3>
 {
   public:
     TileExpiry() : nsExpirationTracker<TileClient, 3>(1000) {}
@@ -457,7 +457,7 @@ class TileExpiry MOZ_FINAL : public nsExpirationTracker<TileClient, 3>
       sTileExpiry = nullptr;
     }
   private:
-    virtual void NotifyExpired(TileClient* aTile) MOZ_OVERRIDE
+    virtual void NotifyExpired(TileClient* aTile) override
     {
       aTile->DiscardBackBuffer();
     }

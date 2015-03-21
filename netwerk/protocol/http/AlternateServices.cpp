@@ -193,7 +193,7 @@ AltSvcMapping::GetConnectionInfo(nsHttpConnectionInfo **outCI,
 
 // This is the asynchronous null transaction used to validate
 // an alt-svc advertisement
-class AltSvcTransaction MOZ_FINAL : public NullHttpTransaction
+class AltSvcTransaction final : public NullHttpTransaction
 {
 public:
     AltSvcTransaction(AltSvcMapping *map,
@@ -301,7 +301,7 @@ public:
     mMapping->SetValidated(true);
   }
 
-  void Close(nsresult reason) MOZ_OVERRIDE
+  void Close(nsresult reason) override
   {
     LOG(("AltSvcTransaction::Close() %p reason=%x running %d",
          this, reason, mRunning));
@@ -314,7 +314,7 @@ public:
   }
 
   nsresult ReadSegments(nsAHttpSegmentReader *reader,
-                        uint32_t count, uint32_t *countRead) MOZ_OVERRIDE
+                        uint32_t count, uint32_t *countRead) override
   {
     LOG(("AltSvcTransaction::ReadSegements() %p\n"));
     mTriedToWrite = true;

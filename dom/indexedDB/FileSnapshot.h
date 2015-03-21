@@ -34,7 +34,7 @@ namespace indexedDB {
 
 class IDBFileHandle;
 
-class FileImplSnapshot MOZ_FINAL
+class FileImplSnapshot final
   : public FileImplBase
   , public PIFileImplSnapshot
 {
@@ -74,12 +74,12 @@ private:
 #endif
 
   virtual void
-  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) MOZ_OVERRIDE;
+  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) override;
 
   virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  GetInternalStream(nsIInputStream** aStream) override;
 
-  virtual bool MayBeClonedToOtherThreads() const MOZ_OVERRIDE
+  virtual bool MayBeClonedToOtherThreads() const override
   {
     return false;
   }
@@ -88,16 +88,16 @@ private:
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
               const nsAString& aContentType,
-              ErrorResult& aRv) MOZ_OVERRIDE;
+              ErrorResult& aRv) override;
 
   virtual bool
-  IsStoredFile() const MOZ_OVERRIDE;
+  IsStoredFile() const override;
 
   virtual bool
-  IsWholeFile() const MOZ_OVERRIDE;
+  IsWholeFile() const override;
 
   virtual bool
-  IsSnapshot() const MOZ_OVERRIDE;
+  IsSnapshot() const override;
 };
 
 } // namespace indexedDB

@@ -4341,7 +4341,7 @@ class SprintOptimizationTypeInfoOp : public ForEachTrackedOptimizationTypeInfoOp
     { }
 
     void readType(const char *keyedBy, const char *name,
-                  const char *location, unsigned lineno) MOZ_OVERRIDE
+                  const char *location, unsigned lineno) override
     {
         if (!startedTypes_) {
             startedTypes_ = true;
@@ -4360,7 +4360,7 @@ class SprintOptimizationTypeInfoOp : public ForEachTrackedOptimizationTypeInfoOp
         Sprint(sp, "},");
     }
 
-    void operator()(TrackedTypeSite site, const char *mirType) MOZ_OVERRIDE {
+    void operator()(TrackedTypeSite site, const char *mirType) override {
         if (startedTypes_) {
             // Clear trailing ,
             if ((*sp)[sp->getOffset() - 1] == ',')
@@ -4385,7 +4385,7 @@ class SprintOptimizationAttemptsOp : public ForEachTrackedOptimizationAttemptOp
       : sp(sp)
     { }
 
-    void operator()(TrackedStrategy strategy, TrackedOutcome outcome) MOZ_OVERRIDE {
+    void operator()(TrackedStrategy strategy, TrackedOutcome outcome) override {
         Sprint(sp, "{\"strategy\":\"%s\",\"outcome\":\"%s\"},",
                TrackedStrategyString(strategy), TrackedOutcomeString(outcome));
     }

@@ -20,7 +20,7 @@ class CompareTextTracks;
 class TrackEvent;
 class TrackEventRunner;
 
-class TextTrackList MOZ_FINAL : public DOMEventTargetHelper
+class TextTrackList final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -29,7 +29,7 @@ public:
   explicit TextTrackList(nsPIDOMWindow* aOwnerWindow);
   TextTrackList(nsPIDOMWindow* aOwnerWindow, TextTrackManager* aTextTrackManager);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t Length() const
   {

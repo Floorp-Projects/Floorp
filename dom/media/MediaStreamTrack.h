@@ -35,7 +35,7 @@ public:
                                            DOMEventTargetHelper)
 
   DOMMediaStream* GetParentObject() const { return mStream; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE = 0;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
 
   DOMMediaStream* GetStream() const { return mStream; }
   TrackID GetTrackID() const { return mTrackID; }

@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLTimeElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLTimeElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLTimeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -31,12 +31,12 @@ public:
     SetHTMLAttr(nsGkAtoms::datetime, aDateTime, aError);
   }
 
-  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) override;
+  virtual void SetItemValueText(const nsAString& text) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
 protected:
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 } // namespace dom

@@ -9,7 +9,7 @@
 #define MOZILLA_LAYERS_COMPOSITABLETRANSACTIONPARENT_H
 
 #include <vector>                       // for vector
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
@@ -52,7 +52,7 @@ protected:
    */
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                  EditReplyVector& replyv);
-  bool IsOnCompositorSide() const MOZ_OVERRIDE { return true; }
+  bool IsOnCompositorSide() const override { return true; }
 
   /**
    * Return true if this protocol is asynchronous with respect to the content

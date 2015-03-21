@@ -29,7 +29,7 @@ namespace dom {
 /**
  * CameraRecorderVideoProfile
  */
-class CameraRecorderVideoProfile MOZ_FINAL : public nsISupports
+class CameraRecorderVideoProfile final : public nsISupports
                                            , public nsWrapperCache
 {
 public:
@@ -39,7 +39,7 @@ public:
   explicit CameraRecorderVideoProfile(nsISupports* aParent,
     const ICameraControl::RecorderProfile::Video& aProfile);
   nsISupports* GetParentObject() const        { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t BitsPerSecond() const              { return mBitrate; }
   uint32_t FramesPerSecond() const            { return mFramerate; }
@@ -68,7 +68,7 @@ private:
 /**
  * CameraRecorderAudioProfile
  */
-class CameraRecorderAudioProfile MOZ_FINAL : public nsISupports
+class CameraRecorderAudioProfile final : public nsISupports
                                            , public nsWrapperCache
 {
 public:
@@ -78,7 +78,7 @@ public:
   explicit CameraRecorderAudioProfile(nsISupports* aParent,
     const ICameraControl::RecorderProfile::Audio& aProfile);
   nsISupports* GetParentObject() const    { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t BitsPerSecond() const          { return mBitrate; }
   uint32_t SamplesPerSecond() const       { return mSamplerate; }
@@ -102,7 +102,7 @@ private:
 /**
  * CameraRecorderProfile
  */
-class CameraRecorderProfile MOZ_FINAL : public nsISupports
+class CameraRecorderProfile final : public nsISupports
                                       , public nsWrapperCache
 {
 public:
@@ -112,7 +112,7 @@ public:
   explicit CameraRecorderProfile(nsISupports* aParent,
                                  const ICameraControl::RecorderProfile& aProfile);
   nsISupports* GetParentObject() const          { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetMimeType(nsAString& aMimeType) const  { aMimeType = mMimeType; }
 
@@ -148,7 +148,7 @@ private:
  */
 template<class T> class CameraClosedListenerProxy;
 
-class CameraRecorderProfiles MOZ_FINAL : public nsISupports
+class CameraRecorderProfiles final : public nsISupports
                                        , public nsWrapperCache
 {
 public:
@@ -158,7 +158,7 @@ public:
   explicit CameraRecorderProfiles(nsISupports* aParent,
                                   ICameraControl* aCameraControl);
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   CameraRecorderProfile* NamedGetter(const nsAString& aName, bool& aFound);
   bool NameIsEnumerable(const nsAString& aName);
@@ -181,7 +181,7 @@ private:
 /**
  * CameraCapabilities
  */
-class CameraCapabilities MOZ_FINAL : public nsISupports
+class CameraCapabilities final : public nsISupports
                                    , public nsWrapperCache
 {
 public:
@@ -200,7 +200,7 @@ public:
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetPreviewSizes(nsTArray<CameraSize>& aRetVal);
   void GetPictureSizes(nsTArray<CameraSize>& aRetVal);

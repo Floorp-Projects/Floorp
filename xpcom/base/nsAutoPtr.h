@@ -771,7 +771,7 @@ public:
   }
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
-                                          void** aResult) const MOZ_OVERRIDE
+                                          void** aResult) const override
   {
     nsresult status = mRawPtr ? mRawPtr->QueryInterface(aIID, aResult)
                               : NS_ERROR_NULL_POINTER;

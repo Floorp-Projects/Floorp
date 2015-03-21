@@ -15,7 +15,7 @@ namespace dom {
  * forcespeakerchange event and change the speaker status in UI.
  * The device's speaker status would set back to normal when UA close the application.
  */
-class SpeakerManager MOZ_FINAL
+class SpeakerManager final
   : public DOMEventTargetHelper
   , public nsIDOMEventListener
 {
@@ -30,7 +30,7 @@ public:
 
   nsPIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   /**
    * WebIDL Interface
    */

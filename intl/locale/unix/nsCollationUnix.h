@@ -16,7 +16,7 @@
 
 
 
-class nsCollationUnix MOZ_FINAL : public nsICollation {
+class nsCollationUnix final : public nsICollation {
 
 protected:
   nsCollation   *mCollation;

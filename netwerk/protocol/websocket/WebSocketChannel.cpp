@@ -550,7 +550,7 @@ StaticMutex           nsWSAdmissionManager::sLock;
 // CallOnMessageAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnMessageAvailable MOZ_FINAL : public nsIRunnable
+class CallOnMessageAvailable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -563,7 +563,7 @@ public:
       mData(aData),
       mLen(aLen) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -594,7 +594,7 @@ NS_IMPL_ISUPPORTS(CallOnMessageAvailable, nsIRunnable)
 // CallOnStop
 //-----------------------------------------------------------------------------
 
-class CallOnStop MOZ_FINAL : public nsIRunnable
+class CallOnStop final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -606,7 +606,7 @@ public:
       mReason(aReason)
   {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -633,7 +633,7 @@ NS_IMPL_ISUPPORTS(CallOnStop, nsIRunnable)
 // CallOnServerClose
 //-----------------------------------------------------------------------------
 
-class CallOnServerClose MOZ_FINAL : public nsIRunnable
+class CallOnServerClose final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -646,7 +646,7 @@ public:
       mCode(aCode),
       mReason(aReason) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
@@ -671,7 +671,7 @@ NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 // CallAcknowledge
 //-----------------------------------------------------------------------------
 
-class CallAcknowledge MOZ_FINAL : public nsCancelableRunnable
+class CallAcknowledge final : public nsCancelableRunnable
 {
 public:
   CallAcknowledge(WebSocketChannel* aChannel,
@@ -703,7 +703,7 @@ private:
 // CallOnTransportAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnTransportAvailable MOZ_FINAL : public nsIRunnable
+class CallOnTransportAvailable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -717,7 +717,7 @@ public:
       mSocketIn(aSocketIn),
       mSocketOut(aSocketOut) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     LOG(("WebSocketChannel::CallOnTransportAvailable %p\n", this));
     return mChannel->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
@@ -1073,7 +1073,7 @@ private:
 // OutboundEnqueuer
 //-----------------------------------------------------------------------------
 
-class OutboundEnqueuer MOZ_FINAL : public nsIRunnable
+class OutboundEnqueuer final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -1081,7 +1081,7 @@ public:
   OutboundEnqueuer(WebSocketChannel *aChannel, OutboundMessage *aMsg)
     : mChannel(aChannel), mMessage(aMsg) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mChannel->EnqueueOutgoingMessage(mChannel->mOutgoingMessages, mMessage);
     return NS_OK;

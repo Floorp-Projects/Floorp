@@ -18,7 +18,7 @@ namespace cache {
 
 class ReadStream;
 
-class CacheStreamControlChild MOZ_FINAL : public PCacheStreamControlChild
+class CacheStreamControlChild final : public PCacheStreamControlChild
                                         , public StreamControl
                                         , public ActorChild
 {
@@ -27,33 +27,33 @@ public:
   ~CacheStreamControlChild();
 
   // ActorChild methods
-  virtual void StartDestroy() MOZ_OVERRIDE;
+  virtual void StartDestroy() override;
 
   // StreamControl methods
   virtual void
-  SerializeControl(PCacheReadStream* aReadStreamOut) MOZ_OVERRIDE;
+  SerializeControl(PCacheReadStream* aReadStreamOut) override;
 
   virtual void
   SerializeFds(PCacheReadStream* aReadStreamOut,
-               const nsTArray<mozilla::ipc::FileDescriptor>& aFds) MOZ_OVERRIDE;
+               const nsTArray<mozilla::ipc::FileDescriptor>& aFds) override;
 
   virtual void
   DeserializeFds(const PCacheReadStream& aReadStream,
-                 nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) MOZ_OVERRIDE;
+                 nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) override;
 
 private:
   virtual void
-  NoteClosedAfterForget(const nsID& aId) MOZ_OVERRIDE;
+  NoteClosedAfterForget(const nsID& aId) override;
 
 #ifdef DEBUG
   virtual void
-  AssertOwningThread() MOZ_OVERRIDE;
+  AssertOwningThread() override;
 #endif
 
   // PCacheStreamControlChild methods
-  virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
-  virtual bool RecvClose(const nsID& aId) MOZ_OVERRIDE;
-  virtual bool RecvCloseAll() MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
+  virtual bool RecvClose(const nsID& aId) override;
+  virtual bool RecvCloseAll() override;
 
   bool mDestroyStarted;
 

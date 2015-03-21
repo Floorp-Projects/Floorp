@@ -16,7 +16,7 @@
 class nsMimeType;
 class nsPluginElement;
 
-class nsMimeTypeArray MOZ_FINAL : public nsISupports,
+class nsMimeTypeArray final : public nsISupports,
                                   public nsWrapperCache
 {
 public:
@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)
 
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Refresh();
 
@@ -59,7 +59,7 @@ protected:
   nsTArray<nsRefPtr<nsMimeType> > mHiddenMimeTypes;
 };
 
-class nsMimeType MOZ_FINAL : public nsWrapperCache
+class nsMimeType final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsMimeType)
@@ -69,7 +69,7 @@ public:
              uint32_t aPluginTagMimeIndex, const nsAString& aMimeType);
   nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aMimeType);
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   const nsString& Type() const
   {

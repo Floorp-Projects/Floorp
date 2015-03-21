@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-class SmsService MOZ_FINAL : public nsISmsService
+class SmsService final : public nsISmsService
 {
 private:
   ~SmsService() {}

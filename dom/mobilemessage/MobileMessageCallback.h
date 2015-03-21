@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-class MobileMessageCallback MOZ_FINAL : public nsIMobileMessageCallback
+class MobileMessageCallback final : public nsIMobileMessageCallback
 {
 public:
   NS_DECL_ISUPPORTS

@@ -36,7 +36,7 @@ namespace dom {
 class PrefSetting;
 }
 
-class Preferences MOZ_FINAL : public nsIPrefService,
+class Preferences final : public nsIPrefService,
                               public nsIObserver,
                               public nsIPrefBranchInternal,
                               public nsSupportsWeakReference

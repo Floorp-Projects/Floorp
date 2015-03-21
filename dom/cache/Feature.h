@@ -22,7 +22,7 @@ namespace cache {
 
 class ActorChild;
 
-class Feature MOZ_FINAL : public workers::WorkerFeature
+class Feature final : public workers::WorkerFeature
 {
 public:
   static already_AddRefed<Feature> Create(workers::WorkerPrivate* aWorkerPrivate);
@@ -33,7 +33,7 @@ public:
   bool Notified() const;
 
   // WorkerFeature methods
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE;
+  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override;
 
 private:
   explicit Feature(workers::WorkerPrivate *aWorkerPrivate);

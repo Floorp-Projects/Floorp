@@ -32,35 +32,35 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration
 public:
   // Only implement QueryInterface; subclasses have the responsibility
   // of implementing AddRef/Release.
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   // Declare addref and release so they can be called on us, but don't
   // implement them.  Our subclasses must handle their own
   // refcounting.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
 
   NS_DECL_NSICSSDECLARATION
   using nsICSSDeclaration::GetLength;
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
-  NS_IMETHOD GetCssText(nsAString & aCssText) MOZ_OVERRIDE;
-  NS_IMETHOD SetCssText(const nsAString & aCssText) MOZ_OVERRIDE;
+  NS_IMETHOD GetCssText(nsAString & aCssText) override;
+  NS_IMETHOD SetCssText(const nsAString & aCssText) override;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
-                              nsAString & _retval) MOZ_OVERRIDE;
+                              nsAString & _retval) override;
   virtual already_AddRefed<mozilla::dom::CSSValue>
     GetPropertyCSSValue(const nsAString & propertyName,
-                        mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                        mozilla::ErrorResult& aRv) override;
   using nsICSSDeclaration::GetPropertyCSSValue;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
-                            nsAString & _retval) MOZ_OVERRIDE;
+                            nsAString & _retval) override;
   NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
-                                 nsAString & _retval) MOZ_OVERRIDE;
+                                 nsAString & _retval) override;
   NS_IMETHOD SetProperty(const nsAString & propertyName,
-                         const nsAString & value, const nsAString & priority) MOZ_OVERRIDE;
-  NS_IMETHOD GetLength(uint32_t *aLength) MOZ_OVERRIDE;
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE = 0;
+                         const nsAString & value, const nsAString & priority) override;
+  NS_IMETHOD GetLength(uint32_t *aLength) override;
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
@@ -95,9 +95,9 @@ public:
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
-  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) MOZ_OVERRIDE;
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   // This method can return null regardless of the value of aAllocate;

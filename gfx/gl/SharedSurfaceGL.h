@@ -57,14 +57,14 @@ protected:
 public:
     virtual ~SharedSurface_Basic();
 
-    virtual void LockProdImpl() MOZ_OVERRIDE {}
-    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
+    virtual void LockProdImpl() override {}
+    virtual void UnlockProdImpl() override {}
 
-    virtual void Fence() MOZ_OVERRIDE {}
-    virtual bool WaitSync() MOZ_OVERRIDE { return true; }
-    virtual bool PollSync() MOZ_OVERRIDE { return true; }
+    virtual void Fence() override {}
+    virtual bool WaitSync() override { return true; }
+    virtual bool PollSync() override { return true; }
 
-    virtual GLuint ProdTexture() MOZ_OVERRIDE {
+    virtual GLuint ProdTexture() override {
         return mTex;
     }
 };
@@ -77,7 +77,7 @@ public:
         : SurfaceFactory(gl, SharedSurfaceType::Basic, caps)
     {}
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_Basic::Create(mGL, mFormats, size, hasAlpha);
     }
@@ -131,14 +131,14 @@ protected:
 public:
     virtual ~SharedSurface_GLTexture();
 
-    virtual void LockProdImpl() MOZ_OVERRIDE {}
-    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
+    virtual void LockProdImpl() override {}
+    virtual void UnlockProdImpl() override {}
 
-    virtual void Fence() MOZ_OVERRIDE;
-    virtual bool WaitSync() MOZ_OVERRIDE;
-    virtual bool PollSync() MOZ_OVERRIDE;
+    virtual void Fence() override;
+    virtual bool WaitSync() override;
+    virtual bool PollSync() override;
 
-    virtual GLuint ProdTexture() MOZ_OVERRIDE {
+    virtual GLuint ProdTexture() override {
         return mTex;
     }
 
@@ -170,7 +170,7 @@ public:
         MOZ_ASSERT(consGL != prodGL);
     }
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_GLTexture::Create(mGL, mConsGL, mFormats, size, hasAlpha);
     }

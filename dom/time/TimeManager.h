@@ -17,7 +17,7 @@ class Date;
 
 namespace time {
 
-class TimeManager MOZ_FINAL : public nsISupports
+class TimeManager final : public nsISupports
                             , public nsWrapperCache
 {
 public:
@@ -42,7 +42,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Set(Date& aDate);
   void Set(double aTime);

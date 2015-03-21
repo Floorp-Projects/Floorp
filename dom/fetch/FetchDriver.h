@@ -41,7 +41,7 @@ protected:
   { };
 };
 
-class FetchDriver MOZ_FINAL : public nsIStreamListener,
+class FetchDriver final : public nsIStreamListener,
                               public nsIChannelEventSink,
                               public nsIInterfaceRequestor,
                               public nsIAsyncVerifyRedirectCallback

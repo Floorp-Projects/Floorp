@@ -32,7 +32,7 @@ namespace workers {
 class URLProxy;
 }
 
-class URL MOZ_FINAL : public URLSearchParamsObserver
+class URL final : public URLSearchParamsObserver
 {
   ~URL() {}
 
@@ -123,7 +123,7 @@ public:
   }
 
   // URLSearchParamsObserver
-  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) MOZ_OVERRIDE;
+  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
 
 private:
   nsIURI* GetURI() const

@@ -22,7 +22,7 @@ namespace workers {
 
 class WorkerDataStore;
 
-class WorkerDataStoreCursor MOZ_FINAL
+class WorkerDataStoreCursor final
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerDataStoreCursor)

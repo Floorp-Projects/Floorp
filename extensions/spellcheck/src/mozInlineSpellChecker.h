@@ -116,7 +116,7 @@ protected:
                                     nsIDOMRange** aRange);
 };
 
-class mozInlineSpellChecker MOZ_FINAL : public nsIInlineSpellChecker,
+class mozInlineSpellChecker final : public nsIInlineSpellChecker,
                                         public nsIEditActionListener,
                                         public nsIDOMEventListener,
                                         public nsSupportsWeakReference

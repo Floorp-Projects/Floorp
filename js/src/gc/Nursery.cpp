@@ -47,7 +47,7 @@ struct js::Nursery::FreeHugeSlotsTask : public GCParallelTask
     FreeOp *fop_;
     HugeSlotsSet slots_;
 
-    virtual void run() MOZ_OVERRIDE;
+    virtual void run() override;
 };
 
 bool

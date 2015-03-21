@@ -11,7 +11,7 @@
 #include "CSSValue.h"
 #include "nsTArray.h"
 
-class nsDOMCSSValueList MOZ_FINAL : public mozilla::dom::CSSValue,
+class nsDOMCSSValueList final : public mozilla::dom::CSSValue,
   public nsIDOMCSSValueList
 {
 public:
@@ -30,10 +30,10 @@ public:
   void AppendCSSValue(CSSValue* aValue);
 
   virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
   virtual void SetCssText(const nsAString& aText,
-                          mozilla::ErrorResult& aRv) MOZ_OVERRIDE MOZ_FINAL;
-  virtual uint16_t CssValueType() const MOZ_OVERRIDE MOZ_FINAL;
+                          mozilla::ErrorResult& aRv) override final;
+  virtual uint16_t CssValueType() const override final;
 
   CSSValue* IndexedGetter(uint32_t aIdx, bool& aFound) const
   {
@@ -56,7 +56,7 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   ~nsDOMCSSValueList();

@@ -512,13 +512,13 @@ UDPSocket::Init(const nsString& aLocalAddress,
     return rv.ErrorCode();
   }
 
-  class OpenSocketRunnable MOZ_FINAL : public nsRunnable
+  class OpenSocketRunnable final : public nsRunnable
   {
   public:
     explicit OpenSocketRunnable(UDPSocket* aSocket) : mSocket(aSocket)
     { }
 
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
       MOZ_ASSERT(mSocket);
 

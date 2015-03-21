@@ -31,7 +31,7 @@ class SVGMPathElement;
 // Subclass of nsSMILAnimationFunction to support a few extra features offered
 // by the <animateMotion> element.
 //
-class SVGMotionSMILAnimationFunction MOZ_FINAL : public nsSMILAnimationFunction
+class SVGMotionSMILAnimationFunction final : public nsSMILAnimationFunction
 {
   typedef mozilla::gfx::Path Path;
 
@@ -40,8 +40,8 @@ public:
   virtual bool SetAttr(nsIAtom* aAttribute,
                        const nsAString& aValue,
                        nsAttrValue& aResult,
-                       nsresult* aParseResult = nullptr) MOZ_OVERRIDE;
-  virtual bool UnsetAttr(nsIAtom* aAttribute) MOZ_OVERRIDE;
+                       nsresult* aParseResult = nullptr) override;
+  virtual bool UnsetAttr(nsIAtom* aAttribute) override;
 
   // Method to allow our owner-element to signal us when our <mpath>
   // has changed or been added/removed.  When that happens, we need to
@@ -62,12 +62,12 @@ protected:
     ePathSourceType_Mpath
   };
 
-  virtual nsSMILCalcMode GetCalcMode() const MOZ_OVERRIDE;
+  virtual nsSMILCalcMode GetCalcMode() const override;
   virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                             nsSMILValueArray& aResult) MOZ_OVERRIDE;
-  virtual void CheckValueListDependentAttrs(uint32_t aNumValues) MOZ_OVERRIDE;
+                             nsSMILValueArray& aResult) override;
+  virtual void CheckValueListDependentAttrs(uint32_t aNumValues) override;
 
-  virtual bool IsToAnimation() const MOZ_OVERRIDE;
+  virtual bool IsToAnimation() const override;
 
   void     CheckKeyPoints();
   nsresult SetKeyPoints(const nsAString& aKeyPoints, nsAttrValue& aResult);

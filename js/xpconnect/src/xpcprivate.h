@@ -304,12 +304,12 @@ public:
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
-                                       bool allowShortCircuit) const MOZ_OVERRIDE;
+                                       bool allowShortCircuit) const override;
 
     void RecordTraversal(void *p, nsISupports *s);
     virtual char* DebugPrintJSStack(bool showArgs,
                                     bool showLocals,
-                                    bool showThisProps) MOZ_OVERRIDE;
+                                    bool showThisProps) override;
 
 
     static bool ReportAllJSExceptions()
@@ -490,10 +490,10 @@ public:
 
     virtual bool
     DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
-                          char (&aName)[72]) const MOZ_OVERRIDE;
+                          char (&aName)[72]) const override;
     virtual bool
     NoteCustomGCThingXPCOMChildren(const js::Class* aClasp, JSObject* aObj,
-                                   nsCycleCollectionTraversalCallback& aCb) const MOZ_OVERRIDE;
+                                   nsCycleCollectionTraversalCallback& aCb) const override;
 
     /**
      * Infrastructure for classes that need to defer part of the finalization
@@ -560,19 +560,19 @@ public:
         return mStrings[index];
     }
 
-    void TraceNativeBlackRoots(JSTracer* trc) MOZ_OVERRIDE;
-    void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) MOZ_OVERRIDE;
-    void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb) MOZ_OVERRIDE;
+    void TraceNativeBlackRoots(JSTracer* trc) override;
+    void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) override;
+    void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb) override;
     void UnmarkSkippableJSHolders();
-    void PrepareForForgetSkippable() MOZ_OVERRIDE;
-    void BeginCycleCollectionCallback() MOZ_OVERRIDE;
-    void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults) MOZ_OVERRIDE;
-    void DispatchDeferredDeletion(bool continuation) MOZ_OVERRIDE;
+    void PrepareForForgetSkippable() override;
+    void BeginCycleCollectionCallback() override;
+    void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults) override;
+    void DispatchDeferredDeletion(bool continuation) override;
 
-    void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
-    void CustomOutOfMemoryCallback() MOZ_OVERRIDE;
-    void CustomLargeAllocationFailureCallback() MOZ_OVERRIDE;
-    bool CustomContextCallback(JSContext *cx, unsigned operation) MOZ_OVERRIDE;
+    void CustomGCCallback(JSGCStatus status) override;
+    void CustomOutOfMemoryCallback() override;
+    void CustomLargeAllocationFailureCallback() override;
+    bool CustomContextCallback(JSContext *cx, unsigned operation) override;
     static void GCSliceCallback(JSRuntime *rt,
                                 JS::GCProgress progress,
                                 const JS::GCDescription &desc);
@@ -1193,7 +1193,7 @@ protected:
     XPCWrappedNativeScope(); // not implemented
 
 private:
-    class ClearInterpositionsObserver MOZ_FINAL : public nsIObserver {
+    class ClearInterpositionsObserver final : public nsIObserver {
         ~ClearInterpositionsObserver() {}
 
       public:
@@ -2319,7 +2319,7 @@ class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
-    NS_IMETHOD DebugDump(int16_t depth) MOZ_OVERRIDE;
+    NS_IMETHOD DebugDump(int16_t depth) override;
 public:
 
     static already_AddRefed<nsXPCWrappedJSClass>
@@ -2408,7 +2408,7 @@ private:
 // nsXPCWrappedJS objects are chained together to represent the various
 // interface on the single underlying (possibly aggregate) JSObject.
 
-class nsXPCWrappedJS MOZ_FINAL : protected nsAutoXPTCStub,
+class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                                  public nsIXPConnectWrappedJS,
                                  public nsSupportsWeakReference,
                                  public nsIPropertyBag,
@@ -2425,7 +2425,7 @@ public:
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const XPTMethodDescriptor *info,
-                          nsXPTCMiniVariant* params) MOZ_OVERRIDE;
+                          nsXPTCMiniVariant* params) override;
 
     /*
     * This is rarely called directly. Instead one usually calls
@@ -2734,7 +2734,7 @@ public:
 // safe.
 extern void xpc_DestroyJSxIDClassObjects();
 
-class nsJSID MOZ_FINAL : public nsIJSID
+class nsJSID final : public nsIJSID
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
@@ -2939,7 +2939,7 @@ public:
 protected:
     explicit nsXPCComponents(XPCWrappedNativeScope* aScope);
     virtual ~nsXPCComponents();
-    virtual void ClearMembers() MOZ_OVERRIDE;
+    virtual void ClearMembers() override;
 
     // Privileged members added by nsIXPCComponents.
     nsRefPtr<nsXPCComponents_Classes>     mClasses;
@@ -2981,7 +2981,7 @@ xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError MOZ_FINAL : public nsIScriptError {
+class nsScriptError final : public nsIScriptError {
 public:
     nsScriptError();
 

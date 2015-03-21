@@ -24,7 +24,7 @@ public:
     NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
 };
 
-class nsResProtocolHandler MOZ_FINAL : public nsIResProtocolHandler, public nsSupportsWeakReference
+class nsResProtocolHandler final : public nsIResProtocolHandler, public nsSupportsWeakReference
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

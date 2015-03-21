@@ -23,7 +23,7 @@ namespace dom {
 class HTMLTrackElement;
 class TextTrackRegion;
 
-class TextTrackCue MOZ_FINAL : public DOMEventTargetHelper
+class TextTrackCue final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -50,7 +50,7 @@ public:
                const nsAString& aText, HTMLTrackElement* aTrackElement,
                ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   TextTrack* GetTrack() const
   {

@@ -21,7 +21,7 @@ class ErrorResult;
 
 namespace dom {
 
-class PowerManager MOZ_FINAL : public nsIDOMMozWakeLockListener
+class PowerManager final : public nsIDOMMozWakeLockListener
                              , public nsWrapperCache
 {
 public:
@@ -39,7 +39,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   void Reboot(ErrorResult& aRv);
   void FactoryReset(mozilla::dom::FactoryResetReason& aReason);
   void PowerOff(ErrorResult& aRv);

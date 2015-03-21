@@ -570,7 +570,7 @@ public:
   {
   }
 
-  void DidRefresh() MOZ_OVERRIDE {
+  void DidRefresh() override {
     if (!mCallback) {
       MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
       return;

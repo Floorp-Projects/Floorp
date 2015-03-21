@@ -5316,7 +5316,7 @@ nsHTMLEditor::IsEditable(nsINode* aNode) {
   return true;
 }
 
-// virtual MOZ_OVERRIDE
+// virtual override
 dom::Element*
 nsHTMLEditor::GetEditorRoot()
 {

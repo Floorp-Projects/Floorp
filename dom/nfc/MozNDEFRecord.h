@@ -30,7 +30,7 @@ namespace dom {
 
 class MozNDEFRecordOptions;
 
-class MozNDEFRecord MOZ_FINAL : public nsISupports,
+class MozNDEFRecord final : public nsISupports,
                                 public nsWrapperCache
 {
 public:
@@ -45,7 +45,7 @@ public:
     return mParent;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<MozNDEFRecord>
   Constructor(const GlobalObject& aGlobal,

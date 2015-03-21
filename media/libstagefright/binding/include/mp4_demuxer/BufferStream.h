@@ -19,12 +19,12 @@ public:
   BufferStream();
 
   virtual bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
-                      size_t* aBytesRead) MOZ_OVERRIDE;
+                      size_t* aBytesRead) override;
   virtual bool CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
-                            size_t* aBytesRead) MOZ_OVERRIDE;
-  virtual bool Length(int64_t* aLength) MOZ_OVERRIDE;
+                            size_t* aBytesRead) override;
+  virtual bool Length(int64_t* aLength) override;
 
-  virtual void DiscardBefore(int64_t aOffset) MOZ_OVERRIDE;
+  virtual void DiscardBefore(int64_t aOffset) override;
 
   void AppendBytes(const uint8_t* aData, size_t aLength);
 

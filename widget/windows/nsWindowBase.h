@@ -23,7 +23,7 @@ public:
   /*
    * Return the HWND or null for this widget.
    */
-  virtual HWND GetWindowHandle() MOZ_FINAL {
+  virtual HWND GetWindowHandle() final {
     return static_cast<HWND>(GetNativeData(NS_NATIVE_WINDOW));
   }
 
@@ -80,7 +80,7 @@ public:
   /*
    * Returns true if a plugin has focus on this widget.  Otherwise, false.
    */
-  virtual bool PluginHasFocus() const MOZ_FINAL
+  virtual bool PluginHasFocus() const final
   {
     return (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
   }

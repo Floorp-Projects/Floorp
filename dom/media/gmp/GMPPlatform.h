@@ -27,8 +27,8 @@ public:
   virtual ~GMPThreadImpl();
 
   // GMPThread
-  virtual void Post(GMPTask* aTask) MOZ_OVERRIDE;
-  virtual void Join() MOZ_OVERRIDE;
+  virtual void Post(GMPTask* aTask) override;
+  virtual void Join() override;
 
 private:
   Mutex mMutex;
@@ -42,9 +42,9 @@ public:
   virtual ~GMPMutexImpl();
 
   // GMPMutex
-  virtual void Acquire() MOZ_OVERRIDE;
-  virtual void Release() MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void Acquire() override;
+  virtual void Release() override;
+  virtual void Destroy() override;
 
 private:
   ReentrantMonitor mMonitor;

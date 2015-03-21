@@ -56,7 +56,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+  NS_IMETHOD Run() override final {
 
     mSourceBuffer->AppendData(mData, mTimestampOffset, mUpdateID);
 
@@ -80,7 +80,7 @@ public:
   , mEnd(aEnd)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+  NS_IMETHOD Run() override final {
 
     if (!mSourceBuffer->mUpdating) {
       // abort was called in between.

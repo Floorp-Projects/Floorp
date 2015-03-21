@@ -21,7 +21,7 @@ class Promise;
 class TVProgram;
 class TVSource;
 
-class TVChannel MOZ_FINAL : public DOMEventTargetHelper
+class TVChannel final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -33,7 +33,7 @@ public:
 
   // WebIDL (internal functions)
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult DispatchTVEvent(nsIDOMEvent* aEvent);
 

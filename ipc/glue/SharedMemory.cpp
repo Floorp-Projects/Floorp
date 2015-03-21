@@ -17,7 +17,7 @@ namespace ipc {
 static Atomic<size_t> gShmemAllocated;
 static Atomic<size_t> gShmemMapped;
 
-class ShmemReporter MOZ_FINAL : public nsIMemoryReporter
+class ShmemReporter final : public nsIMemoryReporter
 {
   ~ShmemReporter() {}
 
@@ -26,7 +26,7 @@ public:
 
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE
+                 bool aAnonymize) override
   {
     nsresult rv;
     rv = MOZ_COLLECT_REPORT(

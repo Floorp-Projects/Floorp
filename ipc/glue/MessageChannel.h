@@ -460,7 +460,7 @@ class MessageChannel : HasResultCodes
         explicit DequeueTask(RefCountedTask* aTask)
           : mTask(aTask)
         { }
-        void Run() MOZ_OVERRIDE { mTask->Run(); }
+        void Run() override { mTask->Run(); }
 
       private:
         nsRefPtr<RefCountedTask> mTask;

@@ -45,7 +45,7 @@ class OpenCursorParams;
 class PBackgroundIDBDatabaseFileChild;
 class RequestParams;
 
-class IDBTransaction MOZ_FINAL
+class IDBTransaction final
   : public IDBWrapperCache
   , public nsIRunnable
 {
@@ -290,11 +290,11 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
 private:
   IDBTransaction(IDBDatabase* aDatabase,

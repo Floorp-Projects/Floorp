@@ -23,7 +23,7 @@ class Promise;
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerNavigator MOZ_FINAL : public nsWrapperCache
+class WorkerNavigator final : public nsWrapperCache
 {
   typedef struct RuntimeService::NavigatorProperties NavigatorProperties;
 
@@ -52,7 +52,7 @@ public:
   Create(bool aOnLine);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const {
     return nullptr;

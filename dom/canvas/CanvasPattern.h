@@ -22,7 +22,7 @@ class SourceSurface;
 namespace dom {
 class SVGMatrix;
 
-class CanvasPattern MOZ_FINAL : public nsWrapperCache
+class CanvasPattern final : public nsWrapperCache
 {
   ~CanvasPattern() {}
 public:
@@ -52,7 +52,7 @@ public:
   {
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return CanvasPatternBinding::Wrap(aCx, this, aGivenProto);
   }

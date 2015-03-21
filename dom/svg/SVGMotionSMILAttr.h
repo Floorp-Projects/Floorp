@@ -38,11 +38,11 @@ public:
   virtual nsresult ValueFromString(const nsAString& aStr,
                                    const dom::SVGAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
-                                   bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-  virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-  virtual nsresult    SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
-  virtual void        ClearAnimValue() MOZ_OVERRIDE;
-  virtual const nsIContent* GetTargetNode() const MOZ_OVERRIDE;
+                                   bool& aPreventCachingOfSandwich) const override;
+  virtual nsSMILValue GetBaseValue() const override;
+  virtual nsresult    SetAnimValue(const nsSMILValue& aValue) override;
+  virtual void        ClearAnimValue() override;
+  virtual const nsIContent* GetTargetNode() const override;
 
 protected:
   // Raw pointers are OK here because this SVGMotionSMILAttr is both

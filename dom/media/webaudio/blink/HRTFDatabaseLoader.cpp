@@ -107,10 +107,10 @@ size_t HRTFDatabaseLoader::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSize
     return amount;
 }
 
-class HRTFDatabaseLoader::ProxyReleaseEvent MOZ_FINAL : public nsRunnable {
+class HRTFDatabaseLoader::ProxyReleaseEvent final : public nsRunnable {
 public:
     explicit ProxyReleaseEvent(HRTFDatabaseLoader* loader) : mLoader(loader) {}
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
         mLoader->MainThreadRelease();
         return NS_OK;

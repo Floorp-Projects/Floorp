@@ -35,41 +35,41 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
 
   virtual mozilla::EventListenerManager*
-    GetExistingListenerManager() const MOZ_OVERRIDE;
+    GetExistingListenerManager() const override;
   virtual mozilla::EventListenerManager*
-    GetOrCreateListenerManager() MOZ_OVERRIDE;
+    GetOrCreateListenerManager() override;
 
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                mozilla::ErrorResult& aRv) override;
 
   // nsPIWindowRoot
 
-  virtual nsPIDOMWindow* GetWindow() MOZ_OVERRIDE;
+  virtual nsPIDOMWindow* GetWindow() override;
 
-  virtual nsresult GetControllers(nsIControllers** aResult) MOZ_OVERRIDE;
+  virtual nsresult GetControllers(nsIControllers** aResult) override;
   virtual nsresult GetControllerForCommand(const char * aCommand,
-                                           nsIController** _retval) MOZ_OVERRIDE;
+                                           nsIController** _retval) override;
 
   virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
-                                          nsTArray<nsCString>& aDisabledCommands) MOZ_OVERRIDE;
+                                          nsTArray<nsCString>& aDisabledCommands) override;
 
-  virtual nsIDOMNode* GetPopupNode() MOZ_OVERRIDE;
-  virtual void SetPopupNode(nsIDOMNode* aNode) MOZ_OVERRIDE;
+  virtual nsIDOMNode* GetPopupNode() override;
+  virtual void SetPopupNode(nsIDOMNode* aNode) override;
 
-  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) MOZ_OVERRIDE
+  virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) override
   {
     mParent = aTarget;
   }
-  virtual mozilla::dom::EventTarget* GetParentTarget() MOZ_OVERRIDE { return mParent; }
-  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE;
+  virtual mozilla::dom::EventTarget* GetParentTarget() override { return mParent; }
+  virtual nsIDOMWindow* GetOwnerGlobal() override;
 
   nsIGlobalObject* GetParentObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsWindowRoot,
                                                          nsIDOMEventTarget)

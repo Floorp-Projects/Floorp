@@ -29,7 +29,7 @@ IsPOTAssumingNonnegative(GLsizei x)
 
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
-class WebGLTexture MOZ_FINAL
+class WebGLTexture final
     : public nsWrapperCache
     , public WebGLBindableName<TexTarget>
     , public WebGLRefCountedObject<WebGLTexture>
@@ -46,7 +46,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTexture)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTexture)

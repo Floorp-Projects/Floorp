@@ -18,7 +18,7 @@ namespace storage {
 
 class StorageBaseStatementInternal;
 
-class BindingParamsArray MOZ_FINAL : public mozIStorageBindingParamsArray
+class BindingParamsArray final : public mozIStorageBindingParamsArray
 {
   typedef nsTArray< nsCOMPtr<mozIStorageBindingParams> > array_type;
 

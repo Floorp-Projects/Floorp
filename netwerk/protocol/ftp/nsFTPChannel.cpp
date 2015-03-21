@@ -131,7 +131,7 @@ nsFtpChannel::OnCallbacksChanged()
 
 namespace {
 
-class FTPEventSinkProxy MOZ_FINAL : public nsIFTPEventSink
+class FTPEventSinkProxy final : public nsIFTPEventSink
 {
     ~FTPEventSinkProxy() {}
 

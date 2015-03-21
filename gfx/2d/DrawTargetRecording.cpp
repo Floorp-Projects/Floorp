@@ -80,7 +80,7 @@ GetGradientStops(GradientStops *aStops)
 class FilterNodeRecording : public FilterNode
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording, override)
   using FilterNode::SetAttribute;
 
   FilterNodeRecording(FilterNode *aFinalFilterNode, DrawEventRecorderPrivate *aRecorder)
@@ -93,12 +93,12 @@ public:
     mRecorder->RecordEvent(RecordedFilterNodeDestruction(this));
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) MOZ_OVERRIDE
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override
   {
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
     mFinalFilterNode->SetInput(aIndex, GetSourceSurface(aSurface));
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) MOZ_OVERRIDE
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override
   {
     FilterNode *finalNode = aFilter;
     if (aFilter->GetBackendType() != FILTER_BACKEND_RECORDING) {
@@ -113,7 +113,7 @@ public:
 
 
 #define FORWARD_SET_ATTRIBUTE(type, argtype) \
-  virtual void SetAttribute(uint32_t aIndex, type aValue) MOZ_OVERRIDE { \
+  virtual void SetAttribute(uint32_t aIndex, type aValue) override { \
     mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aValue, RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
     mFinalFilterNode->SetAttribute(aIndex, aValue); \
   }
@@ -133,12 +133,12 @@ public:
 
 #undef FORWARD_SET_ATTRIBUTE
 
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE {
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) override {
     mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
     mFinalFilterNode->SetAttribute(aIndex, aFloat, aSize);
   }
 
-  virtual FilterBackend GetBackendType() MOZ_OVERRIDE { return FILTER_BACKEND_RECORDING; }
+  virtual FilterBackend GetBackendType() override { return FILTER_BACKEND_RECORDING; }
 
   RefPtr<FilterNode> mFinalFilterNode;
   RefPtr<DrawEventRecorderPrivate> mRecorder;

@@ -2409,7 +2409,7 @@ struct UpdateCellPointersTask : public GCParallelTask
     ArenasToUpdate *source_;
     ArenaHeader *arenaList_;
 
-    virtual void run() MOZ_OVERRIDE;
+    virtual void run() override;
     void getArenasToUpdate(AutoLockHelperThreadState& lock);
     void updateArenas();
 };
@@ -4681,7 +4681,7 @@ GCRuntime::endMarkingZoneGroup()
 #define MAKE_GC_PARALLEL_TASK(name) \
     class name : public GCParallelTask {\
         JSRuntime *runtime;\
-        virtual void run() MOZ_OVERRIDE;\
+        virtual void run() override;\
       public:\
         explicit name (JSRuntime *rt) : runtime(rt) {}\
     }

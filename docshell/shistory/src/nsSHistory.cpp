@@ -165,7 +165,7 @@ enum HistCmd{
 //***      nsSHistoryObserver
 //*****************************************************************************
 
-class nsSHistoryObserver MOZ_FINAL : public nsIObserver
+class nsSHistoryObserver final : public nsIObserver
 {
 
 public:

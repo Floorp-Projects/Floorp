@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GetUserMediaRequest)
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE;
+    override;
   nsISupports* GetParentObject();
 
   uint64_t WindowID();

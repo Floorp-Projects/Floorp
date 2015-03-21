@@ -24,7 +24,7 @@ class SharedSSLState;
 
 class nsIObserver;
 
-class nsNSSSocketInfo MOZ_FINAL : public mozilla::psm::TransportSecurityInfo,
+class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
                                   public nsISSLSocketControl,
                                   public nsIClientAuthUserDecision
 {

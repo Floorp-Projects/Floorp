@@ -29,7 +29,7 @@ struct SavedRequest;
 struct SavedResponse;
 
 // TODO: remove static class and use functions in cache namespace (bug 1110485)
-class DBSchema MOZ_FINAL
+class DBSchema final
 {
 public:
   static nsresult CreateSchema(mozIStorageConnection* aConn);

@@ -78,7 +78,7 @@ USING_WORKERS_NAMESPACE
 
 BEGIN_WORKERS_NAMESPACE
 
-class Proxy MOZ_FINAL : public nsIDOMEventListener
+class Proxy final : public nsIDOMEventListener
 {
 public:
   // Read on multiple threads.
@@ -257,7 +257,7 @@ protected:
   { }
 };
 
-class XHRUnpinRunnable MOZ_FINAL : public MainThreadWorkerControlRunnable
+class XHRUnpinRunnable final : public MainThreadWorkerControlRunnable
 {
   XMLHttpRequest* mXMLHttpRequestPrivate;
 
@@ -285,7 +285,7 @@ private:
   }
 };
 
-class AsyncTeardownRunnable MOZ_FINAL : public nsRunnable
+class AsyncTeardownRunnable final : public nsRunnable
 {
   nsRefPtr<Proxy> mProxy;
 
@@ -303,7 +303,7 @@ private:
   { }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     AssertIsOnMainThread();
 
@@ -314,7 +314,7 @@ private:
   }
 };
 
-class LoadStartDetectionRunnable MOZ_FINAL : public nsRunnable,
+class LoadStartDetectionRunnable final : public nsRunnable,
                                              public nsIDOMEventListener
 {
   WorkerPrivate* mWorkerPrivate;
@@ -325,7 +325,7 @@ class LoadStartDetectionRunnable MOZ_FINAL : public nsRunnable,
   uint32_t mChannelId;
   bool mReceivedLoadStart;
 
-  class ProxyCompleteRunnable MOZ_FINAL : public MainThreadProxyRunnable
+  class ProxyCompleteRunnable final : public MainThreadProxyRunnable
   {
     XMLHttpRequest* mXMLHttpRequestPrivate;
     uint32_t mChannelId;
@@ -342,7 +342,7 @@ class LoadStartDetectionRunnable MOZ_FINAL : public nsRunnable,
     { }
 
     virtual bool
-    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
     {
       if (mChannelId != mProxy->mOuterChannelId) {
         // Threads raced, this event is now obsolete.
@@ -361,7 +361,7 @@ class LoadStartDetectionRunnable MOZ_FINAL : public nsRunnable,
     }
 
     NS_IMETHOD
-    Cancel() MOZ_OVERRIDE
+    Cancel() override
     {
       // This must run!
       nsresult rv = MainThreadProxyRunnable::Cancel();
@@ -404,7 +404,7 @@ private:
     }
 };
 
-class EventRunnable MOZ_FINAL : public MainThreadProxyRunnable
+class EventRunnable final : public MainThreadProxyRunnable
 {
   nsString mType;
   nsString mResponseType;
@@ -473,10 +473,10 @@ private:
   { }
 
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 };
 
 class WorkerThreadProxySyncRunnable : public nsRunnable
@@ -487,7 +487,7 @@ protected:
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
 
 private:
-  class ResponseRunnable MOZ_FINAL: public MainThreadStopSyncLoopRunnable
+  class ResponseRunnable final: public MainThreadStopSyncLoopRunnable
   {
     nsRefPtr<Proxy> mProxy;
     nsresult mErrorCode;
@@ -507,7 +507,7 @@ private:
     { }
 
     virtual void
-    MaybeSetException(JSContext* aCx) MOZ_OVERRIDE
+    MaybeSetException(JSContext* aCx) override
     {
       MOZ_ASSERT(NS_FAILED(mErrorCode));
 
@@ -553,7 +553,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class SyncTeardownRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class SyncTeardownRunnable final : public WorkerThreadProxySyncRunnable
 {
 public:
   SyncTeardownRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy)
@@ -565,7 +565,7 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     mProxy->Teardown();
     MOZ_ASSERT(!mProxy->mSyncLoopTarget);
@@ -573,7 +573,7 @@ private:
   }
 };
 
-class SetBackgroundRequestRunnable MOZ_FINAL :
+class SetBackgroundRequestRunnable final :
   public WorkerThreadProxySyncRunnable
 {
   bool mValue;
@@ -589,13 +589,13 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     return mProxy->mXHR->SetMozBackgroundRequest(mValue);
   }
 };
 
-class SetWithCredentialsRunnable MOZ_FINAL :
+class SetWithCredentialsRunnable final :
   public WorkerThreadProxySyncRunnable
 {
   bool mValue;
@@ -611,13 +611,13 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     return mProxy->mXHR->SetWithCredentials(mValue);
   }
 };
 
-class SetResponseTypeRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class SetResponseTypeRunnable final : public WorkerThreadProxySyncRunnable
 {
   nsString mResponseType;
 
@@ -639,7 +639,7 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     nsresult rv = mProxy->mXHR->SetResponseType(mResponseType);
     mResponseType.Truncate();
@@ -650,7 +650,7 @@ private:
   }
 };
 
-class SetTimeoutRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class SetTimeoutRunnable final : public WorkerThreadProxySyncRunnable
 {
   uint32_t mTimeout;
 
@@ -665,13 +665,13 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     return mProxy->mXHR->SetTimeout(mTimeout);
   }
 };
 
-class AbortRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class AbortRunnable final : public WorkerThreadProxySyncRunnable
 {
 public:
   AbortRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy)
@@ -683,10 +683,10 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE;
+  MainThreadRun() override;
 };
 
-class GetAllResponseHeadersRunnable MOZ_FINAL :
+class GetAllResponseHeadersRunnable final :
   public WorkerThreadProxySyncRunnable
 {
   nsCString& mResponseHeaders;
@@ -703,14 +703,14 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders);
     return NS_OK;
   }
 };
 
-class GetResponseHeaderRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class GetResponseHeaderRunnable final : public WorkerThreadProxySyncRunnable
 {
   const nsCString mHeader;
   nsCString& mValue;
@@ -727,13 +727,13 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     return mProxy->mXHR->GetResponseHeader(mHeader, mValue);
   }
 };
 
-class OpenRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class OpenRunnable final : public WorkerThreadProxySyncRunnable
 {
   nsCString mMethod;
   nsString mURL;
@@ -771,7 +771,7 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     WorkerPrivate* oldWorker = mProxy->mWorkerPrivate;
     mProxy->mWorkerPrivate = mWorkerPrivate;
@@ -786,7 +786,7 @@ private:
   MainThreadRunInternal();
 };
 
-class SendRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class SendRunnable final : public WorkerThreadProxySyncRunnable
 {
   nsString mStringBody;
   JSAutoStructuredCloneBuffer mBody;
@@ -813,10 +813,10 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE;
+  MainThreadRun() override;
 };
 
-class SetRequestHeaderRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class SetRequestHeaderRunnable final : public WorkerThreadProxySyncRunnable
 {
   nsCString mHeader;
   nsCString mValue;
@@ -833,13 +833,13 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     return mProxy->mXHR->SetRequestHeader(mHeader, mValue);
   }
 };
 
-class OverrideMimeTypeRunnable MOZ_FINAL : public WorkerThreadProxySyncRunnable
+class OverrideMimeTypeRunnable final : public WorkerThreadProxySyncRunnable
 {
   nsString mMimeType;
 
@@ -854,7 +854,7 @@ private:
   { }
 
   virtual nsresult
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     mProxy->mXHR->OverrideMimeType(mMimeType);
     return NS_OK;

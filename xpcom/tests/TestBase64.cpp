@@ -143,7 +143,7 @@ static Test kTests[] =
     )
   };
 
-class FakeInputStream MOZ_FINAL : public nsIInputStream
+class FakeInputStream final : public nsIInputStream
 {
   ~FakeInputStream() {}
 

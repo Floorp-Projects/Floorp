@@ -14,7 +14,7 @@
 
 class nsIFile;
 
-class nsDirectoryIndexStream MOZ_FINAL : public nsIInputStream
+class nsDirectoryIndexStream final : public nsIInputStream
 {
 private:
     nsCString mBuf;

@@ -47,7 +47,7 @@ class CacheFileOutputStream;
 class CacheOutputCloseListener;
 class CacheEntryHandle;
 
-class CacheEntry MOZ_FINAL : public nsICacheEntry
+class CacheEntry final : public nsICacheEntry
                            , public nsIRunnable
                            , public CacheFileListener
 {
@@ -123,8 +123,8 @@ private:
   virtual ~CacheEntry();
 
   // CacheFileListener
-  NS_IMETHOD OnFileReady(nsresult aResult, bool aIsNew) MOZ_OVERRIDE;
-  NS_IMETHOD OnFileDoomed(nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD OnFileReady(nsresult aResult, bool aIsNew) override;
+  NS_IMETHOD OnFileDoomed(nsresult aResult) override;
 
   // Keep the service alive during life-time of an entry
   nsRefPtr<CacheStorageService> mService;
@@ -371,7 +371,7 @@ private:
 };
 
 
-class CacheOutputCloseListener MOZ_FINAL : public nsRunnable
+class CacheOutputCloseListener final : public nsRunnable
 {
 public:
   void OnOutputClosed();

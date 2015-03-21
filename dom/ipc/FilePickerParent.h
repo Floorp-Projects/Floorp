@@ -37,9 +37,9 @@ class FilePickerParent : public PFilePickerParent
                         const nsString& aDefaultExtension,
                         InfallibleTArray<nsString>&& aFilters,
                         InfallibleTArray<nsString>&& aFilterNames,
-                        const nsString& aDisplayDirectory) MOZ_OVERRIDE;
+                        const nsString& aDisplayDirectory) override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class FilePickerShownCallback : public nsIFilePickerShownCallback
   {

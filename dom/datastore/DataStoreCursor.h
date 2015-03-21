@@ -22,7 +22,7 @@ class DataStore;
 class GlobalObject;
 class DataStoreCursorImpl;
 
-class DataStoreCursor MOZ_FINAL : public nsISupports
+class DataStoreCursor final : public nsISupports
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

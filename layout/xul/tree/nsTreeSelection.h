@@ -16,7 +16,7 @@
 class nsITreeBoxObject;
 struct nsTreeRange;
 
-class nsTreeSelection MOZ_FINAL : public nsINativeTreeSelection
+class nsTreeSelection final : public nsINativeTreeSelection
 {
 public:
   explicit nsTreeSelection(nsITreeBoxObject* aTree);
@@ -26,7 +26,7 @@ public:
   NS_DECL_NSITREESELECTION
 
   // nsINativeTreeSelection: Untrusted code can use us
-  NS_IMETHOD EnsureNative() MOZ_OVERRIDE { return NS_OK; }
+  NS_IMETHOD EnsureNative() override { return NS_OK; }
 
   friend struct nsTreeRange;
 

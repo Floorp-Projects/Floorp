@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class ImageDocument MOZ_FINAL : public MediaDocument,
+class ImageDocument final : public MediaDocument,
                                 public nsIImageDocument,
                                 public imgINotificationObserver,
                                 public nsIDOMEventListener
@@ -24,7 +24,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
                                      nsIChannel*         aChannel,
@@ -32,18 +32,18 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nullptr) MOZ_OVERRIDE;
+                                     nsIContentSink*     aSink = nullptr) override;
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) override;
+  virtual void Destroy() override;
   virtual void OnPageShow(bool aPersisted,
-                          EventTarget* aDispatchStartTarget) MOZ_OVERRIDE;
+                          EventTarget* aDispatchStartTarget) override;
 
   NS_DECL_NSIIMAGEDOCUMENT
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ImageDocument, MediaDocument)
 
@@ -53,7 +53,7 @@ public:
 
   // WebIDL API
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE;
+    override;
 
   bool ImageResizingEnabled() const
   {
@@ -79,7 +79,7 @@ public:
 protected:
   virtual ~ImageDocument();
 
-  virtual nsresult CreateSyntheticDocument() MOZ_OVERRIDE;
+  virtual nsresult CreateSyntheticDocument() override;
 
   nsresult CheckOverflowing(bool changeState);
 

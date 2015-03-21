@@ -73,16 +73,16 @@ public:
                     uint32_t aLibPathLen,
                     char* aOriginSalt,
                     uint32_t aOriginSaltLen,
-                    const GMPPlatformAPI* aPlatformAPI) MOZ_OVERRIDE;
+                    const GMPPlatformAPI* aPlatformAPI) override;
 
   virtual GMPErr GetAPI(const char* aAPIName,
                         void* aHostAPI,
-                        void** aPluginAPI) MOZ_OVERRIDE;
+                        void** aPluginAPI) override;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
 
 #ifdef SANDBOX_NOT_STATICALLY_LINKED_INTO_PLUGIN_CONTAINER
-  virtual void SetStartSandboxStarter(SandboxStarter* aStarter) MOZ_OVERRIDE {
+  virtual void SetStartSandboxStarter(SandboxStarter* aStarter) override {
     mSandboxStarter = aStarter;
   }
 #endif

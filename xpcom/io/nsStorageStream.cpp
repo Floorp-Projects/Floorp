@@ -338,7 +338,7 @@ nsStorageStream::Seek(int32_t aPosition)
 ////////////////////////////////////////////////////////////////////////////////
 
 // There can be many nsStorageInputStreams for a single nsStorageStream
-class nsStorageInputStream MOZ_FINAL
+class nsStorageInputStream final
   : public nsIInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream

@@ -25,7 +25,7 @@ protected:
     nsMathMLSelectedFrame(aContext) {}
   virtual ~nsMathMLsemanticsFrame();
 
-  nsIFrame* GetSelectedFrame() MOZ_OVERRIDE;
+  nsIFrame* GetSelectedFrame() override;
 };
 
 #endif /* nsMathMLsemanticsFrame_h___ */

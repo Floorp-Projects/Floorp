@@ -68,9 +68,9 @@ public:
   explicit nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   explicit nsGenericDOMDataNode(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) MOZ_OVERRIDE;
+  virtual void GetNodeValueInternal(nsAString& aNodeValue) override;
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                                    mozilla::ErrorResult& aError) override;
 
   // Implementation for nsIDOMCharacterData
   nsresult GetData(nsAString& aData) const;
@@ -86,20 +86,20 @@ public:
   NS_IMETHOD MozRemove();
 
   // nsINode methods
-  virtual uint32_t GetChildCount() const MOZ_OVERRIDE;
-  virtual nsIContent *GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const MOZ_OVERRIDE;
-  virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
+  virtual uint32_t GetChildCount() const override;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const override;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const override;
+  virtual int32_t IndexOf(const nsINode* aPossibleChild) const override;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify) MOZ_OVERRIDE;
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
+                                 bool aNotify) override;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
   virtual void GetTextContentInternal(nsAString& aTextContent,
-                                      mozilla::ErrorResult& aError) MOZ_OVERRIDE
+                                      mozilla::ErrorResult& aError) override
   {
     GetNodeValue(aTextContent);
   }
   virtual void SetTextContentInternal(const nsAString& aTextContent,
-                                      mozilla::ErrorResult& aError) MOZ_OVERRIDE
+                                      mozilla::ErrorResult& aError) override
   {
     // Batch possible DOMSubtreeModified events.
     mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
@@ -109,11 +109,11 @@ public:
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
-  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) override;
 
 
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -123,58 +123,58 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
-  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual uint32_t GetAttrCount() const MOZ_OVERRIDE;
-  virtual const nsTextFragment *GetText() MOZ_OVERRIDE;
-  virtual uint32_t TextLength() const MOZ_OVERRIDE;
+                             bool aNotify) override;
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
+  virtual uint32_t GetAttrCount() const override;
+  virtual const nsTextFragment *GetText() override;
+  virtual uint32_t TextLength() const override;
   virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
   virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
-                              bool aNotify) MOZ_OVERRIDE;
-  virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
-  virtual bool HasTextForTranslation() MOZ_OVERRIDE;
-  virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;
+                              bool aNotify) override;
+  virtual bool TextIsOnlyWhitespace() override;
+  virtual bool HasTextForTranslation() override;
+  virtual void AppendTextTo(nsAString& aResult) override;
   virtual bool AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t&) MOZ_OVERRIDE NS_WARN_UNUSED_RESULT;
-  virtual void DestroyContent() MOZ_OVERRIDE;
-  virtual void SaveSubtreeState() MOZ_OVERRIDE;
+                            const mozilla::fallible_t&) override NS_WARN_UNUSED_RESULT;
+  virtual void DestroyContent() override;
+  virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
-  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const MOZ_OVERRIDE;
+  virtual void List(FILE* out, int32_t aIndent) const override;
+  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override;
 #endif
 
-  virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
-  virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
+  virtual nsIContent *GetBindingParent() const override;
+  virtual nsXBLBinding *GetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
-                             nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
-  virtual mozilla::dom::ShadowRoot *GetContainingShadow() const MOZ_OVERRIDE;
-  virtual mozilla::dom::ShadowRoot *GetShadowRoot() const MOZ_OVERRIDE;
-  virtual nsTArray<nsIContent*> &DestInsertionPoints() MOZ_OVERRIDE;
-  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const MOZ_OVERRIDE;
-  virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) MOZ_OVERRIDE;
-  virtual nsIContent *GetXBLInsertionParent() const MOZ_OVERRIDE;
-  virtual void SetXBLInsertionParent(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
+                             nsBindingManager* aOldBindingManager = nullptr) override;
+  virtual mozilla::dom::ShadowRoot *GetContainingShadow() const override;
+  virtual mozilla::dom::ShadowRoot *GetShadowRoot() const override;
+  virtual nsTArray<nsIContent*> &DestInsertionPoints() override;
+  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const override;
+  virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) override;
+  virtual nsIContent *GetXBLInsertionParent() const override;
+  virtual void SetXBLInsertionParent(nsIContent* aContent) override;
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
+  virtual bool IsLink(nsIURI** aURI) const override;
 
-  virtual mozilla::dom::CustomElementData* GetCustomElementData() const MOZ_OVERRIDE;
-  virtual void SetCustomElementData(mozilla::dom::CustomElementData* aData) MOZ_OVERRIDE;
+  virtual mozilla::dom::CustomElementData* GetCustomElementData() const override;
+  virtual void SetCustomElementData(mozilla::dom::CustomElementData* aData) override;
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override
   {
     *aResult = CloneDataNode(aNodeInfo, true);
     if (!*aResult) {
@@ -228,7 +228,7 @@ public:
 protected:
   virtual ~nsGenericDOMDataNode();
 
-  virtual mozilla::dom::Element* GetNameSpaceElement() MOZ_OVERRIDE
+  virtual mozilla::dom::Element* GetNameSpaceElement() override
   {
     nsINode *parent = GetParentNode();
 
@@ -274,7 +274,7 @@ protected:
   };
 
   // Override from nsINode
-  virtual nsINode::nsSlots* CreateSlots() MOZ_OVERRIDE;
+  virtual nsINode::nsSlots* CreateSlots() override;
 
   nsDataSlots* DataSlots()
   {
@@ -316,16 +316,16 @@ protected:
   nsTextFragment mText;
 
 public:
-  virtual bool OwnedOnlyByTheDOMTree() MOZ_OVERRIDE
+  virtual bool OwnedOnlyByTheDOMTree() override
   {
     return GetParent() && mRefCnt.get() == 1;
   }
 
-  virtual bool IsPurple() MOZ_OVERRIDE
+  virtual bool IsPurple() override
   {
     return mRefCnt.IsPurple();
   }
-  virtual void RemovePurple() MOZ_OVERRIDE
+  virtual void RemovePurple() override
   {
     mRefCnt.RemovePurple();
   }

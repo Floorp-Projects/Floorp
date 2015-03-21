@@ -19,7 +19,7 @@ class CacheStorage;
 class PCacheChild;
 class Feature;
 
-class CacheStorageChild MOZ_FINAL : public PCacheStorageChild
+class CacheStorageChild final : public PCacheStorageChild
                                   , public ActorChild
 {
 public:
@@ -36,26 +36,26 @@ public:
 
   // Synchronously call ActorDestroy on our CacheStorage listener and then start
   // the actor destruction asynchronously from the parent-side.
-  virtual void StartDestroy() MOZ_OVERRIDE;
+  virtual void StartDestroy() override;
 
 private:
   // PCacheStorageChild methods
-  virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
   virtual bool RecvMatchResponse(const RequestId& aRequestId,
                                  const nsresult& aRv,
-                                 const PCacheResponseOrVoid& response) MOZ_OVERRIDE;
+                                 const PCacheResponseOrVoid& response) override;
   virtual bool RecvHasResponse(const cache::RequestId& aRequestId,
                                const nsresult& aRv,
-                               const bool& aSuccess) MOZ_OVERRIDE;
+                               const bool& aSuccess) override;
   virtual bool RecvOpenResponse(const cache::RequestId& aRequestId,
                                 const nsresult& aRv,
-                                PCacheChild* aActor) MOZ_OVERRIDE;
+                                PCacheChild* aActor) override;
   virtual bool RecvDeleteResponse(const cache::RequestId& aRequestId,
                                   const nsresult& aRv,
-                                  const bool& aResult) MOZ_OVERRIDE;
+                                  const bool& aResult) override;
   virtual bool RecvKeysResponse(const cache::RequestId& aRequestId,
                                 const nsresult& aRv,
-                                nsTArray<nsString>&& aKeys) MOZ_OVERRIDE;
+                                nsTArray<nsString>&& aKeys) override;
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its
