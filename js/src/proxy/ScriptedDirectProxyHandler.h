@@ -12,10 +12,10 @@
 namespace js {
 
 /* Derived class for all scripted direct proxy handlers. */
-class ScriptedDirectProxyHandler : public DirectProxyHandler {
+class ScriptedDirectProxyHandler : public BaseProxyHandler {
   public:
     MOZ_CONSTEXPR ScriptedDirectProxyHandler()
-      : DirectProxyHandler(&family)
+      : BaseProxyHandler(&family)
     { }
 
     /* Standard internal methods. */

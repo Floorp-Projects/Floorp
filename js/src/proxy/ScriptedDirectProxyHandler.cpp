@@ -274,7 +274,7 @@ ScriptedDirectProxyHandler::getPrototype(JSContext *cx, HandleObject proxy,
         return false;
     }
 
-    return DirectProxyHandler::getPrototype(cx, proxy, protop);
+    return GetPrototype(cx, target, protop);
 }
 
 bool
@@ -287,7 +287,7 @@ ScriptedDirectProxyHandler::setPrototype(JSContext *cx, HandleObject proxy, Hand
         return false;
     }
 
-    return DirectProxyHandler::setPrototype(cx, proxy, proto, result);
+    return SetPrototype(cx, target, proto, result);
 }
 
 // Not yet part of ES6, but hopefully to be standards-tracked -- and needed to
@@ -302,7 +302,7 @@ ScriptedDirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject pr
         return false;
     }
 
-    return DirectProxyHandler::setImmutablePrototype(cx, proxy, succeeded);
+    return SetImmutablePrototype(cx, target, succeeded);
 }
 
 // ES6 draft rev 32 (2 Feb 2015) 9.5.4 Proxy.[[PreventExtensions]]()
@@ -327,7 +327,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
 
     // Step 7.
     if (trap.isUndefined())
-        return DirectProxyHandler::preventExtensions(cx, proxy, result);
+        return PreventExtensions(cx, target, result);
 
     // Steps 8-9.
     Value argv[] = {
@@ -375,7 +375,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool
 
     // step 6
     if (trap.isUndefined())
-        return DirectProxyHandler::isExtensible(cx, proxy, extensible);
+        return IsExtensible(cx, target, extensible);
 
     // step 7, 9
     Value argv[] = {
@@ -450,7 +450,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::getOwnPropertyDescriptor(cx, proxy, id, desc);
+        return GetOwnPropertyDescriptor(cx, target, id, desc);
 
     // step 8-9
     RootedValue propKey(cx);
@@ -570,7 +570,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 
     // step 8
     if (trap.isUndefined())
-        return DirectProxyHandler::defineProperty(cx, proxy, id, desc, result);
+        return StandardDefineProperty(cx, target, id, desc, result);
 
     // step 9
     RootedValue descObj(cx);
@@ -657,7 +657,7 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
 
     // step 6
     if (trap.isUndefined())
-        return DirectProxyHandler::ownPropertyKeys(cx, proxy, props);
+        return GetPropertyKeys(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
 
     // step 7-8
     Value argv[] = {
@@ -704,7 +704,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
 
     // step 8
     if (trap.isUndefined())
-        return DirectProxyHandler::delete_(cx, proxy, id, result);
+        return DeleteProperty(cx, target, id, result);
 
     // steps 9-10
     RootedValue value(cx);
@@ -763,7 +763,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
 
     // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::enumerate(cx, proxy, objp);
+        return GetIterator(cx, target, 0, objp);
 
     // step 8-9
     Value argv[] = {
@@ -807,7 +807,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
 
     // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::has(cx, proxy, id, bp);
+        return HasProperty(cx, target, id, bp);
 
     // step 8,10
     RootedValue value(cx);
@@ -875,7 +875,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 7
     if (trap.isUndefined())
-        return DirectProxyHandler::get(cx, proxy, receiver, id, vp);
+        return GetProperty(cx, target, receiver, id, vp);
 
     // step 8-9
     RootedValue value(cx);
@@ -940,7 +940,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 8
     if (trap.isUndefined())
-        return DirectProxyHandler::set(cx, proxy, receiver, id, vp, result);
+        return SetProperty(cx, target, receiver, id, vp, result);
 
     // step 9-10
     RootedValue value(cx);
@@ -1015,8 +1015,10 @@ ScriptedDirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallAr
         return false;
 
     // step 6
-    if (trap.isUndefined())
-        return DirectProxyHandler::call(cx, proxy, args);
+    if (trap.isUndefined()) {
+        RootedValue targetv(cx, ObjectValue(*target));
+        return Invoke(cx, args.thisv(), targetv, args.length(), args.array(), args.rval());
+    }
 
     // step 8
     Value argv[] = {
@@ -1056,8 +1058,10 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
         return false;
 
     // step 6
-    if (trap.isUndefined())
-        return DirectProxyHandler::construct(cx, proxy, args);
+    if (trap.isUndefined()) {
+        RootedValue targetv(cx, ObjectValue(*target));
+        return InvokeConstructor(cx, targetv, args.length(), args.array(), args.rval());
+    }
 
     // step 8-9
     Value constructArgv[] = {
@@ -1088,13 +1092,13 @@ bool
 ScriptedDirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                                         bool *bp) const
 {
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-    if (!handler) {
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    if (!target) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    return DirectProxyHandler::hasInstance(cx, proxy, v, bp);
+    return HasInstance(cx, target, v, bp);
 }
 
 bool
@@ -1121,11 +1125,11 @@ const char *
 ScriptedDirectProxyHandler::className(JSContext *cx, HandleObject proxy) const
 {
     // Right now the caller is not prepared to handle failures.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-    if (!handler)
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    if (!target)
         return BaseProxyHandler::className(cx, proxy);
 
-    return DirectProxyHandler::className(cx, proxy);
+    return GetObjectClassName(cx, target);
 }
 JSString *
 ScriptedDirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy,
