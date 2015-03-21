@@ -436,9 +436,14 @@ ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
         return;
 
     // Clone the state and update the slot value.
-    state_ = BlockState::Copy(alloc_, state_);
-    state_->setFixedSlot(ins->slot(), ins->value());
-    ins->block()->insertBefore(ins->toInstruction(), state_);
+    if (state_->hasFixedSlot(ins->slot())) {
+        state_ = BlockState::Copy(alloc_, state_);
+        state_->setFixedSlot(ins->slot(), ins->value());
+        ins->block()->insertBefore(ins->toInstruction(), state_);
+    } else {
+        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        ins->block()->insertBefore(ins, bailout);
+    }
 
     // Remove original instruction.
     ins->block()->discard(ins);
@@ -452,7 +457,13 @@ ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
         return;
 
     // Replace load by the slot value.
-    ins->replaceAllUsesWith(state_->getFixedSlot(ins->slot()));
+    if (state_->hasFixedSlot(ins->slot())) {
+        ins->replaceAllUsesWith(state_->getFixedSlot(ins->slot()));
+    } else {
+        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        ins->block()->insertBefore(ins, bailout);
+        ins->replaceAllUsesWith(undefinedVal_);
+    }
 
     // Remove original instruction.
     ins->block()->discard(ins);
@@ -481,9 +492,14 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
     }
 
     // Clone the state and update the slot value.
-    state_ = BlockState::Copy(alloc_, state_);
-    state_->setDynamicSlot(ins->slot(), ins->value());
-    ins->block()->insertBefore(ins->toInstruction(), state_);
+    if (state_->hasDynamicSlot(ins->slot())) {
+        state_ = BlockState::Copy(alloc_, state_);
+        state_->setDynamicSlot(ins->slot(), ins->value());
+        ins->block()->insertBefore(ins->toInstruction(), state_);
+    } else {
+        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        ins->block()->insertBefore(ins, bailout);
+    }
 
     // Remove original instruction.
     ins->block()->discard(ins);
@@ -501,7 +517,13 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
     }
 
     // Replace load by the slot value.
-    ins->replaceAllUsesWith(state_->getDynamicSlot(ins->slot()));
+    if (state_->hasDynamicSlot(ins->slot())) {
+        ins->replaceAllUsesWith(state_->getDynamicSlot(ins->slot()));
+    } else {
+        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        ins->block()->insertBefore(ins, bailout);
+        ins->replaceAllUsesWith(undefinedVal_);
+    }
 
     // Remove original instruction.
     ins->block()->discard(ins);

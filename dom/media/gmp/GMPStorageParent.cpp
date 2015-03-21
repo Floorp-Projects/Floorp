@@ -39,7 +39,7 @@ extern PRLogModuleInfo* GetGMPLog();
 #ifdef __CLASS__
 #undef __CLASS__
 #endif
-#define __CLASS__ "GMPParent"
+#define __CLASS__ "GMPStorageParent"
 
 namespace gmp {
 

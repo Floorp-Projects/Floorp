@@ -24,7 +24,7 @@ namespace jit {
     _(SimdInsertElement)                                                    \
     _(SimdSignMask)                                                         \
     _(SimdSwizzle)                                                          \
-    _(SimdGeneralSwizzle)                                                   \
+    _(SimdGeneralShuffle)                                                   \
     _(SimdShuffle)                                                          \
     _(SimdUnaryArith)                                                       \
     _(SimdBinaryComp)                                                       \

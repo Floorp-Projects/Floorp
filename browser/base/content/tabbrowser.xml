@@ -83,6 +83,9 @@
       <field name="PlacesUtils" readonly="true">
         (Components.utils.import("resource://gre/modules/PlacesUtils.jsm", {})).PlacesUtils;
       </field>
+      <field name="AppConstants" readonly="true">
+        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
+      </field>
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
@@ -120,11 +123,7 @@
         new Map();
       </field>
       <field name="arrowKeysShouldWrap" readonly="true">
-#ifdef XP_MACOSX
-        true
-#else
-        false
-#endif
+        this.AppConstants.platform == "macosx";
       </field>
 
       <field name="_autoScrollPopup">
@@ -2722,18 +2721,19 @@
         </body>
       </method>
 
-#ifdef E10S_TESTING_ONLY
       <!-- Opens a given tab to a non-remote window. -->
       <method name="openNonRemoteWindow">
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            if (!this.AppConstants.E10S_TESTING_ONLY) {
+              throw "This method is intended only for e10s testing!";
+            }
             let url = aTab.linkedBrowser.currentURI.spec;
             return window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no,non-remote", url);
           ]]>
         </body>
       </method>
-#endif
 
       <method name="moveTabTo">
         <parameter name="aTab"/>
@@ -3094,14 +3094,14 @@
             }
           }
 
-#ifndef XP_MACOSX
-          if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
-              aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-              !this.mCurrentTab.pinned) {
-            this.removeCurrentTab({animate: true});
-            aEvent.preventDefault();
+          if (this.AppConstants.platform != "macosx") {
+            if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
+                aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
+                !this.mCurrentTab.pinned) {
+              this.removeCurrentTab({animate: true});
+              aEvent.preventDefault();
+            }
           }
-#endif
         ]]></body>
       </method>
 
@@ -3133,21 +3133,21 @@
             }
           }
 
-#ifdef XP_MACOSX
-          if (!aEvent.metaKey)
-            return;
+          if (this.AppConstants.platform == "macosx") {
+            if (!aEvent.metaKey)
+              return;
 
-          var offset = 1;
-          switch (aEvent.charCode) {
-            case '}'.charCodeAt(0):
-              offset = -1;
-            case '{'.charCodeAt(0):
-              if (window.getComputedStyle(this, null).direction == "ltr")
-                offset *= -1;
-              this.tabContainer.advanceSelectedTab(offset, true);
-              aEvent.preventDefault();
+            var offset = 1;
+            switch (aEvent.charCode) {
+              case '}'.charCodeAt(0):
+                offset = -1;
+              case '{'.charCodeAt(0):
+                if (window.getComputedStyle(this, null).direction == "ltr")
+                  offset *= -1;
+                this.tabContainer.advanceSelectedTab(offset, true);
+                aEvent.preventDefault();
+            }
           }
-#endif
         ]]></body>
       </method>
 
@@ -3755,15 +3755,16 @@
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
                           style="min-width: 1px;"
-#ifndef XP_MACOSX
-                          clicktoscroll="true"
-#endif
                           class="tabbrowser-arrowscrollbox">
-# This is a hack to circumvent bug 472020, otherwise the tabs show up on the
-# right of the newtab button.
+<!--
+ This is a hack to circumvent bug 472020, otherwise the tabs show up on the
+ right of the newtab button.
+-->
         <children includes="tab"/>
-# This is to ensure anything extensions put here will go before the newtab
-# button, necessary due to the previous hack.
+<!--
+  This is to ensure anything extensions put here will go before the newtab
+  button, necessary due to the previous hack.
+-->
         <children/>
         <xul:toolbarbutton class="tabs-newtab-button"
                            anonid="tabs-newtab-button"
@@ -4397,11 +4398,8 @@
                   sourceNode.ownerDocument.defaultView.gMultiProcessBrowser)
                 return dt.effectAllowed = "none";
 
-#ifdef XP_MACOSX
-              return dt.effectAllowed = event.altKey ? "copy" : "move";
-#else
-              return dt.effectAllowed = event.ctrlKey ? "copy" : "move";
-#endif
+              let copyModifier = this.AppConstants.platform == "macosx" ? event.altKey : event.ctrlKey;
+              return dt.effectAllowed = copyModifier ? "copy" : "move";
             }
           }
 
@@ -4556,13 +4554,13 @@
       ]]></handler>
 
       <handler event="dblclick"><![CDATA[
-#ifndef XP_MACOSX
-        // When the tabbar has an unified appearance with the titlebar
-        // and menubar, a double-click in it should have the same behavior
-        // as double-clicking the titlebar
-        if (TabsInTitlebar.enabled || this.parentNode._dragBindingAlive)
-          return;
-#endif
+        if (gBrowser.AppConstants.platform != "macosx") {
+          // When the tabbar has an unified appearance with the titlebar
+          // and menubar, a double-click in it should have the same behavior
+          // as double-clicking the titlebar
+          if (TabsInTitlebar.enabled || this.parentNode._dragBindingAlive)
+            return;
+        }
 
         if (event.button != 0 ||
             event.originalTarget.localName != "box")
@@ -4646,12 +4644,17 @@
       ]]></handler>
 
       <handler event="keydown" group="system"><![CDATA[
-        if (event.altKey || event.shiftKey ||
-#ifdef XP_MACOSX
-            !event.metaKey)
-#else
-            !event.ctrlKey || event.metaKey)
-#endif
+        if (event.altKey || event.shiftKey)
+          return;
+
+        let wrongModifiers;
+        if (this.tabbrowser.AppConstants.platform == "macosx") {
+          wrongModifiers = !event.metaKey;
+        } else {
+          wrongModifiers = !event.ctrlKey || event.metaKey;
+        }
+
+        if (wrongModifiers)
           return;
 
         // Don't check if the event was already consumed because tab navigation
@@ -4978,13 +4981,12 @@
           window.moveTo(left, top);
           window.focus();
         } else {
-          this.tabbrowser.replaceTabWithWindow(draggedTab, { screenX: left,
-                                                             screenY: top,
-#ifndef XP_WIN
-                                                             outerWidth: winWidth,
-                                                             outerHeight: winHeight
-#endif
-                                                             });
+          let props = { screenX: left, screenY: top };
+          if (this.tabbrowser.AppConstants.platform != "win") {
+            props.outerWidth = winWidth;
+            props.outerHeight = winHeight;
+          }
+          this.tabbrowser.replaceTabWithWindow(draggedTab, props);
         }
         event.stopPropagation();
       ]]></handler>

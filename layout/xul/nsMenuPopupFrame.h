@@ -152,7 +152,8 @@ private:
   nsRefPtr<nsPresContext> mPresContext;
 };
 
-class nsMenuPopupFrame MOZ_FINAL : public nsBoxFrame, public nsMenuParent
+class nsMenuPopupFrame MOZ_FINAL : public nsBoxFrame, public nsMenuParent,
+                                   public nsIReflowCallback
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsMenuPopupFrame)
@@ -399,6 +400,10 @@ public:
     return false;
   }
 
+  // nsIReflowCallback
+  virtual bool ReflowFinished() MOZ_OVERRIDE;
+  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE;
+
 protected:
 
   // returns the popup's level.
@@ -525,6 +530,28 @@ protected:
   // One of PopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
   uint8_t mConsumeRollupEvent;
   FlipType mFlip; // Whether to flip
+
+  struct ReflowCallbackData {
+    ReflowCallbackData() :
+      mPosted(false),
+      mAnchor(nullptr),
+      mSizedToPopup(false)
+    {}
+    void MarkPosted(nsIFrame* aAnchor, bool aSizedToPopup) {
+      mPosted = true;
+      mAnchor = aAnchor;
+      mSizedToPopup = aSizedToPopup;
+    }
+    void Clear() {
+      mPosted = false;
+      mAnchor = nullptr;
+      mSizedToPopup = false;
+    }
+    bool mPosted;
+    nsIFrame* mAnchor;
+    bool mSizedToPopup;
+  };
+  ReflowCallbackData mReflowCallbackData;
 
   bool mIsOpenChanged; // true if the open state changed since the last layout
   bool mIsContextMenu; // true for context menus

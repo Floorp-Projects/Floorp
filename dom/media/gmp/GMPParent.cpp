@@ -34,24 +34,17 @@ using CrashReporter::GetIDFromMinidump;
 
 namespace mozilla {
 
-#ifdef LOG
 #undef LOG
-#endif
+#undef LOGD
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetGMPLog();
-
-#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
-#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#define LOG(level, x, ...) PR_LOG(GetGMPLog(), (level), (x, ##__VA_ARGS__))
+#define LOGD(x, ...) LOG(PR_LOG_DEBUG, "GMPParent[%p|childPid=%d] " x, this, mChildPid, ##__VA_ARGS__)
 #else
-#define LOGD(msg)
-#define LOG(level, msg)
+#define LOG(level, x, ...)
+#define LOGD(x, ...)
 #endif
-
-#ifdef __CLASS__
-#undef __CLASS__
-#endif
-#define __CLASS__ "GMPParent"
 
 namespace gmp {
 
@@ -62,13 +55,18 @@ GMPParent::GMPParent()
   , mAbnormalShutdownInProgress(false)
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
+#ifdef PR_LOGGING
+  , mChildPid(0)
+#endif
 {
+  LOGD("GMPParent ctor");
 }
 
 GMPParent::~GMPParent()
 {
   // Can't Close or Destroy the process here, since destruction is MainThread only
   MOZ_ASSERT(NS_IsMainThread());
+  LOGD("GMPParent dtor");
 }
 
 void
@@ -107,8 +105,7 @@ GMPParent::Init(GeckoMediaPluginService *aService, nsIFile* aPluginDir)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this,
-       NS_LossyConvertUTF16toASCII(parentLeafName).get()));
+  LOGD("%s: for %s", __FUNCTION__, NS_LossyConvertUTF16toASCII(parentLeafName).get());
 
   MOZ_ASSERT(parentLeafName.Length() > 4);
   mName = Substring(parentLeafName, 4);
@@ -135,7 +132,7 @@ GMPParent::LoadProcess()
   if (NS_FAILED(mDirectory->GetPath(path))) {
     return NS_ERROR_FAILURE;
   }
-  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, path.get()));
+  LOGD("%s: for %s", __FUNCTION__, NS_ConvertUTF16toUTF8(path).get());
 
   if (!mProcess) {
     mProcess = new GMPProcessParent(NS_ConvertUTF16toUTF8(path).get());
@@ -145,32 +142,36 @@ GMPParent::LoadProcess()
       return NS_ERROR_FAILURE;
     }
 
+#ifdef PR_LOGGING
+    mChildPid = base::GetProcId(mProcess->GetChildProcessHandle());
+#endif
+
     bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
     if (!opened) {
-      LOGD(("%s::%s: Failed to create new child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+      LOGD("%s: Failed to create new child process", __FUNCTION__);
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Created new child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD("%s: Created new child process", __FUNCTION__);
 
     bool ok = SendSetNodeId(mNodeId);
     if (!ok) {
-      LOGD(("%s::%s: Failed to send node id to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+      LOGD("%s: Failed to send node id to child process", __FUNCTION__);
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Sent node id to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD("%s: Sent node id to child process", __FUNCTION__);
 
     ok = SendStartPlugin();
     if (!ok) {
-      LOGD(("%s::%s: Failed to send start to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+      LOGD("%s: Failed to send start to child process", __FUNCTION__);
       mProcess->Delete();
       mProcess = nullptr;
       return NS_ERROR_FAILURE;
     }
-    LOGD(("%s::%s: Sent StartPlugin to child process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+    LOGD("%s: Sent StartPlugin to child process", __FUNCTION__);
   }
 
   mState = GMPStateLoaded;
@@ -225,8 +226,7 @@ void
 GMPParent::CloseIfUnused()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-  LOGD(("%s::%s: %p mAsyncShutdownRequired=%d", __CLASS__, __FUNCTION__, this,
-        mAsyncShutdownRequired));
+  LOGD("%s: mAsyncShutdownRequired=%d", __FUNCTION__, mAsyncShutdownRequired);
 
   if ((mDeleteProcessOnlyOnUnload ||
        mState == GMPStateLoaded ||
@@ -243,8 +243,7 @@ GMPParent::CloseIfUnused()
 
     if (mAsyncShutdownRequired) {
       if (!mAsyncShutdownInProgress) {
-        LOGD(("%s::%s: %p sending async shutdown notification", __CLASS__,
-              __FUNCTION__, this));
+        LOGD("%s: sending async shutdown notification", __FUNCTION__);
         mAsyncShutdownInProgress = true;
         if (!SendBeginAsyncShutdown() ||
             NS_FAILED(EnsureAsyncShutdownTimeoutSet())) {
@@ -265,7 +264,7 @@ void
 GMPParent::AbortAsyncShutdown()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD("%s", __FUNCTION__);
 
   if (mAsyncShutdownTimeout) {
     mAsyncShutdownTimeout->Cancel();
@@ -299,7 +298,7 @@ GMPParent::AudioDecoderDestroyed(GMPAudioDecoderParent* aDecoder)
 void
 GMPParent::CloseActive(bool aDieWhenUnloaded)
 {
-  LOGD(("%s::%s: %p state %d", __CLASS__, __FUNCTION__, this, mState));
+  LOGD("%s: state %d", __FUNCTION__, mState);
   if (aDieWhenUnloaded) {
     mDeleteProcessOnlyOnUnload = true; // don't allow this to go back...
   }
@@ -339,7 +338,7 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
 void
 GMPParent::Shutdown()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD("%s", __FUNCTION__);
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   MOZ_ASSERT(!mAsyncShutdownTimeout, "Should have canceled shutdown timeout");
@@ -384,7 +383,7 @@ public:
 void
 GMPParent::DeleteProcess()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD("%s", __FUNCTION__);
 
   if (mState != GMPStateClosing) {
     // Don't Close() twice!
@@ -393,7 +392,7 @@ GMPParent::DeleteProcess()
     Close();
   }
   mProcess->Delete();
-  LOGD(("%s::%s: Shut down process %p", __CLASS__, __FUNCTION__, (void *) mProcess));
+  LOGD("%s: Shut down process", __FUNCTION__);
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
 
@@ -654,7 +653,7 @@ GMPNotifyObservers(nsAString& aData)
 void
 GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  LOGD(("%s::%s: %p (%d)", __CLASS__, __FUNCTION__, this, (int) aWhy));
+  LOGD("%s: (%d)", __FUNCTION__, (int)aWhy);
 #ifdef MOZ_CRASHREPORTER
   if (AbnormalShutdown == aWhy) {
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
@@ -1003,6 +1002,12 @@ GMPParent::SetNodeId(const nsACString& aNodeId)
 }
 
 const nsCString&
+GMPParent::GetDisplayName() const
+{
+  return mDisplayName;
+}
+
+const nsCString&
 GMPParent::GetVersion() const
 {
   return mVersion;
@@ -1011,7 +1016,7 @@ GMPParent::GetVersion() const
 bool
 GMPParent::RecvAsyncShutdownRequired()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD("%s", __FUNCTION__);
   if (mAsyncShutdownRequired) {
     NS_WARNING("Received AsyncShutdownRequired message more than once!");
     return true;
@@ -1024,7 +1029,7 @@ GMPParent::RecvAsyncShutdownRequired()
 bool
 GMPParent::RecvAsyncShutdownComplete()
 {
-  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  LOGD("%s", __FUNCTION__);
 
   MOZ_ASSERT(mAsyncShutdownRequired);
   AbortAsyncShutdown();
@@ -1033,3 +1038,6 @@ GMPParent::RecvAsyncShutdownComplete()
 
 } // namespace gmp
 } // namespace mozilla
+
+#undef LOG
+#undef LOGD

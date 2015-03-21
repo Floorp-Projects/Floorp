@@ -2124,9 +2124,6 @@ nsCocoaWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
       }
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
-      // When we're going to be deactive, we must disable the secure event input
-      // mode, see the Carbon Event Manager Reference.
-      TextInputHandler::EnsureSecureEventInputDisabled();
       return NS_OK;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -2400,6 +2397,8 @@ nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:[NSApp mainWindow]];
+
+  TextInputHandler::EnsureSecureEventInputDisabled();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

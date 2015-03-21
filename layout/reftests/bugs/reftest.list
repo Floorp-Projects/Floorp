@@ -152,8 +152,8 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 179596-2.html 179596-2-ref.html
 == 179596-2.html 179596-2-ref2.html
 == 179596-2.html 179596-2-ref3.html
-== 180085-1.html 180085-1-ref.html
-== 180085-2.html 180085-2-ref.html
+!= 180085-1.html 180085-1-ref.html # fix for 180085 reverted in bug 1010675
+!= 180085-2.html 180085-2-ref.html # fix for 180085 reverted in bug 1010675
 == 185388-1.html 185388-1-ref.html
 == 186317-1.html 186317-1-ref.html
 == 192902-1.html 192902-ref.html
@@ -527,8 +527,8 @@ random-if(cocoaWidget) == 350506-1.html 350506-1-ref.html
 == 356774-1.html 356774-1-ref.html
 == 356775-1.html 356775-1-ref.html
 == 359869-1.html 359869-1-ref.html
-skip-if(B2G||Mulet) == 359903-1.html 359903-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== 359903-2.html 359903-2-ref.html
+fails-if(OSX) != 359903-1.html 359903-1-ref.html # erosion of padding removed in bug 1010675 # failure is bug 1145589
+!= 359903-2.html 359903-2-ref.html # erosion of padding removed in bug 1010675
 == 360065-1.html 360065-1-ref.html
 == 360746-1.html 360746-1-ref.html
 == 360757-1a.html 360757-1-ref.html
@@ -1868,5 +1868,6 @@ skip-if(Mulet) == 1120431-2.html 1120431-2-ref.html # TC: Bug 1144079 - Re-enabl
 == 1127107-1b-pre.html 1127107-1-ref.html
 == 1127107-2-capitalize.html 1127107-2-capitalize-ref.html
 == 1127679-1a-inline-flex-relpos.html 1127679-1b-inline-flex-relpos.html
+== 1128354-1.html 1128354-1-ref.html
 == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl-ref.html
 == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl-ref.html

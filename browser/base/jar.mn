@@ -141,7 +141,7 @@ browser.jar:
         content/browser/searchSuggestionUI.js         (content/searchSuggestionUI.js)
         content/browser/searchSuggestionUI.css        (content/searchSuggestionUI.css)
         content/browser/tabbrowser.css                (content/tabbrowser.css)
-*       content/browser/tabbrowser.xml                (content/tabbrowser.xml)
+        content/browser/tabbrowser.xml                (content/tabbrowser.xml)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/web-panels.js                 (content/web-panels.js)

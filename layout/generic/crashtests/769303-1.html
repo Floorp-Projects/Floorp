@@ -1,3 +1,4 @@
+<html class="reftest-wait">
 <style>
 p::first-letter {
     float: left;
@@ -21,8 +22,12 @@ setTimeout("CFcrash()", 21);
 document.addEventListener("DOMContentLoaded", initCF, false);
 window.onload = initCF;
 
+var gCallCount = 0;
 function CFcrash() {
 test3.appendChild(document.createTextNode(" bBCV5.3kvwoaU O8k l i!4c`Ei;N-#/ Qg QBZi$8A [8xlL#cN U4l  !%lP   S% Z9[H } {2Jk A00F8 TjQQ1KHx zf   k]F-G ,%lz8?@ 2ZB!-"));
 window.scrollBy(-463, -480);
+if (++gCallCount == 2) {
+  document.documentElement.classList.remove("reftest-wait");
+}
 }
 </script>

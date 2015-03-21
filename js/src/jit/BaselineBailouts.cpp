@@ -1623,6 +1623,28 @@ HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerS
 }
 
 static bool
+HandleLexicalCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+{
+    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%d, inlined into %s:%d",
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
+
+    MOZ_ASSERT(!outerScript->ionScript()->invalidated());
+
+    if (!innerScript->failedLexicalCheck())
+        innerScript->setFailedLexicalCheck();
+
+    JitSpew(JitSpew_BaselineBailouts, "Invalidating due to lexical check failure");
+    if (!Invalidate(cx, outerScript))
+        return false;
+
+    if (innerScript->hasIonScript() && !Invalidate(cx, innerScript))
+        return false;
+
+    return true;
+}
+
+static bool
 CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size_t inlineDepth,
                             BaselineFrame *frame)
 {
@@ -1831,6 +1853,10 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         break;
       case Bailout_ShapeGuard:
         if (!HandleShapeGuardFailure(cx, outerScript, innerScript))
+            return false;
+        break;
+      case Bailout_UninitializedLexical:
+        if (!HandleLexicalCheckFailure(cx, outerScript, innerScript))
             return false;
         break;
       case Bailout_IonExceptionDebugMode:

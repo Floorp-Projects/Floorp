@@ -330,7 +330,7 @@ class SimdSelectPolicy MOZ_FINAL : public TypePolicy
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE;
 };
 
-class SimdSwizzlePolicy MOZ_FINAL : public TypePolicy
+class SimdShufflePolicy MOZ_FINAL : public TypePolicy
 {
   public:
     SPECIALIZATION_DATA_;

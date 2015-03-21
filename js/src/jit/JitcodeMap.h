@@ -356,7 +356,7 @@ class JitcodeGlobalEntry
             return optsAllTypes_;
         }
 
-        mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *ptr);
+        mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *ptr, uint32_t *entryOffsetOut);
 
         bool markIfUnmarked(JSTracer *trc);
         void sweep();
@@ -785,10 +785,10 @@ class JitcodeGlobalEntry
         return false;
     }
 
-    mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *addr) {
+    mozilla::Maybe<uint8_t> trackedOptimizationIndexAtAddr(void *addr, uint32_t *entryOffsetOut) {
         switch (kind()) {
           case Ion:
-            return ionEntry().trackedOptimizationIndexAtAddr(addr);
+            return ionEntry().trackedOptimizationIndexAtAddr(addr, entryOffsetOut);
           case Baseline:
           case IonCache:
           case Dummy:

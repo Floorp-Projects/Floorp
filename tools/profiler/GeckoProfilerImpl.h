@@ -167,16 +167,6 @@ const char** profiler_get_features()
 }
 
 static inline
-void profiler_print_location()
-{
-  if (!sps_version2()) {
-    return mozilla_sampler_print_location1();
-  } else {
-    return mozilla_sampler_print_location2();
-  }
-}
-
-static inline
 void profiler_lock()
 {
   return mozilla_sampler_lock();

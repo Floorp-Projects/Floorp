@@ -104,6 +104,21 @@ function waitForDebuggerClose(dbg) {
   });
 }
 
+function waitForDebuggerMessage(dbg, message) {
+  return new Promise(function (resolve) {
+    dbg.addListener({
+      onMessage: function (message1) {
+        if (message !== message1) {
+          return;
+        }
+        info(true, "Should receive " + message + " message from debugger.");
+        dbg.removeListener(this);
+        resolve();
+      }
+    });
+  });
+}
+
 function waitForWorkerMessage(worker, message) {
   return new Promise(function (resolve) {
     worker.addEventListener("message", function onmessage(event) {

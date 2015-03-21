@@ -147,6 +147,9 @@ enum BailoutKind
     // by the baseline IC.)
     Bailout_ShapeGuard,
 
+    // When we're trying to use an uninitialized lexical.
+    Bailout_UninitializedLexical,
+
     // A bailout to baseline from Ion on exception to handle Debugger hooks.
     Bailout_IonExceptionDebugMode,
 };
@@ -224,6 +227,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_Neutered";
       case Bailout_ShapeGuard:
         return "Bailout_ShapeGuard";
+      case Bailout_UninitializedLexical:
+        return "Bailout_UninitializedLexical";
       case Bailout_IonExceptionDebugMode:
         return "Bailout_IonExceptionDebugMode";
       default:
