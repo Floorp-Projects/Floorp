@@ -158,7 +158,7 @@ struct BytecodeEmitter
 
     uint32_t        arrayCompDepth; /* stack depth of array in comprehension */
 
-    unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
+    unsigned        emitLevel;      /* emitTree recursion level */
 
     CGConstList     constList;      /* constants to be included with the script */
 
@@ -269,9 +269,26 @@ struct BytecodeEmitter
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
 
+    bool setSrcNoteOffset(unsigned index, unsigned which, ptrdiff_t offset);
+
+    void setJumpOffsetAt(ptrdiff_t off);
+
+    // Emit code for the tree rooted at pn.
+    bool emitTree(ParseNode *pn);
+
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.
     void checkTypeSet(JSOp op);
+
+    void updateDepth(ptrdiff_t target);
+    bool updateLineNumberNotes(uint32_t offset);
+    bool updateSourceCoordNotes(uint32_t offset);
+
+    bool bindNameToSlot(ParseNode *pn);
+
+    void popStatement();
+    void pushStatement(StmtInfoBCE *stmt, StmtType type, ptrdiff_t top);
+    void pushStatementInner(StmtInfoBCE *stmt, StmtType type, ptrdiff_t top);
 
     bool flushPops(int *npops);
 
@@ -469,12 +486,6 @@ struct BytecodeEmitter
 
     bool emitClass(ParseNode *pn);
 };
-
-/*
- * Emit code into bce for the tree rooted at pn.
- */
-bool
-EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn);
 
 /*
  * Emit function code using bce for the tree rooted at body.
