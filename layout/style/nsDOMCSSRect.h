@@ -16,8 +16,8 @@
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRect : public nsIDOMRect,
-                     public nsWrapperCache
+class nsDOMCSSRect final : public nsIDOMRect,
+                           public nsWrapperCache
 {
 public:
   nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,

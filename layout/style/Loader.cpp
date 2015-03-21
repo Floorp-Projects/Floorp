@@ -102,9 +102,9 @@ namespace css {
  * Data needed to properly load a stylesheet *
  *********************************************/
 
-class SheetLoadData : public nsIRunnable,
-                      public nsIUnicharStreamLoaderObserver,
-                      public nsIThreadObserver
+class SheetLoadData final : public nsIRunnable,
+                            public nsIUnicharStreamLoaderObserver,
+                            public nsIThreadObserver
 {
 protected:
   virtual ~SheetLoadData(void);
