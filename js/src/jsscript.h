@@ -67,6 +67,7 @@ enum JSTryNoteKind {
     JSTRY_CATCH,
     JSTRY_FINALLY,
     JSTRY_ITER,
+    JSTRY_FOR_OF,
     JSTRY_LOOP
 };
 
