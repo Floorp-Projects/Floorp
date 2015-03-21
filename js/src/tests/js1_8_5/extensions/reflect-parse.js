@@ -252,9 +252,9 @@ assertDecl("function foo(...rest) { }",
            funDecl(ident("foo"), [], blockStmt([]), [], ident("rest")));
 
 assertDecl("function foo(a=4) { }", funDecl(ident("foo"), [ident("a")], blockStmt([]), [lit(4)]));
-assertDecl("function foo(a, b=4) { }", funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)]));
+assertDecl("function foo(a, b=4) { }", funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [null, lit(4)]));
 assertDecl("function foo(a, b=4, ...rest) { }",
-           funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)], ident("rest")));
+           funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [null, lit(4), null], ident("rest")));
 assertDecl("function foo(a=(function () {})) { function a() {} }",
            funDecl(ident("foo"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))]),
                    [funExpr(null, [], blockStmt([]))]));
