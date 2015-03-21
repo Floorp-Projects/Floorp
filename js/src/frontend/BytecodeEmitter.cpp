@@ -2335,7 +2335,7 @@ EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callC
 
     /* Need to provide |this| value for call */
     if (callContext) {
-        if (op == JSOP_GETNAME) {
+        if (op == JSOP_GETNAME || op == JSOP_GETGNAME) {
             JSOp thisOp =
                 bce->needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
             if (!EmitAtomOp(cx, pn, thisOp, bce))
