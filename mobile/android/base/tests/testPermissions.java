@@ -22,7 +22,7 @@ public class testPermissions extends PixelTest {
         Actions.RepeatedEventExpecter paintExpecter;
 
         // Test geolocation notification
-        loadAndPaint(getAbsoluteUrl(mStringHelper.ROBOCOP_GEOLOCATION_URL));
+        loadAndPaint(getAbsoluteUrl(StringHelper.ROBOCOP_GEOLOCATION_URL));
         waitForText("wants your location");
 
         // Uncheck the "Don't ask again for this site" checkbox

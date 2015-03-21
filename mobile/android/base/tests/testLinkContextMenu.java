@@ -4,20 +4,20 @@
 
 package org.mozilla.gecko.tests;
 
+
 public class testLinkContextMenu extends ContentContextMenuTest {
 
     // Test website strings
     private static String LINK_PAGE_URL;
     private static String BLANK_PAGE_URL;
     private static final String LINK_PAGE_TITLE = "Big Link";
+    private static final String linkMenuItems [] = StringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB;
 
     public void testLinkContextMenu() {
-        final String linkMenuItems [] = mStringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB;
-
         blockForGeckoReady();
 
-        LINK_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_BIG_LINK_URL);
-        BLANK_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        LINK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BIG_LINK_URL);
+        BLANK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         inputAndLoadUrl(LINK_PAGE_URL);
         waitForText(LINK_PAGE_TITLE);
 
