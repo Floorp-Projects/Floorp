@@ -9563,6 +9563,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
+  MOZ_RELEASE_ASSERT(!mBlockNavigation);
+
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
 
