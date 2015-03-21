@@ -119,28 +119,29 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  Handle<StaticEvalObject *> staticEvalScope,
                                  bool hasGlobalScope, uint32_t lineNum, EmitterMode emitterMode)
   : sc(sc),
+    cx(sc->context),
     parent(parent),
-    script(sc->context, script),
-    lazyScript(sc->context, lazyScript),
-    prolog(sc->context, lineNum),
-    main(sc->context, lineNum),
+    script(cx, script),
+    lazyScript(cx, lazyScript),
+    prolog(cx, lineNum),
+    main(cx, lineNum),
     current(&main),
     parser(parser),
     evalCaller(evalCaller),
     evalStaticScope(staticEvalScope),
     topStmt(nullptr),
     topScopeStmt(nullptr),
-    staticScope(sc->context),
-    atomIndices(sc->context),
+    staticScope(cx),
+    atomIndices(cx),
     firstLine(lineNum),
-    localsToFrameSlots_(sc->context),
+    localsToFrameSlots_(cx),
     stackDepth(0), maxStackDepth(0),
     arrayCompDepth(0),
     emitLevel(0),
-    constList(sc->context),
-    tryNoteList(sc->context),
-    blockScopeList(sc->context),
-    yieldOffsetList(sc->context),
+    constList(cx),
+    tryNoteList(cx),
+    blockScopeList(cx),
+    yieldOffsetList(cx),
     typesetCount(0),
     hasSingletons(false),
     hasTryFinally(false),
@@ -159,7 +160,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
 bool
 BytecodeEmitter::init()
 {
-    return atomIndices.ensureMap(sc->context);
+    return atomIndices.ensureMap(cx);
 }
 
 bool
@@ -259,13 +260,13 @@ bool
 BytecodeEmitter::emit1(JSOp op)
 {
     MOZ_ASSERT(CheckStrictOrSloppy(this, op));
-    ptrdiff_t offset = EmitCheck(sc->context, this, 1);
+    ptrdiff_t offset = EmitCheck(cx, this, 1);
     if (offset < 0)
         return false;
 
     jsbytecode *code = this->code(offset);
     code[0] = jsbytecode(op);
-    UpdateDepth(sc->context, this, offset);
+    UpdateDepth(cx, this, offset);
     return true;
 }
 
@@ -1595,8 +1596,8 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
         }
         if (bce->script->directlyInsideEval())
             return false;
-        RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
-        for (StaticScopeIter<CanGC> ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
+        RootedObject outerScope(bce->cx, bce->script->enclosingStaticScope());
+        for (StaticScopeIter<CanGC> ssi(bce->cx, outerScope); !ssi.done(); ssi++) {
             if (ssi.type() != StaticScopeIter<CanGC>::Function) {
                 if (ssi.type() == StaticScopeIter<CanGC>::Block) {
                     // Use generic ops if a catch block is encountered.
@@ -1606,7 +1607,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
                     hops++;
                 continue;
             }
-            RootedScript script(bce->sc->context, ssi.funScript());
+            RootedScript script(bce->cx, ssi.funScript());
             if (script->functionNonDelazifying()->atom() == pn->pn_atom)
                 return false;
             if (ssi.hasDynamicScopeObject()) {
