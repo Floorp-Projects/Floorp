@@ -62,7 +62,7 @@ this.SQLiteStore.prototype = {
    */
   forEachItem: Task.async(function* (callback, ...optsList) {
     let [sql, args] = sqlFromOptions(optsList);
-    let colNames = ReadingList.ItemBasicPropertyNames;
+    let colNames = ReadingList.ItemRecordProperties;
     let conn = yield this._connectionPromise;
     yield conn.executeCached(`
       SELECT ${colNames} FROM items ${sql};
@@ -71,7 +71,7 @@ this.SQLiteStore.prototype = {
 
   /**
    * Adds an item to the store that isn't already present.  See
-   * ReadingList.prototype.addItems.
+   * ReadingList.prototype.addItem.
    *
    * @param items A simple object representing an item.
    * @return Promise<null> Resolved when the store is updated.  Rejected with an
@@ -219,14 +219,14 @@ this.SQLiteStore.prototype = {
 
 /**
  * Returns a simple object whose properties are the
- * ReadingList.ItemBasicPropertyNames properties lifted from the given row.
+ * ReadingList.ItemRecordProperties lifted from the given row.
  *
  * @param row A mozIStorageRow.
  * @return The item.
  */
 function itemFromRow(row) {
   let item = {};
-  for (let name of ReadingList.ItemBasicPropertyNames) {
+  for (let name of ReadingList.ItemRecordProperties) {
     item[name] = row.getResultByName(name);
   }
   return item;

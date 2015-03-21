@@ -40,21 +40,21 @@ function runTests() {
   yield addNewTabPageTab();
   yield customizeNewTabPage("classic");
   let {type, enhanced, title} = getData(0);
-  is(type, "organic", "directory link is organic");
-  isnot(enhanced, "", "directory link has enhanced image");
-  is(title, "title");
+  isnot(type, "enhanced", "history link is not enhanced");
+  is(enhanced, "", "history link has no enhanced image");
+  is(title, "site#-1");
 
-  is(getData(1), null, "history link pushed out by directory link");
+  is(getData(1), null, "there is only one link and it's a history link");
 
   // Test with enhanced = true
   yield addNewTabPageTab();
   yield customizeNewTabPage("enhanced");
   ({type, enhanced, title} = getData(0));
-  is(type, "organic", "directory link is still organic");
-  isnot(enhanced, "", "directory link still has enhanced image");
+  is(type, "organic", "directory link is organic");
+  isnot(enhanced, "", "directory link has enhanced image");
   is(title, "title");
 
-  is(getData(1), null, "history link still pushed out by directory link");
+  is(getData(1), null, "history link pushed out by directory link");
 
   // Test with a pinned link
   setPinnedLinks("-1");
