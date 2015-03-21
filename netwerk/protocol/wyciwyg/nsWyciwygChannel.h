@@ -29,10 +29,10 @@ extern PRLogModuleInfo * gWyciwygLog;
 
 //-----------------------------------------------------------------------------
 
-class nsWyciwygChannel: public nsIWyciwygChannel,
-                        public nsIStreamListener,
-                        public nsICacheEntryOpenCallback,
-                        public mozilla::net::PrivateBrowsingChannel<nsWyciwygChannel>
+class nsWyciwygChannel final: public nsIWyciwygChannel,
+                              public nsIStreamListener,
+                              public nsICacheEntryOpenCallback,
+                              public mozilla::net::PrivateBrowsingChannel<nsWyciwygChannel>
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

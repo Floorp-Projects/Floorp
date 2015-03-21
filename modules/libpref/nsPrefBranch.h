@@ -175,9 +175,9 @@ class PrefCallback : public PLDHashEntryHdr {
     }
 };
 
-class nsPrefBranch : public nsIPrefBranchInternal,
-                     public nsIObserver,
-                     public nsSupportsWeakReference
+class nsPrefBranch final : public nsIPrefBranchInternal,
+                           public nsIObserver,
+                           public nsSupportsWeakReference
 {
   friend class mozilla::PreferenceServiceReporter;
 public:
@@ -228,8 +228,8 @@ private:
 };
 
 
-class nsPrefLocalizedString : public nsIPrefLocalizedString,
-                              public nsISupportsString
+class nsPrefLocalizedString final : public nsIPrefLocalizedString,
+                                    public nsISupportsString
 {
 public:
   nsPrefLocalizedString();

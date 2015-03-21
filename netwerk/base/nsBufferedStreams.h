@@ -88,10 +88,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferedOutputStream : public nsBufferedStream, 
-                               public nsISafeOutputStream,
-                               public nsIBufferedOutputStream,
-                               public nsIStreamBufferAccess
+class nsBufferedOutputStream final : public nsBufferedStream,
+                                     public nsISafeOutputStream,
+                                     public nsIBufferedOutputStream,
+                                     public nsIStreamBufferAccess
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

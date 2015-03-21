@@ -27,7 +27,7 @@ class DnsData;
 class WebSocketRequest;
 class ConnectionData;
 
-class Dashboard
+class Dashboard final
     : public nsIDashboard
     , public nsIDashboardEventNotifier
 {

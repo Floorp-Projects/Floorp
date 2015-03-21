@@ -17,8 +17,8 @@ namespace net {
 class ChannelEvent;
 class ChannelEventQueue;
 
-class WebSocketChannelChild : public BaseWebSocketChannel,
-                              public PWebSocketChild
+class WebSocketChannelChild final : public BaseWebSocketChannel,
+                                    public PWebSocketChild
 {
  public:
   explicit WebSocketChannelChild(bool aSecure);

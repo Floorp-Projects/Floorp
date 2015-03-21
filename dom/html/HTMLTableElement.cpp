@@ -23,8 +23,8 @@ namespace dom {
  * This class provides a late-bound collection of rows in a table.
  * mParent is NOT ref-counted to avoid circular references
  */
-class TableRowsCollection : public nsIHTMLCollection,
-                            public nsWrapperCache
+class TableRowsCollection final : public nsIHTMLCollection,
+                                  public nsWrapperCache
 {
 public:
   explicit TableRowsCollection(HTMLTableElement* aParent);
