@@ -155,8 +155,7 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
 static void
 MarkFunctionsWithinEvalScript(JSScript *script)
 {
-    // Mark top level functions in an eval script as being within an eval and,
-    // if applicable, inside a with statement.
+    // Mark top level functions in an eval script as being within an eval.
 
     if (!script->hasObjects())
         return;
@@ -292,17 +291,14 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!script)
         return nullptr;
 
-    // We can specialize a bit for the given scope chain if that scope chain is the global object.
-    JSObject *globalScope =
-        scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : nullptr;
-    MOZ_ASSERT_IF(globalScope, globalScope->isNative());
-    MOZ_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
-
+    bool insideNonGlobalEval =
+        evalStaticScope && evalStaticScope->enclosingScopeForStaticScopeIter();
     BytecodeEmitter::EmitterMode emitterMode =
         options.selfHostingMode ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc, script,
                         /* lazyScript = */ js::NullPtr(), options.forEval,
-                        evalCaller, evalStaticScope, !!globalScope, options.lineno, emitterMode);
+                        evalCaller, evalStaticScope, insideNonGlobalEval,
+                        options.lineno, emitterMode);
     if (!bce.init())
         return nullptr;
 
@@ -516,10 +512,17 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
     if (lazy->hasBeenCloned())
         script->setHasBeenCloned();
 
+    /*
+     * We just pass false for insideNonGlobalEval and insideEval, because we
+     * don't actually know whether we are or not.  The only consumer of those
+     * booleans is TryConvertFreeName, and it has special machinery to avoid
+     * doing bad things when a lazy function is inside eval.
+     */
+    MOZ_ASSERT(!options.forEval);
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
-                        options.forEval, /* evalCaller = */ js::NullPtr(),
+                        /* insideEval = */ false, /* evalCaller = */ js::NullPtr(),
                         /* evalStaticScope = */ js::NullPtr(),
-                        /* hasGlobalScope = */ true, options.lineno,
+                        /* insideNonGlobalEval = */ false, options.lineno,
                         BytecodeEmitter::LazyFunction);
     if (!bce.init())
         return false;
@@ -532,7 +535,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 static bool
 CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyCompileOptions &options,
                     const AutoNameVector &formals, SourceBufferHolder &srcBuf,
-                    HandleObject enclosingScope, GeneratorKind generatorKind)
+                    HandleObject enclosingStaticScope, GeneratorKind generatorKind)
 {
     js::TraceLoggerThread *logger = js::TraceLoggerForMainThread(cx->runtime());
     js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
@@ -633,7 +636,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
+        Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingStaticScope, false, options,
                                                       /* staticLevel = */ 0, sourceObject,
                                                       /* sourceStart = */ 0, srcBuf.length()));
         if (!script)
@@ -641,19 +644,11 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
 
         script->bindings = fn->pn_funbox->bindings;
 
-        /*
-         * The reason for checking fun->environment() below is that certain
-         * consumers of JS::CompileFunction, namely
-         * EventListenerManager::CompileEventHandlerInternal, passes in a
-         * nullptr environment. This compiled function is never used, but
-         * instead is cloned immediately onto the right scope chain.
-         */
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
                                /* lazyScript = */ js::NullPtr(), /* insideEval = */ false,
                                /* evalCaller = */ js::NullPtr(),
                                /* evalStaticScope = */ js::NullPtr(),
-                               fun->environment() && fun->environment()->is<GlobalObject>(),
-                               options.lineno);
+                               /* insideNonGlobalEval = */ false, options.lineno);
         if (!funbce.init())
             return false;
 
