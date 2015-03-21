@@ -117,7 +117,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  HandleScript script, Handle<LazyScript *> lazyScript,
                                  bool insideEval, HandleScript evalCaller,
                                  Handle<StaticEvalObject *> staticEvalScope,
-                                 bool hasGlobalScope, uint32_t lineNum, EmitterMode emitterMode)
+                                 bool insideNonGlobalEval, uint32_t lineNum,
+                                 EmitterMode emitterMode)
   : sc(sc),
     parent(parent),
     script(sc->context, script),
@@ -147,7 +148,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     emittingForInit(false),
     emittingRunOnceLambda(false),
     insideEval(insideEval),
-    hasGlobalScope(hasGlobalScope),
+    insideNonGlobalEval(insideNonGlobalEval),
     emitterMode(emitterMode)
 {
     MOZ_ASSERT_IF(evalCaller, insideEval);
@@ -1634,8 +1635,13 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
     }
 
     // Unbound names aren't recognizable global-property references if the
-    // script isn't running against its global object.
-    if (!bce->script->compileAndGo() || !bce->hasGlobalScope)
+    // script is inside a non-global eval call.
+    if (bce->insideNonGlobalEval)
+        return false;
+
+    // Skip trying to use GNAME ops if we know our script has a polluted
+    // global scope, since they'll just get treated as NAME ops anyway.
+    if (bce->script->hasPollutedGlobalScope())
         return false;
 
     // Deoptimized names also aren't necessarily globals.
@@ -5412,7 +5418,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool needsPr
             BytecodeEmitter bce2(bce, bce->parser, funbox, script, /* lazyScript = */ js::NullPtr(),
                                  bce->insideEval, bce->evalCaller,
                                  /* evalStaticScope = */ js::NullPtr(),
-                                 bce->hasGlobalScope, lineNum, bce->emitterMode);
+                                 bce->insideNonGlobalEval, lineNum, bce->emitterMode);
             if (!bce2.init())
                 return false;
 
