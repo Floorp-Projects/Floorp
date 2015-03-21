@@ -255,27 +255,24 @@ struct BytecodeEmitter
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
 
+    ptrdiff_t emitCheck(ptrdiff_t delta);
+
     // Emit one bytecode.
     bool emit1(JSOp op);
+
+    // Emit two bytecodes, an opcode (op) with a byte of immediate operand
+    // (op1).
+    bool emit2(JSOp op, jsbytecode op1);
+
+    // Emit three bytecodes, an opcode with two bytes of immediate operands.
+    bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
+
+    // Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
+    ptrdiff_t emitN(JSOp op, size_t extra);
+
+    ptrdiff_t emitJump(JSOp op, ptrdiff_t off);
+    bool emitCall(JSOp op, uint16_t argc, ParseNode *pn = nullptr);
 };
-
-/*
- * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
- */
-bool
-Emit2(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1);
-
-/*
- * Emit three bytecodes, an opcode with two bytes of immediate operands.
- */
-bool
-Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode op2);
-
-/*
- * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
- */
-ptrdiff_t
-EmitN(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
 
 /*
  * Emit code into bce for the tree rooted at pn.
