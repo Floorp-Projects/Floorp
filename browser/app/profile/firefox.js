@@ -1879,8 +1879,8 @@ pref("dom.ipc.reportProcessHangs", true);
 pref("reader.parse-on-load.enabled", false);
 #endif
 
-// Enable ReadingList browser UI by default.
-pref("browser.readinglist.enabled", true);
+// Disable ReadingList browser UI by default.
+pref("browser.readinglist.enabled", false);
 pref("browser.readinglist.sidebarEverOpened", false);
 // Enable the readinglist engine by default.
 pref("readinglist.scheduler.enabled", true);
