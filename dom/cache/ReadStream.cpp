@@ -104,7 +104,7 @@ private:
   };
   Atomic<State> mState;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, MOZ_OVERRIDE)
 };
 
 // ----------------------------------------------------------------------------
