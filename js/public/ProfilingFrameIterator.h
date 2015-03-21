@@ -124,7 +124,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 };
 
 extern JS_PUBLIC_API(ProfilingFrameIterator::FrameKind)
-GetProfilingFrameKindFromNativeAddr(JSRuntime *runtime, void *pc, bool *hasOptInfo);
+GetProfilingFrameKindFromNativeAddr(JSRuntime *runtime, void *pc);
 
 JS_FRIEND_API(bool)
 IsProfilingEnabledForRuntime(JSRuntime *runtime);
