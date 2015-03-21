@@ -24,7 +24,7 @@
           return navigator.mediaDevices.getUserMedia({video:true, fake:true})
             .then(newstream => {
               var newtrack = newstream.getVideoTracks()[0];
-              return test.pcLocal.senderReplaceTrack(0, newtrack);
+              return test.pcLocal.senderReplaceTrack(0, newtrack, newstream.id);
             })
             .then(() => {
               test.setMediaConstraints([{video: true}, {video: true}],

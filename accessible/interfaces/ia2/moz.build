@@ -13,7 +13,6 @@ DEFFILE = SRCDIR + '/IA2Marshal.def'
 OS_LIBS += [
     'uuid',
     'kernel32',
-    'rpcns4',
     'rpcrt4',
     'ole32',
     'oleaut32',

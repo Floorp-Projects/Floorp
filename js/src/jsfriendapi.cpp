@@ -549,9 +549,9 @@ JS_GetCustomIteratorCount(JSContext *cx)
 }
 
 JS_FRIEND_API(unsigned)
-JS_PCToLineNumber(JSScript *script, jsbytecode *pc)
+JS_PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp)
 {
-    return PCToLineNumber(script, pc);
+    return PCToLineNumber(script, pc, columnp);
 }
 
 JS_FRIEND_API(bool)

@@ -5568,6 +5568,80 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               parentDisplay->mResize,
               NS_STYLE_RESIZE_NONE, 0, 0, 0, 0);
 
+  // clip property: length, auto, inherit
+  const nsCSSValue* clipValue = aRuleData->ValueForClip();
+  switch (clipValue->GetUnit()) {
+  case eCSSUnit_Inherit:
+    canStoreInRuleTree = false;
+    display->mClipFlags = parentDisplay->mClipFlags;
+    display->mClip = parentDisplay->mClip;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_Auto:
+    display->mClipFlags = NS_STYLE_CLIP_AUTO;
+    display->mClip.SetRect(0,0,0,0);
+    break;
+
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Rect: {
+    const nsCSSRect& clipRect = clipValue->GetRectValue();
+
+    display->mClipFlags = NS_STYLE_CLIP_RECT;
+
+    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
+      display->mClip.y = 0;
+      display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
+    }
+    else if (clipRect.mTop.IsLengthUnit()) {
+      display->mClip.y = CalcLength(clipRect.mTop, aContext,
+                                    mPresContext, canStoreInRuleTree);
+    }
+
+    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      display->mClip.height = NS_MAXSIZE;
+      display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
+    }
+    else if (clipRect.mBottom.IsLengthUnit()) {
+      display->mClip.height = CalcLength(clipRect.mBottom, aContext,
+                                         mPresContext, canStoreInRuleTree) -
+                              display->mClip.y;
+    }
+
+    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
+      display->mClip.x = 0;
+      display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
+    }
+    else if (clipRect.mLeft.IsLengthUnit()) {
+      display->mClip.x = CalcLength(clipRect.mLeft, aContext,
+                                    mPresContext, canStoreInRuleTree);
+    }
+
+    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      display->mClip.width = NS_MAXSIZE;
+      display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
+    }
+    else if (clipRect.mRight.IsLengthUnit()) {
+      display->mClip.width = CalcLength(clipRect.mRight, aContext,
+                                        mPresContext, canStoreInRuleTree) -
+                             display->mClip.x;
+    }
+    break;
+  }
+
+  default:
+    MOZ_ASSERT(false, "unrecognized clip unit");
+  }
+
   if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
     // and 'position'.  Since generated content can't be floated or
@@ -5625,6 +5699,183 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
   }
+
+  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
+  const nsCSSValue* transformValue = aRuleData->ValueForTransform();
+  switch (transformValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    display->mSpecifiedTransform = nullptr;
+    break;
+
+  case eCSSUnit_Inherit:
+    display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
+    canStoreInRuleTree = false;
+    break;
+
+  case eCSSUnit_SharedList: {
+    nsCSSValueSharedList* list = transformValue->GetSharedListValue();
+    nsCSSValueList* head = list->mHead;
+    MOZ_ASSERT(head, "transform list must have at least one item");
+    // can get a _None in here from transform animation
+    if (head->mValue.GetUnit() == eCSSUnit_None) {
+      MOZ_ASSERT(head->mNext == nullptr, "none must be alone");
+      display->mSpecifiedTransform = nullptr;
+    } else {
+      display->mSpecifiedTransform = list;
+    }
+    break;
+  }
+
+  default:
+    MOZ_ASSERT(false, "unrecognized transform unit");
+  }
+
+  /* Convert the nsCSSValueList into a will-change bitfield for fast lookup */
+  const nsCSSValue* willChangeValue = aRuleData->ValueForWillChange();
+  switch (willChangeValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    display->mWillChange.Clear();
+    display->mWillChangeBitField = 0;
+    for (const nsCSSValueList* item = willChangeValue->GetListValue();
+         item; item = item->mNext)
+    {
+      if (item->mValue.UnitHasStringValue()) {
+        nsAutoString buffer;
+        item->mValue.GetStringValue(buffer);
+        display->mWillChange.AppendElement(buffer);
+
+        if (buffer.EqualsLiteral("transform")) {
+          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_TRANSFORM;
+        }
+        if (buffer.EqualsLiteral("opacity")) {
+          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_OPACITY;
+        }
+        if (buffer.EqualsLiteral("scroll-position")) {
+          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_SCROLL;
+        }
+
+        nsCSSProperty prop =
+          nsCSSProps::LookupProperty(buffer,
+                                     nsCSSProps::eEnabledForAllContent);
+        if (prop != eCSSProperty_UNKNOWN &&
+            nsCSSProps::PropHasFlags(prop,
+                                     CSS_PROPERTY_CREATES_STACKING_CONTEXT))
+        {
+          display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_STACKING_CONTEXT;
+        }
+      }
+    }
+    break;
+  }
+
+  case eCSSUnit_Inherit:
+    display->mWillChange = parentDisplay->mWillChange;
+    display->mWillChangeBitField = parentDisplay->mWillChangeBitField;
+    canStoreInRuleTree = false;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_Auto:
+    display->mWillChange.Clear();
+    display->mWillChangeBitField = 0;
+    break;
+
+  default:
+    MOZ_ASSERT(false, "unrecognized will-change unit");
+  }
+
+  /* Convert -moz-transform-origin. */
+  const nsCSSValue* transformOriginValue =
+    aRuleData->ValueForTransformOrigin();
+  if (transformOriginValue->GetUnit() != eCSSUnit_Null) {
+    const nsCSSValue& valX =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mXValue : *transformOriginValue;
+    const nsCSSValue& valY =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mYValue : *transformOriginValue;
+    const nsCSSValue& valZ =
+      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
+        transformOriginValue->GetTripletValue().mZValue : *transformOriginValue;
+
+    mozilla::DebugOnly<bool> cX =
+       SetCoord(valX, display->mTransformOrigin[0],
+                parentDisplay->mTransformOrigin[0],
+                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
+                  SETCOORD_UNSET_INITIAL,
+                aContext, mPresContext, canStoreInRuleTree);
+
+     mozilla::DebugOnly<bool> cY =
+       SetCoord(valY, display->mTransformOrigin[1],
+                parentDisplay->mTransformOrigin[1],
+                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
+                  SETCOORD_UNSET_INITIAL,
+                aContext, mPresContext, canStoreInRuleTree);
+
+     if (valZ.GetUnit() == eCSSUnit_Null) {
+       // Null for the z component means a 0 translation, not
+       // unspecified, as we have already checked the triplet
+       // value for Null.
+       display->mTransformOrigin[2].SetCoordValue(0);
+     } else {
+       mozilla::DebugOnly<bool> cZ =
+         SetCoord(valZ, display->mTransformOrigin[2],
+                  parentDisplay->mTransformOrigin[2],
+                  SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
+                    SETCOORD_UNSET_INITIAL,
+                  aContext, mPresContext, canStoreInRuleTree);
+       MOZ_ASSERT(cY == cZ, "changed one but not the other");
+     }
+     MOZ_ASSERT(cX == cY, "changed one but not the other");
+     NS_ASSERTION(cX, "Malformed -moz-transform-origin parse!");
+  }
+
+  const nsCSSValue* perspectiveOriginValue =
+    aRuleData->ValueForPerspectiveOrigin();
+  if (perspectiveOriginValue->GetUnit() != eCSSUnit_Null) {
+    mozilla::DebugOnly<bool> result =
+      SetPairCoords(*perspectiveOriginValue,
+                    display->mPerspectiveOrigin[0],
+                    display->mPerspectiveOrigin[1],
+                    parentDisplay->mPerspectiveOrigin[0],
+                    parentDisplay->mPerspectiveOrigin[1],
+                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
+                      SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
+                      SETCOORD_UNSET_INITIAL,
+                    aContext, mPresContext, canStoreInRuleTree);
+    NS_ASSERTION(result, "Malformed -moz-perspective-origin parse!");
+  }
+
+  SetCoord(*aRuleData->ValueForPerspective(), 
+           display->mChildPerspective, parentDisplay->mChildPerspective,
+           SETCOORD_LAH | SETCOORD_INITIAL_NONE | SETCOORD_NONE |
+             SETCOORD_UNSET_INITIAL,
+           aContext, mPresContext, canStoreInRuleTree);
+
+  SetDiscrete(*aRuleData->ValueForBackfaceVisibility(),
+              display->mBackfaceVisibility, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentDisplay->mBackfaceVisibility,
+              NS_STYLE_BACKFACE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
+
+  // transform-style: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTransformStyle(),
+              display->mTransformStyle, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentDisplay->mTransformStyle,
+              NS_STYLE_TRANSFORM_STYLE_FLAT, 0, 0, 0, 0);
 
   // orient: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrient(),
@@ -7449,80 +7700,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                 0, 0, 0, 0);
   }
 
-  // clip property: length, auto, inherit
-  const nsCSSValue* clipValue = aRuleData->ValueForClip();
-  switch (clipValue->GetUnit()) {
-  case eCSSUnit_Inherit:
-    canStoreInRuleTree = false;
-    pos->mClipFlags = parentPos->mClipFlags;
-    pos->mClip = parentPos->mClip;
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_Auto:
-    pos->mClipFlags = NS_STYLE_CLIP_AUTO;
-    pos->mClip.SetRect(0,0,0,0);
-    break;
-
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Rect: {
-    const nsCSSRect& clipRect = clipValue->GetRectValue();
-
-    pos->mClipFlags = NS_STYLE_CLIP_RECT;
-
-    if (clipRect.mTop.GetUnit() == eCSSUnit_Auto) {
-      pos->mClip.y = 0;
-      pos->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
-    }
-    else if (clipRect.mTop.IsLengthUnit()) {
-      pos->mClip.y = CalcLength(clipRect.mTop, aContext,
-                                    mPresContext, canStoreInRuleTree);
-    }
-
-    if (clipRect.mBottom.GetUnit() == eCSSUnit_Auto) {
-      // Setting to NS_MAXSIZE for the 'auto' case ensures that
-      // the clip rect is nonempty. It is important that mClip be
-      // nonempty if the actual clip rect could be nonempty.
-      pos->mClip.height = NS_MAXSIZE;
-      pos->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
-    }
-    else if (clipRect.mBottom.IsLengthUnit()) {
-      pos->mClip.height = CalcLength(clipRect.mBottom, aContext,
-                                     mPresContext, canStoreInRuleTree) -
-                            pos->mClip.y;
-    }
-
-    if (clipRect.mLeft.GetUnit() == eCSSUnit_Auto) {
-      pos->mClip.x = 0;
-      pos->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
-    }
-    else if (clipRect.mLeft.IsLengthUnit()) {
-      pos->mClip.x = CalcLength(clipRect.mLeft, aContext,
-                                mPresContext, canStoreInRuleTree);
-    }
-
-    if (clipRect.mRight.GetUnit() == eCSSUnit_Auto) {
-      // Setting to NS_MAXSIZE for the 'auto' case ensures that
-      // the clip rect is nonempty. It is important that mClip be
-      // nonempty if the actual clip rect could be nonempty.
-      pos->mClip.width = NS_MAXSIZE;
-      pos->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
-    }
-    else if (clipRect.mRight.IsLengthUnit()) {
-      pos->mClip.width = CalcLength(clipRect.mRight, aContext,
-                                    mPresContext, canStoreInRuleTree) -
-                           pos->mClip.x;
-    }
-    break;
-  }
-
-  default:
-    MOZ_ASSERT(false, "unrecognized clip unit");
-  }
-
   // flex-basis: auto, length, percent, enum, calc, inherit, initial
   // (Note: The flags here should match those used for 'width' property above.)
   SetCoord(*aRuleData->ValueForFlexBasis(), pos->mFlexBasis, parentPos->mFlexBasis,
@@ -7670,183 +7847,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               parentPos->mGridRowEnd,
               canStoreInRuleTree);
 
-  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
-  const nsCSSValue* transformValue = aRuleData->ValueForTransform();
-  switch (transformValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_None:
-    pos->mSpecifiedTransform = nullptr;
-    break;
-
-  case eCSSUnit_Inherit:
-    pos->mSpecifiedTransform = parentPos->mSpecifiedTransform;
-    canStoreInRuleTree = false;
-    break;
-
-  case eCSSUnit_SharedList: {
-    nsCSSValueSharedList* list = transformValue->GetSharedListValue();
-    nsCSSValueList* head = list->mHead;
-    MOZ_ASSERT(head, "transform list must have at least one item");
-    // can get a _None in here from transform animation
-    if (head->mValue.GetUnit() == eCSSUnit_None) {
-      MOZ_ASSERT(head->mNext == nullptr, "none must be alone");
-      pos->mSpecifiedTransform = nullptr;
-    } else {
-      pos->mSpecifiedTransform = list;
-    }
-    break;
-  }
-
-  default:
-    MOZ_ASSERT(false, "unrecognized transform unit");
-  }
-
-  /* Convert -moz-transform-origin. */
-  const nsCSSValue* transformOriginValue =
-    aRuleData->ValueForTransformOrigin();
-  if (transformOriginValue->GetUnit() != eCSSUnit_Null) {
-    const nsCSSValue& valX =
-      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
-        transformOriginValue->GetTripletValue().mXValue : *transformOriginValue;
-    const nsCSSValue& valY =
-      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
-        transformOriginValue->GetTripletValue().mYValue : *transformOriginValue;
-    const nsCSSValue& valZ =
-      transformOriginValue->GetUnit() == eCSSUnit_Triplet ?
-        transformOriginValue->GetTripletValue().mZValue : *transformOriginValue;
-
-    mozilla::DebugOnly<bool> cX =
-       SetCoord(valX, pos->mTransformOrigin[0],
-                parentPos->mTransformOrigin[0],
-                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
-                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
-                  SETCOORD_UNSET_INITIAL,
-                aContext, mPresContext, canStoreInRuleTree);
-
-     mozilla::DebugOnly<bool> cY =
-       SetCoord(valY, pos->mTransformOrigin[1],
-                parentPos->mTransformOrigin[1],
-                SETCOORD_LPH | SETCOORD_INITIAL_HALF |
-                  SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
-                  SETCOORD_UNSET_INITIAL,
-                aContext, mPresContext, canStoreInRuleTree);
-
-     if (valZ.GetUnit() == eCSSUnit_Null) {
-       // Null for the z component means a 0 translation, not
-       // unspecified, as we have already checked the triplet
-       // value for Null.
-       pos->mTransformOrigin[2].SetCoordValue(0);
-     } else {
-       mozilla::DebugOnly<bool> cZ =
-         SetCoord(valZ, pos->mTransformOrigin[2],
-                  parentPos->mTransformOrigin[2],
-                  SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
-                    SETCOORD_UNSET_INITIAL,
-                  aContext, mPresContext, canStoreInRuleTree);
-       MOZ_ASSERT(cY == cZ, "changed one but not the other");
-     }
-     MOZ_ASSERT(cX == cY, "changed one but not the other");
-     NS_ASSERTION(cX, "Malformed -moz-transform-origin parse!");
-  }
-
-  const nsCSSValue* perspectiveOriginValue =
-    aRuleData->ValueForPerspectiveOrigin();
-  if (perspectiveOriginValue->GetUnit() != eCSSUnit_Null) {
-    mozilla::DebugOnly<bool> result =
-      SetPairCoords(*perspectiveOriginValue,
-                    pos->mPerspectiveOrigin[0],
-                    pos->mPerspectiveOrigin[1],
-                    parentPos->mPerspectiveOrigin[0],
-                    parentPos->mPerspectiveOrigin[1],
-                    SETCOORD_LPH | SETCOORD_INITIAL_HALF |
-                      SETCOORD_BOX_POSITION | SETCOORD_STORE_CALC |
-                      SETCOORD_UNSET_INITIAL,
-                    aContext, mPresContext, canStoreInRuleTree);
-    NS_ASSERTION(result, "Malformed -moz-perspective-origin parse!");
-  }
-
-  SetCoord(*aRuleData->ValueForPerspective(),
-           pos->mChildPerspective, parentPos->mChildPerspective,
-           SETCOORD_LAH | SETCOORD_INITIAL_NONE | SETCOORD_NONE |
-             SETCOORD_UNSET_INITIAL,
-           aContext, mPresContext, canStoreInRuleTree);
-
-  SetDiscrete(*aRuleData->ValueForBackfaceVisibility(),
-              pos->mBackfaceVisibility, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentPos->mBackfaceVisibility,
-              NS_STYLE_BACKFACE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
-
-  // transform-style: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForTransformStyle(),
-              pos->mTransformStyle, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentPos->mTransformStyle,
-              NS_STYLE_TRANSFORM_STYLE_FLAT, 0, 0, 0, 0);
-
-  /* Convert the nsCSSValueList into a will-change bitfield for fast lookup */
-  const nsCSSValue* willChangeValue = aRuleData->ValueForWillChange();
-  switch (willChangeValue->GetUnit()) {
-  case eCSSUnit_Null:
-    break;
-
-  case eCSSUnit_List:
-  case eCSSUnit_ListDep: {
-    pos->mWillChange.Clear();
-    pos->mWillChangeBitField = 0;
-    for (const nsCSSValueList* item = willChangeValue->GetListValue();
-         item; item = item->mNext)
-    {
-      if (item->mValue.UnitHasStringValue()) {
-        nsAutoString buffer;
-        item->mValue.GetStringValue(buffer);
-        pos->mWillChange.AppendElement(buffer);
-
-        if (buffer.EqualsLiteral("transform")) {
-          pos->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_TRANSFORM;
-        }
-        if (buffer.EqualsLiteral("opacity")) {
-          pos->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_OPACITY;
-        }
-        if (buffer.EqualsLiteral("scroll-position")) {
-          pos->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_SCROLL;
-        }
-
-        nsCSSProperty prop =
-          nsCSSProps::LookupProperty(buffer,
-                                     nsCSSProps::eEnabledForAllContent);
-        if (prop != eCSSProperty_UNKNOWN &&
-            nsCSSProps::PropHasFlags(prop,
-                                     CSS_PROPERTY_CREATES_STACKING_CONTEXT))
-        {
-          pos->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_STACKING_CONTEXT;
-        }
-      }
-    }
-    break;
-  }
-
-  case eCSSUnit_Inherit:
-    pos->mWillChange = parentPos->mWillChange;
-    pos->mWillChangeBitField = parentPos->mWillChangeBitField;
-    canStoreInRuleTree = false;
-    break;
-
-  case eCSSUnit_Initial:
-  case eCSSUnit_Unset:
-  case eCSSUnit_Auto:
-    pos->mWillChange.Clear();
-    pos->mWillChangeBitField = 0;
-    break;
-
-  default:
-    MOZ_ASSERT(false, "unrecognized will-change unit");
-  }
-
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();
   if (! SetCoord(*zIndexValue, pos->mZIndex, parentPos->mZIndex,
@@ -7906,26 +7906,26 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
   const nsCSSValue* borderSpacingValue = aRuleData->ValueForBorderSpacing();
+  // border-spacing: pair(length), inherit
   if (borderSpacingValue->GetUnit() != eCSSUnit_Null) {
-    // border-spacing-x/y: length, inherit
-    nsStyleCoord parentX(parentTable->mBorderSpacingX,
-                         nsStyleCoord::CoordConstructor);
-    nsStyleCoord parentY(parentTable->mBorderSpacingY,
-                         nsStyleCoord::CoordConstructor);
-    nsStyleCoord coordX, coordY;
+    nsStyleCoord parentCol(parentTable->mBorderSpacingCol,
+                           nsStyleCoord::CoordConstructor);
+    nsStyleCoord parentRow(parentTable->mBorderSpacingRow,
+                           nsStyleCoord::CoordConstructor);
+    nsStyleCoord coordCol, coordRow;
 
 #ifdef DEBUG
     bool result =
 #endif
       SetPairCoords(*borderSpacingValue,
-                    coordX, coordY, parentX, parentY,
+                    coordCol, coordRow, parentCol, parentRow,
                     SETCOORD_LH | SETCOORD_INITIAL_ZERO |
                       SETCOORD_CALC_LENGTH_ONLY |
                       SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INHERIT,
                     aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(result, "malformed table border value");
-    table->mBorderSpacingX = coordX.GetCoordValue();
-    table->mBorderSpacingY = coordY.GetCoordValue();
+    table->mBorderSpacingCol = coordCol.GetCoordValue();
+    table->mBorderSpacingRow = coordRow.GetCoordValue();
   }
 
   // caption-side: enum, inherit, initial

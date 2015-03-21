@@ -167,12 +167,6 @@ ImageWrapper::GetType(uint16_t* aType)
   return mInnerImage->GetType(aType);
 }
 
-NS_IMETHODIMP_(uint16_t)
-ImageWrapper::GetType()
-{
-  return mInnerImage->GetType();
-}
-
 NS_IMETHODIMP
 ImageWrapper::GetAnimated(bool* aAnimated)
 {

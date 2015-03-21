@@ -190,6 +190,8 @@ NumLocalsAndArgs(JSScript *script)
     return num;
 }
 
+bool OffThreadCompilationAvailable(JSContext *cx);
+
 void ForbidCompilation(JSContext *cx, JSScript *script);
 
 void PurgeCaches(JSScript *script);

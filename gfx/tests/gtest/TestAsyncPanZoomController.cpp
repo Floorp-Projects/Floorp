@@ -66,7 +66,6 @@ public:
   MOCK_METHOD3(HandleDoubleTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&));
   MOCK_METHOD3(HandleSingleTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&));
   MOCK_METHOD4(HandleLongTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&, uint64_t));
-  MOCK_METHOD3(HandleLongTapUp, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&));
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
   MOCK_METHOD3(NotifyAPZStateChange, void(const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg));
@@ -1390,9 +1389,9 @@ protected:
       EXPECT_CALL(*mcc, HandleLongTap(CSSPoint(10, 10), 0, apzc->GetGuid(), blockId)).Times(1);
       EXPECT_CALL(check, Call("postHandleLongTap"));
 
-      EXPECT_CALL(check, Call("preHandleLongTapUp"));
-      EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
-      EXPECT_CALL(check, Call("postHandleLongTapUp"));
+      EXPECT_CALL(check, Call("preHandleSingleTap"));
+      EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+      EXPECT_CALL(check, Call("postHandleSingleTap"));
     }
 
     // There is a longpress event scheduled on a timeout
@@ -1419,10 +1418,11 @@ protected:
 
     // Finally, simulate lifting the finger. Since the long-press wasn't
     // prevent-defaulted, we should get a long-tap-up event.
-    check.Call("preHandleLongTapUp");
+    check.Call("preHandleSingleTap");
     status = TouchUp(apzc, 10, 10, time);
+    mcc->RunDelayedTask();
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
-    check.Call("postHandleLongTapUp");
+    check.Call("postHandleSingleTap");
 
     apzc->AssertStateIsReset();
   }
@@ -1488,7 +1488,7 @@ protected:
     status = apzc->ReceiveInputEvent(mti, nullptr);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(0);
+    EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(0);
     status = TouchUp(apzc, touchX, touchEndY, time);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 

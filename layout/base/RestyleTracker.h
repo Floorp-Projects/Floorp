@@ -16,6 +16,8 @@
 #include "nsContainerFrame.h"
 #include "mozilla/SplayTree.h"
 #include "mozilla/RestyleLogging.h"
+#include "ProfilerBacktrace.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 
@@ -291,6 +293,7 @@ public:
     // that we called AddPendingRestyle for and found the element this is
     // the RestyleData for as its nearest restyle root.
     nsTArray<nsRefPtr<Element>> mDescendants;
+    UniquePtr<ProfilerBacktrace> mBacktrace;
   };
 
   /**
@@ -388,8 +391,11 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
   }
 
   if (!existingData) {
-    mPendingRestyles.Put(aElement,
-                         new RestyleData(aRestyleHint, aMinChangeHint));
+    RestyleData* rd = new RestyleData(aRestyleHint, aMinChangeHint);
+    if (profiler_feature_active("restyle")) {
+      rd->mBacktrace.reset(profiler_get_backtrace());
+    }
+    mPendingRestyles.Put(aElement, rd);
     return false;
   }
 

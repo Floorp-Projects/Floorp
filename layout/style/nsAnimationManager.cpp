@@ -272,6 +272,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   if (newPlayers.IsEmpty()) {
     if (collection) {
+      // There might be transitions that run now that animations don't
+      // override them.
+      mPresContext->TransitionManager()->
+        UpdateCascadeResultsWithAnimationsToBeDestroyed(collection);
+
       collection->Destroy();
     }
     return nullptr;
@@ -594,6 +599,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
       AnimationProperty &propData = *destAnim->Properties().AppendElement();
       propData.mProperty = prop;
+      propData.mWinsInCascade = true;
 
       KeyframeData *fromKeyframe = nullptr;
       nsRefPtr<nsStyleContext> fromContext;

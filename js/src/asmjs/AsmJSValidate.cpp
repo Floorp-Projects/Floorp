@@ -2732,7 +2732,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MSimdSwizzle *ins = MSimdSwizzle::NewAsmJS(alloc(), vector, type, X, Y, Z, W);
+        MSimdSwizzle *ins = MSimdSwizzle::New(alloc(), vector, type, X, Y, Z, W);
         curBlock_->add(ins);
         return ins;
     }
@@ -2743,7 +2743,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MInstruction *ins = MSimdShuffle::NewAsmJS(alloc(), lhs, rhs, type, X, Y, Z, W);
+        MInstruction *ins = MSimdShuffle::New(alloc(), lhs, rhs, type, X, Y, Z, W);
         curBlock_->add(ins);
         return ins;
     }
@@ -9359,9 +9359,6 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
 
     if (!parser.options().asmJSOption)
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
-
-    if (!parser.options().compileAndGo)
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Temporarily disabled for event-handler and other cloneable scripts");
 
     if (cx->compartment()->debuggerObservesAsmJS())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");

@@ -417,7 +417,7 @@ class MochitestServer(object):
             time.sleep(1)
             i += 1
         else:
-            self._log.error(
+            self._log.info(
                 "TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")
             self.stop()
             sys.exit(1)
@@ -580,9 +580,7 @@ class MochitestUtilsMixin(object):
         if options.logFile:
             options.logFile = self.getLogFilePath(options.logFile)
 
-        # Note that all tests under options.subsuite need to be browser chrome
-        # tests.
-        if options.browserChrome or options.chrome or options.subsuite or \
+        if options.browserChrome or options.chrome or \
            options.a11y or options.webapprtChrome or options.jetpackPackage or \
            options.jetpackAddon:
             self.makeTestConfig(options)
@@ -928,7 +926,7 @@ toolbar#nav-bar {
 
         # Call installChromeJar().
         if not os.path.isdir(os.path.join(SCRIPT_DIR, self.jarDir)):
-            self.log.error(
+            self.log.info(
                 "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
             return None
 
@@ -1419,7 +1417,7 @@ class Mochitest(MochitestUtilsMixin):
         # TODO: this should really be upstreamed somewhere, maybe mozprofile
         certificateStatus = self.fillCertificateDB(options)
         if certificateStatus:
-            self.log.error(
+            self.log.info(
                 "TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
             return None
 
@@ -1611,7 +1609,7 @@ class Mochitest(MochitestUtilsMixin):
                 processPID)
             if isPidAlive(processPID):
                 foundZombie = True
-                self.log.error(
+                self.log.info(
                     "TEST-UNEXPECTED-FAIL | zombiecheck | child process %d still alive after shutdown" %
                     processPID)
                 self.killAndGetStack(
@@ -1698,9 +1696,9 @@ class Mochitest(MochitestUtilsMixin):
             os.close(tmpfd)
             env["MOZ_PROCESS_LOG"] = processLog
 
-            if interactive:
-                # If an interactive debugger is attached,
-                # don't use timeouts, and don't capture ctrl-c.
+            if debuggerInfo:
+                # If a debugger is attached, don't use timeouts, and don't
+                # capture ctrl-c.
                 timeout = None
                 signal.signal(signal.SIGINT, lambda sigid, frame: None)
 
@@ -1800,7 +1798,7 @@ class Mochitest(MochitestUtilsMixin):
             # record post-test information
             if status:
                 self.message_logger.dump_buffered()
-                self.log.error(
+                self.log.info(
                     "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" %
                     (self.lastTestSeen, status))
             else:
@@ -2035,18 +2033,19 @@ class Mochitest(MochitestUtilsMixin):
         def _psInfo(line):
             if pname in line:
                 self.log.info(line)
-        process = mozprocess.ProcessHandler(['ps', '-f', '--no-headers'],
+        process = mozprocess.ProcessHandler(['ps', '-f'],
                                             processOutputLine=_psInfo)
         process.run()
         process.wait()
 
         def _psKill(line):
             parts = line.split()
-            pid = int(parts[0])
-            if len(parts) == 3 and parts[2] == pname and parts[1] == '1':
-                self.log.info("killing %s orphan with pid %d" % (pname, pid))
-                killPid(pid, self.log)
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm', '--no-headers'],
+            if len(parts) == 3 and parts[0].isdigit():
+                pid = int(parts[0])
+                if parts[2] == pname and parts[1] == '1':
+                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
+                    killPid(pid, self.log)
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
                                             processOutputLine=_psKill)
         process.run()
         process.wait()
@@ -2291,7 +2290,7 @@ class Mochitest(MochitestUtilsMixin):
 
         self.message_logger.dump_buffered()
         self.message_logger.buffering = False
-        self.log.error(error_message)
+        self.log.info(error_message)
 
         browserProcessId = browserProcessId or proc.pid
         self.killAndGetStack(

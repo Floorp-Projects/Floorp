@@ -1,5 +1,6 @@
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 MOZ_AUTOMATION_UPDATE_PACKAGING=0
+MOZ_AUTOMATION_SDK=0
 . "$topsrcdir/b2g/config/mozconfigs/common"
 
 # Use sccache

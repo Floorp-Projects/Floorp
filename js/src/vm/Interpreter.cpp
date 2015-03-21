@@ -633,13 +633,18 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, IsValidTerminatingScope(&scopeChainArg));
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
         AutoSuppressGC nogc(cx);
         MOZ_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
     }
+    RootedObject terminatingScope(cx, &scopeChainArg);
+    while (IsSyntacticScope(terminatingScope))
+        terminatingScope = terminatingScope->enclosingScope();
+    MOZ_ASSERT(terminatingScope->is<GlobalObject>() ||
+               script->hasPollutedGlobalScope());
 #endif
 
     if (script->isEmpty()) {
@@ -668,6 +673,9 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 
     MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || !script->compileAndGo(),
                        "Only non-compile-and-go scripts can be executed with "
+                       "interesting scopechains");
+    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || script->hasPollutedGlobalScope(),
+                       "Only scripts with polluted scopes can be executed with "
                        "interesting scopechains");
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
@@ -1664,7 +1672,6 @@ CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED148)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED150)
-CASE(JSOP_UNUSED157)
 CASE(JSOP_UNUSED158)
 CASE(JSOP_UNUSED159)
 CASE(JSOP_UNUSED161)
@@ -1761,6 +1768,7 @@ CASE(JSOP_FORCEINTERPRETER)
 END_CASE(JSOP_FORCEINTERPRETER)
 
 CASE(JSOP_UNDEFINED)
+    // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
     PUSH_UNDEFINED();
 END_CASE(JSOP_UNDEFINED)
 
@@ -2691,21 +2699,28 @@ CASE(JSOP_SETCALL)
 END_CASE(JSOP_SETCALL)
 
 CASE(JSOP_IMPLICITTHIS)
+CASE(JSOP_GIMPLICITTHIS)
 {
-    RootedPropertyName &name = rootName0;
-    name = script->getName(REGS.pc);
+    JSOp op = JSOp(*REGS.pc);
+    if (op == JSOP_IMPLICITTHIS || script->hasPollutedGlobalScope()) {
+        RootedPropertyName &name = rootName0;
+        name = script->getName(REGS.pc);
 
-    RootedObject &scopeObj = rootObject0;
-    scopeObj = REGS.fp()->scopeChain();
+        RootedObject &scopeObj = rootObject0;
+        scopeObj = REGS.fp()->scopeChain();
 
-    RootedObject &scope = rootObject1;
-    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
-        goto error;
+        RootedObject &scope = rootObject1;
+        if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
+            goto error;
 
-    RootedValue &v = rootValue0;
-    if (!ComputeImplicitThis(cx, scope, &v))
-        goto error;
-    PUSH_COPY(v);
+        RootedValue &v = rootValue0;
+        if (!ComputeImplicitThis(cx, scope, &v))
+            goto error;
+        PUSH_COPY(v);
+    } else {
+        // Treat it like JSOP_UNDEFINED.
+        PUSH_UNDEFINED();
+    }
 }
 END_CASE(JSOP_IMPLICITTHIS)
 

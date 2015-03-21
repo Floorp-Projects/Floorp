@@ -154,6 +154,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 
     #visitedLink:link { background-color: yellow }
     #visitedLink:visited { background-color: blue }
+
+    @keyframes opacitymid {
+      0% { opacity: 0.2 }
+      100% { opacity: 0.8 }
+    }
   </style>
 </head>
 <body>
@@ -2126,6 +2131,29 @@ addAsyncAnimTest(function *() {
           "transform animation 1s after display:block");
   ancestor.parentNode.insertBefore(gDiv, ancestor);
   ancestor.parentNode.removeChild(ancestor);
+  done_div();
+});
+
+// Bug 1125455 - Transitions should not run when animations are running.
+addAsyncAnimTest(function *() {
+  new_div("transition: opacity 2s linear; opacity: 0.8");
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0.8, RunningOn.MainThread,
+          "initial opacity");
+  gDiv.style.opacity = "0.2";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0.8, RunningOn.Compositor,
+          "opacity transition at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.65, RunningOn.Compositor,
+          "opacity transition at 0.5s");
+  gDiv.style.animation = "opacitymid 2s linear";
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0.2, RunningOn.Compositor,
+          "opacity animation overriding transition at 0s");
+  advance_clock(500);
+  omta_is("opacity", 0.35, RunningOn.Compositor,
+          "opacity animation overriding transition at 0.5s");
   done_div();
 });
 

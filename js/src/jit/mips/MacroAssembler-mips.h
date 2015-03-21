@@ -1313,6 +1313,18 @@ public:
 
     void loadPrivate(const Address &address, Register dest);
 
+    void loadInt32x1(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x1(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x2(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x2(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x3(const Address &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x3(const BaseIndex &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x1(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x1(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x2(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x2(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x3(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x3(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
     void loadAlignedInt32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedInt32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void loadUnalignedInt32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
@@ -1320,6 +1332,10 @@ public:
     void storeUnalignedInt32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void storeUnalignedInt32x4(FloatRegister src, BaseIndex addr) { MOZ_CRASH("NYI"); }
 
+    void loadFloat32x3(const Address &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadFloat32x3(const BaseIndex &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void storeFloat32x3(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
+    void storeFloat32x(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
     void loadAlignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedFloat32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void loadUnalignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }

@@ -258,8 +258,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdInsertElementI(LSimdInsertElementI *lir);
     void visitSimdInsertElementF(LSimdInsertElementF *lir);
     void visitSimdSignMaskX4(LSimdSignMaskX4 *ins);
-    void visitSimdGeneralSwizzleI(LSimdGeneralSwizzleI *lir);
-    void visitSimdGeneralSwizzleF(LSimdGeneralSwizzleF *lir);
     void visitSimdSwizzleI(LSimdSwizzleI *lir);
     void visitSimdSwizzleF(LSimdSwizzleF *lir);
     void visitSimdShuffle(LSimdShuffle *lir);
@@ -272,6 +270,10 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *lir);
     void visitSimdShift(LSimdShift *lir);
     void visitSimdSelect(LSimdSelect *ins);
+
+    template <class T, class Reg> void visitSimdGeneralShuffle(LSimdGeneralShuffleBase *lir, Reg temp);
+    void visitSimdGeneralShuffleI(LSimdGeneralShuffleI *lir);
+    void visitSimdGeneralShuffleF(LSimdGeneralShuffleF *lir);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout *ool);
