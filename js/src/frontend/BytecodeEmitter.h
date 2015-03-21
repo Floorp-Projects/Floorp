@@ -257,13 +257,13 @@ struct BytecodeEmitter
 /*
  * Emit one bytecode.
  */
-ptrdiff_t
+bool
 Emit1(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op);
 
 /*
  * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
  */
-ptrdiff_t
+bool
 Emit2(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1);
 
 /*
