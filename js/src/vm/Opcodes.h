@@ -1769,9 +1769,10 @@
     macro(JSOP_UNUSED212,     212, "unused212",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED213,     213, "unused213",    NULL,  1,  0,  0,  JOF_BYTE) \
     /*
-     * Pushes the global scope onto the stack.
+     * Pushes the global scope onto the stack if the script doesn't have a
+     * polluted global scope.  Otherwise will act like JSOP_BINDNAME.
      *
-     * 'nameIndex' is not used.
+     * 'nameIndex' is only used when acting like JSOP_BINDNAME.
      *   Category: Variables and Scopes
      *   Type: Free Variables
      *   Operands: uint32_t nameIndex
