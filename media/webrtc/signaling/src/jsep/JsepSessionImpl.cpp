@@ -1184,6 +1184,11 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   // Add extmap attributes.
   AddCommonExtmaps(remoteMsection, msection);
 
+  if (!msection->IsReceiving() && !msection->IsSending()) {
+    DisableMsection(sdp, msection);
+    return NS_OK;
+  }
+
   if (msection->GetFormats().empty()) {
     // Could not negotiate anything. Disable m-section.
     DisableMsection(sdp, msection);
@@ -1870,7 +1875,7 @@ JsepSessionImpl::CopyStickyParams(const SdpMediaSection& source,
         new SdpFlagAttribute(SdpAttribute::kRtcpMuxAttribute));
   }
 
-  // mid must stay the same
+  // mid should stay the same
   if (sourceAttrs.HasAttribute(SdpAttribute::kMidAttribute)) {
     destAttrs.SetAttribute(
         new SdpStringAttribute(SdpAttribute::kMidAttribute,
@@ -2154,7 +2159,8 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
   for (size_t i = 0;
        i < mCurrentRemoteDescription->GetMediaSectionCount();
        ++i) {
-    if (MsectionIsDisabled(description.GetMediaSection(i))) {
+    if (MsectionIsDisabled(description.GetMediaSection(i)) ||
+        MsectionIsDisabled(mCurrentRemoteDescription->GetMediaSection(i))) {
       continue;
     }
 
@@ -2163,15 +2169,7 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
     const SdpAttributeList& oldAttrs(
         mCurrentRemoteDescription->GetMediaSection(i).GetAttributeList());
 
-    // We have already verified the presence of these attributes in ParseSdp.
-    if (newAttrs.GetMid() != oldAttrs.GetMid()) {
-      JSEP_SET_ERROR("New remote description changes mid for level " << i
-                     << ", was \'" << oldAttrs.GetMid()
-                     << "\" now \'" << newAttrs.GetMid() << "\'");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (oldBundleMids.count(newAttrs.GetMid()) &&
+    if (oldBundleMids.count(oldAttrs.GetMid()) &&
         !newBundleMids.count(newAttrs.GetMid())) {
       JSEP_SET_ERROR("Removing m-sections from a bundle group is unsupported "
                      "at this time.");
@@ -2222,6 +2220,17 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
     if (!offerMsection.IsReceiving() && answerMsection.IsSending()) {
       JSEP_SET_ERROR("Answer tried to set send when offer did not set recv");
       return NS_ERROR_INVALID_ARG;
+    }
+
+    if (!MsectionIsDisabled(answerMsection)) {
+      if (offerMsection.GetAttributeList().GetMid() !=
+          answerMsection.GetAttributeList().GetMid()) {
+        JSEP_SET_ERROR("Answer changes mid for level, was \'"
+                       << offerMsection.GetAttributeList().GetMid()
+                       << "\', now \'"
+                       << answerMsection.GetAttributeList().GetMid() << "\'");
+        return NS_ERROR_INVALID_ARG;
+      }
     }
   }
 
@@ -2688,7 +2697,7 @@ JsepSessionImpl::GetBundleInfo(const Sdp& sdp,
   }
 
   if (!bundleMids->empty()) {
-    if (!bundleMsection) {
+    if (!*bundleMsection) {
       JSEP_SET_ERROR("mid specified for bundle transport in group attribute"
           " does not exist in the SDP. (mid="
           << group->tags[0] << ")");

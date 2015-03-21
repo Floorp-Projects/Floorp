@@ -110,23 +110,23 @@ public:
   // safer (albeit grossly suboptimal) to just relayout the whole thing.
   void RestyleTable();
 
-  /** helper to get the cell spacing X style value */
-  nscoord GetCellSpacingX(int32_t aColIndex) MOZ_OVERRIDE;
+  /** helper to get the column spacing style value */
+  nscoord GetColSpacing(int32_t aColIndex) MOZ_OVERRIDE;
 
   /** Sums the combined cell spacing between the columns aStartColIndex to
    *  aEndColIndex.
    */
-  nscoord GetCellSpacingX(int32_t aStartColIndex,
-                          int32_t aEndColIndex) MOZ_OVERRIDE;
+  nscoord GetColSpacing(int32_t aStartColIndex,
+                        int32_t aEndColIndex) MOZ_OVERRIDE;
 
-  /** helper to get the cell spacing Y style value */
-  nscoord GetCellSpacingY(int32_t aRowIndex) MOZ_OVERRIDE;
+  /** helper to get the row spacing style value */
+  nscoord GetRowSpacing(int32_t aRowIndex) MOZ_OVERRIDE;
 
   /** Sums the combined cell spacing between the rows aStartRowIndex to
    *  aEndRowIndex.
    */
-  nscoord GetCellSpacingY(int32_t aStartRowIndex,
-                          int32_t aEndRowIndex) MOZ_OVERRIDE;
+  nscoord GetRowSpacing(int32_t aStartRowIndex,
+                        int32_t aEndRowIndex) MOZ_OVERRIDE;
 
   void SetColSpacingArray(const nsTArray<nscoord>& aColSpacing)
   {

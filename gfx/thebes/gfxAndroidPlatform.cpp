@@ -499,7 +499,6 @@ gfxAndroidPlatform::CreateHardwareVsyncSource()
     display.DisableVsync();
     return vsyncSource.forget();
 #else
-    NS_WARNING("Hardware vsync not supported on android yet");
-    return nullptr;
+    return gfxPlatform::CreateHardwareVsyncSource();
 #endif
 }

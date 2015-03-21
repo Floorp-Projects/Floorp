@@ -18,6 +18,7 @@
 #include "nsICancelable.h"
 #include "nsIDNSService.h"
 #include "nsPIDNSService.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
@@ -1285,11 +1286,22 @@ nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
             return NS_ERROR_NO_INTERFACE;
         }
 
-        // make a temporary channel from the URI
-        nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
-        if (NS_FAILED(rv)) return rv;
-        rv = ios->NewChannelFromURI(uri, getter_AddRefs(channel));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIScriptSecurityManager> secMan(
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIPrincipal> systemPrincipal;
+        rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // creating a temporary channel from the URI which is not
+        // used to perform any network loads, hence its safe to
+        // use systemPrincipal as the loadingPrincipal.
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           uri,
+                           systemPrincipal,
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return AsyncResolveInternal(channel, flags, callback, result, false);

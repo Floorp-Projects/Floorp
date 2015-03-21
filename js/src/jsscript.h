@@ -748,8 +748,14 @@ bool
 XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
           HandleFunction fun, MutableHandleScript scriptp);
 
+enum PollutedGlobalScopeOption {
+    HasPollutedGlobalScope,
+    HasCleanGlobalScope
+};
+
 JSScript *
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            PollutedGlobalScopeOption polluted = HasCleanGlobalScope,
             NewObjectKind newKind = GenericObject);
 
 template<XDRMode mode>
@@ -775,7 +781,8 @@ class JSScript : public js::gc::TenuredCell
                   js::HandleFunction fun, js::MutableHandleScript scriptp);
 
     friend JSScript *
-    js::CloneScript(JSContext *cx, js::HandleObject enclosingScope, js::HandleFunction fun, js::HandleScript src,
+    js::CloneScript(JSContext *cx, js::HandleObject enclosingScope, js::HandleFunction fun,
+                    js::HandleScript src, js::PollutedGlobalScopeOption polluted,
                     js::NewObjectKind newKind);
 
   public:
@@ -918,6 +925,11 @@ class JSScript : public js::gc::TenuredCell
     // See Parser::compileAndGo.
     bool compileAndGo_:1;
 
+    // True if the script has a non-syntactic scope on its dynamic scope chain.
+    // That is, there are objects about which we know nothing between the
+    // outermost syntactic scope and the global.
+    bool hasPollutedGlobalScope_:1;
+
     // see Parser::selfHostingMode.
     bool selfHosted_:1;
 
@@ -964,6 +976,9 @@ class JSScript : public js::gc::TenuredCell
 
     // Idempotent cache has triggered invalidation.
     bool invalidatedIdempotentCache_:1;
+
+    // Lexical check did fail and bail out.
+    bool failedLexicalCheck_:1;
 
     // If the generator was created implicitly via a generator expression,
     // isGeneratorExp will be true.
@@ -1143,6 +1158,10 @@ class JSScript : public js::gc::TenuredCell
         return compileAndGo_;
     }
 
+    bool hasPollutedGlobalScope() const {
+        return hasPollutedGlobalScope_;
+    }
+
     bool selfHosted() const { return selfHosted_; }
     bool bindingsAccessedDynamically() const { return bindingsAccessedDynamically_; }
     bool funHasExtensibleScope() const {
@@ -1207,12 +1226,16 @@ class JSScript : public js::gc::TenuredCell
     bool invalidatedIdempotentCache() const {
         return invalidatedIdempotentCache_;
     }
+    bool failedLexicalCheck() const {
+        return failedLexicalCheck_;
+    }
 
     void setFailedBoundsCheck() { failedBoundsCheck_ = true; }
     void setFailedShapeGuard() { failedShapeGuard_ = true; }
     void setHadFrequentBailouts() { hadFrequentBailouts_ = true; }
     void setUninlineable() { uninlineable_ = true; }
     void setInvalidatedIdempotentCache() { invalidatedIdempotentCache_ = true; }
+    void setFailedLexicalCheck() { failedLexicalCheck_ = true; }
 
     bool hasScriptCounts() const { return hasScriptCounts_; }
 
@@ -2159,7 +2182,7 @@ DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript maybeScr
 
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
-                    NewObjectKind newKind = GenericObject);
+                    PollutedGlobalScopeOption polluted, NewObjectKind newKind);
 
 } /* namespace js */
 
