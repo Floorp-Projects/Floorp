@@ -121,6 +121,8 @@
   "CREATE TABLE moz_keywords (" \
     "  id INTEGER PRIMARY KEY AUTOINCREMENT" \
     ", keyword TEXT UNIQUE" \
+    ", place_id INTEGER" \
+    ", post_data TEXT" \
   ")" \
 )
 

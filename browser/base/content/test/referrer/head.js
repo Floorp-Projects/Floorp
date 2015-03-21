@@ -99,26 +99,45 @@ function clickTheLink(aWindow, aLinkId, aOptions) {
                     function(data) {
     let element = content.document.getElementById(data.id);
     let options = data.options;
-    element.focus();
 
     // EventUtils.synthesizeMouseAtCenter(element, options, content);
     // Alas, EventUtils doesn't work in the content task environment.
-    var domWindowUtils =
-        content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils);
-    var rect = element.getBoundingClientRect();
-    var left = rect.left + rect.width / 2;
-    var top = rect.top + rect.height / 2;
-    var button = options.button || 0;
-    function sendMouseEvent(type) {
-      domWindowUtils.sendMouseEvent(type, left, top, button,
-                                    1, 0, false, 0, 0, true);
+    function doClick() {
+      var domWindowUtils =
+          content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+      var rect = element.getBoundingClientRect();
+      var left = rect.left + rect.width / 2;
+      var top = rect.top + rect.height / 2;
+      var button = options.button || 0;
+      function sendMouseEvent(type) {
+        domWindowUtils.sendMouseEvent(type, left, top, button,
+                                      1, 0, false, 0, 0, true);
+      }
+      if ("type" in options) {
+        sendMouseEvent(options.type);  // e.g., "contextmenu"
+      } else {
+        sendMouseEvent("mousedown");
+        sendMouseEvent("mouseup");
+      }
     }
-    if ("type" in options) {
-      sendMouseEvent(options.type);  // e.g., "contextmenu"
+
+    // waitForFocus(doClick, content);
+    let focusManager = Components.classes["@mozilla.org/focus-manager;1"].
+                       getService(Components.interfaces.nsIFocusManager);
+    let desiredWindow = {};
+    focusManager.getFocusedElementForWindow(content, true, desiredWindow);
+    desiredWindow = desiredWindow.value;
+    if (desiredWindow == focusManager.focusedWindow) {
+      // The window is already focused - click away.
+      doClick();
     } else {
-      sendMouseEvent("mousedown");
-      sendMouseEvent("mouseup");
+      // Focus the window first, then click.
+      desiredWindow.addEventListener("focus", function onFocus() {
+        desiredWindow.removeEventListener("focus", onFocus, true);
+        setTimeout(doClick, 0);
+      }, true);
+      desiredWindow.focus();
     }
   });
 }

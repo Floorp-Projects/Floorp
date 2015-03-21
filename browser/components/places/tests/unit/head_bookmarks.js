@@ -78,22 +78,6 @@ function checkItemHasAnnotation(guid, name) {
   });
 }
 
-function waitForImportAndSmartBookmarks() {
-  return Promise.all([
-    promiseTopicObserved("bookmarks-restore-success"),
-    PlacesTestUtils.promiseAsyncUpdates()
-  ]);
-}
-
-function promiseEndUpdateBatch() {
-  return new Promise(resolve => {
-    PlacesUtils.bookmarks.addObserver({
-      __proto__: NavBookmarkObserver.prototype,
-      onEndUpdateBatch: resolve
-    }, false);
-  });
-}
-
 let createCorruptDB = Task.async(function* () {
   let dbPath = OS.Path.join(OS.Constants.Path.profileDir, "places.sqlite");
   yield OS.File.remove(dbPath);

@@ -4585,9 +4585,6 @@ pref("media.gmp-manager.certs.1.issuerName", "CN=DigiCert Secure Server CA,O=Dig
 pref("media.gmp-manager.certs.1.commonName", "aus4.mozilla.org");
 pref("media.gmp-manager.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("media.gmp-manager.certs.2.commonName", "aus4.mozilla.org");
-
-// Adobe EME is currently pref'd off by default and hidden in the addon manager.
-pref("media.gmp-eme-adobe.hidden", true);
 #endif
 
 // Whether or not to perform reader mode article parsing on page load.

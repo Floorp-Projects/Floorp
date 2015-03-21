@@ -504,7 +504,7 @@ tests.push({
 
       // if keywords are equal, should fall back to title
       { isBookmark: true,
-        uri: "http://example.com/b2",
+        uri: "http://example.com/b1",
         parentFolder: PlacesUtils.bookmarks.toolbarFolder,
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         title: "y8",
