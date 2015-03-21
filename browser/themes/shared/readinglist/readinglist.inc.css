@@ -1,10 +1,13 @@
 /* Reading List button */
 
+#urlbar:not([focused]):not(:hover) #readinglist-addremove-button {
+  display: none;
+}
+
 #readinglist-addremove-button {
   -moz-appearance: none;
   border: none;
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage");
-  padding: 3px;
 }
 
 #readinglist-addremove-button:hover {
@@ -12,15 +15,15 @@
 }
 
 #readinglist-addremove-button > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px
+  width: 14px;
+  height: 14px
 }
 
-#readinglist-addremove-button:not([already-added="true"]):hover {
+#readinglist-addremove-button:hover {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage-hover");
 }
 
-#readinglist-addremove-button:not([already-added="true"]):active {
+#readinglist-addremove-button:active {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage-active");
 }
 
@@ -35,4 +38,3 @@
 #readinglist-addremove-button[already-added="true"]:active {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#alreadyadded-active");
 }
-

@@ -1628,7 +1628,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/Info.png");
 }
 
-%include ../shared/readinglist.inc.css
+%include ../shared/readinglist/readinglist.inc.css
+
+#readinglist-addremove-button {
+  padding: 0 2px;
+}
 
 /* Reader mode button */
 
