@@ -222,13 +222,6 @@ private:
   uint32_t mRecycledBufferSize;
 };
 
-class CompositionNotifySink
-{
-public:
-  virtual void DidComposite() = 0;
-  virtual ~CompositionNotifySink() {}
-};
-
 /**
  * A class that manages Image creation for a LayerManager. The only reason
  * we need a separate class here is that LayerManagers aren't threadsafe
@@ -505,14 +498,6 @@ public:
       mPaintCount++;
       mPreviousImagePainted = true;
     }
-
-    if (mCompositionNotifySink) {
-      mCompositionNotifySink->DidComposite();
-    }
-  }
-
-  void SetCompositionNotifySink(CompositionNotifySink *aSink) {
-    mCompositionNotifySink = aSink;
   }
 
 private:
@@ -564,8 +549,6 @@ private:
   gfx::IntSize mScaleHint;
 
   nsRefPtr<BufferRecycleBin> mRecycleBin;
-
-  CompositionNotifySink *mCompositionNotifySink;
 
   // This member points to an ImageClient if this ImageContainer was
   // sucessfully created with ENABLE_ASYNC, or points to null otherwise.
