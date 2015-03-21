@@ -1162,6 +1162,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
                 break;
               }
 
+              case JSTRY_FOR_OF:
               case JSTRY_LOOP:
                 break;
             }
