@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryPing.jsm");
 Cu.import("resource://gre/modules/TelemetrySession.jsm");
+Cu.import("resource://gre/modules/TelemetryLog.jsm");
 
 const Telemetry = Services.telemetry;
 const bundle = Services.strings.createBundle(
@@ -134,6 +135,57 @@ let GeneralData = {
     table.appendChild(row);
 
     let dataDiv = document.getElementById("general-data");
+    dataDiv.appendChild(table);
+  },
+
+  /**
+   * Helper function for appending a column to the data table.
+   *
+   * @param aRowElement Parent row element
+   * @param aColType Column's tag name
+   * @param aColText Column contents
+   */
+  appendColumn: function(aRowElement, aColType, aColText) {
+    let colElement = document.createElement(aColType);
+    let colTextElement = document.createTextNode(aColText);
+    colElement.appendChild(colTextElement);
+    aRowElement.appendChild(colElement);
+  },
+};
+
+let TelLog = {
+  /**
+   * Renders the telemetry log
+   */
+  render: function() {
+    let entries =  TelemetryLog.entries();
+
+    if(entries.length == 0) {
+        return;
+    }
+    setHasData("telemetry-log-section", true);
+    let table = document.createElement("table");
+
+    let caption = document.createElement("caption");
+    let captionString = bundle.GetStringFromName("telemetryLogTitle");
+    caption.appendChild(document.createTextNode(captionString + "\n"));
+    table.appendChild(caption);
+
+    let headings = document.createElement("tr");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingId") + "\t");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingTimestamp") + "\t");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingData") + "\t");
+    table.appendChild(headings);
+
+    for (let entry of entries) {
+        let row = document.createElement("tr");
+        for (let elem of entry) {
+            this.appendColumn(row, "td", elem + "\t");
+        }
+        table.appendChild(row);
+    }
+
+    let dataDiv = document.getElementById("telemetry-log");
     dataDiv.appendChild(table);
   },
 
@@ -992,6 +1044,9 @@ function onLoad() {
 
   // Show general data.
   GeneralData.render();
+
+  // Show telemetry log.
+  TelLog.render();
 
   // Show slow SQL stats
   SlowSQL.render();

@@ -658,7 +658,7 @@ SocialShare = {
         pageData.microdata = msg.data;
         this.sharePage(providerOrigin, pageData, target);
       });
-      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, target);
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, { target });
       return;
     }
     this.currentShare = pageData;

@@ -152,24 +152,20 @@ const SQL_ADAPTIVE_QUERY =
 const SQL_KEYWORD_QUERY =
   `/* do not warn (bug 487787) */
    SELECT :query_type,
-     (SELECT REPLACE(url, '%s', :query_string) FROM moz_places WHERE id = b.fk)
-     AS search_url, h.title,
+          REPLACE(h.url, '%s', :query_string) AS search_url, h.title,
      IFNULL(f.url, (SELECT f.url
                     FROM moz_places
                     JOIN moz_favicons f ON f.id = favicon_id
-                    WHERE rev_host = (SELECT rev_host FROM moz_places WHERE id = b.fk)
+                    WHERE rev_host = h.rev_host
                     ORDER BY frecency DESC
                     LIMIT 1)
            ),
-     1, b.title, NULL, h.visit_count, h.typed, IFNULL(h.id, b.fk),
-     t.open_count, h.frecency
+     1, NULL, NULL, h.visit_count, h.typed, h.id, t.open_count, h.frecency
    FROM moz_keywords k
-   JOIN moz_bookmarks b ON b.keyword_id = k.id
-   LEFT JOIN moz_places h ON h.url = search_url
+   JOIN moz_places h ON k.place_id = h.id
    LEFT JOIN moz_favicons f ON f.id = h.favicon_id
    LEFT JOIN moz_openpages_temp t ON t.url = search_url
-   WHERE LOWER(k.keyword) = LOWER(:keyword)
-   ORDER BY h.frecency DESC`;
+   WHERE k.keyword = LOWER(:keyword)`;
 
 function hostQuery(conditions = "") {
   let query =
@@ -1241,24 +1237,13 @@ Search.prototype = {
     let title = bookmarkTitle || historyTitle;
 
     if (queryType == QUERYTYPE_KEYWORD) {
+      match.style = "keyword";
       if (this._enableActions) {
-        match.style = "keyword";
         url = makeActionURL("keyword", {
           url: escapedURL,
           input: this._originalSearchString,
         });
         action = "keyword";
-      } else {
-        // If we do not have a title, then we must have a keyword, so let the UI
-        // know it is a keyword.  Otherwise, we found an exact page match, so just
-        // show the page like a regular result.  Because the page title is likely
-        // going to be more specific than the bookmark title (keyword title).
-        if (!historyTitle) {
-          match.style = "keyword"
-        }
-        else {
-          title = historyTitle;
-        }
       }
     }
 

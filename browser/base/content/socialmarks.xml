@@ -163,7 +163,7 @@
             pageData.microdata = msg.data;
             this.loadPanel(pageData, target);
           });
-          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, target);
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, { target });
           return;
         }
         this.pageData = pageData;

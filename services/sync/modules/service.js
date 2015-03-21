@@ -305,6 +305,21 @@ Sync11Service.prototype = {
     return false;
   },
 
+  // The global "enabled" state comes from prefs, and will be set to false
+  // whenever the UI that exposes what to sync finds all Sync engines disabled.
+  get enabled() {
+    return Svc.Prefs.get("enabled");
+  },
+  set enabled(val) {
+    // There's no real reason to impose this other than to catch someone doing
+    // something we don't expect with bad consequences - all setting of this
+    // pref are in the UI code and external to this module.
+    if (val) {
+      throw new Error("Only disabling via this setter is supported");
+    }
+    Svc.Prefs.set("enabled", val);
+  },
+
   /**
    * Prepare to initialize the rest of Weave after waiting a little bit
    */
@@ -333,8 +348,6 @@ Sync11Service.prototype = {
 
     this._clusterManager = this.identity.createClusterManager(this);
     this.recordManager = new RecordManager(this);
-
-    this.enabled = true;
 
     this._registerEngines();
 
@@ -1245,6 +1258,10 @@ Sync11Service.prototype = {
   },
 
   sync: function sync() {
+    if (!this.enabled) {
+      this._log.debug("Not syncing as Sync is disabled.");
+      return;
+    }
     let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
     this._log.debug("User-Agent: " + SyncStorageRequest.prototype.userAgent);
     this._log.info("Starting sync at " + dateStr);
