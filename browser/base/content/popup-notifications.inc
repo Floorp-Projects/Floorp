@@ -60,6 +60,14 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="password-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <textbox id="password-notification-username" disabled="true"/>
+        <textbox id="password-notification-password" type="password"
+                 disabled="true"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
 #ifdef E10S_TESTING_ONLY
     <popupnotification id="enable-e10s-notification" hidden="true">
       <popupnotificationcontent orient="vertical"/>

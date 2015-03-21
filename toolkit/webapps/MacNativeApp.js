@@ -269,6 +269,8 @@ NativeApp.prototype = {
     <string>0</string>\n\
     <key>NSHighResolutionCapable</key>\n\
     <true/>\n\
+    <key>NSSupportsAutomaticGraphicsSwitching</key>\n\
+    <true/>\n\
     <key>NSPrincipalClass</key>\n\
     <string>GeckoNSApplication</string>\n\
     <key>FirefoxBinary</key>\n\

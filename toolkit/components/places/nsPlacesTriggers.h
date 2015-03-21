@@ -175,7 +175,7 @@
   "END" \
 )
 
-#define CREATE_FOREIGNCOUNT_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
+#define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterdelete_trigger " \
   "AFTER DELETE ON moz_bookmarks FOR EACH ROW " \
   "BEGIN " \
@@ -185,7 +185,7 @@
   "END" \
 )
 
-#define CREATE_FOREIGNCOUNT_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
+#define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterinsert_trigger " \
   "AFTER INSERT ON moz_bookmarks FOR EACH ROW " \
   "BEGIN " \
@@ -195,7 +195,7 @@
   "END" \
 )
 
-#define CREATE_FOREIGNCOUNT_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
+#define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterupdate_trigger " \
   "AFTER UPDATE OF fk ON moz_bookmarks FOR EACH ROW " \
   "BEGIN " \
@@ -207,4 +207,38 @@
     "WHERE id = OLD.fk;" \
   "END" \
 )
+
+#define CREATE_KEYWORDS_FOREIGNCOUNT_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_keywords_foreign_count_afterdelete_trigger " \
+  "AFTER DELETE ON moz_keywords FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count - 1 " \
+    "WHERE id = OLD.place_id;" \
+  "END" \
+)
+
+#define CREATE_KEYWORDS_FOREIGNCOUNT_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_keyords_foreign_count_afterinsert_trigger " \
+  "AFTER INSERT ON moz_keywords FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count + 1 " \
+    "WHERE id = NEW.place_id;" \
+  "END" \
+)
+
+#define CREATE_KEYWORDS_FOREIGNCOUNT_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_keywords_foreign_count_afterupdate_trigger " \
+  "AFTER UPDATE OF place_id ON moz_keywords FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count + 1 " \
+    "WHERE id = NEW.place_id; " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count - 1 " \
+    "WHERE id = OLD.place_id; " \
+  "END" \
+)
+
 #endif // __nsPlacesTriggers_h__
