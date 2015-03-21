@@ -41,20 +41,20 @@ public class testHomeBanner extends UITest {
         // Load about:home and make sure the onshown handler is called.
         Actions.EventExpecter eventExpecter = getActions().expectGeckoEvent("TestHomeBanner:MessageShown");
         addBannerMessage();
-        NavigationHelper.enterAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         eventExpecter.blockForEvent();
 
         // Verify that the banner is visible with the correct text.
         mAboutHome.assertBannerText(TEXT);
 
         // Verify that the banner isn't visible after navigating away from about:home.
-        NavigationHelper.enterAndLoadUrl(mStringHelper.ABOUT_FIREFOX_URL);
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_FIREFOX_URL);
         mAboutHome.assertBannerNotVisible();
     }
 
 
     private void hideOnToolbarFocusTest() {
-        NavigationHelper.enterAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mAboutHome.assertVisible()
                   .assertBannerVisible();
 
@@ -72,7 +72,7 @@ public class testHomeBanner extends UITest {
      * Note: This test does not remove the message after it is done.
      */
     private void dismissBannerTest() {
-        NavigationHelper.enterAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mAboutHome.assertVisible();
 
         // Test to make sure the ondismiss handler is called when the close button is clicked.

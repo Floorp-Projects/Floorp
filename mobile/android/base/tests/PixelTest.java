@@ -33,8 +33,8 @@ abstract class PixelTest extends BaseTest {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        waitForText(mStringHelper.RELOAD_LABEL);
-        mSolo.clickOnText(mStringHelper.RELOAD_LABEL);
+        waitForText(StringHelper.RELOAD_LABEL);
+        mSolo.clickOnText(StringHelper.RELOAD_LABEL);
 
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();
@@ -55,13 +55,13 @@ abstract class PixelTest extends BaseTest {
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         if (isPrivate) {
-            selectMenuItem(mStringHelper.NEW_PRIVATE_TAB_LABEL);
+            selectMenuItem(StringHelper.NEW_PRIVATE_TAB_LABEL);
         } else {
-            selectMenuItem(mStringHelper.NEW_TAB_LABEL);
+            selectMenuItem(StringHelper.NEW_TAB_LABEL);
         }
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
-        waitForText(mStringHelper.TITLE_PLACE_HOLDER);
+        waitForText(StringHelper.TITLE_PLACE_HOLDER);
         loadAndPaint(url);
         tabEventExpecter.unregisterListener();
         contentEventExpecter.unregisterListener();
