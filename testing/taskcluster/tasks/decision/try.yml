@@ -2,7 +2,7 @@
 metadata:
   name: 'Taskcluster decision task for {{project}}'
   description: |
-    Try push for {{owner}} with {{comment}}.
+    Try push for {{owner}}.
   owner: mozilla-taskcluster-maintenance@mozilla.com
   source: "{{{source}}}"
 
