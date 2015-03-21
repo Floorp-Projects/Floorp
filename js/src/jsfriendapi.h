@@ -80,7 +80,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JS::HandleObject obj, JS::Mutab
 
 // Raw JSScript* because this needs to be callable from a signal handler.
 extern JS_FRIEND_API(unsigned)
-JS_PCToLineNumber(JSScript *script, jsbytecode *pc);
+JS_PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp = nullptr);
 
 /*
  * Determine whether the given object is backed by a DeadObjectProxy.
