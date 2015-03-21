@@ -17,17 +17,17 @@ typedef nsSVGElement SVGDescElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGDescElement MOZ_FINAL : public SVGDescElementBase
+class SVGDescElement final : public SVGDescElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGDescElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 };
 
 } // namespace dom

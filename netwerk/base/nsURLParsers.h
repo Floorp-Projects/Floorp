@@ -40,7 +40,7 @@ protected:
 //     file://foo/bar.txt     (the authority "foo"  is ignored)
 //----------------------------------------------------------------------------
 
-class nsNoAuthURLParser MOZ_FINAL : public nsBaseURLParser
+class nsNoAuthURLParser final : public nsBaseURLParser
 {
     ~nsNoAuthURLParser() {}
 
@@ -51,18 +51,18 @@ public:
     NS_IMETHOD ParseFilePath(const char *, int32_t,
                              uint32_t *, int32_t *,
                              uint32_t *, int32_t *,
-                             uint32_t *, int32_t *) MOZ_OVERRIDE;
+                             uint32_t *, int32_t *) override;
 #endif
 
     NS_IMETHOD ParseAuthority(const char *auth, int32_t authLen,
                               uint32_t *usernamePos, int32_t *usernameLen,
                               uint32_t *passwordPos, int32_t *passwordLen,
                               uint32_t *hostnamePos, int32_t *hostnameLen,
-                              int32_t *port) MOZ_OVERRIDE;
+                              int32_t *port) override;
 
     void ParseAfterScheme(const char *spec, int32_t specLen,
                           uint32_t *authPos, int32_t *authLen,
-                          uint32_t *pathPos, int32_t *pathLen) MOZ_OVERRIDE;
+                          uint32_t *pathPos, int32_t *pathLen) override;
 };
 
 //----------------------------------------------------------------------------
@@ -86,19 +86,19 @@ public:
                               uint32_t *usernamePos, int32_t *usernameLen,
                               uint32_t *passwordPos, int32_t *passwordLen,
                               uint32_t *hostnamePos, int32_t *hostnameLen,
-                              int32_t *port) MOZ_OVERRIDE;
+                              int32_t *port) override;
 
     NS_IMETHOD ParseUserInfo(const char *userinfo, int32_t userinfoLen,
                              uint32_t *usernamePos, int32_t *usernameLen,
-                             uint32_t *passwordPos, int32_t *passwordLen) MOZ_OVERRIDE;
+                             uint32_t *passwordPos, int32_t *passwordLen) override;
 
     NS_IMETHOD ParseServerInfo(const char *serverinfo, int32_t serverinfoLen,
                                uint32_t *hostnamePos, int32_t *hostnameLen,
-                               int32_t *port) MOZ_OVERRIDE;
+                               int32_t *port) override;
 
     void ParseAfterScheme(const char *spec, int32_t specLen,
                           uint32_t *authPos, int32_t *authLen,
-                          uint32_t *pathPos, int32_t *pathLen) MOZ_OVERRIDE;
+                          uint32_t *pathPos, int32_t *pathLen) override;
 };
 
 //----------------------------------------------------------------------------

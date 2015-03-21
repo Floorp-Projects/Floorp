@@ -42,7 +42,7 @@ namespace dom {
 
 class OnBeforeUnloadEventHandlerNonNull;
 
-class HTMLFrameSetElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLFrameSetElement final : public nsGenericHTMLElement,
                                       public nsIDOMHTMLFrameSetElement
 {
 public:
@@ -80,7 +80,7 @@ public:
     SetHTMLAttr(nsGkAtoms::rows, aRows, aError);
   }
 
-  virtual bool IsEventAttributeName(nsIAtom *aName) MOZ_OVERRIDE;
+  virtual bool IsEventAttributeName(nsIAtom *aName) override;
 
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.
@@ -107,7 +107,7 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
 
    /**
     * GetRowSpec is used to get the "rows" spec.
@@ -130,16 +130,16 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              int32_t aModType) const MOZ_OVERRIDE;
+                                              int32_t aModType) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
 protected:
   virtual ~HTMLFrameSetElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   nsresult ParseRowCol(const nsAString& aValue,

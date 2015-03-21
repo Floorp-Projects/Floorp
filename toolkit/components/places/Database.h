@@ -61,7 +61,7 @@ enum JournalMode {
 , JOURNAL_WAL
 };
 
-class Database MOZ_FINAL : public nsIObserver
+class Database final : public nsIObserver
                          , public nsSupportsWeakReference
 {
   typedef mozilla::storage::StatementCache<mozIStorageStatement> StatementCache;

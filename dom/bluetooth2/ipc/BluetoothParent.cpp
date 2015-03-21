@@ -24,7 +24,7 @@ USING_BLUETOOTH_NAMESPACE
  * BluetoothRequestParent::ReplyRunnable
  ******************************************************************************/
 
-class BluetoothRequestParent::ReplyRunnable MOZ_FINAL : public BluetoothReplyRunnable
+class BluetoothRequestParent::ReplyRunnable final : public BluetoothReplyRunnable
 {
   BluetoothRequestParent* mRequest;
 
@@ -37,7 +37,7 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mReply);
@@ -63,13 +63,13 @@ public:
   }
 
   virtual bool
-  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) MOZ_OVERRIDE
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) override
   {
     MOZ_CRASH("This should never be called!");
   }
 
   virtual void
-  ReleaseMembers() MOZ_OVERRIDE
+  ReleaseMembers() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mRequest = nullptr;

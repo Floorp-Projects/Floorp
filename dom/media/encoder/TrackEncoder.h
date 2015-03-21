@@ -148,7 +148,7 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+                                        const MediaSegment& aQueuedMedia) override;
 
   /**
    * Interleaves the track data and stores the result into aOutput. Might need
@@ -200,7 +200,7 @@ protected:
    * Notifies the audio encoder that we have reached the end of source stream,
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    */
-  virtual void NotifyEndOfStream() MOZ_OVERRIDE;
+  virtual void NotifyEndOfStream() override;
 
   /**
    * The number of channels are used for processing PCM data in the audio encoder.
@@ -241,7 +241,7 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+                                        const MediaSegment& aQueuedMedia) override;
   /**
   * Measure size of mRawSegment
   */
@@ -269,7 +269,7 @@ protected:
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    * Called on the MediaStreamGraph thread.
    */
-  virtual void NotifyEndOfStream() MOZ_OVERRIDE;
+  virtual void NotifyEndOfStream() override;
 
   /**
    * The width of source video frame, ceiled if the source width is odd.

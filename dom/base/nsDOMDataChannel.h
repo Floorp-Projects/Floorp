@@ -43,7 +43,7 @@ public:
                                            mozilla::DOMEventTargetHelper)
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE;
+    override;
   nsPIDOMWindow* GetParentObject() const
   {
     return GetOwner();
@@ -84,18 +84,18 @@ public:
   DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
   virtual nsresult
-  OnMessageAvailable(nsISupports* aContext, const nsACString& aMessage) MOZ_OVERRIDE;
+  OnMessageAvailable(nsISupports* aContext, const nsACString& aMessage) override;
 
   virtual nsresult
-  OnBinaryMessageAvailable(nsISupports* aContext, const nsACString& aMessage) MOZ_OVERRIDE;
+  OnBinaryMessageAvailable(nsISupports* aContext, const nsACString& aMessage) override;
 
   virtual nsresult OnSimpleEvent(nsISupports* aContext, const nsAString& aName);
 
   virtual nsresult
-  OnChannelConnected(nsISupports* aContext) MOZ_OVERRIDE;
+  OnChannelConnected(nsISupports* aContext) override;
 
   virtual nsresult
-  OnChannelClosed(nsISupports* aContext) MOZ_OVERRIDE;
+  OnChannelClosed(nsISupports* aContext) override;
 
   virtual void
   AppReady();

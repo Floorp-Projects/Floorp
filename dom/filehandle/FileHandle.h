@@ -248,7 +248,7 @@ protected:
                  ErrorResult& aRv);
 };
 
-class FinishHelper MOZ_FINAL : public nsIRunnable
+class FinishHelper final : public nsIRunnable
 {
   friend class FileHandleBase;
 

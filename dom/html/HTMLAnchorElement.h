@@ -18,7 +18,7 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
-class HTMLAnchorElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLAnchorElement final : public nsGenericHTMLElement,
                                     public nsIDOMHTMLAnchorElement,
                                     public Link
 {
@@ -39,11 +39,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLAnchorElement,
                                            nsGenericHTMLElement)
 
-  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-  virtual bool Draggable() const MOZ_OVERRIDE;
+  virtual int32_t TabIndexDefault() override;
+  virtual bool Draggable() const override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const MOZ_OVERRIDE
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override
   {
     return true;
   }
@@ -56,17 +56,17 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex) override;
 
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
-  virtual void GetLinkTarget(nsAString& aTarget) MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;
+                     EventChainPostVisitor& aVisitor) override;
+  virtual bool IsLink(nsIURI** aURI) const override;
+  virtual void GetLinkTarget(nsAString& aTarget) override;
+  virtual already_AddRefed<nsIURI> GetHrefURI() const override;
 
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
@@ -75,21 +75,21 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify) override;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual EventStates IntrinsicState() const override;
 
-  virtual void OnDNSPrefetchDeferred() MOZ_OVERRIDE;
-  virtual void OnDNSPrefetchRequested() MOZ_OVERRIDE;
-  virtual bool HasDeferredDNSPrefetchRequest() MOZ_OVERRIDE;
+  virtual void OnDNSPrefetchDeferred() override;
+  virtual void OnDNSPrefetchRequested() override;
+  virtual bool HasDeferredDNSPrefetchRequest() override;
 
   // WebIDL API
   void GetHref(nsAString& aValue, ErrorResult& rv)
@@ -227,9 +227,9 @@ public:
 protected:
   virtual ~HTMLAnchorElement();
 
-  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) override;
+  virtual void SetItemValueText(const nsAString& text) override;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsRefPtr<nsDOMTokenList > mRelList;
 };
 

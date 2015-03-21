@@ -26,29 +26,29 @@ public:
 
   void SentFrame();
   virtual void OutgoingRate(const int video_channel,
-    const unsigned int framerate, const unsigned int bitrate) MOZ_OVERRIDE;
+    const unsigned int framerate, const unsigned int bitrate) override;
 
   virtual void IncomingCodecChanged(const int video_channel,
-    const webrtc::VideoCodec& video_codec) MOZ_OVERRIDE;
+    const webrtc::VideoCodec& video_codec) override;
 
   virtual void IncomingRate(const int video_channel,
                             const unsigned int framerate,
-                            const unsigned int bitrate) MOZ_OVERRIDE;
+                            const unsigned int bitrate) override;
 
-  void ReceiveStateChange(const int video_channel, webrtc::VideoReceiveState state) MOZ_OVERRIDE;
+  void ReceiveStateChange(const int video_channel, webrtc::VideoReceiveState state) override;
 
   void EndOfCallStats();
 
-  virtual void RequestNewKeyFrame(const int video_channel) MOZ_OVERRIDE {};
+  virtual void RequestNewKeyFrame(const int video_channel) override {};
 
-  virtual void SuspendChange(int video_channel, bool is_suspended) MOZ_OVERRIDE {};
+  virtual void SuspendChange(int video_channel, bool is_suspended) override {};
   virtual void DecoderTiming(int decode_ms,
                              int max_decode_ms,
                              int current_delay_ms,
                              int target_delay_ms,
                              int jitter_buffer_ms,
                              int min_playout_delay_ms,
-                             int render_delay_ms) MOZ_OVERRIDE {}
+                             int render_delay_ms) override {}
 
   bool GetEncoderStats(double* framerateMean,
                        double* framerateStdDev,

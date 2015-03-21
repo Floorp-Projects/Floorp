@@ -54,7 +54,7 @@ typedef struct _GtkWidget GtkWidget;
 class QX11EmbedContainer;
 #endif
 
-class nsFrameLoader MOZ_FINAL : public nsIFrameLoader,
+class nsFrameLoader final : public nsIFrameLoader,
                                 public nsStubMutationObserver,
                                 public mozilla::dom::ipc::MessageManagerCallback
 {
@@ -89,15 +89,15 @@ public:
    * MessageManagerCallback methods that we override.
    */
   virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
-                                          bool aRunInGlobalScope) MOZ_OVERRIDE;
+                                          bool aRunInGlobalScope) override;
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
-  virtual bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE;
-  virtual bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE;
-  virtual bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE;
+                                  nsIPrincipal* aPrincipal) override;
+  virtual bool CheckPermission(const nsAString& aPermission) override;
+  virtual bool CheckManifestURL(const nsAString& aManifestURL) override;
+  virtual bool CheckAppHasPermission(const nsAString& aPermission) override;
 
   /**
    * Called from the layout frame associated with this frame loader;

@@ -70,7 +70,7 @@ protected:
 //-------------------------------------------------------------------------
 // Printer Enumerator
 //-------------------------------------------------------------------------
-class nsPrinterEnumeratorWin MOZ_FINAL : public nsIPrinterEnumerator
+class nsPrinterEnumeratorWin final : public nsIPrinterEnumerator
 {
   ~nsPrinterEnumeratorWin();
 

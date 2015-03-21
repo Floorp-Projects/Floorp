@@ -36,33 +36,33 @@ public:
   RtspChannelParent(nsIURI *aUri);
 
   // nsBaseChannel::nsIChannel
-  NS_IMETHOD GetContentType(nsACString & aContentType) MOZ_OVERRIDE MOZ_FINAL;
+  NS_IMETHOD GetContentType(nsACString & aContentType) override final;
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener,
-                       nsISupports *aContext) MOZ_OVERRIDE MOZ_FINAL;
+                       nsISupports *aContext) override final;
 
   // nsBaseChannel::nsIStreamListener::nsIRequestObserver
   NS_IMETHOD OnStartRequest(nsIRequest *aRequest,
-                            nsISupports *aContext) MOZ_OVERRIDE MOZ_FINAL;
+                            nsISupports *aContext) override final;
   NS_IMETHOD OnStopRequest(nsIRequest *aRequest,
                            nsISupports *aContext,
-                           nsresult aStatusCode) MOZ_OVERRIDE MOZ_FINAL;
+                           nsresult aStatusCode) override final;
 
   // nsBaseChannel::nsIStreamListener
   NS_IMETHOD OnDataAvailable(nsIRequest *aRequest,
                              nsISupports *aContext,
                              nsIInputStream *aInputStream,
                              uint64_t aOffset,
-                             uint32_t aCount) MOZ_OVERRIDE MOZ_FINAL;
+                             uint32_t aCount) override final;
 
   // nsBaseChannel::nsIChannel::nsIRequest
-  NS_IMETHOD Cancel(nsresult status) MOZ_OVERRIDE MOZ_FINAL;
-  NS_IMETHOD Suspend() MOZ_OVERRIDE MOZ_FINAL;
-  NS_IMETHOD Resume() MOZ_OVERRIDE MOZ_FINAL;
+  NS_IMETHOD Cancel(nsresult status) override final;
+  NS_IMETHOD Suspend() override final;
+  NS_IMETHOD Resume() override final;
 
   // nsBaseChannel
   NS_IMETHOD OpenContentStream(bool aAsync,
                                nsIInputStream **aStream,
-                               nsIChannel **aChannel) MOZ_OVERRIDE MOZ_FINAL;
+                               nsIChannel **aChannel) override final;
 
   // RtspChannelParent
   bool Init(const RtspChannelConnectArgs& aArgs);
@@ -76,7 +76,7 @@ protected:
 
 private:
   bool mIPCClosed;
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
 } // namespace net

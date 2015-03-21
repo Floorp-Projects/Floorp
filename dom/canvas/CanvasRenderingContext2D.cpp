@@ -159,14 +159,14 @@ static int64_t gCanvasAzureMemoryUsed = 0;
 // This is KIND_OTHER because it's not always clear where in memory the pixels
 // of a canvas are stored.  Furthermore, this memory will be tracked by the
 // underlying surface implementations.  See bug 655638 for details.
-class Canvas2dPixelsReporter MOZ_FINAL : public nsIMemoryReporter
+class Canvas2dPixelsReporter final : public nsIMemoryReporter
 {
   ~Canvas2dPixelsReporter() {}
 public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "canvas-2d-pixels", KIND_OTHER, UNITS_BYTES,
@@ -2279,7 +2279,7 @@ public:
   {
   }
 
-  virtual void DoUpdate() MOZ_OVERRIDE
+  virtual void DoUpdate() override
   {
     // Refresh the cached FilterDescription in mContext->CurrentState().filter.
     // If this filter is not at the top of the state stack, we'll refresh the
@@ -2322,13 +2322,13 @@ public:
   {
   }
 
-  virtual float GetEmLength() const MOZ_OVERRIDE
+  virtual float GetEmLength() const override
   {
     return NSAppUnitsToFloatPixels(mFont.size,
                                    nsPresContext::AppUnitsPerCSSPixel());
   }
 
-  virtual float GetExLength() const MOZ_OVERRIDE
+  virtual float GetExLength() const override
   {
     gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
     nsRefPtr<nsFontMetrics> fontMetrics;
@@ -2340,7 +2340,7 @@ public:
                                    nsPresContext::AppUnitsPerCSSPixel());
   }
 
-  virtual gfx::Size GetSize() const MOZ_OVERRIDE
+  virtual gfx::Size GetSize() const override
   { return Size(mSize); }
 
 private:

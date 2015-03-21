@@ -25,7 +25,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class FetchPut::Runnable MOZ_FINAL : public nsRunnable
+class FetchPut::Runnable final : public nsRunnable
 {
 public:
   explicit Runnable(FetchPut* aFetchPut)
@@ -34,7 +34,7 @@ public:
     MOZ_ASSERT(mFetchPut);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     if (NS_IsMainThread())
     {
@@ -58,7 +58,7 @@ private:
   nsRefPtr<FetchPut> mFetchPut;
 };
 
-class FetchPut::FetchObserver MOZ_FINAL : public FetchDriverObserver
+class FetchPut::FetchObserver final : public FetchDriverObserver
 {
 public:
   explicit FetchObserver(FetchPut* aFetchPut)
@@ -66,13 +66,13 @@ public:
   {
   }
 
-  virtual void OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE
+  virtual void OnResponseAvailable(InternalResponse* aResponse) override
   {
     MOZ_ASSERT(!mInternalResponse);
     mInternalResponse = aResponse;
   }
 
-  virtual void OnResponseEnd() MOZ_OVERRIDE
+  virtual void OnResponseEnd() override
   {
     mFetchPut->FetchComplete(this, mInternalResponse);
     mFetchPut = nullptr;

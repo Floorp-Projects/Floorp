@@ -77,7 +77,7 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct DOMAnimatedNumber MOZ_FINAL : public mozilla::dom::SVGAnimatedNumber
+  struct DOMAnimatedNumber final : public mozilla::dom::SVGAnimatedNumber
   {
     DOMAnimatedNumber(nsSVGNumberPair* aVal, PairIndex aIndex, nsSVGElement *aSVGElement)
       : mozilla::dom::SVGAnimatedNumber(aSVGElement)
@@ -89,11 +89,11 @@ public:
     nsSVGNumberPair* mVal; // kept alive because it belongs to content
     PairIndex mIndex; // are we the first or second number
 
-    virtual float BaseVal() MOZ_OVERRIDE
+    virtual float BaseVal() override
     {
       return mVal->GetBaseValue(mIndex);
     }
-    virtual void SetBaseVal(float aValue) MOZ_OVERRIDE
+    virtual void SetBaseVal(float aValue) override
     {
       MOZ_ASSERT(mozilla::IsFinite(aValue));
       mVal->SetBaseValue(aValue, mIndex, mSVGElement);
@@ -101,7 +101,7 @@ public:
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    virtual float AnimVal() MOZ_OVERRIDE
+    virtual float AnimVal() override
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue(mIndex);
@@ -124,10 +124,10 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const mozilla::dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 

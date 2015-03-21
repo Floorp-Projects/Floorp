@@ -16,7 +16,7 @@ namespace dom {
 
 class FileSystemBase;
 
-class FileSystemRequestParent MOZ_FINAL
+class FileSystemRequestParent final
   : public PFileSystemRequestParent
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemRequestParent)
@@ -33,7 +33,7 @@ public:
   Dispatch(ContentParent* aParent, const FileSystemParams& aParams);
 
   virtual void
-  ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason why) override;
 
 private:
   // Private destructor, to discourage deletion outside of Release():

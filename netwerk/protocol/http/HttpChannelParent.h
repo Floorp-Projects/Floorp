@@ -62,8 +62,8 @@ public:
   bool Init(const HttpChannelCreationArgs& aOpenArgs);
 
   // ADivertableParentChannel functions.
-  void DivertTo(nsIStreamListener *aListener) MOZ_OVERRIDE;
-  nsresult SuspendForDiversion() MOZ_OVERRIDE;
+  void DivertTo(nsIStreamListener *aListener) override;
+  nsresult SuspendForDiversion() override;
 
   // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
   // that it should divert OnDataAvailable and OnStopRequest calls to this
@@ -117,25 +117,25 @@ protected:
                    const uint32_t&            aContentPolicyType,
                    const uint32_t&            aInnerWindowID);
 
-  virtual bool RecvSetPriority(const uint16_t& priority) MOZ_OVERRIDE;
-  virtual bool RecvSetClassOfService(const uint32_t& cos) MOZ_OVERRIDE;
-  virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset) MOZ_OVERRIDE;
-  virtual bool RecvSuspend() MOZ_OVERRIDE;
-  virtual bool RecvResume() MOZ_OVERRIDE;
-  virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;
+  virtual bool RecvSetPriority(const uint16_t& priority) override;
+  virtual bool RecvSetClassOfService(const uint32_t& cos) override;
+  virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset) override;
+  virtual bool RecvSuspend() override;
+  virtual bool RecvResume() override;
+  virtual bool RecvCancel(const nsresult& status) override;
   virtual bool RecvRedirect2Verify(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders,
-                                   const OptionalURIParams& apiRedirectUri) MOZ_OVERRIDE;
+                                   const OptionalURIParams& apiRedirectUri) override;
   virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
-                                                   const int32_t& no) MOZ_OVERRIDE;
-  virtual bool RecvDocumentChannelCleanup() MOZ_OVERRIDE;
-  virtual bool RecvMarkOfflineCacheEntryAsForeign() MOZ_OVERRIDE;
+                                                   const int32_t& no) override;
+  virtual bool RecvDocumentChannelCleanup() override;
+  virtual bool RecvMarkOfflineCacheEntryAsForeign() override;
   virtual bool RecvDivertOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset,
-                                         const uint32_t& count) MOZ_OVERRIDE;
-  virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
-  virtual bool RecvDivertComplete() MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+                                         const uint32_t& count) override;
+  virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) override;
+  virtual bool RecvDivertComplete() override;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
   nsresult ResumeForDiversion();
@@ -146,8 +146,8 @@ protected:
   friend class HttpChannelParentListener;
   nsRefPtr<mozilla::dom::TabParent> mTabParent;
 
-  void OfflineDisconnect() MOZ_OVERRIDE;
-  uint32_t GetAppId() MOZ_OVERRIDE;
+  void OfflineDisconnect() override;
+  uint32_t GetAppId() override;
 
 private:
   nsRefPtr<nsHttpChannel>       mChannel;

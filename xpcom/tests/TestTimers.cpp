@@ -70,7 +70,7 @@ private:
   ReentrantMonitor* mReentrantMonitor;
 };
 
-class TimerCallback MOZ_FINAL : public nsITimerCallback
+class TimerCallback final : public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -78,7 +78,7 @@ public:
   TimerCallback(nsIThread** aThreadPtr, ReentrantMonitor* aReentrantMonitor)
   : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
 
-  NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE {
+  NS_IMETHOD Notify(nsITimer* aTimer) override {
     NS_ASSERTION(mThreadPtr, "Callback was not supposed to be called!");
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 

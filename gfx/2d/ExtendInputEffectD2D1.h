@@ -33,7 +33,7 @@ enum {
 // effect's output rect) or the component transfer and color matrix effects
 // (which can transform transparent pixels into non-transparent ones, but only
 // inside their input effect's output rect).
-class ExtendInputEffectD2D1 MOZ_FINAL : public ID2D1EffectImpl
+class ExtendInputEffectD2D1 final : public ID2D1EffectImpl
                                       , public ID2D1DrawTransform
 {
 public:

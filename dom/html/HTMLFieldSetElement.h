@@ -17,7 +17,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 
-class HTMLFieldSetElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
                                       public nsIDOMHTMLFieldSetElement,
                                       public nsIConstraintValidation
 {
@@ -38,20 +38,20 @@ public:
   NS_DECL_NSIDOMHTMLFIELDSETELEMENT
 
   // nsIContent
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
 
   virtual nsresult InsertChildAt(nsIContent* aChild, uint32_t aIndex,
-                                     bool aNotify) MOZ_OVERRIDE;
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
+                                     bool aNotify) override;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_FIELDSET; }
-  NS_IMETHOD Reset() MOZ_OVERRIDE;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
-  virtual bool IsDisabledForEvents(uint32_t aMessage) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_FIELDSET; }
+  NS_IMETHOD Reset() override;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
+  virtual bool IsDisabledForEvents(uint32_t aMessage) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   const nsIContent* GetFirstLegend() const { return mFirstLegend; }
 
@@ -93,7 +93,7 @@ public:
 
   // XPCOM SetCustomValidity is OK for us
 
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual EventStates IntrinsicState() const override;
 
 
   /*
@@ -111,7 +111,7 @@ public:
 protected:
   virtual ~HTMLFieldSetElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
 

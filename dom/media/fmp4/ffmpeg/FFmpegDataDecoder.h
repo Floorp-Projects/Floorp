@@ -29,11 +29,11 @@ public:
 
   static bool Link();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE = 0;
-  virtual nsresult Flush() MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE = 0;
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override = 0;
+  virtual nsresult Flush() override;
+  virtual nsresult Drain() override = 0;
+  virtual nsresult Shutdown() override;
 
 protected:
   AVFrame*        PrepareFrame();

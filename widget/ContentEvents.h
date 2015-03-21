@@ -26,7 +26,7 @@ namespace mozilla {
 class InternalScrollPortEvent : public WidgetGUIEvent
 {
 public:
-  virtual InternalScrollPortEvent* AsScrollPortEvent() MOZ_OVERRIDE
+  virtual InternalScrollPortEvent* AsScrollPortEvent() override
   {
     return this;
   }
@@ -45,7 +45,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eScrollPortEventClass,
                "Duplicate() must be overridden by sub class");
@@ -75,7 +75,7 @@ public:
 class InternalScrollAreaEvent : public WidgetGUIEvent
 {
 public:
-  virtual InternalScrollAreaEvent* AsScrollAreaEvent() MOZ_OVERRIDE
+  virtual InternalScrollAreaEvent* AsScrollAreaEvent() override
   {
     return this;
   }
@@ -86,7 +86,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eScrollAreaEventClass,
                "Duplicate() must be overridden by sub class");
@@ -119,7 +119,7 @@ public:
 class InternalFormEvent : public WidgetEvent
 {
 public:
-  virtual InternalFormEvent* AsFormEvent() MOZ_OVERRIDE { return this; }
+  virtual InternalFormEvent* AsFormEvent() override { return this; }
 
   InternalFormEvent(bool aIsTrusted, uint32_t aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eFormEventClass)
@@ -127,7 +127,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eFormEventClass,
                "Duplicate() must be overridden by sub class");
@@ -154,7 +154,7 @@ public:
 class InternalClipboardEvent : public WidgetEvent
 {
 public:
-  virtual InternalClipboardEvent* AsClipboardEvent() MOZ_OVERRIDE
+  virtual InternalClipboardEvent* AsClipboardEvent() override
   {
     return this;
   }
@@ -164,7 +164,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eClipboardEventClass,
                "Duplicate() must be overridden by sub class");
@@ -192,7 +192,7 @@ public:
 class InternalFocusEvent : public InternalUIEvent
 {
 public:
-  virtual InternalFocusEvent* AsFocusEvent() MOZ_OVERRIDE { return this; }
+  virtual InternalFocusEvent* AsFocusEvent() override { return this; }
 
   InternalFocusEvent(bool aIsTrusted, uint32_t aMessage)
     : InternalUIEvent(aIsTrusted, aMessage, eFocusEventClass)
@@ -201,7 +201,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eFocusEventClass,
                "Duplicate() must be overridden by sub class");
@@ -234,7 +234,7 @@ public:
 class InternalTransitionEvent : public WidgetEvent
 {
 public:
-  virtual InternalTransitionEvent* AsTransitionEvent() MOZ_OVERRIDE
+  virtual InternalTransitionEvent* AsTransitionEvent() override
   {
     return this;
   }
@@ -246,7 +246,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eTransitionEventClass,
                "Duplicate() must be overridden by sub class");
@@ -279,7 +279,7 @@ public:
 class InternalAnimationEvent : public WidgetEvent
 {
 public:
-  virtual InternalAnimationEvent* AsAnimationEvent() MOZ_OVERRIDE
+  virtual InternalAnimationEvent* AsAnimationEvent() override
   {
     return this;
   }
@@ -291,7 +291,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eAnimationEventClass,
                "Duplicate() must be overridden by sub class");
@@ -323,7 +323,7 @@ public:
 class InternalSVGZoomEvent : public WidgetGUIEvent
 {
 public:
-  virtual InternalSVGZoomEvent* AsSVGZoomEvent() MOZ_OVERRIDE { return this; }
+  virtual InternalSVGZoomEvent* AsSVGZoomEvent() override { return this; }
 
   InternalSVGZoomEvent(bool aIsTrusted, uint32_t aMessage)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eSVGZoomEventClass)
@@ -331,7 +331,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eSVGZoomEventClass,
                "Duplicate() must be overridden by sub class");
@@ -356,7 +356,7 @@ public:
 class InternalSMILTimeEvent : public InternalUIEvent
 {
 public:
-  virtual InternalSMILTimeEvent* AsSMILTimeEvent() MOZ_OVERRIDE
+  virtual InternalSMILTimeEvent* AsSMILTimeEvent() override
   {
     return this;
   }
@@ -368,7 +368,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eSMILTimeEventClass,
                "Duplicate() must be overridden by sub class");

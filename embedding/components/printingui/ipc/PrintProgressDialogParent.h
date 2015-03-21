@@ -13,7 +13,7 @@ class nsIWebProgressListener;
 
 namespace mozilla {
 namespace embedding {
-class PrintProgressDialogParent MOZ_FINAL : public PPrintProgressDialogParent,
+class PrintProgressDialogParent final : public PPrintProgressDialogParent,
                                             public nsIObserver
 {
 public:
@@ -29,26 +29,26 @@ public:
   virtual bool
   RecvStateChange(
           const long& stateFlags,
-          const nsresult& status) MOZ_OVERRIDE;
+          const nsresult& status) override;
 
   virtual bool
   RecvProgressChange(
           const long& curSelfProgress,
           const long& maxSelfProgress,
           const long& curTotalProgress,
-          const long& maxTotalProgress) MOZ_OVERRIDE;
+          const long& maxTotalProgress) override;
 
   virtual bool
-  RecvDocTitleChange(const nsString& newTitle) MOZ_OVERRIDE;
+  RecvDocTitleChange(const nsString& newTitle) override;
 
   virtual bool
-  RecvDocURLChange(const nsString& newURL) MOZ_OVERRIDE;
+  RecvDocURLChange(const nsString& newURL) override;
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  Recv__delete__() MOZ_OVERRIDE;
+  Recv__delete__() override;
 
 private:
   virtual ~PrintProgressDialogParent();

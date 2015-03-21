@@ -167,7 +167,7 @@ BluetoothGatt::Disconnect(ErrorResult& aRv)
   return promise.forget();
 }
 
-class ReadRemoteRssiTask MOZ_FINAL : public BluetoothReplyRunnable
+class ReadRemoteRssiTask final : public BluetoothReplyRunnable
 {
 public:
   ReadRemoteRssiTask(Promise* aPromise)

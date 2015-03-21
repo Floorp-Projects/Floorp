@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace dom {
 
-class MediaKeySystemAccess MOZ_FINAL : public nsISupports,
+class MediaKeySystemAccess final : public nsISupports,
                                        public nsWrapperCache
 {
 public:
@@ -38,7 +38,7 @@ protected:
 public:
   nsPIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetKeySystem(nsString& aRetVal) const;
 

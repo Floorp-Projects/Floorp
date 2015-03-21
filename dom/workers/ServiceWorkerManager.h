@@ -73,7 +73,7 @@ protected:
   Done(nsresult aStatus);
 };
 
-class ServiceWorkerJobQueue MOZ_FINAL
+class ServiceWorkerJobQueue final
 {
   friend class ServiceWorkerJob;
 
@@ -129,7 +129,7 @@ private:
 
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
-class ServiceWorkerRegistrationInfo MOZ_FINAL : public nsISupports
+class ServiceWorkerRegistrationInfo final : public nsISupports
 {
   uint32_t mControlledDocumentsCounter;
 
@@ -210,7 +210,7 @@ public:
  * _GetNewestWorker(serviceWorkerRegistration)", we represent the description
  * by this class and spawn a ServiceWorker in the right global when required.
  */
-class ServiceWorkerInfo MOZ_FINAL
+class ServiceWorkerInfo final
 {
 private:
   const ServiceWorkerRegistrationInfo* mRegistration;
@@ -291,7 +291,7 @@ public:
  * installation, querying and event dispatch of ServiceWorkers for all the
  * origins in the process.
  */
-class ServiceWorkerManager MOZ_FINAL
+class ServiceWorkerManager final
   : public nsIServiceWorkerManager
   , public nsIIPCBackgroundChildCreateCallback
 {

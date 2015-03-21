@@ -32,11 +32,11 @@ public:
   bool RecvCancelDNSRequest(const nsCString& hostName,
                             const uint32_t& flags,
                             const nsCString& networkInterface,
-                            const nsresult& reason) MOZ_OVERRIDE;
-  bool Recv__delete__() MOZ_OVERRIDE;
+                            const nsresult& reason) override;
+  bool Recv__delete__() override;
 
 protected:
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 private:
   virtual ~DNSRequestParent();
 

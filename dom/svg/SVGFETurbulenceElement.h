@@ -29,21 +29,21 @@ protected:
     : SVGFETurbulenceElementBase(aNodeInfo)
   {
   }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual bool SubregionIsUnionOfRegions() MOZ_OVERRIDE { return false; }
+  virtual bool SubregionIsUnionOfRegions() override { return false; }
 
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
                             const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
+  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> BaseFrequencyX();
@@ -54,11 +54,11 @@ public:
   already_AddRefed<SVGAnimatedEnumeration> Type();
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
-  virtual NumberPairAttributesInfo GetNumberPairInfo() MOZ_OVERRIDE;
-  virtual IntegerAttributesInfo GetIntegerInfo() MOZ_OVERRIDE;
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual NumberAttributesInfo GetNumberInfo() override;
+  virtual NumberPairAttributesInfo GetNumberPairInfo() override;
+  virtual IntegerAttributesInfo GetIntegerInfo() override;
+  virtual EnumAttributesInfo GetEnumInfo() override;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { SEED }; // floating point seed?!
   nsSVGNumber2 mNumberAttributes[1];

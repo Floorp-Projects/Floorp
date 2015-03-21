@@ -15,7 +15,7 @@
 
 class nsARequestObserverEvent;
 
-class nsRequestObserverProxy MOZ_FINAL : public nsIRequestObserverProxy
+class nsRequestObserverProxy final : public nsIRequestObserverProxy
 {
     ~nsRequestObserverProxy() {}
 

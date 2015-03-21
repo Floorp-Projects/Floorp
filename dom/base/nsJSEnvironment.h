@@ -47,26 +47,26 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
-  virtual nsIScriptGlobalObject *GetGlobalObject() MOZ_OVERRIDE;
+  virtual nsIScriptGlobalObject *GetGlobalObject() override;
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
-  virtual JSContext* GetNativeContext() MOZ_OVERRIDE;
-  virtual nsresult InitContext() MOZ_OVERRIDE;
-  virtual bool IsContextInitialized() MOZ_OVERRIDE;
+  virtual JSContext* GetNativeContext() override;
+  virtual nsresult InitContext() override;
+  virtual bool IsContextInitialized() override;
 
-  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal) MOZ_OVERRIDE;
+  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal) override;
 
-  virtual bool GetProcessingScriptTag() MOZ_OVERRIDE;
-  virtual void SetProcessingScriptTag(bool aResult) MOZ_OVERRIDE;
+  virtual bool GetProcessingScriptTag() override;
+  virtual void SetProcessingScriptTag(bool aResult) override;
 
-  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) MOZ_OVERRIDE;
+  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) override;
 
-  virtual void WillInitializeContext() MOZ_OVERRIDE;
-  virtual void DidInitializeContext() MOZ_OVERRIDE;
+  virtual void WillInitializeContext() override;
+  virtual void DidInitializeContext() override;
 
-  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) MOZ_OVERRIDE;
-  virtual JSObject* GetWindowProxy() MOZ_OVERRIDE;
-  virtual JSObject* GetWindowProxyPreserveColor() MOZ_OVERRIDE;
+  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) override;
+  virtual JSObject* GetWindowProxy() override;
+  virtual JSObject* GetWindowProxyPreserveColor() override;
 
   static void LoadStart();
   static void LoadEnd();
@@ -195,7 +195,7 @@ public:
     : mReport(aReport)
   {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mReport->LogToConsole();
     return NS_OK;

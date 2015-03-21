@@ -64,7 +64,7 @@ ServiceWorkerClient::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 namespace {
 
-class ServiceWorkerClientPostMessageRunnable MOZ_FINAL : public nsRunnable
+class ServiceWorkerClientPostMessageRunnable final : public nsRunnable
 {
   uint64_t mWindowId;
   JSAutoStructuredCloneBuffer mBuffer;

@@ -35,7 +35,7 @@
  * last call are required as input to the next.
  */
 
-class nsAuthGSSAPI MOZ_FINAL : public nsIAuthModule
+class nsAuthGSSAPI final : public nsIAuthModule
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

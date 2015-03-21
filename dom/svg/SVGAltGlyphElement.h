@@ -17,19 +17,19 @@ namespace dom {
 
 typedef SVGTextPositioningElement SVGAltGlyphElementBase;
 
-class SVGAltGlyphElement MOZ_FINAL : public SVGAltGlyphElementBase
+class SVGAltGlyphElement final : public SVGAltGlyphElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGAltGlyphElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGAltGlyphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> Href();
@@ -41,20 +41,20 @@ public:
 protected:
 
   // nsSVGElement overrides
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
-  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() override;
+  virtual LengthAttributesInfo GetLengthInfo() override;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { HREF };
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 
   nsSVGEnum mEnumAttributes[1];
-  virtual nsSVGEnum* EnumAttributes() MOZ_OVERRIDE
+  virtual nsSVGEnum* EnumAttributes() override
     { return mEnumAttributes; }
 
   nsSVGLength2 mLengthAttributes[1];
-  virtual nsSVGLength2* LengthAttributes() MOZ_OVERRIDE
+  virtual nsSVGLength2* LengthAttributes() override
     { return mLengthAttributes; }
 };
 

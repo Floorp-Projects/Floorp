@@ -21,7 +21,7 @@ class nsIDOMNode;
     { 0xb2, 0x9c, 0xc3, 0xd6, 0x3a, 0x58, 0xf1, 0xd2 } \
 }
 
-class nsHTMLURIRefObject MOZ_FINAL : public nsIURIRefObject
+class nsHTMLURIRefObject final : public nsIURIRefObject
 {
 public:
   nsHTMLURIRefObject();

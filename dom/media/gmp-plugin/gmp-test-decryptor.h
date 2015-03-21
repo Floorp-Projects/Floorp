@@ -16,7 +16,7 @@ public:
 
   explicit FakeDecryptor(GMPDecryptorHost* aHost);
 
-  virtual void Init(GMPDecryptorCallback* aCallback) MOZ_OVERRIDE {
+  virtual void Init(GMPDecryptorCallback* aCallback) override {
     mCallback = aCallback;
   }
 
@@ -26,13 +26,13 @@ public:
                              uint32_t aInitDataTypeSize,
                              const uint8_t* aInitData,
                              uint32_t aInitDataSize,
-                             GMPSessionType aSessionType) MOZ_OVERRIDE
+                             GMPSessionType aSessionType) override
   {
   }
 
   virtual void LoadSession(uint32_t aPromiseId,
                            const char* aSessionId,
-                           uint32_t aSessionIdLength) MOZ_OVERRIDE
+                           uint32_t aSessionIdLength) override
   {
   }
 
@@ -40,32 +40,32 @@ public:
                              const char* aSessionId,
                              uint32_t aSessionIdLength,
                              const uint8_t* aResponse,
-                             uint32_t aResponseSize) MOZ_OVERRIDE;
+                             uint32_t aResponseSize) override;
 
   virtual void CloseSession(uint32_t aPromiseId,
                             const char* aSessionId,
-                            uint32_t aSessionIdLength) MOZ_OVERRIDE
+                            uint32_t aSessionIdLength) override
   {
   }
 
   virtual void RemoveSession(uint32_t aPromiseId,
                              const char* aSessionId,
-                             uint32_t aSessionIdLength) MOZ_OVERRIDE
+                             uint32_t aSessionIdLength) override
   {
   }
 
   virtual void SetServerCertificate(uint32_t aPromiseId,
                                     const uint8_t* aServerCert,
-                                    uint32_t aServerCertSize) MOZ_OVERRIDE
+                                    uint32_t aServerCertSize) override
   {
   }
 
   virtual void Decrypt(GMPBuffer* aBuffer,
-                       GMPEncryptedBufferMetadata* aMetadata) MOZ_OVERRIDE
+                       GMPEncryptedBufferMetadata* aMetadata) override
   {
   }
 
-  virtual void DecryptingComplete() MOZ_OVERRIDE;
+  virtual void DecryptingComplete() override;
 
   static void Message(const std::string& aMessage);
 
@@ -89,7 +89,7 @@ public:
     : mHost(aHost)
   {
   }
-  virtual void BeginShutdown() MOZ_OVERRIDE;
+  virtual void BeginShutdown() override;
 private:
   GMPAsyncShutdownHost* mHost;
 };

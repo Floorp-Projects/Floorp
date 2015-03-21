@@ -23,7 +23,7 @@ namespace dom {
 class Promise;
 class TVSource;
 
-class TVTuner MOZ_FINAL : public DOMEventTargetHelper
+class TVTuner final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -34,7 +34,7 @@ public:
 
   // WebIDL (internal functions)
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult SetCurrentSource(TVSourceType aSourceType);
 

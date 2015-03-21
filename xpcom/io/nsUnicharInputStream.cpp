@@ -23,7 +23,7 @@
 
 #define STRING_BUFFER_SIZE 8192
 
-class StringUnicharInputStream MOZ_FINAL : public nsIUnicharInputStream
+class StringUnicharInputStream final : public nsIUnicharInputStream
 {
 public:
   explicit StringUnicharInputStream(const nsAString& aString) :
@@ -124,7 +124,7 @@ NS_IMPL_ISUPPORTS(StringUnicharInputStream, nsIUnicharInputStream)
 
 //----------------------------------------------------------------------
 
-class UTF8InputStream MOZ_FINAL : public nsIUnicharInputStream
+class UTF8InputStream final : public nsIUnicharInputStream
 {
 public:
   UTF8InputStream();

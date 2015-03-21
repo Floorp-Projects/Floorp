@@ -14,7 +14,7 @@
 class nsCString;
 class nsIArray;
 
-class nsNSSCertificateDB MOZ_FINAL : public nsIX509CertDB
+class nsNSSCertificateDB final : public nsIX509CertDB
                                    , public nsNSSShutDownObject
 
 {
@@ -60,7 +60,7 @@ private:
                                 const nsNSSShutDownPreventionLock &proofOfLock);
 
   // We don't own any NSS objects here, so no need to clean up
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE { };
+  virtual void virtualDestroyNSSReference() override { };
 };
 
 #define NS_X509CERTDB_CID { /* fb0bbc5c-452e-4783-b32c-80124693d871 */ \

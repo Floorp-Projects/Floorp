@@ -23,11 +23,11 @@ public:
     , mSelectedIndex(-1)
   {}
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   VideoTrack* operator[](uint32_t aIndex);
 
-  virtual void EmptyTracks() MOZ_OVERRIDE;
+  virtual void EmptyTracks() override;
 
   // WebIDL
   int32_t SelectedIndex() const
@@ -42,7 +42,7 @@ public:
   friend class VideoTrack;
 
 protected:
-  virtual VideoTrackList* AsVideoTrackList() MOZ_OVERRIDE { return this; }
+  virtual VideoTrackList* AsVideoTrackList() override { return this; }
 
 private:
   int32_t mSelectedIndex;

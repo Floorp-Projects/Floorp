@@ -33,15 +33,15 @@ public:
     NS_DECL_NSIOBSERVER
 
     // LoadNotificationCallback interface
-    virtual void LoadChanged(float aSystemLoad, float aProcessLoad) MOZ_OVERRIDE;
+    virtual void LoadChanged(float aSystemLoad, float aProcessLoad) override;
     // CpuOveruseObserver interface
     // Called as soon as an overuse is detected.
-    virtual void OveruseDetected() MOZ_OVERRIDE;
+    virtual void OveruseDetected() override;
     // Called periodically when the system is not overused any longer.
-    virtual void NormalUsage() MOZ_OVERRIDE;
+    virtual void NormalUsage() override;
     // CPULoadStateCallbackInvoker interface
-    virtual void AddObserver(webrtc::CPULoadStateObserver * aObserver) MOZ_OVERRIDE;
-    virtual void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) MOZ_OVERRIDE;
+    virtual void AddObserver(webrtc::CPULoadStateObserver * aObserver) override;
+    virtual void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) override;
 
 private:
     LoadManagerSingleton(int aLoadMeasurementInterval,
@@ -72,7 +72,7 @@ private:
     static StaticRefPtr<LoadManagerSingleton> sSingleton;
 };
 
-class LoadManager MOZ_FINAL : public webrtc::CPULoadStateCallbackInvoker,
+class LoadManager final : public webrtc::CPULoadStateCallbackInvoker,
                               public webrtc::CpuOveruseObserver
 {
 public:
@@ -81,19 +81,19 @@ public:
     {}
     ~LoadManager() {}
 
-    void AddObserver(webrtc::CPULoadStateObserver * aObserver) MOZ_OVERRIDE
+    void AddObserver(webrtc::CPULoadStateObserver * aObserver) override
     {
         mManager->AddObserver(aObserver);
     }
-    void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) MOZ_OVERRIDE
+    void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) override
     {
         mManager->RemoveObserver(aObserver);
     }
-    void OveruseDetected() MOZ_OVERRIDE
+    void OveruseDetected() override
     {
         mManager->OveruseDetected();
     }
-    void NormalUsage() MOZ_OVERRIDE
+    void NormalUsage() override
     {
         mManager->NormalUsage();
     }

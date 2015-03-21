@@ -24,7 +24,7 @@ class HyperTextAccessible;
 /**
  * A text point (hyper text + offset), represents a boundary of text range.
  */
-struct TextPoint MOZ_FINAL
+struct TextPoint final
 {
   TextPoint(HyperTextAccessible* aContainer, int32_t aOffset) :
     mContainer(aContainer), mOffset(aOffset) { }
@@ -42,7 +42,7 @@ struct TextPoint MOZ_FINAL
 /**
  * Represents a text range within the text control or document.
  */
-class TextRange MOZ_FINAL
+class TextRange final
 {
 public:
   TextRange(HyperTextAccessible* aRoot,

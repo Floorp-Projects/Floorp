@@ -25,7 +25,7 @@ struct MobileMessageFilter;
 class OwningLongOrMozSmsMessageOrMozMmsMessage;
 struct SmsSendParameters;
 
-class MobileMessageManager MOZ_FINAL : public DOMEventTargetHelper
+class MobileMessageManager final : public DOMEventTargetHelper
                                      , public nsIObserver
 {
 public:
@@ -44,7 +44,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
   already_AddRefed<DOMRequest>

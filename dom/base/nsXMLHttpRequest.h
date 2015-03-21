@@ -143,10 +143,10 @@ public:
   IMPL_EVENT_HANDLER(timeout)
   IMPL_EVENT_HANDLER(loadend)
   
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 };
 
-class nsXMLHttpRequestUpload MOZ_FINAL : public nsXHREventTarget,
+class nsXMLHttpRequestUpload final : public nsXHREventTarget,
                                          public nsIXMLHttpRequestUpload
 {
 public:
@@ -160,7 +160,7 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject()
   {
     return GetOwner();
@@ -179,7 +179,7 @@ class nsXMLHttpRequestXPCOMifier;
 
 // Make sure that any non-DOM interfaces added here are also added to
 // nsXMLHttpRequestXPCOMifier.
-class nsXMLHttpRequest MOZ_FINAL : public nsXHREventTarget,
+class nsXMLHttpRequest final : public nsXHREventTarget,
                                    public nsIXMLHttpRequest,
                                    public nsIJSXMLHttpRequest,
                                    public nsIStreamListener,
@@ -196,7 +196,7 @@ class nsXMLHttpRequest MOZ_FINAL : public nsXHREventTarget,
 public:
   nsXMLHttpRequest();
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override
   {
     return mozilla::dom::XMLHttpRequestBinding::Wrap(cx, this, aGivenProto);
   }
@@ -291,7 +291,7 @@ public:
 
   // nsISizeOfEventTarget
   virtual size_t
-    SizeOfEventTargetIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+    SizeOfEventTargetIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget)
 
@@ -570,7 +570,7 @@ public:
   bool AllowUploadProgress();
   void RootJSResultObjects();
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 
   static void SetDontWarnAboutSyncXHR(bool aVal)
   {
@@ -819,7 +819,7 @@ private:
 
 // A shim class designed to expose the non-DOM interfaces of
 // XMLHttpRequest via XPCOM stuff.
-class nsXMLHttpRequestXPCOMifier MOZ_FINAL : public nsIStreamListener,
+class nsXMLHttpRequestXPCOMifier final : public nsIStreamListener,
                                              public nsIChannelEventSink,
                                              public nsIProgressEventSink,
                                              public nsIInterfaceRequestor,
@@ -858,7 +858,7 @@ class nsXHRParseEndListener : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) MOZ_OVERRIDE
+  NS_IMETHOD HandleEvent(nsIDOMEvent *event) override
   {
     nsCOMPtr<nsIXMLHttpRequest> xhr = do_QueryReferent(mXHR);
     if (xhr) {

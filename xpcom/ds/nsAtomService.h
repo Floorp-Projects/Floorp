@@ -9,7 +9,7 @@
 #include "nsIAtomService.h"
 #include "mozilla/Attributes.h"
 
-class nsAtomService MOZ_FINAL : public nsIAtomService
+class nsAtomService final : public nsIAtomService
 {
 public:
   nsAtomService();

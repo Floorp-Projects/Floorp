@@ -21,7 +21,7 @@ namespace cache {
 
 class ManagerId;
 
-class PrincipalVerifier MOZ_FINAL : public nsRunnable
+class PrincipalVerifier final : public nsRunnable
 {
 public:
   // An interface to be implemented by code wishing to use the

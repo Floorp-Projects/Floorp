@@ -23,7 +23,7 @@ class DOMRectReadOnly;
 class DOMPoint;
 struct DOMPointInit;
 
-class DOMQuad MOZ_FINAL : public nsWrapperCache
+class DOMQuad final : public nsWrapperCache
 {
   ~DOMQuad();
 
@@ -35,7 +35,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMQuad)
 
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<DOMQuad>
   Constructor(const GlobalObject& aGlobal,

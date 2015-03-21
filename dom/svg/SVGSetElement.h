@@ -16,7 +16,7 @@ nsresult NS_NewSVGSetElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGSetElement MOZ_FINAL : public SVGAnimationElement
+class SVGSetElement final : public SVGAnimationElement
 {
 protected:
   explicit SVGSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -26,14 +26,14 @@ protected:
   friend nsresult (::NS_NewSVGSetElement(nsIContent **aResult,
                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // nsIDOMNode
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // SVGAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction() MOZ_OVERRIDE;
+  virtual nsSMILAnimationFunction& AnimationFunction() override;
 };
 
 } // namespace dom

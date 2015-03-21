@@ -20,7 +20,7 @@ namespace dom {
 namespace cache {
 
 // TODO: remove static class and use functions in cache namespace (bug 1110485)
-class FileUtils MOZ_FINAL
+class FileUtils final
 {
 public:
   enum BodyFileType

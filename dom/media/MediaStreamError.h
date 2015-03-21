@@ -40,7 +40,7 @@ protected:
   const nsString mConstraintName;
 };
 
-class MediaMgrError MOZ_FINAL : public nsISupports,
+class MediaMgrError final : public nsISupports,
                                 public BaseMediaMgrError
 {
 public:
@@ -56,7 +56,7 @@ private:
 };
 
 namespace dom {
-class MediaStreamError MOZ_FINAL : public nsISupports,
+class MediaStreamError final : public nsISupports,
                                    public BaseMediaMgrError,
                                    public nsWrapperCache
 {
@@ -75,7 +75,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaStreamError)
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIASTREAMERROR_IMPLEMENTATION_IID)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsPIDOMWindow* GetParentObject() const
   {

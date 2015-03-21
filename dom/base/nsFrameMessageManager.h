@@ -146,13 +146,13 @@ public:
   }
 
   virtual bool ToObject(JSContext* aCx, JS::MutableHandle<JSObject*> aObjp)
-    MOZ_OVERRIDE;
+    override;
 
 private:
   JS::Rooted<JSObject*> mObj;
 };
 
-class nsFrameMessageManager MOZ_FINAL : public nsIContentFrameMessageManager,
+class nsFrameMessageManager final : public nsIContentFrameMessageManager,
                                         public nsIMessageBroadcaster,
                                         public nsIFrameScriptLoader,
                                         public nsIProcessScriptLoader,
@@ -434,7 +434,7 @@ protected:
   static nsScriptCacheCleaner* sScriptCacheCleaner;
 };
 
-class nsScriptCacheCleaner MOZ_FINAL : public nsIObserver
+class nsScriptCacheCleaner final : public nsIObserver
 {
   ~nsScriptCacheCleaner() {}
 
@@ -449,7 +449,7 @@ class nsScriptCacheCleaner MOZ_FINAL : public nsIObserver
 
   NS_IMETHODIMP Observe(nsISupports *aSubject,
                         const char *aTopic,
-                        const char16_t *aData) MOZ_OVERRIDE
+                        const char16_t *aData) override
   {
     nsMessageManagerScriptExecutor::Shutdown();
     return NS_OK;

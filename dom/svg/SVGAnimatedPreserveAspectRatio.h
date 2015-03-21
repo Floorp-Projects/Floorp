@@ -22,7 +22,7 @@ class DOMSVGAnimatedPreserveAspectRatio;
 class SVGAnimationElement;
 }
 
-class SVGAnimatedPreserveAspectRatio MOZ_FINAL
+class SVGAnimatedPreserveAspectRatio final
 {
 public:
   void Init() {
@@ -86,7 +86,7 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct SMILPreserveAspectRatio MOZ_FINAL : public nsISMILAttr
+  struct SMILPreserveAspectRatio final : public nsISMILAttr
   {
   public:
     SMILPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
@@ -103,15 +103,15 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 
 namespace dom {
-class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
+class DOMSVGAnimatedPreserveAspectRatio final : public nsISupports,
                                                     public nsWrapperCache
 {
   ~DOMSVGAnimatedPreserveAspectRatio();
@@ -127,7 +127,7 @@ class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // These aren't weak refs because new objects are returned each time
   already_AddRefed<DOMSVGPreserveAspectRatio> BaseVal();

@@ -14,7 +14,7 @@
 
 namespace mozilla { namespace psm {
 
-class AppTrustDomain MOZ_FINAL : public mozilla::pkix::TrustDomain
+class AppTrustDomain final : public mozilla::pkix::TrustDomain
 {
 public:
   typedef mozilla::pkix::Result Result;
@@ -27,35 +27,35 @@ public:
                               const mozilla::pkix::CertPolicyId& policy,
                               mozilla::pkix::Input candidateCertDER,
                               /*out*/ mozilla::pkix::TrustLevel& trustLevel)
-                              MOZ_OVERRIDE;
+                              override;
   virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
-                            mozilla::pkix::Time time) MOZ_OVERRIDE;
+                            mozilla::pkix::Time time) override;
   virtual Result CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                  const mozilla::pkix::CertID& certID,
                                  mozilla::pkix::Time time,
                     /*optional*/ const mozilla::pkix::Input* stapledOCSPresponse,
-                    /*optional*/ const mozilla::pkix::Input* aiaExtension) MOZ_OVERRIDE;
+                    /*optional*/ const mozilla::pkix::Input* aiaExtension) override;
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain,
-                              mozilla::pkix::Time time) MOZ_OVERRIDE;
+                              mozilla::pkix::Time time) override;
   virtual Result CheckSignatureDigestAlgorithm(
-                   mozilla::pkix::DigestAlgorithm digestAlg) MOZ_OVERRIDE;
+                   mozilla::pkix::DigestAlgorithm digestAlg) override;
   virtual Result CheckRSAPublicKeyModulusSizeInBits(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   unsigned int modulusSizeInBits) MOZ_OVERRIDE;
+                   unsigned int modulusSizeInBits) override;
   virtual Result VerifyRSAPKCS1SignedDigest(
                    const mozilla::pkix::SignedDigest& signedDigest,
-                   mozilla::pkix::Input subjectPublicKeyInfo) MOZ_OVERRIDE;
+                   mozilla::pkix::Input subjectPublicKeyInfo) override;
   virtual Result CheckECDSACurveIsAcceptable(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                   mozilla::pkix::NamedCurve curve) MOZ_OVERRIDE;
+                   mozilla::pkix::NamedCurve curve) override;
   virtual Result VerifyECDSASignedDigest(
                    const mozilla::pkix::SignedDigest& signedDigest,
-                   mozilla::pkix::Input subjectPublicKeyInfo) MOZ_OVERRIDE;
+                   mozilla::pkix::Input subjectPublicKeyInfo) override;
   virtual Result DigestBuf(mozilla::pkix::Input item,
                            mozilla::pkix::DigestAlgorithm digestAlg,
                            /*out*/ uint8_t* digestBuf,
-                           size_t digestBufLen) MOZ_OVERRIDE;
+                           size_t digestBufLen) override;
 
 private:
   /*out*/ ScopedCERTCertList& mCertChain;

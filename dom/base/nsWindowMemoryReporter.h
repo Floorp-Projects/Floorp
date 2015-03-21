@@ -139,7 +139,7 @@ public:
  *   the tab.
  *
  */
-class nsWindowMemoryReporter MOZ_FINAL : public nsIMemoryReporter,
+class nsWindowMemoryReporter final : public nsIMemoryReporter,
                                          public nsIObserver,
                                          public nsSupportsWeakReference
 {
@@ -165,7 +165,7 @@ private:
    * nsGhostWindowReporter generates the "ghost-windows" report, which counts
    * the number of ghost windows present.
    */
-  class GhostWindowsReporter MOZ_FINAL : public nsIMemoryReporter
+  class GhostWindowsReporter final : public nsIMemoryReporter
   {
     ~GhostWindowsReporter() {}
   public:
@@ -175,7 +175,7 @@ private:
 
     NS_IMETHOD
     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                   bool aAnonymize) MOZ_OVERRIDE
+                   bool aAnonymize) override
     {
       return MOZ_COLLECT_REPORT(
         "ghost-windows", KIND_OTHER, UNITS_COUNT, DistinguishedAmount(),

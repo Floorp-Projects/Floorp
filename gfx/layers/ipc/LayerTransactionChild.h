@@ -9,7 +9,7 @@
 #define MOZILLA_LAYERS_LAYERTRANSACTIONCHILD_H
 
 #include <stdint.h>                     // for uint32_t
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/PLayerTransactionChild.h"
@@ -62,20 +62,20 @@ protected:
   {}
   ~LayerTransactionChild() { }
 
-  virtual PLayerChild* AllocPLayerChild() MOZ_OVERRIDE;
-  virtual bool DeallocPLayerChild(PLayerChild* actor) MOZ_OVERRIDE;
+  virtual PLayerChild* AllocPLayerChild() override;
+  virtual bool DeallocPLayerChild(PLayerChild* actor) override;
 
-  virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) MOZ_OVERRIDE;
-  virtual bool DeallocPCompositableChild(PCompositableChild* actor) MOZ_OVERRIDE;
+  virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) override;
+  virtual bool DeallocPCompositableChild(PCompositableChild* actor) override;
 
   virtual PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
-                                            const TextureFlags& aFlags) MOZ_OVERRIDE;
-  virtual bool DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
+                                            const TextureFlags& aFlags) override;
+  virtual bool DeallocPTextureChild(PTextureChild* actor) override;
 
   virtual bool
-  RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) MOZ_OVERRIDE;
+  RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);

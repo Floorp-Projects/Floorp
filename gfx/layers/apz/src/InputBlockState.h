@@ -156,16 +156,16 @@ public:
   WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                   bool aTargetConfirmed);
 
-  bool IsReadyForHandling() const MOZ_OVERRIDE;
-  bool HasEvents() const MOZ_OVERRIDE;
-  void DropEvents() MOZ_OVERRIDE;
-  void HandleEvents() MOZ_OVERRIDE;
-  bool MustStayActive() MOZ_OVERRIDE;
-  const char* Type() MOZ_OVERRIDE;
+  bool IsReadyForHandling() const override;
+  bool HasEvents() const override;
+  void DropEvents() override;
+  void HandleEvents() override;
+  bool MustStayActive() override;
+  const char* Type() override;
 
   void AddEvent(const ScrollWheelInput& aEvent);
 
-  WheelBlockState *AsWheelBlock() MOZ_OVERRIDE {
+  WheelBlockState *AsWheelBlock() override {
     return this;
   }
 
@@ -202,7 +202,7 @@ public:
   explicit TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                            bool aTargetConfirmed);
 
-  TouchBlockState *AsTouchBlock() MOZ_OVERRIDE {
+  TouchBlockState *AsTouchBlock() override {
     return this;
   }
 
@@ -226,7 +226,7 @@ public:
    * @return true iff this block has received all the information needed
    *         to properly dispatch the events in the block.
    */
-  bool IsReadyForHandling() const MOZ_OVERRIDE;
+  bool IsReadyForHandling() const override;
 
   /**
    * Sets a flag that indicates this input block occurred while the APZ was
@@ -273,11 +273,11 @@ public:
   bool TouchActionAllowsPanningY() const;
   bool TouchActionAllowsPanningXY() const;
 
-  bool HasEvents() const MOZ_OVERRIDE;
-  void DropEvents() MOZ_OVERRIDE;
-  void HandleEvents() MOZ_OVERRIDE;
-  bool MustStayActive() MOZ_OVERRIDE;
-  const char* Type() MOZ_OVERRIDE;
+  bool HasEvents() const override;
+  void DropEvents() override;
+  void HandleEvents() override;
+  bool MustStayActive() override;
+  const char* Type() override;
 
 private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;

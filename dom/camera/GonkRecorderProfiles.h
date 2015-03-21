@@ -48,8 +48,8 @@ public:
     , mVideo(aCameraId, aQuality)
   { }
 
-  virtual const Audio& GetAudio() const MOZ_OVERRIDE { return mAudio; }
-  virtual const Video& GetVideo() const MOZ_OVERRIDE { return mVideo; }
+  virtual const Audio& GetAudio() const override { return mAudio; }
+  virtual const Video& GetVideo() const override { return mVideo; }
 
 protected:
   virtual ~GonkRecorderProfileBase() { }

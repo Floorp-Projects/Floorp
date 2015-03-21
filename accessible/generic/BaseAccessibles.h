@@ -34,15 +34,15 @@ public:
 
   // Accessible
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
-  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) MOZ_OVERRIDE MOZ_FINAL;
-  virtual bool RemoveChild(Accessible* aChild) MOZ_OVERRIDE MOZ_FINAL;
+                                   EWhichChildAtPoint aWhichChild) override;
+  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override final;
+  virtual bool RemoveChild(Accessible* aChild) override final;
 
 protected:
   virtual ~LeafAccessible() {}
 
   // Accessible
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual void CacheChildren() override;
 };
 
 /**
@@ -61,26 +61,26 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
-  virtual uint64_t NativeLinkState() const MOZ_OVERRIDE;
-  virtual void TakeFocus() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual void Value(nsString& aValue) override;
+  virtual uint64_t NativeLinkState() const override;
+  virtual void TakeFocus() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t index) MOZ_OVERRIDE;
-  virtual KeyBinding AccessKey() const MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t index) override;
+  virtual KeyBinding AccessKey() const override;
 
   // HyperLinkAccessible
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
 
 protected:
   virtual ~LinkableAccessible() {}
 
   // Accessible
-  virtual void BindToParent(Accessible* aParent, uint32_t aIndexInParent) MOZ_OVERRIDE;
-  virtual void UnbindFromParent() MOZ_OVERRIDE;
+  virtual void BindToParent(Accessible* aParent, uint32_t aIndexInParent) override;
+  virtual void UnbindFromParent() override;
 
   /**
    * Parent accessible that provides an action for this linkable accessible.
@@ -100,11 +100,11 @@ public:
   EnumRoleAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     AccessibleWrap(aContent, aDoc) { }
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aPtr) MOZ_OVERRIDE
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aPtr) override
     { return Accessible::QueryInterface(aIID, aPtr); }
 
   // Accessible
-  virtual a11y::role NativeRole() MOZ_OVERRIDE { return R; }
+  virtual a11y::role NativeRole() override { return R; }
 
 protected:
   virtual ~EnumRoleAccessible() { }
@@ -121,11 +121,11 @@ public:
   explicit DummyAccessible(DocAccessible* aDocument = nullptr) :
     AccessibleWrap(nullptr, aDocument) { }
 
-  virtual uint64_t NativeState() MOZ_OVERRIDE MOZ_FINAL;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE MOZ_FINAL;
-  virtual uint64_t NativeLinkState() const MOZ_OVERRIDE MOZ_FINAL;
-  virtual bool NativelyUnavailable() const MOZ_OVERRIDE MOZ_FINAL;
-  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE MOZ_FINAL;
+  virtual uint64_t NativeState() override final;
+  virtual uint64_t NativeInteractiveState() const override final;
+  virtual uint64_t NativeLinkState() const override final;
+  virtual bool NativelyUnavailable() const override final;
+  virtual void ApplyARIAState(uint64_t* aState) const override final;
 
 protected:
   virtual ~DummyAccessible() { }

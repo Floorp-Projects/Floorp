@@ -118,7 +118,7 @@ struct GradientCacheData {
  * entry is in the cache, all the references it has are guaranteed to be valid:
  * the nsStyleRect for the key, the gfxPattern for the value.
  */
-class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
+class GradientCache final : public nsExpirationTracker<GradientCacheData,4>
 {
   public:
     GradientCache()

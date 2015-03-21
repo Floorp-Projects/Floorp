@@ -46,60 +46,60 @@ public:
   InitializeLocal(NPObject* aObject);
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
   AnswerHasMethod(const PluginIdentifier& aId,
-                  bool* aHasMethod) MOZ_OVERRIDE;
+                  bool* aHasMethod) override;
 
   virtual bool
   AnswerInvoke(const PluginIdentifier& aId,
                InfallibleTArray<Variant>&& aArgs,
                Variant* aResult,
-               bool* aSuccess) MOZ_OVERRIDE;
+               bool* aSuccess) override;
 
   virtual bool
   AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
                       Variant* aResult,
-                      bool* aSuccess) MOZ_OVERRIDE;
+                      bool* aSuccess) override;
 
   virtual bool
   AnswerHasProperty(const PluginIdentifier& aId,
-                    bool* aHasProperty) MOZ_OVERRIDE;
+                    bool* aHasProperty) override;
 
   virtual bool
   AnswerGetParentProperty(const PluginIdentifier& aId,
                           Variant* aResult,
-                          bool* aSuccess) MOZ_OVERRIDE;
+                          bool* aSuccess) override;
 
   virtual bool
   AnswerSetProperty(const PluginIdentifier& aId,
                     const Variant& aValue,
-                    bool* aSuccess) MOZ_OVERRIDE;
+                    bool* aSuccess) override;
 
   virtual bool
   AnswerRemoveProperty(const PluginIdentifier& aId,
-                       bool* aSuccess) MOZ_OVERRIDE;
+                       bool* aSuccess) override;
 
   virtual bool
   AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
-                  bool* aSuccess) MOZ_OVERRIDE;
+                  bool* aSuccess) override;
 
   virtual bool
   AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
                   Variant* aResult,
-                  bool* aSuccess) MOZ_OVERRIDE;
+                  bool* aSuccess) override;
 
   virtual bool
   AnswerNPN_Evaluate(const nsCString& aScript,
                      Variant* aResult,
-                     bool* aSuccess) MOZ_OVERRIDE;
+                     bool* aSuccess) override;
 
   virtual bool
-  RecvProtect() MOZ_OVERRIDE;
+  RecvProtect() override;
 
   virtual bool
-  RecvUnprotect() MOZ_OVERRIDE;
+  RecvUnprotect() override;
 
   static const NPClass*
   GetClass()

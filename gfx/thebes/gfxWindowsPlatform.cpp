@@ -120,7 +120,7 @@ static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
     D3D10_FEATURE_LEVEL_9_3 };
 
-class GfxD2DSurfaceReporter MOZ_FINAL : public nsIMemoryReporter
+class GfxD2DSurfaceReporter final : public nsIMemoryReporter
 {
     ~GfxD2DSurfaceReporter() {}
 
@@ -154,7 +154,7 @@ NS_IMPL_ISUPPORTS(GfxD2DSurfaceReporter, nsIMemoryReporter)
 
 #endif
 
-class GfxD2DVramReporter MOZ_FINAL : public nsIMemoryReporter
+class GfxD2DVramReporter final : public nsIMemoryReporter
 {
     ~GfxD2DVramReporter() {}
 
@@ -194,7 +194,7 @@ NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
 
-class GPUAdapterReporter MOZ_FINAL : public nsIMemoryReporter
+class GPUAdapterReporter final : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -331,7 +331,7 @@ NS_IMPL_ISUPPORTS(GPUAdapterReporter, nsIMemoryReporter)
 
 Atomic<size_t> gfxWindowsPlatform::sD3D11MemoryUsed;
 
-class D3D11TextureReporter MOZ_FINAL : public nsIMemoryReporter
+class D3D11TextureReporter final : public nsIMemoryReporter
 {
   ~D3D11TextureReporter() {}
 
@@ -339,7 +339,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
       return MOZ_COLLECT_REPORT("d3d11-shared-textures", KIND_OTHER, UNITS_BYTES,
                                 gfxWindowsPlatform::sD3D11MemoryUsed,
@@ -351,7 +351,7 @@ NS_IMPL_ISUPPORTS(D3D11TextureReporter, nsIMemoryReporter)
 
 Atomic<size_t> gfxWindowsPlatform::sD3D9MemoryUsed;
 
-class D3D9TextureReporter MOZ_FINAL : public nsIMemoryReporter
+class D3D9TextureReporter final : public nsIMemoryReporter
 {
   ~D3D9TextureReporter() {}
 
@@ -359,7 +359,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT("d3d9-shared-textures", KIND_OTHER, UNITS_BYTES,
                               gfxWindowsPlatform::sD3D9MemoryUsed,
@@ -371,7 +371,7 @@ NS_IMPL_ISUPPORTS(D3D9TextureReporter, nsIMemoryReporter)
 
 Atomic<size_t> gfxWindowsPlatform::sD3D9SurfaceImageUsed;
 
-class D3D9SurfaceImageReporter MOZ_FINAL : public nsIMemoryReporter
+class D3D9SurfaceImageReporter final : public nsIMemoryReporter
 {
   ~D3D9SurfaceImageReporter() {}
 
@@ -379,7 +379,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT("d3d9-surface-image", KIND_OTHER, UNITS_BYTES,
                               gfxWindowsPlatform::sD3D9SurfaceImageUsed,
@@ -391,7 +391,7 @@ NS_IMPL_ISUPPORTS(D3D9SurfaceImageReporter, nsIMemoryReporter)
 
 Atomic<size_t> gfxWindowsPlatform::sD3D9SharedTextureUsed;
 
-class D3D9SharedTextureReporter MOZ_FINAL : public nsIMemoryReporter
+class D3D9SharedTextureReporter final : public nsIMemoryReporter
 {
   ~D3D9SharedTextureReporter() {}
 
@@ -399,7 +399,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT("d3d9-shared-texture", KIND_OTHER, UNITS_BYTES,
                               gfxWindowsPlatform::sD3D9SharedTextureUsed,
@@ -1988,11 +1988,11 @@ DwmCompositionEnabled()
   return dwmEnabled;
 }
 
-class D3DVsyncSource MOZ_FINAL : public VsyncSource
+class D3DVsyncSource final : public VsyncSource
 {
 public:
 
-  class D3DVsyncDisplay MOZ_FINAL : public VsyncSource::Display
+  class D3DVsyncDisplay final : public VsyncSource::Display
   {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(D3DVsyncDisplay)
     public:
@@ -2006,7 +2006,7 @@ public:
         MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start Windows vsync thread");
       }
 
-      virtual void EnableVsync() MOZ_OVERRIDE
+      virtual void EnableVsync() override
       {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mVsyncThread->IsRunning());
@@ -2023,7 +2023,7 @@ public:
         mVsyncThread->message_loop()->PostTask(FROM_HERE, vsyncStart);
       }
 
-      virtual void DisableVsync() MOZ_OVERRIDE
+      virtual void DisableVsync() override
       {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mVsyncThread->IsRunning());
@@ -2034,7 +2034,7 @@ public:
         mVsyncEnabled = false;
       }
 
-      virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+      virtual bool IsVsyncEnabled() override
       {
         MOZ_ASSERT(NS_IsMainThread());
         MonitorAutoLock lock(mVsyncEnabledLock);
@@ -2129,7 +2129,7 @@ public:
     mPrimaryDisplay = new D3DVsyncDisplay();
   }
 
-  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  virtual Display& GetGlobalDisplay() override
   {
     return *mPrimaryDisplay;
   }

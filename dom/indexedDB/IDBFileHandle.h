@@ -28,7 +28,7 @@ namespace indexedDB {
 
 class IDBMutableFile;
 
-class IDBFileHandle MOZ_FINAL : public DOMEventTargetHelper,
+class IDBFileHandle final : public DOMEventTargetHelper,
                                 public nsIRunnable,
                                 public FileHandleBase,
                                 public nsSupportsWeakReference
@@ -45,15 +45,15 @@ public:
          IDBMutableFile* aMutableFile);
 
   virtual MutableFileBase*
-  MutableFile() const MOZ_OVERRIDE;
+  MutableFile() const override;
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsPIDOMWindow*
@@ -129,13 +129,13 @@ private:
   ~IDBFileHandle();
 
   virtual nsresult
-  OnCompleteOrAbort(bool aAborted) MOZ_OVERRIDE;
+  OnCompleteOrAbort(bool aAborted) override;
 
   virtual bool
-  CheckWindow() MOZ_OVERRIDE;
+  CheckWindow() override;
 
   virtual already_AddRefed<FileRequestBase>
-  GenerateFileRequest() MOZ_OVERRIDE;
+  GenerateFileRequest() override;
 
   nsRefPtr<IDBMutableFile> mMutableFile;
 };

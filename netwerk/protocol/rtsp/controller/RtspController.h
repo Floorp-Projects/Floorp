@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace net {
 
-class RtspController MOZ_FINAL : public nsIStreamingProtocolController
+class RtspController final : public nsIStreamingProtocolController
                                , public nsIStreamingProtocolListener
 {
 public:

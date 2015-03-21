@@ -23,7 +23,7 @@ public:
     return mRecord->Open();
   }
 
-  virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus) override {
     if (GMP_SUCCEEDED(aStatus)) {
       mRecord->Write(mData.size() ? &mData.front() : nullptr, mData.size());
     } else {
@@ -34,9 +34,9 @@ public:
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aDataSize) MOZ_OVERRIDE {}
+                            uint32_t aDataSize) override {}
 
-  virtual void WriteComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void WriteComplete(GMPErr aStatus) override {
     // Note: Call Close() before running continuation, in case the
     // continuation tries to open the same record; if we call Close()
     // after running the continuation, the Close() call will arrive
@@ -103,7 +103,7 @@ public:
     return mRecord->Open();
   }
 
-  virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus) override {
     auto err = mRecord->Read();
     if (GMP_FAILED(err)) {
       mContinuation->ReadComplete(err, "");
@@ -113,7 +113,7 @@ public:
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aDataSize) MOZ_OVERRIDE {
+                            uint32_t aDataSize) override {
     // Note: Call Close() before running continuation, in case the
     // continuation tries to open the same record; if we call Close()
     // after running the continuation, the Close() call will arrive
@@ -125,7 +125,7 @@ public:
     delete this;
   }
 
-  virtual void WriteComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void WriteComplete(GMPErr aStatus) override {
   }
 
 private:
@@ -181,17 +181,17 @@ public:
     (new OpenRecordClient(aContinuation))->Do(aRecordName);
   }
 
-  virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus) override {
     Done(aStatus);
   }
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aDataSize) MOZ_OVERRIDE {
+                            uint32_t aDataSize) override {
     MOZ_CRASH("Should not reach here.");
   }
 
-  virtual void WriteComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void WriteComplete(GMPErr aStatus) override {
     MOZ_CRASH("Should not reach here.");
   }
 

@@ -18,7 +18,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothDevice;
 class BluetoothValue;
 
-class BluetoothDiscoveryHandle MOZ_FINAL : public DOMEventTargetHelper
+class BluetoothDiscoveryHandle final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,7 +30,7 @@ public:
 
   IMPL_EVENT_HANDLER(devicefound);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow);

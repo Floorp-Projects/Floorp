@@ -16,7 +16,7 @@ nsresult NS_NewSVGAnimateTransformElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class SVGAnimateTransformElement MOZ_FINAL : public SVGAnimationElement
+class SVGAnimateTransformElement final : public SVGAnimationElement
 {
 protected:
   explicit SVGAnimateTransformElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -26,20 +26,20 @@ protected:
     (::NS_NewSVGAnimateTransformElement(nsIContent **aResult,
                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // nsIDOMNode specializations
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // Element specializations
   bool ParseAttribute(int32_t aNamespaceID,
                         nsIAtom* aAttribute,
                         const nsAString& aValue,
-                        nsAttrValue& aResult) MOZ_OVERRIDE;
+                        nsAttrValue& aResult) override;
 
   // SVGAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction() MOZ_OVERRIDE;
+  virtual nsSMILAnimationFunction& AnimationFunction() override;
 };
 
 } // namespace dom

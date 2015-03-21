@@ -847,7 +847,7 @@ class MPhi;
 // register allocator. Like its equivalent in MIR, phis are collected at the
 // top of blocks and are meant to be executed in parallel, choosing the input
 // corresponding to the predecessor taken in the control flow graph.
-class LPhi MOZ_FINAL : public LNode
+class LPhi final : public LNode
 {
     LAllocation *const inputs_;
     LDefinition def_;
@@ -1012,34 +1012,34 @@ namespace details {
         mozilla::Array<LDefinition, Temps> temps_;
 
       public:
-        size_t numDefs() const MOZ_FINAL MOZ_OVERRIDE {
+        size_t numDefs() const final override {
             return Defs;
         }
-        LDefinition *getDef(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        LDefinition *getDef(size_t index) final override {
             return &defs_[index];
         }
-        size_t numTemps() const MOZ_FINAL MOZ_OVERRIDE {
+        size_t numTemps() const final override {
             return Temps;
         }
-        LDefinition *getTemp(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+        LDefinition *getTemp(size_t index) final override {
             return &temps_[index];
         }
 
-        void setDef(size_t index, const LDefinition &def) MOZ_FINAL MOZ_OVERRIDE {
+        void setDef(size_t index, const LDefinition &def) final override {
             defs_[index] = def;
         }
-        void setTemp(size_t index, const LDefinition &a) MOZ_FINAL MOZ_OVERRIDE {
+        void setTemp(size_t index, const LDefinition &a) final override {
             temps_[index] = a;
         }
 
-        size_t numSuccessors() const MOZ_OVERRIDE {
+        size_t numSuccessors() const override {
             return 0;
         }
-        MBasicBlock *getSuccessor(size_t i) const MOZ_OVERRIDE {
+        MBasicBlock *getSuccessor(size_t i) const override {
             MOZ_ASSERT(false);
             return nullptr;
         }
-        void setSuccessor(size_t i, MBasicBlock *successor) MOZ_OVERRIDE {
+        void setSuccessor(size_t i, MBasicBlock *successor) override {
             MOZ_ASSERT(false);
         }
 
@@ -1061,13 +1061,13 @@ class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs
     mozilla::Array<LAllocation, Operands> operands_;
 
   public:
-    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
+    size_t numOperands() const final override {
         return Operands;
     }
-    LAllocation *getOperand(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+    LAllocation *getOperand(size_t index) final override {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation &a) MOZ_FINAL MOZ_OVERRIDE {
+    void setOperand(size_t index, const LAllocation &a) final override {
         operands_[index] = a;
     }
 };
@@ -1081,13 +1081,13 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
     bool init(TempAllocator &alloc, size_t length) {
         return operands_.init(alloc, length);
     }
-    size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
+    size_t numOperands() const final override {
         return operands_.length();
     }
-    LAllocation *getOperand(size_t index) MOZ_FINAL MOZ_OVERRIDE {
+    LAllocation *getOperand(size_t index) final override {
         return &operands_[index];
     }
-    void setOperand(size_t index, const LAllocation &a) MOZ_FINAL MOZ_OVERRIDE {
+    void setOperand(size_t index, const LAllocation &a) final override {
         operands_[index] = a;
     }
 };

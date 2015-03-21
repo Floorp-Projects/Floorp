@@ -54,7 +54,7 @@ WindowsLocationProvider::MLSUpdate::NotifyError(uint16_t aError)
 }
 
 
-class LocationEvent MOZ_FINAL : public ILocationEvents
+class LocationEvent final : public ILocationEvents
 {
 public:
   LocationEvent(nsIGeolocationUpdate* aCallback, WindowsLocationProvider *aProvider)
@@ -62,15 +62,15 @@ public:
   }
 
   // IUnknown interface
-  STDMETHODIMP_(ULONG) AddRef() MOZ_OVERRIDE;
-  STDMETHODIMP_(ULONG) Release() MOZ_OVERRIDE;
-  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) MOZ_OVERRIDE;
+  STDMETHODIMP_(ULONG) AddRef() override;
+  STDMETHODIMP_(ULONG) Release() override;
+  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) override;
 
   // ILocationEvents interface
   STDMETHODIMP OnStatusChanged(REFIID aReportType,
-                               LOCATION_REPORT_STATUS aStatus) MOZ_OVERRIDE;
+                               LOCATION_REPORT_STATUS aStatus) override;
   STDMETHODIMP OnLocationChanged(REFIID aReportType,
-                                 ILocationReport *aReport) MOZ_OVERRIDE;
+                                 ILocationReport *aReport) override;
 
 private:
   nsCOMPtr<nsIGeolocationUpdate> mCallback;

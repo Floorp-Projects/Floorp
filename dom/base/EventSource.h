@@ -36,7 +36,7 @@ namespace dom {
 class AsyncVerifyRedirectCallbackFwr;
 struct EventSourceInit;
 
-class EventSource MOZ_FINAL : public DOMEventTargetHelper
+class EventSource final : public DOMEventTargetHelper
                             , public nsIObserver
                             , public nsIStreamListener
                             , public nsIChannelEventSink
@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsPIDOMWindow*
@@ -98,7 +98,7 @@ public:
   // Determine if preferences allow EventSource
   static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 
 protected:
   virtual ~EventSource();

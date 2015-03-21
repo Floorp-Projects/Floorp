@@ -25,7 +25,7 @@ BEGIN_WORKERS_NAMESPACE
 class SharedWorker;
 class WorkerThread;
 
-class RuntimeService MOZ_FINAL : public nsIObserver
+class RuntimeService final : public nsIObserver
 {
   struct SharedWorkerInfo
   {

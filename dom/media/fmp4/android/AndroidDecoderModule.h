@@ -19,25 +19,25 @@ typedef std::queue<mp4_demuxer::MP4Sample*> SampleQueue;
 
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Shutdown() override;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
 
   AndroidDecoderModule() {}
   virtual ~AndroidDecoderModule() {}
 
-  virtual bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
+  virtual bool SupportsAudioMimeType(const char* aMimeType) override;
 };
 
 class MediaCodecDataDecoder : public MediaDataDecoder {
@@ -50,10 +50,10 @@ public:
 
   virtual ~MediaCodecDataDecoder();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual nsresult Flush() MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
+  virtual nsresult Flush() override;
+  virtual nsresult Drain() override;
+  virtual nsresult Shutdown() override;
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
 
 protected:

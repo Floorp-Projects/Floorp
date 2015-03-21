@@ -24,7 +24,7 @@ BEGIN_WORKERS_NAMESPACE
 class SharedWorker;
 class WorkerPrivate;
 
-class MessagePort MOZ_FINAL : public mozilla::dom::MessagePortBase
+class MessagePort final : public mozilla::dom::MessagePortBase
 {
   friend class SharedWorker;
   friend class WorkerPrivate;
@@ -44,13 +44,13 @@ public:
   virtual void
   PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                  const Optional<Sequence<JS::Value>>& aTransferable,
-                 ErrorResult& aRv) MOZ_OVERRIDE;
+                 ErrorResult& aRv) override;
 
   virtual void
-  Start() MOZ_OVERRIDE;
+  Start() override;
 
   virtual void
-  Close() MOZ_OVERRIDE;
+  Close() override;
 
   uint64_t
   Serial() const
@@ -65,13 +65,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort, DOMEventTargetHelper)
 
   virtual EventHandlerNonNull*
-  GetOnmessage() MOZ_OVERRIDE;
+  GetOnmessage() override;
 
   virtual void
-  SetOnmessage(EventHandlerNonNull* aCallback) MOZ_OVERRIDE;
+  SetOnmessage(EventHandlerNonNull* aCallback) override;
 
   virtual already_AddRefed<MessagePortBase>
-  Clone() MOZ_OVERRIDE;
+  Clone() override;
 
   bool
   IsClosed() const
@@ -80,10 +80,10 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
 #ifdef DEBUG
   void

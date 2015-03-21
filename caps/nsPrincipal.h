@@ -44,31 +44,31 @@ protected:
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };
 
-class nsPrincipal MOZ_FINAL : public nsBasePrincipal
+class nsPrincipal final : public nsBasePrincipal
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetHashValue(uint32_t* aHashValue) MOZ_OVERRIDE;
-  NS_IMETHOD GetURI(nsIURI** aURI) MOZ_OVERRIDE;
-  NS_IMETHOD GetDomain(nsIURI** aDomain) MOZ_OVERRIDE;
-  NS_IMETHOD SetDomain(nsIURI* aDomain) MOZ_OVERRIDE;
-  NS_IMETHOD GetOrigin(char** aOrigin) MOZ_OVERRIDE;
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) MOZ_OVERRIDE;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) MOZ_OVERRIDE;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) MOZ_OVERRIDE;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) MOZ_OVERRIDE;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) MOZ_OVERRIDE;
-  NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) MOZ_OVERRIDE;
-  virtual bool IsOnCSSUnprefixingWhitelist() MOZ_OVERRIDE;
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
+  NS_IMETHOD GetURI(nsIURI** aURI) override;
+  NS_IMETHOD GetDomain(nsIURI** aDomain) override;
+  NS_IMETHOD SetDomain(nsIURI* aDomain) override;
+  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
+  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
+  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
+  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
+  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
+  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
+  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
+  NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  virtual bool IsOnCSSUnprefixingWhitelist() override;
 #ifdef DEBUG
-  virtual void dumpImpl() MOZ_OVERRIDE;
+  virtual void dumpImpl() override;
 #endif
 
   nsPrincipal();
@@ -78,7 +78,7 @@ public:
                 uint32_t aAppId,
                 bool aInMozBrowser);
 
-  virtual void GetScriptLocation(nsACString& aStr) MOZ_OVERRIDE;
+  virtual void GetScriptLocation(nsACString& aStr) override;
   void SetURI(nsIURI* aURI);
 
   static bool IsPrincipalInherited(nsIURI* aURI) {
@@ -139,29 +139,29 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetHashValue(uint32_t* aHashValue) MOZ_OVERRIDE;
-  NS_IMETHOD GetURI(nsIURI** aURI) MOZ_OVERRIDE;
-  NS_IMETHOD GetDomain(nsIURI** aDomain) MOZ_OVERRIDE;
-  NS_IMETHOD SetDomain(nsIURI* aDomain) MOZ_OVERRIDE;
-  NS_IMETHOD GetOrigin(char** aOrigin) MOZ_OVERRIDE;
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) MOZ_OVERRIDE;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) MOZ_OVERRIDE;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) MOZ_OVERRIDE;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) MOZ_OVERRIDE;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) MOZ_OVERRIDE;
-  NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) MOZ_OVERRIDE;
-  virtual bool IsOnCSSUnprefixingWhitelist() MOZ_OVERRIDE;
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
+  NS_IMETHOD GetURI(nsIURI** aURI) override;
+  NS_IMETHOD GetDomain(nsIURI** aDomain) override;
+  NS_IMETHOD SetDomain(nsIURI* aDomain) override;
+  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
+  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
+  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
+  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
+  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
+  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
+  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
+  NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  virtual bool IsOnCSSUnprefixingWhitelist() override;
 #ifdef DEBUG
-  virtual void dumpImpl() MOZ_OVERRIDE;
+  virtual void dumpImpl() override;
 #endif
   
-  virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+  virtual void GetScriptLocation(nsACString &aStr) override;
 
 private:
   nsTArray< nsCOMPtr<nsIPrincipal> > mPrincipals;

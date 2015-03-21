@@ -16,7 +16,7 @@ namespace dom {
 
 class TVChannel;
 
-class TVProgram MOZ_FINAL : public nsISupports
+class TVProgram final : public nsISupports
                           , public nsWrapperCache
 {
 public:
@@ -34,7 +34,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL (public APIs)
 

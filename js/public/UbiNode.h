@@ -521,8 +521,8 @@ class MOZ_STACK_CLASS RootList {
 
 template<>
 struct Concrete<RootList> : public Base {
-    EdgeRange *edges(JSContext *cx, bool wantNames) const MOZ_OVERRIDE;
-    const char16_t *typeName() const MOZ_OVERRIDE { return concreteTypeName; }
+    EdgeRange *edges(JSContext *cx, bool wantNames) const override;
+    const char16_t *typeName() const override { return concreteTypeName; }
 
   protected:
     explicit Concrete(RootList *ptr) : Base(ptr) { }
@@ -537,9 +537,9 @@ struct Concrete<RootList> : public Base {
 // JS_TraceChildren.
 template<typename Referent>
 class TracerConcrete : public Base {
-    const char16_t *typeName() const MOZ_OVERRIDE { return concreteTypeName; }
-    EdgeRange *edges(JSContext *, bool wantNames) const MOZ_OVERRIDE;
-    JS::Zone *zone() const MOZ_OVERRIDE;
+    const char16_t *typeName() const override { return concreteTypeName; }
+    EdgeRange *edges(JSContext *, bool wantNames) const override;
+    JS::Zone *zone() const override;
 
   protected:
     explicit TracerConcrete(Referent *ptr) : Base(ptr) { }
@@ -554,7 +554,7 @@ class TracerConcrete : public Base {
 template<typename Referent>
 class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
-    JSCompartment *compartment() const MOZ_OVERRIDE;
+    JSCompartment *compartment() const override;
 
   protected:
     explicit TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
@@ -570,7 +570,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 template<typename Referent>
 class TracerConcreteWithCompartmentAndClassName : public TracerConcreteWithCompartment<Referent> {
     typedef TracerConcreteWithCompartment<Referent> TracerBase;
-    const char *jsObjectClassName() const MOZ_OVERRIDE;
+    const char *jsObjectClassName() const override;
 
     explicit TracerConcreteWithCompartmentAndClassName(Referent *ptr) : TracerBase(ptr) { }
 
@@ -589,11 +589,11 @@ template<> struct Concrete<JSObject> : TracerConcreteWithCompartmentAndClassName
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
 class Concrete<void> : public Base {
-    const char16_t *typeName() const MOZ_OVERRIDE;
-    size_t size(mozilla::MallocSizeOf mallocSizeOf) const MOZ_OVERRIDE;
-    EdgeRange *edges(JSContext *cx, bool wantNames) const MOZ_OVERRIDE;
-    JS::Zone *zone() const MOZ_OVERRIDE;
-    JSCompartment *compartment() const MOZ_OVERRIDE;
+    const char16_t *typeName() const override;
+    size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
+    EdgeRange *edges(JSContext *cx, bool wantNames) const override;
+    JS::Zone *zone() const override;
+    JSCompartment *compartment() const override;
 
     explicit Concrete(void *ptr) : Base(ptr) { }
 

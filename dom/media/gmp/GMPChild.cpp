@@ -380,7 +380,7 @@ public:
   explicit MacOSXSandboxStarter(GMPChild* aGMPChild)
     : mGMPChild(aGMPChild)
   {}
-  virtual void Start(const char* aLibPath) MOZ_OVERRIDE {
+  virtual void Start(const char* aLibPath) override {
     mGMPChild->StartMacSandbox();
   }
 private:

@@ -40,7 +40,7 @@ class nsHttpResponseHead;
 // intended to run on the socket thread.
 //-----------------------------------------------------------------------------
 
-class nsHttpTransaction MOZ_FINAL : public nsAHttpTransaction
+class nsHttpTransaction final : public nsAHttpTransaction
                                   , public ATokenBucketEvent
                                   , public nsIInputStreamCallback
                                   , public nsIOutputStreamCallback
@@ -124,12 +124,12 @@ public:
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
     // overload of nsAHttpTransaction::LoadGroupConnectionInfo()
-    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() MOZ_OVERRIDE { return mLoadGroupCI.get(); }
+    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() override { return mLoadGroupCI.get(); }
     void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI);
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
 
-    nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE { return this; }
+    nsHttpTransaction *QueryHttpTransaction() override { return this; }
 
     Http2PushedStream *GetPushedStream() { return mPushedStream; }
     Http2PushedStream *TakePushedStream()
@@ -185,10 +185,10 @@ private:
 
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
-    bool ResponseTimeoutEnabled() const MOZ_FINAL;
+    bool ResponseTimeoutEnabled() const final;
 
-    void DisableSpdy() MOZ_OVERRIDE;
-    void ReuseConnectionOnRestartOK(bool reuseOk) MOZ_OVERRIDE { mReuseOnRestart = reuseOk; }
+    void DisableSpdy() override;
+    void ReuseConnectionOnRestartOK(bool reuseOk) override { mReuseOnRestart = reuseOk; }
 
 private:
     class UpdateSecurityCallbacks : public nsRunnable
@@ -386,7 +386,7 @@ public:
     // token bucket submission the transaction just posts an event that causes
     // the pending transaction queue to be rerun (and TryToRunPacedRequest() to
     // be run again.
-    void OnTokenBucketAdmitted() MOZ_OVERRIDE; // ATokenBucketEvent
+    void OnTokenBucketAdmitted() override; // ATokenBucketEvent
 
     // CancelPacing() can be used to tell the token bucket to remove this
     // transaction from the list of pending transactions. This is used when a

@@ -26,7 +26,7 @@
 
 class mozPersonalDictionaryLoader;
 
-class mozPersonalDictionary MOZ_FINAL : public mozIPersonalDictionary,
+class mozPersonalDictionary final : public mozIPersonalDictionary,
                                         public nsIObserver,
                                         public nsSupportsWeakReference
 {

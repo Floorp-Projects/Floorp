@@ -23,7 +23,7 @@
  * NOTE: at time of writing, this requires patches to be added to the stock
  * Samba winbindd and ntlm_auth!  
  */
-class nsAuthSambaNTLM MOZ_FINAL : public nsIAuthModule
+class nsAuthSambaNTLM final : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS

@@ -51,7 +51,7 @@ struct FilePropertyBag;
 class FileImpl;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrString;
 
-class File MOZ_FINAL : public nsIDOMFile
+class File final : public nsIDOMFile
                      , public nsIXHRSendable
                      , public nsIMutable
                      , public nsSupportsWeakReference
@@ -189,7 +189,7 @@ public:
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint64_t GetSize(ErrorResult& aRv);
 
@@ -358,63 +358,63 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  virtual void GetName(nsAString& aName) MOZ_OVERRIDE;
+  virtual void GetName(nsAString& aName) override;
 
-  virtual nsresult GetPath(nsAString& aName) MOZ_OVERRIDE;
+  virtual nsresult GetPath(nsAString& aName) override;
 
-  virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual int64_t GetLastModified(ErrorResult& aRv) override;
 
-  virtual void SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
+  virtual void SetLastModified(int64_t aLastModified) override;
 
-  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) override;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName,
-                                      ErrorResult& aRv) MOZ_OVERRIDE;
+                                      ErrorResult& aRv) override;
 
-  virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE
+  virtual uint64_t GetSize(ErrorResult& aRv) override
   {
     return mLength;
   }
 
-  virtual void GetType(nsAString& aType) MOZ_OVERRIDE;
+  virtual void GetType(nsAString& aType) override;
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE
+              const nsAString& aContentType, ErrorResult& aRv) override
   {
     return nullptr;
   }
 
   virtual const nsTArray<nsRefPtr<FileImpl>>*
-  GetSubBlobImpls() const MOZ_OVERRIDE
+  GetSubBlobImpls() const override
   {
     return nullptr;
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE
+  virtual nsresult GetInternalStream(nsIInputStream** aStream) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual int64_t GetFileId() MOZ_OVERRIDE;
+  virtual int64_t GetFileId() override;
 
-  virtual void AddFileInfo(indexedDB::FileInfo* aFileInfo) MOZ_OVERRIDE;
+  virtual void AddFileInfo(indexedDB::FileInfo* aFileInfo) override;
 
   virtual indexedDB::FileInfo*
-  GetFileInfo(indexedDB::FileManager* aFileManager) MOZ_OVERRIDE;
+  GetFileInfo(indexedDB::FileManager* aFileManager) override;
 
   virtual nsresult GetSendInfo(nsIInputStream** aBody,
                                uint64_t* aContentLength,
                                nsACString& aContentType,
-                               nsACString& aCharset) MOZ_OVERRIDE;
+                               nsACString& aCharset) override;
 
-  virtual nsresult GetMutable(bool* aMutable) const MOZ_OVERRIDE;
+  virtual nsresult GetMutable(bool* aMutable) const override;
 
-  virtual nsresult SetMutable(bool aMutable) MOZ_OVERRIDE;
+  virtual nsresult SetMutable(bool aMutable) override;
 
   virtual void
   SetLazyData(const nsAString& aName, const nsAString& aContentType,
-              uint64_t aLength, uint64_t aLastModifiedDate) MOZ_OVERRIDE
+              uint64_t aLength, uint64_t aLastModifiedDate) override
   {
     NS_ASSERTION(aLength, "must have length");
 
@@ -425,17 +425,17 @@ public:
     mIsFile = !aName.IsVoid();
   }
 
-  virtual bool IsMemoryFile() const MOZ_OVERRIDE
+  virtual bool IsMemoryFile() const override
   {
     return false;
   }
 
-  virtual bool IsDateUnknown() const MOZ_OVERRIDE
+  virtual bool IsDateUnknown() const override
   {
     return mIsFile && mLastModificationDate == UINT64_MAX;
   }
 
-  virtual bool IsFile() const MOZ_OVERRIDE
+  virtual bool IsFile() const override
   {
     return mIsFile;
   }
@@ -456,7 +456,7 @@ public:
     return false;
   }
 
-  virtual bool IsSizeUnknown() const MOZ_OVERRIDE
+  virtual bool IsSizeUnknown() const override
   {
     return mLength == UINT64_MAX;
   }
@@ -492,7 +492,7 @@ protected:
  * This class may be used off the main thread, and in particular, its
  * constructor and destructor may not run on the same thread.  Be careful!
  */
-class FileImplMemory MOZ_FINAL : public FileImplBase
+class FileImplMemory final : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -513,18 +513,18 @@ public:
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) override;
 
-  virtual bool IsMemoryFile() const MOZ_OVERRIDE
+  virtual bool IsMemoryFile() const override
   {
     return true;
   }
 
-  class DataOwner MOZ_FINAL : public mozilla::LinkedListElement<DataOwner> {
+  class DataOwner final : public mozilla::LinkedListElement<DataOwner> {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
     DataOwner(void* aMemoryBuffer, uint64_t aLength)
@@ -585,7 +585,7 @@ private:
   nsRefPtr<DataOwner> mDataOwner;
 };
 
-class FileImplTemporaryFileBlob MOZ_FINAL : public FileImplBase
+class FileImplTemporaryFileBlob final : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -600,11 +600,11 @@ public:
     mFileDescOwner = new nsTemporaryFileInputStream::FileDescOwner(aFD);
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) override;
 
 private:
   FileImplTemporaryFileBlob(const FileImplTemporaryFileBlob* aOther,
@@ -739,13 +739,13 @@ public:
   }
 
   // Overrides
-  virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void GetType(nsAString& aType) MOZ_OVERRIDE;
-  virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetLastModified(int64_t aLastModified) MOZ_OVERRIDE;
+  virtual uint64_t GetSize(ErrorResult& aRv) override;
+  virtual void GetType(nsAString& aType) override;
+  virtual int64_t GetLastModified(ErrorResult& aRv) override;
+  virtual void SetLastModified(int64_t aLastModified) override;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
-                                      ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+                                      ErrorResult& aRv) override;
+  virtual nsresult GetInternalStream(nsIInputStream**) override;
 
   void SetPath(const nsAString& aFullPath);
 
@@ -795,14 +795,14 @@ private:
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) override;
 
-  virtual bool IsStoredFile() const MOZ_OVERRIDE
+  virtual bool IsStoredFile() const override
   {
     return mStoredFile;
   }
 
-  virtual bool IsWholeFile() const MOZ_OVERRIDE
+  virtual bool IsWholeFile() const override
   {
     return mWholeFile;
   }
@@ -813,7 +813,7 @@ private:
   bool mIsTemporary;
 };
 
-class FileList MOZ_FINAL : public nsIDOMFileList,
+class FileList final : public nsIDOMFileList,
                            public nsWrapperCache
 {
   ~FileList() {}
@@ -828,7 +828,7 @@ public:
 
   NS_DECL_NSIDOMFILELIST
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject()
   {

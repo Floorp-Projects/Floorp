@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLShadowElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLShadowElement final : public nsGenericHTMLElement,
                                     public nsStubMutationObserver
 {
 public:
@@ -29,14 +29,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLShadowElement,
                                            nsGenericHTMLElement)
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
 
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
   bool IsInsertionPoint() { return mIsInsertionPoint; }
 
@@ -71,7 +71,7 @@ public:
 protected:
   virtual ~HTMLShadowElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // The ShadowRoot that will be rendered in place of this shadow insertion point.
   nsRefPtr<ShadowRoot> mProjectedShadow;

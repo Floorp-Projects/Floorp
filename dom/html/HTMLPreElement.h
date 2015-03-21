@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLPreElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLPreElement final : public nsGenericHTMLElement,
                                  public nsIDOMHTMLPreElement
 {
 public:
@@ -27,17 +27,17 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMHTMLPreElement
-  NS_IMETHOD GetWidth(int32_t* aWidth) MOZ_OVERRIDE;
-  NS_IMETHOD SetWidth(int32_t aWidth) MOZ_OVERRIDE;
+  NS_IMETHOD GetWidth(int32_t* aWidth) override;
+  NS_IMETHOD SetWidth(int32_t aWidth) override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL API
   int32_t Width() const
@@ -52,7 +52,7 @@ public:
 protected:
   virtual ~HTMLPreElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

@@ -25,7 +25,7 @@ namespace dom {
 class ConsoleCallData;
 struct ConsoleStackEntry;
 
-class Console MOZ_FINAL : public nsIObserver
+class Console final : public nsIObserver
                         , public nsWrapperCache
 {
   ~Console();
@@ -44,7 +44,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void
   Log(JSContext* aCx, const Sequence<JS::Value>& aData);

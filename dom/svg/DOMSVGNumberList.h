@@ -38,7 +38,7 @@ class DOMSVGNumber;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGNumberList MOZ_FINAL : public nsISupports,
+class DOMSVGNumberList final : public nsISupports,
                                    public nsWrapperCache
 {
   friend class AutoChangeNumberListNotifier;
@@ -69,7 +69,7 @@ public:
     InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject()
   {

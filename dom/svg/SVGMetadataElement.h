@@ -17,18 +17,18 @@ typedef nsSVGElement SVGMetadataElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGMetadataElement MOZ_FINAL : public SVGMetadataElementBase
+class SVGMetadataElement final : public SVGMetadataElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGMetadataElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGMetadataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsresult Init();
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 };
 
 } // namespace dom

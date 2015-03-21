@@ -77,17 +77,17 @@ public:
   static HWND GetICoreWindowHWND() { return sICoreHwnd; }
 
   // nsWindowBase
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchKeyboardEvent(mozilla::WidgetKeyboardEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchPluginEvent(const MSG &aMsg) MOZ_OVERRIDE { return false; }
-  virtual bool IsTopLevelWidget() MOZ_OVERRIDE { return true; }
-  virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) MOZ_OVERRIDE { return nullptr; }
+  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) override;
+  virtual bool DispatchKeyboardEvent(mozilla::WidgetKeyboardEvent* aEvent) override;
+  virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) override;
+  virtual bool DispatchContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent) override;
+  virtual bool DispatchPluginEvent(const MSG &aMsg) override { return false; }
+  virtual bool IsTopLevelWidget() override { return true; }
+  virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) override { return nullptr; }
   // InitEvent assumes physical coordinates and is used by shared win32 code. Do
   // not hand winrt event coordinates to this routine.
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
-                         nsIntPoint* aPoint = nullptr) MOZ_OVERRIDE;
+                         nsIntPoint* aPoint = nullptr) override;
 
   // nsBaseWidget
   virtual void SetWidgetListener(nsIWidgetListener* aWidgetListener);
@@ -143,7 +143,7 @@ public:
   float         GetDPI();
   mozilla::LayoutDeviceIntPoint CSSIntPointToLayoutDeviceIntPoint(const mozilla::CSSIntPoint &aCSSPoint);
   void          ChangedDPI();
-  virtual uint32_t GetMaxTouchPoints() const MOZ_OVERRIDE;
+  virtual uint32_t GetMaxTouchPoints() const override;
   virtual bool  IsVisible() const;
   virtual bool  IsEnabled() const;
   // ShouldUseOffMainThreadCompositing is defined in base widget
@@ -161,7 +161,7 @@ public:
                                     const InputContextAction& aAction);
   NS_IMETHOD_(nsIWidget::InputContext) GetInputContext();
   NS_IMETHOD    GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState);
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference() MOZ_OVERRIDE;
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
   // FrameworkView helpers
   void SizeModeChanged();
@@ -243,15 +243,15 @@ protected:
   };
 
   // nsBaseWidget
-  void ConfigureAPZCTreeManager() MOZ_OVERRIDE;
-  already_AddRefed<GeckoContentController> NewRootContentController() MOZ_OVERRIDE;
+  void ConfigureAPZCTreeManager() override;
+  already_AddRefed<GeckoContentController> NewRootContentController() override;
 
   void SetSubclass();
   void RemoveSubclass();
   nsIWidgetListener* GetPaintListener();
 
   virtual nsresult NotifyIMEInternal(
-                     const IMENotification& aIMENotification) MOZ_OVERRIDE;
+                     const IMENotification& aIMENotification) override;
 
   // Async event dispatching
   void DispatchAsyncScrollEvent(DispatchMsg* aEvent);

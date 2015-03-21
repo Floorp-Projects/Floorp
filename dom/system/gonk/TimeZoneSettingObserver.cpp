@@ -51,7 +51,7 @@ protected:
   virtual ~TimeZoneSettingObserver();
 };
 
-class TimeZoneSettingCb MOZ_FINAL : public nsISettingsServiceCallback
+class TimeZoneSettingCb final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS

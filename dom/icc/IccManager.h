@@ -16,7 +16,7 @@ namespace dom {
 class Icc;
 class IccListener;
 
-class IccManager MOZ_FINAL : public DOMEventTargetHelper
+class IccManager final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -49,7 +49,7 @@ public:
   GetParentObject() const { return GetOwner(); }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   ~IccManager();

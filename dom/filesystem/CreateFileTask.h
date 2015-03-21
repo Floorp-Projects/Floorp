@@ -20,7 +20,7 @@ class File;
 class FileImpl;
 class Promise;
 
-class CreateFileTask MOZ_FINAL
+class CreateFileTask final
   : public FileSystemTaskBase
 {
 public:
@@ -41,23 +41,23 @@ public:
   GetPromise();
 
   virtual void
-  GetPermissionAccessType(nsCString& aAccess) const MOZ_OVERRIDE;
+  GetPermissionAccessType(nsCString& aAccess) const override;
 
 protected:
   virtual FileSystemParams
-  GetRequestParams(const nsString& aFileSystem) const MOZ_OVERRIDE;
+  GetRequestParams(const nsString& aFileSystem) const override;
 
   virtual FileSystemResponseValue
-  GetSuccessRequestResult() const MOZ_OVERRIDE;
+  GetSuccessRequestResult() const override;
 
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue) MOZ_OVERRIDE;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue) override;
 
   virtual nsresult
-  Work() MOZ_OVERRIDE;
+  Work() override;
 
   virtual void
-  HandlerCallback() MOZ_OVERRIDE;
+  HandlerCallback() override;
 
 private:
   void

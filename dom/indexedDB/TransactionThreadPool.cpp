@@ -46,7 +46,7 @@ const uint32_t kDEBUGThreadSleepMS = 0;
 
 #ifdef BUILD_THREADPOOL_LISTENER
 
-class TransactionThreadPoolListener MOZ_FINAL
+class TransactionThreadPoolListener final
   : public nsIThreadPoolListener
 {
 public:
@@ -66,7 +66,7 @@ private:
 
 } // anonymous namespace
 
-class TransactionThreadPool::FinishTransactionRunnable MOZ_FINAL
+class TransactionThreadPool::FinishTransactionRunnable final
   : public nsRunnable
 {
   typedef TransactionThreadPool::FinishCallback FinishCallback;
@@ -102,7 +102,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-struct TransactionThreadPool::DatabaseTransactionInfo MOZ_FINAL
+struct TransactionThreadPool::DatabaseTransactionInfo final
 {
   typedef nsClassHashtable<nsUint64HashKey, TransactionInfo>
     TransactionHashtable;
@@ -120,7 +120,7 @@ struct TransactionThreadPool::DatabaseTransactionInfo MOZ_FINAL
   }
 };
 
-struct TransactionThreadPool::DatabasesCompleteCallback MOZ_FINAL
+struct TransactionThreadPool::DatabasesCompleteCallback final
 {
   friend class nsAutoPtr<DatabasesCompleteCallback>;
 
@@ -139,7 +139,7 @@ private:
   }
 };
 
-class TransactionThreadPool::TransactionQueue MOZ_FINAL
+class TransactionThreadPool::TransactionQueue final
   : public nsRunnable
 {
   Monitor mMonitor;
@@ -184,7 +184,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-struct TransactionThreadPool::TransactionInfo MOZ_FINAL
+struct TransactionThreadPool::TransactionInfo final
 {
   uint64_t transactionId;
   nsCString databaseId;
@@ -219,7 +219,7 @@ struct TransactionThreadPool::TransactionInfo MOZ_FINAL
   }
 };
 
-struct TransactionThreadPool::TransactionInfoPair MOZ_FINAL
+struct TransactionThreadPool::TransactionInfoPair final
 {
   // Multiple reading transactions can block future writes.
   nsTArray<TransactionInfo*> lastBlockingWrites;

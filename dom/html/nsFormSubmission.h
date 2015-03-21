@@ -162,11 +162,11 @@ public:
   ~nsFSMultipartFormData();
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) MOZ_OVERRIDE;
+                                    const nsAString& aValue) override;
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   mozilla::dom::File* aBlob) MOZ_OVERRIDE;
+                                   mozilla::dom::File* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) MOZ_OVERRIDE;
+                                        nsIInputStream** aPostDataStream) override;
 
   void GetContentType(nsACString& aContentType)
   {

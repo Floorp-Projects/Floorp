@@ -32,7 +32,7 @@ uint64_t gSHEntrySharedID = 0;
 #define CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT (30*60)
 
 typedef nsExpirationTracker<nsSHEntryShared, 3> HistoryTrackerBase;
-class HistoryTracker MOZ_FINAL : public HistoryTrackerBase {
+class HistoryTracker final : public HistoryTrackerBase {
 public:
   explicit HistoryTracker(uint32_t aTimeout)
     : HistoryTrackerBase(1000 * aTimeout / 2)

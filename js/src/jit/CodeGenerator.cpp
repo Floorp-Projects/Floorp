@@ -418,7 +418,7 @@ class OutOfLineTestObject : public OutOfLineCodeBase<CodeGenerator>
 #endif
     { }
 
-    void accept(CodeGenerator *codegen) MOZ_FINAL MOZ_OVERRIDE {
+    void accept(CodeGenerator *codegen) final override {
         MOZ_ASSERT(initialized());
         codegen->emitOOLTestObject(objreg_, ifEmulatesUndefined_, ifDoesntEmulateUndefined_,
                                    scratch_);

@@ -203,12 +203,12 @@ protected:
   }
 
 public:
-  virtual void Complete() MOZ_OVERRIDE
+  virtual void Complete() override
   {
     mFenceHandle = FenceHandle();
   }
 
-  virtual void Cancel() MOZ_OVERRIDE
+  virtual void Cancel() override
   {
     mFenceHandle = FenceHandle();
   }

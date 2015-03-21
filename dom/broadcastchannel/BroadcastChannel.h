@@ -30,7 +30,7 @@ class WorkerFeature;
 class BroadcastChannelChild;
 class BroadcastChannelMessage;
 
-class BroadcastChannel MOZ_FINAL
+class BroadcastChannel final
   : public DOMEventTargetHelper
   , public nsIIPCBackgroundChildCreateCallback
   , public nsIObserver
@@ -49,7 +49,7 @@ public:
   static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<BroadcastChannel>
   Constructor(const GlobalObject& aGlobal, const nsAString& aChannel,
@@ -75,11 +75,11 @@ public:
                                 EventListener* aCallback,
                                 bool aCapture,
                                 const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) MOZ_OVERRIDE;
+                                ErrorResult& aRv) override;
   virtual void RemoveEventListener(const nsAString& aType,
                                    EventListener* aCallback,
                                    bool aCapture,
-                                   ErrorResult& aRv) MOZ_OVERRIDE;
+                                   ErrorResult& aRv) override;
 
   void Shutdown();
 

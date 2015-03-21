@@ -18,7 +18,7 @@ namespace mozilla {
 
 namespace dom {
 
-class PeriodicWave MOZ_FINAL : public nsWrapperCache
+class PeriodicWave final : public nsWrapperCache
 {
 public:
   PeriodicWave(AudioContext* aContext,
@@ -35,7 +35,7 @@ public:
     return mContext;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t DataLength() const
   {

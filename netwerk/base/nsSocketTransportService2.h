@@ -59,7 +59,7 @@ static const int32_t kDefaultTCPKeepCount =
 
 //-----------------------------------------------------------------------------
 
-class nsSocketTransportService MOZ_FINAL : public nsPISocketTransportService
+class nsSocketTransportService final : public nsPISocketTransportService
                                          , public nsIEventTarget
                                          , public nsIThreadObserver
                                          , public nsIRunnable

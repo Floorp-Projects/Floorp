@@ -43,12 +43,12 @@ public:
 protected:
   virtual ~PropertyStringList();
 
-  virtual void EnsureFresh() MOZ_OVERRIDE;
+  virtual void EnsureFresh() override;
 
   nsRefPtr<HTMLPropertiesCollection> mCollection;
 };
 
-class HTMLPropertiesCollection MOZ_FINAL : public nsIHTMLCollection,
+class HTMLPropertiesCollection final : public nsIHTMLCollection,
                                            public nsStubMutationObserver,
                                            public nsWrapperCache
 {
@@ -59,23 +59,23 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 protected:
   virtual ~HTMLPropertiesCollection();
 
-  virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
+  virtual JSObject* GetWrapperPreserveColorInternal() override
   {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
 public:
 
-  virtual Element* GetElementAt(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual Element* GetElementAt(uint32_t aIndex) override;
 
   void SetDocument(nsIDocument* aDocument);
-  nsINode* GetParentObject() MOZ_OVERRIDE;
+  nsINode* GetParentObject() override;
 
   virtual Element*
-  GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) override
   {
     // HTMLPropertiesCollection.namedItem and the named getter call the
     // NamedItem that returns a PropertyNodeList, calling
@@ -99,7 +99,7 @@ public:
     return mNames;
   }
   virtual void GetSupportedNames(unsigned,
-                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+                                 nsTArray<nsString>& aNames) override;
 
   NS_DECL_NSIDOMHTMLCOLLECTION
 
@@ -148,21 +148,21 @@ protected:
   bool mIsDirty;
 };
 
-class PropertyNodeList MOZ_FINAL : public nsINodeList,
+class PropertyNodeList final : public nsINodeList,
                                    public nsStubMutationObserver
 {
 public:
   PropertyNodeList(HTMLPropertiesCollection* aCollection,
                    nsIContent* aRoot, const nsAString& aName);
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   void SetDocument(nsIDocument* aDocument);
 
   void GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
                  ErrorResult& aError);
 
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual nsIContent* Item(uint32_t aIndex) override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -176,8 +176,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   // nsINodeList interface
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent) override;
+  virtual nsINode* GetParentObject() override;
 
   void AppendElement(nsGenericHTMLElement* aElement)
   {

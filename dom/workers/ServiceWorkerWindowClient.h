@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerWindowClient MOZ_FINAL : public ServiceWorkerClient
+class ServiceWorkerWindowClient final : public ServiceWorkerClient
 {
 public:
   ServiceWorkerWindowClient(nsISupports* aOwner,
@@ -26,7 +26,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   mozilla::dom::VisibilityState
   VisibilityState() const

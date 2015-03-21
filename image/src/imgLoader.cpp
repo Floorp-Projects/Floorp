@@ -51,7 +51,7 @@ using namespace mozilla::net;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ImagesMallocSizeOf)
 
-class imgMemoryReporter MOZ_FINAL : public nsIMemoryReporter
+class imgMemoryReporter final : public nsIMemoryReporter
 {
   ~imgMemoryReporter() { }
 
@@ -59,7 +59,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     nsresult rv;
     nsTArray<ImageMemoryCounter> chrome;
@@ -950,7 +950,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   return NS_OK;
 }
 
-class imgCacheExpirationTracker MOZ_FINAL
+class imgCacheExpirationTracker final
   : public nsExpirationTracker<imgCacheEntry, 3>
 {
   enum { TIMEOUT_SECONDS = 10 };

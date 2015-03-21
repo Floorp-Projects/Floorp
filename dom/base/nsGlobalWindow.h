@@ -149,7 +149,7 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
  * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
-struct nsTimeout MOZ_FINAL
+struct nsTimeout final
   : mozilla::LinkedListElement<nsTimeout>
 {
 private:
@@ -355,13 +355,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
-  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override
   {
     return IsInnerWindow() || EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
   // nsIGlobalJSObjectHolder
-  virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
+  virtual JSObject* GetGlobalJSObject() override;
 
   // nsIScriptGlobalObject
   JSObject *FastGetGlobalJSObject() const
@@ -371,18 +371,18 @@ public:
 
   void TraceGlobalJSObject(JSTracer* aTrc);
 
-  virtual nsresult EnsureScriptEnvironment() MOZ_OVERRIDE;
+  virtual nsresult EnsureScriptEnvironment() override;
 
-  virtual nsIScriptContext *GetScriptContext() MOZ_OVERRIDE;
+  virtual nsIScriptContext *GetScriptContext() override;
 
   void PoisonOuterWindowProxy(JSObject *aObject);
 
-  virtual bool IsBlackForCC(bool aTracingNeeded = true) MOZ_OVERRIDE;
+  virtual bool IsBlackForCC(bool aTracingNeeded = true) override;
 
   static JSObject* OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj);
 
   // nsIScriptObjectPrincipal
-  virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;
+  virtual nsIPrincipal* GetPrincipal() override;
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
@@ -394,18 +394,18 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
 
   virtual mozilla::EventListenerManager*
-    GetExistingListenerManager() const MOZ_OVERRIDE;
+    GetExistingListenerManager() const override;
 
   virtual mozilla::EventListenerManager*
-    GetOrCreateListenerManager() MOZ_OVERRIDE;
+    GetOrCreateListenerManager() override;
 
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE
+                                mozilla::ErrorResult& aRv) override;
+  virtual nsIDOMWindow* GetOwnerGlobal() override
   {
     if (IsOuterWindow()) {
       return this;
@@ -415,73 +415,73 @@ public:
   }
 
   // nsPIDOMWindow
-  virtual nsPIDOMWindow* GetPrivateRoot() MOZ_OVERRIDE;
+  virtual nsPIDOMWindow* GetPrivateRoot() override;
 
   // Outer windows only.
-  virtual void ActivateOrDeactivate(bool aActivate) MOZ_OVERRIDE;
-  virtual void SetActive(bool aActive) MOZ_OVERRIDE;
-  virtual void SetIsBackground(bool aIsBackground) MOZ_OVERRIDE;
-  virtual void SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler) MOZ_OVERRIDE;
+  virtual void ActivateOrDeactivate(bool aActivate) override;
+  virtual void SetActive(bool aActive) override;
+  virtual void SetIsBackground(bool aIsBackground) override;
+  virtual void SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler) override;
 
   // Outer windows only.
-  virtual void SetInitialPrincipalToSubject() MOZ_OVERRIDE;
+  virtual void SetInitialPrincipalToSubject() override;
 
-  virtual PopupControlState PushPopupControlState(PopupControlState state, bool aForce) const MOZ_OVERRIDE;
-  virtual void PopPopupControlState(PopupControlState state) const MOZ_OVERRIDE;
-  virtual PopupControlState GetPopupControlState() const MOZ_OVERRIDE;
+  virtual PopupControlState PushPopupControlState(PopupControlState state, bool aForce) const override;
+  virtual void PopPopupControlState(PopupControlState state) const override;
+  virtual PopupControlState GetPopupControlState() const override;
 
-  virtual already_AddRefed<nsISupports> SaveWindowState() MOZ_OVERRIDE;
-  virtual nsresult RestoreWindowState(nsISupports *aState) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsISupports> SaveWindowState() override;
+  virtual nsresult RestoreWindowState(nsISupports *aState) override;
   virtual void SuspendTimeouts(uint32_t aIncrease = 1,
-                               bool aFreezeChildren = true) MOZ_OVERRIDE;
-  virtual nsresult ResumeTimeouts(bool aThawChildren = true) MOZ_OVERRIDE;
-  virtual uint32_t TimeoutSuspendCount() MOZ_OVERRIDE;
-  virtual nsresult FireDelayedDOMEvents() MOZ_OVERRIDE;
-  virtual bool IsFrozen() const MOZ_OVERRIDE
+                               bool aFreezeChildren = true) override;
+  virtual nsresult ResumeTimeouts(bool aThawChildren = true) override;
+  virtual uint32_t TimeoutSuspendCount() override;
+  virtual nsresult FireDelayedDOMEvents() override;
+  virtual bool IsFrozen() const override
   {
     return mIsFrozen;
   }
-  virtual bool IsRunningTimeout() MOZ_OVERRIDE { return mTimeoutFiringDepth > 0; }
+  virtual bool IsRunningTimeout() override { return mTimeoutFiringDepth > 0; }
 
   // Outer windows only.
-  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) MOZ_OVERRIDE;
+  virtual bool WouldReuseInnerWindow(nsIDocument* aNewDocument) override;
 
-  virtual void SetDocShell(nsIDocShell* aDocShell) MOZ_OVERRIDE;
-  virtual void DetachFromDocShell() MOZ_OVERRIDE;
+  virtual void SetDocShell(nsIDocShell* aDocShell) override;
+  virtual void DetachFromDocShell() override;
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
                                   nsISupports *aState,
-                                  bool aForceReuseInnerWindow) MOZ_OVERRIDE;
+                                  bool aForceReuseInnerWindow) override;
 
   // Outer windows only.
   void DispatchDOMWindowCreated();
 
   virtual void SetOpenerWindow(nsIDOMWindow* aOpener,
-                               bool aOriginalOpener) MOZ_OVERRIDE;
+                               bool aOriginalOpener) override;
 
   // Outer windows only.
-  virtual void EnsureSizeUpToDate() MOZ_OVERRIDE;
+  virtual void EnsureSizeUpToDate() override;
 
-  virtual void EnterModalState() MOZ_OVERRIDE;
-  virtual void LeaveModalState() MOZ_OVERRIDE;
-
-  // Outer windows only.
-  virtual bool CanClose() MOZ_OVERRIDE;
-  virtual void ForceClose() MOZ_OVERRIDE;
+  virtual void EnterModalState() override;
+  virtual void LeaveModalState() override;
 
   // Outer windows only.
-  virtual bool DispatchCustomEvent(const nsAString& aEventName) MOZ_OVERRIDE;
+  virtual bool CanClose() override;
+  virtual void ForceClose() override;
+
+  // Outer windows only.
+  virtual bool DispatchCustomEvent(const nsAString& aEventName) override;
   bool DispatchResizeEvent(const mozilla::CSSIntSize& aSize);
 
   // Inner windows only.
-  virtual void RefreshCompartmentPrincipal() MOZ_OVERRIDE;
+  virtual void RefreshCompartmentPrincipal() override;
 
   // Outer windows only.
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust,
-                                         mozilla::gfx::VRHMDInfo *aHMD = nullptr) MOZ_OVERRIDE;
+                                         mozilla::gfx::VRHMDInfo *aHMD = nullptr) override;
   bool FullScreen() const;
 
   // Inner windows only.
-  virtual void SetHasGamepadEventListener(bool aHasGamepad = true) MOZ_OVERRIDE;
+  virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -632,32 +632,32 @@ public:
 #endif
 
   virtual JSObject*
-    GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) MOZ_OVERRIDE;
+    GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) override;
 
   virtual void
     CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                             JS::Handle<JSObject*> aHandler) MOZ_OVERRIDE;
+                             JS::Handle<JSObject*> aHandler) override;
 
-  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) MOZ_OVERRIDE;
-  virtual void SetReadyForFocus() MOZ_OVERRIDE;
-  virtual void PageHidden() MOZ_OVERRIDE;
-  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI) MOZ_OVERRIDE;
-  virtual nsresult DispatchSyncPopState() MOZ_OVERRIDE;
+  virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod) override;
+  virtual void SetReadyForFocus() override;
+  virtual void PageHidden() override;
+  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI) override;
+  virtual nsresult DispatchSyncPopState() override;
 
   // Inner windows only.
-  virtual void EnableDeviceSensor(uint32_t aType) MOZ_OVERRIDE;
-  virtual void DisableDeviceSensor(uint32_t aType) MOZ_OVERRIDE;
+  virtual void EnableDeviceSensor(uint32_t aType) override;
+  virtual void DisableDeviceSensor(uint32_t aType) override;
 
-  virtual void EnableTimeChangeNotifications() MOZ_OVERRIDE;
-  virtual void DisableTimeChangeNotifications() MOZ_OVERRIDE;
+  virtual void EnableTimeChangeNotifications() override;
+  virtual void DisableTimeChangeNotifications() override;
 
 #ifdef MOZ_B2G
   // Inner windows only.
-  virtual void EnableNetworkEvent(uint32_t aType) MOZ_OVERRIDE;
-  virtual void DisableNetworkEvent(uint32_t aType) MOZ_OVERRIDE;
+  virtual void EnableNetworkEvent(uint32_t aType) override;
+  virtual void DisableNetworkEvent(uint32_t aType) override;
 #endif // MOZ_B2G
 
-  virtual nsresult SetArguments(nsIArray* aArguments) MOZ_OVERRIDE;
+  virtual nsresult SetArguments(nsIArray* aArguments) override;
 
   void MaybeForgiveSpamCount();
   bool IsClosedOrClosing() {
@@ -691,9 +691,9 @@ public:
   FirePopupBlockedEvent(nsIDocument* aDoc,
                         nsIURI* aPopupURI,
                         const nsAString& aPopupWindowName,
-                        const nsAString& aPopupWindowFeatures) MOZ_OVERRIDE;
+                        const nsAString& aPopupWindowFeatures) override;
 
-  virtual uint32_t GetSerial() MOZ_OVERRIDE {
+  virtual uint32_t GetSerial() override {
     return mSerial;
   }
 
@@ -1171,7 +1171,7 @@ protected:
   OpenNoNavigate(const nsAString& aUrl,
                  const nsAString& aName,
                  const nsAString& aOptions,
-                 nsIDOMWindow** _retval) MOZ_OVERRIDE;
+                 nsIDOMWindow** _retval) override;
 
 private:
   /**
@@ -1240,7 +1240,7 @@ public:
   // |interval| is in milliseconds.
   nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                 int32_t interval,
-                                bool aIsInterval, int32_t* aReturn) MOZ_OVERRIDE;
+                                bool aIsInterval, int32_t* aReturn) override;
   int32_t SetTimeoutOrInterval(mozilla::dom::Function& aFunction,
                                int32_t aTimeout,
                                const mozilla::dom::Sequence<JS::Value>& aArguments,
@@ -1250,7 +1250,7 @@ public:
                                mozilla::ErrorResult& aError);
   void ClearTimeoutOrInterval(int32_t aTimerID,
                                   mozilla::ErrorResult& aError);
-  nsresult ClearTimeoutOrInterval(int32_t aTimerID) MOZ_OVERRIDE
+  nsresult ClearTimeoutOrInterval(int32_t aTimerID) override
   {
     mozilla::ErrorResult rv;
     ClearTimeoutOrInterval(aTimerID, rv);
@@ -1297,10 +1297,10 @@ public:
   uint32_t GetFuzzTimeMS();
   nsresult ScheduleActiveTimerCallback();
   uint32_t FindInsertionIndex(IdleObserverHolder* aIdleObserver);
-  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) MOZ_OVERRIDE;
+  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
   nsresult FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
                                       int32_t* aRemoveElementIndex);
-  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) MOZ_OVERRIDE;
+  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr) override;
 
   // Inner windows only.
   nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
@@ -1382,22 +1382,22 @@ public:
 
   virtual void SetFocusedNode(nsIContent* aNode,
                               uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) MOZ_OVERRIDE;
+                              bool aNeedsFocus = false) override;
 
-  virtual uint32_t GetFocusMethod() MOZ_OVERRIDE;
+  virtual uint32_t GetFocusMethod() override;
 
-  virtual bool ShouldShowFocusRing() MOZ_OVERRIDE;
+  virtual bool ShouldShowFocusRing() override;
 
   virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                     UIStateChangeType aShowFocusRings) MOZ_OVERRIDE;
+                                     UIStateChangeType aShowFocusRings) override;
   virtual void GetKeyboardIndicators(bool* aShowAccelerators,
-                                     bool* aShowFocusRings) MOZ_OVERRIDE;
+                                     bool* aShowFocusRings) override;
 
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
 
 public:
-  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() MOZ_OVERRIDE;
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
 protected:
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
@@ -1408,7 +1408,7 @@ protected:
 
   void ClearStatus();
 
-  virtual void UpdateParentTarget() MOZ_OVERRIDE;
+  virtual void UpdateParentTarget() override;
 
   inline int32_t DOMMinTimeoutValue() const;
 

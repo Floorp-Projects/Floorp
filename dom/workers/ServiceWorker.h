@@ -26,7 +26,7 @@ class SharedWorker;
 bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
-class ServiceWorker MOZ_FINAL : public DOMEventTargetHelper
+class ServiceWorker final : public DOMEventTargetHelper
 {
   friend class ServiceWorkerManager;
 public:
@@ -37,7 +37,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   ServiceWorkerState
   State() const
