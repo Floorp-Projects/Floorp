@@ -252,13 +252,10 @@ struct BytecodeEmitter
     bool reportError(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
-};
 
-/*
- * Emit one bytecode.
- */
-bool
-Emit1(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op);
+    // Emit one bytecode.
+    bool emit1(JSOp op);
+};
 
 /*
  * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
