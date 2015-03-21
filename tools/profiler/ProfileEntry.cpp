@@ -24,6 +24,10 @@
  #define snprintf _snprintf
 #endif
 
+using mozilla::Maybe;
+using mozilla::Some;
+using mozilla::Nothing;
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileEntry
 
@@ -276,7 +280,70 @@ public:
   }
 };
 
-void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt)
+bool UniqueJITOptimizations::OptimizationKey::operator<(const OptimizationKey& other) const
+{
+  if (mEntryAddr == other.mEntryAddr) {
+    return mIndex < other.mIndex;
+  }
+  return mEntryAddr < other.mEntryAddr;
+}
+
+Maybe<unsigned> UniqueJITOptimizations::getIndex(void* addr, JSRuntime* rt)
+{
+  void* entryAddr;
+  Maybe<uint8_t> optIndex = JS::TrackedOptimizationIndexAtAddr(rt, addr, &entryAddr);
+  if (optIndex.isNothing()) {
+    return Nothing();
+  }
+
+  OptimizationKey key;
+  key.mEntryAddr = entryAddr;
+  key.mIndex = optIndex.value();
+
+  auto iter = mOptToIndexMap.find(key);
+  if (iter != mOptToIndexMap.end()) {
+    MOZ_ASSERT(iter->second < mOpts.length());
+    return Some(iter->second);
+  }
+
+  unsigned keyIndex = mOpts.length();
+  mOptToIndexMap.insert(std::make_pair(key, keyIndex));
+  MOZ_ALWAYS_TRUE(mOpts.append(key));
+  return Some(keyIndex);
+}
+
+void UniqueJITOptimizations::stream(JSStreamWriter& b, JSRuntime* rt)
+{
+  b.BeginArray();
+    for (size_t i = 0; i < mOpts.length(); i++) {
+      b.BeginObject();
+        b.Name("types");
+        b.BeginArray();
+          StreamOptimizationTypeInfoOp typeInfoOp(b);
+          JS::ForEachTrackedOptimizationTypeInfo(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
+                                                 typeInfoOp);
+        b.EndArray();
+
+        b.Name("attempts");
+        b.BeginArray();
+          JSScript *script;
+          jsbytecode *pc;
+          StreamOptimizationAttemptsOp attemptOp(b);
+          JS::ForEachTrackedOptimizationAttempt(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
+                                                attemptOp, &script, &pc);
+        b.EndArray();
+
+        unsigned line, column;
+        line = JS_PCToLineNumber(script, pc, &column);
+        b.NameValue("line", line);
+        b.NameValue("column", column);
+      b.EndObject();
+    }
+  b.EndArray();
+}
+
+void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt,
+                                            UniqueJITOptimizations &aUniqueOpts)
 {
   b.BeginArray();
 
@@ -407,30 +474,21 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                         // TODOshu: cannot stream tracked optimization info if
                         // the JS engine has already shut down when streaming.
                         if (rt) {
-                          JSScript *optsScript;
-                          jsbytecode *optsPC;
-                          bool hasOptInfo = false;
                           JS::ProfilingFrameIterator::FrameKind frameKind =
-                            JS::GetProfilingFrameKindFromNativeAddr(rt, pc, &hasOptInfo);
+                            JS::GetProfilingFrameKindFromNativeAddr(rt, pc);
                           MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
                                      frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
-                          const char *jitLevelString =
+                          const char* jitLevelString =
                             (frameKind == JS::ProfilingFrameIterator::Frame_Ion) ? "ion"
                                                                                  : "baseline";
                           b.NameValue("implementation", jitLevelString);
-                          if (hasOptInfo) {
-                              b.Name("opts");
-                              b.BeginArray();
-                                StreamOptimizationTypeInfoOp typeInfoOp(b);
-                                JS::ForEachTrackedOptimizationTypeInfo(rt, pc, typeInfoOp);
-                                StreamOptimizationAttemptsOp attemptOp(b);
-                                JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp,
-                                                                      &optsScript, &optsPC);
-                              b.EndArray();
-                              unsigned optsLine, optsColumn;
-                              optsLine = JS_PCToLineNumber(optsScript, optsPC, &optsColumn);
-                              b.NameValue("optsLine", optsLine);
-                              b.NameValue("optsColumn", optsColumn);
+
+                          // Sampled JIT optimizations are deduplicated by
+                          // aUniqueOpts to save space. Stream an index that
+                          // references into the optimizations array.
+                          Maybe<unsigned> optsIndex = aUniqueOpts.getIndex(pc, rt);
+                          if (optsIndex.isSome()) {
+                            b.NameValue("optsIndex", optsIndex.value());
                           }
                         }
                       }
@@ -591,7 +649,13 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     b.NameValue("tid", static_cast<int>(mThreadId));
 
     b.Name("samples");
-    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime);
+    UniqueJITOptimizations uniqueOpts;
+    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
+
+    if (!uniqueOpts.empty()) {
+      b.Name("optimizations");
+      uniqueOpts.stream(b, mPseudoStack->mRuntime);
+    }
 
     b.Name("markers");
     mBuffer->StreamMarkersToJSObject(b, mThreadId);

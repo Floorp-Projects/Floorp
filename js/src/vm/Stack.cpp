@@ -1909,7 +1909,8 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
     // FIXMEshu: disabled until we can ensure the optimization info is live
     // when we write out the JSON stream of the profile.
     if (false && entry.hasTrackedOptimizations()) {
-        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(returnAddr);
+        uint32_t dummy;
+        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(returnAddr, &dummy);
         frames[offset].hasTrackedOptimizations = index.isSome();
     }
 
