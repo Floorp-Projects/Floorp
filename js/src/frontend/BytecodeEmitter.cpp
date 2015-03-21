@@ -5081,7 +5081,7 @@ BytecodeEmitter::emitForIn(ParseNode *pn, ptrdiff_t top)
     if (!emit1(JSOP_POP))
         return false;
 
-    if (!tryNoteList.append(JSTRY_ITER, this->stackDepth, top, offset()))
+    if (!tryNoteList.append(JSTRY_FOR_IN, this->stackDepth, top, offset()))
         return false;
     if (!emit1(JSOP_ENDITER))
         return false;
