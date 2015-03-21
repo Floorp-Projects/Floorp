@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for event handler scoping</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var queryResult;
+test(function() {
+  var d = document.createElement("div");
+  d.setAttribute("onclick", "queryResult = querySelector('span')");
+  var s = document.createElement("span");
+  d.appendChild(s);
+  d.dispatchEvent(new Event("click"));
+  assert_equals(queryResult, s, "Should have gotten the right object");
+}, "Test for bareword calls in an event handler using the element as 'this'");
+</script>

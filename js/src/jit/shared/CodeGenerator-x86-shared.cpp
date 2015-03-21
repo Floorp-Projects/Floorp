@@ -2385,100 +2385,69 @@ CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
     masm.vmovmskps(input, output);
 }
 
-void
-CodeGeneratorX86Shared::visitSimdGeneralSwizzleI(LSimdGeneralSwizzleI *ins)
+template <class T, class Reg> void
+CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase *ins, Reg tempRegister)
 {
-    FloatRegister input = ToFloatRegister(ins->base());
-    Register temp = ToRegister(ins->temp());
+    MSimdGeneralShuffle *mir = ins->mir();
+    unsigned numVectors = mir->numVectors();
+
+    Register laneTemp = ToRegister(ins->temp());
 
     // This won't generate fast code, but it's fine because we expect users
-    // to have used constant indices (and thus MSimdGeneralSwizzle to be fold
-    // into MSimdSwizzle, which are fast).
-    masm.reserveStack(Simd128DataSize * 2);
+    // to have used constant indices (and thus MSimdGeneralShuffle to be fold
+    // into MSimdSwizzle/MSimdShuffle, which are fast).
+    masm.reserveStack(Simd128DataSize * numVectors);
 
-    masm.storeAlignedInt32x4(input, Address(StackPointer, Simd128DataSize));
+    for (unsigned i = 0; i < numVectors; i++) {
+        masm.storeAlignedVector<T>(ToFloatRegister(ins->vector(i)),
+                                   Address(StackPointer, Simd128DataSize * (1 + i)));
+    }
 
     Label bail;
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < mir->numLanes(); i++) {
         Operand lane = ToOperand(ins->lane(i));
 
-        masm.cmp32(lane, Imm32(3));
+        masm.cmp32(lane, Imm32(mir->numVectors() * mir->numLanes() - 1));
         masm.j(Assembler::Above, &bail);
 
         if (lane.kind() == Operand::REG) {
-            masm.load32(Operand(StackPointer, ToRegister(ins->lane(i)), TimesFour, Simd128DataSize),
-                        temp);
+            masm.loadScalar<T>(Operand(StackPointer, ToRegister(ins->lane(i)), TimesFour, Simd128DataSize),
+                               tempRegister);
         } else {
-            masm.load32(lane, temp);
-            masm.load32(Operand(StackPointer, temp, TimesFour, Simd128DataSize), temp);
+            masm.load32(lane, laneTemp);
+            masm.loadScalar<T>(Operand(StackPointer, laneTemp, TimesFour, Simd128DataSize), tempRegister);
         }
 
-        masm.store32(temp, Address(StackPointer, i * sizeof(int32_t)));
+        masm.storeScalar<T>(tempRegister, Address(StackPointer, i * sizeof(T)));
     }
 
     FloatRegister output = ToFloatRegister(ins->output());
-    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
+    masm.loadAlignedVector<T>(Address(StackPointer, 0), output);
 
     Label join;
     masm.jump(&join);
 
     {
         masm.bind(&bail);
-        masm.freeStack(Simd128DataSize * 2);
+        masm.freeStack(Simd128DataSize * numVectors);
         bailout(ins->snapshot());
     }
 
     masm.bind(&join);
-    masm.setFramePushed(masm.framePushed() + Simd128DataSize * 2);
-    masm.freeStack(Simd128DataSize * 2);
+    masm.setFramePushed(masm.framePushed() + Simd128DataSize * numVectors);
+    masm.freeStack(Simd128DataSize * numVectors);
 }
 
 void
-CodeGeneratorX86Shared::visitSimdGeneralSwizzleF(LSimdGeneralSwizzleF *ins)
+CodeGeneratorX86Shared::visitSimdGeneralShuffleI(LSimdGeneralShuffleI *ins)
 {
-    FloatRegister input = ToFloatRegister(ins->base());
-    Register temp = ToRegister(ins->temp());
-
-    // See comment in the visitSimdGeneralSwizzleI.
-    masm.reserveStack(Simd128DataSize * 2);
-
-    masm.storeAlignedFloat32x4(input, Address(StackPointer, Simd128DataSize));
-
-    Label bail;
-
-    for (size_t i = 0; i < 4; i++) {
-        Operand lane = ToOperand(ins->lane(i));
-
-        masm.cmp32(lane, Imm32(3));
-        masm.j(Assembler::Above, &bail);
-
-        if (lane.kind() == Operand::REG) {
-            masm.loadFloat32(Operand(StackPointer, ToRegister(ins->lane(i)), TimesFour, Simd128DataSize),
-                             ScratchFloat32Reg);
-        } else {
-            masm.load32(lane, temp);
-            masm.loadFloat32(Operand(StackPointer, temp, TimesFour, Simd128DataSize), ScratchFloat32Reg);
-        }
-
-        masm.storeFloat32(ScratchFloat32Reg, Address(StackPointer, i * sizeof(int32_t)));
-    }
-
-    FloatRegister output = ToFloatRegister(ins->output());
-    masm.loadAlignedFloat32x4(Address(StackPointer, 0), output);
-
-    Label join;
-    masm.jump(&join);
-
-    {
-        masm.bind(&bail);
-        masm.freeStack(Simd128DataSize * 2);
-        bailout(ins->snapshot());
-    }
-
-    masm.bind(&join);
-    masm.setFramePushed(masm.framePushed() + Simd128DataSize * 2);
-    masm.freeStack(Simd128DataSize * 2);
+    visitSimdGeneralShuffle<int32_t, Register>(ins, ToRegister(ins->temp()));
+}
+void
+CodeGeneratorX86Shared::visitSimdGeneralShuffleF(LSimdGeneralShuffleF *ins)
+{
+    visitSimdGeneralShuffle<float, FloatRegister>(ins, ScratchFloat32Reg);
 }
 
 void

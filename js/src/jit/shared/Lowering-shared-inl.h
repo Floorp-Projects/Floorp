@@ -35,8 +35,17 @@ LIRGeneratorShared::use(MDefinition *mir, LUse policy)
     return policy;
 }
 
-template <size_t X, size_t Y> void
-LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, const LDefinition &def)
+template <size_t X> void
+LIRGeneratorShared::define(details::LInstructionFixedDefsTempsHelper<1, X> *lir, MDefinition *mir,
+                           LDefinition::Policy policy)
+{
+    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+    define(lir, mir, LDefinition(type, policy));
+}
+
+template <size_t X> void
+LIRGeneratorShared::define(details::LInstructionFixedDefsTempsHelper<1, X> *lir, MDefinition *mir,
+                           const LDefinition &def)
 {
     // Call instructions should use defineReturn.
     MOZ_ASSERT(!lir->isCall());
@@ -50,13 +59,6 @@ LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, c
     lir->setMir(mir);
     mir->setVirtualRegister(vreg);
     add(lir);
-}
-
-template <size_t X, size_t Y> void
-LIRGeneratorShared::define(LInstructionHelper<1, X, Y> *lir, MDefinition *mir, LDefinition::Policy policy)
-{
-    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-    define(lir, mir, LDefinition(type, policy));
 }
 
 template <size_t X, size_t Y> void

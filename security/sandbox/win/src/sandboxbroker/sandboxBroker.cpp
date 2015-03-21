@@ -272,6 +272,12 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
                             L"\\??\\pipe\\chrome.*");
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
+  // Add the policy for the client side of the crash server pipe.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\gecko-crash-server-pipe.*");
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
 #ifdef DEBUG
   // The plugin process can't create named events, but we'll
   // make an exception for the events used in logging. Removing

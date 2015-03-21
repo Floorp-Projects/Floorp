@@ -139,10 +139,6 @@ IPDLUnitTestMain(void* aData)
 {
     char* testString = reinterpret_cast<char*>(aData);
 
-    // Some tests require this, and we don't care what thread we're on if we're
-    // not using Nuwa.
-    mozilla::ipc::IToplevelProtocol::SetAllowNonMainThreadUse();
-
     // Check if we are to run the test using threads instead:
     const char *prefix = "thread:";
     const int prefixLen = strlen(prefix);
@@ -378,10 +374,6 @@ IPDLUnitTestChildInit(IPC::Channel* transport,
                       base::ProcessHandle parent,
                       MessageLoop* worker)
 {
-    // Some tests require this, and we don't care what thread we're on if we're
-    // not using Nuwa.
-    mozilla::ipc::IToplevelProtocol::SetAllowNonMainThreadUse();
-
     switch (IPDLUnitTest()) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====

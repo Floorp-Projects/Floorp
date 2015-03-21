@@ -551,19 +551,20 @@ InitOnContentProcessCreated()
 
 #ifdef MOZ_NUWA_PROCESS
 static void
-ResetTransports(void* aUnused) {
+ResetTransports(void* aUnused)
+{
   ContentChild* child = ContentChild::GetSingleton();
   mozilla::ipc::Transport* transport = child->GetTransport();
   int fd = transport->GetFileDescriptor();
   transport->ResetFileDescriptor(fd);
 
-  IToplevelProtocol* toplevel = child->GetFirstOpenedActors();
-  while (toplevel != nullptr) {
+  nsTArray<IToplevelProtocol*> actors;
+  child->GetOpenedActors(actors);
+  for (size_t i = 0; i < actors.Length(); i++) {
+      IToplevelProtocol* toplevel = actors[i];
       transport = toplevel->GetTransport();
       fd = transport->GetFileDescriptor();
       transport->ResetFileDescriptor(fd);
-
-      toplevel = toplevel->getNext();
   }
 }
 #endif
@@ -2677,9 +2678,10 @@ GetProtoFdInfos(NuwaProtoFdInfo* aInfoList,
         content->GetTransport()->GetFileDescriptor();
     i++;
 
-    for (IToplevelProtocol* actor = content->GetFirstOpenedActors();
-         actor != nullptr;
-         actor = actor->getNext()) {
+    IToplevelProtocol* actors[NUWA_TOPLEVEL_MAX];
+    size_t count = content->GetOpenedActorsUnsafe(actors, ArrayLength(actors));
+    for (size_t j = 0; j < count; j++) {
+        IToplevelProtocol* actor = actors[j];
         if (i >= aInfoListSize) {
             NS_RUNTIMEABORT("Too many top level protocols!");
         }

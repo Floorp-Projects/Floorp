@@ -8,13 +8,22 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/StreamList.h"
+#include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/ipc/PFileDescriptorSetParent.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
+
+using mozilla::ipc::FileDescriptor;
+using mozilla::ipc::FileDescriptorSetParent;
+using mozilla::ipc::OptionalFileDescriptorSet;
+using mozilla::ipc::PFileDescriptorSetParent;
 
 // declared in ActorUtils.h
 void
@@ -36,33 +45,75 @@ CacheStreamControlParent::~CacheStreamControlParent()
 }
 
 void
-CacheStreamControlParent::AddListener(ReadStream* aListener)
+CacheStreamControlParent::SerializeControl(PCacheReadStream* aReadStreamOut)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  MOZ_ASSERT(aListener);
-  MOZ_ASSERT(!mListeners.Contains(aListener));
-  mListeners.AppendElement(aListener);
+  aReadStreamOut->controlChild() = nullptr;
+  aReadStreamOut->controlParent() = this;
 }
 
 void
-CacheStreamControlParent::RemoveListener(ReadStream* aListener)
+CacheStreamControlParent::SerializeFds(PCacheReadStream* aReadStreamOut,
+                                       const nsTArray<FileDescriptor>& aFds)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  MOZ_ASSERT(aListener);
-  DebugOnly<bool> removed = mListeners.RemoveElement(aListener);
-  MOZ_ASSERT(removed);
+  PFileDescriptorSetParent* fdSet = nullptr;
+  if (!aFds.IsEmpty()) {
+    fdSet = Manager()->SendPFileDescriptorSetConstructor(aFds[0]);
+    for (uint32_t i = 1; i < aFds.Length(); ++i) {
+      unused << fdSet->SendAddFileDescriptor(aFds[i]);
+    }
+  }
+
+  if (fdSet) {
+    aReadStreamOut->fds() = fdSet;
+  } else {
+    aReadStreamOut->fds() = void_t();
+  }
 }
+
+void
+CacheStreamControlParent::DeserializeFds(const PCacheReadStream& aReadStream,
+                                         nsTArray<FileDescriptor>& aFdsOut)
+{
+  if (aReadStream.fds().type() !=
+      OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
+    return;
+  }
+
+  FileDescriptorSetParent* fdSetActor =
+    static_cast<FileDescriptorSetParent*>(aReadStream.fds().get_PFileDescriptorSetParent());
+  MOZ_ASSERT(fdSetActor);
+
+  fdSetActor->ForgetFileDescriptors(aFdsOut);
+  MOZ_ASSERT(!aFdsOut.IsEmpty());
+
+  if (!fdSetActor->Send__delete__(fdSetActor)) {
+    // child process is gone, warn and allow actor to clean up normally
+    NS_WARNING("Cache failed to delete fd set actor.");
+  }
+}
+
+void
+CacheStreamControlParent::NoteClosedAfterForget(const nsID& aId)
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
+  RecvNoteClosed(aId);
+}
+
+#ifdef DEBUG
+void
+CacheStreamControlParent::AssertOwningThread()
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
+}
+#endif
 
 void
 CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  MOZ_ASSERT(mStreamList);
-  ReadStreamList::ForwardIterator iter(mListeners);
-  while (iter.HasMore()) {
-    nsRefPtr<ReadStream> stream = iter.GetNext();
-    stream->CloseStreamWithoutReporting();
-  }
+  CloseAllReadStreamsWithoutReporting();
   mStreamList->RemoveStreamControl(this);
   mStreamList->NoteClosedAll();
   mStreamList = nullptr;
@@ -116,30 +167,14 @@ void
 CacheStreamControlParent::NotifyClose(const nsID& aId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  DebugOnly<uint32_t> closedCount = 0;
-
-  ReadStreamList::ForwardIterator iter(mListeners);
-  while (iter.HasMore()) {
-    nsRefPtr<ReadStream> stream = iter.GetNext();
-    // note, multiple streams may exist for same ID
-    if (stream->MatchId(aId)) {
-      stream->CloseStream();
-      closedCount += 1;
-    }
-  }
-
-  MOZ_ASSERT(closedCount > 0);
+  CloseReadStreams(aId);
 }
 
 void
 CacheStreamControlParent::NotifyCloseAll()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  ReadStreamList::ForwardIterator iter(mListeners);
-  while (iter.HasMore()) {
-    nsRefPtr<ReadStream> stream = iter.GetNext();
-    stream->CloseStream();
-  }
+  CloseAllReadStreams();
 }
 
 } // namespace cache

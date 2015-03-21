@@ -1322,7 +1322,7 @@ MaybeVerifyBarriers(JSContext *cx, bool always = false)
 /*
  * Instances of this class set the |JSRuntime::suppressGC| flag for the duration
  * that they are live. Use of this class is highly discouraged. Please carefully
- * read the comment in jscntxt.h above |suppressGC| and take all appropriate
+ * read the comment in vm/Runtime.h above |suppressGC| and take all appropriate
  * precautions before instantiating this class.
  */
 class AutoSuppressGC

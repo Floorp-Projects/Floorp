@@ -55,6 +55,7 @@ def getUrlProperties(filename):
         ('completeMarUrl', lambda m: m.endswith('.complete.mar')),
         ('partialMarUrl', lambda m: m.endswith('.mar') and '.partial.' in m),
         ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
+        ('sdkUrl', lambda m: m.endswith(('sdk.tar.bz2', 'sdk.zip'))),
         # packageUrl must be last!
         ('packageUrl', lambda m: True),
     ]

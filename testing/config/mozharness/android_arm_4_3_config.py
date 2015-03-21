@@ -25,8 +25,8 @@ config = {
                 "--http-port=%(http_port)s", "--ssl-port=%(ssl_port)s",
                 "--certificate-path=%(certs_path)s", "--symbols-path=%(symbols_path)s",
                 "--quiet", "--log-raw=%(raw_log_file)s",
-                "--total-chunks=2",
-                "--manifest=tests/dom/canvas/test/_webgl-conformance.ini",
+                "--total-chunks=4",
+                "--subsuite=webgl",
             ],
         },
         "robocop": {

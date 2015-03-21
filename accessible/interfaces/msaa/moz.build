@@ -22,7 +22,6 @@ DEFFILE = SRCDIR + '/AccessibleMarshal.def'
 
 OS_LIBS += [
     'kernel32',
-    'rpcns4',
     'rpcrt4',
     'oleaut32',
 ]

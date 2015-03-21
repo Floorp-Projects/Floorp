@@ -565,6 +565,17 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     if (nativeIndex >= 0)
       nativeStackAddr = (uint8_t *) aNativeStack.sp_array[nativeIndex];
 
+    // If there's a native stack entry which has the same SP as a
+    // pseudo stack entry, pretend we didn't see the native stack
+    // entry.  Ditto for a native stack entry which has the same SP as
+    // a JS stack entry.  In effect this means pseudo or JS entries
+    // trump conflicting native entries.
+    if (nativeStackAddr && (pseudoStackAddr == nativeStackAddr || jsStackAddr == nativeStackAddr)) {
+      nativeStackAddr = nullptr;
+      nativeIndex--;
+      MOZ_ASSERT(pseudoStackAddr || jsStackAddr);
+    }
+
     // Sanity checks.
     MOZ_ASSERT_IF(pseudoStackAddr, pseudoStackAddr != jsStackAddr &&
                                    pseudoStackAddr != nativeStackAddr);
@@ -590,7 +601,21 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       // Stringifying optimization information is delayed until streaming
       // time. To re-lookup the entry in the JitcodeGlobalTable, we need to
       // store the JIT code address ('J') in the circular buffer.
-      if (jsFrames[jsIndex].hasTrackedOptimizations) {
+      //
+      // Note that we cannot do this when we are sychronously sampling the
+      // current thread; that is, when called from profiler_get_backtrace. The
+      // captured backtrace is usually externally stored for an indeterminate
+      // amount of time, such as in nsRefreshDriver. Problematically, the
+      // stored backtrace may be alive across a GC during which the profiler
+      // itself is disabled. In that case, the JS engine is free to discard
+      // its JIT code. This means that if we inserted such 'J' entries into
+      // the buffer, nsRefreshDriver would now be holding on to a backtrace
+      // with stale JIT code return addresses.
+      MOZ_ASSERT_IF(jsFrames[jsIndex].hasTrackedOptimizations,
+                    jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Ion);
+      if (!aSample->isSamplingCurrentThread &&
+          (jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Ion ||
+           jsFrames[jsIndex].kind == JS::ProfilingFrameIterator::Frame_Baseline)) {
         aProfile.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
       }
 
@@ -885,33 +910,3 @@ SyncProfile* TableTicker::GetBacktrace()
 
   return profile;
 }
-
-static void print_callback(const ProfileEntry& entry, const char* tagStringData)
-{
-  switch (entry.getTagName()) {
-    case 's':
-    case 'c':
-      printf_stderr("  %s\n", tagStringData);
-  }
-}
-
-void mozilla_sampler_print_location1()
-{
-  if (!stack_key_initialized)
-    profiler_init(nullptr);
-
-  SyncProfile* syncProfile = NewSyncProfile();
-  if (!syncProfile) {
-    return;
-  }
-
-  syncProfile->BeginUnwind();
-  doSampleStackTrace(*syncProfile, nullptr, false);
-  syncProfile->EndUnwind();
-
-  printf_stderr("Backtrace:\n");
-  syncProfile->IterateTags(print_callback);
-  delete syncProfile;
-}
-
-
