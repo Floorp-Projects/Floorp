@@ -1200,10 +1200,8 @@ IonBuilder::initScopeChain(MDefinition *callee)
                 return false;
         }
     } else {
-        // For global scripts without a polluted global scope, the scope chain
-        // is the global object.
-        MOZ_ASSERT(!script()->isForEval());
-        MOZ_ASSERT(!script()->hasPollutedGlobalScope());
+        // For CNG global scripts, the scope chain is the global object.
+        MOZ_ASSERT(script()->compileAndGo());
         scope = constant(ObjectValue(script()->global()));
     }
 
