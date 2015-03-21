@@ -7,6 +7,8 @@
 #ifndef js_TrackedOptimizationInfo_h
 #define js_TrackedOptimizationInfo_h
 
+#include "mozilla/Maybe.h"
+
 namespace JS {
 
 #define TRACKED_STRATEGY_LIST(_)                        \
@@ -275,13 +277,13 @@ enum class TrackedTypeSite : uint32_t {
     Count
 };
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedStrategyString(TrackedStrategy strategy);
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedOutcomeString(TrackedOutcome outcome);
 
-extern JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char *)
 TrackedTypeSiteString(TrackedTypeSite site);
 
 struct ForEachTrackedOptimizationAttemptOp
@@ -290,7 +292,7 @@ struct ForEachTrackedOptimizationAttemptOp
 };
 
 JS_PUBLIC_API(void)
-ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr,
+ForEachTrackedOptimizationAttempt(JSRuntime *rt, void *addr, uint8_t index,
                                   ForEachTrackedOptimizationAttemptOp &op,
                                   JSScript **scriptOut, jsbytecode **pcOut);
 
@@ -335,9 +337,12 @@ struct ForEachTrackedOptimizationTypeInfoOp
     virtual void operator()(TrackedTypeSite site, const char *mirType) = 0;
 };
 
-extern JS_PUBLIC_API(void)
-ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr,
+JS_PUBLIC_API(void)
+ForEachTrackedOptimizationTypeInfo(JSRuntime *rt, void *addr, uint8_t index,
                                    ForEachTrackedOptimizationTypeInfoOp &op);
+
+JS_PUBLIC_API(mozilla::Maybe<uint8_t>)
+TrackedOptimizationIndexAtAddr(JSRuntime *rt, void *addr, void **entryAddr);
 
 } // namespace JS
 

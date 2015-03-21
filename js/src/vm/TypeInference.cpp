@@ -708,7 +708,7 @@ TypeSet::readBarrier(const TypeSet *types)
     }
 }
 
-bool
+/* static */ bool
 TypeSet::IsTypeMarkedFromAnyThread(TypeSet::Type *v)
 {
     bool rv;
@@ -722,6 +722,22 @@ TypeSet::IsTypeMarkedFromAnyThread(TypeSet::Type *v)
         *v = TypeSet::ObjectType(group);
     } else {
         rv = true;
+    }
+    return rv;
+}
+
+/* static */ bool
+TypeSet::IsTypeAllocatedDuringIncremental(TypeSet::Type v)
+{
+    bool rv;
+    if (v.isSingletonUnchecked()) {
+        JSObject *obj = v.singletonNoBarrier();
+        rv = obj->isTenured() && obj->asTenured().arenaHeader()->allocatedDuringIncremental;
+    } else if (v.isGroupUnchecked()) {
+        ObjectGroup *group = v.groupNoBarrier();
+        rv = group->arenaHeader()->allocatedDuringIncremental;
+    } else {
+        rv = false;
     }
     return rv;
 }
