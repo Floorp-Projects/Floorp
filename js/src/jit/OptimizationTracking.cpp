@@ -91,9 +91,9 @@ JS_PUBLIC_API(const char *)
 JS::TrackedStrategyString(TrackedStrategy strategy)
 {
     switch (strategy) {
-#define STRATEGY_CASE(name, msg)                  \
+#define STRATEGY_CASE(name)                       \
       case TrackedStrategy::name:                 \
-        return msg;
+        return #name;
     TRACKED_STRATEGY_LIST(STRATEGY_CASE)
 #undef STRATEGY_CASE
 
@@ -106,9 +106,9 @@ JS_PUBLIC_API(const char *)
 JS::TrackedOutcomeString(TrackedOutcome outcome)
 {
     switch (outcome) {
-#define OUTCOME_CASE(name, msg)                   \
+#define OUTCOME_CASE(name)                        \
       case TrackedOutcome::name:                  \
-        return msg;
+        return #name;
       TRACKED_OUTCOME_LIST(OUTCOME_CASE)
 #undef OUTCOME_CASE
 
@@ -121,9 +121,9 @@ JS_PUBLIC_API(const char *)
 JS::TrackedTypeSiteString(TrackedTypeSite site)
 {
     switch (site) {
-#define TYPESITE_CASE(name, msg)                  \
+#define TYPESITE_CASE(name)                       \
       case TrackedTypeSite::name:                 \
-        return msg;
+        return #name;
       TRACKED_TYPESITE_LIST(TYPESITE_CASE)
 #undef TYPESITE_CASE
 
