@@ -26,7 +26,7 @@ public:
   virtual void URLSearchParamsUpdated(URLSearchParams* aFromThis) = 0;
 };
 
-class URLSearchParams MOZ_FINAL : public nsISupports,
+class URLSearchParams final : public nsISupports,
                                   public nsWrapperCache
 {
   ~URLSearchParams();
@@ -44,7 +44,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URLSearchParams>
   Constructor(const GlobalObject& aGlobal, const nsAString& aInit,

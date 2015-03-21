@@ -38,7 +38,7 @@ class FilterNodeSoftware : public FilterNode,
                            public FilterInvalidationListener
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeSoftware, override)
   virtual ~FilterNodeSoftware();
 
   // Factory method, intended to be called from DrawTarget*::CreateFilter.
@@ -48,9 +48,9 @@ public:
   void Draw(DrawTarget* aDrawTarget, const Rect &aSourceRect,
             const Point &aDestPoint, const DrawOptions &aOptions);
 
-  virtual FilterBackend GetBackendType() MOZ_OVERRIDE { return FILTER_BACKEND_SOFTWARE; }
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) MOZ_OVERRIDE;
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) MOZ_OVERRIDE;
+  virtual FilterBackend GetBackendType() override { return FILTER_BACKEND_SOFTWARE; }
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override;
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
 
   virtual const char* GetName() { return "Unknown"; }
 
@@ -58,7 +58,7 @@ public:
   virtual void RemoveInvalidationListener(FilterInvalidationListener* aListener);
 
   // FilterInvalidationListener implementation
-  virtual void FilterInvalidated(FilterNodeSoftware* aFilter) MOZ_OVERRIDE;
+  virtual void FilterInvalidated(FilterNodeSoftware* aFilter) override;
 
 protected:
 
@@ -218,18 +218,18 @@ protected:
 class FilterNodeTransformSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTransformSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTransformSoftware, override)
   FilterNodeTransformSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "Transform"; }
+  virtual const char* GetName() override { return "Transform"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aGraphicsFilter) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &aMatrix) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aGraphicsFilter) override;
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &aMatrix) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
   IntRect SourceRectForOutputRect(const IntRect &aRect);
 
 private:
@@ -240,17 +240,17 @@ private:
 class FilterNodeBlendSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlendSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlendSoftware, override)
   FilterNodeBlendSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "Blend"; }
+  virtual const char* GetName() override { return "Blend"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aBlendMode) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aBlendMode) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   BlendMode mBlendMode;
@@ -259,18 +259,18 @@ private:
 class FilterNodeMorphologySoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeMorphologySoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeMorphologySoftware, override)
   FilterNodeMorphologySoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "Morphology"; }
+  virtual const char* GetName() override { return "Morphology"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aRadii) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const IntSize &aRadii) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   IntSize mRadii;
@@ -280,17 +280,17 @@ private:
 class FilterNodeColorMatrixSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeColorMatrixSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "ColorMatrix"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeColorMatrixSoftware, override)
+  virtual const char* GetName() override { return "ColorMatrix"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aMatrix) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aAlphaMode) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aMatrix) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aAlphaMode) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   Matrix5x4 mMatrix;
@@ -300,15 +300,15 @@ private:
 class FilterNodeFloodSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeFloodSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "Flood"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeFloodSoftware, override)
+  virtual const char* GetName() override { return "Flood"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Color &aColor) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Color &aColor) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> GetOutput(const IntRect &aRect) MOZ_OVERRIDE;
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> GetOutput(const IntRect &aRect) override;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
 
 private:
   Color mColor;
@@ -317,16 +317,16 @@ private:
 class FilterNodeTileSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTileSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "Tile"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTileSoftware, override)
+  virtual const char* GetName() override { return "Tile"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   IntRect mSourceRect;
@@ -338,17 +338,17 @@ private:
 class FilterNodeComponentTransferSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeComponentTransferSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeComponentTransferSoftware, override)
   FilterNodeComponentTransferSoftware();
 
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, bool aDisable) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, bool aDisable) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
   virtual void GenerateLookupTable(ptrdiff_t aComponent, uint8_t aTables[4][256],
                                    bool aDisabled);
   virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) = 0;
@@ -362,13 +362,13 @@ protected:
 class FilterNodeTableTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTableTransferSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "TableTransfer"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTableTransferSoftware, override)
+  virtual const char* GetName() override { return "TableTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) override;
 
 protected:
-  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) MOZ_OVERRIDE;
+  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) override;
 
 private:
   void FillLookupTableImpl(std::vector<Float>& aTableValues, uint8_t aTable[256]);
@@ -382,13 +382,13 @@ private:
 class FilterNodeDiscreteTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDiscreteTransferSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "DiscreteTransfer"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDiscreteTransferSoftware, override)
+  virtual const char* GetName() override { return "DiscreteTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) override;
 
 protected:
-  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) MOZ_OVERRIDE;
+  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) override;
 
 private:
   void FillLookupTableImpl(std::vector<Float>& aTableValues, uint8_t aTable[256]);
@@ -402,14 +402,14 @@ private:
 class FilterNodeLinearTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLinearTransformSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLinearTransformSoftware, override)
   FilterNodeLinearTransferSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "LinearTransfer"; }
+  virtual const char* GetName() override { return "LinearTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
 
 protected:
-  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) MOZ_OVERRIDE;
+  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) override;
 
 private:
   void FillLookupTableImpl(Float aSlope, Float aIntercept, uint8_t aTable[256]);
@@ -427,14 +427,14 @@ private:
 class FilterNodeGammaTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGammaTransferSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGammaTransferSoftware, override)
   FilterNodeGammaTransferSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "GammaTransfer"; }
+  virtual const char* GetName() override { return "GammaTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
 
 protected:
-  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) MOZ_OVERRIDE;
+  virtual void FillLookupTable(ptrdiff_t aComponent, uint8_t aTable[256]) override;
 
 private:
   void FillLookupTableImpl(Float aAmplitude, Float aExponent, Float aOffset, uint8_t aTable[256]);
@@ -456,24 +456,24 @@ private:
 class FilterNodeConvolveMatrixSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveMatrixSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveMatrixSoftware, override)
   FilterNodeConvolveMatrixSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "ConvolveMatrix"; }
+  virtual const char* GetName() override { return "ConvolveMatrix"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aKernelSize) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aMatrix, uint32_t aSize) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Size &aKernelUnitLength) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aTarget) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aEdgeMode) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, bool aPreserveAlpha) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const IntSize &aKernelSize) override;
+  virtual void SetAttribute(uint32_t aIndex, const Float* aMatrix, uint32_t aSize) override;
+  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
+  virtual void SetAttribute(uint32_t aIndex, const Size &aKernelUnitLength) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aTarget) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aEdgeMode) override;
+  virtual void SetAttribute(uint32_t aIndex, bool aPreserveAlpha) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   template<typename CoordType>
@@ -498,18 +498,18 @@ private:
 class FilterNodeDisplacementMapSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDisplacementMapSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDisplacementMapSoftware, override)
   FilterNodeDisplacementMapSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "DisplacementMap"; }
+  virtual const char* GetName() override { return "DisplacementMap"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float aScale) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float aScale) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   IntRect InflatedSourceOrDestRect(const IntRect &aDestOrSourceRect);
@@ -522,19 +522,19 @@ private:
 class FilterNodeTurbulenceSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTurbulenceSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTurbulenceSoftware, override)
   FilterNodeTurbulenceSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "Turbulence"; }
+  virtual const char* GetName() override { return "Turbulence"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Size &aSize) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aRenderRect) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, bool aStitchable) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Size &aSize) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &aRenderRect) override;
+  virtual void SetAttribute(uint32_t aIndex, bool aStitchable) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
 
 private:
   IntRect mRenderRect;
@@ -548,17 +548,17 @@ private:
 class FilterNodeArithmeticCombineSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeArithmeticCombineSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeArithmeticCombineSoftware, override)
   FilterNodeArithmeticCombineSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "ArithmeticCombine"; }
+  virtual const char* GetName() override { return "ArithmeticCombine"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   Float mK1;
@@ -570,17 +570,17 @@ private:
 class FilterNodeCompositeSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCompositeSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCompositeSoftware, override)
   FilterNodeCompositeSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "Composite"; }
+  virtual const char* GetName() override { return "Composite"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aOperator) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   CompositeOperator mOperator;
@@ -591,13 +591,13 @@ private:
 class FilterNodeBlurXYSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlurXYSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlurXYSoftware, override)
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
   IntRect InflatedSourceOrDestRect(const IntRect &aDestRect);
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
   // Implemented by subclasses.
   virtual Size StdDeviationXY() = 0;
@@ -606,14 +606,14 @@ protected:
 class FilterNodeGaussianBlurSoftware : public FilterNodeBlurXYSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGaussianBlurSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGaussianBlurSoftware, override)
   FilterNodeGaussianBlurSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "GaussianBlur"; }
+  virtual const char* GetName() override { return "GaussianBlur"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float aStdDeviation) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float aStdDeviation) override;
 
 protected:
-  virtual Size StdDeviationXY() MOZ_OVERRIDE;
+  virtual Size StdDeviationXY() override;
 
 private:
   Float mStdDeviation;
@@ -622,15 +622,15 @@ private:
 class FilterNodeDirectionalBlurSoftware : public FilterNodeBlurXYSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDirectionalBlurSoftware, MOZ_OVERRIDE)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDirectionalBlurSoftware, override)
   FilterNodeDirectionalBlurSoftware();
-  virtual const char* GetName() MOZ_OVERRIDE { return "DirectionalBlur"; }
+  virtual const char* GetName() override { return "DirectionalBlur"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float aStdDeviation) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aBlurDirection) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float aStdDeviation) override;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aBlurDirection) override;
 
 protected:
-  virtual Size StdDeviationXY() MOZ_OVERRIDE;
+  virtual Size StdDeviationXY() override;
 
 private:
   Float mStdDeviation;
@@ -640,16 +640,16 @@ private:
 class FilterNodeCropSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCropSoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "Crop"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCropSoftware, override)
+  virtual const char* GetName() override { return "Crop"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Rect &aSourceRect) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Rect &aSourceRect) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   IntRect mCropRect;
@@ -658,25 +658,25 @@ private:
 class FilterNodePremultiplySoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplySoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "Premultiply"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplySoftware, override)
+  virtual const char* GetName() override { return "Premultiply"; }
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 };
 
 class FilterNodeUnpremultiplySoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeUnpremultiplySoftware, MOZ_OVERRIDE)
-  virtual const char* GetName() MOZ_OVERRIDE { return "Unpremultiply"; }
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeUnpremultiplySoftware, override)
+  virtual const char* GetName() override { return "Unpremultiply"; }
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 };
 
 template<typename LightType, typename LightingType>
@@ -685,22 +685,22 @@ class FilterNodeLightingSoftware : public FilterNodeSoftware
 public:
 #if defined(MOZILLA_INTERNAL_API) && (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
   // Helpers for refcounted
-  virtual const char* typeName() const MOZ_OVERRIDE { return mTypeName; }
-  virtual size_t typeSize() const MOZ_OVERRIDE { return sizeof(*this); }
+  virtual const char* typeName() const override { return mTypeName; }
+  virtual size_t typeSize() const override { return sizeof(*this); }
 #endif
   explicit FilterNodeLightingSoftware(const char* aTypeName);
-  virtual const char* GetName() MOZ_OVERRIDE { return "Lighting"; }
+  virtual const char* GetName() override { return "Lighting"; }
   using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, Float) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Size &) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &) MOZ_OVERRIDE;
-  virtual void SetAttribute(uint32_t aIndex, const Color &) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, Float) override;
+  virtual void SetAttribute(uint32_t aIndex, const Size &) override;
+  virtual void SetAttribute(uint32_t aIndex, const Point3D &) override;
+  virtual void SetAttribute(uint32_t aIndex, const Color &) override;
 
 protected:
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) override;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) override;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) override;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) override;
 
 private:
   template<typename CoordType>

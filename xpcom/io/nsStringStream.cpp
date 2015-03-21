@@ -30,7 +30,7 @@ using namespace mozilla::ipc;
 // nsIStringInputStream implementation
 //-----------------------------------------------------------------------------
 
-class nsStringInputStream MOZ_FINAL
+class nsStringInputStream final
   : public nsIStringInputStream
   , public nsISeekableStream
   , public nsISupportsCString

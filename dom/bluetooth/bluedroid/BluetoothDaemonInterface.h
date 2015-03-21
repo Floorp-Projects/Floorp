@@ -19,7 +19,7 @@ class BluetoothDaemonHandsfreeInterface;
 class BluetoothDaemonProtocol;
 class BluetoothDaemonSocketInterface;
 
-class BluetoothDaemonInterface MOZ_FINAL : public BluetoothInterface
+class BluetoothDaemonInterface final : public BluetoothInterface
 {
 public:
   class CleanupResultHandler;
@@ -110,10 +110,10 @@ public:
 
   /* Profile Interfaces */
 
-  BluetoothSocketInterface* GetBluetoothSocketInterface() MOZ_OVERRIDE;
-  BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() MOZ_OVERRIDE;
-  BluetoothA2dpInterface* GetBluetoothA2dpInterface() MOZ_OVERRIDE;
-  BluetoothAvrcpInterface* GetBluetoothAvrcpInterface() MOZ_OVERRIDE;
+  BluetoothSocketInterface* GetBluetoothSocketInterface() override;
+  BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() override;
+  BluetoothA2dpInterface* GetBluetoothA2dpInterface() override;
+  BluetoothAvrcpInterface* GetBluetoothAvrcpInterface() override;
 
 protected:
   enum Channel {

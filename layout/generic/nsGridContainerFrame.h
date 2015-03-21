@@ -20,7 +20,7 @@
 nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
-class nsGridContainerFrame MOZ_FINAL : public nsContainerFrame
+class nsGridContainerFrame final : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -31,11 +31,11 @@ public:
   void Reflow(nsPresContext*           aPresContext,
               nsHTMLReflowMetrics&     aDesiredSize,
               const nsHTMLReflowState& aReflowState,
-              nsReflowStatus&          aStatus) MOZ_OVERRIDE;
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+              nsReflowStatus&          aStatus) override;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   struct TrackSize {

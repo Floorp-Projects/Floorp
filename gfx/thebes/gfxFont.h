@@ -270,7 +270,7 @@ struct FontCacheSizes {
     size_t mShapedWords; // memory used by the per-font shapedWord caches
 };
 
-class gfxFontCache MOZ_FINAL : public nsExpirationTracker<gfxFont,3> {
+class gfxFontCache final : public nsExpirationTracker<gfxFont,3> {
 public:
     enum {
         FONT_TIMEOUT_SECONDS = 10,
@@ -312,7 +312,7 @@ public:
 
     // This gets called when the timeout has expired on a zero-refcount
     // font; we just delete it.
-    virtual void NotifyExpired(gfxFont *aFont) MOZ_OVERRIDE;
+    virtual void NotifyExpired(gfxFont *aFont) override;
 
     // Cleans out the hashtable and removes expired fonts waiting for cleanup.
     // Other gfxFont objects may be still in use but they will be pushed
@@ -332,7 +332,7 @@ public:
                                 FontCacheSizes* aSizes) const;
 
 protected:
-    class MemoryReporter MOZ_FINAL : public nsIMemoryReporter
+    class MemoryReporter final : public nsIMemoryReporter
     {
         ~MemoryReporter() {}
     public:
@@ -341,7 +341,7 @@ protected:
     };
 
     // Observer for notifications that the font cache cares about
-    class Observer MOZ_FINAL
+    class Observer final
         : public nsIObserver
     {
         ~Observer() {}
@@ -1198,7 +1198,7 @@ public:
         moz_free(p);
     }
 
-    virtual CompressedGlyph *GetCharacterGlyphs() MOZ_OVERRIDE {
+    virtual CompressedGlyph *GetCharacterGlyphs() override {
         return &mCharGlyphsStorage[0];
     }
 

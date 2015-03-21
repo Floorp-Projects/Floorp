@@ -29,7 +29,7 @@ class Response;
 
 namespace cache {
 
-class FetchPut MOZ_FINAL : public Manager::Listener
+class FetchPut final : public Manager::Listener
                          , public TypeUtils
 {
 public:
@@ -83,15 +83,15 @@ private:
   void DoPutOnWorkerThread();
   static bool MatchInPutList(const PCacheRequest& aRequest,
                              const nsTArray<CacheRequestResponse>& aPutList);
-  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) MOZ_OVERRIDE;
+  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) override;
 
   void MaybeSetError(nsresult aRv);
   void MaybeNotifyListener();
 
   // TypeUtils methods
-  virtual nsIGlobalObject* GetGlobalObject() const MOZ_OVERRIDE;
+  virtual nsIGlobalObject* GetGlobalObject() const override;
 #ifdef DEBUG
-  virtual void AssertOwningThread() const MOZ_OVERRIDE;
+  virtual void AssertOwningThread() const override;
 #endif
 
   Listener* mListener;

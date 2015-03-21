@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class MobileMessageThread MOZ_FINAL : public nsIDOMMozMobileMessageThread
+class MobileMessageThread final : public nsIDOMMozMobileMessageThread
 {
 private:
   typedef mobilemessage::ThreadData ThreadData;

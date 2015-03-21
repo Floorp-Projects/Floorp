@@ -56,39 +56,39 @@ public:
                 nsIPresShell* aPresShell);
 
   // nsIScrollPositionListener
-  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) MOZ_OVERRIDE {}
-  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) MOZ_OVERRIDE;
+  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) override {}
+  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) override;
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
 
   // Accessible
   virtual void Init();
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual nsIFrame* GetFrame() const MOZ_OVERRIDE;
-  virtual nsINode* GetNode() const MOZ_OVERRIDE { return mDocumentNode; }
+  virtual void Shutdown() override;
+  virtual nsIFrame* GetFrame() const override;
+  virtual nsINode* GetNode() const override { return mDocumentNode; }
   nsIDocument* DocumentNode() const { return mDocumentNode; }
 
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
-  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
-  virtual Accessible* FocusedChild() MOZ_OVERRIDE;
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual bool NativelyUnavailable() const MOZ_OVERRIDE;
-  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIPersistentProperties> Attributes() MOZ_OVERRIDE;
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
+  virtual void Description(nsString& aDescription) override;
+  virtual Accessible* FocusedChild() override;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeInteractiveState() const override;
+  virtual bool NativelyUnavailable() const override;
+  virtual void ApplyARIAState(uint64_t* aState) const override;
+  virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
 
-  virtual void TakeFocus() MOZ_OVERRIDE;
+  virtual void TakeFocus() override;
 
 #ifdef A11Y_LOG
-  virtual nsresult HandleAccEvent(AccEvent* aEvent) MOZ_OVERRIDE;
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 #endif
 
-  virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const MOZ_OVERRIDE;
+  virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const override;
 
   // HyperTextAccessible
-  virtual already_AddRefed<nsIEditor> GetEditor() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIEditor> GetEditor() const override;
 
   // DocAccessible
 
@@ -344,7 +344,7 @@ protected:
   void LastRelease();
 
   // Accessible
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual void CacheChildren() override;
 
   // DocAccessible
   virtual nsresult AddEventListeners();

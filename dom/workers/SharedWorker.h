@@ -25,7 +25,7 @@ class MessagePort;
 class RuntimeService;
 class WorkerPrivate;
 
-class SharedWorker MOZ_FINAL : public DOMEventTargetHelper
+class SharedWorker final : public DOMEventTargetHelper
 {
   friend class MessagePort;
   friend class RuntimeService;
@@ -78,10 +78,10 @@ public:
   IMPL_EVENT_HANDLER(error)
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
   WorkerPrivate*
   GetWorkerPrivate() const

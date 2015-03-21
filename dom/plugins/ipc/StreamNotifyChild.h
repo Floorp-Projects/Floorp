@@ -26,7 +26,7 @@ public:
     , mBrowserStream(nullptr)
   { }
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   void SetValid(void* aClosure) {
     mClosure = aClosure;
@@ -35,9 +35,9 @@ public:
   void NPP_URLNotify(NPReason reason);
 
 private:
-  virtual bool Recv__delete__(const NPReason& reason) MOZ_OVERRIDE;
+  virtual bool Recv__delete__(const NPReason& reason) override;
 
-  bool RecvRedirectNotify(const nsCString& url, const int32_t& status) MOZ_OVERRIDE;
+  bool RecvRedirectNotify(const nsCString& url, const int32_t& status) override;
 
   /**
    * If a stream is created for this this URLNotify, we associate the objects

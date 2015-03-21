@@ -30,7 +30,7 @@ class SVGMatrix;
 /**
  * DOM wrapper for an SVG transform. See DOMSVGLength.h.
  */
-class SVGTransform MOZ_FINAL : public nsWrapperCache
+class SVGTransform final : public nsWrapperCache
 {
   friend class AutoChangeTransformNotifier;
 
@@ -118,7 +118,7 @@ public:
 
   // WebIDL
   DOMSVGTransformList* GetParentObject() const { return mList; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   uint16_t Type() const;
   dom::SVGMatrix* GetMatrix();
   float Angle() const;

@@ -31,29 +31,29 @@ class ClippedImage : public ImageWrapper
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetWidth(int32_t* aWidth) MOZ_OVERRIDE;
-  NS_IMETHOD GetHeight(int32_t* aHeight) MOZ_OVERRIDE;
-  NS_IMETHOD GetIntrinsicSize(nsSize* aSize) MOZ_OVERRIDE;
-  NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) MOZ_OVERRIDE;
+  NS_IMETHOD GetWidth(int32_t* aWidth) override;
+  NS_IMETHOD GetHeight(int32_t* aHeight) override;
+  NS_IMETHOD GetIntrinsicSize(nsSize* aSize) override;
+  NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) override;
   NS_IMETHOD_(TemporaryRef<SourceSurface>)
-    GetFrame(uint32_t aWhichFrame, uint32_t aFlags) MOZ_OVERRIDE;
+    GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
   NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
     GetImageContainer(layers::LayerManager* aManager,
-                      uint32_t aFlags) MOZ_OVERRIDE;
+                      uint32_t aFlags) override;
   NS_IMETHOD_(DrawResult) Draw(gfxContext* aContext,
                                const nsIntSize& aSize,
                                const ImageRegion& aRegion,
                                uint32_t aWhichFrame,
                                GraphicsFilter aFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
-                               uint32_t aFlags) MOZ_OVERRIDE;
-  NS_IMETHOD RequestDiscard() MOZ_OVERRIDE;
-  NS_IMETHOD_(Orientation) GetOrientation() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) MOZ_OVERRIDE;
+                               uint32_t aFlags) override;
+  NS_IMETHOD RequestDiscard() override;
+  NS_IMETHOD_(Orientation) GetOrientation() override;
+  NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) override;
   nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
                                     uint32_t aWhichFrame,
                                     GraphicsFilter aFilter,
-                                    uint32_t aFlags) MOZ_OVERRIDE;
+                                    uint32_t aFlags) override;
 
 protected:
   ClippedImage(Image* aImage, nsIntRect aClip);

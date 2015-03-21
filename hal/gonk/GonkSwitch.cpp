@@ -228,7 +228,7 @@ private:
   SwitchEvent mEvent;
 };
 
-class SwitchEventObserver MOZ_FINAL : public IUeventObserver
+class SwitchEventObserver final : public IUeventObserver
 {
   ~SwitchEventObserver()
   {

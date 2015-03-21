@@ -24,7 +24,7 @@ namespace dom {
 struct UDPOptions;
 class StringOrBlobOrArrayBufferOrArrayBufferView;
 
-class UDPSocket MOZ_FINAL : public DOMEventTargetHelper
+class UDPSocket final : public DOMEventTargetHelper
                           , public nsIUDPSocketListener
                           , public nsIUDPSocketInternal
 {
@@ -43,10 +43,10 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void
-  DisconnectFromOwner() MOZ_OVERRIDE;
+  DisconnectFromOwner() override;
 
   static already_AddRefed<UDPSocket>
   Constructor(const GlobalObject& aGlobal, const UDPOptions& aOptions, ErrorResult& aRv);

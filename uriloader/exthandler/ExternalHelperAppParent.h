@@ -48,13 +48,13 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    bool RecvOnStartRequest(const nsCString& entityID) MOZ_OVERRIDE;
+    bool RecvOnStartRequest(const nsCString& entityID) override;
     bool RecvOnDataAvailable(const nsCString& data,
                              const uint64_t& offset,
-                             const uint32_t& count) MOZ_OVERRIDE;
-    bool RecvOnStopRequest(const nsresult& code) MOZ_OVERRIDE;
+                             const uint32_t& count) override;
+    bool RecvOnStopRequest(const nsresult& code) override;
 
-    bool RecvDivertToParentUsing(PChannelDiverterParent* diverter) MOZ_OVERRIDE;
+    bool RecvDivertToParentUsing(PChannelDiverterParent* diverter) override;
 
     ExternalHelperAppParent(const OptionalURIParams& uri, const int64_t& contentLength);
     void Init(ContentParent *parent,
@@ -69,7 +69,7 @@ public:
 protected:
   virtual ~ExternalHelperAppParent();
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
   void Delete();
 
 private:

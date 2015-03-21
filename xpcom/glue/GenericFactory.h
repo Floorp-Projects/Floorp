@@ -18,7 +18,7 @@ namespace mozilla {
  * This class is intended for use by the component manager and the generic
  * module.
  */
-class GenericFactory MOZ_FINAL : public nsIFactory
+class GenericFactory final : public nsIFactory
 {
   ~GenericFactory() {}
 

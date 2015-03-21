@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-class SpdyZlibReporter MOZ_FINAL : public nsIMemoryReporter
+class SpdyZlibReporter final : public nsIMemoryReporter
 {
   ~SpdyZlibReporter() {}
 
@@ -50,7 +50,7 @@ private:
 
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE;
+                 bool aAnonymize) override;
 };
 
 } // namespace mozilla

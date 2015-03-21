@@ -23,7 +23,7 @@
 namespace mozilla {
 namespace net {
 
-class MemoryDownloader MOZ_FINAL : public nsIStreamListener
+class MemoryDownloader final : public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

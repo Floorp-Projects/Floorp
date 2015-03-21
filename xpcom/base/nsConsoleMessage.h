@@ -12,7 +12,7 @@
 #include "nsIConsoleMessage.h"
 #include "nsString.h"
 
-class nsConsoleMessage MOZ_FINAL : public nsIConsoleMessage
+class nsConsoleMessage final : public nsIConsoleMessage
 {
 public:
   nsConsoleMessage();

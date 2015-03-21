@@ -133,22 +133,22 @@ public:
 
   // IUnknown
   // Defer to ref counting to BasePin, which defers to owning nsBaseFilter.
-  STDMETHODIMP_(ULONG) AddRef() MOZ_OVERRIDE { return BasePin::AddRef(); }
-  STDMETHODIMP_(ULONG) Release() MOZ_OVERRIDE { return BasePin::Release(); }
-  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) MOZ_OVERRIDE;
+  STDMETHODIMP_(ULONG) AddRef() override { return BasePin::AddRef(); }
+  STDMETHODIMP_(ULONG) Release() override { return BasePin::Release(); }
+  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) override;
 
   // BasePin Overrides.
   // Determines if the pin accepts a specific media type.
-  HRESULT CheckMediaType(const MediaType* aMediaType) MOZ_OVERRIDE;
+  HRESULT CheckMediaType(const MediaType* aMediaType) override;
 
   // Retrieves a preferred media type, by index value.
-  HRESULT GetMediaType(int aPosition, MediaType* aMediaType) MOZ_OVERRIDE;
+  HRESULT GetMediaType(int aPosition, MediaType* aMediaType) override;
 
   // Releases the pin from a connection.
-  HRESULT BreakConnect(void) MOZ_OVERRIDE;
+  HRESULT BreakConnect(void) override;
 
   // Determines whether a pin connection is suitable.
-  HRESULT CheckConnect(IPin* aPin) MOZ_OVERRIDE;
+  HRESULT CheckConnect(IPin* aPin) override;
 
 
   // IAsyncReader overrides
@@ -157,35 +157,35 @@ public:
   // pin connection.
   STDMETHODIMP RequestAllocator(IMemAllocator* aPreferred,
                                 ALLOCATOR_PROPERTIES* aProps,
-                                IMemAllocator** aActual) MOZ_OVERRIDE;
+                                IMemAllocator** aActual) override;
 
   // The Request method queues an asynchronous request for data. Downstream
   // will call WaitForNext() when they want to retrieve the result.
-  STDMETHODIMP Request(IMediaSample* aSample, DWORD_PTR aUserData) MOZ_OVERRIDE;
+  STDMETHODIMP Request(IMediaSample* aSample, DWORD_PTR aUserData) override;
 
   // The WaitForNext method waits for the next pending read request
   // to complete. This method fails if the graph is flushing.
   // Defers to SyncRead/5.
   STDMETHODIMP WaitForNext(DWORD aTimeout,
                            IMediaSample** aSamples,
-                           DWORD_PTR* aUserData) MOZ_OVERRIDE;
+                           DWORD_PTR* aUserData) override;
 
   // The SyncReadAligned method performs a synchronous read. The method
   // blocks until the request is completed. Defers to SyncRead/5. This
   // method does not fail if the graph is flushing.
-  STDMETHODIMP SyncReadAligned(IMediaSample* aSample) MOZ_OVERRIDE;
+  STDMETHODIMP SyncReadAligned(IMediaSample* aSample) override;
 
   // The SyncRead method performs a synchronous read. The method blocks
   // until the request is completed. Defers to SyncRead/5. This
   // method does not fail if the graph is flushing.
-  STDMETHODIMP SyncRead(LONGLONG aPosition, LONG aLength, BYTE* aBuffer) MOZ_OVERRIDE;
+  STDMETHODIMP SyncRead(LONGLONG aPosition, LONG aLength, BYTE* aBuffer) override;
 
   // The Length method retrieves the total length of the stream.
-  STDMETHODIMP Length(LONGLONG* aTotal, LONGLONG* aAvailable) MOZ_OVERRIDE;
+  STDMETHODIMP Length(LONGLONG* aTotal, LONGLONG* aAvailable) override;
 
   // IPin Overrides
-  STDMETHODIMP BeginFlush(void) MOZ_OVERRIDE;
-  STDMETHODIMP EndFlush(void) MOZ_OVERRIDE;
+  STDMETHODIMP BeginFlush(void) override;
+  STDMETHODIMP EndFlush(void) override;
 
   uint32_t GetAndResetBytesConsumedCount();
 

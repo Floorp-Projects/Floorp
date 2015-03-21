@@ -26,7 +26,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class URLProxy;
 
-class URL MOZ_FINAL : public mozilla::dom::URLSearchParamsObserver
+class URL final : public mozilla::dom::URLSearchParamsObserver
 {
   typedef mozilla::dom::URLSearchParams URLSearchParams;
 
@@ -117,7 +117,7 @@ public:
   }
 
   // IURLSearchParamsObserver
-  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) MOZ_OVERRIDE;
+  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
 
 private:
   URLProxy* GetURLProxy() const

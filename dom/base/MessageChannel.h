@@ -21,7 +21,7 @@ namespace dom {
 
 class MessagePort;
 
-class MessageChannel MOZ_FINAL : public nsISupports
+class MessageChannel final : public nsISupports
                                , public nsWrapperCache
 {
 public:
@@ -40,7 +40,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<MessageChannel>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);

@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class NetworkWorker MOZ_FINAL : public nsINetworkWorker
+class NetworkWorker final : public nsINetworkWorker
 {
 public:
   NS_DECL_ISUPPORTS

@@ -80,17 +80,17 @@ public:
 
   void CompositorRecycle();
 
-  virtual bool RecvClientRecycle() MOZ_OVERRIDE;
+  virtual bool RecvClientRecycle() override;
 
-  virtual bool RecvClearTextureHostSync() MOZ_OVERRIDE;
+  virtual bool RecvClearTextureHostSync() override;
 
-  virtual bool RecvRemoveTexture() MOZ_OVERRIDE;
+  virtual bool RecvRemoveTexture() override;
 
-  virtual bool RecvRecycleTexture(const TextureFlags& aTextureFlags) MOZ_OVERRIDE;
+  virtual bool RecvRecycleTexture(const TextureFlags& aTextureFlags) override;
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
-  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  void ActorDestroy(ActorDestroyReason why) override;
 
   void ClearTextureHost();
 

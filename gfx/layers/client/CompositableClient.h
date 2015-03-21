@@ -48,23 +48,23 @@ protected:
   }
 
 public:
-  virtual void Complete() MOZ_OVERRIDE
+  virtual void Complete() override
   {
     ReleaseTextureClient();
   }
 
-  virtual void Cancel() MOZ_OVERRIDE
+  virtual void Cancel() override
   {
     ReleaseTextureClient();
   }
 
-  virtual void SetTextureClient(TextureClient* aTextureClient) MOZ_OVERRIDE
+  virtual void SetTextureClient(TextureClient* aTextureClient) override
   {
     ReleaseTextureClient();
     mTextureClient = aTextureClient;
   }
 
-  virtual void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle) MOZ_OVERRIDE
+  virtual void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle) override
   {
     if (mTextureClient) {
       mTextureClient->SetReleaseFenceHandle(aReleaseFenceHandle);

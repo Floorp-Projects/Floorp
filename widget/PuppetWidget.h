@@ -57,54 +57,54 @@ public:
   NS_IMETHOD Create(nsIWidget*        aParent,
                     nsNativeWidget    aNativeParent,
                     const nsIntRect&  aRect,
-                    nsWidgetInitData* aInitData = nullptr) MOZ_OVERRIDE;
+                    nsWidgetInitData* aInitData = nullptr) override;
 
   void InitIMEState();
 
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               nsWidgetInitData *aInitData = nullptr,
-              bool             aForceUseIWidgetParent = false) MOZ_OVERRIDE;
+              bool             aForceUseIWidgetParent = false) override;
 
-  NS_IMETHOD Destroy() MOZ_OVERRIDE;
+  NS_IMETHOD Destroy() override;
 
-  NS_IMETHOD Show(bool aState) MOZ_OVERRIDE;
+  NS_IMETHOD Show(bool aState) override;
 
-  virtual bool IsVisible() const MOZ_OVERRIDE
+  virtual bool IsVisible() const override
   { return mVisible; }
 
   NS_IMETHOD ConstrainPosition(bool     /*ignored aAllowSlop*/,
                                int32_t* aX,
-                               int32_t* aY) MOZ_OVERRIDE
+                               int32_t* aY) override
   { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
 
   // We're always at <0, 0>, and so ignore move requests.
-  NS_IMETHOD Move(double aX, double aY) MOZ_OVERRIDE
+  NS_IMETHOD Move(double aX, double aY) override
   { return NS_OK; }
 
   NS_IMETHOD Resize(double aWidth,
                     double aHeight,
-                    bool   aRepaint) MOZ_OVERRIDE;
+                    bool   aRepaint) override;
   NS_IMETHOD Resize(double aX,
                     double aY,
                     double aWidth,
                     double aHeight,
-                    bool   aRepaint) MOZ_OVERRIDE
+                    bool   aRepaint) override
   // (we're always at <0, 0>)
   { return Resize(aWidth, aHeight, aRepaint); }
 
   // XXX/cjones: copying gtk behavior here; unclear what disabling a
   // widget is supposed to entail
-  NS_IMETHOD Enable(bool aState) MOZ_OVERRIDE
+  NS_IMETHOD Enable(bool aState) override
   { mEnabled = aState;  return NS_OK; }
-  virtual bool IsEnabled() const MOZ_OVERRIDE
+  virtual bool IsEnabled() const override
   { return mEnabled; }
 
-  NS_IMETHOD SetFocus(bool aRaise = false) MOZ_OVERRIDE;
+  NS_IMETHOD SetFocus(bool aRaise = false) override;
 
-  virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) MOZ_OVERRIDE;
+  virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
 
-  NS_IMETHOD Invalidate(const nsIntRect& aRect) MOZ_OVERRIDE;
+  NS_IMETHOD Invalidate(const nsIntRect& aRect) override;
 
   // This API is going away, steer clear.
   virtual void Scroll(const nsIntPoint& aDelta,
@@ -113,32 +113,32 @@ public:
   { /* dead man walking */ }
 
   // PuppetWidgets don't have native data, as they're purely nonnative.
-  virtual void* GetNativeData(uint32_t aDataType) MOZ_OVERRIDE;
-  NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) MOZ_OVERRIDE
+  virtual void* GetNativeData(uint32_t aDataType) override;
+  NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override
   { return NS_ERROR_UNEXPECTED; }
 
   // PuppetWidgets don't have any concept of titles. 
-  NS_IMETHOD SetTitle(const nsAString& aTitle) MOZ_OVERRIDE
+  NS_IMETHOD SetTitle(const nsAString& aTitle) override
   { return NS_ERROR_UNEXPECTED; }
   
   // PuppetWidgets are always at <0, 0>.
-  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE
+  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return mozilla::LayoutDeviceIntPoint(0, 0); }
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
-  NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) MOZ_OVERRIDE;
-  nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
+  nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) override;
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
-                                 bool aDoCapture) MOZ_OVERRIDE
+                                 bool aDoCapture) override
   { return NS_ERROR_UNEXPECTED; }
 
   NS_IMETHOD_(bool)
   ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                           const mozilla::WidgetKeyboardEvent& aEvent,
                           DoCommandCallback aCallback,
-                          void* aCallbackData) MOZ_OVERRIDE;
+                          void* aCallbackData) override;
 
   friend struct AutoCacheNativeKeyCommands;
 
@@ -152,23 +152,23 @@ public:
   // same-process subdocuments, we force the widget here to be
   // transparent, which in turn will cause layout to use a transparent
   // backstop background color.
-  virtual nsTransparencyMode GetTransparencyMode() MOZ_OVERRIDE
+  virtual nsTransparencyMode GetTransparencyMode() override
   { return eTransparencyTransparent; }
 
   virtual LayerManager*
   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                  bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
+                  bool* aAllowRetaining = nullptr) override;
 
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                    const InputContextAction& aAction) MOZ_OVERRIDE;
-  NS_IMETHOD_(InputContext) GetInputContext() MOZ_OVERRIDE;
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference() MOZ_OVERRIDE;
+                                    const InputContextAction& aAction) override;
+  NS_IMETHOD_(InputContext) GetInputContext() override;
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
-  NS_IMETHOD SetCursor(nsCursor aCursor) MOZ_OVERRIDE;
+  NS_IMETHOD SetCursor(nsCursor aCursor) override;
   NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                       uint32_t aHotspotX, uint32_t aHotspotY) MOZ_OVERRIDE
+                       uint32_t aHotspotX, uint32_t aHotspotY) override
   {
     return nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
   }
@@ -177,12 +177,12 @@ public:
   // Contacts the parent process which gets the DPI from the
   // proper widget there. TODO: Handle DPI changes that happen
   // later on.
-  virtual float GetDPI() MOZ_OVERRIDE;
-  virtual double GetDefaultScaleInternal() MOZ_OVERRIDE;
+  virtual float GetDPI() override;
+  virtual double GetDefaultScaleInternal() override;
 
-  virtual bool NeedsPaint() MOZ_OVERRIDE;
+  virtual bool NeedsPaint() override;
 
-  virtual TabChild* GetOwningTabChild() MOZ_OVERRIDE { return mTabChild; }
+  virtual TabChild* GetOwningTabChild() override { return mTabChild; }
   virtual void ClearBackingScaleCache()
   {
     mDPI = -1;
@@ -199,16 +199,16 @@ public:
 
   NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,
-                            nsString& aCommitted) MOZ_OVERRIDE;
+                            nsString& aCommitted) override;
 
-  NS_IMETHOD SetPluginFocused(bool& aFocused) MOZ_OVERRIDE;
+  NS_IMETHOD SetPluginFocused(bool& aFocused) override;
 
 protected:
   bool mEnabled;
   bool mVisible;
 
   virtual nsresult NotifyIMEInternal(
-                     const IMENotification& aIMENotification) MOZ_OVERRIDE;
+                     const IMENotification& aIMENotification) override;
 
 private:
   nsresult Paint();
@@ -328,16 +328,16 @@ public:
     explicit PuppetScreen(void* nativeScreen);
     ~PuppetScreen();
 
-    NS_IMETHOD GetId(uint32_t* aId) MOZ_OVERRIDE;
-    NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE;
-    NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE;
-    NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) MOZ_OVERRIDE;
-    NS_IMETHOD GetColorDepth(int32_t* aColorDepth) MOZ_OVERRIDE;
-    NS_IMETHOD GetRotation(uint32_t* aRotation) MOZ_OVERRIDE;
-    NS_IMETHOD SetRotation(uint32_t  aRotation) MOZ_OVERRIDE;
+    NS_IMETHOD GetId(uint32_t* aId) override;
+    NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
+    NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth, int32_t* aHeight) override;
+    NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
+    NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override;
+    NS_IMETHOD GetRotation(uint32_t* aRotation) override;
+    NS_IMETHOD SetRotation(uint32_t  aRotation) override;
 };
 
-class PuppetScreenManager MOZ_FINAL : public nsIScreenManager
+class PuppetScreenManager final : public nsIScreenManager
 {
     ~PuppetScreenManager();
 

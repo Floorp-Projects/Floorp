@@ -36,8 +36,8 @@ public:
   HRESULT GetMediaType (IN int iPos, OUT mozilla::media::MediaType * pmt);
   HRESULT CheckMediaType (IN const mozilla::media::MediaType * pmt);
   STDMETHODIMP Receive (IN IMediaSample *);
-  STDMETHODIMP BeginFlush() MOZ_OVERRIDE;
-  STDMETHODIMP EndFlush() MOZ_OVERRIDE;
+  STDMETHODIMP BeginFlush() override;
+  STDMETHODIMP EndFlush() override;
 
   // Called when we start decoding a new segment, that happens directly after
   // a seek. This captures the segment's start time. Samples decoded by the
@@ -47,9 +47,9 @@ public:
   // than the start of the segment, i.e. its absolute time in the stream.
   STDMETHODIMP NewSegment(REFERENCE_TIME tStart,
                           REFERENCE_TIME tStop,
-                          double dRate) MOZ_OVERRIDE;
+                          double dRate) override;
 
-  STDMETHODIMP EndOfStream() MOZ_OVERRIDE;
+  STDMETHODIMP EndOfStream() override;
 
   // Returns the IMediaSeeking interface of the connected output pin.
   // We forward seeking requests upstream from the sink to the source

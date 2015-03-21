@@ -21,7 +21,7 @@ class SpeechSynthesisVoice;
 class SpeechSynthesis;
 class nsSynthVoiceRegistry;
 
-class SpeechSynthesisUtterance MOZ_FINAL : public DOMEventTargetHelper
+class SpeechSynthesisUtterance final : public DOMEventTargetHelper
 {
   friend class SpeechSynthesis;
   friend class nsSpeechTask;
@@ -37,7 +37,7 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static
   already_AddRefed<SpeechSynthesisUtterance> Constructor(GlobalObject& aGlobal,

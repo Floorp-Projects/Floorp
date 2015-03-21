@@ -56,7 +56,7 @@ class Selection;
  *          UX spec, when selection carets are overlapping, the image of
  *          caret becomes tilt.
  */
-class SelectionCarets MOZ_FINAL : public nsIReflowObserver,
+class SelectionCarets final : public nsIReflowObserver,
                                   public nsISelectionListener,
                                   public nsIScrollObserver,
                                   public nsSupportsWeakReference
@@ -81,11 +81,11 @@ public:
   void NotifyBlur(bool aIsLeavingDocument);
 
   // nsIScrollObserver
-  virtual void ScrollPositionChanged() MOZ_OVERRIDE;
+  virtual void ScrollPositionChanged() override;
 
   // AsyncPanZoom started/stopped callbacks from nsIScrollObserver
-  virtual void AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos) MOZ_OVERRIDE;
-  virtual void AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos) MOZ_OVERRIDE;
+  virtual void AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos) override;
+  virtual void AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos) override;
 
   void Init();
   void Terminate();

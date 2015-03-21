@@ -502,7 +502,7 @@ public:
 
 // This callback is used to enable a DataStore when its first revisionID is
 // created.
-class RevisionAddedEnableStoreCallback MOZ_FINAL :
+class RevisionAddedEnableStoreCallback final :
   public DataStoreRevisionCallback
 {
 private:
@@ -541,7 +541,7 @@ private:
 
 // This DataStoreDBCallback is called when DataStoreDB opens the DataStore DB.
 // Then the first revision will be created if it's needed.
-class FirstRevisionIdCallback MOZ_FINAL : public DataStoreDBCallback
+class FirstRevisionIdCallback final : public DataStoreDBCallback
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(FirstRevisionIdCallback)

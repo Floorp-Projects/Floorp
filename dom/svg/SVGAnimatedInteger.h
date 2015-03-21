@@ -27,7 +27,7 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
 
   virtual int32_t BaseVal() = 0;
   virtual void SetBaseVal(int32_t aBaseVal) = 0;

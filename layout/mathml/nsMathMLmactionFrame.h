@@ -24,26 +24,26 @@ public:
   virtual void
   Init(nsIContent*       aContent,
        nsContainerFrame* aParent,
-       nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+       nsIFrame*         aPrevInFlow) override;
 
   virtual void
   SetInitialChildList(ChildListID     aListID,
-                      nsFrameList&    aChildList) MOZ_OVERRIDE;
+                      nsFrameList&    aChildList) override;
 
   virtual nsresult
-  ChildListChanged(int32_t aModType) MOZ_OVERRIDE;
+  ChildListChanged(int32_t aModType) override;
 
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
-                   int32_t  aModType) MOZ_OVERRIDE;
+                   int32_t  aModType) override;
 
 private:
   void MouseClick();
   void MouseOver();
   void MouseOut();
 
-  class MouseListener MOZ_FINAL : public nsIDOMEventListener
+  class MouseListener final : public nsIDOMEventListener
   {
   private:
     ~MouseListener() {}
@@ -70,7 +70,7 @@ private:
 
   // helper to return the frame for the attribute selection="number"
   nsIFrame* 
-  GetSelectedFrame() MOZ_OVERRIDE;
+  GetSelectedFrame() override;
 };
 
 #endif /* nsMathMLmactionFrame_h___ */

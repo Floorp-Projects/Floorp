@@ -18,7 +18,7 @@ namespace dom {
 enum class CanvasWindingRule : uint32_t;
 class SVGMatrix;
 
-class CanvasPath MOZ_FINAL :
+class CanvasPath final :
   public nsWrapperCache
 {
 public:
@@ -27,7 +27,7 @@ public:
 
   nsCOMPtr<nsISupports> GetParentObject() { return mParent; }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
                                                   ErrorResult& rv);

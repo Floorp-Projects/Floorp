@@ -73,7 +73,7 @@ IsSupportedChld(const int aChld) {
   return (aChld >= 0 && aChld <= 3);
 }
 
-class BluetoothHfpManager::GetVolumeTask MOZ_FINAL
+class BluetoothHfpManager::GetVolumeTask final
   : public nsISettingsServiceCallback
 {
 public:
@@ -112,7 +112,7 @@ protected:
 class BluetoothHfpManager::CloseScoTask : public Task
 {
 private:
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
     sBluetoothHfpManager->DisconnectSco();
@@ -122,7 +122,7 @@ private:
 class BluetoothHfpManager::CloseScoRunnable : public nsRunnable
 {
 public:
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -136,7 +136,7 @@ public:
 class BluetoothHfpManager::RespondToBLDNTask : public Task
 {
 private:
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 
@@ -273,7 +273,7 @@ BluetoothHfpManager::Init()
   return true;
 }
 
-class BluetoothHfpManager::CleanupInitResultHandler MOZ_FINAL
+class BluetoothHfpManager::CleanupInitResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -285,7 +285,7 @@ public:
     MOZ_ASSERT(mInterface);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::Init failed: %d", (int)aStatus);
     if (mRes) {
@@ -293,7 +293,7 @@ public:
     }
   }
 
-  void Init() MOZ_OVERRIDE
+  void Init() override
   {
     sBluetoothHfpInterface = mInterface;
     if (mRes) {
@@ -301,7 +301,7 @@ public:
     }
   }
 
-  void Cleanup() MOZ_OVERRIDE
+  void Cleanup() override
   {
     sBluetoothHfpInterface = nullptr;
     /* During re-initialization, a previouly initialized
@@ -323,7 +323,7 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothHfpManager::InitResultHandlerRunnable MOZ_FINAL
+class BluetoothHfpManager::InitResultHandlerRunnable final
   : public nsRunnable
 {
 public:
@@ -333,7 +333,7 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mRes->RunInit();
     return NS_OK;
@@ -343,7 +343,7 @@ private:
   nsRefPtr<CleanupInitResultHandler> mRes;
 };
 
-class BluetoothHfpManager::OnErrorProfileResultHandlerRunnable MOZ_FINAL
+class BluetoothHfpManager::OnErrorProfileResultHandlerRunnable final
   : public nsRunnable
 {
 public:
@@ -355,7 +355,7 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mRes->OnError(mRv);
     return NS_OK;
@@ -429,7 +429,7 @@ BluetoothHfpManager::~BluetoothHfpManager()
   hal::UnregisterBatteryObserver(this);
 }
 
-class BluetoothHfpManager::CleanupResultHandler MOZ_FINAL
+class BluetoothHfpManager::CleanupResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -437,7 +437,7 @@ public:
     : mRes(aRes)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::Cleanup failed: %d", (int)aStatus);
 
@@ -448,7 +448,7 @@ public:
     }
   }
 
-  void Cleanup() MOZ_OVERRIDE
+  void Cleanup() override
   {
     sBluetoothHfpInterface = nullptr;
     if (mRes) {
@@ -460,7 +460,7 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothHfpManager::DeinitResultHandlerRunnable MOZ_FINAL
+class BluetoothHfpManager::DeinitResultHandlerRunnable final
   : public nsRunnable
 {
 public:
@@ -470,7 +470,7 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mRes->Deinit();
     return NS_OK;
@@ -611,11 +611,11 @@ BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
-class BluetoothHfpManager::VolumeControlResultHandler MOZ_FINAL
+class BluetoothHfpManager::VolumeControlResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::VolumeControl failed: %d",
                (int)aStatus);
@@ -748,11 +748,11 @@ BluetoothHfpManager::HandleShutdown()
   sBluetoothHfpManager = nullptr;
 }
 
-class BluetoothHfpManager::ClccResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::ClccResponseResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::ClccResponse failed: %d",
                (int)aStatus);
@@ -785,11 +785,11 @@ BluetoothHfpManager::SendCLCC(Call& aCall, int aIndex)
     aCall.mType, mDeviceAddress, new ClccResponseResultHandler());
 }
 
-class BluetoothHfpManager::FormattedAtResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::FormattedAtResponseResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::FormattedAtResponse failed: %d",
                (int)aStatus);
@@ -805,11 +805,11 @@ BluetoothHfpManager::SendLine(const char* aMessage)
     aMessage, mDeviceAddress, new FormattedAtResponseResultHandler());
 }
 
-class BluetoothHfpManager::AtResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::AtResponseResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::AtResponse failed: %d",
                (int)aStatus);
@@ -825,11 +825,11 @@ BluetoothHfpManager::SendResponse(BluetoothHandsfreeAtResponse aResponseCode)
     aResponseCode, 0, mDeviceAddress, new AtResponseResultHandler());
 }
 
-class BluetoothHfpManager::PhoneStateChangeResultHandler MOZ_FINAL
+class BluetoothHfpManager::PhoneStateChangeResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::PhoneStateChange failed: %d",
                (int)aStatus);
@@ -857,11 +857,11 @@ BluetoothHfpManager::UpdatePhoneCIND(uint32_t aCallIndex)
     new PhoneStateChangeResultHandler());
 }
 
-class BluetoothHfpManager::DeviceStatusNotificationResultHandler MOZ_FINAL
+class BluetoothHfpManager::DeviceStatusNotificationResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING(
       "BluetoothHandsfreeInterface::DeviceStatusNotification failed: %d",
@@ -1113,11 +1113,11 @@ BluetoothHfpManager::ToggleCalls()
                              nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
-class BluetoothHfpManager::ConnectAudioResultHandler MOZ_FINAL
+class BluetoothHfpManager::ConnectAudioResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::ConnectAudio failed: %d",
                (int)aStatus);
@@ -1139,11 +1139,11 @@ BluetoothHfpManager::ConnectSco()
   return true;
 }
 
-class BluetoothHfpManager::DisconnectAudioResultHandler MOZ_FINAL
+class BluetoothHfpManager::DisconnectAudioResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::DisconnectAudio failed: %d",
                (int)aStatus);
@@ -1185,7 +1185,7 @@ BluetoothHfpManager::OnConnectError()
   mDeviceAddress.Truncate();
 }
 
-class BluetoothHfpManager::ConnectResultHandler MOZ_FINAL
+class BluetoothHfpManager::ConnectResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -1195,7 +1195,7 @@ public:
     MOZ_ASSERT(mHfpManager);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::Connect failed: %d",
                (int)aStatus);
@@ -1239,7 +1239,7 @@ BluetoothHfpManager::OnDisconnectError()
   mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
 }
 
-class BluetoothHfpManager::DisconnectResultHandler MOZ_FINAL
+class BluetoothHfpManager::DisconnectResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
@@ -1249,7 +1249,7 @@ public:
     MOZ_ASSERT(mHfpManager);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::Disconnect failed: %d",
                (int)aStatus);
@@ -1517,11 +1517,11 @@ BluetoothHfpManager::CnumNotification(const nsAString& aBdAddress)
   SendResponse(HFP_AT_RESPONSE_OK);
 }
 
-class BluetoothHfpManager::CindResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::CindResponseResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::CindResponse failed: %d",
                (int)aStatus);
@@ -1547,11 +1547,11 @@ BluetoothHfpManager::CindNotification(const nsAString& aBdAddress)
     new CindResponseResultHandler());
 }
 
-class BluetoothHfpManager::CopsResponseResultHandler MOZ_FINAL
+class BluetoothHfpManager::CopsResponseResultHandler final
   : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothHandsfreeInterface::CopsResponse failed: %d",
                (int)aStatus);

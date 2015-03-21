@@ -24,13 +24,13 @@ public:
 
   void RelinquishData(GMPDecryptionData& aData);
 
-  virtual const uint8_t* KeyId() const MOZ_OVERRIDE;
-  virtual uint32_t KeyIdSize() const MOZ_OVERRIDE;
-  virtual const uint8_t* IV() const MOZ_OVERRIDE;
-  virtual uint32_t IVSize() const MOZ_OVERRIDE;
-  virtual uint32_t NumSubsamples() const MOZ_OVERRIDE;
-  virtual const uint16_t* ClearBytes() const MOZ_OVERRIDE;
-  virtual const uint32_t* CipherBytes() const MOZ_OVERRIDE;
+  virtual const uint8_t* KeyId() const override;
+  virtual uint32_t KeyIdSize() const override;
+  virtual const uint8_t* IV() const override;
+  virtual uint32_t IVSize() const override;
+  virtual uint32_t NumSubsamples() const override;
+  virtual const uint16_t* ClearBytes() const override;
+  virtual const uint32_t* CipherBytes() const override;
 
 private:
   nsTArray<uint8_t> mKeyId;

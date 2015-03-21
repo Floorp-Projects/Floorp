@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class ListBoxObject MOZ_FINAL : public BoxObject,
+class ListBoxObject final : public BoxObject,
                                 public nsPIListBoxObject
 {
 public:
@@ -22,14 +22,14 @@ public:
 
   ListBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsPIListBoxObject
-  virtual nsListBoxBodyFrame* GetListBoxBody(bool aFlush) MOZ_OVERRIDE;
+  virtual nsListBoxBodyFrame* GetListBoxBody(bool aFlush) override;
 
   // nsPIBoxObject
-  virtual void Clear() MOZ_OVERRIDE;
-  virtual void ClearCachedValues() MOZ_OVERRIDE;
+  virtual void Clear() override;
+  virtual void ClearCachedValues() override;
 
   // ListBoxObject.webidl
   int32_t GetRowCount();

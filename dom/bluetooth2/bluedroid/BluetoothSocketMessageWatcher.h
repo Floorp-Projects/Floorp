@@ -41,8 +41,8 @@ public:
 
   virtual void Proceed(BluetoothStatus aStatus) = 0;
 
-  void OnFileCanReadWithoutBlocking(int aFd) MOZ_OVERRIDE;
-  void OnFileCanWriteWithoutBlocking(int aFd) MOZ_OVERRIDE;
+  void OnFileCanReadWithoutBlocking(int aFd) override;
+  void OnFileCanWriteWithoutBlocking(int aFd) override;
 
   void Watch();
   void StopWatching();
@@ -81,12 +81,12 @@ private:
 /* |SocketMessageWatcherTask| starts a SocketMessageWatcher
  * on the I/O task
  */
-class SocketMessageWatcherTask MOZ_FINAL : public Task
+class SocketMessageWatcherTask final : public Task
 {
 public:
   SocketMessageWatcherTask(SocketMessageWatcher* aWatcher);
 
-  void Run() MOZ_OVERRIDE;
+  void Run() override;
 
 private:
   SocketMessageWatcher* mWatcher;
@@ -95,12 +95,12 @@ private:
 /* |DeleteSocketMessageWatcherTask| deletes a watching SocketMessageWatcher
  * on the I/O task
  */
-class DeleteSocketMessageWatcherTask MOZ_FINAL : public Task
+class DeleteSocketMessageWatcherTask final : public Task
 {
 public:
   DeleteSocketMessageWatcherTask(BluetoothSocketResultHandler* aRes);
 
-  void Run() MOZ_OVERRIDE;
+  void Run() override;
 
 private:
   BluetoothSocketResultHandler* mRes;

@@ -16,7 +16,7 @@
  * apply to this class
  */
 
-class nsAuthSASL MOZ_FINAL : public nsIAuthModule
+class nsAuthSASL final : public nsIAuthModule
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

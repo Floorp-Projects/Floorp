@@ -61,20 +61,20 @@ public:
     }
 
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                            const MediaEnginePrefs &aPrefs) MOZ_OVERRIDE;
-  virtual nsresult Deallocate() MOZ_OVERRIDE;
-  virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) MOZ_OVERRIDE;
-  virtual nsresult Stop(SourceMediaStream* aSource, TrackID aID) MOZ_OVERRIDE;
+                            const MediaEnginePrefs &aPrefs) override;
+  virtual nsresult Deallocate() override;
+  virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
+  virtual nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime) override;
 
-  void OnHardwareStateChange(HardwareState aState, nsresult aReason) MOZ_OVERRIDE;
+  void OnHardwareStateChange(HardwareState aState, nsresult aReason) override;
   void GetRotation();
-  bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) MOZ_OVERRIDE;
-  void OnUserError(UserContext aContext, nsresult aError) MOZ_OVERRIDE;
-  void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) MOZ_OVERRIDE;
+  bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) override;
+  void OnUserError(UserContext aContext, nsresult aError) override;
+  void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) override;
 
   void AllocImpl();
   void DeallocImpl();
@@ -84,7 +84,7 @@ public:
   void RotateImage(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 
-  nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE;
+  nsresult TakePhoto(PhotoCallback* aCallback) override;
 
   // It sets the correct photo orientation via camera parameter according to
   // current screen orientation.
@@ -104,7 +104,7 @@ protected:
   // Initialize the needed Video engine interfaces.
   void Init();
   void Shutdown();
-  size_t NumCapabilities() MOZ_OVERRIDE;
+  size_t NumCapabilities() override;
   // Initialize the recording frame (MediaBuffer) callback and Gonk camera.
   // MediaBuffer will transfers to MediaStreamGraph via AppendToTrack.
   nsresult InitDirectMediaBuffer();

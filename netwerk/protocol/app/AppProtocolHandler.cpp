@@ -34,7 +34,7 @@ public:
 
   DummyChannel();
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE;
+  NS_IMETHODIMP Run() override;
 
 private:
   ~DummyChannel() {}

@@ -224,26 +224,26 @@ public:
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_IMETHOD OnCreateOfferSuccess(const char* offer, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnCreateOfferError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnCreateAnswerSuccess(const char* answer, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnCreateAnswerError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnSetLocalDescriptionSuccess(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnStateChange(PCObserverStateType state_type, ER&, void*) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddStream(DOMMediaStream &stream, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnRemoveStream(DOMMediaStream &stream, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddTrack(MediaStreamTrack &track, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnRemoveTrack(MediaStreamTrack &track, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnReplaceTrackSuccess(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnReplaceTrackError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddIceCandidateSuccess(ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnAddIceCandidateError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&) MOZ_OVERRIDE;
-  NS_IMETHOD OnNegotiationNeeded(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnCreateOfferSuccess(const char* offer, ER&) override;
+  NS_IMETHOD OnCreateOfferError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD OnCreateAnswerSuccess(const char* answer, ER&) override;
+  NS_IMETHOD OnCreateAnswerError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD OnSetLocalDescriptionSuccess(ER&) override;
+  NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) override;
+  NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) override;
+  NS_IMETHOD OnStateChange(PCObserverStateType state_type, ER&, void*) override;
+  NS_IMETHOD OnAddStream(DOMMediaStream &stream, ER&) override;
+  NS_IMETHOD OnRemoveStream(DOMMediaStream &stream, ER&) override;
+  NS_IMETHOD OnAddTrack(MediaStreamTrack &track, ER&) override;
+  NS_IMETHOD OnRemoveTrack(MediaStreamTrack &track, ER&) override;
+  NS_IMETHOD OnReplaceTrackSuccess(ER&) override;
+  NS_IMETHOD OnReplaceTrackError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD OnAddIceCandidateSuccess(ER&) override;
+  NS_IMETHOD OnAddIceCandidateError(uint32_t code, const char *msg, ER&) override;
+  NS_IMETHOD OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&) override;
+  NS_IMETHOD OnNegotiationNeeded(ER&) override;
 
   // Hack because add_ice_candidates can happen asynchronously with respect
   // to the API calls. The whole test suite needs a refactor.

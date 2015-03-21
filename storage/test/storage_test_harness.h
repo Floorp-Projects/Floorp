@@ -200,7 +200,7 @@ void AsyncStatementSpinner::SpinUntilCompleted()
 }
 
 #define NS_DECL_ASYNCSTATEMENTSPINNER \
-  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) MOZ_OVERRIDE;
+  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) override;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Async Helpers

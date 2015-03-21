@@ -18,7 +18,7 @@ namespace gmp {
 
 class GMPParent;
 
-class GMPAudioDecoderParent MOZ_FINAL : public GMPAudioDecoderProxy
+class GMPAudioDecoderParent final : public GMPAudioDecoderProxy
                                       , public PGMPAudioDecoderParent
 {
 public:
@@ -34,23 +34,23 @@ public:
                               uint32_t aBitsPerChannel,
                               uint32_t aSamplesPerSecond,
                               nsTArray<uint8_t>& aExtraData,
-                              GMPAudioDecoderCallbackProxy* aCallback) MOZ_OVERRIDE;
-  virtual nsresult Decode(GMPAudioSamplesImpl& aInput) MOZ_OVERRIDE;
-  virtual nsresult Reset() MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult Close() MOZ_OVERRIDE;
+                              GMPAudioDecoderCallbackProxy* aCallback) override;
+  virtual nsresult Decode(GMPAudioSamplesImpl& aInput) override;
+  virtual nsresult Reset() override;
+  virtual nsresult Drain() override;
+  virtual nsresult Close() override;
 
 private:
   ~GMPAudioDecoderParent();
 
   // PGMPAudioDecoderParent
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-  virtual bool RecvDecoded(const GMPAudioDecodedSampleData& aDecoded) MOZ_OVERRIDE;
-  virtual bool RecvInputDataExhausted() MOZ_OVERRIDE;
-  virtual bool RecvDrainComplete() MOZ_OVERRIDE;
-  virtual bool RecvResetComplete() MOZ_OVERRIDE;
-  virtual bool RecvError(const GMPErr& aError) MOZ_OVERRIDE;
-  virtual bool Recv__delete__() MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  virtual bool RecvDecoded(const GMPAudioDecodedSampleData& aDecoded) override;
+  virtual bool RecvInputDataExhausted() override;
+  virtual bool RecvDrainComplete() override;
+  virtual bool RecvResetComplete() override;
+  virtual bool RecvError(const GMPErr& aError) override;
+  virtual bool Recv__delete__() override;
 
   bool mIsOpen;
   bool mShuttingDown;

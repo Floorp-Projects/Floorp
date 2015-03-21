@@ -38,7 +38,7 @@ enum {
   RADIAL_PROP_TRANSFORM
 };
 
-class RadialGradientEffectD2D1 MOZ_FINAL : public ID2D1EffectImpl
+class RadialGradientEffectD2D1 final : public ID2D1EffectImpl
                                          , public ID2D1DrawTransform
 {
 public:

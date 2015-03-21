@@ -27,24 +27,24 @@ public:
                       uint32_t aRate);
   virtual ~GMPAudioSamplesImpl();
 
-  virtual GMPAudioFormat GetFormat() MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
-  virtual GMPErr SetBufferSize(uint32_t aSize) MOZ_OVERRIDE;
-  virtual uint32_t Size() MOZ_OVERRIDE;
-  virtual void SetTimeStamp(uint64_t aTimeStamp) MOZ_OVERRIDE;
-  virtual uint64_t TimeStamp() MOZ_OVERRIDE;
-  virtual const uint8_t* Buffer() const MOZ_OVERRIDE;
-  virtual uint8_t* Buffer() MOZ_OVERRIDE;
-  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const MOZ_OVERRIDE;
+  virtual GMPAudioFormat GetFormat() override;
+  virtual void Destroy() override;
+  virtual GMPErr SetBufferSize(uint32_t aSize) override;
+  virtual uint32_t Size() override;
+  virtual void SetTimeStamp(uint64_t aTimeStamp) override;
+  virtual uint64_t TimeStamp() override;
+  virtual const uint8_t* Buffer() const override;
+  virtual uint8_t* Buffer() override;
+  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const override;
 
   void InitCrypto(const mp4_demuxer::CryptoSample& aCrypto);
 
   void RelinquishData(GMPAudioEncodedSampleData& aData);
 
-  virtual uint32_t Channels() const MOZ_OVERRIDE;
-  virtual void SetChannels(uint32_t aChannels) MOZ_OVERRIDE;
-  virtual uint32_t Rate() const MOZ_OVERRIDE;
-  virtual void SetRate(uint32_t aRate) MOZ_OVERRIDE;
+  virtual uint32_t Channels() const override;
+  virtual void SetChannels(uint32_t aChannels) override;
+  virtual uint32_t Rate() const override;
+  virtual void SetRate(uint32_t aRate) override;
 
 private:
   GMPAudioFormat mFormat;
@@ -59,7 +59,7 @@ class GMPAudioHostImpl : public GMPAudioHost
 {
 public:
   virtual GMPErr CreateSamples(GMPAudioFormat aFormat,
-                               GMPAudioSamples** aSamples) MOZ_OVERRIDE;
+                               GMPAudioSamples** aSamples) override;
 private:
 };
 

@@ -30,16 +30,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CSSRuleList)
 
   virtual CSSStyleSheet* GetParentObject() = 0;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE MOZ_FINAL;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
 
   NS_IMETHOD
-  GetLength(uint32_t* aLength) MOZ_OVERRIDE MOZ_FINAL
+  GetLength(uint32_t* aLength) override final
   {
     *aLength = Length();
     return NS_OK;
   }
   NS_IMETHOD
-  Item(uint32_t aIndex, nsIDOMCSSRule** aReturn) MOZ_OVERRIDE MOZ_FINAL
+  Item(uint32_t aIndex, nsIDOMCSSRule** aReturn) override final
   {
     NS_IF_ADDREF(*aReturn = Item(aIndex));
     return NS_OK;

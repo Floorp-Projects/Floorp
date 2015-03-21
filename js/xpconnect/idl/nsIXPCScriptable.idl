@@ -136,8 +136,8 @@ class NS_NO_VTABLE nsXPCClassInfo : public nsIClassInfo,
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCCLASSINFO_IID)
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
 
   virtual void PreserveWrapper(nsISupports *aNative) = 0;
 };

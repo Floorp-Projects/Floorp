@@ -28,10 +28,10 @@ public:
 
   IMPL_EVENT_HANDLER(audioprocess)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
-                       uint32_t aInput, ErrorResult& aRv) MOZ_OVERRIDE
+                       uint32_t aInput, ErrorResult& aRv) override
   {
     AudioNode::Connect(aDestination, aOutput, aInput, aRv);
     if (!aRv.Failed()) {
@@ -40,7 +40,7 @@ public:
   }
 
   virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
-                       ErrorResult& aRv) MOZ_OVERRIDE
+                       ErrorResult& aRv) override
   {
     AudioNode::Connect(aDestination, aOutput, aRv);
     if (!aRv.Failed()) {
@@ -48,7 +48,7 @@ public:
     }
   }
 
-  virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv) MOZ_OVERRIDE
+  virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv) override
   {
     AudioNode::Disconnect(aOutput, aRv);
     if (!aRv.Failed() && OutputNodes().IsEmpty() && OutputParams().IsEmpty()) {
@@ -56,14 +56,14 @@ public:
     }
   }
 
-  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) MOZ_OVERRIDE
+  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
   {
     if (aChannelCount != ChannelCount()) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     }
     return;
   }
-  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) MOZ_OVERRIDE
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) override
   {
     if (aMode != ChannelCountMode::Explicit) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -88,13 +88,13 @@ public:
 
   using DOMEventTargetHelper::DispatchTrustedEvent;
 
-  virtual const char* NodeType() const MOZ_OVERRIDE
+  virtual const char* NodeType() const override
   {
     return "ScriptProcessorNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 protected:
   virtual ~ScriptProcessorNode();

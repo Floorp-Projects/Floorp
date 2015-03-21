@@ -34,7 +34,7 @@ class SVGNumberList;
  * out our pointers to them when they die (making our pointers to them true
  * weak refs).
  */
-class DOMSVGAnimatedNumberList MOZ_FINAL : public nsISupports,
+class DOMSVGAnimatedNumberList final : public nsISupports,
                                            public nsWrapperCache
 {
   friend class DOMSVGNumberList;
@@ -90,7 +90,7 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   // These aren't weak refs because mBaseVal and mAnimVal are weak
   already_AddRefed<DOMSVGNumberList> BaseVal();
   already_AddRefed<DOMSVGNumberList> AnimVal();

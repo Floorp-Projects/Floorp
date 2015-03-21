@@ -32,28 +32,28 @@ public:
 
   // StreamControl methods
   virtual void
-  SerializeControl(PCacheReadStream* aReadStreamOut) MOZ_OVERRIDE;
+  SerializeControl(PCacheReadStream* aReadStreamOut) override;
 
   virtual void
   SerializeFds(PCacheReadStream* aReadStreamOut,
-               const nsTArray<mozilla::ipc::FileDescriptor>& aFds) MOZ_OVERRIDE;
+               const nsTArray<mozilla::ipc::FileDescriptor>& aFds) override;
 
   virtual void
   DeserializeFds(const PCacheReadStream& aReadStream,
-                 nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) MOZ_OVERRIDE;
+                 nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) override;
 
 private:
   virtual void
-  NoteClosedAfterForget(const nsID& aId) MOZ_OVERRIDE;
+  NoteClosedAfterForget(const nsID& aId) override;
 
 #ifdef DEBUG
   virtual void
-  AssertOwningThread() MOZ_OVERRIDE;
+  AssertOwningThread() override;
 #endif
 
   // PCacheStreamControlParent methods
-  virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
-  virtual bool RecvNoteClosed(const nsID& aId) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
+  virtual bool RecvNoteClosed(const nsID& aId) override;
 
   void NotifyClose(const nsID& aId);
   void NotifyCloseAll();

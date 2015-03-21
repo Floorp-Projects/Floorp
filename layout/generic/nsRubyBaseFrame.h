@@ -20,7 +20,7 @@ typedef nsRubyContentFrame nsRubyBaseFrameSuper;
 nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
 
-class nsRubyBaseFrame MOZ_FINAL : public nsRubyBaseFrameSuper
+class nsRubyBaseFrame final : public nsRubyBaseFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -28,10 +28,10 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
 protected:

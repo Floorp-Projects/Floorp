@@ -25,31 +25,31 @@ class TextureClientX11 : public TextureClient
 
   // TextureClient
 
-  virtual bool IsAllocated() const MOZ_OVERRIDE;
+  virtual bool IsAllocated() const override;
 
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+  virtual gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual bool Lock(OpenMode aMode) MOZ_OVERRIDE;
+  virtual bool Lock(OpenMode aMode) override;
 
-  virtual void Unlock() MOZ_OVERRIDE;
+  virtual void Unlock() override;
 
-  virtual bool IsLocked() const MOZ_OVERRIDE { return mLocked; }
+  virtual bool IsLocked() const override { return mLocked; }
 
-  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags flags) MOZ_OVERRIDE;
+  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags flags) override;
 
-  virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
+  virtual bool CanExposeDrawTarget() const override { return true; }
 
-  virtual gfx::DrawTarget* BorrowDrawTarget() MOZ_OVERRIDE;
+  virtual gfx::DrawTarget* BorrowDrawTarget() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
+  virtual bool HasInternalBuffer() const override { return false; }
 
   virtual TemporaryRef<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
  private:
   gfx::SurfaceFormat mFormat;

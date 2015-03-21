@@ -43,7 +43,7 @@ public:
     MOZ_ASSERT(mParent);
     return mParent;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual double X() const = 0;
   virtual double Y() const = 0;
@@ -75,7 +75,7 @@ protected:
   nsCOMPtr<nsISupports> mParent;
 };
 
-class DOMRect MOZ_FINAL : public DOMRectReadOnly
+class DOMRect final : public DOMRectReadOnly
                         , public nsIDOMClientRect
 {
 public:
@@ -98,26 +98,26 @@ public:
   Constructor(const GlobalObject& aGlobal, double aX, double aY,
               double aWidth, double aHeight, ErrorResult& aRV);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void SetRect(float aX, float aY, float aWidth, float aHeight) {
     mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
   }
   void SetLayoutRect(const nsRect& aLayoutRect);
 
-  virtual double X() const MOZ_OVERRIDE
+  virtual double X() const override
   {
     return mX;
   }
-  virtual double Y() const MOZ_OVERRIDE
+  virtual double Y() const override
   {
     return mY;
   }
-  virtual double Width() const MOZ_OVERRIDE
+  virtual double Width() const override
   {
     return mWidth;
   }
-  virtual double Height() const MOZ_OVERRIDE
+  virtual double Height() const override
   {
     return mHeight;
   }
@@ -146,7 +146,7 @@ private:
   ~DOMRect() {};
 };
 
-class DOMRectList MOZ_FINAL : public nsIDOMClientRectList,
+class DOMRectList final : public nsIDOMClientRectList,
                               public nsWrapperCache
 {
   ~DOMRectList() {}
@@ -161,7 +161,7 @@ public:
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject()
   {

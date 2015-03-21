@@ -21,7 +21,7 @@ class nsIWeakReference;
 class nsPIDOMWindow;
 
 // Script "History" object
-class nsHistory MOZ_FINAL : public nsIDOMHistory, // Empty, needed for extension
+class nsHistory final : public nsIDOMHistory, // Empty, needed for extension
                                                   // backwards compat
                             public nsWrapperCache
 {
@@ -33,7 +33,7 @@ public:
   explicit nsHistory(nsPIDOMWindow* aInnerWindow);
 
   nsPIDOMWindow* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,

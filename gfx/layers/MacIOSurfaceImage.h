@@ -20,13 +20,13 @@ public:
   void SetSurface(MacIOSurface* aSurface) { mSurface = aSurface; }
   MacIOSurface* GetSurface() { return mSurface; }
 
-  gfx::IntSize GetSize() MOZ_OVERRIDE {
+  gfx::IntSize GetSize() override {
     return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
   }
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 
   MacIOSurfaceImage() : Image(nullptr, ImageFormat::MAC_IOSURFACE) {}
 

@@ -36,7 +36,7 @@ class ConcurrentStatementsHolder;
 // Max size of History::mRecentlyVisitedURIs
 #define RECENTLY_VISITED_URI_SIZE 8
 
-class History MOZ_FINAL : public IHistory
+class History final : public IHistory
                         , public nsIDownloadHistory
                         , public mozIAsyncHistory
                         , public nsIObserver

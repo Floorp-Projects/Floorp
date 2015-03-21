@@ -18,7 +18,7 @@ namespace mozilla {
 namespace widget {
 namespace android {
 
-class APZCCallbackHandler MOZ_FINAL : public mozilla::layers::GeckoContentController
+class APZCCallbackHandler final : public mozilla::layers::GeckoContentController
 {
 private:
     static StaticRefPtr<APZCCallbackHandler> sInstance;
@@ -43,21 +43,21 @@ public:
     void NotifyDefaultPrevented(uint64_t aInputBlockId, bool aDefaultPrevented);
 
 public: // GeckoContentController methods
-    void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
+    void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) override;
     void RequestFlingSnap(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
-                          const mozilla::CSSPoint& aDestination) MOZ_OVERRIDE;
+                          const mozilla::CSSPoint& aDestination) override;
     void AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
-                                 const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
+                                 const uint32_t& aScrollGeneration) override;
     void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                         const mozilla::layers::ScrollableLayerGuid& aGuid) override;
     void HandleSingleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                         const mozilla::layers::ScrollableLayerGuid& aGuid) override;
     void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                        const mozilla::layers::ScrollableLayerGuid& aGuid,
-                       uint64_t aInputBlockId) MOZ_OVERRIDE;
+                       uint64_t aInputBlockId) override;
     void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect& aContentRect,
-                                 const mozilla::CSSSize& aScrollableSize) MOZ_OVERRIDE;
-    void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
+                                 const mozilla::CSSSize& aScrollableSize) override;
+    void PostDelayedTask(Task* aTask, int aDelayMs) override;
 };
 
 } // namespace android

@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerClients MOZ_FINAL : public nsISupports,
+class ServiceWorkerClients final : public nsISupports,
                                        public nsWrapperCache
 {
 public:
@@ -38,7 +38,7 @@ public:
   Claim();
 
   JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   ServiceWorkerGlobalScope*
   GetParentObject() const

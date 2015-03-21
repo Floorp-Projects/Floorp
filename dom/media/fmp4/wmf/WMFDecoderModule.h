@@ -17,32 +17,32 @@ public:
   virtual ~WMFDecoderModule();
 
   // Initializes the module, loads required dynamic libraries, etc.
-  virtual nsresult Startup() MOZ_OVERRIDE;
+  virtual nsresult Startup() override;
 
   // Called when the decoders have shutdown.
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Shutdown() override;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
-  bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE;
-  bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE;
+  bool SupportsVideoMimeType(const char* aMimeType) override;
+  bool SupportsAudioMimeType(const char* aMimeType) override;
 
-  virtual void DisableHardwareAcceleration() MOZ_OVERRIDE
+  virtual void DisableHardwareAcceleration() override
   {
     sDXVAEnabled = false;
   }
 
-  virtual bool SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& aConfig) const MOZ_OVERRIDE;
+  virtual bool SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& aConfig) const override;
 
   // Accessors that report whether we have the required MFTs available
   // on the system to play various codecs. Windows Vista doesn't have the

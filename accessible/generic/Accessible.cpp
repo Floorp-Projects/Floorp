@@ -1723,13 +1723,13 @@ Accessible::GetNativeInterface(void** aNativeAccessible)
 void
 Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
 {
-  class Runnable MOZ_FINAL : public nsRunnable
+  class Runnable final : public nsRunnable
   {
   public:
     Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx) :
       mAcc(aAcc), mContent(aContent), mIdx(aIdx) { }
 
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
       if (mAcc)
         mAcc->DispatchClickEvent(mContent, mIdx);

@@ -52,7 +52,7 @@ public:
 
   virtual nsresult
   FetchUuidsInternal(const nsAString& aDeviceAddress,
-                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                     BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
   virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
@@ -149,26 +149,26 @@ public:
                int64_t aMediaNumber,
                int64_t aTotalMediaCount,
                int64_t aDuration,
-               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+               BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   SendPlayStatus(int64_t aDuration,
                  int64_t aPosition,
                  const nsAString& aPlayStatus,
-                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                 BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   UpdatePlayStatus(uint32_t aDuration,
                    uint32_t aPosition,
-                   ControlPlayStatus aPlayStatus) MOZ_OVERRIDE;
+                   ControlPlayStatus aPlayStatus) override;
 
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
-                  const nsAString& aMessage) MOZ_OVERRIDE;
+                  const nsAString& aMessage) override;
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage) MOZ_OVERRIDE;
+                   const nsAString& aMessage) override;
 
   //
   // GATT Client
@@ -177,61 +177,61 @@ public:
   virtual void
   ConnectGattClientInternal(const nsAString& aAppUuid,
                             const nsAString& aDeviceAddress,
-                            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                            BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   DisconnectGattClientInternal(const nsAString& aAppUuid,
                                const nsAString& aDeviceAddress,
-                               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                               BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   UnregisterGattClientInternal(int aClientIf,
-                               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                               BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   GattClientReadRemoteRssiInternal(
     int aClientIf, const nsAString& aDeviceAddress,
-    BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+    BluetoothReplyRunnable* aRunnable) override;
 
   //
   // Bluetooth notifications
   //
 
-  virtual void AdapterStateChangedNotification(bool aState) MOZ_OVERRIDE;
+  virtual void AdapterStateChangedNotification(bool aState) override;
   virtual void AdapterPropertiesNotification(
     BluetoothStatus aStatus, int aNumProperties,
-    const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+    const BluetoothProperty* aProperties) override;
 
   virtual void RemoteDevicePropertiesNotification(
     BluetoothStatus aStatus, const nsAString& aBdAddr,
-    int aNumProperties, const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+    int aNumProperties, const BluetoothProperty* aProperties) override;
 
   virtual void DeviceFoundNotification(
-    int aNumProperties, const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+    int aNumProperties, const BluetoothProperty* aProperties) override;
 
-  virtual void DiscoveryStateChangedNotification(bool aState) MOZ_OVERRIDE;
+  virtual void DiscoveryStateChangedNotification(bool aState) override;
 
   virtual void PinRequestNotification(const nsAString& aRemoteBdAddr,
                                       const nsAString& aBdName,
-                                      uint32_t aCod) MOZ_OVERRIDE;
+                                      uint32_t aCod) override;
   virtual void SspRequestNotification(const nsAString& aRemoteBdAddr,
                                       const nsAString& aBdName,
                                       uint32_t aCod,
                                       BluetoothSspVariant aPairingVariant,
-                                      uint32_t aPasskey) MOZ_OVERRIDE;
+                                      uint32_t aPasskey) override;
 
   virtual void BondStateChangedNotification(
     BluetoothStatus aStatus, const nsAString& aRemoteBdAddr,
-    BluetoothBondState aState) MOZ_OVERRIDE;
+    BluetoothBondState aState) override;
   virtual void AclStateChangedNotification(BluetoothStatus aStatus,
                                            const nsAString& aRemoteBdAddr,
-                                           bool aState) MOZ_OVERRIDE;
+                                           bool aState) override;
 
   virtual void DutModeRecvNotification(uint16_t aOpcode,
                                        const uint8_t* aBuf,
-                                       uint8_t aLen) MOZ_OVERRIDE;
+                                       uint8_t aLen) override;
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
-                                      uint16_t aNumPackets) MOZ_OVERRIDE;
+                                      uint16_t aNumPackets) override;
 
 protected:
   static nsresult StartGonkBluetooth();

@@ -18,14 +18,14 @@ namespace mozilla {
 
 class WebGLContext;
 
-class WebGLActiveInfo MOZ_FINAL
+class WebGLActiveInfo final
     : public nsWrapperCache
 {
 public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLActiveInfo)
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLActiveInfo)
 
-    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) override;
 
     WebGLContext* GetParentObject() const {
         return mWebGL;

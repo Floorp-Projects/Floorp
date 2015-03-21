@@ -19,7 +19,7 @@ namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 
-class TextDecoder MOZ_FINAL
+class TextDecoder final
   : public NonRefcountedDOMObject
 {
 public:

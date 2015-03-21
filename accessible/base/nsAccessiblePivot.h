@@ -20,7 +20,7 @@ class RuleCache;
 /**
  * Class represents an accessible pivot.
  */
-class nsAccessiblePivot MOZ_FINAL : public nsIAccessiblePivot
+class nsAccessiblePivot final : public nsIAccessiblePivot
 {
 public:
   typedef mozilla::a11y::Accessible Accessible;

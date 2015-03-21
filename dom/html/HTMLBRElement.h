@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLBRElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLBRElement final : public nsGenericHTMLElement,
                                 public nsIDOMHTMLBRElement
 {
 public:
@@ -29,10 +29,10 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   bool Clear()
   {
@@ -43,7 +43,7 @@ public:
     return SetHTMLAttr(nsGkAtoms::clear, aClear, aError);
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   virtual ~HTMLBRElement();

@@ -27,7 +27,7 @@ class EventTarget;
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class nsPrintPreviewListener MOZ_FINAL : public nsIDOMEventListener
+class nsPrintPreviewListener final : public nsIDOMEventListener
 
 {
 public:

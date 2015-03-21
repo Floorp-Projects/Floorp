@@ -26,11 +26,11 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
     void drop(JSObject *obj);
 
     mozilla::ipc::IProtocol*
-    CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+    CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) override;
 
   protected:
-    virtual bool isParent() MOZ_OVERRIDE { return true; }
-    virtual JSObject *scopeForTargetObjects() MOZ_OVERRIDE;
+    virtual bool isParent() override { return true; }
+    virtual JSObject *scopeForTargetObjects() override;
 };
 
 } // jsipc

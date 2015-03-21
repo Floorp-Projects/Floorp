@@ -110,7 +110,7 @@ class SocketHandler : public nsASocketHandler {
   explicit SocketHandler(SocketTransportServiceTest *test) : test_(test) {
   }
 
-  void OnSocketReady(PRFileDesc *fd, int16_t outflags) MOZ_OVERRIDE {
+  void OnSocketReady(PRFileDesc *fd, int16_t outflags) override {
     unsigned char buf[1600];
 
     int32_t rv;
@@ -121,15 +121,15 @@ class SocketHandler : public nsASocketHandler {
     }
   }
 
-  void OnSocketDetached(PRFileDesc *fd) MOZ_OVERRIDE {}
+  void OnSocketDetached(PRFileDesc *fd) override {}
 
-  void IsLocal(bool *aIsLocal) MOZ_OVERRIDE {
+  void IsLocal(bool *aIsLocal) override {
     // TODO(jesup): better check? Does it matter? (likely no)
     *aIsLocal = false;
   }
 
-  virtual uint64_t ByteCountSent() MOZ_OVERRIDE { return 0; }
-  virtual uint64_t ByteCountReceived() MOZ_OVERRIDE { return 0; }
+  virtual uint64_t ByteCountSent() override { return 0; }
+  virtual uint64_t ByteCountReceived() override { return 0; }
 
   NS_DECL_ISUPPORTS
 

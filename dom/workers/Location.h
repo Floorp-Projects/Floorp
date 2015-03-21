@@ -12,7 +12,7 @@
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerLocation MOZ_FINAL : public nsWrapperCache
+class WorkerLocation final : public nsWrapperCache
 {
   nsString mHref;
   nsString mProtocol;
@@ -60,7 +60,7 @@ public:
   Create(WorkerPrivate::LocationInfo& aInfo);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const {
     return nullptr;

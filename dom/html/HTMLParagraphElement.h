@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLParagraphElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLParagraphElement final : public nsGenericHTMLElement,
                                        public nsIDOMHTMLParagraphElement
 {
 public:
@@ -32,11 +32,11 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL API
   // The XPCOM GetAlign is fine for our purposes
@@ -48,7 +48,7 @@ public:
 protected:
   virtual ~HTMLParagraphElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

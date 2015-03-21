@@ -77,7 +77,7 @@ protected:
 //    be passed through WebRTC rendering pipeline using TextureVideoFrame.
 // 2. ImageHandle: for renderer to get the image object inside without knowledge
 //    about webrtc::NativeHandle.
-class ImageNativeHandle MOZ_FINAL
+class ImageNativeHandle final
   : public webrtc::NativeHandle
   , public DummyRefCountBase
 {
@@ -87,14 +87,14 @@ public:
   {}
 
   // Implement webrtc::NativeHandle.
-  virtual void* GetHandle() MOZ_OVERRIDE { return mImage.get(); }
+  virtual void* GetHandle() override { return mImage.get(); }
 
-  virtual int AddRef() MOZ_OVERRIDE
+  virtual int AddRef() override
   {
     return DummyRefCountBase::AddRef();
   }
 
-  virtual int Release() MOZ_OVERRIDE
+  virtual int Release() override
   {
     return DummyRefCountBase::Release();
   }
@@ -170,7 +170,7 @@ public:
     lock.NotifyAll();
   }
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     MOZ_ASSERT(mThread);
 
@@ -254,7 +254,7 @@ static size_t ParamSetLength(uint8_t* aData, size_t aSize)
 // H.264 decoder using stagefright.
 // It implements gonk native window callback to receive buffers from
 // MediaCodec::RenderOutputBufferAndRelease().
-class WebrtcOMXDecoder MOZ_FINAL : public GonkNativeWindowNewFrameCallback
+class WebrtcOMXDecoder final : public GonkNativeWindowNewFrameCallback
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcOMXDecoder)
 
@@ -516,7 +516,7 @@ public:
 
   // Will be called when MediaCodec::RenderOutputBufferAndRelease() returns
   // buffers back to native window for rendering.
-  void OnNewFrame() MOZ_OVERRIDE
+  void OnNewFrame() override
   {
     RefPtr<layers::TextureClient> buffer = mNativeWindow->getCurrentBuffer();
     if (!buffer) {
@@ -570,7 +570,7 @@ private:
     {}
 
   protected:
-    virtual bool DrainOutput() MOZ_OVERRIDE
+    virtual bool DrainOutput() override
     {
       return (mOMX->DrainOutput(mInputFrames, mMonitor) == OK);
     }
@@ -664,7 +664,7 @@ public:
   {}
 
 protected:
-  virtual bool DrainOutput() MOZ_OVERRIDE
+  virtual bool DrainOutput() override
   {
     nsTArray<uint8_t> output;
     int64_t timeUs = -1ll;

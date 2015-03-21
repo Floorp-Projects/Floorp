@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace jsinspector {
 
-class nsJSInspector MOZ_FINAL : public nsIJSInspector
+class nsJSInspector final : public nsIJSInspector
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -23,7 +23,7 @@
 /**
  * Simple object that holds a single point in space.
  */
-class nsGeoPositionCoords MOZ_FINAL : public nsIDOMGeoPositionCoords
+class nsGeoPositionCoords final : public nsIDOMGeoPositionCoords
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -43,7 +43,7 @@ private:
 // nsGeoPosition
 ////////////////////////////////////////////////////
 
-class nsGeoPosition MOZ_FINAL : public nsIDOMGeoPosition
+class nsGeoPosition final : public nsIDOMGeoPosition
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -76,7 +76,7 @@ namespace dom {
 
 class Coordinates;
 
-class Position MOZ_FINAL : public nsISupports,
+class Position final : public nsISupports,
                            public nsWrapperCache
 {
   ~Position();
@@ -90,7 +90,7 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   Coordinates* Coords();
 
@@ -104,7 +104,7 @@ private:
   nsCOMPtr<nsIDOMGeoPosition> mGeoPosition;
 };
 
-class Coordinates MOZ_FINAL : public nsISupports,
+class Coordinates final : public nsISupports,
                               public nsWrapperCache
 {
   ~Coordinates();
@@ -118,7 +118,7 @@ public:
 
   Position* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   double Latitude() const;
 

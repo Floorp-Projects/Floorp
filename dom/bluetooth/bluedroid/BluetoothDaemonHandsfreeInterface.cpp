@@ -734,7 +734,7 @@ BluetoothDaemonHandsfreeModule::HandleRsp(
 //
 
 // Returns the current notification handler to a notification runnable
-class BluetoothDaemonHandsfreeModule::NotificationHandlerWrapper MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::NotificationHandlerWrapper final
 {
 public:
   typedef BluetoothHandsfreeNotificationHandler ObjectType;
@@ -748,7 +748,7 @@ public:
 };
 
 // Init operator class for ConnectionStateNotification
-class BluetoothDaemonHandsfreeModule::ConnectionStateInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::ConnectionStateInitOp final
   : private PDUInitOp
 {
 public:
@@ -797,7 +797,7 @@ BluetoothDaemonHandsfreeModule::ConnectionStateNtf(
 }
 
 // Init operator class for AudioStateNotification
-class BluetoothDaemonHandsfreeModule::AudioStateInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::AudioStateInitOp final
   : private PDUInitOp
 {
 public:
@@ -837,7 +837,7 @@ BluetoothDaemonHandsfreeModule::AudioStateNtf(
 }
 
 // Init operator class for VoiceRecognitionNotification
-class BluetoothDaemonHandsfreeModule::VoiceRecognitionInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::VoiceRecognitionInitOp final
   : private PDUInitOp
 {
 public:
@@ -882,7 +882,7 @@ BluetoothDaemonHandsfreeModule::VoiceRecognitionNtf(
 }
 
 // Init operator class for AnswerCallNotification
-class BluetoothDaemonHandsfreeModule::AnswerCallInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::AnswerCallInitOp final
   : private PDUInitOp
 {
 public:
@@ -918,7 +918,7 @@ BluetoothDaemonHandsfreeModule::AnswerCallNtf(
 }
 
 // Init operator class for HangupCallNotification
-class BluetoothDaemonHandsfreeModule::HangupCallInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::HangupCallInitOp final
   : private PDUInitOp
 {
 public:
@@ -954,7 +954,7 @@ BluetoothDaemonHandsfreeModule::HangupCallNtf(
 }
 
 // Init operator class for VolumeNotification
-class BluetoothDaemonHandsfreeModule::VolumeInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::VolumeInitOp final
   : private PDUInitOp
 {
 public:
@@ -1005,7 +1005,7 @@ BluetoothDaemonHandsfreeModule::VolumeNtf(
 }
 
 // Init operator class for DialCallNotification
-class BluetoothDaemonHandsfreeModule::DialCallInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::DialCallInitOp final
   : private PDUInitOp
 {
 public:
@@ -1053,7 +1053,7 @@ BluetoothDaemonHandsfreeModule::DialCallNtf(
 }
 
 // Init operator class for DtmfNotification
-class BluetoothDaemonHandsfreeModule::DtmfInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::DtmfInitOp final
   : private PDUInitOp
 {
 public:
@@ -1097,7 +1097,7 @@ BluetoothDaemonHandsfreeModule::DtmfNtf(
 }
 
 // Init operator class for NRECNotification
-class BluetoothDaemonHandsfreeModule::NRECInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::NRECInitOp final
   : private PDUInitOp
 {
 public:
@@ -1141,7 +1141,7 @@ BluetoothDaemonHandsfreeModule::NRECNtf(
 }
 
 // Init operator class for CallHoldNotification
-class BluetoothDaemonHandsfreeModule::CallHoldInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::CallHoldInitOp final
   : private PDUInitOp
 {
 public:
@@ -1185,7 +1185,7 @@ BluetoothDaemonHandsfreeModule::CallHoldNtf(
 }
 
 // Init operator class for CnumNotification
-class BluetoothDaemonHandsfreeModule::CnumInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::CnumInitOp final
   : private PDUInitOp
 {
 public:
@@ -1221,7 +1221,7 @@ BluetoothDaemonHandsfreeModule::CnumNtf(
 }
 
 // Init operator class for CindNotification
-class BluetoothDaemonHandsfreeModule::CindInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::CindInitOp final
   : private PDUInitOp
 {
 public:
@@ -1257,7 +1257,7 @@ BluetoothDaemonHandsfreeModule::CindNtf(
 }
 
 // Init operator class for CopsNotification
-class BluetoothDaemonHandsfreeModule::CopsInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::CopsInitOp final
   : private PDUInitOp
 {
 public:
@@ -1293,7 +1293,7 @@ BluetoothDaemonHandsfreeModule::CopsNtf(
 }
 
 // Init operator class for ClccNotification
-class BluetoothDaemonHandsfreeModule::ClccInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::ClccInitOp final
   : private PDUInitOp
 {
 public:
@@ -1329,7 +1329,7 @@ BluetoothDaemonHandsfreeModule::ClccNtf(
 }
 
 // Init operator class for UnknownAtNotification
-class BluetoothDaemonHandsfreeModule::UnknownAtInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::UnknownAtInitOp final
   : private PDUInitOp
 {
 public:
@@ -1377,7 +1377,7 @@ BluetoothDaemonHandsfreeModule::UnknownAtNtf(
 }
 
 // Init operator class for KeyPressedNotification
-class BluetoothDaemonHandsfreeModule::KeyPressedInitOp MOZ_FINAL
+class BluetoothDaemonHandsfreeModule::KeyPressedInitOp final
   : private PDUInitOp
 {
 public:
@@ -1461,7 +1461,7 @@ BluetoothDaemonHandsfreeInterface::BluetoothDaemonHandsfreeInterface(
 BluetoothDaemonHandsfreeInterface::~BluetoothDaemonHandsfreeInterface()
 { }
 
-class BluetoothDaemonHandsfreeInterface::InitResultHandler MOZ_FINAL
+class BluetoothDaemonHandsfreeInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -1471,14 +1471,14 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     mRes->OnError(aStatus);
   }
 
-  void RegisterModule() MOZ_OVERRIDE
+  void RegisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1516,7 +1516,7 @@ BluetoothDaemonHandsfreeInterface::Init(
   }
 }
 
-class BluetoothDaemonHandsfreeInterface::CleanupResultHandler MOZ_FINAL
+class BluetoothDaemonHandsfreeInterface::CleanupResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -1528,7 +1528,7 @@ public:
     MOZ_ASSERT(mModule);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1538,7 +1538,7 @@ public:
     }
   }
 
-  void UnregisterModule() MOZ_OVERRIDE
+  void UnregisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

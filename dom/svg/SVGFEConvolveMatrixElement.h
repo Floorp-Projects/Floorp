@@ -35,20 +35,20 @@ protected:
     : SVGFEConvolveMatrixElementBase(aNodeInfo)
   {
   }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
                             const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
+  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();
@@ -65,14 +65,14 @@ public:
   already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
-  virtual NumberPairAttributesInfo GetNumberPairInfo() MOZ_OVERRIDE;
-  virtual IntegerAttributesInfo GetIntegerInfo() MOZ_OVERRIDE;
-  virtual IntegerPairAttributesInfo GetIntegerPairInfo() MOZ_OVERRIDE;
-  virtual BooleanAttributesInfo GetBooleanInfo() MOZ_OVERRIDE;
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
-  virtual NumberListAttributesInfo GetNumberListInfo() MOZ_OVERRIDE;
+  virtual NumberAttributesInfo GetNumberInfo() override;
+  virtual NumberPairAttributesInfo GetNumberPairInfo() override;
+  virtual IntegerAttributesInfo GetIntegerInfo() override;
+  virtual IntegerPairAttributesInfo GetIntegerPairInfo() override;
+  virtual BooleanAttributesInfo GetBooleanInfo() override;
+  virtual EnumAttributesInfo GetEnumInfo() override;
+  virtual StringAttributesInfo GetStringInfo() override;
+  virtual NumberListAttributesInfo GetNumberListInfo() override;
 
   enum { DIVISOR, BIAS };
   nsSVGNumber2 mNumberAttributes[2];

@@ -9,7 +9,7 @@
 #include "nsStringAPI.h"
 #include "mozilla/Attributes.h"
 
-class nsFeedSniffer MOZ_FINAL : public nsIContentSniffer,
+class nsFeedSniffer final : public nsIContentSniffer,
                                        nsIStreamListener
 {
 public:

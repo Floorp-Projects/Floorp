@@ -21,7 +21,7 @@
 #pragma warning( disable : 4275 )
 #endif
 
-class nsHTMLTokenizer MOZ_FINAL : public nsITokenizer {
+class nsHTMLTokenizer final : public nsITokenizer {
   ~nsHTMLTokenizer() {}
 
 public:

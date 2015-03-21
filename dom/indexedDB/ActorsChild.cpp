@@ -130,7 +130,7 @@ MaybeCollectGarbageOnIPCMessage()
 #endif // BUILD_GC_ON_IPC_MESSAGES
 }
 
-class MOZ_STACK_CLASS AutoSetCurrentTransaction MOZ_FINAL
+class MOZ_STACK_CLASS AutoSetCurrentTransaction final
 {
   typedef mozilla::ipc::BackgroundChildImpl BackgroundChildImpl;
 
@@ -180,7 +180,7 @@ public:
   }
 };
 
-class MOZ_STACK_CLASS ResultHelper MOZ_FINAL
+class MOZ_STACK_CLASS ResultHelper final
   : public IDBRequest::ResultCallback
 {
   IDBRequest* mRequest;
@@ -340,7 +340,7 @@ public:
   }
 
   virtual nsresult
-  GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) MOZ_OVERRIDE
+  GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) override
   {
     MOZ_ASSERT(aCx);
     MOZ_ASSERT(mRequest);
@@ -519,7 +519,7 @@ private:
   }
 };
 
-class PermissionRequestMainProcessHelper MOZ_FINAL
+class PermissionRequestMainProcessHelper final
   : public PermissionRequestBase
 {
   BackgroundFactoryRequestChild* mActor;
@@ -545,10 +545,10 @@ protected:
 
 private:
   virtual void
-  OnPromptComplete(PermissionValue aPermissionValue) MOZ_OVERRIDE;
+  OnPromptComplete(PermissionValue aPermissionValue) override;
 };
 
-class PermissionRequestChildProcessActor MOZ_FINAL
+class PermissionRequestChildProcessActor final
   : public PIndexedDBPermissionRequestChild
 {
   BackgroundFactoryRequestChild* mActor;
@@ -570,7 +570,7 @@ protected:
   { }
 
   virtual bool
-  Recv__delete__(const uint32_t& aPermission) MOZ_OVERRIDE;
+  Recv__delete__(const uint32_t& aPermission) override;
 };
 
 void
@@ -2069,7 +2069,7 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
  * BackgroundCursorChild
  ******************************************************************************/
 
-class BackgroundCursorChild::DelayedDeleteRunnable MOZ_FINAL
+class BackgroundCursorChild::DelayedDeleteRunnable final
   : public nsICancelableRunnable
 {
   BackgroundCursorChild* mActor;

@@ -33,7 +33,7 @@ public:
   void Shutdown();
 
   // For IObserver.
-  void Notify(const hal::BatteryInformation& aBatteryInfo) MOZ_OVERRIDE;
+  void Notify(const hal::BatteryInformation& aBatteryInfo) override;
 
   /**
    * WebIDL Interface
@@ -44,7 +44,7 @@ public:
      return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   bool Charging() const
   {

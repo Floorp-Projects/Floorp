@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace jsdebugger {
 
-class JSDebugger MOZ_FINAL : public IJSDebugger
+class JSDebugger final : public IJSDebugger
 {
 public:
   NS_DECL_ISUPPORTS

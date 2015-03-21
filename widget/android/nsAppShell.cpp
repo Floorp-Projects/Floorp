@@ -109,7 +109,7 @@ private:
     nsRefPtr<RefCountedJavaObject> mBuffer;
 };
 
-class WakeLockListener MOZ_FINAL : public nsIDOMMozWakeLockListener {
+class WakeLockListener final : public nsIDOMMozWakeLockListener {
 private:
   ~WakeLockListener() {}
 

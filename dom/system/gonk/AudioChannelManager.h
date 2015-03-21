@@ -19,7 +19,7 @@ typedef Observer<SwitchEvent> SwitchObserver;
 namespace dom {
 namespace system {
 
-class AudioChannelManager MOZ_FINAL
+class AudioChannelManager final
   : public DOMEventTargetHelper
   , public hal::SwitchObserver
   , public nsIDOMEventListener
@@ -43,7 +43,7 @@ public:
      return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   bool Headphones() const
   {

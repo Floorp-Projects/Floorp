@@ -25,15 +25,15 @@ public:
   BrowserHangAnnotations();
   ~BrowserHangAnnotations();
 
-  void AddAnnotation(const nsAString& aName, const int32_t aData) MOZ_OVERRIDE;
-  void AddAnnotation(const nsAString& aName, const double aData) MOZ_OVERRIDE;
-  void AddAnnotation(const nsAString& aName, const nsAString& aData) MOZ_OVERRIDE;
-  void AddAnnotation(const nsAString& aName, const nsACString& aData) MOZ_OVERRIDE;
-  void AddAnnotation(const nsAString& aName, const bool aData) MOZ_OVERRIDE;
+  void AddAnnotation(const nsAString& aName, const int32_t aData) override;
+  void AddAnnotation(const nsAString& aName, const double aData) override;
+  void AddAnnotation(const nsAString& aName, const nsAString& aData) override;
+  void AddAnnotation(const nsAString& aName, const nsACString& aData) override;
+  void AddAnnotation(const nsAString& aName, const bool aData) override;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  bool IsEmpty() const MOZ_OVERRIDE;
-  UniquePtr<Enumerator> GetEnumerator() MOZ_OVERRIDE;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  bool IsEmpty() const override;
+  UniquePtr<Enumerator> GetEnumerator() override;
 
   typedef std::pair<nsString, nsString> AnnotationType;
   typedef std::vector<AnnotationType> VectorType;

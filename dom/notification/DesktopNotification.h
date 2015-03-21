@@ -34,7 +34,7 @@ class DesktopNotification;
  * DesktopNotificationCenter
  * Object hangs off of the navigator object and hands out DesktopNotification objects
  */
-class DesktopNotificationCenter MOZ_FINAL : public nsISupports,
+class DesktopNotificationCenter final : public nsISupports,
                                             public nsWrapperCache
 {
 public:
@@ -62,7 +62,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<DesktopNotification>
   CreateNotification(const nsAString& title,
@@ -80,7 +80,7 @@ private:
 
 class DesktopNotificationRequest;
 
-class DesktopNotification MOZ_FINAL : public DOMEventTargetHelper
+class DesktopNotification final : public DOMEventTargetHelper
 {
   friend class DesktopNotificationRequest;
 
@@ -118,7 +118,7 @@ public:
     return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Show(ErrorResult& aRv);
 
@@ -152,7 +152,7 @@ class AlertServiceObserver: public nsIObserver
   NS_IMETHODIMP
   Observe(nsISupports* aSubject,
           const char* aTopic,
-          const char16_t* aData) MOZ_OVERRIDE
+          const char16_t* aData) override
   {
 
     // forward to parent

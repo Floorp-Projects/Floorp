@@ -32,7 +32,7 @@ namespace mozilla {
 typedef nsTArray<nsWeakPtr> CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;
 
-class nsDOMCameraManager MOZ_FINAL
+class nsDOMCameraManager final
   : public nsIObserver
   , public nsSupportsWeakReference
   , public nsWrapperCache
@@ -74,7 +74,7 @@ public:
   void GetListOfCameras(nsTArray<nsString>& aList, mozilla::ErrorResult& aRv);
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 #ifdef MOZ_WIDGET_GONK
   static void PreinitCameraHardware();

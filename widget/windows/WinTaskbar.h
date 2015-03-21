@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace widget {
 
-class WinTaskbar MOZ_FINAL : public nsIWinTaskbar
+class WinTaskbar final : public nsIWinTaskbar
 {
   ~WinTaskbar();
 

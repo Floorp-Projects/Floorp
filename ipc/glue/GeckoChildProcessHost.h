@@ -213,7 +213,7 @@ private:
 };
 
 #ifdef MOZ_NUWA_PROCESS
-class GeckoExistingProcessHost MOZ_FINAL : public GeckoChildProcessHost
+class GeckoExistingProcessHost final : public GeckoChildProcessHost
 {
 public:
   GeckoExistingProcessHost(GeckoProcessType aProcessType,
@@ -224,9 +224,9 @@ public:
   ~GeckoExistingProcessHost();
 
   virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-          base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture()) MOZ_OVERRIDE;
+          base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture()) override;
 
-  virtual void InitializeChannel() MOZ_OVERRIDE;
+  virtual void InitializeChannel() override;
 
 private:
   base::ProcessHandle mExistingProcessHandle;

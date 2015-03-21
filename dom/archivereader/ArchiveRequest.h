@@ -26,7 +26,7 @@ BEGIN_ARCHIVEREADER_NAMESPACE
 class ArchiveRequest : public mozilla::dom::DOMRequest
 {
 public:
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   ArchiveReader* Reader() const;
 
@@ -38,7 +38,7 @@ public:
                  ArchiveReader* aReader);
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
 public:
   // This is called by the DOMArchiveRequestEvent

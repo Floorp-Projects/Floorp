@@ -33,7 +33,7 @@ public:
   NS_IMETHOD Run();
 };
 
-class ProfileSaveEvent MOZ_FINAL : public nsIProfileSaveEvent {
+class ProfileSaveEvent final : public nsIProfileSaveEvent {
 public:
   typedef void (*AddSubProfileFunc)(const char* aProfile, void* aClosure);
   NS_DECL_ISUPPORTS
@@ -43,7 +43,7 @@ public:
     , mClosure(aClosure)
   {}
 
-  NS_IMETHOD AddSubProfile(const char* aProfile) MOZ_OVERRIDE;
+  NS_IMETHOD AddSubProfile(const char* aProfile) override;
 private:
   ~ProfileSaveEvent() {}
 

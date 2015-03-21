@@ -17,25 +17,25 @@ typedef nsSVGPathGeometryElement SVGRectElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGRectElement MOZ_FINAL : public SVGRectElementBase
+class SVGRectElement final : public SVGRectElementBase
 {
 protected:
   explicit SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGRectElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 public:
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+  virtual bool HasValidDimensions() const override;
 
   // nsSVGPathGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
-                                 const Matrix& aTransform) MOZ_OVERRIDE;
-  virtual void GetAsSimplePath(SimplePath* aSimplePath) MOZ_OVERRIDE;
-  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) MOZ_OVERRIDE;
+                                 const Matrix& aTransform) override;
+  virtual void GetAsSimplePath(SimplePath* aSimplePath) override;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X();
@@ -47,7 +47,7 @@ public:
 
 protected:
 
-  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT, ATTR_RX, ATTR_RY };
   nsSVGLength2 mLengthAttributes[6];

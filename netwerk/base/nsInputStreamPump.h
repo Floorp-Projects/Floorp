@@ -17,7 +17,7 @@ class nsIInputStream;
 class nsILoadGroup;
 class nsIStreamListener;
 
-class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
+class nsInputStreamPump final : public nsIInputStreamPump
                                   , public nsIInputStreamCallback
                                   , public nsIThreadRetargetableRequest
 {

@@ -46,7 +46,7 @@ namespace layout {
  * of scroll velocity.
  */
 
-class ScrollVelocityQueue MOZ_FINAL {
+class ScrollVelocityQueue final {
 public:
   explicit ScrollVelocityQueue(nsPresContext *aPresContext)
     : mPresContext(aPresContext) {}

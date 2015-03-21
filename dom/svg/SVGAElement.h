@@ -22,37 +22,37 @@ namespace dom {
 
 typedef SVGGraphicsElement SVGAElementBase;
 
-class SVGAElement MOZ_FINAL : public SVGAElementBase,
+class SVGAElement final : public SVGAElementBase,
                               public Link
 {
 protected:
   explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGAElement, SVGAElementBase)
 
   // nsINode interface methods
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+                     EventChainPostVisitor& aVisitor) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) MOZ_OVERRIDE;
-  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
-  virtual void GetLinkTarget(nsAString& aTarget) MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+  virtual bool IsLink(nsIURI** aURI) const override;
+  virtual void GetLinkTarget(nsAString& aTarget) override;
+  virtual already_AddRefed<nsIURI> GetHrefURI() const override;
+  virtual EventStates IntrinsicState() const override;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -60,9 +60,9 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify) override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> Href();
@@ -73,7 +73,7 @@ public:
 protected:
   virtual ~SVGAElement();
 
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { HREF, TARGET };
   nsSVGString mStringAttributes[2];

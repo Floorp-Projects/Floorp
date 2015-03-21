@@ -197,42 +197,42 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
                                                            nsIDOMWebGLRenderingContext)
 
-    virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE = 0;
+    virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
 #ifdef DEBUG
-    virtual int32_t GetWidth() const MOZ_OVERRIDE;
-    virtual int32_t GetHeight() const MOZ_OVERRIDE;
+    virtual int32_t GetWidth() const override;
+    virtual int32_t GetHeight() const override;
 #endif
-    NS_IMETHOD SetDimensions(int32_t width, int32_t height) MOZ_OVERRIDE;
+    NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
     NS_IMETHOD InitializeWithSurface(nsIDocShell*, gfxASurface*, int32_t,
-                                     int32_t) MOZ_OVERRIDE
+                                     int32_t) override
     {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_IMETHOD Reset() MOZ_OVERRIDE {
+    NS_IMETHOD Reset() override {
         /* (InitializeWithSurface) */
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     virtual void GetImageBuffer(uint8_t** out_imageBuffer,
-                                int32_t* out_format) MOZ_OVERRIDE;
+                                int32_t* out_format) override;
     NS_IMETHOD GetInputStream(const char* mimeType,
                               const char16_t* encoderOptions,
-                              nsIInputStream** out_stream) MOZ_OVERRIDE;
+                              nsIInputStream** out_stream) override;
 
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
-    GetSurfaceSnapshot(bool* out_premultAlpha) MOZ_OVERRIDE;
+    GetSurfaceSnapshot(bool* out_premultAlpha) override;
 
-    NS_IMETHOD SetIsOpaque(bool) MOZ_OVERRIDE { return NS_OK; };
-    bool GetIsOpaque() MOZ_OVERRIDE { return false; }
+    NS_IMETHOD SetIsOpaque(bool) override { return NS_OK; };
+    bool GetIsOpaque() override { return false; }
     NS_IMETHOD SetContextOptions(JSContext* cx,
-                                 JS::Handle<JS::Value> options) MOZ_OVERRIDE;
+                                 JS::Handle<JS::Value> options) override;
 
-    NS_IMETHOD SetIsIPC(bool) MOZ_OVERRIDE {
+    NS_IMETHOD SetIsIPC(bool) override {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -241,9 +241,9 @@ public:
      * that a refresh has occurred. Callers must ensure an observer is removed
      * before it is destroyed.
      */
-    virtual void DidRefresh() MOZ_OVERRIDE;
+    virtual void DidRefresh() override;
 
-    NS_IMETHOD Redraw(const gfxRect&) MOZ_OVERRIDE {
+    NS_IMETHOD Redraw(const gfxRect&) override {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -302,11 +302,11 @@ public:
 
     already_AddRefed<CanvasLayer>
     GetCanvasLayer(nsDisplayListBuilder* builder, CanvasLayer* oldLayer,
-                   LayerManager* manager) MOZ_OVERRIDE;
+                   LayerManager* manager) override;
 
     // Note that 'clean' here refers to its invalidation state, not the
     // contents of the buffer.
-    void MarkContextClean() MOZ_OVERRIDE { mInvalidated = false; }
+    void MarkContextClean() override { mInvalidated = false; }
 
     gl::GLContext* GL() const { return gl; }
 
@@ -1676,7 +1676,7 @@ WebGLContext::ValidateObject(const char* info, ObjectType* object)
 }
 
 // Listen visibilitychange and memory-pressure event for context lose/restore
-class WebGLObserver MOZ_FINAL
+class WebGLObserver final
     : public nsIObserver
     , public nsIDOMEventListener
 {

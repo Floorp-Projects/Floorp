@@ -17,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 // http://www.w3.org/TR/resource-timing/#performanceresourcetiming
-class PerformanceResourceTiming MOZ_FINAL : public PerformanceEntry
+class PerformanceResourceTiming final : public PerformanceEntry
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -31,12 +31,12 @@ public:
                             nsPerformance* aPerformance,
                             const nsAString& aName);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 
-  virtual DOMHighResTimeStamp StartTime() const MOZ_OVERRIDE;
+  virtual DOMHighResTimeStamp StartTime() const override;
 
-  virtual DOMHighResTimeStamp Duration() const MOZ_OVERRIDE
+  virtual DOMHighResTimeStamp Duration() const override
   {
     return ResponseEnd() - StartTime();
   }

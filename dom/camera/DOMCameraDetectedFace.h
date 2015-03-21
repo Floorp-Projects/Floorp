@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace dom {
 
-class DOMCameraDetectedFace MOZ_FINAL : public nsISupports
+class DOMCameraDetectedFace final : public nsISupports
                                       , public nsWrapperCache
 {
 public:
@@ -55,7 +55,7 @@ public:
     return mParent;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   DOMCameraDetectedFace(nsISupports* aParent, const dom::CameraDetectedFaceInit& aFace);

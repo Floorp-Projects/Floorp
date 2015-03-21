@@ -24,7 +24,7 @@ class nsAutoString;
 class nsINSSComponent;
 class nsIASN1Sequence;
 
-class nsNSSCertificate MOZ_FINAL : public nsIX509Cert,
+class nsNSSCertificate final : public nsIX509Cert,
                                    public nsISerializable,
                                    public nsIClassInfo,
                                    public nsNSSShutDownObject
@@ -63,7 +63,7 @@ private:
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
                                           nsINSSComponent* nssComponent);
   nsresult GetSortableDate(PRTime aTime, nsAString& _aSortableDate);
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
+  virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
@@ -103,7 +103,7 @@ public:
                                      proofOfLock);
 private:
    virtual ~nsNSSCertList();
-   virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
+   virtual void virtualDestroyNSSReference() override;
    void destructorSafeDestroyNSSReference();
 
    mozilla::ScopedCERTCertList mCertList;
@@ -123,7 +123,7 @@ public:
                            const nsNSSShutDownPreventionLock& proofOfLock);
 private:
    virtual ~nsNSSCertListEnumerator();
-   virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
+   virtual void virtualDestroyNSSReference() override;
    void destructorSafeDestroyNSSReference();
 
    mozilla::ScopedCERTCertList mCertList;

@@ -103,14 +103,14 @@ public:
     return mAgent->SetVisibilityState(visible);
   }
 
-  NS_IMETHODIMP CanPlayChanged(int32_t canPlay) MOZ_OVERRIDE
+  NS_IMETHODIMP CanPlayChanged(int32_t canPlay) override
   {
     mCanPlay = static_cast<AudioChannelState>(canPlay);
     mWaitCallback = false;
     return NS_OK;
   }
 
-  NS_IMETHODIMP WindowVolumeChanged() MOZ_OVERRIDE
+  NS_IMETHODIMP WindowVolumeChanged() override
   {
     return NS_OK;
   }

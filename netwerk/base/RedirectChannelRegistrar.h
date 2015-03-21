@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace net {
 
-class RedirectChannelRegistrar MOZ_FINAL : public nsIRedirectChannelRegistrar
+class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREDIRECTCHANNELREGISTRAR

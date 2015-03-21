@@ -204,7 +204,7 @@ nsJSID::NewID(const nsID& id)
 // helper is not sufficient to convey the information that we don't want
 // static properties enumerated on the shared proto.
 
-class SharedScriptableHelperForJSIID MOZ_FINAL : public nsIXPCScriptable
+class SharedScriptableHelperForJSIID final : public nsIXPCScriptable
 {
     ~SharedScriptableHelperForJSIID() {}
 public:

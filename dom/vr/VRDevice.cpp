@@ -178,7 +178,7 @@ public:
    */
   virtual void SetFieldOfView(const VRFieldOfViewInit& aLeftFOV,
                               const VRFieldOfViewInit& aRightFOV,
-                              double zNear, double zFar) MOZ_OVERRIDE
+                              double zNear, double zFar) override
   {
     gfx::VRFieldOfView left = gfx::VRFieldOfView(aLeftFOV.mUpDegrees, aLeftFOV.mRightDegrees,
                                                  aLeftFOV.mDownDegrees, aLeftFOV.mLeftDegrees);
@@ -193,7 +193,7 @@ public:
     mHMD->SetFOV(left, right, zNear, zFar);
   }
 
-  virtual already_AddRefed<DOMPoint> GetEyeTranslation(VREye aEye) MOZ_OVERRIDE
+  virtual already_AddRefed<DOMPoint> GetEyeTranslation(VREye aEye) override
   {
     gfx::Point3D p = mHMD->GetEyeTranslation(EyeToEye(aEye));
 
@@ -201,22 +201,22 @@ public:
     return obj.forget();
   }
 
-  virtual VRFieldOfView* GetCurrentEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual VRFieldOfView* GetCurrentEyeFieldOfView(VREye aEye) override
   {
     return CopyFieldOfView(mHMD->GetEyeFOV(EyeToEye(aEye)));
   }
 
-  virtual VRFieldOfView* GetRecommendedEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual VRFieldOfView* GetRecommendedEyeFieldOfView(VREye aEye) override
   {
     return CopyFieldOfView(mHMD->GetRecommendedEyeFOV(EyeToEye(aEye)));
   }
 
-  virtual VRFieldOfView* GetMaximumEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual VRFieldOfView* GetMaximumEyeFieldOfView(VREye aEye) override
   {
     return CopyFieldOfView(mHMD->GetMaximumEyeFOV(EyeToEye(aEye)));
   }
 
-  virtual already_AddRefed<DOMRect> GetRecommendedEyeRenderRect(VREye aEye) MOZ_OVERRIDE
+  virtual already_AddRefed<DOMRect> GetRecommendedEyeRenderRect(VREye aEye) override
   {
     const IntSize& a(mHMD->SuggestedEyeResolution());
     nsRefPtr<DOMRect> obj =
@@ -258,7 +258,7 @@ public:
     }
   }
 
-  virtual already_AddRefed<VRPositionState> GetState(double timeOffset) MOZ_OVERRIDE
+  virtual already_AddRefed<VRPositionState> GetState(double timeOffset) override
   {
     if (!mTracking) {
       mHMD->StartSensorTracking();
@@ -271,7 +271,7 @@ public:
     return obj.forget();
   }
 
-  virtual void ZeroSensor() MOZ_OVERRIDE
+  virtual void ZeroSensor() override
   {
     mHMD->ZeroSensor();
   }

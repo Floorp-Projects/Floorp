@@ -22,7 +22,7 @@
 class nsXULWindow;
 class nsSiteWindow;
 
-class nsContentTreeOwner MOZ_FINAL : public nsIDocShellTreeOwner,
+class nsContentTreeOwner final : public nsIDocShellTreeOwner,
                                      public nsIBaseWindow,
                                      public nsIInterfaceRequestor,
                                      public nsIWebBrowserChrome3,

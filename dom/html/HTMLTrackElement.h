@@ -24,7 +24,7 @@ namespace dom {
 
 class WebVTTListener;
 
-class HTMLTrackElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLTrackElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -90,14 +90,14 @@ public:
 
   TextTrack* GetTrack();
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   // For Track, ItemValue reflects the src attribute
-  virtual void GetItemValueText(DOMString& aText) MOZ_OVERRIDE
+  virtual void GetItemValueText(DOMString& aText) override
   {
     GetSrc(aText);
   }
-  virtual void SetItemValueText(const nsAString& aText) MOZ_OVERRIDE
+  virtual void SetItemValueText(const nsAString& aText) override
   {
     ErrorResult rv;
     SetSrc(aText, rv);
@@ -107,15 +107,15 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
+                              nsAttrValue& aResult) override;
 
   // Override BindToTree() so that we can trigger a load when we become
   // the child of a media element.
   virtual nsresult BindToTree(nsIDocument* aDocument,
                               nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
   // Check enabling preference.
   static bool IsWebVTTEnabled();
@@ -128,7 +128,7 @@ public:
 protected:
   virtual ~HTMLTrackElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   void OnChannelRedirect(nsIChannel* aChannel, nsIChannel* aNewChannel,
                          uint32_t aFlags);
   // Open a new channel to the HTMLTrackElement's src attribute and call

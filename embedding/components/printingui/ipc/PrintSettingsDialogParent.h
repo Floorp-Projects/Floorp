@@ -11,11 +11,11 @@
 namespace mozilla {
 namespace embedding {
 
-class PrintSettingsDialogParent MOZ_FINAL : public PPrintSettingsDialogParent
+class PrintSettingsDialogParent final : public PPrintSettingsDialogParent
 {
 public:
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   MOZ_IMPLICIT PrintSettingsDialogParent();
 

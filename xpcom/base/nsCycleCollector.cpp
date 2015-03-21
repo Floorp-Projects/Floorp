@@ -1479,7 +1479,7 @@ struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
   Type mType;
 };
 
-class nsCycleCollectorLogSinkToFile MOZ_FINAL : public nsICycleCollectorLogSink
+class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink
 {
 public:
   NS_DECL_ISUPPORTS
@@ -1490,43 +1490,43 @@ public:
   {
   }
 
-  NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) MOZ_OVERRIDE
+  NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) override
   {
     aIdentifier = mFilenameIdentifier;
     return NS_OK;
   }
 
-  NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) MOZ_OVERRIDE
+  NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier) override
   {
     mFilenameIdentifier = aIdentifier;
     return NS_OK;
   }
 
-  NS_IMETHOD GetProcessIdentifier(int32_t* aIdentifier) MOZ_OVERRIDE
+  NS_IMETHOD GetProcessIdentifier(int32_t* aIdentifier) override
   {
     *aIdentifier = mProcessIdentifier;
     return NS_OK;
   }
 
-  NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) MOZ_OVERRIDE
+  NS_IMETHOD SetProcessIdentifier(int32_t aIdentifier) override
   {
     mProcessIdentifier = aIdentifier;
     return NS_OK;
   }
 
-  NS_IMETHOD GetGcLog(nsIFile** aPath) MOZ_OVERRIDE
+  NS_IMETHOD GetGcLog(nsIFile** aPath) override
   {
     NS_IF_ADDREF(*aPath = mGCLog.mFile);
     return NS_OK;
   }
 
-  NS_IMETHOD GetCcLog(nsIFile** aPath) MOZ_OVERRIDE
+  NS_IMETHOD GetCcLog(nsIFile** aPath) override
   {
     NS_IF_ADDREF(*aPath = mCCLog.mFile);
     return NS_OK;
   }
 
-  NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) MOZ_OVERRIDE
+  NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) override
   {
     nsresult rv;
 
@@ -1545,7 +1545,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD CloseGCLog() MOZ_OVERRIDE
+  NS_IMETHOD CloseGCLog() override
   {
     if (!mGCLog.mStream) {
       return NS_ERROR_UNEXPECTED;
@@ -1554,7 +1554,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD CloseCCLog() MOZ_OVERRIDE
+  NS_IMETHOD CloseCCLog() override
   {
     if (!mCCLog.mStream) {
       return NS_ERROR_UNEXPECTED;
@@ -1700,7 +1700,7 @@ private:
 NS_IMPL_ISUPPORTS(nsCycleCollectorLogSinkToFile, nsICycleCollectorLogSink)
 
 
-class nsCycleCollectorLogger MOZ_FINAL : public nsICycleCollectorListener
+class nsCycleCollectorLogger final : public nsICycleCollectorListener
 {
   ~nsCycleCollectorLogger()
   {
@@ -1724,50 +1724,50 @@ public:
     mWantAllTraces = true;
   }
 
-  NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener) MOZ_OVERRIDE
+  NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener) override
   {
     SetAllTraces();
     NS_ADDREF(*aListener = this);
     return NS_OK;
   }
 
-  NS_IMETHOD GetWantAllTraces(bool* aAllTraces) MOZ_OVERRIDE
+  NS_IMETHOD GetWantAllTraces(bool* aAllTraces) override
   {
     *aAllTraces = mWantAllTraces;
     return NS_OK;
   }
 
-  NS_IMETHOD GetDisableLog(bool* aDisableLog) MOZ_OVERRIDE
+  NS_IMETHOD GetDisableLog(bool* aDisableLog) override
   {
     *aDisableLog = mDisableLog;
     return NS_OK;
   }
 
-  NS_IMETHOD SetDisableLog(bool aDisableLog) MOZ_OVERRIDE
+  NS_IMETHOD SetDisableLog(bool aDisableLog) override
   {
     mDisableLog = aDisableLog;
     return NS_OK;
   }
 
-  NS_IMETHOD GetWantAfterProcessing(bool* aWantAfterProcessing) MOZ_OVERRIDE
+  NS_IMETHOD GetWantAfterProcessing(bool* aWantAfterProcessing) override
   {
     *aWantAfterProcessing = mWantAfterProcessing;
     return NS_OK;
   }
 
-  NS_IMETHOD SetWantAfterProcessing(bool aWantAfterProcessing) MOZ_OVERRIDE
+  NS_IMETHOD SetWantAfterProcessing(bool aWantAfterProcessing) override
   {
     mWantAfterProcessing = aWantAfterProcessing;
     return NS_OK;
   }
 
-  NS_IMETHOD GetLogSink(nsICycleCollectorLogSink** aLogSink) MOZ_OVERRIDE
+  NS_IMETHOD GetLogSink(nsICycleCollectorLogSink** aLogSink) override
   {
     NS_ADDREF(*aLogSink = mLogSink);
     return NS_OK;
   }
 
-  NS_IMETHOD SetLogSink(nsICycleCollectorLogSink* aLogSink) MOZ_OVERRIDE
+  NS_IMETHOD SetLogSink(nsICycleCollectorLogSink* aLogSink) override
   {
     if (!aLogSink) {
       return NS_ERROR_INVALID_ARG;
@@ -1776,7 +1776,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Begin() MOZ_OVERRIDE
+  NS_IMETHOD Begin() override
   {
     nsresult rv;
 
@@ -1801,7 +1801,7 @@ public:
     return NS_OK;
   }
   NS_IMETHOD NoteRefCountedObject(uint64_t aAddress, uint32_t aRefCount,
-                                  const char* aObjectDescription) MOZ_OVERRIDE
+                                  const char* aObjectDescription) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [rc=%u] %s\n", (void*)aAddress, aRefCount,
@@ -1821,7 +1821,7 @@ public:
   }
   NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
                             const char* aObjectDescription,
-                            uint64_t aCompartmentAddress) MOZ_OVERRIDE
+                            uint64_t aCompartmentAddress) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [gc%s] %s\n", (void*)aAddress,
@@ -1845,7 +1845,7 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD NoteEdge(uint64_t aToAddress, const char* aEdgeName) MOZ_OVERRIDE
+  NS_IMETHOD NoteEdge(uint64_t aToAddress, const char* aEdgeName) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "> %p %s\n", (void*)aToAddress, aEdgeName);
@@ -1862,7 +1862,7 @@ public:
     return NS_OK;
   }
   NS_IMETHOD NoteWeakMapEntry(uint64_t aMap, uint64_t aKey,
-                              uint64_t aKeyDelegate, uint64_t aValue) MOZ_OVERRIDE
+                              uint64_t aKeyDelegate, uint64_t aValue) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
@@ -1871,7 +1871,7 @@ public:
     // We don't support after-processing for weak map entries.
     return NS_OK;
   }
-  NS_IMETHOD NoteIncrementalRoot(uint64_t aAddress) MOZ_OVERRIDE
+  NS_IMETHOD NoteIncrementalRoot(uint64_t aAddress) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "IncrementalRoot %p\n", (void*)aAddress);
@@ -1879,14 +1879,14 @@ public:
     // We don't support after-processing for incremental roots.
     return NS_OK;
   }
-  NS_IMETHOD BeginResults() MOZ_OVERRIDE
+  NS_IMETHOD BeginResults() override
   {
     if (!mDisableLog) {
       fputs("==========\n", mCCLog);
     }
     return NS_OK;
   }
-  NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges) MOZ_OVERRIDE
+  NS_IMETHOD DescribeRoot(uint64_t aAddress, uint32_t aKnownEdges) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [known=%u]\n", (void*)aAddress, aKnownEdges);
@@ -1900,7 +1900,7 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD DescribeGarbage(uint64_t aAddress) MOZ_OVERRIDE
+  NS_IMETHOD DescribeGarbage(uint64_t aAddress) override
   {
     if (!mDisableLog) {
       fprintf(mCCLog, "%p [garbage]\n", (void*)aAddress);
@@ -1913,7 +1913,7 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD End() MOZ_OVERRIDE
+  NS_IMETHOD End() override
   {
     if (!mDisableLog) {
       mCCLog = nullptr;
@@ -1923,7 +1923,7 @@ public:
     return NS_OK;
   }
   NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,
-                         bool* aCanContinue) MOZ_OVERRIDE
+                         bool* aCanContinue) override
   {
     if (NS_WARN_IF(!aHandler) || NS_WARN_IF(!mWantAfterProcessing)) {
       return NS_ERROR_UNEXPECTED;
@@ -2019,7 +2019,7 @@ ValueIsGrayCCThing(const JS::Value& value)
 // Bacon & Rajan's |MarkRoots| routine.
 ////////////////////////////////////////////////////////////////////////
 
-class CCGraphBuilder MOZ_FINAL : public nsCycleCollectionTraversalCallback,
+class CCGraphBuilder final : public nsCycleCollectionTraversalCallback,
   public nsCycleCollectionNoteRootCallback
 {
 private:
