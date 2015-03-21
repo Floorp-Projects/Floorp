@@ -427,7 +427,10 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                                 JS::ForEachTrackedOptimizationAttempt(rt, pc, attemptOp,
                                                                       &optsScript, &optsPC);
                               b.EndArray();
-                              b.NameValue("optsLine", JS_PCToLineNumber(optsScript, optsPC));
+                              unsigned optsLine, optsColumn;
+                              optsLine = JS_PCToLineNumber(optsScript, optsPC, &optsColumn);
+                              b.NameValue("optsLine", optsLine);
+                              b.NameValue("optsColumn", optsColumn);
                           }
                         }
                       }
