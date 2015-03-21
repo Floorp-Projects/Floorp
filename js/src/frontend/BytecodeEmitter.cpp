@@ -284,7 +284,7 @@ frontend::Emit2(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode 
     return true;
 }
 
-ptrdiff_t
+bool
 frontend::Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1,
                 jsbytecode op2)
 {
@@ -296,14 +296,14 @@ frontend::Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode 
 
     ptrdiff_t offset = EmitCheck(cx, bce, 3);
     if (offset < 0)
-        return -1;
+        return false;
 
     jsbytecode *code = bce->code(offset);
     code[0] = jsbytecode(op);
     code[1] = op1;
     code[2] = op2;
     UpdateDepth(cx, bce, offset);
-    return offset;
+    return true;
 }
 
 ptrdiff_t
@@ -343,11 +343,11 @@ EmitJump(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t off)
     return offset;
 }
 
-static ptrdiff_t
+static bool
 EmitCall(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t argc, ParseNode *pn=nullptr)
 {
     if (pn && !UpdateSourceCoordNotes(cx, bce, pn->pn_pos.begin))
-        return -1;
+        return false;
     return Emit3(cx, bce, op, ARGC_HI(argc), ARGC_LO(argc));
 }
 
@@ -425,16 +425,14 @@ ReportStatementTooLarge(TokenStream &ts, StmtInfoBCE *topStmt)
  * Emit a backpatch op with offset pointing to the previous jump of this type,
  * so that we can walk back up the chain fixing up the op and jump offset.
  */
-static ptrdiff_t
+static bool
 EmitBackPatchOp(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t *lastp)
 {
-    ptrdiff_t offset, delta;
-
-    offset = bce->offset();
-    delta = offset - *lastp;
+    ptrdiff_t offset = bce->offset();
+    ptrdiff_t delta = offset - *lastp;
     *lastp = offset;
     MOZ_ASSERT(delta > 0);
-    return EmitJump(cx, bce, JSOP_BACKPATCH, delta);
+    return EmitJump(cx, bce, JSOP_BACKPATCH, delta) >= 0;
 }
 
 static inline unsigned
@@ -565,7 +563,7 @@ CheckTypeSet(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
  */
 #define EMIT_UINT16_IMM_OP(op, i)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (Emit3(cx, bce, op, UINT16_HI(i), UINT16_LO(i)) < 0)               \
+        if (!Emit3(cx, bce, op, UINT16_HI(i), UINT16_LO(i)))                  \
             return false;                                                     \
         CheckTypeSet(cx, bce, op);                                            \
     JS_END_MACRO
@@ -649,7 +647,7 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
         switch (stmt->type) {
           case STMT_FINALLY:
             FLUSH_POPS();
-            if (EmitBackPatchOp(cx, bce, &stmt->gosubs()) < 0)
+            if (!EmitBackPatchOp(cx, bce, &stmt->gosubs()))
                 return false;
             break;
 
@@ -724,7 +722,9 @@ EmitGoto(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdif
             return -1;
     }
 
-    return EmitBackPatchOp(cx, bce, lastp);
+    if (!EmitBackPatchOp(cx, bce, lastp))
+        return -1;
+    return *lastp;
 }
 
 static bool
@@ -3497,7 +3497,7 @@ EmitIteratorNext(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn=nullp
         return false;
     if (!Emit1(cx, bce, JSOP_SWAP))                            // ... NEXT ITER
         return false;
-    if (EmitCall(cx, bce, JSOP_CALL, 0, pn) < 0)               // ... RESULT
+    if (!EmitCall(cx, bce, JSOP_CALL, 0, pn))                  // ... RESULT
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
     return true;
@@ -4545,7 +4545,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // GOSUB to finally, if present.
     if (pn->pn_kid3) {
-        if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
+        if (!EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()))
             return false;
     }
 
@@ -4555,7 +4555,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // Emit jump over catch and/or finally.
     ptrdiff_t catchJump = -1;
-    if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
+    if (!EmitBackPatchOp(cx, bce, &catchJump))
         return false;
 
     ptrdiff_t tryEnd = bce->offset();
@@ -4600,14 +4600,14 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             // gosub <finally>, if required.
             if (pn->pn_kid3) {
-                if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
+                if (!EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()))
                     return false;
                 MOZ_ASSERT(bce->stackDepth == depth);
             }
 
             // Jump over the remaining catch blocks.  This will get fixed
             // up to jump to after catch/finally.
-            if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
+            if (!EmitBackPatchOp(cx, bce, &catchJump))
                 return false;
 
             // If this catch block had a guard clause, patch the guard jump to
@@ -4877,7 +4877,7 @@ EmitIterator(ExclusiveContext *cx, BytecodeEmitter *bce)
         return false;
     if (!Emit1(cx, bce, JSOP_SWAP))                            // ITERFN OBJ
         return false;
-    if (EmitCall(cx, bce, JSOP_CALL, 0) < 0)                   // ITER
+    if (!EmitCall(cx, bce, JSOP_CALL, 0))                      // ITER
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
     return true;
@@ -5797,7 +5797,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter, Parse
     MOZ_ASSERT(depth >= 2);
 
     ptrdiff_t initialSend = -1;
-    if (EmitBackPatchOp(cx, bce, &initialSend) < 0)              // goto initialSend
+    if (!EmitBackPatchOp(cx, bce, &initialSend))                 // goto initialSend
         return false;
 
     // Try prologue.                                             // ITER RESULT
@@ -5821,7 +5821,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter, Parse
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, bce->offset() - tryStart))
         return false;
     ptrdiff_t subsequentSend = -1;
-    if (EmitBackPatchOp(cx, bce, &subsequentSend) < 0)           // goto subsequentSend
+    if (!EmitBackPatchOp(cx, bce, &subsequentSend))              // goto subsequentSend
         return false;
     ptrdiff_t tryEnd = bce->offset();                            // tryEnd:
 
@@ -5864,12 +5864,12 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter, Parse
         return false;
     if (!Emit2(cx, bce, JSOP_PICK, (jsbytecode)3))               // ITER THROW ITER EXCEPTION
         return false;
-    if (EmitCall(cx, bce, JSOP_CALL, 1, iter) < 0)               // ITER RESULT
+    if (!EmitCall(cx, bce, JSOP_CALL, 1, iter))                  // ITER RESULT
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
     MOZ_ASSERT(bce->stackDepth == depth);
     ptrdiff_t checkResult = -1;
-    if (EmitBackPatchOp(cx, bce, &checkResult) < 0)              // goto checkResult
+    if (!EmitBackPatchOp(cx, bce, &checkResult))                 // goto checkResult
         return false;
 
     // Catch epilogue.
@@ -5901,7 +5901,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter, Parse
         return false;
     if (!Emit2(cx, bce, JSOP_PICK, (jsbytecode)3))               // ITER NEXT ITER RECEIVED
         return false;
-    if (EmitCall(cx, bce, JSOP_CALL, 1, iter) < 0)               // ITER RESULT
+    if (!EmitCall(cx, bce, JSOP_CALL, 1, iter))                  // ITER RESULT
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
     MOZ_ASSERT(bce->stackDepth == depth);
@@ -6138,7 +6138,7 @@ EmitSelfHostedCallFunction(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     bce->emittingForInit = oldEmittingForInit;
 
     uint32_t argc = pn->pn_count - 3;
-    if (EmitCall(cx, bce, pn->getOp(), argc) < 0)
+    if (!EmitCall(cx, bce, pn->getOp(), argc))
         return false;
 
     CheckTypeSet(cx, bce, pn->getOp());
@@ -6169,7 +6169,7 @@ EmitSelfHostedResumeGenerator(ExclusiveContext *cx, BytecodeEmitter *bce, ParseN
     uint16_t operand = GeneratorObject::getResumeKind(cx, kindNode->pn_atom);
     MOZ_ASSERT(!kindNode->pn_next);
 
-    if (EmitCall(cx, bce, JSOP_RESUME, operand) < 0)
+    if (!EmitCall(cx, bce, JSOP_RESUME, operand))
         return false;
 
     return true;
@@ -6300,7 +6300,7 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     bce->emittingForInit = oldEmittingForInit;
 
     if (!spread) {
-        if (EmitCall(cx, bce, pn->getOp(), argc, pn) < 0)
+        if (!EmitCall(cx, bce, pn->getOp(), argc, pn))
             return false;
     } else {
         if (!Emit1(cx, bce, pn->getOp()))
