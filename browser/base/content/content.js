@@ -593,3 +593,9 @@ addMessageListener("ContextMenu:Canvas:ToDataURL", (message) => {
 addMessageListener("ContextMenu:ReloadFrame", (message) => {
   message.objects.target.ownerDocument.location.reload();
 });
+
+addMessageListener("ContextMenu:ReloadImage", (message) => {
+  let image = message.objects.target;
+  if (image instanceof Ci.nsIImageLoadingContent)
+    image.forceReload();
+});

@@ -1028,13 +1028,13 @@ nsContextMenu.prototype = {
     BrowserPageInfo(this.target.ownerDocument);
   },
 
-  reloadImage: function(e) {
+  reloadImage: function() {
     urlSecurityCheck(this.mediaURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
 
-    if (this.target instanceof Ci.nsIImageLoadingContent)
-      this.target.forceReload();
+    this.browser.messageManager.sendAsyncMessage("ContextMenu:ReloadImage",
+                                                 null, { target: this.target });
   },
 
   _canvasToDataURL: function(target) {
