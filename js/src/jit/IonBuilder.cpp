@@ -1827,6 +1827,8 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_STRICTSETGNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
+        if (script()->hasPollutedGlobalScope())
+            return jsop_setprop(name);
         JSObject *obj = &script()->global();
         return setStaticName(obj, name);
       }
