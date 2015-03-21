@@ -125,7 +125,7 @@ private:
   JS::Heap<JSObject*> mGlobal;
 };
 
-// NativePromiseCallback wraps a NativePromiseHandler.
+// NativePromiseCallback wraps a PromiseNativeHandler.
 class NativePromiseCallback final : public PromiseCallback
 {
 public:
