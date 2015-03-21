@@ -1640,9 +1640,11 @@ MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
 void
 MediaDecoder::NotifyWaitingForResourcesStatusChanged()
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mDecoderStateMachine) {
-    mDecoderStateMachine->NotifyWaitingForResourcesStatusChanged();
+    RefPtr<nsRunnable> task =
+      NS_NewRunnableMethod(mDecoderStateMachine,
+                           &MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged);
+    mDecoderStateMachine->TaskQueue()->Dispatch(task.forget());
   }
 }
 
@@ -1740,7 +1742,6 @@ CDMProxy*
 MediaDecoder::GetCDMProxy()
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
   return mProxy;
 }
 #endif
