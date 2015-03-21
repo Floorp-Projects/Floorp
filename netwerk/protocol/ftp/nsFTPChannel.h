@@ -20,12 +20,12 @@
 
 class nsIURI;
 
-class nsFtpChannel : public nsBaseChannel,
-                     public nsIFTPChannel,
-                     public nsIUploadChannel,
-                     public nsIResumableChannel,
-                     public nsIProxiedChannel,
-                     public nsIForcePendingChannel
+class nsFtpChannel final : public nsBaseChannel,
+                           public nsIFTPChannel,
+                           public nsIUploadChannel,
+                           public nsIResumableChannel,
+                           public nsIProxiedChannel,
+                           public           nsIForcePendingChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

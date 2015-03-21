@@ -19,8 +19,8 @@ namespace dom {
 
 typedef nsSVGFE SVGFEImageElementBase;
 
-class SVGFEImageElement : public SVGFEImageElementBase,
-                          public nsImageLoadingContent
+class SVGFEImageElement final : public SVGFEImageElementBase,
+                                public nsImageLoadingContent
 {
   friend class ::SVGFEImageFrame;
 

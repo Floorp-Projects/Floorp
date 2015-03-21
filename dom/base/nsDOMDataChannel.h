@@ -24,9 +24,9 @@ class File;
 class DataChannel;
 };
 
-class nsDOMDataChannel : public mozilla::DOMEventTargetHelper,
-                         public nsIDOMDataChannel,
-                         public mozilla::DataChannelListener
+class nsDOMDataChannel final : public mozilla::DOMEventTargetHelper,
+                               public nsIDOMDataChannel,
+                               public mozilla::DataChannelListener
 {
 public:
   nsDOMDataChannel(already_AddRefed<mozilla::DataChannel>& aDataChannel,
