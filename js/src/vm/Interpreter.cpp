@@ -2471,6 +2471,9 @@ CASE(JSOP_STRICTSETNAME)
                   "setname and strictsetname must be the same size");
     static_assert(JSOP_SETGNAME_LENGTH == JSOP_STRICTSETGNAME_LENGTH,
                   "setganem adn strictsetgname must be the same size");
+    static_assert(JSOP_SETNAME_LENGTH == JSOP_SETGNAME_LENGTH,
+                  "We're sharing the END_CASE so the lengths better match");
+
     RootedObject &scope = rootObject0;
     scope = &REGS.sp[-2].toObject();
     HandleValue value = REGS.stackHandleAt(-1);
@@ -2741,7 +2744,7 @@ CASE(JSOP_GETNAME)
 
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, REGS.pc, rval);
-    static_assert(JSOP_NAME_LEGNTH == JSOP_GETGNAME_LENGTH,
+    static_assert(JSOP_GETNAME_LENGTH == JSOP_GETGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
 }
 END_CASE(JSOP_GETNAME)
