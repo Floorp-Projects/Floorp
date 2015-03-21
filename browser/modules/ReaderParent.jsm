@@ -126,15 +126,7 @@ let ReaderParent = {
     }
   },
 
-  handleReaderButtonEvent: function(event) {
-    event.stopPropagation();
-
-    if ((event.type == "click" && event.button != 0) ||
-        (event.type == "keypress" && event.charCode != Ci.nsIDOMKeyEvent.DOM_VK_SPACE &&
-         event.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN)) {
-      return; // Left click, space or enter only
-    }
-
+  toggleReaderMode: function(event) {
     let win = event.target.ownerDocument.defaultView;
     let browser = win.gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
