@@ -273,6 +273,18 @@ struct BytecodeEmitter
     // Emit three bytecodes, an opcode with two bytes of immediate operands.
     bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
 
+    // Dup the var in operand stack slot "slot". The first item on the operand
+    // stack is one slot past the last fixed slot. The last (most recent) item is
+    // slot bce->stackDepth - 1.
+    //
+    // The instruction that is written (JSOP_DUPAT) switches the depth around so
+    // that it is addressed from the sp instead of from the fp. This is useful when
+    // you don't know the size of the fixed stack segment (nfixed), as is the case
+    // when compiling scripts (because each statement is parsed and compiled
+    // separately, but they all together form one script with one fixed stack
+    // frame).
+    bool emitDupAt(unsigned slot);
+
     // Emit a bytecode followed by an uint16 immediate operand stored in
     // big-endian order.
     bool emitUint16Operand(JSOp op, uint32_t i);
@@ -293,6 +305,32 @@ struct BytecodeEmitter
     void backPatch(ptrdiff_t last, jsbytecode *target, jsbytecode op);
 
     ptrdiff_t emitGoto(StmtInfoBCE *toStmt, ptrdiff_t *lastp, SrcNoteType noteType = SRC_NULL);
+
+    bool emitIndex32(JSOp op, uint32_t index);
+    bool emitIndexOp(JSOp op, uint32_t index);
+
+    bool emitAtomOp(JSAtom *atom, JSOp op);
+    bool emitAtomOp(ParseNode *pn, JSOp op);
+
+    bool emitInternedObjectOp(uint32_t index, JSOp op);
+    bool emitObjectOp(ObjectBox *objbox, JSOp op);
+    bool emitObjectPairOp(ObjectBox *objbox1, ObjectBox *objbox2, JSOp op);
+    bool emitRegExp(uint32_t index);
+
+    // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
+    // not used to unconditionally emit JSOP_GETLOCAL. Variable access should
+    // instead be emitted using EmitVarOp. In special cases, when the caller
+    // definitely knows that a given local slot is unaliased, this function may be
+    // used as a non-asserting version of emitUint16Operand.
+    bool emitLocalOp(JSOp op, uint32_t slot);
+
+    bool emitScopeCoordOp(JSOp op, ScopeCoordinate sc);
+    bool emitAliasedVarOp(JSOp op, ParseNode *pn);
+    bool emitAliasedVarOp(JSOp op, ScopeCoordinate sc, MaybeCheckLexical checkLexical);
+    bool emitUnaliasedVarOp(JSOp op, uint32_t slot, MaybeCheckLexical checkLexical);
+
+    bool emitVarOp(ParseNode *pn, JSOp op);
+    bool emitVarIncDec(ParseNode *pn);
 };
 
 /*
