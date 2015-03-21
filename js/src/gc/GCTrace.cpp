@@ -99,7 +99,7 @@ js::gc::InitTrace(GCRuntime &gc)
     TraceEvent(TraceEventInit, 0, TraceFormatVersion);
 
     /* Trace information about thing sizes. */
-    for (ALL_ALLOC_KINDS(kind))
+    for (auto kind : AllAllocKinds())
         TraceEvent(TraceEventThingSize, Arena::thingSize(kind));
 
     return true;
