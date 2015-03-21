@@ -2088,8 +2088,12 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 bool
 BaselineCompiler::emit_JSOP_BINDGNAME()
 {
-    frame.push(ObjectValue(script->global()));
-    return true;
+    if (!script->hasPollutedGlobalScope()) {
+        frame.push(ObjectValue(script->global()));
+        return true;
+    }
+
+    return emit_JSOP_BINDNAME();
 }
 
 bool

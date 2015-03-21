@@ -6202,7 +6202,7 @@ DoBindNameFallback(JSContext *cx, BaselineFrame *frame, ICBindName_Fallback *stu
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BindName(%s)", js_CodeName[JSOp(*pc)]);
 
-    MOZ_ASSERT(op == JSOP_BINDNAME);
+    MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
 
     RootedPropertyName name(cx, frame->script()->getName(pc));
 
