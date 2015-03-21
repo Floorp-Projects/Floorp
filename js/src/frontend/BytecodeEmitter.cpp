@@ -117,8 +117,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  HandleScript script, Handle<LazyScript *> lazyScript,
                                  bool insideEval, HandleScript evalCaller,
                                  Handle<StaticEvalObject *> staticEvalScope,
-                                 bool insideNonGlobalEval, uint32_t lineNum,
-                                 EmitterMode emitterMode)
+                                 bool hasGlobalScope, uint32_t lineNum, EmitterMode emitterMode)
   : sc(sc),
     parent(parent),
     script(sc->context, script),
@@ -148,7 +147,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     emittingForInit(false),
     emittingRunOnceLambda(false),
     insideEval(insideEval),
-    insideNonGlobalEval(insideNonGlobalEval),
+    hasGlobalScope(hasGlobalScope),
     emitterMode(emitterMode)
 {
     MOZ_ASSERT_IF(evalCaller, insideEval);
@@ -1635,13 +1634,8 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
     }
 
     // Unbound names aren't recognizable global-property references if the
-    // script is inside a non-global eval call.
-    if (bce->insideNonGlobalEval)
-        return false;
-
-    // Skip trying to use GNAME ops if we know our script has a polluted
-    // global scope, since they'll just get treated as NAME ops anyway.
-    if (bce->script->hasPollutedGlobalScope())
+    // script isn't running against its global object.
+    if (!bce->script->compileAndGo() || !bce->hasGlobalScope)
         return false;
 
     // Deoptimized names also aren't necessarily globals.
@@ -2341,7 +2335,7 @@ EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callC
 
     /* Need to provide |this| value for call */
     if (callContext) {
-        if (op == JSOP_GETNAME || op == JSOP_GETGNAME) {
+        if (op == JSOP_GETNAME) {
             JSOp thisOp =
                 bce->needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
             if (!EmitAtomOp(cx, pn, thisOp, bce))
@@ -5418,7 +5412,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool needsPr
             BytecodeEmitter bce2(bce, bce->parser, funbox, script, /* lazyScript = */ js::NullPtr(),
                                  bce->insideEval, bce->evalCaller,
                                  /* evalStaticScope = */ js::NullPtr(),
-                                 bce->insideNonGlobalEval, lineNum, bce->emitterMode);
+                                 bce->hasGlobalScope, lineNum, bce->emitterMode);
             if (!bce2.init())
                 return false;
 
@@ -6904,7 +6898,7 @@ EmitLexicalInitialization(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode 
         return false;
 
     if (pn->getOp() != JSOP_INITLEXICAL) {
-        bool global = IsGlobalOp(pn->getOp());
+        bool global = js_CodeSpec[pn->getOp()].format & JOF_GNAME;
         if (!EmitIndex32(cx, global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex, bce))
             return false;
         if (Emit1(cx, bce, JSOP_SWAP) < 0)

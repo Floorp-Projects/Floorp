@@ -151,7 +151,6 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
           case JSOP_GETNAME:
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
-          case JSOP_STRICTSETNAME:
           case JSOP_DELNAME:
           case JSOP_GETALIASEDVAR:
           case JSOP_SETALIASEDVAR:
@@ -162,13 +161,6 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
             usesScopeChain_ = true;
-            break;
-
-          case JSOP_GETGNAME:
-          case JSOP_SETGNAME:
-          case JSOP_STRICTSETGNAME:
-            if (script_->hasPollutedGlobalScope())
-                usesScopeChain_ = true;
             break;
 
           case JSOP_FINALLY:
