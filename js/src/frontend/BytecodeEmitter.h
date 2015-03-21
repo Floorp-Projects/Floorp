@@ -16,6 +16,8 @@
 #include "jsscript.h"
 
 #include "frontend/ParseMaps.h"
+#include "frontend/Parser.h"
+#include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"
 
 namespace js {
@@ -326,10 +328,17 @@ struct BytecodeEmitter
     bool emitAtomOp(JSAtom *atom, JSOp op);
     bool emitAtomOp(ParseNode *pn, JSOp op);
 
+    bool emitArray(ParseNode *pn, uint32_t count);
+    bool emitArrayComp(ParseNode *pn);
+
     bool emitInternedObjectOp(uint32_t index, JSOp op);
     bool emitObjectOp(ObjectBox *objbox, JSOp op);
     bool emitObjectPairOp(ObjectBox *objbox1, ObjectBox *objbox2, JSOp op);
     bool emitRegExp(uint32_t index);
+
+    MOZ_NEVER_INLINE bool emitObject(ParseNode *pn);
+
+    bool emitPropertyList(ParseNode *pn, MutableHandlePlainObject objp, PropListType type);
 
     // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
     // not used to unconditionally emit JSOP_GETLOCAL. Variable access should
@@ -353,11 +362,14 @@ struct BytecodeEmitter
     bool emitVariables(ParseNode *pn, VarEmitOption emitOption, bool isLetExpr = false);
 
     bool emitNewInit(JSProtoKey key);
+    bool emitSingletonInitialiser(ParseNode *pn);
 
     bool emitPrepareIteratorResult();
     bool emitFinishIteratorResult(bool done);
 
+    bool emitYield(ParseNode *pn);
     bool emitYieldOp(JSOp op);
+    bool emitYieldStar(ParseNode *iter, ParseNode *gen);
 
     bool emitPropLHS(ParseNode *pn, JSOp op);
     bool emitPropOp(ParseNode *pn, JSOp op);
@@ -372,7 +384,12 @@ struct BytecodeEmitter
     bool emitElemOp(ParseNode *pn, JSOp op);
     bool emitElemIncDec(ParseNode *pn);
 
+    bool emitCatch(ParseNode *pn);
+    bool emitIf(ParseNode *pn);
+    bool emitWith(ParseNode *pn);
+
     MOZ_NEVER_INLINE bool emitSwitch(ParseNode *pn);
+    MOZ_NEVER_INLINE bool emitTry(ParseNode *pn);
 
     // EmitDestructuringLHS assumes the to-be-destructured value has been pushed on
     // the stack and emits code to destructure a single lhs expression (either a
@@ -386,6 +403,10 @@ struct BytecodeEmitter
     // lhs expression. (Same post-condition as EmitDestructuringOpsHelper)
     bool emitDestructuringLHS(ParseNode *target, VarEmitOption emitOption);
 
+    // emitIterator expects the iterable to already be on the stack.
+    // It will replace that stack value with the corresponding iterator
+    bool emitIterator();
+
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
     bool emitIteratorNext(ParseNode *pn);
@@ -394,8 +415,59 @@ struct BytecodeEmitter
     // that value on the stack with the value defined by |defaultExpr|.
     bool emitDefault(ParseNode *defaultExpr);
 
+    bool emitCallSiteObject(ParseNode *pn);
     bool emitTemplateString(ParseNode *pn);
     bool emitAssignment(ParseNode *lhs, JSOp op, ParseNode *rhs);
+
+    bool emitReturn(ParseNode *pn);
+    bool emitStatement(ParseNode *pn);
+    bool emitStatementList(ParseNode *pn, ptrdiff_t top);
+
+    bool emitDelete(ParseNode *pn);
+    bool emitLogical(ParseNode *pn);
+    bool emitUnary(ParseNode *pn);
+
+    MOZ_NEVER_INLINE bool emitIncOrDec(ParseNode *pn);
+
+    bool emitConditionalExpression(ConditionalExpression &conditional);
+
+    bool emitCallOrNew(ParseNode *pn);
+    bool emitSelfHostedCallFunction(ParseNode *pn);
+    bool emitSelfHostedResumeGenerator(ParseNode *pn);
+    bool emitSelfHostedForceInterpreter(ParseNode *pn);
+
+    bool emitDo(ParseNode *pn);
+    bool emitFor(ParseNode *pn, ptrdiff_t top);
+    bool emitForIn(ParseNode *pn, ptrdiff_t top);
+    bool emitForInOrOfVariables(ParseNode *pn, bool *letDecl);
+    bool emitNormalFor(ParseNode *pn, ptrdiff_t top);
+    bool emitWhile(ParseNode *pn, ptrdiff_t top);
+
+    bool emitBreak(PropertyName *label);
+    bool emitContinue(PropertyName *label);
+
+    bool emitDefaults(ParseNode *pn);
+    bool emitLexicalInitialization(ParseNode *pn, JSOp globalDefOp);
+
+    // emitSpread expects the current index (I) of the array, the array itself
+    // and the iterator to be on the stack in that order (iterator on the bottom).
+    // It will pop the iterator and I, then iterate over the iterator by calling
+    // |.next()| and put the results into the I-th element of array with
+    // incrementing I, then push the result I (it will be original I +
+    // iteration count). The stack after iteration will look like |ARRAY INDEX|.
+    bool emitSpread();
+
+    // If type is STMT_FOR_OF_LOOP, emit bytecode for a for-of loop.
+    // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
+    //
+    // If type is STMT_SPREAD, emit bytecode for spread operator.
+    // pn should be nullptr.
+    //
+    // Please refer the comment above emitSpread for additional information about
+    // stack convention.
+    bool emitForOf(StmtType type, ParseNode *pn, ptrdiff_t top);
+
+    bool emitClass(ParseNode *pn);
 };
 
 /*
