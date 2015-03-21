@@ -465,6 +465,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             break;
           }
 
+          case JSTRY_FOR_OF:
           case JSTRY_LOOP:
             break;
 
@@ -676,6 +677,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             break;
           }
 
+          case JSTRY_FOR_OF:
           case JSTRY_LOOP:
             break;
 
