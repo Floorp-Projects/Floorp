@@ -178,7 +178,7 @@ let ReadingListUI = {
       });
 
       target.insertBefore(menuitem, insertPoint);
-    });
+    }, {sort: "addedOn", descending: true});
 
     if (!hasItems) {
       let menuitem = document.createElement("menuitem");
@@ -242,12 +242,20 @@ let ReadingListUI = {
         uri = null;
     }
 
+    let msg = {topic: "UpdateActiveItem", url: null};
     if (!uri) {
       this.toolbarButton.setAttribute("hidden", true);
+      if (this.isSidebarOpen)
+        document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
       return;
     }
 
-    let isInList = yield ReadingList.containsURL(uri);
+    let isInList = yield ReadingList.hasItemForURL(uri);
+    if (this.isSidebarOpen) {
+      if (isInList)
+        msg.url = typeof uri == "string" ? uri : uri.spec;
+      document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
+    }
     this.setToolbarButtonState(isInList);
   }),
 
@@ -284,7 +292,7 @@ let ReadingListUI = {
     if (!uri)
       return;
 
-    let item = yield ReadingList.getItemForURL(uri);
+    let item = yield ReadingList.itemForURL(uri);
     if (item) {
       yield item.delete();
     } else {
@@ -315,8 +323,15 @@ let ReadingListUI = {
    * @param {ReadingListItem} item - Item added.
    */
   onItemAdded(item) {
+    if (!Services.prefs.getBoolPref("browser.readinglist.sidebarEverOpened")) {
+      SidebarUI.show("readingListSidebar");
+    }
     if (this.isItemForCurrentBrowser(item)) {
       this.setToolbarButtonState(true);
+      if (this.isSidebarOpen) {
+        let msg = {topic: "UpdateActiveItem", url: item.url};
+        document.getElementById("sidebar").contentWindow.postMessage(msg, "*");
+      }
     }
   },
 

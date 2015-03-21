@@ -915,7 +915,6 @@ chatbox {
 
 chatbox[large="true"] {
   width: 300px;
-  heigth: 272px;
 }
 
 chatbox[minimized="true"] {
