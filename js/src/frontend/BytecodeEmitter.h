@@ -88,6 +88,18 @@ struct StmtInfoBCE;
 typedef Vector<jsbytecode, 0> BytecodeVector;
 typedef Vector<jssrcnote, 0> SrcNotesVector;
 
+// This enum tells EmitVariables and the destructuring functions how emit the
+// given Parser::variables parse tree. In the base case, DefineVars, the caller
+// only wants variables to be defined in the prologue (if necessary). For
+// PushInitialValues, variable initializer expressions are evaluated and left
+// on the stack. For InitializeVars, the initializer expressions values are
+// assigned (to local variables) and popped.
+enum VarEmitOption {
+    DefineVars        = 0,
+    PushInitialValues = 1,
+    InitializeVars    = 2
+};
+
 struct BytecodeEmitter
 {
     typedef StmtInfoBCE StmtInfo;
@@ -292,6 +304,8 @@ struct BytecodeEmitter
     // Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
     ptrdiff_t emitN(JSOp op, size_t extra);
 
+    bool emitNumberOp(double dval);
+
     ptrdiff_t emitJump(JSOp op, ptrdiff_t off);
     bool emitCall(JSOp op, uint16_t argc, ParseNode *pn = nullptr);
 
@@ -331,6 +345,57 @@ struct BytecodeEmitter
 
     bool emitVarOp(ParseNode *pn, JSOp op);
     bool emitVarIncDec(ParseNode *pn);
+
+    bool emitNameOp(ParseNode *pn, bool callContext);
+    bool emitNameIncDec(ParseNode *pn);
+
+    bool maybeEmitVarDecl(JSOp prologOp, ParseNode *pn, jsatomid *result);
+    bool emitVariables(ParseNode *pn, VarEmitOption emitOption, bool isLetExpr = false);
+
+    bool emitNewInit(JSProtoKey key);
+
+    bool emitPrepareIteratorResult();
+    bool emitFinishIteratorResult(bool done);
+
+    bool emitYieldOp(JSOp op);
+
+    bool emitPropLHS(ParseNode *pn, JSOp op);
+    bool emitPropOp(ParseNode *pn, JSOp op);
+    bool emitPropIncDec(ParseNode *pn);
+
+    // Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM
+    // opcode onto the stack in the right order. In the case of SETELEM, the
+    // value to be assigned must already be pushed.
+    bool emitElemOperands(ParseNode *pn, JSOp op);
+
+    bool emitElemOpBase(JSOp op);
+    bool emitElemOp(ParseNode *pn, JSOp op);
+    bool emitElemIncDec(ParseNode *pn);
+
+    MOZ_NEVER_INLINE bool emitSwitch(ParseNode *pn);
+
+    // EmitDestructuringLHS assumes the to-be-destructured value has been pushed on
+    // the stack and emits code to destructure a single lhs expression (either a
+    // name or a compound []/{} expression).
+    //
+    // If emitOption is InitializeVars, the to-be-destructured value is assigned to
+    // locals and ultimately the initial slot is popped (-1 total depth change).
+    //
+    // If emitOption is PushInitialValues, the to-be-destructured value is replaced
+    // with the initial values of the N (where 0 <= N) variables assigned in the
+    // lhs expression. (Same post-condition as EmitDestructuringOpsHelper)
+    bool emitDestructuringLHS(ParseNode *target, VarEmitOption emitOption);
+
+    // Pops iterator from the top of the stack. Pushes the result of |.next()|
+    // onto the stack.
+    bool emitIteratorNext(ParseNode *pn);
+
+    // Check if the value on top of the stack is "undefined". If so, replace
+    // that value on the stack with the value defined by |defaultExpr|.
+    bool emitDefault(ParseNode *defaultExpr);
+
+    bool emitTemplateString(ParseNode *pn);
+    bool emitAssignment(ParseNode *lhs, JSOp op, ParseNode *rhs);
 };
 
 /*
