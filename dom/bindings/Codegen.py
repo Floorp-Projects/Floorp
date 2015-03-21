@@ -9148,7 +9148,7 @@ class ClassMethod(ClassItem):
                  breakAfterReturnDecl="\n",
                  breakAfterSelf="\n", override=False):
         """
-        override indicates whether to flag the method as MOZ_OVERRIDE
+        override indicates whether to flag the method as override
         """
         assert not override or virtual
         assert not (override and static)
@@ -9205,7 +9205,7 @@ class ClassMethod(ClassItem):
             name=self.name,
             args=args,
             const=' const' if self.const else '',
-            override=' MOZ_OVERRIDE' if self.override else '',
+            override=' override' if self.override else '',
             body=body,
             breakAfterSelf=self.breakAfterSelf)
 
@@ -13175,7 +13175,7 @@ class CGExampleClass(CGBindingImplClass):
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
         else:
-            decorators = "MOZ_FINAL"
+            decorators = "final"
 
         CGClass.__init__(self, self.nativeLeafName(descriptor),
                          bases=bases,
@@ -13553,7 +13553,7 @@ class CGJSImplClass(CGBindingImplClass):
             # We need a protected virtual destructor our subclasses can use
             destructor = ClassDestructor(virtual=True, visibility="protected")
         else:
-            decorators = "MOZ_FINAL"
+            decorators = "final"
             destructor = ClassDestructor(virtual=False, visibility="private")
 
         baseConstructors = [
