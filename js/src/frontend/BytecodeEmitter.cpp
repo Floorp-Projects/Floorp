@@ -2294,7 +2294,7 @@ BytecodeEmitter::emitNameOp(ParseNode *pn, bool callContext)
 
     /* Need to provide |this| value for call */
     if (callContext) {
-        if (op == JSOP_GETNAME) {
+        if (op == JSOP_GETNAME || op == JSOP_GETGNAME) {
             JSOp thisOp = needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
             if (!emitAtomOp(pn, thisOp))
                 return false;
