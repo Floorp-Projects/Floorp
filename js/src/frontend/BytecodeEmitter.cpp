@@ -6783,7 +6783,7 @@ BytecodeEmitter::emitLexicalInitialization(ParseNode *pn, JSOp globalDefOp)
         return false;
 
     if (pn->getOp() != JSOP_INITLEXICAL) {
-        bool global = js_CodeSpec[pn->getOp()].format & JOF_GNAME;
+        bool global = IsGlobalOp(pn->getOp());
         if (!emitIndex32(global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex))
             return false;
         if (!emit1(JSOP_SWAP))
