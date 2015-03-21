@@ -28,7 +28,8 @@ GfxDriverInfo::GfxDriverInfo()
     mComparisonOp(DRIVER_COMPARISON_IGNORED),
     mDriverVersion(0),
     mDriverVersionMax(0),
-    mSuggestedVersion(nullptr)
+    mSuggestedVersion(nullptr),
+    mGpu2(false)
 {}
 
 GfxDriverInfo::GfxDriverInfo(OperatingSystem os, nsAString& vendor,
@@ -37,7 +38,8 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, nsAString& vendor,
                              VersionComparisonOp op,
                              uint64_t driverVersion,
                              const char *suggestedVersion /* = nullptr */,
-                             bool ownDevices /* = false */)
+                             bool ownDevices /* = false */,
+                             bool gpu2 /* = false */)
   : mOperatingSystem(os),
     mOperatingSystemVersion(0),
     mAdapterVendor(vendor),
@@ -48,7 +50,8 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, nsAString& vendor,
     mComparisonOp(op),
     mDriverVersion(driverVersion),
     mDriverVersionMax(0),
-    mSuggestedVersion(suggestedVersion)
+    mSuggestedVersion(suggestedVersion),
+    mGpu2(gpu2)
 {}
 
 GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
@@ -60,7 +63,8 @@ GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     mComparisonOp(aOrig.mComparisonOp),
     mDriverVersion(aOrig.mDriverVersion),
     mDriverVersionMax(aOrig.mDriverVersionMax),
-    mSuggestedVersion(aOrig.mSuggestedVersion)
+    mSuggestedVersion(aOrig.mSuggestedVersion),
+    mGpu2(aOrig.mGpu2)
 {
   // If we're managing the lifetime of the device family, we have to make a
   // copy of the original's device family.
@@ -213,6 +217,35 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       break;
     case Nvidia310M:
       APPEND_DEVICE(0x0A70);
+      break;
+    case Bug1137716:
+      APPEND_DEVICE(0x0a29);
+      APPEND_DEVICE(0x0a2b);
+      APPEND_DEVICE(0x0a2d);
+      APPEND_DEVICE(0x0a35);
+      APPEND_DEVICE(0x0a6c);
+      APPEND_DEVICE(0x0a70);
+      APPEND_DEVICE(0x0a72);
+      APPEND_DEVICE(0x0a7a);
+      APPEND_DEVICE(0x0caf);
+      // GF180M ids
+      APPEND_DEVICE(0x0de3);
+      APPEND_DEVICE(0x0de8);
+      APPEND_DEVICE(0x0de9);
+      APPEND_DEVICE(0x0dea);
+      APPEND_DEVICE(0x0deb);
+      APPEND_DEVICE(0x0dec);
+      APPEND_DEVICE(0x0ded);
+      APPEND_DEVICE(0x0dee);
+      APPEND_DEVICE(0x0def);
+      APPEND_DEVICE(0x0df0);
+      APPEND_DEVICE(0x0df1);
+      APPEND_DEVICE(0x0df2);
+      APPEND_DEVICE(0x0df3);
+      APPEND_DEVICE(0x0df4);
+      APPEND_DEVICE(0x0df5);
+      APPEND_DEVICE(0x0df6);
+      APPEND_DEVICE(0x0df7);
       break;
     case AMDRadeonHD5800:
       APPEND_DEVICE(0x6899);
