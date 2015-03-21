@@ -2182,9 +2182,9 @@ Notes(JSContext *cx, unsigned argc, jsval *vp)
 
 JS_STATIC_ASSERT(JSTRY_CATCH == 0);
 JS_STATIC_ASSERT(JSTRY_FINALLY == 1);
-JS_STATIC_ASSERT(JSTRY_ITER == 2);
+JS_STATIC_ASSERT(JSTRY_FOR_IN == 2);
 
-static const char* const TryNoteNames[] = { "catch", "finally", "iter", "for-of", "loop" };
+static const char* const TryNoteNames[] = { "catch", "finally", "for-in", "for-of", "loop" };
 
 static bool
 TryNotes(JSContext *cx, HandleScript script, Sprinter *sp)
