@@ -643,7 +643,8 @@ template bool
 js::XDRInterpretedFunction(XDRState<XDR_DECODE> *, HandleObject, HandleScript, MutableHandleFunction);
 
 JSObject *
-js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFunction srcFun)
+js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFunction srcFun,
+                           PollutedGlobalScopeOption polluted)
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
@@ -665,7 +666,7 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
     RootedScript srcScript(cx, srcFun->getOrCreateScript(cx));
     if (!srcScript)
         return nullptr;
-    RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, clone, srcScript));
+    RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, clone, srcScript, polluted));
     if (!clonedScript)
         return nullptr;
 
