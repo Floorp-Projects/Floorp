@@ -1429,7 +1429,7 @@ BrowserGlue.prototype = {
         () => BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath));
     }
 
-    Task.spawn(function() {
+    Task.spawn(function* () {
       // Check if Safe Mode or the user has required to restore bookmarks from
       // default profile's bookmarks.html
       let restoreDefaultBookmarks = false;
@@ -1505,23 +1505,21 @@ BrowserGlue.prototype = {
         if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            BookmarkHTMLUtils.importFromURL(bookmarksUrl, true).then(null,
-              function onFailure() {
-                Cu.reportError("Bookmarks.html file could be corrupt.");
-              }
-            ).then(
-              function onComplete() {
-                // Now apply distribution customized bookmarks.
-                // This should always run after Places initialization.
-                this._distributionCustomizer.applyBookmarks();
-                // Ensure that smart bookmarks are created once the operation is
-                // complete.
-                this.ensurePlacesDefaultQueriesInitialized();
-              }.bind(this)
-            );
-          } catch (err) {
-            Cu.reportError("Bookmarks.html file could be corrupt. " + err);
+            yield BookmarkHTMLUtils.importFromURL(bookmarksUrl, true);
+          } catch (e) {
+            Cu.reportError("Bookmarks.html file could be corrupt. " + e);
           }
+          try {
+            // Now apply distribution customized bookmarks.
+            // This should always run after Places initialization.
+            this._distributionCustomizer.applyBookmarks();
+            // Ensure that smart bookmarks are created once the operation is
+            // complete.
+            this.ensurePlacesDefaultQueriesInitialized();
+          } catch (e) {
+            Cu.reportError(e);
+          }
+
         }
         else {
           Cu.reportError("Unable to find bookmarks.html file.");

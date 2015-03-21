@@ -312,7 +312,7 @@
       <menuitem id="context-shareselect"
                 label="&shareSelect.label;"
                 accesskey="&shareSelect.accesskey;"
-                oncommand="gContextMenu.shareSelect(getBrowserSelection());"/>
+                oncommand="gContextMenu.shareSelect();"/>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
         <menupopup>

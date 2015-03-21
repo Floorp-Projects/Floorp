@@ -721,15 +721,19 @@ add_test(function test_edit_postData() {
   let postData = "post-test_edit_postData";
   let testURI = NetUtil.newURI("http://test_edit_postData.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test edit Post Data");
-
+  PlacesUtils.bookmarks.setKeywordForBookmark(testBkmId, "kw");
   let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
 
   txn.doTransaction();
-  do_check_true(annosvc.itemHasAnnotation(testBkmId, POST_DATA_ANNO));
-  do_check_eq(annosvc.getItemAnnotation(testBkmId, POST_DATA_ANNO), postData);
+  let [url, post_data] = PlacesUtils.getURLAndPostDataForKeyword("kw");
+  Assert.equal(url, testURI.spec);
+  Assert.equal(postData, post_data);
 
   txn.undoTransaction();
-  do_check_false(annosvc.itemHasAnnotation(testBkmId, POST_DATA_ANNO));
+  [url, post_data] = PlacesUtils.getURLAndPostDataForKeyword("kw");
+  Assert.equal(url, testURI.spec);
+  // We don't allow anymore to set a null post data.
+  //Assert.equal(null, post_data);
 
   run_next_test();
 });

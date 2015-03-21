@@ -33,7 +33,7 @@ add_task(function* () {
 
   // The test will continue once import has finished and smart bookmarks
   // have been created.
-  yield promiseEndUpdateBatch();
+  yield promiseTopicObserved("places-browser-init-complete");
 
   let bm = yield PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,

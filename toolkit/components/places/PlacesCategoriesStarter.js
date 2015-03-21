@@ -36,22 +36,25 @@ function PlacesCategoriesStarter()
   Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN, false);
 
   // nsINavBookmarkObserver implementation.
-  let notify = (function () {
+  let notify = () => {
     if (!this._notifiedBookmarksSvcReady) {
+      // TODO (bug 1145424): for whatever reason, even if we remove this
+      // component from the category (and thus from the category cache we use
+      // to notify), we keep being notified.
+      this._notifiedBookmarksSvcReady = true;
       // For perf reasons unregister from the category, since no further
       // notifications are needed.
       Cc["@mozilla.org/categorymanager;1"]
         .getService(Ci.nsICategoryManager)
-        .deleteCategoryEntry("bookmarks-observer", this, false);
+        .deleteCategoryEntry("bookmark-observers", "PlacesCategoriesStarter", false);
       // Directly notify PlacesUtils, to ensure it catches the notification.
       PlacesUtils.observe(null, "bookmarks-service-ready", null);
     }
-  }).bind(this);
+  };
+
   [ "onItemAdded", "onItemRemoved", "onItemChanged", "onBeginUpdateBatch",
-    "onEndUpdateBatch", "onItemVisited",
-    "onItemMoved" ].forEach(function(aMethod) {
-      this[aMethod] = notify;
-    }, this);
+    "onEndUpdateBatch", "onItemVisited", "onItemMoved"
+  ].forEach(aMethod => this[aMethod] = notify);
 }
 
 PlacesCategoriesStarter.prototype = {

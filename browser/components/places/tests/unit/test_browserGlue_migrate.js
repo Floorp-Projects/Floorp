@@ -40,7 +40,7 @@ add_task(function* test_migrate_bookmarks() {
     title: "migrated"
   });
 
-  let promise = promiseEndUpdateBatch();
+  let promise = promiseTopicObserved("places-browser-init-complete");
   bg.observe(null, "initial-migration-did-import-default-bookmarks", null);
   yield promise;
 
