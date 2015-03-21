@@ -935,7 +935,12 @@ let Links = {
   _getMergedProviderLinks: function Links__getMergedProviderLinks() {
     // Build a list containing a copy of each provider's sortedLinks list.
     let linkLists = [];
-    for (let links of this._providers.values()) {
+    for (let provider of this._providers.keys()) {
+      if (!AllPages.enhanced && provider != PlacesProvider) {
+        // Only show history tiles if we're not in 'enhanced' mode.
+        continue;
+      }
+      let links = this._providers.get(provider);
       if (links && links.sortedLinks) {
         linkLists.push(links.sortedLinks.slice());
       }
@@ -1248,11 +1253,19 @@ this.NewTabUtils = {
   },
 
   getProviderLinks: function(aProvider) {
-    return Links._providers.get(aProvider).sortedLinks;
+    let cache = Links._providers.get(aProvider);
+    if (cache && cache.sortedLinks) {
+      return cache.sortedLinks;
+    }
+    return [];
   },
 
   isTopSiteGivenProvider: function(aSite, aProvider) {
-    return Links._providers.get(aProvider).siteMap.has(aSite);
+    let cache = Links._providers.get(aProvider);
+    if (cache && cache.siteMap) {
+      return cache.siteMap.has(aSite);
+    }
+    return false;
   },
 
   isTopPlacesSite: function(aSite) {
