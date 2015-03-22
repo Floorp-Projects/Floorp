@@ -1567,9 +1567,6 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.Push(object);
     masm.movePtr(StackPointer, argProxyReg);
 
-    // Unused space, to keep the same stack layout as Proxy::set frames.
-    PushObjectOpResult(masm);
-
     masm.loadJSContext(argJSContextReg);
 
     if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
@@ -2221,6 +2218,15 @@ EmitObjectOpResultCheck(MacroAssembler &masm, Label *failure, bool strict,
 }
 
 static bool
+ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
+                 bool strict)
+{
+    ObjectOpResult result;
+    return Proxy::set(cx, proxy, proxy, id, vp, result)
+           && result.checkStrictErrorOrWarning(cx, proxy, id, strict);
+}
+
+static bool
 EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
                  HandleId propId, RegisterSet liveRegs, Register object,
                  ConstantOrRegister value, void *returnAddr, bool strict)
@@ -2237,22 +2243,25 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     RegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
 
-    // Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-    //            MutableHandleValue vp, ObjectOpResult &result)
+    // ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
+    //                  bool strict);
     Register argJSContextReg = regSet.takeGeneral();
     Register argProxyReg     = regSet.takeGeneral();
     Register argIdReg        = regSet.takeGeneral();
     Register argVpReg        = regSet.takeGeneral();
-    Register argResultReg    = regSet.takeGeneral();
+    Register argStrictReg    = regSet.takeGeneral();
 
     Register scratch         = regSet.takeGeneral();
 
     // Push stubCode for marking.
     attacher.pushStubCodePointer(masm);
 
-    // Push args on stack first so we can take pointers to make handles.
+    // Push args on stack so we can take pointers to make handles.
+    // Push value before touching any other registers (see WARNING above).
     masm.Push(value);
     masm.movePtr(StackPointer, argVpReg);
+
+    masm.move32(Imm32(strict), argStrictReg);
 
     masm.Push(propId, scratch);
     masm.movePtr(StackPointer, argIdReg);
@@ -2263,10 +2272,6 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.Push(object);
     masm.movePtr(StackPointer, argProxyReg);
 
-    // Allocate result out-param.
-    PushObjectOpResult(masm);
-    masm.movePtr(StackPointer, argResultReg);
-
     masm.loadJSContext(argJSContextReg);
 
     if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
@@ -2274,23 +2279,16 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.enterFakeExitFrame(IonOOLProxyExitFrameLayout::Token());
 
     // Make the call.
-    masm.setupUnalignedABICall(6, scratch);
+    masm.setupUnalignedABICall(5, scratch);
     masm.passABIArg(argJSContextReg);
-    masm.passABIArg(argProxyReg);
     masm.passABIArg(argProxyReg);
     masm.passABIArg(argIdReg);
     masm.passABIArg(argVpReg);
-    masm.passABIArg(argResultReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::set));
+    masm.passABIArg(argStrictReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ProxySetProperty));
 
     // Test for error.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    // Test for strict failure. We emit the check even in non-strict mode in
-    // order to pick up the warning if extraWarnings is enabled.
-    EmitObjectOpResultCheck<IonOOLProxyExitFrameLayout>(masm, masm.exceptionLabel(), strict,
-                                                        scratch, argJSContextReg, argProxyReg,
-                                                        argIdReg, argVpReg, argResultReg);
 
     // masm.leaveExitFrame & pop locals
     masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
@@ -2508,6 +2506,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         SetterOp target = shape->setterOp();
         MOZ_ASSERT(target);
+
         // JSSetterOp: bool fn(JSContext *cx, HandleObject obj,
         //                     HandleId id, MutableHandleValue vp, ObjectOpResult &result);
 
@@ -2561,7 +2560,8 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         // Test for error.
         masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-        // Test for failure.
+        // Test for strict failure. We emit the check even in non-strict mode
+        // in order to pick up the warning if extraWarnings is enabled.
         EmitObjectOpResultCheck<IonOOLSetterOpExitFrameLayout>(masm, masm.exceptionLabel(),
                                                                strict, scratchReg,
                                                                argJSContextReg, argObjReg,
