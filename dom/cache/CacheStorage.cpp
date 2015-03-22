@@ -516,6 +516,13 @@ CacheStorage::AssertOwningThread() const
 }
 #endif
 
+CachePushStreamChild*
+CacheStorage::CreatePushStream(nsIAsyncInputStream* aStream)
+{
+  // This is true because CacheStorage always uses IgnoreBody for requests.
+  MOZ_CRASH("CacheStorage should never create a push stream.");
+}
+
 void
 CacheStorage::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {

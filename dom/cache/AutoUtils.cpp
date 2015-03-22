@@ -7,6 +7,7 @@
 #include "mozilla/dom/cache/AutoUtils.h"
 
 #include "mozilla/unused.h"
+#include "mozilla/dom/cache/CachePushStreamChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
@@ -19,6 +20,7 @@
 namespace {
 
 using mozilla::unused;
+using mozilla::dom::cache::CachePushStreamChild;
 using mozilla::dom::cache::PCacheReadStream;
 using mozilla::dom::cache::PCacheReadStreamOrVoid;
 using mozilla::ipc::FileDescriptor;
@@ -28,8 +30,8 @@ using mozilla::ipc::OptionalFileDescriptorSet;
 
 enum CleanupAction
 {
-  ForgetFds,
-  DeleteFds
+  Forget,
+  Delete
 };
 
 void
@@ -46,7 +48,7 @@ CleanupChildFds(PCacheReadStream& aReadStream, CleanupAction aAction)
     static_cast<FileDescriptorSetChild*>(aReadStream.fds().get_PFileDescriptorSetChild());
   MOZ_ASSERT(fdSetActor);
 
-  if (aAction == DeleteFds) {
+  if (aAction == Delete) {
     unused << fdSetActor->Send__delete__(fdSetActor);
   }
 
@@ -57,13 +59,39 @@ CleanupChildFds(PCacheReadStream& aReadStream, CleanupAction aAction)
 }
 
 void
-CleanupChildFds(PCacheReadStreamOrVoid& aReadStreamOrVoid, CleanupAction aAction)
+CleanupChildPushStream(PCacheReadStream& aReadStream, CleanupAction aAction)
+{
+  if (!aReadStream.pushStreamChild()) {
+    return;
+  }
+
+  auto pushStream =
+    static_cast<CachePushStreamChild*>(aReadStream.pushStreamChild());
+
+  if (aAction == Delete) {
+    pushStream->StartDestroy();
+    return;
+  }
+
+  // If we send the stream, then we need to start it before forgetting about it.
+  pushStream->Start();
+}
+
+void
+CleanupChild(PCacheReadStream& aReadStream, CleanupAction aAction)
+{
+  CleanupChildFds(aReadStream, aAction);
+  CleanupChildPushStream(aReadStream, aAction);
+}
+
+void
+CleanupChild(PCacheReadStreamOrVoid& aReadStreamOrVoid, CleanupAction aAction)
 {
   if (aReadStreamOrVoid.type() == PCacheReadStreamOrVoid::Tvoid_t) {
     return;
   }
 
-  CleanupChildFds(aReadStreamOrVoid.get_PCacheReadStream(), aAction);
+  CleanupChild(aReadStreamOrVoid.get_PCacheReadStream(), aAction);
 }
 
 void
@@ -80,7 +108,7 @@ CleanupParentFds(PCacheReadStream& aReadStream, CleanupAction aAction)
     static_cast<FileDescriptorSetParent*>(aReadStream.fds().get_PFileDescriptorSetParent());
   MOZ_ASSERT(fdSetActor);
 
-  if (aAction == DeleteFds) {
+  if (aAction == Delete) {
     unused << fdSetActor->Send__delete__(fdSetActor);
   }
 
@@ -133,8 +161,8 @@ AutoChildRequest::~AutoChildRequest()
     return;
   }
 
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
-  CleanupChildFds(mRequestOrVoid.get_PCacheRequest().body(), action);
+  CleanupAction action = mSent ? Forget : Delete;
+  CleanupChild(mRequestOrVoid.get_PCacheRequest().body(), action);
 }
 
 void
@@ -173,9 +201,9 @@ AutoChildRequestList::AutoChildRequestList(TypeUtils* aTypeUtils,
 
 AutoChildRequestList::~AutoChildRequestList()
 {
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
+  CleanupAction action = mSent ? Forget : Delete;
   for (uint32_t i = 0; i < mRequestList.Length(); ++i) {
-    CleanupChildFds(mRequestList[i].body(), action);
+    CleanupChild(mRequestList[i].body(), action);
   }
 }
 
@@ -223,9 +251,9 @@ AutoChildRequestResponse::AutoChildRequestResponse(TypeUtils* aTypeUtils)
 
 AutoChildRequestResponse::~AutoChildRequestResponse()
 {
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
-  CleanupChildFds(mRequestResponse.request().body(), action);
-  CleanupChildFds(mRequestResponse.response().body(), action);
+  CleanupAction action = mSent ? Forget : Delete;
+  CleanupChild(mRequestResponse.request().body(), action);
+  CleanupChild(mRequestResponse.response().body(), action);
 }
 
 void
@@ -311,7 +339,7 @@ AutoParentRequestList::AutoParentRequestList(PBackgroundParent* aManager,
 
 AutoParentRequestList::~AutoParentRequestList()
 {
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
+  CleanupAction action = mSent ? Forget : Delete;
   for (uint32_t i = 0; i < mRequestList.Length(); ++i) {
     CleanupParentFds(mRequestList[i].body(), action);
   }
@@ -355,7 +383,7 @@ AutoParentResponseList::AutoParentResponseList(PBackgroundParent* aManager,
 
 AutoParentResponseList::~AutoParentResponseList()
 {
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
+  CleanupAction action = mSent ? Forget : Delete;
   for (uint32_t i = 0; i < mResponseList.Length(); ++i) {
     CleanupParentFds(mResponseList[i].body(), action);
   }
@@ -402,7 +430,7 @@ AutoParentResponseOrVoid::~AutoParentResponseOrVoid()
     return;
   }
 
-  CleanupAction action = mSent ? ForgetFds : DeleteFds;
+  CleanupAction action = mSent ? Forget : Delete;
   CleanupParentFds(mResponseOrVoid.get_PCacheResponse().body(), action);
 }
 

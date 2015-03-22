@@ -39,8 +39,8 @@ class PCacheResponse;
 class PCacheResponseOrVoid;
 
 class Cache final : public PromiseNativeHandler
-                      , public nsWrapperCache
-                      , public TypeUtils
+                  , public nsWrapperCache
+                  , public TypeUtils
 {
 public:
   Cache(nsIGlobalObject* aGlobal, CacheChild* aActor);
@@ -96,6 +96,9 @@ public:
 #ifdef DEBUG
   virtual void AssertOwningThread() const override;
 #endif
+
+  virtual CachePushStreamChild*
+  CreatePushStream(nsIAsyncInputStream* aStream) override;
 
   // PromiseNativeHandler methods
   virtual void
