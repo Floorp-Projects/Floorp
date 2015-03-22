@@ -32,8 +32,8 @@ public:
 private:
   // PCacheParent method
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
-  virtual PCachePushStreamParent* AllocPCachePushStreamParent();
-  virtual bool DeallocPCachePushStreamParent(PCachePushStreamParent* aActor);
+  virtual PCachePushStreamParent* AllocPCachePushStreamParent() override;
+  virtual bool DeallocPCachePushStreamParent(PCachePushStreamParent* aActor) override;
   virtual bool RecvTeardown() override;
   virtual bool
   RecvMatch(const RequestId& aRequestId, const PCacheRequest& aRequest,
