@@ -75,6 +75,21 @@ SECStatus SEC_DeletePermCertificate(CERTCertificate *cert);
 PRBool
 SEC_CrlIsNewer(CERTCrl *inNew, CERTCrl *old);
 
+/*
+** Extract the validity times from a CRL
+**	"crl" is the CRL
+**	"notBefore" is the start of the validity period (last update)
+**	"notAfter" is the end of the validity period (next update)
+*/
+SECStatus
+SEC_GetCrlTimes(CERTCrl *crl, PRTime *notBefore, PRTime *notAfter);
+
+/*
+** Check the validity times of a crl vs. time 't', allowing
+** some slop for broken clocks and stuff.
+**	"crl" is the certificate to be checked
+**	"t" is the time to check against
+*/
 SECCertTimeValidity
 SEC_CheckCrlTimes(CERTCrl *crl, PRTime t);
 
