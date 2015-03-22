@@ -141,7 +141,7 @@ CancelableBlockState::IsReadyForHandling() const
 }
 
 void
-CancelableBlockState::DispatchImmediate(const InputData& aEvent)
+CancelableBlockState::DispatchImmediate(const InputData& aEvent) const
 {
   MOZ_ASSERT(!HasEvents());
   MOZ_ASSERT(GetTargetApzc());
@@ -158,7 +158,6 @@ WheelBlockState::WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTarget
   , mTransactionEnded(false)
 {
   sLastWheelBlockId = GetBlockId();
-  Update(aInitialEvent);
 
   if (aTargetConfirmed) {
     // Find the nearest APZC in the overscroll handoff chain that is scrollable.
@@ -167,7 +166,15 @@ WheelBlockState::WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTarget
     // that case.
     nsRefPtr<AsyncPanZoomController> apzc =
       mOverscrollHandoffChain->FindFirstScrollable(aInitialEvent);
-    if (apzc && apzc != GetTargetApzc()) {
+
+    // If nothing is scrollable, we don't consider this block as starting a
+    // transaction.
+    if (!apzc) {
+      EndTransaction();
+      return;
+    }
+
+    if (apzc != GetTargetApzc()) {
       UpdateTargetApzc(apzc);
     }
   }
@@ -176,21 +183,34 @@ WheelBlockState::WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTarget
 void
 WheelBlockState::Update(const ScrollWheelInput& aEvent)
 {
+  // We might not be in a transaction if the block never started in a
+  // transaction - for example, if nothing was scrollable.
+  if (!InTransaction()) {
+    return;
+  }
+
+  // If we can't scroll in the direction of the wheel event, we don't update
+  // the last move time. This allows us to timeout a transaction even if the
+  // mouse isn't moving.
+  //
+  // We skip this check if the target is not yet confirmed, so that when it is
+  // confirmed, we don't timeout the transaction.
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
+  if (IsTargetConfirmed() && !apzc->CanScroll(aEvent)) {
+    return;
+  }
+
+  // Update the time of the last known good event, and reset the mouse move
+  // time to null. This will reset the delays on both the general transaction
+  // timeout and the mouse-move-in-frame timeout.
   mLastEventTime = aEvent.mTimeStamp;
+  mLastMouseMove = TimeStamp();
 }
 
 void
 WheelBlockState::AddEvent(const ScrollWheelInput& aEvent)
 {
-  Update(aEvent);
   mEvents.AppendElement(aEvent);
-}
-
-void
-WheelBlockState::DispatchImmediate(const InputData& aEvent)
-{
-  Update(aEvent.AsScrollWheelInput());
-  CancelableBlockState::DispatchImmediate(aEvent);
 }
 
 bool
@@ -239,7 +259,7 @@ WheelBlockState::Type()
 }
 
 bool
-WheelBlockState::ShouldAcceptNewEvent(const ScrollWheelInput& aEvent) const
+WheelBlockState::ShouldAcceptNewEvent() const
 {
   if (!InTransaction()) {
     // If we're not in a transaction, start a new one.
@@ -250,15 +270,63 @@ WheelBlockState::ShouldAcceptNewEvent(const ScrollWheelInput& aEvent) const
     return false;
   }
 
+  return true;
+}
+
+bool
+WheelBlockState::MaybeTimeout(const ScrollWheelInput& aEvent)
+{
+  if (MaybeTimeout(aEvent.mTimeStamp)) {
+    return true;
+  }
+
+  if (!mLastMouseMove.IsNull()) {
+    // If there's a recent mouse movement, we can time out the transaction early.
+    TimeDuration duration = TimeStamp::Now() - mLastMouseMove;
+    if (duration.ToMilliseconds() >= gfxPrefs::MouseWheelIgnoreMoveDelayMs()) {
+      TBS_LOG("%p wheel transaction timed out after mouse move\n", this);
+      EndTransaction();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp)
+{
   // End the transaction if the event occurred > 1.5s after the most recently
   // seen wheel event.
-  TimeDuration duration = aEvent.mTimeStamp - mLastEventTime;
-  if (duration.ToMilliseconds() >= gfxPrefs::MouseWheelTransactionTimeoutMs()) {
+  TimeDuration duration = aTimeStamp - mLastEventTime;
+  if (duration.ToMilliseconds() < gfxPrefs::MouseWheelTransactionTimeoutMs()) {
     return false;
   }
 
-  // Accept the event, even if we can't scroll anymore.
+  TBS_LOG("%p wheel transaction timed out\n", this);
+
+  EndTransaction();
   return true;
+}
+
+void
+WheelBlockState::OnMouseMove(const ScreenIntPoint& aPoint)
+{
+  if (!GetTargetApzc()->Contains(aPoint)) {
+    EndTransaction();
+    return;
+  }
+
+  if (mLastMouseMove.IsNull()) {
+    // If the cursor is moving inside the frame, and it is more than the
+    // ignoremovedelay time since the last scroll operation, we record
+    // this as the most recent mouse movement.
+    TimeStamp now = TimeStamp::Now();
+    TimeDuration duration = now - mLastEventTime;
+    if (duration.ToMilliseconds() >= gfxPrefs::MouseWheelIgnoreMoveDelayMs()) {
+      mLastMouseMove = now;
+    }
+  }
 }
 
 bool
@@ -283,6 +351,7 @@ WheelBlockState::AllowScrollHandoff() const
 void
 WheelBlockState::EndTransaction()
 {
+  TBS_LOG("%p ending wheel transaction\n", this);
   mTransactionEnded = true;
 }
 

@@ -1767,6 +1767,19 @@ ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPo
   return TransformVector<ParentLayerPixel>(GetTransformToThis(), aVector, aAnchor);
 }
 
+bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const
+{
+  Matrix4x4 transformToThis = GetTransformToThis();
+  ParentLayerIntPoint point = TransformTo<ParentLayerPixel>(transformToThis, aPoint);
+
+  ParentLayerIntRect cb;
+  {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    GetFrameMetrics().mCompositionBounds.ToIntRect(&cb);
+  }
+  return cb.Contains(point);
+}
+
 ScreenCoord AsyncPanZoomController::PanDistance() const {
   ParentLayerPoint panVector;
   ParentLayerPoint panStart;

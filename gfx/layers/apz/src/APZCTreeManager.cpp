@@ -806,6 +806,47 @@ APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
   }
 }
 
+void
+APZCTreeManager::UpdateWheelTransaction(WidgetInputEvent& aEvent)
+{
+  WheelBlockState* txn = mInputQueue->GetCurrentWheelTransaction();
+  if (!txn) {
+    return;
+  }
+
+  // If the transaction has simply timed out, we don't need to do anything
+  // else.
+  if (txn->MaybeTimeout(TimeStamp::Now())) {
+    return;
+  }
+
+  switch (aEvent.message) {
+   case NS_MOUSE_MOVE:
+   case NS_DRAGDROP_OVER: {
+     WidgetMouseEvent* mouseEvent = aEvent.AsMouseEvent();
+     if (!mouseEvent->IsReal()) {
+       return;
+     }
+
+     ScreenIntPoint point =
+       ViewAs<ScreenPixel>(aEvent.refPoint, PixelCastJustification::LayoutDeviceToScreenForUntransformedEvent);
+     txn->OnMouseMove(point);
+     return;
+   }
+   case NS_KEY_PRESS:
+   case NS_KEY_UP:
+   case NS_KEY_DOWN:
+   case NS_MOUSE_BUTTON_UP:
+   case NS_MOUSE_BUTTON_DOWN:
+   case NS_MOUSE_DOUBLECLICK:
+   case NS_MOUSE_CLICK:
+   case NS_CONTEXTMENU:
+   case NS_DRAGDROP_DROP:
+     txn->EndTransaction();
+     return;
+  }
+}
+
 nsEventStatus
 APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
                               ScrollableLayerGuid* aOutTargetGuid,
@@ -813,6 +854,9 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsEventStatus result = nsEventStatus_eIgnore;
+
+  // Note, we call this before having transformed the reference point.
+  UpdateWheelTransaction(aEvent);
 
   // Transform the refPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.

@@ -110,7 +110,7 @@ public:
    * This input block must not have pending events, and its apzc must not be
    * nullptr.
    */
-  virtual void DispatchImmediate(const InputData& aEvent);
+  void DispatchImmediate(const InputData& aEvent) const;
 
   /**
    * @return true iff this block has received all the information needed
@@ -167,7 +167,6 @@ public:
   void HandleEvents() override;
   bool MustStayActive() override;
   const char* Type() override;
-  void DispatchImmediate(const InputData& aEvent) override;
 
   void AddEvent(const ScrollWheelInput& aEvent);
 
@@ -176,13 +175,21 @@ public:
   }
 
   /**
-   * Returns whether or not the block should accept new events. If the APZC
-   * has been destroyed, or the block is not part of a wheel transaction, then
-   * this will return false.
-   *
-   * @return True if the event should be accepted, false otherwise.
+   * Determine whether this wheel block is accepting new events.
    */
-  bool ShouldAcceptNewEvent(const ScrollWheelInput& aEvent) const;
+  bool ShouldAcceptNewEvent() const;
+
+  /**
+   * Call to check whether a wheel event will cause the current transaction to
+   * timeout.
+   */
+  bool MaybeTimeout(const ScrollWheelInput& aEvent);
+
+  /**
+   * Called from APZCTM when a mouse move or drag+drop event occurs, before
+   * the event has been processed.
+   */
+  void OnMouseMove(const ScreenIntPoint& aPoint);
 
   /**
    * Returns whether or not the block is participating in a wheel transaction.
@@ -205,7 +212,13 @@ public:
    */
   bool AllowScrollHandoff() const;
 
-private:
+  /**
+   * Called to check and possibly end the transaction due to a timeout.
+   *
+   * @return True if the transaction ended, false otherwise.
+   */
+  bool MaybeTimeout(const TimeStamp& aTimeStamp);
+
   /**
    * Update the wheel transaction state for a new event.
    */
@@ -214,6 +227,7 @@ private:
 private:
   nsTArray<ScrollWheelInput> mEvents;
   TimeStamp mLastEventTime;
+  TimeStamp mLastMouseMove;
   bool mTransactionEnded;
 };
 
