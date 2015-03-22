@@ -1472,6 +1472,30 @@ public:
   }
 
   /**
+   * Accessors for line-relative coordinates
+   */
+  nscoord LineLeft(WritingMode aWritingMode, nscoord aContainerWidth) const
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    if (aWritingMode.IsVertical()) {
+      return IStart(); // sideways-left will require aContainerHeight
+    } else {
+      return aWritingMode.IsBidiLTR() ? IStart()
+                                      : aContainerWidth - IEnd();
+    }
+  }
+  nscoord LineRight(WritingMode aWritingMode, nscoord aContainerWidth) const
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    if (aWritingMode.IsVertical()) {
+      return IEnd(); // sideways-left will require aContainerHeight
+    } else {
+      return aWritingMode.IsBidiLTR() ? IEnd()
+                                      : aContainerWidth - IStart();
+    }
+  }
+
+  /**
    * Physical coordinates of the rect.
    */
   nscoord X(WritingMode aWritingMode, nscoord aContainerWidth) const
@@ -1602,19 +1626,6 @@ public:
     CHECK_WRITING_MODE(aOther.GetWritingMode());
     return mRect.IsEqualEdges(aOther.mRect);
   }
-
-/* XXX are these correct?
-  nscoord ILeft(WritingMode aWritingMode) const
-  {
-    CHECK_WRITING_MODE(aWritingMode);
-    return aWritingMode.IsBidiLTR() ? IStart() : IEnd();
-  }
-  nscoord IRight(WritingMode aWritingMode) const
-  {
-    CHECK_WRITING_MODE(aWritingMode);
-    return aWritingMode.IsBidiLTR() ? IEnd() : IStart();
-  }
-*/
 
   LogicalPoint Origin(WritingMode aWritingMode) const
   {
