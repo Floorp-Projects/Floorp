@@ -19,7 +19,8 @@ Promise.all([fetch(url),
   if (results[0] !== results[1]) {
     is(results[0], results[1], 'stored response body should match original');
   }
-  return cache.delete('putter' + context);
-}).then(function() {
+  return caches.delete('putter' + context);
+}).then(function(deleted) {
+  ok(deleted, "The cache should be deleted successfully");
   testDone();
 });
