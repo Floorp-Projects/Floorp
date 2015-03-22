@@ -17,15 +17,15 @@ public:
 
     nsDeviceContextSpecX();
 
-    NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) MOZ_OVERRIDE;
-    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface) MOZ_OVERRIDE;
+    NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
+    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface) override;
     NS_IMETHOD BeginDocument(const nsAString& aTitle,
                              char16_t*       aPrintToFileName,
                              int32_t          aStartPage,
-                             int32_t          aEndPage) MOZ_OVERRIDE;
-    NS_IMETHOD EndDocument() MOZ_OVERRIDE;
-    NS_IMETHOD BeginPage() MOZ_OVERRIDE;
-    NS_IMETHOD EndPage() MOZ_OVERRIDE;
+                             int32_t          aEndPage) override;
+    NS_IMETHOD EndDocument() override;
+    NS_IMETHOD BeginPage() override;
+    NS_IMETHOD EndPage() override;
 
     void GetPaperRect(double* aTop, double* aLeft, double* aBottom, double* aRight);
 

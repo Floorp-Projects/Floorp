@@ -25,13 +25,13 @@ protected:
     : SVGFEMergeNodeElementBase(aNodeInfo)
   {
   }
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
 
   const nsSVGString* GetIn1() { return &mStringAttributes[IN1]; }
 
@@ -39,7 +39,7 @@ public:
   already_AddRefed<SVGAnimatedString> In1();
 
 protected:
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { IN1 };
   nsSVGString mStringAttributes[1];

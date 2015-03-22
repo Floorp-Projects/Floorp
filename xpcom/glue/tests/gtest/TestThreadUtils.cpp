@@ -87,8 +87,8 @@ private:
 public:
   explicit SpyWithISupports(int aID) : Spy(aID) {};
   NS_DECL_ISUPPORTS
-  NS_IMETHOD_(nsrefcnt) RefCnt() MOZ_OVERRIDE { return mRefCnt; }
-  NS_IMETHOD_(int32_t) ID() MOZ_OVERRIDE { return mID; }
+  NS_IMETHOD_(nsrefcnt) RefCnt() override { return mRefCnt; }
+  NS_IMETHOD_(int32_t) ID() override { return mID; }
 };
 NS_IMPL_ISUPPORTS(SpyWithISupports, ISpyWithISupports)
 
@@ -110,8 +110,8 @@ struct ThreadUtilsObject : public IThreadUtilsObject
   NS_DECL_ISUPPORTS
 
   // IThreadUtilsObject implementation
-  NS_IMETHOD_(nsrefcnt) RefCnt() MOZ_OVERRIDE { return mRefCnt; }
-  NS_IMETHOD_(int32_t) ID() MOZ_OVERRIDE { return 0; }
+  NS_IMETHOD_(nsrefcnt) RefCnt() override { return mRefCnt; }
+  NS_IMETHOD_(int32_t) ID() override { return 0; }
 
   int mCount; // Number of calls + arguments processed.
   int mA0, mA1, mA2, mA3;

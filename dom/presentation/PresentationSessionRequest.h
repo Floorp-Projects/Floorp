@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class PresentationSessionRequest MOZ_FINAL : public nsIPresentationSessionRequest
+class PresentationSessionRequest final : public nsIPresentationSessionRequest
 {
 public:
   NS_DECL_ISUPPORTS

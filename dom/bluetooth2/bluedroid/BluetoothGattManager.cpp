@@ -40,7 +40,7 @@ bool BluetoothGattManager::mInShutdown = false;
 class BluetoothGattClient;
 static StaticAutoPtr<nsTArray<nsRefPtr<BluetoothGattClient> > > sClients;
 
-class BluetoothGattClient MOZ_FINAL : public nsISupports
+class BluetoothGattClient final : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
@@ -111,7 +111,7 @@ BluetoothGattManager::Get()
   return sBluetoothGattManager;
 }
 
-class BluetoothGattManager::InitGattResultHandler MOZ_FINAL
+class BluetoothGattManager::InitGattResultHandler final
   : public BluetoothGattResultHandler
 {
 public:
@@ -119,7 +119,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattInterface::Init failed: %d",
                (int)aStatus);
@@ -128,7 +128,7 @@ public:
     }
   }
 
-  void Init() MOZ_OVERRIDE
+  void Init() override
   {
     if (mRes) {
       mRes->Init();
@@ -174,7 +174,7 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
                                 new InitGattResultHandler(aRes));
 }
 
-class BluetoothGattManager::CleanupResultHandler MOZ_FINAL
+class BluetoothGattManager::CleanupResultHandler final
   : public BluetoothGattResultHandler
 {
 public:
@@ -182,7 +182,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattInterface::Cleanup failed: %d",
                (int)aStatus);
@@ -191,7 +191,7 @@ public:
     }
   }
 
-  void Cleanup() MOZ_OVERRIDE
+  void Cleanup() override
   {
     sBluetoothGattClientInterface = nullptr;
     sBluetoothGattInterface = nullptr;
@@ -206,7 +206,7 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothGattManager::CleanupResultHandlerRunnable MOZ_FINAL
+class BluetoothGattManager::CleanupResultHandlerRunnable final
   : public nsRunnable
 {
 public:
@@ -216,7 +216,7 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mRes->Deinit();
     return NS_OK;
@@ -244,7 +244,7 @@ BluetoothGattManager::DeinitGattInterface(BluetoothProfileResultHandler* aRes)
   }
 }
 
-class BluetoothGattManager::RegisterClientResultHandler MOZ_FINAL
+class BluetoothGattManager::RegisterClientResultHandler final
   : public BluetoothGattClientResultHandler
 {
 public:
@@ -254,7 +254,7 @@ public:
     MOZ_ASSERT(mClient);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattClientInterface::RegisterClient failed: %d",
                (int)aStatus);
@@ -282,7 +282,7 @@ private:
   nsRefPtr<BluetoothGattClient> mClient;
 };
 
-class BluetoothGattManager::UnregisterClientResultHandler MOZ_FINAL
+class BluetoothGattManager::UnregisterClientResultHandler final
   : public BluetoothGattClientResultHandler
 {
 public:
@@ -292,7 +292,7 @@ public:
     MOZ_ASSERT(mClient);
   }
 
-  void UnregisterClient() MOZ_OVERRIDE
+  void UnregisterClient() override
   {
     MOZ_ASSERT(mClient->mUnregisterClientRunnable);
     BluetoothService* bs = BluetoothService::Get();
@@ -311,7 +311,7 @@ public:
     sClients->RemoveElement(mClient);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattClientInterface::UnregisterClient failed: %d",
                (int)aStatus);
@@ -354,7 +354,7 @@ BluetoothGattManager::UnregisterClient(int aClientIf,
     new UnregisterClientResultHandler(client));
 }
 
-class BluetoothGattManager::ConnectResultHandler MOZ_FINAL
+class BluetoothGattManager::ConnectResultHandler final
   : public BluetoothGattClientResultHandler
 {
 public:
@@ -364,7 +364,7 @@ public:
     MOZ_ASSERT(mClient);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattClientInterface::Connect failed: %d",
                (int)aStatus);
@@ -423,7 +423,7 @@ BluetoothGattManager::Connect(const nsAString& aAppUuid,
   }
 }
 
-class BluetoothGattManager::DisconnectResultHandler MOZ_FINAL
+class BluetoothGattManager::DisconnectResultHandler final
   : public BluetoothGattClientResultHandler
 {
 public:
@@ -433,7 +433,7 @@ public:
     MOZ_ASSERT(mClient);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattClientInterface::Disconnect failed: %d",
                (int)aStatus);
@@ -486,7 +486,7 @@ BluetoothGattManager::Disconnect(const nsAString& aAppUuid,
     new DisconnectResultHandler(client));
 }
 
-class BluetoothGattManager::ReadRemoteRssiResultHandler MOZ_FINAL
+class BluetoothGattManager::ReadRemoteRssiResultHandler final
   : public BluetoothGattClientResultHandler
 {
 public:
@@ -496,7 +496,7 @@ public:
     MOZ_ASSERT(mClient);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_WARNING("BluetoothGattClientInterface::ReadRemoteRssi failed: %d",
                (int)aStatus);

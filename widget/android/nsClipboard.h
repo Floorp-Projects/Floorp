@@ -8,7 +8,7 @@
 
 #include "nsIClipboard.h"
 
-class nsClipboard MOZ_FINAL : public nsIClipboard
+class nsClipboard final : public nsIClipboard
 {
 private:
   ~nsClipboard() {}

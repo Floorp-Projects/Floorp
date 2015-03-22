@@ -17,7 +17,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class TelephonyCallId MOZ_FINAL : public nsISupports,
+class TelephonyCallId final : public nsISupports,
                                   public nsWrapperCache
 {
 public:
@@ -35,7 +35,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
 

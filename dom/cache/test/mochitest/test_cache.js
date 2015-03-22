@@ -124,6 +124,8 @@ caches.open(name).then(function(openCache) {
   return caches.has(foobar);
 }).then(function(hasMissingCache) {
   ok(!hasMissingCache, 'has should have a result');
-}).then(function() {
+  return caches.delete(name);
+}).then(function(deleteResult) {
+  ok(deleteResult, 'delete should succeed');
   testDone();
 })

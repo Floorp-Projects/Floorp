@@ -148,7 +148,7 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
   return GetProcSelfSmapsPrivate(aN);
 }
 
-class ResidentUniqueReporter MOZ_FINAL : public nsIMemoryReporter
+class ResidentUniqueReporter final : public nsIMemoryReporter
 {
   ~ResidentUniqueReporter() {}
 
@@ -156,7 +156,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
@@ -545,7 +545,7 @@ PrivateDistinguishedAmount(int64_t* aN)
   return NS_OK;
 }
 
-class WindowsAddressSpaceReporter MOZ_FINAL : public nsIMemoryReporter
+class WindowsAddressSpaceReporter final : public nsIMemoryReporter
 {
   ~WindowsAddressSpaceReporter() {}
 
@@ -553,7 +553,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     MEMORY_BASIC_INFORMATION info = { 0 };
     bool isPrevSegStackGuard = false;
@@ -698,7 +698,7 @@ NS_IMPL_ISUPPORTS(WindowsAddressSpaceReporter, nsIMemoryReporter)
 #endif  // XP_<PLATFORM>
 
 #ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
-class VsizeMaxContiguousReporter MOZ_FINAL : public nsIMemoryReporter
+class VsizeMaxContiguousReporter final : public nsIMemoryReporter
 {
   ~VsizeMaxContiguousReporter() {}
 
@@ -706,7 +706,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = VsizeMaxContiguousDistinguishedAmount(&amount);
@@ -721,7 +721,7 @@ NS_IMPL_ISUPPORTS(VsizeMaxContiguousReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_PRIVATE_REPORTER
-class PrivateReporter MOZ_FINAL : public nsIMemoryReporter
+class PrivateReporter final : public nsIMemoryReporter
 {
   ~PrivateReporter() {}
 
@@ -729,7 +729,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = PrivateDistinguishedAmount(&amount);
@@ -745,7 +745,7 @@ NS_IMPL_ISUPPORTS(PrivateReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-class VsizeReporter MOZ_FINAL : public nsIMemoryReporter
+class VsizeReporter final : public nsIMemoryReporter
 {
   ~VsizeReporter() {}
 
@@ -753,7 +753,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = VsizeDistinguishedAmount(&amount);
@@ -772,7 +772,7 @@ public:
 };
 NS_IMPL_ISUPPORTS(VsizeReporter, nsIMemoryReporter)
 
-class ResidentReporter MOZ_FINAL : public nsIMemoryReporter
+class ResidentReporter final : public nsIMemoryReporter
 {
   ~ResidentReporter() {}
 
@@ -780,7 +780,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount;
     nsresult rv = ResidentDistinguishedAmount(&amount);
@@ -830,7 +830,7 @@ ResidentPeakDistinguishedAmount(int64_t* aN)
   return NS_ERROR_FAILURE;
 }
 
-class ResidentPeakReporter MOZ_FINAL : public nsIMemoryReporter
+class ResidentPeakReporter final : public nsIMemoryReporter
 {
   ~ResidentPeakReporter() {}
 
@@ -838,7 +838,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = ResidentPeakDistinguishedAmount(&amount);
@@ -853,7 +853,7 @@ NS_IMPL_ISUPPORTS(ResidentPeakReporter, nsIMemoryReporter)
 
 #define HAVE_PAGE_FAULT_REPORTERS 1
 
-class PageFaultsSoftReporter MOZ_FINAL : public nsIMemoryReporter
+class PageFaultsSoftReporter final : public nsIMemoryReporter
 {
   ~PageFaultsSoftReporter() {}
 
@@ -861,7 +861,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     struct rusage usage;
     int err = getrusage(RUSAGE_SELF, &usage);
@@ -897,7 +897,7 @@ PageFaultsHardDistinguishedAmount(int64_t* aAmount)
   return NS_OK;
 }
 
-class PageFaultsHardReporter MOZ_FINAL : public nsIMemoryReporter
+class PageFaultsHardReporter final : public nsIMemoryReporter
 {
   ~PageFaultsHardReporter() {}
 
@@ -905,7 +905,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     nsresult rv = PageFaultsHardDistinguishedAmount(&amount);
@@ -946,7 +946,7 @@ HeapOverheadRatio(jemalloc_stats_t* aStats)
     ((double)aStats->allocated);
 }
 
-class JemallocHeapReporter MOZ_FINAL : public nsIMemoryReporter
+class JemallocHeapReporter final : public nsIMemoryReporter
 {
   ~JemallocHeapReporter() {}
 
@@ -954,7 +954,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     jemalloc_stats_t stats;
     jemalloc_stats(&stats);
@@ -1050,7 +1050,7 @@ NS_IMPL_ISUPPORTS(JemallocHeapReporter, nsIMemoryReporter)
 // However, the obvious time to register it is when the table is initialized,
 // and that happens before XPCOM components are initialized, which means the
 // RegisterStrongMemoryReporter call fails.  So instead we do it here.
-class AtomTablesReporter MOZ_FINAL : public nsIMemoryReporter
+class AtomTablesReporter final : public nsIMemoryReporter
 {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
@@ -1060,7 +1060,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     size_t Main, Static;
     NS_SizeOfAtomTablesIncludingThis(MallocSizeOf, &Main, &Static);
@@ -1087,7 +1087,7 @@ NS_IMPL_ISUPPORTS(AtomTablesReporter, nsIMemoryReporter)
 // However, this ends up breaking the linking step of various unit tests due
 // to adding a new dependency to libdmd for a commonly used feature (mutexes)
 // in  DMD  builds. So instead we do it here.
-class DeadlockDetectorReporter MOZ_FINAL : public nsIMemoryReporter
+class DeadlockDetectorReporter final : public nsIMemoryReporter
 {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
@@ -1097,7 +1097,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                           nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/deadlock-detector", KIND_HEAP, UNITS_BYTES,
@@ -1114,13 +1114,13 @@ NS_IMPL_ISUPPORTS(DeadlockDetectorReporter, nsIMemoryReporter)
 namespace mozilla {
 namespace dmd {
 
-class DMDReporter MOZ_FINAL : public nsIMemoryReporter
+class DMDReporter final : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     dmd::Sizes sizes;
     dmd::SizeOf(&sizes);
@@ -1777,7 +1777,7 @@ nsMemoryReporterManager::UnblockRegistrationAndRestoreOriginalReporters()
 
 // This is just a wrapper for int64_t that implements nsISupports, so it can be
 // passed to nsIMemoryReporter::CollectReports.
-class Int64Wrapper MOZ_FINAL : public nsISupports
+class Int64Wrapper final : public nsISupports
 {
   ~Int64Wrapper() {}
 
@@ -1791,7 +1791,7 @@ public:
 
 NS_IMPL_ISUPPORTS0(Int64Wrapper)
 
-class ExplicitCallback MOZ_FINAL : public nsIHandleReportCallback
+class ExplicitCallback final : public nsIHandleReportCallback
 {
   ~ExplicitCallback() {}
 
@@ -1801,7 +1801,7 @@ public:
   NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
                       int32_t aKind, int32_t aUnits, int64_t aAmount,
                       const nsACString& aDescription,
-                      nsISupports* aWrappedExplicit) MOZ_OVERRIDE
+                      nsISupports* aWrappedExplicit) override
   {
     // Using the "heap-allocated" reporter here instead of
     // nsMemoryReporterManager.heapAllocated goes against the usual
@@ -2326,7 +2326,7 @@ DEFINE_REGISTER_SIZE_OF_TAB(NonJS);
 namespace mozilla {
 namespace dmd {
 
-class DoNothingCallback MOZ_FINAL : public nsIHandleReportCallback
+class DoNothingCallback final : public nsIHandleReportCallback
 {
 public:
   NS_DECL_ISUPPORTS

@@ -14,37 +14,37 @@ class SharedDecoderCallback : public MediaDataDecoderCallback
 public:
   explicit SharedDecoderCallback(SharedDecoderManager* aManager) : mManager(aManager) {}
 
-  virtual void Output(MediaData* aData) MOZ_OVERRIDE
+  virtual void Output(MediaData* aData) override
   {
     if (mManager->mActiveCallback) {
       mManager->mActiveCallback->Output(aData);
     }
   }
-  virtual void Error() MOZ_OVERRIDE
+  virtual void Error() override
   {
     if (mManager->mActiveCallback) {
       mManager->mActiveCallback->Error();
     }
   }
-  virtual void InputExhausted() MOZ_OVERRIDE
+  virtual void InputExhausted() override
   {
     if (mManager->mActiveCallback) {
       mManager->mActiveCallback->InputExhausted();
     }
   }
-  virtual void DrainComplete() MOZ_OVERRIDE
+  virtual void DrainComplete() override
   {
     if (mManager->mActiveCallback) {
       mManager->DrainComplete();
     }
   }
-  virtual void NotifyResourcesStatusChanged() MOZ_OVERRIDE
+  virtual void NotifyResourcesStatusChanged() override
   {
     if (mManager->mActiveCallback) {
       mManager->mActiveCallback->NotifyResourcesStatusChanged();
     }
   }
-  virtual void ReleaseMediaResources() MOZ_OVERRIDE
+  virtual void ReleaseMediaResources() override
   {
     if (mManager->mActiveCallback) {
       mManager->mActiveCallback->ReleaseMediaResources();

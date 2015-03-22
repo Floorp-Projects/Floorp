@@ -27,7 +27,7 @@ using namespace mozilla::dom;
 /**
  * class used to implement attr() generated content
  */
-class nsAttributeTextNode MOZ_FINAL : public nsTextNode,
+class nsAttributeTextNode final : public nsTextNode,
                                       public nsStubMutationObserver
 {
 public:
@@ -47,15 +47,15 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
   virtual nsGenericDOMDataNode *CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE
+                                              bool aCloneText) const override
   {
     already_AddRefed<mozilla::dom::NodeInfo> ni =
       nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();

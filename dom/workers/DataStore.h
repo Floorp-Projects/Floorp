@@ -28,7 +28,7 @@ class DataStoreChangeEventProxy;
 class WorkerDataStoreCursor;
 class WorkerGlobalScope;
 
-class WorkerDataStore MOZ_FINAL : public DOMEventTargetHelper
+class WorkerDataStore final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -40,7 +40,7 @@ public:
   static already_AddRefed<WorkerDataStore> Constructor(GlobalObject& aGlobal,
                                                        ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL (public APIs)
 
@@ -98,7 +98,7 @@ private:
   nsRefPtr<DataStoreChangeEventProxy> mEventProxy;
 };
 
-class DataStoreChangeEventProxy MOZ_FINAL : public nsIDOMEventListener
+class DataStoreChangeEventProxy final : public nsIDOMEventListener
                                           , public WorkerFeature
 {
 public:
@@ -115,7 +115,7 @@ public:
 protected:
   // WorkerFeature implementation.
 
-  bool Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE;
+  bool Notify(JSContext* aCx, Status aStatus) override;
 
 private:
   ~DataStoreChangeEventProxy() {};

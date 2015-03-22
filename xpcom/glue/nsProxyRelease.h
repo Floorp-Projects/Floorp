@@ -104,7 +104,7 @@ NS_ProxyRelease(nsIEventTarget* aTarget, nsISupports* aDoomed,
  * an nsMainThreadPtrHandle<T> rather than an nsCOMPtr<T>.
  */
 template<class T>
-class nsMainThreadPtrHolder MOZ_FINAL
+class nsMainThreadPtrHolder final
 {
 public:
   // We can only acquire a pointer on the main thread. We to fail fast for

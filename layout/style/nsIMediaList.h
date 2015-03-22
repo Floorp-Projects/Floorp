@@ -188,7 +188,7 @@ private:
   nsTArray<nsMediaExpression> mExpressions;
 };
 
-class nsMediaList MOZ_FINAL : public nsIDOMMediaList
+class nsMediaList final : public nsIDOMMediaList
                             , public nsWrapperCache
 {
 public:
@@ -197,7 +197,7 @@ public:
   nsMediaList();
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject() const
   {
     return nullptr;

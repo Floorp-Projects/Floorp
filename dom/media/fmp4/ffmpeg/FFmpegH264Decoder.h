@@ -36,10 +36,10 @@ public:
                     ImageContainer* aImageContainer);
   virtual ~FFmpegH264Decoder();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult Flush() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Drain() override;
+  virtual nsresult Flush() override;
   static AVCodecID GetCodecId(const char* aMimeType);
 
 private:

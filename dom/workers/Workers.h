@@ -212,14 +212,14 @@ struct WorkerLoadInfo
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-  class InterfaceRequestor MOZ_FINAL : public nsIInterfaceRequestor
+  class InterfaceRequestor final : public nsIInterfaceRequestor
   {
     NS_DECL_ISUPPORTS
 
   public:
     InterfaceRequestor(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
     void MaybeAddTabChild(nsILoadGroup* aLoadGroup);
-    NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink) MOZ_OVERRIDE;
+    NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink) override;
 
   private:
     ~InterfaceRequestor() { }

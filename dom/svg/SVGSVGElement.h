@@ -44,7 +44,7 @@ class SVGIRect;
 
 class SVGSVGElement;
 
-class DOMSVGTranslatePoint MOZ_FINAL : public nsISVGPoint {
+class DOMSVGTranslatePoint final : public nsISVGPoint {
 public:
   DOMSVGTranslatePoint(SVGPoint* aPt, SVGSVGElement *aElement)
     : nsISVGPoint(aPt, true), mElement(aElement) {}
@@ -55,16 +55,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
 
-  virtual DOMSVGPoint* Copy() MOZ_OVERRIDE;
+  virtual DOMSVGPoint* Copy() override;
 
   // WebIDL
-  virtual float X() MOZ_OVERRIDE { return mPt.GetX(); }
-  virtual float Y() MOZ_OVERRIDE { return mPt.GetY(); }
-  virtual void SetX(float aValue, ErrorResult& rv) MOZ_OVERRIDE;
-  virtual void SetY(float aValue, ErrorResult& rv) MOZ_OVERRIDE;
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(SVGMatrix& matrix) MOZ_OVERRIDE;
+  virtual float X() override { return mPt.GetX(); }
+  virtual float Y() override { return mPt.GetY(); }
+  virtual void SetX(float aValue, ErrorResult& rv) override;
+  virtual void SetY(float aValue, ErrorResult& rv) override;
+  virtual already_AddRefed<nsISVGPoint> MatrixTransform(SVGMatrix& matrix) override;
 
-  virtual nsISupports* GetParentObject() MOZ_OVERRIDE;
+  virtual nsISupports* GetParentObject() override;
 
   nsRefPtr<SVGSVGElement> mElement;
 
@@ -87,7 +87,7 @@ public:
 
 typedef SVGGraphicsElement SVGSVGElementBase;
 
-class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase
+class SVGSVGElement final : public SVGSVGElementBase
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
@@ -96,7 +96,7 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase
 
   SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                 FromParser aFromParser);
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -132,15 +132,15 @@ public:
   nsSMILTimeContainer* GetTimedDocumentRoot();
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
-  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+  virtual bool IsEventAttributeName(nsIAtom* aName) override;
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
-  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+                      TransformTypes aWhich = eAllTransforms) const override;
+  virtual bool HasValidDimensions() const override;
 
   // SVGSVGElement methods:
   float GetLength(uint8_t mCtxType);
@@ -212,7 +212,7 @@ public:
   // SVG-as-an-image documents.)
   virtual void FlushImageTransformInvalidation();
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // Returns true IFF our attributes are currently overridden by a <view>
   // element and that element's ID matches the passed-in string.
@@ -272,8 +272,8 @@ private:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
   // implementation helpers:
 
@@ -349,21 +349,21 @@ private:
    */
   SVGPreserveAspectRatio GetPreserveAspectRatioWithOverride() const;
 
-  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
+  virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
-  virtual nsSVGViewBox *GetViewBox() MOZ_OVERRIDE;
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
+  virtual nsSVGViewBox *GetViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
 
   nsSVGViewBox                   mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;

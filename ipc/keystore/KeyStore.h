@@ -99,7 +99,7 @@ public:
                              nsAString& aAddrStr);
 };
 
-class KeyStore MOZ_FINAL : public nsNSSShutDownObject
+class KeyStore final : public nsNSSShutDownObject
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KeyStore)
@@ -117,7 +117,7 @@ private:
     STREAM_SOCKET
   };
 
-  class ListenSocket MOZ_FINAL : public mozilla::ipc::ListenSocket
+  class ListenSocket final : public mozilla::ipc::ListenSocket
   {
   public:
     ListenSocket(KeyStore* aKeyStore);
@@ -126,15 +126,15 @@ private:
     // SocketBase
     //
 
-    void OnConnectSuccess() MOZ_OVERRIDE;
-    void OnConnectError() MOZ_OVERRIDE;
-    void OnDisconnect() MOZ_OVERRIDE;
+    void OnConnectSuccess() override;
+    void OnConnectError() override;
+    void OnDisconnect() override;
 
   private:
     KeyStore* mKeyStore;
   };
 
-  class StreamSocket MOZ_FINAL : public mozilla::ipc::StreamSocket
+  class StreamSocket final : public mozilla::ipc::StreamSocket
   {
   public:
     StreamSocket(KeyStore* aKeyStore);
@@ -143,16 +143,16 @@ private:
     // SocketConsumerBase
     //
 
-    void OnConnectSuccess() MOZ_OVERRIDE;
-    void OnConnectError() MOZ_OVERRIDE;
-    void OnDisconnect() MOZ_OVERRIDE;
+    void OnConnectSuccess() override;
+    void OnConnectError() override;
+    void OnDisconnect() override;
 
-    void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+    void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) override;
 
     // ConnectionOrientedSocket
     //
 
-    ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+    ConnectionOrientedSocketIO* GetIO() override;
 
   private:
     KeyStore* mKeyStore;

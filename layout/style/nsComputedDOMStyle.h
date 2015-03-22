@@ -64,7 +64,7 @@ struct nsStyleXUL;
 struct nsTimingFunction;
 class gfx3DMatrix;
 
-class nsComputedDOMStyle MOZ_FINAL : public nsDOMCSSDeclaration
+class nsComputedDOMStyle final : public nsDOMCSSDeclaration
 {
 public:
   typedef nsCSSProps::KTableValue KTableValue;
@@ -78,9 +78,9 @@ public:
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
   virtual already_AddRefed<mozilla::dom::CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
-    MOZ_OVERRIDE;
+    override;
   using nsICSSDeclaration::GetPropertyCSSValue;
-  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) MOZ_OVERRIDE;
+  virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
   enum StyleType {
     eDefaultOnly, // Only includes UA and user sheets
@@ -92,7 +92,7 @@ public:
                      nsIPresShell* aPresShell,
                      StyleType aStyleType);
 
-  virtual nsINode *GetParentObject() MOZ_OVERRIDE
+  virtual nsINode *GetParentObject() override
   {
     return mContent;
   }
@@ -120,10 +120,10 @@ public:
   // nsDOMCSSDeclaration abstract methods which should never be called
   // on a nsComputedDOMStyle object, but must be defined to avoid
   // compile errors.
-  virtual mozilla::css::Declaration* GetCSSDeclaration(bool) MOZ_OVERRIDE;
-  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration*) MOZ_OVERRIDE;
-  virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;
-  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) MOZ_OVERRIDE;
+  virtual mozilla::css::Declaration* GetCSSDeclaration(bool) override;
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration*) override;
+  virtual nsIDocument* DocToUpdate() override;
+  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
 
   static nsROCSSPrimitiveValue* MatrixToCSSValue(gfx3DMatrix& aMatrix);
 

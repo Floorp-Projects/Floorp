@@ -16,7 +16,7 @@
 #include "nsXRemoteService.h"
 #include "mozilla/Attributes.h"
 
-class nsGTKRemoteService MOZ_FINAL : public nsXRemoteService
+class nsGTKRemoteService final : public nsXRemoteService
 {
 public:
   // We will be a static singleton, so don't use the ordinary methods.
@@ -45,7 +45,7 @@ private:
 
 
   virtual void SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
-                                              uint32_t aTimestamp) MOZ_OVERRIDE;
+                                              uint32_t aTimestamp) override;
 
   nsInterfaceHashtable<nsPtrHashKey<GtkWidget>, nsIWeakReference> mWindows;
   GtkWidget* mServerWindow;  

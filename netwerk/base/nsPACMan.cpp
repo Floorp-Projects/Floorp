@@ -55,7 +55,7 @@ HttpRequestSucceeded(nsIStreamLoader *loader)
 // nsPACManCallback::OnQueryComplete on the Main thread when its completion is
 // discovered on the pac thread
 
-class ExecuteCallback MOZ_FINAL : public nsRunnable
+class ExecuteCallback final : public nsRunnable
 {
 public:
   ExecuteCallback(nsPACManCallback *aCallback,
@@ -95,7 +95,7 @@ private:
 // acts as a proxy to do that, as the PACMan is reference counted
 // and might be destroyed on either thread
 
-class ShutdownThread MOZ_FINAL : public nsRunnable
+class ShutdownThread final : public nsRunnable
 {
 public:
   explicit ShutdownThread(nsIThread *thread)
@@ -116,7 +116,7 @@ private:
 
 // Dispatch this to wait until the PAC thread shuts down.
 
-class WaitForThreadShutdown MOZ_FINAL : public nsRunnable
+class WaitForThreadShutdown final : public nsRunnable
 {
 public:
   explicit WaitForThreadShutdown(nsPACMan *aPACMan)
@@ -144,7 +144,7 @@ private:
 // the javascript PAC file has been installed (perhaps unsuccessfully)
 // and that there is no reason to queue executions anymore
 
-class PACLoadComplete MOZ_FINAL : public nsRunnable
+class PACLoadComplete final : public nsRunnable
 {
 public:
   explicit PACLoadComplete(nsPACMan *aPACMan)
@@ -170,7 +170,7 @@ private:
 // thread onto the PAC thread. There are 3 options: process the queue,
 // cancel the queue, and setup the javascript context with a new PAC file
 
-class ExecutePACThreadAction MOZ_FINAL : public nsRunnable
+class ExecutePACThreadAction final : public nsRunnable
 {
 public:
   // by default we just process the queue

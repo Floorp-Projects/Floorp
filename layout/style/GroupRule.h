@@ -44,11 +44,11 @@ public:
 
   // implement part of nsIStyleRule and Rule
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE
-  virtual void SetStyleSheet(CSSStyleSheet* aSheet) MOZ_OVERRIDE;
+  virtual void SetStyleSheet(CSSStyleSheet* aSheet) override;
 
   // to help implement nsIStyleRule
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
 public:
@@ -74,7 +74,7 @@ public:
 
   // non-virtual -- it is only called by subclasses
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE = 0;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override = 0;
 
   static bool
   CloneRuleInto(Rule* aRule, void* aArray)

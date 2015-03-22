@@ -17,7 +17,7 @@ namespace dom {
 
 class BroadcastChannelService;
 
-class BroadcastChannelParent MOZ_FINAL : public PBroadcastChannelParent
+class BroadcastChannelParent final : public PBroadcastChannelParent
 {
   friend class mozilla::ipc::BackgroundParentImpl;
 
@@ -32,11 +32,11 @@ private:
   ~BroadcastChannelParent();
 
   virtual bool
-  RecvPostMessage(const ClonedMessageData& aData) MOZ_OVERRIDE;
+  RecvPostMessage(const ClonedMessageData& aData) override;
 
-  virtual bool RecvClose() MOZ_OVERRIDE;
+  virtual bool RecvClose() override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   nsRefPtr<BroadcastChannelService> mService;
   nsString mOrigin;

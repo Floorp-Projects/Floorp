@@ -20,7 +20,7 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class AnimationTimeline MOZ_FINAL : public nsWrapperCache
+class AnimationTimeline final : public nsWrapperCache
 {
 public:
   explicit AnimationTimeline(nsIDocument* aDocument)
@@ -41,7 +41,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // AnimationTimeline methods
   Nullable<TimeDuration> GetCurrentTime() const;

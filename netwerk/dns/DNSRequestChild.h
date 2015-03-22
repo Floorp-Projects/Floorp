@@ -42,8 +42,8 @@ protected:
   friend class ChildDNSService;
   virtual ~DNSRequestChild() {}
 
-  virtual bool RecvLookupCompleted(const DNSRequestResponse& reply) MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual bool RecvLookupCompleted(const DNSRequestResponse& reply) override;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIDNSListener>  mListener;
   nsCOMPtr<nsIEventTarget>  mTarget;

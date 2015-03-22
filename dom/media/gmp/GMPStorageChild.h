@@ -30,11 +30,11 @@ public:
                 GMPRecordClient* aClient);
 
   // GMPRecord.
-  virtual GMPErr Open() MOZ_OVERRIDE;
-  virtual GMPErr Read() MOZ_OVERRIDE;
+  virtual GMPErr Open() override;
+  virtual GMPErr Read() override;
   virtual GMPErr Write(const uint8_t* aData,
-                       uint32_t aDataSize) MOZ_OVERRIDE;
-  virtual GMPErr Close() MOZ_OVERRIDE;
+                       uint32_t aDataSize) override;
+  virtual GMPErr Close() override;
 
   const nsCString& Name() const { return mName; }
 
@@ -82,15 +82,15 @@ protected:
 
   // PGMPStorageChild
   virtual bool RecvOpenComplete(const nsCString& aRecordName,
-                                const GMPErr& aStatus) MOZ_OVERRIDE;
+                                const GMPErr& aStatus) override;
   virtual bool RecvReadComplete(const nsCString& aRecordName,
                                 const GMPErr& aStatus,
-                                InfallibleTArray<uint8_t>&& aBytes) MOZ_OVERRIDE;
+                                InfallibleTArray<uint8_t>&& aBytes) override;
   virtual bool RecvWriteComplete(const nsCString& aRecordName,
-                                 const GMPErr& aStatus) MOZ_OVERRIDE;
+                                 const GMPErr& aStatus) override;
   virtual bool RecvRecordNames(InfallibleTArray<nsCString>&& aRecordNames,
-                               const GMPErr& aStatus) MOZ_OVERRIDE;
-  virtual bool RecvShutdown() MOZ_OVERRIDE;
+                               const GMPErr& aStatus) override;
+  virtual bool RecvShutdown() override;
 
 private:
   Monitor mMonitor;

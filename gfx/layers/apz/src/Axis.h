@@ -267,21 +267,21 @@ protected:
 class AxisX : public Axis {
 public:
   explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
-  virtual const char* Name() const MOZ_OVERRIDE;
+  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const override;
+  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
+  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
+  virtual const char* Name() const override;
 };
 
 class AxisY : public Axis {
 public:
   explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
-  virtual const char* Name() const MOZ_OVERRIDE;
+  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const override;
+  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
+  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
+  virtual const char* Name() const override;
 };
 
 }

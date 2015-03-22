@@ -45,7 +45,7 @@ class FactoryRequestParams;
 class IDBOpenDBRequest;
 class LoggingInfo;
 
-class IDBFactory MOZ_FINAL
+class IDBFactory final
   : public nsISupports
   , public nsWrapperCache
 {
@@ -202,7 +202,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   IDBFactory();

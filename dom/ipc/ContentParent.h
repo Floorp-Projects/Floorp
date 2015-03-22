@@ -66,7 +66,7 @@ class MemoryReport;
 class TabContext;
 class ContentBridgeParent;
 
-class ContentParent MOZ_FINAL : public PContentParent
+class ContentParent final : public PContentParent
                               , public nsIContentParent
                               , public nsIObserver
                               , public nsIDOMGeoPositionCallback
@@ -90,7 +90,7 @@ public:
         return sNuwaReady;
     }
 #endif
-    virtual bool IsContentParent() MOZ_OVERRIDE { return true; }
+    virtual bool IsContentParent() override { return true; }
     /**
      * Start up the content-process machinery.  This might include
      * scheduling pre-launch tasks.
@@ -150,14 +150,14 @@ public:
                                         ContentParentId* aCpId,
                                         bool* aIsForApp,
                                         bool* aIsForBrowser,
-                                        TabId* aTabId) MOZ_OVERRIDE;
-    virtual bool RecvBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
+                                        TabId* aTabId) override;
+    virtual bool RecvBridgeToChildProcess(const ContentParentId& aCpId) override;
 
-    virtual bool RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv) MOZ_OVERRIDE;
-    virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) MOZ_OVERRIDE;
+    virtual bool RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv) override;
+    virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) override;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
                                  nsTArray<PluginTag>* aPlugins,
-                                 uint32_t* aNewPluginEpoch) MOZ_OVERRIDE;
+                                 uint32_t* aNewPluginEpoch) override;
 
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
@@ -170,17 +170,17 @@ public:
      * MessageManagerCallback methods that we override.
      */
     virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
-                                            bool aRunInGlobalScope) MOZ_OVERRIDE;
+                                            bool aRunInGlobalScope) override;
     virtual bool DoSendAsyncMessage(JSContext* aCx,
                                     const nsAString& aMessage,
                                     const mozilla::dom::StructuredCloneData& aData,
                                     JS::Handle<JSObject *> aCpows,
-                                    nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
-    virtual bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE;
-    virtual bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE;
-    virtual bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE;
-    virtual bool CheckAppHasStatus(unsigned short aStatus) MOZ_OVERRIDE;
-    virtual bool KillChild() MOZ_OVERRIDE;
+                                    nsIPrincipal* aPrincipal) override;
+    virtual bool CheckPermission(const nsAString& aPermission) override;
+    virtual bool CheckManifestURL(const nsAString& aManifestURL) override;
+    virtual bool CheckAppHasPermission(const nsAString& aPermission) override;
+    virtual bool CheckAppHasStatus(unsigned short aStatus) override;
+    virtual bool KillChild() override;
 
     /** Notify that a tab is beginning its destruction sequence. */
     void NotifyTabDestroying(PBrowserParent* aTab);
@@ -191,7 +191,7 @@ public:
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
     TestShellParent* GetTestShellSingleton();
-    jsipc::CPOWManager* GetCPOWManager() MOZ_OVERRIDE;
+    jsipc::CPOWManager* GetCPOWManager() override;
 
     static TabId
     AllocateTabId(const TabId& aOpenerTabId,
@@ -204,8 +204,8 @@ public:
     bool RequestRunToCompletion();
 
     bool IsAlive();
-    virtual bool IsForApp() MOZ_OVERRIDE;
-    virtual bool IsForBrowser() MOZ_OVERRIDE
+    virtual bool IsForApp() override;
+    virtual bool IsForBrowser() override
     {
       return mIsForBrowser;
     }
@@ -252,7 +252,7 @@ public:
       mKillHardAnnotation = aReason;
     }
 
-    ContentParentId ChildID() MOZ_OVERRIDE { return mChildID; }
+    ContentParentId ChildID() override { return mChildID; }
     const nsString& AppManifestURL() const { return mAppManifestURL; }
 
     bool IsPreallocated();
@@ -265,55 +265,55 @@ public:
      */
     void FriendlyName(nsAString& aName, bool aAnonymize = false);
 
-    virtual void OnChannelError() MOZ_OVERRIDE;
+    virtual void OnChannelError() override;
 
-    virtual void OnBeginSyncTransaction() MOZ_OVERRIDE;
+    virtual void OnBeginSyncTransaction() override;
 
     virtual PCrashReporterParent*
     AllocPCrashReporterParent(const NativeThreadId& tid,
-                              const uint32_t& processType) MOZ_OVERRIDE;
+                              const uint32_t& processType) override;
     virtual bool
     RecvPCrashReporterConstructor(PCrashReporterParent* actor,
                                   const NativeThreadId& tid,
-                                  const uint32_t& processType) MOZ_OVERRIDE;
+                                  const uint32_t& processType) override;
 
-    virtual PNeckoParent* AllocPNeckoParent() MOZ_OVERRIDE;
-    virtual bool RecvPNeckoConstructor(PNeckoParent* aActor) MOZ_OVERRIDE {
+    virtual PNeckoParent* AllocPNeckoParent() override;
+    virtual bool RecvPNeckoConstructor(PNeckoParent* aActor) override {
         return PContentParent::RecvPNeckoConstructor(aActor);
     }
 
-    virtual PPrintingParent* AllocPPrintingParent() MOZ_OVERRIDE;
-    virtual bool RecvPPrintingConstructor(PPrintingParent* aActor) MOZ_OVERRIDE;
-    virtual bool DeallocPPrintingParent(PPrintingParent* aActor) MOZ_OVERRIDE;
+    virtual PPrintingParent* AllocPPrintingParent() override;
+    virtual bool RecvPPrintingConstructor(PPrintingParent* aActor) override;
+    virtual bool DeallocPPrintingParent(PPrintingParent* aActor) override;
 
     virtual PScreenManagerParent*
     AllocPScreenManagerParent(uint32_t* aNumberOfScreens,
                               float* aSystemDefaultScale,
-                              bool* aSuccess) MOZ_OVERRIDE;
-    virtual bool DeallocPScreenManagerParent(PScreenManagerParent* aActor) MOZ_OVERRIDE;
+                              bool* aSuccess) override;
+    virtual bool DeallocPScreenManagerParent(PScreenManagerParent* aActor) override;
 
-    virtual PHalParent* AllocPHalParent() MOZ_OVERRIDE;
-    virtual bool RecvPHalConstructor(PHalParent* aActor) MOZ_OVERRIDE {
+    virtual PHalParent* AllocPHalParent() override;
+    virtual bool RecvPHalConstructor(PHalParent* aActor) override {
         return PContentParent::RecvPHalConstructor(aActor);
     }
 
-    virtual PStorageParent* AllocPStorageParent() MOZ_OVERRIDE;
-    virtual bool RecvPStorageConstructor(PStorageParent* aActor) MOZ_OVERRIDE {
+    virtual PStorageParent* AllocPStorageParent() override;
+    virtual bool RecvPStorageConstructor(PStorageParent* aActor) override {
         return PContentParent::RecvPStorageConstructor(aActor);
     }
 
     virtual PJavaScriptParent*
-    AllocPJavaScriptParent() MOZ_OVERRIDE;
+    AllocPJavaScriptParent() override;
     virtual bool
-    RecvPJavaScriptConstructor(PJavaScriptParent* aActor) MOZ_OVERRIDE {
+    RecvPJavaScriptConstructor(PJavaScriptParent* aActor) override {
         return PContentParent::RecvPJavaScriptConstructor(aActor);
     }
-    virtual PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent() MOZ_OVERRIDE;
+    virtual PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent() override;
 
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
                                            const nsString& aPageURL,
                                            const bool& aIsAudio,
-                                           const bool& aIsVideo) MOZ_OVERRIDE;
+                                           const bool& aIsVideo) override;
 
     bool CycleCollectWithLogs(bool aDumpAllTraces,
                               nsICycleCollectorLogSink* aSink,
@@ -321,14 +321,14 @@ public:
 
     virtual PBlobParent* SendPBlobConstructor(
         PBlobParent* aActor,
-        const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+        const BlobConstructorParams& aParams) override;
 
     virtual bool RecvAllocateTabId(const TabId& aOpenerTabId,
                                    const IPCTabContext& aContext,
                                    const ContentParentId& aCpId,
-                                   TabId* aTabId) MOZ_OVERRIDE;
+                                   TabId* aTabId) override;
 
-    virtual bool RecvDeallocateTabId(const TabId& aTabId) MOZ_OVERRIDE;
+    virtual bool RecvDeallocateTabId(const TabId& aTabId) override;
 
     nsTArray<TabContext> GetManagedTabContext();
 
@@ -336,26 +336,26 @@ public:
     AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
                                    const URIParams& aDocumentURI,
                                    const bool& aStickDocument,
-                                   const TabId& aTabId) MOZ_OVERRIDE;
+                                   const TabId& aTabId) override;
     virtual bool
     RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
                                        const URIParams& aManifestURI,
                                        const URIParams& aDocumentURI,
                                        const bool& stickDocument,
-                                       const TabId& aTabId) MOZ_OVERRIDE;
+                                       const TabId& aTabId) override;
     virtual bool
-    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) MOZ_OVERRIDE;
+    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) override;
 
-    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) MOZ_OVERRIDE;
+    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) override;
 
-    virtual bool RecvFinishShutdown() MOZ_OVERRIDE;
+    virtual bool RecvFinishShutdown() override;
 
 protected:
-    void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    void OnChannelConnected(int32_t pid) override;
+    virtual void ActorDestroy(ActorDestroyReason why) override;
     void OnNuwaForkTimeout();
 
-    bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+    bool ShouldContinueFromReplyTimeout() override;
 
 private:
     static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;
@@ -391,7 +391,7 @@ private:
         const uint32_t& chromeFlags,
         const ContentParentId& aCpId,
         const bool& aIsForApp,
-        const bool& aIsForBrowser) MOZ_OVERRIDE;
+        const bool& aIsForBrowser) override;
     using PContentParent::SendPTestShellConstructor;
 
     // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated may be
@@ -490,86 +490,86 @@ private:
 
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
-                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+                           base::ProcessId aOtherProcess) override;
     PImageBridgeParent*
     AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+                            base::ProcessId aOtherProcess) override;
 
     PSharedBufferManagerParent*
     AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
-                                     base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+                                     base::ProcessId aOtherProcess) override;
     PBackgroundParent*
     AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
-                           MOZ_OVERRIDE;
+                           override;
 
     PProcessHangMonitorParent*
     AllocPProcessHangMonitorParent(Transport* aTransport,
-                                   ProcessId aOtherProcess) MOZ_OVERRIDE;
+                                   ProcessId aOtherProcess) override;
 
     virtual bool RecvGetProcessAttributes(ContentParentId* aCpId,
                                           bool* aIsForApp,
-                                          bool* aIsForBrowser) MOZ_OVERRIDE;
+                                          bool* aIsForBrowser) override;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps)
-        MOZ_OVERRIDE;
+        override;
 
-    virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
+    virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 
-    virtual bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*) MOZ_OVERRIDE;
+    virtual bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*) override;
     virtual PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
                                                 const IPCTabContext& aContext,
                                                 const uint32_t& aChromeFlags,
                                                 const ContentParentId& aCpId,
                                                 const bool& aIsForApp,
-                                                const bool& aIsForBrowser) MOZ_OVERRIDE;
-    virtual bool DeallocPBrowserParent(PBrowserParent* frame) MOZ_OVERRIDE;
+                                                const bool& aIsForBrowser) override;
+    virtual bool DeallocPBrowserParent(PBrowserParent* frame) override;
 
     virtual PDeviceStorageRequestParent*
-    AllocPDeviceStorageRequestParent(const DeviceStorageParams&) MOZ_OVERRIDE;
-    virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*) MOZ_OVERRIDE;
+    AllocPDeviceStorageRequestParent(const DeviceStorageParams&) override;
+    virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*) override;
 
     virtual PFileSystemRequestParent*
-    AllocPFileSystemRequestParent(const FileSystemParams&) MOZ_OVERRIDE;
+    AllocPFileSystemRequestParent(const FileSystemParams&) override;
 
     virtual bool
-    DeallocPFileSystemRequestParent(PFileSystemRequestParent*) MOZ_OVERRIDE;
+    DeallocPFileSystemRequestParent(PFileSystemRequestParent*) override;
 
     virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams)
-                                          MOZ_OVERRIDE;
-    virtual bool DeallocPBlobParent(PBlobParent* aActor) MOZ_OVERRIDE;
+                                          override;
+    virtual bool DeallocPBlobParent(PBlobParent* aActor) override;
 
-    virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) MOZ_OVERRIDE;
+    virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) override;
 
     virtual bool RecvGetRandomValues(const uint32_t& length,
-                                     InfallibleTArray<uint8_t>* randomValues) MOZ_OVERRIDE;
+                                     InfallibleTArray<uint8_t>* randomValues) override;
 
     virtual bool RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
-                                 const uint32_t& aFlags, bool* aIsSecureURI) MOZ_OVERRIDE;
+                                 const uint32_t& aFlags, bool* aIsSecureURI) override;
 
-    virtual bool DeallocPHalParent(PHalParent*) MOZ_OVERRIDE;
+    virtual bool DeallocPHalParent(PHalParent*) override;
 
     virtual PMemoryReportRequestParent*
     AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                     const bool &aAnonymize,
                                     const bool &aMinimizeMemoryUsage,
-                                    const MaybeFileDesc &aDMDFile) MOZ_OVERRIDE;
-    virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) MOZ_OVERRIDE;
+                                    const MaybeFileDesc &aDMDFile) override;
+    virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) override;
 
     virtual PCycleCollectWithLogsParent*
     AllocPCycleCollectWithLogsParent(const bool& aDumpAllTraces,
                                      const FileDescriptor& aGCLog,
-                                     const FileDescriptor& aCCLog) MOZ_OVERRIDE;
+                                     const FileDescriptor& aCCLog) override;
     virtual bool
-    DeallocPCycleCollectWithLogsParent(PCycleCollectWithLogsParent* aActor) MOZ_OVERRIDE;
+    DeallocPCycleCollectWithLogsParent(PCycleCollectWithLogsParent* aActor) override;
 
-    virtual PTestShellParent* AllocPTestShellParent() MOZ_OVERRIDE;
-    virtual bool DeallocPTestShellParent(PTestShellParent* shell) MOZ_OVERRIDE;
+    virtual PTestShellParent* AllocPTestShellParent() override;
+    virtual bool DeallocPTestShellParent(PTestShellParent* shell) override;
 
-    virtual PMobileConnectionParent* AllocPMobileConnectionParent(const uint32_t& aClientId) MOZ_OVERRIDE;
-    virtual bool DeallocPMobileConnectionParent(PMobileConnectionParent* aActor) MOZ_OVERRIDE;
+    virtual PMobileConnectionParent* AllocPMobileConnectionParent(const uint32_t& aClientId) override;
+    virtual bool DeallocPMobileConnectionParent(PMobileConnectionParent* aActor) override;
 
-    virtual bool DeallocPNeckoParent(PNeckoParent* necko) MOZ_OVERRIDE;
+    virtual bool DeallocPNeckoParent(PNeckoParent* necko) override;
 
     virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
             const OptionalURIParams& aUri,
@@ -580,70 +580,70 @@ private:
             const bool& aForceSave,
             const int64_t& aContentLength,
             const OptionalURIParams& aReferrer,
-            PBrowserParent* aBrowser) MOZ_OVERRIDE;
-    virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService) MOZ_OVERRIDE;
+            PBrowserParent* aBrowser) override;
+    virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService) override;
 
-    virtual PCellBroadcastParent* AllocPCellBroadcastParent() MOZ_OVERRIDE;
-    virtual bool DeallocPCellBroadcastParent(PCellBroadcastParent*) MOZ_OVERRIDE;
-    virtual bool RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor) MOZ_OVERRIDE;
+    virtual PCellBroadcastParent* AllocPCellBroadcastParent() override;
+    virtual bool DeallocPCellBroadcastParent(PCellBroadcastParent*) override;
+    virtual bool RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor) override;
 
-    virtual PSmsParent* AllocPSmsParent() MOZ_OVERRIDE;
-    virtual bool DeallocPSmsParent(PSmsParent*) MOZ_OVERRIDE;
+    virtual PSmsParent* AllocPSmsParent() override;
+    virtual bool DeallocPSmsParent(PSmsParent*) override;
 
-    virtual PTelephonyParent* AllocPTelephonyParent() MOZ_OVERRIDE;
-    virtual bool DeallocPTelephonyParent(PTelephonyParent*) MOZ_OVERRIDE;
+    virtual PTelephonyParent* AllocPTelephonyParent() override;
+    virtual bool DeallocPTelephonyParent(PTelephonyParent*) override;
 
-    virtual PVoicemailParent* AllocPVoicemailParent() MOZ_OVERRIDE;
-    virtual bool RecvPVoicemailConstructor(PVoicemailParent* aActor) MOZ_OVERRIDE;
-    virtual bool DeallocPVoicemailParent(PVoicemailParent* aActor) MOZ_OVERRIDE;
+    virtual PVoicemailParent* AllocPVoicemailParent() override;
+    virtual bool RecvPVoicemailConstructor(PVoicemailParent* aActor) override;
+    virtual bool DeallocPVoicemailParent(PVoicemailParent* aActor) override;
 
-    virtual bool DeallocPStorageParent(PStorageParent* aActor) MOZ_OVERRIDE;
+    virtual bool DeallocPStorageParent(PStorageParent* aActor) override;
 
-    virtual PBluetoothParent* AllocPBluetoothParent() MOZ_OVERRIDE;
-    virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor) MOZ_OVERRIDE;
-    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) MOZ_OVERRIDE;
+    virtual PBluetoothParent* AllocPBluetoothParent() override;
+    virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor) override;
+    virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) override;
 
-    virtual PFMRadioParent* AllocPFMRadioParent() MOZ_OVERRIDE;
-    virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) MOZ_OVERRIDE;
+    virtual PFMRadioParent* AllocPFMRadioParent() override;
+    virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) override;
 
     virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
                                  const asmjscache::OpenMode& aOpenMode,
                                  const asmjscache::WriteParams& aWriteParams,
-                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                 const IPC::Principal& aPrincipal) override;
     virtual bool DeallocPAsmJSCacheEntryParent(
-                                   PAsmJSCacheEntryParent* aActor) MOZ_OVERRIDE;
+                                   PAsmJSCacheEntryParent* aActor) override;
 
-    virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() MOZ_OVERRIDE;
-    virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor) MOZ_OVERRIDE;
-    virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor) MOZ_OVERRIDE;
+    virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() override;
+    virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor) override;
+    virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor) override;
 
-    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs) MOZ_OVERRIDE;
-    virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) MOZ_OVERRIDE;
+    virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs) override;
+    virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) override;
 
-    virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) MOZ_OVERRIDE;
+    virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) override;
 
     virtual bool RecvSetClipboardText(const nsString& text,
                                       const bool& isPrivateData,
-                                      const int32_t& whichClipboard) MOZ_OVERRIDE;
-    virtual bool RecvGetClipboardText(const int32_t& whichClipboard, nsString* text) MOZ_OVERRIDE;
-    virtual bool RecvEmptyClipboard(const int32_t& whichClipboard) MOZ_OVERRIDE;
-    virtual bool RecvClipboardHasText(const int32_t& whichClipboard, bool* hasText) MOZ_OVERRIDE;
+                                      const int32_t& whichClipboard) override;
+    virtual bool RecvGetClipboardText(const int32_t& whichClipboard, nsString* text) override;
+    virtual bool RecvEmptyClipboard(const int32_t& whichClipboard) override;
+    virtual bool RecvClipboardHasText(const int32_t& whichClipboard, bool* hasText) override;
 
     virtual bool RecvGetSystemColors(const uint32_t& colorsCount,
-                                     InfallibleTArray<uint32_t>* colors) MOZ_OVERRIDE;
+                                     InfallibleTArray<uint32_t>* colors) override;
     virtual bool RecvGetIconForExtension(const nsCString& aFileExt,
                                          const uint32_t& aIconSize,
-                                         InfallibleTArray<uint8_t>* bits) MOZ_OVERRIDE;
-    virtual bool RecvGetShowPasswordSetting(bool* showPassword) MOZ_OVERRIDE;
+                                         InfallibleTArray<uint8_t>* bits) override;
+    virtual bool RecvGetShowPasswordSetting(bool* showPassword) override;
 
-    virtual bool RecvStartVisitedQuery(const URIParams& uri) MOZ_OVERRIDE;
+    virtual bool RecvStartVisitedQuery(const URIParams& uri) override;
 
     virtual bool RecvVisitURI(const URIParams& uri,
                               const OptionalURIParams& referrer,
-                              const uint32_t& flags) MOZ_OVERRIDE;
+                              const uint32_t& flags) override;
 
     virtual bool RecvSetURITitle(const URIParams& uri,
-                                 const nsString& title) MOZ_OVERRIDE;
+                                 const nsString& title) override;
 
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const bool& aTextClickable,
@@ -651,133 +651,133 @@ private:
                                            const nsString& aBidi, const nsString& aLang,
                                            const nsString& aData,
                                            const IPC::Principal& aPrincipal,
-                                           const bool& aInPrivateBrowsing) MOZ_OVERRIDE;
+                                           const bool& aInPrivateBrowsing) override;
 
     virtual bool RecvCloseAlert(const nsString& aName,
-                                const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                const IPC::Principal& aPrincipal) override;
 
-    virtual bool RecvLoadURIExternal(const URIParams& uri) MOZ_OVERRIDE;
+    virtual bool RecvLoadURIExternal(const URIParams& uri) override;
 
     virtual bool RecvSyncMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aRetvals) MOZ_OVERRIDE;
+                                 InfallibleTArray<nsString>* aRetvals) override;
     virtual bool RecvRpcMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aRetvals) MOZ_OVERRIDE;
+                                InfallibleTArray<nsString>* aRetvals) override;
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
-                                  const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                  const IPC::Principal& aPrincipal) override;
 
     virtual bool RecvFilePathUpdateNotify(const nsString& aType,
                                           const nsString& aStorageName,
                                           const nsString& aFilePath,
-                                          const nsCString& aReason) MOZ_OVERRIDE;
+                                          const nsCString& aReason) override;
 
     virtual bool RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
-                                            const bool& aHighAccuracy) MOZ_OVERRIDE;
-    virtual bool RecvRemoveGeolocationListener() MOZ_OVERRIDE;
-    virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable) MOZ_OVERRIDE;
+                                            const bool& aHighAccuracy) override;
+    virtual bool RecvRemoveGeolocationListener() override;
+    virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable) override;
 
-    virtual bool RecvConsoleMessage(const nsString& aMessage) MOZ_OVERRIDE;
+    virtual bool RecvConsoleMessage(const nsString& aMessage) override;
     virtual bool RecvScriptError(const nsString& aMessage,
                                  const nsString& aSourceName,
                                  const nsString& aSourceLine,
                                  const uint32_t& aLineNumber,
                                  const uint32_t& aColNumber,
                                  const uint32_t& aFlags,
-                                 const nsCString& aCategory) MOZ_OVERRIDE;
+                                 const nsCString& aCategory) override;
 
-    virtual bool RecvPrivateDocShellsExist(const bool& aExist) MOZ_OVERRIDE;
+    virtual bool RecvPrivateDocShellsExist(const bool& aExist) override;
 
-    virtual bool RecvFirstIdle() MOZ_OVERRIDE;
+    virtual bool RecvFirstIdle() override;
 
     virtual bool RecvAudioChannelGetState(const AudioChannel& aChannel,
                                           const bool& aElementHidden,
                                           const bool& aElementWasHidden,
-                                          AudioChannelState* aValue) MOZ_OVERRIDE;
+                                          AudioChannelState* aValue) override;
 
     virtual bool RecvAudioChannelRegisterType(const AudioChannel& aChannel,
-                                              const bool& aWithVideo) MOZ_OVERRIDE;
+                                              const bool& aWithVideo) override;
     virtual bool RecvAudioChannelUnregisterType(const AudioChannel& aChannel,
                                                 const bool& aElementHidden,
-                                                const bool& aWithVideo) MOZ_OVERRIDE;
+                                                const bool& aWithVideo) override;
 
-    virtual bool RecvAudioChannelChangedNotification() MOZ_OVERRIDE;
+    virtual bool RecvAudioChannelChangedNotification() override;
 
     virtual bool RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
-                                                     const bool& aHidden) MOZ_OVERRIDE;
-    virtual bool RecvGetSystemMemory(const uint64_t& getterId) MOZ_OVERRIDE;
+                                                     const bool& aHidden) override;
+    virtual bool RecvGetSystemMemory(const uint64_t& getterId) override;
 
     virtual bool RecvDataStoreGetStores(
                        const nsString& aName,
                        const nsString& aOwner,
                        const IPC::Principal& aPrincipal,
-                       InfallibleTArray<DataStoreSetting>* aValue) MOZ_OVERRIDE;
+                       InfallibleTArray<DataStoreSetting>* aValue) override;
 
-    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) MOZ_OVERRIDE;
+    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) override;
 
-    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) MOZ_OVERRIDE;
+    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) override;
 
-    virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
+    virtual bool RecvSystemMessageHandled() override;
 
-    virtual bool RecvNuwaReady() MOZ_OVERRIDE;
+    virtual bool RecvNuwaReady() override;
 
-    virtual bool RecvNuwaWaitForFreeze() MOZ_OVERRIDE;
+    virtual bool RecvNuwaWaitForFreeze() override;
 
     virtual bool RecvAddNewProcess(const uint32_t& aPid,
-                                   InfallibleTArray<ProtocolFdMapping>&& aFds) MOZ_OVERRIDE;
+                                   InfallibleTArray<ProtocolFdMapping>&& aFds) override;
 
-    virtual bool RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint) MOZ_OVERRIDE;
+    virtual bool RecvCreateFakeVolume(const nsString& fsName, const nsString& mountPoint) override;
 
-    virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) MOZ_OVERRIDE;
+    virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) override;
 
     virtual bool RecvKeywordToURI(const nsCString& aKeyword,
                                   nsString* aProviderName,
                                   OptionalInputStreamParams* aPostData,
-                                  OptionalURIParams* aURI) MOZ_OVERRIDE;
+                                  OptionalURIParams* aURI) override;
 
     virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
-                                                const nsString &aKeyword) MOZ_OVERRIDE; 
+                                                const nsString &aKeyword) override; 
 
-    virtual void ProcessingError(Result aCode, const char* aMsgName) MOZ_OVERRIDE;
+    virtual void ProcessingError(Result aCode, const char* aMsgName) override;
 
-    virtual bool RecvAllocateLayerTreeId(uint64_t* aId) MOZ_OVERRIDE;
-    virtual bool RecvDeallocateLayerTreeId(const uint64_t& aId) MOZ_OVERRIDE;
+    virtual bool RecvAllocateLayerTreeId(uint64_t* aId) override;
+    virtual bool RecvDeallocateLayerTreeId(const uint64_t& aId) override;
 
     virtual bool RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
                                               int32_t* aStatus,
-                                              bool* aSuccess) MOZ_OVERRIDE;
+                                              bool* aSuccess) override;
 
     virtual bool RecvAddIdleObserver(const uint64_t& observerId,
-                                     const uint32_t& aIdleTimeInS) MOZ_OVERRIDE;
+                                     const uint32_t& aIdleTimeInS) override;
     virtual bool RecvRemoveIdleObserver(const uint64_t& observerId,
-                                        const uint32_t& aIdleTimeInS) MOZ_OVERRIDE;
+                                        const uint32_t& aIdleTimeInS) override;
 
     virtual bool
-    RecvBackUpXResources(const FileDescriptor& aXSocketFd) MOZ_OVERRIDE;
+    RecvBackUpXResources(const FileDescriptor& aXSocketFd) override;
 
     virtual bool
-    RecvOpenAnonymousTemporaryFile(FileDescOrError* aFD) MOZ_OVERRIDE;
+    RecvOpenAnonymousTemporaryFile(FileDescOrError* aFD) override;
 
     virtual bool
     RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
                            const nsString& keytype, const nsString& keyparams,
-                           nsString* newValue) MOZ_OVERRIDE;
+                           nsString* newValue) override;
 
     virtual bool
     RecvKeygenProvideContent(nsString* aAttribute,
-                             nsTArray<nsString>* aContent) MOZ_OVERRIDE;
+                             nsTArray<nsString>* aContent) override;
 
     virtual PFileDescriptorSetParent*
-    AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) MOZ_OVERRIDE;
+    AllocPFileDescriptorSetParent(const mozilla::ipc::FileDescriptor&) override;
 
     virtual bool
-    DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) MOZ_OVERRIDE;
+    DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) override;
 
     virtual bool
     RecvGetFileReferences(const PersistenceType& aPersistenceType,
@@ -787,12 +787,12 @@ private:
                           int32_t* aRefCnt,
                           int32_t* aDBRefCnt,
                           int32_t* aSliceRefCnt,
-                          bool* aResult) MOZ_OVERRIDE;
+                          bool* aResult) override;
 
-    virtual PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) MOZ_OVERRIDE;
-    virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) MOZ_OVERRIDE;
+    virtual PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) override;
+    virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) override;
     virtual bool RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
-                                               PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) MOZ_OVERRIDE;
+                                               PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) override;
 
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more

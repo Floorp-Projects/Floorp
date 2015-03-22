@@ -3772,7 +3772,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
 
 namespace {
 
-class HandlingUserInputHelper MOZ_FINAL : public nsIJSRAIIHelper
+class HandlingUserInputHelper final : public nsIJSRAIIHelper
 {
 public:
   explicit HandlingUserInputHelper(bool aHandlingUserInput);

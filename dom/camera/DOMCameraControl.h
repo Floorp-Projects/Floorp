@@ -45,7 +45,7 @@ class StartRecordingHelper;
   { 0x8b, 0x3f, 0x15, 0xb3, 0xc9, 0x96, 0x23, 0x62 } }
 
 // Main camera control.
-class nsDOMCameraControl MOZ_FINAL : public DOMMediaStream
+class nsDOMCameraControl final : public DOMMediaStream
                                    , public nsSupportsWeakReference
 {
 public:
@@ -123,7 +123,7 @@ public:
   already_AddRefed<dom::Promise> ReleaseHardware(ErrorResult& aRv);
   void ResumeContinuousFocus(ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   operator nsISupports*() { return static_cast<DOMMediaStream*>(this); }
 
@@ -144,7 +144,7 @@ public:
 protected:
   virtual ~nsDOMCameraControl();
 
-  class DOMCameraConfiguration MOZ_FINAL : public dom::CameraConfiguration
+  class DOMCameraConfiguration final : public dom::CameraConfiguration
   {
   public:
     NS_INLINE_DECL_REFCOUNTING(DOMCameraConfiguration)
@@ -186,7 +186,7 @@ protected:
 
   already_AddRefed<dom::Promise> CreatePromise(ErrorResult& aRv);
   void AbortPromise(nsRefPtr<dom::Promise>& aPromise);
-  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual void EventListenerAdded(nsIAtom* aType) override;
   void DispatchPreviewStateEvent(DOMCameraControlListener::PreviewState aState);
   void DispatchStateEvent(const nsString& aType, const nsString& aState);
 

@@ -25,7 +25,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class WorkerDebugger;
 
-class WorkerDebuggerManager MOZ_FINAL : public nsIWorkerDebuggerManager
+class WorkerDebuggerManager final : public nsIWorkerDebuggerManager
 {
   friend class ::RegisterDebuggerRunnable;
 

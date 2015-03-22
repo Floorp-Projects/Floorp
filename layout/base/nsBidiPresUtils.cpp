@@ -2069,7 +2069,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor MOZ_FINAL
+class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
   : public nsBidiPresUtils::BidiProcessor
 {
 public:
@@ -2090,21 +2090,21 @@ public:
 
   virtual void SetText(const char16_t* aText,
                        int32_t         aLength,
-                       nsBidiDirection aDirection) MOZ_OVERRIDE
+                       nsBidiDirection aDirection) override
   {
     mFontMetrics->SetTextRunRTL(aDirection==NSBIDI_RTL);
     mText = aText;
     mLength = aLength;
   }
 
-  virtual nscoord GetWidth() MOZ_OVERRIDE
+  virtual nscoord GetWidth() override
   {
     return nsLayoutUtils::AppUnitWidthOfString(mText, mLength, *mFontMetrics,
                                                *mTextRunConstructionContext);
   }
 
   virtual void DrawText(nscoord aIOffset,
-                        nscoord) MOZ_OVERRIDE
+                        nscoord) override
   {
     nsPoint pt(mPt);
     if (mFontMetrics->GetVertical()) {

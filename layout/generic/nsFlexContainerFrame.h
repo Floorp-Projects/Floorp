@@ -41,21 +41,21 @@ public:
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
   virtual nscoord
-    GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    GetMinISize(nsRenderingContext* aRenderingContext) override;
   virtual nscoord
-    GetPrefISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    GetPrefISize(nsRenderingContext* aRenderingContext) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
   // Flexbox-specific public methods
   bool IsHorizontal();

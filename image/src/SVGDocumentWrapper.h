@@ -35,7 +35,7 @@ class SVGSVGElement;
 
 namespace image {
 
-class SVGDocumentWrapper MOZ_FINAL : public nsIStreamListener,
+class SVGDocumentWrapper final : public nsIStreamListener,
                                      public nsIObserver,
                                      nsSupportsWeakReference
 {

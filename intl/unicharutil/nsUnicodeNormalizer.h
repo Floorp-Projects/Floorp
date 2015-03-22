@@ -20,10 +20,10 @@ public:
 
    NS_DECL_ISUPPORTS 
 
-   NS_IMETHOD NormalizeUnicodeNFD( const nsAString& aSrc, nsAString& aDest) MOZ_OVERRIDE;
-   NS_IMETHOD NormalizeUnicodeNFC( const nsAString& aSrc, nsAString& aDest) MOZ_OVERRIDE;
-   NS_IMETHOD NormalizeUnicodeNFKD( const nsAString& aSrc, nsAString& aDest) MOZ_OVERRIDE;
-   NS_IMETHOD NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest) MOZ_OVERRIDE;
+   NS_IMETHOD NormalizeUnicodeNFD( const nsAString& aSrc, nsAString& aDest) override;
+   NS_IMETHOD NormalizeUnicodeNFC( const nsAString& aSrc, nsAString& aDest) override;
+   NS_IMETHOD NormalizeUnicodeNFKD( const nsAString& aSrc, nsAString& aDest) override;
+   NS_IMETHOD NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest) override;
 
    // low-level access to the composition data needed for HarfBuzz callbacks
    static bool Compose(uint32_t a, uint32_t b, uint32_t *ab);

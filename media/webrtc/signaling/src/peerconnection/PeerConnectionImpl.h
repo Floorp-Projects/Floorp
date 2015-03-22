@@ -140,7 +140,7 @@ class RemoteSourceStreamInfo;
 // Uuid Generator
 class PCUuidGenerator : public mozilla::JsepUuidGenerator {
  public:
-  virtual bool Generate(std::string* idp) MOZ_OVERRIDE;
+  virtual bool Generate(std::string* idp) override;
 
  private:
   nsCOMPtr<nsIUUIDGenerator> mGenerator;
@@ -227,7 +227,7 @@ class RTCStatsQuery {
     } while(0)
 #define PC_AUTO_ENTER_API_CALL_NO_CHECK() CheckThread()
 
-class PeerConnectionImpl MOZ_FINAL : public nsISupports,
+class PeerConnectionImpl final : public nsISupports,
 #ifdef MOZILLA_INTERNAL_API
                                      public mozilla::DataChannelConnection::DataConnectionListener,
                                      public nsNSSShutDownObject,
@@ -274,7 +274,7 @@ public:
 #ifdef MOZILLA_INTERNAL_API
     // PeerConnectionImpl only inherits from mozilla::DataChannelConnection
     // inside libxul.
-    MOZ_OVERRIDE
+    override
 #endif
     ;
 
@@ -595,7 +595,7 @@ public:
 
   // for monitoring changes in stream ownership
   // PeerConnectionMedia can't do it because it doesn't know about principals
-  virtual void PrincipalChanged(DOMMediaStream* aMediaStream) MOZ_OVERRIDE;
+  virtual void PrincipalChanged(DOMMediaStream* aMediaStream) override;
 
   nsresult GetRemoteTrackId(const std::string streamId,
                             TrackID numericTrackId,
@@ -638,7 +638,7 @@ private:
   }
 
 #ifdef MOZILLA_INTERNAL_API
-  void virtualDestroyNSSReference() MOZ_FINAL;
+  void virtualDestroyNSSReference() final;
   void destructorSafeDestroyNSSReference();
   nsresult GetTimeSinceEpoch(DOMHighResTimeStamp *result);
 #endif

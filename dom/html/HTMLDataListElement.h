@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLDataListElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLDataListElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLDataListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -33,7 +33,7 @@ public:
   }
 
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // This function is used to generate the nsContentList (option elements).
   static bool MatchOptions(nsIContent* aContent, int32_t aNamespaceID,
@@ -44,7 +44,7 @@ public:
 protected:
   virtual ~HTMLDataListElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // <option>'s list inside the datalist element.
   nsRefPtr<nsContentList> mOptions;

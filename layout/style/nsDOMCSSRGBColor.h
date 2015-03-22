@@ -53,7 +53,7 @@ public:
   }
 
   virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
 
 private:
   virtual ~nsDOMCSSRGBColor(void);

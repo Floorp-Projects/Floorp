@@ -22,7 +22,7 @@ public:
 
 #define BT_DECL_HFP_MGR_BASE                  \
   BT_DECL_PROFILE_MGR_BASE                    \
-  virtual bool IsScoConnected() MOZ_OVERRIDE;
+  virtual bool IsScoConnected() override;
 
 END_BLUETOOTH_NAMESPACE
 

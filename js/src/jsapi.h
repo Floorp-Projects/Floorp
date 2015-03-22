@@ -805,7 +805,7 @@ namespace JS {
 //    JS::SourceBufferHolder srcBuf(chars, length, JS::SourceBufferHolder::GiveOwnership);
 //    JS::Compile(cx, options, srcBuf);
 //
-class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
+class MOZ_STACK_CLASS SourceBufferHolder final
 {
   public:
     enum Ownership {
@@ -3439,9 +3439,9 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     explicit OwningCompileOptions(JSContext *cx);
     ~OwningCompileOptions();
 
-    JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
-    JSString *elementAttributeName() const MOZ_OVERRIDE { return elementAttributeNameRoot; }
-    JSScript *introductionScript() const MOZ_OVERRIDE { return introductionScriptRoot; }
+    JSObject *element() const override { return elementRoot; }
+    JSString *elementAttributeName() const override { return elementAttributeNameRoot; }
+    JSScript *introductionScript() const override { return introductionScriptRoot; }
 
     // Set this to a copy of |rhs|. Return false on OOM.
     bool copy(JSContext *cx, const ReadOnlyCompileOptions &rhs);
@@ -3531,9 +3531,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
         introductionScriptRoot = rhs.introductionScript();
     }
 
-    JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
-    JSString *elementAttributeName() const MOZ_OVERRIDE { return elementAttributeNameRoot; }
-    JSScript *introductionScript() const MOZ_OVERRIDE { return introductionScriptRoot; }
+    JSObject *element() const override { return elementRoot; }
+    JSString *elementAttributeName() const override { return elementAttributeNameRoot; }
+    JSScript *introductionScript() const override { return introductionScriptRoot; }
 
     CompileOptions &setFile(const char *f) { filename_ = f; return *this; }
     CompileOptions &setLine(unsigned l) { lineno = l; return *this; }

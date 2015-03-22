@@ -28,7 +28,7 @@ using mozilla::ipc::FileDescriptor;
 // The inner stream class.  This is where all of the real work is done.  As
 // an invariant Inner::Close() must be called before ~Inner().  This is
 // guaranteed by our outer ReadStream class.
-class ReadStream::Inner MOZ_FINAL : public ReadStream::Controllable
+class ReadStream::Inner final : public ReadStream::Controllable
 {
 public:
   Inner(StreamControl* aControl, const nsID& aId,
@@ -42,13 +42,13 @@ public:
 
   // ReadStream::Controllable methods
   virtual void
-  CloseStream() MOZ_OVERRIDE;
+  CloseStream() override;
 
   virtual void
-  CloseStreamWithoutReporting() MOZ_OVERRIDE;
+  CloseStreamWithoutReporting() override;
 
   virtual bool
-  MatchId(const nsID& aId) const MOZ_OVERRIDE;
+  MatchId(const nsID& aId) const override;
 
   // Simulate nsIInputStream methods, but we don't actually inherit from it
   NS_METHOD
@@ -104,7 +104,7 @@ private:
   };
   Atomic<State> mState;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, MOZ_OVERRIDE)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, override)
 };
 
 // ----------------------------------------------------------------------------
@@ -113,7 +113,7 @@ private:
 // be done on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::NoteClosedRunnable MOZ_FINAL : public nsCancelableRunnable
+class ReadStream::Inner::NoteClosedRunnable final : public nsCancelableRunnable
 {
 public:
   explicit NoteClosedRunnable(ReadStream::Inner* aStream)
@@ -148,7 +148,7 @@ private:
 // it on the thread associated with the PBackground actor.  Must be
 // cancelable to execute on Worker threads (which can occur when the
 // ReadStream is constructed on a child process Worker thread).
-class ReadStream::Inner::ForgetRunnable MOZ_FINAL : public nsCancelableRunnable
+class ReadStream::Inner::ForgetRunnable final : public nsCancelableRunnable
 {
 public:
   explicit ForgetRunnable(ReadStream::Inner* aStream)

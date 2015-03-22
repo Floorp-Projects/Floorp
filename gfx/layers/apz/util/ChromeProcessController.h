@@ -33,28 +33,28 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController
 
 public:
   explicit ChromeProcessController(nsIWidget* aWidget, APZEventState* aAPZEventState);
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void Destroy() override;
 
   // GeckoContentController interface
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
+  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) override;
   virtual void RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                                const mozilla::CSSPoint& aDestination) MOZ_OVERRIDE;
+                                const mozilla::CSSPoint& aDestination) override;
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
-                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
+                                       const uint32_t& aScrollGeneration) override;
 
   virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+                               const ScrollableLayerGuid& aGuid) override {}
   virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                               const ScrollableLayerGuid& aGuid) override;
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                                const ScrollableLayerGuid& aGuid,
-                               uint64_t aInputBlockId) MOZ_OVERRIDE;
+                               uint64_t aInputBlockId) override;
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
-                                       const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
+                                       const mozilla::CSSSize &aScrollableSize) override {}
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
-                                    int aArg) MOZ_OVERRIDE;
+                                    int aArg) override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
   nsRefPtr<APZEventState> mAPZEventState;

@@ -37,7 +37,7 @@ class Element;
  * Finds and looks up elements contained in the SVG document which have glyph
  *   mappings to be drawn by gfxSVGGlyphs
  */
-class gfxSVGGlyphsDocument MOZ_FINAL : public nsAPostRefreshObserver
+class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver
 {
     typedef mozilla::dom::Element Element;
 
@@ -49,7 +49,7 @@ public:
 
     ~gfxSVGGlyphsDocument();
 
-    virtual void DidRefresh() MOZ_OVERRIDE;
+    virtual void DidRefresh() override;
 
 private:
     nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);

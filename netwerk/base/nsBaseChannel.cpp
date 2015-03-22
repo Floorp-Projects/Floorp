@@ -815,7 +815,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
             mContentLength(aContentLength)
         { }
 
-        NS_IMETHOD Run() MOZ_OVERRIDE
+        NS_IMETHOD Run() override
         {
           return mChannel->OnTransportStatus(nullptr, NS_NET_STATUS_READING,
                                              mProgress, mContentLength);

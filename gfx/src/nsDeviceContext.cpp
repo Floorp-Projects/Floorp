@@ -10,7 +10,7 @@
 #include "gfxFont.h"                    // for gfxFontGroup
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPoint.h"                   // for gfxSize
-#include "mozilla/Attributes.h"         // for MOZ_FINAL
+#include "mozilla/Attributes.h"         // for final
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Services.h"           // for GetObserverService
@@ -52,7 +52,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::services::GetObserverService;
 
-class nsFontCache MOZ_FINAL : public nsIObserver
+class nsFontCache final : public nsIObserver
 {
 public:
     nsFontCache()   { MOZ_COUNT_CTOR(nsFontCache); }

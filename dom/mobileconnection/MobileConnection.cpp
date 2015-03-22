@@ -48,7 +48,7 @@ using mozilla::ErrorResult;
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobileconnection;
 
-class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
+class MobileConnection::Listener final : public nsIMobileConnectionListener
 #ifdef MOZ_B2G_RIL
                                            , public nsIIccListener
 #endif // MOZ_B2G_RIL

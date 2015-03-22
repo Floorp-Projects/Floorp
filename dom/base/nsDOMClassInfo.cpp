@@ -1325,7 +1325,7 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
   return NS_OK;
 }
 
-class nsDOMConstructor MOZ_FINAL : public nsIDOMDOMConstructor
+class nsDOMConstructor final : public nsIDOMDOMConstructor
 {
 protected:
   nsDOMConstructor(const char16_t* aName,

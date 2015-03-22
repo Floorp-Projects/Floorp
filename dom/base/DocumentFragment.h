@@ -65,7 +65,7 @@ public:
     Init();
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIContent
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -75,43 +75,43 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE
+                           bool aNotify) override
   {
     return NS_OK;
   }
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute, 
-                             bool aNotify) MOZ_OVERRIDE
+                             bool aNotify) override
   {
     return NS_OK;
   }
-  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const MOZ_OVERRIDE
+  virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override
   {
     return nullptr;
   }
-  virtual uint32_t GetAttrCount() const MOZ_OVERRIDE
+  virtual uint32_t GetAttrCount() const override
   {
     return 0;
   }
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() override { return this; }
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE
+                              bool aCompileEventHandlers) override
   {
     NS_ASSERTION(false, "Trying to bind a fragment to a tree");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override
   {
     NS_ASSERTION(false, "Trying to unbind a fragment from a tree");
     return;
   }
 
-  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
+  virtual Element* GetNameSpaceElement() override
   {
     return nullptr;
   }
@@ -130,8 +130,8 @@ public:
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
 #ifdef DEBUG
-  virtual void List(FILE* out, int32_t aIndent) const MOZ_OVERRIDE;
-  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const MOZ_OVERRIDE;
+  virtual void List(FILE* out, int32_t aIndent) const override;
+  virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override;
 #endif
 
 protected:
@@ -139,7 +139,7 @@ protected:
   {
   }
 
-  nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
   nsIContent* mHost; // Weak
 };
 

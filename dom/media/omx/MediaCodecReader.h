@@ -81,20 +81,20 @@ public:
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   // Flush the MediaTaskQueue, flush MediaCodec and raise the mDiscontinuity.
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
+  virtual nsresult ResetDecode() override;
 
   // Disptach a DecodeVideoFrameTask to decode video data.
   virtual nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe,
-                   int64_t aTimeThreshold) MOZ_OVERRIDE;
+                   int64_t aTimeThreshold) override;
 
   // Disptach a DecodeAduioDataTask to decode video data.
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() MOZ_OVERRIDE;
+  virtual nsRefPtr<AudioDataPromise> RequestAudioData() override;
 
   virtual bool HasAudio();
   virtual bool HasVideo();
 
-  virtual void PreReadMetadata() MOZ_OVERRIDE;
+  virtual void PreReadMetadata() override;
   // Read header data for all bitstreams in the file. Fills aInfo with
   // the data required to present the media, and optionally fills *aTags
   // with tag metadata from the file.
@@ -106,13 +106,13 @@ public:
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
   virtual android::sp<android::MediaSource> GetAudioOffloadTrack();
 
-  virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
+  virtual bool IsAsync() const override { return true; }
 
 protected:
   struct TrackInputCopier
@@ -300,7 +300,7 @@ private:
                             int64_t aOffset,
                             nsRefPtr<SignalObject> aSignal);
 
-    NS_IMETHOD Run() MOZ_OVERRIDE;
+    NS_IMETHOD Run() override;
 
   private:
     // Forbidden
@@ -322,7 +322,7 @@ private:
     ProcessCachedDataTask(nsRefPtr<MediaCodecReader> aReader,
                           int64_t aOffset);
 
-    void Run() MOZ_OVERRIDE;
+    void Run() override;
 
   private:
     // Forbidden

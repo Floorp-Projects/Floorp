@@ -13,7 +13,7 @@ namespace dom {
 
 struct CustomEventInit;
 
-class CustomEvent MOZ_FINAL : public Event,
+class CustomEvent final : public Event,
                               public nsIDOMCustomEvent
 {
 private:
@@ -38,7 +38,7 @@ public:
               ErrorResult& aRv);
 
   virtual JSObject*
-  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void
   GetDetail(JSContext* aCx,

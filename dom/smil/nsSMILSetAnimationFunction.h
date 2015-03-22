@@ -32,7 +32,7 @@ public:
    *          attribute; false otherwise.
    */
   virtual bool SetAttr(nsIAtom* aAttribute, const nsAString& aValue,
-                         nsAttrValue& aResult, nsresult* aParseResult = nullptr) MOZ_OVERRIDE;
+                         nsAttrValue& aResult, nsresult* aParseResult = nullptr) override;
 
   /*
    * Unsets the given attribute.
@@ -40,26 +40,26 @@ public:
    * @returns true if aAttribute is a recognized animation-related
    *          attribute; false otherwise.
    */
-  virtual bool UnsetAttr(nsIAtom* aAttribute) MOZ_OVERRIDE;
+  virtual bool UnsetAttr(nsIAtom* aAttribute) override;
 
 protected:
   // Although <set> animation might look like to-animation, unlike to-animation,
   // it never interpolates values.
   // Returning false here will mean this animation function gets treated as
   // a single-valued function and no interpolation will be attempted.
-  virtual bool IsToAnimation() const MOZ_OVERRIDE {
+  virtual bool IsToAnimation() const override {
     return false;
   }
 
   // <set> applies the exact same value across the simple duration.
-  virtual bool IsValueFixedForSimpleDuration() const MOZ_OVERRIDE {
+  virtual bool IsValueFixedForSimpleDuration() const override {
     return true;
   }
-  virtual bool               HasAttr(nsIAtom* aAttName) const MOZ_OVERRIDE;
-  virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const MOZ_OVERRIDE;
+  virtual bool               HasAttr(nsIAtom* aAttName) const override;
+  virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const override;
   virtual bool               GetAttr(nsIAtom* aAttName,
-                                     nsAString& aResult) const MOZ_OVERRIDE;
-  virtual bool WillReplace() const MOZ_OVERRIDE;
+                                     nsAString& aResult) const override;
+  virtual bool WillReplace() const override;
 
   bool IsDisallowedAttribute(const nsIAtom* aAttribute) const;
 };

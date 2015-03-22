@@ -26,27 +26,27 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) MOZ_OVERRIDE;
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
-                          nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
+                          nsIPrincipal* aPrincipal) override;
 
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
                                      bool aReset = true,
-                                     nsIContentSink* aSink = nullptr) MOZ_OVERRIDE;
+                                     nsIContentSink* aSink = nullptr) override;
 
-  virtual void EndLoad() MOZ_OVERRIDE;
+  virtual void EndLoad() override;
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
-  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const MOZ_OVERRIDE;
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
 
@@ -69,7 +69,7 @@ public:
 protected:
   virtual ~XMLDocument();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult (::NS_NewXMLDocument)(nsIDocument**, bool, bool);
 

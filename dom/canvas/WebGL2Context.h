@@ -29,7 +29,7 @@ public:
     static bool IsSupported();
     static WebGL2Context* Create();
 
-    virtual bool IsWebGL2() const MOZ_OVERRIDE
+    virtual bool IsWebGL2() const override
     {
         return true;
     }
@@ -37,7 +37,7 @@ public:
     // -------------------------------------------------------------------------
     // IMPLEMENT nsWrapperCache
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
     // -------------------------------------------------------------------------
     // Buffer objects - WebGL2ContextBuffers.cpp
@@ -267,17 +267,17 @@ public:
 private:
     WebGL2Context();
 
-    JS::Value GetTexParameterInternal(const TexTarget& target, GLenum pname) MOZ_OVERRIDE;
+    JS::Value GetTexParameterInternal(const TexTarget& target, GLenum pname) override;
 
     bool ValidateSizedInternalFormat(GLenum internalFormat, const char* info);
     bool ValidateTexStorage(GLenum target, GLsizei levels, GLenum internalformat,
                                 GLsizei width, GLsizei height, GLsizei depth,
                                 const char* info);
 
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) MOZ_OVERRIDE;
-    virtual bool ValidateBufferTarget(GLenum target, const char* info) MOZ_OVERRIDE;
-    virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) MOZ_OVERRIDE;
-    virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info) MOZ_OVERRIDE;
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) override;
+    virtual bool ValidateBufferTarget(GLenum target, const char* info) override;
+    virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) override;
+    virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info) override;
 };
 
 } // namespace mozilla

@@ -21,13 +21,13 @@ public:
                                DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
+  virtual void Value(nsString& aValue) override;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const override;
 };
 
 
@@ -40,15 +40,15 @@ public:
   XULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
   // Widgets
-  virtual bool IsWidget() const MOZ_OVERRIDE;
-  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
-  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
+  virtual bool IsWidget() const override;
+  virtual bool IsActiveWidget() const override;
+  virtual bool AreItemsOperable() const override;
 
-  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
+  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const override;
 };
 
 } // namespace a11y

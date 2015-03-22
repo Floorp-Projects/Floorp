@@ -36,7 +36,7 @@ class FileInfo;
 class IDBDatabase;
 class IDBFileHandle;
 
-class IDBMutableFile MOZ_FINAL
+class IDBMutableFile final
   : public DOMEventTargetHelper
   , public MutableFileBase
 {
@@ -94,23 +94,23 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 
   virtual bool
-  IsInvalid() MOZ_OVERRIDE;
+  IsInvalid() override;
 
   virtual nsIOfflineStorage*
-  Storage() MOZ_OVERRIDE;
+  Storage() override;
 
   virtual already_AddRefed<nsISupports>
-  CreateStream(bool aReadOnly) MOZ_OVERRIDE;
+  CreateStream(bool aReadOnly) override;
 
   virtual void
-  SetThreadLocals() MOZ_OVERRIDE;
+  SetThreadLocals() override;
 
   virtual void
-  UnsetThreadLocals() MOZ_OVERRIDE;
+  UnsetThreadLocals() override;
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsPIDOMWindow*

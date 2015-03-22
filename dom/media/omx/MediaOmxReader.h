@@ -93,22 +93,22 @@ public:
   }
 
   // Return mIsWaitingResources.
-  virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
+  virtual bool IsWaitingMediaResources() override;
 
   virtual bool IsDormantNeeded() { return true;}
   virtual void ReleaseMediaResources();
 
-  virtual void PreReadMetadata() MOZ_OVERRIDE;
+  virtual void PreReadMetadata() override;
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
-  virtual void SetIdle() MOZ_OVERRIDE;
+  virtual void SetIdle() override;
 
-  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
 
   android::sp<android::MediaSource> GetAudioOffloadTrack();
 

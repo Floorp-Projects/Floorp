@@ -29,18 +29,18 @@ public:
                              Test aEmpty);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const MOZ_OVERRIDE;
+                                          bool* aCantHandleYet) const override;
 
     virtual bool
     CanPropagate(nsIRDFResource* aSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
-                 Instantiation& aInitialBindings) const MOZ_OVERRIDE;
+                 Instantiation& aInitialBindings) const override;
 
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget) const MOZ_OVERRIDE;
+            nsIRDFNode* aTarget) const override;
 
 
     class Element : public MemoryElement {
@@ -55,14 +55,14 @@ public:
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConInstanceTestNode::Element); }
 
-        virtual const char* Type() const MOZ_OVERRIDE {
+        virtual const char* Type() const override {
             return "nsRDFConInstanceTestNode::Element"; }
 
-        virtual PLHashNumber Hash() const MOZ_OVERRIDE {
+        virtual PLHashNumber Hash() const override {
             return mozilla::HashGeneric(mContainerTest, mEmptyTest, mContainer.get());
         }
 
-        virtual bool Equals(const MemoryElement& aElement) const MOZ_OVERRIDE {
+        virtual bool Equals(const MemoryElement& aElement) const override {
             if (aElement.Type() == Type()) {
                 const Element& element = static_cast<const Element&>(aElement);
                 return mContainer == element.mContainer

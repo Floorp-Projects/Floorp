@@ -22,7 +22,7 @@
 
 class nsIFile;
 
-class nsIconChannel MOZ_FINAL : public nsIChannel, public nsIStreamListener
+class nsIconChannel final : public nsIChannel, public nsIStreamListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

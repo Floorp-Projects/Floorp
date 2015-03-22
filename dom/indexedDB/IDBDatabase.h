@@ -46,7 +46,7 @@ class IDBRequest;
 class IDBTransaction;
 class PBackgroundIDBDatabaseFileChild;
 
-class IDBDatabase MOZ_FINAL
+class IDBDatabase final
   : public IDBWrapperCache
 {
   typedef mozilla::dom::StorageType StorageType;
@@ -262,14 +262,14 @@ public:
 
   // nsIDOMEventTarget
   virtual void
-  LastRelease() MOZ_OVERRIDE;
+  LastRelease() override;
 
   virtual nsresult
-  PostHandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   IDBDatabase(IDBWrapperCache* aOwnerCache,

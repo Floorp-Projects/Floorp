@@ -37,7 +37,7 @@ public:
 
   nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom);
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   Element* GetParentObject()
   {

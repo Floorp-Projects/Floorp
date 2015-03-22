@@ -64,7 +64,7 @@ class WaveShaperNode;
 class PeriodicWave;
 class Promise;
 
-class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
+class AudioContext final : public DOMEventTargetHelper,
                                public nsIMemoryReporter
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
@@ -90,7 +90,7 @@ public:
   void Suspend();
   void Resume();
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   using DOMEventTargetHelper::DispatchTrustedEvent;
 
@@ -262,7 +262,7 @@ private:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE;
+                            nsISupports* aData, bool aAnonymize) override;
 
   friend struct ::mozilla::WebAudioDecodeJob;
 

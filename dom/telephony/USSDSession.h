@@ -23,7 +23,7 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class USSDSession MOZ_FINAL : public nsISupports,
+class USSDSession final : public nsISupports,
                               public nsWrapperCache
 {
 public:
@@ -37,7 +37,7 @@ public:
   GetParentObject() const;
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   static already_AddRefed<USSDSession>

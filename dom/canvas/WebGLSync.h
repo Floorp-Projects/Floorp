@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-class WebGLSync MOZ_FINAL
+class WebGLSync final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLSync>
     , public LinkedListElement<WebGLSync>
@@ -26,7 +26,7 @@ public:
     void Delete();
     WebGLContext* GetParentObject() const;
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSync)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSync)

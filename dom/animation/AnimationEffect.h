@@ -15,7 +15,7 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class AnimationEffect MOZ_FINAL : public nsWrapperCache
+class AnimationEffect final : public nsWrapperCache
 {
 public:
   explicit AnimationEffect(Animation* aAnimation)
@@ -27,7 +27,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationEffect)
 
   Animation* GetParentObject() const { return mAnimation; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // AnimationEffect interface
   void GetName(nsString& aRetVal) const {

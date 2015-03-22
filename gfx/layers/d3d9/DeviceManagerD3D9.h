@@ -79,7 +79,7 @@ struct ShaderConstantRect
  * SwapChain class, this class manages the swap chain belonging to a
  * LayerManagerD3D9.
  */
-class SwapChainD3D9 MOZ_FINAL
+class SwapChainD3D9 final
 {
   NS_INLINE_DECL_REFCOUNTING(SwapChainD3D9)
 public:
@@ -131,7 +131,7 @@ private:
  * device and create swap chains for the individual windows the layer managers
  * belong to.
  */
-class DeviceManagerD3D9 MOZ_FINAL
+class DeviceManagerD3D9 final
 {
 public:
   DeviceManagerD3D9();

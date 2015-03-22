@@ -191,11 +191,11 @@ BluetoothServiceBluedroid::EnsureBluetoothHalLoad()
   return true;
 }
 
-class BluetoothServiceBluedroid::EnableResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::EnableResultHandler final
   : public BluetoothResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -209,7 +209,7 @@ public:
  * result handlers and calls |Proceed| after all results handlers
  * have been run.
  */
-class BluetoothServiceBluedroid::ProfileInitResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::ProfileInitResultHandler final
 : public BluetoothProfileResultHandler
 {
 public:
@@ -219,14 +219,14 @@ public:
     MOZ_ASSERT(mNumProfiles);
   }
 
-  void Init() MOZ_OVERRIDE
+  void Init() override
   {
     if (!(--mNumProfiles)) {
       Proceed();
     }
   }
 
-  void OnError(nsresult aResult) MOZ_OVERRIDE
+  void OnError(nsresult aResult) override
   {
     if (!(--mNumProfiles)) {
       Proceed();
@@ -242,11 +242,11 @@ private:
   unsigned char mNumProfiles;
 };
 
-class BluetoothServiceBluedroid::InitResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::InitResultHandler final
   : public BluetoothResultHandler
 {
 public:
-  void Init() MOZ_OVERRIDE
+  void Init() override
   {
     static void (* const sInitManager[])(BluetoothProfileResultHandler*) = {
       BluetoothHfpManager::InitHfpInterface,
@@ -266,7 +266,7 @@ public:
     }
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -300,11 +300,11 @@ BluetoothServiceBluedroid::StartGonkBluetooth()
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::DisableResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::DisableResultHandler final
   : public BluetoothResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -441,7 +441,7 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -449,7 +449,7 @@ public:
   : mDeviceAddress(aDeviceAddress)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -543,7 +543,7 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::StartDiscoveryResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::StartDiscoveryResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -551,13 +551,13 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void StartDiscovery() MOZ_OVERRIDE
+  void StartDiscovery() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     DispatchBluetoothReply(mRunnable, true, EmptyString());
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("StartDiscovery"));
@@ -579,7 +579,7 @@ BluetoothServiceBluedroid::StartDiscoveryInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::CancelDiscoveryResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::CancelDiscoveryResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -587,13 +587,13 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void CancelDiscovery() MOZ_OVERRIDE
+  void CancelDiscovery() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     DispatchBluetoothReply(mRunnable, true, EmptyString());
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("StopDiscovery"));
@@ -615,7 +615,7 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::SetAdapterPropertyResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::SetAdapterPropertyResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -623,7 +623,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("SetProperty"));
@@ -665,7 +665,7 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   return true;
 }
 
-class BluetoothServiceBluedroid::CreateBondResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::CreateBondResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -673,7 +673,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     sBondingRunnableArray.RemoveElement(mRunnable);
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("CreatedPairedDevice"));
@@ -700,7 +700,7 @@ BluetoothServiceBluedroid::CreatePairedDeviceInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::RemoveBondResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::RemoveBondResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -708,7 +708,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     sUnbondingRunnableArray.RemoveElement(mRunnable);
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("RemoveDevice"));
@@ -734,7 +734,7 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
   return NS_OK;
 }
 
-class BluetoothServiceBluedroid::PinReplyResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::PinReplyResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -742,12 +742,12 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void PinReply() MOZ_OVERRIDE
+  void PinReply() override
   {
     DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("SetPinCode"));
   }
@@ -779,7 +779,7 @@ BluetoothServiceBluedroid::SetPasskeyInternal(
   return true;
 }
 
-class BluetoothServiceBluedroid::SspReplyResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::SspReplyResultHandler final
   : public BluetoothResultHandler
 {
 public:
@@ -787,12 +787,12 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void SspReply() MOZ_OVERRIDE
+  void SspReply() override
   {
     DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     ReplyStatusError(mRunnable, aStatus,
                      NS_LITERAL_STRING("SetPairingConfirmation"));
@@ -1116,7 +1116,7 @@ BluetoothServiceBluedroid::UuidToServiceClassInt(const BluetoothUuid& mUuid)
  * result handlers and calls |Proceed| after all results handlers
  * have been run.
  */
-class BluetoothServiceBluedroid::ProfileDeinitResultHandler MOZ_FINAL
+class BluetoothServiceBluedroid::ProfileDeinitResultHandler final
 : public BluetoothProfileResultHandler
 {
 public:
@@ -1126,14 +1126,14 @@ public:
     MOZ_ASSERT(mNumProfiles);
   }
 
-  void Deinit() MOZ_OVERRIDE
+  void Deinit() override
   {
     if (!(--mNumProfiles)) {
       Proceed();
     }
   }
 
-  void OnError(nsresult aResult) MOZ_OVERRIDE
+  void OnError(nsresult aResult) override
   {
     if (!(--mNumProfiles)) {
       Proceed();
@@ -1150,11 +1150,11 @@ private:
 };
 
 class BluetoothServiceBluedroid::SetAdapterPropertyDiscoverableResultHandler
-  MOZ_FINAL
+  final
   : public BluetoothResultHandler
 {
 public:
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
   }

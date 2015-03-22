@@ -55,7 +55,7 @@ public:
   WaitForDismissal();
 
   virtual void
-  OnMiniShmEvent(MiniShmBase* aMiniShmObj) MOZ_OVERRIDE;
+  OnMiniShmEvent(MiniShmBase* aMiniShmObj) override;
 
 private:
   bool

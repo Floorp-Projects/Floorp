@@ -94,9 +94,9 @@ public:
   virtual void OnTunnelNudged(TLSFilterTransaction *) = 0;
 };
 
-#define NS_DECL_NUDGETUNNELCALLBACK void OnTunnelNudged(TLSFilterTransaction *) MOZ_OVERRIDE;
+#define NS_DECL_NUDGETUNNELCALLBACK void OnTunnelNudged(TLSFilterTransaction *) override;
 
-class TLSFilterTransaction MOZ_FINAL
+class TLSFilterTransaction final
   : public nsAHttpTransaction
   , public nsAHttpSegmentReader
   , public nsAHttpSegmentWriter
@@ -116,8 +116,8 @@ public:
                        nsAHttpSegmentWriter *writer);
 
   const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
-  nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) MOZ_OVERRIDE;
-  nsresult GetTransactionSecurityInfo(nsISupports **) MOZ_OVERRIDE;
+  nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) override;
+  nsresult GetTransactionSecurityInfo(nsISupports **) override;
   nsresult NudgeTunnel(NudgeTunnelCallback *callback);
   nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
   void     newIODriver(nsIAsyncInputStream *aSocketIn,
@@ -126,11 +126,11 @@ public:
                        nsIAsyncOutputStream **outSocketOut);
 
   // nsAHttpTransaction overloads
-  nsHttpPipeline *QueryPipeline() MOZ_OVERRIDE;
-  bool IsNullTransaction() MOZ_OVERRIDE;
-  NullHttpTransaction *QueryNullTransaction() MOZ_OVERRIDE;
-  nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE;
-  SpdyConnectTransaction *QuerySpdyConnectTransaction() MOZ_OVERRIDE;
+  nsHttpPipeline *QueryPipeline() override;
+  bool IsNullTransaction() override;
+  NullHttpTransaction *QueryNullTransaction() override;
+  nsHttpTransaction *QueryHttpTransaction() override;
+  SpdyConnectTransaction *QuerySpdyConnectTransaction() override;
 
 private:
   nsresult StartTimerCallback();
@@ -176,7 +176,7 @@ class OutputStreamShim;
 class nsHttpConnection;
 class ASpdySession;
 
-class SpdyConnectTransaction MOZ_FINAL : public NullHttpTransaction
+class SpdyConnectTransaction final : public NullHttpTransaction
 {
 public:
   SpdyConnectTransaction(nsHttpConnectionInfo *ci,
@@ -186,7 +186,7 @@ public:
                          nsAHttpConnection *session);
   ~SpdyConnectTransaction();
 
-  SpdyConnectTransaction *QuerySpdyConnectTransaction() MOZ_OVERRIDE { return this; }
+  SpdyConnectTransaction *QuerySpdyConnectTransaction() override { return this; }
 
   // A transaction is forced into plaintext when it is intended to be used as a CONNECT
   // tunnel but the setup fails. The plaintext only carries the CONNECT error.
@@ -195,11 +195,11 @@ public:
                                  nsHttpConnectionInfo *aConnInfo);
 
   nsresult ReadSegments(nsAHttpSegmentReader *reader,
-                        uint32_t count, uint32_t *countRead) MOZ_OVERRIDE MOZ_FINAL;
+                        uint32_t count, uint32_t *countRead) override final;
   nsresult WriteSegments(nsAHttpSegmentWriter *writer,
-                         uint32_t count, uint32_t *countWritten) MOZ_OVERRIDE MOZ_FINAL;
-  nsHttpRequestHead *RequestHead() MOZ_OVERRIDE MOZ_FINAL;
-  void Close(nsresult reason) MOZ_OVERRIDE MOZ_FINAL;
+                         uint32_t count, uint32_t *countWritten) override final;
+  nsHttpRequestHead *RequestHead() override final;
+  void Close(nsresult reason) override final;
 
 private:
   friend class InputStreamShim;

@@ -10,19 +10,19 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLElement();
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_OVERRIDE;
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo,
-                         nsINode** aResult) const MOZ_OVERRIDE;
+                         nsINode** aResult) const override;
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

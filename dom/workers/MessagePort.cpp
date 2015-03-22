@@ -25,7 +25,7 @@ USING_WORKERS_NAMESPACE
 
 namespace {
 
-class DelayedEventRunnable MOZ_FINAL : public WorkerRunnable
+class DelayedEventRunnable final : public WorkerRunnable
 {
   nsRefPtr<mozilla::dom::workers::MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mEvents;

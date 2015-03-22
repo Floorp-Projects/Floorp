@@ -20,7 +20,7 @@ namespace ipc {
 // StreamSocketIO
 //
 
-class StreamSocketIO MOZ_FINAL : public UnixSocketWatcher
+class StreamSocketIO final : public UnixSocketWatcher
                                , protected SocketIOBase
                                , public ConnectionOrientedSocketIO
 {
@@ -79,12 +79,12 @@ public:
   //
 
   void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                  socklen_t aAddrLen) MOZ_OVERRIDE;
-  void OnConnected() MOZ_OVERRIDE;
-  void OnError(const char* aFunction, int aErrno) MOZ_OVERRIDE;
-  void OnListening() MOZ_OVERRIDE;
-  void OnSocketCanReceiveWithoutBlocking() MOZ_OVERRIDE;
-  void OnSocketCanSendWithoutBlocking() MOZ_OVERRIDE;
+                  socklen_t aAddrLen) override;
+  void OnConnected() override;
+  void OnError(const char* aFunction, int aErrno) override;
+  void OnListening() override;
+  void OnSocketCanReceiveWithoutBlocking() override;
+  void OnSocketCanSendWithoutBlocking() override;
 
 private:
   void FireSocketError();
@@ -502,7 +502,7 @@ StreamSocketIO::SetSocketFlags(int aFd)
 // Socket tasks
 //
 
-class StreamSocketIO::ConnectTask MOZ_FINAL
+class StreamSocketIO::ConnectTask final
   : public SocketIOTask<StreamSocketIO>
 {
 public:
@@ -510,7 +510,7 @@ public:
   : SocketIOTask<StreamSocketIO>(aIO)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
@@ -519,7 +519,7 @@ public:
   }
 };
 
-class StreamSocketIO::DelayedConnectTask MOZ_FINAL
+class StreamSocketIO::DelayedConnectTask final
   : public SocketIOTask<StreamSocketIO>
 {
 public:
@@ -527,7 +527,7 @@ public:
   : SocketIOTask<StreamSocketIO>(aIO)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

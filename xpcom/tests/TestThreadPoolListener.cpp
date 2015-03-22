@@ -45,7 +45,7 @@ static bool gAllThreadsShutDown = false;
   PR_END_MACRO
 #endif
 
-class Listener MOZ_FINAL : public nsIThreadPoolListener
+class Listener final : public nsIThreadPoolListener
 {
   ~Listener() {}
 

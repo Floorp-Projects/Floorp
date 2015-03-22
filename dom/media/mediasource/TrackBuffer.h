@@ -30,7 +30,7 @@ class TimeRanges;
 
 } // namespace dom
 
-class TrackBuffer MOZ_FINAL {
+class TrackBuffer final {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffer);
 

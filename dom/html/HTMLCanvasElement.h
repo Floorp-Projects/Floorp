@@ -41,7 +41,7 @@ enum class CanvasContextType : uint8_t {
   WebGL2
 };
 
-class HTMLCanvasElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLCanvasElement final : public nsGenericHTMLElement,
                                     public nsIDOMHTMLCanvasElement
 {
   enum {
@@ -170,8 +170,8 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, int32_t aModType) const MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, int32_t aModType) const override;
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -182,15 +182,15 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
 
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  virtual nsresult PreHandleEvent(mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(mozilla::EventChainPreVisitor& aVisitor) override;
 
   /*
    * Helpers called by various users of Canvas
@@ -215,7 +215,7 @@ public:
 protected:
   virtual ~HTMLCanvasElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsIntSize GetWidthHeight();
 
@@ -261,7 +261,7 @@ public:
   HTMLCanvasElement* GetOriginalCanvas();
 };
 
-class HTMLCanvasPrintState MOZ_FINAL : public nsWrapperCache
+class HTMLCanvasPrintState final : public nsWrapperCache
 {
 public:
   HTMLCanvasPrintState(HTMLCanvasElement* aCanvas,
@@ -279,7 +279,7 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(HTMLCanvasPrintState)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(HTMLCanvasPrintState)
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLCanvasElement* GetParentObject()
   {

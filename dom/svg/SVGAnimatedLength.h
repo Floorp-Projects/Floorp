@@ -17,7 +17,7 @@ class DOMSVGLength;
 
 namespace dom {
 
-class SVGAnimatedLength MOZ_FINAL : public nsWrapperCache
+class SVGAnimatedLength final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedLength)
@@ -30,7 +30,7 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   already_AddRefed<DOMSVGLength> BaseVal();
   already_AddRefed<DOMSVGLength> AnimVal();
 

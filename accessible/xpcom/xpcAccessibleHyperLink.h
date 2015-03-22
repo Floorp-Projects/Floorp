@@ -23,13 +23,13 @@ class Accessible;
 class xpcAccessibleHyperLink : public nsIAccessibleHyperLink
 {
 public:
-  NS_IMETHOD GetAnchorCount(int32_t* aAnchorCount) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetStartIndex(int32_t* aStartIndex) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetEndIndex(int32_t* aEndIndex) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetURI(int32_t aIndex, nsIURI** aURI) MOZ_FINAL MOZ_OVERRIDE;
+  NS_IMETHOD GetAnchorCount(int32_t* aAnchorCount) final override;
+  NS_IMETHOD GetStartIndex(int32_t* aStartIndex) final override;
+  NS_IMETHOD GetEndIndex(int32_t* aEndIndex) final override;
+  NS_IMETHOD GetURI(int32_t aIndex, nsIURI** aURI) final override;
   NS_IMETHOD GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
-    MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetValid(bool* aValid) MOZ_FINAL MOZ_OVERRIDE;
+    final override;
+  NS_IMETHOD GetValid(bool* aValid) final override;
 
 protected:
   xpcAccessibleHyperLink() { }

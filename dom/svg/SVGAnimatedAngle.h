@@ -17,7 +17,7 @@ namespace dom {
 
 class SVGAngle;
 
-class SVGAnimatedAngle MOZ_FINAL : public nsWrapperCache
+class SVGAnimatedAngle final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedAngle)
@@ -30,7 +30,7 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   already_AddRefed<SVGAngle> BaseVal();
   already_AddRefed<SVGAngle> AnimVal();
 

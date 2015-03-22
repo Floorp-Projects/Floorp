@@ -50,7 +50,7 @@ protected:
   double mLeftDegrees;
 };
 
-class VRFieldOfView MOZ_FINAL : public VRFieldOfViewReadOnly
+class VRFieldOfView final : public VRFieldOfViewReadOnly
 {
 public:
   explicit VRFieldOfView(double aUpDegrees = 0.0, double aRightDegrees = 0.0,
@@ -76,7 +76,7 @@ public:
   void SetLeftDegrees(double aVal) { mLeftDegrees = aVal; }
 };
 
-class VRPositionState MOZ_FINAL : public nsWrapperCache
+class VRPositionState final : public nsWrapperCache
 {
   ~VRPositionState() {}
 public:
@@ -100,7 +100,7 @@ public:
   DOMPoint* GetAngularAcceleration();
 
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   nsCOMPtr<nsISupports> mParent;
@@ -186,7 +186,7 @@ public:
   virtual VRFieldOfView* GetMaximumEyeFieldOfView(VREye aEye) = 0;
   virtual already_AddRefed<DOMRect> GetRecommendedEyeRenderRect(VREye aEye) = 0;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void XxxToggleElementVR(Element& aElement);
 
@@ -210,7 +210,7 @@ public:
 
   virtual void ZeroSensor() = 0;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   explicit PositionSensorVRDevice(nsISupports* aParent)

@@ -24,7 +24,7 @@ class WebGLUniformLocation;
 
 namespace webgl {
 
-struct LinkedProgramInfo MOZ_FINAL
+struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
     , public SupportsWeakPtr<LinkedProgramInfo>
 {
@@ -90,7 +90,7 @@ class WebGLShader;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
 
-class WebGLProgram MOZ_FINAL
+class WebGLProgram final
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLProgram>
     , public LinkedListElement<WebGLProgram>
@@ -138,7 +138,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
     ~WebGLProgram() {

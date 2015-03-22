@@ -19,7 +19,7 @@ class nsIDOMCSSRuleList;
 class nsIDOMCSSStyleRule;
 class nsIURI;
 
-class inCSSValueSearch MOZ_FINAL : public inICSSValueSearch
+class inCSSValueSearch final : public inICSSValueSearch
 {
 public:
   NS_DECL_ISUPPORTS

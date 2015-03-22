@@ -19,7 +19,7 @@
 
 namespace {
 
-class TestChild MOZ_FINAL : public mozilla::ipc::PBackgroundTestChild
+class TestChild final : public mozilla::ipc::PBackgroundTestChild
 {
   friend class mozilla::ipc::BackgroundChildImpl;
 
@@ -39,7 +39,7 @@ protected:
 
 public:
   virtual bool
-  Recv__delete__(const nsCString& aTestArg) MOZ_OVERRIDE;
+  Recv__delete__(const nsCString& aTestArg) override;
 };
 
 } // anonymous namespace

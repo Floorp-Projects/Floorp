@@ -20,7 +20,7 @@
 class nsIHashable;
 class nsIRemoteOpenFileListener;
 
-class nsJARProtocolHandler MOZ_FINAL : public nsIJARProtocolHandler
+class nsJARProtocolHandler final : public nsIJARProtocolHandler
                                      , public nsSupportsWeakReference
 {
     typedef nsAutoTArray<nsCOMPtr<nsIRemoteOpenFileListener>, 5>

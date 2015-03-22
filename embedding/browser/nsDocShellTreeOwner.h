@@ -60,7 +60,7 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICDocShellTreeOwner,
                               NS_ICDOCSHELLTREEOWNER_IID)
 
-class nsDocShellTreeOwner MOZ_FINAL : public nsIDocShellTreeOwner,
+class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
                                       public nsIBaseWindow,
                                       public nsIInterfaceRequestor,
                                       public nsIWebProgressListener,
@@ -145,7 +145,7 @@ protected:
 // with the DOM with AddChromeListeners() and removing itself with
 // RemoveChromeListeners().
 //
-class ChromeTooltipListener MOZ_FINAL : public nsIDOMEventListener
+class ChromeTooltipListener final : public nsIDOMEventListener
 {
 protected:
   virtual ~ChromeTooltipListener();
@@ -155,7 +155,7 @@ public:
 
   ChromeTooltipListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
 
     // Add/remove the relevant listeners, based on what interfaces
@@ -227,7 +227,7 @@ public:
   ChromeContextMenuListener(nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome);
 
   // nsIDOMContextMenuListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
 
   // Add/remove the relevant listeners, based on what interfaces
   // the embedding chrome implements.

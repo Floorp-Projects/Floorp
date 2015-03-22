@@ -16,17 +16,17 @@
 
 class CancelableTask;
 
-class SoftwareDisplay MOZ_FINAL : public mozilla::gfx::VsyncSource::Display
+class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SoftwareDisplay)
 
 public:
   SoftwareDisplay();
-  virtual void EnableVsync() MOZ_OVERRIDE;
-  virtual void DisableVsync() MOZ_OVERRIDE;
-  virtual bool IsVsyncEnabled() MOZ_OVERRIDE;
+  virtual void EnableVsync() override;
+  virtual void DisableVsync() override;
+  virtual bool IsVsyncEnabled() override;
   bool IsInSoftwareVsyncThread();
-  virtual void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) MOZ_OVERRIDE;
+  virtual void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) override;
   void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
 
 protected:
@@ -51,7 +51,7 @@ public:
   SoftwareVsyncSource();
   ~SoftwareVsyncSource();
 
-  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  virtual Display& GetGlobalDisplay() override
   {
     MOZ_ASSERT(mGlobalDisplay != nullptr);
     return *mGlobalDisplay;

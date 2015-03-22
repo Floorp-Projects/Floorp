@@ -14,7 +14,7 @@
 
 class nsIWidget;
 
-class nsColorPicker MOZ_FINAL : public nsIColorPicker
+class nsColorPicker final : public nsIColorPicker
 {
 public:
   NS_DECL_ISUPPORTS

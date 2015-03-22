@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class SmsMessage MOZ_FINAL : public nsIDOMMozSmsMessage
+class SmsMessage final : public nsIDOMMozSmsMessage
 {
 public:
   NS_DECL_ISUPPORTS

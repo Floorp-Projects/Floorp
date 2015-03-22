@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMetaElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLMetaElement final : public nsGenericHTMLElement,
                                   public nsIDOMHTMLMetaElement
 {
 public:
@@ -27,16 +27,16 @@ public:
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
 
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // XPCOM GetName is fine.
   void SetName(const nsAString& aName, ErrorResult& aRv)
@@ -59,13 +59,13 @@ public:
     SetHTMLAttr(nsGkAtoms::scheme, aScheme, aRv);
   }
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   virtual ~HTMLMetaElement();
 
-  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) override;
+  virtual void SetItemValueText(const nsAString& text) override;
 };
 
 } // namespace dom

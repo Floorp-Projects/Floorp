@@ -331,7 +331,7 @@ public:
     }
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
-  virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const override;
 
   virtual nsresult SetBaseURI(nsIURI* aURI) = 0;
 
@@ -786,7 +786,7 @@ private:
   class SelectorCacheKeyDeleter;
 
 public:
-  class SelectorCache MOZ_FINAL
+  class SelectorCache final
     : public nsExpirationTracker<SelectorCacheKey, 4>
   {
     public:
@@ -795,7 +795,7 @@ public:
       // CacheList takes ownership of aSelectorList.
       void CacheList(const nsAString& aSelector, nsCSSSelectorList* aSelectorList);
 
-      virtual void NotifyExpired(SelectorCacheKey* aSelector) MOZ_OVERRIDE;
+      virtual void NotifyExpired(SelectorCacheKey* aSelector) override;
 
       // We do not call MarkUsed because it would just slow down lookups and
       // because we're OK expiring things after a few seconds even if they're
@@ -2562,7 +2562,7 @@ protected:
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
 
-  virtual Element* GetNameSpaceElement() MOZ_OVERRIDE
+  virtual Element* GetNameSpaceElement() override
   {
     return GetRootElement();
   }

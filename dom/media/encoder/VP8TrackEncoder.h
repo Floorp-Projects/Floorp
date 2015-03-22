@@ -32,14 +32,14 @@ public:
   VP8TrackEncoder();
   virtual ~VP8TrackEncoder();
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_FINAL MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() final override;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_FINAL MOZ_OVERRIDE;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) final override;
 
 protected:
   nsresult Init(int32_t aWidth, int32_t aHeight,
                 int32_t aDisplayWidth, int32_t aDisplayHeight,
-                TrackRate aTrackRate) MOZ_FINAL MOZ_OVERRIDE;
+                TrackRate aTrackRate) final override;
 
 private:
   // Calculate the target frame's encoded duration.

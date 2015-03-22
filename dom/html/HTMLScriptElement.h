@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLScriptElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLScriptElement final : public nsGenericHTMLElement,
                                     public nsIDOMHTMLScriptElement,
                                     public nsScriptElement
 {
@@ -29,35 +29,35 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_OVERRIDE;
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
   using nsGenericHTMLElement::SetInnerHTML;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
-                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                            mozilla::ErrorResult& aError) override;
 
   // nsIDOMHTMLScriptElement
   NS_DECL_NSIDOMHTMLSCRIPTELEMENT
 
   // nsIScriptElement
-  virtual void GetScriptType(nsAString& type) MOZ_OVERRIDE;
-  virtual void GetScriptText(nsAString& text) MOZ_OVERRIDE;
-  virtual void GetScriptCharset(nsAString& charset) MOZ_OVERRIDE;
-  virtual void FreezeUriAsyncDefer() MOZ_OVERRIDE;
-  virtual CORSMode GetCORSMode() const MOZ_OVERRIDE;
+  virtual void GetScriptType(nsAString& type) override;
+  virtual void GetScriptText(nsAString& text) override;
+  virtual void GetScriptCharset(nsAString& charset) override;
+  virtual void FreezeUriAsyncDefer() override;
+  virtual CORSMode GetCORSMode() const override;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
+                              nsAttrValue& aResult) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // Element
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
 
   // WebIDL
   void SetText(const nsAString& aValue, ErrorResult& rv);
@@ -85,9 +85,9 @@ public:
 protected:
   virtual ~HTMLScriptElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   // nsScriptElement
-  virtual bool HasScriptContent() MOZ_OVERRIDE;
+  virtual bool HasScriptContent() override;
 };
 
 } // namespace dom

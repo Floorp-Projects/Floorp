@@ -168,7 +168,7 @@ private:
 // UnixSocketRawData
 //
 
-class UnixSocketRawData MOZ_FINAL : public UnixSocketIOBuffer
+class UnixSocketRawData final : public UnixSocketIOBuffer
 {
 public:
   /* This constructor copies aData of aSize bytes length into the
@@ -328,7 +328,7 @@ private:
  * I/O thrad back to the main thread.
  */
 template <typename T>
-class SocketIOEventRunnable MOZ_FINAL : public SocketIORunnable<T>
+class SocketIOEventRunnable final : public SocketIORunnable<T>
 {
 public:
   enum SocketEvent {
@@ -342,7 +342,7 @@ public:
   , mEvent(e)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -377,7 +377,7 @@ private:
  * to the consumer on the main thread.
  */
 template <typename T>
-class SocketIOReceiveRunnable MOZ_FINAL : public SocketIORunnable<T>
+class SocketIOReceiveRunnable final : public SocketIORunnable<T>
 {
 public:
   SocketIOReceiveRunnable(T* aIO, UnixSocketRawData* aData)
@@ -385,7 +385,7 @@ public:
   , mData(aData)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -411,14 +411,14 @@ private:
 };
 
 template <typename T>
-class SocketIORequestClosingRunnable MOZ_FINAL : public SocketIORunnable<T>
+class SocketIORequestClosingRunnable final : public SocketIORunnable<T>
 {
 public:
   SocketIORequestClosingRunnable(T* aImpl)
   : SocketIORunnable<T>(aImpl)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -443,14 +443,14 @@ public:
 /* |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
  */
 template<class T>
-class SocketIODeleteInstanceRunnable MOZ_FINAL : public nsRunnable
+class SocketIODeleteInstanceRunnable final : public nsRunnable
 {
 public:
   SocketIODeleteInstanceRunnable(T* aInstance)
   : mInstance(aInstance)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mInstance = nullptr; // delete instance
 
@@ -571,7 +571,7 @@ public:
     return mIO;
   }
 
-  void Cancel() MOZ_OVERRIDE
+  void Cancel() override
   {
     mIO = nullptr;
   }
@@ -597,7 +597,7 @@ private:
  * sending the contained data.
  */
 template<typename Tio, typename Tdata>
-class SocketIOSendTask MOZ_FINAL : public SocketIOTask<Tio>
+class SocketIOSendTask final : public SocketIOTask<Tio>
 {
 public:
   SocketIOSendTask(Tio* aIO, Tdata* aData)
@@ -607,7 +607,7 @@ public:
     MOZ_ASSERT(aData);
   }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!SocketIOTask<Tio>::IsCanceled());
@@ -626,14 +626,14 @@ private:
  * the I/O thread and sends it to the main thread for destruction.
  */
 template<typename Tio>
-class SocketIOShutdownTask MOZ_FINAL : public SocketIOTask<Tio>
+class SocketIOShutdownTask final : public SocketIOTask<Tio>
 {
 public:
   SocketIOShutdownTask(Tio* aIO)
   : SocketIOTask<Tio>(aIO)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 

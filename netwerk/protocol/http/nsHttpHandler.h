@@ -49,7 +49,7 @@ enum FrameCheckLevel {
 // nsHttpHandler - protocol handler for HTTP and HTTPS
 //-----------------------------------------------------------------------------
 
-class nsHttpHandler MOZ_FINAL : public nsIHttpProtocolHandler
+class nsHttpHandler final : public nsIHttpProtocolHandler
                               , public nsIObserver
                               , public nsSupportsWeakReference
                               , public nsISpeculativeConnect

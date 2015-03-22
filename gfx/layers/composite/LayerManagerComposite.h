@@ -10,7 +10,7 @@
 #include "GLDefs.h"                     // for GLenum
 #include "Layers.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -69,7 +69,7 @@ struct FPSState;
 
 static const int kVisualWarningDuration = 150; // ms
 
-class LayerManagerComposite MOZ_FINAL : public LayerManager
+class LayerManagerComposite final : public LayerManager
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;
@@ -79,7 +79,7 @@ public:
   explicit LayerManagerComposite(Compositor* aCompositor);
   ~LayerManagerComposite();
 
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void Destroy() override;
 
   /**
    * return True if initialization was succesful, false when it was not.
@@ -103,43 +103,43 @@ public:
   /**
    * LayerManager implementation.
    */
-  virtual LayerManagerComposite* AsLayerManagerComposite() MOZ_OVERRIDE
+  virtual LayerManagerComposite* AsLayerManagerComposite() override
   {
     return this;
   }
 
   void UpdateRenderBounds(const nsIntRect& aRect);
 
-  virtual void BeginTransaction() MOZ_OVERRIDE;
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE
+  virtual void BeginTransaction() override;
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) override
   {
     MOZ_CRASH("Use BeginTransactionWithDrawTarget");
   }
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const nsIntRect& aRect);
 
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+                              EndTransactionFlags aFlags = END_DEFAULT) override;
 
-  virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE { mRoot = aLayer; }
+  virtual void SetRoot(Layer* aLayer) override { mRoot = aLayer; }
 
   // XXX[nrc]: never called, we should move this logic to ClientLayerManager
   // (bug 946926).
-  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) override;
 
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
+  virtual int32_t GetMaxTextureSize() const override
   {
     MOZ_CRASH("Call on compositor, not LayerManagerComposite");
   }
 
-  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
   already_AddRefed<PaintedLayerComposite> CreatePaintedLayerComposite();
   already_AddRefed<ContainerLayerComposite> CreateContainerLayerComposite();
   already_AddRefed<ImageLayerComposite> CreateImageLayerComposite();
@@ -147,21 +147,21 @@ public:
   already_AddRefed<CanvasLayerComposite> CreateCanvasLayerComposite();
   already_AddRefed<RefLayerComposite> CreateRefLayerComposite();
 
-  virtual LayersBackend GetBackendType() MOZ_OVERRIDE
+  virtual LayersBackend GetBackendType() override
   {
     MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
-  virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
+  virtual void GetBackendName(nsAString& name) override
   {
     MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
 
-  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE;
+  virtual bool AreComponentAlphaLayersEnabled() override;
 
   virtual TemporaryRef<DrawTarget>
-    CreateOptimalMaskDrawTarget(const IntSize &aSize) MOZ_OVERRIDE;
+    CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
 
-  virtual const char* Name() const MOZ_OVERRIDE { return ""; }
+  virtual const char* Name() const override { return ""; }
 
   /**
    * Restricts the shadow visible region of layers that are covered with
@@ -194,7 +194,7 @@ public:
    */
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const mozilla::gfx::IntSize& aSize,
-                     mozilla::gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
+                     mozilla::gfx::SurfaceFormat aFormat) override;
 
   /**
    * Calculates the 'completeness' of the rendering that intersected with the

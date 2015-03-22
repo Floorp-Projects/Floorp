@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class sdnDocAccessible MOZ_FINAL : public ISimpleDOMDocument
+class sdnDocAccessible final : public ISimpleDOMDocument
 {
 public:
   sdnDocAccessible(DocAccessibleWrap* aAccessible) : mAccessible(aAccessible) {};

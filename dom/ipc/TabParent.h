@@ -106,15 +106,15 @@ public:
 
     void Destroy();
 
-    virtual bool RecvMoveFocus(const bool& aForward) MOZ_OVERRIDE;
-    virtual bool RecvEvent(const RemoteDOMEvent& aEvent) MOZ_OVERRIDE;
-    virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) MOZ_OVERRIDE;
-    virtual bool RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) MOZ_OVERRIDE;
+    virtual bool RecvMoveFocus(const bool& aForward) override;
+    virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
+    virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
+    virtual bool RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
                                             const nsString& aName,
                                             const nsString& aFeatures,
-                                            bool* aOutWindowOpened) MOZ_OVERRIDE;
+                                            bool* aOutWindowOpened) override;
     virtual bool RecvCreateWindow(PBrowserParent* aOpener,
                                   const uint32_t& aChromeFlags,
                                   const bool& aCalledFromJS,
@@ -126,96 +126,96 @@ public:
                                   const nsString& aBaseURI,
                                   bool* aWindowIsNew,
                                   InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                                  nsCString* aURLToLoad) MOZ_OVERRIDE;
+                                  nsCString* aURLToLoad) override;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
+                                 InfallibleTArray<nsString>* aJSONRetVal) override;
     virtual bool RecvRpcMessage(const nsString& aMessage,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
+                                InfallibleTArray<nsString>* aJSONRetVal) override;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
-                                  const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                  const IPC::Principal& aPrincipal) override;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
                                     nsIMEUpdatePreference* aPreference,
-                                    uint32_t* aSeqno) MOZ_OVERRIDE;
+                                    uint32_t* aSeqno) override;
     virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
                                          const uint32_t& aEnd,
                                          const uint32_t& aNewEnd,
-                                         const bool& aCausedByComposition) MOZ_OVERRIDE;
+                                         const bool& aCausedByComposition) override;
     virtual bool RecvNotifyIMESelectedCompositionRect(
                    const uint32_t& aOffset,
                    InfallibleTArray<LayoutDeviceIntRect>&& aRects,
                    const uint32_t& aCaretOffset,
-                   const LayoutDeviceIntRect& aCaretRect) MOZ_OVERRIDE;
+                   const LayoutDeviceIntRect& aCaretRect) override;
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
                                         const uint32_t& aFocus,
                                         const mozilla::WritingMode& aWritingMode,
-                                        const bool& aCausedByComposition) MOZ_OVERRIDE;
-    virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
+                                        const bool& aCausedByComposition) override;
+    virtual bool RecvNotifyIMETextHint(const nsString& aText) override;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
-                                               bool* aConsumedByIME) MOZ_OVERRIDE;
-    virtual bool RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect) MOZ_OVERRIDE;
+                                               bool* aConsumedByIME) override;
+    virtual bool RecvNotifyIMEEditorRect(const LayoutDeviceIntRect& aRect) override;
     virtual bool RecvNotifyIMEPositionChange(
                    const LayoutDeviceIntRect& aEditorRect,
                    InfallibleTArray<LayoutDeviceIntRect>&& aCompositionRects,
-                   const LayoutDeviceIntRect& aCaretRect) MOZ_OVERRIDE;
+                   const LayoutDeviceIntRect& aCaretRect) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
-                                       nsString* aComposition) MOZ_OVERRIDE;
+                                       nsString* aComposition) override;
     virtual bool RecvStartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
                                     const int32_t& aPanelX,
                                     const int32_t& aPanelY,
-                                    nsString* aCommitted) MOZ_OVERRIDE;
-    virtual bool RecvSetPluginFocused(const bool& aFocused) MOZ_OVERRIDE;
+                                    nsString* aCommitted) override;
+    virtual bool RecvSetPluginFocused(const bool& aFocused) override;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
                                      int32_t* aIMEOpen,
-                                     intptr_t* aNativeIMEContext) MOZ_OVERRIDE;
+                                     intptr_t* aNativeIMEContext) override;
     virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
                                      const int32_t& aIMEOpen,
                                      const nsString& aType,
                                      const nsString& aInputmode,
                                      const nsString& aActionHint,
                                      const int32_t& aCause,
-                                     const int32_t& aFocusChange) MOZ_OVERRIDE;
-    virtual bool RecvRequestFocus(const bool& aCanRaise) MOZ_OVERRIDE;
+                                     const int32_t& aFocusChange) override;
+    virtual bool RecvRequestFocus(const bool& aCanRaise) override;
     virtual bool RecvEnableDisableCommands(const nsString& aAction,
                                            nsTArray<nsCString>&& aEnabledCommands,
-                                           nsTArray<nsCString>&& aDisabledCommands) MOZ_OVERRIDE;
-    virtual bool RecvSetCursor(const uint32_t& aValue, const bool& aForce) MOZ_OVERRIDE;
-    virtual bool RecvSetBackgroundColor(const nscolor& aValue) MOZ_OVERRIDE;
-    virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) MOZ_OVERRIDE;
-    virtual bool RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) MOZ_OVERRIDE;
-    virtual bool RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip) MOZ_OVERRIDE;
-    virtual bool RecvHideTooltip() MOZ_OVERRIDE;
-    virtual bool RecvGetDPI(float* aValue) MOZ_OVERRIDE;
-    virtual bool RecvGetDefaultScale(double* aValue) MOZ_OVERRIDE;
-    virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) MOZ_OVERRIDE;
+                                           nsTArray<nsCString>&& aDisabledCommands) override;
+    virtual bool RecvSetCursor(const uint32_t& aValue, const bool& aForce) override;
+    virtual bool RecvSetBackgroundColor(const nscolor& aValue) override;
+    virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) override;
+    virtual bool RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) override;
+    virtual bool RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip) override;
+    virtual bool RecvHideTooltip() override;
+    virtual bool RecvGetDPI(float* aValue) override;
+    virtual bool RecvGetDefaultScale(double* aValue) override;
+    virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) override;
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
-                                const CSSRect& aRect) MOZ_OVERRIDE;
+                                const CSSRect& aRect) override;
     virtual bool RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
                                            const ViewID& aViewId,
                                            const bool& aIsRoot,
-                                           const ZoomConstraints& aConstraints) MOZ_OVERRIDE;
+                                           const ZoomConstraints& aConstraints) override;
     virtual bool RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
                                                const uint64_t& aInputBlockId,
-                                               const bool& aPreventDefault) MOZ_OVERRIDE;
+                                               const bool& aPreventDefault) override;
     virtual bool RecvSetTargetAPZC(const uint64_t& aInputBlockId,
-                                   nsTArray<ScrollableLayerGuid>&& aTargets) MOZ_OVERRIDE;
+                                   nsTArray<ScrollableLayerGuid>&& aTargets) override;
     virtual bool RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
-                                             nsTArray<TouchBehaviorFlags>&& aTargets) MOZ_OVERRIDE;
-    virtual bool RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent) MOZ_OVERRIDE;
+                                             nsTArray<TouchBehaviorFlags>&& aTargets) override;
+    virtual bool RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent) override;
 
     virtual PColorPickerParent*
-    AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) MOZ_OVERRIDE;
-    virtual bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker) MOZ_OVERRIDE;
+    AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) override;
+    virtual bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker) override;
 
     void LoadURL(nsIURI* aURI);
     // XXX/cjones: it's not clear what we gain by hiding these
@@ -251,7 +251,7 @@ public:
     LayoutDeviceToCSSScale GetLayoutDeviceToCSSScale();
 
     virtual bool RecvRequestNativeKeyBindings(const mozilla::WidgetKeyboardEvent& aEvent,
-                                              MaybeNativeKeyBinding* aBindings) MOZ_OVERRIDE;
+                                              MaybeNativeKeyBinding* aBindings) override;
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,
@@ -273,34 +273,34 @@ public:
                                  const nsString& bgcolor,
                                  const uint32_t& renderFlags,
                                  const bool& flushLayout,
-                                 const nsIntSize& renderSize) MOZ_OVERRIDE;
-    virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor) MOZ_OVERRIDE;
+                                 const nsIntSize& renderSize) override;
+    virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor) override;
 
     virtual PContentPermissionRequestParent*
     AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
-                                         const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+                                         const IPC::Principal& aPrincipal) override;
     virtual bool
-    DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) MOZ_OVERRIDE;
+    DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) override;
 
     virtual PFilePickerParent*
     AllocPFilePickerParent(const nsString& aTitle,
-                           const int16_t& aMode) MOZ_OVERRIDE;
-    virtual bool DeallocPFilePickerParent(PFilePickerParent* actor) MOZ_OVERRIDE;
+                           const int16_t& aMode) override;
+    virtual bool DeallocPFilePickerParent(PFilePickerParent* actor) override;
 
     virtual PIndexedDBPermissionRequestParent*
     AllocPIndexedDBPermissionRequestParent(const Principal& aPrincipal)
-                                           MOZ_OVERRIDE;
+                                           override;
 
     virtual bool
     RecvPIndexedDBPermissionRequestConstructor(
                                       PIndexedDBPermissionRequestParent* aActor,
                                       const Principal& aPrincipal)
-                                      MOZ_OVERRIDE;
+                                      override;
 
     virtual bool
     DeallocPIndexedDBPermissionRequestParent(
                                       PIndexedDBPermissionRequestParent* aActor)
-                                      MOZ_OVERRIDE;
+                                      override;
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
@@ -340,8 +340,8 @@ public:
     /**
      * Native widget remoting protocol for use with windowed plugins with e10s.
      */
-    virtual PPluginWidgetParent* AllocPPluginWidgetParent() MOZ_OVERRIDE;
-    virtual bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor) MOZ_OVERRIDE;
+    virtual PPluginWidgetParent* AllocPPluginWidgetParent() override;
+    virtual bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor) override;
 
     void SetInitedByParent() { mInitedByParent = true; }
     bool IsInitedByParent() const { return mInitedByParent; }
@@ -366,29 +366,29 @@ protected:
 
     virtual bool RecvAsyncAuthPrompt(const nsCString& aUri,
                                      const nsString& aRealm,
-                                     const uint64_t& aCallbackId) MOZ_OVERRIDE;
+                                     const uint64_t& aCallbackId) override;
 
-    virtual bool Recv__delete__() MOZ_OVERRIDE;
+    virtual bool Recv__delete__() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason why) override;
 
     Element* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
     bool AllowContentIME();
 
-    virtual PRenderFrameParent* AllocPRenderFrameParent() MOZ_OVERRIDE;
-    virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
+    virtual PRenderFrameParent* AllocPRenderFrameParent() override;
+    virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) override;
 
-    virtual bool RecvRemotePaintIsReady() MOZ_OVERRIDE;
+    virtual bool RecvRemotePaintIsReady() override;
 
     virtual bool RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
                                         TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                        uint64_t* aLayersId) MOZ_OVERRIDE;
+                                        uint64_t* aLayersId) override;
 
     virtual bool RecvSetDimensions(const uint32_t& aFlags,
                                    const int32_t& aX, const int32_t& aY,
-                                   const int32_t& aCx, const int32_t& aCy) MOZ_OVERRIDE;
+                                   const int32_t& aCx, const int32_t& aCy) override;
 
     bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
 

@@ -742,7 +742,14 @@ GlobalHelperThreadState::canStartGCParallelTask()
 
 js::GCParallelTask::~GCParallelTask()
 {
-    join();
+    // Only most-derived classes' destructors may do the join: base class
+    // destructors run after those for derived classes' members, so a join in a
+    // base class can't ensure that the task is done using the members. All we
+    // can do now is check that someone has previously stopped the task.
+#ifdef DEBUG
+    AutoLockHelperThreadState helperLock;
+    MOZ_ASSERT(state == NotStarted);
+#endif
 }
 
 bool

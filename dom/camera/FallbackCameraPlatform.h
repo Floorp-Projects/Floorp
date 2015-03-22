@@ -68,7 +68,7 @@ namespace android {
   };
 
   template <class T>
-  class sp MOZ_FINAL
+  class sp final
   {
   public:
     sp()
@@ -101,7 +101,7 @@ namespace android {
     CAMERA_MSG_COMPRESSED_IMAGE
   };
 
-  class String8 MOZ_FINAL
+  class String8 final
   {
   public:
     String8()                  { }
@@ -122,7 +122,7 @@ namespace android {
     camera_facing_t facing;
   };
 
-  class Camera MOZ_FINAL : public nsISupports
+  class Camera final : public nsISupports
   {
   public:
     NS_DECL_ISUPPORTS;
@@ -166,7 +166,7 @@ namespace android {
     Camera& operator=(const Camera&) = delete;
   };
 
-  class CameraParameters MOZ_FINAL
+  class CameraParameters final
   {
   public:
     static const char KEY_PREVIEW_SIZE[];
@@ -238,7 +238,7 @@ namespace android {
     static const char KEY_LIGHTFX[];
   };
 
-  class MediaProfiles MOZ_FINAL
+  class MediaProfiles final
   {
   public:
     static MediaProfiles* getInstance() {

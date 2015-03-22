@@ -17,20 +17,20 @@ typedef nsSVGPolyElement SVGPolygonElementBase;
 namespace mozilla {
 namespace dom {
 
-class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase
+class SVGPolygonElement final : public SVGPolygonElementBase
 {
 protected:
   explicit SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGPolygonElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 public:
   // nsSVGPathGeometryElement methods:
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
-  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
+  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 };
 
 } // namespace dom

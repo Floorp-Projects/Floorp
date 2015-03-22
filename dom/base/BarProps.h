@@ -40,7 +40,7 @@ public:
   nsPIDOMWindow* GetParentObject() const;
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual bool GetVisible(ErrorResult& aRv) = 0;
   virtual void SetVisible(bool aVisible, ErrorResult& aRv) = 0;
@@ -57,69 +57,69 @@ protected:
 };
 
 // Script "menubar" object
-class MenubarProp MOZ_FINAL : public BarProp
+class MenubarProp final : public BarProp
 {
 public:
   explicit MenubarProp(nsGlobalWindow *aWindow);
   virtual ~MenubarProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 // Script "toolbar" object
-class ToolbarProp MOZ_FINAL : public BarProp
+class ToolbarProp final : public BarProp
 {
 public:
   explicit ToolbarProp(nsGlobalWindow *aWindow);
   virtual ~ToolbarProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 // Script "locationbar" object
-class LocationbarProp MOZ_FINAL : public BarProp
+class LocationbarProp final : public BarProp
 {
 public:
   explicit LocationbarProp(nsGlobalWindow *aWindow);
   virtual ~LocationbarProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 // Script "personalbar" object
-class PersonalbarProp MOZ_FINAL : public BarProp
+class PersonalbarProp final : public BarProp
 {
 public:
   explicit PersonalbarProp(nsGlobalWindow *aWindow);
   virtual ~PersonalbarProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 // Script "statusbar" object
-class StatusbarProp MOZ_FINAL : public BarProp
+class StatusbarProp final : public BarProp
 {
 public:
   explicit StatusbarProp(nsGlobalWindow *aWindow);
   virtual ~StatusbarProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 // Script "scrollbars" object
-class ScrollbarsProp MOZ_FINAL : public BarProp
+class ScrollbarsProp final : public BarProp
 {
 public:
   explicit ScrollbarsProp(nsGlobalWindow *aWindow);
   virtual ~ScrollbarsProp();
 
-  virtual bool GetVisible(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void SetVisible(bool aVisible, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual bool GetVisible(ErrorResult& aRv) override;
+  virtual void SetVisible(bool aVisible, ErrorResult& aRv) override;
 };
 
 } // namespace dom

@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace net {
 
-class ChildDNSService MOZ_FINAL
+class ChildDNSService final
   : public nsPIDNSService
   , public nsIObserver
 {

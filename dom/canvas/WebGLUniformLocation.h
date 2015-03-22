@@ -24,7 +24,7 @@ namespace webgl {
 struct LinkedProgramInfo;
 }
 
-class WebGLUniformLocation MOZ_FINAL
+class WebGLUniformLocation final
     : public nsWrapperCache
     , public WebGLContextBoundObject
 {
@@ -32,7 +32,7 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLUniformLocation)
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
 
-    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) override;
 
     WebGLContext* GetParentObject() const {
         return mContext;

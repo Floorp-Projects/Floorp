@@ -16,7 +16,7 @@ namespace dom {
 class WakeLock;
 class VideoPlaybackQuality;
 
-class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement
+class HTMLVideoElement final : public HTMLMediaElement
 {
 public:
   typedef mozilla::dom::NodeInfo NodeInfo;
@@ -27,30 +27,30 @@ public:
 
   using HTMLMediaElement::GetPaused;
 
-  NS_IMETHOD_(bool) IsVideo() MOZ_OVERRIDE {
+  NS_IMETHOD_(bool) IsVideo() override {
     return true;
   }
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+                              nsAttrValue& aResult) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
   static void Init();
 
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
-  virtual nsresult Clone(NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // Set size with the current video frame's height and width.
   // If there is no video frame, returns NS_ERROR_FAILURE.
   nsresult GetVideoSize(nsIntSize* size);
 
-  virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) MOZ_OVERRIDE;
+  virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const MOZ_OVERRIDE;
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
   // WebIDL
 
@@ -105,17 +105,17 @@ public:
 
   bool MozHasAudio() const;
 
-  void NotifyOwnerDocumentActivityChanged() MOZ_OVERRIDE;
+  void NotifyOwnerDocumentActivityChanged() override;
 
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
 protected:
   virtual ~HTMLVideoElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void WakeLockCreate() MOZ_OVERRIDE;
-  virtual void WakeLockRelease() MOZ_OVERRIDE;
+  virtual void WakeLockCreate() override;
+  virtual void WakeLockRelease() override;
   void UpdateScreenWakeLock();
 
   nsRefPtr<WakeLock> mScreenWakeLock;

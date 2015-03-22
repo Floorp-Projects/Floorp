@@ -30,8 +30,8 @@ public:
     ~ContentProcess()
     { }
 
-    virtual bool Init() MOZ_OVERRIDE;
-    virtual void CleanUp() MOZ_OVERRIDE;
+    virtual bool Init() override;
+    virtual void CleanUp() override;
 
     void SetAppDir(const nsACString& aPath);
 

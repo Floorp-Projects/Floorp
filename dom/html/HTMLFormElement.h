@@ -33,7 +33,7 @@ namespace dom {
 class HTMLFormControlsCollection;
 class HTMLImageElement;
 
-class HTMLFormElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLFormElement final : public nsGenericHTMLElement,
                                   public nsIDOMHTMLFormElement,
                                   public nsIWebProgressListener,
                                   public nsIForm,
@@ -58,47 +58,47 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIForm
-  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const MOZ_OVERRIDE;
-  NS_IMETHOD_(uint32_t) GetElementCount() const MOZ_OVERRIDE;
-  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const MOZ_OVERRIDE;
+  NS_IMETHOD_(nsIFormControl*) GetElementAt(int32_t aIndex) const override;
+  NS_IMETHOD_(uint32_t) GetElementCount() const override;
+  NS_IMETHOD_(int32_t) IndexOfControl(nsIFormControl* aControl) override;
+  NS_IMETHOD_(nsIFormControl*) GetDefaultSubmitElement() const override;
 
   // nsIRadioGroupContainer
   void SetCurrentRadioButton(const nsAString& aName,
-                             HTMLInputElement* aRadio) MOZ_OVERRIDE;
-  HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) MOZ_OVERRIDE;
+                             HTMLInputElement* aRadio) override;
+  HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) override;
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
                                 const bool aPrevious,
                                 HTMLInputElement* aFocusedRadio,
-                                HTMLInputElement** aRadioOut) MOZ_OVERRIDE;
+                                HTMLInputElement** aRadioOut) override;
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
-                            bool aFlushContent) MOZ_OVERRIDE;
-  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio) MOZ_OVERRIDE;
-  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) MOZ_OVERRIDE;
-  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const MOZ_OVERRIDE;
+                            bool aFlushContent) override;
+  void AddToRadioGroup(const nsAString& aName, nsIFormControl* aRadio) override;
+  void RemoveFromRadioGroup(const nsAString& aName, nsIFormControl* aRadio) override;
+  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const override;
   virtual void RadioRequiredWillChange(const nsAString& aName,
-                                       bool aRequiredAdded) MOZ_OVERRIDE;
-  virtual bool GetValueMissingState(const nsAString& aName) const MOZ_OVERRIDE;
-  virtual void SetValueMissingState(const nsAString& aName, bool aValue) MOZ_OVERRIDE;
+                                       bool aRequiredAdded) override;
+  virtual bool GetValueMissingState(const nsAString& aName) const override;
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue) override;
 
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual EventStates IntrinsicState() const override;
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult WillHandleEvent(
-                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+                     EventChainPostVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+                     EventChainPostVisitor& aVisitor) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -106,9 +106,9 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
 
   /**
    * Forget all information about the current submission (and the fact that we
@@ -116,7 +116,7 @@ public:
    */
   void ForgetCurrentSubmission();
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(HTMLFormElement,
                                                          nsGenericHTMLElement)
@@ -410,12 +410,12 @@ public:
   void RequestAutocomplete();
 
 protected:
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void PostPasswordEvent();
   void EventHandled() { mFormPasswordEventDispatcher = nullptr; }
 
-  class FormPasswordEventDispatcher MOZ_FINAL : public AsyncEventDispatcher
+  class FormPasswordEventDispatcher final : public AsyncEventDispatcher
   {
   public:
     FormPasswordEventDispatcher(HTMLFormElement* aEventNode,
@@ -423,7 +423,7 @@ protected:
       : AsyncEventDispatcher(aEventNode, aEventType, true, true)
     {}
 
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
       static_cast<HTMLFormElement*>(mTarget.get())->EventHandled();
       return AsyncEventDispatcher::Run();
@@ -441,7 +441,7 @@ protected:
       : mForm(aForm)
     {}
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
       mForm->HandleDefaultSubmitRemoval();
       return NS_OK;
     }

@@ -90,7 +90,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
   void
   GetSource(Nullable<OwningIDBObjectStoreOrIDBIndexOrIDBCursor>& aSource) const;
@@ -197,7 +197,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   explicit IDBRequest(IDBDatabase* aDatabase);
@@ -222,7 +222,7 @@ protected:
   { }
 };
 
-class IDBOpenDBRequest MOZ_FINAL
+class IDBOpenDBRequest final
   : public IDBRequest
 {
   class WorkerFeature;
@@ -250,7 +250,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PostHandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   IDBFactory*
   Factory() const
@@ -266,7 +266,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindow* aOwner);

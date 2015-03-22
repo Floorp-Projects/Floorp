@@ -78,7 +78,7 @@ class GfxInfoCollector : public GfxInfoCollectorBase
   public:
   GfxInfoCollector(T* aPointer, void (T::*aFunc)(InfoObject &obj)) : mPointer(aPointer), mFunc(aFunc) {
   }
-  virtual void GetInfo(InfoObject &obj) MOZ_OVERRIDE {
+  virtual void GetInfo(InfoObject &obj) override {
     (mPointer->*mFunc)(obj);
   }
 

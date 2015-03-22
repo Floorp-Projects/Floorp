@@ -26,7 +26,7 @@ public:
                      const nsCString& headers);
   virtual ~BrowserStreamChild();
 
-  virtual bool IsBrowserStream() MOZ_OVERRIDE { return true; }
+  virtual bool IsBrowserStream() override { return true; }
 
   NPError StreamConstructed(
             const nsCString& mimeType,
@@ -35,10 +35,10 @@ public:
 
   virtual bool RecvWrite(const int32_t& offset,
                          const Buffer& data,
-                         const uint32_t& newsize) MOZ_OVERRIDE;
-  virtual bool RecvNPP_StreamAsFile(const nsCString& fname) MOZ_OVERRIDE;
-  virtual bool RecvNPP_DestroyStream(const NPReason& reason) MOZ_OVERRIDE;
-  virtual bool Recv__delete__() MOZ_OVERRIDE;
+                         const uint32_t& newsize) override;
+  virtual bool RecvNPP_StreamAsFile(const nsCString& fname) override;
+  virtual bool RecvNPP_DestroyStream(const NPReason& reason) override;
+  virtual bool Recv__delete__() override;
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {

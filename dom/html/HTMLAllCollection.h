@@ -29,7 +29,7 @@ namespace dom {
 class OwningNodeOrHTMLCollection;
 template<typename> struct Nullable;
 
-class HTMLAllCollection MOZ_FINAL : public nsISupports
+class HTMLAllCollection final : public nsISupports
                                   , public nsWrapperCache
 {
   ~HTMLAllCollection();
@@ -40,7 +40,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLAllCollection)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsINode* GetParentObject() const;
 
   uint32_t Length();

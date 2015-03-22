@@ -23,7 +23,7 @@ typedef nsContainerFrame nsRubyTextContainerFrameSuper;
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
-class nsRubyTextContainerFrame MOZ_FINAL : public nsRubyTextContainerFrameSuper
+class nsRubyTextContainerFrame final : public nsRubyTextContainerFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -31,26 +31,26 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
+  virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   // nsContainerFrame overrides
   virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) MOZ_OVERRIDE;
+                                   nsFrameList& aChildList) override;
   virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) MOZ_OVERRIDE;
+                            nsFrameList& aFrameList) override;
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            nsFrameList& aFrameList) MOZ_OVERRIDE;
+                            nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID,
-                           nsIFrame* aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame* aOldFrame) override;
 
   bool IsSpanContainer() const
   {

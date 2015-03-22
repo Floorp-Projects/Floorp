@@ -84,7 +84,7 @@ static StaticRefPtr<ContentCreationNotifier> gContentCreationNotifier;
 
 // A helper class to send updates when content processes
 // are created. Currently an update for the screen size is sent.
-class ContentCreationNotifier MOZ_FINAL : public nsIObserver
+class ContentCreationNotifier final : public nsIObserver
 {
 private:
     ~ContentCreationNotifier() {}

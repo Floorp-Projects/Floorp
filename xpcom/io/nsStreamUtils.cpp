@@ -25,7 +25,7 @@ using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 
-class nsInputStreamReadyEvent MOZ_FINAL
+class nsInputStreamReadyEvent final
   : public nsIRunnable
   , public nsIInputStreamCallback
 {
@@ -70,7 +70,7 @@ private:
   }
 
 public:
-  NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream* aStream) MOZ_OVERRIDE
+  NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream* aStream) override
   {
     mStream = aStream;
 
@@ -84,7 +84,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     if (mCallback) {
       if (mStream) {
@@ -106,7 +106,7 @@ NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsIRunnable,
 
 //-----------------------------------------------------------------------------
 
-class nsOutputStreamReadyEvent MOZ_FINAL
+class nsOutputStreamReadyEvent final
   : public nsIRunnable
   , public nsIOutputStreamCallback
 {
@@ -151,7 +151,7 @@ private:
   }
 
 public:
-  NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream* aStream) MOZ_OVERRIDE
+  NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream* aStream) override
   {
     mStream = aStream;
 
@@ -165,7 +165,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     if (mCallback) {
       if (mStream) {
@@ -399,20 +399,20 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream* aSource) MOZ_OVERRIDE
+  NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream* aSource) override
   {
     PostContinuationEvent();
     return NS_OK;
   }
 
-  NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream* aSink) MOZ_OVERRIDE
+  NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream* aSink) override
   {
     PostContinuationEvent();
     return NS_OK;
   }
 
   // continuation event handler
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     Process();
 
@@ -485,7 +485,7 @@ NS_IMPL_ISUPPORTS(nsAStreamCopier,
                   nsIOutputStreamCallback,
                   nsIRunnable)
 
-class nsStreamCopierIB MOZ_FINAL : public nsAStreamCopier
+class nsStreamCopierIB final : public nsAStreamCopier
 {
 public:
   nsStreamCopierIB() : nsAStreamCopier()
@@ -534,7 +534,7 @@ public:
   }
 };
 
-class nsStreamCopierOB MOZ_FINAL : public nsAStreamCopier
+class nsStreamCopierOB final : public nsAStreamCopier
 {
 public:
   nsStreamCopierOB() : nsAStreamCopier()

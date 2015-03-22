@@ -51,7 +51,7 @@ struct TransferItem {
 { 0x43ee0327, 0xde5d, 0x463d, \
   { 0x9b, 0xd0, 0xf1, 0x79, 0x09, 0x69, 0xf2, 0xfb } }
 
-class DataTransfer MOZ_FINAL : public nsIDOMDataTransfer,
+class DataTransfer final : public nsIDOMDataTransfer,
                                public nsWrapperCache
 {
 public:
@@ -104,7 +104,7 @@ public:
   DataTransfer(nsISupports* aParent, uint32_t aEventType, bool aIsExternal,
                int32_t aClipboardType);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject()
   {
     return mParent;

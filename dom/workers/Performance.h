@@ -16,7 +16,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
 
-class Performance MOZ_FINAL : public nsWrapperCache
+class Performance final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Performance)
@@ -31,7 +31,7 @@ private:
 
 public:
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports*
   GetParentObject() const

@@ -34,7 +34,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL interface
   Nullable<IccType>
@@ -66,7 +66,7 @@ protected:
   nsCOMPtr<nsIIccInfo> mIccInfo;
 };
 
-class GsmIccInfo MOZ_FINAL : public IccInfo
+class GsmIccInfo final : public IccInfo
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -79,7 +79,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // MozCdmaIccInfo WebIDL
   void
@@ -92,7 +92,7 @@ private:
   nsCOMPtr<nsIGsmIccInfo> mGsmIccInfo;
 };
 
-class CdmaIccInfo MOZ_FINAL : public IccInfo
+class CdmaIccInfo final : public IccInfo
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -105,7 +105,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // MozCdmaIccInfo WebIDL
   void

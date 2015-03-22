@@ -34,7 +34,7 @@ class DOMStringList;
 } // namespace dom
 } // namespace mozilla
 
-class nsDOMOfflineResourceList MOZ_FINAL : public mozilla::DOMEventTargetHelper,
+class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
                                            public nsIDOMOfflineResourceList,
                                            public nsIObserver,
                                            public nsIOfflineCacheUpdateObserver,
@@ -65,7 +65,7 @@ public:
     return GetOwner();
   }
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint16_t GetStatus(ErrorResult& aRv)
   {

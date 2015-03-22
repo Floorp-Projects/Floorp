@@ -357,24 +357,24 @@ public:
   explicit GLPresenter(GLContext* aContext);
   virtual ~GLPresenter();
 
-  virtual GLContext* gl() const MOZ_OVERRIDE { return mGLContext; }
-  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
+  virtual GLContext* gl() const override { return mGLContext; }
+  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) override
   {
     MOZ_ASSERT(aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
     MOZ_ASSERT(aFormat == gfx::SurfaceFormat::R8G8B8A8);
     return mRGBARectProgram;
   }
-  virtual const gfx::Matrix4x4& GetProjMatrix() const MOZ_OVERRIDE
+  virtual const gfx::Matrix4x4& GetProjMatrix() const override
   {
     return mProjMatrix;
   }
-  virtual void ActivateProgram(ShaderProgramOGL *aProg) MOZ_OVERRIDE
+  virtual void ActivateProgram(ShaderProgramOGL *aProg) override
   {
     mGLContext->fUseProgram(aProg->GetProgram());
   }
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg,
                                const gfx::Rect& aLayerRect,
-                               const gfx::Rect& aTextureRect) MOZ_OVERRIDE;
+                               const gfx::Rect& aTextureRect) override;
 
   void BeginFrame(nsIntSize aRenderSize);
   void EndFrame();

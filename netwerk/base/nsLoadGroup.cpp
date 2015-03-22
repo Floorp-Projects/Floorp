@@ -1070,7 +1070,7 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 
 // nsLoadGroupConnectionInfo
 
-class nsLoadGroupConnectionInfo MOZ_FINAL : public nsILoadGroupConnectionInfo
+class nsLoadGroupConnectionInfo final : public nsILoadGroupConnectionInfo
 {
     ~nsLoadGroupConnectionInfo() {}
 

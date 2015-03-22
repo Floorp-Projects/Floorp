@@ -55,7 +55,7 @@ PRLogModuleInfo* GetSpeechRecognitionLog();
 
 already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
 
-class SpeechRecognition MOZ_FINAL : public DOMEventTargetHelper,
+class SpeechRecognition final : public DOMEventTargetHelper,
                                     public nsIObserver,
                                     public SupportsWeakPtr<SpeechRecognition>
 {
@@ -69,7 +69,7 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<SpeechRecognition>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
@@ -272,7 +272,7 @@ public:
 
   ~SpeechEvent();
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
   AudioSegment* mAudioSegment;
   nsRefPtr<SpeechRecognitionResultList> mRecognitionResultList; // TODO: make this a session being passed which also has index and stuff
   nsRefPtr<SpeechRecognitionError> mError;

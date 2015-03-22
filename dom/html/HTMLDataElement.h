@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLDataElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLDataElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -30,14 +30,14 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aError);
   }
 
-  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) override;
+  virtual void SetItemValueText(const nsAString& text) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
 protected:
   virtual ~HTMLDataElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 } // namespace dom

@@ -31,37 +31,37 @@ public:
   virtual void OnDisconnect(enum SocketType aSocketType) = 0;
 };
 
-class NfcListenSocket MOZ_FINAL : public mozilla::ipc::ListenSocket
+class NfcListenSocket final : public mozilla::ipc::ListenSocket
 {
 public:
   NfcListenSocket(NfcSocketListener* aListener);
 
-  void OnConnectSuccess() MOZ_OVERRIDE;
-  void OnConnectError() MOZ_OVERRIDE;
-  void OnDisconnect() MOZ_OVERRIDE;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
   NfcSocketListener* mListener;
 };
 
-class NfcConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
+class NfcConnector final : public mozilla::ipc::UnixSocketConnector
 {
 public:
   NfcConnector()
   { }
 
-  int Create() MOZ_OVERRIDE;
+  int Create() override;
   bool CreateAddr(bool aIsServer,
                   socklen_t& aAddrSize,
                   sockaddr_any& aAddr,
-                  const char* aAddress) MOZ_OVERRIDE;
-  bool SetUp(int aFd) MOZ_OVERRIDE;
-  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+                  const char* aAddress) override;
+  bool SetUp(int aFd) override;
+  bool SetUpListenSocket(int aFd) override;
   void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) MOZ_OVERRIDE;
+                     nsAString& aAddrStr) override;
 };
 
-class NfcConsumer MOZ_FINAL : public mozilla::ipc::StreamSocket
+class NfcConsumer final : public mozilla::ipc::StreamSocket
 {
 public:
   NfcConsumer(NfcSocketListener* aListener);
@@ -69,15 +69,15 @@ public:
   void Shutdown();
   bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
 
-  ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+  ConnectionOrientedSocketIO* GetIO() override;
 
 private:
   void ReceiveSocketData(
-    nsAutoPtr<UnixSocketRawData>& aData) MOZ_OVERRIDE;
+    nsAutoPtr<UnixSocketRawData>& aData) override;
 
-  void OnConnectSuccess() MOZ_OVERRIDE;
-  void OnConnectError() MOZ_OVERRIDE;
-  void OnDisconnect() MOZ_OVERRIDE;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
   NfcSocketListener* mListener;

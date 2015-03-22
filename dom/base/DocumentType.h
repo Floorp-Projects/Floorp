@@ -38,7 +38,7 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
 };
 
-class DocumentType MOZ_FINAL : public DocumentTypeForward
+class DocumentType final : public DocumentTypeForward
 {
 public:
   DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
@@ -56,28 +56,28 @@ public:
   NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) MOZ_OVERRIDE
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
+  virtual void GetNodeValueInternal(nsAString& aNodeValue) override
   {
     SetDOMStringToNull(aNodeValue);
   }
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) MOZ_OVERRIDE
+                                    mozilla::ErrorResult& aError) override
   {
   }
 
   // nsIContent overrides
-  virtual const nsTextFragment* GetText() MOZ_OVERRIDE;
+  virtual const nsTextFragment* GetText() override;
 
   virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const override;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+  virtual nsIDOMNode* AsDOMNode() override { return this; }
 
 protected:
   virtual ~DocumentType();
 
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsString mPublicId;
   nsString mSystemId;

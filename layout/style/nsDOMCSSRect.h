@@ -38,7 +38,7 @@ public:
   nsISupports* GetParentObject() const { return nullptr; }
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
 
 protected:
   virtual ~nsDOMCSSRect(void);

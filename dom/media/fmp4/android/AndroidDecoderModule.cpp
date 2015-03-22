@@ -51,7 +51,7 @@ public:
 
   }
 
-  nsresult Init() MOZ_OVERRIDE {
+  nsresult Init() override {
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
       NS_WARNING("Failed to create SurfaceTexture for video decode\n");
@@ -61,11 +61,11 @@ public:
     return InitDecoder(mSurfaceTexture->JavaSurface());
   }
 
-  void Cleanup() MOZ_OVERRIDE {
+  void Cleanup() override {
     mGLContext = nullptr;
   }
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override {
     if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -103,7 +103,7 @@ public:
     return eglImage;
   }
 
-  virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat, Microseconds aDuration) MOZ_OVERRIDE {
+  virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat, Microseconds aDuration) override {
     if (!EnsureGLContext()) {
       return NS_ERROR_FAILURE;
     }

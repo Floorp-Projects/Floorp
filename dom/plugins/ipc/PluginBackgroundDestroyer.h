@@ -30,7 +30,7 @@ public:
     virtual ~PluginBackgroundDestroyerParent();
 
 private:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason why) override;
 
     nsRefPtr<gfxASurface> mDyingBackground;
 };
@@ -46,7 +46,7 @@ public:
 
 private:
     // Implementing this for good hygiene.
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     { }
 };
 

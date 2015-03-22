@@ -21,7 +21,7 @@ struct MediaStreamConstraints;
 { 0x2f784d8a, 0x7485, 0x4280, \
  { 0x9a, 0x36, 0x74, 0xa4, 0xd6, 0x71, 0xa6, 0xc8 } }
 
-class MediaDevices MOZ_FINAL : public DOMEventTargetHelper
+class MediaDevices final : public DOMEventTargetHelper
 {
 public:
   explicit MediaDevices(nsPIDOMWindow* aWindow) :
@@ -30,7 +30,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise>
   GetUserMedia(const MediaStreamConstraints& aConstraints, ErrorResult &aRv);

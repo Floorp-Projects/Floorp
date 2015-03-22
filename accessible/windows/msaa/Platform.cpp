@@ -45,7 +45,7 @@ class ProxyAccessibleWrap : public AccessibleWrap
     mBits.proxy = aProxy;
   }
 
-  virtual void Shutdown() MOZ_OVERRIDE
+  virtual void Shutdown() override
   {
     mBits.proxy = nullptr;
   }

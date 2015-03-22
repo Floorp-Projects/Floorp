@@ -1228,7 +1228,7 @@ UsbCableEventIOThread()
 *
 **************************************************************************/
 
-class UsbCableObserver MOZ_FINAL : public SwitchObserver
+class UsbCableObserver final : public SwitchObserver
 {
   ~UsbCableObserver()
   {
