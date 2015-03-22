@@ -17,6 +17,7 @@
 #ifndef __VideoDecoder_h__
 #define __VideoDecoder_h__
 
+#include "gmp-task-utils.h"
 #include "gmp-video-decode.h"
 #include "gmp-video-host.h"
 #include "WMFH264Decoder.h"
@@ -48,6 +49,8 @@ public:
 
   virtual void DecodingComplete() override;
 
+  bool HasShutdown() { return mHasShutdown; }
+
 private:
 
   void EnsureWorker();
@@ -67,6 +70,9 @@ private:
                              int32_t aStride,
                              GMPVideoi420Frame* aVideoFrame);
 
+  void MaybeRunOnMainThread(gmp_task_args_base* aTask);
+  void Destroy();
+
   GMPVideoHost *mHostAPI; // host-owned, invalid at DecodingComplete
   GMPVideoDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete
   GMPThread* mWorkerThread;
@@ -78,6 +84,8 @@ private:
 
   int32_t mNumInputTasks;
   bool mSentExtraData;
+
+  bool mHasShutdown;
 };
 
 #endif // __VideoDecoder_h__
