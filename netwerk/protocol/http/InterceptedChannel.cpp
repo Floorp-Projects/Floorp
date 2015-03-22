@@ -232,6 +232,10 @@ InterceptedChannelChrome::Cancel()
 NS_IMETHODIMP
 InterceptedChannelChrome::SetSecurityInfo(nsISupports* aSecurityInfo)
 {
+  if (!mChannel) {
+    return NS_ERROR_FAILURE;
+  }
+
   return mChannel->OverrideSecurityInfo(aSecurityInfo);
 }
 
@@ -359,6 +363,10 @@ InterceptedChannelContent::Cancel()
 NS_IMETHODIMP
 InterceptedChannelContent::SetSecurityInfo(nsISupports* aSecurityInfo)
 {
+  if (!mChannel) {
+    return NS_ERROR_FAILURE;
+  }
+
   return mChannel->OverrideSecurityInfo(aSecurityInfo);
 }
 
