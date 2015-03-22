@@ -63,7 +63,6 @@ OverscrollHandoffChain::IndexOf(const AsyncPanZoomController* aApzc) const
 void
 OverscrollHandoffChain::ForEachApzc(APZCMethod aMethod) const
 {
-  MOZ_ASSERT(Length() > 0);
   for (uint32_t i = 0; i < Length(); ++i) {
     (mChain[i]->*aMethod)();
   }
@@ -156,6 +155,16 @@ OverscrollHandoffChain::HasFastMovingApzc() const
   return AnyApzc(&AsyncPanZoomController::IsMovingFast);
 }
 
+nsRefPtr<AsyncPanZoomController>
+OverscrollHandoffChain::FindFirstScrollable(const ScrollWheelInput& aInput) const
+{
+  for (size_t i = 0; i < Length(); i++) {
+    if (mChain[i]->CanScroll(aInput)) {
+      return mChain[i];
+    }
+  }
+  return nullptr;
+}
 
 } // namespace layers
 } // namespace mozilla

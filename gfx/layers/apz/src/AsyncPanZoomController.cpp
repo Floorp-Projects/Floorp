@@ -682,7 +682,11 @@ public:
    , mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
                  aSpringConstant, aDampingRatio)
    , mSource(aSource)
+   , mAllowOverscroll(true)
   {
+    if (mSource == ScrollSource::Wheel) {
+      mAllowOverscroll = mApzc.AllowScrollHandoffInWheelTransaction();
+    }
   }
 
   /**
@@ -739,8 +743,7 @@ public:
     // This can happen if either the layout.css.scroll-behavior.damping-ratio
     // preference is set to less than 1 (underdamped) or if a smooth scroll
     // inherits velocity from a fling gesture.
-    if (!IsZero(overscroll)) {
-
+    if (!IsZero(overscroll) && mAllowOverscroll) {
       // Hand off a fling with the remaining momentum to the next APZC in the
       // overscroll handoff chain.
 
@@ -778,6 +781,7 @@ private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
   ScrollSource mSource;
+  bool mAllowOverscroll;
 };
 
 void
@@ -1418,21 +1422,59 @@ AsyncPanZoomController::ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint*
   return false;
 }
 
-nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
+void
+AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                                            double& aOutDeltaX,
+                                            double& aOutDeltaY) const
 {
-  double deltaX = aEvent.mDeltaX;
-  double deltaY = aEvent.mDeltaY;
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  aOutDeltaX = aEvent.mDeltaX;
+  aOutDeltaY = aEvent.mDeltaY;
   switch (aEvent.mDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_LINE: {
       LayoutDeviceIntSize scrollAmount = mFrameMetrics.GetLineScrollAmount();
-      deltaX *= scrollAmount.width;
-      deltaY *= scrollAmount.height;
+      aOutDeltaX *= scrollAmount.width;
+      aOutDeltaY *= scrollAmount.height;
       break;
     }
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
-      return nsEventStatus_eConsumeNoDefault;
   }
+}
+
+// Return whether or not the underlying layer can be scrolled on either axis.
+bool
+AsyncPanZoomController::CanScroll(const ScrollWheelInput& aEvent) const
+{
+  double deltaX, deltaY;
+  GetScrollWheelDelta(aEvent, deltaX, deltaY);
+
+  if (!deltaX && !deltaY) {
+    return false;
+  }
+
+  return CanScroll(deltaX, deltaY);
+}
+
+bool
+AsyncPanZoomController::CanScroll(double aDeltaX, double aDeltaY) const
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mX.CanScroll(aDeltaX) || mY.CanScroll(aDeltaY);
+}
+
+bool
+AsyncPanZoomController::AllowScrollHandoffInWheelTransaction() const
+{
+  WheelBlockState* block = mInputQueue->CurrentWheelBlock();
+  return block->AllowScrollHandoff();
+}
+
+nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
+{
+  double deltaX, deltaY;
+  GetScrollWheelDelta(aEvent, deltaX, deltaY);
 
   switch (aEvent.mScrollMode) {
     case ScrollWheelInput::SCROLLMODE_INSTANT: {
@@ -1913,6 +1955,13 @@ bool AsyncPanZoomController::AttemptScroll(const ParentLayerPoint& aStartPoint,
 
   // If we consumed the entire displacement as a normal scroll, great.
   if (IsZero(overscroll)) {
+    return true;
+  }
+
+  // If in a wheel transaction that has not ended, we drop overscroll.
+  if (aOverscrollHandoffState.mScrollSource == ScrollSource::Wheel &&
+      !AllowScrollHandoffInWheelTransaction())
+  {
     return true;
   }
 

@@ -45,12 +45,16 @@ public:
 
   bool IsTargetConfirmed() const;
 
+protected:
+  void UpdateTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
+
 private:
   nsRefPtr<AsyncPanZoomController> mTargetApzc;
-  nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   bool mTargetConfirmed;
   const uint64_t mBlockId;
 protected:
+  nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
+
   // Used to transform events from global screen space to |mTargetApzc|'s
   // screen space. It's cached at the beginning of the input block so that
   // all events in the block are in the same coordinate space.
@@ -106,7 +110,7 @@ public:
    * This input block must not have pending events, and its apzc must not be
    * nullptr.
    */
-  void DispatchImmediate(const InputData& aEvent) const;
+  virtual void DispatchImmediate(const InputData& aEvent);
 
   /**
    * @return true iff this block has received all the information needed
@@ -154,7 +158,8 @@ class WheelBlockState : public CancelableBlockState
 {
 public:
   WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
-                  bool aTargetConfirmed);
+                  bool aTargetConfirmed,
+                  const ScrollWheelInput& aEvent);
 
   bool IsReadyForHandling() const override;
   bool HasEvents() const override;
@@ -162,6 +167,7 @@ public:
   void HandleEvents() override;
   bool MustStayActive() override;
   const char* Type() override;
+  void DispatchImmediate(const InputData& aEvent) override;
 
   void AddEvent(const ScrollWheelInput& aEvent);
 
@@ -169,8 +175,46 @@ public:
     return this;
   }
 
+  /**
+   * Returns whether or not the block should accept new events. If the APZC
+   * has been destroyed, or the block is not part of a wheel transaction, then
+   * this will return false.
+   *
+   * @return True if the event should be accepted, false otherwise.
+   */
+  bool ShouldAcceptNewEvent(const ScrollWheelInput& aEvent) const;
+
+  /**
+   * Returns whether or not the block is participating in a wheel transaction.
+   * This means that the block is the most recent input block to be created,
+   * and no events have occurred that would require scrolling a different
+   * frame.
+   *
+   * @return True if in a transaction, false otherwise.
+   */
+  bool InTransaction() const;
+
+  /**
+   * Mark the block as no longer participating in a wheel transaction. This
+   * will force future wheel events to begin a new input block.
+   */
+  void EndTransaction();
+
+  /**
+   * @return Whether or not overscrolling is prevented for this wheel block.
+   */
+  bool AllowScrollHandoff() const;
+
+private:
+  /**
+   * Update the wheel transaction state for a new event.
+   */
+  void Update(const ScrollWheelInput& aEvent);
+
 private:
   nsTArray<ScrollWheelInput> mEvents;
+  TimeStamp mLastEventTime;
+  bool mTransactionEnded;
 };
 
 /**
