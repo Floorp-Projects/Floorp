@@ -20,7 +20,7 @@ class PCacheChild;
 class Feature;
 
 class CacheStorageChild final : public PCacheStorageChild
-                                  , public ActorChild
+                              , public ActorChild
 {
 public:
   CacheStorageChild(CacheStorage* aListener, Feature* aFeature);
@@ -41,6 +41,7 @@ public:
 private:
   // PCacheStorageChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
+
   virtual bool RecvMatchResponse(const RequestId& aRequestId,
                                  const nsresult& aRv,
                                  const PCacheResponseOrVoid& response) override;

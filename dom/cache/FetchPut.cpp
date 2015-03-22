@@ -458,6 +458,12 @@ FetchPut::AssertOwningThread() const
 }
 #endif
 
+CachePushStreamChild*
+FetchPut::CreatePushStream(nsIAsyncInputStream* aStream)
+{
+  MOZ_CRASH("FetchPut should never create a push stream!");
+}
+
 } // namespace cache
 } // namespace dom
 } // namespace mozilla

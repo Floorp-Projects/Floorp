@@ -18,8 +18,8 @@ namespace cache {
 class ReadStream;
 class StreamList;
 
-class CacheStreamControlParent : public PCacheStreamControlParent
-                               , public StreamControl
+class CacheStreamControlParent final : public PCacheStreamControlParent
+                                     , public StreamControl
 {
 public:
   CacheStreamControlParent();
