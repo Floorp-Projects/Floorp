@@ -369,6 +369,8 @@ public:
   // direction.
   bool CanScroll(double aDeltaX, double aDeltaY) const;
 
+  void NotifyMozMouseScrollEvent(const nsString& aString) const;
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   ~AsyncPanZoomController();

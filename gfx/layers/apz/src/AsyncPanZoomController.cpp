@@ -1476,6 +1476,21 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
   double deltaX, deltaY;
   GetScrollWheelDelta(aEvent, deltaX, deltaY);
 
+  if ((deltaX || deltaY) &&
+      !CanScroll(deltaX, deltaY) &&
+      mInputQueue->GetCurrentWheelTransaction())
+  {
+    // We can't scroll this apz anymore, so we simply drop the event.
+    if (gfxPrefs::MouseScrollTestingEnabled()) {
+      if (nsRefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+        controller->NotifyMozMouseScrollEvent(
+          mFrameMetrics.GetScrollId(),
+          NS_LITERAL_STRING("MozMouseScrollFailed"));
+      }
+    }
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
   switch (aEvent.mScrollMode) {
     case ScrollWheelInput::SCROLLMODE_INSTANT: {
       // Decompose into pan events for simplicity.
@@ -1524,6 +1539,17 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
   }
 
   return nsEventStatus_eConsumeNoDefault;
+}
+
+void
+AsyncPanZoomController::NotifyMozMouseScrollEvent(const nsString& aString) const
+{
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (!controller) {
+    return;
+  }
+
+  controller->NotifyMozMouseScrollEvent(mFrameMetrics.GetScrollId(), aString);
 }
 
 nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {
