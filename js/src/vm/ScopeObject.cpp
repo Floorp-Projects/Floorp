@@ -298,7 +298,7 @@ CallObject::createHollowForDebug(JSContext *cx, HandleFunction callee)
     RootedScript script(cx, callee->nonLazyScript());
     for (BindingIter bi(script); !bi.done(); bi++) {
         id = NameToId(bi->name());
-        if (!SetProperty(cx, callobj, id, optimizedOut))
+        if (!SetProperty(cx, callobj, callobj, id, &optimizedOut))
             return nullptr;
     }
 
@@ -469,11 +469,12 @@ with_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 static bool
-with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc,
+with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
+                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                     ObjectOpResult &result)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return DefineProperty(cx, actual, id, desc, result);
+    return DefineProperty(cx, actual, id, value, getter, setter, attrs, result);
 }
 
 static bool
@@ -492,14 +493,14 @@ with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
 }
 
 static bool
-with_SetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                 HandleValue receiver, ObjectOpResult &result)
+with_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                 MutableHandleValue vp, ObjectOpResult &result)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    RootedValue actualReceiver(cx, receiver);
-    if (receiver.isObject() && &receiver.toObject() == obj)
-        actualReceiver.setObject(*actual);
-    return SetProperty(cx, actual, id, v, actualReceiver, result);
+    RootedObject actualReceiver(cx, receiver);
+    if (receiver == obj)
+        actualReceiver = actual;
+    return SetProperty(cx, actual, actualReceiver, id, vp, result);
 }
 
 static bool
@@ -930,8 +931,8 @@ uninitialized_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver
 }
 
 static bool
-uninitialized_SetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                          HandleValue receiver, ObjectOpResult &result)
+uninitialized_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                          MutableHandleValue vp, ObjectOpResult &result)
 {
     ReportUninitializedLexicalId(cx, id);
     return false;
@@ -1593,8 +1594,8 @@ class DebugScopeProxy : public BaseProxyHandler
         }
     }
 
-    bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v, HandleValue receiver,
-             ObjectOpResult &result) const override
+    bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+             MutableHandleValue vp, ObjectOpResult &result) const override
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
@@ -1603,25 +1604,21 @@ class DebugScopeProxy : public BaseProxyHandler
             return Throw(cx, id, JSMSG_DEBUG_CANT_SET_OPT_ENV);
 
         AccessResult access;
-        RootedValue valCopy(cx, v);
-        if (!handleUnaliasedAccess(cx, debugScope, scope, id, SET, &valCopy, &access))
+        if (!handleUnaliasedAccess(cx, debugScope, scope, id, SET, vp, &access))
             return false;
 
         switch (access) {
           case ACCESS_UNALIASED:
             return result.succeed();
           case ACCESS_GENERIC:
-            {
-                RootedValue scopeVal(cx, ObjectValue(*scope));
-                return SetProperty(cx, scope, id, v, scopeVal, result);
-            }
+            return SetProperty(cx, scope, scope, id, vp, result);
           default:
             MOZ_CRASH("bad AccessResult");
         }
     }
 
     bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                        Handle<PropertyDescriptor> desc,
+                        MutableHandle<PropertyDescriptor> desc,
                         ObjectOpResult &result) const override
     {
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());

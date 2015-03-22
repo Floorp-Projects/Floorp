@@ -9805,7 +9805,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     false.
     """
     def __init__(self, descriptor, operation, checkFound=True,
-                 argumentHandleValue=None, resultVar=None, foundVar=None):
+                 argumentMutableValue=None, resultVar=None, foundVar=None):
         self.checkFound = checkFound
         self.foundVar = foundVar or "found"
 
@@ -9830,12 +9830,12 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 treatNullAs=argument.treatNullAs,
                 sourceDescription=("value being assigned to %s setter" %
                                    descriptor.interface.identifier.name))
-            if argumentHandleValue is None:
-                argumentHandleValue = "desc.value()"
+            if argumentMutableValue is None:
+                argumentMutableValue = "desc.value()"
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
-                "val": argumentHandleValue,
+                "val": argumentMutableValue,
                 "obj": "obj",
                 "passedToJSImpl": "false"
             }
@@ -9880,10 +9880,10 @@ class CGProxyIndexedOperation(CGProxySpecialOperation):
     foundVar: See the docstring for CGProxySpecialOperation.
     """
     def __init__(self, descriptor, name, doUnwrap=True, checkFound=True,
-                 argumentHandleValue=None, resultVar=None, foundVar=None):
+                 argumentMutableValue=None, resultVar=None, foundVar=None):
         self.doUnwrap = doUnwrap
         CGProxySpecialOperation.__init__(self, descriptor, name, checkFound,
-                                         argumentHandleValue=argumentHandleValue,
+                                         argumentMutableValue=argumentMutableValue,
                                          resultVar=resultVar,
                                          foundVar=foundVar)
 
@@ -9941,9 +9941,9 @@ class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed setter.
     """
-    def __init__(self, descriptor, argumentHandleValue=None):
+    def __init__(self, descriptor, argumentMutableValue=None):
         CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedSetter',
-                                         argumentHandleValue=argumentHandleValue)
+                                         argumentMutableValue=argumentMutableValue)
 
 
 class CGProxyIndexedDeleter(CGProxyIndexedOperation):
@@ -9971,10 +9971,10 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
 
     foundVar: See the docstring for CGProxySpecialOperation.
     """
-    def __init__(self, descriptor, name, value=None, argumentHandleValue=None,
+    def __init__(self, descriptor, name, value=None, argumentMutableValue=None,
                  resultVar=None, foundVar=None):
         CGProxySpecialOperation.__init__(self, descriptor, name,
-                                         argumentHandleValue=argumentHandleValue,
+                                         argumentMutableValue=argumentMutableValue,
                                          resultVar=resultVar,
                                          foundVar=foundVar)
         self.value = value
@@ -10072,9 +10072,9 @@ class CGProxyNamedSetter(CGProxyNamedOperation):
     """
     Class to generate a call to a named setter.
     """
-    def __init__(self, descriptor, argumentHandleValue=None):
+    def __init__(self, descriptor, argumentMutableValue=None):
         CGProxyNamedOperation.__init__(self, descriptor, 'NamedSetter',
-                                       argumentHandleValue=argumentHandleValue)
+                                       argumentMutableValue=argumentMutableValue)
 
 
 class CGProxyNamedDeleter(CGProxyNamedOperation):
@@ -10244,7 +10244,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::Handle<JSPropertyDescriptor>', 'desc'),
+                Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
                 Argument('JS::ObjectOpResult&', 'opresult'),
                 Argument('bool*', 'defined')]
         ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True, const=True)
@@ -10691,7 +10691,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::Handle<JS::Value>', 'v'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp'),
                 Argument('bool*', 'done')]
         ClassMethod.__init__(self, "setCustom", "bool", args, virtual=True, override=True, const=True)
         self.descriptor = descriptor
@@ -10716,7 +10716,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                 raise ValueError("In interface " + self.descriptor.name + ": " +
                                  "Can't cope with [OverrideBuiltins] and unforgeable members")
 
-            callSetter = CGProxyNamedSetter(self.descriptor, argumentHandleValue="v")
+            callSetter = CGProxyNamedSetter(self.descriptor, argumentMutableValue="vp")
             return (assertion +
                     callSetter.define() +
                     "*done = true;\n"
@@ -10741,7 +10741,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
 
                 """,
                 callSetter=CGProxyIndexedSetter(self.descriptor,
-                                                argumentHandleValue="v").define())
+                                                argumentMutableValue="vp").define())
         else:
             setIndexed = ""
 

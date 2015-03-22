@@ -612,7 +612,11 @@ class GlobalObject : public NativeObject
         MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(self));
 #endif
         RootedObject holder(cx, intrinsicsHolder());
-        return SetProperty(cx, holder, name, value);
+        RootedValue valCopy(cx, value);
+        ObjectOpResult result;
+        bool ok = SetProperty(cx, holder, holder, name, &valCopy, result);
+        MOZ_ASSERT_IF(ok, result);
+        return ok;
     }
 
     bool getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, HandleAtom name,

@@ -97,7 +97,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                MutableHandle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const override;
@@ -110,8 +110,9 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
-                     JS::HandleValue receiver, JS::ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+                     JS::HandleId id, JS::MutableHandleValue vp,
+                     JS::ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
 
@@ -212,7 +213,7 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
 
 bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                 Handle<JSPropertyDescriptor> desc,
+                                 MutableHandle<JSPropertyDescriptor> desc,
                                  ObjectOpResult &result) const
 {
     FORWARD(defineProperty, (cx, proxy, id, desc, result));
@@ -220,7 +221,7 @@ CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 
 bool
 WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                             Handle<JSPropertyDescriptor> desc,
+                             MutableHandle<JSPropertyDescriptor> desc,
                              ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
@@ -516,37 +517,41 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
-                      JS::HandleValue receiver, JS::ObjectOpResult &result) const
+CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+                      JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result) const
 {
-    FORWARD(set, (cx, proxy, id, v, receiver, result));
+    FORWARD(set, (cx, proxy, receiver, id, vp, result));
 }
 
 bool
-WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
-                  JS::HandleValue receiver, JS::ObjectOpResult &result)
+WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+                  JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
+
+    ObjectVariant receiverVar;
+    if (!toObjectVariant(cx, receiver, &receiverVar))
+        return false;
 
     JSIDVariant idVar;
     if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     JSVariant val;
-    if (!toVariant(cx, v, &val))
-        return false;
-
-    JSVariant receiverVar;
-    if (!toVariant(cx, receiver, &receiverVar))
+    if (!toVariant(cx, vp, &val))
         return false;
 
     ReturnStatus status;
-    if (!SendSet(objId, idVar, val, receiverVar, &status))
+    JSVariant resultValue;
+    if (!SendSet(objId, receiverVar, idVar, val, &status, &resultValue))
         return ipcfail(cx);
 
     LOG_STACK();
 
-    return ok(cx, status, result);
+    if (!ok(cx, status, result))
+        return false;
+
+    return fromVariant(cx, resultValue, vp);
 }
 
 bool

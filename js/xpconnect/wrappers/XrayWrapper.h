@@ -133,7 +133,7 @@ public:
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JSPropertyDescriptor> desc) override;
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::Handle<JSPropertyDescriptor> existingDesc,
                         JS::ObjectOpResult &result, bool *defined);
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
@@ -185,7 +185,7 @@ public:
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JSPropertyDescriptor> desc) override;
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::Handle<JSPropertyDescriptor> existingDesc,
                         JS::ObjectOpResult &result, bool *defined);
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
@@ -228,7 +228,7 @@ public:
     bool delete_(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id, JS::ObjectOpResult &result);
 
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::Handle<JSPropertyDescriptor> existingDesc,
                         JS::ObjectOpResult &result, bool *defined);
 
@@ -346,7 +346,7 @@ public:
                                     JS::MutableHandle<JSPropertyDescriptor> desc) override;
 
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::Handle<JSPropertyDescriptor> existingDesc,
                         JS::ObjectOpResult &result, bool *defined)
     {
@@ -420,7 +420,7 @@ class XrayWrapper : public Base {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                JS::Handle<JSPropertyDescriptor> desc,
+                                JS::MutableHandle<JSPropertyDescriptor> desc,
                                 JS::ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                  JS::AutoIdVector &props) const override;
@@ -441,8 +441,8 @@ class XrayWrapper : public Base {
                      bool *bp) const override;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
-    virtual bool set(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                     JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
+    virtual bool set(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp,
                      JS::ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper,
                       const JS::CallArgs &args) const override;
@@ -515,8 +515,8 @@ public:
                      bool *bp) const override;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
-    virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                     JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
+    virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp,
                      JS::ObjectOpResult &result) const override;
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> proxy,

@@ -528,8 +528,8 @@ class TypedObject : public JSObject
     static bool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                   MutableHandleObject objp, MutableHandleShape propp);
 
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                                   Handle<JSPropertyDescriptor> desc,
+    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                                   GetterOp getter, SetterOp setter, unsigned attrs,
                                    ObjectOpResult &result);
 
     static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
@@ -540,8 +540,8 @@ class TypedObject : public JSObject
     static bool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                                uint32_t index, MutableHandleValue vp);
 
-    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                HandleValue receiver, ObjectOpResult &result);
+    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                                HandleId id, MutableHandleValue vp, ObjectOpResult &result);
 
     static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);
