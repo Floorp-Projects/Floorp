@@ -7,6 +7,7 @@ function testDefaultCtor() {
   is(req.referrer, "about:client", "Default referrer is `client` which serializes to about:client.");
   is(req.mode, "cors", "Request mode for string input is cors");
   is(req.credentials, "omit", "Default Request credentials is omit");
+  is(req.cache, "default", "Default Request cache is default");
 
   var req = new Request(req);
   is(req.method, "GET", "Default Request method is GET");
@@ -16,6 +17,7 @@ function testDefaultCtor() {
   is(req.referrer, "about:client", "Default referrer is `client` which serializes to about:client.");
   is(req.mode, "cors", "Request mode string input is cors");
   is(req.credentials, "omit", "Default Request credentials is omit");
+  is(req.cache, "default", "Default Request cache is default");
 }
 
 function testClone() {
@@ -25,6 +27,7 @@ function testClone() {
               body: "Sample body",
               mode: "same-origin",
               credentials: "same-origin",
+              cache: "no-store",
             });
   var clone = orig.clone();
   ok(clone.method === "POST", "Request method is POST");
@@ -39,6 +42,7 @@ function testClone() {
   ok(clone.referrer === "about:client", "Default referrer is `client` which serializes to about:client.");
   ok(clone.mode === "same-origin", "Request mode is same-origin");
   ok(clone.credentials === "same-origin", "Default credentials is same-origin");
+  ok(clone.cache === "no-store", "Default cache is no-store");
 
   ok(!orig.bodyUsed, "Original body is not consumed.");
   ok(!clone.bodyUsed, "Clone body is not consumed.");
