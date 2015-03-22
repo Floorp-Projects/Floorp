@@ -74,15 +74,21 @@ function startTest(test, token)
     ok(Math.abs(test.duration - v.currentTime) < 0.1,
        TimeStamp(token) + " Current time should be same as duration");
 
-    // Verify all sessions had all keys went sent the to the CDM usable, and thus
+    // Verify all sessions had all keys went sent to the CDM usable, and thus
     // that we received keystatuseschange event(s).
-    is(sessions.length, 1, TimeStamp(token) + " should have 1 session");
+    is(sessions.length, test.sessions, TimeStamp(token) + " should have " + test.sessions + " session" + (test.sessions===1?"":"s"));
+    var keyIdsReceived = [];
+    for (var keyid in test.keys) { keyIdsReceived[keyid] = false; }
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
       ok(session.gotKeysChanged, TimeStamp(token) + " should have received at least one keychange event");
       for (var kid in session.keyIdsReceived) {
-        ok(session.keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
+        Log(token, "session " + i + " key " + kid + " = " + (session.keyIdsReceived[kid] ? "true" : "false"));
+        if (session.keyIdsReceived[kid]) { keyIdsReceived[kid] = true; }
       }
+    }
+    for (var kid in keyIdsReceived) {
+      ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
     }
 
     manager.finished(token);
