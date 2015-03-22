@@ -689,7 +689,7 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
         if (obj->is<ProxyObject>()) {
             Rooted<PropertyDescriptor> pd(cx, desc);
             pd.object().set(obj);
-            return Proxy::defineProperty(cx, obj, id, pd, result);
+            return Proxy::defineProperty(cx, obj, id, &pd, result);
         }
         return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
     }
@@ -1584,26 +1584,25 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
 }
 
 /* static */ bool
-JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                               HandleValue receiver, ObjectOpResult &result)
+JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+                               HandleId id, MutableHandleValue vp, ObjectOpResult &result)
 {
-    RootedValue value(cx, v);
     if (MOZ_UNLIKELY(obj->watched())) {
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, &value))
+        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
     }
-    return obj->getOps()->setProperty(cx, obj, id, value, receiver, result);
+    return obj->getOps()->setProperty(cx, obj, receiver, id, vp, result);
 }
 
 /* static */ bool
-JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
-                              HandleValue receiver, ObjectOpResult &result)
+JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+                              uint32_t index, MutableHandleValue vp, ObjectOpResult &result)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return nonNativeSetProperty(cx, obj, id, v, receiver, result);
+    return nonNativeSetProperty(cx, obj, receiver, id, vp, result);
 }
 
 JS_FRIEND_API(bool)
@@ -3194,29 +3193,22 @@ js::GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc,
-                   ObjectOpResult &result)
-{
-    if (DefinePropertyOp op = obj->getOps()->defineProperty)
-        return op(cx, obj, id, desc, result);
-    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
-}
-
-bool
 js::DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                    ObjectOpResult &result)
 {
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
-    Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(obj, value, attrs, getter, setter);
-    if (DefinePropertyOp op = obj->getOps()->defineProperty) {
+    DefinePropertyOp op = obj->getOps()->defineProperty;
+    if (op) {
         if (!cx->shouldBeJSContext())
             return false;
-        return op(cx->asJSContext(), obj, id, desc, result);
+        return op(cx->asJSContext(), obj, id, value, getter, setter, attrs, result);
     }
-    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
+    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs,
+                                result);
 }
 
 bool
@@ -3277,6 +3269,22 @@ js::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, Handle
     if (!IndexToId(cx, index, &id))
         return false;
     return DefineProperty(cx, obj, id, value, getter, setter, attrs);
+}
+
+bool
+js::SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
+                MutableHandleValue vp)
+{
+    RootedId id(cx, NameToId(name));
+    return SetProperty(cx, obj, receiver, id, vp);
+}
+
+bool
+js::PutProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue value,
+                bool strict)
+{
+    RootedId id(cx, NameToId(name));
+    return PutProperty(cx, obj, id, value, strict);
 }
 
 

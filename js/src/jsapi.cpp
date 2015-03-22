@@ -147,7 +147,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, 
     MOZ_ASSERT(!ok());
 
     unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_WARNING | JSREPORT_STRICT);
-    if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE || code_ == JSMSG_SET_NON_OBJECT_RECEIVER) {
+    if (code_ == JSMSG_OBJECT_NOT_EXTENSIBLE) {
         RootedValue val(cx, ObjectValue(*obj));
         return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
                                      NullPtr(), nullptr, nullptr);
@@ -2205,12 +2205,10 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
     // it's just a plain old data property. However the JS_Define* APIs use
     // null getter and setter to mean "default to the Class getProperty and
     // setProperty ops".
-    if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-        if (!getter)
-            getter = obj->getClass()->getProperty;
-        if (!setter)
-            setter = obj->getClass()->setProperty;
-    }
+    if (!getter)
+        getter = obj->getClass()->getProperty;
+    if (!setter)
+        setter = obj->getClass()->setProperty;
     if (getter == JS_PropertyStub)
         getter = nullptr;
     if (setter == JS_StrictPropertyStub)
@@ -2830,13 +2828,13 @@ JS_GetUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t n
 JS_PUBLIC_API(bool)
 JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
 {
+    RootedValue value(cx, v);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult ignored;
-    return SetProperty(cx, obj, id, v, receiver, ignored);
+    return SetProperty(cx, obj, obj, id, &value, ignored);
 }
 
 JS_PUBLIC_API(bool)
@@ -2847,60 +2845,66 @@ JS_ForwardSetPropertyTo(JSContext *cx, HandleObject obj, HandleId id, HandleValu
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, receiver);
 
-    return SetProperty(cx, obj, id, v, receiver, result);
+    // XXX Bug 603201 will eliminate this ToObject.
+    RootedObject receiverObj(cx, ToObject(cx, receiver));
+    if (!receiverObj)
+        return false;
+
+    RootedValue value(cx, v);
+    return SetProperty(cx, obj, receiverObj, id, &value, result);
 }
 
 static bool
-SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v)
+SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, v);
+    assertSameCompartment(cx, obj, vp);
 
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult ignored;
-    return SetElement(cx, obj, index, v, receiver, ignored);
+    return SetElement(cx, obj, obj, index, vp, ignored);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v)
 {
-    return SetElement(cx, obj, index, v);
+    RootedValue value(cx, v);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleObject v)
 {
     RootedValue value(cx, ObjectOrNullValue(v));
-    return SetElement(cx, obj, index, value);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleString v)
 {
     RootedValue value(cx, StringValue(v));
-    return SetElement(cx, obj, index, value);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, int32_t v)
 {
     RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, uint32_t v)
 {
     RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, HandleObject obj, uint32_t index, double v)
 {
     RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
+    return SetElement(cx, obj, index, &value);
 }
 
 JS_PUBLIC_API(bool)

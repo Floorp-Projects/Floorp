@@ -32,7 +32,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                                   JS::MutableHandle<JSPropertyDescriptor> desc);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::ObjectOpResult &result);
     bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
@@ -42,8 +42,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool get(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
              JS::HandleId id, JS::MutableHandleValue vp);
-    bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
-             JS::HandleValue receiver, JS::ObjectOpResult &result);
+    bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
+             JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result);
     bool callOrConstruct(JSContext *cx, JS::HandleObject proxy, const JS::CallArgs &args,
                          bool construct);
 
@@ -128,8 +128,9 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool SendGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                          const JSIDVariant &id,
                          ReturnStatus *rs, JSVariant *result) = 0;
-    virtual bool SendSet(const ObjectId &objId, const JSIDVariant &id, const JSVariant &value,
-                         const JSVariant &receiverVar, ReturnStatus *rs) = 0;
+    virtual bool SendSet(const ObjectId &objId, const ObjectVariant &receiverVar,
+                         const JSIDVariant &id, const JSVariant &value,
+                         ReturnStatus *rs, JSVariant *result) = 0;
 
     virtual bool SendIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                                   bool *result) = 0;

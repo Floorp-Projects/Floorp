@@ -429,6 +429,7 @@ bool
 SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
             bool strict, jsbytecode *pc)
 {
+    RootedValue v(cx, value);
     RootedId id(cx, NameToId(name));
 
     JSOp op = JSOp(*pc);
@@ -442,21 +443,21 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         return true;
     }
 
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
         if (!NativeSetProperty(
-                cx, obj.as<NativeObject>(), id, value, receiver,
+                cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
                 (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
                  op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
                 ? Unqualified
                 : Qualified,
+                &v,
                 result))
         {
             return false;
         }
     } else {
-        if (!SetProperty(cx, obj, id, value, receiver, result))
+        if (!SetProperty(cx, obj, obj, id, &v, result))
             return false;
     }
     return result.checkStrictErrorOrWarning(cx, obj, id, strict);

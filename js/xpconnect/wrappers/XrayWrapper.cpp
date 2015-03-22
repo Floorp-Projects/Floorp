@@ -593,7 +593,7 @@ JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, ObjectOp
 
 bool
 JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                             Handle<JSPropertyDescriptor> desc,
+                             MutableHandle<JSPropertyDescriptor> desc,
                              Handle<JSPropertyDescriptor> existingDesc,
                              ObjectOpResult &result,
                              bool *defined)
@@ -637,10 +637,9 @@ JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
             return false;
         }
 
-        Rooted<JSPropertyDescriptor> wrappedDesc(cx, desc);
         JSAutoCompartment ac(cx, target);
-        if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc) ||
-            !JS_DefinePropertyById(cx, target, id, wrappedDesc, result))
+        if (!JS_WrapPropertyDescriptor(cx, desc) ||
+            !JS_DefinePropertyById(cx, target, id, desc, result))
         {
             return false;
         }
@@ -1416,7 +1415,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsW
 
 bool
 XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                           Handle<JSPropertyDescriptor> desc,
+                                           MutableHandle<JSPropertyDescriptor> desc,
                                            Handle<JSPropertyDescriptor> existingDesc,
                                            JS::ObjectOpResult &result, bool *defined)
 {
@@ -1577,7 +1576,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Handl
 
 bool
 DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                              Handle<JSPropertyDescriptor> desc,
+                              MutableHandle<JSPropertyDescriptor> desc,
                               Handle<JSPropertyDescriptor> existingDesc,
                               JS::ObjectOpResult &result, bool *defined)
 {
@@ -1931,7 +1930,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
 // to the content object. This is ok, because the the expando object is only
 // ever accessed by code across the compartment boundary.
 static bool
-RecreateLostWaivers(JSContext *cx, const JSPropertyDescriptor *orig,
+RecreateLostWaivers(JSContext *cx, JSPropertyDescriptor *orig,
                     MutableHandle<JSPropertyDescriptor> wrapped)
 {
     // Compute whether the original objects were waived, and implicitly, whether
@@ -1976,7 +1975,7 @@ RecreateLostWaivers(JSContext *cx, const JSPropertyDescriptor *orig,
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
-                                          HandleId id, Handle<JSPropertyDescriptor> desc,
+                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc,
                                           ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::SET);
@@ -2081,15 +2080,15 @@ XrayWrapper<Base, Traits>::get(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper, HandleId id, HandleValue v,
-                               HandleValue receiver, ObjectOpResult &result) const
+XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
+                               HandleObject receiver, HandleId id,
+                               MutableHandleValue vp, ObjectOpResult &result) const
 {
     MOZ_ASSERT(!Traits::HasPrototype);
     // Skip our Base if it isn't already BaseProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    RootedValue wrapperValue(cx, ObjectValue(*wrapper));
-    return js::BaseProxyHandler::set(cx, wrapper, id, v, wrapperValue, result);
+    return js::BaseProxyHandler::set(cx, wrapper, wrapper, id, vp, result);
 }
 
 template <typename Base, typename Traits>

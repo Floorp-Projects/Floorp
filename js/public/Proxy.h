@@ -18,7 +18,6 @@ namespace js {
 
 using JS::AutoIdVector;
 using JS::CallArgs;
-using JS::Handle;
 using JS::HandleId;
 using JS::HandleObject;
 using JS::HandleValue;
@@ -253,7 +252,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const = 0;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                MutableHandle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const = 0;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const = 0;
@@ -295,8 +294,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                     HandleValue receiver, ObjectOpResult &result) const;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, MutableHandleValue vp, ObjectOpResult &result) const;
 
     /*
      * [[Call]] and [[Construct]] are standard internal methods but according
@@ -374,7 +373,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                MutableHandle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const override;
@@ -395,8 +394,9 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
                      bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                     HandleValue receiver, ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                     HandleId id, MutableHandleValue vp,
+                     ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
 

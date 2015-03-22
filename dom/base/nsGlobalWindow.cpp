@@ -621,7 +621,7 @@ public:
   virtual bool defineProperty(JSContext* cx,
                               JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
-                              JS::Handle<JSPropertyDescriptor> desc,
+                              JS::MutableHandle<JSPropertyDescriptor> desc,
                               JS::ObjectOpResult &result) const override;
   virtual bool ownPropertyKeys(JSContext *cx,
                                JS::Handle<JSObject*> proxy,
@@ -643,8 +643,9 @@ public:
                    JS::Handle<jsid> id,
                    JS::MutableHandle<JS::Value> vp) const override;
   virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
-                   JS::Handle<jsid> id, JS::Handle<JS::Value> v,
-                   JS::Handle<JS::Value> receiver,
+                   JS::Handle<JSObject*> receiver,
+                   JS::Handle<jsid> id,
+                   JS::MutableHandle<JS::Value> vp,
                    JS::ObjectOpResult &result) const override;
 
   // SpiderMonkey extensions
@@ -781,7 +782,7 @@ bool
 nsOuterWindowProxy::defineProperty(JSContext* cx,
                                    JS::Handle<JSObject*> proxy,
                                    JS::Handle<jsid> id,
-                                   JS::Handle<JSPropertyDescriptor> desc,
+                                   JS::MutableHandle<JSPropertyDescriptor> desc,
                                    JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
@@ -908,9 +909,9 @@ nsOuterWindowProxy::get(JSContext *cx, JS::Handle<JSObject*> proxy,
 
 bool
 nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
+                        JS::Handle<JSObject*> receiver,
                         JS::Handle<jsid> id,
-                        JS::Handle<JS::Value> v,
-                        JS::Handle<JS::Value> receiver,
+                        JS::MutableHandle<JS::Value> vp,
                         JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
@@ -920,7 +921,7 @@ nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
     return result.failReadOnly();
   }
 
-  return js::Wrapper::set(cx, proxy, id, v, receiver, result);
+  return js::Wrapper::set(cx, proxy, receiver, id, vp, result);
 }
 
 bool

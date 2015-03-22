@@ -313,20 +313,52 @@ GetNameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHan
 }
 
 static bool
-SetPropertyOperation(JSContext *cx, JSOp op, HandleValue lval, HandleId id, HandleValue rval)
+SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, MutableHandleValue rref)
 {
-    MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
+    MOZ_ASSERT(lval.isObject());
+
+    RootedObject obj(cx, &lval.toObject());
+
+    ObjectOpResult result;
+    if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
+        if (!NativeSetProperty(cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
+                               Qualified, rref, result))
+        {
+            return false;
+        }
+    } else {
+        if (!SetProperty(cx, obj, obj, id, rref, result))
+            return false;
+    }
+
+    return result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP);
+}
+
+static bool
+SetPrimitiveProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id,
+                     MutableHandleValue rref)
+{
+    MOZ_ASSERT(lval.isPrimitive());
 
     RootedObject obj(cx, ToObjectFromStack(cx, lval));
     if (!obj)
         return false;
 
-    // Note: ES6 specifies that the value lval, not obj, is passed as receiver
-    // to obj's [[Set]] internal method. See bug 603201.
     RootedValue receiver(cx, ObjectValue(*obj));
-    ObjectOpResult result;
-    return SetProperty(cx, obj, id, rval, receiver, result) &&
-           result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP);
+    return SetObjectProperty(cx, op, receiver, id, rref);
+}
+
+static bool
+SetPropertyOperation(JSContext *cx, JSOp op, HandleValue lval, HandleId id, HandleValue rval)
+{
+    MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
+
+    RootedValue rref(cx, rval);
+
+    if (lval.isPrimitive())
+        return SetPrimitiveProperty(cx, op, lval, id, &rref);
+
+    return SetObjectProperty(cx, op, lval, id, &rref);
 }
 
 bool
@@ -584,7 +616,8 @@ js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *arg
 }
 
 bool
-js::InvokeGetter(JSContext *cx, JSObject *obj, Value fval, MutableHandleValue rval)
+js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, Value fval, unsigned argc,
+                         Value *argv, MutableHandleValue rval)
 {
     /*
      * Invoke could result in another try to get or set the same id again, see
@@ -592,16 +625,7 @@ js::InvokeGetter(JSContext *cx, JSObject *obj, Value fval, MutableHandleValue rv
      */
     JS_CHECK_RECURSION(cx, return false);
 
-    return Invoke(cx, ObjectValue(*obj), fval, 0, nullptr, rval);
-}
-
-bool
-js::InvokeSetter(JSContext *cx, const Value &thisv, Value fval, HandleValue v)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    RootedValue ignored(cx);
-    return Invoke(cx, thisv, fval, 1, v.address(), &ignored);
+    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
 bool
@@ -1379,7 +1403,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         return false;
 
     RootedValue tmp(cx, value);
-    return PutProperty(cx, obj, id, tmp, strict);
+    return PutProperty(cx, obj, id, &tmp, strict);
 }
 
 static MOZ_NEVER_INLINE bool
@@ -3861,8 +3885,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    RootedId id(cx, NameToId(name));
-    return PutProperty(cx, parent, id, rval, script->strict());
+    return PutProperty(cx, parent, name, &rval, script->strict());
 }
 
 bool
