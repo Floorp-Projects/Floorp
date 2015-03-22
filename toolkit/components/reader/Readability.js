@@ -102,15 +102,17 @@ Readability.prototype = {
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single|utility/i,
     byline: /byline|author|dateline|writtenby/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
-    trim: /^\s+|\s+$/g,
     normalize: /\s{2,}/g,
-    videos: /http:\/\/(www\.)?(youtube|vimeo)\.com/i,
+    videos: /https?:\/\/(www\.)?(youtube|vimeo)\.com/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
     prevLink: /(prev|earl|old|new|<|«)/i,
-    whitespace: /^\s*$/
+    whitespace: /^\s*$/,
+    hasContent: /\S$/,
   },
 
   DIV_TO_P_ELEMS: [ "A", "BLOCKQUOTE", "DL", "DIV", "IMG", "OL", "P", "PRE", "TABLE", "UL", "SELECT" ],
+
+  ALTER_TO_DIV_EXCEPTIONS: ["DIV", "ARTICLE", "SECTION", "P"],
 
   /**
    * Run any post-process modifications to article content as necessary.
@@ -204,7 +206,7 @@ Readability.prototype = {
         curTitle = this._getInnerText(hOnes[0]);
     }
 
-    curTitle = curTitle.replace(this.REGEXPS.trim, "");
+    curTitle = curTitle.trim();
 
     if (curTitle.split(' ').length <= 4)
       curTitle = origTitle;
@@ -223,8 +225,8 @@ Readability.prototype = {
 
     // Remove all style tags in head
     var styleTags = doc.getElementsByTagName("style");
-    for (var st = 0; st < styleTags.length; st += 1) {
-      styleTags[st].textContent = "";
+    for (var st = styleTags.length - 1; st >= 0; st -= 1) {
+      styleTags[st].parentNode.removeChild(styleTags[st]);
     }
 
     if (doc.body) {
@@ -305,6 +307,8 @@ Readability.prototype = {
   },
 
   _setNodeTag: function (node, tag) {
+    // FIXME this doesn't work on anything but JSDOMParser (ie the node's tag
+    // won't actually be set).
     node.localName = tag.toLowerCase();
     node.tagName = tag.toUpperCase();
   },
@@ -407,6 +411,54 @@ Readability.prototype = {
     node.readability.contentScore += this._getClassWeight(node);
   },
 
+  _removeAndGetNext: function(node) {
+    var nextNode = this._getNextNode(node, true);
+    node.parentNode.removeChild(node);
+    return nextNode;
+  },
+
+  /**
+   * Traverse the DOM from node to node, starting at the node passed in.
+   * Pass true for the second parameter to indicate this node itself
+   * (and its kids) are going away, and we want the next node over.
+   *
+   * Calling this in a loop will traverse the DOM depth-first.
+   */
+  _getNextNode: function(node, ignoreSelfAndKids) {
+    // First check for kids if those aren't being ignored
+    if (!ignoreSelfAndKids && node.firstElementChild) {
+      return node.firstElementChild;
+    }
+    // Then for siblings...
+    if (node.nextElementSibling) {
+      return node.nextElementSibling;
+    }
+    // And finally, move up the parent chain *and* find a sibling
+    // (because this is depth-first traversal, we will have already
+    // seen the parent nodes themselves).
+    do {
+      node = node.parentNode;
+    } while (node && !node.nextElementSibling);
+    return node && node.nextElementSibling;
+  },
+
+  _checkByline: function(node, matchString) {
+    if (this._articleByline) {
+      return false;
+    }
+
+    if (node.getAttribute !== undefined) {
+      var rel = node.getAttribute("rel");
+    }
+
+    if ((rel === "author" || this.REGEXPS.byline.test(matchString)) && this._isValidByline(node.textContent)) {
+      this._articleByline = node.textContent.trim();
+      return true;
+    }
+
+    return false;
+  },
+
   /***
    * grabArticle - Using a variety of metrics (content score, classname, element types), find the content that is
    *         most likely to be the stuff a user wants to read. Then return it wrapped up in a div.
@@ -430,65 +482,37 @@ Readability.prototype = {
     // Check if any "dir" is set on the toplevel document element
     this._articleDir = doc.documentElement.getAttribute("dir");
 
-    //helper function used below in the 'while' loop:
-    function purgeNode(node, allElements) {
-      for (var i = node.childNodes.length; --i >= 0;) {
-        purgeNode(node.childNodes[i], allElements);
-      }
-      if (node._index !== undefined && allElements[node._index] == node)
-        delete allElements[node._index];
-    }
     while (true) {
       var stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
-      var allElements = page.getElementsByTagName('*');
 
       // First, node prepping. Trash nodes that look cruddy (like ones with the
       // class name "comment", etc), and turn divs into P tags where they have been
       // used inappropriately (as in, where they contain no other block level elements.)
-      //
-      // Note: Assignment from index for performance. See http://www.peachpit.com/articles/article.aspx?p=31567&seqNum=5
-      // TODO: Shouldn't this be a reverse traversal?
-      var node = null;
-      var nodesToScore = [];
+      var elementsToScore = [];
+      var node = this._doc.documentElement;
 
-      // var each node know its index in the allElements array.
-      for (var i = allElements.length; --i >= 0;) {
-        allElements[i]._index = i;
-      }
+      while (node) {
+        var matchString = node.className + " " + node.id;
 
-      /**
-       * JSDOMParser returns static node lists, not live ones. When we remove
-       * an element from the document, we need to manually remove it - and all
-       * of its children - from the allElements array.
-       */
-      for (var nodeIndex = 0; nodeIndex < allElements.length; nodeIndex++) {
-        if (!(node = allElements[nodeIndex]))
+        // Check to see if this node is a byline, and remove it if it is.
+        if (this._checkByline(node, matchString)) {
+          node = this._removeAndGetNext(node);
           continue;
-
-        var matchString = node.className + node.id;
-        if (matchString.search(this.REGEXPS.byline) !== -1 && !this._articleByline) {
-          if (this._isValidByline(node.textContent)) {
-            this._articleByline = node.textContent.trim();
-            node.parentNode.removeChild(node);
-            purgeNode(node, allElements);
-            continue;
-          }
         }
 
         // Remove unlikely candidates
         if (stripUnlikelyCandidates) {
-          if (matchString.search(this.REGEXPS.unlikelyCandidates) !== -1 &&
-            matchString.search(this.REGEXPS.okMaybeItsACandidate) === -1 &&
-            node.tagName !== "BODY") {
+          if (this.REGEXPS.unlikelyCandidates.test(matchString) &&
+              !this.REGEXPS.okMaybeItsACandidate.test(matchString) &&
+              node.tagName !== "BODY") {
             this.log("Removing unlikely candidate - " + matchString);
-            node.parentNode.removeChild(node);
-            purgeNode(node, allElements);
+            node = this._removeAndGetNext(node);
             continue;
           }
         }
 
         if (node.tagName === "P" || node.tagName === "TD" || node.tagName === "PRE")
-          nodesToScore[nodesToScore.length] = node;
+          elementsToScore.push(node);
 
         // Turn all divs that don't have children block level elements into p's
         if (node.tagName === "DIV") {
@@ -496,34 +520,28 @@ Readability.prototype = {
           // element. DIVs with only a P element inside and no text content can be
           // safely converted into plain P elements to avoid confusing the scoring
           // algorithm with DIVs with are, in practice, paragraphs.
-          var pIndex = this._getSinglePIndexInsideDiv(node);
-
-          if (pIndex >= 0 || !this._hasChildBlockElement(node)) {
-            if (pIndex >= 0) {
-              var newNode = node.childNodes[pIndex];
-              node.parentNode.replaceChild(newNode, node);
-              purgeNode(node, allElements);
-            } else {
-              this._setNodeTag(node, "P");
-              nodesToScore[nodesToScore.length] = node;
-            }
+          if (this._hasSinglePInsideElement(node)) {
+            var newNode = node.firstElementChild;
+            node.parentNode.replaceChild(newNode, node);
+            node = newNode;
+          } else if (!this._hasChildBlockElement(node)) {
+            this._setNodeTag(node, "P");
+            elementsToScore.push(node);
           } else {
             // EXPERIMENTAL
             for (var i = 0, il = node.childNodes.length; i < il; i += 1) {
               var childNode = node.childNodes[i];
-              if (!childNode)
-                continue;
-
-              if (childNode.nodeType === 3) { // Node.TEXT_NODE
+              if (childNode.nodeType === Node.TEXT_NODE) {
                 var p = doc.createElement('p');
                 p.textContent = childNode.textContent;
                 p.style.display = 'inline';
                 p.className = 'readability-styled';
-                childNode.parentNode.replaceChild(p, childNode);
+                node.replaceChild(p, childNode);
               }
             }
           }
         }
+        node = this._getNextNode(node);
       }
 
       /**
@@ -533,10 +551,10 @@ Readability.prototype = {
        * A score is determined by things like number of commas, class names, etc. Maybe eventually link density.
       **/
       var candidates = [];
-      for (var pt = 0; pt < nodesToScore.length; pt += 1) {
-        var parentNode = nodesToScore[pt].parentNode;
+      for (var pt = 0; pt < elementsToScore.length; pt += 1) {
+        var parentNode = elementsToScore[pt].parentNode;
         var grandParentNode = parentNode ? parentNode.parentNode : null;
-        var innerText = this._getInnerText(nodesToScore[pt]);
+        var innerText = this._getInnerText(elementsToScore[pt]);
 
         if (!parentNode || typeof(parentNode.tagName) === 'undefined')
           continue;
@@ -612,15 +630,40 @@ Readability.prototype = {
         // Move all of the page's children into topCandidate
         topCandidate = doc.createElement("DIV");
         neededToCreateTopCandidate = true;
-        var children = page.childNodes;
-        while (children.length) {
-          this.log("Moving child out:", children[0]);
-          topCandidate.appendChild(children[0]);
+        // Move everything (not just elements, also text nodes etc.) into the container
+        // so we even include text directly in the body:
+        var kids = page.childNodes;
+        while (kids.length) {
+          this.log("Moving child out:", kids[0]);
+          topCandidate.appendChild(kids[0]);
         }
 
         page.appendChild(topCandidate);
 
         this._initializeNode(topCandidate);
+      } else if (topCandidate) {
+        // Because of our bonus system, parents of candidates might have scores
+        // themselves. They get half of the node. There won't be nodes with higher
+        // scores than our topCandidate, but if we see the score going *up* in the first
+        // few steps up the tree, that's a decent sign that there might be more content
+        // lurking in other places that we want to unify in. The sibling stuff
+        // below does some of that - but only if we've looked high enough up the DOM
+        // tree.
+        var parentOfTopCandidate = topCandidate.parentNode;
+        // The scores shouldn't get too low.
+        var scoreThreshold = topCandidate.readability.contentScore / 3;
+        var lastScore = parentOfTopCandidate.readability.contentScore;
+        while (parentOfTopCandidate && parentOfTopCandidate.readability) {
+          var parentScore = parentOfTopCandidate.readability.contentScore;
+          if (parentScore < scoreThreshold)
+            break;
+          if (parentScore > lastScore) {
+            // Alright! We found a better parent to use.
+            topCandidate = parentOfTopCandidate;
+            break;
+          }
+          parentOfTopCandidate = parentOfTopCandidate.parentNode;
+        }
       }
 
       // Now that we have the top candidate, look through its siblings for content
@@ -631,72 +674,71 @@ Readability.prototype = {
         articleContent.id = "readability-content";
 
       var siblingScoreThreshold = Math.max(10, topCandidate.readability.contentScore * 0.2);
-      var siblingNodes = topCandidate.parentNode.childNodes;
+      var siblings = topCandidate.parentNode.children;
 
-      for (var s = 0, sl = siblingNodes.length; s < sl; s += 1) {
-        var siblingNode = siblingNodes[s];
+      for (var s = 0, sl = siblings.length; s < sl; s++) {
+        var sibling = siblings[s];
         var append = false;
 
-        this.log("Looking at sibling node:", siblingNode, ((typeof siblingNode.readability !== 'undefined') ? ("with score " + siblingNode.readability.contentScore) : ''));
-        this.log("Sibling has score " + (siblingNode.readability ? siblingNode.readability.contentScore : 'Unknown'));
+        this.log("Looking at sibling node:", sibling, sibling.readability ? ("with score " + sibling.readability.contentScore) : '');
+        this.log("Sibling has score", sibling.readability ? sibling.readability.contentScore : 'Unknown');
 
-        if (siblingNode === topCandidate)
+        if (sibling === topCandidate) {
           append = true;
+        } else {
+          var contentBonus = 0;
 
-        var contentBonus = 0;
+          // Give a bonus if sibling nodes and top candidates have the example same classname
+          if (sibling.className === topCandidate.className && topCandidate.className !== "")
+            contentBonus += topCandidate.readability.contentScore * 0.2;
 
-        // Give a bonus if sibling nodes and top candidates have the example same classname
-        if (siblingNode.className === topCandidate.className && topCandidate.className !== "")
-          contentBonus += topCandidate.readability.contentScore * 0.2;
-
-        if (typeof siblingNode.readability !== 'undefined' &&
-          (siblingNode.readability.contentScore+contentBonus) >= siblingScoreThreshold)
-          append = true;
-
-        if (siblingNode.nodeName === "P") {
-          var linkDensity = this._getLinkDensity(siblingNode);
-          var nodeContent = this._getInnerText(siblingNode);
-          var nodeLength = nodeContent.length;
-
-          if (nodeLength > 80 && linkDensity < 0.25) {
+          if (sibling.readability &&
+              ((sibling.readability.contentScore + contentBonus) >= siblingScoreThreshold)) {
             append = true;
-          } else if (nodeLength < 80 && linkDensity === 0 && nodeContent.search(/\.( |$)/) !== -1) {
-            append = true;
+          } else if (sibling.nodeName === "P") {
+            var linkDensity = this._getLinkDensity(sibling);
+            var nodeContent = this._getInnerText(sibling);
+            var nodeLength = nodeContent.length;
+
+            if (nodeLength > 80 && linkDensity < 0.25) {
+              append = true;
+            } else if (nodeLength < 80 && linkDensity === 0 && nodeContent.search(/\.( |$)/) !== -1) {
+              append = true;
+            }
           }
         }
 
         if (append) {
-          this.log("Appending node:", siblingNode);
+          this.log("Appending node:", sibling);
 
-          // siblingNodes is a reference to the childNodes array, and
-          // siblingNode is removed from the array when we call appendChild()
-          // below. As a result, we must revisit this index since the nodes
-          // have been shifted.
-          s -= 1;
-          sl -= 1;
-
-          if (siblingNode.nodeName !== "DIV" && siblingNode.nodeName !== "P") {
+          if (this.ALTER_TO_DIV_EXCEPTIONS.indexOf(sibling.nodeName) === -1) {
             // We have a node that isn't a common block level element, like a form or td tag.
-            // Turn it into a div so it doesn't get filtered out later by accident. */
-            this.log("Altering siblingNode:", siblingNode, 'to div.');
+            // Turn it into a div so it doesn't get filtered out later by accident.
+            this.log("Altering sibling:", sibling, 'to div.');
 
-            this._setNodeTag(siblingNode, "DIV");
+            this._setNodeTag(sibling, "DIV");
           }
 
           // To ensure a node does not interfere with readability styles,
           // remove its classnames.
-          siblingNode.removeAttribute("class");
+          sibling.removeAttribute("class");
 
-          // Append sibling and subtract from our list because it removes
-          // the node when you append to another node.
-          articleContent.appendChild(siblingNode);
+          articleContent.appendChild(sibling);
+          // siblings is a reference to the children array, and
+          // sibling is removed from the array when we call appendChild().
+          // As a result, we must revisit this index since the nodes
+          // have been shifted.
+          s -= 1;
+          sl -= 1;
         }
       }
 
-      this.log("Article content pre-prep: " + articleContent.innerHTML);
+      if (this.ENABLE_LOGGING)
+        this.log("Article content pre-prep: " + articleContent.innerHTML);
       // So we have all of the content that we need. Now we clean it up for presentation.
       this._prepArticle(articleContent);
-      this.log("Article content post-prep: " + articleContent.innerHTML);
+      if (this.ENABLE_LOGGING)
+        this.log("Article content post-prep: " + articleContent.innerHTML);
 
       if (this._curPageNum === 1) {
         if (neededToCreateTopCandidate) {
@@ -718,7 +760,8 @@ Readability.prototype = {
         }
       }
 
-      this.log("Article content after paging: " + articleContent.innerHTML);
+      if (this.ENABLE_LOGGING)
+        this.log("Article content after paging: " + articleContent.innerHTML);
 
       // Now that we've gone through the full algorithm, check to see if
       // we got any meaningful content. If we didn't, we may need to re-run
@@ -760,19 +803,12 @@ Readability.prototype = {
   },
 
   /**
-   * Attempts to get the excerpt from these
-   * sources in the following order:
-   * - meta description tag
-   * - open-graph description
-   * - twitter cards description
-   * - article's first paragraph
-   * If no excerpt is found, an empty string will be
-   * returned.
-   *
-   * @param Element - root element of the processed version page
-   * @return String - excerpt of the article
-  **/
-  _getExcerpt: function(articleContent) {
+   * Attempts to get excerpt and byline metadata for the article.
+   * 
+   * @return Object with optional "excerpt" and "byline" properties
+   */
+  _getArticleMetadata: function() {
+    var metadata = {};
     var values = {};
     var metaElements = this._doc.getElementsByTagName("meta");
 
@@ -789,7 +825,12 @@ Readability.prototype = {
       var elementName = element.getAttribute("name");
       var elementProperty = element.getAttribute("property");
 
-      var name;
+      if (elementName === "author") {
+        metadata.byline = element.getAttribute("content");
+        continue;
+      }
+
+      var name = null;
       if (namePattern.test(elementName)) {
         name = elementName;
       } else if (propertyPattern.test(elementProperty)) {
@@ -808,26 +849,16 @@ Readability.prototype = {
     }
 
     if ("description" in values) {
-      return values["description"];
-    }
-
-    if ("og:description" in values) {
+      metadata.excerpt = values["description"];
+    } else if ("og:description" in values) {
       // Use facebook open graph description.
-      return values["og:description"];
-    }
-
-    if ("twitter:description" in values) {
+      metadata.excerpt = values["og:description"];
+    } else if ("twitter:description" in values) {
       // Use twitter cards description.
-      return values["twitter:description"];
+      metadata.excerpt = values["twitter:description"];
     }
 
-    // No description meta tags, use the article's first paragraph.
-    var paragraphs = articleContent.getElementsByTagName("p");
-    if (paragraphs.length > 0) {
-      return paragraphs[0].textContent;
-    }
-
-    return "";
+    return metadata;
   },
 
   /**
@@ -847,33 +878,28 @@ Readability.prototype = {
   },
 
   /**
-   * Get child index of the only P element inside a DIV with no
-   * text content. Returns -1 if the DIV node contains non-empty
-   * text nodes or if it contains other element nodes.
+   * Check if this node has only whitespace and a single P element
+   * Returns false if the DIV node contains non-empty text nodes
+   * or if it contains no P or more than 1 element.
    *
    * @param Element
   **/
-  _getSinglePIndexInsideDiv: function(e) {
+  _hasSinglePInsideElement: function(e) {
+    // There should be exactly 1 element child which is a P:
+    if (e.children.length != 1 || e.firstElementChild.tagName !== "P") {
+      return false;
+    }
+    // And there should be no text nodes with real content
     var childNodes = e.childNodes;
-    var pIndex = -1;
-
     for (var i = childNodes.length; --i >= 0;) {
       var node = childNodes[i];
-
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.tagName !== "P")
-          return -1;
-
-        if (pIndex >= 0)
-          return -1;
-
-        pIndex = i;
-      } else if (node.nodeType == Node.TEXT_NODE && this._getInnerText(node, false)) {
-        return -1;
+      if (node.nodeType == Node.TEXT_NODE &&
+          this.REGEXPS.hasContent.test(node.textContent)) {
+        return false;
       }
     }
 
-    return pIndex;
+    return true;
   },
 
   /**
@@ -882,12 +908,9 @@ Readability.prototype = {
    * @param Element
    */
   _hasChildBlockElement: function (e) {
-    var length = e.childNodes.length;
+    var length = e.children.length;
     for (var i = 0; i < length; i++) {
-      var child = e.childNodes[i];
-      if (child.nodeType != 1)
-        continue;
-
+      var child = e.children[i];
       if (this.DIV_TO_P_ELEMS.indexOf(child.tagName) !== -1 || this._hasChildBlockElement(child))
         return true;
     }
@@ -902,7 +925,7 @@ Readability.prototype = {
    * @return string
   **/
   _getInnerText: function(e, normalizeSpaces) {
-    var textContent = e.textContent.replace(this.REGEXPS.trim, "");
+    var textContent = e.textContent.trim();
     normalizeSpaces = (typeof normalizeSpaces === 'undefined') ? true : normalizeSpaces;
 
     if (normalizeSpaces) {
@@ -933,10 +956,9 @@ Readability.prototype = {
   **/
   _cleanStyles: function(e) {
     e = e || this._doc;
-    var cur = e.firstChild;
-
     if (!e)
       return;
+    var cur = e.firstChild;
 
     // Remove any root styles, if we're able.
     if (typeof e.removeAttribute === 'function' && e.className !== 'readability-styled')
@@ -944,7 +966,7 @@ Readability.prototype = {
 
     // Go until there are no more child nodes
     while (cur !== null) {
-      if (cur.nodeType === 1) {
+      if (cur.nodeType === cur.ELEMENT_NODE) {
         // Remove style attribute(s) :
         if (cur.className !== "readability-styled")
           cur.removeAttribute("style");
@@ -1355,19 +1377,19 @@ Readability.prototype = {
 
     // Look for a special classname
     if (typeof(e.className) === 'string' && e.className !== '') {
-      if (e.className.search(this.REGEXPS.negative) !== -1)
+      if (this.REGEXPS.negative.test(e.className))
         weight -= 25;
 
-      if (e.className.search(this.REGEXPS.positive) !== -1)
+      if (this.REGEXPS.positive.test(e.className))
         weight += 25;
     }
 
     // Look for a special ID
     if (typeof(e.id) === 'string' && e.id !== '') {
-      if (e.id.search(this.REGEXPS.negative) !== -1)
+      if (this.REGEXPS.negative.test(e.id))
         weight -= 25;
 
-      if (e.id.search(this.REGEXPS.positive) !== -1)
+      if (this.REGEXPS.positive.test(e.id))
         weight += 25;
     }
 
@@ -1395,11 +1417,11 @@ Readability.prototype = {
         }
 
         // First, check the elements attributes to see if any of them contain youtube or vimeo
-        if (attributeValues.search(this.REGEXPS.videos) !== -1)
+        if (this.REGEXPS.videos.test(attributeValues))
           continue;
 
         // Then check the elements inside this element for the same.
-        if (targetList[y].innerHTML.search(this.REGEXPS.videos) !== -1)
+        if (this.REGEXPS.videos.test(targetList[y].innerHTML))
           continue;
       }
 
@@ -1445,7 +1467,7 @@ Readability.prototype = {
         var embedCount = 0;
         var embeds = tagsList[i].getElementsByTagName("embed");
         for (var ei = 0, il = embeds.length; ei < il; ei += 1) {
-          if (embeds[ei].src.search(this.REGEXPS.videos) === -1)
+          if (!this.REGEXPS.videos.test(embeds[ei].src))
             embedCount += 1;
         }
 
@@ -1532,6 +1554,8 @@ Readability.prototype = {
     this._prepDocument();
 
     var articleTitle = this._getArticleTitle();
+    var metadata = this._getArticleMetadata();
+
     var articleContent = this._grabArticle();
     if (!articleContent)
       return null;
@@ -1548,14 +1572,22 @@ Readability.prototype = {
     //   }).bind(this), 500);
     // }
 
-    var excerpt = this._getExcerpt(articleContent);
+    // If we haven't found an excerpt in the article's metadata, use the article's
+    // first paragraph as the excerpt. This is used for displaying a preview of
+    // the article's content.
+    if (!metadata.excerpt) {
+      var paragraphs = articleContent.getElementsByTagName("p");
+      if (paragraphs.length > 0) {
+        metadata.excerpt = paragraphs[0].textContent;
+      }
+    }
 
     return { uri: this._uri,
              title: articleTitle,
-             byline: this._articleByline,
+             byline: metadata.byline || this._articleByline,
              dir: this._articleDir,
              content: articleContent.innerHTML,
              length: articleContent.textContent.length,
-             excerpt: excerpt };
+             excerpt: metadata.excerpt };
   }
 };
