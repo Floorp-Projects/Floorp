@@ -60,6 +60,9 @@ const DIRECTORY_FRECENCY = 1000;
 // The frecency of a suggested link
 const SUGGESTED_FRECENCY = Infinity;
 
+// Default number of times to show a link
+const DEFAULT_FREQUENCY_CAP = 5;
+
 // Divide frecency by this amount for pings
 const PING_SCORE_DIVISOR = 10000;
 
@@ -87,6 +90,11 @@ let DirectoryLinksProvider = {
    * A mapping from eTLD+1 to an enhanced link objects
    */
   _enhancedLinks: new Map(),
+
+  /**
+   * A mapping from site to remaining number of views
+   */
+  _frequencyCaps: new Map(),
 
   /**
    * A mapping from site to a list of suggested link objects
@@ -325,6 +333,23 @@ let DirectoryLinksProvider = {
    * @return download promise
    */
   reportSitesAction: function DirectoryLinksProvider_reportSitesAction(sites, action, triggeringSiteIndex) {
+    // Check if the suggested tile was shown
+    if (action == "view") {
+      sites.slice(0, triggeringSiteIndex + 1).forEach(site => {
+        let {targetedSite, url} = site.link;
+        if (targetedSite) {
+          this._decreaseFrequencyCap(url, 1);
+        }
+      });
+    }
+    // Use up all views if the user clicked on a frequency capped tile
+    else if (action == "click") {
+      let {targetedSite, url} = sites[triggeringSiteIndex].link;
+      if (targetedSite) {
+        this._decreaseFrequencyCap(url, DEFAULT_FREQUENCY_CAP);
+      }
+    }
+
     let newtabEnhanced = false;
     let pingEndPoint = "";
     try {
@@ -415,6 +440,7 @@ let DirectoryLinksProvider = {
     this._readDirectoryLinksFile().then(rawLinks => {
       // Reset the cache of suggested tiles and enhanced images for this new set of links
       this._enhancedLinks.clear();
+      this._frequencyCaps.clear();
       this._suggestedLinks.clear();
 
       let validityFilter = function(link) {
@@ -438,13 +464,19 @@ let DirectoryLinksProvider = {
         // We cache suggested tiles here but do not push any of them in the links list yet.
         // The decision for which suggested tile to include will be made separately.
         this._cacheSuggestedLinks(link);
+        this._frequencyCaps.set(link.url, DEFAULT_FREQUENCY_CAP);
       });
 
-      return rawLinks.directory.filter(validityFilter).map((link, position) => {
+      let links = rawLinks.directory.filter(validityFilter).map((link, position) => {
         setCommonProperties(link, rawLinks.directory.length, position);
         link.frecency = DIRECTORY_FRECENCY;
         return link;
       });
+
+      // Allow for one link suggestion on top of the default directory links
+      this.maxNumLinks = links.length + 1;
+
+      return links;
     }).catch(ex => {
       Cu.reportError(ex);
       return [];
@@ -530,6 +562,21 @@ let DirectoryLinksProvider = {
   },
 
   /**
+   * Record for a url that some number of views have been used
+   * @param url String url of the suggested link
+   * @param amount Number of equivalent views to decrease
+   */
+  _decreaseFrequencyCap(url, amount) {
+    let remainingViews = this._frequencyCaps.get(url) - amount;
+    this._frequencyCaps.set(url, remainingViews);
+
+    // Reached the number of views, so pick a new one.
+    if (remainingViews <= 0) {
+      this._updateSuggestedTile();
+    }
+  },
+
+  /**
    * Chooses and returns a suggested tile based on a user's top sites
    * that we have an available suggested tile for.
    *
@@ -546,13 +593,12 @@ let DirectoryLinksProvider = {
 
     // Delete the current suggested tile, if one exists.
     let initialLength = sortedLinks.length;
-    this.maxNumLinks = initialLength;
     if (initialLength) {
       let mostFrecentLink = sortedLinks[0];
       if (mostFrecentLink.targetedSite) {
         this._callObservers("onLinkChanged", {
           url: mostFrecentLink.url,
-          frecency: 0,
+          frecency: SUGGESTED_FRECENCY,
           lastVisitDate: mostFrecentLink.lastVisitDate,
           type: mostFrecentLink.type,
         }, 0, true);
@@ -574,6 +620,11 @@ let DirectoryLinksProvider = {
     this._topSitesWithSuggestedLinks.forEach(topSiteWithSuggestedLink => {
       let suggestedLinksMap = this._suggestedLinks.get(topSiteWithSuggestedLink);
       suggestedLinksMap.forEach((suggestedLink, url) => {
+        // Skip this link if we've shown it too many times already
+        if (this._frequencyCaps.get(url) <= 0) {
+          return;
+        }
+
         possibleLinks.set(url, suggestedLink);
 
         // Keep a map of URL to targeted sites. We later use this to show the user
@@ -584,10 +635,17 @@ let DirectoryLinksProvider = {
         targetedSites.get(url).push(topSiteWithSuggestedLink);
       })
     });
+
+    // We might have run out of possible links to show
+    let numLinks = possibleLinks.size;
+    if (numLinks == 0) {
+      return;
+    }
+
     let flattenedLinks = [...possibleLinks.values()];
 
     // Choose our suggested link at random
-    let suggestedIndex = Math.floor(Math.random() * flattenedLinks.length);
+    let suggestedIndex = Math.floor(Math.random() * numLinks);
     let chosenSuggestedLink = flattenedLinks[suggestedIndex];
 
     // Show the new directory tile.
@@ -624,11 +682,11 @@ let DirectoryLinksProvider = {
     this._observers.delete(aObserver);
   },
 
-  _callObservers: function DirectoryLinksProvider__callObservers(aMethodName, aArg) {
+  _callObservers(methodName, ...args) {
     for (let obs of this._observers) {
-      if (typeof(obs[aMethodName]) == "function") {
+      if (typeof(obs[methodName]) == "function") {
         try {
-          obs[aMethodName](this, aArg);
+          obs[methodName](this, ...args);
         } catch (err) {
           Cu.reportError(err);
         }
