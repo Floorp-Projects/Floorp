@@ -42,7 +42,7 @@ struct js::Nursery::FreeHugeSlotsTask : public GCParallelTask
     explicit FreeHugeSlotsTask(FreeOp *fop) : fop_(fop) {}
     bool init() { return slots_.init(); }
     void transferSlotsToFree(HugeSlotsSet &slotsToFree);
-    ~FreeHugeSlotsTask() { join(); }
+    ~FreeHugeSlotsTask() override { join(); }
 
   private:
     FreeOp *fop_;
