@@ -671,14 +671,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     NS_WARNING("Failed to visit all headers.");
   }
 
-  mResponse = BeginAndGetFilteredResponse(response);
-
-  nsCOMPtr<nsISupports> securityInfo;
-  rv = channel->GetSecurityInfo(getter_AddRefs(securityInfo));
-  if (securityInfo) {
-    mResponse->SetSecurityInfo(securityInfo);
-  }
-
   // We open a pipe so that we can immediately set the pipe's read end as the
   // response's body. Setting the segment size to UINT32_MAX means that the
   // pipe has infinite space. The nsIChannel will continue to buffer data in
@@ -697,8 +689,17 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     // Cancel request.
     return rv;
   }
+  response->SetBody(pipeInputStream);
 
-  mResponse->SetBody(pipeInputStream);
+  nsCOMPtr<nsISupports> securityInfo;
+  rv = channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (securityInfo) {
+    response->SetSecurityInfo(securityInfo);
+  }
+
+  // Resolves fetch() promise which may trigger code running in a worker.  Make
+  // sure the Response is fully initialized before calling this.
+  mResponse = BeginAndGetFilteredResponse(response);
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
