@@ -119,24 +119,24 @@ AddonWrapper<Base>::get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle
 
 template<typename Base>
 bool
-AddonWrapper<Base>::set(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id, JS::HandleValue v,
-                        JS::HandleValue receiver, JS::ObjectOpResult &result) const
+AddonWrapper<Base>::set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver,
+                        JS::HandleId id, JS::MutableHandleValue vp,
+                        JS::ObjectOpResult &result) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
     if (!Interpose(cx, wrapper, nullptr, id, &desc))
         return false;
 
     if (!desc.object())
-        return Base::set(cx, wrapper, id, v, receiver, result);
+        return Base::set(cx, wrapper, receiver, id, vp, result);
 
     if (desc.setter()) {
         MOZ_ASSERT(desc.hasSetterObject());
         JS::AutoValueVector args(cx);
-        if (!args.append(v))
+        if (!args.append(vp))
             return false;
         RootedValue fval(cx, ObjectValue(*desc.setterObject()));
-        RootedValue ignored(cx);
-        if (!JS::Call(cx, receiver, fval, args, &ignored))
+        if (!JS_CallFunctionValue(cx, receiver, fval, args, vp))
             return false;
         return result.succeed();
     }
@@ -147,8 +147,8 @@ AddonWrapper<Base>::set(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id
 template<typename Base>
 bool
 AddonWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                   Handle<JSPropertyDescriptor> desc,
-                                   ObjectOpResult &result) const
+                                   MutableHandle<JSPropertyDescriptor> desc,
+                                   JS::ObjectOpResult &result) const
 {
     Rooted<JSPropertyDescriptor> interpDesc(cx);
     if (!Interpose(cx, wrapper, nullptr, id, &interpDesc))

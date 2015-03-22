@@ -76,14 +76,12 @@ Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, cons
        MutableHandleValue rval);
 
 /*
- * These helpers take care of the infinite-recursion check necessary for
+ * This helper takes care of the infinite-recursion check necessary for
  * getter/setter calls.
  */
 extern bool
-InvokeGetter(JSContext *cx, JSObject *obj, Value fval, MutableHandleValue rval);
-
-extern bool
-InvokeSetter(JSContext *cx, const Value &thisv, Value fval, HandleValue v);
+InvokeGetterOrSetter(JSContext *cx, JSObject *obj, Value fval, unsigned argc, Value *argv,
+                     MutableHandleValue rval);
 
 /*
  * InvokeConstructor implement a function call from a constructor context

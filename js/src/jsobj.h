@@ -478,12 +478,12 @@ class JSObject : public js::gc::Cell
     bool callMethod(JSContext *cx, js::HandleId id, unsigned argc, js::Value *argv,
                     js::MutableHandleValue vp);
 
-    static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                                     js::HandleValue v, js::HandleValue receiver,
-                                     JS::ObjectOpResult &result);
-    static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                                    js::HandleValue v, js::HandleValue receiver,
-                                    JS::ObjectOpResult &result);
+    static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
+                                     js::HandleObject receiver, js::HandleId id,
+                                     js::MutableHandleValue vp, JS::ObjectOpResult &result);
+    static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj,
+                                    js::HandleObject receiver, uint32_t index,
+                                    js::MutableHandleValue vp, JS::ObjectOpResult &result);
 
     static bool swap(JSContext *cx, JS::HandleObject a, JS::HandleObject b);
 
@@ -769,10 +769,6 @@ StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
                        Handle<PropertyDescriptor> desc);
 
 extern bool
-DefineProperty(JSContext *cx, HandleObject obj, HandleId id,
-               Handle<PropertyDescriptor> desc, ObjectOpResult &result);
-
-extern bool
 DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                JSGetterOp getter, JSSetterOp setter, unsigned attrs, ObjectOpResult &result);
 
@@ -853,52 +849,49 @@ inline bool
 GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
 
 /*
- * ES6 [[Set]]. Carry out the assignment `obj[id] = v`.
+ * ES6 [[Set]]. Carry out the assignment `obj[id] = vp`.
  *
  * The `receiver` argument has to do with how [[Set]] interacts with the
  * prototype chain and proxies. It's hard to explain and ES6 doesn't really
- * try. Long story short, if you just want bog-standard assignment, pass
- * `ObjectValue(*obj)` as receiver. Or better, use one of the signatures that
- * doesn't have a receiver parameter.
+ * try. Long story short, if you just want bog-standard assignment, pass the
+ * same object as both obj and receiver.
  *
- * Callers pass obj != receiver e.g. when a proxy is involved, obj is the
- * proxy's target, and the proxy is using SetProperty to finish an assignment
- * that started out as `receiver[id] = v`, by delegating it to obj.
+ * When obj != receiver, it's a reasonable guess that a proxy is involved, obj
+ * is the proxy's target, and the proxy is using SetProperty to finish an
+ * assignment that started out as `receiver[id] = vp`, by delegating it to obj.
+ *
+ * Strict errors: ES6 specifies that this method returns a boolean value
+ * indicating whether assignment "succeeded". We currently take a `strict`
+ * argument instead, but this has to change. See bug 1113369.
  */
 inline bool
-SetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-            HandleValue receiver, ObjectOpResult &result);
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp, ObjectOpResult &result);
 
 inline bool
-SetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
-{
-    RootedValue receiver(cx, ObjectValue(*obj));
-    ObjectOpResult result;
-    return SetProperty(cx, obj, id, v, receiver, result) &&
-           result.checkStrict(cx, obj, id);
-}
-
-inline bool
-SetProperty(JSContext *cx, HandleObject obj, PropertyName *name, HandleValue v,
-            HandleValue receiver, ObjectOpResult &result)
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+            MutableHandleValue vp, ObjectOpResult &result)
 {
     RootedId id(cx, NameToId(name));
-    return SetProperty(cx, obj, id, v, receiver, result);
+    return SetProperty(cx, obj, receiver, id, vp, result);
 }
 
 inline bool
-SetProperty(JSContext *cx, HandleObject obj, PropertyName *name, HandleValue v)
+SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+           MutableHandleValue vp, ObjectOpResult &result);
+
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp)
 {
-    RootedId id(cx, NameToId(name));
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
-    return SetProperty(cx, obj, id, v, receiver, result) &&
-           result.checkStrict(cx, obj, id);
+    return SetProperty(cx, obj, receiver, id, vp, result) &&
+           result.checkStrict(cx, receiver, id);
 }
 
-inline bool
-SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
-           HandleValue receiver, ObjectOpResult &result);
+extern bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name,
+            MutableHandleValue vp);
 
 /*
  * ES6 draft rev 31 (15 Jan 2015) 7.3.3 Put (O, P, V, Throw), except that on
@@ -906,13 +899,16 @@ SetElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
  * don't bother doing.
  */
 inline bool
-PutProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v, bool strict)
+PutProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue value, bool strict)
 {
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
-    return SetProperty(cx, obj, id, v, receiver, result) &&
+    return SetProperty(cx, obj, obj, id, value, result) &&
            result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
+
+extern bool
+PutProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue value,
+            bool strict);
 
 /*
  * ES6 [[Delete]]. Equivalent to the JS code `delete obj[id]`.

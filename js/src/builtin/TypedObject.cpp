@@ -1751,8 +1751,8 @@ ReportPropertyError(JSContext *cx,
 }
 
 bool
-TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                                GetterOp getter, SetterOp setter, unsigned attrs,
                                 ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
@@ -1904,8 +1904,8 @@ TypedObject::obj_getArrayElement(JSContext *cx,
 }
 
 bool
-TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                             HandleValue receiver, ObjectOpResult &result)
+TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                             MutableHandleValue vp, ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
 
@@ -1919,7 +1919,7 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, Handl
 
       case type::Array: {
         if (JSID_IS_ATOM(id, cx->names().length)) {
-            if (receiver.isObject() && obj == &receiver.toObject()) {
+            if (obj == receiver) {
                 JS_ReportErrorNumber(cx, GetErrorMessage,
                                      nullptr, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
                 return false;
@@ -1929,8 +1929,8 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, Handl
 
         uint32_t index;
         if (IdIsIndex(id, &index)) {
-            if (!receiver.isObject() || obj != &receiver.toObject())
-                return SetPropertyByDefining(cx, obj, id, v, receiver, false, result);
+            if (obj != receiver)
+                return SetPropertyByDefining(cx, obj, receiver, id, vp, false, result);
 
             if (index >= uint32_t(typedObj->length())) {
                 JS_ReportErrorNumber(cx, GetErrorMessage,
@@ -1941,7 +1941,7 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, Handl
             Rooted<TypeDescr*> elementType(cx);
             elementType = &typedObj->typeDescr().as<ArrayTypeDescr>().elementType();
             size_t offset = elementType->size() * index;
-            if (!ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), v))
+            if (!ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp))
                 return false;
             return result.succeed();
         }
@@ -1955,19 +1955,19 @@ TypedObject::obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, Handl
         if (!descr->fieldIndex(id, &fieldIndex))
             break;
 
-        if (!receiver.isObject() || obj != &receiver.toObject())
-            return SetPropertyByDefining(cx, obj, id, v, receiver, false, result);
+        if (obj != receiver)
+            return SetPropertyByDefining(cx, obj, receiver, id, vp, false, result);
 
         size_t offset = descr->fieldOffset(fieldIndex);
         Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
         RootedAtom fieldName(cx, &descr->fieldName(fieldIndex));
-        if (!ConvertAndCopyTo(cx, fieldType, typedObj, offset, fieldName, v))
+        if (!ConvertAndCopyTo(cx, fieldType, typedObj, offset, fieldName, vp))
             return false;
         return result.succeed();
       }
     }
 
-    return SetPropertyOnProto(cx, obj, id, v, receiver, result);
+    return SetPropertyOnProto(cx, obj, receiver, id, vp, result);
 }
 
 bool

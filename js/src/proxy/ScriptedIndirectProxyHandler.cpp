@@ -10,7 +10,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 
-#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -197,7 +196,7 @@ ScriptedIndirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObje
 
 bool
 ScriptedIndirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                             Handle<PropertyDescriptor> desc,
+                                             MutableHandle<PropertyDescriptor> desc,
                                              ObjectOpResult &result) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
@@ -304,55 +303,30 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
 }
 
 bool
-ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                                  HandleValue receiver, ObjectOpResult &result) const
+ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                                  HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue idv(cx);
     if (!IdToStringOrSymbol(cx, id, &idv))
         return false;
     JS::AutoValueArray<3> argv(cx);
-    argv[0].set(receiver);
+    argv[0].setObjectOrNull(receiver);
     argv[1].set(idv);
-    argv[2].set(v);
+    argv[2].set(vp);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!IsCallable(fval))
-        return derivedSet(cx, proxy, id, v, receiver, result);
+        return derivedSet(cx, proxy, receiver, id, vp, result);
     if (!Trap(cx, handler, fval, 3, argv.begin(), &idv))
         return false;
     return result.succeed();
 }
 
-static bool
-CallSetter(JSContext *cx, HandleValue receiver, HandleId id, SetterOp op, unsigned attrs,
-           HandleValue v, ObjectOpResult &result)
-{
-    if (attrs & JSPROP_SETTER) {
-        RootedValue fval(cx, CastAsObjectJsval(op));
-        if (!InvokeSetter(cx, receiver, fval, v))
-            return false;
-        return result.succeed();
-    }
-
-    if (attrs & JSPROP_GETTER)
-        return result.fail(JSMSG_GETTER_ONLY);
-
-    if (!receiver.isObject())
-        return result.fail(JSMSG_SET_NON_OBJECT_RECEIVER);
-    RootedObject receiverObj(cx, &receiver.toObject());
-
-    if (!op)
-        return result.succeed();
-
-    RootedValue valCopy(cx, v);
-    return CallJSSetterOp(cx, op, receiverObj, id, &valCopy, result);
-}
-
 bool
-ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, HandleId id,
-                                         HandleValue v, HandleValue receiver,
+ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, HandleObject receiver,
+                                         HandleId id, MutableHandleValue vp,
                                          ObjectOpResult &result) const
 {
     // Find an own or inherited property. The code here is strange for maximum
@@ -383,7 +357,7 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
             return result.fail(descIsOwn ? JSMSG_READ_ONLY : JSMSG_CANT_REDEFINE_PROP);
 
         if (desc.hasSetterObject() || desc.setter()) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), v, result))
+            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), vp, result))
                 return false;
             if (!result)
                 return true;
@@ -394,21 +368,22 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext *cx, HandleObject proxy, Hand
                 return result.succeed();
             }
         }
-        desc.value().set(v);
+        desc.value().set(vp.get());
 
         if (descIsOwn) {
             MOZ_ASSERT(desc.object() == proxy);
-            return this->defineProperty(cx, proxy, id, desc, result);
+            return this->defineProperty(cx, proxy, id, &desc, result);
         }
-    } else {
-        desc.setDataDescriptor(v, JSPROP_ENUMERATE);
+        return DefineProperty(cx, receiver, id, desc.value(), desc.getter(), desc.setter(),
+                              desc.attributes(), result);
     }
-
-    if (!receiver.isObject())
-        return result.fail(JSMSG_SET_NON_OBJECT_RECEIVER);
-    RootedObject receiverObj(cx, &receiver.toObject());
-    desc.object().set(receiverObj);
-    return DefineProperty(cx, receiverObj, id, desc, result);
+    desc.object().set(receiver);
+    desc.value().set(vp.get());
+    desc.setAttributes(JSPROP_ENUMERATE);
+    desc.setGetter(nullptr);
+    desc.setSetter(nullptr); // Pick up the class getter/setter.
+    return DefineProperty(cx, receiver, id, desc.value(), nullptr, nullptr, JSPROP_ENUMERATE,
+                          result);
 }
 
 bool

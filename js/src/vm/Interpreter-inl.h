@@ -308,6 +308,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
 
     bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
     RootedPropertyName name(cx, script->getName(pc));
+    RootedValue valCopy(cx, val);
 
     // In strict mode, assigning to an undeclared global variable is an
     // error. To detect this, we call NativeSetProperty directly and pass
@@ -315,13 +316,12 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     bool ok;
     ObjectOpResult result;
     RootedId id(cx, NameToId(name));
-    RootedValue receiver(cx, ObjectValue(*scope));
     if (scope->isUnqualifiedVarObj()) {
         MOZ_ASSERT(!scope->getOps()->setProperty);
-        ok = NativeSetProperty(cx, scope.as<NativeObject>(), id, val, receiver, Unqualified,
-                               result);
+        ok = NativeSetProperty(cx, scope.as<NativeObject>(), scope.as<NativeObject>(), id,
+                               Unqualified, &valCopy, result);
     } else {
-        ok = SetProperty(cx, scope, id, val, receiver, result);
+        ok = SetProperty(cx, scope, scope, id, &valCopy, result);
     }
     return ok && result.checkStrictErrorOrWarning(cx, scope, id, strict);
 }
@@ -336,7 +336,8 @@ InitPropertyOperation(JSContext *cx, JSOp op, HandleObject obj, HandleId id, Han
     }
 
     MOZ_ASSERT(obj->as<UnboxedPlainObject>().layout().lookup(id));
-    return PutProperty(cx, obj, id, rhs, false);
+    RootedValue v(cx, rhs);
+    return PutProperty(cx, obj, id, &v, false);
 }
 
 inline bool

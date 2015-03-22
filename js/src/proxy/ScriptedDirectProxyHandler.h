@@ -22,7 +22,7 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                MutableHandle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const override;
@@ -46,8 +46,8 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                      MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                     HandleValue receiver, ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+                     MutableHandleValue vp, ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
 
