@@ -26,6 +26,7 @@ do_get_profile();
 
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
+const SUGGESTED_FRECENCY = Infinity;
 const kURLData = {"directory": [{"url":"http://example.com","title":"LocalSource"}]};
 const kTestURL = 'data:application/json,' + JSON.stringify(kURLData);
 
@@ -247,7 +248,7 @@ add_task(function test_updateSuggestedTile() {
 
         isIdentical([...DirectoryLinksProvider._topSitesWithSuggestedLinks], ["hrblock.com", "1040.com", "freetaxusa.com"]);
         do_check_true(possibleLinks.indexOf(link.url) > -1);
-        do_check_eq(link.frecency, Infinity);
+        do_check_eq(link.frecency, SUGGESTED_FRECENCY);
         do_check_eq(link.type, "affiliate");
         resolve();
       };
@@ -268,10 +269,10 @@ add_task(function test_updateSuggestedTile() {
         if (this.count == 1) {
           // The removed suggested link is the one we added initially.
           do_check_eq(link.url, links.shift().url);
-          do_check_eq(link.frecency, 0);
+          do_check_eq(link.frecency, SUGGESTED_FRECENCY);
         } else {
           links.unshift(link);
-          do_check_eq(link.frecency, Infinity);
+          do_check_eq(link.frecency, SUGGESTED_FRECENCY);
         }
         isIdentical([...DirectoryLinksProvider._topSitesWithSuggestedLinks], ["hrblock.com", "freetaxusa.com"]);
         resolve();
@@ -287,7 +288,7 @@ add_task(function test_updateSuggestedTile() {
 
         do_check_eq(link.type, "affiliate");
         do_check_eq(this.count, 1);
-        do_check_eq(link.frecency, 0);
+        do_check_eq(link.frecency, SUGGESTED_FRECENCY);
         do_check_eq(link.url, links.shift().url);
         isIdentical([...DirectoryLinksProvider._topSitesWithSuggestedLinks], []);
         resolve();
@@ -420,6 +421,142 @@ add_task(function test_topSitesWithSuggestedLinks() {
   // Cleanup.
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   NewTabUtils.getProviderLinks = origGetProviderLinks;
+});
+
+add_task(function test_frequencyCappedSites_views() {
+  Services.prefs.setCharPref(kPingUrlPref, "");
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = () => true;
+
+  let testUrl = "http://frequency.capped/link";
+  let targets = ["top.site.com"];
+  let data = {
+    suggested: [{
+      type: "sponsored",
+      frecent_sites: targets,
+      url: testUrl
+    }],
+    directory: [{
+      type: "organic",
+      url: "http://directory.site/"
+    }]
+  };
+  let dataURI = "data:application/json," + JSON.stringify(data);
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // Wait for links to get loaded
+  let gLinks = NewTabUtils.links;
+  gLinks.addProvider(DirectoryLinksProvider);
+  gLinks.populateCache();
+  yield new Promise(resolve => {
+    NewTabUtils.allPages.register({
+      observe: _ => _,
+      update() {
+        NewTabUtils.allPages.unregister(this);
+        resolve();
+      }
+    });
+  });
+
+  function synthesizeAction(action) {
+    DirectoryLinksProvider.reportSitesAction([{
+      link: {
+        targetedSite: targets[0],
+        url: testUrl
+      }
+    }], action, 0);
+  }
+
+  function checkFirstTypeAndLength(type, length) {
+    let links = gLinks.getLinks();
+    do_check_eq(links[0].type, type);
+    do_check_eq(links.length, length);
+  }
+
+  // Make sure we get 5 views of the link before it is removed
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("organic", 1);
+
+  // Cleanup.
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  gLinks.removeProvider(DirectoryLinksProvider);
+  DirectoryLinksProvider.removeObserver(gLinks);
+  Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
+});
+
+add_task(function test_frequencyCappedSites_click() {
+  Services.prefs.setCharPref(kPingUrlPref, "");
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = () => true;
+
+  let testUrl = "http://frequency.capped/link";
+  let targets = ["top.site.com"];
+  let data = {
+    suggested: [{
+      type: "sponsored",
+      frecent_sites: targets,
+      url: testUrl
+    }],
+    directory: [{
+      type: "organic",
+      url: "http://directory.site/"
+    }]
+  };
+  let dataURI = "data:application/json," + JSON.stringify(data);
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // Wait for links to get loaded
+  let gLinks = NewTabUtils.links;
+  gLinks.addProvider(DirectoryLinksProvider);
+  gLinks.populateCache();
+  yield new Promise(resolve => {
+    NewTabUtils.allPages.register({
+      observe: _ => _,
+      update() {
+        NewTabUtils.allPages.unregister(this);
+        resolve();
+      }
+    });
+  });
+
+  function synthesizeAction(action) {
+    DirectoryLinksProvider.reportSitesAction([{
+      link: {
+        targetedSite: targets[0],
+        url: testUrl
+      }
+    }], action, 0);
+  }
+
+  function checkFirstTypeAndLength(type, length) {
+    let links = gLinks.getLinks();
+    do_check_eq(links[0].type, type);
+    do_check_eq(links.length, length);
+  }
+
+  // Make sure the link disappears after the first click
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("view");
+  checkFirstTypeAndLength("sponsored", 2);
+  synthesizeAction("click");
+  checkFirstTypeAndLength("organic", 1);
+
+  // Cleanup.
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  gLinks.removeProvider(DirectoryLinksProvider);
+  DirectoryLinksProvider.removeObserver(gLinks);
+  Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
 });
 
 add_task(function test_reportSitesAction() {
