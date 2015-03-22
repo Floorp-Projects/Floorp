@@ -396,14 +396,10 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
       },
     }).then(null, do_report_unexpected_exception);
 
-    let channel = NetUtil.newChannel2(sourceURI,
-                                      null,
-                                      null,
-                                      null,      // aLoadingNode
-                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                      null,      // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_OTHER);
+    let channel = NetUtil.newChannel({
+      uri: sourceURI,
+      loadUsingSystemPrincipal: true,
+    });
 
     // Start the actual download process.
     channel.asyncOpen({
@@ -537,7 +533,7 @@ function promiseVerifyContents(aPath, aExpectedContents)
     }
 
     let deferred = Promise.defer();
-    NetUtil.asyncFetch2(
+    NetUtil.asyncFetch(
       file,
       function(aInputStream, aStatus) {
         do_check_true(Components.isSuccessCode(aStatus));
@@ -553,12 +549,7 @@ function promiseVerifyContents(aPath, aExpectedContents)
           do_check_eq(contents, aExpectedContents);
         }
         deferred.resolve();
-      },
-      null,      // aLoadingNode
-      Services.scriptSecurityManager.getSystemPrincipal(),
-      null,      // aTriggeringPrincipal
-      Ci.nsILoadInfo.SEC_NORMAL,
-      Ci.nsIContentPolicy.TYPE_OTHER);
+      });
 
     yield deferred.promise;
   });
