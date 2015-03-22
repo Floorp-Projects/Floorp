@@ -827,15 +827,14 @@
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
                        onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-                <toolbarbutton id="readinglist-addremove-button"
-                               class="tabbable urlbar-icon"
-                               hidden="true"
-                               oncommand="ReadingListUI.togglePageByBrowser(gBrowser.selectedBrowser);"/>
-                <toolbarbutton id="reader-mode-button"
-                               class="tabbable"
-                               hidden="true"
-                               onclick="ReaderParent.handleReaderButtonEvent(event);"
-                               onkeypress="ReaderParent.handleReaderButtonEvent(event);"/>
+                <image id="readinglist-addremove-button"
+                       class="urlbar-icon"
+                       hidden="true"
+                       onclick="ReadingListUI.togglePageByBrowser(gBrowser.selectedBrowser);"/>
+                <image id="reader-mode-button"
+                       class="urlbar-icon"
+                       hidden="true"
+                       onclick="ReaderParent.toggleReaderMode(event);"/>
               </hbox>
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"

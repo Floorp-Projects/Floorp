@@ -362,7 +362,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
     addBrowserSharingListener: function(listener) {
       if (!this._tabChangeListeners) {
         this._tabChangeListeners = new Set();
-        gBrowser.addEventListener("select", this);
+        gBrowser.tabContainer.addEventListener("TabSelect", this);
       }
 
       this._tabChangeListeners.add(listener);
@@ -388,7 +388,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
 
       if (!this._tabChangeListeners.size) {
         this._hideBrowserSharingInfoBar();
-        gBrowser.removeEventListener("select", this);
+        gBrowser.tabContainer.removeEventListener("TabSelect", this);
         delete this._tabChangeListeners;
       }
     },
@@ -484,14 +484,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      */
     handleEvent: function(event) {
       // We only should get "select" events.
-      if (event.type != "select") {
+      if (event.type != "TabSelect") {
         return;
       }
 
       let wasVisible = false;
       // Hide the infobar from the previous tab.
-      if (event.fromTab) {
-        wasVisible = this._hideBrowserSharingInfoBar(false, event.fromTab.linkedBrowser);
+      if (event.detail.previousTabfromTab) {
+        wasVisible = this._hideBrowserSharingInfoBar(false, event.detail.previousTab.linkedBrowser);
       }
 
       // We've changed the tab, so get the new window id.

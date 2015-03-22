@@ -115,26 +115,26 @@ let ReaderParent = {
     }
 
     let button = win.document.getElementById("reader-mode-button");
+    let command = win.document.getElementById("View:ReaderView");
     if (browser.currentURI.spec.startsWith("about:reader")) {
       button.setAttribute("readeractive", true);
       button.hidden = false;
-      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerView.close"));
+      let closeText = gStringBundle.GetStringFromName("readerView.close");
+      button.setAttribute("tooltiptext", closeText);
+      command.setAttribute("label", closeText);
+      command.setAttribute("hidden", false);
     } else {
       button.removeAttribute("readeractive");
-      button.setAttribute("tooltiptext", gStringBundle.GetStringFromName("readerView.enter"));
       button.hidden = !browser.isArticle;
+      let enterText = gStringBundle.GetStringFromName("readerView.enter");
+      button.setAttribute("tooltiptext", enterText);
+      command.setAttribute("label", enterText);
+      command.setAttribute("hidden", !browser.isArticle);
     }
+    command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.accesskey"));
   },
 
-  handleReaderButtonEvent: function(event) {
-    event.stopPropagation();
-
-    if ((event.type == "click" && event.button != 0) ||
-        (event.type == "keypress" && event.charCode != Ci.nsIDOMKeyEvent.DOM_VK_SPACE &&
-         event.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN)) {
-      return; // Left click, space or enter only
-    }
-
+  toggleReaderMode: function(event) {
     let win = event.target.ownerDocument.defaultView;
     let browser = win.gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
