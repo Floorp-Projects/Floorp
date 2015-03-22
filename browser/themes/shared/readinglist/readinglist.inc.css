@@ -5,18 +5,8 @@
 }
 
 #readinglist-addremove-button {
-  -moz-appearance: none;
-  border: none;
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage");
-}
-
-#readinglist-addremove-button:hover {
-  border: none;
-}
-
-#readinglist-addremove-button > .toolbarbutton-icon {
-  width: 14px;
-  height: 14px
+  -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
 #readinglist-addremove-button:hover {
