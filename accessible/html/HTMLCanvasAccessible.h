@@ -23,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual a11y::role NativeRole() override;
 
 protected:
   virtual ~HTMLCanvasAccessible() { }

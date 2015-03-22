@@ -28,7 +28,7 @@ class IDBTransaction;
 
 class DataStoreDBCallback;
 
-class DataStoreDB MOZ_FINAL : public nsIDOMEventListener
+class DataStoreDB final : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -43,7 +43,7 @@ public:
   indexedDB::IDBTransaction* Transaction() const;
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
 
 private:
   ~DataStoreDB();

@@ -137,10 +137,10 @@ public:
     : mId(aId)
     , mThen(aThen)
   {}
-  void Run() MOZ_OVERRIDE {
+  void Run() override {
     ReadRecord(mId, mThen);
   }
-  void Destroy() MOZ_OVERRIDE {
+  void Destroy() override {
     delete this;
   }
   string mId;
@@ -154,14 +154,14 @@ public:
                            const string& aTestID = "")
     : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  void Run() MOZ_OVERRIDE {
+  void Run() override {
     FakeDecryptor::Message(mMessage);
     if (mTestmanager) {
       mTestmanager->EndTest(mTestID);
     }
   }
 
-  void Destroy() MOZ_OVERRIDE {
+  void Destroy() override {
     delete this;
   }
 
@@ -176,7 +176,7 @@ public:
   TestEmptyContinuation(TestManager* aTestManager, const string& aTestID)
     : mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (aData != "") {
       FakeDecryptor::Message("FAIL TestEmptyContinuation record was not truncated");
     }
@@ -196,7 +196,7 @@ public:
                        const string& aTestID)
     : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (aData != TruncateRecordData) {
       FakeDecryptor::Message("FAIL TruncateContinuation read data doesn't match written data");
     }
@@ -220,7 +220,7 @@ public:
                                        const string& aTestID)
   : mValue(aValue), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (aData != mValue) {
       FakeDecryptor::Message("FAIL VerifyAndFinishContinuation read data doesn't match expected data");
     }
@@ -245,7 +245,7 @@ public:
     , mTestID(aTestID)
   {}
 
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (aData != mValue) {
       FakeDecryptor::Message("FAIL VerifyAndOverwriteContinuation read data doesn't match expected data");
     }
@@ -275,7 +275,7 @@ public:
     MOZ_ASSERT(aRecord);
   }
 
-  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
     if (GMP_SUCCEEDED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenSecondTimeContinuation should not be able to re-open record.");
     }
@@ -300,7 +300,7 @@ public:
                               const string& aTestID)
     : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
     if (GMP_FAILED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenAgainContinuation to open record initially.");
       mTestmanager->EndTest(mTestID);
@@ -428,10 +428,10 @@ public:
     : mRecordId(aRecordId)
     , mValue(aValue)
   {}
-  void Run() MOZ_OVERRIDE {
+  void Run() override {
     FakeDecryptor::Message("stored " + mRecordId + " " + mValue);
   }
-  void Destroy() MOZ_OVERRIDE {
+  void Destroy() override {
     delete this;
   }
   const string mRecordId;
@@ -443,7 +443,7 @@ public:
   explicit ReportReadStatusContinuation(const string& aRecordId)
     : mRecordId(aRecordId)
   {}
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (GMP_FAILED(aErr)) {
       FakeDecryptor::Message("retrieve " + mRecordId + " failed");
     } else {
@@ -464,7 +464,7 @@ public:
   explicit ReportReadRecordContinuation(const string& aRecordId)
     : mRecordId(aRecordId)
   {}
-  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+  void ReadComplete(GMPErr aErr, const std::string& aData) override {
     if (GMP_FAILED(aErr)) {
       FakeDecryptor::Message("retrieved " + mRecordId + " failed");
     } else {

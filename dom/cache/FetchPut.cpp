@@ -20,12 +20,14 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "nsCRT.h"
+#include "nsHttp.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
-class FetchPut::Runnable MOZ_FINAL : public nsRunnable
+class FetchPut::Runnable final : public nsRunnable
 {
 public:
   explicit Runnable(FetchPut* aFetchPut)
@@ -34,7 +36,7 @@ public:
     MOZ_ASSERT(mFetchPut);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     if (NS_IsMainThread())
     {
@@ -58,7 +60,7 @@ private:
   nsRefPtr<FetchPut> mFetchPut;
 };
 
-class FetchPut::FetchObserver MOZ_FINAL : public FetchDriverObserver
+class FetchPut::FetchObserver final : public FetchDriverObserver
 {
 public:
   explicit FetchObserver(FetchPut* aFetchPut)
@@ -66,13 +68,13 @@ public:
   {
   }
 
-  virtual void OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE
+  virtual void OnResponseAvailable(InternalResponse* aResponse) override
   {
     MOZ_ASSERT(!mInternalResponse);
     mInternalResponse = aResponse;
   }
 
-  virtual void OnResponseEnd() MOZ_OVERRIDE
+  virtual void OnResponseEnd() override
   {
     mFetchPut->FetchComplete(this, mInternalResponse);
     mFetchPut = nullptr;
@@ -367,31 +369,41 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
     bool varyHeadersMatch = true;
 
     for (uint32_t j = 0; j < varyHeaders.Length(); ++j) {
-      if (varyHeaders[i].EqualsLiteral("*")) {
-        continue;
+      // Extract the header names inside the Vary header value.
+      nsAutoCString varyValue(varyHeaders[j]);
+      char* rawBuffer = varyValue.BeginWriting();
+      char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+      bool bailOut = false;
+      for (; token;
+           token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+        nsDependentCString header(token);
+        if (header.EqualsLiteral("*")) {
+          continue;
+        }
+
+        ErrorResult headerRv;
+        nsAutoCString value;
+        requestHeaders->Get(header, value, headerRv);
+        if (NS_WARN_IF(headerRv.Failed())) {
+          headerRv.ClearMessage();
+          MOZ_ASSERT(value.IsEmpty());
+        }
+
+        nsAutoCString cachedValue;
+        cachedRequestHeaders->Get(header, value, headerRv);
+        if (NS_WARN_IF(headerRv.Failed())) {
+          headerRv.ClearMessage();
+          MOZ_ASSERT(cachedValue.IsEmpty());
+        }
+
+        if (value != cachedValue) {
+          varyHeadersMatch = false;
+          bailOut = true;
+          break;
+        }
       }
 
-      // The VARY header could in theory contain an illegal header name.  So
-      // we need to detect the error in the Get() calls below.  Treat these
-      // as not matching.
-      ErrorResult headerRv;
-
-      nsAutoCString value;
-      requestHeaders->Get(varyHeaders[j], value, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        varyHeadersMatch = false;
-        break;
-      }
-
-      nsAutoCString cachedValue;
-      cachedRequestHeaders->Get(varyHeaders[j], value, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        varyHeadersMatch = false;
-        break;
-      }
-
-      if (value != cachedValue) {
-        varyHeadersMatch = false;
+      if (bailOut) {
         break;
       }
     }

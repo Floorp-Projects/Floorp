@@ -10,7 +10,7 @@
 #include "nsIDOMGeoPosition.h"
 #include "nsGeolocationSettings.h"
 
-class nsGeoGridFuzzer MOZ_FINAL
+class nsGeoGridFuzzer final
 {
 public:
 

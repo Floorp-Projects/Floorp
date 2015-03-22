@@ -3923,7 +3923,7 @@ JSScript::hasLoops()
     JSTryNote *tn = trynotes()->vector;
     JSTryNote *tnlimit = tn + trynotes()->length;
     for (; tn < tnlimit; tn++) {
-        if (tn->kind == JSTRY_ITER || tn->kind == JSTRY_LOOP)
+        if (tn->kind == JSTRY_FOR_IN || tn->kind == JSTRY_LOOP)
             return true;
     }
     return false;

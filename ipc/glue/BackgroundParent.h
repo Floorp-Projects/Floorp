@@ -26,7 +26,7 @@ class PBackgroundParent;
 
 // This class is not designed for public consumption beyond the few static
 // member functions.
-class BackgroundParent MOZ_FINAL
+class BackgroundParent final
 {
   friend class mozilla::dom::ContentParent;
 

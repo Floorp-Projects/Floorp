@@ -35,7 +35,7 @@ private:
  * For cycle-avoidance reasons they do not hold reference-counted references,
  * so it is important we do this.
  */
-class AsyncStatementParamsHolder MOZ_FINAL : public nsIXPConnectJSObjectHolder
+class AsyncStatementParamsHolder final : public nsIXPConnectJSObjectHolder
 {
 public:
   NS_DECL_ISUPPORTS

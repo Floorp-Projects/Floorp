@@ -18,7 +18,7 @@ namespace mozilla {
 namespace places {
 
 
-class PlaceInfo MOZ_FINAL : public mozIPlaceInfo
+class PlaceInfo final : public mozIPlaceInfo
 {
 public:
   NS_DECL_ISUPPORTS

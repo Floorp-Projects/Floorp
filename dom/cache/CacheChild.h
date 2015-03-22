@@ -16,7 +16,7 @@ namespace cache {
 
 class Cache;
 
-class CacheChild MOZ_FINAL : public PCacheChild
+class CacheChild final : public PCacheChild
                            , public ActorChild
 {
 public:
@@ -34,31 +34,31 @@ public:
 
   // Synchronously call ActorDestroy on our Cache listener and then start the
   // actor destruction asynchronously from the parent-side.
-  virtual void StartDestroy() MOZ_OVERRIDE;
+  virtual void StartDestroy() override;
 
 private:
   // PCacheChild methods
   virtual void
-  ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aReason) override;
 
   virtual bool
   RecvMatchResponse(const RequestId& requestId, const nsresult& aRv,
-                    const PCacheResponseOrVoid& aResponse) MOZ_OVERRIDE;
+                    const PCacheResponseOrVoid& aResponse) override;
   virtual bool
   RecvMatchAllResponse(const RequestId& requestId, const nsresult& aRv,
-                       nsTArray<PCacheResponse>&& responses) MOZ_OVERRIDE;
+                       nsTArray<PCacheResponse>&& responses) override;
   virtual bool
   RecvAddAllResponse(const RequestId& requestId,
-                     const nsresult& aRv) MOZ_OVERRIDE;
+                     const nsresult& aRv) override;
   virtual bool
   RecvPutResponse(const RequestId& aRequestId,
-                  const nsresult& aRv) MOZ_OVERRIDE;
+                  const nsresult& aRv) override;
   virtual bool
   RecvDeleteResponse(const RequestId& requestId, const nsresult& aRv,
-                     const bool& result) MOZ_OVERRIDE;
+                     const bool& result) override;
   virtual bool
   RecvKeysResponse(const RequestId& requestId, const nsresult& aRv,
-                   nsTArray<PCacheRequest>&& requests) MOZ_OVERRIDE;
+                   nsTArray<PCacheRequest>&& requests) override;
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The Cache object must call ClearListener() to null this before its

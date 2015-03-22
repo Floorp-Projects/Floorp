@@ -15,14 +15,14 @@ BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioReplyRunnable;
 
-class FMRadioRequestChild MOZ_FINAL : public PFMRadioRequestChild
+class FMRadioRequestChild final : public PFMRadioRequestChild
 {
 public:
   FMRadioRequestChild(FMRadioReplyRunnable* aReplyRunnable);
   ~FMRadioRequestChild();
 
   virtual bool
-  Recv__delete__(const FMRadioResponseType& aResponse) MOZ_OVERRIDE;
+  Recv__delete__(const FMRadioResponseType& aResponse) override;
 
 private:
   nsRefPtr<FMRadioReplyRunnable> mReplyRunnable;

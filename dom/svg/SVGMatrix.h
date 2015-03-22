@@ -50,7 +50,7 @@ namespace dom {
 /**
  * DOM wrapper for an SVG matrix.
  */
-class SVGMatrix MOZ_FINAL : public nsWrapperCache
+class SVGMatrix final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGMatrix)
@@ -75,7 +75,7 @@ public:
 
   // WebIDL
   SVGTransform* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   float A() const { return static_cast<float>(GetMatrix()._11); }
   void SetA(float aA, ErrorResult& rv);

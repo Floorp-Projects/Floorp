@@ -5,7 +5,7 @@
 
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"         // for MOZ_FINAL
+#include "mozilla/Attributes.h"         // for final
 #include "mozilla/Module.h"             // for Module, Module::CIDEntry, etc
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/mozalloc.h"           // for operator new

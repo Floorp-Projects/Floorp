@@ -38,7 +38,7 @@ StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
 uint64_t SharedBufferManagerParent::sBufferKey(0);
 
 #ifdef MOZ_WIDGET_GONK
-class GrallocReporter MOZ_FINAL : public nsIMemoryReporter
+class GrallocReporter final : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -122,7 +122,7 @@ public:
     explicit DeleteSharedBufferManagerParentTask(UniquePtr<SharedBufferManagerParent> aSharedBufferManager)
         : mSharedBufferManager(Move(aSharedBufferManager)) {
     }
-    virtual void Run() MOZ_OVERRIDE {}
+    virtual void Run() override {}
 private:
     UniquePtr<SharedBufferManagerParent> mSharedBufferManager;
 };

@@ -173,7 +173,7 @@ public:
   }
 
   // Custom implementation of IOInterposeObserver::Observation::Filename
-  const char16_t* Filename() MOZ_OVERRIDE;
+  const char16_t* Filename() override;
 
   ~WinIOAutoObservation()
   {

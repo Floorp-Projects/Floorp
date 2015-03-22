@@ -50,37 +50,37 @@ public:
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect) MOZ_OVERRIDE;
+                                  const nsRect& aDirtyRect) override;
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult) MOZ_OVERRIDE;
+                             nsIntMargin* aResult) override;
 
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult) MOZ_OVERRIDE;
+                                  nsIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                   uint8_t aWidgetType, nsRect* aOverflowRect) MOZ_OVERRIDE;
+                                   uint8_t aWidgetType, nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntSize* aResult, bool* aIsOverridable) MOZ_OVERRIDE;
+                                  nsIntSize* aResult, bool* aIsOverridable) override;
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint) MOZ_OVERRIDE;
-  NS_IMETHOD ThemeChanged() MOZ_OVERRIDE;
-  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType) MOZ_OVERRIDE;
-  bool WidgetIsContainer(uint8_t aWidgetType) MOZ_OVERRIDE;
-  bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
-  bool ThemeNeedsComboboxDropmarker() MOZ_OVERRIDE;
-  virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) MOZ_OVERRIDE;
-  virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
+                                nsIAtom* aAttribute, bool* aShouldRepaint) override;
+  NS_IMETHOD ThemeChanged() override;
+  bool ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame, uint8_t aWidgetType) override;
+  bool WidgetIsContainer(uint8_t aWidgetType) override;
+  bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) override;
+  bool ThemeNeedsComboboxDropmarker() override;
+  virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) override;
+  virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType) override;
   virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame, uint8_t aWidgetType,
-                                                          nscolor* aColor) MOZ_OVERRIDE;
+                                                          nscolor* aColor) override;
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
-                                                       uint8_t aWidgetType) MOZ_OVERRIDE;
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) MOZ_OVERRIDE;
+                                                       uint8_t aWidgetType) override;
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;
 
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     bool inIsIndeterminate, bool inIsHorizontal,

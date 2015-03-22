@@ -15,4 +15,5 @@ DIRS += ['build']
 if CONFIG['MOZ_CRT']:
     DIRS += ['crt']
 
-TEST_DIRS += ['tests']
+if not CONFIG['JS_STANDALONE']:
+    TEST_DIRS += ['tests']

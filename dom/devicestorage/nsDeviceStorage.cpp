@@ -725,7 +725,7 @@ DeviceStorageFile::Init()
 // device.storage.overrideRootDir preference. The preference is normally
 // only read once during initialization, but since the test environment has
 // no convenient way to restart, we use a pref watcher instead.
-class OverrideRootDir MOZ_FINAL : public nsIObserver
+class OverrideRootDir final : public nsIObserver
 {
   ~OverrideRootDir();
 
@@ -1950,7 +1950,7 @@ StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString,
   return true;
 }
 
-class DeviceStorageCursorRequest MOZ_FINAL
+class DeviceStorageCursorRequest final
   : public nsIContentPermissionRequest
 {
 public:
@@ -2832,7 +2832,7 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
-class DeviceStorageRequest MOZ_FINAL
+class DeviceStorageRequest final
   : public nsIContentPermissionRequest
   , public nsIRunnable
 {
@@ -2902,7 +2902,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DeviceStorageRequest,
                                            nsIContentPermissionRequest)
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -2914,7 +2914,7 @@ public:
     return nsContentPermissionUtils::AskPermission(this, mWindow);
   }
 
-  NS_IMETHODIMP GetTypes(nsIArray** aTypes) MOZ_OVERRIDE
+  NS_IMETHODIMP GetTypes(nsIArray** aTypes) override
   {
     nsCString type;
     nsresult rv =
@@ -2934,25 +2934,25 @@ public:
     return nsContentPermissionUtils::CreatePermissionArray(type, access, emptyOptions, aTypes);
   }
 
-  NS_IMETHOD GetPrincipal(nsIPrincipal * *aRequestingPrincipal) MOZ_OVERRIDE
+  NS_IMETHOD GetPrincipal(nsIPrincipal * *aRequestingPrincipal) override
   {
     NS_IF_ADDREF(*aRequestingPrincipal = mPrincipal);
     return NS_OK;
   }
 
-  NS_IMETHOD GetWindow(nsIDOMWindow * *aRequestingWindow) MOZ_OVERRIDE
+  NS_IMETHOD GetWindow(nsIDOMWindow * *aRequestingWindow) override
   {
     NS_IF_ADDREF(*aRequestingWindow = mWindow);
     return NS_OK;
   }
 
-  NS_IMETHOD GetElement(nsIDOMElement * *aRequestingElement) MOZ_OVERRIDE
+  NS_IMETHOD GetElement(nsIDOMElement * *aRequestingElement) override
   {
     *aRequestingElement = nullptr;
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() MOZ_OVERRIDE
+  NS_IMETHOD Cancel() override
   {
     nsCOMPtr<nsIRunnable> event
       = new PostErrorEvent(mRequest.forget(),
@@ -2960,7 +2960,7 @@ public:
     return NS_DispatchToMainThread(event);
   }
 
-  NS_IMETHOD Allow(JS::HandleValue aChoices) MOZ_OVERRIDE
+  NS_IMETHOD Allow(JS::HandleValue aChoices) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aChoices.isUndefined());

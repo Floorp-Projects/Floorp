@@ -20,7 +20,7 @@ namespace widget{
 class TextEventDispatcher;
 } // namespace widget
 
-class TextInputProcessor MOZ_FINAL : public nsITextInputProcessor
+class TextInputProcessor final : public nsITextInputProcessor
                                    , public widget::TextEventDispatcherListener
 {
   typedef mozilla::widget::IMENotification IMENotification;
@@ -34,9 +34,9 @@ public:
 
   // TextEventDispatcherListener
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
-                       const IMENotification& aNotification) MOZ_OVERRIDE;
+                       const IMENotification& aNotification) override;
   NS_IMETHOD_(void)
-    OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) MOZ_OVERRIDE;
+    OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
 
 protected:
   virtual ~TextInputProcessor();

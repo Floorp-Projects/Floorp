@@ -647,7 +647,7 @@ BytecodeParser::parse()
                 uint32_t startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
                     uint32_t catchOffset = startOffset + tn->length;
-                    if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
+                    if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
                         if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack))
                             return false;
                     }

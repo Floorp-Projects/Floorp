@@ -503,8 +503,8 @@ class IonTrackedOptimizationsTypeInfo
           : op_(op)
         { }
 
-        void readType(const IonTrackedTypeWithAddendum &tracked) MOZ_OVERRIDE;
-        void operator()(JS::TrackedTypeSite site, MIRType mirType) MOZ_OVERRIDE;
+        void readType(const IonTrackedTypeWithAddendum &tracked) override;
+        void operator()(JS::TrackedTypeSite site, MIRType mirType) override;
     };
 
     void forEach(ForEachOp &op, const IonTrackedTypeVector *allTypes);

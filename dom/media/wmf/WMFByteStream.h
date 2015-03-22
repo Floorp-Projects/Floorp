@@ -33,7 +33,7 @@ class SharedThreadPool;
 //       IMFByteStream was determined by creating it and testing the edge cases.
 //       For details see the test code at:
 //       https://github.com/cpearce/IMFByteStreamBehaviour/
-class WMFByteStream MOZ_FINAL : public IMFByteStream
+class WMFByteStream final : public IMFByteStream
                               , public IMFAttributes
 {
   ~WMFByteStream();

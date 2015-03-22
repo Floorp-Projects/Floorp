@@ -43,7 +43,7 @@ class CacheStorageChild;
 class Feature;
 class PCacheResponseOrVoid;
 
-class CacheStorage MOZ_FINAL : public nsIIPCBackgroundChildCreateCallback
+class CacheStorage final : public nsIIPCBackgroundChildCreateCallback
                              , public nsWrapperCache
                              , public TypeUtils
                              , public PromiseNativeHandler
@@ -72,11 +72,11 @@ public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
   nsISupports* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIIPCbackgroundChildCreateCallback methods
-  virtual void ActorCreated(PBackgroundChild* aActor) MOZ_OVERRIDE;
-  virtual void ActorFailed() MOZ_OVERRIDE;
+  virtual void ActorCreated(PBackgroundChild* aActor) override;
+  virtual void ActorFailed() override;
 
   // Called when CacheStorageChild actor is being destroyed
   void DestroyInternal(CacheStorageChild* aActor);
@@ -92,17 +92,17 @@ public:
                         const nsTArray<nsString>& aKeys);
 
   // TypeUtils methods
-  virtual nsIGlobalObject* GetGlobalObject() const MOZ_OVERRIDE;
+  virtual nsIGlobalObject* GetGlobalObject() const override;
 #ifdef DEBUG
-  virtual void AssertOwningThread() const MOZ_OVERRIDE;
+  virtual void AssertOwningThread() const override;
 #endif
 
   // PromiseNativeHandler methods
   virtual void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   virtual void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
 private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,

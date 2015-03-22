@@ -205,12 +205,12 @@ public:
         cairo_font_face_destroy(mFontFace);
     }
 
-    virtual void ForgetHBFace() MOZ_OVERRIDE;
-    virtual void ReleaseGrFace(gr_face* aFace) MOZ_OVERRIDE;
+    virtual void ForgetHBFace() override;
+    virtual void ReleaseGrFace(gr_face* aFace) override;
 
 protected:
     virtual nsresult
-    CopyFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) MOZ_OVERRIDE;
+    CopyFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) override;
 
     void MaybeReleaseFTFace();
 
@@ -466,7 +466,7 @@ public:
     // Returns true on success
     bool SetCairoFace(cairo_font_face_t *aFace);
 
-    virtual hb_blob_t* GetFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
+    virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
 protected:
     void InitPattern();
@@ -666,17 +666,17 @@ public:
 
 #ifdef USE_SKIA
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
-        GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) MOZ_OVERRIDE;
+        GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
 #endif
 
     // return a cloned font resized and offset to simulate sub/superscript glyphs
     virtual already_AddRefed<gfxFont>
-    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel) MOZ_OVERRIDE;
+    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel) override;
 
 protected:
     virtual already_AddRefed<gfxFont> MakeScaledFont(gfxFontStyle *aFontStyle,
                                                      gfxFloat aFontScale);
-    virtual already_AddRefed<gfxFont> GetSmallCapsFont() MOZ_OVERRIDE;
+    virtual already_AddRefed<gfxFont> GetSmallCapsFont() override;
 
 private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
@@ -693,7 +693,7 @@ private:
  * (fontconfig cache data) and (when needed) fonts.
  */
 
-class gfxFcFontSet MOZ_FINAL {
+class gfxFcFontSet final {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFcFontSet)
     

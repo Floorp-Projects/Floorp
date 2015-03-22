@@ -21,7 +21,7 @@
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "base/thread.h"                // for Thread
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/Monitor.h"            // for Monitor
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
@@ -67,7 +67,7 @@ private:
   uint64_t mLayersId;
 };
 
-class CompositorThreadHolder MOZ_FINAL
+class CompositorThreadHolder final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorThreadHolder)
 
@@ -95,13 +95,13 @@ private:
  * Turns vsync notifications into scheduled composites.
  **/
 
-class CompositorVsyncObserver MOZ_FINAL : public VsyncObserver
+class CompositorVsyncObserver final : public VsyncObserver
 {
   friend class CompositorParent;
 
 public:
   explicit CompositorVsyncObserver(CompositorParent* aCompositorParent, nsIWidget* aWidget);
-  virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) MOZ_OVERRIDE;
+  virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) override;
   void SetNeedsComposite(bool aSchedule);
   bool NeedsComposite();
   void CancelCurrentCompositeTask();
@@ -142,7 +142,7 @@ protected:
   virtual ~CompositorUpdateObserver() {}
 };
 
-class CompositorParent MOZ_FINAL : public PCompositorParent,
+class CompositorParent final : public PCompositorParent,
                                    public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
@@ -157,30 +157,30 @@ public:
   virtual IToplevelProtocol*
   CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
                 base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+                mozilla::ipc::ProtocolCloneContext* aCtx) override;
 
-  virtual bool RecvRequestOverfill() MOZ_OVERRIDE;
-  virtual bool RecvWillStop() MOZ_OVERRIDE;
-  virtual bool RecvStop() MOZ_OVERRIDE;
-  virtual bool RecvPause() MOZ_OVERRIDE;
-  virtual bool RecvResume() MOZ_OVERRIDE;
-  virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
-  virtual bool RecvAdoptChild(const uint64_t& child) MOZ_OVERRIDE;
+  virtual bool RecvRequestOverfill() override;
+  virtual bool RecvWillStop() override;
+  virtual bool RecvStop() override;
+  virtual bool RecvPause() override;
+  virtual bool RecvResume() override;
+  virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
+  virtual bool RecvAdoptChild(const uint64_t& child) override;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                const nsIntRect& aRect) MOZ_OVERRIDE;
-  virtual bool RecvFlushRendering() MOZ_OVERRIDE;
+                                const nsIntRect& aRect) override;
+  virtual bool RecvFlushRendering() override;
 
-  virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE;
+  virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override;
 
-  virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) MOZ_OVERRIDE;
-  virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE;
-  virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE;
+  virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
+  virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
+  virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;
 
   // Unused for chrome <-> compositor communication (which this class does).
   // @see CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint
-  virtual bool RecvRequestNotifyAfterRemotePaint() MOZ_OVERRIDE { return true; };
+  virtual bool RecvRequestNotifyAfterRemotePaint() override { return true; };
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                    const uint64_t& aTransactionId,
@@ -189,16 +189,16 @@ public:
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
                                    uint32_t aPaintSequenceNumber,
-                                   bool aIsRepeatTransaction) MOZ_OVERRIDE;
-  virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
+                                   bool aIsRepeatTransaction) override;
+  virtual void ForceComposite(LayerTransactionParent* aLayerTree) override;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
-                                 const TimeStamp& aTime) MOZ_OVERRIDE;
-  virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
+                                 const TimeStamp& aTime) override;
+  virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
-               MOZ_OVERRIDE;
+               override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
-                              APZTestData* aOutData) MOZ_OVERRIDE;
-  virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE { return mCompositionManager; }
+                              APZTestData* aOutData) override;
+  virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) override { return mCompositionManager; }
 
   /**
    * This forces the is-first-paint flag to true. This is intended to
@@ -355,8 +355,8 @@ protected:
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
                                  const uint64_t& aId,
                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                 bool* aSuccess) MOZ_OVERRIDE;
-  virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
+                                 bool* aSuccess) override;
+  virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
   virtual void ScheduleTask(CancelableTask*, int);
   void CompositeCallback(TimeStamp aScheduleTime);
   void CompositeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);

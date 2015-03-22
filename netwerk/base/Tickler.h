@@ -58,7 +58,7 @@ namespace net {
 { 0x8f769ed6, 0x207c, 0x4af9, \
   { 0x9f, 0x7e, 0x9e, 0x83, 0x2d, 0xa3, 0x75, 0x4e } }
 
-class Tickler MOZ_FINAL : public nsSupportsWeakReference
+class Tickler final : public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -109,7 +109,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Tickler, NS_TICKLER_IID)
 
 #else // not defined MOZ_USE_WIFI_TICKLER
 
-class Tickler MOZ_FINAL : public nsISupports
+class Tickler final : public nsISupports
 {
   ~Tickler() { }
 public:

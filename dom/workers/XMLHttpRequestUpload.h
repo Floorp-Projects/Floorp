@@ -12,7 +12,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class XMLHttpRequest;
 
-class XMLHttpRequestUpload MOZ_FINAL : public nsXHREventTarget
+class XMLHttpRequestUpload final : public nsXHREventTarget
 {
   nsRefPtr<XMLHttpRequest> mXHR;
 
@@ -22,7 +22,7 @@ class XMLHttpRequestUpload MOZ_FINAL : public nsXHREventTarget
 
 public:
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<XMLHttpRequestUpload>
   Create(XMLHttpRequest* aXHR);

@@ -24,7 +24,7 @@ namespace dom {
 class DOMStorageManager;
 class DOMStorageCache;
 
-class DOMStorage MOZ_FINAL
+class DOMStorage final
   : public nsIDOMStorage
   , public nsSupportsWeakReference
   , public nsWrapperCache
@@ -67,7 +67,7 @@ public:
              bool aIsPrivate);
 
   // WebIDL
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsIDOMWindow* GetParentObject() const
   {

@@ -25,7 +25,7 @@
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
 
-class Voicemail::Listener MOZ_FINAL : public nsIVoicemailListener
+class Voicemail::Listener final : public nsIVoicemailListener
 {
   Voicemail* mVoicemail;
 

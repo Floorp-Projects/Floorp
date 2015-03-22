@@ -37,8 +37,8 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITokenizer, NS_ITOKENIZER_IID)
 
 #define NS_DECL_NSITOKENIZER \
-  NS_IMETHOD                     WillTokenize(bool aIsFinalChunk) MOZ_OVERRIDE;\
-  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,bool& aFlushTokens) MOZ_OVERRIDE;\
+  NS_IMETHOD                     WillTokenize(bool aIsFinalChunk) override;\
+  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,bool& aFlushTokens) override;\
 
 
 #endif

@@ -15,17 +15,17 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLProgressElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLProgressElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  EventStates IntrinsicState() const MOZ_OVERRIDE;
+  EventStates IntrinsicState() const override;
 
-  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                        const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
+                        const nsAString& aValue, nsAttrValue& aResult) override;
 
   // WebIDL
   double Value() const;
@@ -43,7 +43,7 @@ public:
 protected:
   virtual ~HTMLProgressElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   /**

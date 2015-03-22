@@ -103,12 +103,8 @@ DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandle
                                 bool *bp) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
-    bool b;
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!HasInstance(cx, target, v, &b))
-        return false;
-    *bp = !!b;
-    return true;
+    return HasInstance(cx, target, v, bp);
 }
 
 bool
@@ -198,12 +194,8 @@ DirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
-    bool found;
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    if (!JS_HasPropertyById(cx, target, id, &found))
-        return false;
-    *bp = !!found;
-    return true;
+    return HasProperty(cx, target, id, bp);
 }
 
 bool
@@ -211,7 +203,7 @@ DirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool 
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return js::HasOwnProperty(cx, target, id, bp);
+    return HasOwnProperty(cx, target, id, bp);
 }
 
 bool

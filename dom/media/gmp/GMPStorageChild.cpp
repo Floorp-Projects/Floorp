@@ -305,7 +305,7 @@ public:
     mRecordNames.Sort();
   }
 
-  virtual GMPErr GetName(const char** aOutName, uint32_t* aOutNameLength) MOZ_OVERRIDE {
+  virtual GMPErr GetName(const char** aOutName, uint32_t* aOutNameLength) override {
     if (!aOutName || !aOutNameLength) {
       return GMPInvalidArgErr;
     }
@@ -317,7 +317,7 @@ public:
     return GMPNoErr;
   }
 
-  virtual GMPErr NextRecord() MOZ_OVERRIDE {
+  virtual GMPErr NextRecord() override {
     if (mIndex < mRecordNames.Length()) {
       mIndex++;
     }
@@ -325,7 +325,7 @@ public:
                                             : GMPEndOfEnumeration;
   }
 
-  virtual void Close() MOZ_OVERRIDE {
+  virtual void Close() override {
     delete this;
   }
 

@@ -22,7 +22,7 @@
 
 NS_IMPL_ISUPPORTS(txXPathObjectAdaptor, txIXPathObject)
 
-class txFunctionEvaluationContext MOZ_FINAL : public txIFunctionEvaluationContext
+class txFunctionEvaluationContext final : public txIFunctionEvaluationContext
 {
 public:
     txFunctionEvaluationContext(txIEvalContext *aContext, nsISupports *aState);

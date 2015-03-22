@@ -1062,7 +1062,7 @@ class CallFrameInfo::Handler {
 // report errors or warn about problems in the data it is parsing.
 // These messages are sent to the message sink |aLog| provided to the
 // constructor.
-class CallFrameInfo::Reporter MOZ_FINAL {
+class CallFrameInfo::Reporter final {
  public:
   // Create an error reporter which attributes troubles to the section
   // named SECTION in FILENAME.

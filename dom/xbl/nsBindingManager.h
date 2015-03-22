@@ -36,7 +36,7 @@ namespace mozilla {
 class CSSStyleSheet;
 } // namespace mozilla
 
-class nsBindingManager MOZ_FINAL : public nsStubMutationObserver
+class nsBindingManager final : public nsStubMutationObserver
 {
   ~nsBindingManager();
 

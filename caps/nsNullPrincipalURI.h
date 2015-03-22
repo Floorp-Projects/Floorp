@@ -24,7 +24,7 @@
   {0x51fcd543, 0x3b52, 0x41f7, \
     {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
 
-class nsNullPrincipalURI MOZ_FINAL : public nsIURI
+class nsNullPrincipalURI final : public nsIURI
                                    , public nsISizeOf
                                    , public nsIIPCSerializableURI
 {
@@ -34,8 +34,8 @@ public:
   NS_DECL_NSIIPCSERIALIZABLEURI
 
   // nsISizeOf
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   explicit nsNullPrincipalURI(const nsCString &aSpec);
 

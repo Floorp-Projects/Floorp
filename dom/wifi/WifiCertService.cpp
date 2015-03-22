@@ -35,7 +35,7 @@ namespace mozilla {
 // The singleton Wifi Cert service, to be used on the main thread.
 StaticRefPtr<WifiCertService> gWifiCertService;
 
-class ImportCertTask MOZ_FINAL: public CryptoTask
+class ImportCertTask final: public CryptoTask
 {
 public:
   ImportCertTask(int32_t aId, nsIDOMBlob* aCertBlob,
@@ -55,7 +55,7 @@ public:
 private:
   virtual void ReleaseNSSResources() {}
 
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -303,7 +303,7 @@ private:
   WifiCertServiceResultOptions mResult;
 };
 
-class DeleteCertTask MOZ_FINAL: public CryptoTask
+class DeleteCertTask final: public CryptoTask
 {
 public:
   DeleteCertTask(int32_t aId, const nsAString& aCertNickname)
@@ -319,7 +319,7 @@ public:
 private:
   virtual void ReleaseNSSResources() {}
 
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 

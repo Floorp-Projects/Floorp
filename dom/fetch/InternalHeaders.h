@@ -26,7 +26,7 @@ template<typename T> class MozMap;
 class HeadersOrByteStringSequenceSequenceOrByteStringMozMap;
 class PHeadersEntry;
 
-class InternalHeaders MOZ_FINAL
+class InternalHeaders final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalHeaders)
 

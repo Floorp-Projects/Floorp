@@ -21,7 +21,7 @@ namespace dom {
 
 class ContentParent;
 
-class WakeLock MOZ_FINAL
+class WakeLock final
   : public nsIDOMEventListener
   , public nsWrapperCache
   , public nsIObserver
@@ -56,7 +56,7 @@ public:
   nsISupports* GetParentObject() const;
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetTopic(nsAString& aTopic);
 

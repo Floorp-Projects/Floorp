@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMenuElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLMenuElement final : public nsGenericHTMLElement,
                                   public nsIDOMHTMLMenuElement,
                                   public nsIHTMLMenu
 {
@@ -35,9 +35,9 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   uint8_t GetType() const { return mType; }
 
@@ -73,7 +73,7 @@ public:
 protected:
   virtual ~HTMLMenuElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 
 protected:

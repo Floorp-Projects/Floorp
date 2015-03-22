@@ -22,7 +22,7 @@
 
 #include "nsXPCOM.h"
 
-class nsCategoryObserver MOZ_FINAL : public nsIObserver
+class nsCategoryObserver final : public nsIObserver
 {
   ~nsCategoryObserver();
 
@@ -53,7 +53,7 @@ private:
  * then get the name of the category.
  */
 template<class T>
-class nsCategoryCache MOZ_FINAL
+class nsCategoryCache final
 {
 public:
   explicit nsCategoryCache(const char* aCategory)

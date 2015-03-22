@@ -192,7 +192,7 @@ class SimpleEdgeRange : public EdgeRange {
         return tracer.okay;
     }
 
-    void popFront() MOZ_OVERRIDE { i++; settle(); }
+    void popFront() override { i++; settle(); }
 };
 
 
@@ -378,7 +378,7 @@ class PreComputedEdgeRange : public EdgeRange {
         settle();
     }
 
-    void popFront() MOZ_OVERRIDE { i++; settle(); }
+    void popFront() override { i++; settle(); }
 };
 
 const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("RootList");

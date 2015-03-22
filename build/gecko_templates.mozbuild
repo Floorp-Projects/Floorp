@@ -55,9 +55,7 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
         error('`linkage` must be "dependent", "standalone" or None')
 
     if mozglue:
-        if CONFIG['JS_STANDALONE']:
-            pass
-        elif CONFIG['MOZ_CRT']:
+        if CONFIG['MOZ_CRT']:
             if msvcrt == 'dynamic':
                 USE_LIBS += ['mozcrt']
             elif msvcrt == 'static':

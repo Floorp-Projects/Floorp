@@ -44,7 +44,7 @@ namespace dom {
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathResult MOZ_FINAL : public nsIXPathResult,
+class XPathResult final : public nsIXPathResult,
                               public nsStubMutationObserver,
                               public nsWrapperCache
 {
@@ -77,7 +77,7 @@ public:
         return static_cast<XPathResult*>(static_cast<nsIXPathResult*>(aSupports));
     }
 
-    virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
     nsINode* GetParentObject() const
     {
         return mParent;
@@ -155,9 +155,9 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
     nsresult SetExprResult(txAExprResult *aExprResult, uint16_t aResultType,
-                           nsINode* aContextNode) MOZ_OVERRIDE;
-    nsresult GetExprResult(txAExprResult **aExprResult) MOZ_OVERRIDE;
-    nsresult Clone(nsIXPathResult **aResult) MOZ_OVERRIDE;
+                           nsINode* aContextNode) override;
+    nsresult GetExprResult(txAExprResult **aExprResult) override;
+    nsresult Clone(nsIXPathResult **aResult) override;
     void RemoveObserver();
 private:
     static bool isSnapshot(uint16_t aResultType)

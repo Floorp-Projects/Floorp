@@ -22,7 +22,7 @@ namespace cache {
 class CacheStreamControlParent;
 class ManagerId;
 
-class CacheStorageParent MOZ_FINAL : public PCacheStorageParent
+class CacheStorageParent final : public PCacheStorageParent
                                    , public PrincipalVerifier::Listener
                                    , public Manager::Listener
 {
@@ -33,35 +33,35 @@ public:
 
 private:
   // PCacheStorageParent methods
-  virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE;
-  virtual bool RecvTeardown() MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aReason) override;
+  virtual bool RecvTeardown() override;
   virtual bool RecvMatch(const RequestId& aRequestId,
                          const PCacheRequest& aRequest,
-                         const PCacheQueryParams& aParams) MOZ_OVERRIDE;
+                         const PCacheQueryParams& aParams) override;
   virtual bool RecvHas(const RequestId& aRequestId,
-                       const nsString& aKey) MOZ_OVERRIDE;
+                       const nsString& aKey) override;
   virtual bool RecvOpen(const RequestId& aRequestId,
-                        const nsString& aKey) MOZ_OVERRIDE;
+                        const nsString& aKey) override;
   virtual bool RecvDelete(const RequestId& aRequestId,
-                          const nsString& aKey) MOZ_OVERRIDE;
-  virtual bool RecvKeys(const RequestId& aRequestId) MOZ_OVERRIDE;
+                          const nsString& aKey) override;
+  virtual bool RecvKeys(const RequestId& aRequestId) override;
 
   // PrincipalVerifier::Listener methods
   virtual void OnPrincipalVerified(nsresult aRv,
-                                   ManagerId* aManagerId) MOZ_OVERRIDE;
+                                   ManagerId* aManagerId) override;
 
   // Manager::Listener methods
   virtual void OnStorageMatch(RequestId aRequestId, nsresult aRv,
                               const SavedResponse* aResponse,
-                              StreamList* aStreamList) MOZ_OVERRIDE;
+                              StreamList* aStreamList) override;
   virtual void OnStorageHas(RequestId aRequestId, nsresult aRv,
-                            bool aCacheFound) MOZ_OVERRIDE;
+                            bool aCacheFound) override;
   virtual void OnStorageOpen(RequestId aRequestId, nsresult aRv,
-                             CacheId aCacheId) MOZ_OVERRIDE;
+                             CacheId aCacheId) override;
   virtual void OnStorageDelete(RequestId aRequestId, nsresult aRv,
-                               bool aCacheDeleted) MOZ_OVERRIDE;
+                               bool aCacheDeleted) override;
   virtual void OnStorageKeys(RequestId aRequestId, nsresult aRv,
-                             const nsTArray<nsString>& aKeys) MOZ_OVERRIDE;
+                             const nsTArray<nsString>& aKeys) override;
 
   CacheStreamControlParent*
   SerializeReadStream(CacheStreamControlParent *aStreamControl, const nsID& aId,

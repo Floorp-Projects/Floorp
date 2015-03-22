@@ -33,6 +33,7 @@ function workerTestExec(script) {
       is(event.data.context, "Worker",
          "Correct context for messages received on the worker");
       if (event.data.type == 'finish') {
+        worker.terminate();
         SpecialPowers.forceGC();
         resolve();
 

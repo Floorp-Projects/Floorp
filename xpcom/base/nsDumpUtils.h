@@ -62,8 +62,8 @@ public:
    * Called when you can read() from the fd without blocking.  Note that this
    * function is also called when you're at eof (read() returns 0 in this case).
    */
-  virtual void OnFileCanReadWithoutBlocking(int aFd) MOZ_OVERRIDE = 0;
-  virtual void OnFileCanWriteWithoutBlocking(int aFd) MOZ_OVERRIDE {};
+  virtual void OnFileCanReadWithoutBlocking(int aFd) override = 0;
+  virtual void OnFileCanWriteWithoutBlocking(int aFd) override {};
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -84,7 +84,7 @@ public:
   virtual void StopWatching();
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) MOZ_OVERRIDE
+                     const char16_t* aData) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));

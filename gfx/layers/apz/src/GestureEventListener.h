@@ -36,7 +36,7 @@ class AsyncPanZoomController;
  * Android doesn't use this class because it has its own built-in gesture event
  * listeners that should generally be preferred.
  */
-class GestureEventListener MOZ_FINAL {
+class GestureEventListener final {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GestureEventListener)
 

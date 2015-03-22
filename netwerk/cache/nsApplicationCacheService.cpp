@@ -207,13 +207,13 @@ nsApplicationCacheService::GetGroupsTimeOrdered(uint32_t *count,
 
 namespace {
 
-class AppCacheClearDataObserver MOZ_FINAL : public nsIObserver {
+class AppCacheClearDataObserver final : public nsIObserver {
 public:
     NS_DECL_ISUPPORTS
 
     // nsIObserver implementation.
     NS_IMETHODIMP
-    Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) MOZ_OVERRIDE
+    Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
     {
         MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
 

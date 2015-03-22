@@ -28,7 +28,7 @@ class nsNodeInfoManager;
 class nsIDocument;
 class nsINode;
 
-class txTransformNotifier MOZ_FINAL : public nsIScriptLoaderObserver,
+class txTransformNotifier final : public nsIScriptLoaderObserver,
                                       public nsICSSLoaderObserver
 {
 public:
@@ -40,7 +40,7 @@ public:
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
                                 bool aWasAlternate,
-                                nsresult aStatus) MOZ_OVERRIDE;
+                                nsresult aStatus) override;
 
     void Init(nsITransformObserver* aObserver);
     nsresult AddScriptElement(nsIScriptElement* aElement);

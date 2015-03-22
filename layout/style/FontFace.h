@@ -32,7 +32,7 @@ class StringOrArrayBufferOrArrayBufferView;
 namespace mozilla {
 namespace dom {
 
-class FontFace MOZ_FINAL : public nsISupports,
+class FontFace final : public nsISupports,
                            public nsWrapperCache
 {
   friend class mozilla::dom::FontFaceBufferSource;
@@ -41,7 +41,7 @@ class FontFace MOZ_FINAL : public nsISupports,
   friend class Entry;
 
 public:
-  class Entry MOZ_FINAL : public gfxUserFontEntry {
+  class Entry final : public gfxUserFontEntry {
     friend class FontFace;
 
   public:
@@ -57,7 +57,7 @@ public:
                          aItalicStyle, aFeatureSettings, aLanguageOverride,
                          aUnicodeRanges) {}
 
-    virtual void SetLoadState(UserFontLoadState aLoadState) MOZ_OVERRIDE;
+    virtual void SetLoadState(UserFontLoadState aLoadState) override;
 
   protected:
     // The FontFace objects that use this user font entry.  We need to store
@@ -71,7 +71,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FontFace)
 
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<FontFace>
   CreateForRule(nsISupports* aGlobal, nsPresContext* aPresContext,

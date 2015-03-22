@@ -366,7 +366,7 @@ public:
 
   virtual void NotifyEvent(
       MediaStreamGraph* aGraph,
-      MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE {
+      MediaStreamListener::MediaStreamGraphEvent event) override {
     if (event == EVENT_FINISHED) {
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
           this, &OutputStreamListener::DoNotifyFinished);

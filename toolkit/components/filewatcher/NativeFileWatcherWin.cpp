@@ -25,7 +25,7 @@ namespace {
 /**
  * An event used to notify the main thread when an error happens.
  */
-class WatchedErrorEvent MOZ_FINAL : public nsRunnable
+class WatchedErrorEvent final : public nsRunnable
 {
 public:
   /**
@@ -63,7 +63,7 @@ public:
 /**
  * An event used to notify the main thread when an operation is successful.
  */
-class WatchedSuccessEvent MOZ_FINAL : public nsRunnable
+class WatchedSuccessEvent final : public nsRunnable
 {
 public:
   /**
@@ -101,7 +101,7 @@ public:
  * An event used to notify the main thread of a change in a watched
  * resource.
  */
-class WatchedChangeEvent MOZ_FINAL : public nsRunnable
+class WatchedChangeEvent final : public nsRunnable
 {
 public:
   /**

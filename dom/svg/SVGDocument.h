@@ -16,7 +16,7 @@ namespace dom {
 
 class SVGForeignObjectElement;
 
-class SVGDocument MOZ_FINAL : public XMLDocument
+class SVGDocument final : public XMLDocument
 {
   friend class SVGForeignObjectElement; // To call EnsureNonSVGUserAgentStyleSheetsLoaded
 
@@ -29,21 +29,21 @@ public:
   }
 
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+                                 bool aNotify) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL API
   void GetDomain(nsAString& aDomain, ErrorResult& aRv);
   nsSVGElement* GetRootElement(ErrorResult& aRv);
 
-  virtual SVGDocument* AsSVGDocument() MOZ_OVERRIDE {
+  virtual SVGDocument* AsSVGDocument() override {
     return this;
   }
 
 private:
   void EnsureNonSVGUserAgentStyleSheetsLoaded();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   bool mHasLoadedNonSVGUserAgentStyleSheets;
 };

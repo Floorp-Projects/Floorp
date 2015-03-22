@@ -25,22 +25,22 @@ public:
 
   friend already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout();
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout() MOZ_OVERRIDE { return this; }
-  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) MOZ_OVERRIDE;
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) MOZ_OVERRIDE;
-  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) MOZ_OVERRIDE;
-  virtual int32_t GetRowCount() MOZ_OVERRIDE { return mRowCount; }
-  virtual Type GetType() MOZ_OVERRIDE { return eRowGroup; }
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() override { return this; }
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override;
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override;
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;
+  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) override;
+  virtual int32_t GetRowCount() override { return mRowCount; }
+  virtual Type GetType() override { return eRowGroup; }
 
 protected:
   nsGridRowGroupLayout();
   virtual ~nsGridRowGroupLayout();
 
-  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState) override;
   static void AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal);
 
 private:

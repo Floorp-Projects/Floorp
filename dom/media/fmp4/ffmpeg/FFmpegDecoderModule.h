@@ -28,14 +28,14 @@ public:
   FFmpegDecoderModule() {}
   virtual ~FFmpegDecoderModule() {}
 
-  virtual nsresult Shutdown() MOZ_OVERRIDE { return NS_OK; }
+  virtual nsresult Shutdown() override { return NS_OK; }
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE
+                     MediaDataDecoderCallback* aCallback) override
   {
     nsRefPtr<MediaDataDecoder> decoder =
       new FFmpegH264Decoder<V>(aVideoTaskQueue, aCallback, aConfig,
@@ -46,24 +46,24 @@ public:
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE
+                     MediaDataDecoderCallback* aCallback) override
   {
     nsRefPtr<MediaDataDecoder> decoder =
       new FFmpegAudioDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
     return decoder.forget();
   }
 
-  virtual bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE
+  virtual bool SupportsAudioMimeType(const char* aMimeType) override
   {
     return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
-  virtual bool SupportsVideoMimeType(const char* aMimeType) MOZ_OVERRIDE
+  virtual bool SupportsVideoMimeType(const char* aMimeType) override
   {
     return FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
-  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) MOZ_OVERRIDE
+  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) override
   {
     return true;
   }

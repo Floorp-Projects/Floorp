@@ -30,7 +30,7 @@ class Promise;
 namespace mozilla {
 namespace dom {
 
-class FontFaceSet MOZ_FINAL : public DOMEventTargetHelper
+class FontFaceSet final : public DOMEventTargetHelper
                             , public nsIDOMEventListener
                             , public nsICSSLoaderObserver
 {
@@ -47,7 +47,7 @@ public:
    * collector).  So UserFontSet exists just to override the needed virtual
    * methods from gfxUserFontSet and to forward them on FontFaceSet.
    */
-  class UserFontSet MOZ_FINAL : public gfxUserFontSet
+  class UserFontSet final : public gfxUserFontSet
   {
     friend class FontFaceSet;
 
@@ -61,21 +61,21 @@ public:
 
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                                    nsIPrincipal** aPrincipal,
-                                   bool* aBypassCache) MOZ_OVERRIDE;
+                                   bool* aBypassCache) override;
     virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
-                               const gfxFontFaceSrc* aFontFaceSrc) MOZ_OVERRIDE;
+                               const gfxFontFaceSrc* aFontFaceSrc) override;
 
   protected:
-    virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
+    virtual bool GetPrivateBrowsing() override;
     virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
                                       const gfxFontFaceSrc* aFontFaceSrc,
                                       uint8_t*& aBuffer,
-                                      uint32_t& aBufferLength) MOZ_OVERRIDE;
+                                      uint32_t& aBufferLength) override;
     virtual nsresult LogMessage(gfxUserFontEntry* aUserFontEntry,
                                 const char* aMessage,
                                 uint32_t aFlags = nsIScriptError::errorFlag,
-                                nsresult aStatus = NS_OK) MOZ_OVERRIDE;
-    virtual void DoRebuildUserFontSet() MOZ_OVERRIDE;
+                                nsresult aStatus = NS_OK) override;
+    virtual void DoRebuildUserFontSet() override;
     virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                    uint32_t aWeight,
@@ -83,7 +83,7 @@ public:
                                    uint32_t aItalicStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
-                                   gfxSparseBitSet* aUnicodeRanges) MOZ_OVERRIDE;
+                                   gfxSparseBitSet* aUnicodeRanges) override;
 
   private:
     nsRefPtr<FontFaceSet> mFontFaceSet;
@@ -95,7 +95,7 @@ public:
 
   FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   UserFontSet* EnsureUserFontSet(nsPresContext* aPresContext);
   UserFontSet* GetUserFontSet() { return mUserFontSet; }
@@ -165,7 +165,7 @@ public:
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
                               bool aWasAlternate,
-                              nsresult aStatus) MOZ_OVERRIDE;
+                              nsresult aStatus) override;
 
   // -- Web IDL --------------------------------------------------------------
 

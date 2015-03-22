@@ -13,7 +13,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsHtml5Speculation MOZ_FINAL : public nsAHtml5TreeOpSink
+class nsHtml5Speculation final : public nsAHtml5TreeOpSink
 {
   public:
     nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,

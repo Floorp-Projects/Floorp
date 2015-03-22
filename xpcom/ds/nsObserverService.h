@@ -18,7 +18,7 @@
 
 class nsIMemoryReporter;
 
-class nsObserverService MOZ_FINAL
+class nsObserverService final
   : public nsIObserverService
   , public nsIMemoryReporter
 {

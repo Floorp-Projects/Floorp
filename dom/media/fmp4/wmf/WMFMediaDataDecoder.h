@@ -63,21 +63,21 @@ public:
                       MediaDataDecoderCallback* aCallback);
   ~WMFMediaDataDecoder();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
 
-  virtual nsresult Flush() MOZ_OVERRIDE;
+  virtual nsresult Flush() override;
 
-  virtual nsresult Drain() MOZ_OVERRIDE;
+  virtual nsresult Drain() override;
 
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Shutdown() override;
 
   virtual bool IsWaitingMediaResources() { return false; };
   virtual bool IsDormantNeeded() { return true; };
-  virtual void AllocateMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
+  virtual void AllocateMediaResources() override;
+  virtual void ReleaseMediaResources() override;
+  virtual bool IsHardwareAccelerated() const override;
 
 private:
 

@@ -17,7 +17,7 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-class inDOMUtils MOZ_FINAL : public inIDOMUtils
+class inDOMUtils final : public inIDOMUtils
 {
 public:
   NS_DECL_ISUPPORTS

@@ -23,7 +23,7 @@ namespace dom {
 
 class nsSpeechTask;
 
-class SpeechSynthesis MOZ_FINAL : public nsISupports,
+class SpeechSynthesis final : public nsISupports,
                                   public nsWrapperCache
 {
 public:
@@ -34,7 +34,7 @@ public:
 
   nsIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   bool Pending() const;
 

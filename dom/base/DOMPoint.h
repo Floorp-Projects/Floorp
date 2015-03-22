@@ -48,7 +48,7 @@ protected:
   double mX, mY, mZ, mW;
 };
 
-class DOMPoint MOZ_FINAL : public DOMPointReadOnly
+class DOMPoint final : public DOMPointReadOnly
 {
 public:
   explicit DOMPoint(nsISupports* aParent, double aX = 0.0, double aY = 0.0,
@@ -64,7 +64,7 @@ public:
               double aZ, double aW, ErrorResult& aRV);
 
   nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void SetX(double aX) { mX = aX; }
   void SetY(double aY) { mY = aY; }

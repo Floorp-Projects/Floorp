@@ -113,7 +113,7 @@ extern EventMsgInfo gAllEvents[];
 #define LogHRESULT(hr) mozilla::widget::WinUtils::Log("%s hr=%X", __FUNCTION__, hr)
 
 #ifdef MOZ_PLACES
-class myDownloadObserver MOZ_FINAL : public nsIDownloadObserver
+class myDownloadObserver final : public nsIDownloadObserver
 {
   ~myDownloadObserver() {}
 
@@ -411,7 +411,7 @@ private:
 };
 
 #ifdef MOZ_PLACES
-class AsyncFaviconDataReady MOZ_FINAL : public nsIFaviconDataCallback
+class AsyncFaviconDataReady final : public nsIFaviconDataCallback
 {
 public:
   NS_DECL_ISUPPORTS

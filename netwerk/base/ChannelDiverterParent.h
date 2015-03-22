@@ -28,7 +28,7 @@ public:
 
   void DivertTo(nsIStreamListener* newListener);
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
   nsRefPtr<ADivertableParentChannel> mDivertableChannelParent;

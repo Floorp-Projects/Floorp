@@ -16,7 +16,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothDevice;
 class BluetoothSignal;
 
-class BluetoothPairingListener MOZ_FINAL : public DOMEventTargetHelper
+class BluetoothPairingListener final : public DOMEventTargetHelper
                                          , public BluetoothSignalObserver
 {
 public:
@@ -37,9 +37,9 @@ public:
     return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
-  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual void DisconnectFromOwner() override;
+  virtual void EventListenerAdded(nsIAtom* aType) override;
 
   IMPL_EVENT_HANDLER(displaypasskeyreq);
   IMPL_EVENT_HANDLER(enterpincodereq);

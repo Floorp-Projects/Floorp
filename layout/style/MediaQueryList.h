@@ -25,7 +25,7 @@ class nsMediaList;
 namespace mozilla {
 namespace dom {
 
-class MediaQueryList MOZ_FINAL : public nsISupports,
+class MediaQueryList final : public nsISupports,
                                  public nsWrapperCache,
                                  public PRCList
 {
@@ -58,7 +58,7 @@ public:
 
   void RemoveAllListeners();
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL methods
   void GetMedia(nsAString& aMedia);

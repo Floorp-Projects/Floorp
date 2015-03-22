@@ -73,7 +73,7 @@ namespace dmd {
 
 class DMDBridge : public ReplaceMallocBridge
 {
-  virtual DMDFuncs* GetDMDFuncs() MOZ_OVERRIDE;
+  virtual DMDFuncs* GetDMDFuncs() override;
 };
 
 static DMDBridge sDMDBridge;
@@ -1673,7 +1673,7 @@ DMDFuncs::ClearReports()
   }
 }
 
-class ToIdStringConverter MOZ_FINAL
+class ToIdStringConverter final
 {
 public:
   ToIdStringConverter() : mNextId(0) { mIdMap.init(512); }

@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class WebGLSampler MOZ_FINAL
+class WebGLSampler final
     : public nsWrapperCache
     , public WebGLBindableName<GLenum>
     , public WebGLRefCountedObject<WebGLSampler>
@@ -28,7 +28,7 @@ public:
     void Delete();
     WebGLContext* GetParentObject() const;
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
 

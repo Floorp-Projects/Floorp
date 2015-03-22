@@ -345,7 +345,7 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
 static StaticAutoPtr<nsTArray<nsCOMPtr<nsIContent> > > sPendingPlugins;
 static StaticAutoPtr<nsTArray<nsCOMPtr<nsITimer> > > sPluginTimers;
 
-class PluginTimerCallBack MOZ_FINAL : public nsITimerCallback
+class PluginTimerCallBack final : public nsITimerCallback
 {
   ~PluginTimerCallBack() {}
 
@@ -354,7 +354,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP Notify(nsITimer* aTimer) MOZ_FINAL
+  NS_IMETHODIMP Notify(nsITimer* aTimer) final
   {
     if (!mContent->IsInDoc())
       return NS_OK;

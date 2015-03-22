@@ -10,13 +10,13 @@
 
 namespace mozilla {
 
-class WebGLVertexArrayFake MOZ_FINAL
+class WebGLVertexArrayFake final
     : public WebGLVertexArray
 {
 public:
-    virtual void BindVertexArrayImpl() MOZ_OVERRIDE;
-    virtual void DeleteImpl() MOZ_OVERRIDE {};
-    virtual void GenVertexArray() MOZ_OVERRIDE {};
+    virtual void BindVertexArrayImpl() override;
+    virtual void DeleteImpl() override {};
+    virtual void GenVertexArray() override {};
 
 private:
     explicit WebGLVertexArrayFake(WebGLContext* webgl)

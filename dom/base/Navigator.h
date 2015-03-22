@@ -108,7 +108,7 @@ class AudioChannelManager;
 #endif
 } // namespace system
 
-class Navigator MOZ_FINAL : public nsIDOMNavigator
+class Navigator final : public nsIDOMNavigator
                           , public nsIMozNavigatorNetwork
                           , public nsWrapperCache
 {
@@ -324,7 +324,7 @@ public:
     return GetWindow();
   }
 
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
   // GetWindowFromGlobal returns the inner window for this global, if
   // any, else null.

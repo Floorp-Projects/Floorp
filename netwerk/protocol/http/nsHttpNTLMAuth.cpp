@@ -212,7 +212,7 @@ CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
 
 // Dummy class for session state object.  This class doesn't hold any data.
 // Instead we use its existence as a flag.  See ChallengeReceived.
-class nsNTLMSessionState MOZ_FINAL : public nsISupports
+class nsNTLMSessionState final : public nsISupports
 {
     ~nsNTLMSessionState() {}
 public:

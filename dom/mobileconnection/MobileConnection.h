@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace dom {
 
-class MobileConnection MOZ_FINAL : public DOMEventTargetHelper
+class MobileConnection final : public DOMEventTargetHelper
                                  , private nsIMobileConnectionListener
 #ifdef MOZ_B2G_RIL
                                  , private nsIIccListener
@@ -53,7 +53,7 @@ public:
   Shutdown();
 
   virtual void
-  DisconnectFromOwner() MOZ_OVERRIDE;
+  DisconnectFromOwner() override;
 
   nsPIDOMWindow*
   GetParentObject() const
@@ -63,7 +63,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL interface
   void

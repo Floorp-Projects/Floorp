@@ -376,7 +376,7 @@ public:
 //// Template Implementation
 
 template <typename DataType, bool Adopting=false>
-class Variant MOZ_FINAL : public Variant_base
+class Variant final : public Variant_base
 {
   ~Variant()
   {

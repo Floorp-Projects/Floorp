@@ -141,7 +141,7 @@ public:
  * A non-refcounted implementation of nsIAtom.
  */
 
-class PermanentAtomImpl MOZ_FINAL : public AtomImpl
+class PermanentAtomImpl final : public AtomImpl
 {
 public:
   PermanentAtomImpl(const nsAString& aString, PLDHashNumber aKeyHash)

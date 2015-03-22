@@ -45,7 +45,7 @@ class OggCodecStore
     Monitor mMonitor;
 };
 
-class OggReader MOZ_FINAL : public MediaDecoderReader
+class OggReader final : public MediaDecoderReader
 {
 public:
   explicit OggReader(AbstractMediaDecoder* aDecoder);
@@ -54,32 +54,32 @@ protected:
   ~OggReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
-  virtual bool DecodeAudioData() MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  virtual nsresult ResetDecode() override;
+  virtual bool DecodeAudioData() override;
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                  int64_t aTimeThreshold) override;
 
-  virtual bool HasAudio() MOZ_OVERRIDE {
+  virtual bool HasAudio() override {
     return (mVorbisState != 0 && mVorbisState->mActive) ||
            (mOpusState != 0 && mOpusState->mActive);
   }
 
-  virtual bool HasVideo() MOZ_OVERRIDE {
+  virtual bool HasVideo() override {
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags) override;
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
 private:
   // TODO: DEPRECATED. This uses synchronous decoding.

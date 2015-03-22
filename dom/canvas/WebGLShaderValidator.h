@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace webgl {
 
-class ShaderValidator MOZ_FINAL
+class ShaderValidator final
 {
     const ShHandle mHandle;
     const int mCompileOptions;

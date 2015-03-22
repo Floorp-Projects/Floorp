@@ -44,7 +44,7 @@ class Element;
  * and Item to its existing child list.
  * @see nsIDOMNodeList
  */
-class nsChildContentList MOZ_FINAL : public nsINodeList
+class nsChildContentList final : public nsINodeList
 {
 public:
   explicit nsChildContentList(nsINode* aNode)
@@ -56,21 +56,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsChildContentList)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
-  virtual int32_t IndexOf(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
+  virtual int32_t IndexOf(nsIContent* aContent) override;
+  virtual nsIContent* Item(uint32_t aIndex) override;
 
   void DropReference()
   {
     mNode = nullptr;
   }
 
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE
+  virtual nsINode* GetParentObject() override
   {
     return mNode;
   }
@@ -86,7 +86,7 @@ private:
  * A class that implements nsIWeakReference
  */
 
-class nsNodeWeakReference MOZ_FINAL : public nsIWeakReference
+class nsNodeWeakReference final : public nsIWeakReference
 {
 public:
   explicit nsNodeWeakReference(nsINode* aNode)
@@ -99,7 +99,7 @@ public:
 
   // nsIWeakReference
   NS_DECL_NSIWEAKREFERENCE
-  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   void NoticeNodeDestruction()
   {
@@ -115,7 +115,7 @@ private:
 /**
  * Tearoff to use for nodes to implement nsISupportsWeakReference
  */
-class nsNodeSupportsWeakRefTearoff MOZ_FINAL : public nsISupportsWeakReference
+class nsNodeSupportsWeakRefTearoff final : public nsISupportsWeakReference
 {
 public:
   explicit nsNodeSupportsWeakRefTearoff(nsINode* aNode)
@@ -158,56 +158,56 @@ public:
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
   // nsINode interface methods
-  virtual uint32_t GetChildCount() const MOZ_OVERRIDE;
-  virtual nsIContent *GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const MOZ_OVERRIDE;
-  virtual int32_t IndexOf(const nsINode* aPossibleChild) const MOZ_OVERRIDE;
+  virtual uint32_t GetChildCount() const override;
+  virtual nsIContent *GetChildAt(uint32_t aIndex) const override;
+  virtual nsIContent * const * GetChildArray(uint32_t* aChildCount) const override;
+  virtual int32_t IndexOf(const nsINode* aPossibleChild) const override;
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                 bool aNotify) MOZ_OVERRIDE;
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
+                                 bool aNotify) override;
+  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
   virtual void GetTextContentInternal(nsAString& aTextContent,
-                                      mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                                      mozilla::ErrorResult& aError) override;
   virtual void SetTextContentInternal(const nsAString& aTextContent,
-                                      mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                                      mozilla::ErrorResult& aError) override;
 
   // nsIContent interface methods
-  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) MOZ_OVERRIDE;
-  virtual const nsTextFragment *GetText() MOZ_OVERRIDE;
-  virtual uint32_t TextLength() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) override;
+  virtual const nsTextFragment *GetText() override;
+  virtual uint32_t TextLength() const override;
   virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
   virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
-                              bool aNotify) MOZ_OVERRIDE;
-  virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
-  virtual bool HasTextForTranslation() MOZ_OVERRIDE;
-  virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;
+                              bool aNotify) override;
+  virtual bool TextIsOnlyWhitespace() override;
+  virtual bool HasTextForTranslation() override;
+  virtual void AppendTextTo(nsAString& aResult) override;
   virtual bool AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t&) MOZ_OVERRIDE NS_WARN_UNUSED_RESULT; 
-  virtual nsIContent *GetBindingParent() const MOZ_OVERRIDE;
-  virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
+                            const mozilla::fallible_t&) override NS_WARN_UNUSED_RESULT; 
+  virtual nsIContent *GetBindingParent() const override;
+  virtual nsXBLBinding *GetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
-                             nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
-  virtual ShadowRoot *GetShadowRoot() const MOZ_OVERRIDE;
-  virtual ShadowRoot *GetContainingShadow() const MOZ_OVERRIDE;
-  virtual nsTArray<nsIContent*> &DestInsertionPoints() MOZ_OVERRIDE;
-  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const MOZ_OVERRIDE;
-  virtual void SetShadowRoot(ShadowRoot* aBinding) MOZ_OVERRIDE;
-  virtual nsIContent *GetXBLInsertionParent() const MOZ_OVERRIDE;
-  virtual void SetXBLInsertionParent(nsIContent* aContent) MOZ_OVERRIDE;
-  virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
+                             nsBindingManager* aOldBindingManager = nullptr) override;
+  virtual ShadowRoot *GetShadowRoot() const override;
+  virtual ShadowRoot *GetContainingShadow() const override;
+  virtual nsTArray<nsIContent*> &DestInsertionPoints() override;
+  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const override;
+  virtual void SetShadowRoot(ShadowRoot* aBinding) override;
+  virtual nsIContent *GetXBLInsertionParent() const override;
+  virtual void SetXBLInsertionParent(nsIContent* aContent) override;
+  virtual bool IsLink(nsIURI** aURI) const override;
 
-  virtual CustomElementData *GetCustomElementData() const MOZ_OVERRIDE;
-  virtual void SetCustomElementData(CustomElementData* aData) MOZ_OVERRIDE;
+  virtual CustomElementData *GetCustomElementData() const override;
+  virtual void SetCustomElementData(CustomElementData* aData) override;
 
-  virtual void DestroyContent() MOZ_OVERRIDE;
-  virtual void SaveSubtreeState() MOZ_OVERRIDE;
+  virtual void DestroyContent() override;
+  virtual void SaveSubtreeState() override;
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
 
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount()
@@ -239,7 +239,7 @@ public:
    */
   void FireNodeRemovedForChildren();
 
-  virtual bool OwnedOnlyByTheDOMTree() MOZ_OVERRIDE
+  virtual bool OwnedOnlyByTheDOMTree() override
   {
     uint32_t rc = mRefCnt.get();
     if (GetParent()) {
@@ -249,12 +249,12 @@ public:
     return rc == 0;
   }
 
-  virtual bool IsPurple() MOZ_OVERRIDE
+  virtual bool IsPurple() override
   {
     return mRefCnt.IsPurple();
   }
 
-  virtual void RemovePurple() MOZ_OVERRIDE
+  virtual void RemovePurple() override
   {
     mRefCnt.RemovePurple();
   }
@@ -400,7 +400,7 @@ protected:
   void SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError);
 
   // Override from nsINode
-  virtual nsINode::nsSlots* CreateSlots() MOZ_OVERRIDE;
+  virtual nsINode::nsSlots* CreateSlots() override;
 
   nsDOMSlots *DOMSlots()
   {

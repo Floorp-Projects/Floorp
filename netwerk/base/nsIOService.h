@@ -44,7 +44,7 @@ namespace net {
 } // namespace net
 } // namespace mozilla
 
-class nsIOService MOZ_FINAL : public nsIIOService2
+class nsIOService final : public nsIIOService2
                             , public nsIObserver
                             , public nsINetUtil
                             , public nsISpeculativeConnect
@@ -172,13 +172,13 @@ public:
     {
     }
 
-    NS_IMETHODIMP GetMode(int32_t *aMode) MOZ_OVERRIDE
+    NS_IMETHODIMP GetMode(int32_t *aMode) override
     {
         *aMode = mMode;
         return NS_OK;
     }
 
-    NS_IMETHODIMP GetAppId(uint32_t *aAppId) MOZ_OVERRIDE
+    NS_IMETHODIMP GetAppId(uint32_t *aAppId) override
     {
         *aAppId = mAppId;
         return NS_OK;

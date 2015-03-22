@@ -77,7 +77,7 @@ public:
     return static_cast<EventTarget*>(this);
   }
 
-  void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
+  void SetPropertyByValue(const BluetoothNamedValue& aValue) override;
 
   void Unroot();
 
@@ -87,9 +87,9 @@ public:
   }
 
   virtual JSObject*
-    WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+    WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 
 private:
   BluetoothDevice(nsPIDOMWindow* aOwner, const nsAString& aAdapterPath,

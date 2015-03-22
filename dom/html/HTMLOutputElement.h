@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLOutputElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLOutputElement final : public nsGenericHTMLFormElement,
                                     public nsStubMutationObserver,
                                     public nsIConstraintValidation
 {
@@ -28,24 +28,24 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_OUTPUT; }
-  NS_IMETHOD Reset() MOZ_OVERRIDE;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
+  NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_OUTPUT; }
+  NS_IMETHOD Reset() override;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
 
-  virtual bool IsDisabled() const MOZ_OVERRIDE { return false; }
+  virtual bool IsDisabled() const override { return false; }
 
-  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                        const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
+                        const nsAString& aValue, nsAttrValue& aResult) override;
 
-  virtual void DoneAddingChildren(bool aHaveNotified) MOZ_OVERRIDE;
+  virtual void DoneAddingChildren(bool aHaveNotified) override;
 
-  EventStates IntrinsicState() const MOZ_OVERRIDE;
+  EventStates IntrinsicState() const override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
-                               bool aCompileEventHandlers) MOZ_OVERRIDE;
+                               bool aCompileEventHandlers) override;
 
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.
@@ -60,7 +60,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLOutputElement,
                                            nsGenericHTMLFormElement)
 
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsDOMSettableTokenList* HtmlFor();

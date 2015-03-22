@@ -83,13 +83,13 @@ public:
 
   // nsWindowBase
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
-                         nsIntPoint* aPoint = nullptr) MOZ_OVERRIDE;
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchKeyboardEvent(mozilla::WidgetKeyboardEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent) MOZ_OVERRIDE;
-  virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) MOZ_OVERRIDE;
-  virtual bool IsTopLevelWidget() MOZ_OVERRIDE { return mIsTopWidgetWindow; }
+                         nsIntPoint* aPoint = nullptr) override;
+  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) override;
+  virtual bool DispatchKeyboardEvent(mozilla::WidgetKeyboardEvent* aEvent) override;
+  virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) override;
+  virtual bool DispatchContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent) override;
+  virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) override;
+  virtual bool IsTopLevelWidget() override { return mIsTopWidgetWindow; }
 
   using nsWindowBase::DispatchPluginEvent;
 
@@ -120,7 +120,7 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetRestoredBounds(nsIntRect &aRect) MOZ_OVERRIDE;
+  NS_IMETHOD              GetRestoredBounds(nsIntRect &aRect) override;
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   virtual nsIntPoint      GetClientOffset();
   void                    SetBackgroundColor(const nscolor &aColor);
@@ -190,11 +190,11 @@ public:
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
   void                    SetDrawsInTitlebar(bool aState);
-  mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
-  virtual void            EndRemoteDrawing() MOZ_OVERRIDE;
+  mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
+  virtual void            EndRemoteDrawing() override;
 
-  virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) MOZ_OVERRIDE;
-  virtual uint32_t        GetMaxTouchPoints() const MOZ_OVERRIDE;
+  virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
+  virtual uint32_t        GetMaxTouchPoints() const override;
 
   /**
    * Event helpers
@@ -281,12 +281,12 @@ public:
 protected:
   virtual ~nsWindow();
 
-  virtual void WindowUsesOMTC() MOZ_OVERRIDE;
-  virtual void ConfigureAPZCTreeManager() MOZ_OVERRIDE;
+  virtual void WindowUsesOMTC() override;
+  virtual void ConfigureAPZCTreeManager() override;
   void RegisterTouchWindow();
 
   virtual nsresult NotifyIMEInternal(
-                     const IMENotification& aIMENotification) MOZ_OVERRIDE;
+                     const IMENotification& aIMENotification) override;
 
   // A magic number to identify the FAKETRACKPOINTSCROLLABLE window created
   // when the trackpoint hack is enabled.
@@ -440,7 +440,7 @@ protected:
   void                    StopFlashing();
   static bool             IsTopLevelMouseExit(HWND aWnd);
   virtual nsresult        SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
-                                              bool aIntersectWithExisting) MOZ_OVERRIDE;
+                                              bool aIntersectWithExisting) override;
   nsIntRegion             GetRegionToPaint(bool aForceFullRepaint, 
                                            PAINTSTRUCT ps, HDC aDC);
   static void             ActivateOtherWindowHelper(HWND aWnd);

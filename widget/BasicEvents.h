@@ -826,7 +826,7 @@ protected:
   }
 
 public:
-  virtual WidgetGUIEvent* AsGUIEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetGUIEvent* AsGUIEvent() override { return this; }
 
   WidgetGUIEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
     WidgetEvent(aIsTrusted, aMessage, eGUIEventClass),
@@ -834,7 +834,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eGUIEventClass,
                "Duplicate() must be overridden by sub class");
@@ -874,7 +874,7 @@ public:
    * WidgetGUIEvent and other Event classes to remove the need for this
    * mPluginEvent field.
    */
-  class PluginEvent MOZ_FINAL
+  class PluginEvent final
   {
     nsTArray<uint8_t> mBuffer;
 
@@ -990,7 +990,7 @@ protected:
   }
 
 public:
-  virtual WidgetInputEvent* AsInputEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetInputEvent* AsInputEvent() override { return this; }
 
   WidgetInputEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass)
@@ -998,7 +998,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eInputEventClass,
                "Duplicate() must be overridden by sub class");
@@ -1160,7 +1160,7 @@ protected:
   }
 
 public:
-  virtual InternalUIEvent* AsUIEvent() MOZ_OVERRIDE { return this; }
+  virtual InternalUIEvent* AsUIEvent() override { return this; }
 
   InternalUIEvent(bool aIsTrusted, uint32_t aMessage)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
@@ -1168,7 +1168,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eUIEventClass,
                "Duplicate() must be overridden by sub class");

@@ -43,7 +43,7 @@ protected:
 };
 
 /* A cycle collected nsHashPropertyBag for main-thread-only use. */
-class nsHashPropertyBagCC MOZ_FINAL : public nsHashPropertyBagBase
+class nsHashPropertyBagCC final : public nsHashPropertyBagBase
 {
 public:
   nsHashPropertyBagCC() {}

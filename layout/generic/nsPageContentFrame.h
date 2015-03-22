@@ -24,9 +24,9 @@ public:
   virtual void Reflow(nsPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aMaxSize,
-                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&      aStatus) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return ViewportFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));
@@ -34,18 +34,18 @@ public:
 
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
-  virtual bool HasTransformGetter() const MOZ_OVERRIDE { return true; }
+  virtual bool HasTransformGetter() const override { return true; }
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::pageContentFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
   
 #ifdef DEBUG_FRAME_DUMP
   // Debugging
-  virtual nsresult  GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult  GetFrameName(nsAString& aResult) const override;
 #endif
 
 protected:

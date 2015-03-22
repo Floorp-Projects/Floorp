@@ -366,7 +366,7 @@ NS_InitXPCOM(nsIServiceManager** aResult,
   return NS_InitXPCOM2(aResult, aBinDirectory, nullptr);
 }
 
-class ICUReporter MOZ_FINAL
+class ICUReporter final
   : public nsIMemoryReporter
   , public CountingAllocatorBase<ICUReporter>
 {
@@ -391,7 +391,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE
+                 bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -406,7 +406,7 @@ NS_IMPL_ISUPPORTS(ICUReporter, nsIMemoryReporter)
 /* static */ template<> Atomic<size_t>
 CountingAllocatorBase<ICUReporter>::sAmount(0);
 
-class OggReporter MOZ_FINAL
+class OggReporter final
   : public nsIMemoryReporter
   , public CountingAllocatorBase<OggReporter>
 {
@@ -416,7 +416,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE
+                 bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -432,7 +432,7 @@ NS_IMPL_ISUPPORTS(OggReporter, nsIMemoryReporter)
 CountingAllocatorBase<OggReporter>::sAmount(0);
 
 #ifdef MOZ_VPX
-class VPXReporter MOZ_FINAL
+class VPXReporter final
   : public nsIMemoryReporter
   , public CountingAllocatorBase<VPXReporter>
 {
@@ -442,7 +442,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE
+                 bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
@@ -459,7 +459,7 @@ CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
 
 #ifdef MOZ_WEBM
-class NesteggReporter MOZ_FINAL
+class NesteggReporter final
   : public nsIMemoryReporter
   , public CountingAllocatorBase<NesteggReporter>
 {
@@ -469,7 +469,7 @@ public:
 private:
   NS_IMETHODIMP
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) MOZ_OVERRIDE
+                 bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/media/libnestegg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),

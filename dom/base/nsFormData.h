@@ -25,7 +25,7 @@ class GlobalObject;
 } // namespace dom
 } // namespace mozilla
 
-class nsFormData MOZ_FINAL : public nsIDOMFormData,
+class nsFormData final : public nsIDOMFormData,
                              public nsIXHRSendable,
                              public nsFormSubmission,
                              public nsWrapperCache
@@ -80,7 +80,7 @@ public:
   NS_DECL_NSIXHRSENDABLE
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsISupports*
@@ -105,16 +105,16 @@ public:
 
   // nsFormSubmission
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) MOZ_OVERRIDE;
+                                        nsIInputStream** aPostDataStream) override;
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) MOZ_OVERRIDE
+                                    const nsAString& aValue) override
   {
     FormDataTuple* data = mFormData.AppendElement();
     SetNameValuePair(data, aName, aValue);
     return NS_OK;
   }
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aBlob) MOZ_OVERRIDE
+                                   File* aBlob) override
   {
     FormDataTuple* data = mFormData.AppendElement();
     SetNameFilePair(data, aName, aBlob);

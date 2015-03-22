@@ -47,7 +47,7 @@ public:
     return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
   DOMRequestReadyState ReadyState() const
@@ -93,7 +93,7 @@ protected:
   void RootResultVal();
 };
 
-class DOMRequestService MOZ_FINAL : public nsIDOMRequestService
+class DOMRequestService final : public nsIDOMRequestService
 {
   ~DOMRequestService() {}
 

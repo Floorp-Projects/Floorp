@@ -219,7 +219,7 @@ protected:
       , mResolveMethod(aResolveMethod)
       , mRejectMethod(aRejectMethod) {}
 
-    void Dispatch(MediaPromise *aPromise) MOZ_OVERRIDE
+    void Dispatch(MediaPromise *aPromise) override
     {
       aPromise->mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!aPromise->IsPending());
@@ -251,7 +251,7 @@ protected:
   void AssertOnDispatchThread() {}
 #endif
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect() override
   {
     AssertOnDispatchThread();
     MOZ_DIAGNOSTIC_ASSERT(!Consumer::mComplete);
@@ -264,7 +264,7 @@ protected:
   }
 
   protected:
-    virtual void DoResolve(ResolveValueType aResolveValue) MOZ_OVERRIDE
+    virtual void DoResolve(ResolveValueType aResolveValue) override
     {
       Consumer::mComplete = true;
       if (Consumer::mDisconnected) {
@@ -281,7 +281,7 @@ protected:
       mThisVal = nullptr;
     }
 
-    virtual void DoReject(RejectValueType aRejectValue) MOZ_OVERRIDE
+    virtual void DoReject(RejectValueType aRejectValue) override
     {
       Consumer::mComplete = true;
       if (Consumer::mDisconnected) {
@@ -591,7 +591,7 @@ public:
   typedef nsRefPtr<PromiseType>(ThisType::*Type)();
   MethodCallWithNoArgs(ThisType* aThisVal, Type aMethod)
     : mThisVal(aThisVal), mMethod(aMethod) {}
-  nsRefPtr<PromiseType> Invoke() MOZ_OVERRIDE { return ((*mThisVal).*mMethod)(); }
+  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(); }
 protected:
   nsRefPtr<ThisType> mThisVal;
   Type mMethod;
@@ -604,7 +604,7 @@ public:
   typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type);
   MethodCallWithOneArg(ThisType* aThisVal, Type aMethod, Arg1Type aArg1)
     : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1) {}
-  nsRefPtr<PromiseType> Invoke() MOZ_OVERRIDE { return ((*mThisVal).*mMethod)(mArg1); }
+  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(mArg1); }
 protected:
   nsRefPtr<ThisType> mThisVal;
   Type mMethod;
@@ -618,7 +618,7 @@ public:
   typedef nsRefPtr<PromiseType>(ThisType::*Type)(Arg1Type, Arg2Type);
   MethodCallWithTwoArgs(ThisType* aThisVal, Type aMethod, Arg1Type aArg1, Arg2Type aArg2)
     : mThisVal(aThisVal), mMethod(aMethod), mArg1(aArg1), mArg2(aArg2) {}
-  nsRefPtr<PromiseType> Invoke() MOZ_OVERRIDE { return ((*mThisVal).*mMethod)(mArg1, mArg2); }
+  nsRefPtr<PromiseType> Invoke() override { return ((*mThisVal).*mMethod)(mArg1, mArg2); }
 protected:
   nsRefPtr<ThisType> mThisVal;
   Type mMethod;

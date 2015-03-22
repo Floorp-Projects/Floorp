@@ -42,12 +42,13 @@ struct js::Nursery::FreeHugeSlotsTask : public GCParallelTask
     explicit FreeHugeSlotsTask(FreeOp *fop) : fop_(fop) {}
     bool init() { return slots_.init(); }
     void transferSlotsToFree(HugeSlotsSet &slotsToFree);
+    ~FreeHugeSlotsTask() override { join(); }
 
   private:
     FreeOp *fop_;
     HugeSlotsSet slots_;
 
-    virtual void run() MOZ_OVERRIDE;
+    virtual void run() override;
 };
 
 bool
