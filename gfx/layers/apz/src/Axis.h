@@ -148,6 +148,11 @@ public:
   bool CanScroll() const;
 
   /**
+   * Returns whether this axis can scroll any more in a particular direction.
+   */
+  bool CanScroll(double aDelta) const;
+
+  /**
    * Returns true if the page has room to be scrolled along this axis
    * and this axis is not scroll-locked.
    */

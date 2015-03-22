@@ -361,6 +361,14 @@ public:
   ParentLayerPoint ToParentLayerCoordinates(const ScreenPoint& aVector,
                                             const ScreenPoint& aAnchor) const;
 
+  // Return whether or not a wheel event will be able to scroll in either
+  // direction.
+  bool CanScroll(const ScrollWheelInput& aEvent) const;
+
+  // Return whether or not a scroll delta will be able to scroll in either
+  // direction.
+  bool CanScroll(double aDeltaX, double aDeltaY) const;
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   ~AsyncPanZoomController();
@@ -422,6 +430,10 @@ protected:
    * Helper methods for handling scroll wheel events.
    */
   nsEventStatus OnScrollWheel(const ScrollWheelInput& aEvent);
+
+  void GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                           double& aOutDeltaX,
+                           double& aOutDeltaY) const;
 
   /**
    * Helper methods for long press gestures.
@@ -848,6 +860,9 @@ private:
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
 
   void StartSmoothScroll(ScrollSource aSource);
+
+  // Returns whether overscroll is allowed during a wheel event.
+  bool AllowScrollHandoffInWheelTransaction() const;
 
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains
