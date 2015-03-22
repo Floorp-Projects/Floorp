@@ -19,6 +19,7 @@
 
 #include "gmp-audio-decode.h"
 #include "gmp-audio-host.h"
+#include "gmp-task-utils.h"
 #include "WMFAACDecoder.h"
 
 #include "mfobjects.h"
@@ -41,6 +42,8 @@ public:
 
   virtual void DecodingComplete() override;
 
+  bool HasShutdown() { return mHasShutdown; }
+
 private:
 
   void EnsureWorker();
@@ -53,6 +56,9 @@ private:
   HRESULT MFToGMPSample(IMFSample* aSample,
                         GMPAudioSamples* aAudioFrame);
 
+  void MaybeRunOnMainThread(gmp_task_args_base* aTask);
+  void Destroy();
+
   GMPAudioHost *mHostAPI; // host-owned, invalid at DecodingComplete
   GMPAudioDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete
   GMPThread* mWorkerThread;
@@ -60,6 +66,8 @@ private:
   wmf::AutoPtr<wmf::WMFAACDecoder> mDecoder;
 
   int32_t mNumInputTasks;
+
+  bool mHasShutdown;
 };
 
 #endif // __AudioDecoder_h__
