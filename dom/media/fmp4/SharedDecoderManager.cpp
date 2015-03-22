@@ -105,24 +105,28 @@ SharedDecoderManager::CreateVideoDecoder(
   return proxy.forget();
 }
 
+void
+SharedDecoderManager::DisableHardwareAcceleration()
+{
+  MOZ_ASSERT(mPDM);
+  mPDM->DisableHardwareAcceleration();
+}
+
 bool
-SharedDecoderManager::Recreate(PlatformDecoderModule* aPDM,
-                               const mp4_demuxer::VideoDecoderConfig& aConfig,
+SharedDecoderManager::Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                layers::LayersBackend aLayersBackend,
                                layers::ImageContainer* aImageContainer)
 {
   mDecoder->Flush();
   mDecoder->Shutdown();
-  mDecoder = aPDM->CreateVideoDecoder(aConfig,
+  mDecoder = mPDM->CreateVideoDecoder(aConfig,
                                       aLayersBackend,
                                       aImageContainer,
                                       mTaskQueue,
                                       mCallback);
   if (!mDecoder) {
-    mPDM = nullptr;
     return false;
   }
-  mPDM = aPDM;
   nsresult rv = mDecoder->Init();
   return rv == NS_OK;
 }
