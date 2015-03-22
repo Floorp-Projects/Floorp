@@ -82,6 +82,7 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   RequestMode fallbackMode = RequestMode::EndGuard_;
   RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
+  RequestCache fallbackCache = RequestCache::EndGuard_;
   if (aInput.IsUSVString()) {
     nsString input;
     input.Assign(aInput.GetAsUSVString());
@@ -127,6 +128,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetURL(NS_ConvertUTF16toUTF8(requestURL));
     fallbackMode = RequestMode::Cors;
     fallbackCredentials = RequestCredentials::Omit;
+    fallbackCache = RequestCache::Default;
   }
 
   // CORS-with-forced-preflight is not publicly exposed and should not be
@@ -150,6 +152,12 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (credentials != RequestCredentials::EndGuard_) {
     request->SetCredentialsMode(credentials);
+  }
+
+  RequestCache cache = aInit.mCache.WasPassed() ?
+                       aInit.mCache.Value() : fallbackCache;
+  if (cache != RequestCache::EndGuard_) {
+    request->SetCacheMode(cache);
   }
 
   // Request constructor step 14.
