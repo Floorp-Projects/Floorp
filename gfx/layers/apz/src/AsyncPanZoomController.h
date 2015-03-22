@@ -999,6 +999,10 @@ public:
     return mAncestorTransform;
   }
 
+  // Returns whether or not this apzc contains the given screen point within
+  // its composition bounds.
+  bool Contains(const ScreenIntPoint& aPoint) const;
+
   bool IsOverscrolled() const {
     return mX.IsOverscrolled() || mY.IsOverscrolled();
   }

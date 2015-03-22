@@ -162,7 +162,10 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
 
     // If the block is not accepting new events we'll create a new input block
     // (and therefore a new wheel transaction).
-    if (block && !block->ShouldAcceptNewEvent(aEvent)) {
+    if (block &&
+        (!block->ShouldAcceptNewEvent() ||
+         block->MaybeTimeout(aEvent)))
+    {
       block = nullptr;
     }
   }
@@ -186,6 +189,8 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
   if (aOutInputBlockId) {
     *aOutInputBlockId = block->GetBlockId();
   }
+
+  block->Update(aEvent);
 
   // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
   // target set on the block. In this case the confirmed target (which may be
