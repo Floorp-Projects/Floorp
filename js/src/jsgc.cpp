@@ -2403,7 +2403,7 @@ struct UpdateCellPointersTask : public GCParallelTask
 
     UpdateCellPointersTask() : rt_(nullptr), source_(nullptr), arenaList_(nullptr) {}
     void init(JSRuntime *rt, ArenasToUpdate *source, AutoLockHelperThreadState& lock);
-    ~UpdateCellPointersTask() { join(); }
+    ~UpdateCellPointersTask() override { join(); }
 
   private:
     JSRuntime *rt_;
