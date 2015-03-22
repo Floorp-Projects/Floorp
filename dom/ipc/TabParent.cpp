@@ -974,6 +974,14 @@ void TabParent::NotifyAPZStateChange(ViewID aViewId,
 }
 
 void
+TabParent::NotifyMouseScrollTestEvent(const ViewID& aScrollId, const nsString& aEvent)
+{
+  if (!mIsDestroyed) {
+    unused << SendMouseScrollTestEvent(aScrollId, aEvent);
+  }
+}
+
+void
 TabParent::Activate()
 {
   if (!mIsDestroyed) {

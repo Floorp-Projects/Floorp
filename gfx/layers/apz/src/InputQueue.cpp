@@ -170,7 +170,6 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
     }
   }
 
-  // If we have a block, it should be in a wheel transaction.
   MOZ_ASSERT(!block || block->InTransaction());
 
   if (!block) {

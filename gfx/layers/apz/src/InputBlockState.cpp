@@ -305,6 +305,11 @@ WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp)
 
   TBS_LOG("%p wheel transaction timed out\n", this);
 
+  if (gfxPrefs::MouseScrollTestingEnabled()) {
+    nsRefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
+    apzc->NotifyMozMouseScrollEvent(NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"));
+  }
+
   EndTransaction();
   return true;
 }
