@@ -38,10 +38,10 @@ protected:
   explicit SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   uint16_t ZoomAndPan() { return mEnumAttributes[ZOOMANDPAN].GetAnimValue(); }
@@ -54,20 +54,20 @@ private:
 
   // nsSVGElement overrides
 
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
-  virtual nsSVGViewBox *GetViewBox() MOZ_OVERRIDE;
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
+  virtual nsSVGViewBox *GetViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
 
   nsSVGViewBox                   mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
-  virtual StringListAttributesInfo GetStringListInfo() MOZ_OVERRIDE;
+  virtual StringListAttributesInfo GetStringListInfo() override;
 
   enum { VIEW_TARGET };
   SVGStringList mStringListAttributes[1];

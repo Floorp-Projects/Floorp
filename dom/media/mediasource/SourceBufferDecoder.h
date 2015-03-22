@@ -27,7 +27,7 @@ class TimeRanges;
 
 } // namespace dom
 
-class SourceBufferDecoder MOZ_FINAL : public AbstractMediaDecoder
+class SourceBufferDecoder final : public AbstractMediaDecoder
 {
 public:
   // This class holds a weak pointer to MediaResource.  It's the responsibility
@@ -37,34 +37,34 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
-  virtual bool IsShutdown() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual bool IsTransportSeekable() MOZ_FINAL MOZ_OVERRIDE;
-  virtual bool OnDecodeThread() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual bool OnStateMachineThread() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
-  virtual layers::ImageContainer* GetImageContainer() MOZ_FINAL MOZ_OVERRIDE;
-  virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
-  virtual SourceBufferResource* GetResource() const MOZ_FINAL MOZ_OVERRIDE;
-  virtual ReentrantMonitor& GetReentrantMonitor() MOZ_FINAL MOZ_OVERRIDE;
-  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() final override;
+  virtual bool IsShutdown() const final override;
+  virtual bool IsTransportSeekable() final override;
+  virtual bool OnDecodeThread() const final override;
+  virtual bool OnStateMachineThread() const final override;
+  virtual int64_t GetMediaDuration() final override;
+  virtual layers::ImageContainer* GetImageContainer() final override;
+  virtual MediaDecoderOwner* GetOwner() final override;
+  virtual SourceBufferResource* GetResource() const final override;
+  virtual ReentrantMonitor& GetReentrantMonitor() final override;
+  virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                               nsAutoPtr<MetadataTags> aTags,
-                              MediaDecoderEventVisibility aEventVisibility) MOZ_FINAL MOZ_OVERRIDE;
+                              MediaDecoderEventVisibility aEventVisibility) final override;
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                MediaDecoderEventVisibility aEventVisibility) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded, uint32_t aDropped) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void NotifyWaitingForResourcesStatusChanged() MOZ_FINAL MOZ_OVERRIDE;
-  virtual void OnReadMetadataCompleted() MOZ_FINAL MOZ_OVERRIDE;
-  virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void RemoveMediaTracks() MOZ_FINAL MOZ_OVERRIDE;
-  virtual void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void SetMediaEndTime(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_FINAL MOZ_OVERRIDE;
-  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
-  virtual bool HasInitializationData() MOZ_FINAL MOZ_OVERRIDE;
+                                MediaDecoderEventVisibility aEventVisibility) final override;
+  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) final override;
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) final override;
+  virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded, uint32_t aDropped) final override;
+  virtual void NotifyWaitingForResourcesStatusChanged() final override;
+  virtual void OnReadMetadataCompleted() final override;
+  virtual void QueueMetadata(int64_t aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) final override;
+  virtual void RemoveMediaTracks() final override;
+  virtual void SetMediaDuration(int64_t aDuration) final override;
+  virtual void SetMediaEndTime(int64_t aTime) final override;
+  virtual void SetMediaSeekable(bool aMediaSeekable) final override;
+  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) final override;
+  virtual bool HasInitializationData() final override;
 
   // SourceBufferResource specific interface below.
   int64_t GetTimestampOffset() const { return mTimestampOffset; }
@@ -104,7 +104,7 @@ public:
   }
 
 #ifdef MOZ_EME
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -112,7 +112,7 @@ public:
     return NS_OK;
   }
 
-  virtual CDMProxy* GetCDMProxy() MOZ_OVERRIDE
+  virtual CDMProxy* GetCDMProxy() override
   {
     MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());

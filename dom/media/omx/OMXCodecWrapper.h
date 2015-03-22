@@ -214,7 +214,7 @@ private:
 /**
  * Audio encoder.
  */
-class OMXAudioEncoder MOZ_FINAL : public OMXCodecWrapper
+class OMXAudioEncoder final : public OMXCodecWrapper
 {
 public:
   /**
@@ -235,7 +235,7 @@ public:
   ~OMXAudioEncoder();
 protected:
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
-                                       ABuffer* aData) MOZ_OVERRIDE;
+                                       ABuffer* aData) override;
 private:
   // Hide these. User should always use creator functions to get a media codec.
   OMXAudioEncoder() = delete;
@@ -276,7 +276,7 @@ private:
 /**
  * Video encoder.
  */
-class OMXVideoEncoder MOZ_FINAL : public OMXCodecWrapper
+class OMXVideoEncoder final : public OMXCodecWrapper
 {
 public:
   // Types of output blob format.
@@ -320,13 +320,13 @@ public:
 
 protected:
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
-                                       ABuffer* aData) MOZ_OVERRIDE;
+                                       ABuffer* aData) override;
 
   // If configured to output MP4 format blob, AVC/H.264 encoder has to replace
   // NAL unit start code with the unit length as specified in
   // ISO/IEC 14496-15 5.2.3.
   virtual void AppendFrame(nsTArray<uint8_t>* aOutputBuf,
-                           const uint8_t* aData, size_t aSize) MOZ_OVERRIDE;
+                           const uint8_t* aData, size_t aSize) override;
 
 private:
   // Hide these. User should always use creator functions to get a media codec.

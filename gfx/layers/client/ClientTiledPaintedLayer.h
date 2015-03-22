@@ -47,15 +47,15 @@ public:
 protected:
   ~ClientTiledPaintedLayer();
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
 public:
   // Override name to distinguish it from ClientPaintedLayer in layer dumps
-  virtual const char* Name() const MOZ_OVERRIDE { return "TiledPaintedLayer"; }
+  virtual const char* Name() const override { return "TiledPaintedLayer"; }
 
   // PaintedLayer
-  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE {
+  virtual Layer* AsLayer() override { return this; }
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
     mInvalidRegion.SimplifyOutward(20);
     mValidRegion.Sub(mValidRegion, mInvalidRegion);
@@ -63,17 +63,17 @@ public:
   }
 
   // Shadow methods
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE;
-  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
+  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect() override
   {
     ClientLayer::Disconnect();
   }
 
-  virtual void RenderLayer() MOZ_OVERRIDE;
+  virtual void RenderLayer() override;
 
-  virtual void ClearCachedResources() MOZ_OVERRIDE;
+  virtual void ClearCachedResources() override;
 
   /**
    * Helper method to find the nearest ancestor layers which

@@ -23,7 +23,7 @@ namespace dom {
 
 typedef nsSVGElement SVGScriptElementBase;
 
-class SVGScriptElement MOZ_FINAL : public SVGScriptElementBase,
+class SVGScriptElement final : public SVGScriptElementBase,
                                    public nsScriptElement
 {
 protected:
@@ -33,7 +33,7 @@ protected:
   SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                    FromParser aFromParser);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // interfaces:
@@ -41,27 +41,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIScriptElement
-  virtual void GetScriptType(nsAString& type) MOZ_OVERRIDE;
-  virtual void GetScriptText(nsAString& text) MOZ_OVERRIDE;
-  virtual void GetScriptCharset(nsAString& charset) MOZ_OVERRIDE;
-  virtual void FreezeUriAsyncDefer() MOZ_OVERRIDE;
-  virtual CORSMode GetCORSMode() const MOZ_OVERRIDE;
+  virtual void GetScriptType(nsAString& type) override;
+  virtual void GetScriptText(nsAString& text) override;
+  virtual void GetScriptCharset(nsAString& charset) override;
+  virtual void FreezeUriAsyncDefer() override;
+  virtual CORSMode GetCORSMode() const override;
 
   // nsScriptElement
-  virtual bool HasScriptContent() MOZ_OVERRIDE;
+  virtual bool HasScriptContent() override;
 
   // nsIContent specializations:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
+                              nsAttrValue& aResult) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   void GetType(nsAString & aType);
@@ -73,7 +73,7 @@ public:
 protected:
   ~SVGScriptElement();
 
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { HREF };
   nsSVGString mStringAttributes[1];

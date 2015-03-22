@@ -24,7 +24,7 @@ class nsISVGPoint;
 
 namespace dom {
 
-class SVGPathElement MOZ_FINAL : public SVGPathElementBase
+class SVGPathElement final : public SVGPathElementBase
 {
 friend class nsSVGPathFrame;
 
@@ -33,7 +33,7 @@ friend class nsSVGPathFrame;
 protected:
   friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   explicit SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
 public:
@@ -41,32 +41,32 @@ public:
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const override;
 
   // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+  virtual bool HasValidDimensions() const override;
 
   // nsSVGPathGeometryElement methods:
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName) MOZ_OVERRIDE;
-  virtual bool IsMarkable() MOZ_OVERRIDE;
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
-  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
+  virtual bool AttributeDefinesGeometry(const nsIAtom *aName) override;
+  virtual bool IsMarkable() override;
+  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) override;
 
   /**
    * This returns a path without the extra little line segments that
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
    */
-  virtual TemporaryRef<Path> GetOrBuildPathForMeasuring() MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> GetOrBuildPathForMeasuring() override;
 
   // nsIContent interface
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
-  virtual SVGAnimatedPathSegList* GetAnimPathSegList() MOZ_OVERRIDE {
+  virtual SVGAnimatedPathSegList* GetAnimPathSegList() override {
     return &mD;
   }
 
-  virtual nsIAtom* GetPathDataAttrName() const MOZ_OVERRIDE {
+  virtual nsIAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::d;
   }
 
@@ -122,7 +122,7 @@ public:
 protected:
 
   // nsSVGElement method
-  virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
+  virtual NumberAttributesInfo GetNumberInfo() override;
 
   SVGAnimatedPathSegList mD;
   nsSVGNumber2 mPathLength;

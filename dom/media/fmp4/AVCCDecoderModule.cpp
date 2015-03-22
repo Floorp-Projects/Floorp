@@ -26,16 +26,16 @@ public:
 
   virtual ~AVCCMediaDataDecoder();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
-  virtual nsresult Flush() MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
-  virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
-  virtual bool IsDormantNeeded() MOZ_OVERRIDE;
-  virtual void AllocateMediaResources() MOZ_OVERRIDE;
-  virtual void ReleaseMediaResources() MOZ_OVERRIDE;
-  virtual bool IsHardwareAccelerated() const MOZ_OVERRIDE;
+  virtual nsresult Init() override;
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Flush() override;
+  virtual nsresult Drain() override;
+  virtual nsresult Shutdown() override;
+  virtual bool IsWaitingMediaResources() override;
+  virtual bool IsDormantNeeded() override;
+  virtual void AllocateMediaResources() override;
+  virtual void ReleaseMediaResources() override;
+  virtual bool IsHardwareAccelerated() const override;
 
 private:
   // Will create the required MediaDataDecoder if we have a AVC SPS.

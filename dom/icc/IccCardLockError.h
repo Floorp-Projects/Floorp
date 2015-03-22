@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace dom {
 
-class IccCardLockError MOZ_FINAL : public DOMError
+class IccCardLockError final : public DOMError
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -23,7 +23,7 @@ public:
               int16_t aRetryCount, ErrorResult& aRv);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL interface
 

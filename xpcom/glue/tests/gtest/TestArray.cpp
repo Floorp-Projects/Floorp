@@ -26,7 +26,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
-class Foo MOZ_FINAL : public IFoo {
+class Foo final : public IFoo {
 public:
 
   explicit Foo(int32_t aID);
@@ -35,8 +35,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // IFoo implementation
-  NS_IMETHOD_(nsrefcnt) RefCnt() MOZ_OVERRIDE { return mRefCnt; }
-  NS_IMETHOD_(int32_t) ID() MOZ_OVERRIDE { return mID; }
+  NS_IMETHOD_(nsrefcnt) RefCnt() override { return mRefCnt; }
+  NS_IMETHOD_(int32_t) ID() override { return mID; }
 
   static int32_t gCount;
 

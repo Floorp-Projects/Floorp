@@ -29,7 +29,7 @@ namespace dom {
 
 typedef SVGGraphicsElement SVGUseElementBase;
 
-class SVGUseElement MOZ_FINAL : public SVGUseElementBase,
+class SVGUseElement final : public SVGUseElementBase,
                                 public nsStubMutationObserver
 {
   friend class ::nsSVGUseFrame;
@@ -38,7 +38,7 @@ protected:
                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~SVGUseElement();
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
   // interfaces:
@@ -60,12 +60,12 @@ public:
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
-  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+                      TransformTypes aWhich = eAllTransforms) const override;
+  virtual bool HasValidDimensions() const override;
 
   // nsIContent interface
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> Href();
@@ -79,7 +79,7 @@ protected:
   public:
     explicit SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
   protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE {
+    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
       nsReferencedElement::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mContainer);
@@ -90,8 +90,8 @@ protected:
     SVGUseElement* mContainer;
   };
 
-  virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual LengthAttributesInfo GetLengthInfo() override;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   /**
    * Returns true if our width and height should be used, or false if they

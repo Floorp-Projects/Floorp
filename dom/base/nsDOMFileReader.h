@@ -51,18 +51,18 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // FileIOObject overrides
-  virtual void DoAbort(nsAString& aEvent) MOZ_OVERRIDE;
+  virtual void DoAbort(nsAString& aEvent) override;
 
-  virtual nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount) MOZ_OVERRIDE;
+  virtual nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount) override;
 
   virtual nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
-                               nsAString& aTerminationEvent) MOZ_OVERRIDE;
+                               nsAString& aTerminationEvent) override;
 
   nsPIDOMWindow* GetParentObject() const
   {
     return GetOwner();
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   static already_AddRefed<nsDOMFileReader>

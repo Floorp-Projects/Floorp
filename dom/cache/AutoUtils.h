@@ -55,7 +55,7 @@ protected:
   bool mSent;
 };
 
-class MOZ_STACK_CLASS AutoChildRequest MOZ_FINAL : public AutoChildBase
+class MOZ_STACK_CLASS AutoChildRequest final : public AutoChildBase
 {
 public:
   explicit AutoChildRequest(TypeUtils* aTypeUtils);
@@ -72,7 +72,7 @@ private:
   PCacheRequestOrVoid mRequestOrVoid;
 };
 
-class MOZ_STACK_CLASS AutoChildRequestList MOZ_FINAL : public AutoChildBase
+class MOZ_STACK_CLASS AutoChildRequestList final : public AutoChildBase
 {
 public:
   AutoChildRequestList(TypeUtils* aTypeUtils, uint32_t aCapacity);
@@ -89,7 +89,7 @@ private:
   nsAutoTArray<PCacheRequest, 32> mRequestList;
 };
 
-class MOZ_STACK_CLASS AutoChildRequestResponse MOZ_FINAL : public AutoChildBase
+class MOZ_STACK_CLASS AutoChildRequestResponse final : public AutoChildBase
 {
 public:
   explicit AutoChildRequestResponse(TypeUtils* aTypeUtils);
@@ -120,7 +120,7 @@ protected:
   bool mSent;
 };
 
-class MOZ_STACK_CLASS AutoParentRequestList MOZ_FINAL : public AutoParentBase
+class MOZ_STACK_CLASS AutoParentRequestList final : public AutoParentBase
 {
 public:
   AutoParentRequestList(mozilla::ipc::PBackgroundParent* aManager,
@@ -136,7 +136,7 @@ private:
   nsAutoTArray<PCacheRequest, 32> mRequestList;
 };
 
-class MOZ_STACK_CLASS AutoParentResponseList MOZ_FINAL : public AutoParentBase
+class MOZ_STACK_CLASS AutoParentResponseList final : public AutoParentBase
 {
 public:
   AutoParentResponseList(mozilla::ipc::PBackgroundParent* aManager,
@@ -152,7 +152,7 @@ private:
   nsAutoTArray<PCacheResponse, 32> mResponseList;
 };
 
-class MOZ_STACK_CLASS AutoParentResponseOrVoid MOZ_FINAL : public AutoParentBase
+class MOZ_STACK_CLASS AutoParentResponseOrVoid final : public AutoParentBase
 {
 public:
   explicit AutoParentResponseOrVoid(mozilla::ipc::PBackgroundParent* aManager);

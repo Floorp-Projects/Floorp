@@ -55,7 +55,7 @@ enum GeolocationFuzzMethod {
  * Simple class for holding the geolocation settings values.
  */
 
-class GeolocationSetting MOZ_FINAL {
+class GeolocationSetting final {
 public:
   explicit GeolocationSetting(const nsString& aOrigin) :
     mFuzzMethod(GEO_ALA_TYPE_DEFAULT),
@@ -114,7 +114,7 @@ private:
 /**
  * Singleton that holds the global and per-origin geolocation settings.
  */
-class nsGeolocationSettings MOZ_FINAL : public nsIObserver
+class nsGeolocationSettings final : public nsIObserver
 {
 public:
   static already_AddRefed<nsGeolocationSettings> GetGeolocationSettings();

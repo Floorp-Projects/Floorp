@@ -148,7 +148,7 @@ struct nsStyleGradientStop {
   bool operator!=(const nsStyleGradientStop&) const = delete;
 };
 
-class nsStyleGradient MOZ_FINAL {
+class nsStyleGradient final {
 public:
   nsStyleGradient();
   uint8_t mShape;  // NS_STYLE_GRADIENT_SHAPE_*
@@ -734,7 +734,7 @@ struct nsCSSShadowItem {
   }
 };
 
-class nsCSSShadowArray MOZ_FINAL {
+class nsCSSShadowArray final {
   public:
     void* operator new(size_t aBaseSize, uint32_t aArrayLen) {
       // We can allocate both this nsCSSShadowArray and the
@@ -2878,7 +2878,7 @@ struct nsStyleSVG {
   }
 };
 
-class nsStyleBasicShape MOZ_FINAL {
+class nsStyleBasicShape final {
 public:
   enum Type {
     eInset,

@@ -24,7 +24,7 @@ namespace layout {
 // Use PBackground thread in the main process to send vsync notifications to
 // content process. This actor will be released when its parent protocol calls
 // DeallocPVsyncParent().
-class VsyncParent MOZ_FINAL : public PVsyncParent,
+class VsyncParent final : public PVsyncParent,
                               public VsyncObserver
 {
   friend class mozilla::ipc::BackgroundParentImpl;
@@ -35,11 +35,11 @@ private:
   VsyncParent();
   virtual ~VsyncParent();
 
-  virtual bool NotifyVsync(TimeStamp aTimeStamp) MOZ_OVERRIDE;
+  virtual bool NotifyVsync(TimeStamp aTimeStamp) override;
 
-  virtual bool RecvObserve() MOZ_OVERRIDE;
-  virtual bool RecvUnobserve() MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) MOZ_OVERRIDE;
+  virtual bool RecvObserve() override;
+  virtual bool RecvUnobserve() override;
+  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   void DispatchVsyncEvent(TimeStamp aTimeStamp);
 

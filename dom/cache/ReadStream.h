@@ -42,7 +42,7 @@ class PCacheStreamControlParent;
 // stream channel.  For example, Cache.put() can detect that the content
 // script is passing a Cache-originated-stream back into the Cache
 // again.  This enables certain optimizations.
-class ReadStream MOZ_FINAL : public nsIInputStream
+class ReadStream final : public nsIInputStream
 {
 public:
   // Interface that lets the StreamControl classes interact with

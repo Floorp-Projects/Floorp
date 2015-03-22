@@ -32,7 +32,7 @@ namespace mozilla {
  * is created on the main thread then it will automatically join its thread on
  * XPCOM shutdown using the Observer Service.
  */
-class LazyIdleThread MOZ_FINAL
+class LazyIdleThread final
   : public nsIThread
   , public nsITimerCallback
   , public nsIThreadObserver

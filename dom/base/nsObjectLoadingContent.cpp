@@ -368,10 +368,10 @@ public:
   }
 
   // nsRunnable
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
   // nsITimerCallback
-  NS_IMETHOD Notify(nsITimer* timer) MOZ_OVERRIDE;
+  NS_IMETHOD Notify(nsITimer* timer) override;
 
 protected:
   virtual ~nsStopPluginRunnable() {}
@@ -1281,7 +1281,7 @@ nsObjectLoadingContent::GetBaseURI(nsIURI **aResult)
 // We use a shim class to implement this so that JS consumers still
 // see an interface requestor even though WebIDL bindings don't expose
 // that stuff.
-class ObjectInterfaceRequestorShim MOZ_FINAL : public nsIInterfaceRequestor,
+class ObjectInterfaceRequestorShim final : public nsIInterfaceRequestor,
                                                public nsIChannelEventSink,
                                                public nsIStreamListener
 {

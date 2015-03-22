@@ -14,6 +14,8 @@
 #include "mozIStorageStatement.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "nsCRT.h"
+#include "nsHttp.h"
 
 namespace mozilla {
 namespace dom {
@@ -794,8 +796,6 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
 
   nsRefPtr<InternalHeaders> cachedHeaders = new InternalHeaders(HeadersGuardEnum::None);
 
-  ErrorResult errorResult;
-
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
     nsAutoCString name;
     nsAutoCString value;
@@ -803,6 +803,8 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     rv = state->GetUTF8String(1, value);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    ErrorResult errorResult;
 
     cachedHeaders->Append(name, value, errorResult);
     if (errorResult.Failed()) { return errorResult.ErrorCode(); };
@@ -815,20 +817,41 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
   bool varyHeadersMatch = true;
 
   for (uint32_t i = 0; i < varyValues.Length(); ++i) {
-    if (varyValues[i].EqualsLiteral("*")) {
-      continue;
+    // Extract the header names inside the Vary header value.
+    nsAutoCString varyValue(varyValues[i]);
+    char* rawBuffer = varyValue.BeginWriting();
+    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+    bool bailOut = false;
+    for (; token;
+         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+      nsDependentCString header(token);
+      if (header.EqualsLiteral("*")) {
+        continue;
+      }
+
+      ErrorResult errorResult;
+      nsAutoCString queryValue;
+      queryHeaders->Get(header, queryValue, errorResult);
+      if (errorResult.Failed()) {
+        errorResult.ClearMessage();
+        MOZ_ASSERT(queryValue.IsEmpty());
+      }
+
+      nsAutoCString cachedValue;
+      cachedHeaders->Get(header, cachedValue, errorResult);
+      if (errorResult.Failed()) {
+        errorResult.ClearMessage();
+        MOZ_ASSERT(cachedValue.IsEmpty());
+      }
+
+      if (queryValue != cachedValue) {
+        varyHeadersMatch = false;
+        bailOut = true;
+        break;
+      }
     }
 
-    nsAutoCString queryValue;
-    queryHeaders->Get(varyValues[i], queryValue, errorResult);
-    if (errorResult.Failed()) { return errorResult.ErrorCode(); };
-
-    nsAutoCString cachedValue;
-    cachedHeaders->Get(varyValues[i], cachedValue, errorResult);
-    if (errorResult.Failed()) { return errorResult.ErrorCode(); };
-
-    if (queryValue != cachedValue) {
-      varyHeadersMatch = false;
+    if (bailOut) {
       break;
     }
   }

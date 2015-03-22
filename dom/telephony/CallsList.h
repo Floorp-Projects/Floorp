@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class CallsList MOZ_FINAL : public nsISupports,
+class CallsList final : public nsISupports,
                             public nsWrapperCache
 {
   nsRefPtr<Telephony> mTelephony;
@@ -31,7 +31,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // CallsList WebIDL
   already_AddRefed<TelephonyCall>

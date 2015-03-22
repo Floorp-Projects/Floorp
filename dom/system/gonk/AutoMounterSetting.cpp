@@ -40,7 +40,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace system {
 
-class SettingsServiceCallback MOZ_FINAL : public nsISettingsServiceCallback
+class SettingsServiceCallback final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -68,7 +68,7 @@ protected:
 
 NS_IMPL_ISUPPORTS(SettingsServiceCallback, nsISettingsServiceCallback)
 
-class CheckVolumeSettingsCallback MOZ_FINAL : public nsISettingsServiceCallback
+class CheckVolumeSettingsCallback final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -50,7 +50,7 @@ int pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
 
 class LogAllocBridge : public ReplaceMallocBridge
 {
-  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) MOZ_OVERRIDE {
+  virtual void InitDebugFd(mozilla::DebugFdRegistry& aRegistry) override {
     if (!sStdoutOrStderr) {
       aRegistry.RegisterHandle(sFd);
     }

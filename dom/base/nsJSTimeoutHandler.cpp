@@ -26,7 +26,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 // Our JS nsIScriptTimeoutHandler implementation.
-class nsJSScriptTimeoutHandler MOZ_FINAL : public nsIScriptTimeoutHandler
+class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler
 {
 public:
   // nsISupports
@@ -42,18 +42,18 @@ public:
                            const nsAString& aExpression, bool* aAllowEval,
                            ErrorResult& aError);
 
-  virtual const char16_t* GetHandlerText() MOZ_OVERRIDE;
-  virtual Function* GetCallback() MOZ_OVERRIDE
+  virtual const char16_t* GetHandlerText() override;
+  virtual Function* GetCallback() override
   {
     return mFunction;
   }
-  virtual void GetLocation(const char** aFileName, uint32_t* aLineNo) MOZ_OVERRIDE
+  virtual void GetLocation(const char** aFileName, uint32_t* aLineNo) override
   {
     *aFileName = mFileName.get();
     *aLineNo = mLineNo;
   }
 
-  virtual const nsTArray<JS::Value>& GetArgs() MOZ_OVERRIDE
+  virtual const nsTArray<JS::Value>& GetArgs() override
   {
     return mArgs;
   }

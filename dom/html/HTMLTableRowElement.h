@@ -16,7 +16,7 @@ namespace dom {
 
 class HTMLTableSectionElement;
 
-class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement
+class HTMLTableRowElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLTableRowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -81,11 +81,11 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
-                                nsAttrValue& aResult) MOZ_OVERRIDE;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+                                nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLTableRowElement,
                                                      nsGenericHTMLElement)
@@ -93,7 +93,7 @@ public:
 protected:
   virtual ~HTMLTableRowElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLTableSectionElement* GetSection() const;
   HTMLTableElement* GetTable() const;

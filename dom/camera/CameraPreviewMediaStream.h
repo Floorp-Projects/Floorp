@@ -21,7 +21,7 @@ public:
   }
 
   virtual void
-  DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable) MOZ_OVERRIDE;
+  DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable) override;
 
 protected:
   ~FakeMediaStreamGraph()
@@ -42,16 +42,16 @@ class CameraPreviewMediaStream : public MediaStream
 public:
   explicit CameraPreviewMediaStream(DOMMediaStream* aWrapper);
 
-  virtual CameraPreviewMediaStream* AsCameraPreviewStream() MOZ_OVERRIDE { return this; };
-  virtual void AddAudioOutput(void* aKey) MOZ_OVERRIDE;
-  virtual void SetAudioOutputVolume(void* aKey, float aVolume) MOZ_OVERRIDE;
-  virtual void RemoveAudioOutput(void* aKey) MOZ_OVERRIDE;
-  virtual void AddVideoOutput(VideoFrameContainer* aContainer) MOZ_OVERRIDE;
-  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer) MOZ_OVERRIDE;
-  virtual void ChangeExplicitBlockerCount(int32_t aDelta) MOZ_OVERRIDE;
-  virtual void AddListener(MediaStreamListener* aListener) MOZ_OVERRIDE;
-  virtual void RemoveListener(MediaStreamListener* aListener) MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual CameraPreviewMediaStream* AsCameraPreviewStream() override { return this; };
+  virtual void AddAudioOutput(void* aKey) override;
+  virtual void SetAudioOutputVolume(void* aKey, float aVolume) override;
+  virtual void RemoveAudioOutput(void* aKey) override;
+  virtual void AddVideoOutput(VideoFrameContainer* aContainer) override;
+  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer) override;
+  virtual void ChangeExplicitBlockerCount(int32_t aDelta) override;
+  virtual void AddListener(MediaStreamListener* aListener) override;
+  virtual void RemoveListener(MediaStreamListener* aListener) override;
+  virtual void Destroy() override;
   void OnPreviewStateChange(bool aActive);
 
   void Invalidate();

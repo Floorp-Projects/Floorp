@@ -13,7 +13,7 @@
 
 struct MiscContainer;
 
-struct MiscContainer MOZ_FINAL
+struct MiscContainer final
 {
   typedef nsAttrValue::ValueType ValueType;
 

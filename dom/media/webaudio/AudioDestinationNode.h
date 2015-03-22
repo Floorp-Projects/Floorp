@@ -19,7 +19,7 @@ namespace dom {
 class AudioContext;
 class EventProxyHandler;
 
-class AudioDestinationNode MOZ_FINAL : public AudioNode
+class AudioDestinationNode final : public AudioNode
                                      , public nsIDOMEventListener
                                      , public nsIAudioChannelAgentCallback
                                      , public MainThreadMediaStreamListener
@@ -34,22 +34,22 @@ public:
                        uint32_t aLength = 0,
                        float aSampleRate = 0.0f);
 
-  virtual void DestroyMediaStream() MOZ_OVERRIDE;
+  virtual void DestroyMediaStream() override;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioDestinationNode, AudioNode)
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual uint16_t NumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
+  virtual uint16_t NumberOfOutputs() const final override
   {
     return 0;
   }
 
   uint32_t MaxChannelCount() const;
   virtual void SetChannelCount(uint32_t aChannelCount,
-                               ErrorResult& aRv) MOZ_OVERRIDE;
+                               ErrorResult& aRv) override;
 
   void Mute();
   void Unmute();
@@ -59,12 +59,12 @@ public:
   void OfflineShutdown();
 
   // nsIDOMEventListener - by proxy
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
 
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
-  virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
+  virtual void NotifyMainThreadStateChanged() override;
   void FireOfflineCompletionEvent();
 
   // An amount that should be added to the MediaStream's current time to
@@ -76,13 +76,13 @@ public:
 
   void CreateAudioChannelAgent();
 
-  virtual const char* NodeType() const MOZ_OVERRIDE
+  virtual const char* NodeType() const override
   {
     return "AudioDestinationNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
   void InputMuted(bool aInputMuted);
   void ResolvePromise(AudioBuffer* aRenderedBuffer);

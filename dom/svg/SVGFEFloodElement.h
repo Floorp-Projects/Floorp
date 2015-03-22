@@ -25,27 +25,27 @@ protected:
     : SVGFEFloodElementBase(aNodeInfo)
   {
   }
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual bool SubregionIsUnionOfRegions() MOZ_OVERRIDE { return false; }
+  virtual bool SubregionIsUnionOfRegions() override { return false; }
 
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
                             const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
-  virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) override;
+  virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
 protected:
-  virtual bool ProducesSRGB() MOZ_OVERRIDE { return true; }
+  virtual bool ProducesSRGB() override { return true; }
 
-  virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
+  virtual StringAttributesInfo GetStringInfo() override;
 
   enum { RESULT };
   nsSVGString mStringAttributes[1];

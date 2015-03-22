@@ -188,7 +188,7 @@ struct ScriptLoadInfo
 
 class ScriptLoaderRunnable;
 
-class ScriptExecutorRunnable MOZ_FINAL : public MainThreadWorkerSyncRunnable
+class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable
 {
   ScriptLoaderRunnable& mScriptLoader;
   uint32_t mFirstIndex;
@@ -204,14 +204,14 @@ private:
   { }
 
   virtual bool
-  IsDebuggerRunnable() const MOZ_OVERRIDE;
+  IsDebuggerRunnable() const override;
 
   virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   virtual void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
-          MOZ_OVERRIDE;
+          override;
 
   NS_DECL_NSICANCELABLERUNNABLE
 
@@ -221,7 +221,7 @@ private:
                        bool aResult);
 };
 
-class ScriptLoaderRunnable MOZ_FINAL : public WorkerFeature,
+class ScriptLoaderRunnable final : public WorkerFeature,
                                        public nsIRunnable,
                                        public nsIStreamLoaderObserver
 {
@@ -259,7 +259,7 @@ private:
   { }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     AssertIsOnMainThread();
 
@@ -273,7 +273,7 @@ private:
   NS_IMETHOD
   OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
                    nsresult aStatus, uint32_t aStringLen,
-                   const uint8_t* aString) MOZ_OVERRIDE
+                   const uint8_t* aString) override
   {
     AssertIsOnMainThread();
 
@@ -298,7 +298,7 @@ private:
   }
 
   virtual bool
-  Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE
+  Notify(JSContext* aCx, Status aStatus) override
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -647,7 +647,7 @@ private:
 
 NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsIStreamLoaderObserver)
 
-class ChannelGetterRunnable MOZ_FINAL : public nsRunnable
+class ChannelGetterRunnable final : public nsRunnable
 {
   WorkerPrivate* mParentWorker;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
@@ -669,7 +669,7 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     AssertIsOnMainThread();
 

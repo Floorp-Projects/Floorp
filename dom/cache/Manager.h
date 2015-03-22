@@ -59,7 +59,7 @@ class StreamList;
 // As an invariant, all Manager objects must cease all IO before shutdown.  This
 // is enforced by the ShutdownObserver.  If content still holds references to
 // Cache DOM objects during shutdown, then all operations will begin rejecting.
-class Manager MOZ_FINAL
+class Manager final
 {
 public:
   // Callback interface implemented by clients of Manager, such as CacheParent

@@ -1352,7 +1352,7 @@ public:
   explicit nsFrameLoaderDestroyRunnable(nsFrameLoader* aFrameLoader)
    : mFrameLoader(aFrameLoader), mPhase(eDestroyDocShell) {}
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE;
+  NS_IMETHODIMP Run() override;
 };
 
 void

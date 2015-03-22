@@ -54,28 +54,28 @@ public:
   // other lower-level methods.
   bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                                 JS::Handle<jsid> id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                JS::MutableHandle<JSPropertyDescriptor> desc) const override;
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                               JS::AutoIdVector &props) const MOZ_OVERRIDE;
+                               JS::AutoIdVector &props) const override;
 
   bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                              JS::Handle<jsid> id,
-                             JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                             JS::MutableHandle<JSPropertyDescriptor> desc) const override;
 
   virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
+                         JS::MutableHandle<JSObject*> objp) const override;
 
   // We override getOwnEnumerablePropertyKeys() and implement it directly
   // instead of using the default implementation, which would call
   // ownPropertyKeys and then filter out the non-enumerable ones. This avoids
   // unnecessary work during enumeration.
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
+                                            JS::AutoIdVector &props) const override;
 
   bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-             JS::Handle<JSObject*> callable) const MOZ_OVERRIDE;
+             JS::Handle<JSObject*> callable) const override;
   bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
-               JS::Handle<jsid> id) const MOZ_OVERRIDE;
+               JS::Handle<jsid> id) const override;
 
 protected:
   // Hook for subclasses to implement shared ownPropertyKeys()/keys()
@@ -106,7 +106,7 @@ public:
 
   bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                       JS::MutableHandle<JSPropertyDescriptor> desc,
-                      JS::ObjectOpResult &result) const MOZ_OVERRIDE
+                      JS::ObjectOpResult &result) const override
   {
     bool unused;
     return defineProperty(cx, proxy, id, desc, result, &unused);
@@ -115,16 +115,16 @@ public:
                               JS::MutableHandle<JSPropertyDescriptor> desc,
                               JS::ObjectOpResult &result, bool *defined) const;
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-               JS::ObjectOpResult &result) const MOZ_OVERRIDE;
+               JS::ObjectOpResult &result) const override;
   bool preventExtensions(JSContext* cx, JS::Handle<JSObject*> proxy,
-                         JS::ObjectOpResult& result) const MOZ_OVERRIDE;
+                         JS::ObjectOpResult& result) const override;
   bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
-                    const MOZ_OVERRIDE;
+                    const override;
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-           bool* bp) const MOZ_OVERRIDE;
+           bool* bp) const override;
   bool set(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
            JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp, JS::ObjectOpResult &result)
-           const MOZ_OVERRIDE;
+           const override;
 
   /*
    * If assigning to proxy[id] hits a named setter with OverrideBuiltins or

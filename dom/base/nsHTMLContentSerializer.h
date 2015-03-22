@@ -27,13 +27,13 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
 
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) MOZ_OVERRIDE;
+                                nsAString& aStr) override;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr) MOZ_OVERRIDE;
+                              nsAString& aStr) override;
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
-                                 nsAString& aStr) MOZ_OVERRIDE;
+                                 nsAString& aStr) override;
  protected:
 
   NS_WARN_UNUSED_RESULT
@@ -47,7 +47,7 @@ class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
 
   NS_WARN_UNUSED_RESULT
   virtual bool AppendAndTranslateEntities(const nsAString& aStr,
-                                          nsAString& aOutputStr) MOZ_OVERRIDE;
+                                          nsAString& aOutputStr) override;
 
 };
 

@@ -165,7 +165,7 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
 
-  virtual void AddTrack(const std::string& track) MOZ_OVERRIDE
+  virtual void AddTrack(const std::string& track) override
   {
     mTrackIdMap.push_back(track);
     SourceStreamInfo::AddTrack(track);
@@ -399,7 +399,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     NS_IMETHODIMP OnProxyAvailable(nsICancelable *request,
                                    nsIChannel *aChannel,
                                    nsIProxyInfo *proxyinfo,
-                                   nsresult result) MOZ_OVERRIDE;
+                                   nsresult result) override;
     NS_DECL_ISUPPORTS
 
    private:

@@ -29,7 +29,7 @@ public:
   NS_DECL_NSIUTF8STRINGENUMERATOR
   // can't use NS_DECL_NSISTRINGENUMERATOR because they share the
   // HasMore() signature
-  NS_IMETHOD GetNext(nsAString& aResult) MOZ_OVERRIDE;
+  NS_IMETHOD GetNext(nsAString& aResult) override;
 
   static EmptyEnumeratorImpl* GetInstance()
   {
@@ -96,14 +96,14 @@ NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSingletonEnumerator MOZ_FINAL : public nsISimpleEnumerator
+class nsSingletonEnumerator final : public nsISimpleEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
 
   // nsISimpleEnumerator methods
-  NS_IMETHOD HasMoreElements(bool* aResult) MOZ_OVERRIDE;
-  NS_IMETHOD GetNext(nsISupports** aResult) MOZ_OVERRIDE;
+  NS_IMETHOD HasMoreElements(bool* aResult) override;
+  NS_IMETHOD GetNext(nsISupports** aResult) override;
 
   explicit nsSingletonEnumerator(nsISupports* aValue);
 
@@ -174,14 +174,14 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator** aResult,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsUnionEnumerator MOZ_FINAL : public nsISimpleEnumerator
+class nsUnionEnumerator final : public nsISimpleEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
 
   // nsISimpleEnumerator methods
-  NS_IMETHOD HasMoreElements(bool* aResult) MOZ_OVERRIDE;
-  NS_IMETHOD GetNext(nsISupports** aResult) MOZ_OVERRIDE;
+  NS_IMETHOD HasMoreElements(bool* aResult) override;
+  NS_IMETHOD GetNext(nsISupports** aResult) override;
 
   nsUnionEnumerator(nsISimpleEnumerator* aFirstEnumerator,
                     nsISimpleEnumerator* aSecondEnumerator);

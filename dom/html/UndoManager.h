@@ -25,7 +25,7 @@ namespace dom {
 class DOMTransaction;
 class DOMTransactionCallback;
 
-class UndoManager MOZ_FINAL : public nsISupports,
+class UndoManager final : public nsISupports,
                               public nsWrapperCache
 {
   friend class TxnScopeGuard;
@@ -53,7 +53,7 @@ public:
     return mHostNode;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return mozilla::dom::UndoManagerBinding::Wrap(aCx, this, aGivenProto);
   }

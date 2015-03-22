@@ -20,7 +20,7 @@ typedef nsRubyContentFrame nsRubyTextFrameSuper;
 nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
 
-class nsRubyTextFrame MOZ_FINAL : public nsRubyTextFrameSuper
+class nsRubyTextFrame final : public nsRubyTextFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -28,21 +28,21 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
+  virtual bool CanContinueTextRun() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
 
   bool IsAutoHidden() const
   {

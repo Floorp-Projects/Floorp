@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace embedding {
 
-class PrintSettingsDialogChild MOZ_FINAL : public PPrintSettingsDialogChild
+class PrintSettingsDialogChild final : public PPrintSettingsDialogChild
 {
   NS_INLINE_DECL_REFCOUNTING(PrintSettingsDialogChild)
 
@@ -17,7 +17,7 @@ public:
   MOZ_IMPLICIT PrintSettingsDialogChild();
 
   virtual bool Recv__delete__(const nsresult& aResult,
-                              const PrintData& aData) MOZ_OVERRIDE;
+                              const PrintData& aData) override;
 
   bool returned() { return mReturned; };
   nsresult result() { return mResult; };

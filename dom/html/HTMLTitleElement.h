@@ -16,7 +16,7 @@ class ErrorResult;
 
 namespace dom {
 
-class HTMLTitleElement MOZ_FINAL : public nsGenericHTMLElement,
+class HTMLTitleElement final : public nsGenericHTMLElement,
                                    public nsIDOMHTMLTitleElement,
                                    public nsStubMutationObserver
 {
@@ -45,22 +45,22 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
 
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
-  virtual void DoneAddingChildren(bool aHaveNotified) MOZ_OVERRIDE;
+  virtual void DoneAddingChildren(bool aHaveNotified) override;
 
 protected:
   virtual ~HTMLTitleElement();
 
   virtual JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
 
 private:
   void SendTitleChangeEvent(bool aBound);

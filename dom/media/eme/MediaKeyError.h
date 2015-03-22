@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-class MediaKeyError MOZ_FINAL : public Event
+class MediaKeyError final : public Event
 {
 public:
   NS_FORWARD_TO_EVENT
@@ -24,7 +24,7 @@ public:
   MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode);
   ~MediaKeyError();
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t SystemCode() const;
 

@@ -20,7 +20,7 @@ namespace dom {
 
 class EventTarget;
 
-class Touch MOZ_FINAL : public nsISupports
+class Touch final : public nsISupports
                       , public nsWrapperCache
                       , public WidgetPointerHelper
 {
@@ -54,7 +54,7 @@ public:
 
   bool Equals(Touch* aTouch);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   EventTarget* GetParentObject();
 

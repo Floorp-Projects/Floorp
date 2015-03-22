@@ -51,7 +51,7 @@ public:
   Clone() = 0;
 };
 
-class MessagePort MOZ_FINAL : public MessagePortBase
+class MessagePort final : public MessagePortBase
 {
   friend class DispatchEventRunnable;
   friend class PostMessageRunnable;
@@ -64,24 +64,24 @@ public:
   explicit MessagePort(nsPIDOMWindow* aWindow);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void
   PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                  const Optional<Sequence<JS::Value>>& aTransferable,
-                 ErrorResult& aRv) MOZ_OVERRIDE;
+                 ErrorResult& aRv) override;
 
   virtual void
-  Start() MOZ_OVERRIDE;
+  Start() override;
 
   virtual void
-  Close() MOZ_OVERRIDE;
+  Close() override;
 
   virtual EventHandlerNonNull*
-  GetOnmessage() MOZ_OVERRIDE;
+  GetOnmessage() override;
 
   virtual void
-  SetOnmessage(EventHandlerNonNull* aCallback) MOZ_OVERRIDE;
+  SetOnmessage(EventHandlerNonNull* aCallback) override;
 
   // Non WebIDL methods
 
@@ -92,7 +92,7 @@ public:
   Entangle(MessagePort* aMessagePort);
 
   virtual already_AddRefed<MessagePortBase>
-  Clone() MOZ_OVERRIDE;
+  Clone() override;
 
 private:
   ~MessagePort();

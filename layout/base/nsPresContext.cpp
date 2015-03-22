@@ -2506,7 +2506,7 @@ public:
                "DOMPaintEvent requested for a detached pres context");
     mList.TakeFrom(aList);
   }
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     // The pres context might have been detached during the delay -
     // that's fine, just don't fire the event.

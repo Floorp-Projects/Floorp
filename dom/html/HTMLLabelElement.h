@@ -17,7 +17,7 @@ namespace mozilla {
 class EventChainPostVisitor;
 namespace dom {
 
-class HTMLLabelElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLLabelElement final : public nsGenericHTMLFormElement,
                                    public nsIDOMHTMLLabelElement
 {
 public:
@@ -33,7 +33,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const MOZ_OVERRIDE
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override
   {
     return true;
   }
@@ -56,27 +56,27 @@ public:
   }
 
   using nsGenericHTMLElement::Focus;
-  virtual void Focus(mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  virtual void Focus(mozilla::ErrorResult& aError) override;
 
   // nsIFormControl
-  NS_IMETHOD_(uint32_t) GetType() const MOZ_OVERRIDE { return NS_FORM_LABEL; }
-  NS_IMETHOD Reset() MOZ_OVERRIDE;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) MOZ_OVERRIDE;
+  NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_LABEL; }
+  NS_IMETHOD Reset() override;
+  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
 
-  virtual bool IsDisabled() const MOZ_OVERRIDE { return false; }
+  virtual bool IsDisabled() const override { return false; }
 
   // nsIContent
   virtual nsresult PostHandleEvent(
-                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+                     EventChainPostVisitor& aVisitor) override;
   virtual void PerformAccesskey(bool aKeyCausesActivation,
-                                bool aIsTrustedEvent) MOZ_OVERRIDE;
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+                                bool aIsTrustedEvent) override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   nsGenericHTMLElement* GetLabeledElement() const;
 protected:
   virtual ~HTMLLabelElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsGenericHTMLElement* GetFirstLabelableDescendant() const;
 

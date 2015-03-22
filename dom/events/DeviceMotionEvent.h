@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class DeviceRotationRate MOZ_FINAL : public nsWrapperCache
+class DeviceRotationRate final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceRotationRate)
@@ -27,7 +27,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return DeviceRotationRateBinding::Wrap(aCx, this, aGivenProto);
   }
@@ -44,7 +44,7 @@ protected:
   Nullable<double> mAlpha, mBeta, mGamma;
 };
 
-class DeviceAcceleration MOZ_FINAL : public nsWrapperCache
+class DeviceAcceleration final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceAcceleration)
@@ -59,7 +59,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return DeviceAccelerationBinding::Wrap(aCx, this, aGivenProto);
   }
@@ -76,7 +76,7 @@ protected:
   Nullable<double> mX, mY, mZ;
 };
 
-class DeviceMotionEvent MOZ_FINAL : public Event
+class DeviceMotionEvent final : public Event
 {
 public:
 
@@ -94,7 +94,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeviceMotionEvent, Event)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return DeviceMotionEventBinding::Wrap(aCx, this, aGivenProto);
   }

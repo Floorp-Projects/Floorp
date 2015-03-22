@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class RequestSyncWifiService MOZ_FINAL : public nsISupports
+class RequestSyncWifiService final : public nsISupports
                                        , public NetworkObserver
 {
 public:
@@ -24,7 +24,7 @@ public:
 
   static already_AddRefed<RequestSyncWifiService> GetInstance();
 
-  void Notify(const hal::NetworkInformation& aNetworkInfo) MOZ_OVERRIDE;
+  void Notify(const hal::NetworkInformation& aNetworkInfo) override;
 
 private:
   RequestSyncWifiService()

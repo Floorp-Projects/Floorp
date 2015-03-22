@@ -42,7 +42,7 @@ function test() {
   is(gl.getParameter(gl.BLEND), true,
     "The blend mode wasn't set to the correct default value.");
   is(gl.getParameter(gl.BLEND_SRC_ALPHA), gl.SRC_ALPHA,
-    "The soruce blend func wasn't set to the correct default value.");
+    "The source blend func wasn't set to the correct default value.");
   is(gl.getParameter(gl.BLEND_DST_ALPHA), gl.ONE_MINUS_SRC_ALPHA,
     "The destination blend func wasn't set to the correct default value.");
 

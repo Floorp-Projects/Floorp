@@ -992,6 +992,9 @@ class GCParallelTask
 
   public:
     GCParallelTask() : state(NotStarted), duration_(0) {}
+
+    // Derived classes must override this to ensure that join() gets called
+    // before members get destructed.
     virtual ~GCParallelTask();
 
     // Time spent in the most recent invocation of this task.

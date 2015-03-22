@@ -741,7 +741,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 // and handles any necessary partial hash expansions before calling
 // the client callback.
 
-class nsUrlClassifierLookupCallback MOZ_FINAL : public nsIUrlClassifierLookupCallback
+class nsUrlClassifierLookupCallback final : public nsIUrlClassifierLookupCallback
                                               , public nsIUrlClassifierHashCompleterCallback
 {
 public:
@@ -970,7 +970,7 @@ nsUrlClassifierLookupCallback::HandleResults()
 // Helper class for nsIURIClassifier implementation, translates table names
 // to nsIURIClassifier enums.
 
-class nsUrlClassifierClassifyCallback MOZ_FINAL : public nsIUrlClassifierCallback
+class nsUrlClassifierClassifyCallback final : public nsIUrlClassifierCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

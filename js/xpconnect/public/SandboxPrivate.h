@@ -35,12 +35,12 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SandboxPrivate,
                                                            nsIGlobalObject)
 
-    nsIPrincipal *GetPrincipal() MOZ_OVERRIDE
+    nsIPrincipal *GetPrincipal() override
     {
         return mPrincipal;
     }
 
-    JSObject *GetGlobalJSObject() MOZ_OVERRIDE
+    JSObject *GetGlobalJSObject() override
     {
         return GetWrapper();
     }
@@ -50,7 +50,7 @@ public:
         ClearWrapper();
     }
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override
     {
         MOZ_CRASH("SandboxPrivate doesn't use DOM bindings!");
     }

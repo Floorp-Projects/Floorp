@@ -222,7 +222,7 @@ NS_IMPL_ISUPPORTS0(ContinueLifecycleTask);
 
 class ServiceWorkerRegisterJob;
 
-class ContinueInstallTask MOZ_FINAL : public ContinueLifecycleTask
+class ContinueInstallTask final : public ContinueLifecycleTask
 {
   nsRefPtr<ServiceWorkerRegisterJob> mJob;
 
@@ -231,10 +231,10 @@ public:
     : mJob(aJob)
   { }
 
-  void ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmediately) MOZ_OVERRIDE;
+  void ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmediately) override;
 };
 
-class ContinueActivateTask MOZ_FINAL : public ContinueLifecycleTask
+class ContinueActivateTask final : public ContinueLifecycleTask
 {
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
 
@@ -244,10 +244,10 @@ public:
   { }
 
   void
-  ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmediately /* unused */) MOZ_OVERRIDE;
+  ContinueAfterWorkerEvent(bool aSuccess, bool aActivateImmediately /* unused */) override;
 };
 
-class ContinueLifecycleRunnable MOZ_FINAL : public nsRunnable
+class ContinueLifecycleRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<ContinueLifecycleTask> mTask;
   bool mSuccess;
@@ -265,7 +265,7 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     AssertIsOnMainThread();
     mTask->ContinueAfterWorkerEvent(mSuccess, mActivateImmediately);
@@ -279,7 +279,7 @@ public:
  * ServiceWorkers, so the parent thread -> worker thread requirement for
  * runnables is satisfied.
  */
-class LifecycleEventWorkerRunnable MOZ_FINAL : public WorkerRunnable
+class LifecycleEventWorkerRunnable final : public WorkerRunnable
 {
   nsString mEventName;
   nsMainThreadPtrHandle<ContinueLifecycleTask> mTask;
@@ -297,7 +297,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     MOZ_ASSERT(aWorkerPrivate);
     return DispatchLifecycleEvent(aCx, aWorkerPrivate);
@@ -331,7 +331,7 @@ public:
   { }
 };
 
-class ServiceWorkerResolveWindowPromiseOnUpdateCallback MOZ_FINAL : public ServiceWorkerUpdateFinishCallback
+class ServiceWorkerResolveWindowPromiseOnUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
   nsRefPtr<nsPIDOMWindow> mWindow;
   // The promise "returned" by the call to Update up to
@@ -349,7 +349,7 @@ public:
   }
 
   void
-  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) MOZ_OVERRIDE
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
   {
     nsRefPtr<ServiceWorkerRegistration> swr =
       new ServiceWorkerRegistration(mWindow,
@@ -358,13 +358,13 @@ public:
   }
 
   void
-  UpdateFailed(nsresult aStatus) MOZ_OVERRIDE
+  UpdateFailed(nsresult aStatus) override
   {
     mPromise->MaybeReject(aStatus);
   }
 
   void
-  UpdateFailed(const ErrorEventInit& aErrorDesc) MOZ_OVERRIDE
+  UpdateFailed(const ErrorEventInit& aErrorDesc) override
   {
     AutoJSAPI jsapi;
     jsapi.Init(mWindow);
@@ -401,7 +401,7 @@ public:
   }
 };
 
-class ContinueUpdateRunnable MOZ_FINAL : public nsRunnable
+class ContinueUpdateRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsISupports> mJob;
 public:
@@ -414,7 +414,7 @@ public:
   NS_IMETHOD Run();
 };
 
-class CheckWorkerEvaluationAndContinueUpdateWorkerRunnable MOZ_FINAL : public WorkerRunnable
+class CheckWorkerEvaluationAndContinueUpdateWorkerRunnable final : public WorkerRunnable
 {
   const nsMainThreadPtrHandle<nsISupports> mJob;
 public:
@@ -427,7 +427,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
     if (aWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
@@ -474,7 +474,7 @@ GetRequiredScopeStringPrefix(const nsACString& aScriptSpec, nsACString& aPrefix)
 }
 } // anonymous namespace
 
-class ServiceWorkerRegisterJob MOZ_FINAL : public ServiceWorkerJob,
+class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
                                            public nsIStreamLoaderObserver
 {
   friend class ContinueInstallTask;
@@ -522,7 +522,7 @@ public:
   { }
 
   void
-  Start() MOZ_OVERRIDE
+  Start() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -562,7 +562,7 @@ public:
   NS_IMETHOD
   OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
                    nsresult aStatus, uint32_t aLen,
-                   const uint8_t* aString) MOZ_OVERRIDE
+                   const uint8_t* aString) override
   {
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
@@ -1010,7 +1010,7 @@ ServiceWorkerManager::AppendPendingOperation(nsIRunnable* aRunnable)
  * Used to handle ExtendableEvent::waitUntil() and proceed with
  * installation/activation.
  */
-class LifecycleEventPromiseHandler MOZ_FINAL : public PromiseNativeHandler
+class LifecycleEventPromiseHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<ContinueLifecycleTask> mTask;
   bool mActivateImmediately;
@@ -1029,7 +1029,7 @@ public:
   }
 
   void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1041,7 +1041,7 @@ public:
   }
 
   void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1540,7 +1540,7 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
   return false;
 }
 
-class ServiceWorkerUnregisterJob MOZ_FINAL : public ServiceWorkerJob
+class ServiceWorkerUnregisterJob final : public ServiceWorkerJob
 {
   nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   const nsCString mScope;
@@ -1564,7 +1564,7 @@ public:
   }
 
   void
-  Start() MOZ_OVERRIDE
+  Start() override
   {
     AssertIsOnMainThread();
     nsCOMPtr<nsIRunnable> r =
@@ -2147,7 +2147,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  VisitHeader(const nsACString& aHeader, const nsACString& aValue) MOZ_OVERRIDE
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override
   {
     mHeaderNames.AppendElement(aHeader);
     mHeaderValues.AppendElement(aValue);
@@ -2188,7 +2188,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     MOZ_ASSERT(aWorkerPrivate);
     return DispatchFetchEvent(aCx, aWorkerPrivate);
@@ -2197,7 +2197,7 @@ public:
 private:
   ~FetchEventRunnable() {}
 
-  class ResumeRequest MOZ_FINAL : public nsRunnable {
+  class ResumeRequest final : public nsRunnable {
     nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   public:
     explicit ResumeRequest(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)

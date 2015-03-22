@@ -26,14 +26,14 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                             int32_t hour, 
                             int32_t minute, 
                             int32_t second, 
-                            char16_t **dateTimeString) MOZ_OVERRIDE;
+                            char16_t **dateTimeString) override;
 
   NS_IMETHOD FormatDate(const char16_t *locale, 
                         nsDateFormatSelector dateFormatSelector, 
                         int32_t year, 
                         int32_t month, 
                         int32_t day, 
-                        char16_t **dateString) MOZ_OVERRIDE
+                        char16_t **dateString) override
                         {return FormatDateTime(locale, dateFormatSelector, kTimeFormatNone, 
                                                year, month, day, 0, 0, 0, dateString);}
 
@@ -42,7 +42,7 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                         int32_t hour, 
                         int32_t minute, 
                         int32_t second, 
-                        char16_t **timeString) MOZ_OVERRIDE
+                        char16_t **timeString) override
                         {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
                                                1999, 1, 1, hour, minute, second, timeString);}
 

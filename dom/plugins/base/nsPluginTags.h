@@ -22,7 +22,7 @@ class nsNPAPIPlugin;
 
 // A linked-list of plugin information that is used for instantiating plugins
 // and reflecting plugin information into JavaScript.
-class nsPluginTag MOZ_FINAL : public nsIPluginTag
+class nsPluginTag final : public nsIPluginTag
 {
 public:
   NS_DECL_ISUPPORTS

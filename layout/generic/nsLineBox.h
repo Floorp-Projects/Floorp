@@ -201,7 +201,7 @@ class nsLineLink {
  * enough state to support incremental reflow of the frames, event handling
  * for the frames, and rendering of the frames.
  */
-class nsLineBox MOZ_FINAL : public nsLineLink {
+class nsLineBox final : public nsLineLink {
 private:
   nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock);
   ~nsLineBox();
@@ -1708,32 +1708,32 @@ nsLineList_const_reverse_iterator::operator=(const nsLineList_const_reverse_iter
 
 //----------------------------------------------------------------------
 
-class nsLineIterator MOZ_FINAL : public nsILineIterator
+class nsLineIterator final : public nsILineIterator
 {
 public:
   nsLineIterator();
   ~nsLineIterator();
 
-  virtual void DisposeLineIterator() MOZ_OVERRIDE;
+  virtual void DisposeLineIterator() override;
 
-  virtual int32_t GetNumLines() MOZ_OVERRIDE;
-  virtual bool GetDirection() MOZ_OVERRIDE;
+  virtual int32_t GetNumLines() override;
+  virtual bool GetDirection() override;
   NS_IMETHOD GetLine(int32_t aLineNumber,
                      nsIFrame** aFirstFrameOnLine,
                      int32_t* aNumFramesOnLine,
-                     nsRect& aLineBounds) MOZ_OVERRIDE;
-  virtual int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) MOZ_OVERRIDE;
+                     nsRect& aLineBounds) override;
+  virtual int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) override;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber,
                          nsPoint aPos,
                          nsIFrame** aFrameFound,
                          bool* aPosIsBeforeFirstFrame,
-                         bool* aPosIsAfterLastFrame) MOZ_OVERRIDE;
+                         bool* aPosIsAfterLastFrame) override;
 
-  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) MOZ_OVERRIDE;
+  NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) override;
   NS_IMETHOD CheckLineOrder(int32_t                  aLine,
                             bool                     *aIsReordered,
                             nsIFrame                 **aFirstVisual,
-                            nsIFrame                 **aLastVisual) MOZ_OVERRIDE;
+                            nsIFrame                 **aLastVisual) override;
   nsresult Init(nsLineList& aLines, bool aRightToLeft);
 
 private:

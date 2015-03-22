@@ -22,7 +22,7 @@ namespace workers {
 class ServiceWorker;
 }
 
-class ServiceWorkerRegistration MOZ_FINAL : public DOMEventTargetHelper
+class ServiceWorkerRegistration final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -35,7 +35,7 @@ public:
                             const nsAString& aScope);
 
   JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<workers::ServiceWorker>
   GetInstalling();
@@ -60,7 +60,7 @@ public:
   InvalidateWorkerReference(WhichServiceWorker aWhichOnes);
 
   // DOMEventTargethelper
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 
 private:
   ~ServiceWorkerRegistration();

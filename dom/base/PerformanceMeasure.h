@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 // http://www.w3.org/TR/user-timing/#performancemeasure
-class PerformanceMeasure MOZ_FINAL : public PerformanceEntry
+class PerformanceMeasure final : public PerformanceEntry
 {
 public:
   PerformanceMeasure(nsPerformance* aPerformance,
@@ -20,14 +20,14 @@ public:
                      DOMHighResTimeStamp aStartTime,
                      DOMHighResTimeStamp aEndTime);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual DOMHighResTimeStamp StartTime() const MOZ_OVERRIDE
+  virtual DOMHighResTimeStamp StartTime() const override
   {
     return mStartTime;
   }
 
-  virtual DOMHighResTimeStamp Duration() const MOZ_OVERRIDE
+  virtual DOMHighResTimeStamp Duration() const override
   {
     return mDuration;
   }

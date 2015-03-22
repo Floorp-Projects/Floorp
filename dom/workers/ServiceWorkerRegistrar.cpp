@@ -361,7 +361,7 @@ ServiceWorkerRegistrar::DeleteData()
   }
 }
 
-class ServiceWorkerRegistrarSaveDataRunnable MOZ_FINAL : public nsRunnable
+class ServiceWorkerRegistrarSaveDataRunnable final : public nsRunnable
 {
 public:
   ServiceWorkerRegistrarSaveDataRunnable()

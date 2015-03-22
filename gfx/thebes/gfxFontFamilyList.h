@@ -47,7 +47,7 @@ enum QuotedName { eQuotedName, eUnquotedName };
  * a font type indicated named family or which generic family
  */
 
-struct FontFamilyName MOZ_FINAL {
+struct FontFamilyName final {
     FontFamilyName()
         : mType(eFamily_named)
     {}

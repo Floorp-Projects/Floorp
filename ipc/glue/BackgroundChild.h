@@ -46,7 +46,7 @@ class PBackgroundChild;
 //
 // The PBackgroundChild actor and all its sub-protocol actors will be
 // automatically destroyed when its designated thread completes.
-class BackgroundChild MOZ_FINAL
+class BackgroundChild final
 {
   friend class mozilla::dom::ContentChild;
   friend class mozilla::dom::ContentParent;

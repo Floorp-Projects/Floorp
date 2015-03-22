@@ -28,7 +28,7 @@ using mozilla::dom::quota::PersistenceType;
 
 // Executed when the context is destroyed to release our lock on the
 // QuotaManager.
-class QuotaReleaseRunnable MOZ_FINAL : public nsRunnable
+class QuotaReleaseRunnable final : public nsRunnable
 {
 public:
   QuotaReleaseRunnable(const QuotaInfo& aQuotaInfo, const nsACString& aQuotaId)
@@ -36,7 +36,7 @@ public:
     , mQuotaId(aQuotaId)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     QuotaManager* qm = QuotaManager::Get();
@@ -69,7 +69,7 @@ using mozilla::dom::quota::PersistenceType;
 // Executed to perform the complicated dance of steps necessary to initialize
 // the QuotaManager.  This must be performed for each origin before any disk
 // IO occurrs.
-class Context::QuotaInitRunnable MOZ_FINAL : public nsIRunnable
+class Context::QuotaInitRunnable final : public nsIRunnable
                                            , public Action::Resolver
 {
 public:
@@ -104,7 +104,7 @@ public:
     return rv;
   }
 
-  virtual void Resolve(nsresult aRv) MOZ_OVERRIDE
+  virtual void Resolve(nsresult aRv) override
   {
     // Depending on the error or success path, this can run on either the
     // main thread or the QuotaManager IO thread.  The IO thread is an
@@ -319,7 +319,7 @@ Context::QuotaInitRunnable::Run()
 // Runnable wrapper around Action objects dispatched on the Context.  This
 // runnable executes the Action on the appropriate threads while the Context
 // is initialized.
-class Context::ActionRunnable MOZ_FINAL : public nsIRunnable
+class Context::ActionRunnable final : public nsIRunnable
                                         , public Action::Resolver
 {
 public:
@@ -365,7 +365,7 @@ public:
     mAction->CancelOnInitiatingThread();
   }
 
-  virtual void Resolve(nsresult aRv) MOZ_OVERRIDE
+  virtual void Resolve(nsresult aRv) override
   {
     MOZ_ASSERT(mTarget == NS_GetCurrentThread());
     MOZ_ASSERT(mState == STATE_RUNNING);

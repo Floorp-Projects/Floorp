@@ -19,7 +19,7 @@ namespace dom {
 
 typedef SVGTransformableElement SVGClipPathElementBase;
 
-class SVGClipPathElement MOZ_FINAL : public SVGClipPathElementBase
+class SVGClipPathElement final : public SVGClipPathElementBase
 {
   friend class ::nsSVGClipPathFrame;
 
@@ -27,10 +27,10 @@ protected:
   friend nsresult (::NS_NewSVGClipPathElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   explicit SVGClipPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
 public:
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedEnumeration> ClipPathUnits();
@@ -41,7 +41,7 @@ protected:
   nsSVGEnum mEnumAttributes[1];
   static EnumInfo sEnumInfo[1];
 
-  virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
+  virtual EnumAttributesInfo GetEnumInfo() override;
 };
 
 } // namespace dom

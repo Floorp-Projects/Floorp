@@ -107,7 +107,7 @@ public:
     return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 

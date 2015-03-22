@@ -10,7 +10,7 @@
 #include <stdio.h>                      // for FILE
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted, etc
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for Rect
@@ -235,7 +235,7 @@ protected:
   bool mKeepAttached;
 };
 
-class AutoLockCompositableHost MOZ_FINAL
+class AutoLockCompositableHost final
 {
 public:
   explicit AutoLockCompositableHost(CompositableHost* aHost)

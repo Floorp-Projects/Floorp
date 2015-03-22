@@ -40,7 +40,7 @@ class FileDescriptor;
 }
 } // namespace mozilla
 
-class DeviceStorageFile MOZ_FINAL
+class DeviceStorageFile final
   : public nsISupports {
 public:
   nsCOMPtr<nsIFile> mFile;
@@ -142,7 +142,7 @@ private:
     * ContentParent::Init (for IPC)
     * nsDOMDeviceStorage::Init (for non-ipc)
 */
-class FileUpdateDispatcher MOZ_FINAL
+class FileUpdateDispatcher final
   : public nsIObserver
 {
   ~FileUpdateDispatcher() {}
@@ -156,7 +156,7 @@ class FileUpdateDispatcher MOZ_FINAL
   static mozilla::StaticRefPtr<FileUpdateDispatcher> sSingleton;
 };
 
-class nsDOMDeviceStorage MOZ_FINAL
+class nsDOMDeviceStorage final
   : public mozilla::DOMEventTargetHelper
   , public nsIDOMDeviceStorage
   , public nsIObserver
@@ -178,21 +178,21 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
 
   virtual mozilla::EventListenerManager*
-    GetExistingListenerManager() const MOZ_OVERRIDE;
+    GetExistingListenerManager() const override;
   virtual mozilla::EventListenerManager*
-    GetOrCreateListenerManager() MOZ_OVERRIDE;
+    GetOrCreateListenerManager() override;
 
   virtual void
   AddEventListener(const nsAString& aType,
                    mozilla::dom::EventListener* aListener,
                    bool aUseCapture,
                    const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                   ErrorResult& aRv) MOZ_OVERRIDE;
+                   ErrorResult& aRv) override;
 
   virtual void RemoveEventListener(const nsAString& aType,
                                    mozilla::dom::EventListener* aListener,
                                    bool aUseCapture,
-                                   ErrorResult& aRv) MOZ_OVERRIDE;
+                                   ErrorResult& aRv) override;
 
   explicit nsDOMDeviceStorage(nsPIDOMWindow* aWindow);
 
@@ -215,7 +215,7 @@ public:
     return GetOwner();
   }
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   IMPL_EVENT_HANDLER(change)
 

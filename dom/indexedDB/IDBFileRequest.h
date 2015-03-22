@@ -25,7 +25,7 @@ namespace indexedDB {
 
 class IDBFileHandle;
 
-class IDBFileRequest MOZ_FINAL : public DOMRequest,
+class IDBFileRequest final : public DOMRequest,
                                  public FileRequestBase
 {
 public:
@@ -39,18 +39,18 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
 
   // FileRequest
   virtual void
-  OnProgress(uint64_t aProgress, uint64_t aProgressMax) MOZ_OVERRIDE;
+  OnProgress(uint64_t aProgress, uint64_t aProgressMax) override;
 
   virtual nsresult
-  NotifyHelperCompleted(FileHelper* aFileHelper) MOZ_OVERRIDE;
+  NotifyHelperCompleted(FileHelper* aFileHelper) override;
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   IDBFileHandle*

@@ -106,7 +106,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
 /**
  * RemotePermissionRequest will send a prompt ipdl request to b2g process.
  */
-class RemotePermissionRequest MOZ_FINAL : public nsISupports
+class RemotePermissionRequest final : public nsISupports
                                         , public mozilla::dom::PContentPermissionRequestChild
 {
 public:
@@ -117,7 +117,7 @@ public:
 
   // It will be called when prompt dismissed.
   virtual bool Recv__delete__(const bool &aAllow,
-                              InfallibleTArray<PermissionChoice>&& aChoices) MOZ_OVERRIDE;
+                              InfallibleTArray<PermissionChoice>&& aChoices) override;
 
   void IPDLAddRef()
   {

@@ -39,7 +39,7 @@ namespace dom {
 
 class TimeRanges;
 
-class SourceBuffer MOZ_FINAL : public DOMEventTargetHelper
+class SourceBuffer final : public DOMEventTargetHelper
 {
 public:
   /** WebIDL Methods. */
@@ -94,7 +94,7 @@ public:
 
   MediaSource* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // Notify the SourceBuffer that it has been detached from the
   // MediaSource's sourceBuffer list.

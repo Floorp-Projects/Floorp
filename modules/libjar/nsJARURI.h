@@ -32,7 +32,7 @@
 }
 
 
-class nsJARURI MOZ_FINAL : public nsIJARURI,
+class nsJARURI final : public nsIJARURI,
                            public nsISerializable,
                            public nsIClassInfo,
                            public nsINestedURI,

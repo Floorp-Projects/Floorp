@@ -884,7 +884,7 @@ class ReadTempAttemptsVectorOp : public JS::ForEachTrackedOptimizationAttemptOp
       : attempts_(attempts)
     { }
 
-    void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) MOZ_OVERRIDE {
+    void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
         MOZ_ALWAYS_TRUE(attempts_->append(OptimizationAttempt(strategy, outcome)));
     }
 };
@@ -902,11 +902,11 @@ struct ReadTempTypeInfoVectorOp : public IonTrackedOptimizationsTypeInfo::ForEac
         accTypes_(alloc)
     { }
 
-    void readType(const IonTrackedTypeWithAddendum &tracked) MOZ_OVERRIDE {
+    void readType(const IonTrackedTypeWithAddendum &tracked) override {
         MOZ_ALWAYS_TRUE(accTypes_.append(tracked.type));
     }
 
-    void operator()(JS::TrackedTypeSite site, MIRType mirType) MOZ_OVERRIDE {
+    void operator()(JS::TrackedTypeSite site, MIRType mirType) override {
         OptimizationTypeInfo ty(alloc_, site, mirType);
         for (uint32_t i = 0; i < accTypes_.length(); i++)
             MOZ_ALWAYS_TRUE(ty.trackType(accTypes_[i]));

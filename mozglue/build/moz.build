@@ -13,53 +13,9 @@ else:
 
 SDK_LIBRARY = True
 
-if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or FORCE_SHARED_LIB):
-    pass
-    # TODO: SHARED_LIBRARY_LIBS go here
-else:
-    # Temporary, until bug 662814 lands
-    NO_VISIBILITY_FLAGS = True
-    SOURCES += [
-        'dummy.cpp',
-    ]
-
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += [
         'BionicGlue.cpp',
-    ]
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    SOURCES += [
-        'WindowsDllBlocklist.cpp',
-    ]
-    DEFFILE = 'mozglue.def'
-    DISABLE_STL_WRAPPING = True
-    OS_LIBS += [
-        'version',
-    ]
-
-if CONFIG['MOZ_NUWA_PROCESS']:
-    EXPORTS.ipc += [
-        'Nuwa.h',
-    ]
-    SOURCES += [
-        'Nuwa.cpp',
-    ]
-
-EXPORTS.mozilla += [
-    'arm.h',
-    'SSE.h',
-    'WindowsDllBlocklist.h',
-]
-
-if CONFIG['CPU_ARCH'].startswith('x86'):
-    SOURCES += [
-        'SSE.cpp',
-    ]
-
-if CONFIG['CPU_ARCH'] == 'arm':
-    SOURCES += [
-        'arm.cpp',
     ]
 
 if CONFIG['MOZ_ASAN']:
@@ -67,20 +23,67 @@ if CONFIG['MOZ_ASAN']:
         'AsanOptions.cpp',
     ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFFILE = 'mozglue.def'
+
+if not CONFIG['JS_STANDALONE']:
+
+    if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or FORCE_SHARED_LIB):
+        pass
+        # TODO: SHARED_LIBRARY_LIBS go here
+    else:
+        # Temporary, until bug 662814 lands
+        NO_VISIBILITY_FLAGS = True
+        SOURCES += [
+            'dummy.cpp',
+        ]
+
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        SOURCES += [
+            'WindowsDllBlocklist.cpp',
+        ]
+        DISABLE_STL_WRAPPING = True
+        OS_LIBS += [
+            'version',
+        ]
+
+    if CONFIG['MOZ_NUWA_PROCESS']:
+        EXPORTS.ipc += [
+            'Nuwa.h',
+        ]
+        SOURCES += [
+            'Nuwa.cpp',
+        ]
+
+    EXPORTS.mozilla += [
+        'arm.h',
+        'SSE.h',
+        'WindowsDllBlocklist.h',
+    ]
+
+    if CONFIG['CPU_ARCH'].startswith('x86'):
+        SOURCES += [
+            'SSE.cpp',
+        ]
+
+    if CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'arm.cpp',
+        ]
+
+    if CONFIG['MOZ_LINKER']:
+        USE_LIBS += [
+            'zlib',
+        ]
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        SOURCES += [
+            'cpuacct.c',
+        ]
 
 USE_LIBS += [
     'mfbt',
 ]
-
-if CONFIG['MOZ_LINKER']:
-    USE_LIBS += [
-        'zlib',
-    ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    SOURCES += [
-        'cpuacct.c',
-    ]
 
 DEFINES['IMPL_MFBT'] = True
 

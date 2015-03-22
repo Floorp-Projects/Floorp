@@ -34,7 +34,7 @@ class FileManager;
 class FileManagerInfo;
 class IDBFactory;
 
-class IndexedDatabaseManager MOZ_FINAL : public nsIObserver
+class IndexedDatabaseManager final : public nsIObserver
 {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 

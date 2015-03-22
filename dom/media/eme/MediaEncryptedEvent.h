@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace dom {
 
-class MediaEncryptedEvent MOZ_FINAL : public Event
+class MediaEncryptedEvent final : public Event
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -36,7 +36,7 @@ protected:
 
 public:
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<MediaEncryptedEvent>
   Constructor(EventTarget* aOwner);

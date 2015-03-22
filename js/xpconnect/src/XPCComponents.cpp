@@ -98,7 +98,7 @@ xpc::CheckAccessList(const char16_t *wideName, const char *const list[])
 /***************************************************************************/
 
 
-class nsXPCComponents_Interfaces MOZ_FINAL :
+class nsXPCComponents_Interfaces final :
             public nsIXPCComponents_Interfaces,
             public nsIXPCScriptable,
             public nsIClassInfo
@@ -341,7 +341,7 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative *wrapper,
 /***************************************************************************/
 /***************************************************************************/
 
-class nsXPCComponents_InterfacesByID MOZ_FINAL :
+class nsXPCComponents_InterfacesByID final :
             public nsIXPCComponents_InterfacesByID,
             public nsIXPCScriptable,
             public nsIClassInfo
@@ -589,7 +589,7 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative *wrapper,
 
 
 
-class nsXPCComponents_Classes MOZ_FINAL :
+class nsXPCComponents_Classes final :
   public nsIXPCComponents_Classes,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -815,7 +815,7 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative *wrapper,
 /***************************************************************************/
 /***************************************************************************/
 
-class nsXPCComponents_ClassesByID MOZ_FINAL :
+class nsXPCComponents_ClassesByID final :
   public nsIXPCComponents_ClassesByID,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -1064,7 +1064,7 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative *wrapper,
 // Currently the possible results do not change at runtime, so they are only
 // cached once (unlike ContractIDs, CLSIDs, and IIDs)
 
-class nsXPCComponents_Results MOZ_FINAL :
+class nsXPCComponents_Results final :
   public nsIXPCComponents_Results,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -1266,7 +1266,7 @@ nsXPCComponents_Results::Resolve(nsIXPConnectWrappedNative *wrapper,
 /***************************************************************************/
 // JavaScript Constructor for nsIJSID objects (Components.ID)
 
-class nsXPCComponents_ID MOZ_FINAL :
+class nsXPCComponents_ID final :
   public nsIXPCComponents_ID,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -1483,7 +1483,7 @@ nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative *wrapper,
 /***************************************************************************/
 // JavaScript Constructor for nsIXPCException objects (Components.Exception)
 
-class nsXPCComponents_Exception MOZ_FINAL :
+class nsXPCComponents_Exception final :
   public nsIXPCComponents_Exception,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -2129,7 +2129,7 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,JSContext *
 /*******************************************************/
 // JavaScript Constructor for nsIXPCConstructor objects (Components.Constructor)
 
-class nsXPCComponents_Constructor MOZ_FINAL :
+class nsXPCComponents_Constructor final :
   public nsIXPCComponents_Constructor,
   public nsIXPCScriptable,
   public nsIClassInfo
@@ -2444,7 +2444,7 @@ nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-class nsXPCComponents_Utils MOZ_FINAL :
+class nsXPCComponents_Utils final :
             public nsIXPCComponents_Utils,
             public nsIXPCScriptable
 {

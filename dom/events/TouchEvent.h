@@ -19,7 +19,7 @@ class nsAString;
 namespace mozilla {
 namespace dom {
 
-class TouchList MOZ_FINAL : public nsISupports
+class TouchList final : public nsISupports
                           , public nsWrapperCache
 {
 public:
@@ -44,7 +44,7 @@ public:
     mPoints.AppendElement(aPoint);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const
   {
@@ -89,7 +89,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TouchEvent, UIEvent)
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return TouchEventBinding::Wrap(aCx, this, aGivenProto);
   }

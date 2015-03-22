@@ -45,7 +45,7 @@ using namespace mozilla::gfx;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 
-class FreetypeReporter MOZ_FINAL : public nsIMemoryReporter,
+class FreetypeReporter final : public nsIMemoryReporter,
                                    public CountingAllocatorBase<FreetypeReporter>
 {
 private:
@@ -425,19 +425,19 @@ bool gfxAndroidPlatform::HaveChoiceOfHWAndSWCanvas()
 }
 
 #ifdef MOZ_WIDGET_GONK
-class GonkVsyncSource MOZ_FINAL : public VsyncSource
+class GonkVsyncSource final : public VsyncSource
 {
 public:
   GonkVsyncSource()
   {
   }
 
-  virtual Display& GetGlobalDisplay() MOZ_OVERRIDE
+  virtual Display& GetGlobalDisplay() override
   {
     return mGlobalDisplay;
   }
 
-  class GonkDisplay MOZ_FINAL : public VsyncSource::Display
+  class GonkDisplay final : public VsyncSource::Display
   {
   public:
     GonkDisplay() : mVsyncEnabled(false)
@@ -449,7 +449,7 @@ public:
       DisableVsync();
     }
 
-    virtual void EnableVsync() MOZ_OVERRIDE
+    virtual void EnableVsync() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       if (IsVsyncEnabled()) {
@@ -458,7 +458,7 @@ public:
       mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(true);
     }
 
-    virtual void DisableVsync() MOZ_OVERRIDE
+    virtual void DisableVsync() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       if (!IsVsyncEnabled()) {
@@ -467,7 +467,7 @@ public:
       mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(false);
     }
 
-    virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+    virtual bool IsVsyncEnabled() override
     {
       MOZ_ASSERT(NS_IsMainThread());
       return mVsyncEnabled;

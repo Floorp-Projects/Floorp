@@ -1429,7 +1429,7 @@ nsExternalResourceMap::ExternalResource::~ExternalResource()
 // If we ever have an nsIDocumentObserver notification for stylesheet title
 // changes we should update the list from that instead of overriding
 // EnsureFresh.
-class nsDOMStyleSheetSetList MOZ_FINAL : public DOMStringList
+class nsDOMStyleSheetSetList final : public DOMStringList
 {
 public:
   explicit nsDOMStyleSheetSetList(nsIDocument* aDocument);
@@ -1439,7 +1439,7 @@ public:
     mDocument = nullptr;
   }
 
-  virtual void EnsureFresh() MOZ_OVERRIDE;
+  virtual void EnsureFresh() override;
 
 protected:
   nsIDocument* mDocument;  // Our document; weak ref.  It'll let us know if it
@@ -1489,7 +1489,7 @@ void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
   AddObject(key);
 }
 
-class nsIDocument::SelectorCacheKeyDeleter MOZ_FINAL : public nsRunnable
+class nsIDocument::SelectorCacheKeyDeleter final : public nsRunnable
 {
 public:
   explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
@@ -5922,7 +5922,7 @@ nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
 
 namespace {
 
-class ProcessStackRunner MOZ_FINAL : public nsIRunnable
+class ProcessStackRunner final : public nsIRunnable
 {
   ~ProcessStackRunner() {}
 public:
@@ -5931,7 +5931,7 @@ public:
   {
   }
   NS_DECL_ISUPPORTS
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsDocument::ProcessTopElementQueue(mIsBaseQueue);
     return NS_OK;
@@ -9865,11 +9865,11 @@ namespace {
  * Stub for LoadSheet(), since all we want is to get the sheet into
  * the CSSLoader's style cache
  */
-class StubCSSLoaderObserver MOZ_FINAL : public nsICSSLoaderObserver {
+class StubCSSLoaderObserver final : public nsICSSLoaderObserver {
   ~StubCSSLoaderObserver() {}
 public:
   NS_IMETHOD
-  StyleSheetLoaded(CSSStyleSheet*, bool, nsresult) MOZ_OVERRIDE
+  StyleSheetLoaded(CSSStyleSheet*, bool, nsresult) override
   {
     return NS_OK;
   }
@@ -12009,7 +12009,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsCOMPtr<Element> e = do_QueryReferent(mElement);
     nsCOMPtr<nsIDocument> d = do_QueryReferent(mDocument);

@@ -87,11 +87,11 @@ class HangMonitorChild
 
   void ClearHang();
 
-  virtual bool RecvTerminateScript() MOZ_OVERRIDE;
-  virtual bool RecvBeginStartingDebugger() MOZ_OVERRIDE;
-  virtual bool RecvEndStartingDebugger() MOZ_OVERRIDE;
+  virtual bool RecvTerminateScript() override;
+  virtual bool RecvBeginStartingDebugger() override;
+  virtual bool RecvEndStartingDebugger() override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void Shutdown();
 
@@ -126,7 +126,7 @@ HangMonitorChild* HangMonitorChild::sInstance;
 
 class HangMonitorParent;
 
-class HangMonitoredProcess MOZ_FINAL
+class HangMonitoredProcess final
   : public nsIHangReport
 {
 public:
@@ -136,20 +136,20 @@ public:
                        ContentParent* aContentParent)
     : mActor(aActor), mContentParent(aContentParent) {}
 
-  NS_IMETHOD GetHangType(uint32_t* aHangType) MOZ_OVERRIDE;
-  NS_IMETHOD GetScriptBrowser(nsIDOMElement** aBrowser) MOZ_OVERRIDE;
-  NS_IMETHOD GetScriptFileName(nsACString& aFileName) MOZ_OVERRIDE;
-  NS_IMETHOD GetScriptLineNo(uint32_t* aLineNo) MOZ_OVERRIDE;
+  NS_IMETHOD GetHangType(uint32_t* aHangType) override;
+  NS_IMETHOD GetScriptBrowser(nsIDOMElement** aBrowser) override;
+  NS_IMETHOD GetScriptFileName(nsACString& aFileName) override;
+  NS_IMETHOD GetScriptLineNo(uint32_t* aLineNo) override;
 
-  NS_IMETHOD GetPluginName(nsACString& aPluginName) MOZ_OVERRIDE;
+  NS_IMETHOD GetPluginName(nsACString& aPluginName) override;
 
-  NS_IMETHOD TerminateScript() MOZ_OVERRIDE;
-  NS_IMETHOD BeginStartingDebugger() MOZ_OVERRIDE;
-  NS_IMETHOD EndStartingDebugger() MOZ_OVERRIDE;
-  NS_IMETHOD TerminatePlugin() MOZ_OVERRIDE;
-  NS_IMETHOD TerminateProcess() MOZ_OVERRIDE;
+  NS_IMETHOD TerminateScript() override;
+  NS_IMETHOD BeginStartingDebugger() override;
+  NS_IMETHOD EndStartingDebugger() override;
+  NS_IMETHOD TerminatePlugin() override;
+  NS_IMETHOD TerminateProcess() override;
 
-  NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult) MOZ_OVERRIDE;
+  NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult) override;
 
   void Clear() { mContentParent = nullptr; mActor = nullptr; }
 
@@ -174,9 +174,9 @@ public:
   void Open(Transport* aTransport, ProcessHandle aHandle,
             MessageLoop* aIOLoop);
 
-  virtual bool RecvHangEvidence(const HangData& aHangData) MOZ_OVERRIDE;
+  virtual bool RecvHangEvidence(const HangData& aHangData) override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void SetProcess(HangMonitoredProcess* aProcess) { mProcess = aProcess; }
 
@@ -498,7 +498,7 @@ HangMonitorParent::Open(Transport* aTransport, ProcessHandle aHandle,
   MOZ_ASSERT(ok);
 }
 
-class HangObserverNotifier MOZ_FINAL : public nsRunnable
+class HangObserverNotifier final : public nsRunnable
 {
 public:
   HangObserverNotifier(HangMonitoredProcess* aProcess, const HangData& aHangData)

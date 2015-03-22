@@ -40,7 +40,7 @@ class nsXULTemplateResultRDF;
 /**
  * An object that generates results from a query on an RDF graph
  */
-class nsXULTemplateQueryProcessorRDF MOZ_FINAL : public nsIXULTemplateQueryProcessor,
+class nsXULTemplateQueryProcessorRDF final : public nsIXULTemplateQueryProcessor,
                                                  public nsIRDFObserver
 {
 public:

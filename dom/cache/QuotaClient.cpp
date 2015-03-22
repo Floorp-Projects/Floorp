@@ -60,18 +60,18 @@ GetBodyUsage(nsIFile* aDir, UsageInfo* aUsageInfo)
   return NS_OK;
 }
 
-class CacheQuotaClient MOZ_FINAL : public Client
+class CacheQuotaClient final : public Client
 {
 public:
   virtual Type
-  GetType() MOZ_OVERRIDE
+  GetType() override
   {
     return DOMCACHE;
   }
 
   virtual nsresult
   InitOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
-             const nsACString& aOrigin, UsageInfo* aUsageInfo) MOZ_OVERRIDE
+             const nsACString& aOrigin, UsageInfo* aUsageInfo) override
   {
     return NS_OK;
   }
@@ -79,7 +79,7 @@ public:
   virtual nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
                     const nsACString& aOrigin,
-                    UsageInfo* aUsageInfo) MOZ_OVERRIDE
+                    UsageInfo* aUsageInfo) override
   {
     QuotaManager* qm = QuotaManager::Get();
     MOZ_ASSERT(qm);
@@ -149,25 +149,25 @@ public:
 
   virtual void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
-                         const nsACString& aOrigin) MOZ_OVERRIDE
+                         const nsACString& aOrigin) override
   {
     // nothing to do
   }
 
   virtual void
-  ReleaseIOThreadObjects() MOZ_OVERRIDE
+  ReleaseIOThreadObjects() override
   {
     // nothing to do
   }
 
   virtual bool
-  IsFileServiceUtilized() MOZ_OVERRIDE
+  IsFileServiceUtilized() override
   {
     return false;
   }
 
   virtual bool
-  IsTransactionServiceActivated() MOZ_OVERRIDE
+  IsTransactionServiceActivated() override
   {
     // TODO: implement nsIOfflineStorage interface (bug 1110487)
     return false;
@@ -175,14 +175,14 @@ public:
 
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
-                            nsIRunnable* aCallback) MOZ_OVERRIDE
+                            nsIRunnable* aCallback) override
   {
     // TODO: implement nsIOfflineStorage interface (bug 1110487)
   }
 
 
   virtual void
-  ShutdownTransactionService() MOZ_OVERRIDE
+  ShutdownTransactionService() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -194,7 +194,7 @@ private:
   ~CacheQuotaClient() { }
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, MOZ_OVERRIDE)
+  NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, override)
 };
 
 } // anonymous namespace;

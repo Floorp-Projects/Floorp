@@ -90,7 +90,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE MOZ_FINAL;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto);
 
@@ -306,28 +306,28 @@ private:
   NS_FORWARD_NSIDOMEVENT(Event::)
 
 #define NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(_to) \
-  NS_IMETHOD GetType(nsAString& aType) MOZ_OVERRIDE { return _to GetType(aType); } \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget) MOZ_OVERRIDE { return _to GetTarget(aTarget); } \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) MOZ_OVERRIDE { return _to GetCurrentTarget(aCurrentTarget); } \
-  NS_IMETHOD GetEventPhase(uint16_t* aEventPhase) MOZ_OVERRIDE { return _to GetEventPhase(aEventPhase); } \
-  NS_IMETHOD GetBubbles(bool* aBubbles) MOZ_OVERRIDE { return _to GetBubbles(aBubbles); } \
-  NS_IMETHOD GetCancelable(bool* aCancelable) MOZ_OVERRIDE { return _to GetCancelable(aCancelable); } \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp) MOZ_OVERRIDE { return _to GetTimeStamp(aTimeStamp); } \
-  NS_IMETHOD StopPropagation(void) MOZ_OVERRIDE { return _to StopPropagation(); } \
-  NS_IMETHOD PreventDefault(void) MOZ_OVERRIDE { return _to PreventDefault(); } \
-  NS_IMETHOD InitEvent(const nsAString& eventTypeArg, bool canBubbleArg, bool cancelableArg) MOZ_OVERRIDE { return _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } \
-  NS_IMETHOD GetDefaultPrevented(bool* aDefaultPrevented) MOZ_OVERRIDE { return _to GetDefaultPrevented(aDefaultPrevented); } \
-  NS_IMETHOD StopImmediatePropagation(void) MOZ_OVERRIDE { return _to StopImmediatePropagation(); } \
-  NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) MOZ_OVERRIDE { return _to GetOriginalTarget(aOriginalTarget); } \
-  NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) MOZ_OVERRIDE { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
-  NS_IMETHOD GetPreventDefault(bool* aRetval) MOZ_OVERRIDE { return _to GetPreventDefault(aRetval); } \
-  NS_IMETHOD GetIsTrusted(bool* aIsTrusted) MOZ_OVERRIDE { return _to GetIsTrusted(aIsTrusted); } \
-  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) MOZ_OVERRIDE { return _to SetTarget(aTarget); } \
-  NS_IMETHOD_(bool) IsDispatchStopped(void) MOZ_OVERRIDE { return _to IsDispatchStopped(); } \
-  NS_IMETHOD_(WidgetEvent*) GetInternalNSEvent(void) MOZ_OVERRIDE { return _to GetInternalNSEvent(); } \
-  NS_IMETHOD_(void) SetTrusted(bool aTrusted) MOZ_OVERRIDE { _to SetTrusted(aTrusted); } \
-  NS_IMETHOD_(void) SetOwner(EventTarget* aOwner) MOZ_OVERRIDE { _to SetOwner(aOwner); } \
-  NS_IMETHOD_(Event*) InternalDOMEvent() MOZ_OVERRIDE { return _to InternalDOMEvent(); }
+  NS_IMETHOD GetType(nsAString& aType) override { return _to GetType(aType); } \
+  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget) override { return _to GetTarget(aTarget); } \
+  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) override { return _to GetCurrentTarget(aCurrentTarget); } \
+  NS_IMETHOD GetEventPhase(uint16_t* aEventPhase) override { return _to GetEventPhase(aEventPhase); } \
+  NS_IMETHOD GetBubbles(bool* aBubbles) override { return _to GetBubbles(aBubbles); } \
+  NS_IMETHOD GetCancelable(bool* aCancelable) override { return _to GetCancelable(aCancelable); } \
+  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp) override { return _to GetTimeStamp(aTimeStamp); } \
+  NS_IMETHOD StopPropagation(void) override { return _to StopPropagation(); } \
+  NS_IMETHOD PreventDefault(void) override { return _to PreventDefault(); } \
+  NS_IMETHOD InitEvent(const nsAString& eventTypeArg, bool canBubbleArg, bool cancelableArg) override { return _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } \
+  NS_IMETHOD GetDefaultPrevented(bool* aDefaultPrevented) override { return _to GetDefaultPrevented(aDefaultPrevented); } \
+  NS_IMETHOD StopImmediatePropagation(void) override { return _to StopImmediatePropagation(); } \
+  NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) override { return _to GetOriginalTarget(aOriginalTarget); } \
+  NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) override { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
+  NS_IMETHOD GetPreventDefault(bool* aRetval) override { return _to GetPreventDefault(aRetval); } \
+  NS_IMETHOD GetIsTrusted(bool* aIsTrusted) override { return _to GetIsTrusted(aIsTrusted); } \
+  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) override { return _to SetTarget(aTarget); } \
+  NS_IMETHOD_(bool) IsDispatchStopped(void) override { return _to IsDispatchStopped(); } \
+  NS_IMETHOD_(WidgetEvent*) GetInternalNSEvent(void) override { return _to GetInternalNSEvent(); } \
+  NS_IMETHOD_(void) SetTrusted(bool aTrusted) override { _to SetTrusted(aTrusted); } \
+  NS_IMETHOD_(void) SetOwner(EventTarget* aOwner) override { _to SetOwner(aOwner); } \
+  NS_IMETHOD_(Event*) InternalDOMEvent() override { return _to InternalDOMEvent(); }
 
 #define NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION \
   NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(Event::)

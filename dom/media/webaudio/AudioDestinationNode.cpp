@@ -50,7 +50,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
+                            bool* aFinished) override
   {
     // Do this just for the sake of political correctness; this output
     // will not go anywhere.
@@ -126,7 +126,7 @@ public:
     }
   }
 
-  class OnCompleteTask MOZ_FINAL : public nsRunnable
+  class OnCompleteTask final : public nsRunnable
   {
   public:
     OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
@@ -181,14 +181,14 @@ public:
     NS_DispatchToMainThread(task);
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mInputChannels.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -249,7 +249,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
+                            bool* aFinished) override
   {
     *aOutput = aInput;
     aOutput->mVolume *= mVolume;
@@ -265,7 +265,7 @@ public:
     }
   }
 
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
+  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     if (aIndex == VOLUME) {
       mVolume = aParam;
@@ -276,7 +276,7 @@ public:
     VOLUME,
   };
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -291,7 +291,7 @@ static bool UseAudioChannelService()
   return Preferences::GetBool("media.useAudioChannelService");
 }
 
-class EventProxyHandler MOZ_FINAL : public nsIDOMEventListener
+class EventProxyHandler final : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -303,7 +303,7 @@ public:
   }
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override
   {
     nsCOMPtr<nsIDOMEventListener> listener = do_QueryReferent(mWeakNode);
     if (!listener) {

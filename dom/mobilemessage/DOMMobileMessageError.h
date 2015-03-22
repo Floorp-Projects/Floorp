@@ -17,7 +17,7 @@ namespace dom {
 
 class OwningMozSmsMessageOrMozMmsMessage;
 
-class DOMMobileMessageError MOZ_FINAL : public DOMError
+class DOMMobileMessageError final : public DOMError
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,7 +30,7 @@ public:
                         nsIDOMMozMmsMessage* aMms);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetData(OwningMozSmsMessageOrMozMmsMessage& aRetVal) const;
 

@@ -1116,8 +1116,6 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D11::EndFrame()
 {
-  mContext->Flush();
-
   nsIntSize oldSize = mSize;
   EnsureSize();
   UINT presentInterval = 0;

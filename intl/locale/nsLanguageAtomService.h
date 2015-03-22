@@ -13,22 +13,22 @@
 #define NS_LANGUAGEATOMSERVICE_CID \
   {0xB7C65853, 0x2996, 0x435E, {0x96, 0x54, 0xDC, 0xC1, 0x78, 0xAA, 0xB4, 0x8C}}
 
-class nsLanguageAtomService MOZ_FINAL : public nsILanguageAtomService
+class nsLanguageAtomService final : public nsILanguageAtomService
 {
 public:
   NS_DECL_ISUPPORTS
 
   // nsILanguageAtomService
   virtual nsIAtom*
-    LookupLanguage(const nsACString &aLanguage, nsresult *aError) MOZ_OVERRIDE;
+    LookupLanguage(const nsACString &aLanguage, nsresult *aError) override;
 
   virtual already_AddRefed<nsIAtom>
-    LookupCharSet(const nsACString& aCharSet) MOZ_OVERRIDE;
+    LookupCharSet(const nsACString& aCharSet) override;
 
-  virtual nsIAtom* GetLocaleLanguage(nsresult *aError) MOZ_OVERRIDE;
+  virtual nsIAtom* GetLocaleLanguage(nsresult *aError) override;
 
   virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
-                                                nsresult *aError) MOZ_OVERRIDE;
+                                                nsresult *aError) override;
 
   nsLanguageAtomService();
 

@@ -57,7 +57,7 @@ class BluetoothProfileManagerBase;
 class BluetoothReplyRunnable;
 typedef void (*BluetoothProfileControllerCallback)();
 
-class BluetoothProfileController MOZ_FINAL
+class BluetoothProfileController final
 {
   ~BluetoothProfileController();
 

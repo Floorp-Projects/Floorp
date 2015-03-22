@@ -31,15 +31,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIAnimationObserver, NS_IANIMATION_OBSERVER_IID)
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED                          \
     virtual void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer)      \
-      MOZ_OVERRIDE;
+      override;
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED                        \
     virtual void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer)    \
-      MOZ_OVERRIDE;
+      override;
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED                        \
     virtual void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer)    \
-      MOZ_OVERRIDE;
+      override;
 
 #define NS_IMPL_NSIANIMATIONOBSERVER_STUB(class_)                            \
 void                                                                         \

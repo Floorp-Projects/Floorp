@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class XMLStylesheetProcessingInstruction MOZ_FINAL
+class XMLStylesheetProcessingInstruction final
 : public ProcessingInstruction
 , public nsStyleLinkElement
 {
@@ -35,7 +35,7 @@ public:
   {
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -46,22 +46,22 @@ public:
 
   // nsIDOMNode
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+                                    mozilla::ErrorResult& aError) override;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
 
   // nsIStyleSheetLinkingElement
-  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) MOZ_OVERRIDE;
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) override;
 
   // nsStyleLinkElement
-  NS_IMETHOD GetCharset(nsAString& aCharset) MOZ_OVERRIDE;
+  NS_IMETHOD GetCharset(nsAString& aCharset) override;
 
-  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv) MOZ_OVERRIDE
+  virtual void SetData(const nsAString& aData, mozilla::ErrorResult& rv) override
   {
     nsGenericDOMDataNode::SetData(aData, rv);
     if (rv.Failed()) {
@@ -76,14 +76,14 @@ protected:
 
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 
-  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
+  already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) override;
   void GetStyleSheetInfo(nsAString& aTitle,
                          nsAString& aType,
                          nsAString& aMedia,
                          bool* aIsScoped,
-                         bool* aIsAlternate) MOZ_OVERRIDE;
+                         bool* aIsAlternate) override;
   virtual nsGenericDOMDataNode* CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
-                                              bool aCloneText) const MOZ_OVERRIDE;
+                                              bool aCloneText) const override;
 };
 
 } // namespace dom

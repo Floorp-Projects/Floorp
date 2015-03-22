@@ -27,7 +27,7 @@ public:
   NS_FORWARD_TO_UIEVENT
   NS_DECL_NSIDOMCOMPOSITIONEVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return CompositionEventBinding::Wrap(aCx, this, aGivenProto);
   }

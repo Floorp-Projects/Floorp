@@ -29,10 +29,10 @@ public:
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               nsEventStatus* aEventStatus) override;
 
   virtual void MouseClicked(nsPresContext* aPresContext,
-                            mozilla::WidgetMouseEvent* aEvent) MOZ_OVERRIDE;
+                            mozilla::WidgetMouseEvent* aEvent) override;
 
 protected:
   nsIContent* GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow);

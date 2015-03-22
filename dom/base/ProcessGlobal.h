@@ -48,7 +48,7 @@ public:
 
   virtual void LoadScript(const nsAString& aURL);
 
-  virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE
+  virtual JSObject* GetGlobalJSObject() override
   {
     if (!mGlobal) {
       return nullptr;
@@ -56,9 +56,9 @@ public:
 
     return mGlobal->GetJSObject();
   }
-  virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }
+  virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override
   {
     MOZ_CRASH("ProcessGlobal doesn't use DOM bindings!");
   }

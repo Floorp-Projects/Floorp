@@ -23,7 +23,7 @@ class HTMLImageElement;
 class OwningRadioNodeListOrElement;
 template<typename> struct Nullable;
 
-class HTMLFormControlsCollection MOZ_FINAL : public nsIHTMLCollection
+class HTMLFormControlsCollection final : public nsIHTMLCollection
                                            , public nsWrapperCache
 {
 public:
@@ -36,11 +36,11 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual Element* GetElementAt(uint32_t index) MOZ_OVERRIDE;
-  virtual nsINode* GetParentObject() MOZ_OVERRIDE;
+  virtual Element* GetElementAt(uint32_t index) override;
+  virtual nsINode* GetParentObject() override;
 
   virtual Element*
-  GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE;
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
 
   void
   NamedGetter(const nsAString& aName,
@@ -54,7 +54,7 @@ public:
     NamedGetter(aName, dummy, aResult);
   }
   virtual void GetSupportedNames(unsigned aFlags,
-                                 nsTArray<nsString>& aNames) MOZ_OVERRIDE;
+                                 nsTArray<nsString>& aNames) override;
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
@@ -80,10 +80,10 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 protected:
   virtual ~HTMLFormControlsCollection();
-  virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
+  virtual JSObject* GetWrapperPreserveColorInternal() override
   {
     return nsWrapperCache::GetWrapperPreserveColor();
   }

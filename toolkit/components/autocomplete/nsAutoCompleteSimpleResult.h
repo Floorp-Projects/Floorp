@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 
-class nsAutoCompleteSimpleResult MOZ_FINAL : public nsIAutoCompleteSimpleResult
+class nsAutoCompleteSimpleResult final : public nsIAutoCompleteSimpleResult
 {
 public:
   nsAutoCompleteSimpleResult();

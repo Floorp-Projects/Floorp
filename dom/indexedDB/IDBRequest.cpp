@@ -431,7 +431,7 @@ IDBRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
   return NS_OK;
 }
 
-class IDBOpenDBRequest::WorkerFeature MOZ_FINAL
+class IDBOpenDBRequest::WorkerFeature final
   : public mozilla::dom::workers::WorkerFeature
 {
   WorkerPrivate* mWorkerPrivate;
@@ -458,7 +458,7 @@ public:
 
 private:
   virtual bool
-  Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE;
+  Notify(JSContext* aCx, Status aStatus) override;
 };
 
 IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindow* aOwner)

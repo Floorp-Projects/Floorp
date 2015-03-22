@@ -16,7 +16,7 @@
 class nsIURI;
 class nsIDNSService;
 
-class nsDNSPrefetch MOZ_FINAL : public nsIDNSListener
+class nsDNSPrefetch final : public nsIDNSListener
 {
     ~nsDNSPrefetch() {}
 

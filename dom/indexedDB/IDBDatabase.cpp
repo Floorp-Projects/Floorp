@@ -67,7 +67,7 @@ const char kCycleCollectionObserverTopic[] = "cycle-collector-end";
 const char kMemoryPressureObserverTopic[] = "memory-pressure";
 const char kWindowObserverTopic[] = "inner-window-destroyed";
 
-class CancelableRunnableWrapper MOZ_FINAL
+class CancelableRunnableWrapper final
   : public nsICancelableRunnable
 {
   nsCOMPtr<nsIRunnable> mRunnable;
@@ -91,7 +91,7 @@ private:
 };
 
 // XXX This should either be ported to PBackground or removed someday.
-class CreateFileHelper MOZ_FINAL
+class CreateFileHelper final
   : public nsRunnable
 {
   nsRefPtr<IDBDatabase> mDatabase;
@@ -137,7 +137,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class DatabaseFile MOZ_FINAL
+class DatabaseFile final
   : public PBackgroundIDBDatabaseFileChild
 {
   IDBDatabase* mDatabase;
@@ -161,7 +161,7 @@ private:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE
+  ActorDestroy(ActorDestroyReason aWhy) override
   {
     MOZ_ASSERT(mDatabase);
     mDatabase->AssertIsOnOwningThread();
@@ -179,7 +179,7 @@ private:
 
 } // anonymous namespace
 
-class IDBDatabase::LogWarningRunnable MOZ_FINAL
+class IDBDatabase::LogWarningRunnable final
   : public nsRunnable
 {
   nsCString mMessageName;
@@ -219,7 +219,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class IDBDatabase::Observer MOZ_FINAL
+class IDBDatabase::Observer final
   : public nsIObserver
 {
   IDBDatabase* mWeakDatabase;
@@ -430,7 +430,7 @@ IDBDatabase::RefreshSpec(bool aMayDelete)
 {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator
@@ -847,7 +847,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static void
@@ -1001,7 +1001,7 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFileActor);
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator
@@ -1140,7 +1140,7 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
 {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator

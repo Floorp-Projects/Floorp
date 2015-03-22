@@ -80,7 +80,7 @@ class PendingDBLookup;
 // nsIApplicationReputationQuery and an nsIApplicationReputationCallback. Once
 // created by ApplicationReputationService, it is guaranteed to call mCallback.
 // This class is private to ApplicationReputationService.
-class PendingLookup MOZ_FINAL : public nsIStreamListener
+class PendingLookup final : public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -209,7 +209,7 @@ private:
 
 // A single-use class for looking up a single URI in the safebrowsing DB. This
 // class is private to PendingLookup.
-class PendingDBLookup MOZ_FINAL : public nsIUrlClassifierCallback
+class PendingDBLookup final : public nsIUrlClassifierCallback
 {
 public:
   NS_DECL_ISUPPORTS

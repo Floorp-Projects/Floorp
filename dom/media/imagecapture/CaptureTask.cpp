@@ -103,7 +103,7 @@ CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
   public:
     explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
-    nsresult ReceiveBlob(already_AddRefed<dom::File> aBlob) MOZ_OVERRIDE
+    nsresult ReceiveBlob(already_AddRefed<dom::File> aBlob) override
     {
       nsRefPtr<dom::File> blob(aBlob);
       mTask->TaskComplete(blob.forget(), NS_OK);

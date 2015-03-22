@@ -608,7 +608,7 @@ FetchDriver::FailWithNetworkError()
 }
 
 namespace {
-class FillResponseHeaders MOZ_FINAL : public nsIHttpHeaderVisitor {
+class FillResponseHeaders final : public nsIHttpHeaderVisitor {
   InternalResponse* mResponse;
 
   ~FillResponseHeaders()
@@ -622,7 +622,7 @@ public:
   }
 
   NS_IMETHOD
-  VisitHeader(const nsACString & aHeader, const nsACString & aValue) MOZ_OVERRIDE
+  VisitHeader(const nsACString & aHeader, const nsACString & aValue) override
   {
     ErrorResult result;
     mResponse->Headers()->Append(aHeader, aValue, result);

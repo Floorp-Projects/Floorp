@@ -61,47 +61,47 @@ public:
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
   virtual void DidReflow(nsPresContext* aPresContext,
                          const nsHTMLReflowState* aReflowState,
-                         nsDidReflowStatus aStatus) MOZ_OVERRIDE;
+                         nsDidReflowStatus aStatus) override;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual nsresult  HandleEvent(nsPresContext* aPresContext,
                                 mozilla::WidgetGUIEvent* aEvent,
-                                nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                                nsEventStatus* aEventStatus) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsPluginFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
-  virtual bool NeedsView() MOZ_OVERRIDE { return true; }
+  virtual bool NeedsView() override { return true; }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
-  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) MOZ_OVERRIDE;
+  NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) override;
 
-  virtual void SetIsDocumentActive(bool aIsActive) MOZ_OVERRIDE;
+  virtual void SetIsDocumentActive(bool aIsActive) override;
 
   virtual nsresult GetCursor(const nsPoint& aPoint, 
-                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                             nsIFrame::Cursor& aCursor) override;
 
   // APIs used by nsRootPresContext to set up the widget position/size/clip
   // region.
@@ -135,7 +135,7 @@ public:
 
   // accessibility support
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #ifdef XP_WIN
   NS_IMETHOD GetPluginPort(HWND *aPort);
 #endif
@@ -149,8 +149,8 @@ public:
                                             nsIFrame* aRoot);
 
   // nsIReflowCallback
-  virtual bool ReflowFinished() MOZ_OVERRIDE;
-  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE;
+  virtual bool ReflowFinished() override;
+  virtual void ReflowCallbackCanceled() override;
 
   /**
    * Builds either an ImageLayer or a ReadbackLayer, depending on the type
@@ -184,7 +184,7 @@ public:
    */
   static void EndSwapDocShells(nsISupports* aSupports, void*);
 
-  nsIWidget* GetWidget() MOZ_OVERRIDE { return mInnerView ? mWidget : nullptr; }
+  nsIWidget* GetWidget() override { return mInnerView ? mWidget : nullptr; }
 
   /**
    * Adjust the plugin's idea of its size, using aSize as its new size.
@@ -210,7 +210,7 @@ protected:
                       nsHTMLReflowMetrics& aDesiredSize);
 
   bool IsFocusable(int32_t *aTabIndex = nullptr, 
-                   bool aWithMouse = false) MOZ_OVERRIDE;
+                   bool aWithMouse = false) override;
 
   // check attributes and optionally CSS to see if we should display anything
   bool IsHidden(bool aCheckVisibilityStyle = true) const;
@@ -261,7 +261,7 @@ private:
     explicit PluginEventNotifier(const nsString &aEventType) : 
       mEventType(aEventType) {}
     
-    NS_IMETHOD Run() MOZ_OVERRIDE;
+    NS_IMETHOD Run() override;
   private:
     nsString mEventType;
   };
@@ -311,19 +311,19 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap) MOZ_OVERRIDE;
+                                   bool* aSnap) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
+                     nsRenderingContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) MOZ_OVERRIDE;
+                                 nsRegion* aVisibleRegion) override;
 
   NS_DISPLAY_DECL_NAME("Plugin", TYPE_PLUGIN)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE
+                                             const ContainerLayerParameters& aContainerParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder,
                                                            aManager, 
@@ -333,7 +333,7 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->GetLayerState(aBuilder,
                                                               aManager);

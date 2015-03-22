@@ -123,7 +123,7 @@ private:
 typedef mozilla::BaseAutoLock<SafeMutex> SafeMutexAutoLock;
 typedef mozilla::BaseAutoUnlock<SafeMutex> SafeMutexAutoUnlock;
 
-class nsComponentManagerImpl MOZ_FINAL
+class nsComponentManagerImpl final
   : public nsIComponentManager
   , public nsIServiceManager
   , public nsSupportsWeakReference

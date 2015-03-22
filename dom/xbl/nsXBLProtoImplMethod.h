@@ -90,14 +90,14 @@ public:
   void SetLineNumber(uint32_t aLineNumber);
   
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aTargetClassObject) override;
   virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi, const nsString& aClassStr,
-                                 JS::Handle<JSObject*> aClassObject) MOZ_OVERRIDE;
+                                 JS::Handle<JSObject*> aClassObject) override;
 
-  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) MOZ_OVERRIDE;
+  virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) override;
 
   nsresult Read(nsIObjectInputStream* aStream);
-  virtual nsresult Write(nsIObjectOutputStream* aStream) MOZ_OVERRIDE;
+  virtual nsresult Write(nsIObjectOutputStream* aStream) override;
 
   bool IsCompiled() const
   {
@@ -145,7 +145,7 @@ public:
   // binding instantiations (though they may hang out in mMembers on the
   // prototype implementation).
   virtual nsresult InstallMember(JSContext* aCx,
-                                 JS::Handle<JSObject*> aTargetClassObject) MOZ_OVERRIDE {
+                                 JS::Handle<JSObject*> aTargetClassObject) override {
     return NS_OK;
   }
 

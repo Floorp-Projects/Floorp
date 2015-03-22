@@ -17,12 +17,12 @@ public:
   AudioStreamTrack(DOMMediaStream* aStream, TrackID aTrackID)
     : MediaStreamTrack(aStream, aTrackID) {}
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual AudioStreamTrack* AsAudioStreamTrack() MOZ_OVERRIDE { return this; }
+  virtual AudioStreamTrack* AsAudioStreamTrack() override { return this; }
 
   // WebIDL
-  virtual void GetKind(nsAString& aKind) MOZ_OVERRIDE { aKind.AssignLiteral("audio"); }
+  virtual void GetKind(nsAString& aKind) override { aKind.AssignLiteral("audio"); }
 };
 
 }

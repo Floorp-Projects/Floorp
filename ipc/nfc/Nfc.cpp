@@ -28,7 +28,7 @@ using namespace mozilla::ipc;
 
 namespace {
 
-class SendNfcSocketDataTask MOZ_FINAL : public nsRunnable
+class SendNfcSocketDataTask final : public nsRunnable
 {
 public:
   SendNfcSocketDataTask(NfcConsumer* aConsumer, UnixSocketRawData* aRawData)
