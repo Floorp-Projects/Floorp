@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/cache/AutoUtils.h"
+#include "mozilla/dom/cache/CachePushStreamParent.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
@@ -59,6 +60,19 @@ CacheParent::ActorDestroy(ActorDestroyReason aReason)
   mManager->RemoveListener(this);
   mManager->ReleaseCacheId(mCacheId);
   mManager = nullptr;
+}
+
+PCachePushStreamParent*
+CacheParent::AllocPCachePushStreamParent()
+{
+  return CachePushStreamParent::Create();
+}
+
+bool
+CacheParent::DeallocPCachePushStreamParent(PCachePushStreamParent* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 bool
@@ -259,13 +273,27 @@ CacheParent::DeserializeCacheStream(const PCacheReadStreamOrVoid& aStreamOrVoid)
     return nullptr;
   }
 
+  nsCOMPtr<nsIInputStream> stream;
   const PCacheReadStream& readStream = aStreamOrVoid.get_PCacheReadStream();
 
-  nsCOMPtr<nsIInputStream> stream = ReadStream::Create(readStream);
+  // Option 1: A push stream actor was sent for nsPipe data
+  if (readStream.pushStreamParent()) {
+    MOZ_ASSERT(!readStream.controlParent());
+    CachePushStreamParent* pushStream =
+      static_cast<CachePushStreamParent*>(readStream.pushStreamParent());
+    stream = pushStream->TakeReader();
+    MOZ_ASSERT(stream);
+    return stream.forget();
+  }
+
+  // Option 2: One of our own ReadStreams was passed back to us with a stream
+  //           control actor.
+  stream = ReadStream::Create(readStream);
   if (stream) {
     return stream.forget();
   }
 
+  // Option 3: A stream was serialized using normal methods.
   nsAutoTArray<FileDescriptor, 4> fds;
   if (readStream.fds().type() ==
       OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
