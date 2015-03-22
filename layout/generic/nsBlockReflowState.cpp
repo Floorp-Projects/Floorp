@@ -472,7 +472,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
   // "Translate" the float manager with an offset of (0, 0) in order to
   // set the origin to our writing mode
   LogicalPoint oPt(wm);
-  WritingMode oldWM = mFloatManager->Translate(wm, oPt);
+  WritingMode oldWM = mFloatManager->Translate(wm, oPt, ContainerWidth());
   if (aLine->HasFloats()) {
     // Place the floats into the space-manager again. Also slide
     // them, just like the regular frames on the line.
@@ -512,7 +512,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
     nsBlockFrame::RecoverFloatsFor(aLine->mFirstChild, *mFloatManager, wm,
                                    ContainerWidth());
   }
-  mFloatManager->Untranslate(oldWM, oPt);
+  mFloatManager->Untranslate(oldWM, oPt, ContainerWidth());
 }
 
 /**
@@ -711,7 +711,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // "Translate" the float manager with an offset of (0, 0) in order to
   // set the origin to our writing mode
   LogicalPoint oPt(wm);
-  WritingMode oldWM = mFloatManager->Translate(wm, oPt);
+  WritingMode oldWM = mFloatManager->Translate(wm, oPt, ContainerWidth());
   mBCoord = std::max(mFloatManager->GetLowestFloatTop(wm, ContainerWidth()),
                      mBCoord);
 
@@ -1001,7 +1001,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   }
 #endif
 
-  mFloatManager->Untranslate(oldWM, oPt);
+  mFloatManager->Untranslate(oldWM, oPt, ContainerWidth());
 
   return true;
 }

@@ -943,7 +943,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   metrics.BSize(lineWM) = nscoord(0xdeadbeef);
 #endif
   LogicalPoint tPt = pfd->mBounds.Origin(lineWM);
-  WritingMode oldWM = mFloatManager->Translate(lineWM, tPt);
+  WritingMode oldWM = mFloatManager->Translate(lineWM, tPt, ContainerWidth());
 
   int32_t savedOptionalBreakOffset;
   gfxBreakPriority savedOptionalBreakPriority;
@@ -1031,7 +1031,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
   pfd->mIsEmpty = isEmpty;
 
-  mFloatManager->Untranslate(oldWM, tPt);
+  mFloatManager->Untranslate(oldWM, tPt, ContainerWidth());
 
   NS_ASSERTION(metrics.ISize(lineWM) >= 0, "bad inline size");
   NS_ASSERTION(metrics.BSize(lineWM) >= 0,"bad block size");
