@@ -22,25 +22,25 @@ this.DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager");
 
+Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/marionette-elements.js");
-Cu.import("chrome://marionette/content/marionette-simpletest.js");
 Cu.import("chrome://marionette/content/modal.js");
+Cu.import("chrome://marionette/content/simpletest.js");
 
-loader.loadSubScript("chrome://marionette/content/marionette-common.js");
+loader.loadSubScript("chrome://marionette/content/common.js");
 
 // preserve this import order:
 let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
-loader.loadSubScript("chrome://marionette/content/marionette-sendkeys.js", utils);
-loader.loadSubScript("chrome://marionette/content/marionette-frame-manager.js");
+loader.loadSubScript("chrome://marionette/content/sendkeys.js", utils);
+loader.loadSubScript("chrome://marionette/content/frame-manager.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
-const FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
+const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
@@ -92,7 +92,7 @@ this.Context.fromString = function(s) {
  * The argument sequence is serialised and passed as an array, unless it
  * consists of a single object type that isn't null, in which case it's
  * passed literally.  The latter specialisation is temporary to achieve
- * backwards compatibility with marionette-listener.js.
+ * backwards compatibility with listener.js.
  *
  * @param {function(): nsIMessageManager} mmFn
  *     Function returning the current message manager.
@@ -305,7 +305,7 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
 
 /**
  * Helper method to send async messages to the content listener.
- * Correct usage is to pass in the name of a function in marionette-listener.js,
+ * Correct usage is to pass in the name of a function in listener.js,
  * a message object consisting of JSON serialisable primitives,
  * and the current command's ID.
  *
