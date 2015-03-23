@@ -89,7 +89,7 @@ body {
 }
 
 .item:not(:hover):not(.selected) .remove-button {
-  display: none;
+  visibility: hidden;
 }
 
 .remove-button {
