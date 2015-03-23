@@ -106,7 +106,8 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         // Escape hatch: we don't show the option to open this dialog in this state so this should
         // never be run. However, due to potential inconsistencies in synced client state
         // (e.g. bug 1122302 comment 47), we might fail.
-        if (state == State.DEVICES_ONLY && clientrecords.length == 0) {
+        if (state == State.DEVICES_ONLY &&
+                (clientrecords == null || clientrecords.length == 0)) {
             Log.e(LOGTAG, "In state: " + State.DEVICES_ONLY + " and received 0 synced clients. Finishing...");
             Toast.makeText(this, getResources().getText(R.string.overlay_no_synced_devices), Toast.LENGTH_SHORT)
                  .show();
