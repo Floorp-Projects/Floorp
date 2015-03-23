@@ -2372,6 +2372,22 @@ TEST_P(SignalingTest, RenegotiationOffererRemovesTrack)
   CloseStreams();
 }
 
+TEST_P(SignalingTest, RenegotiationBothRemoveThenAddTrack)
+{
+  OfferOptions options;
+  OfferAnswer(options, OFFER_AV | ANSWER_AV);
+
+  a1_->RemoveTrack(0, false);
+  a2_->RemoveTrack(0, false);
+
+  OfferAnswer(options, OFFER_NONE);
+
+  // OFFER_AUDIO causes a new audio track to be added on both sides
+  OfferAnswer(options, OFFER_AUDIO);
+
+  CloseStreams();
+}
+
 TEST_P(SignalingTest, RenegotiationOffererReplacesTrack)
 {
   OfferOptions options;

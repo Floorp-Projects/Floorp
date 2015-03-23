@@ -236,6 +236,7 @@ private:
                          const Sdp& oldAnswer,
                          Sdp* newSdp);
   void SetupBundle(Sdp* sdp) const;
+  nsresult SetupTransportAttributes(Sdp* sdp);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
   nsresult GetIdsFromMsid(const Sdp& sdp,
                           const SdpMediaSection& msection,
@@ -312,6 +313,7 @@ private:
                               std::vector<uint8_t>* payloadTypesOut);
   std::string GetCNAME(const SdpMediaSection& msection) const;
   bool MsectionIsDisabled(const SdpMediaSection& msection) const;
+  const Sdp* GetAnswer() const;
 
   std::vector<JsepSendingTrack> mLocalTracks;
   std::vector<JsepReceivingTrack> mRemoteTracks;

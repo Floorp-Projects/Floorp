@@ -480,6 +480,11 @@ void NrIceMediaStream::Ready() {
 void NrIceMediaStream::Close() {
   MOZ_MTLOG(ML_DEBUG, "Marking stream closed '" << name_ << "'");
   state_ = ICE_CLOSED;
-  stream_ = nullptr;
+
+  int r = nr_ice_remove_media_stream(ctx_->ctx(), &stream_);
+  if (r) {
+    MOZ_ASSERT(false, "Failed to remove stream");
+    MOZ_MTLOG(ML_ERROR, "Failed to remove stream, error=" << r);
+  }
 }
 }  // close namespace

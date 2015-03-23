@@ -1880,6 +1880,14 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
             offererPairs[0].mRtpTransport.get());
   ASSERT_NE(newAnswererPairs[0].mRtpTransport.get(),
             answererPairs[0].mRtpTransport.get());
+
+  ASSERT_LE(1U, mSessionOff.GetTransports().size());
+  ASSERT_LE(1U, mSessionAns.GetTransports().size());
+
+  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
+            mSessionOff.GetTransports()[0]->mState);
+  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
+            mSessionAns.GetTransports()[0]->mState);
 }
 
 TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
