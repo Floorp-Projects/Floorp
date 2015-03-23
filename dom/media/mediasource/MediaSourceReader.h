@@ -134,11 +134,11 @@ public:
   bool TrackBuffersContainTime(int64_t aTime);
 
   // Mark the reader to indicate that EndOfStream has been called on our MediaSource
-  void Ended();
-
-  // Return true if the Ended method has been called
+  // and that the media element has all the media data.
+  // If called with true, the reader will come out of ended mode.
+  void Ended(bool aEnded);
+  // Return true if reader has all of the media data.
   bool IsEnded();
-  bool IsNearEnd(MediaData::Type aType, int64_t aTime /* microseconds */);
 
   // Set the duration of the attached mediasource element.
   void SetMediaSourceDuration(double aDuration /* seconds */);
@@ -219,6 +219,8 @@ private:
 
   void AttemptSeek();
   bool IsSeeking() { return mPendingSeekTime != -1; }
+
+  bool IsNearEnd(MediaData::Type aType, int64_t aTime /* microseconds */);
 
   nsRefPtr<SourceBufferDecoder> mAudioSourceDecoder;
   nsRefPtr<SourceBufferDecoder> mVideoSourceDecoder;

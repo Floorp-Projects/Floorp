@@ -156,10 +156,10 @@ MediaSourceDecoder::OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const Med
 }
 
 void
-MediaSourceDecoder::Ended()
+MediaSourceDecoder::Ended(bool aEnded)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mReader->Ended();
+  mReader->Ended(aEnded);
   mon.NotifyAll();
 }
 
