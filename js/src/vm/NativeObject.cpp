@@ -1324,14 +1324,15 @@ CheckAccessorRedefinition(ExclusiveContext* cx, HandleObject obj, HandleShape sh
 
 bool
 js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                         Handle<JSPropertyDescriptor> desc,
+                         Handle<PropertyDescriptor> desc,
                          ObjectOpResult& result)
 {
+    desc.assertValid();
+
     GetterOp getter = desc.getter();
     SetterOp setter = desc.setter();
     unsigned attrs = desc.attributes();
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
