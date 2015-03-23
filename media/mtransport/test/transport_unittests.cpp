@@ -599,7 +599,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
     // Create the media stream
     mozilla::RefPtr<NrIceMediaStream> stream =
         ice_ctx_->CreateStream(static_cast<char *>(name), 1);
+
     ASSERT_TRUE(stream != nullptr);
+    ice_ctx_->SetStream(streams_.size(), stream);
     streams_.push_back(stream);
 
     // Listen for candidates

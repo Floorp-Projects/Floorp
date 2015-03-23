@@ -531,14 +531,20 @@ NrIceCtx::~NrIceCtx() {
 
 RefPtr<NrIceMediaStream>
 NrIceCtx::CreateStream(const std::string& name, int components) {
-  RefPtr<NrIceMediaStream> stream =
-    NrIceMediaStream::Create(this, name, components);
+  return NrIceMediaStream::Create(this, name, components);
+}
 
-  if (stream) {
-    streams_.push_back(stream);
+void
+NrIceCtx::SetStream(size_t index, NrIceMediaStream* stream) {
+  if (index >= streams_.size()) {
+    streams_.resize(index + 1);
   }
 
-  return stream;
+  if (streams_[index]) {
+    streams_[index]->Close();
+  }
+
+  streams_[index] = stream;
 }
 
 std::string NrIceCtx::ufrag() const {
