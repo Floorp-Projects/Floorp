@@ -110,10 +110,10 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
  * the test data that will be used by the following tests.
  */
 add_task(function test_initialize() {
-  let oldCanRecord = Services.telemetry.canRecord;
-  Services.telemetry.canRecord = true;
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
   do_register_cleanup(function () {
-    Services.telemetry.canRecord = oldCanRecord;
+    Services.telemetry.canRecordExtended = oldCanRecord;
   });
 
   let uniqueNumber = 1;
