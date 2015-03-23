@@ -4,8 +4,20 @@
 
 %include ../../shared/readinglist/sidebar.inc.css
 
+html {
+  border: 1px solid ThreeDShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  box-sizing: border-box;
+}
+
 .item {
   -moz-padding-end: 0;
+}
+
+.item.active {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 .item-title {
