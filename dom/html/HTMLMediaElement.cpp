@@ -3093,10 +3093,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     }
 
 #ifdef MOZ_EME
-    // Dispatch a distinct 'encrypted' event for each initData we have.
-    for (const auto& initData : aInfo->mCrypto.mInitDatas) {
-      DispatchEncrypted(initData.mInitData, initData.mType);
-    }
+    DispatchEncrypted(aInfo->mCrypto.mInitData, aInfo->mCrypto.mType);
 #endif
   }
 
