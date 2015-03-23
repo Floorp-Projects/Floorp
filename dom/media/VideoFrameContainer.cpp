@@ -65,16 +65,6 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::Reset()
-{
-  ClearCurrentFrame(true);
-  Invalidate();
-  mIntrinsicSize = gfxIntSize(-1, -1);
-  mPaintDelay = mozilla::TimeDuration();
-  mPaintTarget = mozilla::TimeStamp();
-  mImageContainer->ResetPaintCount();
-}
-
 void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
 {
   MutexAutoLock lock(mMutex);
