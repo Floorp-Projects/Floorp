@@ -4,6 +4,10 @@
 
 %include ../../shared/readinglist/sidebar.inc.css
 
+html {
+  border-top: 1px solid #bdbdbd;
+}
+
 .item-title {
   margin: 4px 0 0;
 }
