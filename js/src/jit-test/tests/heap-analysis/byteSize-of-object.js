@@ -26,7 +26,7 @@ function tenure(obj) {
 // being tenured. (We use 'survives a GC' as an approximation for 'tenuring'.)
 function tByteSize(obj) {
   var size = byteSize(obj);
-  gc();
+  minorgc();
   if (size != byteSize(obj))
     return 0;
   return size;

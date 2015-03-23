@@ -567,7 +567,6 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 
 // Define specializations for some commonly-used public JSAPI types.
 // These can use the generic templates above.
-template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
 
@@ -584,6 +583,17 @@ class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
     static void construct(void* storage, JSObject* ptr) {
         new (storage) Concrete(ptr);
     }
+};
+
+// For JSString, we extend the generic template with a 'size' implementation.
+template<> struct Concrete<JSString> : TracerConcrete<JSString> {
+    size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  protected:
+    explicit Concrete(JSString *ptr) : TracerConcrete<JSString>(ptr) { }
+
+  public:
+    static void construct(void *storage, JSString *ptr) { new (storage) Concrete(ptr); }
 };
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
