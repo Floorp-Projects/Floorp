@@ -49,8 +49,6 @@ public:
   B2G_ACL_EXPORT void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
                        TimeStamp aTargetTime);
   void ClearCurrentFrame(bool aResetSize = false);
-  // Reset the VideoFrameContainer
-  void Reset();
   // Time in seconds by which the last painted video frame was late by.
   // E.g. if the last painted frame should have been painted at time t,
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
