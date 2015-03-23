@@ -334,7 +334,7 @@ ReflectionTests.typeMap = {
                      {toString:function() {return 2;}, valueOf: null},
                      {valueOf:function() {return 3;}}],
         "domExpected": function(val) {
-            var parsed = ReflectionTests.parseInt(val + "");
+            var parsed = ReflectionTests.parseInt(String(val));
             if (parsed === false || parsed > maxInt || parsed < minInt) {
                 return null;
             }

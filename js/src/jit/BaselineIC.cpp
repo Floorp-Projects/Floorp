@@ -6061,6 +6061,8 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
 
     RootedPropertyName name(cx, script->getName(pc));
 
+    static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
+                  "Otherwise our check for JSOP_TYPEOF isn't ok");
     if (JSOp(pc[JSOP_GETGNAME_LENGTH]) == JSOP_TYPEOF) {
         if (!GetScopeNameForTypeOf(cx, scopeChain, name, res))
             return false;
@@ -6087,7 +6089,7 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
 
     bool attached = false;
     bool isTemporarilyUnoptimizable = false;
-    if (js_CodeSpec[*pc].format & JOF_GNAME) {
+    if (IsGlobalOp(JSOp(*pc)) && !script->hasPollutedGlobalScope()) {
         Handle<GlobalObject*> global = scopeChain.as<GlobalObject>();
         if (!TryAttachGlobalNameStub(cx, script, pc, stub, global, name, &attached,
                                      &isTemporarilyUnoptimizable))
@@ -6202,7 +6204,7 @@ DoBindNameFallback(JSContext *cx, BaselineFrame *frame, ICBindName_Fallback *stu
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BindName(%s)", js_CodeName[JSOp(*pc)]);
 
-    MOZ_ASSERT(op == JSOP_BINDNAME);
+    MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
 
     RootedPropertyName name(cx, frame->script()->getName(pc));
 

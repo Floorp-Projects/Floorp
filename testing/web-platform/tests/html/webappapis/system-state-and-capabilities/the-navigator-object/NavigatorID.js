@@ -31,6 +31,10 @@ function run_test() {
                   "navigator.userAgent should be a string");
   }, "userAgent type");
 
+  test(function() {
+    assert_equals(navigator.vendorSub, "");
+  }, "vendorSub");
+
   async_test(function() {
     var request = new XMLHttpRequest();
     request.onload = this.step_func_done(function() {

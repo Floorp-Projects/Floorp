@@ -171,6 +171,16 @@ def check_parsed(path, f):
                 errors.append(("MULTIPLE-TESTHARNESSREPORT",
                                "%s more than one <script src='/resources/testharnessreport.js>'" % path, None))
 
+        for element in source_file.variant_nodes:
+            if "content" not in element.attrib:
+                errors.append(("VARIANT-MISSING",
+                               "%s has <meta name=variant> missing 'content' attribute" % path, None))
+            else:
+                variant = element.attrib["content"]
+                if variant != "" and variant[0] not in ("?", "#"):
+                    errors.append(("MALFORMED-VARIANT",
+                               "%s <meta name=variant> 'content' attribute must be the empty string or start with '?' or '#'" % path, None))
+
         seen_elements = {"timeout": False,
                          "testharness": False,
                          "testharnessreport": False}
