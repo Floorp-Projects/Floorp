@@ -257,6 +257,7 @@ body {
   border-left: 0;
   border-right: 0;
   border-bottom: 1px solid #c1c1c1;
+  padding: 0;
 }
 
 .button[hidden] {
