@@ -1477,7 +1477,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                          ObjectOpResult& result)
 {
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(obj, value, attrs, getter, setter);
+    desc.initFields(NullPtr(), value, attrs, getter, setter);
     return NativeDefineProperty(cx, obj, id, desc, result);
 }
 
