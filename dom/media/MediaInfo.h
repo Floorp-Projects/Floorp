@@ -106,10 +106,9 @@ public:
 class EncryptionInfo {
 public:
   struct InitData {
-    template<typename AInitDatas>
-    InitData(const nsAString& aType, AInitDatas&& aInitData)
+    InitData(const nsString& aType, nsTArray<uint8_t>&& aInitData)
       : mType(aType)
-      , mInitData(Forward<AInitDatas>(aInitData))
+      , mInitData(Move(aInitData))
     {
     }
 
@@ -127,10 +126,9 @@ public:
     return !mInitDatas.IsEmpty();
   }
 
-  template<typename AInitDatas>
-  void AddInitData(const nsAString& aType, AInitDatas&& aInitData)
+  void AddInitData(const nsString& aType, nsTArray<uint8_t>&& aInitData)
   {
-    mInitDatas.AppendElement(InitData(aType, Forward<AInitDatas>(aInitData)));
+    mInitDatas.AppendElement(InitData(aType, Move(aInitData)));
   }
 
   void AddInitData(const EncryptionInfo& aInfo)
