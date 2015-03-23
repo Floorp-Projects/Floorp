@@ -36,6 +36,7 @@ public:
   void SetIdle(MediaDataDecoder* aProxy);
   void ReleaseMediaResources();
   void Shutdown();
+  bool IsPDMInUse(const PlatformDecoderModule* aPDM) const;
 
   friend class SharedDecoderProxy;
   friend class SharedDecoderCallback;
@@ -49,6 +50,7 @@ private:
   virtual ~SharedDecoderManager();
   void DrainComplete();
 
+  nsRefPtr<PlatformDecoderModule> mPDM;
   nsRefPtr<MediaDataDecoder> mDecoder;
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   SharedDecoderProxy* mActiveProxy;
