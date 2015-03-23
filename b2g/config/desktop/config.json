@@ -1,0 +1,8 @@
+{
+    "gaia": {
+        "l10n": {
+            "vcs": "hgtool",
+            "root": "https://hg.mozilla.org/gaia-l10n"
+        }
+    }
+}
