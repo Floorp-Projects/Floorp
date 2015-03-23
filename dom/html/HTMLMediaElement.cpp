@@ -3092,7 +3092,9 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
       return;
     }
 
+#ifdef MOZ_EME
     DispatchEncrypted(aInfo->mCrypto.mInitData, aInfo->mCrypto.mType);
+#endif
   }
 
   // Expose the tracks to JS directly.
