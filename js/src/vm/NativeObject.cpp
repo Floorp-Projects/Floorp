@@ -1302,10 +1302,13 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
         }
     } else if (IsAnyTypedArray(obj)) {
-        // Don't define new indexed properties on typed arrays.
+        // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
         uint64_t index;
-        if (IsTypedArrayIndex(id, &index))
-            return result.succeed();
+        if (IsTypedArrayIndex(id, &index)) {
+            if (!cx->shouldBeJSContext())
+                return false;
+            return DefineTypedArrayElement(cx->asJSContext(), obj, index, desc_, result);
+        }
     }
 
     Rooted<PropertyDescriptor> desc(cx, desc_);
