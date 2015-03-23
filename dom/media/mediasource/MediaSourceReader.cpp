@@ -727,6 +727,8 @@ MediaSourceReader::NotifyTimeRangesChanged()
     RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
         this, &MediaSourceReader::AttemptSeek));
     GetTaskQueue()->Dispatch(task.forget());
+  } else {
+    MaybeNotifyHaveData();
   }
 }
 
@@ -958,16 +960,24 @@ MediaSourceReader::MaybeNotifyHaveData()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   bool haveAudio = false, haveVideo = false;
-  if (!IsSeeking() && mAudioTrack && HaveData(mLastAudioTime, MediaData::AUDIO_DATA)) {
-    haveAudio = true;
-    WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
+  bool ended = IsEnded();
+  // If we are in ended mode, we will resolve any pending wait promises.
+  // The next Request*Data will handle END_OF_STREAM or going back into waiting
+  // mode.
+  if (!IsSeeking() && mAudioTrack) {
+    haveAudio = HaveData(mLastAudioTime, MediaData::AUDIO_DATA);
+    if (ended || haveAudio) {
+      WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
+    }
   }
-  if (!IsSeeking() && mVideoTrack && HaveData(mLastVideoTime, MediaData::VIDEO_DATA)) {
-    haveVideo = true;
-    WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
+  if (!IsSeeking() && mVideoTrack) {
+    haveVideo = HaveData(mLastVideoTime, MediaData::VIDEO_DATA);
+    if (ended || haveVideo) {
+      WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
+    }
   }
-  MSE_DEBUG("isSeeking=%d haveAudio=%d, haveVideo=%d",
-            IsSeeking(), haveAudio, haveVideo);
+  MSE_DEBUG("isSeeking=%d haveAudio=%d, haveVideo=%d ended=%d",
+            IsSeeking(), haveAudio, haveVideo, ended);
 }
 
 nsresult
@@ -1046,6 +1056,13 @@ MediaSourceReader::Ended(bool aEnded)
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mEnded = aEnded;
+  if (aEnded) {
+    // post a task to the decode queue to try to complete any pending
+    // seek or wait
+    RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+        this, &MediaSourceReader::NotifyTimeRangesChanged));
+    GetTaskQueue()->Dispatch(task.forget());
+  }
 }
 
 bool
