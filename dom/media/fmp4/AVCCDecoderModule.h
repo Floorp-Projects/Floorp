@@ -28,7 +28,6 @@ public:
   virtual ~AVCCDecoderModule();
 
   virtual nsresult Startup() MOZ_OVERRIDE;
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
