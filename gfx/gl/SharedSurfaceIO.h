@@ -30,6 +30,9 @@ public:
     virtual bool WaitSync() override { return true; }
     virtual bool PollSync() override { return true; }
 
+    virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                                GLint x, GLint y, GLsizei width, GLsizei height,
+                                GLint border) override;
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid *pixels) override;
 
