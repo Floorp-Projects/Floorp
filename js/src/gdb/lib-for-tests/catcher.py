@@ -1,9 +1,9 @@
 # Apparently, there's simply no way to ask GDB to exit with a non-zero
 # status when the script run with the --eval-command option fails. Thus, if
-# we have --eval-command run prolog.py directly, syntax errors there will
+# we have --eval-command run prologue.py directly, syntax errors there will
 # lead GDB to exit with no indication anything went wrong.
 #
-# To avert that, we use this very small launcher script to run prolog.py
+# To avert that, we use this very small launcher script to run prologue.py
 # and catch errors.
 #
 # Remember, errors in this file will cause spurious passes, so keep this as
@@ -15,7 +15,7 @@ import traceback
 try:
     # testlibdir is set on the GDB command line, via:
     # --eval-command python testlibdir=...
-    execfile(os.path.join(testlibdir, 'prolog.py'))
+    execfile(os.path.join(testlibdir, 'prologue.py'))
 except Exception as err:
     sys.stderr.write('Error running GDB prologue:\n')
     traceback.print_exc()

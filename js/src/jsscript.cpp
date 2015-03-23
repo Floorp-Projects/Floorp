@@ -586,7 +586,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t length, lineno, column, nslots, staticLevel;
     uint32_t natoms, nsrcnotes, i;
     uint32_t nconsts, nobjects, nregexps, ntrynotes, nblockscopes, nyieldoffsets;
-    uint32_t prologLength, version;
+    uint32_t prologueLength, version;
     uint32_t funLength = 0;
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
@@ -633,7 +633,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
         return false;
 
     if (mode == XDR_ENCODE) {
-        prologLength = script->mainOffset();
+        prologueLength = script->mainOffset();
         MOZ_ASSERT(script->getVersion() != JSVERSION_UNKNOWN);
         version = script->getVersion();
         lineno = script->lineno();
@@ -702,7 +702,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << HasPollutedGlobalScope);
     }
 
-    if (!xdr->codeUint32(&prologLength))
+    if (!xdr->codeUint32(&prologueLength))
         return false;
     if (!xdr->codeUint32(&version))
         return false;
@@ -787,7 +787,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
         }
 
         MOZ_ASSERT(!script->mainOffset());
-        script->mainOffset_ = prologLength;
+        script->mainOffset_ = prologueLength;
         script->setLength(length);
         script->funLength_ = funLength;
 
@@ -2567,7 +2567,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     MOZ_ASSERT(bce->regexpList.length <= INDEX_LIMIT);
 
     uint32_t mainLength = bce->offset();
-    uint32_t prologLength = bce->prologOffset();
+    uint32_t prologueLength = bce->prologueOffset();
     uint32_t nsrcnotes;
     if (!bce->finishTakingSrcNotes(&nsrcnotes))
         return false;
@@ -2581,19 +2581,19 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     }
 
     MOZ_ASSERT(script->mainOffset() == 0);
-    script->mainOffset_ = prologLength;
+    script->mainOffset_ = prologueLength;
 
     script->lineno_ = bce->firstLine;
 
-    script->setLength(prologLength + mainLength);
+    script->setLength(prologueLength + mainLength);
     script->natoms_ = natoms;
     SharedScriptData* ssd = SharedScriptData::new_(cx, script->length(), nsrcnotes, natoms);
     if (!ssd)
         return false;
 
     jsbytecode* code = ssd->data;
-    PodCopy<jsbytecode>(code, bce->prolog.code.begin(), prologLength);
-    PodCopy<jsbytecode>(code + prologLength, bce->code().begin(), mainLength);
+    PodCopy<jsbytecode>(code, bce->prologue.code.begin(), prologueLength);
+    PodCopy<jsbytecode>(code + prologueLength, bce->code().begin(), mainLength);
     bce->copySrcNotes((jssrcnote*)(code + script->length()), nsrcnotes);
     InitAtomMap(bce->atomIndices.getMap(), ssd->atoms());
 
@@ -2639,7 +2639,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         script->setGeneratorKind(funbox->generatorKind());
         script->setFunction(funbox->function());
         if (bce->yieldOffsetList.length() != 0)
-            bce->yieldOffsetList.finish(script->yieldOffsets(), prologLength);
+            bce->yieldOffsetList.finish(script->yieldOffsets(), prologueLength);
     }
 
     // The call to nfixed() depends on the above setFunction() call.
@@ -2855,7 +2855,7 @@ js::LineNumberToPC(JSScript* script, unsigned target)
     unsigned bestdiff = SN_MAX_OFFSET;
     for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         /*
-         * Exact-match only if offset is not in the prolog; otherwise use
+         * Exact-match only if offset is not in the prologue; otherwise use
          * nearest greater-or-equal line number match.
          */
         if (lineno == target && offset >= ptrdiff_t(script->mainOffset()))
