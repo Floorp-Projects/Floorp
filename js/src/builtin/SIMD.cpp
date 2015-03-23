@@ -851,22 +851,6 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
 
 template<typename Vret>
 static bool
-FuncZero(JSContext *cx, unsigned argc, Value *vp)
-{
-    typedef typename Vret::Elem RetElem;
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 0)
-        return ErrorBadArgs(cx);
-
-    RetElem result[Vret::lanes];
-    for (unsigned i = 0; i < Vret::lanes; i++)
-        result[i] = RetElem(0);
-    return StoreResult<Vret>(cx, args, result);
-}
-
-template<typename Vret>
-static bool
 FuncSplat(JSContext *cx, unsigned argc, Value *vp)
 {
     typedef typename Vret::Elem RetElem;
