@@ -3224,7 +3224,6 @@ void HTMLMediaElement::SeekStarted()
   if(mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannelBeforeSeek = true;
   }
-  FireTimeUpdate(false);
 }
 
 void HTMLMediaElement::SeekCompleted()
