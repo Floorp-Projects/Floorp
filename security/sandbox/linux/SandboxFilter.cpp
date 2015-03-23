@@ -154,6 +154,7 @@ SandboxFilterImplContent::Build() {
   Allow(SYSCALL(munmap));
   Allow(SYSCALL(mprotect));
   Allow(SYSCALL(writev));
+  Allow(SYSCALL(pread64));
   AllowThreadClone();
   Allow(SYSCALL(brk));
 #if SYSCALL_EXISTS(set_thread_area)

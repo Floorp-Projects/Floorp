@@ -6,12 +6,12 @@
 
 #include "BluetoothGattManager.h"
 
-#include "BluetoothCommon.h"
 #include "BluetoothInterface.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 #include "MainThreadUtils.h"
+#include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
@@ -37,10 +37,9 @@ namespace {
 
 bool BluetoothGattManager::mInShutdown = false;
 
-class BluetoothGattClient;
 static StaticAutoPtr<nsTArray<nsRefPtr<BluetoothGattClient> > > sClients;
 
-class BluetoothGattClient final : public nsISupports
+class mozilla::dom::bluetooth::BluetoothGattClient final : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
@@ -56,8 +55,39 @@ public:
   {
     mConnectRunnable = nullptr;
     mDisconnectRunnable = nullptr;
+    mDiscoverRunnable = nullptr;
     mUnregisterClientRunnable = nullptr;
     mReadRemoteRssiRunnable = nullptr;
+  }
+
+  void NotifyDiscoverCompleted(bool aSuccess)
+  {
+    MOZ_ASSERT(!mAppUuid.IsEmpty());
+    MOZ_ASSERT(mDiscoverRunnable);
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    // Notify application to clear the cache values of
+    // service/characteristic/descriptor.
+    bs->DistributeSignal(NS_LITERAL_STRING("DiscoverCompleted"),
+                         mAppUuid,
+                         BluetoothValue(aSuccess));
+
+    // Resolve/Reject the Promise.
+    if (aSuccess) {
+      DispatchReplySuccess(mDiscoverRunnable);
+    } else {
+      DispatchReplyError(mDiscoverRunnable,
+                         NS_LITERAL_STRING("Discover failed"));
+    }
+
+    // Cleanup
+    mServices.Clear();
+    mIncludedServices.Clear();
+    mCharacteristics.Clear();
+    mDescriptors.Clear();
+    mDiscoverRunnable = nullptr;
   }
 
   nsString mAppUuid;
@@ -66,8 +96,18 @@ public:
   int mConnId;
   nsRefPtr<BluetoothReplyRunnable> mConnectRunnable;
   nsRefPtr<BluetoothReplyRunnable> mDisconnectRunnable;
-  nsRefPtr<BluetoothReplyRunnable> mUnregisterClientRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mDiscoverRunnable;
   nsRefPtr<BluetoothReplyRunnable> mReadRemoteRssiRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mUnregisterClientRunnable;
+
+  /**
+   * These temporary arrays are used only during discover operations.
+   * All of them are empty if there are no ongoing discover operations.
+   */
+  nsTArray<BluetoothGattServiceId> mServices;
+  nsTArray<BluetoothGattServiceId> mIncludedServices;
+  nsTArray<BluetoothGattId> mCharacteristics;
+  nsTArray<BluetoothGattId> mDescriptors;
 };
 
 NS_IMPL_ISUPPORTS0(BluetoothGattClient)
@@ -89,6 +129,16 @@ public:
               int aClientIf) const
   {
     return aClient->mClientIf == aClientIf;
+  }
+};
+
+class ConnIdComparator
+{
+public:
+  bool Equals(const nsRefPtr<BluetoothGattClient>& aClient,
+              int aConnId) const
+  {
+    return aClient->mConnId == aConnId;
   }
 };
 
@@ -338,13 +388,7 @@ BluetoothGattManager::UnregisterClient(int aClientIf,
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    ClientIfComparator());
-
-  // Reject the unregister request if the client is not found
-  if (index == sClients->NoIndex) {
-    DispatchReplyError(aRunnable,
-                       NS_LITERAL_STRING("Unregister GATT client failed"));
-    return;
-  }
+  MOZ_ASSERT(index != sClients->NoIndex);
 
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
   client->mUnregisterClientRunnable = aRunnable;
@@ -469,12 +513,7 @@ BluetoothGattManager::Disconnect(const nsAString& aAppUuid,
   ENSURE_GATT_CLIENT_INTF_IS_READY_VOID(aRunnable);
 
   size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
-
-  // Reject the disconnect request if the client is not found
-  if (index == sClients->NoIndex) {
-    DispatchReplyError(aRunnable, NS_LITERAL_STRING("Disconnect failed"));
-    return;
-  }
+  MOZ_ASSERT(index != sClients->NoIndex);
 
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
   client->mDisconnectRunnable = aRunnable;
@@ -484,6 +523,66 @@ BluetoothGattManager::Disconnect(const nsAString& aAppUuid,
     aDeviceAddr,
     client->mConnId,
     new DisconnectResultHandler(client));
+}
+
+class BluetoothGattManager::DiscoverResultHandler final
+  : public BluetoothGattClientResultHandler
+{
+public:
+  DiscoverResultHandler(BluetoothGattClient* aClient)
+  : mClient(aClient)
+  {
+    MOZ_ASSERT(mClient);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattClientInterface::Discover failed: %d",
+               (int)aStatus);
+
+    mClient->NotifyDiscoverCompleted(false);
+  }
+
+private:
+  nsRefPtr<BluetoothGattClient> mClient;
+};
+
+void
+BluetoothGattManager::Discover(const nsAString& aAppUuid,
+                               BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_CLIENT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  MOZ_ASSERT(client->mConnId > 0);
+  MOZ_ASSERT(!client->mDiscoverRunnable);
+
+  client->mDiscoverRunnable = aRunnable;
+
+  /**
+   * Discover all services/characteristics/descriptors offered by the remote
+   * GATT server.
+   *
+   * The discover procesure includes following steps.
+   * 1) Discover all services.
+   * 2) After all services are discovered, for each service S, we will do
+   *    following actions.
+   *    2-1) Discover all included services of service S.
+   *    2-2) Discover all characteristics of service S.
+   *    2-3) Discover all descriptors of those characteristics discovered in
+   *         2-2).
+   */
+  sBluetoothGattClientInterface->SearchService(
+    client->mConnId,
+    true, // search all services
+    BluetoothUuid(),
+    new DiscoverResultHandler(client));
 }
 
 class BluetoothGattManager::ReadRemoteRssiResultHandler final
@@ -527,13 +626,7 @@ BluetoothGattManager::ReadRemoteRssi(int aClientIf,
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    ClientIfComparator());
-
-  // Reject the read remote rssi request if the client is not found
-  if (index == sClients->NoIndex) {
-    DispatchReplyError(aRunnable,
-                       NS_LITERAL_STRING("Read remote RSSI failed"));
-    return;
-  }
+  MOZ_ASSERT(index != sClients->NoIndex);
 
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
   client->mReadRemoteRssiRunnable = aRunnable;
@@ -558,7 +651,7 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   UuidToString(aAppUuid, uuid);
 
   size_t index = sClients->IndexOf(uuid, 0 /* Start */, UuidComparator());
-  NS_ENSURE_TRUE_VOID(index != sClients->NoIndex);
+  MOZ_ASSERT(index != sClients->NoIndex);
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
   BluetoothService* bs = BluetoothService::Get();
@@ -621,7 +714,7 @@ BluetoothGattManager::ConnectNotification(int aConnId,
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    ClientIfComparator());
-  NS_ENSURE_TRUE_VOID(index != sClients->NoIndex);
+  MOZ_ASSERT(index != sClients->NoIndex);
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
   if (aStatus != GATT_STATUS_SUCCESS) {
@@ -673,7 +766,7 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    ClientIfComparator());
-  NS_ENSURE_TRUE_VOID(index != sClients->NoIndex);
+  MOZ_ASSERT(index != sClients->NoIndex);
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
   if (aStatus != GATT_STATUS_SUCCESS) {
@@ -711,12 +804,57 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
 void
 BluetoothGattManager::SearchCompleteNotification(int aConnId,
                                                  BluetoothGattStatus aStatus)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */,
+                                   ConnIdComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  MOZ_ASSERT(client->mDiscoverRunnable);
+
+  if (aStatus != GATT_STATUS_SUCCESS) {
+    client->NotifyDiscoverCompleted(false);
+    return;
+  }
+
+  // Notify BluetoothGatt to create all services
+  bs->DistributeSignal(NS_LITERAL_STRING("ServicesDiscovered"),
+                       client->mAppUuid,
+                       BluetoothValue(client->mServices));
+
+  // All services are discovered, continue to search included services of each
+  // service if existed, otherwise, notify application that discover completed
+  if (!client->mServices.IsEmpty()) {
+    sBluetoothGattClientInterface->GetIncludedService(
+      aConnId,
+      client->mServices[0], // start from first service
+      true, // first included service
+      BluetoothGattServiceId(),
+      new DiscoverResultHandler(client));
+  } else {
+    client->NotifyDiscoverCompleted(true);
+  }
+}
 
 void
 BluetoothGattManager::SearchResultNotification(
   int aConnId, const BluetoothGattServiceId& aServiceId)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */,
+                                   ConnIdComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  // Save to mServices for distributing to application and discovering
+  // included services, characteristics of this service later
+  sClients->ElementAt(index)->mServices.AppendElement(aServiceId);
+}
 
 void
 BluetoothGattManager::GetCharacteristicNotification(
@@ -724,7 +862,43 @@ BluetoothGattManager::GetCharacteristicNotification(
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   int aCharProperty)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */,
+                                   ConnIdComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  MOZ_ASSERT(client->mDiscoverRunnable);
+
+  if (aStatus == GATT_STATUS_SUCCESS) {
+    // Save to mCharacteristics for distributing to applications and
+    // discovering descriptors of this characteristic later
+    client->mCharacteristics.AppendElement(aCharId);
+
+    // Get next characteristic of this service
+    sBluetoothGattClientInterface->GetCharacteristic(
+      aConnId,
+      aServiceId,
+      false,
+      aCharId,
+      new DiscoverResultHandler(client));
+  } else { // all characteristics of this service are discovered
+    // Notify BluetoothGattService to create characteristics then proceed
+    nsString path;
+    GeneratePathFromGattId(aServiceId.mId, path);
+
+    bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicsDiscovered"),
+                         path,
+                         BluetoothValue(client->mCharacteristics));
+
+    ProceedDiscoverProcess(client, aServiceId);
+  }
+}
 
 void
 BluetoothGattManager::GetDescriptorNotification(
@@ -732,14 +906,93 @@ BluetoothGattManager::GetDescriptorNotification(
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   const BluetoothGattId& aDescriptorId)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */,
+                                   ConnIdComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  MOZ_ASSERT(client->mDiscoverRunnable);
+
+  if (aStatus == GATT_STATUS_SUCCESS) {
+    // Save to mDescriptors for distributing to applications
+    client->mDescriptors.AppendElement(aDescriptorId);
+
+    // Get next descriptor of this characteristic
+    sBluetoothGattClientInterface->GetDescriptor(
+      aConnId,
+      aServiceId,
+      aCharId,
+      false,
+      aDescriptorId,
+      new DiscoverResultHandler(client));
+  } else { // all descriptors of this characteristic are discovered
+    // Notify BluetoothGattCharacteristic to create descriptors then proceed
+    nsString path;
+    GeneratePathFromGattId(aCharId, path);
+
+    bs->DistributeSignal(NS_LITERAL_STRING("DescriptorsDiscovered"),
+                         path,
+                         BluetoothValue(client->mDescriptors));
+    client->mDescriptors.Clear();
+
+    ProceedDiscoverProcess(client, aServiceId);
+  }
+}
 
 void
 BluetoothGattManager::GetIncludedServiceNotification(
   int aConnId, BluetoothGattStatus aStatus,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattServiceId& aIncludedServId)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */,
+                                   ConnIdComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+  MOZ_ASSERT(client->mDiscoverRunnable);
+
+  if (aStatus == GATT_STATUS_SUCCESS) {
+    // Save to mIncludedServices for distributing to applications
+    client->mIncludedServices.AppendElement(aIncludedServId);
+
+    // Get next included service of this service
+    sBluetoothGattClientInterface->GetIncludedService(
+      aConnId,
+      aServiceId,
+      false,
+      aIncludedServId,
+      new DiscoverResultHandler(client));
+  } else { // all included services of this service are discovered
+    // Notify BluetoothGattService to create included services
+    nsString path;
+    GeneratePathFromGattId(aServiceId.mId, path);
+
+    bs->DistributeSignal(NS_LITERAL_STRING("IncludedServicesDiscovered"),
+                         path,
+                         BluetoothValue(client->mIncludedServices));
+    client->mIncludedServices.Clear();
+
+    // Start to discover characteristics of this service
+    sBluetoothGattClientInterface->GetCharacteristic(
+      aConnId,
+      aServiceId,
+      true, // first characteristic
+      BluetoothGattId(),
+      new DiscoverResultHandler(client));
+  }
+}
 
 void
 BluetoothGattManager::RegisterNotificationNotification(
@@ -861,6 +1114,47 @@ BluetoothGattManager::HandleShutdown()
   MOZ_ASSERT(NS_IsMainThread());
   mInShutdown = true;
   sBluetoothGattManager = nullptr;
+}
+
+void
+BluetoothGattManager::ProceedDiscoverProcess(
+  BluetoothGattClient* aClient,
+  const BluetoothGattServiceId& aServiceId)
+{
+  /**
+   * This function will be called to decide how to proceed the discover process
+   * after discovering all characteristics of a given service, or after
+   * discovering all descriptors of a given characteristic.
+   *
+   * There are three cases here,
+   * 1) mCharacteristics is not empty:
+   *      Proceed to discover descriptors of the first saved characteristic.
+   * 2) mCharacteristics is empty but mServices is not empty:
+   *      This service does not have any saved characteristics left, proceed to
+   *      discover included services of the next service.
+   * 3) Both arrays are already empty:
+   *      Discover is done, notify application.
+   */
+  if (!aClient->mCharacteristics.IsEmpty()) {
+    sBluetoothGattClientInterface->GetDescriptor(
+      aClient->mConnId,
+      aServiceId,
+      aClient->mCharacteristics[0],
+      true, // first descriptor
+      BluetoothGattId(),
+      new DiscoverResultHandler(aClient));
+    aClient->mCharacteristics.RemoveElementAt(0);
+  } else if (!aClient->mServices.IsEmpty()) {
+    sBluetoothGattClientInterface->GetIncludedService(
+      aClient->mConnId,
+      aClient->mServices[0],
+      true, // first included service
+      BluetoothGattServiceId(),
+      new DiscoverResultHandler(aClient));
+    aClient->mServices.RemoveElementAt(0);
+  } else {
+    aClient->NotifyDiscoverCompleted(true);
+  }
 }
 
 NS_IMPL_ISUPPORTS(BluetoothGattManager, nsIObserver)

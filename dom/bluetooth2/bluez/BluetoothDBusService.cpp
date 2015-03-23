@@ -4292,6 +4292,12 @@ BluetoothDBusService::DisconnectGattClientInternal(
 }
 
 void
+BluetoothDBusService::DiscoverGattServicesInternal(
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
 BluetoothDBusService::UnregisterGattClientInternal(
   int aClientIf, BluetoothReplyRunnable* aRunnable)
 {

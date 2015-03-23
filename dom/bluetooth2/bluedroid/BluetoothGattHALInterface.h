@@ -56,19 +56,23 @@ public:
 
   /* Enumerate Attributes */
   void SearchService(int aConnId,
+                     bool aSearchAll,
                      const BluetoothUuid& aUuid,
                      BluetoothGattClientResultHandler* aRes);
   void GetIncludedService(int aConnId,
                           const BluetoothGattServiceId& aServiceId,
+                          bool aFirst,
                           const BluetoothGattServiceId& aStartServiceId,
                           BluetoothGattClientResultHandler* aRes);
   void GetCharacteristic(int aConnId,
                          const BluetoothGattServiceId& aServiceId,
+                         bool aFirst,
                          const BluetoothGattId& aStartCharId,
                          BluetoothGattClientResultHandler* aRes);
   void GetDescriptor(int aConnId,
                      const BluetoothGattServiceId& aServiceId,
                      const BluetoothGattId& aCharId,
+                     bool aFirst,
                      const BluetoothGattId& aDescriptorId,
                      BluetoothGattClientResultHandler* aRes);
 
