@@ -1092,52 +1092,52 @@ Store(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#define DEFINE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands, Flags) \
-bool                                                                \
-js::simd_float32x4_##Name(JSContext *cx, unsigned argc, Value *vp)  \
-{                                                                   \
-    return Func(cx, argc, vp);                                      \
+#define DEFINE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands)       \
+bool                                                               \
+js::simd_float32x4_##Name(JSContext *cx, unsigned argc, Value *vp) \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
 }
 FLOAT32X4_FUNCTION_LIST(DEFINE_SIMD_FLOAT32X4_FUNCTION)
 #undef DEFINE_SIMD_FLOAT32X4_FUNCTION
 
-#define DEFINE_SIMD_FLOAT64X2_FUNCTION(Name, Func, Operands, Flags) \
-bool                                                                \
-js::simd_float64x2_##Name(JSContext *cx, unsigned argc, Value *vp)  \
-{                                                                   \
-    return Func(cx, argc, vp);                                      \
+#define DEFINE_SIMD_FLOAT64X2_FUNCTION(Name, Func, Operands)       \
+bool                                                               \
+js::simd_float64x2_##Name(JSContext *cx, unsigned argc, Value *vp) \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
 }
 FLOAT64X2_FUNCTION_LIST(DEFINE_SIMD_FLOAT64X2_FUNCTION)
 #undef DEFINE_SIMD_FLOAT64X2_FUNCTION
 
-#define DEFINE_SIMD_INT32X4_FUNCTION(Name, Func, Operands, Flags)   \
-bool                                                                \
-js::simd_int32x4_##Name(JSContext *cx, unsigned argc, Value *vp)    \
-{                                                                   \
-    return Func(cx, argc, vp);                                      \
+#define DEFINE_SIMD_INT32X4_FUNCTION(Name, Func, Operands)         \
+bool                                                               \
+js::simd_int32x4_##Name(JSContext *cx, unsigned argc, Value *vp)   \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
 }
 INT32X4_FUNCTION_LIST(DEFINE_SIMD_INT32X4_FUNCTION)
 #undef DEFINE_SIMD_INT32X4_FUNCTION
 
 const JSFunctionSpec js::Float32x4Methods[] = {
-#define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands, Flags)   \
-        JS_FN(#Name, js::simd_float32x4_##Name, Operands, Flags),
+#define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands)         \
+        JS_FN(#Name, js::simd_float32x4_##Name, Operands, 0),
         FLOAT32X4_FUNCTION_LIST(SIMD_FLOAT32X4_FUNCTION_ITEM)
 #undef SIMD_FLOAT32x4_FUNCTION_ITEM
         JS_FS_END
 };
 
 const JSFunctionSpec js::Float64x2Methods[] = {
-#define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands, Flags)       \
-        JS_FN(#Name, js::simd_float64x2_##Name, Operands, Flags),
+#define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands)         \
+        JS_FN(#Name, js::simd_float64x2_##Name, Operands, 0),
         FLOAT64X2_FUNCTION_LIST(SIMD_FLOAT64X2_FUNCTION_ITEM)
 #undef SIMD_FLOAT64X2_FUNCTION_ITEM
         JS_FS_END
 };
 
 const JSFunctionSpec js::Int32x4Methods[] = {
-#define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands, Flags)     \
-        JS_FN(#Name, js::simd_int32x4_##Name, Operands, Flags),
+#define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands)           \
+        JS_FN(#Name, js::simd_int32x4_##Name, Operands, 0),
         INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
 #undef SIMD_INT32X4_FUNCTION_ITEM
         JS_FS_END
