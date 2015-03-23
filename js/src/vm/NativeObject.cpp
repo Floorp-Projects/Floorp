@@ -1321,16 +1321,33 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         }
     }
 
-    Rooted<PropertyDescriptor> desc(cx, desc_);
-
+    // 9.1.6.1 OrdinaryDefineOwnProperty steps 1-2.
     RootedShape shape(cx);
+    if (desc_.hasValue()) {
+        // If we did a normal lookup here, it would cause resolve hook recursion in
+        // the following case. Suppose the first script we run in a lazy global is
+        // |parseInt()|.
+        //   - js::InitNumberClass is called to resolve parseInt.
+        //   - js::InitNumberClass tries to define the Number constructor on the
+        //     global.
+        //   - We end up here.
+        //   - This lookup for 'Number' triggers the global resolve hook.
+        //   - js::InitNumberClass is called again, this time to resolve Number.
+        //   - It creates a second Number constructor, which trips an assertion.
+        //
+        // Therefore we do a special lookup that does not call the resolve hook.
+        NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
+    } else {
+        if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
+            return false;
+    }
+
+    Rooted<PropertyDescriptor> desc(cx, desc_);
 
     // If defining a getter or setter, we must check for its counterpart and
     // update the attributes and property ops.  A getter or setter is really
     // only half of a property.
     if (desc.isAccessorDescriptor()) {
-        if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
-            return false;
         if (shape) {
             // If we are defining a getter whose setter was already defined, or
             // vice versa, finish the job via obj->changeProperty.
@@ -1374,20 +1391,6 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         // must both be filled in.
         desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER;
     } else if (desc.hasValue()) {
-        // If we did a normal lookup here, it would cause resolve hook recursion in
-        // the following case. Suppose the first script we run in a lazy global is
-        // |parseInt()|.
-        //   - js::InitNumberClass is called to resolve parseInt.
-        //   - js::InitNumberClass tries to define the Number constructor on the
-        //     global.
-        //   - We end up here.
-        //   - This lookup for 'Number' triggers the global resolve hook.
-        //   - js::InitNumberClass is called again, this time to resolve Number.
-        //   - It creates a second Number constructor, which trips an assertion.
-        //
-        // Therefore we do a special lookup that does not call the resolve hook.
-        NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
-
         if (shape) {
             // If any other JSPROP_IGNORE_* attributes are present, copy the
             // corresponding JSPROP_* attributes from the existing property.
@@ -1406,9 +1409,6 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         }
     } else {
         // We have been asked merely to update JSPROP_PERMANENT and/or JSPROP_ENUMERATE.
-        if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
-            return false;
-
         if (shape) {
             // Don't forget about arrays.
             if (IsImplicitDenseOrTypedArrayElement(shape)) {
