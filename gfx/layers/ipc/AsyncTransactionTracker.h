@@ -170,7 +170,7 @@ protected:
   uint64_t mSerial;
 
   bool mIsTrackersHolderDestroyed;
-  std::map<uint64_t, RefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackeres;
+  std::map<uint64_t, RefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackers;
 
   /**
    * gecko does not provide atomic operation for uint64_t.
