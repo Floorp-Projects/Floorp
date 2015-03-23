@@ -38,6 +38,25 @@ use webdriver::error::{
     WebDriverResult, WebDriverError, ErrorStatus};
 use webdriver::server::{WebDriverHandler, Session};
 
+pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 16] = [
+    ("browser.dom.window.dump.enabled", PrefValue::PrefBool(true)),
+    ("marionette.defaultPrefs.enabled", PrefValue::PrefBool(true)),
+    ("marionette.logging", PrefValue::PrefBool(true)),
+    ("browser.displayedE10SPrompt", PrefValue::PrefInt(5)),
+    ("browser.displayedE10SPrompt.1", PrefValue::PrefInt(5)),
+    ("browser.displayedE10SPrompt.2", PrefValue::PrefInt(5)),
+    ("browser.displayedE10SPrompt.3", PrefValue::PrefInt(5)),
+    ("browser.displayedE10SPrompt.4", PrefValue::PrefInt(5)),
+    ("browser.sessionstore.resume_from_crash", PrefValue::PrefBool(false)),
+    ("browser.shell.checkDefaultBrowser", PrefValue::PrefBool(false)),
+    ("browser.startup.page", PrefValue::PrefInt(0)),
+    ("browser.tabs.remote.autostart.1", PrefValue::PrefBool(false)),
+    ("browser.tabs.remote.autostart.2", PrefValue::PrefBool(false)),
+    ("browser.warnOnQuit", PrefValue::PrefBool(false)),
+    ("dom.ipc.reportProcessHangs", PrefValue::PrefBool(false)),
+    ("focusmanager.testmode", PrefValue::PrefBool(true)),
+];
+
 pub enum BrowserLauncher {
     None,
     BinaryLauncher(Path)
@@ -99,10 +118,10 @@ impl MarionetteHandler {
         match self.launcher {
             BrowserLauncher::BinaryLauncher(ref binary) => {
                 let mut runner = try!(FirefoxRunner::new(binary.clone(), None));
-                runner.profile.preferences.insert("marionette.defaultPrefs.enabled",
-                                                  PrefValue::PrefBool(true));
-                runner.profile.preferences.insert("marionette.defaultPrefs.port",
-                                                  PrefValue::PrefInt(self.port as isize));
+                runner.profile.preferences.insert("marionette.defaultPrefs.port", PrefValue::PrefInt(self.port as isize));
+                runner.profile.preferences.insert("startup.homepage_welcome_url", PrefValue::PrefString("about:blank".to_string()));
+                runner.profile.preferences.insert_vec(&FIREFOX_PREFERENCES);
+
                 try!(runner.start());
 
                 self.browser = Some(runner);
@@ -631,7 +650,12 @@ trait ToMarionette {
 impl ToMarionette for WebDriverMessage {
     fn to_marionette(&self) -> WebDriverResult<Json> {
         let (opt_name, opt_parameters) = match self.command {
-            NewSession => (Some("newSession"), None),
+            NewSession => {
+                let mut data = BTreeMap::new();
+                data.insert("sessionId".to_string(), Json::Null);
+                data.insert("capabilities".to_string(), Json::Null);
+                (Some("newSession"), Some(Ok(Json::Object(data))))
+            },
             DeleteSession => (Some("deleteSession"), None),
             Get(ref x) => (Some("get"), Some(x.to_marionette())),
             GetCurrentUrl => (Some("getCurrentUrl"), None),
