@@ -13,14 +13,22 @@
 namespace js {
 struct Class;
 
+// Allocate a new GC thing. After a successful allocation the caller must
+// fully initialize the thing before calling any function that can potentially
+// trigger GC. This will ensure that GC tracing never sees junk values stored
+// in the partially initialized thing.
+//
+// Note that JSObject allocation must use the longer signature below that
+// includes slot, heap, and finalizer information in support of various
+// object-specific optimizations.
+template <typename T, AllowGC allowGC = CanGC>
+T *
+Allocate(ExclusiveContext *cx);
+
 template <typename, AllowGC allowGC = CanGC>
 JSObject *
 Allocate(ExclusiveContext *cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
          const Class *clasp);
-
-template <typename T, AllowGC allowGC = CanGC>
-T *
-Allocate(ExclusiveContext *cx);
 
 } // namespace js
 
