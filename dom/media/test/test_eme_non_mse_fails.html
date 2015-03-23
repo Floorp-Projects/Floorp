@@ -40,17 +40,19 @@ function TestSetMediaKeys(test, token)
 
   var v = document.createElement("video");
 
-  // XXX the encrypted event should never fire here after bug 1134434
   v.addEventListener("encrypted", function() {
-    DoSetMediaKeys(v)
+    ok(false, token + " should not fire encrypted event");
+  });
 
-    .then(function() {
-      ok(false, token + " expected setMediaKeys to fail.");
-      manager.finished(token);
-    }, function(err) {
-      is(err.name, "NotSupportedError", token + " should return correct error");
-      manager.finished(token);
-    });
+  var loadedMetadata = false;
+  v.addEventListener("loadedmetadata", function() {
+    loadedMetadata = true;
+  });
+
+  v.addEventListener("error", function() {
+    ok(true, token + " expected error event");
+    ok(loadedMetadata, token + " expected loadedmetadata to have fired");
+    manager.finished(token);
   });
 
   v.src = test.name;
