@@ -275,8 +275,6 @@ private:
 
   layers::LayersBackend mLayersBackendType;
 
-  nsTArray<nsTArray<uint8_t>> mInitDataEncountered;
-
   // True if we've read the streams' metadata.
   bool mDemuxerInitialized;
 
