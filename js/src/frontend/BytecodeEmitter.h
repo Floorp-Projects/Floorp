@@ -80,7 +80,7 @@ struct CGYieldOffsetList {
 
     bool append(uint32_t offset) { return list.append(offset); }
     size_t length() const { return list.length(); }
-    void finish(YieldOffsetArray& array, uint32_t prologLength);
+    void finish(YieldOffsetArray& array, uint32_t prologueLength);
 };
 
 struct LoopStmtInfo;
@@ -130,7 +130,7 @@ struct BytecodeEmitter
           : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineNum), lastColumn(0)
         {}
     };
-    EmitSection prolog, main, *current;
+    EmitSection prologue, main, *current;
 
     /* the parser */
     Parser<FullParseHandler>* const parser;
@@ -257,9 +257,9 @@ struct BytecodeEmitter
     BytecodeVector& code() const { return current->code; }
     jsbytecode* code(ptrdiff_t offset) const { return current->code.begin() + offset; }
     ptrdiff_t offset() const { return current->code.end() - current->code.begin(); }
-    ptrdiff_t prologOffset() const { return prolog.code.end() - prolog.code.begin(); }
+    ptrdiff_t prologueOffset() const { return prologue.code.end() - prologue.code.begin(); }
     void switchToMain() { current = &main; }
-    void switchToProlog() { current = &prolog; }
+    void switchToPrologue() { current = &prologue; }
 
     SrcNotesVector& notes() const { return current->notes; }
     ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
@@ -451,7 +451,7 @@ struct BytecodeEmitter
     bool emitNameOp(ParseNode* pn, bool callContext);
     bool emitNameIncDec(ParseNode* pn);
 
-    bool maybeEmitVarDecl(JSOp prologOp, ParseNode* pn, jsatomid* result);
+    bool maybeEmitVarDecl(JSOp prologueOp, ParseNode* pn, jsatomid* result);
     bool emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isLetExpr = false);
 
     bool emitNewInit(JSProtoKey key);
@@ -506,16 +506,16 @@ struct BytecodeEmitter
     bool emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOption emitOption);
 
     typedef bool
-    (*DestructuringDeclEmitter)(BytecodeEmitter* bce, JSOp prologOp, ParseNode* pn);
+    (*DestructuringDeclEmitter)(BytecodeEmitter* bce, JSOp prologueOp, ParseNode* pn);
 
     template <DestructuringDeclEmitter EmitName>
-    bool emitDestructuringDeclsWithEmitter(JSOp prologOp, ParseNode* pattern);
+    bool emitDestructuringDeclsWithEmitter(JSOp prologueOp, ParseNode* pattern);
 
-    bool emitDestructuringDecls(JSOp prologOp, ParseNode* pattern);
+    bool emitDestructuringDecls(JSOp prologueOp, ParseNode* pattern);
 
     // Emit code to initialize all destructured names to the value on the top of
     // the stack.
-    bool emitInitializeDestructuringDecls(JSOp prologOp, ParseNode* pattern);
+    bool emitInitializeDestructuringDecls(JSOp prologueOp, ParseNode* pattern);
 
     // emitIterator expects the iterable to already be on the stack.
     // It will replace that stack value with the corresponding iterator

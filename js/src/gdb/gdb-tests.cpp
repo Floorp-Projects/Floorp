@@ -46,7 +46,7 @@ void reportError(JSContext* cx, const char* message, JSErrorReport* report)
             message);
 }
 
-// prolog.py sets a breakpoint on this function; test functions can call it
+// prologue.py sets a breakpoint on this function; test functions can call it
 // to easily return control to GDB where desired.
 void breakpoint() {
     // If we leave this function empty, the linker will unify it with other
