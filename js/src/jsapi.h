@@ -2595,7 +2595,7 @@ class PropertyDescriptorOperations
             MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
             MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
             MOZ_ASSERT(!has(SHADOWABLE));
-            MOZ_ASSERT(desc()->value.isUndefined());
+            MOZ_ASSERT(value().isUndefined());
             MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
             MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
         } else {
