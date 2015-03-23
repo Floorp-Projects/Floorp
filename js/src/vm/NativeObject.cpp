@@ -1324,8 +1324,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedShape shape(cx);
-    RootedValue updateValue(cx, desc.value());
-    bool shouldDefine = true;
+    RootedValue value(cx, desc.value());
 
     /*
      * If defining a getter or setter, we must check for its counterpart and
@@ -1363,15 +1362,20 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                                                      : shape->setter());
                 if (!shape)
                     return false;
-                shouldDefine = false;
+                if (!PurgeScopeChain(cx, obj, id))
+                    return false;
+
+                JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, value));
+                if (!CallAddPropertyHook(cx, obj, shape, value))
+                    return false;
+                return result.succeed();
             }
         }
 
         // Either we are converting a data property to an accessor property, or
         // creating a new accessor property; either way [[Get]] and [[Set]]
         // must both be filled in.
-        if (shouldDefine)
-            attrs |= JSPROP_GETTER | JSPROP_SETTER;
+        attrs |= JSPROP_GETTER | JSPROP_SETTER;
     } else if (desc.hasValue()) {
         // If we did a normal lookup here, it would cause resolve hook recursion in
         // the following case. Suppose the first script we run in a lazy global is
@@ -1435,7 +1439,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]]
                 // is present, change the existing accessor property to a data
                 // property.
-                updateValue = UndefinedValue();
+                value = UndefinedValue();
             } else {
                 // We are at most changing some attributes, and cannot convert
                 // from data descriptor to accessor, or vice versa. Take
@@ -1445,33 +1449,19 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 getter = shape->getter();
                 setter = shape->setter();
                 if (shape->hasSlot())
-                    updateValue = obj->getSlot(shape->slot());
+                    value = obj->getSlot(shape->slot());
             }
         }
     }
 
-    /*
-     * Purge the property cache of any properties named by id that are about
-     * to be shadowed in obj's scope chain.
-     */
     if (!PurgeScopeChain(cx, obj, id))
         return false;
 
-    if (shouldDefine) {
-        // Handle the default cases here. Anyone that wanted to set non-default attributes has
-        // cleared the IGNORE flags by now. Since we can never get here with JSPROP_IGNORE_VALUE
-        // relevant, just clear it.
-        attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
-        return DefinePropertyOrElement(cx, obj, id, getter, setter, attrs, updateValue, result);
-    }
-
-    MOZ_ASSERT(shape);
-
-    JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, updateValue));
-
-    if (!CallAddPropertyHook(cx, obj, shape, updateValue))
-        return false;
-    return result.succeed();
+    // Handle the default cases here. Anyone that wanted to set non-default attributes has
+    // cleared the IGNORE flags by now. Since we can never get here with JSPROP_IGNORE_VALUE
+    // relevant, just clear it.
+    attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
+    return DefinePropertyOrElement(cx, obj, id, getter, setter, attrs, value, result);
 }
 
 bool
