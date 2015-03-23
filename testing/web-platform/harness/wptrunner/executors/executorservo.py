@@ -25,22 +25,21 @@ from .process import ProcessTestExecutor
 class ServoTestharnessExecutor(ProcessTestExecutor):
     convert_result = testharness_result_converter
 
-    def __init__(self, browser, http_server_url, timeout_multiplier=1, debug_args=None,
+    def __init__(self, browser, server_config, timeout_multiplier=1, debug_args=None,
                  pause_after_test=False):
-        ProcessTestExecutor.__init__(self, browser, http_server_url,
+        ProcessTestExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_args=debug_args)
         self.pause_after_test = pause_after_test
         self.result_data = None
         self.result_flag = None
-        self.protocol = Protocol(self, browser, http_server_url)
+        self.protocol = Protocol(self, browser)
 
     def do_test(self, test):
         self.result_data = None
         self.result_flag = threading.Event()
 
-        self.command = [self.binary, "--cpu", "--hard-fail", "-z",
-                        urlparse.urljoin(self.http_server_url, test.url)]
+        self.command = [self.binary, "--cpu", "--hard-fail", "-z", self.test_url(test)]
 
         if self.pause_after_test:
             self.command.remove("-z")
@@ -120,15 +119,15 @@ class TempFilename(object):
 class ServoRefTestExecutor(ProcessTestExecutor):
     convert_result = reftest_result_converter
 
-    def __init__(self, browser, http_server_url, binary=None, timeout_multiplier=1,
+    def __init__(self, browser, server_config, binary=None, timeout_multiplier=1,
                  screenshot_cache=None, debug_args=None, pause_after_test=False):
         ProcessTestExecutor.__init__(self,
                                      browser,
-                                     http_server_url,
+                                     server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_args=debug_args)
 
-        self.protocol = Protocol(self, browser, http_server_url)
+        self.protocol = Protocol(self, browser)
         self.screenshot_cache = screenshot_cache
         self.implementation = RefTestImplementation(self)
         self.tempdir = tempfile.mkdtemp()
@@ -137,8 +136,8 @@ class ServoRefTestExecutor(ProcessTestExecutor):
         os.rmdir(self.tempdir)
         ProcessTestExecutor.teardown(self)
 
-    def screenshot(self, url, timeout):
-        full_url = urlparse.urljoin(self.http_server_url, url)
+    def screenshot(self, test):
+        full_url = self.test_url(test)
 
         with TempFilename(self.tempdir) as output_path:
             self.command = [self.binary, "--cpu", "--hard-fail", "--exit",
@@ -147,12 +146,12 @@ class ServoRefTestExecutor(ProcessTestExecutor):
             self.proc = ProcessHandler(self.command,
                                        processOutputLine=[self.on_output])
             self.proc.run()
-            rv = self.proc.wait(timeout=timeout)
+            rv = self.proc.wait(timeout=test.timeout)
             if rv is None:
                 self.proc.kill()
                 return False, ("EXTERNAL-TIMEOUT", None)
 
-            if rv < 0:
+            if rv != 0 or not os.path.exists(output_path):
                 return False, ("CRASH", None)
 
             with open(output_path) as f:

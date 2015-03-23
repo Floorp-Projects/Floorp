@@ -40,7 +40,7 @@ def setup_logging(*args, **kwargs):
     global logger
     logger = wptlogging.setup(*args, **kwargs)
 
-def get_loader(test_paths, product, debug=False, **kwargs):
+def get_loader(test_paths, product, ssl_env, debug=False, **kwargs):
     run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=debug)
 
     test_manifests = testloader.ManifestLoader(test_paths, force_manifest_update=kwargs["manifest_update"]).load()
@@ -56,13 +56,16 @@ def get_loader(test_paths, product, debug=False, **kwargs):
                                         run_info,
                                         chunk_type=kwargs["chunk_type"],
                                         total_chunks=kwargs["total_chunks"],
-                                        chunk_number=kwargs["this_chunk"])
+                                        chunk_number=kwargs["this_chunk"],
+                                        include_https=ssl_env.ssl_enabled)
     return run_info, test_loader
 
 def list_test_groups(test_paths, product, **kwargs):
     env.do_delayed_imports(logger, test_paths)
 
-    run_info, test_loader = get_loader(test_paths, product,
+    ssl_env = env.ssl_env(logger, **kwargs)
+
+    run_info, test_loader = get_loader(test_paths, product, ssl_env,
                                        **kwargs)
 
     for item in sorted(test_loader.groups(kwargs["test_types"])):
@@ -74,7 +77,9 @@ def list_disabled(test_paths, product, **kwargs):
 
     rv = []
 
-    run_info, test_loader = get_loader(test_paths, product,
+    ssl_env = env.ssl_env(logger, **kwargs)
+
+    run_info, test_loader = get_loader(test_paths, product, ssl_env,
                                        **kwargs)
 
     for test_type, tests in test_loader.disabled_tests.iteritems():
@@ -109,7 +114,7 @@ def run_tests(config, test_paths, product, **kwargs):
             run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=False)
             test_loader = kwargs["test_loader"]
         else:
-            run_info, test_loader = get_loader(test_paths, product,
+            run_info, test_loader = get_loader(test_paths, product, ssl_env,
                                                **kwargs)
 
         if kwargs["run_by_dir"] is False:
@@ -137,8 +142,6 @@ def run_tests(config, test_paths, product, **kwargs):
                 raise
 
             browser_kwargs = get_browser_kwargs(ssl_env=ssl_env, **kwargs)
-            base_server = "http://%s:%i" % (test_environment.external_config["host"],
-                                            test_environment.external_config["ports"]["http"][0])
 
             repeat = kwargs["repeat"]
             for repeat_count in xrange(repeat):
@@ -157,7 +160,7 @@ def run_tests(config, test_paths, product, **kwargs):
 
                     executor_cls = executor_classes.get(test_type)
                     executor_kwargs = get_executor_kwargs(test_type,
-                                                          base_server,
+                                                          test_environment.external_config,
                                                           test_environment.cache_manager,
                                                           **kwargs)
 

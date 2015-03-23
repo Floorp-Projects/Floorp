@@ -70,19 +70,23 @@ class TestEnvironmentError(Exception):
     pass
 
 
-def static_handler(path, format_args, content_type, **headers):
-    with open(path) as f:
-        data = f.read() % format_args
+class StaticHandler(object):
+    def __init__(self, path, format_args, content_type, **headers):
+        with open(path) as f:
+            self.data = f.read() % format_args
 
-    resp_headers = [("Content-Type", content_type)]
-    for k, v in headers.iteritems():
-        resp_headers.append((k.replace("_", "-"), v))
+        self.resp_headers = [("Content-Type", content_type)]
+        for k, v in headers.iteritems():
+            resp_headers.append((k.replace("_", "-"), v))
 
-    @serve.handlers.handler
-    def func(request, response):
-        return resp_headers, data
+        self.handler = serve.handlers.handler(self.handle_request)
 
-    return func
+    def handle_request(self, request, response):
+        return self.resp_headers, self.data
+
+    def __call__(self, request, response):
+        rv = self.handler(request, response)
+        return rv
 
 
 class TestEnvironment(object):
@@ -99,15 +103,16 @@ class TestEnvironment(object):
         self.options = options if options is not None else {}
 
         self.cache_manager = multiprocessing.Manager()
+        self.routes = self.get_routes()
 
     def __enter__(self):
         self.ssl_env.__enter__()
         self.cache_manager.__enter__()
         self.setup_server_logging()
-        self.setup_routes()
         self.config = self.load_config()
         serve.set_computed_defaults(self.config)
-        self.external_config, self.servers = serve.start(self.config, self.ssl_env)
+        self.external_config, self.servers = serve.start(self.config, self.ssl_env,
+                                                         self.routes)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -166,14 +171,15 @@ class TestEnvironment(object):
             # This happens if logging has already been set up for wptserve
             pass
 
-    def setup_routes(self):
+    def get_routes(self):
+        routes = serve.default_routes()
         for path, format_args, content_type, route in [
-                ("testharness_runner.html", {}, "text/html", b"/testharness_runner.html"),
+                ("testharness_runner.html", {}, "text/html", "/testharness_runner.html"),
                 (self.options.get("testharnessreport", "testharnessreport.js"),
                  {"output": self.pause_after_test}, "text/javascript",
-                 b"/resources/testharnessreport.js")]:
-            handler = static_handler(os.path.join(here, path), format_args, content_type)
-            serve.routes.insert(0, (b"GET", route, handler))
+                 "/resources/testharnessreport.js")]:
+            handler = StaticHandler(os.path.join(here, path), format_args, content_type)
+            routes.insert(0, (b"GET", str(route), handler))
 
         for url, paths in self.test_paths.iteritems():
             if url == "/":
@@ -184,7 +190,7 @@ class TestEnvironment(object):
 
             for (method,
                  suffix,
-                 handler_cls) in [(serve.any_method,
+                 handler_cls) in [(b"*",
                                    b"*.py",
                                    serve.handlers.PythonScriptHandler),
                                   (b"GET",
@@ -194,10 +200,12 @@ class TestEnvironment(object):
                                    "*",
                                    serve.handlers.FileHandler)]:
                 route = (method, b"%s%s" % (str(url), str(suffix)), handler_cls(path, url_base=url))
-                serve.routes.insert(-3, route)
+                routes.insert(-3, route)
 
         if "/" not in self.test_paths:
-            serve.routes = serve.routes[:-3]
+            routes = routes[:-3]
+
+        return routes
 
     def ensure_started(self):
         # Pause for a while to ensure that the server has a chance to start

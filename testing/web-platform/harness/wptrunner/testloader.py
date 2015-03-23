@@ -255,9 +255,13 @@ class ManifestLoader(object):
         if not json_data:
             manifest_file = manifest.Manifest(None, url_base)
         else:
-            manifest_file = manifest.Manifest.from_json(tests_path, json_data)
+            try:
+                manifest_file = manifest.Manifest.from_json(tests_path, json_data)
+            except manifest.ManifestVersionMismatch:
+                manifest_file = manifest.Manifest(None, url_base)
 
-        manifest_update.update(tests_path, url_base, manifest_file)
+            manifest_update.update(tests_path, url_base, manifest_file)
+
         manifest.write(manifest_file, manifest_path)
 
     def load_manifest(self, tests_path, metadata_path, url_base="/"):
@@ -283,7 +287,7 @@ class TestLoader(object):
                  chunk_type="none",
                  total_chunks=1,
                  chunk_number=1,
-                 force_manifest_update=False):
+                 include_https=True):
 
         self.test_types = test_types
         self.test_filter = test_filter
@@ -291,6 +295,7 @@ class TestLoader(object):
         self.manifests = test_manifests
         self.tests = None
         self.disabled_tests = None
+        self.include_https = include_https
 
         self.chunk_type = chunk_type
         self.total_chunks = total_chunks
@@ -349,7 +354,10 @@ class TestLoader(object):
                  "disabled":defaultdict(list)}
 
         for test_path, test_type, test in self.iter_tests():
-            key = "enabled" if not test.disabled() else "disabled"
+            enabled = not test.disabled()
+            if not self.include_https and test.protocol == "https":
+                enabled = False
+            key = "enabled" if enabled else "disabled"
             tests[key][test_type].append(test)
 
         self.tests = tests["enabled"]

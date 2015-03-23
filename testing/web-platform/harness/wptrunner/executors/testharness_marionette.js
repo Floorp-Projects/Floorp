@@ -8,12 +8,13 @@ window.wrappedJSObject.explicit_timeout = %(explicit_timeout)d;
 window.wrappedJSObject.done = function(tests, status) {
   clearTimeout(timer);
   var test_results = tests.map(function(x) {
-    return {name:x.name, status:x.status, message:x.message}
+    return {name:x.name, status:x.status, message:x.message, stack:x.stack}
   });
   marionetteScriptFinished({test:"%(url)s",
                             tests:test_results,
                             status: status.status,
-                            message: status.message});
+                            message: status.message,
+                            stack: status.stack});
 }
 
 window.wrappedJSObject.win = window.open("%(abs_url)s", "%(window_id)s");
