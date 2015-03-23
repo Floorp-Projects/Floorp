@@ -1,3 +1,5 @@
+var seenIndex = false;
+
 onfetch = function(ev) {
   if (ev.request.url.contains("synthesized.txt")) {
     ev.respondWith(Promise.resolve(
@@ -114,5 +116,19 @@ onfetch = function(ev) {
         return new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers });
       });
     }));
+  }
+
+  else if (ev.request.url.contains("index.html")) {
+    if (seenIndex) {
+        var body = "<script>" +
+                     "opener.postMessage({status: 'ok', result: " + ev.isReload + "," +
+                                         "message: 'reload status should be indicated'}, '*');" +
+                     "opener.postMessage({status: 'done'}, '*');" +
+                   "</script>";
+        ev.respondWith(new Response(body, {headers: {'Content-Type': 'text/html'}}));
+    } else {
+      seenIndex = true;
+      ev.respondWith(fetch(ev.request.url));
+    }
   }
 }
