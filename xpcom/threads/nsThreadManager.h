@@ -100,7 +100,7 @@ private:
   nsThreadManager()
     : mCurThreadIndex(0)
     , mMainPRThread(nullptr)
-    , mLock(nullptr)
+    , mLock("nsThreadManager.mLock")
     , mInitialized(false)
     , mCurrentNumberOfThreads(1)
     , mHighestNumberOfThreads(1)
@@ -113,13 +113,11 @@ private:
   }
 
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
-  unsigned             mCurThreadIndex;  // thread-local-storage index
+  unsigned            mCurThreadIndex;  // thread-local-storage index
   nsRefPtr<nsThread>  mMainThread;
   PRThread*           mMainPRThread;
-  // This is a pointer in order to allow creating nsThreadManager from
-  // the static context in debug builds.
-  nsAutoPtr<mozilla::Mutex> mLock;  // protects tables
-  bool                mInitialized;
+  mozilla::OffTheBooksMutex mLock;  // protects tables
+  mozilla::Atomic<bool> mInitialized;
 
   // The current number of threads
   uint32_t            mCurrentNumberOfThreads;
