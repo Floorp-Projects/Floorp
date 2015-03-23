@@ -113,7 +113,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
-                    if (tn->kind != JSTRY_ITER) {
+                    if (tn->kind != JSTRY_FOR_IN) {
                         infos_[catchOffset].init(stackDepth);
                         infos_[catchOffset].jumpTarget = true;
                     }
