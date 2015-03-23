@@ -7,6 +7,8 @@
 [CheckPermissions="bluetooth"]
 interface BluetoothGatt : EventTarget
 {
+  [Cached, Pure]
+  readonly attribute sequence<BluetoothGattService> services;
   readonly attribute BluetoothConnectionState       connectionState;
 
   // Fired when attribute connectionState changed
@@ -27,6 +29,14 @@ interface BluetoothGatt : EventTarget
   Promise<void>                                     connect();
   [NewObject]
   Promise<void>                                     disconnect();
+
+  /**
+   * Discover services, characteristics, descriptors offered by the remote GATT
+   * server. The promise will be rejected if the connState is not connected or
+   * operation fails.
+   */
+  [NewObject]
+  Promise<void>                                     discoverServices();
 
   /**
    * Read RSSI for the remote BLE device if the connectState is connected.

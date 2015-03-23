@@ -29,6 +29,7 @@ loader.lazyGetter(this, "Debugger", () => {
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/styleinspector/css-logic", true);
+loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
 let TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
       "Uint32Array", "Int8Array", "Int16Array", "Int32Array", "Float32Array",
@@ -444,6 +445,7 @@ function ThreadActor(aParent, aGlobal)
   this._tabClosed = false;
   this._scripts = null;
   this._sources = null;
+  this._pauseOnDOMEvents = null;
 
   this._options = {
     useSourceMaps: false,
@@ -467,6 +469,8 @@ function ThreadActor(aParent, aGlobal)
   this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
   this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
   this.onNewScript = this.onNewScript.bind(this);
+  this._onWindowReady = this._onWindowReady.bind(this);
+  events.on(this._parent, "window-ready", this._onWindowReady);
   // Set a wrappedJSObject property so |this| can be sent via the observer svc
   // for the xpcshell harness.
   this.wrappedJSObject = this;
@@ -620,6 +624,7 @@ ThreadActor.prototype = {
     // things like breakpoints across connections.
     this._sourceActorStore = null;
 
+    events.off(this._parent, "window-ready", this._onWindowReady);
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
@@ -1007,6 +1012,16 @@ ThreadActor.prototype = {
                 .getService(Ci.nsIEventListenerService);
       els.addListenerForAllEvents(this.global, this._allEventsListener, true);
     }
+  },
+
+  /**
+   * If we are tasked with breaking on the load event, we have to add the
+   * listener early enough.
+   */
+  _onWindowReady: function () {
+    this._maybeListenToEvents({
+      pauseOnDOMEvents: this._pauseOnDOMEvents
+    });
   },
 
   /**
@@ -2791,21 +2806,16 @@ SourceActor.prototype = {
    * Ensure the given BreakpointActor is set as a breakpoint handler on all
    * scripts that match its location in the original source.
    *
-   * It is possible that no scripts match the given location, because they have
-   * all been garbage collected. In that case, the BreakpointActor is not set as
-   * a breakpoint handler for any script, but is still inserted in the
-   * BreakpointActorMap as a pending breakpoint. Whenever a new script is
-   * introduced, we call this method again to see if there are now any scripts
-   * that matches the given location.
+   * If there are no scripts that match the location of the BreakpointActor,
+   * we slide its location to the next closest line (for line breakpoints) or
+   * column (for column breakpoint) that does.
    *
-   * The first time we find one or more scripts that matches the given location,
-   * we check if any of these scripts has any entry points for the given
-   * location. If not, we assume that the given location does not have any code.
-   *
-   * If the given location does not contain any code, we slide the breakpoint
-   * down to the next closest line that does, and update the BreakpointActorMap
-   * accordingly. Note that we only do so if the BreakpointActor is still
-   * pending (i.e. is not set as a breakpoint handler for any script).
+   * If breakpoint sliding fails, then either there are no scripts that contain
+   * any code for the given location, or they were all garbage collected before
+   * the debugger started running. We cannot distinguish between these two
+   * cases, so we insert the BreakpointActor in the BreakpointActorMap as
+   * a pending breakpoint. Whenever a new script is introduced, this method is
+   * called again for each pending breakpoint.
    *
    * @param BreakpointActor actor
    *        The BreakpointActor to be set as a breakpoint handler.
@@ -2813,21 +2823,125 @@ SourceActor.prototype = {
    * @returns A Promise that resolves to the given BreakpointActor.
    */
   _setBreakpointForActor: function (actor) {
+    let { originalLocation } = actor;
+
     if (this.isSourceMapped) {
-      return this.threadActor.sources.getGeneratedLocation(
-        actor.originalLocation
-      ).then((generatedLocation) => {
+      // TODO: Refactor breakpoint sliding for source mapped sources.
+      return this.threadActor.sources.getGeneratedLocation(originalLocation)
+                                     .then((generatedLocation) => {
         return generatedLocation.generatedSourceActor
-                                ._setBreakpointForActorAtLocation(
+                                ._setBreakpointForActorAtLocationWithSliding(
           actor,
           generatedLocation
         );
       });
     } else {
-      return Promise.resolve(this._setBreakpointForActorAtLocation(
-        actor,
-        GeneratedLocation.fromOriginalLocation(actor.originalLocation)
-      ));
+      // If this is a non-source mapped source, the original location and
+      // generated location are the same, so we can safely convert between them.
+      let generatedLocation = GeneratedLocation.fromOriginalLocation(originalLocation);
+      let { generatedColumn } = generatedLocation;
+
+      // Try to set the breakpoint on the generated location directly. If this
+      // succeeds, we can avoid the more expensive breakpoint sliding algorithm
+      // below.
+      if (this._setBreakpointForActorAtLocation(actor, generatedLocation)) {
+        return Promise.resolve(actor);
+      }
+
+      // There were no scripts that matched the given location, so we need to
+      // perform breakpoint sliding.
+      if (generatedColumn === undefined) {
+        // To perform breakpoint sliding for line breakpoints, we need to build
+        // a map from line numbers to a list of entry points for each line,
+        // implemented as a sparse array. An entry point is a (script, offsets)
+        // pair, and represents all offsets in that script that are entry points
+        // for the corresponding line.
+        let lineToEntryPointsMap = [];
+
+        // Iterate over all scripts that correspond to this source actor.
+        let scripts = this.scripts.getScriptsBySourceActor(this);
+        for (let script of scripts) {
+          // Get all offsets for each line in the current script. This returns
+          // a map from line numbers fo a list of offsets for each line,
+          // implemented as a sparse array.
+          let lineToOffsetsMap = script.getAllOffsets();
+
+          // Iterate over each line, and add their list of offsets to the map
+          // from line numbers to entry points by forming a (script, offsets)
+          // pair, where script is the current script, and offsets is the list
+          // of offsets for the current line.
+          for (let line = 0; line < lineToOffsetsMap.length; ++line) {
+            let offsets = lineToOffsetsMap[line];
+            if (offsets) {
+              let entryPoints = lineToEntryPointsMap[line];
+              if (!entryPoints) {
+                // We dont have a list of entry points for the current line
+                // number yet, so create it and add it to the map.
+                entryPoints = [];
+                lineToEntryPointsMap[line] = entryPoints;
+              }
+              entryPoints.push({ script, offsets });
+            }
+          }
+        }
+
+        let {
+          originalSourceActor,
+          originalLine,
+          originalColumn
+        } = originalLocation;
+
+        // Now that we have a map from line numbers to a list of entry points
+        // for each line, we can use it to perform breakpoint sliding. Start
+        // at the original line of the breakpoint actor, and keep incrementing
+        // it by one, until either we find a line that has at least one entry
+        // point, or we go past the last line in the map.
+        //
+        // Note that by computing the entire map up front, and implementing it
+        // as a sparse array, we can easily tell when we went past the last line
+        // in the map.
+        let actualLine = originalLine;
+        while (actualLine < lineToEntryPointsMap.length) {
+          let entryPoints = lineToEntryPointsMap[actualLine];
+          if (entryPoints) {
+            setBreakpointForActorAtEntryPoints(actor, entryPoints);
+            break;
+          }
+          ++actualLine;
+        }
+        if (actualLine === lineToEntryPointsMap.length) {
+          // We went past the last line in the map, so breakpoint sliding
+          // failed. Keep the BreakpointActor in the BreakpointActorMap as a
+          // pending breakpoint, so we can try again whenever a new script is
+          // introduced.
+          return Promise.resolve(actor);
+        }
+
+        // If the actual line on which the BreakpointActor was set differs from
+        // the original line that was requested, the BreakpointActor and the
+        // BreakpointActorMap need to be updated accordingly.
+        if (actualLine !== originalLine) {
+          let actualLocation = new OriginalLocation(
+            originalSourceActor,
+            actualLine
+          );
+          let existingActor = this.breakpointActorMap.getActor(actualLocation);
+          if (existingActor) {
+            actor.onDelete();
+            this.breakpointActorMap.deleteActor(originalLocation);
+            actor = existingActor;
+          } else {
+            this.breakpointActorMap.deleteActor(originalLocation);
+            actor.originalLocation = actualLocation;
+            this.breakpointActorMap.setActor(actualLocation, actor);
+          }
+        }
+
+        return Promise.resolve(actor);
+      } else {
+        // TODO: Implement breakpoint sliding for column breakpoints
+        return Promise.resolve(actor);
+      }
     }
   },
 
@@ -2841,8 +2955,79 @@ SourceActor.prototype = {
    *        A GeneratedLocation representing the location in the generated
    *        source for which the given BreakpointActor is to be set as a
    *        breakpoint handler.
+   *
+   * @returns A Boolean that is true if the BreakpointActor was set as a
+   *          breakpoint handler on at least one script, and false otherwise.
    */
   _setBreakpointForActorAtLocation: function (actor, generatedLocation) {
+    let { generatedLine, generatedColumn } = generatedLocation;
+
+    // Find all scripts that match the given source actor and line number.
+    let scripts = this.scripts.getScriptsBySourceActorAndLine(
+      this,
+      generatedLine
+    ).filter((script) => !actor.hasScript(script));
+
+    // Find all entry points that correspond to the given location.
+    let entryPoints = [];
+    if (generatedColumn === undefined) {
+      // This is a line breakpoint, so we are interested in all offsets
+      // that correspond to the given line number.
+      for (let script of scripts) {
+        let offsets = script.getLineOffsets(generatedLine);
+        if (offsets.length > 0) {
+          entryPoints.push({ script, offsets });
+        }
+      }
+    } else {
+      // This is a column breakpoint, so we are interested in all column
+      // offsets that correspond to the given line *and* column number.
+      for (let script of scripts) {
+        let columnToOffsetMap = script.getAllColumnOffsets()
+                                      .filter(({ lineNumber }) => {
+          return lineNumber === generatedLine;
+        });
+        for (let { columnNumber: column, offset } of columnToOffsetMap) {
+          // TODO: What we are actually interested in here is a range of
+          // columns, rather than a single one.
+          if (column == generatedColumn) {
+            entryPoints.push({ script, offsets: [offset] });
+          }
+        }
+      }
+    }
+
+    if (entryPoints.length === 0) {
+      return false;
+    }
+    setBreakpointForActorAtEntryPoints(actor, entryPoints);
+    return true;
+  },
+
+  /*
+   * Ensure the given BreakpointActor is set as breakpoint handler on all
+   * scripts that match the given location in the generated source.
+   *
+   * TODO: This method is bugged, because it performs breakpoint sliding on
+   * generated locations. Breakpoint sliding should be performed on original
+   * locations, because there is no guarantee that the next line in the
+   * generated source corresponds to the next line in an original source.
+   *
+   * The only place this method is still used is from setBreakpointForActor
+   * when called for a source mapped source. Once that code has been refactored,
+   * this method can be removed.
+   *
+   * @param BreakpointActor actor
+   *        The BreakpointActor to be set as a breakpoint handler.
+   * @param GeneratedLocation generatedLocation
+   *        A GeneratedLocation representing the location in the generated
+   *        source for which the given BreakpointActor is to be set as a
+   *        breakpoint handler.
+   *
+   * @returns A Boolean that is true if the BreakpointActor was set as a
+   *          breakpoint handler on at least one script, and false otherwise.
+   */
+  _setBreakpointForActorAtLocationWithSliding: function (actor, generatedLocation) {
     let originalLocation = actor.originalLocation;
     let { generatedLine, generatedColumn } = generatedLocation;
 
@@ -2967,10 +3152,6 @@ SourceActor.prototype = {
       }
       actor.addScript(script, this.threadActor);
     }
-
-    return {
-      actor: actor.actorID
-    };
   },
 
   /**
