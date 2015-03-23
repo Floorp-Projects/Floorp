@@ -86,13 +86,6 @@ public:
                    bool aHasVideo);
 #endif
 
-  // Called to shutdown the decoder module and cleanup state. The PDM
-  // is deleted immediately after Shutdown() is called. Shutdown() is
-  // called after Shutdown() has been called on all MediaDataDecoders
-  // created from this PlatformDecoderModule.
-  // This is called on the decode task queue.
-  virtual nsresult Shutdown() = 0;
-
   // Creates an H.264 decoder. The layers backend is passed in so that
   // decoders can determine whether hardware accelerated decoding can be used.
   // Asynchronous decoding of video should be done in runnables dispatched
