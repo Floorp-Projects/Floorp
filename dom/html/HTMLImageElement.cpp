@@ -151,7 +151,8 @@ NS_IMPL_INT_ATTR(HTMLImageElement, Vspace, vspace)
 bool
 HTMLImageElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap);
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
+          nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
 bool
