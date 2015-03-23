@@ -540,6 +540,18 @@ TileClient::operator=(const TileClient& o)
   return *this;
 }
 
+void
+TileClient::Dump(std::stringstream& aStream)
+{
+  aStream << "TileClient(bb=" << (TextureClient*)mBackBuffer << " fb=" << mFrontBuffer.get();
+  if (mBackBufferOnWhite) {
+    aStream << " bbow=" << mBackBufferOnWhite.get();
+  }
+  if (mFrontBufferOnWhite) {
+    aStream << " fbow=" << mFrontBufferOnWhite.get();
+  }
+  aStream << ")";
+}
 
 void
 TileClient::Flip()

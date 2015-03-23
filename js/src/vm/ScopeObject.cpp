@@ -2568,7 +2568,17 @@ RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remai
         switch (JSOp(*pc)) {
           case JSOP_GETNAME:
           case JSOP_SETNAME:
+          case JSOP_STRICTSETNAME:
             name = script->getName(pc);
+            break;
+
+          case JSOP_GETGNAME:
+          case JSOP_SETGNAME:
+          case JSOP_STRICTSETGNAME:
+            if (script->hasPollutedGlobalScope())
+                name = script->getName(pc);
+            else
+                name = nullptr;
             break;
 
           case JSOP_GETALIASEDVAR:

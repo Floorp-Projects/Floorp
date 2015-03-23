@@ -18,27 +18,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
     <span id="text">label</span>
     <input type="button" id="target" value="target">
 
-    <a id="yes1" href="#">a</a>
-    <audio id="yes2" controls></audio>
-    <button id="yes3">button</button>
-    <details id="yes4">details</details>
-    <embed id="yes5">embed</embed>
-    <iframe id="yes6" src="data:text/plain," style="width: 16px; height: 16px;"></iframe>
-    <img id="yes7" src="data:image/png," usemap="#map">
-    <input id="yes8" type="text" size="4">
-    <keygen id="yes9">
-    <label id="yes10">label</label>
-    <object id="yes11" usemap="#map">object</object>
-    <select id="yes12"><option>select</option></select>
-    <textarea id="yes13" cols="1" rows="1"></textarea>
-    <video id="yes14" controls></video>
+    <a class="yes" href="#">a</a>
+    <audio class="yes" controls></audio>
+    <button class="yes">button</button>
+    <details class="yes">details</details>
+    <embed class="yes">embed</embed>
+    <iframe class="yes" src="data:text/plain," style="width: 16px; height: 16px;"></iframe>
+    <img class="yes" src="data:image/png," usemap="#map">
+    <input class="yes" type="text" size="4">
+    <keygen class="yes">
+    <label class="yes">label</label>
+    <object class="yes" usemap="#map">object</object>
+    <select class="yes"><option>select</option></select>
+    <textarea class="yes" cols="1" rows="1"></textarea>
+    <video class="yes" controls></video>
 
-    <audio id="no1"></audio>
-    <img id="no2" src="data:image/png,">
-    <input id="no3" type="hidden">
-    <object id="no4">object</object>
-    <video id="no5"></video>
-    <span id="no6" tabindex="1">tabindex</span>
+    <audio class="no"></audio>
+    <img class="no" src="data:image/png,">
+    <input class="no" type="hidden">
+    <object class="no">object</object>
+    <video class="no"></video>
+
+    <span class="no" tabindex="1">tabindex</span>
+    <audio class="no" tabindex="1"></audio>
+    <img class="no" src="data:image/png," tabindex="1">
+    <input class="no" type="hidden" tabindex="1">
+    <object class="no" tabindex="1">object</object>
+    <video class="no" tabindex="1"></video>
   </label>
 </form>
 <script class="testbody" type="text/javascript">
@@ -47,32 +53,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
 
 var target = document.getElementById("target");
 
-var yes_nodes = [
-  document.getElementById("yes1"),
-  document.getElementById("yes2"),
-  document.getElementById("yes3"),
-  document.getElementById("yes4"),
-  document.getElementById("yes5"),
-  document.getElementById("yes6"),
-  document.getElementById("yes7"),
-  document.getElementById("yes8"),
-  document.getElementById("yes9"),
-  document.getElementById("yes10"),
-  document.getElementById("yes11"),
-  document.getElementById("yes12"),
-  document.getElementById("yes13"),
-  document.getElementById("yes14"),
-];
+var yes_nodes = Array.from(document.getElementsByClassName("yes"));
 
-var no_nodes = [
-  document.getElementById("text"),
-  document.getElementById("no1"),
-  document.getElementById("no2"),
-  document.getElementById("no3"),
-  document.getElementById("no4"),
-  document.getElementById("no5"),
-  document.getElementById("no6"),
-];
+var no_nodes = Array.from(document.getElementsByClassName("no"));
 
 var target_clicked = false;
 target.addEventListener("click", function() {

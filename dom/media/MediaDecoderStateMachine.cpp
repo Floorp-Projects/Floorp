@@ -2532,7 +2532,7 @@ MediaDecoderStateMachine::SeekCompleted()
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING
   // if we need to seek again.
 
-  bool isLiveStream = mDecoder->GetResource()->GetLength() == -1;
+  bool isLiveStream = mDecoder->GetResource()->IsLiveStream();
   if (mPendingSeek.Exists()) {
     // A new seek target came in while we were processing the old one. No rest
     // for the seeking.
@@ -2740,7 +2740,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // downloaded a reasonable amount of data inside our buffering time.
       if (mReader->UseBufferingHeuristics()) {
         TimeDuration elapsed = now - mBufferingStart;
-        bool isLiveStream = resource->GetLength() == -1;
+        bool isLiveStream = resource->IsLiveStream();
         if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
               elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
               (mQuickBuffering ? HasLowDecodedData(mQuickBufferingLowDataThresholdUsecs)

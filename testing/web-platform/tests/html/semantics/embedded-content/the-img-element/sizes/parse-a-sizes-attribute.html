@@ -1,5 +1,6 @@
 <!doctype html>
 <title>img parse a sizes attribute</title>
+<meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
@@ -14,12 +15,18 @@ function check(p, iframe) {
   var current = p.firstElementChild;
   var ref_sizes = current.getAttribute('sizes');
   var expect = p.firstElementChild.currentSrc;
+  if (expect) {
+    expect = expect.split('?')[0];
+  }
   while (current = current.nextElementSibling) {
     test(function() {
       if (expect === '' || expect === null || expect === undefined) {
         assert_unreached('ref currentSrc was ' + format_value(expect));
       }
-      assert_equals(current.currentSrc, expect);
+      var got = current.currentSrc;
+      assert_greater_than(got.indexOf('?'), -1, 'expected a "?" in currentSrc');
+      got = got.split('?')[0];
+      assert_equals(got, expect);
     }, current.outerHTML + ' ref sizes=' + format_value(ref_sizes) + ' (' + iframe.getAttribute('data-desc') + ')');
   }
 }

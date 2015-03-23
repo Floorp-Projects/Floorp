@@ -89,6 +89,8 @@
 #elif defined(_WIN32)
 #  if defined(_M_IX86)
 #    define MOZ_LITTLE_ENDIAN 1
+#  elif defined(_M_ARM)
+#    define MOZ_LITTLE_ENDIAN 1
 #  else
 #    error "CPU type is unknown"
 #  endif
