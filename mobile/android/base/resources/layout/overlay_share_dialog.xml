@@ -44,7 +44,7 @@
             android:textSize="12sp"
             android:scrollHorizontally="true"/>
 
-        <!-- TODO: Add back drop shadow? -->
+        <!-- TODO: Add back drop shadow (bug 1146488)? -->
         <!-- Buttons -->
         <!-- "Send to Firefox Sync" -->
         <org.mozilla.gecko.overlays.ui.SendTabList
