@@ -56,6 +56,7 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.aboutHomeSnippets.updateUrl': 'https://localhost/snippet-dummy',
     'browser.newtab.url' : 'about:blank',
     'browser.search.update': False,
+    'browser.search.suggest.enabled' : False,
     'browser.safebrowsing.enabled' : False,
     'browser.safebrowsing.updateURL': 'http://localhost/safebrowsing-dummy/update',
     'browser.safebrowsing.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
