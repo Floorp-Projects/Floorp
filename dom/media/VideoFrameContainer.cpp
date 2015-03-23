@@ -65,7 +65,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
+void VideoFrameContainer::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
@@ -76,7 +76,7 @@ void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
   mImageContainer->UnlockCurrentImage();
 
   mImageContainer->ClearAllImages();
-  mImageSizeChanged = aResetSize;
+  mImageSizeChanged = false;
 }
 
 ImageContainer* VideoFrameContainer::GetImageContainer() {
