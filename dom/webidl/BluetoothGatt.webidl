@@ -7,6 +7,8 @@
 [CheckPermissions="bluetooth"]
 interface BluetoothGatt : EventTarget
 {
+  [Cached, Pure]
+  readonly attribute sequence<BluetoothGattService> services;
   readonly attribute BluetoothConnectionState       connectionState;
 
   // Fired when attribute connectionState changed
