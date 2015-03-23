@@ -355,10 +355,10 @@ function test_addons() {
 function test_privateMode() {
   var h = Telemetry.newHistogram("test::private_mode_boolean", "never", Telemetry.HISTOGRAM_BOOLEAN);
   var orig = h.snapshot();
-  Telemetry.canRecord = false;
+  Telemetry.canRecordExtended = false;
   h.add(1);
   do_check_eq(uneval(orig), uneval(h.snapshot()));
-  Telemetry.canRecord = true;
+  Telemetry.canRecordExtended = true;
   h.add(1);
   do_check_neq(uneval(orig), uneval(h.snapshot()));
 }

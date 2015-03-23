@@ -5,10 +5,10 @@
 "use strict";
 
 // So we can test collecting telemetry on the eyedropper
-let oldCanRecord = Services.telemetry.canRecord;
-Services.telemetry.canRecord = true;
+let oldCanRecord = Services.telemetry.canRecordExtended;
+Services.telemetry.canRecordExtended = true;
 registerCleanupFunction(function () {
-  Services.telemetry.canRecord = oldCanRecord;
+  Services.telemetry.canRecordExtended = oldCanRecord;
 });
 const HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_BOOLEAN";
 const FLAG_HISTOGRAM_ID = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_PER_USER_FLAG";
