@@ -3231,6 +3231,7 @@ void HTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = false;
   SetPlayedOrSeeked(true);
+  FireTimeUpdate(false);
   DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
   // We changed whether we're seeking so we need to AddRemoveSelfReference
   AddRemoveSelfReference();
