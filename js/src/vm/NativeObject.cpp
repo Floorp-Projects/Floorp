@@ -1212,6 +1212,64 @@ CheckAccessorRedefinition(ExclusiveContext* cx, HandleObject obj, HandleShape sh
     return Throw(cx->asJSContext(), shape->propid(), JSMSG_CANT_REDEFINE_PROP);
 }
 
+static bool
+AddOrChangeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                    Handle<PropertyDescriptor> desc)
+{
+    desc.assertComplete();
+
+    if (!PurgeScopeChain(cx, obj, id))
+        return false;
+
+    // Use dense storage for new indexed properties where possible.
+    if (JSID_IS_INT(id) &&
+        !desc.getter() &&
+        !desc.setter() &&
+        desc.attributes() == JSPROP_ENUMERATE &&
+        (!obj->isIndexed() || !obj->containsPure(id)) &&
+        !IsAnyTypedArray(obj))
+    {
+        uint32_t index = JSID_TO_INT(id);
+        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            obj->setDenseElementWithType(cx, index, desc.value());
+            if (!CallAddPropertyHookDense(cx, obj, index, desc.value()))
+                return false;
+            return true;
+        }
+    }
+
+    RootedShape shape(cx, NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                                    SHAPE_INVALID_SLOT, desc.attributes(), 0));
+    if (!shape)
+        return false;
+
+    if (!UpdateShapeTypeAndValue(cx, obj, shape, desc.value()))
+        return false;
+
+    // Clear any existing dense index after adding a sparse indexed property,
+    // and investigate converting the object to dense indexes.
+    if (JSID_IS_INT(id)) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
+
+        uint32_t index = JSID_TO_INT(id);
+        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
+        NativeObject::EnsureDenseResult edResult =
+            NativeObject::maybeDensifySparseElements(cx, obj);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            MOZ_ASSERT(!desc.setter());
+            return CallAddPropertyHookDense(cx, obj, index, desc.value());
+        }
+    }
+
+    return CallAddPropertyHook(cx, obj, shape, desc.value());
+}
+
 bool
 js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
                          Handle<PropertyDescriptor> desc_,
@@ -1378,65 +1436,8 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
 
     // At this point, no mutation has happened yet, but all ES6 error cases
     // have been dealt with.
-
-    desc.assertComplete();
-    MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-    MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
-
-    if (!PurgeScopeChain(cx, obj, id))
+    if (!AddOrChangeProperty(cx, obj, id, desc))
         return false;
-
-    // Use dense storage for new indexed properties where possible.
-    if (JSID_IS_INT(id) &&
-        !desc.getter() &&
-        !desc.setter() &&
-        desc.attributes() == JSPROP_ENUMERATE &&
-        (!obj->isIndexed() || !obj->containsPure(id)) &&
-        !IsAnyTypedArray(obj))
-    {
-        uint32_t index = JSID_TO_INT(id);
-        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            obj->setDenseElementWithType(cx, index, desc.value());
-            if (!CallAddPropertyHookDense(cx, obj, index, desc.value()))
-                return false;
-            return result.succeed();
-        }
-    }
-
-    shape = NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                      SHAPE_INVALID_SLOT, desc.attributes(), 0);
-    if (!shape)
-        return false;
-
-    if (!UpdateShapeTypeAndValue(cx, obj, shape, desc.value()))
-        return false;
-
-    // Clear any existing dense index after adding a sparse indexed property,
-    // and investigate converting the object to dense indexes.
-    if (JSID_IS_INT(id)) {
-        if (!obj->maybeCopyElementsForWrite(cx))
-            return false;
-
-        uint32_t index = JSID_TO_INT(id);
-        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
-        NativeObject::EnsureDenseResult edResult =
-            NativeObject::maybeDensifySparseElements(cx, obj);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            MOZ_ASSERT(!desc.setter());
-            if (!CallAddPropertyHookDense(cx, obj, index, desc.value()))
-                return false;
-            return result.succeed();
-        }
-    }
-
-    if (!CallAddPropertyHook(cx, obj, shape, desc.value()))
-        return false;
-
     return result.succeed();
 }
 
