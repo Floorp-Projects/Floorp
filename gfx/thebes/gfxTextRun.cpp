@@ -1231,13 +1231,16 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, uint32_t aStart,
     // Copy glyph runs
     GlyphRunIterator iter(aSource, aStart, aLength);
 #ifdef DEBUG
-    gfxFont *lastFont = nullptr;
+    GlyphRun *prevRun = nullptr;
 #endif
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
-        NS_ASSERTION(font != lastFont, "Glyphruns not coalesced?");
+        NS_ASSERTION(!prevRun || prevRun->mFont != iter.GetGlyphRun()->mFont ||
+                     prevRun->mMatchType != iter.GetGlyphRun()->mMatchType ||
+                     prevRun->mOrientation != iter.GetGlyphRun()->mOrientation,
+                     "Glyphruns not coalesced?");
 #ifdef DEBUG
-        lastFont = font;
+        prevRun = iter.GetGlyphRun();
         uint32_t end = iter.GetStringEnd();
 #endif
         uint32_t start = iter.GetStringStart();
