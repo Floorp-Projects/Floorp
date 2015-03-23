@@ -52,10 +52,7 @@ function startTest(test, token)
     manager.finished(token);
   });
 
-  manager.started(token + "_load");
-  LoadTest(test, v, token)
-  .then(function() { manager.finished(token + "_load"); })
-  .catch(function() { manager.finished(token + "_load"); });
+  LoadTest(test, v, token);
 }
 
 function beginTest() {
