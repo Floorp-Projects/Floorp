@@ -3284,7 +3284,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         return fill(
             """
             $*{assertInheritance}
-            MOZ_ASSERT_IF(aGivenProto, !aCache->GetWrapper());
+            MOZ_ASSERT(!aCache->GetWrapper(),
+                       "You should probably not be using Wrap() directly; use "
+                       "GetOrCreateDOMReflector instead");
 
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");

@@ -1,11 +1,32 @@
 <!DOCTYPE html>
 <title>Scripts with for and event attributes</title>
+<link rel="author" title="Matheus Kerschbaum" href="mailto:matjk7@gmail.com">
 <link rel="author" title="Ms2ger" href="mailto:ms2ger@gmail.com">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/#prepare-a-script">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
-var run = [false, false, false, false, false, false, false, false, false, false, false, false];
+var expected = [
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  true,
+  true,
+  false,
+  true,
+  true,
+];
+var run = expected.map(function() { return false });
 </script>
 <script for="w&#x130;ndow" event="onload">
 run[0] = true;
@@ -43,11 +64,29 @@ run[10] = true;
 <script for="window" event="onload&#xa0;">
 run[11] = true;
 </script>
+<script for=" window " event=" onload ">
+run[12] = true;
+</script>
+<script for=" window " event=" onload() ">
+run[13] = true;
+</script>
+<script for="object" event="handler">
+run[14] = true;
+</script>
+<script event="handler">
+run[15] = true;
+</script>
+<script for="object">
+run[16] = true;
+</script>
 <script>
 test(function() {
   for (var i = 0; i < run.length; ++i) {
     test(function() {
-      assert_false(run[i]);
+      var script = document.querySelectorAll("script[for], script[event]")[i];
+      assert_equals(run[i], expected[i],
+                    "script for=" + format_value(script.getAttribute("for")) +
+                    " event=" + format_value(script.getAttribute("event")));
     }, "Script " + i);
   }
 });

@@ -1,0 +1,50 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1145407",
+    title: "Multistream: Two audio tracks in one stream"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.chain.insertAfter("PC_REMOTE_GET_OFFER", [
+        function PC_REMOTE_OVERRIDE_STREAM_IDS_IN_OFFER(test) {
+          test._local_offer.sdp = test._local_offer.sdp.replace(
+              /a=msid:[^\s]*/g,
+              "a=msid:foo");
+        },
+        function PC_REMOTE_OVERRIDE_EXPECTED_STREAM_IDS(test) {
+          Object.keys(
+              test.pcRemote.expectedRemoteTrackInfoById).forEach(trackId => {
+                test.pcRemote.expectedRemoteTrackInfoById[trackId].streamId = "foo";
+              });
+        }
+    ]);
+    test.chain.insertAfter("PC_LOCAL_GET_ANSWER", [
+        function PC_LOCAL_OVERRIDE_STREAM_IDS_IN_ANSWER(test) {
+          test._remote_answer.sdp = test._remote_answer.sdp.replace(
+              /a=msid:[^\s]*/g,
+              "a=msid:foo");
+        },
+        function PC_LOCAL_OVERRIDE_EXPECTED_STREAM_IDS(test) {
+          Object.keys(
+              test.pcLocal.expectedRemoteTrackInfoById).forEach(trackId => {
+                test.pcLocal.expectedRemoteTrackInfoById[trackId].streamId = "foo";
+              });
+        }
+    ]);
+    test.setMediaConstraints([{audio: true}, {audio: true}],
+                             [{audio: true}, {audio: true}]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

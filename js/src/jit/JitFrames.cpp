@@ -2496,9 +2496,10 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback 
     if (isFunctionFrame())
         return callee(fallback)->environment();
 
-    // Ion does not handle scripts that are not compile-and-go.
+    // Ion does not handle non-function scripts that have anything other than
+    // the global on their scope chain.
     MOZ_ASSERT(!script()->isForEval());
-    MOZ_ASSERT(script()->compileAndGo());
+    MOZ_ASSERT(!script()->hasPollutedGlobalScope());
     return &script()->global();
 }
 

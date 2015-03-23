@@ -110,6 +110,8 @@ def parse_args():
                           help='Run tests in valgrind.')
     harness_og.add_option('--valgrind-args', default='',
                           help='Extra args to pass to valgrind.')
+    harness_og.add_option('--rr', action='store_true',
+                          help='Run tests under RR record-and-replay debugger.')
     op.add_option_group(harness_og)
 
     input_og = OptionGroup(op, "Inputs", "Change what tests are run.")
@@ -174,9 +176,9 @@ def parse_args():
     if options.js_shell is None and not options.make_manifests:
         op.error('missing JS_SHELL argument')
 
-    # Valgrind and gdb are mutually exclusive.
-    if options.valgrind and options.debug:
-        op.error("--valgrind and --debug are mutually exclusive.")
+    # Valgrind, gdb, and rr are mutually exclusive.
+    if sum(map(lambda e: 1 if e else 0, [options.valgrind, options.debug, options.rr])) > 1:
+        op.error("--valgrind, --debug, and --rr are mutually exclusive.")
 
     # Fill the debugger field, as needed.
     prefix = options.debugger.split() if options.debug else []
@@ -185,6 +187,8 @@ def parse_args():
         if os.uname()[0] == 'Darwin':
             prefix.append('--dsymutil=yes')
         options.show_output = True
+    if options.rr:
+        prefix = ['rr', 'record']
 
     js_cmd_args = options.shell_args.split()
     if options.jorendb:

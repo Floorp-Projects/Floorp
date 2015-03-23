@@ -155,8 +155,6 @@ _PassthroughInputDataCallback(AudioConverterRef aAudioConverter,
     return kNoMoreDataErr;
   }
 
-  LOG("AudioConverter wants %u packets of audio data\n", *aNumDataPackets);
-
   if (aPacketDesc) {
     userData->mPacket.mStartOffset = 0;
     userData->mPacket.mVariableFramesInPacket = 0;
@@ -253,11 +251,9 @@ AppleATDecoder::DecodeSample(mp4_demuxer::MP4Sample* aSample)
 
     if (numFrames) {
       outputData.AppendElements(decoded.get(), numFrames * channels);
-      LOG("%d frames decoded", numFrames);
     }
 
     if (rv == kNoMoreDataErr) {
-      LOG("done processing compressed packet");
       break;
     }
   } while (true);
@@ -274,9 +270,11 @@ AppleATDecoder::DecodeSample(mp4_demuxer::MP4Sample* aSample)
     return NS_ERROR_FAILURE;
   }
 
+#ifdef LOG_SAMPLE_DECODE
   LOG("pushed audio at time %lfs; duration %lfs\n",
       (double)aSample->composition_timestamp / USECS_PER_S,
       (double)duration.value() / USECS_PER_S);
+#endif
 
   nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outputData.Length()]);
   PodCopy(data.get(), &outputData[0], outputData.Length());

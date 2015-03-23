@@ -103,6 +103,8 @@ InitMemorySubsystem()
     }
 }
 
+#  if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+
 static inline void *
 MapMemoryAt(void *desired, size_t length, int flags, int prot = PAGE_READWRITE)
 {
@@ -279,6 +281,57 @@ GetPageFaultCount()
     return pmc.PageFaultCount;
 }
 
+#  else // Various APIs are unavailable.
+
+void *
+MapAlignedPages(size_t size, size_t alignment)
+{
+    MOZ_ASSERT(size >= alignment);
+    MOZ_ASSERT(size % alignment == 0);
+    MOZ_ASSERT(size % pageSize == 0);
+    MOZ_ASSERT(alignment % allocGranularity == 0);
+
+    void *p = _aligned_malloc(size, alignment);
+
+    MOZ_ASSERT(OffsetFromAligned(p, alignment) == 0);
+    return p;
+}
+
+static void *
+MapAlignedPagesLastDitch(size_t size, size_t alignment)
+{
+    return nullptr;
+}
+
+void
+UnmapPages(void *p, size_t size)
+{
+    _aligned_free(p);
+}
+
+bool
+MarkPagesUnused(void *p, size_t size)
+{
+    MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
+    return true;
+}
+
+bool
+MarkPagesInUse(void *p, size_t size)
+{
+    MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
+    return true;
+}
+
+size_t
+GetPageFaultCount()
+{
+    // GetProcessMemoryInfo is unavailable.
+    return 0;
+}
+
+#  endif
+
 void *
 AllocateMappedContent(int fd, size_t offset, size_t length, size_t alignment)
 {
@@ -321,6 +374,12 @@ MapAlignedPages(size_t size, size_t alignment)
     if (p == MAP_FAILED)
         return nullptr;
     return p;
+}
+
+static void *
+MapAlignedPagesLastDitch(size_t size, size_t alignment)
+{
+    return nullptr;
 }
 
 void

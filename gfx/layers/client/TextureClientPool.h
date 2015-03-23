@@ -75,10 +75,7 @@ public:
    * Report that a client retrieved via GetTextureClient() has become
    * unusable, so that it will no longer be tracked.
    */
-  void ReportClientLost() {
-    MOZ_ASSERT(mOutstandingClients > mTextureClientsDeferred.size());
-    mOutstandingClients--;
-  }
+  void ReportClientLost();
 
   /**
    * Calling this will cause the pool to attempt to relinquish any unused

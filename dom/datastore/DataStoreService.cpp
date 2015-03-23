@@ -1020,10 +1020,12 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
       return;
     }
 
-    JS::Rooted<JSObject*> obj(cx, exposedStore->WrapObject(cx, JS::NullPtr()));
-    MOZ_ASSERT(obj);
+    JS::Rooted<JS::Value> exposedObject(cx);
+    if (!GetOrCreateDOMReflector(cx, exposedStore, &exposedObject)) {
+      JS_ClearPendingException(cx);
+      return;
+    }
 
-    JS::Rooted<JS::Value> exposedObject(cx, JS::ObjectValue(*obj));
     dataStore->SetExposedObject(exposedObject);
 
     counter->AppendDataStore(cx, exposedStore, dataStore);

@@ -186,6 +186,7 @@ void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::ScaleFactors2D<src, dst>& scale,
                const char* pfx="", const char* sfx="")
 {
+  aStream << pfx;
   std::streamsize oldPrecision = aStream.precision(3);
   if (scale.AreScalesSame()) {
     aStream << scale.xScale;
@@ -193,6 +194,7 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::ScaleFactors2D<sr
     aStream << '(' << scale.xScale << ',' << scale.yScale << ')';
   }
   aStream.precision(oldPrecision);
+  aStream << sfx;
 }
 
 void
