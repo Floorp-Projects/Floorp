@@ -271,6 +271,8 @@ nsNSSComponent::createBackgroundThreads()
 nsNSSComponent::~nsNSSComponent()
 {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::dtor\n"));
+  NS_ASSERTION(!mCertVerificationThread,
+               "Cert verification thread should have been cleaned up.");
 
   deleteBackgroundThreads();
 
@@ -1331,6 +1333,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
         bec->DontForward();
       }
     }
+
+    deleteBackgroundThreads();
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     nsNSSShutDownPreventionLock locker;
