@@ -29,12 +29,6 @@ using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::FloorLog2;
 
-namespace js {
-extern const JSFunctionSpec Float32x4Methods[];
-extern const JSFunctionSpec Float64x2Methods[];
-extern const JSFunctionSpec Int32x4Methods[];
-}
-
 ///////////////////////////////////////////////////////////////////////////
 // SIMD
 
@@ -199,6 +193,7 @@ class Int32x4Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
 };
 class Float32x4Defn {
   public:
@@ -206,6 +201,7 @@ class Float32x4Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
 };
 class Float64x2Defn {
   public:
@@ -213,6 +209,7 @@ class Float64x2Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
 };
 } // namespace js
 
@@ -237,6 +234,14 @@ const JSFunctionSpec js::Float32x4Defn::TypedObjectMethods[] = {
     JS_FS_END
 };
 
+const JSFunctionSpec js::Float32x4Defn::Methods[] = {
+#define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_float32x4_##Name, Operands, 0),
+    FLOAT32X4_FUNCTION_LIST(SIMD_FLOAT32X4_FUNCTION_ITEM)
+#undef SIMD_FLOAT32x4_FUNCTION_ITEM
+    JS_FS_END
+};
+
 const JSFunctionSpec js::Float64x2Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
@@ -253,6 +258,14 @@ const JSPropertySpec js::Float64x2Defn::TypedObjectProperties[] = {
 
 const JSFunctionSpec js::Float64x2Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec js::Float64x2Defn::Methods[]  = {
+#define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_float64x2_##Name, Operands, 0),
+    FLOAT64X2_FUNCTION_LIST(SIMD_FLOAT64X2_FUNCTION_ITEM)
+#undef SIMD_FLOAT64X2_FUNCTION_ITEM
     JS_FS_END
 };
 
@@ -274,6 +287,14 @@ const JSPropertySpec js::Int32x4Defn::TypedObjectProperties[] = {
 
 const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec js::Int32x4Defn::Methods[] = {
+#define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_int32x4_##Name, Operands, 0),
+    INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
+#undef SIMD_INT32X4_FUNCTION_ITEM
     JS_FS_END
 };
 
@@ -391,7 +412,7 @@ const Class SIMDObject::class_ = {
 template <typename Defn>
 static JSObject *
 CreateAndBindSimdType(JSContext *cx, Handle<GlobalObject*> global, HandleObject SIMD,
-                      js::ImmutablePropertyNamePtr name, const JSFunctionSpec methodsSpec[])
+                      js::ImmutablePropertyNamePtr name)
 {
     RootedObject typeObject(cx, CreateSimdClass<Defn>(cx, global, name));
     if (!typeObject)
@@ -399,7 +420,7 @@ CreateAndBindSimdType(JSContext *cx, Handle<GlobalObject*> global, HandleObject 
 
     // Define float32x4 functions and install as a property of the SIMD object.
     RootedValue typeValue(cx, ObjectValue(*typeObject));
-    if (!JS_DefineFunctions(cx, typeObject, methodsSpec) ||
+    if (!JS_DefineFunctions(cx, typeObject, Defn::Methods) ||
         !DefineProperty(cx, SIMD, name, typeValue, nullptr, nullptr,
                         JSPROP_READONLY | JSPROP_PERMANENT))
     {
@@ -431,24 +452,21 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 
     // float32x4
     RootedObject f32x4(cx);
-    f32x4 = CreateAndBindSimdType<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4,
-                                                 Float32x4Methods);
+    f32x4 = CreateAndBindSimdType<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4);
     if (!f32x4)
         return nullptr;
     global->setFloat32x4TypeDescr(*f32x4);
 
     // float64x2
     RootedObject f64x2(cx);
-    f64x2 = CreateAndBindSimdType<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2,
-                                                 Float64x2Methods);
+    f64x2 = CreateAndBindSimdType<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2);
     if (!f64x2)
         return nullptr;
     global->setFloat64x2TypeDescr(*f64x2);
 
     // int32x4
     RootedObject i32x4(cx);
-    i32x4 = CreateAndBindSimdType<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4,
-                                               Int32x4Methods);
+    i32x4 = CreateAndBindSimdType<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4);
     if (!i32x4)
         return nullptr;
     global->setInt32x4TypeDescr(*i32x4);
@@ -1097,26 +1115,3 @@ js::simd_int32x4_##Name(JSContext *cx, unsigned argc, Value *vp)   \
 INT32X4_FUNCTION_LIST(DEFINE_SIMD_INT32X4_FUNCTION)
 #undef DEFINE_SIMD_INT32X4_FUNCTION
 
-const JSFunctionSpec js::Float32x4Methods[] = {
-#define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands)         \
-        JS_FN(#Name, js::simd_float32x4_##Name, Operands, 0),
-        FLOAT32X4_FUNCTION_LIST(SIMD_FLOAT32X4_FUNCTION_ITEM)
-#undef SIMD_FLOAT32x4_FUNCTION_ITEM
-        JS_FS_END
-};
-
-const JSFunctionSpec js::Float64x2Methods[] = {
-#define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands)         \
-        JS_FN(#Name, js::simd_float64x2_##Name, Operands, 0),
-        FLOAT64X2_FUNCTION_LIST(SIMD_FLOAT64X2_FUNCTION_ITEM)
-#undef SIMD_FLOAT64X2_FUNCTION_ITEM
-        JS_FS_END
-};
-
-const JSFunctionSpec js::Int32x4Methods[] = {
-#define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands)           \
-        JS_FN(#Name, js::simd_int32x4_##Name, Operands, 0),
-        INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
-#undef SIMD_INT32X4_FUNCTION_ITEM
-        JS_FS_END
-};
