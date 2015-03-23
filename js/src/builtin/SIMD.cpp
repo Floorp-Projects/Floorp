@@ -302,7 +302,8 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
 
 template<typename T>
 static JSObject *
-CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName stringRepr)
+CreateAndBindSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandleObject SIMD,
+                       HandlePropertyName stringRepr)
 {
     const SimdTypeDescr::Type type = T::type;
 
@@ -311,7 +312,6 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
         return nullptr;
 
     // Create type constructor itself and initialize its reserved slots.
-
     Rooted<SimdTypeDescr*> typeDescr(cx);
     typeDescr = NewObjectWithProto<SimdTypeDescr>(cx, funcProto, SingletonObject);
     if (!typeDescr)
@@ -329,7 +329,6 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
         return nullptr;
 
     // Create prototype property, which inherits from Object.prototype.
-
     RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
     if (!objProto)
         return nullptr;
@@ -340,13 +339,21 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
     // Link constructor to prototype and install properties.
-
     if (!JS_DefineFunctions(cx, typeDescr, T::TypeDescriptorMethods))
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, typeDescr, proto) ||
         !DefinePropertiesAndFunctions(cx, proto, T::TypedObjectProperties,
                                       T::TypedObjectMethods))
+    {
+        return nullptr;
+    }
+
+    // Bind type descriptor to the global SIMD object
+    RootedValue typeValue(cx, ObjectValue(*typeDescr));
+    if (!JS_DefineFunctions(cx, typeDescr, T::Methods) ||
+        !DefineProperty(cx, SIMD, stringRepr, typeValue, nullptr, nullptr,
+                        JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -411,27 +418,6 @@ const Class SIMDObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SIMD)
 };
 
-template <typename Defn>
-static JSObject *
-CreateAndBindSimdType(JSContext *cx, Handle<GlobalObject*> global, HandleObject SIMD,
-                      js::ImmutablePropertyNamePtr name)
-{
-    RootedObject typeObject(cx, CreateSimdClass<Defn>(cx, global, name));
-    if (!typeObject)
-        return nullptr;
-
-    // Define float32x4 functions and install as a property of the SIMD object.
-    RootedValue typeValue(cx, ObjectValue(*typeObject));
-    if (!JS_DefineFunctions(cx, typeObject, Defn::Methods) ||
-        !DefineProperty(cx, SIMD, name, typeValue, nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return nullptr;
-    }
-
-    return typeObject;
-}
-
 JSObject *
 SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 {
@@ -452,26 +438,23 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
     if (!SIMD)
         return nullptr;
 
-    // float32x4
     RootedObject f32x4(cx);
-    f32x4 = CreateAndBindSimdType<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4);
+    f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4);
     if (!f32x4)
         return nullptr;
     global->setFloat32x4TypeDescr(*f32x4);
 
-    // float64x2
-    RootedObject f64x2(cx);
-    f64x2 = CreateAndBindSimdType<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2);
-    if (!f64x2)
-        return nullptr;
-    global->setFloat64x2TypeDescr(*f64x2);
-
-    // int32x4
     RootedObject i32x4(cx);
-    i32x4 = CreateAndBindSimdType<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4);
+    i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4);
     if (!i32x4)
         return nullptr;
     global->setInt32x4TypeDescr(*i32x4);
+
+    RootedObject f64x2(cx);
+    f64x2 = CreateAndBindSimdClass<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2);
+    if (!f64x2)
+        return nullptr;
+    global->setFloat64x2TypeDescr(*f64x2);
 
     // Everything is set up, install SIMD on the global object.
     RootedValue SIMDValue(cx, ObjectValue(*SIMD));
