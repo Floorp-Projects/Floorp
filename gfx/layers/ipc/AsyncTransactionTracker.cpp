@@ -119,7 +119,7 @@ AsyncTransactionTrackersHolder::HoldUntilComplete(AsyncTransactionTracker* aTran
 
   if (aTransactionTracker) {
     MutexAutoLock lock(*sHolderLock);
-    mAsyncTransactionTrackeres[aTransactionTracker->GetId()] = aTransactionTracker;
+    mAsyncTransactionTrackers[aTransactionTracker->GetId()] = aTransactionTracker;
   }
 }
 
@@ -134,10 +134,10 @@ void
 AsyncTransactionTrackersHolder::TransactionCompletetedInternal(uint64_t aTransactionId)
 {
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
-    = mAsyncTransactionTrackeres.find(aTransactionId);
-  if (it != mAsyncTransactionTrackeres.end()) {
+    = mAsyncTransactionTrackers.find(aTransactionId);
+  if (it != mAsyncTransactionTrackers.end()) {
     it->second->NotifyComplete();
-    mAsyncTransactionTrackeres.erase(it);
+    mAsyncTransactionTrackers.erase(it);
   }
 }
 
@@ -146,8 +146,8 @@ AsyncTransactionTrackersHolder::SetReleaseFenceHandle(FenceHandle& aReleaseFence
                                                       uint64_t aTransactionId)
 {
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
-    = mAsyncTransactionTrackeres.find(aTransactionId);
-  if (it != mAsyncTransactionTrackeres.end()) {
+    = mAsyncTransactionTrackers.find(aTransactionId);
+  if (it != mAsyncTransactionTrackers.end()) {
     it->second->SetReleaseFenceHandle(aReleaseFenceHandle);
   }
 }
@@ -183,11 +183,11 @@ AsyncTransactionTrackersHolder::ClearAllAsyncTransactionTrackers()
     sHolderLock->Lock();
   }
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it;
-  for (it = mAsyncTransactionTrackeres.begin();
-       it != mAsyncTransactionTrackeres.end(); it++) {
+  for (it = mAsyncTransactionTrackers.begin();
+       it != mAsyncTransactionTrackers.end(); it++) {
     it->second->NotifyCancel();
   }
-  mAsyncTransactionTrackeres.clear();
+  mAsyncTransactionTrackers.clear();
   if (sHolderLock) {
     sHolderLock->Unlock();
   }
