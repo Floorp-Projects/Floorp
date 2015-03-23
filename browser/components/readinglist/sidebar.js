@@ -161,6 +161,7 @@ let RLSidebar = {
     } else {
       thumb.style.removeProperty("background-image");
     }
+    thumb.classList.toggle("preview-available", !!item.preview);
   },
 
   /**
