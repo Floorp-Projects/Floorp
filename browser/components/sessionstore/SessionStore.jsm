@@ -470,14 +470,9 @@ let SessionStoreInternal = {
 
             if (this._needsRestorePage(state, this._recentCrashes)) {
               // replace the crashed session with a restore-page-only session
-              let pageData = {
-                url: "about:sessionrestore",
-                formdata: {
-                  id: { "sessionData": state },
-                  xpath: {}
-                }
-              };
-              state = { windows: [{ tabs: [{ entries: [pageData] }] }] };
+              let url = "about:sessionrestore";
+              let formdata = {id: {sessionData: state}, url};
+              state = { windows: [{ tabs: [{ entries: [{url}], formdata }] }] };
             } else if (this._hasSingleTabWithURL(state.windows,
                                                  "about:welcomeback")) {
               // On a single about:welcomeback URL that crashed, replace about:welcomeback
