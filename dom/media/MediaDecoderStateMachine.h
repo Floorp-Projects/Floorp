@@ -410,9 +410,6 @@ public:
   // and aborting all pending operations on the decode task queue.
   void Reset();
 
-private:
-  void AcquireMonitorAndInvokeDecodeError();
-
 protected:
   virtual ~MediaDecoderStateMachine();
 
