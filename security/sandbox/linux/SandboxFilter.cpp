@@ -368,6 +368,7 @@ void SandboxFilterImplGMP::Build() {
   Allow(SOCKETCALL(recvmsg, RECVMSG));
   Allow(SOCKETCALL(sendmsg, SENDMSG));
   Allow(SYSCALL(time));
+  Allow(SYSCALL(sched_yield));
 
   // Nothing after this line is performance-critical.
 
