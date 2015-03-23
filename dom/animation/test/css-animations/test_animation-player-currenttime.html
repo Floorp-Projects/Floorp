@@ -611,6 +611,47 @@ async_test(function(t) {
   });
 }, 'Animation.currentTime after pausing');
 
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = ANIM_PROPERTY_VAL;
+
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(function() {
+    // just before animation ends:
+    animation.currentTime = ANIM_DELAY_MS + ANIM_DUR_MS - 1;
+
+    return waitForTwoAnimationFrames();
+  }).then(t.step_func(function() {
+    assert_equals(animation.currentTime, ANIM_DELAY_MS + ANIM_DUR_MS,
+      'Animation.currentTime should not continue to increase after the ' +
+      'animation has finished');
+    t.done();
+  }));
+}, 'Test Animation.currentTime clamping');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = ANIM_PROPERTY_VAL;
+
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(function() {
+    // play backwards:
+    animation.playbackRate = -1;
+
+    // just before animation ends (at the "start"):
+    animation.currentTime = 1;
+
+    return waitForTwoAnimationFrames();
+  }).then(t.step_func(function() {
+    assert_equals(animation.currentTime, 0,
+      'Animation.currentTime should not continue to decrease after an ' +
+      'animation running in reverse has finished and currentTime is zero');
+    t.done();
+  }));
+}, 'Test Animation.currentTime clamping for reversed animation');
+
     </script>
   </body>
 </html>
