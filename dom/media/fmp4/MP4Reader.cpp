@@ -368,7 +368,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     {
       MonitorAutoUnlock unlock(mDemuxerMonitor);
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mIsEncrypted = mCrypto.valid;
+      mInfo.mCrypto.mIsEncrypted = mIsEncrypted = mCrypto.valid;
     }
 
     // Remember that we've initialized the demuxer, so that if we're decoding
@@ -400,14 +400,15 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     }
   }
 
-  if (mCrypto.valid) {
+  if (mIsEncrypted) {
     nsTArray<uint8_t> initData;
     ExtractCryptoInitData(initData);
     if (initData.Length() == 0) {
       return NS_ERROR_FAILURE;
     }
 
-    mInfo.mCrypto.AddInitData(NS_LITERAL_STRING("cenc"), Move(initData));
+    mInfo.mCrypto.mInitData = initData;
+    mInfo.mCrypto.mType = NS_LITERAL_STRING("cenc");
   }
 
   // Get the duration, and report it to the decoder if we have it.

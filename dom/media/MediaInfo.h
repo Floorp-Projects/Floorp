@@ -105,39 +105,16 @@ public:
 
 class EncryptionInfo {
 public:
-  struct InitData {
-    InitData(const nsString& aType, nsTArray<uint8_t>&& aInitData)
-      : mType(aType)
-      , mInitData(Move(aInitData))
-    {
-    }
+  EncryptionInfo() : mIsEncrypted(false) {}
 
-    // Encryption type to be passed to JS. Usually `cenc'.
-    nsString mType;
+  // Encryption type to be passed to JS. Usually `cenc'.
+  nsString mType;
 
-    // Encryption data.
-    nsTArray<uint8_t> mInitData;
-  };
-  typedef nsTArray<InitData> InitDatas;
+  // Encryption data.
+  nsTArray<uint8_t> mInitData;
 
   // True if the stream has encryption metadata
-  bool IsEncrypted() const
-  {
-    return !mInitDatas.IsEmpty();
-  }
-
-  void AddInitData(const nsString& aType, nsTArray<uint8_t>&& aInitData)
-  {
-    mInitDatas.AppendElement(InitData(aType, Move(aInitData)));
-  }
-
-  void AddInitData(const EncryptionInfo& aInfo)
-  {
-    mInitDatas.AppendElements(aInfo.mInitDatas);
-  }
-
-  // One 'InitData' per encrypted buffer.
-  InitDatas mInitDatas;
+  bool mIsEncrypted;
 };
 
 class MediaInfo {
@@ -154,7 +131,7 @@ public:
 
   bool IsEncrypted() const
   {
-    return mCrypto.IsEncrypted();
+    return mCrypto.mIsEncrypted;
   }
 
   bool HasValidMedia() const
