@@ -83,8 +83,10 @@ SharedDecoderManager::CreateVideoDecoder(
     mDecoder = aPDM->CreateVideoDecoder(
       aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
     if (!mDecoder) {
+      mPDM = nullptr;
       return nullptr;
     }
+    mPDM = aPDM;
     nsresult rv = mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
   }
@@ -103,8 +105,10 @@ SharedDecoderManager::Recreate(PlatformDecoderModule* aPDM,
   mDecoder->Shutdown();
   mDecoder = aPDM->CreateVideoDecoder(aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
   if (!mDecoder) {
+    mPDM = nullptr;
     return false;
   }
+  mPDM = aPDM;
   nsresult rv = mDecoder->Init();
   return rv == NS_OK;
 }
@@ -168,11 +172,21 @@ SharedDecoderManager::Shutdown()
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
+  if (mPDM) {
+    mPDM->Shutdown();
+    mPDM = nullptr;
+  }
   if (mTaskQueue) {
     mTaskQueue->BeginShutdown();
     mTaskQueue->AwaitShutdownAndIdle();
     mTaskQueue = nullptr;
   }
+}
+
+bool
+SharedDecoderManager::IsPDMInUse(const mozilla::PlatformDecoderModule* aPDM) const
+{
+  return aPDM == mPDM;
 }
 
 SharedDecoderProxy::SharedDecoderProxy(
