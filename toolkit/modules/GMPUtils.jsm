@@ -47,7 +47,11 @@ this.GMPUtils = {
    */
   _isPluginSupported: function(aPlugin) {
     if (aPlugin.id == EME_ADOBE_ID) {
-      return false;
+      if (Services.appinfo.OS == "WINNT") {
+        return Services.sysinfo.getPropertyAsInt32("version") >= 6;
+      } else {
+        return false;
+      }
     }
     return true;
   },
