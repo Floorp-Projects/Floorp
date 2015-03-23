@@ -14,7 +14,10 @@ INDENT TABS: content-security-policy/*
 INDENT TABS: custom-elements/*
 INDENT TABS: DOMEvents/*
 INDENT TABS: eventsource/*
-INDENT TABS: html/*
+INDENT TABS: html/editing/dnd/*
+INDENT TABS: html/semantics/*
+INDENT TABS: html/syntax/*
+INDENT TABS: html/webappapis/*
 INDENT TABS: media-source/*
 INDENT TABS: old-tests/*
 INDENT TABS: pointerlock/*
@@ -33,7 +36,6 @@ TRAILING WHITESPACE: conformance-checkers/*
 TRAILING WHITESPACE: content-security-policy/*
 TRAILING WHITESPACE: custom-elements/*
 TRAILING WHITESPACE: DOMEvents/*
-TRAILING WHITESPACE: html/*
 TRAILING WHITESPACE: html-longdesc/*
 TRAILING WHITESPACE: media-source/*
 TRAILING WHITESPACE: microdata/*
@@ -67,6 +69,7 @@ TRAILING WHITESPACE: XMLHttpRequest/*
 *:*.woff
 *:*.eot
 *:*.sfd
+*:*.swf
 
 ## Documentation ##
 
