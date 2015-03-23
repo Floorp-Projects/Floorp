@@ -14,6 +14,8 @@
 #include "GMPCallbackBase.h"
 #include "GMPUtils.h"
 
+class nsCString;
+
 class GMPVideoDecoderCallbackProxy : public GMPCallbackBase,
                                      public GMPVideoDecoderCallback
 {
