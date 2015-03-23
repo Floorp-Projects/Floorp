@@ -231,6 +231,7 @@ add_task(function* test_pluginRegistration() {
     let MockGMPService = {
       addPluginDirectory: path => addedPaths.push(path),
       removePluginDirectory: path => removedPaths.push(path),
+      removeAndDeletePluginDirectory: path => removedPaths.push(path),
     };
 
     GMPScope.gmpService = MockGMPService;
