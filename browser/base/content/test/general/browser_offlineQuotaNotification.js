@@ -51,20 +51,8 @@ function checkInContentPreferences(win) {
 
 function test() {
   waitForExplicitFinish();
-
-  Services.prefs.setBoolPref("offline-apps.allow_by_default", false);
-
-  // Open a new tab.
-  gBrowser.selectedTab = gBrowser.addTab(URL);
-  registerCleanupFunction(() => gBrowser.removeCurrentTab());
-
-
-  Promise.all([
-    // Wait for a notification that asks whether to allow offline storage.
-    promiseNotification(),
-    // Wait for the tab to load.
-    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser)
-  ]).then(() => {
+  gBrowser.selectedBrowser.addEventListener("load", function onload() {
+    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
     gBrowser.selectedBrowser.contentWindow.applicationCache.oncached = function() {
       executeSoon(function() {
         // We got cached - now we should have provoked the quota warning.
@@ -99,14 +87,8 @@ function test() {
     // Click the notification panel's "Allow" button.  This should kick
     // off updates which will call our oncached handler above.
     PopupNotifications.panel.firstElementChild.button.click();
-  });
-}
+  }, true);
 
-function promiseNotification() {
-  return new Promise(resolve => {
-    PopupNotifications.panel.addEventListener("popupshown", function onShown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onShown);
-      resolve();
-    });
-  });
+  Services.prefs.setBoolPref("offline-apps.allow_by_default", false);
+  gBrowser.contentWindow.location = URL;
 }
