@@ -457,7 +457,7 @@ let gSyncUI = {
     let lastSync, threshold, prolonged;
     try {
       lastSync = new Date(Services.prefs.getCharPref("readinglist.scheduler.lastSync"));
-      threshold = new Date(Date.now() - Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout"));
+      threshold = new Date(Date.now() - Services.prefs.getIntPref("services.sync.errorhandler.networkFailureReportTimeout") * 1000);
       prolonged = lastSync <= threshold;
     } catch (ex) {
       // no pref, assume not prolonged.
