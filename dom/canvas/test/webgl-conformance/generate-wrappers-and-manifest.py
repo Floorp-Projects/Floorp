@@ -252,8 +252,7 @@ def WriteWrappers(testWebPathList):
 
 def PathFromManifestDir(path):
     print('path: ' + path)
-    ret = os.path.join(FILE_PATH_PREFIX, path)
-    return ret.replace(os.sep, '/')
+    return os.path.join(FILE_PATH_PREFIX, path)
 
 
 def WriteManifest(wrapperManifestPathList, supportFilePathList):
