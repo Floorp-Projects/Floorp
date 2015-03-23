@@ -1110,8 +1110,13 @@ nsAutoCompleteController::StartSearch(uint16_t aSearchType)
   NS_ENSURE_STATE(mInput);
   nsCOMPtr<nsIAutoCompleteInput> input = mInput;
 
-  for (uint32_t i = 0; i < mSearches.Length(); ++i) {
-    nsCOMPtr<nsIAutoCompleteSearch> search = mSearches[i];
+  // Iterate a copy of |mSearches| so that we don't run into trouble if the
+  // array is mutated while we're still in the loop. An nsIAutoCompleteSearch
+  // implementation could synchronously start a new search when StartSearch()
+  // is called and that would lead to assertions down the way.
+  nsCOMArray<nsIAutoCompleteSearch> searchesCopy(mSearches);
+  for (uint32_t i = 0; i < searchesCopy.Length(); ++i) {
+    nsCOMPtr<nsIAutoCompleteSearch> search = searchesCopy[i];
 
     // Filter on search type.  Not all the searches implement this interface,
     // in such a case just consider them delayed.
