@@ -100,7 +100,7 @@ add_task(function* initializeState() {
     }
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL);
-    gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK);
+    gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_EME_ENABLED);
     yield GMPScope.GMPProvider.shutdown();
     GMPScope.GMPProvider.startup();
@@ -324,7 +324,7 @@ add_task(function* testPreferencesButton() {
 });
 
 add_task(function* testUpdateButton() {
-  gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK);
+  gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
 
   let originalInstallManager = GMPScope.GMPInstallManager;
   Object.defineProperty(GMPScope, "GMPInstallManager", {
