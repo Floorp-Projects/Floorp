@@ -37,6 +37,8 @@ Marionette.prototype = {
     "getLogs",
     "generate_results",
     "waitFor",
+    "runEmulatorCmd",
+    "runEmulatorShell",
     "TEST_PASS",
     "TEST_KNOWN_FAIL",
     "TEST_UNEXPECTED_FAIL",
@@ -200,5 +202,15 @@ Marionette.prototype = {
         return;
       }
       this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, deadline);
+  },
+
+  runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
+    this.heartbeatCallback();
+    this.scope.runEmulatorCmd(cmd, callback);
+  },
+
+  runEmulatorShell: function runEmulatorShell(args, callback) {
+    this.heartbeatCallback();
+    this.scope.runEmulatorShell(args, callback);
   },
 };
