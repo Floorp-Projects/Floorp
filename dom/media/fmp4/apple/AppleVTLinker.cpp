@@ -98,6 +98,10 @@ AppleVTLinker::Unlink()
   --sRefCount;
   if (sLink && sRefCount < 1) {
     LOG("Unlinking VideoToolbox framework.");
+#define LINK_FUNC(func)                                                   \
+    func = nullptr;
+#include "AppleVTFunctions.h"
+#undef LINK_FUNC
     dlclose(sLink);
     sLink = nullptr;
     skPropEnableHWAccel = nullptr;
