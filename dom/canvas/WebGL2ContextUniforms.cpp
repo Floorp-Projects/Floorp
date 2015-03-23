@@ -74,6 +74,12 @@ WebGL2Context::ValidateAttribPointerType(bool integerMode, GLenum type,
     return false;
 }
 
+bool
+WebGL2Context::ValidateUniformMatrixTranspose(bool /*transpose*/, const char* /*info*/)
+{
+    return true;
+}
+
 // -------------------------------------------------------------------------
 // Uniforms and attributes
 
@@ -166,87 +172,111 @@ WebGL2Context::Uniform4uiv(WebGLUniformLocation* location,
 }
 
 void
-WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix2x3fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformMatrixArraySetter(loc, 2, 3, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix2x3fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniformMatrix2x3fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
-WebGL2Context::UniformMatrix2x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix2x4fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformMatrixArraySetter(loc, 2, 4, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix2x4fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniformMatrix2x4fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
-WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix3x2fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformMatrixArraySetter(loc, 3, 2, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix3x2fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniformMatrix3x2fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
-WebGL2Context::UniformMatrix3x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix3x4fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformMatrixArraySetter(loc, 3, 4, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix3x4fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniformMatrix3x4fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
-WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
+WebGL2Context::UniformMatrix4x2fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformMatrixArraySetter(loc, 4, 2, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix4x2fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniformMatrix4x2fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
-WebGL2Context::UniformMatrix2x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
+WebGL2Context::UniformMatrix4x3fv_base(WebGLUniformLocation* loc, bool transpose,
+                                       size_t arrayLength, const GLfloat* data)
 {
-    MOZ_CRASH("Not Implemented.");
-}
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
 
-void
-WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
-{
-    MOZ_CRASH("Not Implemented.");
-}
+    if (!ValidateUniformMatrixArraySetter(loc, 4, 3, LOCAL_GL_FLOAT, arrayLength,
+                                          transpose, "uniformMatrix4x3fv",
+                                          &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
 
-void
-WebGL2Context::UniformMatrix4x2fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
-{
-    MOZ_CRASH("Not Implemented.");
-}
-
-void
-WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
-{
-    MOZ_CRASH("Not Implemented.");
-}
-
-void
-WebGL2Context::UniformMatrix3x4fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
-{
-    MOZ_CRASH("Not Implemented.");
-}
-
-void
-WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Float32Array& value)
-{
-    MOZ_CRASH("Not Implemented.");
-}
-
-void
-WebGL2Context::UniformMatrix4x3fv(WebGLUniformLocation* location, bool transpose,
-                                  const dom::Sequence<GLfloat>& value)
-{
-    MOZ_CRASH("Not Implemented.");
+    MakeContextCurrent();
+    gl->fUniformMatrix4x3fv(rawLoc, numElementsToUpload, transpose, data);
 }
 
 void
