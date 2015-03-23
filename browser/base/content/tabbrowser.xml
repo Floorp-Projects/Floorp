@@ -4398,7 +4398,7 @@
                   sourceNode.ownerDocument.defaultView.gMultiProcessBrowser)
                 return dt.effectAllowed = "none";
 
-              let copyModifier = this.AppConstants.platform == "macosx" ? event.altKey : event.ctrlKey;
+              let copyModifier = this.tabbrowser.AppConstants.platform == "macosx" ? event.altKey : event.ctrlKey;
               return dt.effectAllowed = copyModifier ? "copy" : "move";
             }
           }
