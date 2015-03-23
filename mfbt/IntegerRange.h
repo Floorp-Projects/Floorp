@@ -33,10 +33,10 @@ public:
     : mCurrent(aOther.mCurrent) { }
 
   // Since operator* is required to return a reference, we return
-  // the reference of our member here.
+  // a reference to our member here.
   const IntTypeT& operator*() const { return mCurrent; }
 
-  /* Increments and descrements operators */
+  /* Increment and decrement operators */
 
   IntegerIterator& operator++() { ++mCurrent; return *this; }
   IntegerIterator& operator--() { --mCurrent; return *this; }
