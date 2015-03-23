@@ -448,7 +448,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             continue;
 
         switch (tn->kind) {
-          case JSTRY_ITER: {
+          case JSTRY_FOR_IN: {
             MOZ_ASSERT(JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
             MOZ_ASSERT(tn->stackDepth > 0);
 
@@ -457,6 +457,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             break;
           }
 
+          case JSTRY_FOR_OF:
           case JSTRY_LOOP:
             break;
 
@@ -658,7 +659,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             }
             break;
 
-          case JSTRY_ITER: {
+          case JSTRY_FOR_IN: {
             Value iterValue(* (Value *) rfe->stackPointer);
             RootedObject iterObject(cx, &iterValue.toObject());
             if (cx->isExceptionPending())
@@ -668,6 +669,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             break;
           }
 
+          case JSTRY_FOR_OF:
           case JSTRY_LOOP:
             break;
 

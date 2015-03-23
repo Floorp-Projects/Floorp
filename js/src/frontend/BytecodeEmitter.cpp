@@ -5083,6 +5083,9 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, StmtType type, ParseNode *
     if (!PopStatementBCE(cx, bce))
         return false;
 
+    if (!bce->tryNoteList.append(JSTRY_FOR_OF, bce->stackDepth, top, bce->offset()))
+        return false;
+
     if (letDecl) {
         if (!LeaveNestedScope(cx, bce, &letStmt))
             return false;
@@ -5208,7 +5211,7 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
-    if (!bce->tryNoteList.append(JSTRY_ITER, bce->stackDepth, top, bce->offset()))
+    if (!bce->tryNoteList.append(JSTRY_FOR_IN, bce->stackDepth, top, bce->offset()))
         return false;
     if (Emit1(cx, bce, JSOP_ENDITER) < 0)
         return false;
