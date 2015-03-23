@@ -1318,6 +1318,16 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 return false;
             return DefineTypedArrayElement(cx->asJSContext(), obj, index, desc_, result);
         }
+    } else if (obj->is<ArgumentsObject>()) {
+        if (id == NameToId(cx->names().length)) {
+            // Either we are resolving the .length property on this object, or
+            // redefining it. In the latter case only, we must set a bit. To
+            // distinguish the two cases, we note that when resolving, the
+            // property won't already exist; whereas the first time it is
+            // redefined, it will.
+            if (obj->containsPure(id))
+                obj->as<ArgumentsObject>().markLengthOverridden();
+        }
     }
 
     Rooted<PropertyDescriptor> desc(cx, desc_);
