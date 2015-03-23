@@ -1228,22 +1228,18 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     RootedShape shape(cx);
     RootedValue value(cx, desc.value());
 
-    /*
-     * If defining a getter or setter, we must check for its counterpart and
-     * update the attributes and property ops.  A getter or setter is really
-     * only half of a property.
-     */
+    // If defining a getter or setter, we must check for its counterpart and
+    // update the attributes and property ops.  A getter or setter is really
+    // only half of a property.
     if (desc.isAccessorDescriptor()) {
         if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
             return false;
         if (shape) {
-            /*
-             * If we are defining a getter whose setter was already defined, or
-             * vice versa, finish the job via obj->changeProperty.
-             */
+            // If we are defining a getter whose setter was already defined, or
+            // vice versa, finish the job via obj->changeProperty.
             if (IsImplicitDenseOrTypedArrayElement(shape)) {
                 if (IsAnyTypedArray(obj)) {
-                    /* Ignore getter/setter properties added to typed arrays. */
+                    // Ignore getter/setter properties added to typed arrays.
                     return result.succeed();
                 }
                 if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
@@ -1317,11 +1313,9 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             // Don't forget about arrays.
             if (IsImplicitDenseOrTypedArrayElement(shape)) {
                 if (IsAnyTypedArray(obj)) {
-                    /*
-                     * Silently ignore attempts to change individual index attributes.
-                     * FIXME: Uses the same broken behavior as for accessors. This should
-                     *        fail.
-                     */
+                    // Silently ignore attempts to change individual index attributes.
+                    // FIXME: Uses the same broken behavior as for accessors. This should
+                    //        fail.
                     return result.succeed();
                 }
                 if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
@@ -1356,40 +1350,11 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         }
     }
 
-    if (!PurgeScopeChain(cx, obj, id))
-        return false;
-
     // Dispense with any remaining JSPROP_IGNORE_* attributes. Any bits that
     // needed to be copied from an existing property have been copied by
     // now. Since we can never get here with JSPROP_IGNORE_VALUE relevant, just
     // clear it.
     attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
-
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
-    /* Use dense storage for new indexed properties where possible. */
-    if (JSID_IS_INT(id) &&
-        !getter &&
-        !setter &&
-        attrs == JSPROP_ENUMERATE &&
-        (!obj->isIndexed() || !obj->containsPure(id)) &&
-        !IsAnyTypedArray(obj))
-    {
-        uint32_t index = JSID_TO_INT(id);
-        if (WouldDefinePastNonwritableLength(obj, index))
-            return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
-
-        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            obj->setDenseElementWithType(cx, index, value);
-            if (!CallAddPropertyHookDense(cx, obj, index, value))
-                return false;
-            return result.succeed();
-        }
-    }
 
     if (obj->is<ArrayObject>()) {
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
@@ -1404,13 +1369,40 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             if (WouldDefinePastNonwritableLength(obj, index))
                 return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
         }
-    }
-
-    // Don't define new indexed properties on typed arrays.
-    if (IsAnyTypedArray(obj)) {
+    } else if (IsAnyTypedArray(obj)) {
+        // Don't define new indexed properties on typed arrays.
         uint64_t index;
         if (IsTypedArrayIndex(id, &index))
             return result.succeed();
+    }
+
+    // At this point, no mutation has happened yet, but all ES6 error cases
+    // have been dealt with.
+
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
+    if (!PurgeScopeChain(cx, obj, id))
+        return false;
+
+    // Use dense storage for new indexed properties where possible.
+    if (JSID_IS_INT(id) &&
+        !getter &&
+        !setter &&
+        attrs == JSPROP_ENUMERATE &&
+        (!obj->isIndexed() || !obj->containsPure(id)) &&
+        !IsAnyTypedArray(obj))
+    {
+        uint32_t index = JSID_TO_INT(id);
+        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            obj->setDenseElementWithType(cx, index, value);
+            if (!CallAddPropertyHookDense(cx, obj, index, value))
+                return false;
+            return result.succeed();
+        }
     }
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
@@ -1421,10 +1413,8 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     if (!UpdateShapeTypeAndValue(cx, obj, shape, value))
         return false;
 
-    /*
-     * Clear any existing dense index after adding a sparse indexed property,
-     * and investigate converting the object to dense indexes.
-     */
+    // Clear any existing dense index after adding a sparse indexed property,
+    // and investigate converting the object to dense indexes.
     if (JSID_IS_INT(id)) {
         if (!obj->maybeCopyElementsForWrite(cx))
             return false;
