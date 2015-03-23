@@ -331,10 +331,10 @@ class SimdTypeDescr : public ComplexTypeDescr
 {
   public:
     enum Type {
-        TYPE_INT32 = JS_SIMDTYPEREPR_INT32,
-        TYPE_FLOAT32 = JS_SIMDTYPEREPR_FLOAT32,
-        TYPE_FLOAT64 = JS_SIMDTYPEREPR_FLOAT64,
-        LAST_TYPE = TYPE_FLOAT64
+        Int32x4 = JS_SIMDTYPEREPR_INT32,
+        Float32x4 = JS_SIMDTYPEREPR_FLOAT32,
+        Float64x2 = JS_SIMDTYPEREPR_FLOAT64,
+        LAST_TYPE = Float64x2
     };
 
     static const type::Kind Kind = type::Simd;
@@ -352,10 +352,10 @@ class SimdTypeDescr : public ComplexTypeDescr
     static bool is(const Value &v);
 };
 
-#define JS_FOR_EACH_SIMD_TYPE_REPR(macro_)                             \
-    macro_(SimdTypeDescr::TYPE_INT32, int32_t, int32, 4)               \
-    macro_(SimdTypeDescr::TYPE_FLOAT32, float, float32, 4)             \
-    macro_(SimdTypeDescr::TYPE_FLOAT64, double, float64, 2)
+#define JS_FOR_EACH_SIMD_TYPE_REPR(macro_)               \
+    macro_(SimdTypeDescr::Int32x4, int32_t, int32, 4)    \
+    macro_(SimdTypeDescr::Float32x4, float, float32, 4)  \
+    macro_(SimdTypeDescr::Float64x2, double, float64, 2)
 
 bool IsTypedObjectClass(const Class *clasp); // Defined below
 bool IsTypedObjectArray(JSObject& obj);
