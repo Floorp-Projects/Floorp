@@ -18,10 +18,6 @@ public:
 
   virtual nsresult Startup() MOZ_OVERRIDE;
 
-  // Called when the decoders have shutdown. Main thread only.
-  // Does this really need to be main thread only????
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
-
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,

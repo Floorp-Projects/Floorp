@@ -203,13 +203,7 @@ MP4Reader::Shutdown()
   // Dispose of the queued sample before shutting down the demuxer
   mQueuedVideoSample = nullptr;
 
-  if (mPlatform) {
-    if (!mSharedDecoderManager ||
-        !mSharedDecoderManager->IsPDMInUse(mPlatform)) {
-      mPlatform->Shutdown();
-    }
-    mPlatform = nullptr;
-  }
+  mPlatform = nullptr;
 
   return MediaDecoderReader::Shutdown();
 }
