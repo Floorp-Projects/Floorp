@@ -156,6 +156,142 @@
 
       testHeaderCells(headerInfoMap);
 
+      //////////////////////////////////////////////////////////////////////////
+      // @scope="rowgroup" and @scope="row"
+
+      headerInfoMap = [
+        {
+          cell: "t7_r1c1",
+          rowHeaderCells: [ "t7_Females", "t7_Mary" ],
+          columnHeaderCells: [ "t7_1km" ]
+        },
+        {
+          cell: "t7_r1c2",
+          rowHeaderCells: [ "t7_Females", "t7_Mary" ],
+          columnHeaderCells: [ "t7_5km" ]
+        },
+        {
+          cell: "t7_r1c3",
+          rowHeaderCells: [ "t7_Females", "t7_Mary" ],
+          columnHeaderCells: [ "t7_10km" ]
+        },
+        {
+          cell: "t7_r2c1",
+          rowHeaderCells: [ "t7_Females", "t7_Betsy" ],
+          columnHeaderCells: [ "t7_1km" ]
+        },
+        {
+          cell: "t7_r2c2",
+          rowHeaderCells: [ "t7_Females", "t7_Betsy" ],
+          columnHeaderCells: [ "t7_5km" ]
+        },
+        {
+          cell: "t7_r2c3",
+          rowHeaderCells: [ "t7_Females", "t7_Betsy" ],
+          columnHeaderCells: [ "t7_10km" ]
+        },
+        {
+          cell: "t7_r3c1",
+          rowHeaderCells: [ "t7_Males", "t7_Matt" ],
+          columnHeaderCells: [ "t7_1km" ]
+        },
+        {
+          cell: "t7_r3c2",
+          rowHeaderCells: [ "t7_Males", "t7_Matt" ],
+          columnHeaderCells: [ "t7_5km" ]
+        },
+        {
+          cell: "t7_r3c3",
+          rowHeaderCells: [ "t7_Males", "t7_Matt" ],
+          columnHeaderCells: [ "t7_10km" ]
+        },
+        {
+          cell: "t7_r4c1",
+          rowHeaderCells: [ "t7_Males", "t7_Todd" ],
+          columnHeaderCells: [ "t7_1km" ]
+        },
+        {
+          cell: "t7_r4c2",
+          rowHeaderCells: [ "t7_Males", "t7_Todd" ],
+          columnHeaderCells: [ "t7_5km" ]
+        },
+        {
+          cell: "t7_r4c3",
+          rowHeaderCells: [ "t7_Males", "t7_Todd" ],
+          columnHeaderCells: [ "t7_10km" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      //////////////////////////////////////////////////////////////////////////
+      // @scope="colgroup" and @scope="col"
+
+      headerInfoMap = [
+        {
+          cell: "t8_r1c1",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t7_Females", "t7_Mary" ]
+        },
+        {
+          cell: "t8_r1c2",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Females", "t8_Mary" ]
+        },
+        {
+          cell: "t8_r1c3",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Females", "t8_Mary" ]
+        },
+        {
+          cell: "t8_r1c4",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Females", "t8_Betsy" ]
+        },
+        {
+          cell: "t8_r2c1",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Females", "t8_Betsy" ]
+        },
+        {
+          cell: "t8_r2c2",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Females", "t8_Betsy" ]
+        },
+        {
+          cell: "t8_r2c3",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Matt" ]
+        },
+        {
+          cell: "t8_r2c4",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Matt" ]
+        },
+        {
+          cell: "t8_r3c1",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Matt" ]
+        },
+        {
+          cell: "t8_r3c2",
+          rowHeaderCells: [ "t8_1km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Todd" ]
+        },
+        {
+          cell: "t8_r3c3",
+          rowHeaderCells: [ "t8_5km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Todd" ]
+        },
+        {
+          cell: "t8_r3c4",
+          rowHeaderCells: [ "t8_10km" ],
+          columnHeaderCells: [ "t8_Males", "t8_Todd" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
       SimpleTest.finish();
     }
 
@@ -174,6 +310,11 @@
      title="Table headers not associated when header is a td element with no scope"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=704465">
     Bug 704465
+  </a>
+  <a target="_blank"
+     title="Support rowgroup and colgroup HTML scope"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1141978">
+    Bug 1141978
   </a>
 
   <p id="display"></p>
@@ -275,5 +416,87 @@
       <td id="table6_cell" headers="table6_ch table6_rh">cell</td>
     </tr>
   </table>
+
+  <table id="table7" class="data complex" border="1">
+    <caption>Version 1 with rowgroup</caption>
+    <thead>
+    <tr>
+      <td colspan="2">&nbsp;</td>
+      <th id="t7_1km" scope="col">1 km</th>
+      <th id="t7_5km" scope="col">5 km</th>
+      <th id="t7_10km" scope="col">10 km</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="t7_Females" rowspan="2" scope="rowgroup">Females</th>
+        <th id="t7_Mary" scope="row">Mary</th>
+        <td id="t7_r1c1">8:32</td>
+        <td id="t7_r1c2">28:04</td>
+        <td id="t7_r1c3">1:01:16</td>
+      </tr>
+      <tr>
+        <th id="t7_Betsy" scope="row">Betsy</th>
+        <td id="t7_r2c1">7:43</td>
+        <td id="t7_r2c2">26:47</td>
+        <td id="t7_r2c3">55:38</td>
+      </tr>
+      <tr>
+        <th id="t7_Males" rowspan="2" scope="rowgroup">Males</th>
+        <th id="t7_Matt" scope="row">Matt</th>
+        <td id="t7_r3c1">7:55</td>
+        <td id="t7_r3c2">27:29</td>
+        <td id="t7_r3c3">57:04</td>
+      </tr>
+      <tr>
+        <th id="t7_Todd" scope="row">Todd</th>
+        <td id="t7_r4c1">7:01</td>
+        <td id="t7_r4c2">24:21</td>
+        <td id="t7_r4c3">50:35</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table8" class="data complex" border="1">
+    <caption>Version 2 with colgroup</caption>
+    <thead>
+      <tr>
+        <td rowspan="2">&nbsp;</td>
+        <th id="t8_Females" colspan="2" scope="colgroup">Females</th>
+        <th id="t8_Males" colspan="2" scope="colgroup">Males</th>
+      </tr>
+      <tr>
+        <th id="t8_Mary" scope="col">Mary</th>
+        <th id="t8_Betsy" scope="col">Betsy</th>
+        <th id="t8_Matt" scope="col">Matt</th>
+        <th id="t8_Todd" scope="col">Todd</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="t8_1km" scope="row">1 km</th>
+        <td id="t8_r1c1">8:32</td>
+        <td id="t8_r1c2">7:43</td>
+        <td id="t8_r1c3">7:55</td>
+        <td id="t8_r1c4">7:01</td>
+      </tr>
+      <tr>
+        <th id="t8_5km" scope="row">5 km</th>
+        <td id="t8_r2c1">28:04</td>
+        <td id="t8_r2c2">26:47</td>
+        <td id="t8_r2c3">27:27</td>
+        <td id="t8_r2c4">24:21</td>
+      </tr>
+      <tr>
+        <th id="t8_10km" scope="row">10 km</th>
+        <td id="t8_r3c1">1:01:16</td>
+        <td id="t8_r3c2">55:38</td>
+        <td id="t8_r3c3">57:04</td>
+        <td id="t8_r3c4">50:35</td>
+      </tr>
+
+    </tbody>
+  </table>
+
 </body>
 </html>
