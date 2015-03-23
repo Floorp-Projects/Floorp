@@ -331,18 +331,6 @@ CreateSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandlePropertyName 
     return typeDescr;
 }
 
-const char*
-SimdTypeToMinimumLanesNumber(SimdTypeDescr &descr) {
-    switch (descr.type()) {
-      case SimdTypeDescr::TYPE_INT32:
-      case SimdTypeDescr::TYPE_FLOAT32:
-        return "3";
-      case SimdTypeDescr::TYPE_FLOAT64:
-        return "1";
-    }
-    MOZ_CRASH("Unexpected SIMD type description.");
-}
-
 bool
 SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -400,6 +388,27 @@ const Class SIMDObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SIMD)
 };
 
+template <typename Defn>
+static JSObject *
+CreateAndBindSimdType(JSContext *cx, Handle<GlobalObject*> global, HandleObject SIMD,
+                      js::ImmutablePropertyNamePtr name, const JSFunctionSpec methodsSpec[])
+{
+    RootedObject typeObject(cx, CreateSimdClass<Defn>(cx, global, name));
+    if (!typeObject)
+        return nullptr;
+
+    // Define float32x4 functions and install as a property of the SIMD object.
+    RootedValue typeValue(cx, ObjectValue(*typeObject));
+    if (!JS_DefineFunctions(cx, typeObject, methodsSpec) ||
+        !DefineProperty(cx, SIMD, name, typeValue, nullptr, nullptr,
+                        JSPROP_READONLY | JSPROP_PERMANENT))
+    {
+        return nullptr;
+    }
+
+    return typeObject;
+}
+
 JSObject *
 SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 {
@@ -421,66 +430,35 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
         return nullptr;
 
     // float32x4
-    RootedObject float32x4Object(cx);
-    float32x4Object = CreateSimdClass<Float32x4Defn>(cx, global,
-                                                     cx->names().float32x4);
-    if (!float32x4Object)
+    RootedObject f32x4(cx);
+    f32x4 = CreateAndBindSimdType<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4,
+                                                 Float32x4Methods);
+    if (!f32x4)
         return nullptr;
-
-    // Define float32x4 functions and install as a property of the SIMD object.
-    RootedValue float32x4Value(cx, ObjectValue(*float32x4Object));
-    if (!JS_DefineFunctions(cx, float32x4Object, Float32x4Methods) ||
-        !DefineProperty(cx, SIMD, cx->names().float32x4,
-                        float32x4Value, nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return nullptr;
-    }
+    global->setFloat32x4TypeDescr(*f32x4);
 
     // float64x2
-    RootedObject float64x2Object(cx);
-    float64x2Object = CreateSimdClass<Float64x2Defn>(cx, global,
-                                                     cx->names().float64x2);
-    if (!float64x2Object)
+    RootedObject f64x2(cx);
+    f64x2 = CreateAndBindSimdType<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2,
+                                                 Float64x2Methods);
+    if (!f64x2)
         return nullptr;
-
-    // Define float64x2 functions and install as a property of the SIMD object.
-    RootedValue float64x2Value(cx, ObjectValue(*float64x2Object));
-    if (!JS_DefineFunctions(cx, float64x2Object, Float64x2Methods) ||
-        !DefineProperty(cx, SIMD, cx->names().float64x2,
-                        float64x2Value, nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return nullptr;
-    }
+    global->setFloat64x2TypeDescr(*f64x2);
 
     // int32x4
-    RootedObject int32x4Object(cx);
-    int32x4Object = CreateSimdClass<Int32x4Defn>(cx, global,
-                                                 cx->names().int32x4);
-    if (!int32x4Object)
+    RootedObject i32x4(cx);
+    i32x4 = CreateAndBindSimdType<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4,
+                                               Int32x4Methods);
+    if (!i32x4)
         return nullptr;
-
-    // Define int32x4 functions and install as a property of the SIMD object.
-    RootedValue int32x4Value(cx, ObjectValue(*int32x4Object));
-    if (!JS_DefineFunctions(cx, int32x4Object, Int32x4Methods) ||
-        !DefineProperty(cx, SIMD, cx->names().int32x4,
-                        int32x4Value, nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return nullptr;
-    }
-
-    RootedValue SIMDValue(cx, ObjectValue(*SIMD));
+    global->setInt32x4TypeDescr(*i32x4);
 
     // Everything is set up, install SIMD on the global object.
+    RootedValue SIMDValue(cx, ObjectValue(*SIMD));
     if (!DefineProperty(cx, global, cx->names().SIMD, SIMDValue, nullptr, nullptr, 0))
         return nullptr;
 
     global->setConstructor(JSProto_SIMD, SIMDValue);
-    global->setFloat32x4TypeDescr(*float32x4Object);
-    global->setFloat64x2TypeDescr(*float64x2Object);
-    global->setInt32x4TypeDescr(*int32x4Object);
     return SIMD;
 }
 
