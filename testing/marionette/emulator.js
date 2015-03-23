@@ -53,8 +53,9 @@ Emulator.prototype.popCallback = function(id) {
     }
   }
 
-  if (!f)
+  if (!f) {
     return null;
+  }
 
   this.cbs.splice(fi, 1);
   return f;
@@ -103,16 +104,19 @@ EmulatorCallback.prototype.shell = function(args, cb) {
 };
 
 EmulatorCallback.prototype.result = function(msg) {
-  if (this.send_ === null)
+  if (this.send_ === null) {
     throw new TypeError(
       "EmulatorCallback must be registered with Emulator to fire");
+  }
 
   try {
-    if (!this.onresult)
+    if (!this.onresult) {
       return;
+    }
     this.onresult(msg.result);
   } catch (e) {
-    if (this.onerror)
+    if (this.onerror) {
       this.onerror(e);
+    }
   }
 };
