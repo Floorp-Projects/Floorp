@@ -114,16 +114,6 @@ public:
   //  GetScaledTileSize().width, GetScaledTileSize().height)
   Tile GetTile(int x, int y) const;
 
-  // This operates the same as GetTile(aTileOrigin), but will also replace the
-  // specified tile with the placeholder tile. This does not call ReleaseTile
-  // on the removed tile.
-  bool RemoveTile(const nsIntPoint& aTileOrigin, Tile& aRemovedTile);
-
-  // This operates the same as GetTile(x, y), but will also replace the
-  // specified tile with the placeholder tile. This does not call ReleaseTile
-  // on the removed tile.
-  bool RemoveTile(int x, int y, Tile& aRemovedTile);
-
   const gfx::IntSize& GetTileSize() const { return mTileSize; }
 
   gfx::IntSize GetScaledTileSize() const { return RoundedToInt(gfx::Size(mTileSize) / mResolution); }
@@ -283,31 +273,6 @@ TiledLayerBuffer<Derived, Tile>::GetTile(int x, int y) const
 {
   int index = x * mRetainedHeight + y;
   return mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
-}
-
-template<typename Derived, typename Tile> bool
-TiledLayerBuffer<Derived, Tile>::RemoveTile(const nsIntPoint& aTileOrigin,
-                                            Tile& aRemovedTile)
-{
-  gfx::IntSize scaledTileSize = GetScaledTileSize();
-  int firstTileX = floor_div(mValidRegion.GetBounds().x, scaledTileSize.width);
-  int firstTileY = floor_div(mValidRegion.GetBounds().y, scaledTileSize.height);
-  return RemoveTile(floor_div(aTileOrigin.x, scaledTileSize.width) - firstTileX,
-                    floor_div(aTileOrigin.y, scaledTileSize.height) - firstTileY,
-                    aRemovedTile);
-}
-
-template<typename Derived, typename Tile> bool
-TiledLayerBuffer<Derived, Tile>::RemoveTile(int x, int y, Tile& aRemovedTile)
-{
-  int index = x * mRetainedHeight + y;
-  const Tile& tileToRemove = mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
-  if (!tileToRemove.IsPlaceholderTile()) {
-    aRemovedTile = tileToRemove;
-    mRetainedTiles[index] = AsDerived().GetPlaceholderTile();
-    return true;
-  }
-  return false;
 }
 
 template<typename Derived, typename Tile> void
