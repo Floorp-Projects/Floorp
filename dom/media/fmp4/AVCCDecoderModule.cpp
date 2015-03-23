@@ -265,12 +265,6 @@ AVCCDecoderModule::Startup()
   return mPDM->Startup();
 }
 
-nsresult
-AVCCDecoderModule::Shutdown()
-{
-  return mPDM->Shutdown();
-}
-
 already_AddRefed<MediaDataDecoder>
 AVCCDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                       layers::LayersBackend aLayersBackend,

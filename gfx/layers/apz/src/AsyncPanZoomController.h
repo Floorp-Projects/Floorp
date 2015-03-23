@@ -361,6 +361,16 @@ public:
   ParentLayerPoint ToParentLayerCoordinates(const ScreenPoint& aVector,
                                             const ScreenPoint& aAnchor) const;
 
+  // Return whether or not a wheel event will be able to scroll in either
+  // direction.
+  bool CanScroll(const ScrollWheelInput& aEvent) const;
+
+  // Return whether or not a scroll delta will be able to scroll in either
+  // direction.
+  bool CanScroll(double aDeltaX, double aDeltaY) const;
+
+  void NotifyMozMouseScrollEvent(const nsString& aString) const;
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   ~AsyncPanZoomController();
@@ -422,6 +432,10 @@ protected:
    * Helper methods for handling scroll wheel events.
    */
   nsEventStatus OnScrollWheel(const ScrollWheelInput& aEvent);
+
+  void GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                           double& aOutDeltaX,
+                           double& aOutDeltaY) const;
 
   /**
    * Helper methods for long press gestures.
@@ -849,6 +863,9 @@ private:
 
   void StartSmoothScroll(ScrollSource aSource);
 
+  // Returns whether overscroll is allowed during a wheel event.
+  bool AllowScrollHandoffInWheelTransaction() const;
+
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains
    * out of APZC instances. These chains can only be walked or manipulated
@@ -983,6 +1000,10 @@ public:
   Matrix4x4 GetAncestorTransform() const {
     return mAncestorTransform;
   }
+
+  // Returns whether or not this apzc contains the given screen point within
+  // its composition bounds.
+  bool Contains(const ScreenIntPoint& aPoint) const;
 
   bool IsOverscrolled() const {
     return mX.IsOverscrolled() || mY.IsOverscrolled();

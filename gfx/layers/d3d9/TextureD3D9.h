@@ -370,6 +370,43 @@ protected:
   bool mIsLocked;
 };
 
+class DXGIYCbCrTextureHostD3D9 : public TextureHost
+{
+public:
+  DXGIYCbCrTextureHostD3D9(TextureFlags aFlags,
+                           const SurfaceDescriptorDXGIYCbCr& aDescriptor);
+
+  virtual TextureSource* GetTextureSources() override;
+
+  virtual void DeallocateDeviceData() override {}
+
+  virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual gfx::SurfaceFormat GetFormat() const override { return gfx::SurfaceFormat::YUV; }
+
+  virtual bool Lock() override;
+  virtual void Unlock() override;
+  virtual gfx::IntSize GetSize() const override { return mSize; }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
+  {
+    return nullptr;
+  }
+
+ protected:
+  IDirect3DDevice9* GetDevice();
+
+  HANDLE mHandles[3];
+  RefPtr<IDirect3DTexture9> mTextures[3];
+  RefPtr<DataTextureSourceD3D9> mTextureSources[3];
+
+  RefPtr<CompositorD3D9> mCompositor;
+  gfx::IntSize mSize;
+  gfx::IntSize mSizeY;
+  gfx::IntSize mSizeCbCr;
+  bool mIsLocked;
+ };
+
 class CompositingRenderTargetD3D9 : public CompositingRenderTarget,
                                     public TextureSourceD3D9
 {

@@ -320,7 +320,7 @@ Context::QuotaInitRunnable::Run()
 // runnable executes the Action on the appropriate threads while the Context
 // is initialized.
 class Context::ActionRunnable final : public nsIRunnable
-                                        , public Action::Resolver
+                                    , public Action::Resolver
 {
 public:
   ActionRunnable(Context* aContext, nsIEventTarget* aTarget, Action* aAction,

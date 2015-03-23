@@ -28,6 +28,8 @@ WMFDecoderModule::WMFDecoderModule()
 
 WMFDecoderModule::~WMFDecoderModule()
 {
+  DebugOnly<HRESULT> hr = wmf::MFShutdown();
+  NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
 }
 
 /* static */
@@ -55,14 +57,6 @@ WMFDecoderModule::Startup()
     NS_WARNING("Failed to initialize Windows Media Foundation");
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
-}
-
-nsresult
-WMFDecoderModule::Shutdown()
-{
-  DebugOnly<HRESULT> hr = wmf::MFShutdown();
-  NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
   return NS_OK;
 }
 

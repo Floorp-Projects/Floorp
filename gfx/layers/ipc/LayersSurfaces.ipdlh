@@ -55,6 +55,8 @@ struct SurfaceDescriptorDXGIYCbCr {
   WindowsHandle handleCb;
   WindowsHandle handleCr;
   IntSize size;
+  IntSize sizeY;
+  IntSize sizeCbCr;
 };
 
 struct SurfaceDescriptorMacIOSurface {

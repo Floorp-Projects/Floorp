@@ -8,6 +8,8 @@ include protocol PContent;
 
 include "mozilla/GfxMessageUtils.h";
 
+using struct nsIntPoint from "nsRect.h";
+using struct nsIntSize from "nsRect.h";
 using struct nsIntRect from "nsRect.h";
 
 namespace mozilla {
@@ -121,6 +123,9 @@ child:
   prio(high) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
   prio(high) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
   prio(high) sync PasteText(uint64_t aID, int32_t aPosition);
+
+  prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(nsIntPoint aRetVal);
+  prio(high) sync ImageSize(uint64_t aID) returns(nsIntSize aRetVal);
 };
 
 }

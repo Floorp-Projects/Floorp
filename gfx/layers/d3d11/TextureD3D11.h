@@ -78,17 +78,17 @@ protected:
   bool mNeedsClearWhite;
 };
 
-class DXGIYCbCrTextureClientD3D11 : public TextureClient
+class DXGIYCbCrTextureClient : public TextureClient
 {
 public:
-  DXGIYCbCrTextureClientD3D11(ISurfaceAllocator* aAllocator,
-                              TextureFlags aFlags);
+  DXGIYCbCrTextureClient(ISurfaceAllocator* aAllocator,
+                         TextureFlags aFlags);
 
-  virtual ~DXGIYCbCrTextureClientD3D11();
+  virtual ~DXGIYCbCrTextureClient();
 
   // TextureClient
 
-  virtual bool IsAllocated() const override{ return !!mTextures[0]; }
+  virtual bool IsAllocated() const override{ return !!mHoldRefs[0]; }
 
   virtual bool Lock(OpenMode aOpenMode) override;
 
@@ -98,17 +98,25 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
-  void InitWith(ID3D11Texture2D* aTextureY,
-                ID3D11Texture2D* aTextureCb,
-                ID3D11Texture2D* aTextureCr,
-                const gfx::IntSize& aSize)
+  void InitWith(IUnknown* aTextureY,
+                IUnknown* aTextureCb,
+                IUnknown* aTextureCr,
+                HANDLE aHandleY,
+                HANDLE aHandleCb,
+                HANDLE aHandleCr,
+                const gfx::IntSize& aSize,
+                const gfx::IntSize& aSizeY,
+                const gfx::IntSize& aSizeCbCr)
   {
-    MOZ_ASSERT(aTextureY && aTextureCb && aTextureCr);
-    MOZ_ASSERT(!mTextures[0]);
-    mTextures[0] = aTextureY;
-    mTextures[1] = aTextureCb;
-    mTextures[2] = aTextureCr;
+    mHandles[0] = aHandleY;
+    mHandles[1] = aHandleCb;
+    mHandles[2] = aHandleCr;
+    mHoldRefs[0] = aTextureY;
+    mHoldRefs[1] = aTextureCb;
+    mHoldRefs[2] = aTextureCr;
     mSize = aSize;
+    mSizeY = aSizeY;
+    mSizeCbCr = aSizeCbCr;
   }
 
   virtual gfx::IntSize GetSize() const
@@ -125,8 +133,11 @@ public:
     CreateSimilar(TextureFlags, TextureAllocationFlags) const override{ return nullptr; }
 
 private:
-  RefPtr<ID3D11Texture2D> mTextures[3];
+  RefPtr<IUnknown> mHoldRefs[3];
+  HANDLE mHandles[3];
   gfx::IntSize mSize;
+  gfx::IntSize mSizeY;
+  gfx::IntSize mSizeCbCr;
   bool mIsLocked;
 };
 

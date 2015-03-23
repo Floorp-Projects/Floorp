@@ -363,5 +363,21 @@ ProxyAccessible::PasteText(int32_t aPosition)
   unused << mDoc->SendPasteText(mID, aPosition);
 }
 
+nsIntPoint
+ProxyAccessible::ImagePosition(uint32_t aCoordType)
+{
+  nsIntPoint retVal;
+  unused << mDoc->SendImagePosition(mID, aCoordType, &retVal);
+  return retVal;
+}
+
+nsIntSize
+ProxyAccessible::ImageSize()
+{
+  nsIntSize retVal;
+  unused << mDoc->SendImageSize(mID, &retVal);
+  return retVal;
+}
+
 }
 }
