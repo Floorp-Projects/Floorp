@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
+#include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/dom/bluetooth/BluetoothGatt.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothGattBinding.h"
@@ -20,14 +20,9 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothGatt)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothGatt,
-                                                DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothGatt,
-                                                  DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothGatt,
+                                   DOMEventTargetHelper,
+                                   mServices)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothGatt)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -42,6 +37,7 @@ BluetoothGatt::BluetoothGatt(nsPIDOMWindow* aWindow,
   , mClientIf(0)
   , mConnectionState(BluetoothConnectionState::Disconnected)
   , mDeviceAddr(aDeviceAddr)
+  , mDiscoveringServices(false)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(!mDeviceAddr.IsEmpty());
@@ -216,6 +212,36 @@ BluetoothGatt::ReadRemoteRssi(ErrorResult& aRv)
   return promise.forget();
 }
 
+already_AddRefed<Promise>
+BluetoothGatt::DiscoverServices(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(
+    mConnectionState == BluetoothConnectionState::Connected &&
+    !mDiscoveringServices,
+    NS_ERROR_DOM_INVALID_STATE_ERR);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  mDiscoveringServices = true;
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
+                                   promise,
+                                   NS_LITERAL_STRING("DiscoverGattServices"));
+  bs->DiscoverGattServicesInternal(mAppUuid, result);
+
+  return promise.forget();
+}
+
 void
 BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 {
@@ -236,6 +262,22 @@ BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 }
 
 void
+BluetoothGatt::HandleServicesDiscovered(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothGattServiceId);
+
+  const InfallibleTArray<BluetoothGattServiceId>& serviceIds =
+    aValue.get_ArrayOfBluetoothGattServiceId();
+
+  for (uint32_t i = 0; i < serviceIds.Length(); i++) {
+    mServices.AppendElement(new BluetoothGattService(
+      GetParentObject(), mAppUuid, serviceIds[i]));
+  }
+
+  BluetoothGattBinding::ClearCachedServicesValue(this);
+}
+
+void
 BluetoothGatt::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -253,6 +295,18 @@ BluetoothGatt::Notify(const BluetoothSignal& aData)
       v.get_bool() ? BluetoothConnectionState::Connected
                    : BluetoothConnectionState::Disconnected;
     UpdateConnectionState(state);
+  } else if (aData.name().EqualsLiteral("ServicesDiscovered")) {
+    HandleServicesDiscovered(v);
+  } else if (aData.name().EqualsLiteral("DiscoverCompleted")) {
+    MOZ_ASSERT(v.type() == BluetoothValue::Tbool);
+
+    bool isDiscoverSuccess = v.get_bool();
+    if (!isDiscoverSuccess) { // Clean all discovered attributes if failed
+      mServices.Clear();
+      BluetoothGattBinding::ClearCachedServicesValue(this);
+    }
+
+    mDiscoveringServices = false;
   } else {
     BT_WARNING("Not handling GATT signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());

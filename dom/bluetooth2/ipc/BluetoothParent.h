@@ -224,6 +224,9 @@ protected:
   DoRequest(const DisconnectGattClientRequest& aRequest);
 
   bool
+  DoRequest(const DiscoverGattServicesRequest& aRequest);
+
+  bool
   DoRequest(const UnregisterGattClientRequest& aRequest);
 
   bool

@@ -691,20 +691,24 @@ public:
 
   /* Enumerate Attributes */
   virtual void SearchService(int aConnId,
+                             bool aSearchAll,
                              const BluetoothUuid& aUuid,
                              BluetoothGattClientResultHandler* aRes) = 0;
   virtual void GetIncludedService(
     int aConnId,
     const BluetoothGattServiceId& aServiceId,
+    bool aFirst,
     const BluetoothGattServiceId& aStartServiceId,
     BluetoothGattClientResultHandler* aRes) = 0;
   virtual void GetCharacteristic(int aConnId,
                                  const BluetoothGattServiceId& aServiceId,
+                                 bool aFirst,
                                  const BluetoothGattId& aStartCharId,
                                  BluetoothGattClientResultHandler* aRes) = 0;
   virtual void GetDescriptor(int aConnId,
                              const BluetoothGattServiceId& aServiceId,
                              const BluetoothGattId& aCharId,
+                             bool aFirst,
                              const BluetoothGattId& aDescriptorId,
                              BluetoothGattClientResultHandler* aRes) = 0;
 
