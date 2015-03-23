@@ -1102,95 +1102,6 @@ UpdateShapeTypeAndValue(ExclusiveContext* cx, NativeObject* obj, Shape* shape, c
     return true;
 }
 
-static inline bool
-DefinePropertyOrElement(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                        GetterOp getter, SetterOp setter, unsigned attrs, HandleValue value,
-                        ObjectOpResult& result)
-{
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
-    /* Use dense storage for new indexed properties where possible. */
-    if (JSID_IS_INT(id) &&
-        !getter &&
-        !setter &&
-        attrs == JSPROP_ENUMERATE &&
-        (!obj->isIndexed() || !obj->containsPure(id)) &&
-        !IsAnyTypedArray(obj))
-    {
-        uint32_t index = JSID_TO_INT(id);
-        if (WouldDefinePastNonwritableLength(obj, index))
-            return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
-
-        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            obj->setDenseElementWithType(cx, index, value);
-            if (!CallAddPropertyHookDense(cx, obj, index, value))
-                return false;
-            return result.succeed();
-        }
-    }
-
-    if (obj->is<ArrayObject>()) {
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        if (id == NameToId(cx->names().length)) {
-            if (!cx->shouldBeJSContext())
-                return false;
-            return ArraySetLength(cx->asJSContext(), arr, id, attrs, value, result);
-        }
-
-        uint32_t index;
-        if (IdIsIndex(id, &index)) {
-            if (WouldDefinePastNonwritableLength(obj, index))
-                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
-        }
-    }
-
-    // Don't define new indexed properties on typed arrays.
-    if (IsAnyTypedArray(obj)) {
-        uint64_t index;
-        if (IsTypedArrayIndex(id, &index))
-            return result.succeed();
-    }
-
-    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-    RootedShape shape(cx, NativeObject::putProperty(cx, obj, id, getter, setter,
-                                                    SHAPE_INVALID_SLOT, attrs, 0));
-    if (!shape)
-        return false;
-
-    if (!UpdateShapeTypeAndValue(cx, obj, shape, value))
-        return false;
-
-    /*
-     * Clear any existing dense index after adding a sparse indexed property,
-     * and investigate converting the object to dense indexes.
-     */
-    if (JSID_IS_INT(id)) {
-        if (!obj->maybeCopyElementsForWrite(cx))
-            return false;
-
-        uint32_t index = JSID_TO_INT(id);
-        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
-        NativeObject::EnsureDenseResult edResult = NativeObject::maybeDensifySparseElements(cx, obj);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            MOZ_ASSERT(!setter);
-            if (!CallAddPropertyHookDense(cx, obj, index, value))
-                return false;
-            return result.succeed();
-        }
-    }
-
-    if (!CallAddPropertyHook(cx, obj, shape, value))
-        return false;
-
-    return result.succeed();
-}
-
 static unsigned
 ApplyOrDefaultAttributes(unsigned attrs, const Shape* shape = nullptr)
 {
@@ -1448,12 +1359,95 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     if (!PurgeScopeChain(cx, obj, id))
         return false;
 
-    // Handle the default cases here. Anyone that wanted to set non-default attributes has
-    // cleared the IGNORE flags by now. Since we can never get here with JSPROP_IGNORE_VALUE
-    // relevant, just clear it.
+    // Dispense with any remaining JSPROP_IGNORE_* attributes. Any bits that
+    // needed to be copied from an existing property have been copied by
+    // now. Since we can never get here with JSPROP_IGNORE_VALUE relevant, just
+    // clear it.
     attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
-    return DefinePropertyOrElement(cx, obj, id, getter, setter, attrs, value, result);
+
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
+    /* Use dense storage for new indexed properties where possible. */
+    if (JSID_IS_INT(id) &&
+        !getter &&
+        !setter &&
+        attrs == JSPROP_ENUMERATE &&
+        (!obj->isIndexed() || !obj->containsPure(id)) &&
+        !IsAnyTypedArray(obj))
+    {
+        uint32_t index = JSID_TO_INT(id);
+        if (WouldDefinePastNonwritableLength(obj, index))
+            return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+
+        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            obj->setDenseElementWithType(cx, index, value);
+            if (!CallAddPropertyHookDense(cx, obj, index, value))
+                return false;
+            return result.succeed();
+        }
+    }
+
+    if (obj->is<ArrayObject>()) {
+        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+        if (id == NameToId(cx->names().length)) {
+            if (!cx->shouldBeJSContext())
+                return false;
+            return ArraySetLength(cx->asJSContext(), arr, id, attrs, value, result);
+        }
+
+        uint32_t index;
+        if (IdIsIndex(id, &index)) {
+            if (WouldDefinePastNonwritableLength(obj, index))
+                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+        }
+    }
+
+    // Don't define new indexed properties on typed arrays.
+    if (IsAnyTypedArray(obj)) {
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index))
+            return result.succeed();
+    }
+
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    shape = NativeObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT, attrs, 0);
+    if (!shape)
+        return false;
+
+    if (!UpdateShapeTypeAndValue(cx, obj, shape, value))
+        return false;
+
+    /*
+     * Clear any existing dense index after adding a sparse indexed property,
+     * and investigate converting the object to dense indexes.
+     */
+    if (JSID_IS_INT(id)) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
+
+        uint32_t index = JSID_TO_INT(id);
+        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
+        NativeObject::EnsureDenseResult edResult = NativeObject::maybeDensifySparseElements(cx, obj);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            MOZ_ASSERT(!setter);
+            if (!CallAddPropertyHookDense(cx, obj, index, value))
+                return false;
+            return result.succeed();
+        }
+    }
+
+    if (!CallAddPropertyHook(cx, obj, shape, value))
+        return false;
+
+    return result.succeed();
 }
+
 
 bool
 js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
