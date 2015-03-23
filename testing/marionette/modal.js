@@ -96,8 +96,9 @@ Object.defineProperty(modal.Dialog.prototype, "window", {
   get() {
     if (this.win_ !== null) {
       let win = this.win_.get();
-      if (win && win.parent)
+      if (win && win.parent) {
         return win;
+      }
     }
     return null;
   }
@@ -106,8 +107,9 @@ Object.defineProperty(modal.Dialog.prototype, "window", {
 Object.defineProperty(modal.Dialog.prototype, "ui", {
   get() {
     let win = this.window;
-    if (win)
+    if (win) {
       return win.Dialog.ui;
+    }
     return this.curBrowser.getTabModalUI();
   }
 });

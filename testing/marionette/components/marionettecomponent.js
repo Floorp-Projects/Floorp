@@ -91,7 +91,7 @@ MarionetteComponent.prototype.observe = function(subj, topic, data) {
       } catch(e) {}
       if (this.enabled) {
         this.logger.info("Marionette enabled via build flag and pref");
-  
+
         // We want to suppress the modal dialog that's shown
         // when starting up in safe-mode to enable testing.
         if (Services.appinfo.inSafeMode) {
