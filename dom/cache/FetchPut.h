@@ -30,7 +30,7 @@ class Response;
 namespace cache {
 
 class FetchPut final : public Manager::Listener
-                         , public TypeUtils
+                     , public TypeUtils
 {
 public:
   typedef std::pair<nsRefPtr<Request>, nsRefPtr<Response>> PutPair;
@@ -93,6 +93,9 @@ private:
 #ifdef DEBUG
   virtual void AssertOwningThread() const override;
 #endif
+
+  virtual CachePushStreamChild*
+  CreatePushStream(nsIAsyncInputStream* aStream) override;
 
   Listener* mListener;
   nsRefPtr<Manager> mManager;

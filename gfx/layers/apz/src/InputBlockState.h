@@ -45,12 +45,16 @@ public:
 
   bool IsTargetConfirmed() const;
 
+protected:
+  void UpdateTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
+
 private:
   nsRefPtr<AsyncPanZoomController> mTargetApzc;
-  nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   bool mTargetConfirmed;
   const uint64_t mBlockId;
 protected:
+  nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
+
   // Used to transform events from global screen space to |mTargetApzc|'s
   // screen space. It's cached at the beginning of the input block so that
   // all events in the block are in the same coordinate space.
@@ -154,7 +158,8 @@ class WheelBlockState : public CancelableBlockState
 {
 public:
   WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
-                  bool aTargetConfirmed);
+                  bool aTargetConfirmed,
+                  const ScrollWheelInput& aEvent);
 
   bool IsReadyForHandling() const override;
   bool HasEvents() const override;
@@ -169,8 +174,61 @@ public:
     return this;
   }
 
+  /**
+   * Determine whether this wheel block is accepting new events.
+   */
+  bool ShouldAcceptNewEvent() const;
+
+  /**
+   * Call to check whether a wheel event will cause the current transaction to
+   * timeout.
+   */
+  bool MaybeTimeout(const ScrollWheelInput& aEvent);
+
+  /**
+   * Called from APZCTM when a mouse move or drag+drop event occurs, before
+   * the event has been processed.
+   */
+  void OnMouseMove(const ScreenIntPoint& aPoint);
+
+  /**
+   * Returns whether or not the block is participating in a wheel transaction.
+   * This means that the block is the most recent input block to be created,
+   * and no events have occurred that would require scrolling a different
+   * frame.
+   *
+   * @return True if in a transaction, false otherwise.
+   */
+  bool InTransaction() const;
+
+  /**
+   * Mark the block as no longer participating in a wheel transaction. This
+   * will force future wheel events to begin a new input block.
+   */
+  void EndTransaction();
+
+  /**
+   * @return Whether or not overscrolling is prevented for this wheel block.
+   */
+  bool AllowScrollHandoff() const;
+
+  /**
+   * Called to check and possibly end the transaction due to a timeout.
+   *
+   * @return True if the transaction ended, false otherwise.
+   */
+  bool MaybeTimeout(const TimeStamp& aTimeStamp);
+
+  /**
+   * Update the wheel transaction state for a new event.
+   */
+  void Update(const ScrollWheelInput& aEvent);
+
 private:
   nsTArray<ScrollWheelInput> mEvents;
+  TimeStamp mLastEventTime;
+  TimeStamp mLastMouseMove;
+  bool mTransactionEnded;
 };
 
 /**

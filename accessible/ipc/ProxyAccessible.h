@@ -177,6 +177,10 @@ public:
 
   void PasteText(int32_t aPosition);
 
+  nsIntPoint ImagePosition(uint32_t aCoordType);
+
+  nsIntSize ImageSize();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

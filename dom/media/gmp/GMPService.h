@@ -71,8 +71,9 @@ private:
   void LoadFromEnvironment();
   void ProcessPossiblePlugin(nsIFile* aDir);
 
-  void AddOnGMPThread(const nsAString& aSearchDir);
-  void RemoveOnGMPThread(const nsAString& aSearchDir);
+  void AddOnGMPThread(const nsAString& aDirectory);
+  void RemoveOnGMPThread(const nsAString& aDirectory,
+                         const bool aDeleteFromDisk);
 
   nsresult SetAsyncShutdownTimeout();
 
@@ -96,11 +97,17 @@ private:
   class PathRunnable : public nsRunnable
   {
   public:
-    PathRunnable(GeckoMediaPluginService* service, const nsAString& path,
-                 bool add)
-      : mService(service)
-      , mPath(path)
-      , mAdd(add)
+    enum EOperation {
+      ADD,
+      REMOVE,
+      REMOVE_AND_DELETE_FROM_DISK,
+    };
+
+    PathRunnable(GeckoMediaPluginService* aService, const nsAString& aPath,
+                 EOperation aOperation)
+      : mService(aService)
+      , mPath(aPath)
+      , mOperation(aOperation)
     { }
 
     NS_DECL_NSIRUNNABLE
@@ -108,7 +115,7 @@ private:
   private:
     nsRefPtr<GeckoMediaPluginService> mService;
     nsString mPath;
-    bool mAdd;
+    EOperation mOperation;
   };
 
   Mutex mMutex; // Protects mGMPThread and mShuttingDown and mPlugins
