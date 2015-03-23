@@ -4,7 +4,7 @@
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 const URL_HOST = "http://localhost";
 
-Cu.import("resource://gre/modules/GMPInstallManager.jsm");
+let GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -26,26 +26,26 @@ function run_test() {Cu.import("resource://gre/modules/Preferences.jsm")
 add_task(function* test_prefs() {
   let addon1 = "addon1", addon2 = "addon2";
 
-  GMPPrefs.set(GMPPrefs.KEY_URL, "http://not-really-used");
-  GMPPrefs.set(GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "1", addon1);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "2", addon1);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "3", addon2);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "4", addon2);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, false, addon2);
-  GMPPrefs.set(GMPPrefs.KEY_CERT_CHECKATTRS, true);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_URL, "http://not-really-used");
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "1", addon1);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "2", addon1);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "3", addon2);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "4", addon2);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, addon2);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS, true);
 
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_URL), "http://not-really-used");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_URL_OVERRIDE),
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_URL), "http://not-really-used");
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_URL_OVERRIDE),
               "http://not-really-used-2");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, "", addon1), "1");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, "", addon1), "2");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, "", addon2), "3");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, "", addon2), "4");
-  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE, undefined, addon2),
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon1), "1");
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon1), "2");
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon2), "3");
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon2), "4");
+  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, undefined, addon2),
               false);
-  do_check_true(GMPPrefs.get(GMPPrefs.KEY_CERT_CHECKATTRS));
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, addon2);
+  do_check_true(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS));
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, addon2);
 });
 
 /**
@@ -184,10 +184,10 @@ add_test(function test_checkForAddons_bad_ssl() {
   // Add random stuff that cause CertUtil to require https.
   //
   let PREF_KEY_URL_OVERRIDE_BACKUP =
-    Preferences.get(GMPPrefs.KEY_URL_OVERRIDE, undefined);
-  Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+    Preferences.get(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, undefined);
+  Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
 
-  let CERTS_BRANCH_DOT_ONE = GMPPrefs.CERTS_BRANCH + ".1";
+  let CERTS_BRANCH_DOT_ONE = GMPScope.GMPPrefs.KEY_CERTS_BRANCH + ".1";
   let PREF_CERTS_BRANCH_DOT_ONE_BACKUP =
     Preferences.get(CERTS_BRANCH_DOT_ONE, undefined);
   Services.prefs.setCharPref(CERTS_BRANCH_DOT_ONE, "funky value");
@@ -203,7 +203,7 @@ add_test(function test_checkForAddons_bad_ssl() {
                                        "not https."));
     installManager.uninit();
     if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-      Preferences.set(GMPPrefs.KEY_URL_OVERRIDE,
+      Preferences.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
         PREF_KEY_URL_OVERRIDE_BACKUP);
     }
     if (PREF_CERTS_BRANCH_DOT_ONE_BACKUP) {
@@ -483,10 +483,11 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
     do_check_true(compareBinaryData(downloadedBytes, sourceBytes));
 
     // Make sure the prefs are set correctly
-    do_check_true(!!GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, "",
-                                 gmpAddon.id));
-    do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, "", gmpAddon.id),
-                             "1.1");
+    do_check_true(!!GMPScope.GMPPrefs.get(
+      GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", gmpAddon.id));
+    do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "",
+                                      gmpAddon.id),
+                "1.1");
     // Make sure it reports as being installed
     do_check_true(gmpAddon.isInstalled);
 
@@ -518,7 +519,7 @@ add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
  * Tests simpleCheckAndInstall when autoupdate is disabled for a GMP
  */
 add_task(function* test_simpleCheckAndInstall_autoUpdateDisabled() {
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, false, OPEN_H264_ID);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPScope.OPEN_H264_ID);
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -536,8 +537,8 @@ add_task(function* test_simpleCheckAndInstall_autoUpdateDisabled() {
   let installManager = new GMPInstallManager();
   let result = yield installManager.simpleCheckAndInstall();
   do_check_eq(result.status, "nothing-new-to-install");
-  Preferences.reset(GMPPrefs.KEY_UPDATE_LAST_CHECK);
-  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, OPEN_H264_ID);
+  Preferences.reset(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
+  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPScope.OPEN_H264_ID);
 });
 
 /**
