@@ -111,6 +111,7 @@ struct FloatRegister
     FloatRegister asInt32x4() const { MOZ_CRASH(); }
     FloatRegister asFloat32x4() const { MOZ_CRASH(); }
     Code code() const { MOZ_CRASH(); }
+    Encoding encoding() const { MOZ_CRASH(); }
     const char *name() const { MOZ_CRASH(); }
     bool volatile_() const { MOZ_CRASH(); }
     bool operator != (FloatRegister) const { MOZ_CRASH(); }
