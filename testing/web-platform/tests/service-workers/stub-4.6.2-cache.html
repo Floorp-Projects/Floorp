@@ -13,24 +13,30 @@
     <body>
 
 <script type=text/plain id="idl_0">
-[Constructor]
+[Exposed=(Window,Worker)]
 interface Cache {
-  Promise<AbstractResponse> match((Request or ScalarValueString) request, optional QueryParams params);
-  Promise<sequence<AbstractResponse>> matchAll((Request or ScalarValueString) request, optional QueryParams params);
-  Promise<any> add((Request or ScalarValueString)... requests);
-  Promise<any> put((Request or ScalarValueString) request, AbstractResponse response);
-  Promise<any> delete((Request or ScalarValueString) request, optional QueryParams params);
-  Promise<any> each(CacheIterationCallback callback, optional object thisArg);
+  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
+  Promise<sequence<Response>> matchAll(optional RequestInfo request, optional CacheQueryOptions options);
+  Promise<void> add(RequestInfo request);
+  Promise<void> addAll(sequence<RequestInfo> requests);
+  Promise<void> put(RequestInfo request, Response response);
+  Promise<boolean> delete(RequestInfo request, optional CacheQueryOptions options);
+  Promise<sequence<Request>> keys(optional RequestInfo request, optional CacheQueryOptions options);
 };
 
-dictionary QueryParams {
-  boolean ignoreSearch;
-  boolean ignoreMethod;
-  boolean ignoreVary;
-  boolean prefixMatch;
+dictionary CacheQueryOptions {
+  boolean ignoreSearch = false;
+  boolean ignoreMethod = false;
+  boolean ignoreVary = false;
+  DOMString cacheName;
 };
 
-callback CacheIterationCallback = void (AbstractResponse value, (Request or ScalarValueString) key, Cache map);
+dictionary CacheBatchOperation {
+  DOMString type;
+  Request request;
+  Response response;
+  CacheQueryOptions options;
+};
 </pre>
 
 
