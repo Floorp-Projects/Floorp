@@ -21,6 +21,10 @@ let getWindowFrom = x =>
                     null;
 
 function removeFromListeners() {
+  this.removeEventListener("DOMWindowClose", removeFromListeners);
+  for (let cleaner of listeners.get(this))
+    cleaner();
+
   listeners.delete(this);
 }
 
@@ -45,26 +49,25 @@ function open(target, type, options) {
   if (!window)
     throw new Error("Unable to obtain the owner window from the target given.");
 
-  let cleaners = listeners.get(window) || [];
+  let cleaners = listeners.get(window);
+  if (!cleaners) {
+    cleaners = [];
+    listeners.set(window, cleaners);
+
+    // We need to remove from our map the `window` once is closed, to prevent
+    // memory leak
+    window.addEventListener("DOMWindowClose", removeFromListeners);
+  }
+
   cleaners.push(() => target.removeEventListener(type, listener, capture));
-
-  listeners.set(window, cleaners);
-
-  // We need to remove from our map the `window` once is closed, to prevent
-  // memory leak
-  window.addEventListener("DOMWindowClose", removeFromListeners);
-
   target.addEventListener(type, listener, capture);
 
   return output;
 }
 
 unload(() => {
-  for (let [window, cleaners] of listeners) {
-    cleaners.forEach(callback => callback())
-  }
-
-  listeners.clear();
+  for (let window of listeners.keys())
+    removeFromListeners.call(window);
 });
 
 exports.open = open;
