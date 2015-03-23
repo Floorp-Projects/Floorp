@@ -190,7 +190,7 @@ namespace {
 // These classes just exist to group together various properties and so on.
 class Int32x4Defn {
   public:
-    static const SimdTypeDescr::Type type = SimdTypeDescr::TYPE_INT32;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
@@ -198,7 +198,7 @@ class Int32x4Defn {
 };
 class Float32x4Defn {
   public:
-    static const SimdTypeDescr::Type type = SimdTypeDescr::TYPE_FLOAT32;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
@@ -206,7 +206,7 @@ class Float32x4Defn {
 };
 class Float64x2Defn {
   public:
-    static const SimdTypeDescr::Type type = SimdTypeDescr::TYPE_FLOAT64;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
@@ -391,9 +391,9 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     switch (descr->type()) {
-      case SimdTypeDescr::TYPE_INT32:   return FillLanes<Int32x4>(cx, result, args);
-      case SimdTypeDescr::TYPE_FLOAT32: return FillLanes<Float32x4>(cx, result, args);
-      case SimdTypeDescr::TYPE_FLOAT64: return FillLanes<Float64x2>(cx, result, args);
+      case SimdTypeDescr::Int32x4:   return FillLanes< ::Int32x4>(cx, result, args);
+      case SimdTypeDescr::Float32x4: return FillLanes< ::Float32x4>(cx, result, args);
+      case SimdTypeDescr::Float64x2: return FillLanes< ::Float64x2>(cx, result, args);
     }
 
     MOZ_CRASH("unexpected SIMD descriptor");

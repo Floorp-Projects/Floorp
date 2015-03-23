@@ -263,12 +263,12 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 #define INLINE_FLOAT32X4_SIMD_ARITH_(OP)                                                         \
     if (native == js::simd_float32x4_##OP)                                                       \
         return inlineBinarySimd<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
-                                                  SimdTypeDescr::TYPE_FLOAT32);
+                                                  SimdTypeDescr::Float32x4);
 
 #define INLINE_INT32X4_SIMD_ARITH_(OP)                                                           \
     if (native == js::simd_int32x4_##OP)                                                         \
         return inlineBinarySimd<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
-                                                  SimdTypeDescr::TYPE_INT32);
+                                                  SimdTypeDescr::Int32x4);
 
     ARITH_COMMONX4_SIMD_OP(INLINE_INT32X4_SIMD_ARITH_)
     ARITH_COMMONX4_SIMD_OP(INLINE_FLOAT32X4_SIMD_ARITH_)
@@ -279,28 +279,28 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 #define INLINE_SIMD_BITWISE_(OP)                                                                 \
     if (native == js::simd_int32x4_##OP)                                                         \
         return inlineBinarySimd<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_, \
-                                                    SimdTypeDescr::TYPE_INT32);                  \
+                                                    SimdTypeDescr::Int32x4);                     \
     if (native == js::simd_float32x4_##OP)                                                       \
         return inlineBinarySimd<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_, \
-                                                    SimdTypeDescr::TYPE_FLOAT32);
+                                                    SimdTypeDescr::Float32x4);
 
     BITWISE_COMMONX4_SIMD_OP(INLINE_SIMD_BITWISE_)
 #undef INLINE_SIMD_BITWISE_
 
 #define INLINE_SIMD_COMPARISON_(OP)                                                                \
     if (native == js::simd_int32x4_##OP)                                                           \
-        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::TYPE_INT32);   \
+        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::Int32x4);      \
     if (native == js::simd_float32x4_##OP)                                                         \
-        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::Float32x4);
 
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
 #undef INLINE_SIMD_COMPARISON_
 
 #define INLINE_SIMD_SETTER_(LANE)                                                                   \
     if (native == js::simd_int32x4_with##LANE)                                                      \
-        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::TYPE_INT32);   \
+        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::Int32x4);      \
     if (native == js::simd_float32x4_with##LANE)                                                    \
-        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdWith(callInfo, native, SimdLane::Lane##LANE, SimdTypeDescr::Float32x4);
 
     INLINE_SIMD_SETTER_(X)
     INLINE_SIMD_SETTER_(Y)
@@ -309,94 +309,94 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 #undef INLINE_SIMD_SETTER_
 
     if (native == js::simd_int32x4_not)
-        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_INT32);
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::Int32x4);
     if (native == js::simd_int32x4_neg)
-        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::neg, SimdTypeDescr::TYPE_INT32);
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::neg, SimdTypeDescr::Int32x4);
 
 #define INLINE_SIMD_FLOAT32X4_UNARY_(OP)                                                           \
     if (native == js::simd_float32x4_##OP)                                                         \
-        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::OP, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::OP, SimdTypeDescr::Float32x4);
 
     UNARY_ARITH_FLOAT32X4_SIMD_OP(INLINE_SIMD_FLOAT32X4_UNARY_)
     INLINE_SIMD_FLOAT32X4_UNARY_(neg)
 #undef INLINE_SIMD_FLOAT32X4_UNARY_
 
     if (native == js::simd_float32x4_not)
-        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::Float32x4);
 
     typedef bool IsCast;
     if (native == js::simd_float32x4_fromInt32x4)
-        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::TYPE_INT32, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::Int32x4, SimdTypeDescr::Float32x4);
     if (native == js::simd_int32x4_fromFloat32x4)
-        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::TYPE_FLOAT32, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdConvert(callInfo, native, IsCast(false), SimdTypeDescr::Float32x4, SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_fromInt32x4Bits)
-        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::TYPE_INT32, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::Int32x4, SimdTypeDescr::Float32x4);
     if (native == js::simd_int32x4_fromFloat32x4Bits)
-        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::TYPE_FLOAT32, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdConvert(callInfo, native, IsCast(true), SimdTypeDescr::Float32x4, SimdTypeDescr::Int32x4);
 
     if (native == js::simd_int32x4_splat)
-        return inlineSimdSplat(callInfo, native, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdSplat(callInfo, native, SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_splat)
-        return inlineSimdSplat(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdSplat(callInfo, native, SimdTypeDescr::Float32x4);
 
     if (native == js::simd_int32x4_check)
-        return inlineSimdCheck(callInfo, native, SimdTypeDescr::TYPE_INT32);
+        return inlineSimdCheck(callInfo, native, SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_check)
-        return inlineSimdCheck(callInfo, native, SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdCheck(callInfo, native, SimdTypeDescr::Float32x4);
 
     typedef bool IsElementWise;
     if (native == js::simd_int32x4_select)
-        return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::TYPE_INT32);
+        return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::Int32x4);
     if (native == js::simd_int32x4_bitselect)
-        return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::TYPE_INT32);
+        return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_select)
-        return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::Float32x4);
     if (native == js::simd_float32x4_bitselect)
-        return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::TYPE_FLOAT32);
+        return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::Float32x4);
 
     if (native == js::simd_int32x4_swizzle)
-        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_INT32, 1, 4);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::Int32x4, 1, 4);
     if (native == js::simd_float32x4_swizzle)
-        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1, 4);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::Float32x4, 1, 4);
     if (native == js::simd_int32x4_shuffle)
-        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_INT32, 2, 4);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::Int32x4, 2, 4);
     if (native == js::simd_float32x4_shuffle)
-        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2, 4);
+        return inlineSimdShuffle(callInfo, native, SimdTypeDescr::Float32x4, 2, 4);
 
     if (native == js::simd_int32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 4);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 4);
     if (native == js::simd_int32x4_loadX)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 1);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 1);
     if (native == js::simd_int32x4_loadXY)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 2);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 2);
     if (native == js::simd_int32x4_loadXYZ)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_INT32, 3);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 3);
 
     if (native == js::simd_float32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 4);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 4);
     if (native == js::simd_float32x4_loadX)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 1);
     if (native == js::simd_float32x4_loadXY)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 2);
     if (native == js::simd_float32x4_loadXYZ)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 3);
+        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
     if (native == js::simd_int32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 4);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 4);
     if (native == js::simd_int32x4_storeX)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 1);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 1);
     if (native == js::simd_int32x4_storeXY)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 2);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 2);
     if (native == js::simd_int32x4_storeXYZ)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_INT32, 3);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 3);
     if (native == js::simd_float32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 4);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 4);
     if (native == js::simd_float32x4_storeX)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 1);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 1);
     if (native == js::simd_float32x4_storeXY)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 2);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 2);
     if (native == js::simd_float32x4_storeXYZ)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::TYPE_FLOAT32, 3);
+        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
     return InliningStatus_NotInlined;
 }
@@ -3116,7 +3116,7 @@ IonBuilder::inlineCompSimd(CallInfo &callInfo, JSNative native, MSimdBinaryComp:
                            SimdTypeDescr::Type compType)
 {
     InlineTypedObject *templateObj = nullptr;
-    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::TYPE_INT32, 2, &templateObj))
+    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::Int32x4, 2, &templateObj))
         return InliningStatus_NotInlined;
 
     // If the type of any of the arguments is neither a SIMD type, an Object
@@ -3251,9 +3251,9 @@ static Scalar::Type
 SimdTypeToScalarType(SimdTypeDescr::Type type)
 {
     switch (type) {
-      case SimdTypeDescr::TYPE_FLOAT32: return Scalar::Float32x4;
-      case SimdTypeDescr::TYPE_INT32:   return Scalar::Int32x4;
-      case SimdTypeDescr::TYPE_FLOAT64: break;
+      case SimdTypeDescr::Float32x4: return Scalar::Float32x4;
+      case SimdTypeDescr::Int32x4:   return Scalar::Int32x4;
+      case SimdTypeDescr::Float64x2: break;
     }
     MOZ_CRASH("unexpected simd type");
 }

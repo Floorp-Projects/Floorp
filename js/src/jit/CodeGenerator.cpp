@@ -4535,10 +4535,10 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox *lir)
     js::SimdTypeDescr::Type type;
     switch (lir->mir()->type()) {
       case MIRType_Int32x4:
-        type = js::SimdTypeDescr::TYPE_INT32;
+        type = js::SimdTypeDescr::Int32x4;
         break;
       case MIRType_Float32x4:
-        type = js::SimdTypeDescr::TYPE_FLOAT32;
+        type = js::SimdTypeDescr::Float32x4;
         break;
       default:
         MOZ_CRASH("Unexpected SIMD Type.");
