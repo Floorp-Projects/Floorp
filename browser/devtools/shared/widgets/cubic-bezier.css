@@ -5,32 +5,28 @@
 /* Based on Lea Verou www.cubic-bezier.com
    See https://github.com/LeaVerou/cubic-bezier */
 
+#container {
+  display: flex;
+  width: 410px;
+  height: 370px;
+  flex-direction: row-reverse;
+  overflow: hidden;
+}
+
+.display-wrap {
+  width: 50%;
+  height: 100%;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Coordinate Plane */
+
 .coordinate-plane {
-  position: absolute;
-  line-height: 0;
-  height: 400px;
-  width: 200px;
-}
-
-.coordinate-plane:before,
-.coordinate-plane:after {
-  position: absolute;
-  bottom: 25%;
-  left: 0;
-  width: 100%;
-}
-
-.coordinate-plane:before {
-  content: "";
-  border-bottom: 2px solid;
-  transform: rotate(-90deg) translateY(2px);
-  transform-origin: bottom left;
-}
-
-.coordinate-plane:after {
-  content: "";
-  border-top: 2px solid;
-  margin-bottom: -2px;
+  width: 150px;
+  height: 370px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .theme-dark .coordinate-plane:before,
@@ -50,45 +46,41 @@
   outline: none;
   border-radius: 5px;
   padding: 0;
-
   cursor: pointer;
 }
 
-#P1x, #P1y {
-  color: #f08;
-}
-
-#P2x, #P2y {
-  color: #0ab;
-}
-
-canvas#curve {
-  background:
-    linear-gradient(-45deg, transparent 49.7%, rgba(0,0,0,.2) 49.7%, rgba(0,0,0,.2) 50.3%, transparent 50.3%) center no-repeat,
-    repeating-linear-gradient(transparent, #eee 0, #eee .5%, transparent .5%, transparent 10%) no-repeat,
-    repeating-linear-gradient(-90deg, transparent, #eee 0, #eee .5%, transparent .5%, transparent 10%) no-repeat;
-
-  background-size: 100% 50%, 100% 50%, 100% 50%;
-  background-position: 25%, 0, 0;
+.display-wrap {
+  background: repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 15px) no-repeat, repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 15px) no-repeat;
+  background-size: 100% 100%, 100% 100%;
+  background-position: -2px 5px, -2px 5px;
 
   -moz-user-select: none;
 }
 
-.theme-dark canvas#curve {
-  background:
-    linear-gradient(-45deg, transparent 49.7%, #eee 49.7%, #eee 50.3%, transparent 50.3%) center no-repeat,
-    repeating-linear-gradient(transparent, rgba(0,0,0,.2) 0, rgba(0,0,0,.2) .5%, transparent .5%, transparent 10%) no-repeat,
-    repeating-linear-gradient(-90deg, transparent, rgba(0,0,0,.2) 0, rgba(0,0,0,.2) .5%, transparent .5%, transparent 10%) no-repeat;
+.theme-dark .display-wrap {
+  background: repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 15px) no-repeat, repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 15px) no-repeat;
+  background-size: 100% 100%, 100% 100%;
+  background-position: -2px 5px, -2px 5px;
 
-  background-size: 100% 50%, 100% 50%, 100% 50%;
-  background-position: 25%, 0, 0;
+  -moz-user-select: none;
+}
+canvas#curve {
+  background: linear-gradient(-45deg, transparent 49.7%, rgba(0,0,0,.2) 49.7%, rgba(0,0,0,.2) 50.3%, transparent 50.3%) center no-repeat;
+  background-size: 100% 100%;
+  background-position: 0 0;
 }
 
-/* Timing function preview widget */
+.theme-dark canvas#curve {
+  background: linear-gradient(-45deg, transparent 49.7%, #eee 49.7%, #eee 50.3%, transparent 50.3%) center no-repeat;
+}
+
+/* Timing Function Preview Widget */
 
 .timing-function-preview {
   position: absolute;
-  top: 400px;
+  bottom: 20px;
+  right: 27px;
+  width: 150px;
 }
 
 .timing-function-preview .scale {
@@ -97,7 +89,7 @@ canvas#curve {
   left: 0;
   z-index: 1;
 
-  width: 200px;
+  width: 150px;
   height: 1px;
 
   background: #ccc;
@@ -128,10 +120,10 @@ canvas#curve {
     left: -7px;
   }
   33% {
-    left: 193px;
+    left: 143px;
   }
   50% {
-    left: 193px;
+    left: 143px;
   }
   83% {
     left: -7px;
@@ -139,4 +131,110 @@ canvas#curve {
   100% {
     left: -7px;
   }
+}
+
+/* Preset Widget */
+
+.preset-pane {
+  width:50%;
+  height: 100%;
+  border-right: 1px solid var(--theme-splitter-color);
+}
+
+#preset-categories {
+  display: flex;
+  width: 94%;
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 2px;
+  background-color: var(--theme-toolbar-background);
+  margin-left: 4px;
+  margin-top: 3px;
+}
+
+#preset-categories .category:last-child {
+  border-right: none;
+}
+
+.category {
+  flex: 1 1 auto;
+  padding: 5px;
+  width: 33.33%;
+  text-align: center;
+  text-transform: capitalize;
+  border-right: 1px solid var(--theme-splitter-color);
+  cursor: default;
+  color: var(--theme-body-color);
+}
+
+.category:hover {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.active-category {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.active-category:hover {
+  background-color: var(--theme-selection-background);
+}
+
+#preset-container {
+  padding: 0px;
+  width: 100%;
+  height: 331px;
+  overflow-y: scroll;
+}
+
+.preset-list {
+  display: none;
+}
+
+.active-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: left;
+  padding-left: 4px;
+  padding-top: 3px;
+}
+
+.preset {
+  cursor: pointer;
+  width: 55px;
+  margin: 5px 11px 0px 0px;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.preset canvas {
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .preset canvas {
+  border-color: #444e58;
+}
+
+.preset p {
+  text-align: center;
+  font-size: 0.9em;
+  line-height: 0px;
+  margin: 2px 0px 0px 0p;
+  color: var(--theme-body-color-alt);
+}
+
+.active-preset p, .active-preset:hover p {
+  color: var(--theme-body-color);
+}
+
+.preset:hover canvas {
+  border-color: var(--theme-selection-background);
+}
+
+.active-preset canvas, .active-preset:hover canvas,
+.theme-dark .active-preset canvas, .theme-dark .preset:hover canvas {
+  background-color: var(--theme-selection-background-semitransparent);
+  border-color: var(--theme-selection-background);
 }

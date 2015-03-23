@@ -104,7 +104,10 @@ function getCanvasMock(w=200, h=400) {
         stroke: () => {},
         arc: () => {},
         fill: () => {},
-        bezierCurveTo: () => {}
+        bezierCurveTo: () => {},
+        save: () => {},
+        restore: () => {},
+        setTransform: () => {}
       };
     },
     width: w,
