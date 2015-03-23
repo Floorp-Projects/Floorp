@@ -257,6 +257,21 @@ int nr_ice_peer_ctx_find_pstream(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str
     return(_status);
   }
 
+int nr_ice_peer_ctx_remove_pstream(nr_ice_peer_ctx *pctx, nr_ice_media_stream **pstreamp)
+  {
+    int r,_status;
+
+    STAILQ_REMOVE(&pctx->peer_streams,*pstreamp,nr_ice_media_stream_,entry);
+
+    if(r=nr_ice_media_stream_destroy(pstreamp)) {
+      ABORT(r);
+    }
+
+    _status=0;
+ abort:
+    return(_status);
+  }
+
 int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *candidate)
   {
     nr_ice_media_stream *pstream;
