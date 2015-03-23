@@ -69,6 +69,29 @@ this.__defineSetter__("_maxUsedThemes", function maxUsedThemesSetter(aVal) {
 var _themeIDBeingEnabled = null;
 var _themeIDBeingDisabled = null;
 
+// Convert from the old storage format (in which the order of usedThemes
+// was combined with isThemeSelected to determine which theme was selected)
+// to the new one (where a selectedThemeID determines which theme is selected).
+(function migrateToNewStorageFormat() {
+  let wasThemeSelected = false;
+  try {
+    wasThemeSelected = _prefs.getBoolPref("isThemeSelected");
+  } catch(e) { }
+
+  if (wasThemeSelected) {
+    _prefs.clearUserPref("isThemeSelected");
+    let themes = [];
+    try {
+      themes = JSON.parse(_prefs.getComplexValue("usedThemes",
+                                                 Ci.nsISupportsString).data);
+    } catch (e) { }
+
+    if (Array.isArray(themes) && themes[0]) {
+      _prefs.setCharPref("selectedThemeID", themes[0].id);
+    }
+  }
+})();
+
 this.LightweightThemeManager = {
   get name() "LightweightThemeManager",
 
@@ -82,12 +105,16 @@ this.LightweightThemeManager = {
   },
 
   get currentTheme () {
+    let selectedThemeID = null;
     try {
-      if (_prefs.getBoolPref("isThemeSelected"))
-        var data = this.usedThemes[0];
+      selectedThemeID = _prefs.getCharPref("selectedThemeID");
     } catch (e) {}
 
-    return data || null;
+    let data = null;
+    if (selectedThemeID) {
+      data = this.getUsedTheme(selectedThemeID);
+    }
+    return data;
   },
 
   get currentThemeForDisplay () {
@@ -242,7 +269,11 @@ this.LightweightThemeManager = {
       }
     }
 
-    _prefs.setBoolPref("isThemeSelected", aData != null);
+    if (aData)
+      _prefs.setCharPref("selectedThemeID", aData.id);
+    else
+      _prefs.clearUserPref("selectedThemeID");
+
     _notifyWindows(aData);
     Services.obs.notifyObservers(null, "lightweight-theme-changed", null);
   },
