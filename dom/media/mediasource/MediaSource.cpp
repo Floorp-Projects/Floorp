@@ -297,15 +297,14 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();
-  mDecoder->Ended();
   if (!aError.WasPassed()) {
     mDecoder->SetMediaSourceDuration(mSourceBuffers->GetHighestBufferedEndTime(),
                                      MSRangeRemovalAction::SKIP);
     if (aRv.Failed()) {
       return;
     }
-    // TODO:
-    //   Notify media element that all data is now available.
+    // Notify reader that all data is now available.
+    mDecoder->Ended(true);
     return;
   }
   switch (aError.Value()) {
@@ -456,6 +455,10 @@ MediaSource::SetReadyState(MediaSourceReadyState aState)
       (oldState == MediaSourceReadyState::Closed ||
        oldState == MediaSourceReadyState::Ended)) {
     QueueAsyncSimpleEvent("sourceopen");
+    if (oldState == MediaSourceReadyState::Ended) {
+      // Notify reader that more data may come.
+      mDecoder->Ended(false);
+    }
     return;
   }
 
