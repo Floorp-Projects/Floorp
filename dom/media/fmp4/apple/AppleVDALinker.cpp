@@ -94,7 +94,7 @@ AppleVDALinker::Unlink()
   MOZ_ASSERT(sRefCount > 0, "Unbalanced Unlink()");
   --sRefCount;
   if (sLink && sRefCount < 1) {
-    LOG("Unlinking VideoToolbox framework.");
+    LOG("Unlinking VideoDecodeAcceleration framework.");
     dlclose(sLink);
     sLink = nullptr;
     skPropWidth = nullptr;
