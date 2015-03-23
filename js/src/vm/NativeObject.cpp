@@ -1277,6 +1277,37 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
 {
     desc_.assertValid();
 
+    // Section numbers and step numbers below refer to ES6 draft rev 36
+    // (17 March 2015).
+    //
+    // This function aims to implement 9.1.6 [[DefineOwnProperty]] as well as
+    // the [[DefineOwnProperty]] methods described in 9.4.2.1 (arrays), 9.4.4.2
+    // (arguments), and 9.4.5.3 (typed array views).
+
+    // Dispense with custom behavior of exotic native objects first.
+    if (obj->is<ArrayObject>()) {
+        // 9.4.2.1 step 2. Redefining an array's length is very special.
+        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+        if (id == NameToId(cx->names().length)) {
+            if (!cx->shouldBeJSContext())
+                return false;
+            return ArraySetLength(cx->asJSContext(), arr, id, desc_.attributes(), desc_.value(),
+                                  result);
+        }
+
+        // 9.4.2.1 step 3. Don't extend a fixed-length array.
+        uint32_t index;
+        if (IdIsIndex(id, &index)) {
+            if (WouldDefinePastNonwritableLength(obj, index))
+                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+        }
+    } else if (IsAnyTypedArray(obj)) {
+        // Don't define new indexed properties on typed arrays.
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index))
+            return result.succeed();
+    }
+
     Rooted<PropertyDescriptor> desc(cx, desc_);
 
     RootedShape shape(cx);
@@ -1412,27 +1443,6 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     // now. Since we can never get here with JSPROP_IGNORE_VALUE relevant, just
     // clear it.
     desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes()) & ~JSPROP_IGNORE_VALUE);
-
-    if (obj->is<ArrayObject>()) {
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        if (id == NameToId(cx->names().length)) {
-            if (!cx->shouldBeJSContext())
-                return false;
-            return ArraySetLength(cx->asJSContext(), arr, id, desc.attributes(), desc.value(),
-                                  result);
-        }
-
-        uint32_t index;
-        if (IdIsIndex(id, &index)) {
-            if (WouldDefinePastNonwritableLength(obj, index))
-                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
-        }
-    } else if (IsAnyTypedArray(obj)) {
-        // Don't define new indexed properties on typed arrays.
-        uint64_t index;
-        if (IsTypedArrayIndex(id, &index))
-            return result.succeed();
-    }
 
     // At this point, no mutation has happened yet, but all ES6 error cases
     // have been dealt with.
