@@ -29,6 +29,14 @@ interface BluetoothGatt : EventTarget
   Promise<void>                                     disconnect();
 
   /**
+   * Discover services, characteristics, descriptors offered by the remote GATT
+   * server. The promise will be rejected if the connState is not connected or
+   * operation fails.
+   */
+  [NewObject]
+  Promise<void>                                     discoverServices();
+
+  /**
    * Read RSSI for the remote BLE device if the connectState is connected.
    * Otherwise, the Promise will be rejected directly.
    */
