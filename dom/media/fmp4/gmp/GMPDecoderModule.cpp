@@ -21,12 +21,6 @@ GMPDecoderModule::~GMPDecoderModule()
 {
 }
 
-nsresult
-GMPDecoderModule::Shutdown()
-{
-  return NS_OK;
-}
-
 static already_AddRefed<MediaDataDecoderProxy>
 CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
 {

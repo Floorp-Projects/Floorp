@@ -26,12 +26,6 @@ GonkDecoderModule::Init()
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 }
 
-nsresult
-GonkDecoderModule::Shutdown()
-{
-  return NS_OK;
-}
-
 already_AddRefed<MediaDataDecoder>
 GonkDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                      mozilla::layers::LayersBackend aLayersBackend,

@@ -299,12 +299,6 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 
 }
 
-
-nsresult AndroidDecoderModule::Shutdown()
-{
-  return NS_OK;
-}
-
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
                                              const char* aMimeType,
                                              MediaFormat::Param aFormat,

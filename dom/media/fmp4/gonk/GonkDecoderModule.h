@@ -16,9 +16,6 @@ public:
   GonkDecoderModule();
   virtual ~GonkDecoderModule();
 
-  // Called when the decoders have shutdown.
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
-
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,

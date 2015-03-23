@@ -190,21 +190,12 @@ SharedDecoderManager::Shutdown()
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
-  if (mPDM) {
-    mPDM->Shutdown();
-    mPDM = nullptr;
-  }
+  mPDM = nullptr;
   if (mTaskQueue) {
     mTaskQueue->BeginShutdown();
     mTaskQueue->AwaitShutdownAndIdle();
     mTaskQueue = nullptr;
   }
-}
-
-bool
-SharedDecoderManager::IsPDMInUse(const mozilla::PlatformDecoderModule* aPDM) const
-{
-  return aPDM == mPDM;
 }
 
 SharedDecoderProxy::SharedDecoderProxy(SharedDecoderManager* aManager,
