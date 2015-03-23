@@ -11,7 +11,7 @@ class NoSSLEnvironment(object):
         pass
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, *args, **kwargs):
         pass

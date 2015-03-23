@@ -22,31 +22,44 @@
             var expect = [4, "", "upload.timeout", "upload.loadend", "timeout", "loadend"];
             var actual = [];
 
-            xhr.onreadystatechange = function()
+            xhr.onreadystatechange = test.step_func(function()
             {
-                test.step(function()
+                if (xhr.readyState == 4)
                 {
-                    if (xhr.readyState == 4)
-                    {
-                        actual.push(xhr.readyState, xhr.response);
-                    }
-                });
-            };
+                    actual.push(xhr.readyState, xhr.response);
+                }
+            });
 
-            xhr.onloadend          = function(e){ actual.push(e.type); VerifyResult()};
-            xhr.ontimeout          = function(e){ actual.push(e.type); };
-
-            xhr.upload.onloadend   = function(e){ actual.push("upload." + e.type);};
-            xhr.upload.ontimeout   = function(e){ actual.push("upload." + e.type); };
-
-            function VerifyResult()
+            xhr.onloadend = test.step_func_done(function(e)
             {
-                test.step(function()
-                {
-                    assert_array_equals(actual, expect);
-                    test.done();
-                });
-            };
+                assert_equals(e.loaded, 0);
+                assert_equals(e.total, 0);
+                actual.push(e.type);
+                assert_array_equals(actual, expect);
+            });
+
+            xhr.ontimeout = test.step_func(function(e)
+            {
+                assert_equals(e.loaded, 0);
+                assert_equals(e.total, 0);
+                actual.push(e.type);
+            });
+
+
+            xhr.upload.onloadend = test.step_func(function(e)
+            {
+                assert_equals(e.loaded, 0);
+                assert_equals(e.total, 0);
+                actual.push("upload." + e.type);
+            });
+
+            xhr.upload.ontimeout = test.step_func(function(e)
+            {
+                assert_equals(e.loaded, 0);
+                assert_equals(e.total, 0);
+                actual.push("upload." + e.type);
+            });
+
 
             var content = "";
             for (var i = 0; i < 121026; i++)
