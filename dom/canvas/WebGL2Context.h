@@ -122,16 +122,32 @@ private:
 
 public:
     void Uniform1uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform1uiv_base(loc,arr.Length(), arr.Elements());
+        Uniform1uiv_base(loc, arr.Length(), arr.Elements());
     }
     void Uniform2uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform2uiv_base(loc,arr.Length(), arr.Elements());
+        Uniform2uiv_base(loc, arr.Length(), arr.Elements());
     }
     void Uniform3uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform3uiv_base(loc,arr.Length(), arr.Elements());
+        Uniform3uiv_base(loc, arr.Length(), arr.Elements());
     }
     void Uniform4uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform4uiv_base(loc,arr.Length(), arr.Elements());
+        Uniform4uiv_base(loc, arr.Length(), arr.Elements());
+    }
+    void Uniform1uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
+        arr.ComputeLengthAndData();
+        Uniform1uiv_base(loc, arr.Length(), arr.Data());
+    }
+    void Uniform2uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
+        arr.ComputeLengthAndData();
+        Uniform2uiv_base(loc, arr.Length(), arr.Data());
+    }
+    void Uniform3uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
+        arr.ComputeLengthAndData();
+        Uniform3uiv_base(loc, arr.Length(), arr.Data());
+    }
+    void Uniform4uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
+        arr.ComputeLengthAndData();
+        Uniform4uiv_base(loc, arr.Length(), arr.Data());
     }
 
 private:
