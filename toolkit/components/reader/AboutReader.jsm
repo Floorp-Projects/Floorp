@@ -625,39 +625,29 @@ AboutReader.prototype = {
 
   _updateImageMargins: function Reader_updateImageMargins() {
     let windowWidth = this._win.innerWidth;
-    let contentWidth = this._contentElement.offsetWidth;
-    let maxWidthStyle = windowWidth + "px !important";
+    let bodyWidth = this._doc.body.clientWidth;
 
     let setImageMargins = function(img) {
-      if (!img._originalWidth)
-        img._originalWidth = img.offsetWidth;
+      // If the image is at least as wide as the window, make it fill edge-to-edge on mobile.
+      if (img.naturalWidth >= windowWidth) {
+        img.setAttribute("moz-reader-full-width", true);
+      } else {
+        img.removeAttribute("moz-reader-full-width");
+      }
 
-      let imgWidth = img._originalWidth;
-
-      // If the image is taking more than half of the screen, just make
-      // it fill edge-to-edge.
-      if (imgWidth < contentWidth && imgWidth > windowWidth * 0.55)
-        imgWidth = windowWidth;
-
-      let sideMargin = Math.max((contentWidth - windowWidth) / 2,
-                                (contentWidth - imgWidth) / 2);
-
-      let imageStyle = sideMargin + "px !important";
-      let widthStyle = imgWidth + "px !important";
-
-      let cssText = "max-width: " + maxWidthStyle + ";" +
-                    "width: " + widthStyle + ";" +
-                    "margin-left: " + imageStyle + ";" +
-                    "margin-right: " + imageStyle + ";";
-
-      img.style.cssText = cssText;
+      // If the image is at least half as wide as the body, center it on desktop.
+      if (img.naturalWidth >= bodyWidth/2) {
+        img.setAttribute("moz-reader-center", true);
+      } else {
+        img.removeAttribute("moz-reader-center");
+      }
     }
 
     let imgs = this._doc.querySelectorAll(this._BLOCK_IMAGES_SELECTOR);
     for (let i = imgs.length; --i >= 0;) {
       let img = imgs[i];
 
-      if (img.width > 0) {
+      if (img.naturalWidth > 0) {
         setImageMargins(img);
       } else {
         img.onload = function() {
