@@ -171,19 +171,27 @@ body {
 }
 
 .content p,
-.content img,
 .content code,
 .content pre,
 .content blockquote,
 .content ul,
 .content ol,
-.content li {
+.content li,
+.content figure,
+.content .wp-caption {
   margin: 0 0 30px 0;
 }
 
-.content .wp-caption,
-.content figure {
-  margin: 0 30px 30px 30px;
+.content p > img:only-child,
+.content p > a:only-child > img:only-child,
+.content .wp-caption img,
+.content figure img {
+  display: block;
+}
+
+.content img[moz-reader-center] {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .content .caption,
