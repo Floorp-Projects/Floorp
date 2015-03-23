@@ -2090,7 +2090,7 @@ inline int CheckIsSetterOp(JSSetterOp op);
    reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
-  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS))>::Type>(0), \
+  (static_cast<mozilla::EnableIf<((flags) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>::Type>(0), \
    (flags))
 
 #define JS_PROPERTYOP_GETTER(v) \
