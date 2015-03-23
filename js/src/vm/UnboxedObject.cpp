@@ -176,8 +176,10 @@ UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
 
             Register payloadReg = masm.extractObject(valueOperand, scratch1);
 
-            if (!types->hasType(TypeSet::AnyObjectType()))
-                masm.guardObjectType(payloadReg, types, scratch2, &failureStoreObject);
+            if (!types->hasType(TypeSet::AnyObjectType())) {
+                Register scratch = (payloadReg == scratch1) ? scratch2 : scratch1;
+                masm.guardObjectType(payloadReg, types, scratch, &failureStoreObject);
+            }
 
             masm.storeUnboxedProperty(targetAddress, JSVAL_TYPE_OBJECT,
                                       TypedOrValueRegister(MIRType_Object,
@@ -207,7 +209,7 @@ UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
     for (GeneralRegisterBackwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
         masm.Pop(*iter);
 
-    masm.ret();
+    masm.abiret();
 
     masm.bind(&failureStoreOther);
 
@@ -241,7 +243,7 @@ UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
     masm.jump(&done);
 
     Linker linker(masm);
-    AutoFlushICache afc("RegExp");
+    AutoFlushICache afc("UnboxedObject");
     JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
     if (!code)
         return false;
