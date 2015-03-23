@@ -119,56 +119,114 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
 }
 
 void
-WebGL2Context::Uniform1ui(WebGLUniformLocation* location, GLuint v0)
+WebGL2Context::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_UNSIGNED_INT, "uniform1ui", &rawLoc))
+        return;
+
+    MakeContextCurrent();
+    gl->fUniform1ui(rawLoc, v0);
 }
 
 void
-WebGL2Context::Uniform2ui(WebGLUniformLocation* location, GLuint v0, GLuint v1)
+WebGL2Context::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_UNSIGNED_INT, "uniform2ui", &rawLoc))
+        return;
+
+    MakeContextCurrent();
+    gl->fUniform2ui(rawLoc, v0, v1);
 }
 
 void
-WebGL2Context::Uniform3ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2)
+WebGL2Context::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_UNSIGNED_INT, "uniform3ui", &rawLoc))
+        return;
+
+    MakeContextCurrent();
+    gl->fUniform3ui(rawLoc, v0, v1, v2);
 }
 
 void
-WebGL2Context::Uniform4ui(WebGLUniformLocation* location, GLuint v0, GLuint v1,
-                          GLuint v2, GLuint v3)
+WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2, GLuint v3)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_UNSIGNED_INT, "uniform4ui", &rawLoc))
+        return;
+
+    MakeContextCurrent();
+    gl->fUniform4ui(rawLoc, v0, v1, v2, v3);
 }
 
 void
-WebGL2Context::Uniform1uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform1uiv_base(WebGLUniformLocation* loc, size_t arrayLength,
+                                const GLuint* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformArraySetter(loc, 1, LOCAL_GL_UNSIGNED_INT, arrayLength,
+                                    "uniform1uiv", &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniform1uiv(rawLoc, numElementsToUpload, data);
 }
 
 void
-WebGL2Context::Uniform2uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform2uiv_base(WebGLUniformLocation* loc, size_t arrayLength,
+                                const GLuint* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformArraySetter(loc, 2, LOCAL_GL_UNSIGNED_INT, arrayLength,
+                                    "uniform2uiv", &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniform2uiv(rawLoc, numElementsToUpload, data);
 }
 
 void
-WebGL2Context::Uniform3uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform3uiv_base(WebGLUniformLocation* loc, size_t arrayLength,
+                                const GLuint* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformArraySetter(loc, 3, LOCAL_GL_UNSIGNED_INT, arrayLength,
+                                    "uniform3uiv", &rawLoc, &numElementsToUpload))
+    {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniform1uiv(rawLoc, numElementsToUpload, data);
 }
 
 void
-WebGL2Context::Uniform4uiv(WebGLUniformLocation* location,
-                           const dom::Sequence<GLuint>& value)
+WebGL2Context::Uniform4uiv_base(WebGLUniformLocation* loc, size_t arrayLength,
+                                const GLuint* data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GLuint rawLoc;
+    GLsizei numElementsToUpload;
+
+    if (!ValidateUniformArraySetter(loc, 4, LOCAL_GL_UNSIGNED_INT, arrayLength,
+                                    "uniform4uiv", &rawLoc, &numElementsToUpload)) {
+        return;
+    }
+
+    MakeContextCurrent();
+    gl->fUniform4uiv(rawLoc, numElementsToUpload, data);
 }
 
 void

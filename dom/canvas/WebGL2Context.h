@@ -113,10 +113,27 @@ public:
     void Uniform2ui(WebGLUniformLocation* location, GLuint v0, GLuint v1);
     void Uniform3ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2);
     void Uniform4ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
-    void Uniform1uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value);
-    void Uniform2uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value);
-    void Uniform3uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value);
-    void Uniform4uiv(WebGLUniformLocation* location, const dom::Sequence<GLuint>& value);
+
+private:
+    void Uniform1uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
+    void Uniform2uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
+    void Uniform3uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
+    void Uniform4uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
+
+public:
+    void Uniform1uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
+        Uniform1uiv_base(loc,arr.Length(), arr.Elements());
+    }
+    void Uniform2uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
+        Uniform2uiv_base(loc,arr.Length(), arr.Elements());
+    }
+    void Uniform3uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
+        Uniform3uiv_base(loc,arr.Length(), arr.Elements());
+    }
+    void Uniform4uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
+        Uniform4uiv_base(loc,arr.Length(), arr.Elements());
+    }
+
 private:
     void UniformMatrix2x3fv_base(WebGLUniformLocation* loc, bool transpose,
                                  size_t arrayLength, const GLfloat* data);
