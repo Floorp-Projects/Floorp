@@ -12,10 +12,13 @@
         android:scaleType="center"/>
 
     <TextView
-        android:textAppearance="@style/ShareOverlayTextAppearance.Button"
+        android:textAppearance="@style/ShareOverlayTextAppearance"
         android:id="@+id/overlaybtn_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="false"
-        android:enabled="false"/>
+        android:enabled="false"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:textColor="@color/primary_text_selector"/>
 </merge>

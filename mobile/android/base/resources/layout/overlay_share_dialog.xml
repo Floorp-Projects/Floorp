@@ -25,19 +25,24 @@
         <TextView
             android:id="@+id/title"
             style="@style/ShareOverlayTitle"
-            android:textAppearance="@style/ShareOverlayTextAppearance.Header.Title"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="8dp"
+            android:maxLines="2"
+            android:textSize="20sp"
+            android:ellipsize="end"/>
 
         <!-- Subtitle (url) -->
         <TextView
             android:id="@+id/subtitle"
             style="@style/ShareOverlayTitle"
-            android:textAppearance="@style/ShareOverlayTextAppearance.Header.Subtitle"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"/>
+            android:layout_marginBottom="20dp"
+            android:textSize="12sp"
+            android:scrollHorizontally="true"/>
 
         <!-- TODO: Add back drop shadow? -->
         <!-- Buttons -->
