@@ -274,14 +274,20 @@ FormAutoComplete.prototype = {
             this.log("getAutocompleteValues failed: " + aError.message);
           },
           handleCompletion: aReason => {
-            this._pendingQuery = null;
-            if (!aReason) {
-              callback(results);
+            // Check that the current query is still the one we created. Our
+            // query might have been canceled shortly before completing, in
+            // that case we don't want to call the callback anymore.
+            if (query == this._pendingQuery) {
+              this._pendingQuery = null;
+              if (!aReason) {
+                callback(results);
+              }
             }
           }
         };
 
-        this._pendingQuery = FormHistory.getAutoCompleteResults(searchString, params, processResults);
+        let query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
+        this._pendingQuery = query;
     },
 
     /*
