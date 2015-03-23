@@ -34,11 +34,11 @@ UNIFIED_SOURCES += [
     'VoicemailStatus.cpp',
 ]
 
-if CONFIG['MOZ_B2G_RIL']:
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        XPIDL_SOURCES += [
-            'gonk/nsIGonkVoicemailService.idl',
-        ]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'gonk/nsIGonkVoicemailService.idl',
+    ]
+    if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
         EXTRA_COMPONENTS += [
             'gonk/VoicemailService.js',
             'gonk/VoicemailService.manifest',
