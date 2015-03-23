@@ -15,6 +15,7 @@ namespace mozilla {
 namespace a11y {
 class Accessible;
 class HyperTextAccessible;
+class ImageAccessible;
 
 class AccShowEvent;
 
@@ -33,9 +34,6 @@ public:
     mDoc->SetIPCDoc(nullptr);
     MOZ_COUNT_DTOR(DocAccessibleChild);
   }
-
-  Accessible* IdToAccessible(const uint64_t& aID);
-  HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID);
 
   void ShowEvent(AccShowEvent* aShowEvent);
 
@@ -184,7 +182,19 @@ public:
   virtual bool RecvPasteText(const uint64_t& aID,
                              const int32_t& aPosition) override;
 
+  virtual bool RecvImagePosition(const uint64_t& aID,
+                                 const uint32_t& aCoordType,
+                                 nsIntPoint* aRetVal) override;
+
+  virtual bool RecvImageSize(const uint64_t& aID,
+                             nsIntSize* aRetVal) override;
+
 private:
+
+  Accessible* IdToAccessible(const uint64_t& aID) const;
+  HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
+  ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
+
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);
 
