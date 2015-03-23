@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- *
- * This file contains common code that is shared between marionette-server.js
- * and marionette-listener.js.
- *
- */
+// This file contains common code that is shared between
+// driver.jj and listener.js.
 
 /**
  * Creates an error message for a JavaScript exception thrown during

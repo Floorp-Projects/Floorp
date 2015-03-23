@@ -11,10 +11,10 @@ let uuidGen = Cc["@mozilla.org/uuid-generator;1"]
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 
-loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
-loader.loadSubScript("chrome://marionette/content/marionette-common.js");
-loader.loadSubScript("chrome://marionette/content/marionette-actions.js");
-Cu.import("chrome://marionette/content/marionette-elements.js");
+loader.loadSubScript("chrome://marionette/content/simpletest.js");
+loader.loadSubScript("chrome://marionette/content/common.js");
+loader.loadSubScript("chrome://marionette/content/actions.js");
+Cu.import("chrome://marionette/content/elements.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -24,7 +24,7 @@ utils.window = content;
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
-loader.loadSubScript("chrome://marionette/content/marionette-sendkeys.js", utils);
+loader.loadSubScript("chrome://marionette/content/sendkeys.js", utils);
 
 loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
 loader.loadSubScript("chrome://specialpowers/content/specialpowers.js");
@@ -74,7 +74,7 @@ let multiLast = {};
 
 Cu.import("resource://gre/modules/Log.jsm");
 let logger = Log.repository.getLogger("Marionette");
-logger.info("loaded marionette-listener.js");
+logger.info("loaded listener.js");
 let modalHandler = function() {
   // This gets called on the system app only since it receives the mozbrowserprompt event
   sendSyncMessage("Marionette:switchedToFrame", { frameValue: null, storePrevious: true });
