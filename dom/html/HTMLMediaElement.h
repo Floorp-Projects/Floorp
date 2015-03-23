@@ -1316,9 +1316,6 @@ protected:
   // True if the media has encryption information.
   bool mIsEncrypted;
 
-  // Init Data that needs to be sent in 'encrypted' events in MetadataLoaded().
-  EncryptionInfo mPendingEncryptedInitData;
-
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
 
