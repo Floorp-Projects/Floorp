@@ -18,7 +18,8 @@ from .base import (ExecutorException,
                    TestExecutor,
                    TestharnessExecutor,
                    testharness_result_converter,
-                   reftest_result_converter)
+                   reftest_result_converter,
+                   strip_server)
 from ..testrunner import Stop
 
 
@@ -37,10 +38,10 @@ def do_delayed_imports():
 
 
 class SeleniumProtocol(Protocol):
-    def __init__(self, executor, browser, http_server_url, capabilities, **kwargs):
+    def __init__(self, executor, browser, capabilities, **kwargs):
         do_delayed_imports()
 
-        Protocol.__init__(self, executor, browser, http_server_url)
+        Protocol.__init__(self, executor, browser)
         self.capabilities = capabilities
         self.url = browser.webdriver_url
         self.webdriver = None
@@ -93,7 +94,11 @@ class SeleniumProtocol(Protocol):
         return True
 
     def after_connect(self):
-        url = urlparse.urljoin(self.http_server_url, "/testharness_runner.html")
+        self.load_runner("http")
+
+    def load_runner(self, protocol):
+        url = urlparse.urljoin(self.executor.server_url(protocol),
+                               "/testharness_runner.html")
         self.logger.debug("Loading %s" % url)
         self.webdriver.get(url)
         self.webdriver.execute_script("document.title = '%s'" %
@@ -159,13 +164,13 @@ class SeleniumRun(object):
 
 
 class SeleniumTestharnessExecutor(TestharnessExecutor):
-    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+    def __init__(self, browser, server_config, timeout_multiplier=1,
                  close_after_done=True, capabilities=None, debug_args=None):
         """Selenium-based executor for testharness.js tests"""
-        TestharnessExecutor.__init__(self, browser, http_server_url,
+        TestharnessExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_args=debug_args)
-        self.protocol = SeleniumProtocol(self, browser, http_server_url, capabilities)
+        self.protocol = SeleniumProtocol(self, browser, capabilities)
         with open(os.path.join(here, "testharness_webdriver.js")) as f:
             self.script = f.read()
         self.close_after_done = close_after_done
@@ -174,9 +179,17 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
     def is_alive(self):
         return self.protocol.is_alive()
 
+    def on_protocol_change(self, new_protocol):
+        self.protocol.load_runner(new_protocol)
+
     def do_test(self, test):
-        success, data = SeleniumRun(self.do_testharness, self.protocol.webdriver,
-                                    test.url, test.timeout * self.timeout_multiplier).run()
+        url = self.test_url(test)
+
+        success, data = SeleniumRun(self.do_testharness,
+                                    self.protocol.webdriver,
+                                    url,
+                                    test.timeout * self.timeout_multiplier).run()
+
         if success:
             return self.convert_result(test, data)
 
@@ -184,24 +197,24 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
 
     def do_testharness(self, webdriver, url, timeout):
         return webdriver.execute_async_script(
-            self.script % {"abs_url": urlparse.urljoin(self.http_server_url, url),
-                           "url": url,
+            self.script % {"abs_url": url,
+                           "url": strip_server(url),
                            "window_id": self.window_id,
                            "timeout_multiplier": self.timeout_multiplier,
                            "timeout": timeout * 1000})
 
 class SeleniumRefTestExecutor(RefTestExecutor):
-    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+    def __init__(self, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_args=None, capabilities=None):
         """Selenium WebDriver-based executor for reftests"""
         RefTestExecutor.__init__(self,
                                  browser,
-                                 http_server_url,
+                                 server_config,
                                  screenshot_cache=screenshot_cache,
                                  timeout_multiplier=timeout_multiplier,
                                  debug_args=debug_args)
-        self.protocol = SeleniumProtocol(self, browser, http_server_url,
+        self.protocol = SeleniumProtocol(self, browser,
                                          capabilities=capabilities)
         self.implementation = RefTestImplementation(self)
         self.close_after_done = close_after_done
@@ -234,13 +247,14 @@ class SeleniumRefTestExecutor(RefTestExecutor):
 
         return self.convert_result(test, result)
 
-    def screenshot(self, url, timeout):
-        return SeleniumRun(self._screenshot, self.protocol.webdriver,
-                           url, timeout).run()
+    def screenshot(self, test):
+        return SeleniumRun(self._screenshot,
+                           self.protocol.webdriver,
+                           self.test_url(test),
+                           test.timeout).run()
 
     def _screenshot(self, webdriver, url, timeout):
-        full_url = urlparse.urljoin(self.http_server_url, url)
-        webdriver.get(full_url)
+        webdriver.get(url)
 
         webdriver.execute_async_script(self.wait_script)
 

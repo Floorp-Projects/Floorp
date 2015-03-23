@@ -54,7 +54,6 @@ class ExpectedManifest(ManifestItem):
         """Add a test to the manifest"""
         ManifestItem.append(self, child)
         self.child_map[child.id] = child
-        #assert len(self.child_map) == len(self.children), "%r %r" % (self.child_map, self.children)
 
     def _remove_child(self, child):
         del self.child_map[child.id]

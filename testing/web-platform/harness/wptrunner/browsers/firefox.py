@@ -45,8 +45,8 @@ def browser_kwargs(**kwargs):
             "ca_certificate_path": kwargs["ssl_env"].ca_cert_path()}
 
 
-def executor_kwargs(test_type, http_server_url, cache_manager, **kwargs):
-    executor_kwargs = base_executor_kwargs(test_type, http_server_url,
+def executor_kwargs(test_type, server_config, cache_manager, **kwargs):
+    executor_kwargs = base_executor_kwargs(test_type, server_config,
                                            cache_manager, **kwargs)
     executor_kwargs["close_after_done"] = True
     return executor_kwargs
