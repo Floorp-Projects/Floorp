@@ -45,6 +45,7 @@ public:
   void PrepareInitialization();
 
   bool IsWaitingMediaResources() override;
+  bool IsWaitingOnCDMResource() override;
 
   nsRefPtr<AudioDataPromise> RequestAudioData() override;
   nsRefPtr<VideoDataPromise>
