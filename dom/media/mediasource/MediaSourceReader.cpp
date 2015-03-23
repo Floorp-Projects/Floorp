@@ -96,6 +96,7 @@ MediaSourceReader::IsWaitingMediaResources()
 bool
 MediaSourceReader::IsWaitingOnCDMResource()
 {
+#ifdef MOZ_EME
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MOZ_ASSERT(!IsWaitingMediaResources());
 
@@ -106,6 +107,9 @@ MediaSourceReader::IsWaitingOnCDMResource()
   }
 
   return mInfo.IsEncrypted() && !mCDMProxy;
+#else
+  return false;
+#endif
 }
 
 size_t
