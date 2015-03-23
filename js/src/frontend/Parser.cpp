@@ -1175,7 +1175,7 @@ struct BindData
     /* name node for definition processing and error source coordinates */
     typename ParseHandler::Node pn;
 
-    JSOp            op;         /* prolog bytecode or nop */
+    JSOp            op;         /* prologue bytecode or nop */
     Binder          binder;     /* binder, discriminates u */
     bool            isConst;    /* const binding? */
 
