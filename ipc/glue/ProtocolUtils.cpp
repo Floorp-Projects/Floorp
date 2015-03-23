@@ -10,6 +10,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/StaticMutex.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
@@ -25,56 +26,36 @@ using base::ProcessId;
 namespace mozilla {
 namespace ipc {
 
-static Atomic<size_t> gNumProtocols;
-static StaticAutoPtr<Mutex> gProtocolMutex;
+static StaticMutex gProtocolMutex;
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
  : mOpener(nullptr)
  , mProtocolId(aProtoId)
  , mTrans(nullptr)
 {
-  size_t old = gNumProtocols++;
-
-  if (!old) {
-    // We assume that two threads never race to create the first protocol. This
-    // assertion is sufficient to ensure that.
-    MOZ_ASSERT(NS_IsMainThread());
-    gProtocolMutex = new Mutex("ITopLevelProtocol::ProtocolMutex");
-  }
 }
 
 IToplevelProtocol::~IToplevelProtocol()
 {
-  bool last = false;
+  StaticMutexAutoLock al(gProtocolMutex);
 
-  {
-    MutexAutoLock al(*gProtocolMutex);
-
-    for (IToplevelProtocol* actor = mOpenActors.getFirst();
-         actor;
-         actor = actor->getNext()) {
-      actor->mOpener = nullptr;
-    }
-
-    mOpenActors.clear();
-
-    if (mOpener) {
-      removeFrom(mOpener->mOpenActors);
-    }
-
-    gNumProtocols--;
-    last = gNumProtocols == 0;
+  for (IToplevelProtocol* actor = mOpenActors.getFirst();
+       actor;
+       actor = actor->getNext()) {
+    actor->mOpener = nullptr;
   }
 
-  if (last) {
-    gProtocolMutex = nullptr;
+  mOpenActors.clear();
+
+  if (mOpener) {
+      removeFrom(mOpener->mOpenActors);
   }
 }
 
 void
 IToplevelProtocol::AddOpenedActorLocked(IToplevelProtocol* aActor)
 {
-  gProtocolMutex->AssertCurrentThreadOwns();
+  gProtocolMutex.AssertCurrentThreadOwns();
 
 #ifdef DEBUG
   for (const IToplevelProtocol* actor = mOpenActors.getFirst();
@@ -92,14 +73,14 @@ IToplevelProtocol::AddOpenedActorLocked(IToplevelProtocol* aActor)
 void
 IToplevelProtocol::AddOpenedActor(IToplevelProtocol* aActor)
 {
-  MutexAutoLock al(*gProtocolMutex);
+  StaticMutexAutoLock al(gProtocolMutex);
   AddOpenedActorLocked(aActor);
 }
 
 void
 IToplevelProtocol::GetOpenedActorsLocked(nsTArray<IToplevelProtocol*>& aActors)
 {
-  gProtocolMutex->AssertCurrentThreadOwns();
+  gProtocolMutex.AssertCurrentThreadOwns();
 
   for (IToplevelProtocol* actor = mOpenActors.getFirst();
        actor;
@@ -111,7 +92,7 @@ IToplevelProtocol::GetOpenedActorsLocked(nsTArray<IToplevelProtocol*>& aActors)
 void
 IToplevelProtocol::GetOpenedActors(nsTArray<IToplevelProtocol*>& aActors)
 {
-  MutexAutoLock al(*gProtocolMutex);
+  StaticMutexAutoLock al(gProtocolMutex);
   GetOpenedActorsLocked(aActors);
 }
 
@@ -143,7 +124,7 @@ IToplevelProtocol::CloneOpenedToplevels(IToplevelProtocol* aTemplate,
                                         base::ProcessHandle aPeerProcess,
                                         ProtocolCloneContext* aCtx)
 {
-  MutexAutoLock al(*gProtocolMutex);
+  StaticMutexAutoLock al(gProtocolMutex);
 
   nsTArray<IToplevelProtocol*> actors;
   aTemplate->GetOpenedActorsLocked(actors);
