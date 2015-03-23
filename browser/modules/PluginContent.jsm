@@ -96,9 +96,7 @@ PluginContent.prototype = {
       return;
     }
 
-    if (Services.telemetry.canSend) {
-      this._finishRecordingFlashPluginTelemetry();
-    }
+    this._finishRecordingFlashPluginTelemetry();
     this.clearPluginDataCache();
   },
 
@@ -391,8 +389,7 @@ PluginContent.prototype = {
         break;
     }
 
-    if (Services.telemetry.canSend && this._getPluginInfo(plugin).mimetype ===
-                                      "application/x-shockwave-flash") {
+    if (this._getPluginInfo(plugin).mimetype === "application/x-shockwave-flash") {
       this._recordFlashPluginTelemetry(eventType, plugin);
     }
 
@@ -426,6 +423,10 @@ PluginContent.prototype = {
   },
 
   _recordFlashPluginTelemetry: function (eventType, plugin) {
+    if (!Services.telemetry.canRecordExtended) {
+      return;
+    }
+
     if (!this.flashPluginStats) {
       this.flashPluginStats = {
         instancesCount: 0,
