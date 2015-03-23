@@ -95,6 +95,10 @@ AppleVDALinker::Unlink()
   --sRefCount;
   if (sLink && sRefCount < 1) {
     LOG("Unlinking VideoDecodeAcceleration framework.");
+#define LINK_FUNC(func)                                                   \
+    func = nullptr;
+#include "AppleVDAFunctions.h"
+#undef LINK_FUNC
     dlclose(sLink);
     sLink = nullptr;
     skPropWidth = nullptr;
