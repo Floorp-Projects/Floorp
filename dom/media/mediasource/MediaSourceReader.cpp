@@ -49,6 +49,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mLastVideoTime(0)
   , mPendingSeekTime(-1)
   , mWaitingForSeekData(false)
+  , mSeekToEnd(false)
   , mTimeThreshold(0)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
@@ -826,14 +827,18 @@ MediaSourceReader::OnVideoSeekFailed(nsresult aResult)
 void
 MediaSourceReader::DoAudioSeek()
 {
-  if (SwitchAudioSource(&mPendingSeekTime) == SOURCE_NONE) {
+  int64_t seekTime = mPendingSeekTime;
+  if (mSeekToEnd) {
+    seekTime = LastSampleTime(MediaData::AUDIO_DATA);
+  }
+  if (SwitchAudioSource(&seekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
     mWaitingForSeekData = true;
     return;
   }
   GetAudioReader()->ResetDecode();
-  mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(mPendingSeekTime), 0)
+  mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(seekTime), 0)
                          ->RefableThen(GetTaskQueue(), __func__, this,
                                        &MediaSourceReader::OnAudioSeekCompleted,
                                        &MediaSourceReader::OnAudioSeekFailed));
@@ -868,7 +873,9 @@ MediaSourceReader::AttemptSeek()
     if (!mWaitingForSeekData) {
       return;
     }
-    if (!TrackBuffersContainTime(mPendingSeekTime)) {
+
+    mSeekToEnd = IsEnded() && mPendingSeekTime >= mMediaSourceDuration * USECS_PER_S;
+    if (!mSeekToEnd && !TrackBuffersContainTime(mPendingSeekTime)) {
       mVideoSourceDecoder = nullptr;
       mAudioSourceDecoder = nullptr;
       return;
@@ -892,14 +899,18 @@ MediaSourceReader::AttemptSeek()
 void
 MediaSourceReader::DoVideoSeek()
 {
-  if (SwitchVideoSource(&mPendingSeekTime) == SOURCE_NONE) {
+  int64_t seekTime = mPendingSeekTime;
+  if (mSeekToEnd) {
+    seekTime = LastSampleTime(MediaData::VIDEO_DATA);
+  }
+  if (SwitchVideoSource(&seekTime) == SOURCE_NONE) {
     // Data we need got evicted since the last time we checked for data
     // availability. Abort current seek attempt.
     mWaitingForSeekData = true;
     return;
   }
   GetVideoReader()->ResetDecode();
-  mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(mPendingSeekTime), 0)
+  mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(seekTime), 0)
                           ->RefableThen(GetTaskQueue(), __func__, this,
                                         &MediaSourceReader::OnVideoSeekCompleted,
                                         &MediaSourceReader::OnVideoSeekFailed));
@@ -1084,6 +1095,18 @@ MediaSourceReader::IsNearEnd(MediaData::Type aType, int64_t aTime)
   nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
   trackBuffer->Buffered(buffered);
   return aTime >= (buffered->GetEndTime() * USECS_PER_S - EOS_FUZZ_US);
+}
+
+int64_t
+MediaSourceReader::LastSampleTime(MediaData::Type aType)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  TrackBuffer* trackBuffer =
+  aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
+  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
+  trackBuffer->Buffered(buffered);
+  return buffered->GetEndTime() * USECS_PER_S - 1;
 }
 
 void
