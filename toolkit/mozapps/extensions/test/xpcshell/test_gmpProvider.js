@@ -231,6 +231,7 @@ add_task(function* test_pluginRegistration() {
     let MockGMPService = {
       addPluginDirectory: path => addedPaths.push(path),
       removePluginDirectory: path => removedPaths.push(path),
+      removeAndDeletePluginDirectory: path => removedPaths.push(path),
     };
 
     GMPScope.gmpService = MockGMPService;
@@ -307,18 +308,18 @@ add_task(function* test_periodicUpdate() {
     gPrefs.clearUserPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, addon.id));
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK, 0);
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK, 0);
     let result =
       yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
-    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK, Date.now() / 1000 - 60);
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK, Date.now() / 1000 - 60);
     result =
       yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
     Assert.strictEqual(result, false);
 
-    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK,
+    gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK,
                      Date.now() / 1000 - 2 * GMPScope.SEC_IN_A_DAY);
     gInstalledAddonId = "";
     result =

@@ -66,6 +66,10 @@ CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
       result = new DXGITextureHostD3D9(aFlags, aDesc);
       break;
     }
+    case SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr: {
+      result = new DXGIYCbCrTextureHostD3D9(aFlags, aDesc.get_SurfaceDescriptorDXGIYCbCr());
+      break;
+    }
     default: {
       NS_WARNING("Unsupported SurfaceDescriptor type");
     }
@@ -1030,6 +1034,88 @@ void
 DXGITextureHostD3D9::DeallocateDeviceData()
 {
   mTextureSource = nullptr;
+}
+
+DXGIYCbCrTextureHostD3D9::DXGIYCbCrTextureHostD3D9(TextureFlags aFlags,
+                                                   const SurfaceDescriptorDXGIYCbCr& aDescriptor)
+ : TextureHost(aFlags)
+ , mSize(aDescriptor.size())
+ , mSizeY(aDescriptor.sizeY())
+ , mSizeCbCr(aDescriptor.sizeCbCr())
+ , mIsLocked(false)
+{
+  mHandles[0] = reinterpret_cast<HANDLE>(aDescriptor.handleY());
+  mHandles[1] = reinterpret_cast<HANDLE>(aDescriptor.handleCb());
+  mHandles[2] = reinterpret_cast<HANDLE>(aDescriptor.handleCr());
+}
+
+IDirect3DDevice9*
+DXGIYCbCrTextureHostD3D9::GetDevice()
+{
+  return mCompositor ? mCompositor->device() : nullptr;
+}
+
+void
+DXGIYCbCrTextureHostD3D9::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
+}
+
+bool
+DXGIYCbCrTextureHostD3D9::Lock()
+{
+  if (!GetDevice()) {
+    NS_WARNING("trying to lock a TextureHost without a D3D device");
+    return false;
+  }
+  if (!mTextureSources[0]) {
+    if (!mHandles[0]) {
+      return false;
+    }
+
+    if (FAILED(GetDevice()->CreateTexture(mSizeY.width, mSizeY.height,
+                                          1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
+                                          byRef(mTextures[0]), &mHandles[0]))) {
+      return false;
+    }
+
+    if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
+                                          1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
+                                          byRef(mTextures[1]), &mHandles[1]))) {
+      return false;
+    }
+
+    if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
+                                          1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
+                                          byRef(mTextures[2]), &mHandles[2]))) {
+      return false;
+    }
+
+    mTextureSources[0] = new DataTextureSourceD3D9(SurfaceFormat::A8, mSize, mCompositor, mTextures[0]);
+    mTextureSources[1] = new DataTextureSourceD3D9(SurfaceFormat::A8, mSize, mCompositor, mTextures[1]);
+    mTextureSources[2] = new DataTextureSourceD3D9(SurfaceFormat::A8, mSize, mCompositor, mTextures[2]);
+    mTextureSources[0]->SetNextSibling(mTextureSources[1]);
+    mTextureSources[1]->SetNextSibling(mTextureSources[2]);
+  }
+
+  mIsLocked = true;
+  return mIsLocked;
+}
+
+void
+DXGIYCbCrTextureHostD3D9::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
+}
+
+TextureSource*
+DXGIYCbCrTextureHostD3D9::GetTextureSources()
+{
+  MOZ_ASSERT(mIsLocked);
+  // If Lock was successful we must have a valid TextureSource.
+  MOZ_ASSERT(mTextureSources[0] && mTextureSources[1] && mTextureSources[2]);
+  return mTextureSources[0].get();
 }
 
 }

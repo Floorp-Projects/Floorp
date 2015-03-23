@@ -19,8 +19,8 @@ namespace cache {
 class ReadStream;
 
 class CacheStreamControlChild final : public PCacheStreamControlChild
-                                        , public StreamControl
-                                        , public ActorChild
+                                    , public StreamControl
+                                    , public ActorChild
 {
 public:
   CacheStreamControlChild();

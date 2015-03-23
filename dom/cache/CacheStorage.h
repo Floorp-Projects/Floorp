@@ -44,9 +44,9 @@ class Feature;
 class PCacheResponseOrVoid;
 
 class CacheStorage final : public nsIIPCBackgroundChildCreateCallback
-                             , public nsWrapperCache
-                             , public TypeUtils
-                             , public PromiseNativeHandler
+                         , public nsWrapperCache
+                         , public TypeUtils
+                         , public PromiseNativeHandler
 {
   typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
 
@@ -96,6 +96,9 @@ public:
 #ifdef DEBUG
   virtual void AssertOwningThread() const override;
 #endif
+
+  virtual CachePushStreamChild*
+  CreatePushStream(nsIAsyncInputStream* aStream) override;
 
   // PromiseNativeHandler methods
   virtual void

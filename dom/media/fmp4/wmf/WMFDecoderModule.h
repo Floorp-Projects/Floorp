@@ -19,9 +19,6 @@ public:
   // Initializes the module, loads required dynamic libraries, etc.
   virtual nsresult Startup() override;
 
-  // Called when the decoders have shutdown.
-  virtual nsresult Shutdown() override;
-
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,

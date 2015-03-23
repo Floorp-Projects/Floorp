@@ -2213,6 +2213,7 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
   // runnable will run in finite time.
   if (!(graph->mRealtime || graph->mNonRealtimeProcessing)) {
     runnable->Run();
+    return;
   }
 
   class Message : public ControlMessage {
