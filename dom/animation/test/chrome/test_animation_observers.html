@@ -315,8 +315,10 @@ function assert_records(expected, desc) {
     assert_records([{ added: [firstPlayer], changed: [], removed: [] }],
                    "records after transition start");
 
-    // Wait a bit longer for the transition to take effect.
+    // Wait for the AnimationPlayer to get going, then seek well into
+    // the transition.
     yield await_frame();
+    firstPlayer.currentTime = 50000;
 
     // Reverse the transition by setting the background-color back to its
     // original value.
@@ -327,6 +329,9 @@ function assert_records(expected, desc) {
     is(players.length, 1, "getAnimationPlayers().length after transition reversal");
 
     var secondPlayer = players[0];
+
+    ok(firstPlayer != secondPlayer,
+       "second AnimationPlayer should be different from the first");
 
     // Wait for the single MutationRecord for the removal of the original
     // AnimationPlayer and the addition of the new AnimationPlayer to
@@ -365,8 +370,10 @@ function assert_records(expected, desc) {
     assert_records([{ added: players, changed: [], removed: [] }],
                    "records after transition starts");
 
-    // Wait for the AnimationPlayers to get going.
+    // Wait for the AnimationPlayers to get going, then seek well into
+    // the transitions.
     yield await_frame();
+    players.forEach(p => p.currentTime = 50000);
 
     is(players.filter(p => p.playState == "running").length, 3, "number of running AnimationPlayers");
 
