@@ -2997,7 +2997,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                 // want to proceed since the LOAD_ONLY_IF_MODIFIED flag is
                 // also set.
                 MOZ_ASSERT(mLoadFlags & LOAD_ONLY_IF_MODIFIED);
-            } else {
+            } else if (mInterceptCache != INTERCEPTED) {
                 return rv;
             }
         }

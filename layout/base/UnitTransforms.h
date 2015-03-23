@@ -30,7 +30,12 @@ enum class PixelCastJustification : uint8_t {
   // The transform that is usually used to convert between two coordinate
   // systems is not available (for example, because the object that stores it
   // is being destroyed), so fall back to the identity.
-  TransformNotAvailable
+  TransformNotAvailable,
+  // When an OS event is initially constructed, its reference point is
+  // technically in screen pixels, as it has not yet accounted for any
+  // asynchronous transforms. This justification is for viewing the initial
+  // reference point as a screen point.
+  LayoutDeviceToScreenForUntransformedEvent
 };
 
 template <class TargetUnits, class SourceUnits>
@@ -44,6 +49,10 @@ gfx::IntSizeTyped<TargetUnits> ViewAs(const gfx::IntSizeTyped<SourceUnits>& aSiz
 template <class TargetUnits, class SourceUnits>
 gfx::PointTyped<TargetUnits> ViewAs(const gfx::PointTyped<SourceUnits>& aPoint, PixelCastJustification) {
   return gfx::PointTyped<TargetUnits>(aPoint.x, aPoint.y);
+}
+template <class TargetUnits, class SourceUnits>
+gfx::IntPointTyped<TargetUnits> ViewAs(const gfx::IntPointTyped<SourceUnits>& aPoint, PixelCastJustification) {
+  return gfx::IntPointTyped<TargetUnits>(aPoint.x, aPoint.y);
 }
 template <class NewTargetUnits, class OldTargetUnits, class SourceUnits>
 gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(

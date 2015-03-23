@@ -2199,6 +2199,13 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   return true;
 }
 
+bool
+TabChild::RecvMouseScrollTestEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+{
+  APZCCallbackHelper::NotifyMozMouseScrollEvent(aScrollId, aEvent);
+  return true;
+}
+
 static Touch*
 GetTouchForIdentifier(const WidgetTouchEvent& aEvent, int32_t aId)
 {

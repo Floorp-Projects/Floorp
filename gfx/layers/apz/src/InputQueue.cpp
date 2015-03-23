@@ -160,14 +160,20 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
   if (!mInputBlockQueue.IsEmpty()) {
     block = mInputBlockQueue.LastElement()->AsWheelBlock();
 
-    // If the block's APZC has been destroyed, request a new block.
-    if (block && block->GetTargetApzc()->IsDestroyed()) {
+    // If the block is not accepting new events we'll create a new input block
+    // (and therefore a new wheel transaction).
+    if (block &&
+        (!block->ShouldAcceptNewEvent() ||
+         block->MaybeTimeout(aEvent)))
+    {
       block = nullptr;
     }
   }
 
+  MOZ_ASSERT(!block || block->InTransaction());
+
   if (!block) {
-    block = new WheelBlockState(aTarget, aTargetConfirmed);
+    block = new WheelBlockState(aTarget, aTargetConfirmed, aEvent);
     INPQ_LOG("started new scroll wheel block %p for target %p\n", block, aTarget.get());
 
     SweepDepletedBlocks();
@@ -182,6 +188,8 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
   if (aOutInputBlockId) {
     *aOutInputBlockId = block->GetBlockId();
   }
+
+  block->Update(aEvent);
 
   // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
   // target set on the block. In this case the confirmed target (which may be
@@ -286,8 +294,29 @@ InputQueue::CurrentBlock() const
 TouchBlockState*
 InputQueue::CurrentTouchBlock() const
 {
-  TouchBlockState *block = CurrentBlock()->AsTouchBlock();
+  TouchBlockState* block = CurrentBlock()->AsTouchBlock();
   MOZ_ASSERT(block);
+  return block;
+}
+
+WheelBlockState*
+InputQueue::CurrentWheelBlock() const
+{
+  WheelBlockState* block = CurrentBlock()->AsWheelBlock();
+  MOZ_ASSERT(block);
+  return block;
+}
+
+WheelBlockState*
+InputQueue::GetCurrentWheelTransaction() const
+{
+  if (mInputBlockQueue.IsEmpty()) {
+    return nullptr;
+  }
+  WheelBlockState* block = CurrentBlock()->AsWheelBlock();
+  if (!block || !block->InTransaction()) {
+    return nullptr;
+  }
   return block;
 }
 
@@ -426,7 +455,7 @@ InputQueue::ProcessInputBlocks() {
 
     // If we get here, we know there are more touch blocks in the queue after
     // |curBlock|, so we can remove |curBlock| and try to process the next one.
-    INPQ_LOG("discarding depleted touch block %p\n", curBlock);
+    INPQ_LOG("discarding processed %s block %p\n", curBlock->Type(), curBlock);
     mInputBlockQueue.RemoveElementAt(0);
   } while (!mInputBlockQueue.IsEmpty());
 }
