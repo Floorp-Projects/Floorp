@@ -208,15 +208,6 @@ EMEDecoderModule::~EMEDecoderModule()
 {
 }
 
-nsresult
-EMEDecoderModule::Shutdown()
-{
-  if (mPDM) {
-    return mPDM->Shutdown();
-  }
-  return NS_OK;
-}
-
 static already_AddRefed<MediaDataDecoderProxy>
 CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
 {

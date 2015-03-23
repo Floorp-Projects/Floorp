@@ -23,8 +23,8 @@ class CacheStreamControlParent;
 class ManagerId;
 
 class CacheStorageParent final : public PCacheStorageParent
-                                   , public PrincipalVerifier::Listener
-                                   , public Manager::Listener
+                               , public PrincipalVerifier::Listener
+                               , public Manager::Listener
 {
 public:
   CacheStorageParent(PBackgroundParent* aManagingActor, Namespace aNamespace,

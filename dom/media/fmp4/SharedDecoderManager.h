@@ -28,7 +28,8 @@ public:
     PlatformDecoderModule* aPDM,
     const mp4_demuxer::VideoDecoderConfig& aConfig,
     layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer, FlushableMediaTaskQueue* aVideoTaskQueue,
+    layers::ImageContainer* aImageContainer,
+    FlushableMediaTaskQueue* aVideoTaskQueue,
     MediaDataDecoderCallback* aCallback);
 
   void SetReader(MediaDecoderReader* aReader);
@@ -40,15 +41,16 @@ public:
   friend class SharedDecoderProxy;
   friend class SharedDecoderCallback;
 
-  bool Recreate(PlatformDecoderModule* aPDM,
-    const mp4_demuxer::VideoDecoderConfig& aConfig,
-    layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer);
+  void DisableHardwareAcceleration();
+  bool Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                layers::LayersBackend aLayersBackend,
+                layers::ImageContainer* aImageContainer);
 
 private:
   virtual ~SharedDecoderManager();
   void DrainComplete();
 
+  nsRefPtr<PlatformDecoderModule> mPDM;
   nsRefPtr<MediaDataDecoder> mDecoder;
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   SharedDecoderProxy* mActiveProxy;

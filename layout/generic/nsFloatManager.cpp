@@ -40,7 +40,7 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
                                mozilla::WritingMode aWM)
   : mWritingMode(aWM),
-    mOffset(aWM),
+    mLineLeft(0), mBlockStart(0),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mPushedLeftFloatPastBreak(false),
     mPushedRightFloatPastBreak(false),
@@ -121,8 +121,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   NS_ASSERTION(aContentArea.ISize(aWM) >= 0,
                "unexpected content area inline size");
 
-  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
-  nscoord blockStart = aBOffset + offset.B(aWM);
+  nscoord blockStart = aBOffset + mBlockStart;
   if (blockStart < nscoord_MIN) {
     NS_WARNING("bad value");
     blockStart = nscoord_MIN;
@@ -162,11 +161,11 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       blockEnd = nscoord_MAX;
     }
   }
-  nscoord inlineStart = offset.I(aWM) + aContentArea.IStart(aWM);
-  nscoord inlineEnd = offset.I(aWM) + aContentArea.IEnd(aWM);
-  if (inlineEnd < inlineStart) {
+  nscoord lineLeft = mLineLeft + aContentArea.LineLeft(aWM, aContainerWidth);
+  nscoord lineRight = mLineLeft + aContentArea.LineRight(aWM, aContainerWidth);
+  if (lineRight < lineLeft) {
     NS_WARNING("bad value");
-    inlineEnd = inlineStart;
+    lineRight = lineLeft;
   }
 
   // Walk backwards through the floats until we either hit the front of
@@ -178,17 +177,15 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       // There aren't any more floats that could intersect this band.
       break;
     }
-    if (fi.mRect.IsEmpty()) {
+    if (fi.IsEmpty()) {
       // For compatibility, ignore floats with empty rects, even though it
       // disagrees with the spec.  (We might want to fix this in the
       // future, though.)
       continue;
     }
 
-    LogicalRect rect = fi.mRect.ConvertTo(aWM, fi.mWritingMode,
-                                          aContainerWidth);
-    nscoord floatBStart = rect.BStart(aWM);
-    nscoord floatBEnd = rect.BEnd(aWM);
+    nscoord floatBStart = fi.BStart();
+    nscoord floatBEnd = fi.BEnd();
     if (blockStart < floatBStart && aInfoType == BAND_FROM_POINT) {
       // This float is below our band.  Shrink our band's height if needed.
       if (floatBStart < blockEnd) {
@@ -211,12 +208,11 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       }
 
       // Shrink our band's width if needed.
-      if ((fi.mFrame->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) ==
-          aWM.IsBidiLTR()) {
-        // A left float in an ltr block or a right float in an rtl block
-        nscoord inlineEndEdge = rect.IEnd(aWM);
-        if (inlineEndEdge > inlineStart) {
-          inlineStart = inlineEndEdge;
+      if (fi.mFrame->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+        // A left float
+        nscoord lineRightEdge = fi.LineRight();
+        if (lineRightEdge > lineLeft) {
+          lineLeft = lineRightEdge;
           // Only set haveFloats to true if the float is inside our
           // containing block.  This matches the spec for what some
           // callers want and disagrees for other callers, so we should
@@ -224,10 +220,10 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
           haveFloats = true;
         }
       } else {
-        // A left float in an rtl block or a right float in an ltr block
-        nscoord inlineStartEdge = rect.IStart(aWM);
-        if (inlineStartEdge < inlineEnd) {
-          inlineEnd = inlineStartEdge;
+        // A right float
+        nscoord lineLeftEdge = fi.LineLeft();
+        if (lineLeftEdge < lineRight) {
+          lineRight = lineLeftEdge;
           // See above.
           haveFloats = true;
         }
@@ -237,9 +233,13 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
 
   nscoord blockSize = (blockEnd == nscoord_MAX) ?
                        nscoord_MAX : (blockEnd - blockStart);
-  return nsFlowAreaRect(aWM,
-                        inlineStart - offset.I(aWM), blockStart - offset.B(aWM),
-                        inlineEnd - inlineStart, blockSize, haveFloats);
+  // convert back from LineLeft/Right to IStart
+  nscoord inlineStart = aWM.IsVertical() || aWM.IsBidiLTR()
+                         ? lineLeft - mLineLeft
+                         : mLineLeft + aContainerWidth - lineRight;
+
+  return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
+                        lineRight - lineLeft, blockSize, haveFloats);
 }
 
 nsresult
@@ -249,7 +249,11 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   NS_ASSERTION(aMarginRect.ISize(aWM) >= 0, "negative inline size!");
   NS_ASSERTION(aMarginRect.BSize(aWM) >= 0, "negative block size!");
 
-  FloatInfo info(aFloatFrame, aWM, aMarginRect + mOffset);
+  FloatInfo info(aFloatFrame,
+                 aMarginRect.LineLeft(aWM, aContainerWidth) + mLineLeft,
+                 aMarginRect.BStart(aWM) + mBlockStart,
+                 aMarginRect.ISize(aWM),
+                 aMarginRect.BSize(aWM));
 
   // Set mLeftBEnd and mRightBEnd.
   if (HasAnyFloats()) {
@@ -263,10 +267,9 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   uint8_t floatStyle = aFloatFrame->StyleDisplay()->mFloats;
   NS_ASSERTION(floatStyle == NS_STYLE_FLOAT_LEFT ||
                floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float");
-  nscoord& sideBEnd =
-    ((floatStyle == NS_STYLE_FLOAT_LEFT) == aWM.IsBidiLTR()) ? info.mLeftBEnd
-                                                             : info.mRightBEnd;
-  nscoord thisBEnd = info.mRect.BEnd(aWM);
+  nscoord& sideBEnd = floatStyle == NS_STYLE_FLOAT_LEFT ? info.mLeftBEnd
+                                                        : info.mRightBEnd;
+  nscoord thisBEnd = info.BEnd();
   if (thisBEnd > sideBEnd)
     sideBEnd = thisBEnd;
 
@@ -276,6 +279,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   return NS_OK;
 }
 
+// static
 LogicalRect
 nsFloatManager::CalculateRegionFor(WritingMode          aWM,
                                    nsIFrame*            aFloat,
@@ -402,7 +406,8 @@ nsFloatManager::PushState(SavedState* aState)
   // Allowing mFloatDamage to accumulate the damage incurred during both
   // reflows ensures that nothing gets missed.
   aState->mWritingMode = mWritingMode;
-  aState->mOffset = mOffset;
+  aState->mLineLeft = mLineLeft;
+  aState->mBlockStart = mBlockStart;
   aState->mPushedLeftFloatPastBreak = mPushedLeftFloatPastBreak;
   aState->mPushedRightFloatPastBreak = mPushedRightFloatPastBreak;
   aState->mSplitLeftFloatAcrossBreak = mSplitLeftFloatAcrossBreak;
@@ -416,7 +421,8 @@ nsFloatManager::PopState(SavedState* aState)
   NS_PRECONDITION(aState, "No state to restore?");
 
   mWritingMode = aState->mWritingMode;
-  mOffset = aState->mOffset;
+  mLineLeft = aState->mLineLeft;
+  mBlockStart = aState->mBlockStart;
   mPushedLeftFloatPastBreak = aState->mPushedLeftFloatPastBreak;
   mPushedRightFloatPastBreak = aState->mPushedRightFloatPastBreak;
   mSplitLeftFloatAcrossBreak = aState->mSplitLeftFloatAcrossBreak;
@@ -428,8 +434,7 @@ nsFloatManager::PopState(SavedState* aState)
 }
 
 nscoord
-nsFloatManager::GetLowestFloatTop(WritingMode aWM,
-                                  nscoord aContainerWidth) const
+nsFloatManager::GetLowestFloatTop() const
 {
   if (mPushedLeftFloatPastBreak || mPushedRightFloatPastBreak) {
     return nscoord_MAX;
@@ -437,11 +442,7 @@ nsFloatManager::GetLowestFloatTop(WritingMode aWM,
   if (!HasAnyFloats()) {
     return nscoord_MIN;
   }
-  FloatInfo fi = mFloats[mFloats.Length() - 1];
-  LogicalRect rect = fi.mRect.ConvertTo(aWM, fi.mWritingMode, aContainerWidth);
-  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
-
-  return rect.BStart(aWM) - offset.B(aWM);
+  return mFloats[mFloats.Length() -1].BStart() - mBlockStart;
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -461,10 +462,7 @@ nsFloatManager::List(FILE* out) const
     const FloatInfo &fi = mFloats[i];
     fprintf_stderr(out, "Float %u: frame=%p rect={%d,%d,%d,%d} ymost={l:%d, r:%d}\n",
                    i, static_cast<void*>(fi.mFrame),
-                   fi.mRect.IStart(fi.mWritingMode),
-                   fi.mRect.BStart(fi.mWritingMode),
-                   fi.mRect.ISize(fi.mWritingMode),
-                   fi.mRect.BSize(fi.mWritingMode),
+                   fi.LineLeft(), fi.BStart(), fi.ISize(), fi.BSize(),
                    fi.mLeftBEnd, fi.mRightBEnd);
   }
   return NS_OK;
@@ -472,8 +470,7 @@ nsFloatManager::List(FILE* out) const
 #endif
 
 nscoord
-nsFloatManager::ClearFloats(WritingMode aWM, nscoord aBCoord,
-                            uint8_t aBreakType, nscoord aContainerWidth,
+nsFloatManager::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
                             uint32_t aFlags) const
 {
   if (!(aFlags & DONT_CLEAR_PUSHED_FLOATS) && ClearContinues(aBreakType)) {
@@ -483,8 +480,7 @@ nsFloatManager::ClearFloats(WritingMode aWM, nscoord aBCoord,
     return aBCoord;
   }
 
-  LogicalPoint offset = mOffset.ConvertTo(aWM, mWritingMode, 0);
-  nscoord blockEnd = aBCoord + offset.B(aWM);
+  nscoord blockEnd = aBCoord + mBlockStart;
 
   const FloatInfo &tail = mFloats[mFloats.Length() - 1];
   switch (aBreakType) {
@@ -493,19 +489,17 @@ nsFloatManager::ClearFloats(WritingMode aWM, nscoord aBCoord,
       blockEnd = std::max(blockEnd, tail.mRightBEnd);
       break;
     case NS_STYLE_CLEAR_LEFT:
-      blockEnd = std::max(blockEnd, aWM.IsBidiLTR() ? tail.mLeftBEnd
-                                                    : tail.mRightBEnd);
+      blockEnd = std::max(blockEnd, tail.mLeftBEnd);
       break;
     case NS_STYLE_CLEAR_RIGHT:
-      blockEnd = std::max(blockEnd, aWM.IsBidiLTR() ? tail.mRightBEnd
-                                                    : tail.mLeftBEnd);
+      blockEnd = std::max(blockEnd, tail.mRightBEnd);
       break;
     default:
       // Do nothing
       break;
   }
 
-  blockEnd -= offset.B(aWM);
+  blockEnd -= mBlockStart;
 
   return blockEnd;
 }
@@ -524,9 +518,11 @@ nsFloatManager::ClearContinues(uint8_t aBreakType) const
 /////////////////////////////////////////////////////////////////////////////
 // FloatInfo
 
-nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, WritingMode aWM,
-                                     const LogicalRect& aRect)
-  : mFrame(aFrame), mRect(aRect), mWritingMode(aWM)
+nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
+                                     nscoord aLineLeft, nscoord aBStart,
+                                     nscoord aISize, nscoord aBSize)
+  : mFrame(aFrame)
+  , mRect(aLineLeft, aBStart, aISize, aBSize)
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
@@ -534,10 +530,9 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame, WritingMode aWM,
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsFloatManager::FloatInfo::FloatInfo(const FloatInfo& aOther)
   : mFrame(aOther.mFrame),
-    mRect(aOther.mRect),
-    mWritingMode(aOther.mWritingMode),
     mLeftBEnd(aOther.mLeftBEnd),
-    mRightBEnd(aOther.mRightBEnd)
+    mRightBEnd(aOther.mRightBEnd),
+    mRect(aOther.mRect)
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
