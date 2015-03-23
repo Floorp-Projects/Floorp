@@ -23,103 +23,58 @@ using std::vector;
 
 struct Button {
   int id;
-  bool analog;
   IOHIDElementRef element;
-  CFIndex min;
-  CFIndex max;
-
-  Button(int aId, IOHIDElementRef aElement, CFIndex aMin, CFIndex aMax) :
-    id(aId),
-    analog((aMax - aMin) > 1),
-    element(aElement),
-    min(aMin),
-    max(aMax) {}
 };
 
 struct Axis {
   int id;
   IOHIDElementRef element;
-  uint32_t usagePage;
-  uint32_t usage;
   CFIndex min;
   CFIndex max;
 };
 
-typedef bool dpad_buttons[4];
-
 // These values can be found in the USB HID Usage Tables:
 // http://www.usb.org/developers/hidpage
-const unsigned kDesktopUsagePage = 0x01;
-const unsigned kSimUsagePage = 0x02;
-const unsigned kAcceleratorUsage = 0xC4;
-const unsigned kBrakeUsage = 0xC5;
-const unsigned kJoystickUsage = 0x04;
-const unsigned kGamepadUsage = 0x05;
-const unsigned kAxisUsageMin = 0x30;
-const unsigned kAxisUsageMax = 0x35;
-const unsigned kDpadUsage = 0x39;
-const unsigned kButtonUsagePage = 0x09;
-const unsigned kConsumerPage = 0x0C;
-const unsigned kHomeUsage = 0x223;
-const unsigned kBackUsage = 0x224;
-
+#define GENERIC_DESKTOP_USAGE_PAGE 0x01
+#define JOYSTICK_USAGE_NUMBER 0x04
+#define GAMEPAD_USAGE_NUMBER 0x05
+#define AXIS_MIN_USAGE_NUMBER 0x30
+#define AXIS_MAX_USAGE_NUMBER 0x35
+#define BUTTON_USAGE_PAGE 0x09
 
 class Gamepad {
  private:
   IOHIDDeviceRef mDevice;
-  nsTArray<Button> buttons;
-  nsTArray<Axis> axes;
-  IOHIDElementRef mDpad;
-  dpad_buttons mDpadState;
+  vector<Button> buttons;
+  vector<Axis> axes;
 
  public:
-  Gamepad() : mDevice(nullptr), mDpad(nullptr), mSuperIndex(-1) {}
+  Gamepad() : mDevice(nullptr), mSuperIndex(-1) {}
   bool operator==(IOHIDDeviceRef device) const { return mDevice == device; }
   bool empty() const { return mDevice == nullptr; }
-  void clear()
-  {
+  void clear() {
     mDevice = nullptr;
-    buttons.Clear();
-    axes.Clear();
-    mDpad = nullptr;
+    buttons.clear();
+    axes.clear();
     mSuperIndex = -1;
   }
   void init(IOHIDDeviceRef device);
-  size_t numButtons() { return buttons.Length() + (mDpad ? 4 : 0); }
-  size_t numAxes() { return axes.Length(); }
+  size_t numButtons() { return buttons.size(); }
+  size_t numAxes() { return axes.size(); }
 
   // Index given by our superclass.
   uint32_t mSuperIndex;
 
-  const bool isDpad(IOHIDElementRef element) const
-  {
-    return element == mDpad;
-  }
-
-  const dpad_buttons& getDpadState() const
-  {
-    return mDpadState;
-  }
-
-  void setDpadState(const dpad_buttons& dpadState)
-  {
-    for (unsigned i = 0; i < ArrayLength(mDpadState); i++) {
-      mDpadState[i] = dpadState[i];
-    }
-  }
-
-  const Button* lookupButton(IOHIDElementRef element) const
-  {
-    for (unsigned i = 0; i < buttons.Length(); i++) {
+  const Button* lookupButton(IOHIDElementRef element) const {
+    for (size_t i = 0; i < buttons.size(); i++) {
       if (buttons[i].element == element)
         return &buttons[i];
     }
     return nullptr;
   }
 
-  const Axis* lookupAxis(IOHIDElementRef element) const
-  {
-    for (unsigned i = 0; i < axes.Length(); i++) {
+  const Axis* lookupAxis(IOHIDElementRef element) const {
+    for (size_t i = 0; i < axes.size(); i++) {
       if (axes[i].element == element)
         return &axes[i];
     }
@@ -127,23 +82,7 @@ class Gamepad {
   }
 };
 
-class AxisComparator {
-public:
-  bool Equals(const Axis& a1, const Axis& a2) const
-  {
-    return a1.usagePage == a2.usagePage && a1.usage == a2.usage;
-  }
-  bool LessThan(const Axis& a1, const Axis& a2) const
-  {
-    if (a1.usagePage == a2.usagePage) {
-      return a1.usage < a2.usage;
-    }
-    return a1.usagePage < a2.usagePage;
-  }
-};
-
-void Gamepad::init(IOHIDDeviceRef device)
-{
+void Gamepad::init(IOHIDDeviceRef device) {
   clear();
   mDevice = device;
 
@@ -157,39 +96,21 @@ void Gamepad::init(IOHIDDeviceRef device)
     uint32_t usagePage = IOHIDElementGetUsagePage(element);
     uint32_t usage = IOHIDElementGetUsage(element);
 
-    if (usagePage == kDesktopUsagePage &&
-        usage >= kAxisUsageMin &&
-        usage <= kAxisUsageMax)
+    if (usagePage == GENERIC_DESKTOP_USAGE_PAGE &&
+        usage >= AXIS_MIN_USAGE_NUMBER &&
+        usage <= AXIS_MAX_USAGE_NUMBER)
     {
-      Axis axis = { int(axes.Length()),
+      Axis axis = { int(axes.size()),
                     element,
-                    usagePage,
-                    usage,
                     IOHIDElementGetLogicalMin(element),
                     IOHIDElementGetLogicalMax(element) };
-      axes.AppendElement(axis);
-    } else if (usagePage == kDesktopUsagePage && usage == kDpadUsage &&
-               // Don't know how to handle d-pads that return weird values.
-               IOHIDElementGetLogicalMax(element) - IOHIDElementGetLogicalMin(element) == 7) {
-      mDpad = element;
-    } else if ((usagePage == kSimUsagePage &&
-                 (usage == kAcceleratorUsage ||
-                  usage == kBrakeUsage)) ||
-               (usagePage == kButtonUsagePage) ||
-               (usagePage == kConsumerPage &&
-                 (usage == kHomeUsage ||
-                  usage == kBackUsage))) {
-      Button button(int(buttons.Length()), element, IOHIDElementGetLogicalMin(element), IOHIDElementGetLogicalMax(element));
-      buttons.AppendElement(button);
+      axes.push_back(axis);
+    } else if (usagePage == BUTTON_USAGE_PAGE) {
+      Button button = { int(usage) - 1, element };
+      buttons.push_back(button);
     } else {
       //TODO: handle other usage pages
     }
-  }
-
-  AxisComparator comparator;
-  axes.Sort(comparator);
-  for (unsigned i = 0; i < axes.Length(); i++) {
-    axes[i].id = i;
   }
 }
 
@@ -268,90 +189,23 @@ DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device)
   }
 }
 
-/*
- * Given a value from a d-pad (POV hat in USB HID terminology),
- * represent it as 4 buttons, one for each cardinal direction.
- */
-static void
-UnpackDpad(int dpad_value, int min, int max, dpad_buttons& buttons)
-{
-  const unsigned kUp = 0;
-  const unsigned kDown = 1;
-  const unsigned kLeft = 2;
-  const unsigned kRight = 3;
-
-  // Different controllers have different ways of representing
-  // "nothing is pressed", but they're all outside the range of values.
-  if (dpad_value < min || dpad_value > max) {
-    // Nothing is pressed.
-    return;
-  }
-
-  // Normalize value to start at 0.
-  int value = dpad_value - min;
-
-  // Value will be in the range 0-7. The value represents the
-  // position of the d-pad around a circle, with 0 being straight up,
-  // 2 being right, 4 being straight down, and 6 being left.
-  if (value < 2 || value > 6) {
-    buttons[kUp] = true;
-  }
-  if (value > 2 && value < 6) {
-    buttons[kDown] = true;
-  }
-  if (value > 4) {
-    buttons[kLeft] = true;
-  }
-  if (value > 0 && value < 4) {
-    buttons[kRight] = true;
-  }
-}
-
 void
 DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
 {
-  uint32_t value_length = IOHIDValueGetLength(value);
-  if (value_length > 4) {
-    // Workaround for bizarre issue with PS3 controllers that try to return
-    // massive (30+ byte) values and crash IOHIDValueGetIntegerValue
-    return;
-  }
   nsRefPtr<GamepadService> service(GamepadService::GetService());
   IOHIDElementRef element = IOHIDValueGetElement(value);
   IOHIDDeviceRef device = IOHIDElementGetDevice(element);
-  for (unsigned i = 0; i < mGamepads.size(); i++) {
-    Gamepad &gamepad = mGamepads[i];
+  for (size_t i = 0; i < mGamepads.size(); i++) {
+    const Gamepad &gamepad = mGamepads[i];
     if (gamepad == device) {
-      if (gamepad.isDpad(element)) {
-        const dpad_buttons& oldState = gamepad.getDpadState();
-        dpad_buttons newState = { false, false, false, false };
-        UnpackDpad(IOHIDValueGetIntegerValue(value),
-                   IOHIDElementGetLogicalMin(element),
-                   IOHIDElementGetLogicalMax(element),
-                   newState);
-        const int numButtons = gamepad.numButtons();
-        for (unsigned b = 0; b < ArrayLength(newState); b++) {
-          if (newState[b] != oldState[b]) {
-            service->NewButtonEvent(i, numButtons - 4 + b, newState[b]);
-          }
-        }
-        gamepad.setDpadState(newState);
-      } else if (const Axis* axis = gamepad.lookupAxis(element)) {
+      if (const Axis* axis = gamepad.lookupAxis(element)) {
         double d = IOHIDValueGetIntegerValue(value);
         double v = 2.0f * (d - axis->min) /
           (double)(axis->max - axis->min) - 1.0f;
         service->NewAxisMoveEvent(i, axis->id, v);
       } else if (const Button* button = gamepad.lookupButton(element)) {
-        int iv = IOHIDValueGetIntegerValue(value);
-        bool pressed = iv != 0;
-        double v = 0;
-        if (button->analog) {
-          double dv = iv;
-          v = (dv - button->min) / (double)(button->max - button->min);
-        } else {
-          v = pressed ? 1.0 : 0.0;
-        }
-        service->NewButtonEvent(i, button->id, pressed, v);
+        bool pressed = IOHIDValueGetIntegerValue(value) != 0;
+        service->NewButtonEvent(i, button->id, pressed);
       }
       return;
     }
@@ -432,15 +286,15 @@ void DarwinGamepadService::Startup()
                                                kIOHIDOptionsTypeNone);
 
   CFMutableDictionaryRef criteria_arr[2];
-  criteria_arr[0] = MatchingDictionary(kDesktopUsagePage,
-                                       kJoystickUsage);
+  criteria_arr[0] = MatchingDictionary(GENERIC_DESKTOP_USAGE_PAGE,
+                                       JOYSTICK_USAGE_NUMBER);
   if (!criteria_arr[0]) {
     CFRelease(manager);
     return;
   }
 
-  criteria_arr[1] = MatchingDictionary(kDesktopUsagePage,
-                                       kGamepadUsage);
+  criteria_arr[1] = MatchingDictionary(GENERIC_DESKTOP_USAGE_PAGE,
+                                       GAMEPAD_USAGE_NUMBER);
   if (!criteria_arr[1]) {
     CFRelease(criteria_arr[0]);
     CFRelease(manager);
