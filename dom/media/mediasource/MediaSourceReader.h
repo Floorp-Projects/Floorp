@@ -221,6 +221,7 @@ private:
   bool IsSeeking() { return mPendingSeekTime != -1; }
 
   bool IsNearEnd(MediaData::Type aType, int64_t aTime /* microseconds */);
+  int64_t LastSampleTime(MediaData::Type aType);
 
   nsRefPtr<SourceBufferDecoder> mAudioSourceDecoder;
   nsRefPtr<SourceBufferDecoder> mVideoSourceDecoder;
@@ -260,6 +261,7 @@ private:
   // to be added to the track buffer.
   int64_t mPendingSeekTime;
   bool mWaitingForSeekData;
+  bool mSeekToEnd;
 
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
