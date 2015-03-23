@@ -3066,7 +3066,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       nsAutoPtr<const MetadataTags> aTags)
 {
   mMediaInfo = *aInfo;
-  mIsEncrypted = aInfo->mIsEncrypted;
+  mIsEncrypted = aInfo->IsEncrypted();
   mTags = aTags.forget();
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
@@ -3085,6 +3085,16 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
     mDecoder->SetFragmentEndTime(mFragmentEnd);
+  }
+  if (mIsEncrypted) {
+    if (!mMediaSource) {
+      DecodeError();
+      return;
+    }
+
+#ifdef MOZ_EME
+    DispatchEncrypted(aInfo->mCrypto.mInitData, aInfo->mCrypto.mType);
+#endif
   }
 
   // Expose the tracks to JS directly.

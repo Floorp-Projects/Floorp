@@ -252,7 +252,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     }
   }
 
-  LogicalPoint tPt(mWritingMode);
+  nscoord tI = 0, tB = 0;
   // The values of x and y do not matter for floats, so don't bother
   // calculating them. Floats are guaranteed to have their own float
   // manager, so tI and tB don't matter.  mICoord and mBCoord don't
@@ -264,12 +264,18 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     // reflow auto inline-start/end margins will have a zero value.
 
     WritingMode frameWM = aFrameRS.GetWritingMode();
-    mICoord = tPt.I(mWritingMode) =
-      mSpace.IStart(mWritingMode) +
-      aFrameRS.ComputedLogicalMargin().ConvertTo(mWritingMode,
-                                                 frameWM).IStart(mWritingMode);
-    mBCoord = tPt.B(mWritingMode) = mSpace.BStart(mWritingMode) +
-                                    mBStartMargin.get() + aClearance;
+    LogicalMargin usedMargin =
+      aFrameRS.ComputedLogicalMargin().ConvertTo(mWritingMode, frameWM);
+    mICoord = mSpace.IStart(mWritingMode) + usedMargin.IStart(mWritingMode);
+    mBCoord = mSpace.BStart(mWritingMode) + mBStartMargin.get() + aClearance;
+
+    LogicalRect space(mWritingMode, mICoord, mBCoord,
+                      mSpace.ISize(mWritingMode) -
+                      usedMargin.IStartEnd(mWritingMode),
+                      mSpace.BSize(mWritingMode) -
+                      usedMargin.BStartEnd(mWritingMode));
+    tI = space.LineLeft(mWritingMode, mContainerWidth);
+    tB = mBCoord;
 
     if ((mFrame->GetStateBits() & NS_BLOCK_FLOAT_MGR) == 0)
       aFrameRS.mBlockDelta =
@@ -284,10 +290,9 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
   mMetrics.BSize(mWritingMode) = nscoord(0xdeadbeef);
 #endif
 
-  WritingMode oldWM = mOuterReflowState.mFloatManager->Translate(mWritingMode,
-                                                                 tPt);
+  mOuterReflowState.mFloatManager->Translate(tI, tB);
   mFrame->Reflow(mPresContext, mMetrics, aFrameRS, aFrameReflowStatus);
-  mOuterReflowState.mFloatManager->Untranslate(oldWM, tPt);
+  mOuterReflowState.mFloatManager->Translate(-tI, -tB);
 
 #ifdef DEBUG
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {

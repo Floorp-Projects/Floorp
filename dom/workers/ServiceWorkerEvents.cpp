@@ -244,6 +244,9 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     if (NS_WARN_IF(!stsThread)) {
       return;
     }
+
+    // XXXnsm, Fix for Bug 1141332 means that if we decide to make this
+    // streaming at some point, we'll need a different solution to that bug.
     rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
                       RespondWithCopyComplete, closure.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {

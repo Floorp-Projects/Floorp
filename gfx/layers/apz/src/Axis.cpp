@@ -394,6 +394,16 @@ bool Axis::CanScroll() const {
   return GetPageLength() - GetCompositionLength() > COORDINATE_EPSILON;
 }
 
+bool Axis::CanScroll(double aDelta) const
+{
+  if (!CanScroll() || mAxisLocked) {
+    return false;
+  }
+
+  ParentLayerCoord delta = aDelta;
+  return DisplacementWillOverscrollAmount(delta) != delta;
+}
+
 bool Axis::CanScrollNow() const {
   return !mAxisLocked && CanScroll();
 }

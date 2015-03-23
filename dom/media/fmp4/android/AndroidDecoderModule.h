@@ -19,8 +19,6 @@ typedef std::queue<mp4_demuxer::MP4Sample*> SampleQueue;
 
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
-  virtual nsresult Shutdown() override;
-
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                      layers::LayersBackend aLayersBackend,
