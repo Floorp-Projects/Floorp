@@ -64,17 +64,25 @@ AC_ARG_WITH(nspr-exec-prefix,
 
 	if test -z "$no_nspr"; then
 		nspr_config_major_version=`echo $NSPR_VERSION_STRING | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\1/'`
 		nspr_config_minor_version=`echo $NSPR_VERSION_STRING | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\2/'`
 		nspr_config_micro_version=`echo $NSPR_VERSION_STRING | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\4/'`
+		if test -z "$nspr_config_micro_version"; then
+			nspr_config_micro_version="0"
+		fi
+
 		min_nspr_major_version=`echo $min_nspr_version | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\1/'`
 		min_nspr_minor_version=`echo $min_nspr_version | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\2/'`
 		min_nspr_micro_version=`echo $min_nspr_version | \
-			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+			sed 's/\([[0-9]]*\)\.\([[0-9]]*\)\(\.\([[0-9]]*\)\)\{0,1\}/\4/'`
+		if test -z "$min_nspr_micro_version"; then
+			min_nspr_micro_version="0"
+		fi
+
 		if test "$nspr_config_major_version" -ne "$min_nspr_major_version"; then
 			no_nspr="yes"
 		elif test "$nspr_config_major_version" -eq "$min_nspr_major_version" &&
