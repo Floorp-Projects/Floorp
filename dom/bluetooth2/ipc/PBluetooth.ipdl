@@ -188,6 +188,11 @@ struct DisconnectGattClientRequest
   nsString deviceAddress;
 };
 
+struct DiscoverGattServicesRequest
+{
+  nsString appUuid;
+};
+
 struct UnregisterGattClientRequest
 {
   int clientIf;
@@ -233,6 +238,7 @@ union Request
   SendPlayStatusRequest;
   ConnectGattClientRequest;
   DisconnectGattClientRequest;
+  DiscoverGattServicesRequest;
   UnregisterGattClientRequest;
   GattClientReadRemoteRssiRequest;
 };
