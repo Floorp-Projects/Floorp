@@ -1041,13 +1041,13 @@ MediaSourceReader::MaybeNotifyHaveData()
   if (!IsSeeking() && mAudioTrack) {
     haveAudio = HaveData(mLastAudioTime, MediaData::AUDIO_DATA);
     if (ended || haveAudio) {
-      WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA __func__);
+      WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
     }
   }
   if (!IsSeeking() && mVideoTrack) {
     haveVideo = HaveData(mLastVideoTime, MediaData::VIDEO_DATA);
     if (ended || haveVideo) {
-      WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA __func__);
+      WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
     }
   }
   MSE_DEBUG("isSeeking=%d haveAudio=%d, haveVideo=%d ended=%d",
