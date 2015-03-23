@@ -354,7 +354,6 @@ function nukeModules() {
   // the addon is unload.
 
   unloadSandbox(cuddlefishSandbox.loaderSandbox);
-  unloadSandbox(cuddlefishSandbox.xulappSandbox);
 
   // Bug 764840: We need to unload cuddlefish otherwise it will stay alive
   // and keep a reference to this compartment.

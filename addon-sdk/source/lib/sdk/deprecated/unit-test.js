@@ -320,6 +320,8 @@ TestRunner.prototype = {
     });
 
     PromiseDebugging.flushUncaughtErrors();
+    PromiseDebugging.removeUncaughtErrorObserver(this._uncaughtErrorObserver);
+
 
     return all(winPromises).then(() => {
       let browserWins = wins.filter(isBrowser);
@@ -537,7 +539,8 @@ TestRunner.prototype = {
     this.test.errors = {};
     this.test.last = 'START';
     PromiseDebugging.clearUncaughtErrorObservers();
-    PromiseDebugging.addUncaughtErrorObserver(this._uncaughtErrorObserver.bind(this));
+    this._uncaughtErrorObserver = this._uncaughtErrorObserver.bind(this);
+    PromiseDebugging.addUncaughtErrorObserver(this._uncaughtErrorObserver);
 
     this.isDone = false;
     this.onDone = function(self) {
