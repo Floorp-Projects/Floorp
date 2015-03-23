@@ -2693,7 +2693,19 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         value().set(v);
     }
 
-    void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
+    void setConfigurable(bool configurable) {
+        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
+                      (configurable ? 0 : JSPROP_PERMANENT));
+    }
+    void setEnumerable(bool enumerable) {
+        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
+                      (enumerable ? JSPROP_ENUMERATE : 0));
+    }
+    void setWritable(bool writable) {
+        MOZ_ASSERT(!(desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_READONLY | JSPROP_READONLY)) |
+                      (writable ? 0 : JSPROP_READONLY));
+    }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
     void setGetter(JSGetterOp op) {
@@ -2704,8 +2716,16 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         MOZ_ASSERT(op != JS_StrictPropertyStub);
         desc()->setter = op;
     }
-    void setGetterObject(JSObject* obj) { desc()->getter = reinterpret_cast<JSGetterOp>(obj); }
-    void setSetterObject(JSObject* obj) { desc()->setter = reinterpret_cast<JSSetterOp>(obj); }
+    void setGetterObject(JSObject* obj) {
+        desc()->getter = reinterpret_cast<JSGetterOp>(obj);
+        desc()->attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY);
+        desc()->attrs |= JSPROP_GETTER | JSPROP_SHARED;
+    }
+    void setSetterObject(JSObject* obj) {
+        desc()->setter = reinterpret_cast<JSSetterOp>(obj);
+        desc()->attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY);
+        desc()->attrs |= JSPROP_SETTER | JSPROP_SHARED;
+    }
 
     JS::MutableHandleObject getterObject() {
         MOZ_ASSERT(this->hasGetterObject());
