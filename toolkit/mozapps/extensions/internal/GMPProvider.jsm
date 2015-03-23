@@ -21,11 +21,15 @@ Cu.import("resource://gre/modules/GMPUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
   this, "GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(
+  this, "setTimeout", "resource://gre/modules/Timer.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME       = "type.%ID%.name";
 
 const SEC_IN_A_DAY           = 24 * 60 * 60;
+// How long to wait after a user enabled EME before attempting to download CDMs.
+const GMP_CHECK_DELAY        = 10 * 1000; // milliseconds
 
 const NS_GRE_DIR             = "GreD";
 const CLEARKEY_PLUGIN_ID     = "gmp-clearkey";
@@ -116,6 +120,7 @@ GMPWrapper.prototype = {
   // An active task that checks for plugin updates and installs them.
   _updateTask: null,
   _gmpPath: null,
+  _isUpdateCheckPending: false,
 
   optionsType: AddonManager.OPTIONS_TYPE_INLINE,
   get optionsURL() { return this._plugin.optionsURL; },
@@ -239,7 +244,7 @@ GMPWrapper.prototype = {
       }
 
       let secSinceLastCheck =
-        Date.now() / 1000 - Preferences.get(GMPPrefs.KEY_PROVIDER_LASTCHECK, 0);
+        Date.now() / 1000 - Preferences.get(GMPPrefs.KEY_UPDATE_LAST_CHECK, 0);
       if (secSinceLastCheck <= SEC_IN_A_DAY) {
         this._log.trace("findUpdates() - " + this._plugin.id +
                         " - last check was less then a day ago");
@@ -337,19 +342,30 @@ GMPWrapper.prototype = {
       if (this._gmpPath) {
         this._log.info("onPrefEMEGlobalEnabledChanged() - unregistering gmp " +
                        "directory " + this._gmpPath);
-        gmpService.removePluginDirectory(this._gmpPath);
+        gmpService.removeAndDeletePluginDirectory(this._gmpPath);
       }
+      GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_VERSION, this.id);
       AddonManagerPrivate.callAddonListeners("onUninstalled", this);
     } else {
       AddonManagerPrivate.callInstallListeners("onExternalInstall", null, this,
                                                null, false);
       AddonManagerPrivate.callAddonListeners("onInstalling", this, false);
-      if (this._gmpPath && this.isActive) {
-        this._log.info("onPrefEMEGlobalEnabledChanged() - registering gmp " +
-                       "directory " + this._gmpPath);
-        gmpService.addPluginDirectory(this._gmpPath);
-      }
       AddonManagerPrivate.callAddonListeners("onInstalled", this);
+      if (!this._isUpdateCheckPending) {
+        this._isUpdateCheckPending = true;
+        GMPPrefs.reset(GMPPrefs.KEY_UPDATE_LAST_CHECK, null);
+        // Delay this in case the user changes his mind and doesn't want to
+        // enable EME after all.
+        setTimeout(() => {
+          if (!this.appDisabled) {
+            let gmpInstallManager = new GMPInstallManager();
+            // We don't really care about the results, if someone is interested
+            // they can check the log.
+            gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+          }
+          this._isUpdateCheckPending = false;
+        }, GMP_CHECK_DELAY);
+      }
     }
     if (!this.userDisabled) {
       this._handleEnabledChanged();
@@ -367,7 +383,7 @@ GMPWrapper.prototype = {
     if (this._gmpPath) {
       this._log.info("onPrefVersionChanged() - unregistering gmp directory " +
                      this._gmpPath);
-      gmpService.removePluginDirectory(this._gmpPath);
+      gmpService.removeAndDeletePluginDirectory(this._gmpPath);
     }
     AddonManagerPrivate.callAddonListeners("onUninstalled", this);
 

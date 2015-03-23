@@ -571,6 +571,11 @@ child:
              int32_t aModifiers,
              bool aPreventDefault);
 
+    /**
+     * APZ notification for mouse scroll testing events.
+     */
+    MouseScrollTestEvent(ViewID aScrollId, nsString aEvent);
+
     CompositionEvent(WidgetCompositionEvent event);
 
     SelectionEvent(WidgetSelectionEvent event);

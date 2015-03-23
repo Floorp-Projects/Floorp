@@ -14,6 +14,7 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
+#include "mozilla/dom/cache/CachePushStreamChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/ErrorResult.h"
@@ -525,6 +526,18 @@ Cache::AssertOwningThread() const
   NS_ASSERT_OWNINGTHREAD(Cache);
 }
 #endif
+
+CachePushStreamChild*
+Cache::CreatePushStream(nsIAsyncInputStream* aStream)
+{
+  NS_ASSERT_OWNINGTHREAD(Cache);
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(aStream);
+  auto actor = mActor->SendPCachePushStreamConstructor(
+    new CachePushStreamChild(mActor->GetFeature(), aStream));
+  MOZ_ASSERT(actor);
+  return static_cast<CachePushStreamChild*>(actor);
+}
 
 void
 Cache::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)

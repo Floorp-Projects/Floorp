@@ -10,6 +10,7 @@
 #include "ProxyAccessible.h"
 #include "Relation.h"
 #include "HyperTextAccessible-inl.h"
+#include "ImageAccessible.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
@@ -46,17 +47,24 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
 }
 
 Accessible*
-DocAccessibleChild::IdToAccessible(const uint64_t& aID)
+DocAccessibleChild::IdToAccessible(const uint64_t& aID) const
 {
   return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
 }
 
 HyperTextAccessible*
-DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID)
+DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
   Accessible* acc = IdToAccessible(aID);
   MOZ_ASSERT(!acc || acc->IsHyperText());
   return acc ? acc->AsHyperText() : nullptr;
+}
+
+ImageAccessible*
+DocAccessibleChild::IdToImageAccessible(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return (acc && acc->IsImage()) ? acc->AsImage() : nullptr;
 }
 
 void
@@ -579,6 +587,32 @@ DocAccessibleChild::RecvPasteText(const uint64_t& aID,
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     acc->PasteText(aPosition);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvImagePosition(const uint64_t& aID,
+                                      const uint32_t& aCoordType,
+                                      nsIntPoint* aRetVal)
+{
+  ImageAccessible* acc = IdToImageAccessible(aID);
+  if (acc) {
+    *aRetVal = acc->Position(aCoordType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvImageSize(const uint64_t& aID,
+                                  nsIntSize* aRetVal)
+{
+
+  ImageAccessible* acc = IdToImageAccessible(aID);
+  if (acc) {
+    *aRetVal = acc->Size();
   }
 
   return true;

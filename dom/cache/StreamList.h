@@ -21,7 +21,7 @@ class CacheStreamControlParent;
 class Context;
 class Manager;
 
-class StreamList
+class StreamList final
 {
 public:
   StreamList(Manager* aManager, Context* aContext);
