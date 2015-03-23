@@ -13995,7 +13995,8 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     }
   }
 
-  return swm->DispatchFetchEvent(doc, aChannel);
+  bool isReload = mLoadType & LOAD_CMD_RELOAD;
+  return swm->DispatchFetchEvent(doc, aChannel, isReload);
 }
 
 NS_IMETHODIMP
