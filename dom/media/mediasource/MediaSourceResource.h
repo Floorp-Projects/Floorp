@@ -8,6 +8,7 @@
 #define MOZILLA_MEDIASOURCERESOURCE_H_
 
 #include "MediaResource.h"
+#include "mozilla/Monitor.h"
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -26,7 +27,10 @@ class MediaSourceResource final : public MediaResource
 {
 public:
   explicit MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
-    : mPrincipal(aPrincipal) {}
+    : mPrincipal(aPrincipal)
+    , mMonitor("MediaSourceResource")
+    , mEnded(false)
+    {}
 
   virtual nsresult Close() override { return NS_OK; }
   virtual void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
@@ -66,6 +70,17 @@ public:
   virtual bool IsTransportSeekable() override { return true; }
   virtual const nsCString& GetContentType() const override { return mType; }
 
+  virtual bool IsLiveStream() override
+  {
+    MonitorAutoLock mon(mMonitor);
+    return !mEnded;
+  }
+  void SetEnded(bool aEnded)
+  {
+    MonitorAutoLock mon(mMonitor);
+    mEnded = aEnded;
+  }
+
 private:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
@@ -82,6 +97,8 @@ private:
 
   nsRefPtr<nsIPrincipal> mPrincipal;
   const nsCString mType;
+  Monitor mMonitor;
+  bool mEnded; // protected by mMonitor
 };
 
 } // namespace mozilla

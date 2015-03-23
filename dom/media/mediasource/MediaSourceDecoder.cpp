@@ -159,6 +159,7 @@ void
 MediaSourceDecoder::Ended(bool aEnded)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  static_cast<MediaSourceResource*>(GetResource())->SetEnded(aEnded);
   mReader->Ended(aEnded);
   mon.NotifyAll();
 }
