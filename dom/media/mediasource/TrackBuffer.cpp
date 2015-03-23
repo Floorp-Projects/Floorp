@@ -47,6 +47,7 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   , mLastStartTimestamp(0)
   , mLastTimestampOffset(0)
   , mAdjustedTimestamp(0)
+  , mIsWaitingOnCDM(false)
   , mShutdown(false)
 {
   MOZ_COUNT_CTOR(TrackBuffer);
@@ -588,6 +589,7 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 
   if (mCurrentDecoder != aDecoder) {
     MSE_DEBUG("append was cancelled. Aborting initialization.");
+    RemoveDecoder(aDecoder);
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
     return;
@@ -641,12 +643,12 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   }
   if (mCurrentDecoder != aDecoder) {
     MSE_DEBUG("append was cancelled. Aborting initialization.");
+    RemoveDecoder(aDecoder);
     return;
   }
 
   if (NS_SUCCEEDED(rv) && reader->IsWaitingOnCDMResource()) {
-    mWaitingDecoders.AppendElement(aDecoder);
-    return;
+    mIsWaitingOnCDM = true;
   }
 
   aDecoder->SetTaskQueue(nullptr);
@@ -693,6 +695,7 @@ TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
     MSE_DEBUG("append was cancelled. Aborting initialization.");
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
+    RemoveDecoder(aDecoder);
     return;
   }
 
@@ -808,6 +811,12 @@ TrackBuffer::IsReady()
 }
 
 bool
+TrackBuffer::IsWaitingOnCDMResource()
+{
+  return mIsWaitingOnCDM;
+}
+
+bool
 TrackBuffer::ContainsTime(int64_t aTime, int64_t aTolerance)
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
@@ -875,21 +884,12 @@ TrackBuffer::SetCDMProxy(CDMProxy* aProxy)
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
 
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    nsresult rv = mDecoders[i]->SetCDMProxy(aProxy);
-    NS_ENSURE_SUCCESS(rv, rv);
+  for (auto& decoder : mDecoders) {
+    decoder->SetCDMProxy(aProxy);
   }
 
-  for (uint32_t i = 0; i < mWaitingDecoders.Length(); ++i) {
-    CDMCaps::AutoLock caps(aProxy->Capabilites());
-    caps.CallOnMainThreadWhenCapsAvailable(
-      NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
-                                                        &TrackBuffer::QueueInitializeDecoder,
-                                                        mWaitingDecoders[i]));
-  }
-
-  mWaitingDecoders.Clear();
-
+  mIsWaitingOnCDM = false;
+  mParentDecoder->NotifyWaitingForResourcesStatusChanged();
   return NS_OK;
 }
 #endif

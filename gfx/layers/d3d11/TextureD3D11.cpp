@@ -504,18 +504,18 @@ TextureClientD3D11::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-DXGIYCbCrTextureClientD3D11::DXGIYCbCrTextureClientD3D11(ISurfaceAllocator* aAllocator,
-                                                         TextureFlags aFlags)
+DXGIYCbCrTextureClient::DXGIYCbCrTextureClient(ISurfaceAllocator* aAllocator,
+                                               TextureFlags aFlags)
   : TextureClient(aAllocator, aFlags)
   , mIsLocked(false)
 {
-  MOZ_COUNT_CTOR(DXGIYCbCrTextureClientD3D11);
+  MOZ_COUNT_CTOR(DXGIYCbCrTextureClient);
 }
 
 class YCbCrKeepAliveD3D11 : public KeepAlive
 {
 public:
-  YCbCrKeepAliveD3D11(RefPtr<ID3D11Texture2D> aTextures[3])
+  YCbCrKeepAliveD3D11(RefPtr<IUnknown> aTextures[3])
   {
     mTextures[0] = aTextures[0];
     mTextures[1] = aTextures[1];
@@ -523,19 +523,19 @@ public:
   }
 
 protected:
-  RefPtr<ID3D11Texture2D> mTextures[3];
+  RefPtr<IUnknown> mTextures[3];
 };
 
-DXGIYCbCrTextureClientD3D11::~DXGIYCbCrTextureClientD3D11()
+DXGIYCbCrTextureClient::~DXGIYCbCrTextureClient()
 {
-  if (mTextures[0] && mActor) {
-    KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mTextures));
+  if (mHoldRefs[0] && mActor) {
+    KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mHoldRefs));
   }
-  MOZ_COUNT_DTOR(DXGIYCbCrTextureClientD3D11);
+  MOZ_COUNT_DTOR(DXGIYCbCrTextureClient);
 }
 
 bool
-DXGIYCbCrTextureClientD3D11::Lock(OpenMode)
+DXGIYCbCrTextureClient::Lock(OpenMode)
 {
   MOZ_ASSERT(!mIsLocked);
   if (!IsValid()) {
@@ -546,37 +546,22 @@ DXGIYCbCrTextureClientD3D11::Lock(OpenMode)
 }
 
 void
-DXGIYCbCrTextureClientD3D11::Unlock()
+DXGIYCbCrTextureClient::Unlock()
 {
   MOZ_ASSERT(mIsLocked, "Unlock called while the texture is not locked!");
   mIsLocked = false;
 }
 
 bool
-DXGIYCbCrTextureClientD3D11::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+DXGIYCbCrTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
   MOZ_ASSERT(IsValid());
   if (!IsAllocated()) {
     return false;
   }
 
-  RefPtr<IDXGIResource> resource;
-  mTextures[0]->QueryInterface((IDXGIResource**)byRef(resource));
-
-  HANDLE sharedHandleY;
-  HRESULT hr = resource->GetSharedHandle(&sharedHandleY);
-
-  mTextures[1]->QueryInterface((IDXGIResource**)byRef(resource));
-
-  HANDLE sharedHandleCb;
-  hr = resource->GetSharedHandle(&sharedHandleCb);
-
-  mTextures[2]->QueryInterface((IDXGIResource**)byRef(resource));
-
-  HANDLE sharedHandleCr;
-  hr = resource->GetSharedHandle(&sharedHandleCr);
-
-  aOutDescriptor = SurfaceDescriptorDXGIYCbCr((WindowsHandle)sharedHandleY, (WindowsHandle)sharedHandleCb, (WindowsHandle)sharedHandleCr, GetSize());
+  aOutDescriptor = SurfaceDescriptorDXGIYCbCr((WindowsHandle)mHandles[0], (WindowsHandle)mHandles[1], (WindowsHandle)mHandles[2],
+                                              GetSize(), mSizeY, mSizeCbCr);
   return true;
 }
 

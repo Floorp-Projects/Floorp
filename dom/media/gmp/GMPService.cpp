@@ -665,10 +665,11 @@ GeckoMediaPluginService::LoadFromEnvironment()
 NS_IMETHODIMP
 GeckoMediaPluginService::PathRunnable::Run()
 {
-  if (mAdd) {
+  if (mOperation == ADD) {
     mService->AddOnGMPThread(mPath);
   } else {
-    mService->RemoveOnGMPThread(mPath);
+    mService->RemoveOnGMPThread(mPath,
+                                mOperation == REMOVE_AND_DELETE_FROM_DISK);
   }
   return NS_OK;
 }
@@ -677,14 +678,26 @@ NS_IMETHODIMP
 GeckoMediaPluginService::AddPluginDirectory(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GMPDispatch(new PathRunnable(this, aDirectory, true));
+  return GMPDispatch(new PathRunnable(this, aDirectory,
+                                      PathRunnable::EOperation::ADD));
 }
 
 NS_IMETHODIMP
 GeckoMediaPluginService::RemovePluginDirectory(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GMPDispatch(new PathRunnable(this, aDirectory, false));
+  return GMPDispatch(new PathRunnable(this, aDirectory,
+                                      PathRunnable::EOperation::REMOVE));
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::RemoveAndDeletePluginDirectory(
+  const nsAString& aDirectory)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return GMPDispatch(
+    new PathRunnable(this, aDirectory,
+                     PathRunnable::EOperation::REMOVE_AND_DELETE_FROM_DISK));
 }
 
 class DummyRunnable : public nsRunnable {
@@ -915,7 +928,8 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
 }
 
 void
-GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
+GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory,
+                                           const bool aDeleteFromDisk)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, NS_LossyConvertUTF16toASCII(aDirectory).get()));
@@ -931,7 +945,11 @@ GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
     if (NS_SUCCEEDED(directory->Equals(pluginpath, &equals)) && equals) {
+      mPlugins[i]->AbortAsyncShutdown();
       mPlugins[i]->CloseActive(true);
+      if (aDeleteFromDisk) {
+        pluginpath->Remove(true);
+      }
       mPlugins.RemoveElementAt(i);
       return;
     }

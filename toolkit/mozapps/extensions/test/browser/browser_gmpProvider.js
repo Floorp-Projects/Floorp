@@ -100,7 +100,7 @@ add_task(function* initializeState() {
     }
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL);
-    gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK);
+    gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
     gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_EME_ENABLED);
     yield GMPScope.GMPProvider.shutdown();
     GMPScope.GMPProvider.startup();
@@ -324,7 +324,7 @@ add_task(function* testPreferencesButton() {
 });
 
 add_task(function* testUpdateButton() {
-  gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_PROVIDER_LASTCHECK);
+  gPrefs.clearUserPref(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
 
   let originalInstallManager = GMPScope.GMPInstallManager;
   Object.defineProperty(GMPScope, "GMPInstallManager", {
@@ -375,8 +375,13 @@ add_task(function* testEmeSupport() {
     let doc = gManagerWindow.document;
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.id == GMPScope.EME_ADOBE_ID) {
-      Assert.ok(!item,
-                "Adobe EME not supported, couldn't find add-on element.");
+      if (Services.appinfo.OS == "WINNT" &&
+          Services.sysinfo.getPropertyAsInt32("version") >= 6) {
+        Assert.ok(item, "Adobe EME supported, found add-on element.");
+      } else {
+        Assert.ok(!item,
+                  "Adobe EME not supported, couldn't find add-on element.");
+      }
     } else {
       Assert.ok(item, "Found add-on element.");
     }

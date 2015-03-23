@@ -199,4 +199,15 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
   mAPZEventState->ProcessAPZStateChange(GetDocument(), aGuid.mScrollId, aChange, aArg);
 }
 
+void
+ChromeProcessController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(this, &ChromeProcessController::NotifyMozMouseScrollEvent, aScrollId, aEvent));
+    return;
+  }
 
+  APZCCallbackHelper::NotifyMozMouseScrollEvent(aScrollId, aEvent);
+}

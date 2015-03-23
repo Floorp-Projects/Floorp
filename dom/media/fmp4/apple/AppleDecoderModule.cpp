@@ -36,12 +36,46 @@ bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sIsVDAAvailable = false;
 bool AppleDecoderModule::sForceVDA = false;
 
+class LinkTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    MOZ_ASSERT(AppleDecoderModule::sInitialized);
+    if (AppleDecoderModule::sIsVDAAvailable) {
+      AppleVDALinker::Link();
+    }
+    if (AppleDecoderModule::sIsVTAvailable) {
+      AppleVTLinker::Link();
+      AppleCMLinker::Link();
+    }
+    return NS_OK;
+  }
+};
+
+class UnlinkTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    MOZ_ASSERT(AppleDecoderModule::sInitialized);
+    if (AppleDecoderModule::sIsVDAAvailable) {
+      AppleVDALinker::Unlink();
+    }
+    if (AppleDecoderModule::sIsVTAvailable) {
+      AppleVTLinker::Unlink();
+      AppleCMLinker::Unlink();
+    }
+    return NS_OK;
+  }
+};
+
 AppleDecoderModule::AppleDecoderModule()
 {
 }
 
 AppleDecoderModule::~AppleDecoderModule()
 {
+  nsCOMPtr<nsIRunnable> task(new UnlinkTask());
+  NS_DispatchToMainThread(task);
 }
 
 /* static */
@@ -104,22 +138,6 @@ AppleDecoderModule::CanDecode()
   return (sIsVDAAvailable || sIsVTAvailable) ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
-class LinkTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-    MOZ_ASSERT(AppleDecoderModule::sInitialized);
-    if (AppleDecoderModule::sIsVDAAvailable) {
-      AppleVDALinker::Link();
-    }
-    if (AppleDecoderModule::sIsVTAvailable) {
-      AppleVTLinker::Link();
-      AppleCMLinker::Link();
-    }
-    return NS_OK;
-  }
-};
-
 nsresult
 AppleDecoderModule::Startup()
 {
@@ -130,30 +148,6 @@ AppleDecoderModule::Startup()
   nsCOMPtr<nsIRunnable> task(new LinkTask());
   NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
 
-  return NS_OK;
-}
-
-class UnlinkTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-    MOZ_ASSERT(AppleDecoderModule::sInitialized);
-    if (AppleDecoderModule::sIsVDAAvailable) {
-      AppleVDALinker::Unlink();
-    }
-    if (AppleDecoderModule::sIsVTAvailable) {
-      AppleVTLinker::Unlink();
-      AppleCMLinker::Unlink();
-    }
-    return NS_OK;
-  }
-};
-
-nsresult
-AppleDecoderModule::Shutdown()
-{
-  nsCOMPtr<nsIRunnable> task(new UnlinkTask());
-  NS_DispatchToMainThread(task);
   return NS_OK;
 }
 

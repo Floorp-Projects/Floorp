@@ -19,19 +19,19 @@ fails == 345369-2.html 345369-2-ref.html
 == 546048-1.html 546048-1-ref.html
 == 775350-1.html 775350-1-ref.html
 == 1114329.html 1114329-ref.html
-fails == float-in-rtl-1a.html float-in-rtl-1-ref.html # bug 1114329
-fails == float-in-rtl-1b.html float-in-rtl-1-ref.html # bug 1114329
-fails == float-in-rtl-1c.html float-in-rtl-1-ref.html # bug 1114329
-fails == float-in-rtl-1d.html float-in-rtl-1-ref.html # bug 1114329
-fails == float-in-rtl-2a.html float-in-rtl-2-ref.html # bug 1114329
-fails == float-in-rtl-2b.html float-in-rtl-2-ref.html # bug 1114329
-fails == float-in-rtl-2c.html float-in-rtl-2-ref.html # bug 1114329
-fails == float-in-rtl-2d.html float-in-rtl-2-ref.html # bug 1114329
-fails == float-in-rtl-3a.html float-in-rtl-3-ref.html # bug 1114329
-fails == float-in-rtl-3b.html float-in-rtl-3-ref.html # bug 1114329
-fails == float-in-rtl-3c.html float-in-rtl-3-ref.html # bug 1114329
-fails == float-in-rtl-3d.html float-in-rtl-3-ref.html # bug 1114329
-fails == float-in-rtl-4a.html float-in-rtl-4-ref.html # bug 1114329
-fails == float-in-rtl-4b.html float-in-rtl-4-ref.html # bug 1114329
-fails == float-in-rtl-4c.html float-in-rtl-4-ref.html # bug 1114329
-fails == float-in-rtl-4d.html float-in-rtl-4-ref.html # bug 1114329
+== float-in-rtl-1a.html float-in-rtl-1-ref.html
+== float-in-rtl-1b.html float-in-rtl-1-ref.html
+== float-in-rtl-1c.html float-in-rtl-1-ref.html
+== float-in-rtl-1d.html float-in-rtl-1-ref.html
+== float-in-rtl-2a.html float-in-rtl-2-ref.html
+== float-in-rtl-2b.html float-in-rtl-2-ref.html
+== float-in-rtl-2c.html float-in-rtl-2-ref.html
+== float-in-rtl-2d.html float-in-rtl-2-ref.html
+== float-in-rtl-3a.html float-in-rtl-3-ref.html
+== float-in-rtl-3b.html float-in-rtl-3-ref.html
+== float-in-rtl-3c.html float-in-rtl-3-ref.html
+== float-in-rtl-3d.html float-in-rtl-3-ref.html
+== float-in-rtl-4a.html float-in-rtl-4-ref.html
+== float-in-rtl-4b.html float-in-rtl-4-ref.html
+== float-in-rtl-4c.html float-in-rtl-4-ref.html
+== float-in-rtl-4d.html float-in-rtl-4-ref.html

@@ -9,6 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/Cache.h"
+#include "mozilla/dom/cache/PCachePushStreamChild.h"
 #include "mozilla/dom/cache/StreamUtils.h"
 
 namespace mozilla {
@@ -92,6 +93,20 @@ CacheChild::ActorDestroy(ActorDestroyReason aReason)
   }
 
   RemoveFeature();
+}
+
+PCachePushStreamChild*
+CacheChild::AllocPCachePushStreamChild()
+{
+  MOZ_CRASH("CachePushStreamChild should be manually constructed.");
+  return nullptr;
+}
+
+bool
+CacheChild::DeallocPCachePushStreamChild(PCachePushStreamChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 bool

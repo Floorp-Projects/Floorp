@@ -28,9 +28,6 @@ public:
 
   virtual ~EMEDecoderModule();
 
-  // Called when the decoders have shutdown. Main thread only.
-  virtual nsresult Shutdown() override;
-
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
