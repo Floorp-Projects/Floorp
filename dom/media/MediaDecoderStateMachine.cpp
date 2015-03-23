@@ -931,13 +931,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
 }
 
 void
-MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  DecodeError();
-}
-
-void
 MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnStateMachineThread());
@@ -2096,22 +2089,10 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
 void
 MediaDecoderStateMachine::DecodeError()
 {
-  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(OnStateMachineThread());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mState == DECODER_STATE_SHUTDOWN) {
     // Already shutdown.
-    return;
-  }
-
-  // DecodeError should probably be redesigned so that it doesn't need to run
-  // on the Decode Task Queue, but this does the trick for now.
-  if (!OnDecodeThread()) {
-    RefPtr<nsIRunnable> task(
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError));
-    nsresult rv = DecodeTaskQueue()->Dispatch(task);
-
-    if (NS_FAILED(rv)) {
-      DECODER_WARN("Failed to dispatch AcquireMonitorAndInvokeDecodeError");
-    }
     return;
   }
 
