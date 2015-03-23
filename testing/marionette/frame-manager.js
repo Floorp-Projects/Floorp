@@ -6,7 +6,7 @@ let {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = ["FrameManager"];
 
-let FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
+let FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
