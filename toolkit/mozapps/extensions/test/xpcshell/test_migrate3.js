@@ -118,7 +118,7 @@ function run_test() {
     previewURL: "http://localhost/data/preview.png",
     iconURL: "http://localhost/data/icon.png"
   }]));
-  Services.prefs.setBoolPref("lightweightThemes.isThemeSelected", true);
+  Services.prefs.setCharPref("lightweightThemes.selectedThemeID", "1");
 
   let stagedXPIs = profileDir.clone();
   stagedXPIs.append("staged-xpis");
