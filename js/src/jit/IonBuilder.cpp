@@ -10254,9 +10254,9 @@ MIRType
 IonBuilder::SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
 {
     switch (type) {
-      case SimdTypeDescr::TYPE_INT32:   return MIRType_Int32x4;
-      case SimdTypeDescr::TYPE_FLOAT32: return MIRType_Float32x4;
-      case SimdTypeDescr::TYPE_FLOAT64: return MIRType_Undefined;
+      case SimdTypeDescr::Int32x4:   return MIRType_Int32x4;
+      case SimdTypeDescr::Float32x4: return MIRType_Float32x4;
+      case SimdTypeDescr::Float64x2: return MIRType_Undefined;
     }
     MOZ_CRASH("unimplemented MIR type for a SimdTypeDescr::Type");
 }
